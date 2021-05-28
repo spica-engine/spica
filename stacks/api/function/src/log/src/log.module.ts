@@ -19,7 +19,8 @@ export class LogModule {
           provide: FUNCTION_LOG_OPTIONS,
           useValue: options
         }
-      ]
+      ],
+      exports: [LogService]
     };
   }
 }

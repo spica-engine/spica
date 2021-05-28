@@ -22,7 +22,8 @@
       "default": 100
     },
     "timeout": {
-      "type": "number"
+      "type": "number",
+      "minimum": 2
     },
     "language": {
       "type": "string",

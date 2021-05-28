@@ -69,7 +69,7 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync", async () => {
-    const ws = wsc.get("/function/logs");
+    const ws = wsc.get("/function-logs");
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -82,7 +82,7 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync with filter", async () => {
-    const ws = wsc.get(url(`/function/logs?functions=${fn1}`));
+    const ws = wsc.get(url(`/function-logs?functions=${fn1}`));
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -94,7 +94,7 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync with filter array", async () => {
-    const ws = wsc.get(url(`/function/logs?functions=${fn1}&functions=${fn2}`));
+    const ws = wsc.get(url(`/function-logs?functions=${fn1}&functions=${fn2}`));
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -107,7 +107,7 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync with limit", async () => {
-    const ws = wsc.get(url(`/function/logs`, {limit: 1}));
+    const ws = wsc.get(url(`/function-logs`, {limit: 1}));
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -119,7 +119,7 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync with skip", async () => {
-    const ws = wsc.get(url("/function/logs", {skip: 1}));
+    const ws = wsc.get(url("/function-logs", {skip: 1}));
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -139,7 +139,7 @@ describe("Realtime", () => {
         content: "content"
       })
       .then(r => r.ops.map(({_id, ...rest}) => ({_id: _id.toString(), ...rest})));
-    const ws = wsc.get(url("/function/logs", {skip: 1, limit: 2}));
+    const ws = wsc.get(url("/function-logs", {skip: 1, limit: 2}));
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -152,7 +152,7 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync with sort", async () => {
-    const ws = wsc.get(url("/function/logs", {sort: {_id: -1}}));
+    const ws = wsc.get(url("/function-logs", {sort: {_id: -1}}));
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -176,7 +176,7 @@ describe("Realtime", () => {
       })
       .then(r => r.ops.map(({_id, ...rest}) => ({_id: _id.toString(), ...rest})));
     const ws = wsc.get(
-      url("/function/logs", {
+      url("/function-logs", {
         begin: new Date(tomorrow.setUTCHours(0, 0, 0, 0)).toISOString(),
         end: new Date(tomorrow.setUTCHours(23, 59, 59, 999)).toISOString()
       })

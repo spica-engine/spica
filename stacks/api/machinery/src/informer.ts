@@ -42,12 +42,14 @@ export function inform<T>(options: InformAdd<T> | InformUpdate<T> | InformDelete
           `bail: informer has reached the exponetial back-off limit ${MAX_RETRY} for event ${options.type} on ${options.groupResource.group} ${options.groupResource.resource}`
         );
       }
+
       console.log(err);
       console.debug(
         `retrying (${retry}) the event ${options.type} on ${options.groupResource.group} ${options.groupResource.resource}`
       );
+
       await new Promise(resolve => setTimeout(resolve, retry * 1000));
-      await process(func, retry++);
+      await process(func, retry + 1);
     }
   };
 

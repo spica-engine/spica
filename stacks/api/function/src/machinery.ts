@@ -14,36 +14,71 @@ async function v1_trigger_to_internal(object: any) {
   const triggerRaw: Trigger = {
     active: true,
     type: object.spec.type,
-    batch: object.spec.batch,
     options: {}
   };
 
-  if (object.spec.type == "http") {
-    triggerRaw.options = object.spec.httpOptions;
-  } else if (object.spec.type == "bucket") {
-    const bkt = object.spec.bucketOptions.bucket;
+  if (object.spec.batch) {
+    triggerRaw.batch = object.spec.batch;
+  }
 
-    const bucket = await bucketStore.get(bkt.resourceFieldRef.schemaName);
+  switch (object.spec.type) {
+    case "http":
+      triggerRaw.options = object.spec.httpOptions;
+      break;
 
-    triggerRaw.options = {
-      type: object.spec.bucketOptions.type
-    };
+    case "bucket":
+      const bkt = object.spec.bucketOptions.bucket;
 
-    // TODO: think about a better way to handle this
-    if (!bucket) {
-      triggerRaw.active = false;
-    } else {
-      triggerRaw.options["bucket"] = bucket.metadata.uid;
-    }
-  } else if (object.spec.type == "firehose") {
-    triggerRaw.options = object.spec.firehoseOptions;
-  } else if (object.spec.type == "schedule") {
-    triggerRaw.options = {
-      frequency: object.spec.scheduleOptions.cronSpec,
-      timezone: object.spec.scheduleOptions.timezone
-    };
-  } else if (object.spec.type == "system") {
-    triggerRaw.options = object.spec.systemOptions;
+      const bucket = await bucketStore.get(bkt.resourceFieldRef.schemaName);
+
+      triggerRaw.options = {
+        type: object.spec.bucketOptions.type
+      };
+
+      // TODO: think about a better way to handle this
+      if (!bucket) {
+        triggerRaw.active = false;
+      } else {
+        triggerRaw.options["bucket"] = bucket.metadata.uid;
+      }
+
+      break;
+
+    case "firehose":
+      triggerRaw.options = object.spec.firehoseOptions;
+      break;
+
+    case "schedule":
+      triggerRaw.options = {
+        frequency: object.spec.scheduleOptions.cronSpec,
+        timezone: object.spec.scheduleOptions.timezone
+      };
+      break;
+
+    case "system":
+      triggerRaw.options = object.spec.systemOptions;
+      break;
+
+    case "database":
+      const options = object.spec.databaseOptions;
+
+      triggerRaw.options = {
+        type: options.type
+      };
+
+      if (typeof options.collection == "string") {
+        triggerRaw.options["collection"] = options.collection;
+      } else if (typeof options.collection == "object") {
+        const bucket = await bucketStore.get(options.collection.resourceFieldRef.schemaName);
+
+        if (!bucket) {
+          triggerRaw.active = false;
+        } else {
+          triggerRaw.options["collection"] = `bucket_${bucket.metadata.uid}`;
+        }
+      }
+
+      break;
   }
 
   return triggerRaw;

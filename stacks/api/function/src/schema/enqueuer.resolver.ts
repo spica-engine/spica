@@ -57,11 +57,11 @@ export function generate({body}: {body: Function}) {
                     properties: {
                       limit: {
                         type: "number",
-                        minimum: 1
+                        default: Number.MAX_SAFE_INTEGER
                       },
                       deadline: {
                         type: "number",
-                        minimum: 1
+                        default: Number.MAX_SAFE_INTEGER
                       }
                     }
                   },
