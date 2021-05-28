@@ -300,6 +300,43 @@ Function 'macro' arg[2] must be property access chain.`
 
           expect(result).toEqual(false);
         });
+
+        describe("nested arrays", () => {
+          const target = parser.parse("document.tags");
+          const compare = parser.parse("[['nodejs','express'],['angular']]");
+
+          const context: any = {
+            arguments: [target, compare],
+            target: "default"
+          };
+
+          const someFn = some(context);
+
+          it("should return true", () => {
+            const request = {
+              document: {
+                tags: [["nodejs", "express"], ["firebase"]]
+              }
+            };
+
+            const result = someFn(request);
+
+            expect(result).toEqual(true);
+          });
+
+          it("should return false", () => {
+            const request = {
+              document: {
+                // it should contain exact ['nodejs','express'] or ['angular']
+                tags: [["nodejs", "express", "angular"]]
+              }
+            };
+
+            const result = someFn(request);
+
+            expect(result).toEqual(false);
+          });
+        });
       });
 
       describe("convert", () => {
@@ -387,6 +424,43 @@ Function 'macro' arg[2] must be property access chain.`
 
           expect(result).toEqual(false);
         });
+
+        describe("nested arrays", () => {
+          const target = parser.parse("document.tags");
+          const compare = parser.parse("[['nodejs','express'],['angular']]");
+
+          const context: any = {
+            arguments: [target, compare],
+            target: "default"
+          };
+
+          const everyFn = every(context);
+
+          it("should return true", () => {
+            const request = {
+              document: {
+                tags: [["nodejs", "express"], ["angular"], ["docker"]]
+              }
+            };
+
+            const result = everyFn(request);
+
+            expect(result).toEqual(true);
+          });
+
+          it("should return false", () => {
+            const request = {
+              document: {
+                // it does not contain exact ['angular']
+                tags: [["nodejs", "express", "angular"]]
+              }
+            };
+
+            const result = everyFn(request);
+
+            expect(result).toEqual(false);
+          });
+        });
       });
 
       describe("convert", () => {
@@ -473,6 +547,44 @@ Function 'macro' arg[2] must be property access chain.`
           const result = equalFn(request);
 
           expect(result).toEqual(false);
+        });
+
+        describe("nested arrays", () => {
+          const target = parser.parse("document.tags");
+          const compare = parser.parse("[['nodejs','express'],['angular']]");
+
+          const context: any = {
+            arguments: [target, compare],
+            target: "default"
+          };
+
+          const equalFn = equal(context);
+
+          it("should return true", () => {
+            const request = {
+              document: {
+                // order of items is not necessary
+                tags: [["angular"], ["nodejs", "express"]]
+              }
+            };
+
+            const result = equalFn(request);
+
+            expect(result).toEqual(true);
+          });
+
+          it("should return false", () => {
+            const request = {
+              document: {
+                // it has extra item ['docker']
+                tags: [["nodejs", "express"], ["angular"], ["docker"]]
+              }
+            };
+
+            const result = equalFn(request);
+
+            expect(result).toEqual(false);
+          });
         });
       });
 

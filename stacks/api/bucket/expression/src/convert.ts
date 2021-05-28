@@ -2,17 +2,25 @@ import {getMostLeftSelectIdentifier} from "./ast";
 import {compile} from "./compile";
 import * as func from "./func";
 
+function visitArgFns(fns: any[], ctx) {
+  const finalResult = [];
+  for (const fn of fns) {
+    if (Array.isArray(fn)) {
+      const extractedFn = visitArgFns(fn, ctx);
+      finalResult.push(extractedFn);
+      continue;
+    }
+
+    const result = fn(ctx);
+    finalResult.push(result);
+  }
+  return finalResult;
+}
+
 function visit(node) {
   if (Array.isArray(node)) {
-    const fns = visitItems(node);
-    return ctx => {
-      const results = [];
-      for (const fn of fns) {
-        const result = fn(ctx);
-        results.push(result);
-      }
-      return results;
-    };
+    const fns = visitArgs(node);
+    return ctx => visitArgFns(fns, ctx);
   }
   switch (node.kind) {
     case "operator":
@@ -34,12 +42,12 @@ function visit(node) {
   }
 }
 
-function visitItems(args: any[]): any[] {
+function visitArgs(args: any[]): any[] {
   const finalResult = [];
   for (const arg of args) {
     if (Array.isArray(arg)) {
-      const extracteds = visitItems(arg);
-      finalResult.push(...extracteds);
+      const extracteds = visitArgs(arg);
+      finalResult.push(extracteds);
       continue;
     }
 
