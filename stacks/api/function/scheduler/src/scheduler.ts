@@ -121,16 +121,14 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   batching = new Map<string, Batch>();
 
-  timeouts = new Map<string, NodeJS.Timeout[]>();
+  timeouts = new Map<string, NodeJS.Timeout>();
 
   getBatchForTarget(target: event.Target) {
     for (const batch of this.batching.values()) {
       if (
         batch.target == target.id &&
         batch.remaining_enqueues[target.handler] != 0 &&
-        (!batch.last_enqueued_at[target.handler] ||
-          Date.now() - batch.last_enqueued_at[target.handler] <
-            target.context.batch.deadline * 1000)
+        Date.now() < batch.deadline
       ) {
         return batch;
       }
@@ -219,26 +217,17 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       const timeoutInSeconds = Math.min(this.options.timeout, event.target.context.timeout);
 
       if (!this.timeouts.has(workerId)) {
-        const beforeAbortedSeconds = timeoutInSeconds - 1;
-
-        const beforeAborted = setTimeout(() => {
-          console.debug(`worker ${workerId} is about to be shutted down.`);
-
-          if (this.batching.has(workerId)) {
-            this.batching.delete(workerId);
-          }
-        }, beforeAbortedSeconds * 1000);
-
-        const aborting = setTimeout(() => {
-          if (stderr.writable) {
-            stderr.write(
-              `Function (${event.target.handler}) did not finish within ${timeoutInSeconds} seconds. Aborting.`
-            );
-          }
-          worker.kill();
-        }, timeoutInSeconds * 1000);
-
-        this.timeouts.set(workerId, [beforeAborted, aborting]);
+        this.timeouts.set(
+          workerId,
+          setTimeout(() => {
+            if (stderr.writable) {
+              stderr.write(
+                `Function (${event.target.handler}) did not finish within ${timeoutInSeconds} seconds. Aborting.`
+              );
+            }
+            worker.kill();
+          }, timeoutInSeconds * 1000)
+        );
       }
 
       schedule(event);
@@ -286,6 +275,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.pool.delete(id);
     this.workers.delete(id);
     this.batching.delete(id);
+
+    clearTimeout(this.timeouts.get(id));
+    this.timeouts.delete(id);
 
     if (process.env.TEST_TARGET) {
       return console.log(`lost a worker ${id} and skipping auto spawn under testing`);

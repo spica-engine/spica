@@ -4,7 +4,6 @@ import {mongodb, _mongodb} from "./mongo";
 import {ObjectId} from "./objectid";
 
 let connection: _mongodb.MongoClient = globalThis[Symbol.for("kDatabaseDevkitConn")];
-let closeProcess;
 
 function checkEnvironment() {
   if (!process.env.RUNTIME) {
@@ -54,18 +53,6 @@ export async function database(): Promise<_mongodb.Db> {
         `Set NO_DEVKIT_DATABASE_WARNING environment variable to ignore this warning.`,
       "FootgunWarning"
     );
-  }
-
-  if (!closeProcess) {
-    closeProcess = setTimeout(() => {
-      close()
-        .then(
-          () =>
-            "DEBUG_DEVKIT_DATABASE" in process.env &&
-            process.emitWarning("Db connection has been closed due to timeout is reached", "Info")
-        )
-        .catch(e => "DEBUG_DEVKIT_DATABASE" in process.env && process.emitWarning(e, "Error"));
-    }, parseInt(process.env.TIMEOUT) * 1000 - 1000);
   }
 
   const db = connection.db(process.env.__INTERNAL__SPICA__MONGODBNAME__);
