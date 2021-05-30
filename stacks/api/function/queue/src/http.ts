@@ -74,7 +74,6 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
       callback({code: 1}, undefined);
     } else {
       const serverResponse = this.streamMap.get(call.request.id);
-      this.queue.delete(call.request.id);
       if (call.request.data) {
         serverResponse.end(Buffer.from(call.request.data), call.request.encoding, () => {
           callback(undefined, new Http.End.Result());
@@ -82,6 +81,7 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
       } else {
         serverResponse.end(() => callback(undefined, new Http.End.Result()));
       }
+      this.dequeue(call.request.id);
     }
   }
 

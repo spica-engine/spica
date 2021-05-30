@@ -200,7 +200,7 @@
               thumbLabel
               [displayWith]="formatTimeout"
               tickInterval="auto"
-              min="2"
+              min="1"
               [max]="timeout"
               [ngModel]="function.timeout || timeout"
               (ngModelChange)="function.timeout = $event"
@@ -448,7 +448,9 @@
                 [matAwareDialog]="{
                   title: 'IMPORTANT CONFIRMATION! PLEASE READ CAREFULLY',
                   templateOrDescription:
-                    'By default, each process is running on the fresh workers parallelly. You can enable batching to run multiple processes in the same worker. This action will share memory in each process but keep in mind that will may cause to long process queue.',
+                    'You can enable batching to run multiple process in the same worker. This action will
+                  share memory in each process. To enable batching, you have to set \'Deadline\' (seconds
+                  to wait after first execution). Once batch deadline expired, next process will be run on the new worker.',
                   answer: '',
                   noAnswer: true
                 }"
@@ -459,6 +461,19 @@
                 labelPosition="before"
                 >Batching
               </mat-slide-toggle>
+              <mat-form-field *ngIf="batching">
+                <mat-label>Deadline (s)</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  placeholder="Deadline"
+                  #nameModel="ngModel"
+                  [min]="batching ? 1 : 0"
+                  [(ngModel)]="batchingDeadline"
+                  name="deadline"
+                  [required]="batching"
+                />
+              </mat-form-field>
             </div>
           </mat-list-item>
         </div>
