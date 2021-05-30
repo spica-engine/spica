@@ -261,9 +261,6 @@ describe("Scheduler", () => {
       schedule: scheduler.workers.get(worker1Id),
       workerId: worker1Id,
       deadline: now.getTime() + 10 * 1000,
-      last_enqueued_at: {
-        default: now.getTime()
-      },
       remaining_enqueues: {
         default: 1
       },
