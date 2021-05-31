@@ -1,9 +1,15 @@
 <mat-toolbar>
-  <h4 class="mat-h4">
-    <mat-icon>bug_report</mat-icon>
-    <span>Function Logs</span>
-  </h4>
-  <div>
+  <div class="left">
+    <h4 class="mat-h4">
+      <mat-icon>bug_report</mat-icon>
+      <span>Function Logs</span>
+    </h4>
+  </div>
+  <div class="right">
+    <button mat-button (click)="resetScroll(); refresh.next()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
     <button mat-button canInteract="function:logs:delete" (click)="clearLogs()">
       <mat-icon>clear_all</mat-icon>
       Clear

@@ -2,16 +2,8 @@
   mat-toolbar {
     min-height: 250px;
     padding: 0 30px;
-    align-items: flex-start;
-    flex-direction: column;
-    h4 > * {
-      margin-left: 5px;
-      vertical-align: middle;
-    }
-    div:last-of-type {
-      align-self: flex-end;
-      margin-top: 60px;
-    }
+    display: flex !important;
+    justify-content: space-between !important;
   }
 
   .log-viewport {
