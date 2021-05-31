@@ -1,5 +1,10 @@
+## v0.9.1 (2021-05-30)
+
+
+
 ## v0.8.9 (2021-05-30)
 
+* docs: update changelog for v0.8.9 ([a66a17ac7](https://github.com/spica-engine/spica/commit/a66a17ac7))
 * perf(function): memory leak, batch options refactoring ([72280562f](https://github.com/spica-engine/spica/commit/72280562f))
 * fix(bucket): do not display placeholder if property title was not provided ([bce88679b](https://github.com/spica-engine/spica/commit/bce88679b))
 * fix(bucket): some fixes for inline editing ([a4f59e192](https://github.com/spica-engine/spica/commit/a4f59e192))
