@@ -1,6 +1,10 @@
-## v0.9.1 (2021-05-30)
+## v0.9.2 (2021-06-04)
 
+* fix(bucket): remove stream if it has no listener on realtime ([8fbfc0e96](https://github.com/spica-engine/spica/commit/8fbfc0e96))
 
+## v0.9.1 (2021-05-31)
+
+* docs: update changelog for v0.9.1 ([191274da0](https://github.com/spica-engine/spica/commit/191274da0))
 
 ## v0.8.9 (2021-05-30)
 
