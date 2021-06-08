@@ -1,18 +1,8 @@
 import {CdkVirtualScrollViewport} from "@angular/cdk/scrolling";
 import {Component, OnInit, Input, ViewChild, AfterViewInit, OnDestroy} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {
-  Observable,
-  forkJoin,
-  BehaviorSubject,
-  combineLatest,
-  zip,
-  iif,
-  Subject,
-  merge,
-  of
-} from "rxjs";
-import {switchMap, tap, map, flatMap, takeUntil} from "rxjs/operators";
+import {Observable, forkJoin, BehaviorSubject, combineLatest, zip, Subject, of} from "rxjs";
+import {switchMap, tap, map, flatMap, takeUntil, filter} from "rxjs/operators";
 import {Function, Log} from "../../../function/interface";
 import {FunctionService} from "../../services/function.service";
 
@@ -34,9 +24,9 @@ export class LogViewComponent implements OnInit, OnDestroy {
 
   logs$: Observable<Log[]>;
 
-  logPerReq = 40;
+  readonly logPerReq = 40;
 
-  itemSize = 26;
+  readonly itemSize = 25;
 
   skip = 0;
 
@@ -46,7 +36,10 @@ export class LogViewComponent implements OnInit, OnDestroy {
 
   bufferSize = 750;
 
+  readonly filtersHeight = 80;
+
   @Input() functionId$: BehaviorSubject<string> = new BehaviorSubject(undefined);
+  @Input() height$: Subject<number>;
 
   @ViewChild(CdkVirtualScrollViewport)
   viewport: CdkVirtualScrollViewport;
@@ -64,9 +57,14 @@ export class LogViewComponent implements OnInit, OnDestroy {
   }
 
   onScroll(itemIndex: number) {
-    const displayableItemLength = this.viewport.getViewportSize() / this.itemSize;
+    const viewportHeight = document
+      .getElementsByClassName("log-viewport")[0]
+      .getBoundingClientRect().height;
 
-    if (itemIndex >= (this.pageIndex + 1) * this.logPerReq - displayableItemLength) {
+    const displayableItemLength = viewportHeight / this.itemSize;
+    const scrollThreshold = (this.pageIndex + 1) * this.logPerReq - displayableItemLength;
+
+    if (itemIndex >= scrollThreshold) {
       this.pageIndex++;
       this.skip = this.pageIndex * this.logPerReq;
       this.refresh.next(undefined);
@@ -74,10 +72,22 @@ export class LogViewComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    if (this.height$) {
+      this.height$.pipe(takeUntil(this.dispose)).subscribe(height => {
+        const el = document.getElementsByClassName("log-viewport")[0];
+        const desiredHeight = height - this.filtersHeight;
+        if (el) {
+          el.setAttribute("style", `height: ${desiredHeight}px`);
+        }
+      });
+    }
+
     this.queryParams = combineLatest(this.functionId$, this.route.queryParams).pipe(
       takeUntil(this.dispose),
       map(([functionId, filter]) => {
         filter = {...filter};
+
+        this.resetScroll();
 
         if (filter.showErrors) {
           filter.showErrors = JSON.parse(filter.showErrors);
@@ -117,20 +127,22 @@ export class LogViewComponent implements OnInit, OnDestroy {
     this.logs$ = combineLatest(this.queryParams, this.refresh).pipe(
       takeUntil(this.dispose),
       tap(() => (this.isPending = true)),
-      switchMap(([filter]) =>
+      switchMap(([_filter]) =>
         this.fs
           .getLogs({
-            ...filter,
-            ...(!filter.realtime ? {limit: this.logPerReq, skip: this.skip} : {})
+            ..._filter,
+            ...(!_filter.realtime ? {limit: this.logPerReq, skip: this.skip} : {})
           })
           .pipe(
+            // realtime sends undefined logs if functions creates logs so frequently
+            map(logs => logs.filter(log => !!log)),
             map(logs => {
               return {
                 logs:
-                  !filter.showErrors && filter.realtime
+                  !_filter.showErrors && _filter.realtime
                     ? logs.filter(log => log.channel != "stderr")
                     : logs,
-                filter
+                filter: _filter
               };
             })
           )
