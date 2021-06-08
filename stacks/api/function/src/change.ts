@@ -61,7 +61,7 @@ export function createTargetChanges(fn: Function, changeKind: ChangeKind): Targe
   const changes: TargetChange[] = [];
   for (const [handler, trigger] of Object.entries(fn.triggers)) {
     const change: TargetChange = {
-      kind: changeKind,
+      kind: trigger.active ? changeKind : ChangeKind.Removed,
       options: trigger.options,
       type: trigger.type,
       target: {
