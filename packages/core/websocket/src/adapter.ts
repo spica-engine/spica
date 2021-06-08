@@ -33,9 +33,10 @@ export class WsAdapter extends BaseAdapter {
         const url = new URL(request.url, "http://insteadof");
         if (pathtoregexp(path).test(url.pathname)) {
           matched = true;
-          server.handleUpgrade(request, socket, head, (ws: any) =>
-            server.emit("connection", ws, request)
-          );
+          server.handleUpgrade(request, socket, head, (ws: any) => {
+            ws.upgradeReq = request;
+            server.emit("connection", ws, request);
+          });
           break;
         }
       }
