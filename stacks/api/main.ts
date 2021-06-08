@@ -409,7 +409,7 @@ if (args["cert-file"] && args["key-file"]) {
 NestFactory.create(RootModule, {
   httpsOptions,
   bodyParser: false,
-  logger: true
+  logger: false
 })
   .then(app => {
     app.useWebSocketAdapter(new WsAdapter(app));
