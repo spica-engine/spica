@@ -117,7 +117,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   workers = new Map<string, (event: event.Event) => void>();
 
   eventQueue = new Map<string, event.Event>();
-  processingQueue = new Map<string, event.Event>();
 
   batching = new Map<string, Batch>();
 
@@ -233,7 +232,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       schedule(event);
 
       this.eventQueue.delete(event.id);
-      this.processingQueue.set(event.id, event);
 
       console.debug(`assigning ${event.id} to ${workerId}`);
     }
@@ -253,9 +251,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     console.debug(
       `an event has been completed ${id} with status ${succedded ? "success" : "fail"}`
     );
-    this.processingQueue.delete(id);
-    // async processes keep workers alive even it exceeds timeout
-    //clearTimeout(this.timeouts.get(id));
   }
 
   gotWorker(id: string, schedule: (event: event.Event) => void) {
