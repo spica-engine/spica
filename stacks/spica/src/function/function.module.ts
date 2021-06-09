@@ -30,6 +30,7 @@ import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
 import {provideActivityFactory} from "@spica-client/function/providers/activity";
 import {provideWsInterceptor} from "@spica-client/function/providers/websocket";
+import {provideBaseurlInterceptor} from "@spica-client/function/providers/url";
 import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
 import {PassportService} from "@spica-client/passport";
 import {PassportModule} from "../passport/passport.module";
@@ -37,7 +38,12 @@ import {LanguageDirective} from "./directives/dynamic.language";
 import {FunctionRoutingModule} from "./function-routing.module";
 import {FunctionInitializer} from "./function.initializer";
 import {FunctionService} from "./services/function.service";
-import {FunctionOptions, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "./interface";
+import {
+  BASEURL_INTERCEPTOR,
+  FunctionOptions,
+  FUNCTION_OPTIONS,
+  WEBSOCKET_INTERCEPTOR
+} from "./interface";
 import {AddComponent} from "./pages/add/add.component";
 import {ExampleComponent} from "@spica-client/common/example";
 import {IndexComponent} from "./pages/index/index.component";
@@ -106,9 +112,14 @@ export class FunctionModule {
       providers: [
         {provide: FUNCTION_OPTIONS, useValue: options},
         {
+          provide: BASEURL_INTERCEPTOR,
+          useFactory: provideBaseurlInterceptor,
+          deps: [FUNCTION_OPTIONS]
+        },
+        {
           provide: WEBSOCKET_INTERCEPTOR,
           useFactory: provideWsInterceptor,
-          deps: [FUNCTION_OPTIONS]
+          deps: [BASEURL_INTERCEPTOR]
         },
         {
           provide: FunctionInitializer,

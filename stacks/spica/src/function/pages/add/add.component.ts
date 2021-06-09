@@ -7,7 +7,8 @@ import {
   ViewChild,
   Renderer2,
   ChangeDetectorRef,
-  RendererStyleFlags2
+  RendererStyleFlags2,
+  Inject
 } from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {SavingState} from "@spica-client/material";
@@ -30,6 +31,7 @@ import {
 } from "rxjs/operators";
 import {FunctionService} from "../../services/function.service";
 import {
+  BASEURL_INTERCEPTOR,
   denormalizeFunction,
   emptyFunction,
   emptyTrigger,
@@ -297,7 +299,8 @@ export class AddComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     public renderer: Renderer2,
     public changeDetector: ChangeDetectorRef,
-    private github: GithubService
+    private github: GithubService,
+    @Inject(BASEURL_INTERCEPTOR) private baseUrl: string
   ) {
     this.information = this.functionService.information().pipe(
       share(),

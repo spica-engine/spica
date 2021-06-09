@@ -8,6 +8,7 @@ export interface FunctionOptions {
 
 export const FUNCTION_OPTIONS = new InjectionToken<FunctionOptions>("FUNCTION_OPTIONS");
 export const WEBSOCKET_INTERCEPTOR = new InjectionToken<FunctionOptions>("WEBSOCKET_INTERCEPTOR");
+export const BASEURL_INTERCEPTOR = new InjectionToken<FunctionOptions>("BASEURL_INTERCEPTOR");
 
 export interface FunctionDescription {
   _id?: string;

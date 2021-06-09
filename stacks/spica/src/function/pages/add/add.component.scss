@@ -286,6 +286,14 @@
           }
         }
       }
+
+      .http-url {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        font-size: 12px;
+        margin-top: 30px;
+      }
     }
 
     .trigger-explanation {
