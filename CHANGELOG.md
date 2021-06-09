@@ -1,5 +1,12 @@
+## v0.9.3 (2021-06-09)
+
+* fix(function): some fixes for scheduler ([8e78ed063](https://github.com/spica-engine/spica/commit/8e78ed063))
+* feat(function): add the seconds field to scheduler trigger ([e1b7bd78e](https://github.com/spica-engine/spica/commit/e1b7bd78e))
+* fix(function): http trigger will return response for failed processes ([31bead3b2](https://github.com/spica-engine/spica/commit/31bead3b2))
+
 ## v0.9.2 (2021-06-04)
 
+* docs: update changelog for v0.9.2 ([02d162ef1](https://github.com/spica-engine/spica/commit/02d162ef1))
 * fix(bucket): remove stream if it has no listener on realtime ([8fbfc0e96](https://github.com/spica-engine/spica/commit/8fbfc0e96))
 
 ## v0.9.1 (2021-05-31)
