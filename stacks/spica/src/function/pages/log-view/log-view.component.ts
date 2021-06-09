@@ -62,9 +62,9 @@ export class LogViewComponent implements OnInit, OnDestroy {
       .getBoundingClientRect().height;
 
     const displayableItemLength = viewportHeight / this.itemSize;
-    const scrollThreshold = (this.pageIndex + 1) * this.logPerReq - displayableItemLength;
+    const threshold = (this.pageIndex + 1) * this.logPerReq - displayableItemLength;
 
-    if (itemIndex >= scrollThreshold) {
+    if (itemIndex >= threshold) {
       this.pageIndex++;
       this.skip = this.pageIndex * this.logPerReq;
       this.refresh.next(undefined);

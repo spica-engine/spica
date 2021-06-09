@@ -623,23 +623,31 @@ export class AddComponent implements OnInit, OnDestroy {
   logViewHeight$: Subject<number> = new Subject();
 
   readonly logViewLabelHeight = 42;
-  readonly logViewExpandedHeight = 410;
+  readonly logViewDefaultExpandedHeight = 410;
 
   onMouseMove(event: MouseEvent) {
     if (!this.isResizing) {
       return;
     }
 
-    const el = document.getElementsByClassName("footer-bar")[0];
-    const desiredHeight = window.innerHeight - event.clientY - 5;
+    const logview = document.getElementsByClassName("footer-bar")[0];
+    const resizeCursor = document.getElementsByClassName("resize-cursor")[0];
 
-    el.setAttribute("style", `height: ${desiredHeight}px !important`);
+    const desiredHeight =
+      window.innerHeight - event.clientY - resizeCursor.getBoundingClientRect().height / 2;
 
-    if (desiredHeight <= this.logViewLabelHeight) {
-      if (this.enableLogView) {
-        this.onMouseUp();
-      }
+    logview.setAttribute("style", `height: ${desiredHeight}px !important`);
+
+    // hide logview
+    // 1px is for preventing the conflict between expand and hide moves
+    if (this.enableLogView && desiredHeight <= this.logViewLabelHeight - 1) {
       this.onLogViewSelectionChange();
+      this.onMouseUp();
+      return;
+    }
+    // expand logview
+    else if (!this.enableLogView && desiredHeight >= this.logViewLabelHeight) {
+      this.onLogViewSelectionChange(desiredHeight);
       return;
     }
 
@@ -654,7 +662,7 @@ export class AddComponent implements OnInit, OnDestroy {
     this.isResizing = false;
   }
 
-  onLogViewSelectionChange() {
+  onLogViewSelectionChange(height?: number) {
     this.enableLogView = !this.enableLogView;
 
     const el = document.getElementsByClassName("footer-bar")[0] as HTMLElement;
@@ -663,8 +671,9 @@ export class AddComponent implements OnInit, OnDestroy {
       el.setAttribute("style", `height:${this.logViewLabelHeight}px !important`);
       this.logViewHeight$.next(0);
     } else {
-      el.setAttribute("style", `height: ${this.logViewExpandedHeight}px !important`);
-      this.logViewHeight$.next(this.logViewExpandedHeight - this.logViewLabelHeight);
+      height = height || this.logViewDefaultExpandedHeight;
+      el.setAttribute("style", `height: ${height}px !important`);
+      this.logViewHeight$.next(height - this.logViewLabelHeight);
     }
   }
 
