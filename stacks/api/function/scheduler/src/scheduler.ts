@@ -117,7 +117,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   workers = new Map<string, (event: event.Event) => void>();
 
   eventQueue = new Map<string, event.Event>();
-  processingQueue = new Map<string, event.Event>();
 
   batching = new Map<string, Batch>();
 
@@ -143,8 +142,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         Date.now() > batch.deadline ||
         Object.values(batch.remaining_enqueues).every(n => n == 0)
       ) {
-        batch.schedule(undefined);
-        console.log("removing dead batch " + workerId);
+        if (batch.schedule) {
+          batch.schedule(undefined);
+          console.log("removing dead batch " + workerId);
+        }
       }
     }
   }
@@ -188,7 +189,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
           batch = createBatch(event.target, worker.workerId, worker.schedule);
           this.batching.set(batch.workerId, batch);
         } else if (!batch.schedule) {
-          break;
+          continue;
         }
 
         workerId = batch.workerId;
@@ -233,7 +234,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       schedule(event);
 
       this.eventQueue.delete(event.id);
-      this.processingQueue.set(event.id, event);
 
       console.debug(`assigning ${event.id} to ${workerId}`);
     }
@@ -247,15 +247,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   cancel(id) {
     console.debug(`an event got cancelled ${id}`);
     this.eventQueue.delete(id);
-    this.complete(id, false);
   }
   complete(id: string, succedded: boolean) {
     console.debug(
       `an event has been completed ${id} with status ${succedded ? "success" : "fail"}`
     );
-    this.processingQueue.delete(id);
-    // async processes keep workers alive even it exceeds timeout
-    //clearTimeout(this.timeouts.get(id));
   }
 
   gotWorker(id: string, schedule: (event: event.Event) => void) {

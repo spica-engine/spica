@@ -35,7 +35,6 @@ class NodeWorker extends Worker {
       [
         "--experimental-modules",
         "--enable-source-maps",
-        "--unhandled-rejections=strict",
         "--es-module-specifier-resolution=node",
         `--experimental-loader=${path.join(__dirname, "runtime", "entrypoint", "bootstrap")}`
       ],
