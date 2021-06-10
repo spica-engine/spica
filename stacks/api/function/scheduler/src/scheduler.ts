@@ -247,7 +247,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   cancel(id) {
     console.debug(`an event got cancelled ${id}`);
     this.eventQueue.delete(id);
-    this.complete(id, false);
   }
   complete(id: string, succedded: boolean) {
     console.debug(
