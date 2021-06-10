@@ -59,7 +59,7 @@ const args = yargs
     "bucket-cache": {
       boolean: true,
       description: "It will reduce bucket-data response time significantly when enabled.",
-      default: true
+      default: false
     },
     "bucket-cache-ttl": {
       number: true,

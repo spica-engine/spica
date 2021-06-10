@@ -460,6 +460,34 @@ describe("Entrypoint", () => {
       expect(serverResponse.end).toHaveBeenCalledTimes(1);
     });
 
+    it("should send response for handler which contains unhandled promise rejection", async () => {
+      await initializeFn(`export default function(req, res) {
+        return Promise.reject("FAILED")
+      }`);
+
+      const ev = new event.Event({
+        type: event.Type.HTTP,
+        target: new event.Target({
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
+      queue.enqueue(ev);
+
+      const serverResponse = {
+        writeHead: jasmine.createSpy("writeHead"),
+        end: jasmine.createSpy("end").and.callFake((_, __, callback) => callback())
+      };
+      httpQueue.enqueue(ev.id, new Http.Request(), serverResponse as any);
+
+      await spawn();
+      expect(serverResponse.end).toHaveBeenCalledTimes(1);
+    });
+
     it("should send the response from the returned value", async () => {
       await initializeFn(`export default function(req, res) {
         return {worksViaReturn: true};

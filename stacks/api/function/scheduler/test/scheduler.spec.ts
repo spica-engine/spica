@@ -218,25 +218,6 @@ describe("Scheduler", () => {
     expect(write).not.toHaveBeenCalled();
   });
 
-  it("should cancel the event and delete it from processing queue", () => {
-    const ev = new event.Event({
-      id: "custom_event",
-      target: new event.Target({
-        cwd: compilation.cwd,
-        handler: "default",
-        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
-      }),
-      type: -1
-    });
-    scheduler.enqueue(ev);
-
-    expect(scheduler["processingQueue"].get(ev.id)).toEqual(ev);
-
-    scheduler["cancel"](ev.id);
-
-    expect(scheduler["processingQueue"].has(ev.id)).toEqual(false);
-  });
-
   it("should create batch for event", () => {
     const ev = new event.Event({
       target: new event.Target({
