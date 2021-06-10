@@ -110,17 +110,20 @@ async function _process(ev, queue) {
       callback = async result => {
         if (!response.headersSent && result != undefined) {
           if (result instanceof Promise) {
-            result = await result.catch(e => {
-              const responseObj = {statusCode: 500, error: "Internal Server Error"};
+            result = await result
+            .catch(e => {
+              if (!response.headersSent) {
+                const responseObj = {statusCode: 500, error: "Internal Server Error"};
 
-              if (e) {
-                responseObj.message = e.toString();
+                if (e) {
+                  responseObj.message = e.toString();
+                }
+                response.status(500).send(responseObj);
               }
-
-              response.status(500).send(responseObj);
               return Promise.reject(e);
             });
           }
+
           if (result != undefined && !response.headersSent) {
             return response.send(result);
           }
