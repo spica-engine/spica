@@ -1,5 +1,12 @@
+## v0.9.4 (2021-06-10)
+
+* fix(function): refresh button for logs ([e38823449](https://github.com/spica-engine/spica/commit/e38823449))
+* style(identity): strategy buttons style ([f5bcbe9bd](https://github.com/spica-engine/spica/commit/f5bcbe9bd))
+* fix(function): some fixes for http events ([a2f71fe59](https://github.com/spica-engine/spica/commit/a2f71fe59))
+
 ## v0.9.3 (2021-06-09)
 
+* docs: update changelog for v0.9.3 ([c7277cf7c](https://github.com/spica-engine/spica/commit/c7277cf7c))
 * fix(function): some fixes for scheduler ([8e78ed063](https://github.com/spica-engine/spica/commit/8e78ed063))
 * feat(function): add the seconds field to scheduler trigger ([e1b7bd78e](https://github.com/spica-engine/spica/commit/e1b7bd78e))
 * fix(function): http trigger will return response for failed processes ([31bead3b2](https://github.com/spica-engine/spica/commit/31bead3b2))
