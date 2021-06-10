@@ -83,7 +83,7 @@ async function _process(ev, queue) {
         if (error && "code" in error && error.code == 1) {
           error.details = `The http request "${ev.id}" handled through "${ev.target.handler}" has been cancelled by the user.`;
           console.error(error.details);
-          return Promise.reject(error.details);
+          return;
         }
         return Promise.reject(error);
       };
