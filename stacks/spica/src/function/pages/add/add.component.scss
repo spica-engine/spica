@@ -23,10 +23,13 @@
       width: 400px;
       height: calc(100vh - 64px);
       overflow: auto;
+
+      transform: translateX(0%);
+      transition: all 0.5s ease-in-out;
     }
 
     .info-hidden {
-      display: none;
+      transform: translateX(100%);
     }
 
     .code {
