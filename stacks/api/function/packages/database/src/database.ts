@@ -1,9 +1,13 @@
 import * as util from "util";
-import {checkDocument} from "./check";
+import {checkDocuments} from "./check";
 import {mongodb, _mongodb} from "./mongo";
 import {ObjectId} from "./objectid";
 
 let connection: _mongodb.MongoClient = globalThis[Symbol.for("kDatabaseDevkitConn")];
+
+function ignoreWarnings() {
+  return "NO_DEVKIT_DATABASE_WARNING" in process.env;
+}
 
 function checkEnvironment() {
   if (!process.env.RUNTIME) {
@@ -46,7 +50,7 @@ export async function database(): Promise<_mongodb.Db> {
 
   const connection = (globalThis[Symbol.for("kDatabaseDevkitConn")] = await connect());
 
-  if (!("NO_DEVKIT_DATABASE_WARNING" in process.env) && "TIMEOUT" in process.env) {
+  if (!ignoreWarnings() && "TIMEOUT" in process.env) {
     process.emitWarning(
       `As the structure of the data in the database is subject to change in any future release, we encourage you not to interact with the database directly.\n` +
         `As an alternative, we recommend you to interact with the APIs through an API Key to do the same. \n` +
@@ -74,67 +78,63 @@ export async function database(): Promise<_mongodb.Db> {
 
     const findOne = coll.findOne;
     coll.findOne = (filter, ...args) => {
-      checkDocument(filter);
+      validateDocs([filter]);
       return findOne.bind(coll)(filter, ...args);
     };
     const find = coll.find;
     coll.find = (filter, ...args) => {
-      checkDocument(filter);
+      validateDocs([filter]);
       return find.bind(coll)(filter, ...args);
     };
     const findOneAndUpdate = coll.findOneAndUpdate;
     coll.findOneAndUpdate = (filter, update, ...args) => {
-      checkDocument(filter);
-      checkDocument(update);
+      validateDocs([filter, update]);
       return findOneAndUpdate.bind(coll)(filter, update, ...args);
     };
 
     const findOneAndReplace = coll.findOneAndReplace;
     coll.findOneAndReplace = (filter, update, ...args) => {
-      checkDocument(filter);
-      checkDocument(update);
+      validateDocs([filter, update]);
       return findOneAndReplace.bind(coll)(filter, update, ...args);
     };
 
     const findOneAndDelete = coll.findOneAndDelete;
     coll.findOneAndDelete = (filter, ...args) => {
-      checkDocument(filter);
+      validateDocs([filter]);
       return findOneAndDelete.bind(coll)(filter, ...args);
     };
 
     const insertOne = coll.insertOne;
     coll.insertOne = (doc, ...args) => {
-      checkDocument(doc);
+      validateDocs([doc]);
       return insertOne.bind(coll)(doc, ...args);
     };
     const insertMany = coll.insertMany;
     coll.insertMany = (docs, ...args) => {
-      checkDocument(docs);
+      validateDocs([docs]);
       return insertMany.bind(coll)(docs, ...args);
     };
     const updateOne = coll.updateOne;
     coll.updateOne = (filter, update, ...args) => {
-      checkDocument(filter);
-      checkDocument(update);
+      validateDocs([filter, update]);
       return updateOne.bind(coll)(filter, update, ...args);
     };
 
     const updateMany = coll.updateMany;
     coll.updateMany = (filter, update, ...args) => {
-      checkDocument(filter);
-      checkDocument(update);
+      validateDocs([filter, update]);
       return updateMany.bind(coll)(filter, update, ...args);
     };
 
     const deleteOne = coll.deleteOne;
     coll.deleteOne = (filter, ...args) => {
-      checkDocument(filter);
+      validateDocs([filter]);
       return deleteOne.bind(coll)(filter, ...args);
     };
 
     const deleteMany = coll.deleteMany;
     coll.deleteMany = (filter, ...args) => {
-      checkDocument(filter);
+      validateDocs([filter]);
       return deleteMany.bind(coll)(filter, ...args);
     };
 
@@ -142,6 +142,12 @@ export async function database(): Promise<_mongodb.Db> {
   };
 
   return db;
+}
+
+function validateDocs(docs: any[]) {
+  if (!ignoreWarnings()) {
+    checkDocuments(docs);
+  }
 }
 
 export function close(force?: boolean): Promise<void> {
