@@ -109,12 +109,15 @@ export class IdentityController {
         {$unwind: {path: "$meta", preserveNullAndEmptyArrays: true}}
       );
 
-      const result = await this.identity.aggregate<PaginationResponse<Identity>>(pipeline).next();
+      const result = await this.identity
+        .aggregate<PaginationResponse<Identity>>(pipeline, {allowDiskUse: true})
+        .next();
 
       return result.data.length ? result : {meta: {total: 0}, data: []};
     }
-
-    return this.identity.aggregate<Identity>([...pipeline, ...seekingPipeline]).toArray();
+    return this.identity
+      .aggregate<Identity>([...pipeline, ...seekingPipeline], {allowDiskUse: true})
+      .toArray();
   }
   @Get("predefs")
   @UseGuards(AuthGuard())
