@@ -1,0 +1,21 @@
+h3 {
+  text-align: center;
+}
+
+div.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  div.inputs {
+    > h4 {
+      margin: 0px 0px 5px 0px;
+    }
+    mat-form-field {
+      margin-right: 5px;
+    }
+  }
+}
+
+div.content {
+  margin-top: 30px;
+}

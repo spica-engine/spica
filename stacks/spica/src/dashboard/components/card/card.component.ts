@@ -1,13 +1,14 @@
-import {Component, Input, Output, EventEmitter} from "@angular/core";
+import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
+import {DomSanitizer} from "@angular/platform-browser";
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 
 @Component({
-  selector: "dashboard-default",
-  templateUrl: "./default.component.html",
-  styleUrls: ["./default.component.scss"]
+  selector: "dashboard-card",
+  templateUrl: "./card.component.html",
+  styleUrls: ["./card.component.scss"]
 })
-export class DefaultComponent {
+export class CardComponent implements OnInit {
   @Input() componentData$: Observable<any>;
   @Input() type: string;
 
@@ -15,7 +16,7 @@ export class DefaultComponent {
 
   @Output() onUpdate: EventEmitter<object> = new EventEmitter();
 
-  constructor() {}
+  constructor(private sanitizer: DomSanitizer) {}
 
   ngOnInit() {
     this.componentData$ = this.componentData$.pipe(

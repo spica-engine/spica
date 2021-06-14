@@ -1,8 +1,8 @@
 <ng-container *ngIf="componentData$ | async; let componentData">
   <h3>{{ componentData.title }}</h3>
   <div class="header">
-    <div class="filters">
-      <h4>Filters</h4>
+    <div class="inputs">
+      <h4>Inputs</h4>
       <div>
         <ng-container *ngFor="let definition of componentData.filters">
           <span
@@ -19,18 +19,5 @@
       <mat-icon>refresh</mat-icon>
     </button>
   </div>
-  <div>
-    <canvas
-      baseChart
-      [data]="componentData.data"
-      [datasets]="componentData.datasets"
-      [labels]="componentData.label"
-      [options]="componentData.options"
-      [colors]="componentData.colors"
-      [legend]="componentData.legend"
-      [plugins]="componentData.plugins"
-      [chartType]="type"
-    >
-    </canvas>
-  </div>
+  <div class="content" [innerHTML]="sanitizer.bypassSecurityTrustHtml(componentData.data)"></div>
 </ng-container>

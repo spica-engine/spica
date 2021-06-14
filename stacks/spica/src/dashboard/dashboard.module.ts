@@ -37,6 +37,7 @@ import {DefaultComponent} from "./components/default/default.component";
 import {TableComponent} from "./components/table/table.component";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular-datetime-picker";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
+import {CardComponent} from "./components/card/card.component";
 
 @NgModule({
   imports: [
@@ -77,7 +78,8 @@ import {WelcomeComponent} from "./pages/welcome/welcome.component";
     IndexComponent,
     DefaultComponent,
     TableComponent,
-    WelcomeComponent
+    WelcomeComponent,
+    CardComponent
   ],
   providers: [
     DashboardService,
