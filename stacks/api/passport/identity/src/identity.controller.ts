@@ -83,7 +83,7 @@ export class IdentityController {
     const seekingPipeline: object[] = [];
 
     if (Object.keys(sort).length) {
-      pipeline.push({$sort: sort});
+      seekingPipeline.push({$sort: sort});
     }
 
     if (skip) {
@@ -109,15 +109,11 @@ export class IdentityController {
         {$unwind: {path: "$meta", preserveNullAndEmptyArrays: true}}
       );
 
-      const result = await this.identity
-        .aggregate<PaginationResponse<Identity>>(pipeline, {allowDiskUse: true})
-        .next();
+      const result = await this.identity.aggregate<PaginationResponse<Identity>>(pipeline).next();
 
       return result.data.length ? result : {meta: {total: 0}, data: []};
     }
-    return this.identity
-      .aggregate<Identity>([...pipeline, ...seekingPipeline], {allowDiskUse: true})
-      .toArray();
+    return this.identity.aggregate<Identity>([...pipeline, ...seekingPipeline]).toArray();
   }
   @Get("predefs")
   @UseGuards(AuthGuard())

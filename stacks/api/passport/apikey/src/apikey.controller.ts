@@ -33,14 +33,18 @@ export class ApiKeyController {
     @Query("skip", DEFAULT(0), NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: {[k: string]: number}
   ) {
-    let dataPipeline: object[] = [{$skip: skip}];
-
-    if (limit) {
-      dataPipeline.push({$limit: limit});
-    }
+    const dataPipeline: object[] = [];
 
     if (sort) {
       dataPipeline.push({$sort: sort});
+    }
+
+    if (skip) {
+      dataPipeline.push({$skip: skip});
+    }
+
+    if (limit) {
+      dataPipeline.push({$limit: limit});
     }
 
     const pipeline = [
