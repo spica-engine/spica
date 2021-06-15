@@ -1,21 +1,27 @@
-h3 {
-  text-align: center;
+mat-card-header {
+  align-items: center;
+  justify-content: center;
 }
 
-div.header {
+button.refresh {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+div.inputs {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  div.inputs {
-    > h4 {
-      margin: 0px 0px 5px 0px;
-    }
-    mat-form-field {
+  align-items: baseline;
+
+  div.placers {
+    flex: 9;
+    > span {
       margin-right: 5px;
     }
   }
-}
 
-div.content {
-  margin-top: 30px;
+  button.action {
+    flex: 1;
+  }
 }

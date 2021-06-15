@@ -1,5 +1,5 @@
+import {HttpParams} from "@angular/common/http";
 import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
-import {DomSanitizer} from "@angular/platform-browser";
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 
@@ -12,23 +12,32 @@ export class CardComponent implements OnInit {
   @Input() componentData$: Observable<any>;
   @Input() type: string;
 
-  filter = {};
+  inputs = {};
 
   @Output() onUpdate: EventEmitter<object> = new EventEmitter();
 
-  constructor(private sanitizer: DomSanitizer) {}
+  constructor() {}
 
   ngOnInit() {
     this.componentData$ = this.componentData$.pipe(
       tap(componentData => {
-        for (const f of componentData.filters) {
-          this.filter[f.key] = f.value;
+        if (componentData.inputs) {
+          for (const input of componentData.inputs) {
+            this.inputs[input.key] = input.value;
+          }
         }
       })
     );
   }
 
+  onSubmit(form, button) {
+    const params = new HttpParams({fromObject: this.inputs});
+    const url = button.target + "?" + params.toString();
+    form.action = url;
+    form.submit();
+  }
+
   refresh() {
-    this.onUpdate.next(this.filter);
+    this.onUpdate.next();
   }
 }

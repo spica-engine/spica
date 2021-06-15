@@ -1,23 +1,35 @@
 <ng-container *ngIf="componentData$ | async; let componentData">
-  <h3>{{ componentData.title }}</h3>
-  <div class="header">
+  <mat-card-header>
+    <mat-card-title>{{ componentData.title }}</mat-card-title>
+    <button class="refresh" mat-icon-button matTooltip="Refresh card" (click)="refresh()">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </mat-card-header>
+  <mat-card-content>
+    <p>{{ componentData.description }}</p>
+  </mat-card-content>
+  <form
+    #form
+    [action]="componentData.button.target"
+    [method]="componentData.button.method"
+    target="_blank"
+  >
     <div class="inputs">
-      <h4>Inputs</h4>
-      <div>
-        <ng-container *ngFor="let definition of componentData.filters">
-          <span
-            [name]="definition.key"
-            [inputPlacer]="definition"
-            [(ngModel)]="definition.value"
-            [minimal]="true"
-          >
+      <div class="placers">
+        <ng-container *ngFor="let input of componentData.inputs">
+          <span [name]="input.key" [inputPlacer]="input" [(ngModel)]="inputs[input.key]">
+            <input type="hidden" [name]="input.key" [value]="inputs[input.key]" />
           </span>
         </ng-container>
       </div>
+      <button
+        class="action"
+        [color]="componentData.button.color"
+        mat-flat-button
+        (click)="onSubmit(form, componentData.button)"
+      >
+        {{ componentData.button.title }}
+      </button>
     </div>
-    <button mat-icon-button matTooltip="Refresh data" (click)="refresh()">
-      <mat-icon>refresh</mat-icon>
-    </button>
-  </div>
-  <div class="content" [innerHTML]="sanitizer.bypassSecurityTrustHtml(componentData.data)"></div>
+  </form>
 </ng-container>
