@@ -39,9 +39,8 @@ export class ApiKeyController {
       dataPipeline.push({$sort: sort});
     }
 
-    if (skip) {
-      dataPipeline.push({$skip: skip});
-    }
+    // sub-pipeline in $facet stage cannot be empty
+    dataPipeline.push({$skip: skip});
 
     if (limit) {
       dataPipeline.push({$limit: limit});

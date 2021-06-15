@@ -86,9 +86,8 @@ export class IdentityController {
       seekingPipeline.push({$sort: sort});
     }
 
-    if (skip) {
-      seekingPipeline.push({$skip: skip});
-    }
+    // sub-pipeline in $facet stage cannot be empty
+    seekingPipeline.push({$skip: skip});
 
     if (limit) {
       seekingPipeline.push({$limit: limit});
