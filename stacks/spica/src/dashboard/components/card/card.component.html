@@ -14,22 +14,21 @@
     [method]="componentData.button.method"
     target="_blank"
   >
-    <div class="inputs">
-      <div class="placers">
-        <ng-container *ngFor="let input of componentData.inputs">
-          <span [name]="input.key" [inputPlacer]="input" [(ngModel)]="inputs[input.key]">
-            <input type="hidden" [name]="input.key" [value]="inputs[input.key]" />
-          </span>
-        </ng-container>
-      </div>
+    <mat-card-content class="inputs">
+      <ng-container *ngFor="let input of componentData.inputs">
+        <span [name]="input.key" [inputPlacer]="input" [(ngModel)]="inputs[input.key]">
+          <input type="hidden" [name]="input.key" [value]="inputs[input.key]" />
+        </span>
+      </ng-container>
+    </mat-card-content>
+    <mat-card-actions>
       <button
-        class="action"
         [color]="componentData.button.color"
         mat-flat-button
         (click)="onSubmit(form, componentData.button)"
       >
         {{ componentData.button.title }}
       </button>
-    </div>
+    </mat-card-actions>
   </form>
 </ng-container>

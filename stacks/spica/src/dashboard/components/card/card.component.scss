@@ -9,19 +9,8 @@ button.refresh {
   top: 0;
 }
 
-div.inputs {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-
-  div.placers {
-    flex: 9;
-    > span {
-      margin-right: 5px;
-    }
-  }
-
-  button.action {
-    flex: 1;
+mat-card-content.inputs{
+  > span {
+    margin-right: 5px;
   }
 }
