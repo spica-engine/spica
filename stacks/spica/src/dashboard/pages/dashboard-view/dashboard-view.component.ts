@@ -19,6 +19,8 @@ export class DashboardViewComponent {
 
   defaultTypes = ["line", "pie", "doughnut", "polarArea", "scatter", "bubble", "radar", "bar"];
 
+  customTypes = ["table", "card"];
+
   constructor(private activatedRoute: ActivatedRoute, private ds: DashboardService) {}
 
   ngOnInit() {

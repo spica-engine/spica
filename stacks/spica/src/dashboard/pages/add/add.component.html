@@ -72,8 +72,7 @@
                 required
               />
               <mat-hint>
-                Whenever custom dashboard content displayed, Spica will send a GET request to this
-                URL to fetch dataset.
+                Url address that will return the content of this component.
               </mat-hint>
               <mat-error *ngIf="urlModel.errors?.pattern">Enter a valid url.</mat-error>
             </mat-form-field>
