@@ -1,25 +1,28 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from "@angular/core/testing";
+import {of} from "rxjs";
 
-import { CardComponent } from './card.component';
+import {CardComponent} from "./card.component";
 
-describe('CardComponent', () => {
+describe("CardComponent", () => {
   let component: CardComponent;
   let fixture: ComponentFixture<CardComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ CardComponent ]
-    })
-    .compileComponents();
+      declarations: [CardComponent]
+    }).compileComponents();
   });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(CardComponent);
     component = fixture.componentInstance;
+
+    component.componentData$ = of();
+
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  fit("should create", () => {
     expect(component).toBeTruthy();
   });
 });
