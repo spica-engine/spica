@@ -1,4 +1,12 @@
-import {Component, ElementRef, Inject, ViewChild} from "@angular/core";
+import {
+  Component,
+  ElementRef,
+  Inject,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  ViewChild
+} from "@angular/core";
 import {FormControl} from "@angular/forms";
 import {MatChipInputEvent} from "@angular/material/chips";
 import {InputSchema, INPUT_SCHEMA} from "../../input";
@@ -9,31 +17,35 @@ import {COMMA, ENTER} from "@angular/cdk/keycodes";
   selector: "enum-schema",
   styleUrls: ["./enum-schema.component.scss"]
 })
-export class EnumSchemaComponent {
+export class EnumSchemaComponent implements OnChanges {
   _trackBy: (i) => any = i => i;
   enumCtrl = new FormControl();
-  selectable = true;
-  removable = true;
-  separatorKeysCodes: number[] = [ENTER, COMMA];
 
-  schemaWithoutEnum: InputSchema;
-  @ViewChild("enumInput") enumInput: ElementRef<HTMLInputElement>;
+  separatorKeyCodes: number[] = [ENTER, COMMA];
 
-  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {
-    this.schema.enum = this.schema.enum || [];
-    this.schemaWithoutEnum = {...this.schema, enum: undefined};
+  @Input("schema") _schema: InputSchema;
+
+  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {}
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes._schema) {
+      this.schema = changes._schema.currentValue;
+      this.schema.enum = this.schema.enum || [];
+    }
   }
 
   addItem(event: MatChipInputEvent) {
-    const input = event.input;
-    const value = event.value ? event.value.trim() : undefined;
+    const value = this.prepareValue(event.value);
 
-    if (value) {
-      this.schema.enum.push(value);
+    if (!this.isValidValue(value)) {
+      this.enumCtrl.setErrors({invalidType: true});
+      return;
     }
 
-    if (input) {
-      input.value = "";
+    this.schema.enum.push(value);
+
+    if (event.input) {
+      event.input.value = "";
     }
 
     this.enumCtrl.setValue(null);
@@ -43,6 +55,23 @@ export class EnumSchemaComponent {
     this.schema.enum.splice(index, 1);
     if (this.schema.enum.length < 1) {
       delete this.schema.enum;
+    }
+  }
+
+  isValidValue(value) {
+    return value != null && value != undefined;
+  }
+
+  prepareValue(value: string) {
+    value = value && value.trim().length ? value.trim() : undefined;
+
+    switch (this.schema.type) {
+      case "string":
+        return value;
+      case "number":
+        return !isNaN(parseInt(value)) ? parseInt(value) : undefined;
+      default:
+        value;
     }
   }
 }

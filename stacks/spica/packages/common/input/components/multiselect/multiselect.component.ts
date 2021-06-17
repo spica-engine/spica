@@ -16,7 +16,7 @@ export class MultiselectComponent implements ControlValueAccessor {
   _onChangeFn: Function = () => {};
   _onTouchedFn: Function = () => {};
 
-  constructor(@Inject(INPUT_SCHEMA) public schema: InternalPropertySchema) {}
+  constructor(@Inject(INPUT_SCHEMA) public schema: any) {}
 
   writeValue(val: unknown[]): void {
     this._value = val;

@@ -1,11 +1,8 @@
 <mat-form-field>
-  <mat-select [(ngModel)]="schema.items['type']">
-    <mat-option value="string">
-      string
-    </mat-option>
-    <mat-option value="number">
-      number
+  <mat-select [ngModel]="schema.items.type" (ngModelChange)="onChange($event)">
+    <mat-option *ngFor="let type of availableTypes" [value]="type">
+      {{ type }}
     </mat-option>
   </mat-select>
 </mat-form-field>
-<enum-schema></enum-schema>
+<enum-schema [schema]="schema.items"></enum-schema>

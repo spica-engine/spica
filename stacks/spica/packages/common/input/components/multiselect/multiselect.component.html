@@ -8,7 +8,7 @@
     (ngModelChange)="_onChangeFn($event)"
     multiple
   >
-    <mat-option *ngFor="let item of schema.enum" [value]="item">
+    <mat-option class="mat-accent" *ngFor="let item of schema.items.enum" [value]="item">
       {{ item }}
     </mat-option>
   </mat-select>

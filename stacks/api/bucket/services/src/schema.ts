@@ -31,8 +31,6 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
 
       case "multiselect":
         schema.type = "array";
-        schema.items["enum"] = JSON.parse(JSON.stringify(schema.enum));
-        delete schema.enum;
         schema.uniqueItems = true;
         break;
 

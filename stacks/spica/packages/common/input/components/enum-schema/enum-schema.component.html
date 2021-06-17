@@ -3,21 +3,21 @@
     <mat-chip-list #chipList aria-label="Enum values">
       <mat-chip
         *ngFor="let value of schema.enum; let index = index; trackBy: _trackBy"
-        [selectable]="selectable"
-        [removable]="removable"
         (removed)="removeItem(index)"
       >
         {{ schema.enum[index] }}
-        <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+        <mat-icon matChipRemove>cancel</mat-icon>
       </mat-chip>
       <input
         placeholder="New value..."
-        #enumInput
         [formControl]="enumCtrl"
         [matChipInputFor]="chipList"
-        [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+        [matChipInputSeparatorKeyCodes]="separatorKeyCodes"
         (matChipInputTokenEnd)="addItem($event)"
       />
+      <mat-error *ngIf="enumCtrl.errors?.invalidType"
+        >Enum value must be a valid {{ schema.type }}</mat-error
+      >
     </mat-chip-list>
   </mat-form-field>
 </div>
