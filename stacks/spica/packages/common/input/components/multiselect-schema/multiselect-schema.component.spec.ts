@@ -1,16 +1,15 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from "@angular/core/testing";
 
-import { MultiselectSchemaComponent } from './multiselect-schema.component';
+import {MultiselectSchemaComponent} from "./multiselect-schema.component";
 
-describe('MultiselectSchemaComponent', () => {
+describe("MultiselectSchemaComponent", () => {
   let component: MultiselectSchemaComponent;
   let fixture: ComponentFixture<MultiselectSchemaComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ MultiselectSchemaComponent ]
-    })
-    .compileComponents();
+      declarations: [MultiselectSchemaComponent]
+    }).compileComponents();
   });
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('MultiselectSchemaComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

@@ -182,7 +182,7 @@ export function coerceObject() {
       {
         origin: "array",
         type: "multiselect",
-        title:"Multiple Selection",
+        title: "Multiple Selection",
         icon: "checklist",
         color: "#17a98e",
         placer: MultiselectComponent,
