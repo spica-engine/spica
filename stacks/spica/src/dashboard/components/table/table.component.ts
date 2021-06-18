@@ -30,6 +30,10 @@ export class TableComponent implements AfterViewInit {
   ngAfterViewInit() {
     this.componentData$ = this.componentData$.pipe(
       tap(componentData => {
+        for (const f of componentData.filters) {
+          this.filter[f.key] = f.value;
+        }
+
         this.displayedColumns = componentData.displayedColumns;
 
         this.dataSource = new MatTableDataSource(componentData.data);

@@ -1,37 +1,13 @@
 <ng-container *ngIf="componentData$ | async; let componentData">
   <h3>{{ componentData.title }}</h3>
-  <div class="header">
-    <div class="filters">
-      <h4>Filters</h4>
-      <div>
-        <mat-form-field *ngFor="let definition of componentData.filters">
-          <mat-label>{{ definition.key }}</mat-label>
-          <input
-            *ngIf="definition.type != 'date'"
-            matInput
-            [name]="definition.key"
-            [ngModel]="definition.value"
-            (ngModelChange)="filter[definition.key] = $event"
-          />
-          <ng-container *ngIf="definition.type == 'date'">
-            <input
-              matInput
-              type="datetime"
-              [ngModel]="definition.value"
-              (ngModelChange)="filter[definition.key] = $event"
-              (focus)="dt1.open()"
-              [owlDateTime]="dt1"
-              [owlDateTimeTrigger]="dt1"
-              placeholder="Date Time"
-            />
-            <owl-date-time #dt1></owl-date-time>
-          </ng-container>
-        </mat-form-field>
-      </div>
-    </div>
-    <button mat-icon-button matTooltip="Refresh data" (click)="refresh()">
-      <mat-icon>refresh</mat-icon>
-    </button>
+  <button class="refresh" mat-icon-button matTooltip="Refresh data" (click)="refresh()">
+    <mat-icon>refresh</mat-icon>
+  </button>
+  <div class="filters">
+    <ng-container *ngFor="let definition of componentData.filters">
+      <span [name]="definition.key" [inputPlacer]="definition" [(ngModel)]="filter[definition.key]">
+      </span>
+    </ng-container>
   </div>
 </ng-container>
 
