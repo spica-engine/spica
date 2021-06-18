@@ -10,7 +10,6 @@ import {tap} from "rxjs/operators";
 })
 export class CardComponent implements OnInit {
   @Input() componentData$: Observable<any>;
-  @Input() type: string;
 
   inputs = {};
 
