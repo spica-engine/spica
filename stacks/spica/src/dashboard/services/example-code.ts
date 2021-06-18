@@ -135,7 +135,7 @@ const example = {
     displayedColumns: ["position", "name", "weight", "symbol"],
     filters: [{key: "name", type: "string", value: "['Hydrogen','Nitrogen']"}]
 }`,
-  card:`{
+  card: `{
     title: "Card Title",
     description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
       In quis libero quis ligula vulputate efficitur.",

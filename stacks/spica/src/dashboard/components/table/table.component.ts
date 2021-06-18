@@ -33,7 +33,7 @@ export class TableComponent implements AfterViewInit {
         for (const f of componentData.filters) {
           this.filter[f.key] = f.value;
         }
-        
+
         this.displayedColumns = componentData.displayedColumns;
 
         this.dataSource = new MatTableDataSource(componentData.data);
