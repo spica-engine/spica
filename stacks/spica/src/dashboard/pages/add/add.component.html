@@ -68,13 +68,11 @@
                 [name]="i + '.url'"
                 [(ngModel)]="component.url"
                 #urlModel="ngModel"
-                pattern="^(https?:\/\/)(.*)"
                 required
               />
               <mat-hint>
                 Url address that will return the content of this component.
               </mat-hint>
-              <mat-error *ngIf="urlModel.errors?.pattern">Enter a valid url.</mat-error>
             </mat-form-field>
             <mat-form-field>
               <mat-label>
