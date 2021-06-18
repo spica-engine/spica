@@ -1,5 +1,5 @@
-import {Component, Inject, ViewChild} from "@angular/core";
-import {DEFAULT_ARRAY_ITEM, InputSchema, INPUT_SCHEMA} from "../../input";
+import {Component, Inject} from "@angular/core";
+import {INPUT_SCHEMA} from "../../input";
 import {InputResolver} from "../../input.resolver";
 import {SchemaComponent} from "../schema.component";
 

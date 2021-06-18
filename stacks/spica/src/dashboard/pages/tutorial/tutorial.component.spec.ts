@@ -89,6 +89,7 @@ describe("TutorialComponent", () => {
       "number",
       "boolean",
       "textarea",
+      "multiselect",
       "color"
     ]);
   });
