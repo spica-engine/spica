@@ -19,6 +19,7 @@
     "simpleTypes": {
       "enum": [
         "array",
+        "multiselect",
         "boolean",
         "number",
         "object",

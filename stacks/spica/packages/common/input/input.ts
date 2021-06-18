@@ -20,6 +20,7 @@ export interface InputPlacerWithMetaPlacer {
   icon: string;
   metaPlacer?: any;
   coerce?: () => any;
+  title?: string;
 }
 
 export const INPUT_PLACERS = new InjectionToken<InputPlacerWithMetaPlacer[]>("INPUT_PLACERS");

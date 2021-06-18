@@ -16,78 +16,86 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
       }
     } else if (schema.items) {
       schema.items = map(schema.items as JSONSchema7);
-    } else {
-      switch (schema.type) {
-        case "storage":
-        case "richtext":
-        case "textarea":
-          schema.type = "string";
-          break;
-        case "color":
-          schema.type = "string";
-          break;
-        case "relation":
-          if (schema["relationType"] == "onetomany") {
-            schema.type = "array";
-            schema.items = {
-              format: "objectid-string",
-              type: "string"
-            };
-          } else {
-            schema.type = "string";
-            schema.format = "objectid-string";
-          }
+    }
 
-          break;
-        case "date":
-          schema.type = "string";
-          schema.format = "date-time";
-          break;
-        case "location":
-          const point: JSONSchema7Definition = {
-            type: "array",
-            items: [
-              {
-                title: "Longitude",
-                type: "number",
-                minimum: -180,
-                maximum: 180
-              },
-              {
-                title: "Latitude",
-                type: "number",
-                minimum: -90,
-                maximum: 90
-              }
-            ],
-            minItems: 2,
-            additionalItems: false
+    switch (schema.type) {
+      case "storage":
+      case "richtext":
+
+      case "textarea":
+        schema.type = "string";
+        break;
+      case "color":
+        schema.type = "string";
+        break;
+
+      case "multiselect":
+        schema.type = "array";
+        schema.uniqueItems = true;
+        break;
+
+      case "relation":
+        if (schema["relationType"] == "onetomany") {
+          schema.type = "array";
+          schema.items = {
+            format: "objectid-string",
+            type: "string"
           };
+        } else {
+          schema.type = "string";
+          schema.format = "objectid-string";
+        }
 
-          schema.type = "object";
-          schema.required = ["coordinates"];
-          schema.properties = {
-            type: {
-              type: "string",
-              const: schema["locationType"],
-              default: schema["locationType"]
+        break;
+      case "date":
+        schema.type = "string";
+        schema.format = "date-time";
+        break;
+
+      case "location":
+        const point: JSONSchema7Definition = {
+          type: "array",
+          items: [
+            {
+              title: "Longitude",
+              type: "number",
+              minimum: -180,
+              maximum: 180
             },
-            coordinates: {}
-          };
+            {
+              title: "Latitude",
+              type: "number",
+              minimum: -90,
+              maximum: 90
+            }
+          ],
+          minItems: 2,
+          additionalItems: false
+        };
 
-          switch (schema["locationType"]) {
-            case "Point":
-              schema.properties.coordinates = point;
-              break;
-            default:
-              throw new BadRequestException(
-                `Unknown location type '${schema["locationType"]}' on bucket schema.`
-              );
-          }
+        schema.type = "object";
+        schema.required = ["coordinates"];
+        schema.properties = {
+          type: {
+            type: "string",
+            const: schema["locationType"],
+            default: schema["locationType"]
+          },
+          coordinates: {}
+        };
 
-          break;
-        default:
-      }
+        switch (schema["locationType"]) {
+          case "Point":
+            schema.properties.coordinates = point;
+            break;
+          default:
+            throw new BadRequestException(
+              `Unknown location type '${schema["locationType"]}' on bucket schema.`
+            );
+        }
+
+        break;
+      default:
     }
     return schema;
   }
