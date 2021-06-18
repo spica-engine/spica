@@ -83,12 +83,17 @@ async function _process(ev, queue) {
         if (error && "code" in error && error.code == 1) {
           error.details = `The http request "${ev.id}" handled through "${ev.target.handler}" has been cancelled by the user.`;
           console.error(error.details);
-          return Promise.reject(error.details);
+          return;
         }
         return Promise.reject(error);
       };
 
       const request = await httpQueue.pop(httpPop).catch(handleRejection);
+      if (!request) {
+        queue.complete(new event.Complete({id: ev.id, succedded: false}));
+        return;
+      }
+
       const response = new Response(
         e => {
           e.id = ev.id;
@@ -111,16 +116,18 @@ async function _process(ev, queue) {
         if (!response.headersSent && result != undefined) {
           if (result instanceof Promise) {
             result = await result.catch(e => {
-              const responseObj = {statusCode: 500, error: "Internal Server Error"};
+              if (!response.headersSent) {
+                const responseObj = {statusCode: 500, error: "Internal Server Error"};
 
-              if (e) {
-                responseObj.message = e.toString();
+                if (e) {
+                  responseObj.message = e.toString();
+                }
+                response.status(500).send(responseObj);
               }
-
-              response.status(500).send(responseObj);
               return Promise.reject(e);
             });
           }
+
           if (result != undefined && !response.headersSent) {
             return response.send(result);
           }

@@ -142,8 +142,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         Date.now() > batch.deadline ||
         Object.values(batch.remaining_enqueues).every(n => n == 0)
       ) {
-        batch.schedule(undefined);
-        console.log("removing dead batch " + workerId);
+        if (batch.schedule) {
+          batch.schedule(undefined);
+          console.log("removing dead batch " + workerId);
+        }
       }
     }
   }
@@ -187,7 +189,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
           batch = createBatch(event.target, worker.workerId, worker.schedule);
           this.batching.set(batch.workerId, batch);
         } else if (!batch.schedule) {
-          break;
+          continue;
         }
 
         workerId = batch.workerId;
@@ -245,7 +247,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   cancel(id) {
     console.debug(`an event got cancelled ${id}`);
     this.eventQueue.delete(id);
-    this.complete(id, false);
   }
   complete(id: string, succedded: boolean) {
     console.debug(
