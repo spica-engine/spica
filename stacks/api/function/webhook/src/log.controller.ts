@@ -46,13 +46,17 @@ export class WebhookLogController {
       filter.succeed = {$eq: succeed};
     }
 
-    let aggregation: object[] = [{$match: filter}];
+    const aggregation: object[] = [{$match: filter}];
 
     aggregation.push({$sort: {_id: -1}});
 
-    if (skip) aggregation.push({$skip: skip});
+    if (skip) {
+      aggregation.push({$skip: skip});
+    }
 
-    if (limit) aggregation.push({$limit: limit});
+    if (limit) {
+      aggregation.push({$limit: limit});
+    }
 
     return this.logService.aggregate(aggregation).toArray();
   }
