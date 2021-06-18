@@ -1,5 +1,16 @@
+## v0.9.5 (2021-06-18)
+
+* feat(dashboard): introduce card component to custom dashboards ([91d12f2d1](https://github.com/spica-engine/spica/commit/91d12f2d1))
+* feat(bucket): introduce multiple selection property type ([3e6b80e27](https://github.com/spica-engine/spica/commit/3e6b80e27))
+* fix(function): ignore warnings properly on @spica-devkit/database ([12c72b7af](https://github.com/spica-engine/spica/commit/12c72b7af))
+* feat(function): resizable and expandable sections on function page ([5a08c6a48](https://github.com/spica-engine/spica/commit/5a08c6a48))
+* perf(common): database sort, skip, limit optimization ([6f0f3d6d4](https://github.com/spica-engine/spica/commit/6f0f3d6d4))
+* fix(function): http trigger request cancelation case ([a21fcee8b](https://github.com/spica-engine/spica/commit/a21fcee8b))
+
 ## v0.9.4 (2021-06-10)
 
+* fix(function): fix for production build ([ff4c3f9ad](https://github.com/spica-engine/spica/commit/ff4c3f9ad))
+* docs: update changelog for v0.9.4 ([df95336e2](https://github.com/spica-engine/spica/commit/df95336e2))
 * fix(function): refresh button for logs ([e38823449](https://github.com/spica-engine/spica/commit/e38823449))
 * style(identity): strategy buttons style ([f5bcbe9bd](https://github.com/spica-engine/spica/commit/f5bcbe9bd))
 * fix(function): some fixes for http events ([a2f71fe59](https://github.com/spica-engine/spica/commit/a2f71fe59))
