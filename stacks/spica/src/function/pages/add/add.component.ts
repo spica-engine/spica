@@ -67,6 +67,8 @@ export class AddComponent implements OnInit, OnDestroy {
 
   enableLogView: boolean = false;
 
+  enableInfoView: boolean = true;
+
   onFullScreen: boolean = false;
 
   private dispose = new EventEmitter();
@@ -615,5 +617,78 @@ export class AddComponent implements OnInit, OnDestroy {
     };
 
     document.addEventListener(this.browserFullscreenKeywords.onChange, escHandler);
+  }
+
+  isResizing: boolean;
+  logViewHeight$: Subject<number> = new Subject();
+
+  readonly logViewLabelHeight = 42;
+  readonly logViewDefaultExpandedHeight = 410;
+
+  onMouseMove(event: MouseEvent) {
+    if (!this.isResizing) {
+      return;
+    }
+
+    const logview = document.getElementsByClassName("footer-bar")[0];
+    const resizeCursor = document.getElementsByClassName("resize-cursor")[0];
+
+    const desiredHeight =
+      window.innerHeight - event.clientY - resizeCursor.getBoundingClientRect().height / 2;
+
+    logview.setAttribute("style", `height: ${desiredHeight}px !important`);
+
+    // hide logview
+    // 1px is for preventing the conflict between expand and hide moves
+    if (this.enableLogView && desiredHeight <= this.logViewLabelHeight - 1) {
+      this.onLogViewSelectionChange();
+      this.onMouseUp();
+      return;
+    }
+    // expand logview
+    else if (!this.enableLogView && desiredHeight >= this.logViewLabelHeight) {
+      this.onLogViewSelectionChange(desiredHeight);
+      return;
+    }
+
+    this.logViewHeight$.next(desiredHeight - this.logViewLabelHeight);
+  }
+
+  onMouseDown() {
+    this.isResizing = true;
+  }
+
+  onMouseUp() {
+    this.isResizing = false;
+  }
+
+  onLogViewSelectionChange(height?: number) {
+    this.enableLogView = !this.enableLogView;
+
+    const el = document.getElementsByClassName("footer-bar")[0] as HTMLElement;
+
+    if (!this.enableLogView) {
+      el.setAttribute("style", `height:${this.logViewLabelHeight}px !important`);
+      this.logViewHeight$.next(0);
+    } else {
+      height = height || this.logViewDefaultExpandedHeight;
+      el.setAttribute("style", `height: ${height}px !important`);
+      this.logViewHeight$.next(height - this.logViewLabelHeight);
+    }
+  }
+
+  onInfoViewSelectionChange() {
+    this.enableInfoView = !this.enableInfoView;
+
+    const codeSection = document.getElementsByClassName("code")[0];
+    const infoSection = document.getElementsByClassName("info")[0];
+
+    if (!this.enableInfoView) {
+      this.renderer.addClass(codeSection, "code-expanded");
+      this.renderer.addClass(infoSection, "info-hidden");
+    } else {
+      this.renderer.removeClass(codeSection, "code-expanded");
+      this.renderer.removeClass(infoSection, "info-hidden");
+    }
   }
 }

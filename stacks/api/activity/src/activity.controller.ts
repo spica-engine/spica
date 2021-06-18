@@ -46,11 +46,11 @@ export class ActivityController {
       }
     ];
 
-    aggregation.push({$sort: {_id: -1}});
-
     let filter: FilterQuery<Activity> = {};
 
-    if (identifier) filter.identifier = identifier;
+    if (identifier) {
+      filter.identifier = identifier;
+    }
 
     if (!isNaN(begin.getTime()) && !isNaN(end.getTime())) {
       filter._id = {
@@ -72,6 +72,8 @@ export class ActivityController {
     if (filter) {
       aggregation.push({$match: filter});
     }
+
+    aggregation.push({$sort: {_id: -1}});
 
     if (skip) {
       aggregation.push({$skip: skip});

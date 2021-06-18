@@ -1,4 +1,9 @@
-<div class="container" [class.with-sidecar]="enableLogView">
+<div
+  class="container"
+  (mousemove)="onMouseMove($event)"
+  (mouseup)="onMouseUp()"
+  [class.with-sidecar]="enableLogView"
+>
   <div class="code">
     <h4 class="code-actions">
       <mat-icon>code</mat-icon> Code
@@ -76,6 +81,17 @@
           >
           </mat-progress-spinner>
         </span>
+        <button
+          *ngIf="!onFullScreen"
+          class="hide-show-info"
+          mat-icon-button
+          (click)="onInfoViewSelectionChange()"
+          [matTooltip]="enableInfoView ? 'Hide Options' : 'Show Options'"
+        >
+          <mat-icon>
+            {{ enableInfoView ? "chevron_right" : "chevron_left" }}
+          </mat-icon>
+        </button>
       </div>
     </h4>
     <mat-divider></mat-divider>
@@ -89,19 +105,19 @@
       [options]="editorOptions"
     >
     </function-code-editor>
+    <div class="resize-cursor" (mousedown)="onMouseDown()"></div>
     <div class="footer-bar">
-      <button mat-button canInteract="function:logs:index" (click)="enableLogView = !enableLogView">
-        <mat-icon>bug_report</mat-icon>
-        {{ enableLogView ? "Disable Log View" : "Enable Log View" }}
+      <button mat-button canInteract="function:logs:index" (click)="onLogViewSelectionChange()">
+        <mat-icon>{{ enableLogView ? "expand_more" : "expand_less" }}</mat-icon>
+        Logs
       </button>
-
       <div class="sidecar-log-view" *ngIf="enableLogView">
-        <log-view [functionId$]="selectedFunctionId"></log-view>
+        <log-view [height$]="logViewHeight$" [functionId$]="selectedFunctionId"></log-view>
       </div>
     </div>
   </div>
-  <form #form="ngForm" (keydown.enter)="$event.preventDefault()">
-    <div class="info">
+  <div class="info">
+    <form #form="ngForm" (keydown.enter)="$event.preventDefault()">
       <mat-list>
         <mat-list-item class="describe">
           <h4 class="name" *ngIf="!editName && function._id" (click)="editName = true">
@@ -449,8 +465,8 @@
                   title: 'IMPORTANT CONFIRMATION! PLEASE READ CAREFULLY',
                   templateOrDescription:
                     'You can enable batching to run multiple process in the same worker. This action will
-                  share memory in each process. To enable batching, you have to set \'Deadline\' (seconds
-                  to wait after first execution). Once batch deadline expired, next process will be run on the new worker.',
+                        share memory in each process. To enable batching, you have to set \'Deadline\' (seconds
+                        to wait after first execution). Once batch deadline expired, next process will be run on the new worker.',
                   answer: '',
                   noAnswer: true
                 }"
@@ -500,6 +516,6 @@
         <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
         <span>{{ (!state ? "save" : state) | titlecase }}</span>
       </button>
-    </div>
-  </form>
+    </form>
+  </div>
 </div>

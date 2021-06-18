@@ -89,6 +89,11 @@ async function _process(ev, queue) {
       };
 
       const request = await httpQueue.pop(httpPop).catch(handleRejection);
+      if (!request) {
+        queue.complete(new event.Complete({id: ev.id, succedded: false}));
+        return;
+      }
+
       const response = new Response(
         e => {
           e.id = ev.id;

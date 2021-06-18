@@ -23,6 +23,7 @@ export class StorageService {
       dataPipeline.push({$sort: sort});
     }
 
+    // sub-pipeline in $facet stage cannot be empty
     dataPipeline.push({$skip: skip});
 
     if (limit) {
