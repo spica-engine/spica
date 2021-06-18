@@ -1,0 +1,8 @@
+<mat-form-field>
+  <mat-select [ngModel]="schema.items.type" (ngModelChange)="onChange($event)">
+    <mat-option *ngFor="let type of availableTypes" [value]="type">
+      {{ type }}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
+<enum-schema [schema]="schema.items"></enum-schema>

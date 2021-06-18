@@ -5,7 +5,7 @@
     <div class="icon" [style.background]="field.color">
       <mat-icon>{{ field.icon }}</mat-icon>
     </div>
-    {{ field.type }}
+    {{ field.title || field.type }}
   </div>
 </div>
 <div *ngIf="step > 0">

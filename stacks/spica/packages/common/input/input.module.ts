@@ -56,6 +56,8 @@ import {
 } from "./validators";
 
 import {ConditionalSchemaPipe} from "./conditional";
+import {MultiselectSchemaComponent} from "./components/multiselect-schema/multiselect-schema.component";
+import {MultiselectComponent} from "./components/multiselect/multiselect.component";
 
 export function coerceObject() {
   return {};
@@ -120,7 +122,9 @@ export function coerceObject() {
     ColorComponent,
     BooleanSchemaComponent,
     ArrayControlContainer,
-    ConditionalSchemaPipe
+    ConditionalSchemaPipe,
+    MultiselectSchemaComponent,
+    MultiselectComponent
   ],
   providers: [
     {
@@ -174,6 +178,15 @@ export function coerceObject() {
         color: "#17a98e",
         placer: ArrayComponent,
         metaPlacer: ArraySchemaComponent
+      },
+      {
+        origin: "array",
+        type: "multiselect",
+        title: "Multiple Selection",
+        icon: "checklist",
+        color: "#17a98e",
+        placer: MultiselectComponent,
+        metaPlacer: MultiselectSchemaComponent
       },
       {
         origin: "object",
