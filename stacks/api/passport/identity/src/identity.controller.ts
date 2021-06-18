@@ -83,12 +83,11 @@ export class IdentityController {
     const seekingPipeline: object[] = [];
 
     if (Object.keys(sort).length) {
-      pipeline.push({$sort: sort});
+      seekingPipeline.push({$sort: sort});
     }
 
-    if (skip) {
-      seekingPipeline.push({$skip: skip});
-    }
+    // sub-pipeline in $facet stage cannot be empty
+    seekingPipeline.push({$skip: skip});
 
     if (limit) {
       seekingPipeline.push({$limit: limit});
@@ -113,7 +112,6 @@ export class IdentityController {
 
       return result.data.length ? result : {meta: {total: 0}, data: []};
     }
-
     return this.identity.aggregate<Identity>([...pipeline, ...seekingPipeline]).toArray();
   }
   @Get("predefs")

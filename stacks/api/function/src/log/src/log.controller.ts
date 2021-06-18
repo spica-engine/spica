@@ -48,7 +48,6 @@ export class LogController {
       {
         $match: match
       },
-      {$sort: {_id: -1}},
       {
         $lookup: {
           from: "function",
@@ -61,6 +60,8 @@ export class LogController {
       {$set: {function: "$fn.name"}},
       {$unset: ["fn"]}
     ];
+
+    pipeline.push({$sort: {_id: -1}});
 
     if (skip > 0) {
       pipeline.push({$skip: skip});

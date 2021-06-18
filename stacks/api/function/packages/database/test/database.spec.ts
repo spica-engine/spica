@@ -120,7 +120,7 @@ describe("database", () => {
     });
 
     it("should be checked in findOne", async () => {
-      await coll.find({
+      await coll.findOne({
         _id: new ObjectId(),
         user: new ObjectId()
       });

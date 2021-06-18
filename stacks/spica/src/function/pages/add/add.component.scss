@@ -20,16 +20,31 @@
     height: calc(100vh - 64px);
     overflow: hidden;
     .info {
+      position: absolute;
+      right: 0;
+
       width: 400px;
       height: calc(100vh - 64px);
       overflow: auto;
+
+      transition: all 0.5s ease-in-out;
+
+      form {
+        height: 100%;
+      }
     }
+
+    .info-hidden {
+      transform: translateX(100%);
+    }
+
     .code {
       flex: 1;
-      position: relative;
       display: flex;
       flex-direction: column;
       max-width: calc(100% - 400px);
+
+      transition: all 0.5s ease-in-out;
       .code-actions {
         padding: 5px 10px 5px 20px;
         margin: 0px;
@@ -75,6 +90,17 @@
         }
       }
     }
+
+    .code-expanded {
+      max-width: 100%;
+    }
+
+    .resize-cursor {
+      width: 100%;
+      height: 5px;
+      cursor: row-resize;
+    }
+
     .footer-bar {
       height: 42px;
       display: flex;
