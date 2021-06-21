@@ -160,32 +160,32 @@ export class RealtimeDatabaseService {
           .subscribe();
       }
 
-      if (options.filter && !immutableDocuments) {
-        streams.add(
-          this.database
-            .collection(name)
-            .watch(
-              [
-                ...generateMatchingPipeline({
-                  $nor: [options.filter]
-                }),
-                {$match: {$or: [{operationType: "update"}, {operationType: "replace"}]}}
-              ],
-              {
-                fullDocument: "updateLookup"
-              }
-            )
-            ["on"]("change", change => {
-              if (isChangeAlreadyPresentInCursor(ids, change)) {
-                observer.next({
-                  kind: ChunkKind.Expunge,
-                  document: change.documentKey as T
-                });
-                ids.delete(change.documentKey._id.toString());
-              }
-            })
-        );
-      }
+      // if (options.filter && !immutableDocuments) {
+      //   streams.add(
+      //     this.database
+      //       .collection(name)
+      //       .watch(
+      //         [
+      //           ...generateMatchingPipeline({
+      //             $nor: [options.filter]
+      //           }),
+      //           {$match: {$or: [{operationType: "update"}, {operationType: "replace"}]}}
+      //         ],
+      //         {
+      //           fullDocument: "updateLookup"
+      //         }
+      //       )
+      //       ["on"]("change", change => {
+      //         if (isChangeAlreadyPresentInCursor(ids, change)) {
+      //           observer.next({
+      //             kind: ChunkKind.Expunge,
+      //             document: change.documentKey as T
+      //           });
+      //           ids.delete(change.documentKey._id.toString());
+      //         }
+      //       })
+      //   );
+      // }
 
       const fetchMoreItemToFillTheCursor = () => {
         this.database
@@ -204,37 +204,61 @@ export class RealtimeDatabaseService {
 
       let pipeline = [];
 
-      if (options.filter) {
-        const exceptDeletedsExpression = [
-          {"__changeStream__.operationType": {$not: {$eq: "delete"}}},
-          options.filter
-        ];
+      // if (options.filter) {
+      //   const exceptDeletedsExpression = [
+      //     {"__changeStream__.operationType": {$not: {$eq: "delete"}}},
+      //     options.filter
+      //   ];
 
-        if (immutableDocuments) {
-          exceptDeletedsExpression.push({"__changeStream__.operationType": "insert"});
-        }
+      //   if (immutableDocuments) {
+      //     exceptDeletedsExpression.push({"__changeStream__.operationType": "insert"});
+      //   }
 
-        pipeline = generateMatchingPipeline({
-          $or: [
-            {
-              "__changeStream__.operationType": "delete"
-            },
-            {
-              $and: exceptDeletedsExpression
-            }
-          ]
-        });
-      }
+      //   pipeline = [
+      //     {
+      //       $or: [
+      //         {
+      //           "__changeStream__.operationType": "delete"
+      //         },
+      //         {
+      //           $and: exceptDeletedsExpression
+      //         }
+      //       ]
+      //     }
+      //   ];
+      // }
 
       streams.add(
         this.database
           .collection(name)
-          .watch(pipeline, {
-            fullDocument: "updateLookup"
-          })
-          ["on"]("change", change => {
-            switch (change.operationType) {
+          .watch(
+            //pipeline,
+            [],
+            {
+              fullDocument: "updateLookup"
+            }
+          )
+          ["on"]("change", async _change => {
+            let change;
+            switch (_change.operationType) {
               case "insert":
+                change = await this.database
+                  .collection("buckets")
+                  .aggregate([
+                    {$limit: 1},
+                    {
+                      $replaceWith: {$literal: _change}
+                    },
+                    ...generateMatchingPipeline(options.filter ? options.filter : {})
+                  ])
+                  .next();
+
+                console.log(change);
+
+                if (!change) {
+                  return;
+                }
+
                 if (options.limit && ids.size >= options.limit && !options.sort) {
                   return;
                 }
@@ -249,6 +273,23 @@ export class RealtimeDatabaseService {
 
                 break;
               case "delete":
+                change = await this.database
+                  .collection("buckets")
+                  .aggregate([
+                    {$limit: 1},
+                    {
+                      $replaceWith: {$literal: _change}
+                    },
+                    ...generateMatchingPipeline(options.filter ? options.filter : {})
+                  ])
+                  .next();
+
+                console.log(change);
+
+                if (!change) {
+                  return;
+                }
+
                 if (ids.has(change.documentKey._id.toString())) {
                   observer.next({kind: ChunkKind.Delete, document: change.documentKey as T});
                   ids.delete(change.documentKey._id.toString());
@@ -260,7 +301,16 @@ export class RealtimeDatabaseService {
                 break;
               case "replace":
               case "update":
+                if (isChangeAlreadyPresentInCursor(ids, change)) {
+                  observer.next({
+                    kind: ChunkKind.Expunge,
+                    document: change.documentKey as T
+                  });
+                  ids.delete(change.documentKey._id.toString());
+                  return;
+                }
                 // prettier-ignore
+
                 if (
                   (!options.filter && options.skip && !isChangeAlreadyPresentInCursor(ids, change)) ||
                   (options.limit && ids.size >= options.limit && !isChangeAlreadyPresentInCursor(ids, change))
