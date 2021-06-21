@@ -238,22 +238,11 @@ export class RealtimeDatabaseService {
               fullDocument: "updateLookup"
             }
           )
-          ["on"]("change", async _change => {
+          ["on"]("change", async pureChange => {
             let change;
-            switch (_change.operationType) {
+            switch (pureChange.operationType) {
               case "insert":
-                change = await this.database
-                  .collection("buckets")
-                  .aggregate([
-                    {$limit: 1},
-                    {
-                      $replaceWith: {$literal: _change}
-                    },
-                    ...generateMatchingPipeline(options.filter ? options.filter : {})
-                  ])
-                  .next();
-
-                console.log(change);
+                change = await this.filterChange(pureChange, options.filter);
 
                 if (!change) {
                   return;
@@ -273,12 +262,18 @@ export class RealtimeDatabaseService {
 
                 break;
               case "delete":
+                change = await this.filterChange(pureChange, options.filter);
+
+                if (!change) {
+                  return;
+                }
+
                 change = await this.database
                   .collection("buckets")
                   .aggregate([
                     {$limit: 1},
                     {
-                      $replaceWith: {$literal: _change}
+                      $replaceWith: {$literal: pureChange}
                     },
                     ...generateMatchingPipeline(options.filter ? options.filter : {})
                   ])
@@ -301,16 +296,24 @@ export class RealtimeDatabaseService {
                 break;
               case "replace":
               case "update":
-                if (isChangeAlreadyPresentInCursor(ids, change)) {
-                  observer.next({
-                    kind: ChunkKind.Expunge,
-                    document: change.documentKey as T
-                  });
-                  ids.delete(change.documentKey._id.toString());
+                change = await this.filterChange(pureChange, options.filter);
+
+                // EXPUNGE
+                if (!change) {
+                  change = await this.filterChange(pureChange, {$nor: [options.filter]});
+
+                  if (isChangeAlreadyPresentInCursor(ids, change)) {
+                    observer.next({
+                      kind: ChunkKind.Expunge,
+                      document: change.documentKey as T
+                    });
+                    ids.delete(change.documentKey._id.toString());
+                  }
+
                   return;
                 }
-                // prettier-ignore
 
+                // prettier-ignore
                 if (
                   (!options.filter && options.skip && !isChangeAlreadyPresentInCursor(ids, change)) ||
                   (options.limit && ids.size >= options.limit && !isChangeAlreadyPresentInCursor(ids, change))
@@ -398,6 +401,19 @@ export class RealtimeDatabaseService {
         });
       })
     );
+  }
+
+  private filterChange(change, filter) {
+    return this.database
+      .collection("buckets")
+      .aggregate([
+        {$limit: 1},
+        {
+          $replaceWith: {$literal: change}
+        },
+        ...generateMatchingPipeline(filter || {})
+      ])
+      .next();
   }
 }
 
