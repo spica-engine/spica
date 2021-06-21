@@ -1,5 +1,10 @@
+## v0.9.6 (2021-06-21)
+
+* fix(dashboard): custom dashboard filters ([2ea0de941](https://github.com/spica-engine/spica/commit/2ea0de941))
+
 ## v0.9.5 (2021-06-18)
 
+* docs: update changelog for v0.9.5 ([530d3138a](https://github.com/spica-engine/spica/commit/530d3138a))
 * feat(dashboard): introduce card component to custom dashboards ([91d12f2d1](https://github.com/spica-engine/spica/commit/91d12f2d1))
 * feat(bucket): introduce multiple selection property type ([3e6b80e27](https://github.com/spica-engine/spica/commit/3e6b80e27))
 * fix(function): ignore warnings properly on @spica-devkit/database ([12c72b7af](https://github.com/spica-engine/spica/commit/12c72b7af))
