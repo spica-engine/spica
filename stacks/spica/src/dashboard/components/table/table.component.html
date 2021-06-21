@@ -1,12 +1,16 @@
 <ng-container *ngIf="componentData$ | async; let componentData">
   <h3>{{ componentData.title }}</h3>
-  <button class="refresh" mat-icon-button matTooltip="Refresh data" (click)="refresh()">
+  <button
+    class="refresh"
+    mat-icon-button
+    matTooltip="Refresh data"
+    (click)="this.onUpdate.next(componentData.filters)"
+  >
     <mat-icon>refresh</mat-icon>
   </button>
   <div class="filters">
-    <ng-container *ngFor="let definition of componentData.filters">
-      <span [name]="definition.key" [inputPlacer]="definition" [(ngModel)]="filter[definition.key]">
-      </span>
+    <ng-container *ngFor="let filter of componentData.filters">
+      <span [name]="filter.key" [inputPlacer]="filter" [(ngModel)]="filter.value"> </span>
     </ng-container>
   </div>
 </ng-container>
