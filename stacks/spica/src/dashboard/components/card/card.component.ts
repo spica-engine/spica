@@ -1,42 +1,27 @@
 import {HttpParams} from "@angular/common/http";
-import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
+import {Component, EventEmitter, Input, Output} from "@angular/core";
 import {Observable} from "rxjs";
-import {tap} from "rxjs/operators";
 
 @Component({
   selector: "dashboard-card",
   templateUrl: "./card.component.html",
   styleUrls: ["./card.component.scss"]
 })
-export class CardComponent implements OnInit {
+export class CardComponent {
   @Input() componentData$: Observable<any>;
-
-  inputs = {};
 
   @Output() onUpdate: EventEmitter<object> = new EventEmitter();
 
-  constructor() {}
+  onSubmit(form, button, inputs = []) {
+    const query = {};
+    for (const input of inputs) {
+      query[input.key] = input.value;
+    }
 
-  ngOnInit() {
-    this.componentData$ = this.componentData$.pipe(
-      tap(componentData => {
-        if (componentData.inputs) {
-          for (const input of componentData.inputs) {
-            this.inputs[input.key] = input.value;
-          }
-        }
-      })
-    );
-  }
-
-  onSubmit(form, button) {
-    const params = new HttpParams({fromObject: this.inputs});
+    const params = new HttpParams({fromObject: query});
     const url = button.target + "?" + params.toString();
     form.action = url;
-    form.submit();
-  }
 
-  refresh() {
-    this.onUpdate.next();
+    form.submit();
   }
 }

@@ -1,7 +1,12 @@
 <ng-container *ngIf="componentData$ | async; let componentData">
   <mat-card-header>
     <mat-card-title>{{ componentData.title }}</mat-card-title>
-    <button class="refresh" mat-icon-button matTooltip="Refresh card" (click)="refresh()">
+    <button
+      class="refresh"
+      mat-icon-button
+      matTooltip="Refresh card"
+      (click)="this.onUpdate.next()"
+    >
       <mat-icon>refresh</mat-icon>
     </button>
   </mat-card-header>
@@ -16,8 +21,8 @@
   >
     <mat-card-content class="inputs">
       <ng-container *ngFor="let input of componentData.inputs">
-        <span [name]="input.key" [inputPlacer]="input" [(ngModel)]="inputs[input.key]">
-          <input type="hidden" [name]="input.key" [value]="inputs[input.key]" />
+        <span [name]="input.key" [inputPlacer]="input" [(ngModel)]="input.value">
+          <input type="hidden" [name]="input.key" [value]="input.value" />
         </span>
       </ng-container>
     </mat-card-content>
@@ -25,7 +30,7 @@
       <button
         [color]="componentData.button.color"
         mat-flat-button
-        (click)="onSubmit(form, componentData.button)"
+        (click)="onSubmit(form, componentData.button, componentData.inputs)"
       >
         {{ componentData.button.title }}
       </button>

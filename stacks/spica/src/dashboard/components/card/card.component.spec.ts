@@ -67,11 +67,6 @@ describe("CardComponent", () => {
   });
 
   it("should send default inputs", () => {
-    expect(component.inputs).toEqual({
-      topic: "Cars",
-      message: "Bestseller car of this year has been announced.."
-    });
-
     const inputValues = Array.from(
       fixture.debugElement.nativeElement.querySelectorAll("mat-card-content.inputs > span > input")
     ).map((i: any) => i.value);

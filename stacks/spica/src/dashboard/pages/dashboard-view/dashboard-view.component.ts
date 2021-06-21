@@ -45,7 +45,13 @@ export class DashboardViewComponent {
     );
   }
 
-  onUpdate(filter: object, i: number) {
-    this.refreshSubjects$[i].next(filter);
+  onUpdate(filters: any[] = [], i: number) {
+    const queryFilter = {};
+
+    for (const filter of filters) {
+      queryFilter[filter.key] = filter.value;
+    }
+
+    this.refreshSubjects$[i].next(queryFilter);
   }
 }
