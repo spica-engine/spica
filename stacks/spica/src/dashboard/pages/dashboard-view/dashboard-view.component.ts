@@ -32,6 +32,9 @@ export class DashboardViewComponent {
               return;
             }
 
+            this.refreshSubjects$ = [];
+            this.componentData$ = [];
+
             for (const component of dashboard.components) {
               const refresh$ = new BehaviorSubject(undefined);
               this.refreshSubjects$.push(refresh$);
