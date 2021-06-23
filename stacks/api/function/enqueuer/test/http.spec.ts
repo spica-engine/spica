@@ -9,6 +9,14 @@ import {event} from "@spica-server/function/queue/proto";
  * TODO: Provide some tests for req.query, req.headers and req.params
  * TODO: Check if req.method, req.url, req.path is set
  */
+
+function createTarget(cwd?: string, handler?: string) {
+  const target = new event.Target();
+  target.cwd = cwd || "/tmp/fn1";
+  target.handler = handler || "default";
+  return target;
+}
+
 describe("http enqueuer", () => {
   let app: INestApplication;
   let req: Request;
@@ -25,10 +33,8 @@ describe("http enqueuer", () => {
     allowedOrigins: ["*"]
   };
 
-  beforeAll(async () => {
-    noopTarget = new event.Target();
-    noopTarget.cwd = "/tmp/fn1";
-    noopTarget.handler = "default";
+  beforeEach(async () => {
+    noopTarget = createTarget();
     const module = await Test.createTestingModule({
       imports: [CoreTestingModule]
     }).compile();
@@ -49,9 +55,61 @@ describe("http enqueuer", () => {
   });
 
   afterEach(() => {
-    // Reset enqueue spy in case some of the it blocks might have their spy delegates registered onto.
-    httpQueue.enqueue = jasmine.createSpy();
-    httpQueue.dequeue.calls.reset();
+    app.close();
+  });
+
+  it("should subscribe", () => {
+    const options = {method: HttpMethod.Put, path: "/test", preflight: true};
+    httpEnqueuer.subscribe(noopTarget, options);
+
+    const routes = httpEnqueuer["router"].stack
+      .filter(layer => layer.route && layer.route.path == "/test")
+      .map(layer => layer.route);
+
+    // one options and two put endpoints, one of put endpoints for allowing the preflight
+    expect(routes.length).toEqual(3);
+
+    const optionsRoute = routes[0].stack[0];
+    const optionsCwdHandler = [optionsRoute.handle.target.cwd, optionsRoute.handle.target.handler];
+
+    expect(optionsRoute.method).toEqual("options");
+    expect(optionsCwdHandler).toEqual(["/tmp/fn1", "default"]);
+
+    const putRoutes = [routes[1].stack[0], routes[2].stack[0]];
+
+    expect(putRoutes.map(r => r.method)).toEqual(["put", "put"]);
+
+    const cwds = [putRoutes[0].handle.target.cwd, putRoutes[1].handle.target.cwd];
+    const handlers = [putRoutes[0].handle.target.handler, putRoutes[1].handle.target.handler];
+
+    expect(cwds).toEqual(["/tmp/fn1", "/tmp/fn1"]);
+    expect(handlers).toEqual(["default", "default"]);
+  });
+
+  it("should unsubscribe", () => {
+    const options1 = {method: HttpMethod.Post, path: "/test1", preflight: true};
+    const options2 = {method: HttpMethod.Put, path: "/test2", preflight: true};
+    const options3 = {method: HttpMethod.Delete, path: "/test3", preflight: true};
+
+    const target1 = createTarget("/tmp/fn1", "handler1");
+    const target2 = createTarget("/tmp/fn1", "handler2");
+    const target3 = createTarget("/tmp/fn2", "handler1");
+
+    httpEnqueuer.subscribe(target1, options1);
+    httpEnqueuer.subscribe(target2, options2);
+    httpEnqueuer.subscribe(target3, options3);
+
+    httpEnqueuer.unsubscribe(target1);
+
+    const routes = httpEnqueuer["router"].stack
+      .filter(layer => layer.route && layer.route.path.startsWith("/test"))
+      .map(layer => layer.route);
+
+    expect(routes.length).toEqual(6);
+
+    expect(routes.map(r => r.stack[0].method).includes("post")).toEqual(false);
+    expect(routes.map(r => r.stack[0].method).includes("put")).toEqual(true);
+    expect(routes.map(r => r.stack[0].method).includes("delete")).toEqual(true);
   });
 
   it("should not handle preflight requests on indistinct paths", async () => {
@@ -268,9 +326,5 @@ describe("http enqueuer", () => {
       httpEnqueuer.unsubscribe(noopTarget);
       done();
     });
-  });
-
-  afterAll(() => {
-    app.close();
   });
 });

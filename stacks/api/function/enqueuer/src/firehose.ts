@@ -134,6 +134,9 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
     });
   }
 
+  // @TODO: unsubscribed targets won't be able to listen to client messages,
+  // but they can still send message from server until worker be lost.
+  // we may decide to block this behaviour
   unsubscribe(target: event.Target): void {
     for (const pair of this.eventTargetPairs) {
       if (
