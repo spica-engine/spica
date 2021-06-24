@@ -1,0 +1,39 @@
+<ng-container *ngIf="componentData$ | async; let componentData">
+  <mat-card-header>
+    <mat-card-title>{{ componentData.title }}</mat-card-title>
+    <button
+      class="refresh"
+      mat-icon-button
+      matTooltip="Refresh card"
+      (click)="this.onUpdate.next()"
+    >
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </mat-card-header>
+  <mat-card-content>
+    <p>{{ componentData.description }}</p>
+  </mat-card-content>
+  <form
+    #form
+    [action]="componentData.button.target"
+    [method]="componentData.button.method"
+    target="_blank"
+  >
+    <mat-card-content class="inputs">
+      <ng-container *ngFor="let input of componentData.inputs">
+        <span [name]="input.key" [inputPlacer]="input" [(ngModel)]="input.value">
+          <input type="hidden" [name]="input.key" [value]="input.value" />
+        </span>
+      </ng-container>
+    </mat-card-content>
+    <mat-card-actions>
+      <button
+        [color]="componentData.button.color"
+        mat-flat-button
+        (click)="onSubmit(form, componentData.button, componentData.inputs)"
+      >
+        {{ componentData.button.title }}
+      </button>
+    </mat-card-actions>
+  </form>
+</ng-container>

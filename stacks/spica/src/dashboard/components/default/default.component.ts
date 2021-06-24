@@ -9,14 +9,5 @@ import {Observable} from "rxjs";
 export class DefaultComponent {
   @Input() componentData$: Observable<any>;
   @Input() type: string;
-
-  filter = {};
-
   @Output() onUpdate: EventEmitter<object> = new EventEmitter();
-
-  constructor() {}
-
-  refresh() {
-    this.onUpdate.next(this.filter);
-  }
 }

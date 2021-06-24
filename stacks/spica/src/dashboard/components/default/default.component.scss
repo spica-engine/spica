@@ -2,16 +2,18 @@ h3 {
   text-align: center;
 }
 
-div.header {
+div.filters {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  div.filters {
-    > h4 {
-      margin: 0px 0px 5px 0px;
-    }
-    mat-form-field {
-      margin-right: 5px;
-    }
+  > h4 {
+    margin: 0px 0px 5px 0px;
   }
+  > span {
+    margin-right: 5px;
+  }
+}
+
+button.refresh {
+  position: absolute;
+  right: 0;
+  top: 0;
 }

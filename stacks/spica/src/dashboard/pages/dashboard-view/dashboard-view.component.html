@@ -22,9 +22,18 @@
           (onUpdate)="onUpdate($event, i)"
         >
         </dashboard-table>
+        <dashboard-card
+          *ngIf="component.type == 'card'"
+          [componentData$]="componentData$[i]"
+          [type]="component.type"
+          (onUpdate)="onUpdate($event, i)"
+        >
+        </dashboard-card>
         <div
           class="nonexist-type"
-          *ngIf="defaultTypes.indexOf(component.type) == -1 && component.type != 'table'"
+          *ngIf="
+            defaultTypes.indexOf(component.type) == -1 && customTypes.indexOf(component.type) == -1
+          "
         >
           <span>This component type does not exist.</span>
         </div>
