@@ -4,6 +4,7 @@ import {Observable, BehaviorSubject} from "rxjs";
 import {switchMap, tap} from "rxjs/operators";
 import {DashboardService} from "../../services/dashboard.service";
 import {Dashboard} from "@spica-client/dashboard/interfaces";
+import {CdkDragMove} from "@angular/cdk/drag-drop";
 
 @Component({
   selector: "app-dashboard-view",
@@ -23,6 +24,8 @@ export class DashboardViewComponent {
 
   constructor(private activatedRoute: ActivatedRoute, private ds: DashboardService) {}
 
+  cardZIndexes: number[] = [];
+
   ngOnInit() {
     this.dashboard$ = this.activatedRoute.params.pipe(
       switchMap(params =>
@@ -32,7 +35,8 @@ export class DashboardViewComponent {
               return;
             }
 
-            for (const component of dashboard.components) {
+            for (const [index, component] of dashboard.components.entries()) {
+              this.cardZIndexes[index] = index;
               const refresh$ = new BehaviorSubject(undefined);
               this.refreshSubjects$.push(refresh$);
               this.componentData$.push(
@@ -53,5 +57,25 @@ export class DashboardViewComponent {
     }
 
     this.refreshSubjects$[i].next(queryFilter);
+  }
+
+  onCardFocus(i: number) {
+    const highestZ = this.cardZIndexes.length - 1;
+    const currentZ = JSON.parse(JSON.stringify(this.cardZIndexes[i]));
+
+    this.cardZIndexes = this.cardZIndexes.map(z => {
+      if (z == currentZ) {
+        return highestZ;
+      } else if (z > currentZ) {
+        return z - 1;
+      }
+      return z;
+    });
+  }
+
+  onDragEnded(event: CdkDragMove<any>, i: number) {}
+
+  onResize(event) {
+    console.log(event);
   }
 }
