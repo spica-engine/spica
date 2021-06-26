@@ -5,6 +5,13 @@ import {DashboardService} from "../../services/dashboard.service";
 import {Component as DashboardComponent, Dashboard} from "@spica-client/dashboard/interfaces";
 import {Component, OnInit} from "@angular/core";
 
+interface ComponentStyle {
+  "z-index": number;
+  width: string;
+  height: string;
+  transform: string;
+}
+
 @Component({
   selector: "app-dashboard-view",
   templateUrl: "./dashboard-view.component.html",
@@ -22,6 +29,10 @@ export class DashboardViewComponent implements OnInit {
 
   customTypes = ["table", "card"];
 
+  componentStyles: ComponentStyle[] = [];
+
+  localStorageKey: string;
+
   constructor(private activatedRoute: ActivatedRoute, private ds: DashboardService) {}
 
   ngOnInit() {
@@ -34,7 +45,12 @@ export class DashboardViewComponent implements OnInit {
             }
 
             this._id = dashboard._id;
-            
+
+            this.localStorageKey = `dashboard_${this._id}_component_styles`;
+
+            this.loadComponentStyles(dashboard.components.length);
+            this.saveComponentStyles();
+
             for (const component of dashboard.components) {
               const refresh$ = new BehaviorSubject(undefined);
               this.refreshSubjects$.push(refresh$);
@@ -74,18 +90,11 @@ export class DashboardViewComponent implements OnInit {
     });
   }
 
-  componentStyles: {
-    "z-index": number;
-    width: string;
-    height: string;
-    transform: string;
-  }[] = [];
-
   onEditEnded(component: HTMLElement, i: number) {
     let {transform, width, height} = getComputedStyle(component);
     const {m41: translateX, m42: translateY} = new WebKitCSSMatrix(transform);
 
-    const container = document.getElementsByClassName("container")[0] as HTMLElement;
+    const container = document.getElementsByClassName("dashboard-container")[0] as HTMLElement;
     const containerWidth = container.clientWidth;
 
     width = Math.min(parseInt(width), containerWidth - translateX) + "px";
@@ -100,63 +109,56 @@ export class DashboardViewComponent implements OnInit {
   }
 
   saveComponentStyles() {
-    localStorage.setItem(
-      `dashboard_${this._id}_component_styles`,
-      JSON.stringify(this.componentStyles)
-    );
+    localStorage.removeItem(this.localStorageKey);
+    localStorage.setItem(this.localStorageKey, JSON.stringify(this.componentStyles));
   }
 
-  loadComponentStyles(components: DashboardComponent[]) {
-    let savedStyles: any = localStorage.getItem(`dashboard_${this._id}_component_styles`);
+  loadComponentStyles(componentsLength: number) {
+    let savedStyles: any = localStorage.getItem(this.localStorageKey);
 
     try {
-      savedStyles = JSON.parse(savedStyles);
+      savedStyles = JSON.parse(savedStyles) || this.getDefaultComponentStyles(componentsLength);
+    } catch (e) {
+      savedStyles = [];
+    }
 
-      if (savedStyles.length) {
-        this.componentStyles = savedStyles;
+    this.componentStyles = savedStyles;
 
-        // user might have added new component to dashboard
-        if (components.length > this.componentStyles.length) {
-          const diff = components.length - this.componentStyles.length;
-          const addedComponentStyles = this.getDefaultComponentStyles(
-            diff,
-            this.componentStyles.length
-          );
+    // user might have added new component to dashboard
+    if (componentsLength > this.componentStyles.length) {
+      const diff = componentsLength - this.componentStyles.length;
+      const addedComponentStyles = this.getDefaultComponentStyles(
+        diff,
+        this.componentStyles.length
+      );
 
-          this.componentStyles.push(...addedComponentStyles);
-          this.saveComponentStyles();
-        }
-
-        return;
-      }
-    } catch (e) {}
-
-    this.componentStyles = this.getDefaultComponentStyles(components.length);
+      this.componentStyles.push(...addedComponentStyles);
+    }
   }
 
-  getDefaultComponentStyles(length: number, minZIndex: number = 0) {
+  getDefaultComponentStyles(componentsLength: number, minZIndex: number = 0) {
     const width = 500;
     const height = 500;
 
-    const container = document.getElementsByClassName("components-container")[0] as HTMLElement;
+    const container = document.getElementsByClassName("dashboard-container")[0] as HTMLElement;
     const containerWidth = container.clientWidth;
 
-    let multiplierX = 0;
-    let multiplierY = 0;
+    let multiplierX = -1;
+    let multiplierY = -1;
 
-    let goRight = true;
+    let toRight = true;
 
-    return new Array(length).fill(undefined).map((_, i) => {
-      goRight ? multiplierX++ : multiplierX--;
+    return new Array(componentsLength).fill(undefined).map((_, i) => {
+      toRight ? multiplierX++ : multiplierX--;
       multiplierY++;
 
       const translateX = multiplierX * 50;
       const translateY = multiplierY * 50;
 
-      const nextIteration = (multiplierX + (goRight ? 1 : -1)) * 50;
+      const nextIteration = (multiplierX + (toRight ? 1 : -1)) * 50;
 
-      if (nextIteration + width >= containerWidth || nextIteration <= 0) {
-        goRight = !goRight;
+      if (nextIteration + width >= containerWidth || nextIteration < 0) {
+        toRight = !toRight;
       }
       return {
         "z-index": minZIndex + i,
