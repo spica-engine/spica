@@ -1,1 +1,1 @@
-import "monaco-editor-core/esm/vs/editor/editor.worker.js";
+import "monaco-editor/esm/vs/editor/editor.worker.js";
