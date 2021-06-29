@@ -5,6 +5,7 @@ import {tap, delayWhen, map, debounceTime, retryWhen, filter} from "rxjs/operato
 import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
 import {isPlatformBrowser} from "@spica-devkit/internal_common";
+import {RealtimeConnection} from "./interface";
 
 export class IterableSet<T> implements Iterable<T> {
   ids = new Array<string>();
@@ -67,23 +68,13 @@ export function getWsObs<T>(
   sort?: object,
   findOne?: true,
   messageCallback?: (res: {status: number; message: string}) => any
-): Observable<T> & {
-  insert: (document: T) => void;
-  replace: (document: T) => void;
-  patch: (document: Partial<T>) => void;
-  remove: (document: {_id: string} & Partial<T>) => void;
-};
+): RealtimeConnection<T>;
 export function getWsObs<T>(
   url: string,
   sort?: object,
   findOne?: false,
   messageCallback?: (res: {status: number; message: string}) => any
-): Observable<T[]> & {
-  insert: (document: T) => void;
-  replace: (document: T) => void;
-  patch: (document: Partial<T>) => void;
-  remove: (document: {_id: string} & Partial<T>) => void;
-};
+): RealtimeConnection<T[]>;
 export function getWsObs<T>(
   url: string,
   sort?: object,
@@ -93,12 +84,7 @@ export function getWsObs<T>(
       return console.error(res.message);
     }
   }
-): Observable<T[]> & {
-  insert: (document: T) => void;
-  replace: (document: T) => void;
-  patch: (document: Partial<T>) => void;
-  remove: (document: {_id: string} & Partial<T>) => void;
-} {
+): RealtimeConnection<T | T[]> {
   let data = new IterableSet<T>();
 
   let urlConfigOrSource: string | WebSocketSubjectConfig<any> = url;
@@ -150,18 +136,16 @@ export function getWsObs<T>(
     map(() => (findOne ? Array.from(data)[0] : Array.from(data)))
   );
 
-  const insert = (document: T) => subject.next({event: OperationKind.INSERT, data: document});
+  const insert = document => subject.next({event: OperationKind.INSERT, data: document});
   observable["insert"] = insert;
 
-  const replace = (document: T) => subject.next({event: OperationKind.REPLACE, data: document});
+  const replace = document => subject.next({event: OperationKind.REPLACE, data: document});
   observable["replace"] = replace;
 
-  const patch = (document: Partial<T>) =>
-    subject.next({event: OperationKind.PATCH, data: document});
+  const patch = document => subject.next({event: OperationKind.PATCH, data: document});
   observable["patch"] = patch;
 
-  const remove = (document: {_id: string} & Partial<T>) =>
-    subject.next({event: OperationKind.DELETE, data: document});
+  const remove = document => subject.next({event: OperationKind.DELETE, data: document});
   observable["remove"] = remove;
 
   return observable as any;
