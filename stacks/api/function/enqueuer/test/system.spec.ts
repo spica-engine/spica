@@ -2,8 +2,15 @@ import {SystemEnqueuer} from "@spica-server/function/enqueuer";
 import {EventQueue} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
 
+function createTarget(cwd?: string, handler?: string) {
+  const target = new event.Target();
+  target.cwd = cwd || "/tmp/fn1";
+  target.handler = handler || "default";
+  return target;
+}
+
 describe("SystemEnqueuer", () => {
-  const noopTarget = new event.Target({cwd: "/tmp/fn1", handler: "default"});
+  const noopTarget = createTarget();
   let enqueuer: SystemEnqueuer;
   let eventQueue: jasmine.SpyObj<EventQueue>;
   let nextSpy: jasmine.Spy;
@@ -21,6 +28,35 @@ describe("SystemEnqueuer", () => {
     enqueuer = new SystemEnqueuer(eventQueue);
     nextSpy = spyOn(enqueuer["subscriptionSubject"], "next").and.callThrough();
     invokerSpy = spyOn(enqueuer, "invokeReadyEventTargets" as never).and.callThrough();
+  });
+
+  it("should subscribe", () => {
+    enqueuer.subscribe(noopTarget, {name: "READY"});
+
+    const targets: event.Target[] = Array.from(enqueuer["readyTargets"]);
+    expect(targets.length).toEqual(1);
+
+    expect([targets[0].cwd, targets[0].handler]).toEqual(["/tmp/fn1", "default"]);
+  });
+
+  it("should unsubscribe", () => {
+    const target1 = createTarget("/tmp/fn1", "handler1");
+    const target2 = createTarget("/tmp/fn1", "handler2");
+    const target3 = createTarget("/tmp/fn2", "handler1");
+
+    enqueuer.subscribe(target1, {name: "READY"});
+    enqueuer.subscribe(target2, {name: "READY"});
+    enqueuer.subscribe(target3, {name: "READY"});
+
+    enqueuer.unsubscribe(target1);
+
+    const targets: event.Target[] = Array.from(enqueuer["readyTargets"]);
+    expect(targets.length).toEqual(2);
+
+    expect(targets.map(t => [t.cwd, t.handler])).toEqual([
+      ["/tmp/fn1", "handler2"],
+      ["/tmp/fn2", "handler1"]
+    ]);
   });
 
   it("should not call next till first subscribe is received", () => {
