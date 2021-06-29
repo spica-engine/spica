@@ -1,5 +1,9 @@
 <ng-container *ngIf="componentData$ | async; let componentData">
-  <h3>{{ componentData.title }}</h3>
+  <mat-card-header
+    ><mat-card-title>
+      {{ componentData.title }}
+    </mat-card-title>
+  </mat-card-header>
   <button
     class="refresh"
     mat-icon-button
@@ -13,7 +17,7 @@
       <span [name]="filter.key" [inputPlacer]="filter" [(ngModel)]="filter.value"> </span>
     </ng-container>
   </div>
-  <div>
+  <div class="chart-container">
     <canvas
       baseChart
       [data]="componentData.data"
