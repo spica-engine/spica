@@ -12,6 +12,8 @@ import {
   HttpService
 } from "@spica-devkit/internal_common";
 import {getWsObs} from "./operators";
+
+// do not remove these unused imports
 import {Observable} from "rxjs";
 import {map} from "rxjs/operators";
 
@@ -68,7 +70,7 @@ export function remove(id: string): Promise<any> {
 }
 
 export namespace data {
-  export function get(
+  export function get<BucketDocument>(
     bucketId: string,
     documentId: string,
     options: {headers?: object; queryParams?: object} = {}
@@ -81,9 +83,17 @@ export namespace data {
     });
   }
 
-  export function getAll(
+  export function getAll<BucketDocument>(
     bucketId: string,
-    options: {headers?: object; queryParams?: object} = {}
+    options?: {headers?: object; queryParams?: {[key: string]: any; paginate?: false}}
+  ): Promise<BucketDocument[]>;
+  export function getAll<BucketDocument>(
+    bucketId: string,
+    options?: {headers?: object; queryParams?: {[key: string]: any; paginate?: true}}
+  ): Promise<IndexResult<BucketDocument>>;
+  export function getAll<BucketDocument>(
+    bucketId: string,
+    options: {headers?: object; queryParams?: {[key: string]: any; paginate?: boolean}} = {}
   ): Promise<BucketDocument[] | IndexResult<BucketDocument>> {
     checkInitialized(authorization);
 
@@ -116,7 +126,7 @@ export namespace data {
   ): Promise<any> {
     checkInitialized(authorization);
 
-    return service.patch<any>(`bucket/${bucketId}/data/${documentId}`, document);
+    return service.patch(`bucket/${bucketId}/data/${documentId}`, document);
   }
 
   export function remove(bucketId: string, documentId: string): Promise<any> {
@@ -126,7 +136,7 @@ export namespace data {
   }
 
   export namespace realtime {
-    export function get(
+    export function get<BucketDocument>(
       bucketId: string,
       documentId: string,
       messageCallback?: (res: {status: number; message: string}) => any
@@ -138,10 +148,10 @@ export namespace data {
         Authorization: authorization
       });
 
-      return getWsObs<BucketDocument[]>(fullUrl.toString(), undefined, true, messageCallback);
+      return getWsObs<BucketDocument>(fullUrl.toString(), undefined, true, messageCallback);
     }
 
-    export function getAll(
+    export function getAll<BucketDocument>(
       bucketId: string,
       queryParams: object = {},
       messageCallback?: (res: {status: number; message: string}) => any
@@ -155,7 +165,7 @@ export namespace data {
         Authorization: authorization
       });
 
-      return getWsObs<BucketDocument[]>(fullUrl.toString(), sort, false, messageCallback);
+      return getWsObs<BucketDocument>(fullUrl.toString(), sort, false, messageCallback);
     }
   }
 }

@@ -3,6 +3,8 @@ div {
     min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
+
+    justify-content: space-between;
     h1 {
       & > * {
         vertical-align: middle;
@@ -16,30 +18,36 @@ div {
       }
     }
   }
-  div.content {
+  div.components-container {
     margin-top: -160px;
-    display: block;
-    div.components {
-      display: flex;
-      flex-direction: row;
-      flex-grow: 1;
-      flex-wrap: wrap;
-      align-items: stretch;
-      margin: 20px;
-      mat-card {
+    width: 100%;
+    height: 300vh;
+    mat-card {
+      position: absolute;
+      height: 500px;
+      width: 500px;
+
+      min-width: 250px;
+      min-height: 250px;
+
+      resize: both;
+      overflow: auto;
+
+      margin: 10px;
+
+      &:active {
+        box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14),
+          0 3px 14px 2px rgba(0, 0, 0, 0.12);
+      }
+
+      div.drag-cursor {
+        cursor: move;
         width: 100%;
-        overflow-x: auto;
-        flex-basis: calc(50% - 10px);
-        margin: 5px;
-        flex-grow: 1;
-        min-height: 250px;
-        min-width: 250px;
-        div.nonexist-type {
-          height: 100%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
+        height: 50px;
+
+        position: absolute;
+        left: 0;
+        top: 0;
       }
     }
   }
