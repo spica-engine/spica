@@ -5,6 +5,7 @@ import {tap, delayWhen, map, debounceTime, retryWhen, filter} from "rxjs/operato
 import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
 import {isPlatformBrowser} from "@spica-devkit/internal_common";
+import {RealtimeConnection} from "./interface";
 
 export class IterableSet<T> implements Iterable<T> {
   ids = new Array<string>();
@@ -65,15 +66,25 @@ export class IterableSet<T> implements Iterable<T> {
 export function getWsObs<T>(
   url: string,
   sort?: object,
+  findOne?: true,
+  messageCallback?: (res: {status: number; message: string}) => any
+): RealtimeConnection<T>;
+export function getWsObs<T>(
+  url: string,
+  sort?: object,
+  findOne?: false,
+  messageCallback?: (res: {status: number; message: string}) => any
+): RealtimeConnection<T[]>;
+export function getWsObs<T>(
+  url: string,
+  sort?: object,
   findOne?: boolean,
   messageCallback: (res: {status: number; message: string}) => any = res => {
     if (res.status >= 400 && res.status < 600) {
       return console.error(res.message);
     }
   }
-): Observable<T[]> & {
-  next: (kind: OperationKind, document: any) => void;
-} {
+): RealtimeConnection<T | T[]> {
   let data = new IterableSet<T>();
 
   let urlConfigOrSource: string | WebSocketSubjectConfig<any> = url;
@@ -86,8 +97,6 @@ export function getWsObs<T>(
   }
 
   const subject = webSocket<any>(urlConfigOrSource);
-
-  const next = (kind: OperationKind, document: any) => subject.next({event: kind, data: document});
 
   const observable = subject.pipe(
     tap(chunk => {
@@ -127,7 +136,17 @@ export function getWsObs<T>(
     map(() => (findOne ? Array.from(data)[0] : Array.from(data)))
   );
 
-  observable["next"] = next;
+  const insert = document => subject.next({event: OperationKind.INSERT, data: document});
+  observable["insert"] = insert;
+
+  const replace = document => subject.next({event: OperationKind.REPLACE, data: document});
+  observable["replace"] = replace;
+
+  const patch = document => subject.next({event: OperationKind.PATCH, data: document});
+  observable["patch"] = patch;
+
+  const remove = document => subject.next({event: OperationKind.DELETE, data: document});
+  observable["remove"] = remove;
 
   return observable as any;
 }
