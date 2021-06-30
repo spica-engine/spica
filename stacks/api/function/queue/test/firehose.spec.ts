@@ -23,7 +23,7 @@ describe("FirehoseQueue", () => {
   });
 
   describe("pop", () => {
-    it("should return error", done => {
+    it("should return error for nonexistent events", done => {
       const pop = new Firehose.Message.Pop({
         id: "1"
       });
@@ -31,19 +31,27 @@ describe("FirehoseQueue", () => {
         expect(e).not.toBeUndefined();
         expect(e.message).toBe("2 UNKNOWN: Queue has no item with id 1");
         expect(req).toBeUndefined();
+
+        expect(firehoseQueue.size).toEqual(0);
+
         done();
       });
     });
 
-    it("should not return error", done => {
+    it("should pop", done => {
       const pop = new Firehose.Message.Pop({
         id: "2"
       });
       firehoseQueue.enqueue(pop.id, new Firehose.Message.Incoming(), undefined);
 
+      expect(firehoseQueue.size).toEqual(1);
+
       firehoseQueueClient.pop(pop, (e, req) => {
         expect(e).toBe(null);
         expect(req instanceof Firehose.Message.Incoming).toBe(true);
+
+        expect(firehoseQueue.size).toEqual(0);
+
         done();
       });
     });
@@ -65,6 +73,8 @@ describe("FirehoseQueue", () => {
     });
 
     firehoseQueue.enqueue("1", incomingMessage, socket);
+
+    expect(firehoseQueue["sockets"].size).toEqual(1);
 
     const outgoingMessage = new Firehose.Message.Outgoing({
       client,
@@ -160,5 +170,42 @@ describe("FirehoseQueue", () => {
         done();
       }
     );
+  });
+
+  it("should remove socket for close message", done => {
+    const client = new Firehose.ClientDescription({
+      id: "1"
+    });
+
+    const pop = new Firehose.Message.Pop({
+      id: "1"
+    });
+
+    firehoseQueue.enqueue(
+      pop.id,
+      new Firehose.Message.Incoming({
+        client,
+        message: new Firehose.Message({
+          name: "connection"
+        })
+      }),
+      undefined
+    );
+    expect(firehoseQueue["sockets"].size).toEqual(1);
+
+    pop.id = "2";
+    firehoseQueue.enqueue(
+      pop.id,
+      new Firehose.Message.Incoming({
+        client,
+        message: new Firehose.Message({
+          name: "close"
+        })
+      }),
+      undefined
+    );
+    expect(firehoseQueue["sockets"].size).toEqual(0);
+
+    firehoseQueueClient.pop(pop, done);
   });
 });
