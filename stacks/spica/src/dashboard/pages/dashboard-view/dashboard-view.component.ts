@@ -4,7 +4,7 @@ import {switchMap, tap} from "rxjs/operators";
 import {DashboardService} from "../../services/dashboard.service";
 import {Dashboard} from "@spica-client/dashboard/interfaces";
 import {Component, OnInit} from "@angular/core";
-import {BreakpointObserver, Breakpoints, BreakpointState} from "@angular/cdk/layout";
+import {BreakpointObserver, BreakpointState} from "@angular/cdk/layout";
 
 interface ComponentStyle {
   "z-index": number;
@@ -40,13 +40,9 @@ export class DashboardViewComponent implements OnInit {
     private ds: DashboardService,
     public breakpointObserver: BreakpointObserver
   ) {
-    this.breakpointObserver.observe("(max-width: 1280px)").subscribe((state: BreakpointState) => {
-      this.customizeDisabled = state.matches;
-      // if (this.customizeDisabled) {
-      //   setTimeout(() => this.autoAlign(1), 100);
-      //   this.saveComponentStyles();
-      // }
-    });
+    this.breakpointObserver
+      .observe("(max-width: 1280px)")
+      .subscribe((state: BreakpointState) => (this.customizeDisabled = state.matches));
   }
 
   ngOnInit() {
