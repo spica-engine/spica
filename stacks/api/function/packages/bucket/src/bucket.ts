@@ -70,34 +70,34 @@ export function remove(id: string): Promise<any> {
 }
 
 export namespace data {
-  export function get<BucketDocument>(
+  export function get<T>(
     bucketId: string,
     documentId: string,
     options: {headers?: object; queryParams?: object} = {}
-  ): Promise<BucketDocument> {
+  ): Promise<T> {
     checkInitialized(authorization);
 
-    return service.get<BucketDocument>(`bucket/${bucketId}/data/${documentId}`, {
+    return service.get<T>(`bucket/${bucketId}/data/${documentId}`, {
       params: options.queryParams,
       headers: options.headers
     });
   }
 
-  export function getAll<BucketDocument>(
+  export function getAll<T>(
     bucketId: string,
     options?: {headers?: object; queryParams?: {[key: string]: any; paginate?: false}}
-  ): Promise<BucketDocument[]>;
-  export function getAll<BucketDocument>(
+  ): Promise<T[]>;
+  export function getAll<T>(
     bucketId: string,
     options?: {headers?: object; queryParams?: {[key: string]: any; paginate?: true}}
-  ): Promise<IndexResult<BucketDocument>>;
-  export function getAll<BucketDocument>(
+  ): Promise<IndexResult<T>>;
+  export function getAll<T>(
     bucketId: string,
     options: {headers?: object; queryParams?: {[key: string]: any; paginate?: boolean}} = {}
-  ): Promise<BucketDocument[] | IndexResult<BucketDocument>> {
+  ): Promise<T[] | IndexResult<T>> {
     checkInitialized(authorization);
 
-    return service.get<BucketDocument[] | IndexResult<BucketDocument>>(`bucket/${bucketId}/data`, {
+    return service.get<T[] | IndexResult<T>>(`bucket/${bucketId}/data`, {
       params: options.queryParams,
       headers: options.headers
     });
@@ -136,7 +136,7 @@ export namespace data {
   }
 
   export namespace realtime {
-    export function get<BucketDocument>(
+    export function get<T>(
       bucketId: string,
       documentId: string,
       messageCallback?: (res: {status: number; message: string}) => any
@@ -148,10 +148,10 @@ export namespace data {
         Authorization: authorization
       });
 
-      return getWsObs<BucketDocument>(fullUrl.toString(), undefined, true, messageCallback);
+      return getWsObs<T>(fullUrl.toString(), undefined, true, messageCallback);
     }
 
-    export function getAll<BucketDocument>(
+    export function getAll<T>(
       bucketId: string,
       queryParams: object = {},
       messageCallback?: (res: {status: number; message: string}) => any
@@ -165,7 +165,7 @@ export namespace data {
         Authorization: authorization
       });
 
-      return getWsObs<BucketDocument>(fullUrl.toString(), sort, false, messageCallback);
+      return getWsObs<T>(fullUrl.toString(), sort, false, messageCallback);
     }
   }
 }
