@@ -1,5 +1,6 @@
-h3 {
-  text-align: center;
+mat-card-header {
+  align-items: center;
+  justify-content: center;
 }
 
 div.filters {
@@ -12,8 +13,17 @@ div.filters {
   }
 }
 
+div.chart-container {
+  min-height: 100px;
+  height: calc(100% - 150px);
+}
+
 button.refresh {
   position: absolute;
-  right: 0;
-  top: 0;
+  right: 10px;
+  top: 10px;
+
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
 }

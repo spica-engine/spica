@@ -5,8 +5,13 @@ mat-card-header {
 
 button.refresh {
   position: absolute;
-  right: 0;
-  top: 0;
+  right: 10px;
+  top: 10px;
+  mat-icon {
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+  }
 }
 
 mat-card-content.inputs {

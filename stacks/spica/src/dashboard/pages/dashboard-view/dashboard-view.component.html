@@ -1,13 +1,47 @@
-<div *ngIf="dashboard$ | async; let dashboard">
-  <mat-toolbar>
-    <h1>
-      <mat-icon> {{ dashboard.icon }} </mat-icon>
-      <span> {{ dashboard.name }}</span>
-    </h1>
-  </mat-toolbar>
-  <div class="content">
-    <div class="components">
-      <mat-card *ngFor="let component of dashboard.components; index as i">
+<div class="dashboard-container">
+  <div *ngIf="dashboard$ | async; let dashboard">
+    <mat-toolbar>
+      <h1>
+        <mat-icon> {{ dashboard.icon }} </mat-icon>
+        <span> {{ dashboard.name }}</span>
+      </h1>
+      <div *ngIf="!customizeDisabled" class="actions">
+        <mat-form-field>
+          <mat-label>
+            Auto Align
+          </mat-label>
+          <mat-select (selectionChange)="autoAlign($event.value); saveComponentStyles()">
+            <mat-option *ngFor="let i of [1, 2, 3, 4]" [value]="i">
+              {{ componentStyles.length / i | number: "1.0-0" }}
+              x {{ i }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button
+          mat-button
+          (click)="
+            componentStyles = getDefaultComponentStyles(dashboard.components.length);
+            saveComponentStyles()
+          "
+        >
+          <mat-icon>
+            restart_alt
+          </mat-icon>
+          Reset
+        </button>
+      </div>
+    </mat-toolbar>
+    <div class="components-container">
+      <mat-card
+        *ngFor="let component of dashboard.components; index as i"
+        class="card"
+        [ngStyle]="componentStyles[i]"
+        (mouseup)="onEditEnded($event.currentTarget, i)"
+        cdkDrag
+        cdkDragBoundary=".components-container"
+      >
+        <div class="drag-cursor" cdkDragHandle></div>
         <dashboard-default
           *ngIf="defaultTypes.indexOf(component.type) != -1"
           [componentData$]="componentData$[i]"
@@ -29,14 +63,6 @@
           (onUpdate)="onUpdate($event, i)"
         >
         </dashboard-card>
-        <div
-          class="nonexist-type"
-          *ngIf="
-            defaultTypes.indexOf(component.type) == -1 && customTypes.indexOf(component.type) == -1
-          "
-        >
-          <span>This component type does not exist.</span>
-        </div>
       </mat-card>
     </div>
   </div>

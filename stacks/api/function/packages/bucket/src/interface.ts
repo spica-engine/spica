@@ -1,4 +1,5 @@
 import {JSONSchema7, JSONSchema7TypeName} from "json-schema";
+import {Observable} from "rxjs";
 
 export interface Bucket {
   _id?: string;
@@ -87,3 +88,12 @@ export interface IndexResult<T> {
   };
   data: T[];
 }
+
+export type RealtimeConnection<T> = Observable<T> & {
+  insert: (document: Singular<T>) => void;
+  replace: (document: Singular<T> & {_id: string}) => void;
+  patch: (document: Partial<Singular<T>> & {_id: string}) => void;
+  remove: (document: Partial<Singular<T>> & {_id: string}) => void;
+};
+
+type Singular<T> = T extends Array<any> ? T[0] : T;
