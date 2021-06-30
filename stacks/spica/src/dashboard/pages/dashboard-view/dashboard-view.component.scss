@@ -17,6 +17,20 @@ div {
         margin-left: 5px;
       }
     }
+
+    div.actions {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      > * {
+        margin-left: 5px;
+      }
+      mat-form-field {
+        font-size: 14px;
+        width: 150px;
+      }
+    }
   }
   div.components-container {
     margin-top: -160px;
@@ -48,6 +62,21 @@ div {
         position: absolute;
         left: 0;
         top: 0;
+      }
+    }
+  }
+
+  @media only screen and (max-width: 1280px) {
+    div.components-container > {
+      mat-card {
+        width: calc(100% - 20px) !important;
+        height: 500px !important;
+        position: relative !important;
+        transform: unset !important;
+
+        div.drag-cursor {
+          display: none;
+        }
       }
     }
   }

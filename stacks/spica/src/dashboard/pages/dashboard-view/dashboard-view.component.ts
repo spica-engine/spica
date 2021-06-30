@@ -2,8 +2,9 @@ import {ActivatedRoute} from "@angular/router";
 import {Observable, BehaviorSubject} from "rxjs";
 import {switchMap, tap} from "rxjs/operators";
 import {DashboardService} from "../../services/dashboard.service";
-import {Component as DashboardComponent, Dashboard} from "@spica-client/dashboard/interfaces";
+import {Dashboard} from "@spica-client/dashboard/interfaces";
 import {Component, OnInit} from "@angular/core";
+import {BreakpointObserver, BreakpointState} from "@angular/cdk/layout";
 
 interface ComponentStyle {
   "z-index": number;
@@ -18,7 +19,6 @@ interface ComponentStyle {
   styleUrls: ["./dashboard-view.component.scss"]
 })
 export class DashboardViewComponent implements OnInit {
-  _id: string;
   dashboard$: Observable<Dashboard>;
 
   componentData$: Observable<object>[] = [];
@@ -33,7 +33,17 @@ export class DashboardViewComponent implements OnInit {
 
   localStorageKey: string;
 
-  constructor(private activatedRoute: ActivatedRoute, private ds: DashboardService) {}
+  customizeDisabled = false;
+
+  constructor(
+    private activatedRoute: ActivatedRoute,
+    private ds: DashboardService,
+    public breakpointObserver: BreakpointObserver
+  ) {
+    this.breakpointObserver
+      .observe("(max-width: 1280px)")
+      .subscribe((state: BreakpointState) => (this.customizeDisabled = state.matches));
+  }
 
   ngOnInit() {
     this.dashboard$ = this.activatedRoute.params.pipe(
@@ -44,9 +54,10 @@ export class DashboardViewComponent implements OnInit {
               return;
             }
 
-            this._id = dashboard._id;
+            this.refreshSubjects$ = [];
+            this.componentData$ = [];
 
-            this.localStorageKey = `dashboard_${this._id}_component_styles`;
+            this.localStorageKey = `dashboard_${dashboard._id}_component_styles`;
 
             this.loadComponentStyles(dashboard.components.length);
             this.saveComponentStyles();
@@ -167,5 +178,36 @@ export class DashboardViewComponent implements OnInit {
         transform: `translate3d(${translateX}px, ${translateY}px, 0px)`
       };
     });
+  }
+
+  autoAlign(columns: number) {
+    const margin = 10;
+
+    const container = document.getElementsByClassName("dashboard-container")[0] as HTMLElement;
+    const containerWidth = container.clientWidth - (columns + 1) * margin;
+
+    const componentHeight = 500;
+    const componentWidth = containerWidth / columns;
+
+    const rows = this.componentStyles.length / columns;
+
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < columns; x++) {
+        const index = x + y * columns;
+
+        if (index > this.componentStyles.length - 1) {
+          break;
+        }
+
+        const translateX = x * componentWidth + margin * x;
+        const translateY = y * componentHeight + margin * y;
+
+        this.componentStyles[index].width = componentWidth + "px";
+        this.componentStyles[index].height = componentHeight + "px";
+        this.componentStyles[
+          index
+        ].transform = `translate3d(${translateX}px, ${translateY}px, 0px)`;
+      }
+    }
   }
 }
