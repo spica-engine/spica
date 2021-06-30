@@ -19,8 +19,16 @@ div {
     }
 
     div.actions {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      > * {
+        margin-left: 5px;
+      }
       mat-form-field {
-        font-size: 15px;
+        font-size: 14px;
+        width: 150px;
       }
     }
   }

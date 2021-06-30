@@ -10,14 +10,26 @@
           <mat-label>
             Auto Align
           </mat-label>
-          <mat-select (selectionChange)="autoAlign($event.value); saveComponentStyles()">
-            <mat-option *ngFor="let i of [1, 2, 3, 4]" [value]="i">
-              {{ componentStyles.length / i | number: "1.0-0" }}
-              x {{ i }}
+          <mat-select #select (selectionChange)="autoAlign($event.value); saveComponentStyles()">
+            <mat-select-trigger>
+              <mat-icon>
+                {{ select.triggerValue }}
+              </mat-icon>
+            </mat-select-trigger>
+            <mat-option [value]="1">
+              <mat-icon>table_rows</mat-icon>
+            </mat-option>
+            <mat-option [value]="2">
+              <mat-icon>window</mat-icon>
+            </mat-option>
+            <mat-option [value]="3">
+              <mat-icon>grid_on</mat-icon>
+            </mat-option>
+            <mat-option [value]="4">
+              <mat-icon>view_comfy</mat-icon>
             </mat-option>
           </mat-select>
         </mat-form-field>
-
         <button
           mat-button
           (click)="
