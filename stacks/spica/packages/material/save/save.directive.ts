@@ -1,4 +1,4 @@
-import {Directive, Input, TemplateRef, ViewContainerRef} from "@angular/core";
+import {Directive, Input, OnInit, TemplateRef, ViewContainerRef} from "@angular/core";
 import {SavingState} from "./interface";
 
 @Directive({

@@ -1,0 +1,17 @@
+<div *ngIf="(asyncTask | async) || 'pristine'; let state">
+  <ng-container *ngIf="state == 'pending' && !stateStyles.pending.icon; else providedIcons">
+    <mat-progress-spinner
+      [diameter]="18"
+      color="accent"
+      mode="indeterminate"
+    ></mat-progress-spinner>
+  </ng-container>
+
+  <ng-template #providedIcons>
+    <mat-icon>
+      {{ stateStyles[state].icon }}
+    </mat-icon>
+  </ng-template>
+
+  <span *ngIf="!minimal">{{ stateStyles[state].text }}</span>
+</div>

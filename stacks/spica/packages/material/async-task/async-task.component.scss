@@ -1,0 +1,13 @@
+:host {
+  div {
+    display: inline-block;
+    > * {
+      vertical-align: middle;
+    }
+
+    mat-progress-spinner {
+      display: inline-block;
+      margin-right: 5px;
+    }
+  }
+}
