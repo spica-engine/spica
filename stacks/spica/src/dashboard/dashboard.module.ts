@@ -28,7 +28,7 @@ import {MatStepperModule} from "@angular/material/stepper";
 import {MatSelectModule} from "@angular/material/select";
 import {MatTabsModule} from "@angular/material/tabs";
 import {MatTableModule} from "@angular/material/table";
-import {MatClipboardModule, MatAwareDialogModule} from "@spica-client/material";
+import {MatClipboardModule, MatAwareDialogModule, AsyncTaskModule} from "@spica-client/material";
 import {AddComponent} from "./pages/add/add.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {MatMenuModule} from "@angular/material/menu";
@@ -70,7 +70,8 @@ import {DragDropModule} from "@angular/cdk/drag-drop";
     OwlNativeDateTimeModule,
     MatAwareDialogModule,
     PassportModule.forChild(),
-    DragDropModule
+    DragDropModule,
+    AsyncTaskModule
   ],
   declarations: [
     DashboardComponent,

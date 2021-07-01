@@ -1,6 +1,6 @@
 import {Component, Input, OnChanges, OnDestroy, SimpleChanges, TemplateRef} from "@angular/core";
 import {ActivatedRoute} from "@angular/router";
-import {merge, Observable, of, Subject} from "rxjs";
+import {iif, merge, Observable, of, Subject} from "rxjs";
 import {
   ignoreElements,
   endWith,
@@ -57,11 +57,13 @@ export class AsyncTaskComponent implements OnChanges, OnDestroy {
 
   @Input() asyncTask: Observable<any> = of(PendingState.Pristine);
 
-  @Input() parent: HTMLButtonElement;
+  @Input() parents: HTMLButtonElement[] = [];
 
   @Input() minimal = false;
 
   dispose: Subject<any> = new Subject();
+
+  @Input() skipResponse = false;
 
   constructor(private activatedRoute: ActivatedRoute) {
     this.activatedRoute.params
@@ -75,26 +77,34 @@ export class AsyncTaskComponent implements OnChanges, OnDestroy {
 
   reset() {
     this.asyncTask = of(PendingState.Pristine);
-    if (this.parent) {
-      this.parent.disabled = false;
-    }
+    this.updateParents(false);
   }
 
-  ngOnChanges(change: SimpleChanges) {
-    if (
-      (change.asyncTask && change.asyncTask.isFirstChange()) ||
-      (change.parent && change.parent.isFirstChange())
-    ) {
+  ngOnChanges(changes: SimpleChanges) {
+    let validChange = true;
+
+    for (const [input, change] of Object.entries(changes)) {
+      if (
+        change.isFirstChange() ||
+        (input == "asyncTask" && typeof change.currentValue == "undefined")
+      ) {
+        validChange = false;
+        break;
+      }
+    }
+
+    if (!validChange) {
       return;
     }
 
-    const newAsyncTask = change.asyncTask.currentValue as Observable<any>;
+    const newAsyncTask = changes.asyncTask.currentValue as Observable<any>;
 
-    this.parent.disabled = true;
+    this.updateParents(true);
 
     this.asyncTask = merge(
       of(PendingState.Pending),
       newAsyncTask
+        .pipe(tap(console.log))
         .pipe(
           ignoreElements(),
           endWith(PendingState.Succeeded),
@@ -102,17 +112,27 @@ export class AsyncTaskComponent implements OnChanges, OnDestroy {
         )
         .pipe(
           switchMap(v =>
-            merge(
-              of(v),
-              of(v).pipe(
-                delay(1000),
-                map(() => PendingState.Pristine),
-                tap(() => (this.parent.disabled = false))
+            iif(
+              () => this.skipResponse,
+              of(PendingState.Pristine).pipe(tap(() => this.updateParents(false))),
+              merge(
+                of(v),
+                of(v).pipe(
+                  delay(1000),
+                  map(() => PendingState.Pristine),
+                  tap(() => this.updateParents(false))
+                )
               )
             )
           )
         )
     );
+  }
+
+  updateParents(disable: boolean) {
+    if (this.parents.length) {
+      this.parents.forEach(p => (p.disabled = disable));
+    }
   }
 
   ngOnDestroy() {

@@ -85,6 +85,8 @@ export class IndexComponent implements OnInit, OnDestroy {
   nonEditableTypes = ["storage", "relation", "richtext"];
   dispose = new Subject();
 
+  $delete: Observable<any>[] = [];
+
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
@@ -204,6 +206,9 @@ export class IndexComponent implements OnInit, OnDestroy {
         this.selectedItems = [];
         this.paginator.length = (response.meta && response.meta.total) || 0;
         this.dataIds = response.data.map(d => d._id);
+
+        response.data.forEach(() => this.$delete.push());
+
         this.loaded = true;
         const bucketUrl = `/bucket/${this.bucketId}/data?`;
 
@@ -421,11 +426,13 @@ export class IndexComponent implements OnInit, OnDestroy {
       .finally(() => this.refresh.next());
   }
 
-  delete(id: string): void {
-    this.bds
-      .delete(this.bucketId, id)
-      .toPromise()
-      .then(() => this.refresh.next());
+  delete(id: string, i: number): void {
+    this.$delete[i] = this.bds.delete(this.bucketId, id).pipe(
+      tap(() => {
+        this.refresh.next();
+        this.$delete.splice(i);
+      })
+    );
   }
 
   deleteSelectedItems() {

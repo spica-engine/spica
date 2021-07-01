@@ -426,7 +426,7 @@
         (click)="saveBucket()"
         #saveButtonRef
       >
-        <async-task [parent]="saveButtonRef" [asyncTask]="$save"> </async-task>
+        <async-task [parents]="[saveButtonRef]" [asyncTask]="$save"> </async-task>
       </button>
     </mat-card-actions>
     <mat-list-item
@@ -447,7 +447,7 @@
             succeeded: {icon: 'done', text: 'Removed!'},
             failed: {icon: 'clear', text: 'Failed!'}
           }"
-          [parent]="removeButtonRef"
+          [parents]="[removeButtonRef]"
           [asyncTask]="$remove"
         ></async-task>
       </button>

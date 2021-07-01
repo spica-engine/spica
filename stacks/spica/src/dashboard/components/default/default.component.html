@@ -8,9 +8,22 @@
     class="refresh"
     mat-icon-button
     matTooltip="Refresh data"
-    (click)="onUpdate.next(componentData.filters)"
+    (click)="onRefresh(componentData.filters)"
+    #parent
   >
-    <mat-icon>refresh</mat-icon>
+    <async-task
+      [skipResponse]="true"
+      [minimal]="true"
+      [stateStyles]="{
+        pristine: {icon: 'refresh'},
+        pending: {},
+        succeeded: {icon: 'refresh'},
+        failed: {icon: 'clear'}
+      }"
+      [parents]="[parent]"
+      [asyncTask]="$subject"
+    >
+    </async-task>
   </button>
   <div class="filters">
     <ng-container *ngFor="let filter of componentData.filters">

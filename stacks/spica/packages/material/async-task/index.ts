@@ -1,1 +1,1 @@
-export {AsyncTaskModule} from "./async-task.module"
+export {AsyncTaskModule} from "./async-task.module";

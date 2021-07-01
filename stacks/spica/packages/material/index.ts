@@ -5,4 +5,4 @@ export * from "./aware-dialog";
 export * from "./clipboard";
 export * from "./icons";
 export * from "./save";
-export * from "./async-task"
+export * from "./async-task";

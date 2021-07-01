@@ -32,13 +32,14 @@
 
       <ng-container matColumnDef="actions">
         <mat-header-cell class="action" *matHeaderCellDef>Actions</mat-header-cell>
-        <mat-cell class="action" *matCellDef="let function">
+        <mat-cell class="action" *matCellDef="let function; let i = index">
           <button
             canInteract="function:show"
             [resource]="function._id"
             mat-icon-button
             [routerLink]="function._id"
             matTooltip="Edit"
+            #editButtonRef
           >
             <mat-icon>edit</mat-icon>
           </button>
@@ -48,6 +49,7 @@
             [routerLink]="['logs']"
             [queryParams]="{function: function._id}"
             matTooltip="Logs"
+            #logButtonRef
           >
             <mat-icon>bug_report</mat-icon>
           </button>
@@ -62,9 +64,22 @@
               templateOrDescription: dialogTemplate,
               answer: function.name
             }"
-            (confirm)="delete(function._id)"
+            (confirm)="delete(function._id, i)"
+            #deletButtonRef
           >
-            <mat-icon>delete</mat-icon>
+            <async-task
+              [stateStyles]="{
+                pristine: {icon: 'delete'},
+                pending: {},
+                succeeded: {icon: 'done'},
+                failed: {icon: 'clear'}
+              }"
+              [skipResponse]="true"
+              [minimal]="true"
+              [asyncTask]="$delete[i]"
+              [parents]="[deletButtonRef, logButtonRef, editButtonRef]"
+            >
+            </async-task>
           </button>
         </mat-cell>
       </ng-container>

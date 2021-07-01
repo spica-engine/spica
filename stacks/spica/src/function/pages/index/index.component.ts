@@ -1,7 +1,8 @@
 import {Component, OnInit} from "@angular/core";
-import {Observable} from "rxjs";
+import {Observable, of} from "rxjs";
 import {FunctionService} from "../../services";
 import {Function} from "../../interface";
+import {tap} from "rxjs/operators";
 
 @Component({
   selector: "function-index",
@@ -12,13 +13,20 @@ export class IndexComponent implements OnInit {
   public $data: Observable<Function[]>;
   public displayedColumns = ["_id", "name", "description", "actions"];
 
+  $delete: Observable<any>[] = [];
+
   constructor(private functionService: FunctionService) {}
 
   ngOnInit() {
-    this.$data = this.functionService.getFunctions();
+    this.$data = this.functionService.getFunctions().pipe(
+      tap(fs => {
+        this.$delete = [];
+        fs.forEach(() => this.$delete.push());
+      })
+    );
   }
 
-  delete(id: string): void {
-    this.functionService.delete(id).toPromise();
+  delete(id: string, i: number): void {
+    this.$delete[i] = this.functionService.delete(id);
   }
 }

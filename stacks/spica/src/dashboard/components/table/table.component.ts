@@ -2,7 +2,7 @@ import {Component, Input, ViewChild, Output, EventEmitter, AfterViewInit} from "
 import {MatSort} from "@angular/material/sort";
 import {MatTableDataSource} from "@angular/material/table";
 import {MatPaginator} from "@angular/material/paginator";
-import {Observable} from "rxjs";
+import {Observable, of, Subject} from "rxjs";
 import {tap} from "rxjs/operators";
 
 @Component({
@@ -23,15 +23,25 @@ export class TableComponent implements AfterViewInit {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
   @ViewChild(MatSort, {static: true}) sort: MatSort;
 
+  $subject: Subject<any>;
+
   ngAfterViewInit() {
     this.componentData$ = this.componentData$.pipe(
       tap(componentData => {
-        this.displayedColumns = componentData.displayedColumns;
+        if (this.$subject) {
+          this.$subject.complete();
+        }
 
+        this.displayedColumns = componentData.displayedColumns;
         this.dataSource = new MatTableDataSource(componentData.data);
         this.dataSource.sort = this.sort;
         this.dataSource.paginator = this.paginator;
       })
     );
+  }
+
+  onRefresh(filter) {
+    this.$subject = new Subject();
+    this.onUpdate.next(filter);
   }
 }

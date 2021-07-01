@@ -134,7 +134,7 @@
       (click)="saveBucketRow()"
       #parent
     >
-      <async-task [parent]="parent" [asyncTask]="$save"></async-task>
+      <async-task [parents]="[parent]" [asyncTask]="$save"></async-task>
     </button>
   </mat-card-actions>
 </mat-card>

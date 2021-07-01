@@ -1,5 +1,5 @@
 import {ActivatedRoute} from "@angular/router";
-import {Observable, BehaviorSubject} from "rxjs";
+import {Observable, BehaviorSubject, of} from "rxjs";
 import {switchMap, tap} from "rxjs/operators";
 import {DashboardService} from "../../services/dashboard.service";
 import {Dashboard} from "@spica-client/dashboard/interfaces";

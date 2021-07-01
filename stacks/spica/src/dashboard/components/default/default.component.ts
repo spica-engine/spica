@@ -1,6 +1,6 @@
 import {Component, Input, Output, EventEmitter, OnInit} from "@angular/core";
-import {Observable} from "rxjs";
-import {map} from "rxjs/operators";
+import {Observable, Subject} from "rxjs";
+import {map, tap} from "rxjs/operators";
 
 @Component({
   selector: "dashboard-default",
@@ -12,8 +12,15 @@ export class DefaultComponent implements OnInit {
   @Input() type: string;
   @Output() onUpdate: EventEmitter<object> = new EventEmitter();
 
+  $subject: Subject<any>;
+
   ngOnInit() {
     this.componentData$ = this.componentData$.pipe(
+      tap(() => {
+        if (this.$subject) {
+          this.$subject.complete();
+        }
+      }),
       map(data => {
         data.options = {
           ...data.options,
@@ -23,5 +30,10 @@ export class DefaultComponent implements OnInit {
         return data;
       })
     );
+  }
+
+  onRefresh(filter) {
+    this.$subject = new Subject();
+    this.onUpdate.next(filter);
   }
 }

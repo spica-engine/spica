@@ -202,12 +202,13 @@
         </ng-container>
         <ng-container matColumnDef="$$spicainternal_actions" *ngIf="schema$ | async; let schema">
           <th mat-header-cell class="action" *matHeaderCellDef>Actions</th>
-          <td mat-cell class="action" *matCellDef="let row">
+          <td #actionsRef mat-cell class="action" *matCellDef="let row; let i = index">
             <button
               canInteract="bucket:data:show"
               [resource]="schema._id + '/' + row._id"
               mat-icon-button
               [routerLink]="row._id"
+              #editButtonRef
             >
               <mat-icon>{{ readOnly ? "remove_red_eye" : "edit" }}</mat-icon>
             </button>
@@ -227,9 +228,22 @@
                   : 'agree',
                 list: getDependents(schema, [row])
               }"
-              (confirm)="delete(row._id)"
+              (confirm)="delete(row._id, i)"
+              #deleteButtonRef
             >
-              <mat-icon>delete</mat-icon>
+              <async-task
+                [skipResponse]="true"
+                [stateStyles]="{
+                  pristine: {icon: 'delete'},
+                  pending: {},
+                  succeeded: {icon: 'done'},
+                  failed: {icon: 'clear'}
+                }"
+                [minimal]="true"
+                [parents]="[deleteButtonRef, editButtonRef]"
+                [asyncTask]="$delete[i]"
+              >
+              </async-task>
             </button>
           </td>
         </ng-container>

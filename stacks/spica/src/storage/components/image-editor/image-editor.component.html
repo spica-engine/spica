@@ -13,7 +13,7 @@
       <mat-icon>rotate_right</mat-icon>
     </button>
     <button #doneButtonRef mat-icon-button (click)="doneCropping()" title="Done">
-      <async-task [minimal]="true" [parent]="doneButtonRef" [asyncTask]="$save"> </async-task>
+      <async-task [minimal]="true" [parents]="doneButtonRef" [asyncTask]="$save"> </async-task>
     </button>
     <span class="scaleSlider">
       <mat-label>Scale Percentage</mat-label>
