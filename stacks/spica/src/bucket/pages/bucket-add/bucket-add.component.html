@@ -417,28 +417,16 @@
         [canInteract]="bucket._id ? 'bucket:update' : 'bucket:create'"
         [resource]="bucket._id ? bucket._id : undefined"
         form="describeForm"
-        *matSave="$save | async; let state"
         [disabled]="
           describeForm.invalid ||
           (bucket.properties | keyvalue)?.length < 1 ||
           bucket.primary == undefined ||
-          (bucket.documentSettings && bucket.documentSettings.countLimit < 1) ||
-          !!state
+          (bucket.documentSettings && bucket.documentSettings.countLimit < 1)
         "
         (click)="saveBucket()"
-        [ngSwitch]="state"
+        #saveButtonRef
       >
-        <mat-icon *ngSwitchDefault>save</mat-icon>
-        <mat-progress-spinner
-          *ngSwitchCase="'saving'"
-          [diameter]="18"
-          color="primary"
-          mode="indeterminate"
-        >
-        </mat-progress-spinner>
-        <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
-        <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
-        <span>{{ (!state ? "save" : state) | titlecase }}</span>
+        <async-task [parent]="saveButtonRef" [asyncTask]="$save"> </async-task>
       </button>
     </mat-card-actions>
     <mat-list-item
@@ -451,34 +439,17 @@
       <h3>
         DANGER ZONE
       </h3>
-      <button
-        (click)="clearHistories()"
-        mat-raised-button
-        color="warn"
-        *matSave="$remove | async; let state"
-        [disabled]="!!state"
-        [ngSwitch]="state"
-      >
-        <ng-container *ngSwitchDefault>
-          <mat-icon>delete</mat-icon>
-          <span>Remove History</span>
-        </ng-container>
-        <ng-container *ngSwitchCase="'saving'">
-          <mat-progress-spinner
-            [diameter]="18"
-            color="primary"
-            mode="indeterminate"
-          ></mat-progress-spinner>
-          <span>Removing..</span>
-        </ng-container>
-        <ng-container *ngSwitchCase="'saved'">
-          <mat-icon>done</mat-icon>
-          <span>Removed</span>
-        </ng-container>
-        <ng-container *ngSwitchCase="'failed'">
-          <mat-icon>clear</mat-icon>
-          <span>Failed</span>
-        </ng-container>
+      <button (click)="clearHistories()" mat-raised-button color="warn" #removeButtonRef>
+        <async-task
+          [stateStyles]="{
+            pristine: {icon: 'delete', text: 'Remove History'},
+            pending: {text: 'Removing..'},
+            succeeded: {icon: 'done', text: 'Removed!'},
+            failed: {icon: 'clear', text: 'Failed!'}
+          }"
+          [parent]="removeButtonRef"
+          [asyncTask]="$remove"
+        ></async-task>
       </button>
       <p>
         This action will remove all histories of this bucket

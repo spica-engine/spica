@@ -1,27 +1,14 @@
 import {animate, style, transition, trigger} from "@angular/animations";
 import {CdkDragDrop, moveItemInArray} from "@angular/cdk/drag-drop";
-import {Component, HostListener, OnDestroy, OnInit} from "@angular/core";
+import {Component, OnDestroy, OnInit} from "@angular/core";
 import {MatCheckboxChange} from "@angular/material/checkbox";
 import {ActivatedRoute, Router} from "@angular/router";
 import {InputResolver} from "@spica-client/common";
 import {deepCopy} from "@spica-client/core";
-import {ICONS, SavingState} from "@spica-client/material";
-import {Subject, Observable, merge, of} from "rxjs";
-import {
-  filter,
-  flatMap,
-  map,
-  switchMap,
-  takeUntil,
-  tap,
-  ignoreElements,
-  endWith,
-  catchError,
-  mapTo,
-  take
-} from "rxjs/operators";
+import {ICONS} from "@spica-client/material";
+import {Subject, Observable, of} from "rxjs";
+import {filter, switchMap, takeUntil, tap, catchError, mapTo, take} from "rxjs/operators";
 import {Bucket, emptyBucket, LimitExceedBehaviour} from "../../interfaces/bucket";
-import {PredefinedDefault} from "../../interfaces/predefined-default";
 import {BucketService} from "../../services/bucket.service";
 import {BucketHistoryService} from "@spica-client/bucket/services/bucket-history.service";
 import {MatDialog} from "@angular/material/dialog";
@@ -50,9 +37,9 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   buckets: Bucket[];
   bucket: Bucket;
 
-  $save: Observable<SavingState>;
+  $save: Observable<any>;
 
-  $remove: Observable<SavingState>;
+  $remove: Observable<any>;
 
   isHistoryEndpointEnabled$: Observable<boolean>;
 
@@ -86,8 +73,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     this.activatedRoute.params
       .pipe(
         tap(params => {
-          this.$save = of(SavingState.Pristine);
-          this.$remove = of(SavingState.Pristine);
           if (!params.id) {
             this.bucket = emptyBucket();
             this.updatePositionProperties();
@@ -162,27 +147,13 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
     const save = isInsert ? this.bs.insertOne(this.bucket) : this.bs.replaceOne(this.bucket);
 
-    this.$save = merge(
-      of(SavingState.Saving),
-      save.pipe(
-        tap(bucket => isInsert && this.router.navigate(["bucket", bucket._id, "add"])),
-        ignoreElements(),
-        endWith(SavingState.Saved),
-        catchError(() => of(SavingState.Failed))
-      )
+    this.$save = save.pipe(
+      tap(bucket => isInsert && this.router.navigate(["bucket", bucket._id, "add"]))
     );
   }
 
   clearHistories() {
-    const remove = this.historyService.clearHistories(this.bucket._id);
-    this.$remove = merge(
-      of(SavingState.Saving),
-      remove.pipe(
-        ignoreElements(),
-        endWith(SavingState.Saved),
-        catchError(() => of(SavingState.Failed))
-      )
-    );
+    this.$remove = this.historyService.clearHistories(this.bucket._id);
   }
 
   createNewField(propertyKey: string = null) {

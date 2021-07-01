@@ -2,26 +2,14 @@ import {animate, style, transition, trigger} from "@angular/animations";
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Observable, of, merge, throwError, BehaviorSubject, Subject} from "rxjs";
-import {
-  delay,
-  flatMap,
-  map,
-  share,
-  tap,
-  ignoreElements,
-  endWith,
-  catchError,
-  switchMap,
-  switchMapTo
-} from "rxjs/operators";
+import {Observable, of, throwError, BehaviorSubject} from "rxjs";
+import {delay, flatMap, map, share, tap, catchError, switchMapTo} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketHistory} from "../../interfaces/bucket-history";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketHistoryService} from "../../services/bucket-history.service";
 import {BucketService} from "../../services/bucket.service";
-import {SavingState} from "@spica-client/material";
 
 @Component({
   selector: "bucket-add",
@@ -42,7 +30,7 @@ export class AddComponent implements OnInit {
   bucket$: Observable<Bucket>;
   histories$: Observable<Array<BucketHistory>>;
 
-  $save: Observable<SavingState>;
+  $save: Observable<any>;
 
   private refreshHistory = new BehaviorSubject(undefined);
 
@@ -68,7 +56,6 @@ export class AddComponent implements OnInit {
   ngOnInit(): void {
     this.bucket$ = this.route.params.pipe(
       tap(params => {
-        this.$save = of(SavingState.Pristine);
         this.bucketId = params.id;
       }),
       flatMap(params => {
@@ -149,19 +136,13 @@ export class AddComponent implements OnInit {
       ? this.bds.insertOne(this.bucketId, this.data)
       : this.bds.replaceOne(this.bucketId, this.data);
 
-    this.$save = merge(
-      of(SavingState.Saving),
-      save.pipe(
-        tap(() => {
-          this.refreshHistory.next(undefined);
-          if (isInsert) {
-            this.router.navigate(["bucket", this.bucketId]);
-          }
-        }),
-        ignoreElements(),
-        endWith(SavingState.Saved),
-        catchError(() => of(SavingState.Failed))
-      )
+    this.$save = save.pipe(
+      tap(() => {
+        this.refreshHistory.next(undefined);
+        if (isInsert) {
+          this.router.navigate(["bucket", this.bucketId]);
+        }
+      })
     );
   }
 

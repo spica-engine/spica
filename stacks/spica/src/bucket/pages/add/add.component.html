@@ -129,22 +129,12 @@
       class="save-button"
       [canInteract]="data._id ? 'bucket:data:update' : 'bucket:data:create'"
       [resource]="data._id ? bucketId + '/' + data._id : bucketId"
-      *matSave="$save | async; let state"
-      [disabled]="form.invalid || scheduleForm?.invalid || bucket.readOnly || !!state"
+      [disabled]="form.invalid || scheduleForm?.invalid || bucket.readOnly"
       mat-button
       (click)="saveBucketRow()"
-      [ngSwitch]="state"
+      #parent
     >
-      <mat-icon *ngSwitchDefault>save</mat-icon>
-      <mat-progress-spinner
-        *ngSwitchCase="'saving'"
-        [diameter]="18"
-        color="primary"
-        mode="indeterminate"
-      ></mat-progress-spinner>
-      <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
-      <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
-      <span>{{ (!state ? "save" : state) | titlecase }}</span>
+      <async-task [parent]="parent" [asyncTask]="$save"></async-task>
     </button>
   </mat-card-actions>
 </mat-card>

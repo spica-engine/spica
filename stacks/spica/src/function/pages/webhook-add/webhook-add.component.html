@@ -89,21 +89,11 @@
       [canInteract]="webhook._id ? 'webhook:update' : 'webhook:create'"
       [resource]="webhook._id ? webhook._id : undefined"
       mat-button
-      *matSave="$save | async; let state"
-      [ngSwitch]="state"
-      [disabled]="form.invalid || !!state"
+      [disabled]="form.invalid"
       (click)="save()"
+      #parent
     >
-      <mat-icon *ngSwitchDefault>save</mat-icon>
-      <mat-progress-spinner
-        *ngSwitchCase="'saving'"
-        [diameter]="18"
-        color="primary"
-        mode="indeterminate"
-      ></mat-progress-spinner>
-      <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
-      <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
-      <span>{{ (!state ? "save" : state) | titlecase }}</span>
+      <async-task [parent]="parent" [asyncTask]="$save"> </async-task>
     </button>
   </mat-card-actions>
 </mat-card>

@@ -17,7 +17,7 @@ import {MatTableModule} from "@angular/material/table";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {InputModule} from "@spica-client/common";
 import {EditorModule} from "@spica-client/common/code-editor";
-import {MatAwareDialogModule, MatSaveModule} from "@spica-client/material";
+import {AsyncTaskModule, MatAwareDialogModule, MatSaveModule} from "@spica-client/material";
 import {PassportModule} from "@spica-client/passport";
 import {HandlebarsLanguageDirective} from "./directives/handlebars.language";
 import {WebhookAddComponent} from "./pages/webhook-add/webhook-add.component";
@@ -49,7 +49,8 @@ import {WebhookRoutingModule} from "./webhook-routing.module";
     MatProgressSpinnerModule,
     ScrollingModule,
     MatExpansionModule,
-    MatSaveModule
+    MatSaveModule,
+    AsyncTaskModule
   ],
   declarations: [
     WebhookAddComponent,

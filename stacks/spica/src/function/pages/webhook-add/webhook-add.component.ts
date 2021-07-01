@@ -25,7 +25,7 @@ export class WebhookAddComponent implements OnInit, OnDestroy {
 
   collections$: Observable<string[]>;
 
-  $save: Observable<SavingState>;
+  $save: Observable<any>;
 
   constructor(
     private webhookService: WebhookService,
@@ -40,7 +40,6 @@ export class WebhookAddComponent implements OnInit, OnDestroy {
       .pipe(
         filter(params => params.id),
         switchMap(params => this.webhookService.get(params.id)),
-        tap(() => (this.$save = of(SavingState.Pristine))),
         takeUntil(this.dispose)
       )
       .subscribe(data => (this.webhook = data));
@@ -53,19 +52,13 @@ export class WebhookAddComponent implements OnInit, OnDestroy {
       ? this.webhookService.add(this.webhook)
       : this.webhookService.update({...this.webhook});
 
-    this.$save = merge(
-      of(SavingState.Saving),
-      save.pipe(
-        tap(webhook => {
-          this.webhook = webhook;
-          if (isInsert) {
-            this.router.navigate([`webhook/${webhook._id}`]);
-          }
-        }),
-        ignoreElements(),
-        endWith(SavingState.Saved),
-        catchError(() => of(SavingState.Failed))
-      )
+    this.$save = save.pipe(
+      tap(webhook => {
+        this.webhook = webhook;
+        if (isInsert) {
+          this.router.navigate([`webhook/${webhook._id}`]);
+        }
+      })
     );
   }
 

@@ -497,24 +497,14 @@
       <button
         class="save-button"
         mat-button
-        *matSave="$save | async; let state"
-        [disabled]="form.invalid || isHandlerDuplicated || !!state || isIndexPending"
+        [disabled]="form.invalid || isHandlerDuplicated || isIndexPending"
         [canInteract]="function._id ? 'function:update' : 'function:create'"
         [resource]="function._id ? function._id : undefined"
         (click)="save()"
-        [ngSwitch]="state"
+        #parent
       >
-        <mat-icon *ngSwitchDefault>save</mat-icon>
-        <mat-progress-spinner
-          *ngSwitchCase="'saving'"
-          [diameter]="18"
-          color="primary"
-          mode="indeterminate"
-        >
-        </mat-progress-spinner>
-        <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
-        <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
-        <span>{{ (!state ? "save" : state) | titlecase }}</span>
+        <async-task [parent]="parent" [asyncTask]="$save">
+        </async-task>
       </button>
     </form>
   </div>

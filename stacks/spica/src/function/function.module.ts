@@ -30,7 +30,12 @@ import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
 import {provideActivityFactory} from "@spica-client/function/providers/activity";
 import {provideWsInterceptor} from "@spica-client/function/providers/websocket";
-import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
+import {
+  MatAwareDialogModule,
+  MatClipboardModule,
+  MatSaveModule,
+  AsyncTaskModule
+} from "@spica-client/material";
 import {PassportService} from "@spica-client/passport";
 import {PassportModule} from "../passport/passport.module";
 import {LanguageDirective} from "./directives/dynamic.language";
@@ -82,6 +87,7 @@ import {RepositoryComponent} from "./components/repository/repository.component"
     PassportModule.forChild(),
     WebhookModule,
     MatSaveModule,
+    AsyncTaskModule,
     MatDatepickerModule,
     ScrollingModule,
     MatClipboardModule,

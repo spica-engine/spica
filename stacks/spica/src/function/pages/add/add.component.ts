@@ -10,7 +10,6 @@ import {
   RendererStyleFlags2
 } from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {SavingState} from "@spica-client/material";
 import {merge, Observable, of, Subject, throwError, BehaviorSubject} from "rxjs";
 import {
   catchError,
@@ -18,9 +17,7 @@ import {
   endWith,
   filter,
   flatMap,
-  ignoreElements,
   map,
-  mergeMap,
   share,
   startWith,
   switchMap,
@@ -85,7 +82,7 @@ export class AddComponent implements OnInit, OnDestroy {
   index: string;
   $indexSave: Observable<Date | "inprogress">;
 
-  $save: Observable<SavingState>;
+  $save: Observable<any>;
 
   $markers = new Subject<unknown[]>();
 
@@ -334,7 +331,6 @@ export class AddComponent implements OnInit, OnDestroy {
           this.dependencyInstallPending = false;
           this.serverError = undefined;
           this.isIndexPending = true;
-          this.$save = of(SavingState.Pristine);
           this.function = normalizeFunction(fn);
           for (const [index, trigger] of this.function.triggers.entries()) {
             this.triggersEditMode[index] = false;
@@ -449,28 +445,46 @@ export class AddComponent implements OnInit, OnDestroy {
       ? this.functionService.insertOne(fn)
       : this.functionService.replaceOne(fn);
 
-    this.$save = merge(
-      of(SavingState.Saving),
-      save.pipe(
-        flatMap(fn =>
-          this.functionService.updateIndex(fn._id, this.index).pipe(
-            catchError(error => {
-              if (error.status == 422) {
-                return of(error);
-              }
-              return throwError(error);
-            }),
-            tap(() => isInsert && this.router.navigate([`function/${fn._id}`])),
-            ignoreElements()
-          )
-        ),
-        endWith(SavingState.Saved),
-        catchError((err: HttpErrorResponse) => {
-          this.serverError = err.error.message;
-          return of(SavingState.Failed);
-        })
-      )
+    this.$save = save.pipe(
+      flatMap(fn =>
+        this.functionService.updateIndex(fn._id, this.index).pipe(
+          catchError(error => {
+            if (error.status == 422) {
+              return of(error);
+            }
+            return throwError(error);
+          }),
+          tap(() => isInsert && this.router.navigate([`function/${fn._id}`]))
+        )
+      ),
+      catchError((err: HttpErrorResponse) => {
+        this.serverError = err.error.message;
+        return throwError(err);
+      })
     );
+
+    // this.$save = merge(
+    //   of(SavingState.Saving),
+    //   save.pipe(
+    //     flatMap(fn =>
+    //       this.functionService.updateIndex(fn._id, this.index).pipe(
+    //         catchError(error => {
+    //           if (error.status == 422) {
+    //             return of(error);
+    //           }
+    //           return throwError(error);
+    //         }),
+    //         tap(() => isInsert && this.router.navigate([`function/${fn._id}`])),
+    //         ignoreElements()
+    //       )
+    //     ),
+    //     endWith(SavingState.Saved),
+    //     catchError((err: HttpErrorResponse) => {
+    //       this.serverError = err.error.message;
+    //       return of(SavingState.Failed);
+    //     })
+    //   )
+    // );
   }
 
   getDependencies() {

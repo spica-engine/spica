@@ -20,7 +20,12 @@ import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {InputModule} from "@spica-client/common";
 import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
-import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
+import {
+  AsyncTaskModule,
+  MatAwareDialogModule,
+  MatClipboardModule,
+  MatSaveModule
+} from "@spica-client/material";
 import {provideActivityFactory} from "@spica-client/storage/providers/activity";
 import {AngularCropperjsModule} from "angular-cropperjs";
 import {ImageEditorComponent} from "./components/image-editor/image-editor.component";
@@ -57,6 +62,7 @@ import {StorageRoutingModule} from "./storage-routing.module";
     MatClipboardModule,
     MatMenuModule,
     MatSaveModule,
+    AsyncTaskModule,
     InputModule.withPlacers([
       {
         origin: "string",

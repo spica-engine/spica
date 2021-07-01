@@ -37,7 +37,7 @@ import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
 import {EditorModule} from "@spica-client/common/code-editor";
 import {LAYOUT_INITIALIZER, PreferencesModule, RouteService} from "@spica-client/core";
 import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
-import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
+import {MatAwareDialogModule, MatClipboardModule, MatSaveModule,AsyncTaskModule} from "@spica-client/material";
 import {MatResizeHeaderModule} from "@spica-client/material/resize";
 import {PassportModule, PassportService} from "../passport";
 import {StorageModule} from "../storage";
@@ -134,6 +134,7 @@ import {MatButtonToggleModule} from "@angular/material/button-toggle";
     PreferencesModule.forChild(),
     MatClipboardModule,
     MatSaveModule,
+    AsyncTaskModule,
     PassportModule.forChild(),
     SpicaCommon,
     EditorModule
