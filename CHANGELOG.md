@@ -1,5 +1,13 @@
+## v0.9.7 (2021-06-30)
+
+* fix(dashboard): refresh components when dashboard page changed ([fb8cdaac9](https://github.com/spica-engine/spica/commit/fb8cdaac9))
+* test(function): tests for queues and enqueuers ([51626eb8f](https://github.com/spica-engine/spica/commit/51626eb8f))
+* feat(dashboard): resizable and draggable dashboard components ([779b350fb](https://github.com/spica-engine/spica/commit/779b350fb))
+* refactor(function): methods and type definitions for @spica-devkit/bucket ([48c2c0994](https://github.com/spica-engine/spica/commit/48c2c0994))
+
 ## v0.9.6 (2021-06-21)
 
+* docs:update changelog for v0.9.6 ([67bf276c9](https://github.com/spica-engine/spica/commit/67bf276c9))
 * fix(dashboard): custom dashboard filters ([2ea0de941](https://github.com/spica-engine/spica/commit/2ea0de941))
 
 ## v0.9.5 (2021-06-18)
