@@ -92,9 +92,9 @@
           minimap: {enabled: false},
           lineNumbers: 'off',
           contextmenu: false,
-          value: '{\n\t\n}'
+          value: '{\n\t\n}',
+          language: 'json'
         }"
-        language="json"
       >
       </code-editor>
       <div class="history">
@@ -112,7 +112,13 @@
         *ngIf="currentTabIndex == 2"
         placeholder="Expression Filter"
         [(ngModel)]="value"
-        [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false, value: ''}"
+        [options]="{
+          minimap: {enabled: false},
+          lineNumbers: 'off',
+          contextmenu: false,
+          value: '',
+          language: 'cel'
+        }"
         language="cel"
         [properties]="properties"
         context="filter"
