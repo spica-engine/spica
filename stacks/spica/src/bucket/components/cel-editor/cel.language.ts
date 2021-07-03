@@ -5,23 +5,20 @@ import {Directive, OnDestroy, Input, OnInit} from "@angular/core";
 let hasRegistered = false;
 
 @Directive({
-  selector: "code-editor[language='cel']"
+  selector: "code-editor[language='cel']",
+  host: {"(onInit)": "init()"}
 })
-export class CelLanguageDirective implements OnInit, OnDestroy {
+export class CelLanguageDirective implements OnDestroy {
   private disposables: Array<any> = [];
   @Input("properties") bucketProperties: object;
   @Input() context: "rule" | "filter" = "rule";
 
-  async ngOnInit() {
+  async init() {
     if (hasRegistered) {
       return;
     }
 
     hasRegistered = true;
-
-    if (typeof monaco == "undefined") {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
 
     if (!monaco.languages.getLanguages().some(language => language.id == "cel")) {
       monaco.languages.register({id: "cel"});
@@ -56,8 +53,6 @@ export class CelLanguageDirective implements OnInit, OnDestroy {
         }
       })
     );
-
-    console.log(monaco.languages.getLanguages());
   }
 
   async suggestionBuilder(

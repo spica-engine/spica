@@ -65,9 +65,9 @@
         >
           <mat-icon>{{ onFullScreen ? "fullscreen_exit" : "fullscreen" }}</mat-icon>
         </button>
-        <!-- <button mat-icon-button (click)="language.format()" matTooltip="Format">
+        <button mat-icon-button (click)="language.format()" matTooltip="Format">
           <mat-icon>format_align_center</mat-icon>
-        </button> -->
+        </button>
         <span class="last-saved" *ngIf="$indexSave | async; let lastSaved">
           <mat-label *ngIf="lastSaved != 'inprogress'">
             Last saved: {{ lastSaved | date: "mediumTime" }}
@@ -101,7 +101,8 @@
       name="code"
       [(ngModel)]="index"
       [options]="editorOptions"
-      [language]="'javascript'"
+      #language="language"
+      [language]="function.language"
     >
     </code-editor>
     <div class="resize-cursor" (mousedown)="onMouseDown()"></div>

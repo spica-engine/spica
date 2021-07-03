@@ -1,23 +1,22 @@
 import {Directive, Input, OnChanges, OnDestroy, OnInit, SimpleChanges} from "@angular/core";
 
 @Directive({
-  selector: "code-editor[[language]='javascript']"
+  selector: "code-editor[language]",
+  host: {"(onInit)": "_editorReady($event)"},
+  exportAs: "language"
 })
-export class LanguageDirective implements OnInit, OnChanges, OnDestroy {
+export class LanguageDirective implements OnChanges, OnDestroy {
   @Input() language: string;
   private disposables: Array<any> = [];
 
-  constructor(){console.log("asda")}
+  private editor: monaco.editor.IStandaloneCodeEditor;
 
   format() {
-    return // this.editor.getAction("editor.action.formatDocument").run();
+    return this.editor.getAction("editor.action.formatDocument").run();
   }
 
-  async ngOnInit() {
-
-    if (typeof monaco == "undefined") {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
+  _editorReady(_editor: monaco.editor.IStandaloneCodeEditor) {
+    this.editor = _editor;
 
     this.updateLanguage();
 
@@ -47,13 +46,13 @@ export class LanguageDirective implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.language && typeof monaco != "undefined") {
+    if (changes.language && this.editor) {
       this.updateLanguage();
     }
   }
 
   updateLanguage() {
-    monaco.editor.setModelLanguage(monaco.editor.getModels()[0], this.language);
+    monaco.editor.setModelLanguage(this.editor.getModel(), this.language);
   }
 
   ngOnDestroy(): void {
