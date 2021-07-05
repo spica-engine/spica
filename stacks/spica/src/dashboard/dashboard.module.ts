@@ -38,6 +38,7 @@ import {TableComponent} from "./components/table/table.component";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular-datetime-picker";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {CardComponent} from "./components/card/card.component";
+import {DragDropModule} from "@angular/cdk/drag-drop";
 
 @NgModule({
   imports: [
@@ -68,7 +69,8 @@ import {CardComponent} from "./components/card/card.component";
     OwlDateTimeModule,
     OwlNativeDateTimeModule,
     MatAwareDialogModule,
-    PassportModule.forChild()
+    PassportModule.forChild(),
+    DragDropModule
   ],
   declarations: [
     DashboardComponent,

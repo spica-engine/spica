@@ -12,6 +12,8 @@ import {
   HttpService
 } from "@spica-devkit/internal_common";
 import {getWsObs} from "./operators";
+
+// do not remove these unused imports
 import {Observable} from "rxjs";
 import {map} from "rxjs/operators";
 
@@ -68,26 +70,34 @@ export function remove(id: string): Promise<any> {
 }
 
 export namespace data {
-  export function get(
+  export function get<T>(
     bucketId: string,
     documentId: string,
     options: {headers?: object; queryParams?: object} = {}
-  ): Promise<BucketDocument> {
+  ): Promise<T> {
     checkInitialized(authorization);
 
-    return service.get<BucketDocument>(`bucket/${bucketId}/data/${documentId}`, {
+    return service.get<T>(`bucket/${bucketId}/data/${documentId}`, {
       params: options.queryParams,
       headers: options.headers
     });
   }
 
-  export function getAll(
+  export function getAll<T>(
     bucketId: string,
-    options: {headers?: object; queryParams?: object} = {}
-  ): Promise<BucketDocument[] | IndexResult<BucketDocument>> {
+    options?: {headers?: object; queryParams?: {[key: string]: any; paginate?: false}}
+  ): Promise<T[]>;
+  export function getAll<T>(
+    bucketId: string,
+    options?: {headers?: object; queryParams?: {[key: string]: any; paginate?: true}}
+  ): Promise<IndexResult<T>>;
+  export function getAll<T>(
+    bucketId: string,
+    options: {headers?: object; queryParams?: {[key: string]: any; paginate?: boolean}} = {}
+  ): Promise<T[] | IndexResult<T>> {
     checkInitialized(authorization);
 
-    return service.get<BucketDocument[] | IndexResult<BucketDocument>>(`bucket/${bucketId}/data`, {
+    return service.get<T[] | IndexResult<T>>(`bucket/${bucketId}/data`, {
       params: options.queryParams,
       headers: options.headers
     });
@@ -116,7 +126,7 @@ export namespace data {
   ): Promise<any> {
     checkInitialized(authorization);
 
-    return service.patch<any>(`bucket/${bucketId}/data/${documentId}`, document);
+    return service.patch(`bucket/${bucketId}/data/${documentId}`, document);
   }
 
   export function remove(bucketId: string, documentId: string): Promise<any> {
@@ -126,7 +136,7 @@ export namespace data {
   }
 
   export namespace realtime {
-    export function get(
+    export function get<T>(
       bucketId: string,
       documentId: string,
       messageCallback?: (res: {status: number; message: string}) => any
@@ -138,10 +148,10 @@ export namespace data {
         Authorization: authorization
       });
 
-      return getWsObs<BucketDocument[]>(fullUrl.toString(), undefined, true, messageCallback);
+      return getWsObs<T>(fullUrl.toString(), undefined, true, messageCallback);
     }
 
-    export function getAll(
+    export function getAll<T>(
       bucketId: string,
       queryParams: object = {},
       messageCallback?: (res: {status: number; message: string}) => any
@@ -155,7 +165,7 @@ export namespace data {
         Authorization: authorization
       });
 
-      return getWsObs<BucketDocument[]>(fullUrl.toString(), sort, false, messageCallback);
+      return getWsObs<T>(fullUrl.toString(), sort, false, messageCallback);
     }
   }
 }

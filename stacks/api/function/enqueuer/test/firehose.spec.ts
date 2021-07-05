@@ -38,6 +38,34 @@ describe("FirehoseEnqueuer", () => {
     app.close();
   });
 
+  it("should subscribe", () => {
+    firehoseEnqueuer.subscribe(noopTarget, {event: "**"});
+
+    expect(Array.from(firehoseEnqueuer["eventTargetPairs"])).toEqual([
+      {
+        name: "**",
+        target: noopTarget
+      }
+    ]);
+  });
+
+  it("should unsubscribe", () => {
+    firehoseEnqueuer.subscribe(noopTarget, {event: "*"});
+    firehoseEnqueuer.subscribe(noopTarget, {event: "**"});
+
+    const target2 = {...noopTarget, cwd: "/tmp/fn2"} as any;
+    firehoseEnqueuer.subscribe(target2, {event: "**"});
+
+    firehoseEnqueuer.unsubscribe(noopTarget);
+
+    expect(Array.from(firehoseEnqueuer["eventTargetPairs"])).toEqual([
+      {
+        name: "**",
+        target: target2
+      }
+    ]);
+  });
+
   it("should send client description", async () => {
     firehoseEnqueuer.subscribe(noopTarget, {event: "**"});
 
