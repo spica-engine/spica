@@ -10,7 +10,7 @@ let hasRegistered = false;
 })
 export class CelLanguageDirective implements OnDestroy {
   private disposables: Array<any> = [];
-  @Input("properties") bucketProperties: object;
+  @Input("properties") bucketProperties: object = {};
   @Input() context: "rule" | "filter" = "rule";
 
   async init() {

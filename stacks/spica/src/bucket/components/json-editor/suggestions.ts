@@ -1,4 +1,4 @@
-const suggestions = [
+const examples = [
   {
     label: "Simple string equality",
     description: "Filter documents that their titles equal to 'spica'",
@@ -28,4 +28,4 @@ const suggestions = [
   }
 ];
 
-export {suggestions};
+export {examples};

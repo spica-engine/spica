@@ -315,7 +315,12 @@
                   *ngIf="configurationState == 'rules'"
                   placeholder="ACL"
                   [(ngModel)]="bucket.acl.read"
-                  [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false,language:'cel'}"
+                  [options]="{
+                    minimap: {enabled: false},
+                    lineNumbers: 'off',
+                    contextmenu: false,
+                    language: 'cel'
+                  }"
                   language="cel"
                   [properties]="bucket.properties"
                 >
@@ -332,7 +337,12 @@
                   *ngIf="configurationState == 'rules'"
                   placeholder="ACL"
                   [(ngModel)]="bucket.acl.write"
-                  [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false,language:'cel'}"
+                  [options]="{
+                    minimap: {enabled: false},
+                    lineNumbers: 'off',
+                    contextmenu: false,
+                    language: 'cel'
+                  }"
                   language="cel"
                   [properties]="bucket.properties"
                 >
