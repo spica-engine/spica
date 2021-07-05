@@ -1,6 +1,4 @@
-import {Directive, OnDestroy, Input} from "@angular/core";
-
-declare var monaco: typeof import("monaco-editor-core");
+import {Directive, OnDestroy, Input, OnInit} from "@angular/core";
 
 // this global state will prevent to registering same registerCompletionItemProvider twice from same page
 // if we remove this, completions will be displayed twice.
@@ -8,16 +6,14 @@ let hasRegistered = false;
 
 @Directive({
   selector: "code-editor[language='cel']",
-  host: {
-    "(init)": "onInit($event)"
-  }
+  host: {"(onInit)": "init()"}
 })
 export class CelLanguageDirective implements OnDestroy {
   private disposables: Array<any> = [];
-  @Input("properties") bucketProperties: object;
+  @Input("properties") bucketProperties: object = {};
   @Input() context: "rule" | "filter" = "rule";
 
-  async onInit() {
+  async init() {
     if (hasRegistered) {
       return;
     }

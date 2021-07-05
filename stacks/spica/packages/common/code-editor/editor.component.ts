@@ -1,177 +1,225 @@
+/// <reference path="../../../../../node_modules/monaco-editor/monaco.d.ts" />
 import {
   Component,
-  DoCheck,
   ElementRef,
   EventEmitter,
   forwardRef,
   Input,
   NgZone,
-  OnChanges,
-  OnDestroy,
-  OnInit,
   Output,
-  SimpleChanges
+  ViewChild
 } from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {Scheme, SchemeObserver} from "@spica-client/core/layout";
-import {Subject} from "rxjs";
+import {Scheme, SchemeObserver} from "@spica-client/core";
+import {fromEvent, Subject, Subscription} from "rxjs";
 import {takeUntil} from "rxjs/operators";
+
+let loadedMonaco = false;
+let loadPromise: Promise<void>;
 
 @Component({
   selector: "code-editor",
-  template: "",
+  template: '<div class="editor-container" #editorContainer></div>',
+  styles: [
+    `
+      :host {
+        display: block;
+      }
+
+      .editor-container {
+        width: 100%;
+        height: 100%;
+        min-height: 100px;
+      }
+    `
+  ],
   styleUrls: ["./editor.component.scss"],
   providers: [
-    {provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => EditorComponent), multi: true}
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => EditorComponent),
+      multi: true
+    }
   ]
 })
-export class EditorComponent
-  implements OnInit, OnChanges, OnDestroy, DoCheck, ControlValueAccessor {
-  @Output() init = new EventEmitter();
+export class EditorComponent implements ControlValueAccessor {
+  @Input("ngModel") _value: string = "";
+  @Input() options: any = {};
+  @Input() model: any;
+
+  @Output() onInit = new EventEmitter<any>();
   @Output() save = new EventEmitter();
 
-  @Input() language: string;
-  @Input() theme: string;
-  @Input() options: any;
-  @Input("marker") markers: any[];
+  @ViewChild("editorContainer", {static: true}) _editorContainer: ElementRef;
 
-  private monaco: typeof import("monaco-editor-core");
-
-  private editorRef: ReturnType<typeof import("monaco-editor-core").editor.create>;
   private dispose = new Subject();
-  private disposables: import("monaco-editor-core").IDisposable[] = [];
 
-  private get _options(): any {
-    return {
-      ...this.options,
-      scrollBeyondLastLine: false,
-      cursorBlinking: "phase",
-      fontLigatures: true,
-      fontFamily: "Fira Code",
-      lineNumbersMinChars: 2
-    };
-  }
+  private editor: monaco.editor.IStandaloneCodeEditor;
+  private windowResizeSubscription: Subscription;
 
-  private value: string;
-
+  private propagateChange = (_: any) => {};
   private onTouched = () => {};
-  private onChanged = (code: string) => {};
 
-  constructor(
-    private elementRef: ElementRef<HTMLElement>,
-    private zone: NgZone,
-    private schemeObserver: SchemeObserver
-  ) {
-    window["MonacoEnvironment"] = {
-      getWorker: () => {
-        return new Worker("./editor.worker", {type: "module", name: "custom-editor-worker"});
+  private disposables: monaco.IDisposable[] = [];
+
+  writeValue(value: any): void {
+    this._value = value || "";
+    // Fix for value change while dispose in process.
+    setTimeout(() => {
+      if (this.editor && !this.options.model) {
+        this.editor.setValue(this._value);
       }
-    };
-  }
-
-  writeValue(code: string): void {
-    if (this.editorRef) {
-      this.editorRef.setValue(code || "");
-    } else {
-      this.value = code;
-    }
+    });
   }
 
   registerOnChange(fn: any): void {
-    this.onChanged = fn;
+    this.propagateChange = fn;
   }
 
   registerOnTouched(fn: any): void {
     this.onTouched = fn;
   }
 
-  setDisabledState?(isDisabled: boolean): void {
-    if (this.editorRef) {
-      this.editorRef.updateOptions({readOnly: isDisabled});
+  constructor(private zone: NgZone, private schemeObserver: SchemeObserver) {
+    this.initializeWorkerSelector();
+  }
+
+  ngAfterViewInit() {
+    this.loadMonaco();
+  }
+
+  initializeWorkerSelector() {
+    window["MonacoEnvironment"] = {
+      getWorker: function(_, label) {
+        if (label === "typescript" || label === "javascript") {
+          return new Worker("./workers/ts.worker", {type: "module", name: "js/ts-worker"});
+        } else if (label === "json") {
+          return new Worker("./workers/json.worker", {type: "module", name: "json-worker"});
+        } else if (label === "handlebars") {
+          return new Worker("./workers/handlebars.worker", {
+            type: "module",
+            name: "handlebars-worker"
+          });
+        }
+        return new Worker("./workers/ts.worker", {type: "module", name: "editor-worker"});
+      }
+    };
+  }
+
+  loadMonaco() {
+    if (loadedMonaco) {
+      // Wait until monaco editor is available
+      loadPromise.then(() => {
+        this.initMonaco(this.options);
+      });
+    } else {
+      loadedMonaco = true;
+      loadPromise = new Promise<void>((resolve: any) => {
+        const onGotAmdLoader: any = () => {
+          // Load monaco
+          (<any>window).require.config({paths: {vs: "./assets/monaco/min/vs"}});
+          (<any>window).require(["vs/editor/editor.main"], () => {
+            this.initMonaco(this.options);
+            resolve();
+          });
+        };
+
+        // Load AMD loader if necessary
+        if (!(<any>window).require) {
+          const loaderScript: HTMLScriptElement = document.createElement("script");
+          loaderScript.type = "text/javascript";
+          loaderScript.src = `./assets/monaco/min/vs/loader.js`;
+          loaderScript.addEventListener("load", onGotAmdLoader);
+          document.body.appendChild(loaderScript);
+        } else {
+          onGotAmdLoader();
+        }
+      });
     }
   }
 
-  changeScheme(isDark: boolean) {
-    this.theme = isDark ? "vs-dark" : "vs-light";
-    this.monaco.editor.setTheme(this.theme);
-  }
+  initMonaco(options: any): void {
+    const hasModel = !!options.model;
 
-  async ngOnInit() {
-    if (window["jasmine"]) {
-      return;
+    if (hasModel) {
+      const model = monaco.editor.getModel(options.model.uri || "");
+      if (model) {
+        options.model = model;
+        options.model.setValue(this._value);
+      } else {
+        options.model = monaco.editor.createModel(
+          options.model.value,
+          options.model.language,
+          options.model.uri
+        );
+      }
     }
-    this.monaco = await import("monaco-editor-core");
-    this.editorRef = this.monaco.editor.create(this.elementRef.nativeElement, this._options);
+
+    this.editor = monaco.editor.create(this._editorContainer.nativeElement, options);
+
+    if (!hasModel) {
+      this.editor.setValue(this._value);
+    }
 
     this.disposables.push(
-      this.editorRef.onDidChangeModelContent(() => this.onChanged(this.editorRef.getValue())),
-      this.editorRef.onDidBlurEditorText(() => this.onTouched())
+      this.editor.onDidChangeModelContent((e: any) => {
+        const value = this.editor.getValue();
+
+        // value is not propagated to parent when executing outside zone.
+        this.zone.run(() => {
+          this.propagateChange(value);
+          this._value = value;
+        });
+      })
     );
 
-    this.init.emit(this.editorRef);
+    this.disposables.push(
+      this.editor.onDidBlurEditorWidget(() => {
+        this.onTouched();
+      })
+    );
 
-    this.disposables.push();
-
-    this.editorRef.addCommand(this.monaco.KeyMod.CtrlCmd | this.monaco.KeyCode.KEY_S, () =>
+    this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () =>
       this.zone.run(() => this.save.emit())
     );
 
-    if (this.value) {
-      this.editorRef.setValue(this.value);
+    this.resizeWhenWindowResized();
+
+    this.handleThemeChanges();
+
+    this.onInit.emit(this.editor);
+  }
+
+  resizeWhenWindowResized() {
+    if (this.windowResizeSubscription) {
+      this.windowResizeSubscription.unsubscribe();
     }
 
-    if (this.language) {
-      this.monaco.editor.setModelLanguage(this.editorRef.getModel(), this.language);
-    }
+    this.windowResizeSubscription = fromEvent(window, "resize").subscribe(() =>
+      this.editor.layout()
+    );
+  }
 
-    if (this.theme) {
-      this.monaco.editor.setTheme(this.theme);
-    }
-
-    if (this.markers) {
-      this.monaco.editor.setModelMarkers(this.editorRef.getModel(), this.language, this.markers);
-    }
-
+  handleThemeChanges() {
     this.schemeObserver
       .observe(Scheme.Dark)
       .pipe(takeUntil(this.dispose))
-      .subscribe(r => this.changeScheme(r));
+      .subscribe(isDark => {
+        const theme = isDark ? "vs-dark" : "vs-light";
+        monaco.editor.setTheme(theme);
+      });
   }
 
-  ngDoCheck(): void {
-    if (this.editorRef && this.elementRef.nativeElement) {
-      const elemrect = this.elementRef.nativeElement.getBoundingClientRect();
-      const editorrect = this.editorRef.getLayoutInfo();
-      if (
-        Math.abs(elemrect.width - editorrect.width) <= 5 ||
-        Math.abs(elemrect.height - editorrect.height) <= 5
-      ) {
-        this.editorRef.layout();
-      }
-    }
-  }
+  ngOnDestroy() {
+    this.disposables.forEach(d => d.dispose());
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (this.editorRef) {
-      if (changes.language) {
-        this.monaco.editor.setModelLanguage(this.editorRef.getModel(), this.language);
-      }
-      if (changes.theme) {
-        this.monaco.editor.setTheme(this.theme);
-      }
-      if (changes.markers) {
-        this.monaco.editor.setModelMarkers(this.editorRef.getModel(), this.language, this.markers);
-      }
+    if (this.windowResizeSubscription) {
+      this.windowResizeSubscription.unsubscribe();
     }
-  }
 
-  ngOnDestroy(): void {
-    if (this.editorRef) {
-      this.editorRef.dispose();
+    if (this.editor) {
+      this.editor.dispose();
+      this.editor = undefined;
     }
-    for (const disposable of this.disposables) {
-      disposable.dispose();
-    }
-    this.dispose.next();
   }
 }

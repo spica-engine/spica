@@ -95,16 +95,16 @@
       </div>
     </h4>
     <mat-divider></mat-divider>
-    <function-code-editor
+    <code-editor
       class="editor"
       (save)="updateIndex()"
-      #language="language"
       name="code"
-      [language]="function.language"
       [(ngModel)]="index"
       [options]="editorOptions"
+      #language="language"
+      [language]="function.language"
     >
-    </function-code-editor>
+    </code-editor>
     <div class="resize-cursor" (mousedown)="onMouseDown()"></div>
     <div class="footer-bar">
       <button mat-button canInteract="function:logs:index" (click)="onLogViewSelectionChange()">

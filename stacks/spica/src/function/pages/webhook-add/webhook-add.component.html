@@ -35,7 +35,6 @@
             #bodyModel="ngModel"
             required
             name="body"
-            language="handlebars"
             [options]="{language: 'handlebars', minimap: {enabled: false}}"
           ></code-editor>
           <mat-error *ngIf="bodyModel.errors?.required">Body mapping is required</mat-error>

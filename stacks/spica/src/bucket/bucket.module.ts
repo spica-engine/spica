@@ -144,13 +144,10 @@ import {MatButtonToggleModule} from "@angular/material/button-toggle";
     BucketIndexComponent,
     BucketAddComponent,
     WelcomeComponent,
-
     RichTextEditorComponent,
     RelationComponent,
     RelationSchemaComponent,
     LocationComponent,
-
-    PropertyLanguageComponent,
     SettingsComponent,
     FilterComponent,
     RequiredTranslate,
