@@ -20,7 +20,6 @@ import {LayoutModule} from "@spica-client/core/layout";
 import {MatSaveModule} from "@spica-client/material";
 import {of, Subject} from "rxjs";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
-import {HandlebarsLanguageDirective} from "../../directives/handlebars.language";
 import {Webhook} from "../../interface";
 import {WebhookService} from "../../services";
 import {WebhookAddComponent} from "./webhook-add.component";
@@ -60,7 +59,7 @@ describe("Webhook", () => {
         MatSaveModule,
         EditorModule
       ],
-      declarations: [WebhookAddComponent, HandlebarsLanguageDirective, CanInteractDirectiveTest],
+      declarations: [WebhookAddComponent, CanInteractDirectiveTest],
       providers: [
         {
           provide: WebhookService,
@@ -83,13 +82,13 @@ describe("Webhook", () => {
   });
 
   describe("Add", () => {
-    it("should set webhook and trigger", fakeAsync(() => {
+    it("should set webhook and trigger", () => {
       expect(webhookService.get).not.toHaveBeenCalled();
       expect(webhookService.getCollections).toHaveBeenCalledTimes(1);
       expect(fixture.componentInstance.webhook).toBeTruthy();
-    }));
+    });
 
-    it("should enable save button when form fields are valid", fakeAsync(() => {
+    it("should enable save button when form fields are valid", () => {
       fixture.detectChanges();
       const addButton = fixture.debugElement.query(By.css("mat-card mat-card-actions button"));
       const form = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgForm);
@@ -105,7 +104,7 @@ describe("Webhook", () => {
       fixture.detectChanges();
 
       expect(addButton.nativeElement.disabled).toEqual(false);
-    }));
+    });
 
     it("should insert webhook and navigate to the webhook page", fakeAsync(() => {
       fixture.componentInstance.webhook = {
@@ -150,19 +149,23 @@ describe("Webhook", () => {
       activatedRoute.next({id: "1"});
     });
 
-    it("should get webhook", fakeAsync(() => {
+    it("should get webhook", () => {
       expect(webhookService.get).toHaveBeenCalledTimes(1);
       expect(webhookService.get).toHaveBeenCalledWith("1");
       expect(fixture.componentInstance.webhook).toEqual(hook);
-    }));
+    });
 
-    it("should update webhook", fakeAsync(async () => {
+    it("should update webhook", fakeAsync(() => {
       webhookService.update.and.returnValue(
         of({
           _id: "1",
-          body: "updated_webhook",
+          body: "",
           url: "http://www.test.com",
-          trigger: {active: true, name: "database", options: {collection: "bucket", type: "UPDATE"}}
+          trigger: {
+            active: true,
+            name: "database",
+            options: {collection: "identity", type: "INSERT"}
+          }
         })
       );
       const editButton = fixture.debugElement.query(By.css("mat-card mat-card-actions button"));
@@ -181,9 +184,9 @@ describe("Webhook", () => {
 
       expect(fixture.componentInstance.webhook).toEqual({
         _id: "1",
-        body: "updated_webhook",
+        body: "",
         url: "http://www.test.com",
-        trigger: {active: true, name: "database", options: {collection: "bucket", type: "UPDATE"}}
+        trigger: {active: true, name: "database", options: {collection: "identity", type: "INSERT"}}
       });
     }));
   });
