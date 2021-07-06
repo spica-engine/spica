@@ -119,7 +119,7 @@ export class Npm extends PackageManager {
   findTypes(cwd: string, depName: string) {
     const typeFiles = glob.sync(`node_modules/${depName}/**/*.d.ts`, {cwd});
     const promises: Promise<{[file: string]: string}>[] = [];
-    
+
     if (typeFiles) {
       for (const file of typeFiles) {
         promises.push(

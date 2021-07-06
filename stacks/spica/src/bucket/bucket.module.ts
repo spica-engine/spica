@@ -154,7 +154,7 @@ import {MatButtonToggleModule} from "@angular/material/button-toggle";
     AddFieldModalComponent,
     PropertyLanguageComponent,
     CelLanguageDirective,
-    JsonLanguageDirective,
+    JsonLanguageDirective
   ]
 })
 export class BucketModule {
