@@ -13,5 +13,7 @@ ts_library(
         "//stacks/api/function/pkgmanager",
         "@npm//@types/node",
         "@npm//rxjs",
+        "@npm//glob",
+        "@npm//@types/glob"
     ],
 )

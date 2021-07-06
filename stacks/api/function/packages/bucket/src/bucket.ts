@@ -3,7 +3,8 @@ import {
   BucketDocument,
   ApikeyInitialization,
   IdentityInitialization,
-  IndexResult
+  IndexResult,
+  RealtimeConnection
 } from "@spica-devkit/bucket";
 import {
   initialize as _initialize,
@@ -140,7 +141,7 @@ export namespace data {
       bucketId: string,
       documentId: string,
       messageCallback?: (res: {status: number; message: string}) => any
-    ) {
+    ): RealtimeConnection<T> {
       checkInitialized(authorization);
 
       const fullUrl = buildUrl(`${wsUrl}/${bucketId}/data`, {
@@ -155,7 +156,7 @@ export namespace data {
       bucketId: string,
       queryParams: object = {},
       messageCallback?: (res: {status: number; message: string}) => any
-    ) {
+    ): RealtimeConnection<T[]> {
       checkInitialized(authorization);
 
       const sort = queryParams["sort"];
