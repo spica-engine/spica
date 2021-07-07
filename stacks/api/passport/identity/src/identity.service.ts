@@ -15,7 +15,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     @Inject(IDENTITY_OPTIONS) private identityOptions: IdentityOptions
   ) {
     super(database, {
-      countLimit: identityOptions.identityCountLimit
+      entryLimit: identityOptions.entryLimit
     });
     this._coll.createIndex({identifier: 1}, {unique: true});
   }

@@ -178,6 +178,10 @@ const args = yargs
       boolean: true,
       description: "When true, @spica-devkit/database will be cached and run significantly fast.",
       default: true
+    },
+    "function-limit": {
+      number: true,
+      description: "Maximum number of function that can be inserted."
     }
   })
   /* Storage Options */
@@ -366,7 +370,7 @@ const modules = [
     expiresIn: args["passport-identity-token-expires-in"],
     maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
     defaultStrategy: args["passport-default-strategy"],
-    identityCountLimit: args["passport-identity-limit"],
+    entryLimit: args["passport-identity-limit"],
     defaultIdentityPolicies: args["passport-default-identity-policies"],
     defaultIdentityIdentifier: args["passport-default-identity-identifier"],
     defaultIdentityPassword: args["passport-default-identity-password"],
@@ -384,6 +388,7 @@ const modules = [
     apiUrl: args["function-api-url"],
     timeout: args["function-timeout"],
     experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
+    entryLimit: args["function-limit"],
     corsOptions: {
       allowedOrigins: args["cors-allowed-origins"],
       allowedMethods: args["cors-allowed-methods"],
