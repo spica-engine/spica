@@ -59,7 +59,7 @@ export class BucketDataService {
       )
     );
     if (totalDocumentCount + count > this.bucketDataLimit) {
-      throw new Error("Total bucket-data limit exceeded.");
+      throw new Error("Total bucket-data limit exceeded");
     }
   }
 }

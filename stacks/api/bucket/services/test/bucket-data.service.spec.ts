@@ -87,13 +87,13 @@ describe("Bucket Data Service", () => {
 
       // INSERT ONE
       await bds2.insertOne({title: "entry3"}).catch(e => {
-        expect(e).toEqual(new Error("Total bucket-data limit exceeded."));
+        expect(e).toEqual(new Error("Total bucket-data limit exceeded"));
       });
 
       // INSERT MANY
       await bds2.deleteOne({title: "entry2"});
       await bds2.insertMany([{title: "entry3"}, {title: "entry4"}]).catch(e => {
-        expect(e).toEqual(new Error("Total bucket-data limit exceeded."));
+        expect(e).toEqual(new Error("Total bucket-data limit exceeded"));
       });
     });
   });

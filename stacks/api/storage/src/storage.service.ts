@@ -1,14 +1,44 @@
-import {Injectable} from "@nestjs/common";
+import {Inject, Injectable} from "@nestjs/common";
 import {Collection, DatabaseService, FilterQuery, ObjectId} from "@spica-server/database";
 import {StorageObject} from "./body";
+import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {Strategy} from "./strategy/strategy";
 
 @Injectable()
 export class StorageService {
   private _collection: Collection<StorageObject>;
 
-  constructor(database: DatabaseService, private service: Strategy) {
+  constructor(
+    database: DatabaseService,
+    private service: Strategy,
+    @Inject(STORAGE_OPTIONS) private options: StorageOptions
+  ) {
     this._collection = database.collection("storage");
+  }
+
+  private async validateTotalStorageSize(size: number) {
+    if (!this.options.totalSizeLimit) {
+      return;
+    }
+    const existing = await this._collection
+      .aggregate([
+        {
+          $group: {
+            _id: "",
+            total: {$sum: "$content.size"}
+          }
+        },
+        {
+          $project: {total: 1}
+        }
+      ])
+      .toArray()
+      .then((d: any) => (d.length ? d[0].total : 0));
+
+    const neededInMb = (existing + size) * Math.pow(10, -6);
+    if (neededInMb > this.options.totalSizeLimit) {
+      throw new Error("Total storage object size limit exceeded");
+    }
   }
 
   getAll(
@@ -74,16 +104,20 @@ export class StorageService {
     await this.service.delete(id.toHexString());
   }
 
-  async updateOne(
-    filter: FilterQuery<StorageObject>,
-    object: StorageObject
-  ): Promise<StorageObject> {
+  async updateOne(_id: ObjectId, object: StorageObject): Promise<StorageObject> {
+    const existing = await this._collection.findOne({_id});
+    if (!existing) {
+      throw new Error(`Storage object ${_id} could not be found`);
+    }
+
+    await this.validateTotalStorageSize(object.content.size - existing.content.size);
+
     if (object.content.data) {
       await this.service.write(object._id.toString(), object.content.data, object.content.type);
     }
     delete object.content.data;
     delete object._id;
-    return this._collection.updateOne(filter, {$set: object}, {upsert: true}).then(() => object);
+    return this._collection.findOneAndUpdate({_id}, {$set: object}).then(() => object);
   }
 
   async insertMany(objects: StorageObject[]): Promise<StorageObject[]> {
@@ -92,6 +126,8 @@ export class StorageService {
       delete object.content.data;
       return object;
     });
+
+    await this.validateTotalStorageSize(schemas.reduce((sum, curr) => sum + curr.content.size, 0));
 
     const insertedObjects = await this._collection
       .insertMany(schemas)

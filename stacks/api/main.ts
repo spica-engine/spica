@@ -216,6 +216,10 @@ const args = yargs
       number: true,
       description: "Maximum size in Mi that an object could be.",
       default: 35
+    },
+    "storage-total-size-limit": {
+      number: true,
+      description: "Total size limit of storage. Unit: Mb"
     }
   })
   /* CORS Options */
@@ -361,7 +365,8 @@ const modules = [
     defaultPublicUrl: args["default-storage-public-url"],
     gcloudServiceAccountPath: args["gcloud-service-account-path"],
     gcloudBucketName: args["gcloud-bucket-name"],
-    objectSizeLimit: args["storage-object-size-limit"]
+    objectSizeLimit: args["storage-object-size-limit"],
+    totalSizeLimit: args["storage-total-size-limit"]
   }),
   PassportModule.forRoot({
     publicUrl: args["public-url"],
