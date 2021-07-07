@@ -85,6 +85,10 @@ const args = yargs
       boolean: true,
       description: "Whether the experimental Bucket realtime feature is enabled.",
       default: true
+    },
+    "bucket-data-limit": {
+      number: true,
+      description: "Maximum document count in all bucket-data collections"
     }
   })
   /* Passport Options  */
@@ -344,7 +348,8 @@ const modules = [
     history: args["bucket-history"],
     realtime: args["experimental-bucket-realtime"],
     cache: args["bucket-cache"],
-    cacheTtl: args["bucket-cache-ttl"]
+    cacheTtl: args["bucket-cache-ttl"],
+    bucketDataLimit: args["bucket-data-limit"]
   }),
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud",
