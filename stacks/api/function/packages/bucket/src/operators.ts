@@ -1,11 +1,16 @@
-import {Sequence, SequenceKind, ChunkKind, OperationKind} from "@spica-devkit/bucket";
+import {
+  Sequence,
+  SequenceKind,
+  ChunkKind,
+  OperationKind,
+  RealtimeConnection
+} from "@spica-devkit/bucket";
 //@ts-ignore
 import WebSocket from "ws";
 import {tap, delayWhen, map, debounceTime, retryWhen, filter} from "rxjs/operators";
 import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
 import {isPlatformBrowser} from "@spica-devkit/internal_common";
-import {RealtimeConnection} from "./interface";
 
 export class IterableSet<T> implements Iterable<T> {
   ids = new Array<string>();

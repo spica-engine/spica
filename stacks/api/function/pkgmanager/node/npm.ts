@@ -4,6 +4,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import {Observable} from "rxjs";
+import {glob} from "glob";
 
 function getNpmPath() {
   let npmPath: string = "npm";
@@ -95,16 +96,16 @@ export class Npm extends PackageManager {
   ls(cwd: string): Promise<Package[]> {
     return fs.promises
       .readFile(path.join(cwd, "package.json"))
-      .then(buffer => {
+      .then(async buffer => {
         const packageJson = JSON.parse(buffer.toString());
         const dependencies = packageJson.dependencies || {};
-        return Object.keys(dependencies).reduce((packages, depName) => {
-          packages.push({
-            name: depName,
-            version: dependencies[depName]
-          });
-          return packages;
-        }, new Array<Package>());
+
+        const packages = new Array<Package>();
+        for (const depName of Object.keys(dependencies)) {
+          const types = await this.findTypes(cwd, depName);
+          packages.push({name: depName, version: dependencies[depName], types});
+        }
+        return packages;
       })
       .catch(e => {
         // Function has no package.json file.
@@ -113,5 +114,29 @@ export class Npm extends PackageManager {
         }
         return Promise.reject(e);
       });
+  }
+
+  findTypes(cwd: string, depName: string) {
+    const typeFiles = glob.sync(`node_modules/${depName}/**/*.d.ts`, {cwd});
+    const promises: Promise<{[file: string]: string}>[] = [];
+
+    if (typeFiles) {
+      for (const file of typeFiles) {
+        promises.push(
+          fs.promises.readFile(path.join(cwd, file)).then(b => {
+            return {
+              [file]: b.toString()
+            };
+          })
+        );
+      }
+    }
+
+    return Promise.all(promises).then(files => {
+      return files.reduce((acc, curr) => {
+        acc = {...acc, ...curr};
+        return acc;
+      }, {});
+    });
   }
 }
