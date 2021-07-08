@@ -1,17 +1,23 @@
-import {Injectable} from "@nestjs/common";
+import {Inject, Injectable, Optional} from "@nestjs/common";
 import {Default, Validator} from "@spica-server/core/schema";
 import {BaseCollection, Collection, DatabaseService, ObjectId} from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference/services";
 import {BehaviorSubject, Observable} from "rxjs";
 import {Bucket, BucketPreferences} from "./bucket";
 import {getBucketDataCollection} from "@spica-server/bucket/services";
+import {BUCKET_DATA_LIMIT} from "./options";
 
 @Injectable()
 export class BucketService extends BaseCollection<Bucket>("buckets") {
   readonly buckets: Collection<Bucket>;
   schemaChangeEmitter: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
 
-  constructor(db: DatabaseService, private pref: PreferenceService, private validator: Validator) {
+  constructor(
+    db: DatabaseService,
+    private pref: PreferenceService,
+    private validator: Validator,
+    @Optional() @Inject(BUCKET_DATA_LIMIT) private bucketDataLimit
+  ) {
     super(db);
     this.buckets = db.collection("buckets");
   }
@@ -24,7 +30,40 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     this.schemaChangeEmitter.next(undefined);
   }
 
+  async totalDocCountValidation(count: number) {
+    if (!this.bucketDataLimit) {
+      return;
+    }
+
+    const existing = await super
+      .aggregate([
+        {
+          $group: {
+            _id: "",
+            total: {
+              $sum: "$documentSettings.countLimit"
+            }
+          }
+        },
+        {
+          $project: {
+            total: 1
+          }
+        }
+      ])
+      .toArray()
+      .then((d: any[]) => (d.length ? d[0].total : 0));
+
+    if (existing + count > this.bucketDataLimit) {
+      throw new Error(`Remained document count limit is ${this.bucketDataLimit - existing}`);
+    }
+  }
+
   async insertOne(bucket: Bucket) {
+    await this.totalDocCountValidation(
+      bucket.documentSettings ? bucket.documentSettings.countLimit : 0
+    );
+
     const insertedBucket = await super.insertOne(bucket);
     const bucketCollection = await this.db.createCollection(
       getBucketDataCollection(insertedBucket._id)

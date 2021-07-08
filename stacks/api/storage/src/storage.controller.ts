@@ -14,7 +14,8 @@ import {
   Res,
   UseGuards,
   UseInterceptors,
-  HttpCode
+  HttpCode,
+  HttpException
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
@@ -127,7 +128,9 @@ export class StorageController {
     }
     object._id = id;
     object.content.size = object.content.data.byteLength;
-    object = await this.storage.updateOne({_id: id}, object);
+    object = await this.storage.updateOne(id, object).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
+    });
     object.url = await this.storage.getUrl(id.toHexString());
     return object;
   }
@@ -179,7 +182,9 @@ export class StorageController {
       });
     }
 
-    objects = await this.storage.insertMany(objects);
+    objects = await this.storage.insertMany(objects).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
+    });
 
     for (const object of objects) {
       object.url = await this.storage.getUrl(object._id.toString());

@@ -86,6 +86,10 @@ const args = yargs
       boolean: true,
       description: "Whether the experimental Bucket realtime feature is enabled.",
       default: true
+    },
+    "bucket-data-limit": {
+      number: true,
+      description: "Maximum document count in all bucket-data collections"
     }
   })
   /* Passport Options  */
@@ -175,6 +179,10 @@ const args = yargs
       boolean: true,
       description: "When true, @spica-devkit/database will be cached and run significantly fast.",
       default: true
+    },
+    "function-limit": {
+      number: true,
+      description: "Maximum number of function that can be inserted."
     }
   })
   /* Storage Options */
@@ -209,6 +217,10 @@ const args = yargs
       number: true,
       description: "Maximum size in Mi that an object could be.",
       default: 35
+    },
+    "storage-total-size-limit": {
+      number: true,
+      description: "Total size limit of storage. Unit: Mb"
     }
   })
   /* CORS Options */
@@ -346,7 +358,8 @@ const modules = [
     history: args["bucket-history"],
     realtime: args["experimental-bucket-realtime"],
     cache: args["bucket-cache"],
-    cacheTtl: args["bucket-cache-ttl"]
+    cacheTtl: args["bucket-cache-ttl"],
+    bucketDataLimit: args["bucket-data-limit"]
   }),
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud",
@@ -354,7 +367,8 @@ const modules = [
     defaultPublicUrl: args["default-storage-public-url"],
     gcloudServiceAccountPath: args["gcloud-service-account-path"],
     gcloudBucketName: args["gcloud-bucket-name"],
-    objectSizeLimit: args["storage-object-size-limit"]
+    objectSizeLimit: args["storage-object-size-limit"],
+    totalSizeLimit: args["storage-total-size-limit"]
   }),
   PassportModule.forRoot({
     publicUrl: args["public-url"],
@@ -363,7 +377,7 @@ const modules = [
     expiresIn: args["passport-identity-token-expires-in"],
     maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
     defaultStrategy: args["passport-default-strategy"],
-    identityCountLimit: args["passport-identity-limit"],
+    entryLimit: args["passport-identity-limit"],
     defaultIdentityPolicies: args["passport-default-identity-policies"],
     defaultIdentityIdentifier: args["passport-default-identity-identifier"],
     defaultIdentityPassword: args["passport-default-identity-password"],
@@ -381,6 +395,7 @@ const modules = [
     apiUrl: args["function-api-url"],
     timeout: args["function-timeout"],
     experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
+    entryLimit: args["function-limit"],
     corsOptions: {
       allowedOrigins: args["cors-allowed-origins"],
       allowedMethods: args["cors-allowed-methods"],

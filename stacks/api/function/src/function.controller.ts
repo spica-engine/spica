@@ -209,7 +209,9 @@ export class FunctionController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
-    fn = await this.fs.insertOne(fn);
+    fn = await this.fs.insertOne(fn).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
+    });
 
     const changes = createTargetChanges(fn, ChangeKind.Added);
     this.engine.categorizeChanges(changes);

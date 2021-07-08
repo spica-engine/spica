@@ -40,7 +40,7 @@ export class BucketModule {
     });
     const imports: (Type<any> | DynamicModule)[] = [schemaModule, ServicesModule];
 
-    const BucketCore = BucketCoreModule.initialize();
+    const BucketCore = BucketCoreModule.initialize(options);
 
     let BucketCache;
 
@@ -131,10 +131,10 @@ export class BucketModule {
 @Global()
 @Module({})
 export class BucketCoreModule {
-  static initialize() {
+  static initialize(options: BucketOptions) {
     return {
       module: BucketCoreModule,
-      imports: [ServicesModule],
+      imports: [ServicesModule.initialize(options.bucketDataLimit)],
       providers: [
         {
           provide: BUCKET_LANGUAGE_FINALIZER,
@@ -153,4 +153,5 @@ export interface BucketOptions {
   realtime: boolean;
   cache: boolean;
   cacheTtl?: number;
+  bucketDataLimit?: number;
 }

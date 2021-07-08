@@ -4,6 +4,7 @@ import {StorageService} from "@spica-server/storage";
 import {StorageObject} from "@spica-server/storage/src/body";
 import {Default} from "@spica-server/storage/src/strategy/default";
 import {Strategy} from "@spica-server/storage/src/strategy/strategy";
+import {STORAGE_OPTIONS} from "../src/options";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
@@ -31,6 +32,10 @@ describe("Storage Service", () => {
         {
           provide: Strategy,
           useValue: new Default(process.env.TEST_TMPDIR, "http://insteadof")
+        },
+        {
+          provide: STORAGE_OPTIONS,
+          useValue: {totalSizeLimit: 10}
         }
       ]
     }).compile();
@@ -76,7 +81,7 @@ describe("Storage Service", () => {
         size: 10
       }
     };
-    await expectAsync(storageService.updateOne({_id: storageObjectId}, updatedData)).toBeResolved();
+    await expectAsync(storageService.updateOne(storageObjectId, updatedData)).toBeResolved();
 
     return await expectAsync(
       storageService.get(storageObjectId).then(result => {
@@ -152,6 +157,122 @@ describe("Storage Service", () => {
           return result;
         })
       ).toBeResolved();
+    });
+  });
+
+  describe("storage size limit", () => {
+    const MB = Math.pow(10, 6); // 1mb = 10^6 byte
+    let storageObjects = [];
+
+    it("should skip validation if total size limit was not provided", async () => {
+      module = await Test.createTestingModule({
+        imports: [DatabaseTestingModule.standalone()],
+        providers: [
+          StorageService,
+          {
+            provide: Strategy,
+            useValue: new Default(process.env.TEST_TMPDIR, "http://insteadof")
+          },
+          {
+            provide: STORAGE_OPTIONS,
+            useValue: {}
+          }
+        ]
+      }).compile();
+      storageService = module.get(StorageService);
+
+      const [insertedObj] = await storageService.insertMany([
+        {
+          _id: new ObjectId(),
+          name: "name",
+          url: "url",
+          content: {
+            data: Buffer.from(""),
+            type: "text/plain",
+            size: 100 * MB
+          }
+        }
+      ]);
+
+      expect(insertedObj.content.size).toEqual(100 * MB);
+    });
+
+    beforeEach(async () => {
+      storageObjects = [
+        {
+          _id: new ObjectId(),
+          name: "name",
+          url: "url",
+          content: {
+            data: Buffer.from(""),
+            type: "text/plain",
+            size: 4.5 * MB
+          }
+        },
+        {
+          _id: new ObjectId(),
+          name: "name2",
+          url: "url2",
+          content: {
+            data: Buffer.from(""),
+            type: "text/plain",
+            size: 4.5 * MB
+          }
+        }
+      ];
+      await storageService.insertMany(storageObjects);
+    });
+
+    describe("insert", () => {
+      it("should insert if it won't exceed the limit", async () => {
+        const storageObject = {
+          _id: new ObjectId(),
+          name: "name",
+          url: "url",
+          content: {
+            data: Buffer.from(""),
+            type: "text/plain",
+            size: 1 * MB
+          }
+        };
+
+        const [insertedObj] = await storageService.insertMany([storageObject]);
+        expect(insertedObj._id).toEqual(storageObject._id);
+      });
+
+      it("should not insert if it exceed the limit", async () => {
+        const storageObject = {
+          _id: new ObjectId(),
+          name: "name",
+          url: "url",
+          content: {
+            data: Buffer.from(""),
+            type: "text/plain",
+            size: 1.1 * MB
+          }
+        };
+
+        await storageService.insertMany([storageObject]).catch(e => {
+          expect(e).toEqual(new Error("Total storage object size limit exceeded"));
+        });
+      });
+    });
+
+    describe("update", () => {
+      it("should update if it won't exceed the limit", async () => {
+        storageObjects[0].content.size = 5.5 * MB;
+
+        const updatedObj = await storageService.updateOne(storageObjects[0]._id, storageObjects[0]);
+        expect(updatedObj.content.size).toEqual(5.5 * MB);
+      });
+
+      it("should not update if it exceed the limit", async () => {
+        storageObjects[0].content.size = 5.6 * MB;
+
+        await storageService.updateOne(storageObjects[0]._id, storageObjects[0]).catch(e => {
+          expect(e).toEqual(new Error("Total storage object size limit exceeded"));
+        });
+      });
     });
   });
 });
