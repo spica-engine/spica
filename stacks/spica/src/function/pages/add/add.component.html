@@ -103,6 +103,7 @@
       [options]="editorOptions"
       #language="language"
       [language]="function.language"
+      [dependencies]="dependencies | async"
     >
     </code-editor>
     <div class="resize-cursor" (mousedown)="onMouseDown()"></div>
