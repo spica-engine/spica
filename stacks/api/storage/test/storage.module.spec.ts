@@ -16,8 +16,7 @@ describe("Strategy", () => {
           defaultPath: undefined,
           defaultPublicUrl: undefined,
           strategy: "default",
-          objectSizeLimit: 20,
-          totalSizeLimit: undefined
+          objectSizeLimit: 20
         })
       ]
     }).compile();
@@ -34,8 +33,7 @@ describe("Strategy", () => {
           strategy: "gcloud",
           gcloudBucketName: "test",
           gcloudServiceAccountPath: process.env.TEST_TMPDIR,
-          objectSizeLimit: 20,
-          totalSizeLimit: undefined
+          objectSizeLimit: 20
         })
       ]
     }).compile();

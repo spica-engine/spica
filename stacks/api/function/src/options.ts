@@ -10,5 +10,5 @@ export interface Options {
 export interface FunctionOptions extends SchedulingOptions {
   path: string;
   logExpireAfterSeconds: number;
-  entryLimit: number;
+  entryLimit?: number;
 }

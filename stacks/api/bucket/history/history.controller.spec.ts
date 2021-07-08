@@ -36,7 +36,7 @@ describe("History Acceptance", () => {
         PassportTestingModule.initialize(),
         DatabaseTestingModule.create(),
         PreferenceTestingModule,
-        ServicesModule,
+        ServicesModule.initialize(undefined),
         HistoryModule.register()
       ]
     }).compile();

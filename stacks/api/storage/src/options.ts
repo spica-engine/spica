@@ -7,5 +7,5 @@ export interface StorageOptions {
   gcloudServiceAccountPath?: string;
   gcloudBucketName?: string;
   objectSizeLimit: number;
-  totalSizeLimit: number;
+  totalSizeLimit?: number;
 }

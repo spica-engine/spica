@@ -18,7 +18,7 @@ export class BucketDataService {
       schema.documentSettings &&
       schema.documentSettings.limitExceedBehaviour == LimitExceedBehaviours.PREVENT
     ) {
-      options.countLimit = schema.documentSettings.countLimit;
+      options.entryLimit = schema.documentSettings.countLimit;
     }
 
     const collection = new Collection(this.db, options);

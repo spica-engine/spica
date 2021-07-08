@@ -52,8 +52,7 @@ describe("Storage Acceptance", () => {
           defaultPath: process.env.TEST_TMPDIR,
           defaultPublicUrl: "http://insteadof",
           strategy: "default",
-          objectSizeLimit: 0.1,
-          totalSizeLimit: undefined
+          objectSizeLimit: 0.1
         })
       ]
     }).compile();
