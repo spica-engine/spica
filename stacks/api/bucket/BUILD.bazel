@@ -26,6 +26,7 @@ ts_library(
         "//stacks/api/bucket/realtime",
         "//stacks/api/bucket/services",
         "//stacks/api/machinery",
+        "//stacks/api/status",
         "//stacks/api/passport",
         "//stacks/api/passport/guard",
         "//stacks/api/preference",

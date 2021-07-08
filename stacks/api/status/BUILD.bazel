@@ -1,0 +1,15 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm//@bazel/typescript:index.bzl", "ts_library")
+
+ts_library(
+    name = "status",
+    srcs = glob([
+        "src/**/*.ts",
+        "index.ts",
+    ]),
+    module_name = "@spica-server/status",
+    deps = [
+        "@npm//@nestjs/common"
+    ],
+)
