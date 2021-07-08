@@ -10,7 +10,9 @@ export class StatusController {
   }
 
   @Get()
-  findAll() {}
+  findAll() {
+    return Promise.all(this.providers.map(p => p.provide()));
+  }
 
   @Get(":module")
   find(@Param("module") module: string) {

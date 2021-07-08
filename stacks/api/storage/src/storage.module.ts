@@ -7,9 +7,14 @@ import {Default} from "./strategy/default";
 import {GCloud} from "./strategy/gcloud";
 import {Strategy} from "./strategy/strategy";
 import {BASE_64} from "./schema/format";
+import {registerStatusProvider} from "./status";
 
 @Module({})
 export class StorageModule {
+  constructor(storageService: StorageService) {
+    registerStatusProvider(storageService);
+  }
+  
   static forRoot(options: StorageOptions): DynamicModule {
     return {
       module: StorageModule,

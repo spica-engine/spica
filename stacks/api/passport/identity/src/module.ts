@@ -9,6 +9,7 @@ import {IdentityService} from "./identity.service";
 import {IdentityStrategy} from "./identity.strategy";
 import {provideSettingsFinalizer, providePolicyFinalizer} from "./utility";
 import {IDENTITY_POLICY_FINALIZER} from "@spica-server/passport/policy";
+import {registerStatusProvider} from "./status";
 
 @Global()
 @Module({})
@@ -24,6 +25,7 @@ export class IdentityModule {
         policies: options.defaultIdentityPolicies
       });
     }
+    registerStatusProvider(identityService);
   }
 
   static forRoot(options: IdentityOptions): DynamicModule {

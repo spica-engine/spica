@@ -122,6 +122,13 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   timeouts = new Map<string, NodeJS.Timeout>();
 
+  getStatus() {
+    return {
+      limit: this.options.poolSize,
+      current: this.workers.size
+    };
+  }
+
   getBatchForTarget(target: event.Target) {
     for (const batch of this.batching.values()) {
       if (

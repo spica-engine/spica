@@ -24,6 +24,7 @@ ts_library(
         "//stacks/api/function/src/log",
         "//stacks/api/function/webhook",
         "//stacks/api/machinery",
+        "//stacks/api/status",
         "//stacks/api/passport/guard",
         "//stacks/api/passport/policy",
         "@npm//@nestjs/common",

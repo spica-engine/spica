@@ -10,11 +10,12 @@ export async function registerStatusProvider(bs: BucketService, bds: BucketDataS
     const status: Status = {
       module: "bucket",
       status: {
-        buckets: await bs.getStatus()
+        buckets: await bs.getStatus(),
+        "bucket-data": await bds.getStatus()
       }
     };
 
-    const bucketSchemas = await bs.find({});
+    const bucketSchemas = await bs.find();
     for (const schema of bucketSchemas) {
       const bdsCol = bds.children(schema);
 

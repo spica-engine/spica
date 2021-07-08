@@ -1,6 +1,6 @@
 import {DynamicModule, Module} from "@nestjs/common";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {SchedulerModule} from "@spica-server/function/scheduler";
+import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {WebhookModule} from "@spica-server/function/webhook";
 import * as path from "path";
 import {FunctionEngine} from "./engine";
@@ -13,11 +13,13 @@ import {FunctionOptions, FUNCTION_OPTIONS} from "./options";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
 import {Http, RepoStrategies} from "./services/interface";
 import {Axios} from "./services/axios";
+import {registerStatusProvider} from "./status";
 
 @Module({})
 export class FunctionModule {
-  constructor(fs: FunctionService, fe: FunctionEngine) {
+  constructor(fs: FunctionService, fe: FunctionEngine, scheduler: Scheduler) {
     registerInformers(fs, fe);
+    registerStatusProvider(fs,scheduler);
   }
 
   static forRoot(options: FunctionOptions): DynamicModule {

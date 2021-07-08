@@ -37,7 +37,7 @@ export class _MixinCollection<T> {
 
   async getStatus() {
     return {
-      limit: this.options ? this.options.countLimit : undefined,
+      limit: this.options ? this.options.entryLimit : undefined,
       current: await this._coll.estimatedDocumentCount()
     };
   }

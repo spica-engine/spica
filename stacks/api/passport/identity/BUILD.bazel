@@ -18,6 +18,7 @@ ts_library(
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/activity/services",
+        "//stacks/api/status",
         "//stacks/api/passport/guard",
         "//stacks/api/passport/policy",
         "//stacks/api/preference/services",
