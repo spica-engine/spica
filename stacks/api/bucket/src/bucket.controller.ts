@@ -6,6 +6,7 @@ import {
   Get,
   Headers,
   HttpCode,
+  HttpException,
   HttpStatus,
   Optional,
   Param,
@@ -95,7 +96,9 @@ export class BucketController {
   async add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
     this.ruleValidation(bucket);
 
-    const insertedBucket = await this.bs.insertOne(bucket);
+    const insertedBucket = await this.bs.insertOne(bucket).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
+    });
     this.bs.emitSchemaChanges();
 
     return insertedBucket;

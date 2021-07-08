@@ -15,7 +15,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     @Inject(IDENTITY_OPTIONS) private identityOptions: IdentityOptions
   ) {
     super(database, {
-      countLimit: identityOptions.identityCountLimit
+      entryLimit: identityOptions.entryLimit
     });
     this._coll.createIndex({identifier: 1}, {unique: true});
   }
@@ -27,11 +27,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
   sign(identity: Identity, requestedExpires?: number) {
     let expiresIn = this.identityOptions.expiresIn;
     if (requestedExpires) {
-      if (requestedExpires > this.identityOptions.maxExpiresIn) {
-        expiresIn = this.identityOptions.maxExpiresIn;
-      } else {
-        expiresIn = requestedExpires;
-      }
+      expiresIn = Math.min(requestedExpires, this.identityOptions.maxExpiresIn);
     }
 
     const token = this.jwt.sign(

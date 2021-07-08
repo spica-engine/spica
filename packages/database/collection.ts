@@ -15,7 +15,7 @@ import {
 import {DatabaseService} from "./database.service";
 
 export interface InitializeOptions {
-  countLimit: number;
+  entryLimit: number;
 }
 
 export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
@@ -63,10 +63,10 @@ export class _MixinCollection<T> {
   }
 
   async documentCountLimitValidation(insertedDocumentCount: number) {
-    if (this.options && this.options.countLimit) {
+    if (this.options && this.options.entryLimit) {
       const existingDocumentCount = await this._coll.estimatedDocumentCount();
 
-      if (existingDocumentCount + insertedDocumentCount > this.options.countLimit) {
+      if (existingDocumentCount + insertedDocumentCount > this.options.entryLimit) {
         throw new Error("Maximum number of documents has been reached");
       }
     }

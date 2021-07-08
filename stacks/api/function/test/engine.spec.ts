@@ -52,7 +52,7 @@ describe("Engine", () => {
     mongo = module.get(MongoClient);
 
     engine = new FunctionEngine(
-      new FunctionService(database),
+      new FunctionService(database, {} as any),
       database,
       mongo,
       scheduler,
