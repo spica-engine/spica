@@ -151,5 +151,5 @@ export interface BucketOptions {
   realtime: boolean;
   cache: boolean;
   cacheTtl?: number;
-  bucketDataLimit?: number;
+  bucketDataLimit: number;
 }

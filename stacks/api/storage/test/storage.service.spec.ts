@@ -164,6 +164,39 @@ describe("Storage Service", () => {
     const MB = Math.pow(10, 6); // 1mb = 10^6 byte
     let storageObjects = [];
 
+    it("should skip validation if total size limit was not provided", async () => {
+      module = await Test.createTestingModule({
+        imports: [DatabaseTestingModule.standalone()],
+        providers: [
+          StorageService,
+          {
+            provide: Strategy,
+            useValue: new Default(process.env.TEST_TMPDIR, "http://insteadof")
+          },
+          {
+            provide: STORAGE_OPTIONS,
+            useValue: {}
+          }
+        ]
+      }).compile();
+      storageService = module.get(StorageService);
+
+      const [insertedObj] = await storageService.insertMany([
+        {
+          _id: new ObjectId(),
+          name: "name",
+          url: "url",
+          content: {
+            data: Buffer.from(""),
+            type: "text/plain",
+            size: 100 * MB
+          }
+        }
+      ]);
+
+      expect(insertedObj.content.size).toEqual(100 * MB);
+    });
+
     beforeEach(async () => {
       storageObjects = [
         {

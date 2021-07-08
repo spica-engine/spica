@@ -30,7 +30,6 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     this.schemaChangeEmitter.next(undefined);
   }
 
-  //@TODO: we may decide to remove this logic, make it clarify
   async totalDocCountValidation(count: number) {
     if (!this.bucketDataLimit) {
       return;

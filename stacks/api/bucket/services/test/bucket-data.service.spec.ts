@@ -59,7 +59,7 @@ describe("Bucket Data Service", () => {
 
     afterEach(() => module.close());
 
-    it("should insert entry if it causes to limit exceeding", async () => {
+    it("should insert entry if it does not cause to limit exceeding", async () => {
       const buckets = await db
         .collection("buckets")
         .insertMany([{title: "bucket1"}, {title: "bucket2"}] as any[]);
@@ -73,7 +73,7 @@ describe("Bucket Data Service", () => {
       expect(insertedDoc.title).toEqual("entry2");
     });
 
-    it("should not insert entry if it does not cause to limit exceeding", async () => {
+    it("should not insert entry if it causes to limit exceeding", async () => {
       const buckets = await db
         .collection("buckets")
         .insertMany([{title: "bucket1"}, {title: "bucket2"}] as any[])
