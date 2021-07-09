@@ -14,10 +14,7 @@ export class BucketDataService {
     const Collection = BaseCollection<BucketDocument>(getBucketDataCollection(schema._id));
     let options: any = {};
 
-    if (
-      schema.documentSettings &&
-      schema.documentSettings.limitExceedBehaviour == LimitExceedBehaviours.PREVENT
-    ) {
+    if (schema.documentSettings && schema.documentSettings.countLimit) {
       options.entryLimit = schema.documentSettings.countLimit;
     }
 

@@ -19,6 +19,7 @@ import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
 import * as yargs from "yargs";
+import {Request, Response, NextFunction} from "express";
 
 const args = yargs
   /* TLS Options */
@@ -339,8 +340,8 @@ Example: http(s)://doomed-d45f1.spica.io/api`
 const modules = [
   DashboardModule.forRoot(),
   PreferenceModule,
-  ApiMachineryModule.forRoot(),
-  StatusModule.forRoot(),
+  ApiMachineryModule,
+  StatusModule,
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
@@ -431,6 +432,12 @@ NestFactory.create(RootModule, {
   .then(app => {
     app.useWebSocketAdapter(new WsAdapter(app));
     app.use(
+      // (req: Request, res: Response, next: NextFunction) => {
+      //   //console.log(req.get("Content-Length"));
+      //   //@ts-ignore
+      //   console.log(res.header()._headers);
+      //   next();
+      // },
       Middlewares.Preflight({
         allowedOrigins: args["cors-allowed-origins"],
         allowedMethods: args["cors-allowed-methods"],
