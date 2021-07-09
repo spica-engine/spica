@@ -8,20 +8,23 @@ ts_library(
         "controller.spec.ts",
     ],
     deps = [
+        "//packages/core",
         "//packages/core/schema",
         "//packages/core/testing",
+        "//packages/core/websocket",
         "//packages/database/testing",
         "//stacks/api/preference/testing",
         "//stacks/api/passport/testing",
         "//stacks/api/status",
         "//stacks/api/bucket",
+        "//stacks/api/storage",
         "//stacks/api/passport/identity",
         "//stacks/api/passport/policy",
         "//stacks/api/function",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
-        "@npm//@types/node",
+        "@npm//@types/node"
     ],
 )
 
