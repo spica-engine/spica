@@ -432,12 +432,6 @@ NestFactory.create(RootModule, {
   .then(app => {
     app.useWebSocketAdapter(new WsAdapter(app));
     app.use(
-      // (req: Request, res: Response, next: NextFunction) => {
-      //   //console.log(req.get("Content-Length"));
-      //   //@ts-ignore
-      //   console.log(res.header()._headers);
-      //   next();
-      // },
       Middlewares.Preflight({
         allowedOrigins: args["cors-allowed-origins"],
         allowedMethods: args["cors-allowed-methods"],
