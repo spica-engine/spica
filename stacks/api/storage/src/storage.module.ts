@@ -14,7 +14,7 @@ export class StorageModule {
   constructor(storageService: StorageService) {
     registerStatusProvider(storageService);
   }
-  
+
   static forRoot(options: StorageOptions): DynamicModule {
     return {
       module: StorageModule,

@@ -1,10 +1,9 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
-import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
 import {DATE_TIME, OBJECTID_STRING} from "@spica-server/core/schema/formats";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {FunctionModule} from "@spica-server/function";
 import {IdentityModule} from "@spica-server/passport/identity";
@@ -14,9 +13,10 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {StatusModule} from "@spica-server/status";
 import {StorageModule} from "@spica-server/storage";
 import * as os from "os";
+import * as BSON from "bson";
+import {WsAdapter} from "@spica-server/core/websocket";
 
-const MB = Math.pow(10, 6);
-const KB = Math.pow(10, -6);
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50051";
 
 describe("Status", () => {
   describe("Bucket", () => {
@@ -163,10 +163,11 @@ describe("Status", () => {
     });
   });
 
-  xdescribe("Function", () => {
+  describe("Function", () => {
     let module: TestingModule;
     let app: INestApplication;
     let req: Request;
+    let fn;
 
     beforeEach(async () => {
       module = await Test.createTestingModule({
@@ -178,8 +179,8 @@ describe("Status", () => {
           FunctionModule.forRoot({
             path: os.tmpdir(),
             databaseName: undefined,
-            poolSize: 3,
-            poolMaxSize: 3,
+            poolSize: 1,
+            poolMaxSize: 1,
             databaseReplicaSet: undefined,
             databaseUri: undefined,
             apiUrl: undefined,
@@ -195,25 +196,81 @@ describe("Status", () => {
           })
         ]
       }).compile();
-      app = module.createNestApplication();
       req = module.get(Request);
 
+      app = module.createNestApplication();
+      app.useWebSocketAdapter(new WsAdapter(app));
+
       await app.listen(req.socket);
+
+      fn = await req
+        .post("/function", {
+          name: "test",
+          description: "test",
+          language: "javascript",
+          timeout: 100,
+          triggers: {
+            default: {
+              options: {
+                method: "Get",
+                path: "/test",
+                preflight: true
+              },
+              type: "http",
+              active: true
+            }
+          },
+          env: {},
+          memoryLimit: 100
+        })
+        .then(res => res.body);
+
+      await req.post(`/function/${fn._id}/index`, {
+        index: `export default function(){ return "OK"; }`
+      });
     });
 
     afterEach(async () => await app.close());
 
     it("should return status of function module", async () => {
+      // wait until worker spawned
+      await new Promise((resolve, _) => setTimeout(resolve, 2 * 1000));
+
       const res = await req.get("/status/function");
       expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
       expect(res.body).toEqual({
         module: "function",
         status: {
           functions: {
-            current: 0
+            limit: 20,
+            current: 1
           },
           workers: {
-            limit: 3,
+            limit: 1,
+            current: 1
+          }
+        }
+      });
+    });
+
+    it("should return updated function module status", async () => {
+      // wait until worker spawned
+      await new Promise((resolve, _) => setTimeout(resolve, 2 * 1000));
+
+      // use a worker
+      await req.get("/fn-execute/test");
+
+      const res = await req.get("/status/function");
+      expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
+      expect(res.body).toEqual({
+        module: "function",
+        status: {
+          functions: {
+            limit: 20,
+            current: 1
+          },
+          workers: {
+            limit: 1,
             current: 0
           }
         }
@@ -221,7 +278,7 @@ describe("Status", () => {
     });
   });
 
-  fdescribe("Storage", () => {
+  describe("Storage", () => {
     let module: TestingModule;
     let app: INestApplication;
     let req: Request;
@@ -241,8 +298,7 @@ describe("Status", () => {
           })
         ]
       }).compile();
-      app = module.createNestApplication();
-      app.use(Middlewares.JsonBodyParser({limit: 10 * MB, ignoreUrls: []}));
+      app = module.createNestApplication(undefined, {bodyParser: false});
       req = module.get(Request);
 
       await app.listen(req.socket);
@@ -250,19 +306,17 @@ describe("Status", () => {
 
     afterEach(async () => await app.close());
 
-    fit("should return status of storage module", async () => {
-      const data = 
+    it("should return status of storage module", async () => {
       // insert storage
-      await req
-        .post("/storage", [
-          {
-            name: "test.txt",
-            content: {type: "text/plain", data: data.toString()}
+      await req.post("/storage", [
+        {
+          name: "test.txt",
+          content: {
+            type: "text/plain",
+            data: new BSON.Binary(Buffer.alloc(3 * 1000 * 1000))
           }
-        ])
-        .then(r => {
-          console.dir(r, {depth: Infinity});
-        });
+        }
+      ]);
 
       const res = await req.get("/status/storage");
       expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);

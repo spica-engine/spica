@@ -19,7 +19,7 @@ import {registerStatusProvider} from "./status";
 export class FunctionModule {
   constructor(fs: FunctionService, fe: FunctionEngine, scheduler: Scheduler) {
     registerInformers(fs, fe);
-    registerStatusProvider(fs,scheduler);
+    registerStatusProvider(fs, scheduler);
   }
 
   static forRoot(options: FunctionOptions): DynamicModule {

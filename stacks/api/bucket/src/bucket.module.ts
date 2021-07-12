@@ -124,7 +124,7 @@ export class BucketModule {
     });
 
     registerInformers(bs);
-    registerStatusProvider(bs,bds);
+    registerStatusProvider(bs, bds);
   }
 }
 
