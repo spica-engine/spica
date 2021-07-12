@@ -18,6 +18,7 @@ import {GraphqlController} from "./graphql/graphql";
 import {provideLanguageFinalizer} from "@spica-server/bucket/common";
 import {registerInformers} from "./machinery";
 import {DocumentScheduler} from "./scheduler";
+import {registerStatusProvider} from "./status";
 
 @Module({})
 export class BucketModule {
@@ -110,7 +111,7 @@ export class BucketModule {
     };
   }
 
-  constructor(preference: PreferenceService, bs: BucketService) {
+  constructor(preference: PreferenceService, bs: BucketService, bds: BucketDataService) {
     preference.default({
       scope: "bucket",
       language: {
@@ -123,6 +124,7 @@ export class BucketModule {
     });
 
     registerInformers(bs);
+    registerStatusProvider(bs, bds);
   }
 }
 

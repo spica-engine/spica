@@ -180,14 +180,11 @@ async function applyDependencyChanges(
 }
 
 export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
-  const functionStore = store<any>({
-    group: "function",
-    resource: "functions"
-  });
-  const triggerStore = store<any>({
-    group: "function",
-    resource: "triggers"
-  });
+  const getStore = (resource: string) =>
+    store<any>({
+      group: "function",
+      resource: resource
+    });
 
   register(
     {
@@ -197,7 +194,7 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
     },
     {
       add: async (object: any) => {
-        const fn = await functionStore.get(object.spec.func);
+        const fn = await getStore("functions").get(object.spec.func);
         if (fn) {
           const trigger = await v1_trigger_to_internal(object);
           await fs.updateOne(
@@ -221,11 +218,11 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
             }
           ]);
         } else {
-          await triggerStore.patch(object.metadata.name, {status: "ErrFuncNotFound"});
+          await getStore("triggers").patch(object.metadata.name, {status: "ErrFuncNotFound"});
         }
       },
       update: async (_, object: any) => {
-        const fn = await functionStore.get(object.spec.func);
+        const fn = await getStore("functions").get(object.spec.func);
         if (fn) {
           const trigger = await v1_trigger_to_internal(object);
           await fs.updateOne(
@@ -248,11 +245,11 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
             }
           ]);
         } else {
-          await triggerStore.patch(object.metadata.name, {status: "ErrFuncNotFound"});
+          await getStore("triggers").patch(object.metadata.name, {status: "ErrFuncNotFound"});
         }
       },
       delete: async object => {
-        const fn = await functionStore.get(object.spec.func);
+        const fn = await getStore("functions").get(object.spec.func);
         if (fn) {
           await fs.updateOne(
             {_id: new ObjectId(fn.metadata.uid)},
@@ -268,7 +265,7 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
             }
           ]);
         } else {
-          await triggerStore.patch(object.metadata.name, {status: "ErrFuncNotFound"});
+          await getStore("triggers").patch(object.metadata.name, {status: "ErrFuncNotFound"});
         }
       }
     }
@@ -282,12 +279,12 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
     },
     {
       add: async (obj: any) => {
-        await functionStore.patch(obj.metadata.name, {status: "Pending"});
+        await getStore("functions").patch(obj.metadata.name, {status: "Pending"});
         let fn;
         try {
           const raw = await v1_function_to_internal(obj);
           fn = await fs.insertOne(raw);
-          await functionStore.patch(obj.metadata.name, {
+          await getStore("functions").patch(obj.metadata.name, {
             metadata: {uid: String(fn._id)},
             status: "Creating"
           });
@@ -305,7 +302,7 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
           throw e;
         }
 
-        await functionStore.patch(obj.metadata.name, {status: "Ready"});
+        await getStore("functions").patch(obj.metadata.name, {status: "Ready"});
       },
       update: async (oldObj, obj: any) => {
         const raw = await v1_function_to_internal(obj);

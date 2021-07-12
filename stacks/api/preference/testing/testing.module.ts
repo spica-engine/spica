@@ -4,6 +4,11 @@ import {Observable} from "rxjs";
 
 class PartialPreferenceService {
   private defaults = new Map<string, any>();
+
+  constructor() {
+    this.defaults.set("passport", {identity: {attributes: {}}});
+  }
+
   default = jasmine
     .createSpy<typeof PreferenceService.prototype.default>("PreferenceService.default")
     .and.callFake((preference: any) => {

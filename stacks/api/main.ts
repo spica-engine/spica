@@ -13,11 +13,13 @@ import {FunctionModule} from "@spica-server/function";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
 import {ApiMachineryModule} from "@spica-server/machinery";
+import {StatusModule} from "@spica-server/status";
 import {StorageModule} from "@spica-server/storage";
 import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
 import * as yargs from "yargs";
+import {Request, Response, NextFunction} from "express";
 
 const args = yargs
   /* TLS Options */
@@ -338,7 +340,8 @@ Example: http(s)://doomed-d45f1.spica.io/api`
 const modules = [
   DashboardModule.forRoot(),
   PreferenceModule,
-  ApiMachineryModule.forRoot(),
+  ApiMachineryModule,
+  StatusModule,
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
