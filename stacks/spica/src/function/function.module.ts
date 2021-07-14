@@ -40,6 +40,7 @@ import {FunctionService} from "./services/function.service";
 import {FunctionOptions, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "./interface";
 import {AddComponent} from "./pages/add/add.component";
 import {ExampleComponent} from "@spica-client/common/example";
+import {ConfigurationComponent} from "./components/configuration/configuration.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {LogViewComponent} from "./pages/log-view/log-view.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
@@ -47,6 +48,7 @@ import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
 import {WebhookModule} from "./webhook.module";
 import {RepositoryComponent} from "./components/repository/repository.component";
+import {MatDialogModule} from "@angular/material/dialog";
 
 @NgModule({
   imports: [
@@ -56,6 +58,7 @@ import {RepositoryComponent} from "./components/repository/repository.component"
     MatCardModule,
     MatIconModule,
     MatAwareDialogModule,
+    MatDialogModule,
     MatTableModule,
     MatButtonModule,
     MatPaginatorModule,
@@ -94,7 +97,8 @@ import {RepositoryComponent} from "./components/repository/repository.component"
     WelcomeComponent,
     LanguageDirective,
     EnqueuerPipe,
-    ExampleComponent
+    ExampleComponent,
+    ConfigurationComponent
   ]
 })
 export class FunctionModule {

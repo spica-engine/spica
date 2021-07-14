@@ -159,7 +159,7 @@ export class FunctionController {
       throw new NotFoundException("Couldn't find the function.");
     }
 
-    this.log.deleteMany({function: id.toString()});
+    const _ = this.log.deleteMany({function: id.toString()});
 
     const changes = createTargetChanges(fn, ChangeKind.Removed);
     this.engine.categorizeChanges(changes);

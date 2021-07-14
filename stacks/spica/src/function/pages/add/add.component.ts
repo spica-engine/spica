@@ -42,6 +42,7 @@ import {MatDialog} from "@angular/material/dialog";
 import {ExampleComponent} from "@spica-client/common/example";
 import {GithubService} from "@spica-client/function/services";
 import {RepositoryComponent} from "../../components/repository/repository.component";
+import {ConfigurationComponent} from "../../components/configuration/configuration.component";
 
 @Component({
   selector: "functions-add",
@@ -111,6 +112,7 @@ export class AddComponent implements OnInit, OnDestroy {
   editName = false;
   editDescription = false;
 
+  // GITHUB CONFIGURATIONS
   repos: {repo: string; branches: string[]}[] = [];
 
   selectedRepoBranch: {repo: string; branch: string} = {repo: undefined, branch: undefined};
@@ -290,6 +292,7 @@ export class AddComponent implements OnInit, OnDestroy {
       branch: this.pushStrategy.branch
     };
   }
+  // END OF THE GITHUB CONFIGURATIONS
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -322,6 +325,36 @@ export class AddComponent implements OnInit, OnDestroy {
     merge(
       this.$refresh,
       this.activatedRoute.params.pipe(
+        tap(params => {
+          if (!params.id) {
+            this.onInfoViewSelectionChange(false);
+            this.dialog
+              .open(ConfigurationComponent, {
+                disableClose: true,
+                minWidth: "200px",
+                width: "40%",
+                maxWidth: "1000px",
+                data: {
+                  information: this.information,
+                  function: this.function
+                }
+              })
+              .afterClosed()
+              .toPromise()
+              .then(save => {
+                this.onInfoViewSelectionChange(true);
+
+                if (!save) {
+                  this.function = emptyFunction();
+                  return;
+                }
+
+                const code = this.functionService.getExample(this.function.triggers[0]);
+                this.index = code;
+                this.save();
+              });
+          }
+        }),
         filter(params => params.id),
         map(params => params.id)
       )
@@ -677,8 +710,8 @@ export class AddComponent implements OnInit, OnDestroy {
     }
   }
 
-  onInfoViewSelectionChange() {
-    this.enableInfoView = !this.enableInfoView;
+  onInfoViewSelectionChange(state?: boolean) {
+    this.enableInfoView = typeof state != "undefined" ? state : !this.enableInfoView;
 
     const codeSection = document.getElementsByClassName("code")[0];
     const infoSection = document.getElementsByClassName("info")[0];
