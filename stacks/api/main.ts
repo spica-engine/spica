@@ -19,7 +19,6 @@ import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
 import * as yargs from "yargs";
-import {Request, Response, NextFunction} from "express";
 
 const args = yargs
   /* TLS Options */
@@ -224,6 +223,13 @@ const args = yargs
       description: "Total size limit of storage. Unit: Mb"
     }
   })
+  /* Request-Response Options */
+  .options({
+    "request-limit": {
+      number: true,
+      description: "Maximum request count that server can process"
+    }
+  })
   /* CORS Options */
   .option({
     "cors-allowed-origins": {
@@ -341,7 +347,9 @@ const modules = [
   DashboardModule.forRoot(),
   PreferenceModule,
   ApiMachineryModule,
-  StatusModule,
+  StatusModule.forRoot({
+    requestLimit: args["request-limit"]
+  }),
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
