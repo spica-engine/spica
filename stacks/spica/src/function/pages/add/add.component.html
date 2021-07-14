@@ -47,12 +47,16 @@
             color="warn"
             (click)="disconnectGithub()"
           >
-            <mat-icon>clear</mat-icon>
+            <mat-icon>link_off</mat-icon>
           </button>
-          <span class="repo-response">
-            {{ repoResponse }}
-          </span>
         </ng-container>
+        <span
+          *ngIf="repoResponse"
+          [style.color]="repoResponse.succeeded ? 'green' : 'red'"
+          class="repo-response"
+        >
+          {{ repoResponse.message }}
+        </span>
       </div>
 
       <span class="seperator"></span>

@@ -1,6 +1,6 @@
 import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
-import {map, take, takeUntil, tap} from "rxjs/operators";
+import {take, timeout} from "rxjs/operators";
 import {RepositoryService} from "../interface";
 import {v4 as uuidv4} from "uuid";
 import {webSocket} from "rxjs/webSocket";
@@ -65,8 +65,19 @@ export class GithubService implements RepositoryService {
     const url = "wss://hq.spicaengine.com/api/firehose";
     const subject = webSocket(url);
 
+    const timeoutMs = 60 * 1000;
+
     return new Observable<OAuthResponse>(subscriber => {
-      subject.pipe(take(2)).subscribe((v: OAuthResponse) => subscriber.next(v));
+      subject
+        .pipe(
+          timeout(timeoutMs),
+          take(2)
+        )
+        .subscribe(
+          (v: OAuthResponse) => subscriber.next(v),
+          e => subscriber.error(e.message),
+          () => subscriber.complete()
+        );
       subject.next({name: "state", data: uuidv4()});
 
       return () => subject.unsubscribe();

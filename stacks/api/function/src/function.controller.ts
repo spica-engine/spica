@@ -86,17 +86,31 @@ export class FunctionController {
     @Param("branch") branch: string,
     @Body() options: any
   ) {
-    return this.engine.pushCommit(integration, repo, branch, options.message).catch(e => {
-      throw new BadRequestException(e.toString());
-    });
+    return this.engine
+      .pushCommit(integration, repo, branch, options.message)
+      .then(() => {
+        return {
+          message: "Changes have been pushed successfully."
+        };
+      })
+      .catch(e => {
+        throw new BadRequestException(e.toString());
+      });
   }
 
   @Post("integrations/:integration/repos")
   @UseGuards(AuthGuard(), ActionGuard("function:integrations", "function"))
   async create(@Param("integration") integration: string, @Body() options: any) {
-    return this.engine.createRepo(integration, options.repo, options.token).catch(e => {
-      throw new BadRequestException(e.toString());
-    });
+    return this.engine
+      .createRepo(integration, options.repo, options.token)
+      .then(() => {
+        return {
+          message: "Changes have been pushed successfully."
+        };
+      })
+      .catch(e => {
+        throw new BadRequestException(e.toString());
+      });
   }
 
   /**

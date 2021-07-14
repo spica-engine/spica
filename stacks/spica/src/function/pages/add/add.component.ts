@@ -20,14 +20,12 @@ import {
   flatMap,
   ignoreElements,
   map,
-  mergeMap,
   share,
   startWith,
   switchMap,
   take,
   takeUntil,
-  tap,
-  timeout
+  tap
 } from "rxjs/operators";
 import {FunctionService} from "../../services/function.service";
 import {
@@ -41,7 +39,7 @@ import {
 } from "../../interface";
 import {MatDialog} from "@angular/material/dialog";
 import {ExampleComponent} from "@spica-client/common/example";
-import {GithubService} from "@spica-client/function/services";
+import {GithubService, OAuthError} from "@spica-client/function/services";
 import {RepositoryComponent} from "../../components/repository/repository.component";
 
 @Component({
@@ -130,7 +128,7 @@ export class AddComponent implements OnInit, OnDestroy {
 
   repoPending = false;
 
-  repoResponse;
+  repoResponse: {succeeded: boolean; message: string};
 
   async initGithub() {
     let token = this.github.token;
@@ -140,13 +138,14 @@ export class AddComponent implements OnInit, OnDestroy {
 
       let tab: Window;
 
-      return this.github
-        .startOAuth()
-        .pipe(
-          timeout(60 * 1000),
-          take(2)
-        )
-        .subscribe(res => {
+      const onFailed = (reason: string) => {
+        tab.close();
+        this.repoPending = false;
+        this.showRepoResponse({succeeded: false, message: reason});
+      };
+
+      return this.github.startOAuth().subscribe(
+        res => {
           switch (res.name) {
             case "url":
               tab = window.open(res.data.url);
@@ -160,13 +159,15 @@ export class AddComponent implements OnInit, OnDestroy {
               break;
 
             case "error":
-              this.repoPending = false;
-              throw Error(res.data.message);
+              onFailed(res.data.message);
+              break;
 
             default:
               break;
           }
-        });
+        },
+        e => onFailed(e)
+      );
     }
 
     this.integratedUser = await this.github.initialize(token);
@@ -175,10 +176,9 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   disconnectGithub() {
-    this.integratedUser = undefined;
-    this.repos = [];
+    this.integratedUser = this.github.token = undefined;
     this.github.selectedRepoBranch = this.selectedRepoBranch = {repo: undefined, branch: undefined};
-    this.github.token = undefined;
+    this.repos = [];
   }
 
   async listRepos() {
@@ -250,7 +250,7 @@ export class AddComponent implements OnInit, OnDestroy {
       .pullCommit(this.selectedRepoBranch.repo, this.selectedRepoBranch.branch)
       .toPromise()
       .then((res: any) => {
-        this.showRepoResponse(res.message);
+        this.showRepoResponse({succeeded: true, message: res.message});
       })
       .finally(() => (this.repoPending = false));
 
@@ -259,14 +259,14 @@ export class AddComponent implements OnInit, OnDestroy {
     this.$refresh.next(this.function._id);
   }
 
-  showRepoResponse(message: string) {
-    this.repoResponse = message;
+  showRepoResponse(response: {succeeded: boolean; message: string}) {
+    this.repoResponse = response;
     setTimeout(() => {
-      this.repoResponse = "";
+      this.repoResponse = undefined;
     }, 3000);
   }
 
-  // we prefer adding a new repo or branch manually cause of the github response caches
+  // we prefer to add a new repo or branch manually since github return responses from cache
   addRepoBranch(repoBranch: {repo: string; branch: string}) {
     const repoIndex = this.repos.findIndex(r => r.repo == repoBranch.repo);
 
@@ -283,18 +283,19 @@ export class AddComponent implements OnInit, OnDestroy {
 
   async push() {
     this.repoPending = true;
+    let promise: Promise<any>;
 
     if (this.pushStrategy.target == "repo") {
-      await this.github
-        .createRepo(this.pushStrategy.repo)
-        .toPromise()
-        .finally(() => (this.repoPending = false));
+      promise = this.github.createRepo(this.pushStrategy.repo).toPromise();
     } else if (this.pushStrategy.target == "branch" || this.pushStrategy.target == "commit") {
-      await this.github
+      promise = this.github
         .pushCommit(this.pushStrategy.repo, this.pushStrategy.branch, this.pushStrategy.message)
-        .toPromise()
-        .finally(() => (this.repoPending = false));
+        .toPromise();
     }
+
+    await promise
+      .then((res: any) => this.showRepoResponse({succeeded: true, message: res.message}))
+      .finally(() => (this.repoPending = false));
 
     this.selectedRepoBranch = this.github.selectedRepoBranch = {
       repo: this.pushStrategy.repo,
