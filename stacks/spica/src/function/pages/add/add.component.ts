@@ -26,7 +26,8 @@ import {
   switchMap,
   take,
   takeUntil,
-  tap
+  tap,
+  timeout
 } from "rxjs/operators";
 import {FunctionService} from "../../services/function.service";
 import {
@@ -137,29 +138,39 @@ export class AddComponent implements OnInit, OnDestroy {
     if (!token) {
       this.repoPending = true;
 
-      const loginPage = await this.github.getLoginPage().toPromise();
-      const tab = window.open(loginPage);
+      let tab: Window;
 
-      token = await this.github
-        .startPolling()
-        .toPromise()
-        .catch(e => {
-          console.error(e);
-          return undefined;
+      return this.github
+        .startOAuth()
+        .pipe(
+          timeout(60 * 1000),
+          take(2)
+        )
+        .subscribe(res => {
+          switch (res.name) {
+            case "url":
+              tab = window.open(res.data.url);
+              break;
+
+            case "token":
+              tab.close();
+              this.repoPending = false;
+              this.github.token = res.data.token;
+              this.initGithub();
+              break;
+
+            case "error":
+              this.repoPending = false;
+              throw Error(res.data.message);
+
+            default:
+              break;
+          }
         });
-
-      tab.close();
-
-      this.repoPending = false;
-      if (!token) {
-        return console.error("Token could not be founded.");
-      }
     }
 
     this.integratedUser = await this.github.initialize(token);
-
     this.repos = await this.listRepos();
-
     this.selectedRepoBranch = this.github.selectedRepoBranch;
   }
 
