@@ -11,7 +11,7 @@ export async function registerStatusProvider(bs: BucketService, bds: BucketDataS
       module: "bucket",
       status: {
         buckets: await bs.getStatus(),
-        "bucket-data": await bds.getStatus()
+        "bucketData": await bds.getStatus()
       }
     };
 

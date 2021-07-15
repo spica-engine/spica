@@ -3,12 +3,18 @@ import {StatusController} from "./controller";
 import {
   CoreStatusServiceModule,
   StatusInterceptor,
-  StatusOptions
+  StatusOptions,
+  StatusService
 } from "@spica-server/status/services";
 import {APP_INTERCEPTOR} from "@nestjs/core";
+import {registerStatusProvider} from "./status";
 
 @Module({})
 export class StatusModule {
+  constructor(service: StatusService) {
+    registerStatusProvider(service);
+  }
+  
   static forRoot(options: StatusOptions) {
     return {
       module: StatusModule,

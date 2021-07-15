@@ -20,6 +20,8 @@ import * as https from "https";
 import * as path from "path";
 import * as yargs from "yargs";
 
+const DAY_SEC = 30 * 24 * 60 * 60;
+
 const args = yargs
   /* TLS Options */
   .options({
@@ -223,8 +225,14 @@ const args = yargs
       description: "Total size limit of storage. Unit: Mb"
     }
   })
-  /* Request-Response Options */
+  /* Status Options */
   .options({
+    "status-tracking": {
+      boolean: true,
+      description:
+        "When enabled, server will be able to show the stats of core modules and track the request-response stats too.",
+      default: true
+    },
     "request-limit": {
       number: true,
       description: "Maximum request count that server can process"
@@ -262,7 +270,7 @@ const args = yargs
   .option("common-log-lifespan", {
     number: true,
     description: "Seconds that need to be passed to expire logs. Default value is one month.",
-    default: 2629743
+    default: DAY_SEC
   })
   .option("port", {
     number: true,
@@ -347,9 +355,6 @@ const modules = [
   DashboardModule.forRoot(),
   PreferenceModule,
   ApiMachineryModule,
-  StatusModule.forRoot({
-    requestLimit: args["request-limit"]
-  }),
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
@@ -416,6 +421,15 @@ const modules = [
 
 if (args["activity-stream"]) {
   modules.push(ActivityModule.forRoot({expireAfterSeconds: args["common-log-lifespan"]}));
+}
+
+if (args["status-tracking"]) {
+  modules.push(
+    StatusModule.forRoot({
+      requestLimit: args["request-limit"],
+      expireAfterSeconds: args["common-log-lifespan"]
+    })
+  );
 }
 
 @Module({

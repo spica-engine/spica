@@ -125,7 +125,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   getStatus() {
     return {
       limit: this.options.poolSize,
-      current: this.workers.size
+      current: this.workers.size,
+      unit: "count"
     };
   }
 

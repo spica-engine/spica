@@ -2,8 +2,9 @@ export interface Status {
   module: string;
   status: {
     [key: string]: {
-      limit: number;
+      limit?: number;
       current: number;
+      unit: string;
     };
   };
 }

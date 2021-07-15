@@ -10,13 +10,18 @@ export class StatusInterceptor implements NestInterceptor {
     const req = context.switchToHttp().getRequest();
     const res = context.switchToHttp().getResponse();
 
-    const reqSize = req.get("Content-Length");
-    this.service.increase("request", parseInt(reqSize)).catch(console.debug);
-
     const send = res.send;
     res.send = payload => {
-      const resSize = Buffer.byteLength(payload);
-      this.service.increase("response", resSize).catch(console.debug);
+      const reqSize = parseInt(req.get("Content-Length")) || 0;
+      const resSize = Buffer.byteLength(payload) || 0;
+      this.service.insertOne({
+        request: {
+          size: reqSize
+        },
+        response: {
+          size: resSize
+        }
+      });
 
       send.bind(res)(payload);
     };

@@ -38,7 +38,8 @@ export class StorageService {
       limit: this.options.totalSizeLimit,
       current: await this.existingSize().then(bytes =>
         parseFloat((bytes * Math.pow(10, -6)).toFixed(2))
-      )
+      ),
+      unit: "mb"
     };
   }
 

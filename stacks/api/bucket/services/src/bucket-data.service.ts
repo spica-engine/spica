@@ -60,7 +60,8 @@ export class BucketDataService {
   async getStatus() {
     return {
       limit: this.bucketDataLimit,
-      current: await this.existingBucketData()
+      current: await this.existingBucketData(),
+      unit: "count"
     };
   }
 
