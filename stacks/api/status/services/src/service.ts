@@ -6,7 +6,7 @@ import {ApiStatus, StatusOptions, STATUS_OPTIONS} from "./interface";
 export class StatusService extends BaseCollection<ApiStatus>("status") {
   moduleOptions: StatusOptions;
   constructor(db: DatabaseService, @Inject(STATUS_OPTIONS) _moduleOptions: StatusOptions) {
-    // this service will insert document for each request, enabling entry limit feature here will cause to slow requests,responses
+    // this service will insert document for each request, enabling entry limit feature here will increase request-response time.
     // we will apply entry limitation from somewhere else
     super(db);
     this.createCollection(this._collection, {ignoreAlreadyExist: true}).then(() =>
@@ -16,7 +16,7 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
     this.moduleOptions = _moduleOptions;
   }
 
-  getTrasferredSize(parent: "request" | "response") {
+  getTransferredSize(parent: "request" | "response") {
     const field = `${parent}.size`;
     return super
       .aggregate([
@@ -34,6 +34,10 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
       .then((d: any) => (d.length ? d[0].total : 0));
   }
 
+  private byteToMb(bytes: number) {
+    return parseFloat((bytes * Math.pow(10, -6)).toFixed(2));
+  }
+
   async _getStatus() {
     const currentDocsLength = await super.estimatedDocumentCount();
     return {
@@ -43,16 +47,16 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
         unit: "count"
       },
       uploaded: {
-        current: await this.getTrasferredSize("request"),
+        current: await this.getTransferredSize("request").then(bytes => this.byteToMb(bytes)),
         unit: "mb"
       },
       responses: {
         limit: this.moduleOptions ? this.moduleOptions.requestLimit : undefined,
-        current: await super.estimatedDocumentCount(),
+        current: currentDocsLength,
         unit: "count"
       },
       downloaded: {
-        current: await this.getTrasferredSize("response"),
+        current: await this.getTransferredSize("response").then(bytes => this.byteToMb(bytes)),
         unit: "mb"
       }
     };
