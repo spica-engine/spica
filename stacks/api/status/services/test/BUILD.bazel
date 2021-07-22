@@ -10,19 +10,19 @@ ts_library(
     deps = [
         "//packages/core",
         "//packages/core/testing",
-        "@npm//@nestjs/common",
-        "@npm//@nestjs/testing",
+        "//packages/database/testing",
         "//stacks/api/status",
         "//stacks/api/status/services",
-        "//packages/database/testing",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
     ],
 )
 
 jasmine_node_test(
     name = "interceptor_test",
+    tags = ["flaky"],
     deps = [
         ":status_interceptor_test_lib",
     ],
-    tags = ["flaky"]
 )

@@ -10,8 +10,8 @@ ts_library(
     ]),
     module_name = "@spica-server/status",
     deps = [
-        "@npm//@nestjs/core",
+        "//stacks/api/status/services",
         "@npm//@nestjs/common",
-        "//stacks/api/status/services"
+        "@npm//@nestjs/core",
     ],
 )

@@ -14,7 +14,7 @@ export class StatusModule {
   constructor(service: StatusService) {
     registerStatusProvider(service);
   }
-  
+
   static forRoot(options: StatusOptions) {
     return {
       module: StatusModule,
