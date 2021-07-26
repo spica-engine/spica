@@ -53,28 +53,33 @@
         cdkDrag
         cdkDragBoundary=".components-container"
       >
+        <mat-spinner *ngIf="arePendings[i]" color="accent" diameter="75"></mat-spinner>
+       
         <div class="drag-cursor" cdkDragHandle></div>
-        <dashboard-default
-          *ngIf="defaultTypes.indexOf(component.type) != -1"
-          [componentData$]="componentData$[i]"
-          [type]="component.type"
-          (onUpdate)="onUpdate($event, i)"
-        >
-        </dashboard-default>
-        <dashboard-table
-          *ngIf="component.type == 'table'"
-          [componentData$]="componentData$[i]"
-          [type]="component.type"
-          (onUpdate)="onUpdate($event, i)"
-        >
-        </dashboard-table>
-        <dashboard-card
-          *ngIf="component.type == 'card'"
-          [componentData$]="componentData$[i]"
-          [type]="component.type"
-          (onUpdate)="onUpdate($event, i)"
-        >
-        </dashboard-card>
+
+        <div [style.visibility]="arePendings[i] ? 'hidden' : 'visible'">
+          <dashboard-default
+            *ngIf="defaultTypes.indexOf(component.type) != -1"
+            [componentData$]="componentData$[i]"
+            [type]="component.type"
+            (onUpdate)="onUpdate($event, i)"
+          >
+          </dashboard-default>
+          <dashboard-table
+            *ngIf="component.type == 'table'"
+            [componentData$]="componentData$[i]"
+            [type]="component.type"
+            (onUpdate)="onUpdate($event, i)"
+          >
+          </dashboard-table>
+          <dashboard-card
+            *ngIf="component.type == 'card'"
+            [componentData$]="componentData$[i]"
+            [type]="component.type"
+            (onUpdate)="onUpdate($event, i)"
+          >
+          </dashboard-card>
+        </div>
       </mat-card>
     </div>
   </div>

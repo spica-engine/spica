@@ -18,6 +18,7 @@
     [action]="componentData.button.target"
     [method]="componentData.button.method"
     target="_blank"
+    enctype="multipart/form-data"
   >
     <mat-card-content class="inputs">
       <ng-container *ngFor="let input of componentData.inputs">
@@ -27,11 +28,14 @@
       </ng-container>
     </mat-card-content>
     <mat-card-actions>
-      <button
+      <!-- <button
         [color]="componentData.button.color"
         mat-flat-button
         (click)="onSubmit(form, componentData.button, componentData.inputs)"
       >
+        {{ componentData.button.title }}
+      </button> -->
+      <button [color]="componentData.button.color" mat-flat-button (click)="form.submit()">
         {{ componentData.button.title }}
       </button>
     </mat-card-actions>
