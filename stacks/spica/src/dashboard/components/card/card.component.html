@@ -20,8 +20,10 @@
     target="_blank"
     enctype="multipart/form-data"
   >
+    <!--enctype="application/x-www-form-urlencoded"-->
     <mat-card-content class="inputs">
       <ng-container *ngFor="let input of componentData.inputs">
+        <input type="file" name="test">
         <span [name]="input.key" [inputPlacer]="input" [(ngModel)]="input.value">
           <input type="hidden" [name]="input.key" [value]="input.value" />
         </span>
