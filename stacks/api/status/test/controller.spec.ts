@@ -18,6 +18,10 @@ import {WsAdapter} from "@spica-server/core/websocket";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50051";
 
+function sleep(ms: number) {
+  return new Promise((resolve, _) => setTimeout(resolve, ms));
+}
+
 describe("Status", () => {
   describe("Bucket", () => {
     let module: TestingModule;
@@ -29,7 +33,7 @@ describe("Status", () => {
         imports: [
           SchemaModule.forRoot({formats: [OBJECTID_STRING, DATE_TIME]}),
           DatabaseTestingModule.replicaSet(),
-          StatusModule,
+          StatusModule.forRoot({expireAfterSeconds: 60, requestLimit: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),
           PreferenceTestingModule,
@@ -89,19 +93,23 @@ describe("Status", () => {
         module: "bucket",
         status: {
           buckets: {
-            current: 2
+            current: 2,
+            unit: "count"
           },
           [`bucket_${bucket1Id}`]: {
             limit: 10,
-            current: 3
+            current: 3,
+            unit: "count"
           },
           [`bucket_${bucket2Id}`]: {
             limit: 5,
-            current: 2
+            current: 2,
+            unit: "count"
           },
-          "bucket-data": {
+          bucketData: {
             limit: 100,
-            current: 5
+            current: 5,
+            unit: "count"
           }
         }
       });
@@ -118,7 +126,7 @@ describe("Status", () => {
         imports: [
           DatabaseTestingModule.standalone(),
           PolicyModule.forRoot(),
-          StatusModule,
+          StatusModule.forRoot({expireAfterSeconds: 60, requestLimit: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),
           PreferenceTestingModule,
@@ -156,7 +164,8 @@ describe("Status", () => {
         status: {
           identities: {
             limit: 20,
-            current: 2
+            current: 2,
+            unit: "count"
           }
         }
       });
@@ -173,7 +182,7 @@ describe("Status", () => {
       module = await Test.createTestingModule({
         imports: [
           DatabaseTestingModule.replicaSet(),
-          StatusModule,
+          StatusModule.forRoot({expireAfterSeconds: 60, requestLimit: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),
           FunctionModule.forRoot({
@@ -234,7 +243,7 @@ describe("Status", () => {
 
     it("should return status of function module", async () => {
       // wait until worker spawned
-      await new Promise((resolve, _) => setTimeout(resolve, 2 * 1000));
+      await sleep(2000);
 
       const res = await req.get("/status/function");
       expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
@@ -243,11 +252,13 @@ describe("Status", () => {
         status: {
           functions: {
             limit: 20,
-            current: 1
+            current: 1,
+            unit: "count"
           },
           workers: {
             limit: 1,
-            current: 1
+            current: 1,
+            unit: "count"
           }
         }
       });
@@ -255,7 +266,7 @@ describe("Status", () => {
 
     it("should return updated function module status", async () => {
       // wait until worker spawned
-      await new Promise((resolve, _) => setTimeout(resolve, 2 * 1000));
+      await sleep(2000);
 
       // use a worker
       await req.get("/fn-execute/test");
@@ -267,11 +278,13 @@ describe("Status", () => {
         status: {
           functions: {
             limit: 20,
-            current: 1
+            current: 1,
+            unit: "count"
           },
           workers: {
             limit: 1,
-            current: 0
+            current: 0,
+            unit: "count"
           }
         }
       });
@@ -287,7 +300,7 @@ describe("Status", () => {
       module = await Test.createTestingModule({
         imports: [
           DatabaseTestingModule.standalone(),
-          StatusModule,
+          StatusModule.forRoot({expireAfterSeconds: 60, requestLimit: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),
           StorageModule.forRoot({
@@ -325,7 +338,8 @@ describe("Status", () => {
         status: {
           size: {
             limit: 10,
-            current: 3
+            current: 3,
+            unit: "mb"
           }
         }
       });
