@@ -243,7 +243,7 @@ export async function patchDocument(
 
   delete patch._id;
 
-  const updateQuery = getUpdateQueryForPatch(patch,document);
+  const updateQuery = getUpdateQueryForPatch(patch, document);
 
   return collection
     .findOneAndUpdate({_id: document._id}, updateQuery, {
