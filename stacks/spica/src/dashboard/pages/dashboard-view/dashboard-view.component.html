@@ -54,7 +54,7 @@
         cdkDragBoundary=".components-container"
       >
         <mat-spinner *ngIf="arePendings[i]" color="accent" diameter="75"></mat-spinner>
-       
+
         <div class="drag-cursor" cdkDragHandle></div>
 
         <div [style.visibility]="arePendings[i] ? 'hidden' : 'visible'">
