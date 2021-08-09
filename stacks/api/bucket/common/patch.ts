@@ -6,11 +6,11 @@ export function applyPatch(previousDocument: BucketDocument, patchQuery: object)
   return JsonMergePatch.apply(document, patchQuery);
 }
 
-export function getUpdateQueryForPatch(query: Partial<BucketDocument>) {
+export function getUpdateQueryForPatch(query: Partial<BucketDocument>, document: BucketDocument) {
   const unset = {};
   const set = {};
 
-  const visit = (partialPatch: any, base: string = "") => {
+  const visit = (partialPatch: any, base: string, document: BucketDocument) => {
     for (const name in partialPatch) {
       const key = base ? `${base}.${name}` : name;
       const value = partialPatch[name];
@@ -25,14 +25,15 @@ export function getUpdateQueryForPatch(query: Partial<BucketDocument>) {
         type == "bigint" ||
         Array.isArray(value)
       ) {
-        set[key] = value;
+        // patch query does not include some special types like date-string, but patched document does
+        set[key] = document[key];
       } else if (typeof value == "object") {
-        visit(value, key);
+        visit(value, key, document[key]);
       }
     }
   };
 
-  visit(query);
+  visit(query, "", document);
 
   let result: any = {};
 
