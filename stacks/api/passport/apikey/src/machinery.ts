@@ -59,7 +59,11 @@ export function registerInformers(apiKeyService: ApiKeyService) {
         await apikeyStore.patch(newObj.metadata.name, {
           spec: {key: oldObj.spec.key}
         });
-        await apiKeyService.updateOne({_id: new ObjectId(newObj.metadata.uid)}, {$set: raw});
+        await apiKeyService.updateOne(
+          {_id: new ObjectId(newObj.metadata.uid)},
+          {$set: raw},
+          {upsert: true}
+        );
       },
       delete: async obj => {
         await apiKeyService.deleteOne({_id: new ObjectId(obj.metadata.uid)});

@@ -122,7 +122,11 @@ export function registerInformers(bs: BucketService) {
       },
       update: async (_, newObj: any) => {
         const bucketSchemaInternal = await v1_schema_to_internal(newObj);
-        await bs.updateOne({_id: new ObjectId(newObj.metadata.uid)}, {$set: bucketSchemaInternal});
+        await bs.updateOne(
+          {_id: new ObjectId(newObj.metadata.uid)},
+          {$set: bucketSchemaInternal},
+          {upsert: true}
+        );
       },
       delete: async obj => {
         await bs.deleteOne({_id: new ObjectId(obj.metadata.uid)});
