@@ -14,7 +14,13 @@
   </button>
   <div class="filters">
     <ng-container *ngFor="let filter of componentData.filters">
-      <span [name]="filter.key" [inputPlacer]="filter" [(ngModel)]="filter.value"> </span>
+      <span
+        [name]="filter.key"
+        [inputPlacer]="filter"
+        [(ngModel)]="filter.value"
+        (keyup.enter)="onUpdate.next(componentData.filters)"
+      >
+      </span>
     </ng-container>
   </div>
   <div class="chart-container">
