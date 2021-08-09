@@ -19,11 +19,24 @@ export class RichTextEditorComponent implements ControlValueAccessor {
   disabled = false;
   moreActions = false;
 
-  block: string = "p";
-  fontSize: number = 5;
+  block: string;
+  fontSize: number;
 
-  currentFont = "Arial";
-  fonts: string[] = ["Arial", "Times New Roman", "Calibri", "Comic Sans MS"];
+  currentFont: string;
+  fonts: string[] = [
+    "Arial",
+    "Brush Script MT",
+    "Calibri",
+    "Comic Sans MS",
+    "Courier",
+    "Courier New",
+    "Copperplate",
+    "Garamond",
+    "Georgia",
+    "Helvetica",
+    "Times New Roman",
+    "Verdana"
+  ];
 
   formatting = [
     {
@@ -68,40 +81,23 @@ export class RichTextEditorComponent implements ControlValueAccessor {
     @Inject(DOCUMENT) private _document: any
   ) {}
 
-  execute(command: string) {
-    const commands = ["h1", "h2", "h3", "h4", "h5", "h6", "p", "pre"];
-    if (commands.indexOf(command) > -1) {
-      this._document.execCommand("formatBlock", false, command);
-    }
-
-    this._document.execCommand(command, false, null);
+  execute(command: string, value: string = null) {
+    this._document.execCommand(command, false, value);
   }
 
   insertUrl() {
     const url = prompt("Insert URL link", "http://");
-    this._document.execCommand("createlink", false, url);
-  }
-
-  setFont(name: string) {
-    this._document.execCommand("fontName", false, name);
-  }
-
-  setSize(size: number): void {
-    this._document.execCommand("fontSize", false, size);
-  }
-
-  setTextColor(color: string) {
-    this._document.execCommand("foreColor", false, color);
-  }
-
-  setBackgroundColor(color: string) {
-    this._document.execCommand("hiliteColor", false, color);
+    this.execute("createlink", url);
   }
 
   addImage(storage: any) {
     if (storage.content.type.includes("image/")) {
-      this._document.execCommand("insertImage", false, storage.url);
+      this.execute("insertImage", storage.url);
     }
+  }
+
+  getFormatHTML(format: {name: string; value: string}) {
+    return `<${format.value}>${format.name}</${format.value}>`;
   }
 
   @HostListener("click")
