@@ -1,5 +1,6 @@
 import {Http} from "@spica-server/function/queue/proto";
 import * as grpc from "@grpc/grpc-js";
+import {parseBody} from "./parser";
 
 export class HttpQueue {
   private client: any;
@@ -92,10 +93,7 @@ export class Request {
     }
 
     if (req.body) {
-      this.body = req.body;
-      if (this.headers.get("content-type") == "application/json") {
-        this.body = JSON.parse(Buffer.from(req.body).toString());
-      }
+      this.body = parseBody(req.body, this.headers.get("content-type"));
     }
   }
 }
