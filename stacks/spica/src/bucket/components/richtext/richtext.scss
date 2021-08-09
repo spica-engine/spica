@@ -27,12 +27,17 @@
     div.actions {
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-around;
-      align-items: flex-start;
+      align-items: center;
       padding-top: 5px;
       span {
         padding: 5px;
       }
+
+      mat-divider {
+        height: 30px;
+        margin: 0px 10px;
+      }
+
       mat-form-field {
         margin-top: 4px;
         width: 32%;

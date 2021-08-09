@@ -113,7 +113,11 @@
         Logs
       </button>
       <div class="sidecar-log-view" *ngIf="enableLogView">
-        <log-view [height$]="logViewHeight$" [functionId$]="selectedFunctionId"></log-view>
+        <log-view
+          [height$]="logViewHeight$"
+          [functionId$]="selectedFunctionId"
+          [realtimeConnectionTime]="realtimeConnectionTime"
+        ></log-view>
       </div>
     </div>
   </div>
