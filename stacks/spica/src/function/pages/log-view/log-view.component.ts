@@ -44,11 +44,13 @@ export class LogViewComponent implements OnInit, OnDestroy {
   @ViewChild(CdkVirtualScrollViewport)
   viewport: CdkVirtualScrollViewport;
 
-  realtimeConnectionTime: Date;
+  @Input() realtimeConnectionTime: Date;
 
   dispose = new Subject();
 
-  constructor(private route: ActivatedRoute, private fs: FunctionService, public router: Router) {}
+  constructor(private route: ActivatedRoute, private fs: FunctionService, public router: Router) {
+    this.realtimeConnectionTime = this.realtimeConnectionTime || new Date();
+  }
 
   resetScroll() {
     this.pageIndex = 0;
@@ -106,9 +108,6 @@ export class LogViewComponent implements OnInit, OnDestroy {
         }
 
         if (filter.realtime) {
-          this.realtimeConnectionTime = this.realtimeConnectionTime
-            ? this.realtimeConnectionTime
-            : new Date();
           filter.begin = this.realtimeConnectionTime;
           filter.end = undefined;
 
@@ -124,7 +123,7 @@ export class LogViewComponent implements OnInit, OnDestroy {
 
     this.functions$ = this.fs.getFunctions();
 
-    this.logs$ = combineLatest(this.queryParams, this.refresh).pipe(
+    this.logs$ = combineLatest([this.queryParams, this.refresh]).pipe(
       takeUntil(this.dispose),
       tap(() => (this.isPending = true)),
       switchMap(([_filter]) =>
