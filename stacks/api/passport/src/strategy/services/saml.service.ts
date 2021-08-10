@@ -1,4 +1,4 @@
-import {Inject, Injectable} from "@nestjs/common";
+import {Inject, Injectable, Optional} from "@nestjs/common";
 import * as saml2 from "saml2-js";
 import * as uuid from "uuid/v4";
 import {SamlStrategy, Strategy, StrategyTypeService} from "../interface";
