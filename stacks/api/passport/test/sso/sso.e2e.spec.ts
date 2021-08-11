@@ -1,4 +1,4 @@
-import {Controller, Get, INestApplication, Req, Res} from "@nestjs/common";
+import {Controller, Get, INestApplication, Next, Req, Res} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
@@ -77,7 +77,10 @@ export class IDPController {
   constructor(private identity: IdentityService) {}
 
   @Get("login")
-  async login(@Req() req, @Res() res) {
+  //@ts-ignore
+  async login(@Req() req, @Res({passthrough: true}) res, @Next() next) {
+    req.query["SAMLRequest"] = decodeURIComponent(req.query["SAMLRequest"]);
+
     const authorization = req.headers["authorization"] || "";
 
     req.user = await this.identity.verify(authorization);
@@ -86,7 +89,7 @@ export class IDPController {
 
     // SAMLP only conforms with express like response objects.
     res.set = (k, v) => {
-      res.headers.set(k, v);
+      res.header(k, v);
     };
 
     samlp.auth({
@@ -98,8 +101,8 @@ export class IDPController {
           getNameIdentifier: () => this.getNameIdentifier(claims)
         };
       },
-      cert: "CERTIFICATE",
-      key: "PRIVATE_KEY",
+      cert: CERTIFICATE,
+      key: PRIVATE_KEY,
       getPostURL: function(wtrealm, wreply, req, callback) {
         // ATTENTION: If you get 401 error it might be related to this line since this logic does not work on latest version of xpath
         const callbackUrl = xpath.select(
@@ -108,68 +111,10 @@ export class IDPController {
         );
         return callback(null, callbackUrl);
       },
+      // actual implementation sends template to the user and redirects user to the spica home page as logged in
+      // But will return saml response and send the response to the strategy complete endpoint to complete the SSO flow.
       responseHandler: function(response, opts, req, res, next) {
-        console.log(opts);
-        const template = `
-  <html>
-  <head>
-      <title>Working...</title>
-      <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300&display=swap" rel="stylesheet">
-      <style>
-          body {
-              width: 100vw;
-              height: 100vh;
-              margin: 0;
-              background: url(https://storage.googleapis.com/hq-assets/background-landing.png);
-              color: #fff;
-              display:flex;
-              flex-flow: column;
-              justify-content: center;
-              align-items: center;
-              font-family: 'Ubuntu', sans-serif;
-              font-size: 12px;
-          }
-          body > *:not(:first-child) {
-              margin-top: 10px;
-          }
-          button {
-              border: none;
-              background: #f4f2f1;
-              border-radius: 4px;
-              padding: 8px 20px;
-              margin-top: 15px;
-          }
-      </style>
-  </head>
-  <body>
-      <img src="https://storage.googleapis.com/hq-assets/astro-composer.svg?v=1">
-      <h1>A moment.</h1>
-      <h3>We are trying to complete your request.</h3>
-      <small>If you don't get redirected automatically within 2 seconds. Click to continue</small>
-      <form method="post" action="${opts.postUrl}" enctype="application/x-www-form-urlencoded">
-          <input type="hidden" name="SAMLResponse" value="${response.toString("base64")}">
-          <input type="hidden" name="RelayState" value="${opts.RelayState ||
-            (req.query || {}).RelayState ||
-            (req.body || {}).RelayState ||
-            ""}">
-          <noscript>
-              <p>Script is disabled. Click continue to continue.</p>
-          </noscript>
-          <button type="submit">Continue</button>
-      </form>
-      <script language="javascript" type="text/javascript">
-          addEventListener("DOMContentLoaded", function(){
-              setTimeout(function(){
-                 document.forms[0].submit();
-              }, 1000);
-              setTimeout(function() {
-                window.close();
-              }, 2000);
-          });
-      </script>
-  </body>
-  </html>`;
-        res.send(template.trim());
+        res.send({url: opts.postUrl, SAMLResponse: response.toString("base64")});
       }
     })(req, res, () => {});
   }
@@ -200,6 +145,7 @@ describe("SSO E2E Test", () => {
     let req: Request;
     let app: INestApplication;
     let token: string;
+    const publicUrl = "http://insteadof";
 
     beforeEach(async () => {
       const module = await Test.createTestingModule({
@@ -211,7 +157,7 @@ describe("SSO E2E Test", () => {
             expiresIn: EXPIRES_IN,
             issuer: "spica",
             maxExpiresIn: EXPIRES_IN,
-            publicUrl: "http://insteadof",
+            publicUrl: publicUrl,
             samlCertificateTTL: EXPIRES_IN,
             secretOrKey: "spica",
             defaultStrategy: "IDENTITY",
@@ -301,7 +247,7 @@ describe("SSO E2E Test", () => {
         }
       };
       await req.post("/passport/strategy", strategy, {Authorization: `IDENTITY ${token}`});
-    }, 120000);
+    }, 20_000);
 
     it("should list strategies", async () => {
       const {body: strategies} = await req.get("/passport/strategies");
@@ -324,23 +270,74 @@ describe("SSO E2E Test", () => {
       expect(strategy.url.startsWith("/idp/login?SAMLRequest=")).toBeTrue();
     });
 
-    fit("should complete single sign on with success", async () => {
+    it("should complete SSO with success", async done => {
       const {body: strategies} = await req.get("/passport/strategies");
       const {body: strategy} = await req.get(`/passport/strategy/${strategies[0]._id}/url`);
 
-      const samlReq = (strategy.url.substring(
-        strategy.url.indexOf("?") + 1,
-        strategy.url.length
-      ) as string).split("=");
-      const queryParams = {[samlReq[0]]: samlReq[1]};
+      const _ = req.get("/passport/identify", {state: strategy.state}).then(async res => {
+        expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
+        expect(res.body.scheme).toEqual("IDENTITY");
+        expect(res.body.issuer).toEqual("passport/identity");
+        expect(res.body.token).toBeDefined();
 
-      await req
-        .get("/idp/login", queryParams, {Authorization: token})
-        .catch(console.log);
+        // lets verify token
+        const {
+          body: {identifier}
+        } = await req.get("/passport/identity/verify", {}, {authorization: res.body.token});
+        expect(identifier).toEqual("spica");
+        done();
+      });
 
-      
+      const {url: strategyUrl, params: strategyParams} = parseUrl(strategy.url, publicUrl);
+      const {
+        body: {SAMLResponse, url: completeUrl}
+      } = await req.get(strategyUrl, strategyParams, {authorization: token});
 
-        expect(1).toEqual(2);
-    }, 10000);
+      // this last request because of we use test environment,
+      // actual SSO implementation handles this last step automatically on browser environment and redirects user to the panel as logged in
+      const request = parseUrl(completeUrl, publicUrl);
+      const res = await req.post(request.url, {SAMLResponse: SAMLResponse}, {}, request.params);
+
+      expect([res.statusCode, res.statusText]).toEqual([204, "No Content"]);
+      expect(res.body).toBeUndefined();
+    });
+
+    xit("should complete SSO with fail due to timeout", async done => {
+      const {body: strategies} = await req.get("/passport/strategies");
+      const {body: strategy} = await req.get(`/passport/strategy/${strategies[0]._id}/url`);
+
+      const _ = req
+        .get("/passport/identify", {state: strategy.state})
+        .then(res => {
+          console.log(res);
+          done();
+        })
+        .catch(res => {
+          console.log(res);
+          done();
+        });
+
+      // clock.tick(61_000);
+    });
   });
 });
+
+function parseUrl(url: string, remove?: string) {
+  let params: any = {};
+
+  if (remove) {
+    url = url.replace(remove, "");
+  }
+
+  url
+    .substring(url.indexOf("?") + 1)
+    .split("&")
+    .forEach(param => {
+      const arr = param.split("=");
+      params[arr[0]] = arr[1];
+    });
+
+  url = url.substring(0, url.indexOf("?"));
+
+  return {url, params};
+}

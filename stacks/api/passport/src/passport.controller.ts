@@ -224,6 +224,6 @@ export class PassportController {
       .then(identity => {
         observer.next(identity);
       })
-      .catch(e => observer.error(e));
+      .catch(e => observer.error(e.toString()));
   }
 }
