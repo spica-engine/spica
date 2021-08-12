@@ -1,4 +1,4 @@
-import {Module} from "@nestjs/common";
+import {Global, Module} from "@nestjs/common";
 import {Request} from "./request";
 import {Websocket} from "./websocket";
 import * as fs from "fs";

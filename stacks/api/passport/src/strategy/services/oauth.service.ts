@@ -2,11 +2,8 @@ import {Inject, Injectable} from "@nestjs/common";
 import {ObjectId} from "@spica-server/database";
 import {OAuthRequestDetails, OAuthStrategy, Strategy, StrategyTypeService} from "../interface";
 import {StrategyService} from "./strategy.service";
-import axios from "axios";
-import {PassportOptions, PASSPORT_OPTIONS} from "../../options";
+import {PassportOptions, PASSPORT_OPTIONS, REQUEST_SERVICE} from "../../options";
 import * as uuid from "uuid";
-import * as fs from "fs";
-import * as path from "path";
 
 @Injectable()
 export class OAuthService implements StrategyTypeService {
@@ -14,8 +11,11 @@ export class OAuthService implements StrategyTypeService {
 
   constructor(
     private strategyService: StrategyService,
-    @Inject(PASSPORT_OPTIONS) private options: PassportOptions
-  ) {}
+    @Inject(PASSPORT_OPTIONS) private options: PassportOptions,
+    @Inject(REQUEST_SERVICE) private request: (ops: any) => Promise<any>,
+  ) {
+    console.log(request);
+  }
 
   async assert(strategy: OAuthStrategy, body?: unknown, code?: string): Promise<any> {
     strategy.options.access_token.params = {
@@ -24,7 +24,6 @@ export class OAuthService implements StrategyTypeService {
     };
 
     const tokenResponse = await this.sendRequest(strategy.options.access_token);
-
     if (!tokenResponse.access_token) {
       throw Error("Access token could not find.");
     }
@@ -85,33 +84,12 @@ export class OAuthService implements StrategyTypeService {
   }
 
   sendRequest(requestDetails: OAuthRequestDetails): Promise<any> {
-    const config: any = {
+    return this.request({
       url: requestDetails.base_url,
       params: requestDetails.params,
       method: requestDetails.method as any,
       headers: requestDetails.headers,
       responseType: "json"
-    };
-
-    if (process.env.TEST_TARGET) {
-      config.socketPath = path.join(
-        path.relative(process.cwd(), process.env.TEST_TMPDIR),
-        fs.mkdtempSync("test-") + ".sock"
-      );
-    }
-
-    return new Promise((resolve, reject) => {
-      axios(config)
-        .then(res => resolve(res.data))
-        .catch(error => {
-          reject(
-            error.response
-              ? typeof error.response.data == "object"
-                ? JSON.stringify(error.response.data)
-                : error.response.data || error.response.statusText
-              : error.toString()
-          );
-        });
     });
   }
 }

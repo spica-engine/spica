@@ -5,7 +5,7 @@ import {IdentityModule} from "@spica-server/passport/identity";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {PreferenceService} from "@spica-server/preference/services";
 import {GuardService} from "./guard.service";
-import {PassportOptions, PASSPORT_OPTIONS} from "./options";
+import {PassportOptions, PASSPORT_OPTIONS, requestFactory, REQUEST_SERVICE} from "./options";
 import {PassportController} from "./passport.controller";
 import {SamlService} from "./strategy/services/saml.service";
 import {StrategyController} from "./strategy/strategy.controller";
@@ -63,6 +63,10 @@ export class PassportModule {
         ApiKeyModule.forRoot()
       ],
       providers: [
+        {
+          provide: REQUEST_SERVICE,
+          useFactory: () => requestFactory
+        },
         StrategyService,
         SamlService,
         OAuthService,

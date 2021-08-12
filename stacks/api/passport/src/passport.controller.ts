@@ -225,9 +225,10 @@ export class PassportController {
 
     return service
       .assert(strategy, body, code)
-      .then(identity => {
-        observer.next(identity);
-      })
-      .catch(e => observer.error(e.toString()));
+      .then(identity => observer.next(identity))
+      .catch(e => {
+        console.log(e);
+        observer.error(e.toString())
+      });
   }
 }
