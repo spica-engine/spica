@@ -5,6 +5,8 @@ import {StrategyService} from "./strategy.service";
 import axios from "axios";
 import {PassportOptions, PASSPORT_OPTIONS} from "../../options";
 import * as uuid from "uuid";
+import * as fs from "fs";
+import * as path from "path";
 
 @Injectable()
 export class OAuthService implements StrategyTypeService {
@@ -83,16 +85,33 @@ export class OAuthService implements StrategyTypeService {
   }
 
   sendRequest(requestDetails: OAuthRequestDetails): Promise<any> {
+    const config: any = {
+      url: requestDetails.base_url,
+      params: requestDetails.params,
+      method: requestDetails.method as any,
+      headers: requestDetails.headers,
+      responseType: "json"
+    };
+
+    if (process.env.TEST_TARGET) {
+      config.socketPath = path.join(
+        path.relative(process.cwd(), process.env.TEST_TMPDIR),
+        fs.mkdtempSync("test-") + ".sock"
+      );
+    }
+
     return new Promise((resolve, reject) => {
-      axios({
-        url: requestDetails.base_url,
-        params: requestDetails.params,
-        method: requestDetails.method as any,
-        headers: requestDetails.headers,
-        responseType: "json"
-      })
+      axios(config)
         .then(res => resolve(res.data))
-        .catch(error => reject(error.response.data));
+        .catch(error => {
+          reject(
+            error.response
+              ? typeof error.response.data == "object"
+                ? JSON.stringify(error.response.data)
+                : error.response.data || error.response.statusText
+              : error.toString()
+          );
+        });
     });
   }
 }

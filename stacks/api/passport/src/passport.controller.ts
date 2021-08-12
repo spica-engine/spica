@@ -84,7 +84,7 @@ export class PassportController {
         .toPromise();
       assertObservers.delete(state);
 
-      const idenfitifer = user ? user.upn || user.name_id || user.email : undefined;
+      const idenfitifer = user ? user.upn || user.name_id || user.email || user.id : undefined;
 
       if (!idenfitifer) {
         throw new InternalServerErrorException("Authentication has failed.");
@@ -92,11 +92,15 @@ export class PassportController {
 
       identity = await this.identity.findOne({identifier: idenfitifer});
 
+      // HQ sends attributes field which contains unacceptable fields for mongodb
+      delete user.attributes;
+
       if (!identity) {
         identity = await this.identity.insertOne({
           identifier: idenfitifer,
           password: undefined,
-          policies: []
+          policies: [],
+          attributes: user
         });
       }
     }

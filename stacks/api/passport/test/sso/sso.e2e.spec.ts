@@ -73,17 +73,23 @@ enum ClaimNamespaces {
 }
 
 @Controller("idp")
-export class IDPController {
+export class SAMLController {
   constructor(private identity: IdentityService) {}
 
   @Get("login")
-  //@ts-ignore
-  async login(@Req() req, @Res({passthrough: true}) res, @Next() next) {
+  async login(@Req() req, @Res() res, @Next() next) {
     req.query["SAMLRequest"] = decodeURIComponent(req.query["SAMLRequest"]);
 
     const authorization = req.headers["authorization"] || "";
 
-    req.user = await this.identity.verify(authorization);
+    // custom identity validation
+    if (authorization != "testuser") {
+      return res.status(401).send("Unauthorized");
+    }
+
+    req.user = {
+      identifier: authorization
+    };
 
     const claims = this.getClaims(req.user);
 
@@ -112,7 +118,7 @@ export class IDPController {
         return callback(null, callbackUrl);
       },
       // actual implementation sends template to the user and redirects user to the spica home page as logged in
-      // But will return saml response and send the response to the strategy complete endpoint to complete the SSO flow.
+      // But we will return saml response and send the response to the strategy complete endpoint to complete the SSO flow.
       responseHandler: function(response, opts, req, res, next) {
         res.send({url: opts.postUrl, SAMLResponse: response.toString("base64")});
       }
@@ -140,16 +146,35 @@ export class IDPController {
   }
 }
 
+@Controller("oauth")
+export class OAuthController {
+  @Get("code")
+  code() {
+    return "super_secret_code";
+  }
+
+  @Get("token")
+  token() {
+    return "super_secret_token";
+  }
+
+  @Get("info")
+  info() {
+    return {
+      name: "testuser",
+      picture: "url"
+    };
+  }
+}
 describe("SSO E2E Test", () => {
   describe("SAML", () => {
     let req: Request;
     let app: INestApplication;
-    let token: string;
     const publicUrl = "http://insteadof";
 
     beforeEach(async () => {
       const module = await Test.createTestingModule({
-        controllers: [IDPController],
+        controllers: [SAMLController],
         imports: [
           SchemaModule.forRoot(),
           DatabaseTestingModule.standalone(),
@@ -177,44 +202,6 @@ describe("SSO E2E Test", () => {
         }
       });
 
-      // const module = await Test.createTestingModule({
-      //   providers: [
-      //     SamlService,
-      //     StrategyService,
-      //     // {provide:PASSPORT_OPTIONS,useValue:{}},
-      //   ],
-      //   imports: [
-      //     SchemaModule.forChild(),
-      //     DatabaseTestingModule.standalone(),
-      //     CoreTestingModule,
-      //     PreferenceTestingModule,
-      //     IdentityModule.forRoot({
-      //       expiresIn: EXPIRES_IN,
-      //       issuer: "spica",
-      //       maxExpiresIn: EXPIRES_IN,
-      //       secretOrKey: "spica"
-      //     })
-      //   ],
-      //   controllers: [PassportController]
-      // }).compile();
-
-      // const module: any = await Test.createTestingModule({
-      //   imports: [
-      //     DatabaseTestingModule.standalone(),
-      //     SSOTestingModule.initialize({
-      //       expiresIn: EXPIRES_IN,
-      //       issuer: "spica",
-      //       maxExpiresIn: EXPIRES_IN,
-      //       publicUrl: "http://unix",
-      //       samlCertificateTTL: EXPIRES_IN,
-      //       secretOrKey: "spica"
-      //     }),
-      //     CoreTestingModule
-      //   ]
-      // })
-      //   .compile()
-      //   .catch(console.log);
-
       req = module.get(Request);
       app = module.createNestApplication();
 
@@ -224,14 +211,12 @@ describe("SSO E2E Test", () => {
       await new Promise((resolve, _) => setTimeout(resolve, 3000));
 
       //LOGIN
-      await req
-        .post("/passport/identify", {
-          identifier: "spica",
-          password: "spica"
-        })
-        .then((res: any) => {
-          token = res.body.token;
-        });
+      const {
+        body: {token}
+      } = await req.post("/passport/identify", {
+        identifier: "spica",
+        password: "spica"
+      });
 
       // STRATEGY INSERT
       const strategy = {
@@ -280,19 +265,19 @@ describe("SSO E2E Test", () => {
         expect(res.body.issuer).toEqual("passport/identity");
         expect(res.body.token).toBeDefined();
 
-        // lets verify token
+        // make sure token is valid
         const {
           body: {identifier}
         } = await req.get("/passport/identity/verify", {}, {authorization: res.body.token});
-        expect(identifier).toEqual("spica");
+        expect(identifier).toEqual("testuser");
         done();
       });
 
       const {url: strategyUrl, params: strategyParams} = parseUrl(strategy.url, publicUrl);
+
       const {
         body: {SAMLResponse, url: completeUrl}
-      } = await req.get(strategyUrl, strategyParams, {authorization: token});
-
+      } = await req.get(strategyUrl, strategyParams, {authorization: "testuser"});
       // this last request because of we use test environment,
       // actual SSO implementation handles this last step automatically on browser environment and redirects user to the panel as logged in
       const request = parseUrl(completeUrl, publicUrl);
@@ -316,8 +301,161 @@ describe("SSO E2E Test", () => {
           console.log(res);
           done();
         });
+    });
+  });
 
-      // clock.tick(61_000);
+  fdescribe("OAuth", () => {
+    let req: Request;
+    let app: INestApplication;
+    const publicUrl = "http://unix";
+
+    const strategy = {
+      type: "oauth",
+      name: "oauth",
+      title: "oauth",
+      icon: "login",
+      options: {
+        code: {
+          base_url: "http://unix/oauth/code",
+          params: {
+            client_id: "client_id"
+          },
+          headers: {},
+          method: "get"
+        },
+        access_token: {
+          base_url: "http://unix/oauth/token",
+          params: {
+            client_id: "client_id",
+            client_secret: "client_secret"
+          },
+          headers: {},
+          method: "get"
+        },
+        identifier: {
+          base_url: "http://unix/oauth/identifier",
+          params: {},
+          headers: {},
+          method: "get"
+        }
+      }
+    };
+
+    beforeEach(async () => {
+      const module = await Test.createTestingModule({
+        controllers: [OAuthController],
+        imports: [
+          SchemaModule.forRoot(),
+          DatabaseTestingModule.standalone(),
+          PassportModule.forRoot({
+            expiresIn: EXPIRES_IN,
+            issuer: "spica",
+            maxExpiresIn: EXPIRES_IN,
+            publicUrl: publicUrl,
+            samlCertificateTTL: EXPIRES_IN,
+            secretOrKey: "spica",
+            defaultStrategy: "IDENTITY",
+            defaultIdentityIdentifier: "spica",
+            defaultIdentityPassword: "spica",
+            audience: "spica",
+            defaultIdentityPolicies: ["PassportFullAccess"]
+          }),
+          PreferenceTestingModule,
+          CoreTestingModule
+        ]
+      }).compile();
+
+      jasmine.addCustomEqualityTester((actual, expected) => {
+        if (expected == "__objectid__" && typeof actual == typeof expected) {
+          return true;
+        }
+      });
+
+      req = module.get(Request);
+      app = module.createNestApplication();
+
+      await app.listen(req.socket);
+
+      req.socket;
+
+      // WAIT UNTIL IDENTITY IS INSERTED
+      await new Promise((resolve, _) => setTimeout(resolve, 3000));
+
+      // LOGIN
+      const {
+        body: {token}
+      } = await req.post("/passport/identify", {
+        identifier: "spica",
+        password: "spica"
+      });
+
+      // STRATEGY INSERT
+      await req.post("/passport/strategy", strategy, {Authorization: `IDENTITY ${token}`});
+    }, 20_000);
+
+    it("should list strategies", async () => {
+      const {body: strategies} = await req.get("/passport/strategies");
+      expect(strategies).toEqual([
+        {
+          _id: "__objectid__",
+          type: "oauth",
+          name: "oauth",
+          title: "oauth",
+          icon: "login"
+        }
+      ]);
+    });
+
+    it("should get strategy login url", async () => {
+      const {body: strategies} = await req.get("/passport/strategies");
+      const {body: strategy} = await req.get(`/passport/strategy/${strategies[0]._id}/url`);
+
+      expect(strategy.state).toBeDefined();
+      expect(
+        strategy.url.startsWith(
+          `http://unix/oauth/code?client_id=client_id&redirect_uri=http://unix/passport/strategy/${strategies[0]._id}/complete&state=`
+        )
+      ).toBeTrue();
+    });
+
+    fit("should complete SSO with success", async done => {
+      const {body: strategies} = await req.get("/passport/strategies");
+      const {body: strategy} = await req.get(`/passport/strategy/${strategies[0]._id}/url`);
+
+      const _ = req.get("/passport/identify", {state: strategy.state}).then(async res => {
+        console.log(res);
+        expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
+        expect(res.body.scheme).toEqual("IDENTITY");
+        expect(res.body.issuer).toEqual("passport/identity");
+        expect(res.body.token).toBeDefined();
+
+        // make sure token is valid
+        const {
+          body: {identifier}
+        } = await req.get("/passport/identity/verify", {}, {authorization: res.body.token});
+        expect(identifier).toEqual("testuser");
+        done();
+      });
+
+      // we should get code and send it to the compelete endpoint manually, there is no such a step in real scenario
+      
+      // get code
+      const {url: strategyUrl, params: strategyParams} = parseUrl(strategy.url, publicUrl);
+      const {body: code} = await req.get(strategyUrl, strategyParams, {authorization: "testuser"});
+      
+      // send code to the strategy complete endpoint
+      const {url: completeUrl, params: completeParams} = parseUrl(
+        strategyParams.redirect_uri,
+        publicUrl
+      );
+      const res = await req.get(completeUrl, {
+        ...completeParams,
+        code: code,
+        state: strategyParams.state
+      });
+
+      expect([res.statusCode, res.statusText]).toEqual([204, "No Content"]);
+      expect(res.body).toBeUndefined();
     });
   });
 });
@@ -337,7 +475,7 @@ function parseUrl(url: string, remove?: string) {
       params[arr[0]] = arr[1];
     });
 
-  url = url.substring(0, url.indexOf("?"));
+  url = url.substring(0, url.includes("?") ? url.indexOf("?") : url.length);
 
   return {url, params};
 }
