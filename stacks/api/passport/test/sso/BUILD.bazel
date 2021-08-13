@@ -7,7 +7,6 @@ ts_library(
     name = "sso_e2e_test_lib",
     testonly = True,
     srcs = [
-        "module.ts",
         "sso.e2e.spec.ts",
     ],
     deps = [
