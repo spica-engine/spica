@@ -310,7 +310,7 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
         const fn = await fs.findOneAndUpdate(
           {_id: new ObjectId(obj.metadata.uid)},
           {$set: raw},
-          {returnOriginal: false}
+          {returnOriginal: false, upsert: true}
         );
         if (oldObj.spec.code != obj.spec.code) {
           await fe.update(fn, obj.spec.code);

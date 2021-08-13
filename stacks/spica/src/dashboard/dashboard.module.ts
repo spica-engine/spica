@@ -39,6 +39,7 @@ import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {CardComponent} from "./components/card/card.component";
 import {DragDropModule} from "@angular/cdk/drag-drop";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 
 @NgModule({
   imports: [
@@ -70,7 +71,8 @@ import {DragDropModule} from "@angular/cdk/drag-drop";
     OwlNativeDateTimeModule,
     MatAwareDialogModule,
     PassportModule.forChild(),
-    DragDropModule
+    DragDropModule,
+    MatProgressSpinnerModule
   ],
   declarations: [
     DashboardComponent,

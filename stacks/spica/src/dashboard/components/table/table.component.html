@@ -8,13 +8,19 @@
     class="refresh"
     mat-icon-button
     matTooltip="Refresh data"
-    (click)="this.onUpdate.next(componentData.filters)"
+    (click)="onUpdate.next(componentData.filters)"
   >
     <mat-icon>refresh</mat-icon>
   </button>
   <div class="filters">
     <ng-container *ngFor="let filter of componentData.filters">
-      <span [name]="filter.key" [inputPlacer]="filter" [(ngModel)]="filter.value"> </span>
+      <span
+        [name]="filter.key"
+        [inputPlacer]="filter"
+        [(ngModel)]="filter.value"
+        (keyup.enter)="onUpdate.next(componentData.filters)"
+      >
+      </span>
     </ng-container>
   </div>
 </ng-container>
