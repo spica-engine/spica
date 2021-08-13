@@ -1,4 +1,4 @@
-import {Controller, Get, INestApplication, Next, Req, Res} from "@nestjs/common";
+import {Controller, Get, INestApplication, Req, Res} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
@@ -74,18 +74,13 @@ enum ClaimNamespaces {
 
 @Controller("idp")
 export class SAMLController {
-  constructor(private identity: IdentityService) {}
+  constructor() {}
 
   @Get("login")
-  async login(@Req() req, @Res() res, @Next() next) {
+  async login(@Req() req, @Res() res) {
     req.query["SAMLRequest"] = decodeURIComponent(req.query["SAMLRequest"]);
 
     const authorization = req.headers["authorization"] || "";
-
-    // custom identity validation
-    if (authorization != "testuser") {
-      return res.status(401).send("Unauthorized");
-    }
 
     req.user = {
       identifier: authorization
@@ -110,7 +105,6 @@ export class SAMLController {
       cert: CERTIFICATE,
       key: PRIVATE_KEY,
       getPostURL: function(wtrealm, wreply, req, callback) {
-        // ATTENTION: If you get 401 error it might be related to this line since this logic does not work on latest version of xpath
         const callbackUrl = xpath.select(
           "string(//AuthnRequest/@AssertionConsumerServiceURL)",
           wreply
@@ -166,11 +160,22 @@ export class OAuthController {
     };
   }
 }
+
+export class RequestService {
+  public service: Request;
+  public publicUrl: string;
+
+  request(options: any) {
+    options.url = options.url.replace(this.publicUrl, "");
+    return this.service.request({path: options.url, ...options}).then(res => res.body);
+  }
+}
+
 describe("SSO E2E Test", () => {
+  const publicUrl = "http://insteadof";
   describe("SAML", () => {
     let req: Request;
     let app: INestApplication;
-    const publicUrl = "http://insteadof";
 
     beforeEach(async () => {
       const module = await Test.createTestingModule({
@@ -210,15 +215,13 @@ describe("SSO E2E Test", () => {
       // WAIT UNTIL IDENTITY IS INSERTED
       await new Promise((resolve, _) => setTimeout(resolve, 3000));
 
-      //LOGIN
+      // STRATEGY INSERT
       const {
         body: {token}
       } = await req.post("/passport/identify", {
         identifier: "spica",
         password: "spica"
       });
-
-      // STRATEGY INSERT
       const strategy = {
         type: "saml",
         name: "strategy1",
@@ -274,7 +277,6 @@ describe("SSO E2E Test", () => {
       });
 
       const {url: strategyUrl, params: strategyParams} = parseUrl(strategy.url, publicUrl);
-
       const {
         body: {SAMLResponse, url: completeUrl}
       } = await req.get(strategyUrl, strategyParams, {authorization: "testuser"});
@@ -286,28 +288,12 @@ describe("SSO E2E Test", () => {
       expect([res.statusCode, res.statusText]).toEqual([204, "No Content"]);
       expect(res.body).toBeUndefined();
     });
-
-    xit("should complete SSO with fail due to timeout", async done => {
-      const {body: strategies} = await req.get("/passport/strategies");
-      const {body: strategy} = await req.get(`/passport/strategy/${strategies[0]._id}/url`);
-
-      const _ = req
-        .get("/passport/identify", {state: strategy.state})
-        .then(res => {
-          console.log(res);
-          done();
-        })
-        .catch(res => {
-          console.log(res);
-          done();
-        });
-    });
   });
 
-  fdescribe("OAuth", () => {
+  describe("OAuth", () => {
     let req: Request;
     let app: INestApplication;
-    const publicUrl = "http://unix";
+    const publicUrl = "http://insteadof";
 
     const strategy = {
       type: "oauth",
@@ -316,7 +302,7 @@ describe("SSO E2E Test", () => {
       icon: "login",
       options: {
         code: {
-          base_url: "http://unix/oauth/code",
+          base_url: publicUrl + "/oauth/code",
           params: {
             client_id: "client_id"
           },
@@ -324,7 +310,7 @@ describe("SSO E2E Test", () => {
           method: "get"
         },
         access_token: {
-          base_url: "http://unix/oauth/token",
+          base_url: publicUrl + "/oauth/token",
           params: {
             client_id: "client_id",
             client_secret: "client_secret"
@@ -333,7 +319,7 @@ describe("SSO E2E Test", () => {
           method: "get"
         },
         identifier: {
-          base_url: "http://unix/oauth/info",
+          base_url: publicUrl + "/oauth/info",
           params: {},
           headers: {},
           method: "get"
@@ -365,7 +351,7 @@ describe("SSO E2E Test", () => {
         ]
       })
         .overrideProvider(REQUEST_SERVICE)
-        .useFactory({factory: () => () => Promise.resolve({access_token: "asdqwe"}),inject:[Request]})
+        .useClass(RequestService)
         .compile();
 
       jasmine.addCustomEqualityTester((actual, expected) => {
@@ -377,22 +363,23 @@ describe("SSO E2E Test", () => {
       req = module.get(Request);
       app = module.createNestApplication();
 
-      await app.listen(req.socket);
+      // set request service as it sends requests via unix socket
+      const requestService: RequestService = module.get(REQUEST_SERVICE);
+      requestService.service = req;
+      requestService.publicUrl = publicUrl;
 
-      req.socket;
+      await app.listen(req.socket);
 
       // WAIT UNTIL IDENTITY IS INSERTED
       await new Promise((resolve, _) => setTimeout(resolve, 3000));
 
-      // LOGIN
+      // STRATEGY INSERT
       const {
         body: {token}
       } = await req.post("/passport/identify", {
         identifier: "spica",
         password: "spica"
       });
-
-      // STRATEGY INSERT
       await req.post("/passport/strategy", strategy, {Authorization: `IDENTITY ${token}`});
     }, 20_000);
 
@@ -416,12 +403,12 @@ describe("SSO E2E Test", () => {
       expect(strategy.state).toBeDefined();
       expect(
         strategy.url.startsWith(
-          `http://unix/oauth/code?client_id=client_id&redirect_uri=http://unix/passport/strategy/${strategies[0]._id}/complete&state=`
+          `${publicUrl}/oauth/code?client_id=client_id&redirect_uri=${publicUrl}/passport/strategy/${strategies[0]._id}/complete&state=`
         )
       ).toBeTrue();
     });
 
-    fit("should complete SSO with success", async done => {
+    it("should complete SSO with success", async done => {
       const {body: strategies} = await req.get("/passport/strategies");
       const {body: strategy} = await req.get(`/passport/strategy/${strategies[0]._id}/url`);
 
@@ -432,10 +419,16 @@ describe("SSO E2E Test", () => {
         expect(res.body.token).toBeDefined();
 
         // make sure token is valid
-        // const {
-        //   body: {identifier}
-        // } = await req.get("/passport/identity/verify", {}, {authorization: res.body.token});
-        // expect(identifier).toEqual("testuser@testuser.com");
+        const {body} = await req.get(
+          "/passport/identity/verify",
+          {},
+          {authorization: res.body.token}
+        );
+        expect(body.identifier).toEqual("testuser@testuser.com");
+        expect(body.attributes).toEqual({
+          email: "testuser@testuser.com",
+          picture: "url"
+        });
         done();
       });
 

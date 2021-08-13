@@ -10,12 +10,12 @@ export interface PassportOptions extends IdentityOptions {
   samlCertificateTTL: number;
 }
 
-export function requestFactory(options: any) {
-  return new Promise((resolve, reject) => {
-    axios(options)
-      .then(res => resolve(res.data))
+export class RequestService {
+  request(options: any) {
+    return axios(options)
+      .then(res => res.data)
       .catch(error =>
-        reject(
+        Promise.reject(
           error.response
             ? typeof error.response.data == "object"
               ? JSON.stringify(error.response.data)
@@ -23,7 +23,7 @@ export function requestFactory(options: any) {
             : error.toString()
         )
       );
-  });
+  }
 }
 
 export const REQUEST_SERVICE = Symbol.for("REQUEST_SERVICE");

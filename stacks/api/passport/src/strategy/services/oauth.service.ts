@@ -2,7 +2,7 @@ import {Inject, Injectable} from "@nestjs/common";
 import {ObjectId} from "@spica-server/database";
 import {OAuthRequestDetails, OAuthStrategy, Strategy, StrategyTypeService} from "../interface";
 import {StrategyService} from "./strategy.service";
-import {PassportOptions, PASSPORT_OPTIONS, REQUEST_SERVICE} from "../../options";
+import {PassportOptions, PASSPORT_OPTIONS, RequestService, REQUEST_SERVICE} from "../../options";
 import * as uuid from "uuid";
 
 @Injectable()
@@ -12,10 +12,8 @@ export class OAuthService implements StrategyTypeService {
   constructor(
     private strategyService: StrategyService,
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions,
-    @Inject(REQUEST_SERVICE) private request: (ops: any) => Promise<any>,
-  ) {
-    console.log(request);
-  }
+    @Inject(REQUEST_SERVICE) private req: RequestService
+  ) {}
 
   async assert(strategy: OAuthStrategy, body?: unknown, code?: string): Promise<any> {
     strategy.options.access_token.params = {
@@ -84,7 +82,7 @@ export class OAuthService implements StrategyTypeService {
   }
 
   sendRequest(requestDetails: OAuthRequestDetails): Promise<any> {
-    return this.request({
+    return this.req.request({
       url: requestDetails.base_url,
       params: requestDetails.params,
       method: requestDetails.method as any,

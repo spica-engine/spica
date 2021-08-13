@@ -41,19 +41,7 @@ export class PassportController {
     private strategy: StrategyService
   ) {}
 
-  @Get("identify")
-  async identify(
-    @Query("identifier") identifier: string,
-    @Query("password") password: string,
-    @Query("state") state: string,
-    @Req() req: any,
-    @Query("expires", NUMBER) expiresIn?: number
-  ) {
-    req.res.append(
-      "Warning",
-      `299 "Identify with 'GET' method has been deprecated. Use 'POST' instead."`
-    );
-
+  async _identify(identifier: string, password: string, state: string, expiresIn: number) {
     let identity: Identity;
 
     if (!state) {
@@ -87,7 +75,9 @@ export class PassportController {
       const idenfitifer = user ? user.upn || user.name_id || user.email || user.id : undefined;
 
       if (!idenfitifer) {
-        throw new InternalServerErrorException("Authentication has failed.");
+        throw new BadRequestException(
+          "Response should include at least one of these values: upn, name_id, email, id."
+        );
       }
 
       identity = await this.identity.findOne({identifier: idenfitifer});
@@ -108,58 +98,32 @@ export class PassportController {
     return this.identity.sign(identity, expiresIn);
   }
 
+  @Get("identify")
+  identify(
+    @Query("identifier") identifier: string,
+    @Query("password") password: string,
+    @Query("state") state: string,
+    @Req() req: any,
+    @Query("expires", NUMBER) expiresIn?: number
+  ) {
+    req.res.append(
+      "Warning",
+      `299 "Identify with 'GET' method has been deprecated. Use 'POST' instead."`
+    );
+
+    return this._identify(identifier, password, state, expiresIn);
+  }
+
   @Post("identify")
-  async identifyWithPost(
+  identifyWithPost(
     @Body(Schema.validate("http://spica.internal/login")) credentials: LoginCredentials
   ) {
-    let identity: Identity;
-
-    if (!credentials.state) {
-      identity = await this.identity.identify(credentials.identifier, credentials.password);
-      if (!identity) {
-        throw new UnauthorizedException("Identifier or password was incorrect.");
-      }
-    } else {
-      if (!assertObservers.has(credentials.state)) {
-        throw new BadRequestException("Authentication has failed due to invalid state.");
-      }
-
-      const observer = assertObservers.get(credentials.state);
-
-      const {user} = await observer
-        .pipe(
-          timeout(60000),
-          take(1),
-          catchError(error => {
-            assertObservers.delete(credentials.state);
-            return throwError(
-              error && error.name == "TimeoutError"
-                ? new GatewayTimeoutException("Operation did not complete within one minute.")
-                : new UnauthorizedException(JSON.stringify(error))
-            );
-          })
-        )
-        .toPromise();
-      assertObservers.delete(credentials.state);
-
-      const idenfitifer = user ? user.upn || user.name_id || user.email : undefined;
-
-      if (!idenfitifer) {
-        throw new InternalServerErrorException("Authentication has failed.");
-      }
-
-      identity = await this.identity.findOne({identifier: idenfitifer});
-
-      if (!identity) {
-        identity = await this.identity.insertOne({
-          identifier: idenfitifer,
-          password: undefined,
-          policies: []
-        });
-      }
-    }
-
-    return this.identity.sign(identity, credentials.expires);
+    return this._identify(
+      credentials.identifier,
+      credentials.password,
+      credentials.state,
+      credentials.expires
+    );
   }
 
   @Get("strategies")
@@ -228,7 +192,7 @@ export class PassportController {
       .then(identity => observer.next(identity))
       .catch(e => {
         console.log(e);
-        observer.error(e.toString())
+        observer.error(e.toString());
       });
   }
 }

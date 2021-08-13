@@ -75,7 +75,6 @@ export class Request {
       })
       .catch(error => {
         let {response} = error;
-        // console.log(req,error);
         if (!response) {
           return Promise.reject(error);
         }
