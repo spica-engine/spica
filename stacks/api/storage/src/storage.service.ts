@@ -16,11 +16,8 @@ export class StorageService {
     this._collection = database.collection("storage");
   }
 
-  private async validateTotalStorageSize(size: number) {
-    if (!this.options.totalSizeLimit) {
-      return;
-    }
-    const existing = await this._collection
+  private existingSize(): Promise<number> {
+    return this._collection
       .aggregate([
         {
           $group: {
@@ -34,6 +31,23 @@ export class StorageService {
       ])
       .toArray()
       .then((d: any) => (d.length ? d[0].total : 0));
+  }
+
+  async getStatus() {
+    return {
+      limit: this.options.totalSizeLimit,
+      current: await this.existingSize().then(bytes =>
+        parseFloat((bytes * Math.pow(10, -6)).toFixed(2))
+      ),
+      unit: "mb"
+    };
+  }
+
+  private async validateTotalStorageSize(size: number) {
+    if (!this.options.totalSizeLimit) {
+      return;
+    }
+    const existing = await this.existingSize();
 
     const neededInMb = (existing + size) * Math.pow(10, -6);
     if (neededInMb > this.options.totalSizeLimit) {
