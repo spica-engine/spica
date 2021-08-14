@@ -53,7 +53,8 @@ export function registerInformers(dashboardService: DashboardService) {
           {
             _id: new ObjectId(newObject.metadata.uid)
           },
-          {$set: document}
+          {$set: document},
+          {upsert: true}
         );
       },
       delete: async (object: DashboardObject) => {

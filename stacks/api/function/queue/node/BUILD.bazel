@@ -10,6 +10,7 @@ ts_library(
         "firehose.ts",
         "http.ts",
         "index.ts",
+        "parser.ts",
     ],
     module_name = "@spica-server/function/queue/node",
     deps = [
@@ -17,5 +18,6 @@ ts_library(
         "@npm//@grpc/grpc-js",
         "@npm//@types/node",
         "@npm//google-protobuf",
+        "@npm//qs",
     ],
 )

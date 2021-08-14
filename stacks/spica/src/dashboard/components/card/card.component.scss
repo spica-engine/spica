@@ -15,7 +15,17 @@ button.refresh {
 }
 
 mat-card-content.inputs {
-  > span {
+  > span,
+  button {
     margin-right: 5px;
+  }
+
+  button.file-selector {
+    height: 44px;
+    width: 200px;
+
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
   }
 }

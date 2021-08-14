@@ -41,6 +41,7 @@ import {MatDialog} from "@angular/material/dialog";
 import {ExampleComponent} from "@spica-client/common/example";
 import {GithubService, OAuthError} from "@spica-client/function/services";
 import {RepositoryComponent} from "../../components/repository/repository.component";
+import {ConfigurationComponent} from "../../components/configuration/configuration.component";
 
 @Component({
   selector: "functions-add",
@@ -64,13 +65,9 @@ export class AddComponent implements OnInit, OnDestroy {
   isHandlerDuplicated = false;
   serverError: string;
 
-  enableLogView: boolean = false;
-
-  enableInfoView: boolean = true;
-
-  onFullScreen: boolean = false;
-
   private dispose = new EventEmitter();
+
+  realtimeConnectionTime = new Date();
 
   editorOptions = {
     language: "javascript",
@@ -94,13 +91,6 @@ export class AddComponent implements OnInit, OnDestroy {
 
   batching: boolean = false;
 
-  browserFullscreenKeywords = {
-    open: "",
-    onChange: "",
-    fullScreenElement: "",
-    exit: ""
-  };
-
   sections = {
     triggers: true,
     dependencies: false,
@@ -109,199 +99,6 @@ export class AddComponent implements OnInit, OnDestroy {
   };
   editName = false;
   editDescription = false;
-
-  repos: {repo: string; branches: string[]}[] = [];
-
-  selectedRepoBranch: {repo: string; branch: string} = {repo: undefined, branch: undefined};
-
-  pushStrategy: {
-    target: "repo" | "branch" | "commit";
-    repo: string;
-    branch?: string;
-    message?: string;
-  } = {target: undefined, repo: undefined};
-
-  integratedUser: {
-    username: string;
-    avatar_url: string;
-  };
-
-  repoPending = false;
-
-  repoResponse: {succeeded: boolean; message: string};
-
-  async initGithub() {
-    let token = this.github.token;
-
-    if (!token) {
-      this.repoPending = true;
-
-      let tab: Window;
-
-      const onFailed = (reason: string) => {
-        tab.close();
-        this.repoPending = false;
-        this.showRepoResponse({succeeded: false, message: reason});
-      };
-
-      return this.github.startOAuth().subscribe(
-        res => {
-          switch (res.name) {
-            case "url":
-              tab = window.open(res.data.url);
-              break;
-
-            case "token":
-              tab.close();
-              this.repoPending = false;
-              this.github.token = res.data.token;
-              this.initGithub();
-              break;
-
-            case "error":
-              onFailed(res.data.message);
-              break;
-
-            default:
-              break;
-          }
-        },
-        e => onFailed(e)
-      );
-    }
-
-    this.integratedUser = await this.github.initialize(token);
-    this.repos = await this.listRepos();
-    this.selectedRepoBranch = this.github.selectedRepoBranch;
-  }
-
-  disconnectGithub() {
-    this.integratedUser = this.github.token = undefined;
-    this.github.selectedRepoBranch = this.selectedRepoBranch = {repo: undefined, branch: undefined};
-    this.repos = [];
-  }
-
-  async listRepos() {
-    this.repoPending = true;
-    const rps = await this.github
-      .listRepos()
-      .pipe(map(repos => repos.map(r => r.name)))
-      .toPromise();
-
-    return Promise.all(
-      rps.map(repo =>
-        this.github
-          .listBranches(repo)
-          .pipe(
-            map(branches => {
-              return {
-                repo: repo,
-                branches: branches.map(b => b.name)
-              };
-            })
-          )
-          .toPromise()
-          .finally(() => (this.repoPending = false))
-      )
-    );
-  }
-
-  openRepoBranchDialog() {
-    this.clearPushStrategy();
-
-    this.dialog
-      .open(RepositoryComponent, {
-        width: "400px",
-        maxWidth: "100%",
-        data: {
-          selectedRepo: this.selectedRepoBranch,
-          availableRepos: this.repos,
-          pushStrategy: this.pushStrategy,
-          user: this.integratedUser
-        }
-      })
-      .afterClosed()
-      .toPromise()
-      .then(async (action: "pull" | "push") => {
-        if (action == "pull") {
-          this.pull();
-        } else if (action == "push") {
-          await this.push();
-
-          this.addRepoBranch({
-            repo: this.pushStrategy.repo,
-            branch: this.pushStrategy.branch
-          });
-        }
-      });
-  }
-
-  clearPushStrategy() {
-    this.pushStrategy.target = undefined;
-    this.pushStrategy.repo = undefined;
-    this.pushStrategy.branch = undefined;
-    this.pushStrategy.message = undefined;
-  }
-
-  async pull() {
-    this.repoPending = true;
-
-    await this.github
-      .pullCommit(this.selectedRepoBranch.repo, this.selectedRepoBranch.branch)
-      .toPromise()
-      .then((res: any) => {
-        this.showRepoResponse({succeeded: true, message: res.message});
-      })
-      .finally(() => (this.repoPending = false));
-
-    this.github.selectedRepoBranch = this.selectedRepoBranch;
-
-    this.$refresh.next(this.function._id);
-  }
-
-  showRepoResponse(response: {succeeded: boolean; message: string}) {
-    this.repoResponse = response;
-    setTimeout(() => {
-      this.repoResponse = undefined;
-    }, 3000);
-  }
-
-  // we prefer to add a new repo or branch manually since github return responses from cache
-  addRepoBranch(repoBranch: {repo: string; branch: string}) {
-    const repoIndex = this.repos.findIndex(r => r.repo == repoBranch.repo);
-
-    if (repoIndex == -1) {
-      return this.repos.push({repo: repoBranch.repo, branches: [repoBranch.branch]});
-    }
-
-    const branchIndex = this.repos[repoIndex].branches.indexOf(repoBranch.branch);
-
-    if (branchIndex == -1) {
-      return this.repos[repoIndex].branches.push(repoBranch.branch);
-    }
-  }
-
-  async push() {
-    this.repoPending = true;
-    let promise: Promise<any>;
-
-    if (this.pushStrategy.target == "repo") {
-      promise = this.github.createRepo(this.pushStrategy.repo).toPromise();
-    } else if (this.pushStrategy.target == "branch" || this.pushStrategy.target == "commit") {
-      promise = this.github
-        .pushCommit(this.pushStrategy.repo, this.pushStrategy.branch, this.pushStrategy.message)
-        .toPromise();
-    }
-
-    await promise
-      .then((res: any) => this.showRepoResponse({succeeded: true, message: res.message}))
-      .finally(() => (this.repoPending = false));
-
-    this.selectedRepoBranch = this.github.selectedRepoBranch = {
-      repo: this.pushStrategy.repo,
-      branch: this.pushStrategy.branch
-    };
-  }
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -334,6 +131,36 @@ export class AddComponent implements OnInit, OnDestroy {
     merge(
       this.$refresh,
       this.activatedRoute.params.pipe(
+        tap(params => {
+          if (!params.id) {
+            this.onInfoViewSelectionChange(false);
+            this.dialog
+              .open(ConfigurationComponent, {
+                disableClose: true,
+                minWidth: "200px",
+                width: "40%",
+                maxWidth: "1000px",
+                data: {
+                  information: this.information,
+                  function: this.function
+                }
+              })
+              .afterClosed()
+              .toPromise()
+              .then(save => {
+                this.onInfoViewSelectionChange(true);
+
+                if (!save) {
+                  this.function = emptyFunction();
+                  return;
+                }
+
+                const code = this.functionService.getExample(this.function.triggers[0]);
+                this.index = code;
+                this.save();
+              });
+          }
+        }),
         filter(params => params.id),
         map(params => params.id)
       )
@@ -527,6 +354,18 @@ export class AddComponent implements OnInit, OnDestroy {
     }
   }
 
+  // FULLSCREEN CODE EDITOR
+  enableLogView: boolean = false;
+  enableInfoView: boolean = true;
+  onFullScreen: boolean = false;
+
+  browserFullscreenKeywords = {
+    open: "",
+    onChange: "",
+    fullScreenElement: "",
+    exit: ""
+  };
+
   async switchToFullscreen() {
     if (!this.onFullScreen) {
       if (!this.enableLogView) {
@@ -631,6 +470,7 @@ export class AddComponent implements OnInit, OnDestroy {
     document.addEventListener(this.browserFullscreenKeywords.onChange, escHandler);
   }
 
+  // RESIZABLE LOGS
   isResizing: boolean;
   logViewHeight$: Subject<number> = new Subject();
 
@@ -689,8 +529,8 @@ export class AddComponent implements OnInit, OnDestroy {
     }
   }
 
-  onInfoViewSelectionChange() {
-    this.enableInfoView = !this.enableInfoView;
+  onInfoViewSelectionChange(state?: boolean) {
+    this.enableInfoView = typeof state != "undefined" ? state : !this.enableInfoView;
 
     const codeSection = document.getElementsByClassName("code")[0];
     const infoSection = document.getElementsByClassName("info")[0];
@@ -702,5 +542,199 @@ export class AddComponent implements OnInit, OnDestroy {
       this.renderer.removeClass(codeSection, "code-expanded");
       this.renderer.removeClass(infoSection, "info-hidden");
     }
+  }
+
+  //GITHUB INTEGRATION
+  repos: {repo: string; branches: string[]}[] = [];
+
+  selectedRepoBranch: {repo: string; branch: string} = {repo: undefined, branch: undefined};
+
+  pushStrategy: {
+    target: "repo" | "branch" | "commit";
+    repo: string;
+    branch?: string;
+    message?: string;
+  } = {target: undefined, repo: undefined};
+
+  integratedUser: {
+    username: string;
+    avatar_url: string;
+  };
+
+  repoPending = false;
+
+  repoResponse: {succeeded: boolean; message: string};
+
+  async initGithub() {
+    let token = this.github.token;
+
+    if (!token) {
+      this.repoPending = true;
+
+      let tab: Window;
+
+      const onFailed = (reason: string) => {
+        tab.close();
+        this.repoPending = false;
+        this.showRepoResponse({succeeded: false, message: reason});
+      };
+
+      return this.github.startOAuth().subscribe(
+        res => {
+          switch (res.name) {
+            case "url":
+              tab = window.open(res.data.url);
+              break;
+
+            case "token":
+              tab.close();
+              this.repoPending = false;
+              this.github.token = res.data.token;
+              this.initGithub();
+              break;
+
+            case "error":
+              onFailed(res.data.message);
+              break;
+
+            default:
+              break;
+          }
+        },
+        e => onFailed(e)
+      );
+    }
+
+    this.integratedUser = await this.github.initialize(token);
+    this.repos = await this.listRepos();
+    this.selectedRepoBranch = this.github.selectedRepoBranch;
+  }
+
+  disconnectGithub() {
+    this.integratedUser = this.github.token = undefined;
+    this.github.selectedRepoBranch = this.selectedRepoBranch = {repo: undefined, branch: undefined};
+    this.repos = [];
+  }
+
+  async listRepos() {
+    this.repoPending = true;
+    const rps = await this.github
+      .listRepos()
+      .pipe(map(repos => repos.map(r => r.name)))
+      .toPromise();
+
+    return Promise.all(
+      rps.map(repo =>
+        this.github
+          .listBranches(repo)
+          .pipe(
+            map(branches => {
+              return {
+                repo: repo,
+                branches: branches.map(b => b.name)
+              };
+            })
+          )
+          .toPromise()
+          .finally(() => (this.repoPending = false))
+      )
+    );
+  }
+
+  openRepoBranchDialog() {
+    this.clearPushStrategy();
+
+    this.dialog
+      .open(RepositoryComponent, {
+        width: "400px",
+        maxWidth: "100%",
+        data: {
+          selectedRepo: this.selectedRepoBranch,
+          availableRepos: this.repos,
+          pushStrategy: this.pushStrategy,
+          user: this.integratedUser
+        }
+      })
+      .afterClosed()
+      .toPromise()
+      .then(async (action: "pull" | "push") => {
+        if (action == "pull") {
+          this.pull();
+        } else if (action == "push") {
+          await this.push();
+
+          this.addRepoBranch({
+            repo: this.pushStrategy.repo,
+            branch: this.pushStrategy.branch
+          });
+        }
+      });
+  }
+
+  clearPushStrategy() {
+    this.pushStrategy.target = undefined;
+    this.pushStrategy.repo = undefined;
+    this.pushStrategy.branch = undefined;
+    this.pushStrategy.message = undefined;
+  }
+
+  async pull() {
+    this.repoPending = true;
+
+    await this.github
+      .pullCommit(this.selectedRepoBranch.repo, this.selectedRepoBranch.branch)
+      .toPromise()
+      .then((res: any) => {
+        this.showRepoResponse({succeeded: true, message: res.message});
+      })
+      .finally(() => (this.repoPending = false));
+
+    this.github.selectedRepoBranch = this.selectedRepoBranch;
+
+    this.$refresh.next(this.function._id);
+  }
+
+  showRepoResponse(response: {succeeded: boolean; message: string}) {
+    this.repoResponse = response;
+    setTimeout(() => {
+      this.repoResponse = undefined;
+    }, 3000);
+  }
+
+  // we prefer to add a new repo or branch manually since github return responses from cache
+  addRepoBranch(repoBranch: {repo: string; branch: string}) {
+    const repoIndex = this.repos.findIndex(r => r.repo == repoBranch.repo);
+
+    if (repoIndex == -1) {
+      return this.repos.push({repo: repoBranch.repo, branches: [repoBranch.branch]});
+    }
+
+    const branchIndex = this.repos[repoIndex].branches.indexOf(repoBranch.branch);
+
+    if (branchIndex == -1) {
+      return this.repos[repoIndex].branches.push(repoBranch.branch);
+    }
+  }
+
+  async push() {
+    this.repoPending = true;
+    let promise: Promise<any>;
+
+    if (this.pushStrategy.target == "repo") {
+      promise = this.github.createRepo(this.pushStrategy.repo).toPromise();
+    } else if (this.pushStrategy.target == "branch" || this.pushStrategy.target == "commit") {
+      promise = this.github
+        .pushCommit(this.pushStrategy.repo, this.pushStrategy.branch, this.pushStrategy.message)
+        .toPromise();
+    }
+
+    await promise
+      .then((res: any) => this.showRepoResponse({succeeded: true, message: res.message}))
+      .finally(() => (this.repoPending = false));
+
+    this.selectedRepoBranch = this.github.selectedRepoBranch = {
+      repo: this.pushStrategy.repo,
+      branch: this.pushStrategy.branch
+    };
   }
 }

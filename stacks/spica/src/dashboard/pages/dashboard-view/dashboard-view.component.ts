@@ -35,6 +35,8 @@ export class DashboardViewComponent implements OnInit {
 
   customizeDisabled = false;
 
+  arePendings: boolean[] = [];
+
   constructor(
     private activatedRoute: ActivatedRoute,
     private ds: DashboardService,
@@ -54,25 +56,37 @@ export class DashboardViewComponent implements OnInit {
               return;
             }
 
-            this.refreshSubjects$ = [];
-            this.componentData$ = [];
+            this.clearCards();
 
             this.localStorageKey = `dashboard_${dashboard._id}_component_styles`;
 
             this.loadComponentStyles(dashboard.components.length);
             this.saveComponentStyles();
 
-            for (const component of dashboard.components) {
+            for (const [index, component] of dashboard.components.entries()) {
               const refresh$ = new BehaviorSubject(undefined);
               this.refreshSubjects$.push(refresh$);
+
+              this.arePendings.push(true);
+
               this.componentData$.push(
-                refresh$.pipe(switchMap(filter => this.ds.executeComponent(component.url, filter)))
+                refresh$.pipe(
+                  tap(() => (this.arePendings[index] = true)),
+                  switchMap(filter => this.ds.executeComponent(component.url, filter)),
+                  tap(() => (this.arePendings[index] = false))
+                )
               );
             }
           })
         )
       )
     );
+  }
+
+  clearCards() {
+    this.refreshSubjects$ = [];
+    this.componentData$ = [];
+    this.arePendings = [];
   }
 
   onUpdate(filters: any[] = [], i: number) {

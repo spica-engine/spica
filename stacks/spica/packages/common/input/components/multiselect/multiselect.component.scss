@@ -1,3 +1,6 @@
-mat-form-field {
-  width: 100%;
+:host {
+  display: inline-block;
+  mat-form-field {
+    width: 100%;
+  }
 }
