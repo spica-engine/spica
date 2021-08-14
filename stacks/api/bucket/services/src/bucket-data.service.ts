@@ -14,10 +14,7 @@ export class BucketDataService {
     const Collection = BaseCollection<BucketDocument>(getBucketDataCollection(schema._id));
     let options: any = {};
 
-    if (
-      schema.documentSettings &&
-      schema.documentSettings.limitExceedBehaviour == LimitExceedBehaviours.PREVENT
-    ) {
+    if (schema.documentSettings && schema.documentSettings.countLimit) {
       options.entryLimit = schema.documentSettings.countLimit;
     }
 
@@ -41,7 +38,7 @@ export class BucketDataService {
     return collection;
   }
 
-  private async validateTotalBucketDataCount(count: number) {
+  private async existingBucketData() {
     const bucketNames = await this.db
       .collection("buckets")
       .find()
@@ -50,14 +47,26 @@ export class BucketDataService {
 
     let totalDocumentCount = 0;
 
-    await Promise.all(
+    return Promise.all(
       bucketNames.map(name =>
         this.db
           .collection(name)
           .estimatedDocumentCount()
           .then(c => (totalDocumentCount += c))
       )
-    );
+    ).then(() => totalDocumentCount);
+  }
+
+  async getStatus() {
+    return {
+      limit: this.bucketDataLimit,
+      current: await this.existingBucketData(),
+      unit: "count"
+    };
+  }
+
+  private async validateTotalBucketDataCount(count: number) {
+    const totalDocumentCount = await this.existingBucketData();
     if (totalDocumentCount + count > this.bucketDataLimit) {
       throw new Error("Total bucket-data limit exceeded");
     }

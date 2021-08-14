@@ -154,7 +154,7 @@
             *ngIf="!editDescription && function._id"
             (click)="editDescription = true"
           >
-            {{ function._id ? function.description : "No description added"
+            {{ function._id ? function.description || "No description added" : "Description"
             }}<mat-icon>edit</mat-icon>
           </p>
           <mat-form-field *ngIf="editDescription || !function._id">
@@ -162,26 +162,12 @@
             <textarea
               matInput
               placeholder="Description"
-              #descriptionModel="ngModel"
               [(ngModel)]="function.description"
               name="description"
-              required
               rows="1"
-              minlength="3"
-              maxlength="250"
             ></textarea>
             <mat-hint>Description of the function.</mat-hint>
-            <mat-error *ngIf="descriptionModel?.errors?.required">
-              Description is required.
-            </mat-error>
-            <mat-error *ngIf="descriptionModel?.errors?.minLength">
-              Description must be greater than {{ descriptionModel.errors.min.min }} characters.
-            </mat-error>
-            <mat-error *ngIf="descriptionModel?.errors?.maxLength">
-              Description must be less than {{ descriptionModel.errors.max.max }} characters.
-            </mat-error>
           </mat-form-field>
-
           <p class="description" *ngIf="function._id" (click)="editDescription = true">
             <b>{{ function.language + " Engine" | titlecase }}</b>
           </p>
@@ -513,7 +499,7 @@
         <mat-progress-spinner
           *ngSwitchCase="'saving'"
           [diameter]="18"
-          color="primary"
+          color="accent"
           mode="indeterminate"
         >
         </mat-progress-spinner>
