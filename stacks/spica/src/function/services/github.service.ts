@@ -1,8 +1,27 @@
 import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
-import {delay, filter, map, retryWhen, take, tap} from "rxjs/operators";
+import {take, timeout} from "rxjs/operators";
 import {RepositoryService} from "../interface";
 import {v4 as uuidv4} from "uuid";
+import {webSocket} from "rxjs/webSocket";
+import {Observable} from "rxjs";
+
+export type OAuthUrl = {
+  name: "url";
+  data: {url: string};
+};
+
+export type OAuthToken = {
+  name: "token";
+  data: {token: string};
+};
+
+export type OAuthError = {
+  name: "error";
+  data: {message: string};
+};
+
+export type OAuthResponse = OAuthUrl | OAuthToken | OAuthError;
 
 @Injectable({providedIn: "root"})
 export class GithubService implements RepositoryService {
@@ -40,27 +59,29 @@ export class GithubService implements RepositoryService {
     localStorage.setItem("github_repo_branch", JSON.stringify(value));
   }
 
-  state: string;
-
   headers = {};
 
-  startPolling() {
-    const url = `https://hq.spicaengine.com/api/fn-execute/github-token?state=${this.state}`;
-    return this.http.get<{token: string}>(url).pipe(
-      retryWhen(errors =>
-        errors.pipe(
-          delay(10000),
-          take(6)
-        )
-      ),
-      map(res => res.token)
-    );
-  }
+  startOAuth() {
+    const url = "wss://hq.spicaengine.com/api/firehose";
+    const subject = webSocket(url);
 
-  getLoginPage() {
-    this.state = uuidv4();
-    const url = `https://hq.spicaengine.com/api/fn-execute/github-oauth?state=${this.state}`;
-    return this.http.get<{url: string}>(url).pipe(map(res => res.url));
+    const timeoutMs = 60 * 1000;
+
+    return new Observable<OAuthResponse>(subscriber => {
+      subject
+        .pipe(
+          timeout(timeoutMs),
+          take(2)
+        )
+        .subscribe(
+          (v: OAuthResponse) => subscriber.next(v),
+          e => subscriber.error(e.message),
+          () => subscriber.complete()
+        );
+      subject.next({name: "state", data: uuidv4()});
+
+      return () => subject.unsubscribe();
+    });
   }
 
   async initialize(token?: string) {
