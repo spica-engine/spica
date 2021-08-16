@@ -16,7 +16,7 @@ import {MatSortModule} from "@angular/material/sort";
 import {MatTableModule} from "@angular/material/table";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
-import {By, DomSanitizer} from "@angular/platform-browser";
+import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
@@ -115,12 +115,6 @@ describe("IndexComponent", () => {
         {
           provide: ActivatedRoute,
           useValue: activatedRoute
-        },
-        {
-          provide: DomSanitizer,
-          useValue: {
-            bypassSecurityTrustHtml: val => val
-          }
         }
       ],
       declarations: [
@@ -135,6 +129,7 @@ describe("IndexComponent", () => {
     setItem = spyOn(localStorage, "setItem");
 
     fixture = TestBed.createComponent(IndexComponent);
+    fixture.componentInstance["sanitizer"].bypassSecurityTrustHtml = v => v;
     fixture.detectChanges(false);
 
     bucketDataService.find.calls.reset();
@@ -524,7 +519,8 @@ describe("IndexComponent", () => {
         {type: "object"},
         "object"
       );
-      expect(template).toEqual(defaultDiv(JSON.stringify({test: "value"})));
+      // &#34; => "
+      expect(template).toEqual(defaultDiv("{&#34;test&#34;:&#34;value&#34;}"));
     });
 
     it("should return date", () => {
@@ -699,6 +695,15 @@ describe("IndexComponent", () => {
       expect(differentTemplate).not.toEqual(template);
 
       expect(templateCache.get(`address_{"field1":"test2"}`)).toEqual(differentTemplate);
+    });
+
+    it("should sanitize input that includes possible malicious code", () => {
+      const template = fixture.componentInstance.buildTemplate(
+        "<a onmouseover='alert(`some malicious code`)'>click me</a>",
+        {type: "string"},
+        "title"
+      );
+      expect(template).toEqual(defaultDiv("<a>click me</a>"));
     });
   });
 
