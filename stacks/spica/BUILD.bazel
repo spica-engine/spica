@@ -1,25 +1,17 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
-load("//tools/pkg_stamp:index.bzl", "pkg_stamp")
 load("@build_bazel_rules_nodejs//:index.bzl", "pkg_web")
-
-pkg_stamp(
-    name = "spica_stamp_pkg",
-    srcs = [
-        "//:spica",
-    ],
-    substitutions = {
-        "0.0.0-PLACEHOLDER": "{BUILD_SCM_VERSION}",
-        "COMMIT_HASH_PLACEHOLDER": "{BUILD_SCM_HASH}",
-    },
-)
 
 pkg_web(
     name = "spica_pkg",
     srcs = [
         ":spica_stamp_pkg",
     ],
+    substitutions = {
+        "0.0.0-PLACEHOLDER": "{BUILD_SCM_VERSION}",
+        "COMMIT_HASH_PLACEHOLDER": "{BUILD_SCM_HASH}",
+    },
 )
 
 container_image(
