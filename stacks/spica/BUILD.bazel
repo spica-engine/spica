@@ -37,7 +37,7 @@ container_image(
     stamp = True,
     symlinks = {
         "/etc/nginx/nginx.conf": "/container/nginx.conf",
-        "/usr/share/nginx/html": "/spica_pkg/spica_stamp_pkg/dist/spica",
+        "/usr/share/nginx/html": "/spica_pkg/dist/spica",
     },
 )
 
