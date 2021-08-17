@@ -5,6 +5,9 @@ export interface Identity {
   identifier: string;
   password: string;
   policies: string[];
+  attributes?: {
+    [key: string]: any;
+  };
 }
 
 export interface LoginCredentials {

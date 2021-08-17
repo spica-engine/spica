@@ -1,0 +1,35 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm//@bazel/typescript:index.bzl", "ts_library")
+load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
+
+ts_library(
+    name = "sso_e2e_test_lib",
+    testonly = True,
+    srcs = [
+        "sso.e2e.spec.ts",
+    ],
+    deps = [
+        "//packages/core/schema",
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/passport",
+        "//stacks/api/passport/identity",
+        "//stacks/api/passport/policy",
+        "//stacks/api/passport/testing",
+        "//stacks/api/preference/testing",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/jwt",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//samlp",
+        "@npm//xpath",
+    ],
+)
+
+jasmine_node_test(
+    name = "sso_e2e_test",
+    deps = [
+        ":sso_e2e_test_lib",
+    ],
+)
