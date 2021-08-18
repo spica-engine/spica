@@ -1,15 +1,14 @@
 import {IdentityService} from "./identity.service";
 import {schemaDiff, ChangeKind} from "@spica-server/core/differ";
 
-export function attachIdentityAccess(request: any) {
-  if (
-    request.method == "PUT" &&
-    request.params.id == request.user._id &&
-    !request.user.policies.includes("IdentityFullAccess")
-  ) {
-    request.user.policies.push("IdentityFullAccess");
-  }
-  return request;
+export function registerPolicyAttacher(policy: string | string[]) {
+  policy = Array.isArray(policy) ? policy : [policy];
+  return request => {
+    if (request.params.id == request.user._id) {
+      request.user.policies = Array.from(new Set(request.user.policies.concat(policy)));
+    }
+    return request;
+  };
 }
 
 export function provideSettingsFinalizer(identityService: IdentityService) {
