@@ -13,16 +13,10 @@
       }
     }
 
-    button:last-of-type {
+    div.actions {
       align-self: flex-end;
       margin-top: 60px;
     }
-  }
-  mat-card {
-    margin: 30px;
-    margin-top: -85px;
-    // For proper border radius
-    overflow: hidden;
   }
 
   textarea {
@@ -39,57 +33,49 @@
         vertical-align: middle;
       }
     }
-  }
 
-  .full-width-table {
-    width: 100%;
-  }
-  .mat-cell {
-    text-align: center;
-  }
-  .mat-card-header {
-    width: 100%;
-  }
-  ::ng-deep .mat-card-header-text {
-    width: 100%;
-  }
-  .mat-header-cell {
-    text-align: left;
-  }
-  .mat-cell {
-    text-align: left;
-  }
-  button[mat-button] {
-    float: right;
-  }
-  ::ng-deep[centerHeader] {
-    display: grid;
-    text-align: center;
-  }
-  ::ng-deep[item] {
-    display: block;
-    text-align: center;
-  }
+    transition: width 1s;
+    display: inline-block;
+    width: calc(100% - 60px);
+    margin: 30px;
+    margin-top: -85px;
+    overflow-x: scroll;
 
-  mat-card mat-card-content mat-table mat-header-cell:nth-child(1),
-  mat-cell:nth-child(1) {
-    word-break: break-word;
-    text-align: left;
-    flex: 2;
-  }
+    table {
+      min-width: 100%;
+      width: max-content;
+      .select {
+        width: 75px;
+      }
+      th:not(.select):not(:last-of-type) {
+        position: relative;
+        &:after {
+          content: "||";
+          position: absolute;
+          right: 10px;
+          top: 10px;
+        }
+      }
+      tr {
+        height: 40px !important;
+        > th:last-of-type {
+          padding-right: 35px;
+        }
+        > *:last-of-type {
+          text-align: right;
+        }
+      }
 
-  mat-card mat-card-content mat-table mat-header-cell:nth-child(2),
-  mat-cell:nth-child(2) {
-    word-break: break-word;
-    flex: 4;
-  }
+      td.mat-cell {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 0;
+      }
 
-  mat-card mat-card-content mat-table mat-header-cell:nth-child(3),
-  mat-cell:nth-child(3) {
-    word-break: break-word;
-    justify-content: flex-end;
-    flex: 1;
-    max-width: 150px;
-    justify-content: flex-end;
+      td.mat-cell:last-of-type {
+        text-overflow: unset;
+      }
+    }
   }
 }

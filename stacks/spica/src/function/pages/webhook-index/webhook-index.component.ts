@@ -15,7 +15,13 @@ export class WebhookIndexComponent implements OnInit {
 
   public $data: Observable<Webhook[]>;
   refresh: Subject<void> = new Subject<void>();
-  displayedColumns = ["_id", "url", "actions"];
+
+  properties = ["_id", "url", "operation", "collection", "actions"];
+  displayedProperties = JSON.parse(localStorage.getItem("Webhooks-displayedProperties")) || [
+    "_id",
+    "url",
+    "actions"
+  ];
 
   constructor(private webhookService: WebhookService) {}
 
@@ -39,5 +45,29 @@ export class WebhookIndexComponent implements OnInit {
       .delete(id)
       .toPromise()
       .then(() => this.refresh.next());
+  }
+
+  toggleProperty(name: string, selected: boolean) {
+    if (selected) {
+      this.displayedProperties.push(name);
+    } else {
+      this.displayedProperties.splice(this.displayedProperties.indexOf(name), 1);
+    }
+
+    this.displayedProperties = this.displayedProperties.sort(
+      (a, b) => this.properties.indexOf(a) - this.properties.indexOf(b)
+    );
+
+    localStorage.setItem("Webhooks-displayedProperties", JSON.stringify(this.displayedProperties));
+  }
+
+  toggleDisplayAll(display: boolean) {
+    if (display) {
+      this.displayedProperties = JSON.parse(JSON.stringify(this.properties));
+    } else {
+      this.displayedProperties = ["_id", "url", "actions"];
+    }
+
+    localStorage.setItem("Webhooks-displayedProperties", JSON.stringify(this.displayedProperties));
   }
 }
