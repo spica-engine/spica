@@ -77,7 +77,7 @@ export class ApiKeyIndexComponent implements OnInit {
 
   onSortChange(sort) {
     if (!sort.direction) {
-      this.sort = {_id: 1};
+      this.sort = {_id: -1};
     } else {
       this.sort = {
         [sort.active]: sort.direction === "asc" ? 1 : -1
