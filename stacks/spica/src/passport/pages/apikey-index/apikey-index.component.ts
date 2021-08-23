@@ -14,8 +14,13 @@ export class ApiKeyIndexComponent implements OnInit {
   @ViewChild("toolbar", {static: true}) toolbar: TemplateRef<any>;
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
-  displayedColumns = ["key", "name", "description", "actions"];
-
+  properties = ["_id", "key", "name", "description", "active", "policies", "actions"];
+  displayedProperties = JSON.parse(localStorage.getItem("Apikeys-displayedProperties")) || [
+    "key",
+    "name",
+    "description",
+    "actions"
+  ];
   apiKeys$: Observable<ApiKey[]>;
   refresh$: Subject<void> = new Subject<void>();
 
@@ -41,5 +46,29 @@ export class ApiKeyIndexComponent implements OnInit {
       .delete(id)
       .toPromise()
       .then(() => this.refresh$.next());
+  }
+
+  toggleProperty(name: string, selected: boolean) {
+    if (selected) {
+      this.displayedProperties.push(name);
+    } else {
+      this.displayedProperties.splice(this.displayedProperties.indexOf(name), 1);
+    }
+
+    this.displayedProperties = this.displayedProperties.sort(
+      (a, b) => this.properties.indexOf(a) - this.properties.indexOf(b)
+    );
+
+    localStorage.setItem("Apikeys-displayedProperties", JSON.stringify(this.displayedProperties));
+  }
+
+  toggleDisplayAll(display: boolean) {
+    if (display) {
+      this.displayedProperties = JSON.parse(JSON.stringify(this.properties));
+    } else {
+      this.displayedProperties = ["key", "name", "description", "actions"];
+    }
+
+    localStorage.setItem("Apikeys-displayedProperties", JSON.stringify(this.displayedProperties));
   }
 }
