@@ -28,6 +28,7 @@ import {MatResizeHeaderModule} from "@spica-client/material/resize";
 import {MatMenuModule} from "@angular/material/menu";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {CommonModule as SpicaCommon} from "@spica-client/common";
+import {MatSortModule} from "@angular/material/sort";
 
 @NgModule({
   imports: [
@@ -56,7 +57,8 @@ import {CommonModule as SpicaCommon} from "@spica-client/common";
     MatSaveModule,
     MatResizeHeaderModule,
     MatMenuModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatSortModule
   ],
   declarations: [
     WebhookAddComponent,

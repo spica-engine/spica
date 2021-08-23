@@ -16,12 +16,14 @@ export class WebhookIndexComponent implements OnInit {
   public $data: Observable<Webhook[]>;
   refresh: Subject<void> = new Subject<void>();
 
-  properties = ["_id", "url", "operation", "collection", "actions"];
+  properties = ["_id", "url", "type", "collection", "actions"];
   displayedProperties = JSON.parse(localStorage.getItem("Webhooks-displayedProperties")) || [
     "_id",
     "url",
     "actions"
   ];
+
+  sort: {[k: string]: number} = {_id: -1};
 
   constructor(private webhookService: WebhookService) {}
 
@@ -30,7 +32,8 @@ export class WebhookIndexComponent implements OnInit {
       switchMap(() =>
         this.webhookService.getAll(
           this.paginator.pageSize || 12,
-          this.paginator.pageSize * this.paginator.pageIndex
+          this.paginator.pageSize * this.paginator.pageIndex,
+          this.sort
         )
       ),
       map(webhooks => {
@@ -69,5 +72,18 @@ export class WebhookIndexComponent implements OnInit {
     }
 
     localStorage.setItem("Webhooks-displayedProperties", JSON.stringify(this.displayedProperties));
+  }
+
+  onSortChange(sort) {
+    const property = sort.active != "id" || " url" ? `trigger.options.${sort.active}` : sort.active;
+    if (sort.direction) {
+      this.sort = {
+        [property]: sort.direction === "asc" ? 1 : -1
+      };
+    } else {
+      this.sort = {_id: -1};
+    }
+
+    this.refresh.next();
   }
 }

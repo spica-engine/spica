@@ -81,7 +81,7 @@ describe("Webhook Index", () => {
 
   it("should render webhooks", async () => {
     expect(webhookService.getAll).toHaveBeenCalledTimes(1);
-    expect(webhookService.getAll).toHaveBeenCalledWith(10, 0);
+    expect(webhookService.getAll).toHaveBeenCalledWith(10, 0, {_id: -1});
 
     const id = fixture.debugElement.query(By.css("table td:nth-of-type(1)"));
     const url = fixture.debugElement.query(By.css("table td:nth-of-type(2)"));
@@ -98,7 +98,7 @@ describe("Webhook Index", () => {
     fixture.detectChanges();
 
     expect(webhookService.getAll).toHaveBeenCalledTimes(2);
-    expect(webhookService.getAll.calls.argsFor(1)).toEqual([10, 10]);
+    expect(webhookService.getAll.calls.argsFor(1)).toEqual([10, 10, {_id: -1}]);
 
     const id = fixture.debugElement.query(By.css("table td:nth-of-type(1)"));
     const url = fixture.debugElement.query(By.css("table td:nth-of-type(2)"));

@@ -16,9 +16,9 @@ export class WebhookService {
     return this.http.get<Webhook>(`api:/webhook/${id}`);
   }
 
-  getAll(limit?: any, skip?: any): Observable<IndexResult<Webhook>> {
+  getAll(limit: any, skip: any, sort: {[k: string]: number}): Observable<IndexResult<Webhook>> {
     return this.http.get<IndexResult<Webhook>>(`api:/webhook`, {
-      params: {limit: limit, skip: skip}
+      params: {limit: limit, skip: skip, sort: JSON.stringify(sort)}
     });
   }
 
