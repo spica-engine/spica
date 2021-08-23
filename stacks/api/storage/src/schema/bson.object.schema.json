@@ -13,8 +13,7 @@
             "required": ["type", "data"],
             "properties": {
                 "type": {
-                    "type": "string",
-                    "pattern": "^\\w+\\/[-+.\\w]+$"
+                    "type": "string"
                 },
                 "data": true
             }
