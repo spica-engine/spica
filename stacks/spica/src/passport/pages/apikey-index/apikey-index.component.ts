@@ -24,6 +24,8 @@ export class ApiKeyIndexComponent implements OnInit {
   apiKeys$: Observable<ApiKey[]>;
   refresh$: Subject<void> = new Subject<void>();
 
+  sort: {[key: string]: number} = {_id: -1};
+
   constructor(private apiKeyService: ApiKeyService) {}
 
   ngOnInit() {
@@ -31,7 +33,8 @@ export class ApiKeyIndexComponent implements OnInit {
       switchMap(() =>
         this.apiKeyService.getAll(
           this.paginator.pageSize || 10,
-          this.paginator.pageSize * this.paginator.pageIndex
+          this.paginator.pageSize * this.paginator.pageIndex,
+          this.sort
         )
       ),
       map(response => {
@@ -70,5 +73,17 @@ export class ApiKeyIndexComponent implements OnInit {
     }
 
     localStorage.setItem("Apikeys-displayedProperties", JSON.stringify(this.displayedProperties));
+  }
+
+  onSortChange(sort) {
+    if (!sort.direction) {
+      this.sort = {_id: 1};
+    } else {
+      this.sort = {
+        [sort.active]: sort.direction === "asc" ? 1 : -1
+      };
+    }
+
+    this.refresh$.next();
   }
 }
