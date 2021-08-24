@@ -69,43 +69,98 @@
   div.data-guide {
     display: flex;
     align-items: flex-start;
-    mat-card {
-      &.with-examples {
-        margin-right: 5px;
-        width: 66%;
+    a,
+    button {
+      border-color: var(--primary-400);
+    }
+    .guide {
+      transition: all 1s;
+      position: absolute;
+      left: 0px;
+      top: 0px;
+      height: 100vh;
+      width: 100%;
+      min-width: 300px;
+      display: flex;
+      transform: translateX(0%);
+      .title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        button {
+          margin-left: 10px;
+        }
       }
+      .input {
+        display: flex;
+        flex-direction: row-reverse;
+        align-items: flex-start;
+        padding: 10px 20px;
+        a {
+          margin-right: 30px;
+        }
+      }
+      .backdrop {
+        transition: all 1s;
+        flex: 1;
+        background-color: rgba(0, 0, 0, 0.4);
+        transform: translateX(0%);
+        z-index: 1;
+      }
+      &.hide {
+        left: 0px;
+        transform: translateX(100%);
+        .backdrop {
+          transform: translateX(100%);
+        }
+      }
+      .content {
+        z-index: 5;
+        width: 70%;
+        min-width: 300px;
+        display: flex;
+        flex-direction: column;
+        background: var(--primary-800);
+        color: var(--primary-100);
+        height: 100%;
+        overflow: auto;
+        .item {
+          border-bottom: 1px solid var(--primary-400);
+          padding: 20px;
+        }
 
-      &.guide {
-        margin-left: unset;
-        margin-right: unset;
-        width: 29%;
-        padding: unset;
-        background: transparent;
-        box-shadow: unset;
-        &.hide {
-          width: 0;
-          mat-list {
-            height: 0;
+        ::ng-deep mat-form-field {
+          * {
+            color: var(--primary-100);
+          }
+          .mat-form-field-outline {
+            background: transparent;
           }
         }
-        .guide-link {
-          display: block;
-          font-size: 13px;
-          margin-bottom: 10px;
+      }
+      .guide-link {
+        display: block;
+        margin-bottom: 10px;
+        .description {
+          line-height: 1.5rem;
         }
-        mat-chip {
-          padding: 3px 10px;
-          border-radius: 5px;
-        }
-        pre.guide-response {
-          padding: 7px 10px;
-          border-radius: 5px;
-          background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
-          max-height: 400px;
-          overflow-y: auto;
+        .link {
+          line-height: 1.5em;
+          margin: 0px;
+          font-size: 0.95rem;
+          code {
+            border-radius: 4px;
+          }
         }
       }
-      transition: width 1s;
+      pre.guide-response {
+        font-size: 0.95rem;
+        border-radius: 4px;
+        line-height: 1.5em;
+        margin: 0px;
+      }
+    }
+    mat-card {
       display: inline-block;
       width: calc(100% - 60px);
       margin: 30px;
