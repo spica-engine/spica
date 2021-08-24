@@ -8,12 +8,13 @@ import {ApiKey} from "../interfaces/apikey";
 export class ApiKeyService {
   constructor(private http: HttpClient) {}
 
-  getAll(limit?: number, skip?: number): Observable<IndexResult<ApiKey>> {
-    let params = {};
-    if (limit) params = {...params, limit: limit};
-    if (skip) params = {...params, skip: skip};
+  getAll(
+    limit: number,
+    skip: number,
+    sort: {[key: string]: number}
+  ): Observable<IndexResult<ApiKey>> {
     return this.http.get<IndexResult<ApiKey>>("api:/passport/apikey", {
-      params: params
+      params: {limit, skip, sort: JSON.stringify(sort)} as any
     });
   }
 
@@ -47,7 +48,7 @@ export class MockApiKeyService extends ApiKeyService {
   constructor() {
     super(undefined);
   }
-  getAll(limit?: number, skip?: number) {
+  getAll(limit: number, skip: number, sort: {[k: string]: number}) {
     if (limit || skip) {
       let copyApiKeys = JSON.parse(JSON.stringify(this.apiKeys));
       return of({
