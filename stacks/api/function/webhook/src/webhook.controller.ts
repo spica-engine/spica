@@ -12,7 +12,7 @@ import {
   Query,
   UseGuards
 } from "@nestjs/common";
-import {DEFAULT, NUMBER} from "@spica-server/core";
+import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {DatabaseService, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
@@ -41,14 +41,15 @@ export class WebhookController {
   find(
     @ResourceFilter() resourceFilter: object,
     @Query("limit", DEFAULT(10), NUMBER) limit: number,
-    @Query("skip", DEFAULT(0), NUMBER) skip: number
+    @Query("skip", DEFAULT(0), NUMBER) skip: number,
+    @Query("sort", DEFAULT({_id: -1}), JSONP) sort: {[k: string]: number}
   ) {
     const aggregate = [
       resourceFilter,
       {
         $facet: {
           meta: [{$count: "total"}],
-          data: [{$skip: skip}, {$limit: limit}]
+          data: [{$sort: sort}, {$skip: skip}, {$limit: limit}]
         }
       },
       {
