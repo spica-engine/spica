@@ -2,8 +2,7 @@ import {Inject, Injectable} from "@nestjs/common";
 import {ObjectId} from "@spica-server/database";
 import {OAuthRequestDetails, OAuthStrategy, Strategy, StrategyTypeService} from "../interface";
 import {StrategyService} from "./strategy.service";
-import axios from "axios";
-import {PassportOptions, PASSPORT_OPTIONS} from "../../options";
+import {PassportOptions, PASSPORT_OPTIONS, RequestService, REQUEST_SERVICE} from "../../options";
 import * as uuid from "uuid";
 
 @Injectable()
@@ -12,7 +11,8 @@ export class OAuthService implements StrategyTypeService {
 
   constructor(
     private strategyService: StrategyService,
-    @Inject(PASSPORT_OPTIONS) private options: PassportOptions
+    @Inject(PASSPORT_OPTIONS) private options: PassportOptions,
+    @Inject(REQUEST_SERVICE) private req: RequestService
   ) {}
 
   async assert(strategy: OAuthStrategy, body?: unknown, code?: string): Promise<any> {
@@ -22,7 +22,6 @@ export class OAuthService implements StrategyTypeService {
     };
 
     const tokenResponse = await this.sendRequest(strategy.options.access_token);
-
     if (!tokenResponse.access_token) {
       throw Error("Access token could not find.");
     }
@@ -83,16 +82,12 @@ export class OAuthService implements StrategyTypeService {
   }
 
   sendRequest(requestDetails: OAuthRequestDetails): Promise<any> {
-    return new Promise((resolve, reject) => {
-      axios({
-        url: requestDetails.base_url,
-        params: requestDetails.params,
-        method: requestDetails.method as any,
-        headers: requestDetails.headers,
-        responseType: "json"
-      })
-        .then(res => resolve(res.data))
-        .catch(error => reject(error.response.data));
+    return this.req.request({
+      url: requestDetails.base_url,
+      params: requestDetails.params,
+      method: requestDetails.method as any,
+      headers: requestDetails.headers,
+      responseType: "json"
     });
   }
 }

@@ -1,5 +1,5 @@
 import {animate, style, transition, trigger} from "@angular/animations";
-import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/core";
+import {Component, OnDestroy, OnInit, SecurityContext, ViewChild} from "@angular/core";
 import {MatPaginator, PageEvent} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute, Router} from "@angular/router";
@@ -551,7 +551,9 @@ export class IndexComponent implements OnInit, OnDestroy {
     const html = options.noEndTag
       ? `<${options.name} style='${style}' ${props}>`
       : `<${options.name} style='${style}' ${props}>${
-          this.isValidValue(options.value) ? options.value : ""
+          this.isValidValue(options.value)
+            ? this.sanitizer.sanitize(SecurityContext.HTML, options.value)
+            : ""
         }</${options.name}>`;
 
     return this.sanitizer.bypassSecurityTrustHtml(html);
