@@ -4,7 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  InternalServerErrorException,
   Param,
   Post,
   Put,
@@ -14,23 +13,28 @@ import {
   UseInterceptors,
   HttpStatus,
   HttpCode,
-  Headers
+  Headers,
+  Inject
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {PolicyService} from "@spica-server/passport/policy";
 import {createIdentityActivity} from "./activity.resource";
 import {hash} from "./hash";
 import {IdentityService} from "./identity.service";
 import {Identity, PaginationResponse} from "./interface";
-import {attachIdentityAccess} from "./utility";
+import {POLICY_PROVIDER} from "./options";
+import {registerPolicyAttacher} from "./utility";
 
 @Controller("passport/identity")
 export class IdentityController {
-  constructor(private identity: IdentityService, private policy: PolicyService) {}
+  constructor(
+    private identity: IdentityService,
+    @Inject(POLICY_PROVIDER)
+    private identityPolicyResolver: (req: any) => Promise<[{statement: []}]>
+  ) {}
 
   @Get("verify")
   verify(@Headers("Authorization") token: string) {
@@ -43,19 +47,19 @@ export class IdentityController {
     });
   }
 
-  // TODO: try to drop direct dependency on policy service
   @Get("statements")
   @UseGuards(AuthGuard())
   async statements(@Req() req) {
-    if (!req.user.policies) {
-      return [];
-    }
-    const policies = await this.policy._findAll();
-    const identityPolicies = req.user.policies.map(p => policies.find(pp => pp._id == p));
-    return Array.prototype.concat.apply(
-      [],
-      identityPolicies.filter(item => item).map(ip => ip.statement)
-    );
+    req.user.policies = req.user.policies || [];
+
+    const identityPolicies = await this.identityPolicyResolver(req);
+
+    return identityPolicies
+      .filter(i => i)
+      .map(ip => ip.statement)
+      .reduce((acc, curr) => {
+        return acc.concat(curr);
+      }, []);
   }
 
   @Get()
@@ -121,7 +125,14 @@ export class IdentityController {
   }
 
   @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:identity:show"))
+  @UseGuards(
+    AuthGuard(),
+    ActionGuard(
+      "passport:identity:show",
+      undefined,
+      registerPolicyAttacher("IdentityReadOnlyAccess")
+    )
+  )
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.identity.findOne({_id: id}, {projection: {password: 0}});
   }
@@ -150,7 +161,10 @@ export class IdentityController {
 
   @UseInterceptors(activity(createIdentityActivity))
   @Put(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:identity:update", undefined, attachIdentityAccess))
+  @UseGuards(
+    AuthGuard(),
+    ActionGuard("passport:identity:update", undefined, registerPolicyAttacher("IdentityFullAccess"))
+  )
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/update-identity-with-attributes"))
@@ -178,8 +192,8 @@ export class IdentityController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     // prevent to delete the last user
-    const users = await this.identity.find();
-    if (users.length == 1) {
+    const userCount = await this.identity.estimatedDocumentCount();
+    if (userCount == 1) {
       return;
     }
     return this.identity.deleteOne({_id: id});
