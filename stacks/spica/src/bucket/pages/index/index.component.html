@@ -147,7 +147,7 @@
 </mat-toolbar>
 
 <div class="data-guide">
-  <mat-card class="mat-elevation-z25" [class.with-examples]="guide">
+  <mat-card class="mat-elevation-z25">
     <mat-card-content>
       <table
         mat-table
@@ -306,37 +306,66 @@
     </mat-card-content>
   </mat-card>
 
-  <mat-card class="guide" [class.hide]="!guide">
-    <mat-accordion multi>
-      <mat-expansion-panel *ngFor="let guide of guideObjects | keyvalue">
-        <mat-expansion-panel-header>
-          <mat-panel-description>
-            {{ guide.value.title }}
-          </mat-panel-description>
-        </mat-expansion-panel-header>
-
-        <p class="guide-link">
-          {{ guide.value.description }} <br /><br />
-          <span *ngIf="guide.value.url != ''">{{ rootUrl + "/api" + guide.value.url }}</span>
-        </p>
-        <button
-          *ngIf="guide.value.url != ''"
-          mat-raised-button
-          color="warn"
-          (click)="guideRequest(guide.value.url, guide.key)"
+  <div class="guide" [class.hide]="!guide">
+    <div class="backdrop" (click)="guide = !guide"></div>
+    <div class="content">
+      <div class="input">
+        <mat-form-field appearance="outline">
+          <mat-label>Choose SDK</mat-label>
+          <mat-select [(ngModel)]="guideSDK">
+            <mat-option value="curl">cURL</mat-option>
+            <mat-option value="js">JS/TS SDK</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <a mat-stroked-button target="_blank" href="https://www.youtube.com/watch?v=KiN7ZtmhUaQ"
+          >Watch On Youtube</a
         >
-          {{ guideResponse[guide.key] ? "Hide Response" : "Send Request" }}
-        </button>
-        <pre
-          *ngIf="guideResponse[guide.key]"
-          class="guide-response"
-          [innerHtml]="
+        <a
+          mat-stroked-button
+          target="_blank"
+          href="https://spicaengine.com/docs/modules/bucket-module"
+          >Full Documentation</a
+        >
+      </div>
+      <ng-container *ngFor="let guide of guideObjects">
+        <div class="item" *ngIf="guide.value.example[guideSDK]">
+          <h3 class="title">
+            {{ guide.value.title }}
+            <div>
+              <button
+                mat-button
+                #clipboard="matClipboard"
+                [matClipboard]="guide.value.example[guideSDK]"
+              >
+                <mat-icon [matTooltip]="clipboard.toolTip">
+                  {{ clipboard.icon }}
+                </mat-icon>
+                {{ clipboard.toolTip || "Copy to clipboard" }}
+              </button>
+              <button
+                *ngIf="guide.value.example['api']"
+                mat-stroked-button
+                (click)="guideRequest(guide.value.example.api, guide.key)"
+              >
+                {{ guideResponse[guide.key] ? "Hide Response" : "Show Response" }}
+              </button>
+            </div>
+          </h3>
+
+          <div class="guide-link">
+            <div class="description">{{ guide.value.description }}</div>
+            <pre class="link" *ngIf="guide.value.example[guideSDK]">
+              <code [highlight]="guide.value.example[guideSDK]" [languages]="['typescript']"></code>
+            </pre>
+
+            <pre *ngIf="guideResponse[guide.key]" class="guide-response"><code  [highlight]="
             guideResponse[guide.key] ? (guideResponse[guide.key] | json) : 'Data does not exist'
-          "
-        ></pre>
-      </mat-expansion-panel>
-    </mat-accordion>
-  </mat-card>
+            " [languages]="['json']"></code></pre>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
 </div>
 <ng-template #deleteRowsDialog let-answer="answer">
   <p>
