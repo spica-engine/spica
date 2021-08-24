@@ -64,6 +64,7 @@ import {BucketService} from "./services/bucket.service";
 import * as fromBucket from "./state/bucket.reducer";
 import {RequiredTranslate} from "./validators";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
+import {HighlightModule, HIGHLIGHT_OPTIONS} from "ngx-highlightjs";
 
 @NgModule({
   imports: [
@@ -136,7 +137,8 @@ import {MatButtonToggleModule} from "@angular/material/button-toggle";
     MatSaveModule,
     PassportModule.forChild(),
     SpicaCommon,
-    EditorModule
+    EditorModule,
+    HighlightModule
   ],
   declarations: [
     IndexComponent,
@@ -181,6 +183,17 @@ export class BucketModule {
           provide: ACTIVITY_FACTORY,
           useValue: provideActivityFactory,
           multi: true
+        },
+        {
+          provide: HIGHLIGHT_OPTIONS,
+          useValue: {
+            coreLibraryLoader: () => import("highlight.js/lib/core"),
+            lineNumbersLoader: () => import("highlightjs-line-numbers.js"),
+            languages: {
+              typescript: () => import("highlight.js/lib/languages/typescript"),
+              json: () => import("highlight.js/lib/languages/json")
+            }
+          }
         }
       ]
     };
