@@ -15,6 +15,10 @@ import {WebhookService} from "../../services";
 import {WebhookIndexComponent} from "../webhook-index/webhook-index.component";
 import {MatButtonModule} from "@angular/material/button";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
+import {MatMenuModule} from "@angular/material/menu";
+import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatDividerModule} from "@angular/material/divider";
+import {FormsModule} from "@angular/forms";
 
 describe("Webhook Index", () => {
   let fixture: ComponentFixture<WebhookIndexComponent>;
@@ -48,6 +52,7 @@ describe("Webhook Index", () => {
 
     TestBed.configureTestingModule({
       imports: [
+        FormsModule,
         MatPaginatorModule,
         RouterTestingModule,
         MatTableModule,
@@ -56,7 +61,10 @@ describe("Webhook Index", () => {
         MatCardModule,
         NoopAnimationsModule,
         MatAwareDialogModule,
-        MatButtonModule
+        MatButtonModule,
+        MatMenuModule,
+        MatCheckboxModule,
+        MatDividerModule
       ],
       declarations: [WebhookIndexComponent, CanInteractDirectiveTest],
       providers: [
@@ -73,10 +81,10 @@ describe("Webhook Index", () => {
 
   it("should render webhooks", async () => {
     expect(webhookService.getAll).toHaveBeenCalledTimes(1);
-    expect(webhookService.getAll).toHaveBeenCalledWith(10, 0);
+    expect(webhookService.getAll).toHaveBeenCalledWith(10, 0, {_id: -1});
 
-    const id = fixture.debugElement.query(By.css("mat-table mat-cell:nth-of-type(1)"));
-    const url = fixture.debugElement.query(By.css("mat-table mat-cell:nth-of-type(2)"));
+    const id = fixture.debugElement.query(By.css("table td:nth-of-type(1)"));
+    const url = fixture.debugElement.query(By.css("table td:nth-of-type(2)"));
 
     expect(id.nativeElement.textContent).toBe("0");
     expect(url.nativeElement.textContent).toBe("test_url");
@@ -90,10 +98,10 @@ describe("Webhook Index", () => {
     fixture.detectChanges();
 
     expect(webhookService.getAll).toHaveBeenCalledTimes(2);
-    expect(webhookService.getAll.calls.argsFor(1)).toEqual([10, 10]);
+    expect(webhookService.getAll.calls.argsFor(1)).toEqual([10, 10, {_id: -1}]);
 
-    const id = fixture.debugElement.query(By.css("mat-table mat-cell:nth-of-type(1)"));
-    const url = fixture.debugElement.query(By.css("mat-table mat-cell:nth-of-type(2)"));
+    const id = fixture.debugElement.query(By.css("table td:nth-of-type(1)"));
+    const url = fixture.debugElement.query(By.css("table td:nth-of-type(2)"));
 
     expect(id.nativeElement.textContent).toBe("10");
     expect(url.nativeElement.textContent).toBe("test_url");

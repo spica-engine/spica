@@ -121,9 +121,19 @@ export function registerInformers(bs: BucketService) {
         await st.patch(obj.metadata.name, {metadata: {uid: String(bkt._id)}, status: "Ready"});
       },
       update: async (_, newObj: any) => {
+        const st = store({
+          group: "bucket",
+          resource: "schemas"
+        });
+
+        const existing = await st.get(newObj.metadata.name);
+        if (!existing.metadata.uid) {
+          throw new Error("Bucket should have been inserted before updating");
+        }
+
         const bucketSchemaInternal = await v1_schema_to_internal(newObj);
         await bs.updateOne(
-          {_id: new ObjectId(newObj.metadata.uid)},
+          {_id: new ObjectId(existing.metadata.uid)},
           {$set: bucketSchemaInternal},
           {upsert: true}
         );

@@ -1,12 +1,11 @@
 import {
-  attachIdentityAccess,
+  registerPolicyAttacher,
   providePolicyFinalizer
 } from "@spica-server/passport/identity/src/utility";
 
 describe("Utilities", () => {
   it("should attach IdentityFullAccess when condition is valid", () => {
     let request = {
-      method: "PUT",
       params: {
         id: "test_user"
       },
@@ -15,9 +14,20 @@ describe("Utilities", () => {
         policies: []
       }
     };
-    expect(attachIdentityAccess(request)).toEqual({
+
+    let policyAttachedRequest = registerPolicyAttacher("IdentityFullAccess")(request);
+    expect(policyAttachedRequest).toEqual({
       ...request,
       user: {_id: "test_user", policies: ["IdentityFullAccess"]}
+    });
+
+    policyAttachedRequest = registerPolicyAttacher([
+      "IdentityFullAccess",
+      "PreferenceReadOnlyAccess"
+    ])(request);
+    expect(policyAttachedRequest).toEqual({
+      ...request,
+      user: {_id: "test_user", policies: ["IdentityFullAccess", "PreferenceReadOnlyAccess"]}
     });
   });
 
