@@ -188,7 +188,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   createNewField(propertyKey: string = null) {
     let dialogRef = this.dialog.open(AddFieldModalComponent, {
       width: "800px",
-      maxHeight: "800px",
+      maxHeight: "90vh",
       data: {
         parentSchema: this.bucket,
         propertyKey: propertyKey

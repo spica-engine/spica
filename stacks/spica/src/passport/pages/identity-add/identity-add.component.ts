@@ -60,11 +60,18 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
       )
       .subscribe();
 
-    this.preferencesService
-      .get("passport")
+    // in order to prevent getting 403 when there is missing preference show policy on passport resource
+    this.passportService
+      .checkAllowed("preference:show", "passport")
       .toPromise()
-      .then(pref => {
-        this.preferences = pref.identity;
+      .then(isAllowed => {
+        isAllowed &&
+          this.preferencesService
+            .get("passport")
+            .toPromise()
+            .then(pref => {
+              this.preferences = pref.identity;
+            });
       });
   }
 

@@ -16,7 +16,8 @@ import {
   deleteDocument,
   clearRelations,
   getDependents,
-  deepCopy
+  deepCopy,
+  authIdToString
 } from "@spica-server/bucket/common";
 import * as expression from "@spica-server/bucket/expression";
 import {aggregate} from "@spica-server/bucket/expression";
@@ -474,6 +475,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     const schema = await this.bucketService.findOne({_id: new ObjectId(schemaId)});
 
+    req = authIdToString(req);
     const match = expression.aggregate(schema.acl.read, {auth: req.user});
 
     const options: FindOptions<{}> = {};

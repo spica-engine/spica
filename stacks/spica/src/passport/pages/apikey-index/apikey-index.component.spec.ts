@@ -56,7 +56,7 @@ describe("ApiKeyIndexComponent", () => {
   });
 
   it("should show apikeys", () => {
-    const cells = fixture.debugElement.queryAll(By.css("mat-table mat-cell"));
+    const cells = fixture.debugElement.queryAll(By.css("table td"));
     expect(cells[0].nativeElement.textContent).toBe("testkey");
     expect(cells[1].nativeElement.textContent).toBe("testname");
     expect(cells[2].nativeElement.textContent).toBe("testdescription");
