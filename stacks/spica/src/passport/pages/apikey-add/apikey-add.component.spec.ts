@@ -186,8 +186,9 @@ describe("ApiKeyAddComponent", () => {
 
     component.saveApiKey();
 
-    const apiKeys = ((await component["apiKeyService"].getAll().toPromise()) as IndexResult<ApiKey>)
-      .data;
+    const apiKeys = ((await component["apiKeyService"]
+      .getAll(0, 0, {_id: -1})
+      .toPromise()) as IndexResult<ApiKey>).data;
     delete apiKeys[0]._id;
     expect(apiKeys).toEqual([
       {
