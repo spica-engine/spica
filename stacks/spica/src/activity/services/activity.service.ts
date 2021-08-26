@@ -74,7 +74,9 @@ export class ActivityService {
       case "passport":
         switch (module) {
           case "apikey":
-            return this.apiKey.getAll().pipe(map(result => result.data.map(apikey => apikey._id)));
+            return this.apiKey
+              .getAll(0, 0, {_id: -1})
+              .pipe(map(result => result.data.map(apikey => apikey._id)));
           case "identity":
             return this.identity
               .find()

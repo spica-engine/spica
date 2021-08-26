@@ -24,10 +24,16 @@ import {WebhookIndexComponent} from "./pages/webhook-index/webhook-index.compone
 import {WebhookLogViewComponent} from "./pages/webhook-log-view/webhook-log-view.component";
 import {WebhookWelcomeComponent} from "./pages/webhook-welcome/webhook-welcome.component";
 import {WebhookRoutingModule} from "./webhook-routing.module";
+import {MatResizeHeaderModule} from "@spica-client/material/resize";
+import {MatMenuModule} from "@angular/material/menu";
+import {MatCheckboxModule} from "@angular/material/checkbox";
+import {CommonModule as SpicaCommon} from "@spica-client/common";
+import {MatSortModule} from "@angular/material/sort";
 
 @NgModule({
   imports: [
     CommonModule,
+    SpicaCommon,
     FormsModule,
     InputModule,
     PassportModule.forChild(),
@@ -48,7 +54,11 @@ import {WebhookRoutingModule} from "./webhook-routing.module";
     MatProgressSpinnerModule,
     ScrollingModule,
     MatExpansionModule,
-    MatSaveModule
+    MatSaveModule,
+    MatResizeHeaderModule,
+    MatMenuModule,
+    MatCheckboxModule,
+    MatSortModule
   ],
   declarations: [
     WebhookAddComponent,

@@ -1,4 +1,5 @@
 export const IDENTITY_OPTIONS = Symbol.for("IDENTITY_OPTIONS");
+export const POLICY_PROVIDER = Symbol.for("POLICY_PROVIDER");
 
 export interface IdentityOptions {
   expiresIn: number;
