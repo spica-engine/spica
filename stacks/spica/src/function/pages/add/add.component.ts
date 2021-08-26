@@ -140,6 +140,7 @@ export class AddComponent implements OnInit, OnDestroy {
                 minWidth: "200px",
                 width: "40%",
                 maxWidth: "1000px",
+                maxHeight: "90vh",
                 data: {
                   information: this.information,
                   function: this.function
