@@ -180,7 +180,7 @@ describe("Storage/IndexComponent", () => {
       const insertSpy = spyOn(fixture.componentInstance["storage"], "insertMany").and.returnValue(
         of(event)
       );
-      fixture.componentInstance.uploadStorageMany({} as any);
+      fixture.componentInstance.uploadStorageMany({length: 1} as any);
       fixture.detectChanges();
 
       expect(
@@ -188,7 +188,7 @@ describe("Storage/IndexComponent", () => {
       ).toBe(true);
 
       expect(insertSpy).toHaveBeenCalledTimes(1);
-      expect(insertSpy).toHaveBeenCalledWith({} as any);
+      expect(insertSpy).toHaveBeenCalledWith({length: 1} as any);
     });
 
     it("should complete upload progress", () => {
@@ -197,7 +197,7 @@ describe("Storage/IndexComponent", () => {
         of({type: HttpEventType.Response} as any)
       );
 
-      fixture.componentInstance.uploadStorageMany({} as any);
+      fixture.componentInstance.uploadStorageMany({length: 1} as any);
       fixture.detectChanges();
 
       expect(
@@ -205,7 +205,7 @@ describe("Storage/IndexComponent", () => {
       ).toBe(false);
 
       expect(insertSpy).toHaveBeenCalledTimes(1);
-      expect(insertSpy).toHaveBeenCalledWith({} as any);
+      expect(insertSpy).toHaveBeenCalledWith({length: 1} as any);
 
       expect(refreshSpy).toHaveBeenCalledTimes(1);
       expect(fixture.componentInstance.progress).toBe(undefined);
