@@ -7,6 +7,12 @@
       padding: unset;
     }
   }
+
+  .mat-menu-content {
+    button.active {
+      color: var(--accent-300) !important;
+    }
+  }
 }
 
 :host {

@@ -21,7 +21,7 @@ export class IndexComponent implements OnInit {
   storages$: Observable<Storage[]>;
   progress: number;
   refresh: Subject<string> = new Subject();
-  sorter;
+  sorter: any = {_id: -1};
   cols: number = 5;
 
   loading$: BehaviorSubject<boolean> = new BehaviorSubject(false);
@@ -85,7 +85,7 @@ export class IndexComponent implements OnInit {
   }
 
   uploadStorageMany(file: FileList): void {
-    if (file) {
+    if (file.length) {
       this.storage.insertMany(file).subscribe(
         event => {
           if (event.type === HttpEventType.UploadProgress) {
@@ -95,19 +95,16 @@ export class IndexComponent implements OnInit {
             this.refresh.next();
           }
         },
-        () => this.uploadDone()
+        err => {
+          console.error(err);
+          this.progress = undefined;
+        }
       );
     }
   }
 
   clearLastUpdates() {
     this.lastUpdates.clear();
-    this.refresh.next();
-  }
-
-  uploadDone() {
-    this.sortStorage({direction: "desc", name: "_id"});
-    this.progress = undefined;
     this.refresh.next();
   }
 
@@ -124,10 +121,9 @@ export class IndexComponent implements OnInit {
     return Promise.all(promises).then(() => this.refresh.next());
   }
 
-  sortStorage({...value}) {
+  sortStorage(value) {
     value.direction = value.direction === "asc" ? 1 : -1;
-    this.sorter = {};
-    this.sorter[value.name] = value.direction;
+    this.sorter = {[value.name]: value.direction};
     this.refresh.next();
   }
 
