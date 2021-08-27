@@ -38,6 +38,7 @@ import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {IndexComponent} from "./index.component";
 import {LayoutModule} from "@spica-client/core/layout";
+import {BASE_URL} from "@spica-client/core/http";
 
 describe("IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
@@ -115,6 +116,10 @@ describe("IndexComponent", () => {
         {
           provide: ActivatedRoute,
           useValue: activatedRoute
+        },
+        {
+          provide: BASE_URL,
+          useValue: [{api: "http://insteadof"}]
         }
       ],
       declarations: [
