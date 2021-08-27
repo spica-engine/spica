@@ -10,6 +10,7 @@ ts_library(
     srcs = [
         "main.ts",
     ],
+    data = ["start-options.json"],
     deps = [
         "//packages/core",
         "//packages/core/schema",

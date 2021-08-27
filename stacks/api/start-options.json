@@ -1,0 +1,246 @@
+{
+  "options": {
+    "cert-file": {
+      "string": true,
+      "description": "Path to the client server TLS cert file."
+    },
+    "key-file": {
+      "string": true,
+      "description": "Path to the client server TLS key file."
+    },
+
+    "database-uri": {
+      "string": true,
+      "description": "MongoDB connection url."
+    },
+    "database-name": {
+      "string": true,
+      "description": "Name of the database."
+    },
+    "database-replica-set": {
+      "string": true,
+      "alias": ["replica-set"],
+      "description": "Name of the replica set."
+    },
+    "database-pool-size": {
+      "number": true,
+      "description": "Amount of connection that will be opened against database.",
+      "default": 50
+    },
+
+    "bucket-cache": {
+      "boolean": true,
+      "description": "It will reduce bucket-data response time significantly when enabled.",
+      "default": false
+    },
+    "bucket-cache-ttl": {
+      "number": true,
+      "description": "Lifespan of the bucket-data response caches. Unit: second",
+      "default": 60
+    },
+    "activity-stream": {
+      "boolean": true,
+      "description": "Whether Activity Stream feature is enabled.",
+      "default": true
+    },
+    "bucket-hooks": {
+      "boolean": true,
+      "description": "Whether Bucket Hooks feature is enabled.",
+      "default": true
+    },
+    "bucket-history": {
+      "boolean": true,
+      "description": "Whether Bucket History feature is enabled.",
+      "default": true
+    },
+    "experimental-bucket-realtime": {
+      "boolean": true,
+      "description": "Whether the experimental Bucket realtime feature is enabled.",
+      "default": true
+    },
+    "bucket-data-limit": {
+      "number": true,
+      "description": "Maximum document count in all bucket-data collections"
+    },
+
+    "passport-secret": {
+      "string": true,
+      "alias": ["secret"],
+      "description": "PEM-encoded public key (asymmetric) for verifying the JWT token's signature."
+    },
+    "passport-saml-certificate-ttl": {
+      "number": true,
+      "description": "Lifespan of the self-signed certificate in seconds. Default value: Number.MAX_SAFE_INTEGER",
+      "default": 2147483647
+    },
+    "passport-identity-token-expires-in": {
+      "number": true,
+      "description": "Default lifespan of the issued JWT tokens. Unit: second. Default value is 2 days",
+      "default": 172800
+    },
+    "passport-identity-token-expiration-seconds-limit": {
+      "number": true,
+      "description": "Maximum lifespan of the requested JWT token can have. Unit: second"
+    },
+    "passport-default-identity-identifier": {
+      "string": true,
+      "description": "Identifier of the default identity.",
+      "default": "spica"
+    },
+    "passport-default-strategy": {
+      "string": true,
+      "description": "The default startegy to authenticate identities.",
+      "default": "IDENTITY",
+      "choices": ["IDENTITY", "APIKEY"]
+    },
+    "passport-default-identity-password": {
+      "string": true,
+      "description": "Password of the default account.",
+      "default": "spica"
+    },
+    "passport-default-identity-policies": {
+      "array": true,
+      "description": "Policies to attach to the default identity.",
+      "default": [
+        "ApiKeyFullAccess",
+        "IdentityFullAccess",
+        "StrategyFullAccess",
+        "PolicyFullAccess",
+        "PassportFullAccess",
+        "ActivityFullAccess",
+        "StorageFullAccess",
+        "FunctionFullAccess",
+        "BucketFullAccess",
+        "DashboardFullAccess",
+        "WebhookFullAccess",
+        "PreferenceFullAccess"
+      ]
+    },
+    "passport-identity-limit": {
+      "number": true,
+      "description": "Maximum number of identity that can be inserted."
+    },
+
+    "function-pool-size": {
+      "number": true,
+      "description": "Number of worker processes to fork at start up.",
+      "default": 10
+    },
+    "function-pool-maximum-size": {
+      "number": true,
+      "description": "Maximum number of worker processes to fork.",
+      "default": 15
+    },
+    "function-api-url": {
+      "string": true,
+      "description": "Internally or publicly accessible url of the api. This value will be used by various devkit packages such as @spica-devkit/bucket and @spica-devkit/dashboard. Defaults to value of --public-url if not present."
+    },
+    "function-timeout": {
+      "number": true,
+      "description": "Amount of time in seconds that has to elapse before aborting a function.",
+      "default": 120
+    },
+    "experimental-function-devkit-database-cache": {
+      "boolean": true,
+      "description": "When true, @spica-devkit/database will be cached and run significantly fast.",
+      "default": true
+    },
+    "function-limit": {
+      "number": true,
+      "description": "Maximum number of function that can be inserted."
+    },
+
+    "storage-strategy": {
+      "string": true,
+      "description": "Cloud Storage service to store documents. Available options are default and gcloud.",
+      "default": "default",
+      "choices": ["default", "gcloud"]
+    },
+    "default-storage-path": {
+      "string": true,
+      "description": "A relative path to --persistent-path that will be used to store storage objects.",
+      "default": "storage"
+    },
+    "default-storage-public-url": {
+      "string": true,
+      "description": "Publicly accessible url of the storage. This value will be used by storage to generate urls to objects. Defaults to --public-url if not present."
+    },
+    "gcloud-service-account-path": {
+      "string": true,
+      "description": "Path for the service account file to authorize on google cloud services."
+    },
+    "gcloud-bucket-name": {
+      "string": true,
+      "description": "Name of the bucket to store documents on GCS."
+    },
+    "storage-object-size-limit": {
+      "number": true,
+      "description": "Maximum size in Mi that an object could be.",
+      "default": 35
+    },
+    "storage-total-size-limit": {
+      "number": true,
+      "description": "Total size limit of storage. Unit: Mb"
+    },
+
+    "status-tracking": {
+      "boolean": true,
+      "description": "When enabled, server will be able to show the stats of core modules and track the request-response stats too.",
+      "default": true
+    },
+    "request-limit": {
+      "number": true,
+      "description": "Maximum request count that server can process"
+    },
+
+    "cors-allowed-origins": {
+      "array": true,
+      "description": "Access-Control-Allow-Origin.",
+      "default": ["*"]
+    },
+    "cors-allowed-methods": {
+      "array": true,
+      "description": "Access-Control-Allow-Methods",
+      "default": ["*"]
+    },
+    "cors-allowed-headers": {
+      "array": true,
+      "description": "Access-Control-Allow-Headers",
+      "default": ["Authorization", "Content-Type", "Accept-Language"]
+    },
+    "cors-allow-credentials": {
+      "boolean": true,
+      "description": "Access-Control-Allow-Credentials",
+      "default": true
+    },
+    "payload-size-limit": {
+      "number": true,
+      "description": "Maximum size in Mi that a body could be.",
+      "default": 15
+    },
+    "common-log-lifespan": {
+      "number": true,
+      "description": "Seconds that need to be passed to expire logs. Default value is one month.",
+      "default": 2592000
+    },
+    "port": {
+      "number": true,
+      "alias": ["p"],
+      "default": 80,
+      "description": "A port to listen on."
+    },
+    "persistent-path": {
+      "string": true,
+      "default": "/tmp",
+      "normalize": true,
+      "description": "A path that will be used by API to store persistent data."
+    },
+    "public-url": {
+      "string": true,
+      "description": "Publicly accessible url of the APIs.",
+      "alias": ["public-host"],
+      "describe": "This option will be used by various modules. For instance the 'storage' module will use this url to generate object links that are accessible from egress networks. While the 'passport' module will use this url to re-route the user to the Passport APIs.Example: http(s)://doomed-d45f1.spica.io/api"
+    }
+  },
+  "demandOptions": ["database-name", "database-uri", "passport-secret", "public-url"]
+}
