@@ -185,6 +185,11 @@ const args = yargs
     "function-limit": {
       number: true,
       description: "Maximum number of function that can be inserted."
+    },
+    "function-debug": {
+      boolean: true,
+      description: "Enable/disable function workers debugging mode. Default value is true",
+      default: true
     }
   })
   /* Storage Options */
@@ -415,7 +420,8 @@ const modules = [
       allowedMethods: args["cors-allowed-methods"],
       allowedHeaders: args["cors-allowed-headers"],
       allowCredentials: args["cors-allow-credentials"]
-    }
+    },
+    debug: args["function-debug"]
   })
 ];
 

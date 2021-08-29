@@ -26,7 +26,8 @@ describe("Scheduler", () => {
       allowedHeaders: ["*"],
       allowedMethods: ["*"],
       allowedOrigins: ["*"]
-    }
+    },
+    debug: false
   };
 
   const now = new Date(2015, 1, 1, 1, 1, 31, 0);

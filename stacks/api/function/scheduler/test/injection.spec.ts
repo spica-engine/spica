@@ -46,7 +46,8 @@ describe("Scheduler Injection", () => {
             allowedHeaders: ["*"],
             allowedMethods: ["*"],
             allowedOrigins: ["*"]
-          }
+          },
+          debug: false
         }),
         SpySchedulerModule
       ]
