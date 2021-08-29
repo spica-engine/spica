@@ -68,7 +68,8 @@ xdescribe("Hooks Integration", () => {
             allowedMethods: ["*"],
             allowedOrigins: ["*"]
           },
-          logExpireAfterSeconds: 60
+          logExpireAfterSeconds: 60,
+          debug: false
         })
       ]
     }).compile();
