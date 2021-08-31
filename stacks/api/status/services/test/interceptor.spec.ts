@@ -67,7 +67,7 @@ describe("Status Interceptor", () => {
       expect(res.body).toEqual({
         module: "api",
         status: {
-          requests: {
+          calls: {
             limit: 10,
             current: 1,
             unit: "count"
@@ -75,11 +75,6 @@ describe("Status Interceptor", () => {
           uploaded: {
             current: 0,
             unit: "mb"
-          },
-          responses: {
-            limit: 10,
-            current: 1,
-            unit: "count"
           },
           downloaded: {
             current: 1,
@@ -102,7 +97,7 @@ describe("Status Interceptor", () => {
       expect(res.body).toEqual({
         module: "api",
         status: {
-          requests: {
+          calls: {
             limit: 10,
             current: 2,
             unit: "count"
@@ -110,11 +105,6 @@ describe("Status Interceptor", () => {
           uploaded: {
             current: 0,
             unit: "mb"
-          },
-          responses: {
-            limit: 10,
-            current: 2,
-            unit: "count"
           },
           downloaded: {
             current: 1,
