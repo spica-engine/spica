@@ -26,14 +26,14 @@ Spica is a full-fledged, free and open-source backend development platform. It a
 
 
 ## Secondary Features
-:white_check_mark: Inline image editing
-:white_check_mark: Scheduled data publishing
-:white_check_mark: Data history
-:white_check_mark: Data localization
-:white_check_mark: Event driven function triggers
-:white_check_mark: Prebuilt Open-Source Assets & Plugins
-:white_check_mark: Customizable back-office UI
-:white_check_mark: API-first approach
+- :white_check_mark: Inline image editing
+- :white_check_mark: Scheduled data publishing
+- :white_check_mark: Data history
+- :white_check_mark: Data localization
+- :white_check_mark: Event driven function triggers
+- :white_check_mark: Prebuilt Open-Source Assets & Plugins
+- :white_check_mark: Customizable back-office UI
+- :white_check_mark: API-first approach
 
 Spica provides enterprise-grade backend features and customizable back-office UI for non-technical people. 
 
