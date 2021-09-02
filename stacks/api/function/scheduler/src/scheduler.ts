@@ -133,9 +133,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   getBatchForTarget(target: event.Target) {
     for (const batch of this.batching.values()) {
       if (
-        batch.target == target.id &&
-        batch.remaining_enqueues[target.handler] != 0 &&
-        Date.now() < batch.deadline
+        batch.target == target.id
+        // &&
+        // batch.remaining_enqueues[target.handler] != 0 &&
+        // Date.now() < batch.deadline
       ) {
         return batch;
       }
@@ -223,21 +224,22 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       const worker = this.pool.get(workerId);
       worker.attach(stdout, stderr);
 
-      const timeoutInSeconds = Math.min(this.options.timeout, event.target.context.timeout);
+      const timeoutInMs = Math.min(this.options.timeout, event.target.context.timeout) * 1000;
 
-      if (!this.timeouts.has(workerId)) {
-        this.timeouts.set(
-          workerId,
-          setTimeout(() => {
-            if (stderr.writable) {
-              stderr.write(
-                `Function (${event.target.handler}) did not finish within ${timeoutInSeconds} seconds. Aborting.`
-              );
-            }
-            worker.kill();
-          }, timeoutInSeconds * 1000)
-        );
+      const timeoutFn = () => {
+        if (stderr.writable) {
+          stderr.write(
+            `Function (${event.target.handler}) did not finish within ${timeoutInMs /
+              1000} seconds. Aborting.`
+          );
+        }
+        worker.kill();
+      };
+
+      if (this.timeouts.has(workerId)) {
+        clearTimeout(this.timeouts.get(workerId));
       }
+      this.timeouts.set(workerId, setTimeout(timeoutFn, timeoutInMs));
 
       schedule(event);
 
