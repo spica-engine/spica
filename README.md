@@ -54,7 +54,14 @@ spica project start my-first-server
 
 ## How It Works
 
-We are trying to reduce development time for fast-paced projects and startups. Also we want to give a platform where the backend developers enjoy while developing robust projects. You can use Spica as a backend engine as well as a headless CMS
+We are trying to reduce development time for fast-paced projects and startups. Also we want to give a platform where the backend developers enjoy while developing robust projects. You can use Spica as a backend engine as well as a headless CMS.
+
+To use Spica as a **backend engine**:
+1. Prepare your data models in **Bucket Module**, REST API and GraphQL API will be generated automatically
+2. Add rules to each bucket as an entry level security layer
+3. Create custom policy for your project user roles
+4. Apply your logic with **cloud functions**
+5. Add **custom dashboards** for the business managers
 
 To use Spica as a **Headless CMS**:
 1. Prepare your data models in **Bucket Module**, REST API and GraphQL API will be generated automatically
@@ -63,13 +70,6 @@ To use Spica as a **Headless CMS**:
 4. Add policies to your **identities** so your content editors can't reach to any technical part.
 5. Add automations with **cloud functions**
 6. Add **Webhooks** if you want to trigger any other 3rd party integration such as Slack, Zapier
-
-To use Spica as a **backend engine**:
-1. Prepare your data models in **Bucket Module**, REST API and GraphQL API will be generated automatically
-2. Add rules to each bucket as an entry level security layer
-3. Create custom policy for your project user roles
-4. Apply your logic with **cloud functions**
-5. Add **custom dashboards** for the business managers
 
 ## RoadMap
 
