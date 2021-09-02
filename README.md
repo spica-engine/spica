@@ -8,17 +8,18 @@
 
 Spica is a full-fledged, free and open-source backend development platform. It aims to reduce all repetitive backend tasks and provide to fastest backend development process. Spica fulfills the needs of development among other things such as:
 
-| Feature | Version | Tests | Used In Enterprise Project |
+| Modules | Version | Tests | Used In Enterprise Project |
 :-------------------- | :-------------------- | :-------------------- | :-------------------- |
 | Data Modeling | Release | :white_check_mark: | :white_check_mark: |
 | Realtime Database | Release | :white_check_mark: | :white_check_mark: |
-| Auto-Generated REST API | Release | :white_check_mark: | :white_check_mark: |
 | Cloud Functions | Release | :white_check_mark: |:white_check_mark: |
 | Identity and Access Management | Release | :white_large_square: |:white_check_mark: |
-| Custom OAuth & SAML | Beta | :white_large_square: |:white_check_mark: |
 | Storage (CDN) | Release | :white_check_mark: | :white_check_mark: |
 | Dashboards | Release | :white_check_mark: | :white_check_mark: |
+| **Feautres** | | |  |
+| Auto-Generated REST API | Release | :white_check_mark: | :white_check_mark: |
 | WebHooks | Release | :white_check_mark: | :white_check_mark: |
+| Custom OAuth & SAML | Beta | :white_large_square: |:white_check_mark: |
 | GraphQL | Beta | :white_check_mark: | :white_large_square: |
 | ACL Rules | Release | :white_check_mark: | :white_check_mark: |
 | Asset System | Beta | :white_large_square: | :white_large_square: |
