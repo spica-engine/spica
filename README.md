@@ -6,20 +6,24 @@
 
 Spica is a full-fledged, free and open-source backend development platform. It aims to reduce all repetitive backend tasks and provide to fastest backend development process. Spica fulfills the needs of development among other things such as:
 
+
+### Primary Features
 - **Data Modeling**
 - **Realtime Database** 
 - **Auto-Generated REST API**
-- **GraphQL Support**
 - **Cloud Functions**
 - **Identity and Access Management**
-- **ACL Rules**
-- **Storage Module (CDN)**
+- **Storage (CDN)**
 - **Dashboards**
 - **WebHooks**
-- **API-first approach**
+
+### Secondary Features
+- **GraphQL Support**
+- **ACL Rules**
 - **Prebuilt Open-Source Assets & Plugins**
 - **Monitoring Tools**
 - **Customizable back-office UI**
+- **API-first approach**
 
 Spica provides enterprise-grade backend features and customizable back-office UI for non-technical people. 
 
@@ -89,7 +93,6 @@ Join us on [Slack][slack] or [Discord][discord], feel free to request to join ou
 | [spicaengine/mongoreplicationcontroller](https://hub.docker.com/r/spicaengine/mongoreplicationcontroller) | ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/spicaengine/mongoreplicationcontroller?sort=semver&label=version&color=blue) ![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/spicaengine/initcontainer?sort=semver&label=size&color=blue) ![Docker Pulls](https://img.shields.io/docker/pulls/spicaengine/initcontainer?label=downloads&color=blue) |            Kubernetes controller for MongoDB replication             |
 |                          [@spica/cli](https://www.npmjs.com/package/@spica/cli)                           |                                                                                                                               ![npm (scoped)](https://img.shields.io/npm/v/@spica/cli?label=version&color=blue) ![npm](https://img.shields.io/npm/dm/@spica/cli?color=blue)                                                                                                                               |                     CLI for controlling the API.                     |
 |              [@spica-devkit/database](https://www.npmjs.com/package/@spica-devkit/database)               |                                                                                                                   ![npm (scoped)](https://img.shields.io/npm/v/@spica-devkit/database?label=version&color=blue) ![npm](https://img.shields.io/npm/dm/@spica-devkit/database?color=blue)                                                                                                                   | Development package for interacting with the APIs database directly. |
-|             [@spica-devkit/dashboard](https://www.npmjs.com/package/@spica-devkit/dashboard)              |                                                                                                                  ![npm (scoped)](https://img.shields.io/npm/v/@spica-devkit/dashboard?label=version&color=blue) ![npm](https://img.shields.io/npm/dm/@spica-devkit/dashboard?color=blue)                                                                                                                  |     Development package for interacting with the Dashboard APIs.     |
 |                [@spica-devkit/bucket](https://www.npmjs.com/package/@spica-devkit/bucket)                 |                                                                                                                     ![npm (scoped)](https://img.shields.io/npm/v/@spica-devkit/bucket?label=version&color=blue) ![npm](https://img.shields.io/npm/dm/@spica-devkit/bucket?color=blue)                                                                                                                     |      Development package for interacting with the Bucket APIs.       |
 
 ## Contributing
