@@ -6,24 +6,22 @@
 
 Spica is a full-fledged, free and open-source backend development platform. It aims to reduce all repetitive backend tasks and provide to fastest backend development process. Spica fulfills the needs of development among other things such as:
 
-
-### Primary Features
-- **Data Modeling**
-- **Realtime Database** 
-- **Auto-Generated REST API**
-- **Cloud Functions**
-- **Identity and Access Management**
-- **Storage (CDN)**
-- **Dashboards**
-- **WebHooks**
+- Data Modeling
+- Realtime Database
+- Auto-Generated REST API
+- Cloud Functions
+- Identity and Access Management
+- Storage (CDN)
+- Dashboards
+- WebHooks
 
 ### Secondary Features
-- **GraphQL Support**
-- **ACL Rules**
-- **Prebuilt Open-Source Assets & Plugins**
-- **Monitoring Tools**
-- **Customizable back-office UI**
-- **API-first approach**
+- GraphQL Support
+- ACL Rules
+- Prebuilt Open-Source Assets & Plugins
+- Monitoring Tools
+- Customizable back-office UI
+- API-first approach
 
 Spica provides enterprise-grade backend features and customizable back-office UI for non-technical people. 
 
