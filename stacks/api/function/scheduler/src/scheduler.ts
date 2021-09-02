@@ -70,22 +70,36 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
+    const workerUnsubscription = (targetId: string) => {
+      Array.from(this.workers.entries())
+        .filter(([id, worker]) => worker.target && worker.target.id == targetId)
+        .forEach(([id]) => this.workers.delete(id));
+    };
+
     this.enqueuers.add(
       new HttpEnqueuer(
         this.queue,
         this.httpQueue,
         this.http.httpAdapter.getInstance(),
-        this.options.corsOptions
+        this.options.corsOptions,
+        workerUnsubscription
       )
     );
 
     this.enqueuers.add(
-      new FirehoseEnqueuer(this.queue, this.firehoseQueue, this.http.httpAdapter.getHttpServer())
+      new FirehoseEnqueuer(
+        this.queue,
+        this.firehoseQueue,
+        this.http.httpAdapter.getHttpServer(),
+        workerUnsubscription
+      )
     );
 
-    this.enqueuers.add(new DatabaseEnqueuer(this.queue, this.databaseQueue, this.database));
+    this.enqueuers.add(
+      new DatabaseEnqueuer(this.queue, this.databaseQueue, this.database, workerUnsubscription)
+    );
 
-    this.enqueuers.add(new ScheduleEnqueuer(this.queue));
+    this.enqueuers.add(new ScheduleEnqueuer(this.queue, workerUnsubscription));
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 

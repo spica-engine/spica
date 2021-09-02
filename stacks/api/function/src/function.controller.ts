@@ -248,6 +248,10 @@ export class FunctionController {
       throw new NotFoundException("Cannot find function.");
     }
     await this.engine.update(fn, index);
+
+    const changes = createTargetChanges(fn, ChangeKind.Updated);
+    this.engine.categorizeChanges(changes);
+
     return this.engine
       .compile(fn)
       .catch(diagnostics => Promise.reject(new HttpException(diagnostics, 422)));

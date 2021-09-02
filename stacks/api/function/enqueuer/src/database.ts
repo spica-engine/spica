@@ -21,7 +21,8 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   constructor(
     private queue: EventQueue,
     private databaseQueue: DatabaseQueue,
-    private db: DatabaseService
+    private db: DatabaseService,
+    private workerUnsubscription: (targetId: string) => void
   ) {
     super();
   }
@@ -65,6 +66,8 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   }
 
   unsubscribe(target: event.Target): void {
+    this.workerUnsubscription(target.id);
+
     for (const stream of this.streams) {
       if (
         (!target.handler && stream["target"].cwd == target.cwd) ||

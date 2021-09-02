@@ -5,7 +5,7 @@ import {ObjectId} from "./objectid";
 
 // check if there is no connection(X)
 
-// how to stop running function
+// how to stop running function(X)
 
 // hq firehose trigger
 
