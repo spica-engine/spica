@@ -16,7 +16,7 @@ Spica is a full-fledged, free and open-source backend development platform. It a
 | Identity and Access Management | Release | :white_large_square: |:white_check_mark: |
 | Storage (CDN) | Release | :white_check_mark: | :white_check_mark: |
 | Dashboards | Release | :white_check_mark: | :white_check_mark: |
-| **Feautres** | | |  |
+| **Features** | | |  |
 | Auto-Generated REST API | Release | :white_check_mark: | :white_check_mark: |
 | WebHooks | Release | :white_check_mark: | :white_check_mark: |
 | Custom OAuth & SAML | Beta | :white_large_square: |:white_check_mark: |
