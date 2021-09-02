@@ -87,10 +87,6 @@ export class AddComponent implements OnInit, OnDestroy {
 
   triggersEditMode = [];
 
-  batchingDeadline: number = 0;
-
-  batching: boolean = false;
-
   sections = {
     triggers: true,
     dependencies: false,
@@ -113,14 +109,9 @@ export class AddComponent implements OnInit, OnDestroy {
     this.information = this.functionService.information().pipe(
       share(),
       tap(information => {
-        this.function.timeout = this.function.timeout || information.timeout * 0.7;
+        this.function.timeout = this.function.timeout || information.timeout * 0.1;
       })
     );
-  }
-
-  resetBatchOptions() {
-    this.batching = false;
-    this.batchingDeadline = 0;
   }
 
   ngOnInit() {
@@ -169,7 +160,6 @@ export class AddComponent implements OnInit, OnDestroy {
         tap(id => this.selectedFunctionId.next(id)),
         switchMap(id => this.functionService.getFunction(id).pipe(take(1))),
         tap(fn => {
-          this.resetBatchOptions();
           this.dependencyInstallPending = false;
           this.serverError = undefined;
           this.isIndexPending = true;
@@ -177,10 +167,6 @@ export class AddComponent implements OnInit, OnDestroy {
           this.function = normalizeFunction(fn);
           for (const [index, trigger] of this.function.triggers.entries()) {
             this.triggersEditMode[index] = false;
-            if (trigger.batch) {
-              this.batching = true;
-              this.batchingDeadline = Math.max(this.batchingDeadline, trigger.batch.deadline);
-            }
           }
           this.getDependencies();
         }),
@@ -269,16 +255,6 @@ export class AddComponent implements OnInit, OnDestroy {
     if (this.isIndexPending) return;
 
     this.serverError = undefined;
-
-    for (const trigger of this.function.triggers) {
-      if (this.batching) {
-        trigger.batch = {
-          deadline: this.batchingDeadline
-        };
-      } else {
-        delete trigger.batch;
-      }
-    }
 
     const fn = denormalizeFunction(this.function);
 

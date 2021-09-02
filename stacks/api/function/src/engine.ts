@@ -248,9 +248,6 @@ export class FunctionEngine implements OnModuleDestroy {
           timeout: change.target.context.timeout
         })
       });
-      if (change.target.context.batch) {
-        target.context.batch = new event.SchedulingContext.Batch(change.target.context.batch);
-      }
       enqueuer.subscribe(target, change.options);
     } else {
       console.warn(`Couldn't find enqueuer ${change.type}.`);

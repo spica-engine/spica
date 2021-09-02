@@ -20,9 +20,10 @@ import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
 import {Node} from "@spica-server/function/runtime/node";
 import * as uniqid from "uniqid";
-import {Batch, createBatch, updateBatch} from "./batch";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
+
+type ScheduleWorker = Worker & {target: event.Target; schedule: (event: event.Event) => void};
 
 @Injectable()
 export class Scheduler implements OnModuleInit, OnModuleDestroy {
@@ -102,9 +103,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    for (const [id, worker] of this.pool.entries()) {
+    for (const [id, worker] of this.workers.entries()) {
       await worker.kill();
-      this.pool.delete(id);
+      this.workers.delete(id);
     }
     for (const language of this.languages.values()) {
       await language.kill();
@@ -112,125 +113,68 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     return this.queue.kill();
   }
 
-  private readonly pool = new Map<string, Worker>();
-
-  workers = new Map<string, (event: event.Event) => void>();
+  workers = new Map<string, ScheduleWorker>();
 
   eventQueue = new Map<string, event.Event>();
-
-  batching = new Map<string, Batch>();
 
   timeouts = new Map<string, NodeJS.Timeout>();
 
   getStatus() {
     return {
-      limit: this.options.poolSize,
-      current: this.workers.size,
+      limit: this.workers.size,
+      current: Array.from(this.workers.values()).filter(w => w.schedule).length,
       unit: "count"
     };
   }
 
-  getBatchForTarget(target: event.Target) {
-    for (const batch of this.batching.values()) {
-      if (
-        batch.target == target.id
-        // &&
-        // batch.remaining_enqueues[target.handler] != 0 &&
-        // Date.now() < batch.deadline
-      ) {
-        return batch;
+  takeAWorker(target: event.Target): {id: string; worker: ScheduleWorker} {
+    let nextWorker: any;
+
+    for (const [id, worker] of this.workers.entries()) {
+      if (!worker.target && !nextWorker) {
+        nextWorker = {id, worker};
+      }
+
+      if (worker.target && worker.target.id == target.id) {
+        return {id, worker};
       }
     }
-
-    return undefined;
-  }
-
-  releaseFinishedBatches() {
-    for (const [workerId, batch] of this.batching.entries()) {
-      if (
-        Date.now() > batch.deadline ||
-        Object.values(batch.remaining_enqueues).every(n => n == 0)
-      ) {
-        if (batch.schedule) {
-          batch.schedule(undefined);
-          console.log("removing dead batch " + workerId);
-        }
-      }
-    }
-  }
-
-  takeAWorker() {
-    const workerId: string = this.workers.keys().next().value;
-    if (!workerId) {
-      return undefined;
-    }
-    const schedule = this.workers.get(workerId);
-    this.workers.delete(workerId);
-    return {schedule, workerId};
+    return nextWorker || {id: undefined, worker: undefined};
   }
 
   process() {
     for (const event of this.eventQueue.values()) {
-      const {target} = event;
-
-      let schedule: (event: event.Event) => void;
-      let workerId: string;
+      const {id: workerId, worker} = this.takeAWorker(event.target);
 
       const [stdout, stderr] = this.output.create({
         eventId: event.id,
         functionId: event.target.id
       });
-
-      if (target.context.batch) {
-        let batch = this.getBatchForTarget(target);
-        if (!batch) {
-          const worker = this.takeAWorker();
-
-          if (!worker) {
-            stderr.write(
-              `There is no worker left for ${event.target.handler}, it has been added to the queue.`
-            );
-            break;
-          }
-
-          console.debug(`creating a new batch for ${target.id}`);
-
-          batch = createBatch(event.target, worker.workerId, worker.schedule);
-          this.batching.set(batch.workerId, batch);
-        } else if (!batch.schedule) {
-          continue;
-        }
-
-        workerId = batch.workerId;
-        schedule = batch.schedule;
-
-        updateBatch(batch, target);
-
-        batch.schedule = undefined;
-      } else {
-        const worker = this.takeAWorker();
-
-        if (!worker) {
-          stderr.write(
-            `There is no worker left for (${event.target.handler}), it has been added to the queue and will be executed when a worker available.`
-          );
-          break;
-        }
-
-        schedule = worker.schedule;
-        workerId = worker.workerId;
+      if (!worker) {
+        stderr.write(
+          `There is no worker left for ${event.target.handler}, it has been added to the queue.`
+        );
+        break;
       }
 
-      const worker = this.pool.get(workerId);
+      // if worker is busy, move to the next events
+      if (!worker.schedule) {
+        continue;
+      }
+
+      const schedule = worker.schedule;
+      worker.schedule = undefined;
+      worker.target = event.target;
+
       worker.attach(stdout, stderr);
 
       const timeoutInMs = Math.min(this.options.timeout, event.target.context.timeout) * 1000;
-
       const timeoutFn = () => {
         if (stderr.writable) {
           stderr.write(
-            `Function (${event.target.handler}) did not finish within ${timeoutInMs /
-              1000} seconds. Aborting.`
+            `${timeoutInMs / 1000} seconds timeout value has been reached for function '${
+              event.target.handler
+            }'. The worker is being shut down.`
           );
         }
         worker.kill();
@@ -265,22 +209,18 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   gotWorker(id: string, schedule: (event: event.Event) => void) {
-    if (this.batching.has(id)) {
-      console.debug(`worker ${id} is batching`);
-      const batch = this.batching.get(id);
-      batch.schedule = schedule;
-      this.releaseFinishedBatches();
-    } else {
-      this.workers.set(id, schedule);
-      console.debug(`got a new worker ${id}`);
-    }
+    const relatedWorker = this.workers.get(id);
+    relatedWorker.schedule = schedule;
+
+    console.debug(
+      relatedWorker.target ? `worker ${id} is waiting for new event` : `got a new worker ${id}`
+    );
+
     this.process();
   }
 
   lostWorker(id: string) {
-    this.pool.delete(id);
     this.workers.delete(id);
-    this.batching.delete(id);
 
     clearTimeout(this.timeouts.get(id));
     this.timeouts.delete(id);
@@ -293,9 +233,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   private spawn() {
-    if (this.pool.size >= this.options.poolMaxSize) {
-      return;
-    }
     const id: string = uniqid();
     const worker = this.runtimes.get("node").spawn({
       id,
@@ -311,7 +248,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     });
 
     worker.once("exit", () => this.lostWorker(id));
-    this.pool.set(id, worker);
+
+    (worker as ScheduleWorker).schedule = undefined;
+    (worker as ScheduleWorker).target = undefined;
+
+    this.workers.set(id, worker as ScheduleWorker);
   }
 
   /**

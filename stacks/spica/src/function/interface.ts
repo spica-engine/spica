@@ -39,9 +39,6 @@ export interface Trigger extends TriggerDescription {
 export interface TriggerDescription<T = any> {
   type: string;
   active?: boolean;
-  batch?: {
-    deadline: number;
-  };
   options: T;
 }
 

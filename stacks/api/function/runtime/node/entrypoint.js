@@ -44,9 +44,6 @@ if (!process.env.WORKER_ID) {
     }))
   ) {
     await _process(ev, queue);
-    if (!ev.target.context.batch) {
-      break;
-    }
   }
 })();
 

@@ -51,20 +51,6 @@ export function generate({body}: {body: Function}) {
                     type: "boolean",
                     default: true
                   },
-                  batch: {
-                    type: "object",
-                    required: ["limit", "deadline"],
-                    properties: {
-                      limit: {
-                        type: "number",
-                        default: Number.MAX_SAFE_INTEGER
-                      },
-                      deadline: {
-                        type: "number",
-                        default: Number.MAX_SAFE_INTEGER
-                      }
-                    }
-                  },
                   options: {
                     $ref: `http://spica.internal/function/enqueuer/${body.triggers[key].type}`
                   }

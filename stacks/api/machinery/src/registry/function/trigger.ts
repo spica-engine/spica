@@ -16,21 +16,6 @@ const TriggerV1: JSONSchema7 = {
       type: "string",
       enum: ["http", "bucket", "schedule", "firehose", "system", "database"]
     },
-    batch: {
-      type: "object",
-      additionalProperties: false,
-      required: ["deadline", "limit"],
-      properties: {
-        deadline: {
-          type: "number",
-          minimum: 1
-        },
-        limit: {
-          type: "number",
-          default: Number.MAX_SAFE_INTEGER
-        }
-      }
-    },
     scheduleOptions: {
       type: "object",
       required: ["cronSpec", "timezone"],

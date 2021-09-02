@@ -17,10 +17,6 @@ async function v1_trigger_to_internal(object: any) {
     options: {}
   };
 
-  if (object.spec.batch) {
-    triggerRaw.batch = object.spec.batch;
-  }
-
   switch (object.spec.type) {
     case "http":
       triggerRaw.options = object.spec.httpOptions;
