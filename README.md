@@ -6,22 +6,24 @@
 
 Spica is a full-fledged, free and open-source backend development platform. It aims to reduce all repetitive backend tasks and provide to fastest backend development process. Spica fulfills the needs of development among other things such as:
 
-- Data Modeling
-- Realtime Database
-- Auto-Generated REST API
-- Cloud Functions
-- Identity and Access Management
-- Storage (CDN)
-- Dashboards
-- WebHooks
+| Feature | Version | Security Checked | Unit Tests | Integration Test |
+:-------- | :-------- | :---------------- | :------------ | :------------------|
+| Data Modeling | Release | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| Realtime Database | Release | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| Auto-Generated REST API | Release | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| Cloud Functions | Release | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| Identity and Access Management | Release | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| Storage (CDN) | Release | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| Dashboards | Release | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| WebHooks | Release | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 
 ### Secondary Features
-- GraphQL Support
-- ACL Rules
-- Prebuilt Open-Source Assets & Plugins
-- Monitoring Tools
-- Customizable back-office UI
-- API-first approach
+- GraphQL Support : Beta version
+- ACL Rules : Ready for release
+- Prebuilt Open-Source Assets & Plugins : Beta version
+- Monitoring Tools : Beta version
+- Customizable back-office UI : Ready for release
+- API-first approach : Ready for release
 
 Spica provides enterprise-grade backend features and customizable back-office UI for non-technical people. 
 
