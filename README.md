@@ -9,7 +9,7 @@
 Spica is a full-fledged, free and open-source backend development platform. It aims to reduce all repetitive backend tasks and provide to fastest backend development process. Spica fulfills the needs of development among other things such as:
 
 | Modules | Version | Tests | Used In Enterprise Project |
-:-------------------- | :-------------------- | :-------------------- | :-------------------- |
+:-------------------- | :-------------------- | :--------------------: | :--------------------: |
 | Data Modeling | Release | :white_check_mark: | :white_check_mark: |
 | Realtime Database | Release | :white_check_mark: | :white_check_mark: |
 | Cloud Functions | Release | :white_check_mark: |:white_check_mark: |
