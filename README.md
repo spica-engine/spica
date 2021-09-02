@@ -2,6 +2,8 @@
   <img height="200px" src="stacks/spica/assets/logo-1.png">
 </p>
 
+---------------------
+
 # Spica - development engine [![Build status](https://badge.buildkite.com/231efc3a5086b0db36206b21f04ee665939ca9186505894312.svg?style=square)](https://buildkite.com/spica/default)
 
 Spica is a full-fledged, free and open-source backend development platform. It aims to reduce all repetitive backend tasks and provide to fastest backend development process. Spica fulfills the needs of development among other things such as:
@@ -26,14 +28,14 @@ Spica is a full-fledged, free and open-source backend development platform. It a
 
 
 ## Secondary Features
-- ✅ Inline image editing
-- ✅ Scheduled data publishing
-- ✅ Data history
-- ✅ Data localization
-- ✅ Event driven function triggers
-- ✅ Prebuilt Open-Source Assets & Plugins
-- ✅ Customizable back-office UI
-- ✅ API-first approach
+- Inline image editing
+- Scheduled data publishing
+- Data history
+- Data localization
+- Event driven function triggers
+- Prebuilt Open-Source Assets & Plugins
+- Customizable back-office UI
+- API-first approach
 
 Spica provides enterprise-grade backend features and customizable back-office UI for non-technical people. 
 
