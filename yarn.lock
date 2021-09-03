@@ -7137,10 +7137,20 @@ hex-color-regex@^1.1.0:
   resolved "https://registry.yarnpkg.com/hex-color-regex/-/hex-color-regex-1.1.0.tgz#4c06fccb4602fe2602b3c93df82d7e7dbf1a8a8e"
   integrity sha512-l9sfDFsuqtOqKDsQdqrMRk0U85RZc0RtOR9yPI7mRVOa4FsR/BVnZ0shmQRM96Ji99kYZP/7hn1cedc1+ApsTQ==
 
+highlight.js@^10.0.0:
+  version "10.7.3"
+  resolved "https://registry.yarnpkg.com/highlight.js/-/highlight.js-10.7.3.tgz#697272e3991356e40c3cac566a74eef681756531"
+  integrity sha512-tzcUFauisWKNHaRkN4Wjl/ZA07gENAjFl3J/c480dprkGTg5EQstgaNFqBfUqCq54kZRIEcreTsAgF/m2quD7A==
+
 highlight.js@~10.3.0:
   version "10.3.2"
   resolved "https://registry.yarnpkg.com/highlight.js/-/highlight.js-10.3.2.tgz#135fd3619a00c3cbb8b4cd6dbc78d56bfcbc46f1"
   integrity sha512-3jRT7OUYsVsKvukNKZCtnvRcFyCJqSEIuIMsEybAXRiFSwpt65qjPd/Pr+UOdYt7WJlt+lj3+ypUsHiySBp/Jw==
+
+highlightjs-line-numbers.js@^2.8.0:
+  version "2.8.0"
+  resolved "https://registry.yarnpkg.com/highlightjs-line-numbers.js/-/highlightjs-line-numbers.js-2.8.0.tgz#479ea8cff0c31fadc1578a66fa03e38b801f9ca6"
+  integrity sha512-TEf1gw0c8mb8nan0QwliqS7obT4cpUd9hzsGzsZLweteNnWea/VIqy5/aQqsa5wnz9lnvmtAkS1ZtDTjB/goYQ==
 
 hmac-drbg@^1.0.0:
   version "1.0.1"
@@ -9658,6 +9668,15 @@ ng2-charts@^2.4.2:
   dependencies:
     "@types/chart.js" "^2.9.24"
     lodash-es "^4.17.15"
+    tslib "^2.0.0"
+
+ngx-highlightjs@^4.1.4:
+  version "4.1.4"
+  resolved "https://registry.yarnpkg.com/ngx-highlightjs/-/ngx-highlightjs-4.1.4.tgz#630a68c080bd5a3651ac64c2b284d6e7174f6ae2"
+  integrity sha512-yh5p8J+mUNHMm5kQM1CAyRdLT2KiW631l/Rky+rkxwT6NZHG80yImWXZt7RG3heTQzd1wDOWMQ8JznF3KeUv5g==
+  dependencies:
+    highlight.js "^10.0.0"
+    highlightjs-line-numbers.js "^2.8.0"
     tslib "^2.0.0"
 
 nice-try@^1.0.4:
