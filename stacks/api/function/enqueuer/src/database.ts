@@ -22,7 +22,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     private queue: EventQueue,
     private databaseQueue: DatabaseQueue,
     private db: DatabaseService,
-    private workerUnsubscription: (targetId: string) => void
+    private schedulerUnsubscription: (targetId: string) => void
   ) {
     super();
   }
@@ -66,7 +66,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   }
 
   unsubscribe(target: event.Target): void {
-    this.workerUnsubscription(target.id);
+    this.schedulerUnsubscription(target.id);
 
     for (const stream of this.streams) {
       if (

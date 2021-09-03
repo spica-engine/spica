@@ -157,6 +157,7 @@ const args = yargs
   .demandOption("passport-secret")
   /* Function Options */
   .options({
+    // remove these two below
     "function-pool-size": {
       number: true,
       description: "Number of worker processes to fork at start up.",

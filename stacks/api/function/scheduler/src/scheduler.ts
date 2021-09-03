@@ -70,7 +70,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
-    const workerUnsubscription = (targetId: string) => {
+    const schedulerUnsubscription = (targetId: string) => {
       Array.from(this.workers.entries())
         .filter(([id, worker]) => worker.target && worker.target.id == targetId)
         .forEach(([id]) => this.workers.delete(id));
@@ -82,7 +82,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.httpQueue,
         this.http.httpAdapter.getInstance(),
         this.options.corsOptions,
-        workerUnsubscription
+        schedulerUnsubscription
       )
     );
 
@@ -91,15 +91,15 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.queue,
         this.firehoseQueue,
         this.http.httpAdapter.getHttpServer(),
-        workerUnsubscription
+        schedulerUnsubscription
       )
     );
 
     this.enqueuers.add(
-      new DatabaseEnqueuer(this.queue, this.databaseQueue, this.database, workerUnsubscription)
+      new DatabaseEnqueuer(this.queue, this.databaseQueue, this.database, schedulerUnsubscription)
     );
 
-    this.enqueuers.add(new ScheduleEnqueuer(this.queue, workerUnsubscription));
+    this.enqueuers.add(new ScheduleEnqueuer(this.queue, schedulerUnsubscription));
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
@@ -111,9 +111,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     await this.queue.listen();
 
-    for (let i = 0; i < this.options.poolSize; i++) {
-      this.spawn();
-    }
+    this.scaleWorkers();
+
+    // for (let i = 0; i < this.options.poolSize; i++) {
+    //   this.spawn();
+    // }
   }
 
   async onModuleDestroy() {
@@ -142,18 +144,22 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   takeAWorker(target: event.Target): {id: string; worker: ScheduleWorker} {
-    let nextWorker: any;
+    const arr = Array.from(this.workers.entries()).map(([id, worker]) => {
+      return {id, worker};
+    });
 
-    for (const [id, worker] of this.workers.entries()) {
-      if (!worker.target && !nextWorker) {
-        nextWorker = {id, worker};
-      }
+    const fresh = arr.find(({worker}) => !worker.target) || {id: undefined, worker: undefined};
+    const relateds = arr.filter(({worker}) => worker.target && worker.target.id == target.id);
 
-      if (worker.target && worker.target.id == target.id) {
-        return {id, worker};
-      }
+    switch (relateds.length) {
+      case 0:
+        return fresh;
+      case 1:
+        // maximum concurency level is two for the same target events
+        return relateds[0].worker.schedule ? relateds[0] : fresh;
+      case 2:
+        return relateds.find(({worker}) => worker.schedule) || relateds[0];
     }
-    return nextWorker || {id: undefined, worker: undefined};
   }
 
   process() {
@@ -168,7 +174,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         stderr.write(
           `There is no worker left for ${event.target.handler}, it has been added to the queue.`
         );
-        break;
+        continue;
       }
 
       // if worker is busy, move to the next events
@@ -204,6 +210,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       this.eventQueue.delete(event.id);
 
       console.debug(`assigning ${event.id} to ${workerId}`);
+
+      this.scaleWorkers();
     }
   }
 
@@ -224,6 +232,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   gotWorker(id: string, schedule: (event: event.Event) => void) {
     const relatedWorker = this.workers.get(id);
+    // related worker is undefined for some cases
     relatedWorker.schedule = schedule;
 
     console.debug(
@@ -233,40 +242,70 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.process();
   }
 
-  lostWorker(id: string) {
+  lostWorker(id: string, autoScale = true) {
     this.workers.delete(id);
 
     clearTimeout(this.timeouts.get(id));
     this.timeouts.delete(id);
 
-    if (process.env.TEST_TARGET) {
-      return console.log(`lost a worker ${id} and skipping auto spawn under testing`);
-    }
     console.debug(`lost a worker ${id}`);
-    this.spawn();
+
+    if (process.env.TEST_TARGET) {
+      return console.log(`skipping auto-scale under testing`);
+    }
+
+    if (autoScale) {
+      this.scaleWorkers();
+    }
   }
 
-  private spawn() {
-    const id: string = uniqid();
-    const worker = this.runtimes.get("node").spawn({
-      id,
-      env: {
-        __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
-        __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
-        __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
-        __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
-        __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
-          ? "true"
-          : ""
+  private scaleWorkers() {
+    const staleWorkerCount = Array.from(this.workers.values()).filter(w => w.target && w.target.id)
+      .length;
+    const desiredWorkerCount = staleWorkerCount + 1;
+
+    if (this.workers.size > desiredWorkerCount) {
+      let gap = this.workers.size - desiredWorkerCount;
+
+      for (const [id, worker] of this.workers.entries()) {
+        if (!worker.target) {
+          this.lostWorker(id, false);
+
+          gap--;
+          if (gap == 0) {
+            break;
+          }
+        }
       }
-    });
+    }
 
-    worker.once("exit", () => this.lostWorker(id));
+    for (let i = this.workers.size; i < desiredWorkerCount; i++) {
+      const id: string = uniqid();
+      const worker = this.runtimes.get("node").spawn({
+        id,
+        env: {
+          __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
+          __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
+          __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
+          __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
+          __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
+            ? "true"
+            : ""
+        }
+      });
 
-    (worker as ScheduleWorker).schedule = undefined;
-    (worker as ScheduleWorker).target = undefined;
+      worker.once("exit", () => this.lostWorker(id));
 
-    this.workers.set(id, worker as ScheduleWorker);
+      (worker as ScheduleWorker).schedule = undefined;
+      (worker as ScheduleWorker).target = undefined;
+
+      this.workers.set(id, worker as ScheduleWorker);
+    }
+
+    console.log("---------------------");
+    console.log("HOT   : ", Array.from(this.workers.values()).filter(w => w.target).length);
+    console.log("COLD  : ", Array.from(this.workers.values()).filter(w => !w.target).length);
+    console.log("---------------------");
   }
 
   /**
