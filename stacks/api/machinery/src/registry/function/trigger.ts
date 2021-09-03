@@ -27,7 +27,7 @@ const TriggerV1: JSONSchema7 = {
         },
         limit: {
           type: "number",
-          minimum: 2
+          default: Number.MAX_SAFE_INTEGER
         }
       }
     },
