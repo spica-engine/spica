@@ -153,6 +153,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         if (batch.schedule) {
           batch.schedule(undefined);
           console.log("removing dead batch " + workerId);
+          this.batching.delete(workerId);
         }
       }
     }
