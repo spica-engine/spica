@@ -112,10 +112,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     await this.queue.listen();
 
     this.scaleWorkers();
-
-    // for (let i = 0; i < this.options.poolSize; i++) {
-    //   this.spawn();
-    // }
   }
 
   async onModuleDestroy() {
@@ -144,21 +140,21 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   takeAWorker(target: event.Target): {id: string; worker: ScheduleWorker} {
-    const arr = Array.from(this.workers.entries()).map(([id, worker]) => {
+    const workers = Array.from(this.workers.entries()).map(([id, worker]) => {
       return {id, worker};
     });
 
-    const fresh = arr.find(({worker}) => !worker.target) || {id: undefined, worker: undefined};
-    const relateds = arr.filter(({worker}) => worker.target && worker.target.id == target.id);
+    const fresh = workers.find(({worker}) => !worker.target) || {id: undefined, worker: undefined};
+    const activateds = workers.filter(({worker}) => worker.target && worker.target.id == target.id);
 
-    switch (relateds.length) {
+    switch (activateds.length) {
       case 0:
         return fresh;
       case 1:
         // maximum concurency level is two for the same target events
-        return relateds[0].worker.schedule ? relateds[0] : fresh;
+        return activateds[0].worker.schedule ? activateds[0] : fresh;
       case 2:
-        return relateds.find(({worker}) => worker.schedule) || relateds[0];
+        return activateds.find(({worker}) => worker.schedule) || activateds[0];
     }
   }
 
@@ -242,7 +238,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.process();
   }
 
-  lostWorker(id: string, autoScale = true) {
+  lostWorker(id: string) {
     this.workers.delete(id);
 
     clearTimeout(this.timeouts.get(id));
@@ -254,32 +250,15 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       return console.log(`skipping auto-scale under testing`);
     }
 
-    if (autoScale) {
-      this.scaleWorkers();
-    }
+    this.scaleWorkers();
   }
 
   private scaleWorkers() {
-    const staleWorkerCount = Array.from(this.workers.values()).filter(w => w.target && w.target.id)
+    const activatedWorkers = Array.from(this.workers.values()).filter(w => w.target && w.target.id)
       .length;
-    const desiredWorkerCount = staleWorkerCount + 1;
+    const desiredWorkers = activatedWorkers + 1;
 
-    if (this.workers.size > desiredWorkerCount) {
-      let gap = this.workers.size - desiredWorkerCount;
-
-      for (const [id, worker] of this.workers.entries()) {
-        if (!worker.target) {
-          this.lostWorker(id, false);
-
-          gap--;
-          if (gap == 0) {
-            break;
-          }
-        }
-      }
-    }
-
-    for (let i = this.workers.size; i < desiredWorkerCount; i++) {
+    for (let i = this.workers.size; i < desiredWorkers; i++) {
       const id: string = uniqid();
       const worker = this.runtimes.get("node").spawn({
         id,
@@ -303,8 +282,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     }
 
     console.log("---------------------");
-    console.log("HOT   : ", Array.from(this.workers.values()).filter(w => w.target).length);
-    console.log("COLD  : ", Array.from(this.workers.values()).filter(w => !w.target).length);
+    console.log("ACTIVATED : ", Array.from(this.workers.values()).filter(w => w.target).length);
+    console.log("FRESH     : ", Array.from(this.workers.values()).filter(w => !w.target).length);
     console.log("---------------------");
   }
 

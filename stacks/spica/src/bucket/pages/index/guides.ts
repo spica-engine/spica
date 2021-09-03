@@ -23,8 +23,8 @@ Bucket.initialize({publicUrl: '${rootURL}', apikey: '<YOUR APIKEY>'}) `
         "To get all data using limits, simply you can add 'limit' [number] parameter as query params. You can try the live demo below.",
       example: {
         api: `/${bucketUrl}limit=1`,
-        curl: `curl --request GET '${rootURL}/api${bucketUrl}limit=1'
---header 'Authorization: <YOUR AUTHORIZATION TOKEN>' 
+        curl: `curl --request GET '${rootURL}${bucketUrl}limit=1' \\
+--header 'Authorization: <YOUR AUTHORIZATION TOKEN>' \\
 --header 'Content-Type: application/json'`,
         js: `import * as Bucket from '@spica-devkit/bucket'
 
@@ -43,8 +43,8 @@ console.log(result);`
         "To sort your dataset, you can add 'sort' [object] parameter as query params. You can try the live demo below. ",
       example: {
         api: `/${bucketUrl}limit=1&sort={"${firstProp}":1}`,
-        curl: `curl --request GET '${rootURL}/api${bucketUrl}limit=1&sort={"${firstProp}":1}'
---header 'Authorization: <YOUR AUTHORIZATION TOKEN>' 
+        curl: `curl --request GET '${rootURL}${bucketUrl}limit=1&sort={"${firstProp}":1}' \\
+--header 'Authorization: <YOUR AUTHORIZATION TOKEN>' \\
 --header 'Content-Type: application/json'`,
         js: `import * as Bucket from '@spica-devkit/bucket'
                 
@@ -64,8 +64,8 @@ console.log(result);`
         "To filter your data, you can use MongoDB match aggregations in 'filter' [object] query parameter. You can try the live demo below.",
       example: {
         api: `/${bucketUrl}limit=1&filter={"${firstProp}":{"$regex":"${firstPropValue}"}}`,
-        curl: `curl --request GET '${rootURL}/api${bucketUrl}limit=1&filter={"${firstProp}":{"$regex":"${firstPropValue}"}}'
---header 'Authorization: <YOUR AUTHORIZATION TOKEN>' 
+        curl: `curl --request GET '${rootURL}${bucketUrl}limit=1&filter={"${firstProp}":{"$regex":"${firstPropValue}"}}' \\
+--header 'Authorization: <YOUR AUTHORIZATION TOKEN>' \\
 --header 'Content-Type: application/json'`,
         js: `import * as Bucket from '@spica-devkit/bucket'
 
@@ -88,8 +88,8 @@ console.log(result);
         "To filter your data, you can use built-in 'Spica Rules' engine in 'filter' [string] query parameter. You can try the live demo below.",
       example: {
         api: `/${bucketUrl}limit=3&filter=${firstProp}=="${firstPropValue}"`,
-        curl: `curl --request GET '${rootURL}/api${bucketUrl}limit=3&filter=${firstProp}=="${firstPropValue}"'
---header 'Authorization: <YOUR AUTHORIZATION TOKEN>' 
+        curl: `curl --request GET '${rootURL}${bucketUrl}limit=3&filter=${firstProp}=="${firstPropValue}"' \\
+--header 'Authorization: <YOUR AUTHORIZATION TOKEN>' \\
 --header 'Content-Type: application/json'`,
         js: `import * as Bucket from '@spica-devkit/bucket'
 
@@ -109,8 +109,8 @@ console.log(result);`
         "You can apply double filter to your requests as well. You can try the live demo below.",
       example: {
         api: `/${bucketUrl}limit=1&filter={"${firstProp}":{"$regex":"${firstPropValue}"},"${secondProp}":{"$regex":"${secondPropValue}"}}`,
-        curl: `curl --request GET '${rootURL}/api${bucketUrl}limit=1&filter={"${firstProp}":{"$regex":"${firstPropValue}"},"${secondProp}":{"$regex":"${secondPropValue}"}}'
---header 'Authorization: <YOUR AUTHORIZATION TOKEN>' 
+        curl: `curl --request GET '${rootURL}${bucketUrl}limit=1&filter={"${firstProp}":{"$regex":"${firstPropValue}"},"${secondProp}":{"$regex":"${secondPropValue}"}}' \\
+--header 'Authorization: <YOUR AUTHORIZATION TOKEN>' \\
 --header 'Content-Type: application/json'`,
         js: `import * as Bucket from '@spica-devkit/bucket'
 
@@ -133,8 +133,8 @@ console.log(result);`
         "You can get all scheduled data with using 'shcedule' [boolean] query parameter. You can try the live demo below.",
       example: {
         api: `/${bucketUrl}limit=1&schedule=true`,
-        curl: `curl --request GET '${rootURL}/api${bucketUrl}limit=1&schedule=true'
---header 'Authorization: <YOUR AUTHORIZATION TOKEN>' 
+        curl: `curl --request GET '${rootURL}${bucketUrl}limit=1&schedule=true' \\
+--header 'Authorization: <YOUR AUTHORIZATION TOKEN>' \\
 --header 'Content-Type: application/json'`,
         js: `import * as Bucket from '@spica-devkit/bucket'
 
@@ -153,9 +153,9 @@ console.log(result);`
       description:
         "To get localized data, you can use 'Accept-Language' request header. As an example '{Accept-Language: \"en-EN\"}'",
       example: {
-        curl: `curl --request GET 'http://localhost:4200/api${bucketUrl}limit=1&schedule=true'
---header 'Authorization: <YOUR AUTHORIZATION TOKEN>' 
---header 'Content-Type: application/json'
+        curl: `curl --request GET '${rootURL}${bucketUrl}limit=1&schedule=true' \\
+--header 'Authorization: <YOUR AUTHORIZATION TOKEN>' \\
+--header 'Content-Type: application/json' \\
 --header 'Accept-Language: en-EN'`,
 
         js: `import * as Bucket from '@spica-devkit/bucket'
