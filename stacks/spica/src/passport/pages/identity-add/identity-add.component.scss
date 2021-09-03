@@ -12,15 +12,14 @@
         > * {
           width: 100%;
         }
-
-        div.policies {
-          flex: 1;
-          display: flex;
-          flex-flow: row wrap;
-          justify-content: space-between;
-          mat-list {
-            flex-grow: 1;
-          }
+      }
+      div.policies {
+        flex: 1;
+        display: flex;
+        flex-flow: row wrap;
+        justify-content: space-between;
+        mat-list {
+          flex-grow: 1;
         }
       }
     }
