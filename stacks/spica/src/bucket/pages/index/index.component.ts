@@ -1,5 +1,5 @@
 import {animate, style, transition, trigger} from "@angular/animations";
-import {Component, OnDestroy, OnInit, SecurityContext, ViewChild} from "@angular/core";
+import {Component, Inject, OnDestroy, OnInit, SecurityContext, ViewChild} from "@angular/core";
 import {MatPaginator, PageEvent} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute, Router} from "@angular/router";
@@ -21,7 +21,7 @@ import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {DomSanitizer} from "@angular/platform-browser";
 import {NgModel} from "@angular/forms";
-import {Scheme, SchemeObserver} from "@spica-client/core";
+import {BaseUrlCollection, BASE_URL, Scheme, SchemeObserver} from "@spica-client/core";
 import {guides} from "./guides";
 
 @Component({
@@ -93,8 +93,10 @@ export class IndexComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private sanitizer: DomSanitizer,
-    private scheme: SchemeObserver
+    private scheme: SchemeObserver,
+    @Inject(BASE_URL) private baseUrls: BaseUrlCollection[]
   ) {
+    this.rootUrl = this.baseUrls.find(urls => urls.api).api;
     this.scheme
       .observe(Scheme.Dark)
       .pipe(takeUntil(this.dispose))
@@ -105,7 +107,6 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.rootUrl = window.location.origin;
     this.$preferences = this.bs.getPreferences();
 
     this.schema$ = this.route.params.pipe(
