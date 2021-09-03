@@ -132,9 +132,14 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   timeouts = new Map<string, NodeJS.Timeout>();
 
   getStatus() {
+    const workers = Array.from(this.workers.values());
+
+    const activateds = workers.filter(w => w.target).length;
+    const freshes = workers.length - activateds;
+
     return {
-      limit: this.workers.size,
-      current: Array.from(this.workers.values()).filter(w => w.schedule).length,
+      activateds: activateds,
+      freshes: freshes,
       unit: "count"
     };
   }
@@ -151,7 +156,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       case 0:
         return fresh;
       case 1:
-        // maximum concurency level is two for the same target events
         return activateds[0].worker.schedule ? activateds[0] : fresh;
       case 2:
         return activateds.find(({worker}) => worker.schedule) || activateds[0];
@@ -228,7 +232,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   gotWorker(id: string, schedule: (event: event.Event) => void) {
     const relatedWorker = this.workers.get(id);
-    // related worker is undefined for some cases
+    // related worker is undefined for some cases??
     relatedWorker.schedule = schedule;
 
     console.debug(
@@ -254,8 +258,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   private scaleWorkers() {
-    const activatedWorkers = Array.from(this.workers.values()).filter(w => w.target && w.target.id)
-      .length;
+    const activatedWorkers = Array.from(this.workers.values()).filter(w => w.target).length;
     const desiredWorkers = activatedWorkers + 1;
 
     for (let i = this.workers.size; i < desiredWorkers; i++) {
