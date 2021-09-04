@@ -150,16 +150,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     });
 
     const fresh = workers.find(({worker}) => !worker.target) || {id: undefined, worker: undefined};
-    const activateds = workers.filter(({worker}) => worker.target && worker.target.id == target.id);
+    const activated = workers.find(({worker}) => worker.target && worker.target.id == target.id);
 
-    switch (activateds.length) {
-      case 0:
-        return fresh;
-      case 1:
-        return activateds[0].worker.schedule ? activateds[0] : fresh;
-      case 2:
-        return activateds.find(({worker}) => worker.schedule) || activateds[0];
-    }
+    return activated || fresh;
   }
 
   process() {
