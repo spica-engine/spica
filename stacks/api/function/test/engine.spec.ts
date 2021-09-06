@@ -184,8 +184,7 @@ describe("Engine", () => {
       handler: "test_handler",
       context: {
         env: [{key: "TEST", value: "true"}],
-        timeout: 60,
-        batch: undefined
+        timeout: 60
       }
     });
   });

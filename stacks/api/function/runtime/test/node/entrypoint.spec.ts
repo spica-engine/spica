@@ -79,7 +79,7 @@ describe("Entrypoint", () => {
       process();
     });
 
-    queue = new EventQueue(popSpy, enqueueSpy, () => {}, () => {});
+    queue = new EventQueue(popSpy, enqueueSpy, () => queueSize--, () => {});
     await queue.listen();
     runtime = new Node();
     language = new Javascript();
@@ -89,7 +89,7 @@ describe("Entrypoint", () => {
     queue["kill"]();
   });
 
-  it("should pop the latest event from queue", async () => {
+  fit("should pop the latest event from queue", async () => {
     await initializeFn(`export default function() {}`);
     queue.enqueue(
       new event.Event({

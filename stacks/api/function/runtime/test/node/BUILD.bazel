@@ -44,6 +44,7 @@ ts_library(
         "@npm//@types/jasmine",
         "@npm//@types/node",
         "@npm//qs",
+        "@npm//rxjs",
     ],
 )
 

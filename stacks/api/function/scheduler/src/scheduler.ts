@@ -149,10 +149,17 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       return {id, worker};
     });
 
-    const fresh = workers.find(({worker}) => !worker.target) || {id: undefined, worker: undefined};
-    const activated = workers.find(({worker}) => worker.target && worker.target.id == target.id);
+    const fresh = workers.find(({worker}) => !worker.target);
+    const activateds = workers.filter(({worker}) => worker.target && worker.target.id == target.id);
 
-    return activated || fresh;
+    switch (activateds.length) {
+      case 0:
+        return fresh;
+      case 1:
+        return activateds[0].worker.schedule ? activateds[0] : fresh;
+      case 2:
+        return activateds.find(({worker}) => worker.schedule) || activateds[0];
+    }
   }
 
   process() {
@@ -163,12 +170,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         eventId: event.id,
         functionId: event.target.id
       });
-      if (!worker) {
-        stderr.write(
-          `There is no worker left for ${event.target.handler}, it has been added to the queue.`
-        );
-        continue;
-      }
 
       // if worker is busy, move to the next events
       if (!worker.schedule) {

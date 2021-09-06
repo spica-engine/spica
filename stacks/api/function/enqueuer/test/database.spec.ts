@@ -23,6 +23,8 @@ describe("DatabaseEnqueuer", () => {
   let databaseEnqueuer: DatabaseEnqueuer;
   let database: DatabaseService;
 
+  let schedulerUnsubscriptionSpy: jasmine.Spy;
+
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.replicaSet()]
@@ -33,7 +35,14 @@ describe("DatabaseEnqueuer", () => {
 
     eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
     databaseQueue = jasmine.createSpyObj("databaseQueue", ["enqueue"]);
-    databaseEnqueuer = new DatabaseEnqueuer(eventQueue, databaseQueue, database);
+
+    schedulerUnsubscriptionSpy = jasmine.createSpy("unsubscription", () => {});
+    databaseEnqueuer = new DatabaseEnqueuer(
+      eventQueue,
+      databaseQueue,
+      database,
+      schedulerUnsubscriptionSpy
+    );
   });
 
   it("should subscribe", async () => {
@@ -77,6 +86,8 @@ describe("DatabaseEnqueuer", () => {
     ]);
 
     expect(target1Stream.isClosed()).toEqual(true);
+
+    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledOnceWith(target1.id);
   });
 
   it("should enqueue INSERT events", async () => {
