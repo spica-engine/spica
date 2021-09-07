@@ -44,7 +44,7 @@ export namespace event {
     toObject() {
       return {
         env: this.env.map((item: SchedulingContext.Env) => item.toObject()),
-        timeout: this.timeout,
+        timeout: this.timeout
       };
     }
     serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {

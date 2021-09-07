@@ -19,6 +19,7 @@ import {event} from "@spica-server/function/queue/proto";
 import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
 import {Node} from "@spica-server/function/runtime/node";
+import {FunctionService} from "@spica-server/function/services";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
@@ -39,12 +40,17 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   private output: StandartStream;
 
+  private fnCount = 0;
+
   constructor(
     private http: HttpAdapterHost,
     private database: DatabaseService,
+    private service: FunctionService,
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>
   ) {
+    this.service.watch(true).subscribe(count => (this.fnCount = count));
+
     this.output = new DatabaseOutput(database);
 
     this.languages.set("typescript", new Typescript());
@@ -149,17 +155,27 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       return {id, worker};
     });
 
-    const fresh = workers.find(({worker}) => !worker.target);
+    const fresh = workers.find(({worker}) => !worker.target) || {id: undefined, worker: undefined};
     const activateds = workers.filter(({worker}) => worker.target && worker.target.id == target.id);
 
-    switch (activateds.length) {
-      case 0:
-        return fresh;
-      case 1:
-        return activateds[0].worker.schedule ? activateds[0] : fresh;
-      case 2:
-        return activateds.find(({worker}) => worker.schedule) || activateds[0];
+    const maxConcurrency = Math.ceil(this.options.poolSize / this.fnCount);
+
+    if (activateds.length == 0) {
+      return fresh;
+    } else if (activateds.length > 0 && activateds.length < maxConcurrency) {
+      return activateds[0].worker.schedule ? activateds[0] : fresh;
+    } else if (activateds.length == maxConcurrency) {
+      return activateds.find(({worker}) => worker.schedule) || activateds[0];
     }
+
+    // switch (activateds.length) {
+    //   case 0:
+    //     return fresh;
+    //   case 1:
+    //     return activateds[0].worker.schedule ? activateds[0] : fresh;
+    //   case 2:
+    //     return activateds.find(({worker}) => worker.schedule) || activateds[0];
+    // }
   }
 
   process() {
@@ -172,7 +188,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       });
 
       // if worker is busy, move to the next events
-      if (!worker.schedule) {
+      if (!worker || !worker.schedule) {
+        stderr.write(
+          `No available worker left for '${event.id}', it will be executed when a worker is available.`
+        );
         continue;
       }
 

@@ -29,10 +29,13 @@ import {from, of, OperatorFunction} from "rxjs";
 import {catchError, finalize, last, map, take, tap} from "rxjs/operators";
 import {createFunctionActivity} from "./activity.resource";
 import {FunctionEngine} from "./engine";
-import {FunctionService} from "./function.service";
+import {
+  FunctionService,
+  Function,
+  FUNCTION_OPTIONS,
+  Options
+} from "@spica-server/function/services";
 import {ChangeKind, hasContextChange} from "./change";
-import {Function} from "./interface";
-import {FUNCTION_OPTIONS, Options} from "./options";
 import {generate} from "./schema/enqueuer.resolver";
 import {changesFromTriggers, createTargetChanges} from "./change";
 import {LogService} from "./log/src/log.service";

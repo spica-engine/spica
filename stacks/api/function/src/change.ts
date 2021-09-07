@@ -1,4 +1,4 @@
-import {Triggers, Function, Environment} from "./interface";
+import {Triggers, Function, Environment} from "@spica-server/function/services";
 import {diff} from "@spica-server/core/differ";
 
 export function changesFromTriggers(previousFn: Function, currentFn: Function) {

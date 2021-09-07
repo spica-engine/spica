@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {Validator} from "@spica-server/core/schema";
 import {FunctionEngine} from "../engine";
-import {Function} from "../interface";
+import {Function} from "@spica-server/function/services";
 import {Observable} from "rxjs";
 import {JSONSchema7} from "json-schema";
 
