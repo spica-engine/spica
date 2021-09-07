@@ -10,6 +10,7 @@ export interface SchedulingOptions {
   timeout: number;
   experimentalDevkitDatabaseCache?: boolean;
   corsOptions: CorsOptions;
+  debug: boolean;
 }
 
 export const SCHEDULING_OPTIONS = Symbol.for("SCHEDULING_OPTIONS");

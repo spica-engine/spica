@@ -99,7 +99,7 @@ spec:
               memory: "300Mi"
               cpu: "400m"
             limits:
-              memory: "600Mi"
+              memory: "3600Mi"
               cpu: "500m"
           ports:
             - containerPort: 4300
@@ -124,6 +124,8 @@ spec:
             - "3"
             - --function-pool-max-size
             - "5"
+            - --storage-object-size-limit
+            - "600"
           volumeMounts:
             - name: master-data
               mountPath: /data
@@ -161,8 +163,8 @@ metadata:
   namespace: infrastructure-master-spicaengine-com
   name: gateway
   annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: 15M
-    nginx.ingress.kubernetes.io/client-body-buffer-size: 15M
+    nginx.ingress.kubernetes.io/proxy-body-size: 600M
+    nginx.ingress.kubernetes.io/client-body-buffer-size: 600M
     nginx.ingress.kubernetes.io/rewrite-target: /$1
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: "letsencrypt-prod"

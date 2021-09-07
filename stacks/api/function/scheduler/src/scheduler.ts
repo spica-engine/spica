@@ -152,7 +152,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       ) {
         if (batch.schedule) {
           batch.schedule(undefined);
-          console.log("removing dead batch " + workerId);
+          this.print("removing dead batch " + workerId);
           this.batching.delete(workerId);
         }
       }
@@ -193,7 +193,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
             break;
           }
 
-          console.debug(`creating a new batch for ${target.id}`);
+          this.print(`creating a new batch for ${target.id}`);
 
           batch = createBatch(event.target, worker.workerId, worker.schedule);
           this.batching.set(batch.workerId, batch);
@@ -244,7 +244,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
       this.eventQueue.delete(event.id);
 
-      console.debug(`assigning ${event.id} to ${workerId}`);
+      this.print(`assigning ${event.id} to ${workerId}`);
     }
   }
 
@@ -254,24 +254,22 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   cancel(id) {
-    console.debug(`an event got cancelled ${id}`);
+    this.print(`an event got cancelled ${id}`);
     this.eventQueue.delete(id);
   }
   complete(id: string, succedded: boolean) {
-    console.debug(
-      `an event has been completed ${id} with status ${succedded ? "success" : "fail"}`
-    );
+    this.print(`an event has been completed ${id} with status ${succedded ? "success" : "fail"}`);
   }
 
   gotWorker(id: string, schedule: (event: event.Event) => void) {
     if (this.batching.has(id)) {
-      console.debug(`worker ${id} is batching`);
+      this.print(`worker ${id} is batching`);
       const batch = this.batching.get(id);
       batch.schedule = schedule;
       this.releaseFinishedBatches();
     } else {
       this.workers.set(id, schedule);
-      console.debug(`got a new worker ${id}`);
+      this.print(`got a new worker ${id}`);
     }
     this.process();
   }
@@ -285,9 +283,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.timeouts.delete(id);
 
     if (process.env.TEST_TARGET) {
-      return console.log(`lost a worker ${id} and skipping auto spawn under testing`);
+      return this.print(`lost a worker ${id} and skipping auto spawn under testing`);
     }
-    console.debug(`lost a worker ${id}`);
+    this.print(`lost a worker ${id}`);
     this.spawn();
   }
 
@@ -318,5 +316,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
    */
   kill() {
     this.queue.kill();
+  }
+
+  private print(message: string) {
+    if (this.options.debug) {
+      console.debug(message);
+    }
   }
 }

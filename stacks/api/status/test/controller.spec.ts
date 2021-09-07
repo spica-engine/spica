@@ -201,7 +201,8 @@ describe("Status", () => {
               allowedOrigins: ["*"]
             },
             logExpireAfterSeconds: 60,
-            entryLimit: 20
+            entryLimit: 20,
+            debug: false
           })
         ]
       }).compile();

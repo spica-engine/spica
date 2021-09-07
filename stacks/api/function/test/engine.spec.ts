@@ -39,7 +39,8 @@ describe("Engine", () => {
             allowedMethods: ["*"],
             allowCredentials: true,
             allowedHeaders: ["*"]
-          }
+          },
+          debug: false
         }),
         DatabaseTestingModule.replicaSet()
       ]
