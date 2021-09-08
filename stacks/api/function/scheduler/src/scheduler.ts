@@ -228,7 +228,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   gotWorker(id: string, schedule: (event: event.Event) => void) {
     const relatedWorker = this.workers.get(id);
-    // related worker is undefined for some cases??
     relatedWorker.schedule = schedule;
 
     console.debug(

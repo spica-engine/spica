@@ -30,8 +30,6 @@ describe("Engine", () => {
           databaseName: undefined,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
-          poolSize: 1,
-          poolMaxSize: 1,
           apiUrl: undefined,
           timeout: 60000,
           corsOptions: {

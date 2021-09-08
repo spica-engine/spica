@@ -16,8 +16,6 @@ describe("Scheduler", () => {
     databaseUri: undefined,
     databaseName: undefined,
     databaseReplicaSet: undefined,
-    poolSize: 2,
-    poolMaxSize: 2,
     apiUrl: undefined,
     timeout: 60,
     corsOptions: {

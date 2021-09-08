@@ -23,7 +23,6 @@ ts_library(
         "//stacks/api/function/runtime",
         "//stacks/api/function/runtime/io",
         "//stacks/api/function/runtime/node",
-        "//stacks/api/function/services",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@types/node",

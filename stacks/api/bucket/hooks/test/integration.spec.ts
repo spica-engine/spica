@@ -56,8 +56,6 @@ xdescribe("Hooks Integration", () => {
         FunctionModule.forRoot({
           path: os.tmpdir(),
           databaseName: undefined,
-          poolSize: 1,
-          poolMaxSize: 1,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
           apiUrl: undefined,

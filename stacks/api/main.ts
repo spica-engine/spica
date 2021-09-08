@@ -157,17 +157,6 @@ const args = yargs
   .demandOption("passport-secret")
   /* Function Options */
   .options({
-    // remove these two below
-    "function-pool-size": {
-      number: true,
-      description: "Number of worker processes to fork at start up.",
-      default: 10
-    },
-    "function-pool-maximum-size": {
-      number: true,
-      description: "Maximum number of worker processes to fork.",
-      default: 15
-    },
     "function-api-url": {
       string: true,
       description:
@@ -405,8 +394,6 @@ const modules = [
     databaseName: args["database-name"],
     databaseReplicaSet: args["database-replica-set"],
     databaseUri: args["database-uri"],
-    poolSize: args["function-pool-size"],
-    poolMaxSize: args["function-pool-maximum-size"],
     apiUrl: args["function-api-url"],
     timeout: args["function-timeout"],
     experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
@@ -450,7 +437,7 @@ if (args["cert-file"] && args["key-file"]) {
 NestFactory.create(RootModule, {
   httpsOptions,
   bodyParser: false,
-  logger: true
+  logger: false
 })
   .then(app => {
     app.useWebSocketAdapter(new WsAdapter(app));
