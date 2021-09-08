@@ -5,7 +5,7 @@ import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {from} from "rxjs";
 import {bufferCount, take} from "rxjs/operators";
-import {FunctionService} from "../src/function.service";
+import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
 import {TargetChange, ChangeKind} from "../src/change";
 

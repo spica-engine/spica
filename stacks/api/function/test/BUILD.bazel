@@ -13,6 +13,7 @@ ts_library(
         "//packages/core/schema",
         "//packages/database",
         "//packages/database/testing",
+        "//stacks/api/function/services",
         "//stacks/api/function",
         "//stacks/api/function/scheduler",
         "@npm//@nestjs/common",
@@ -35,6 +36,7 @@ ts_library(
         "change.spec.ts",
     ],
     deps = [
+        "//stacks/api/function/services",
         "//stacks/api/function",
         "@npm//@types/jasmine",
     ],

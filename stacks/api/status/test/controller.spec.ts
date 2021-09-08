@@ -245,7 +245,7 @@ describe("Status", () => {
       // wait until worker spawned
       await sleep(2000);
 
-      const res = await req.get("/status/function");
+      let res = await req.get("/status/function");
       expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
       expect(res.body).toEqual({
         module: "function",
@@ -256,22 +256,16 @@ describe("Status", () => {
             unit: "count"
           },
           workers: {
-            limit: 1,
-            current: 1,
+            activated: 0,
+            fresh: 1,
             unit: "count"
           }
         }
       });
-    });
 
-    it("should return updated function module status", async () => {
-      // wait until worker spawned
-      await sleep(2000);
-
-      // use a worker
       await req.get("/fn-execute/test");
 
-      const res = await req.get("/status/function");
+      res = await req.get("/status/function");
       expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
       expect(res.body).toEqual({
         module: "function",
@@ -282,8 +276,8 @@ describe("Status", () => {
             unit: "count"
           },
           workers: {
-            limit: 1,
-            current: 0,
+            activated: 1,
+            fresh: 1,
             unit: "count"
           }
         }

@@ -32,18 +32,21 @@ describe("Entrypoint", () => {
     return language.compile(compilation);
   }
 
-  function spawn(stdout?: Writable, idOverride?: string): Promise<number> {
-    return new Promise((resolve, reject) => {
-      const worker = runtime.spawn({
-        id: idOverride != undefined ? idOverride : String(++id),
-        env: {
-          __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
-          __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
-          __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET
-        }
-      });
-      worker.attach(stdout || process.stdout, stdout || process.stderr);
+  function spawn(stdout?: Writable, idOverride?: string): any {
+    const worker = runtime.spawn({
+      id: idOverride != undefined ? idOverride : String(++id),
+      env: {
+        __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
+        __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
+        __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET
+      }
+    });
 
+    const stream = stdout || new PassThrough();
+
+    worker.attach(stream, stream);
+
+    return new Promise((resolve, reject) => {
       worker.once("error", e => {
         reject(e);
       });
@@ -66,20 +69,22 @@ describe("Entrypoint", () => {
       if (schedule && event) {
         queueSize--;
         schedule(event);
+        schedule = event = undefined;
       }
     }
+
+    popSpy = jasmine.createSpy("pop").and.callFake((_, sc) => {
+      schedule = sc;
+      process();
+    });
 
     enqueueSpy = jasmine.createSpy("enqueue").and.callFake(e => {
       queueSize++;
       event = e;
       process();
     });
-    popSpy = jasmine.createSpy("pop").and.callFake((_, sc) => {
-      schedule = sc;
-      process();
-    });
 
-    queue = new EventQueue(popSpy, enqueueSpy, () => queueSize--, () => {});
+    queue = new EventQueue(popSpy, enqueueSpy, () => {}, () => {});
     await queue.listen();
     runtime = new Node();
     language = new Javascript();
@@ -89,8 +94,16 @@ describe("Entrypoint", () => {
     queue["kill"]();
   });
 
-  fit("should pop the latest event from queue", async () => {
+  it("should pop the latest event from queue", async done => {
     await initializeFn(`export default function() {}`);
+
+    spawn();
+
+    queue["_complete"] = () => {
+      expect(queueSize).toBe(0);
+      done();
+    };
+
     queue.enqueue(
       new event.Event({
         type: -1,
@@ -104,8 +117,6 @@ describe("Entrypoint", () => {
         })
       })
     );
-    await spawn();
-    expect(queueSize).toBe(0);
   });
 
   it("should exit abnormally when worker id was not set", async () => {
@@ -181,11 +192,27 @@ describe("Entrypoint", () => {
     ]);
   });
 
-  it("should redirect output to stream", async () => {
+  it("should redirect output to stream", async done => {
     await initializeFn(`export default function() {
       console.log('this should appear in the logs');
       console.warn('this also should appear in the logs');
     }`);
+
+    const stream = new PassThrough();
+
+    const writeSpy = spyOn(stream, "write").and.callThrough();
+
+    spawn(stream);
+
+    queue["_complete"] = () => {
+      expect(writeSpy).toHaveBeenCalledTimes(2);
+      expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
+        "this should appear in the logs\n",
+        "this also should appear in the logs\n"
+      ]);
+      done();
+    };
+
     queue.enqueue(
       new event.Event({
         type: -1,
@@ -199,18 +226,6 @@ describe("Entrypoint", () => {
         })
       })
     );
-
-    const stream = new PassThrough();
-
-    const writeSpy = spyOn(stream, "write").and.callThrough();
-
-    await spawn(stream);
-
-    expect(writeSpy).toHaveBeenCalledTimes(2);
-    expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
-      "this should appear in the logs\n",
-      "this also should appear in the logs\n"
-    ]);
   });
 
   it("should be able access to prebuilt env variables", async () => {
@@ -290,8 +305,8 @@ describe("Entrypoint", () => {
     it("should work with default handler", async () => {
       await initializeFn(`
       declare var process;
-      export default function() { 
-        process.exit(4); 
+      export default function() {
+        process.exit(4);
       }`);
       queue.enqueue(
         new event.Event({
@@ -313,8 +328,8 @@ describe("Entrypoint", () => {
     it("should work with custom handler", async () => {
       await initializeFn(`
       declare var process;
-      export function test() { 
-        process.exit(4); 
+      export function test() {
+        process.exit(4);
       }`);
       queue.enqueue(
         new event.Event({
@@ -344,7 +359,7 @@ describe("Entrypoint", () => {
       queue.listen();
     });
 
-    it("should pop from the queue", async () => {
+    it("should pop from the queue", async done => {
       await initializeFn(`export default function() {}`);
 
       const ev = new event.Event({
@@ -366,10 +381,14 @@ describe("Entrypoint", () => {
       expect(httpQueue.size).toBe(1);
       expect(queueSize).toBe(1);
 
-      await spawn();
+      queue["_complete"] = () => {
+        // It gets deleted after the response is completed
+        expect(httpQueue.size).toBe(0);
+        expect(queueSize).toBe(0);
+        done();
+      };
 
-      // It gets deleted after the response is completed
-      expect(httpQueue.size).toBe(0);
+      spawn();
     });
 
     it("should pass request to fn", async () => {
@@ -432,7 +451,7 @@ describe("Entrypoint", () => {
       expect(exitCode).toBe(4);
     });
 
-    it("should send the response", async () => {
+    it("should send the response", async done => {
       await initializeFn(`export default function(req, res) {
         res.send({ oughtToSerialize: true  });
       }`);
@@ -448,19 +467,23 @@ describe("Entrypoint", () => {
           })
         })
       });
-      queue.enqueue(ev);
 
       const serverResponse = {
         writeHead: jasmine.createSpy("writeHead"),
-        end: jasmine.createSpy("end").and.callFake((_, __, callback) => callback())
+        end: jasmine.createSpy("end").and.callFake((_, __, callback) => {
+          callback();
+          expect(serverResponse.end).toHaveBeenCalledTimes(1);
+          done();
+        })
       };
-      httpQueue.enqueue(ev.id, new Http.Request(), serverResponse as any);
 
-      await spawn();
-      expect(serverResponse.end).toHaveBeenCalledTimes(1);
+      spawn();
+
+      queue.enqueue(ev);
+      httpQueue.enqueue(ev.id, new Http.Request(), serverResponse as any);
     });
 
-    it("should send response for handler which contains unhandled promise rejection", async () => {
+    it("should send response for handler which contains unhandled promise rejection", async done => {
       await initializeFn(`export default function(req, res) {
         return Promise.reject("FAILED")
       }`);
@@ -476,19 +499,23 @@ describe("Entrypoint", () => {
           })
         })
       });
-      queue.enqueue(ev);
 
       const serverResponse = {
         writeHead: jasmine.createSpy("writeHead"),
-        end: jasmine.createSpy("end").and.callFake((_, __, callback) => callback())
+        end: jasmine.createSpy("end").and.callFake((_, __, callback) => {
+          callback();
+          expect(serverResponse.end).toHaveBeenCalledTimes(1);
+          done();
+        })
       };
-      httpQueue.enqueue(ev.id, new Http.Request(), serverResponse as any);
 
-      await spawn();
-      expect(serverResponse.end).toHaveBeenCalledTimes(1);
+      spawn(new PassThrough());
+
+      queue.enqueue(ev);
+      httpQueue.enqueue(ev.id, new Http.Request(), serverResponse as any);
     });
 
-    it("should send the response from the returned value", async () => {
+    it("should send the response from the returned value", async done => {
       await initializeFn(`export default function(req, res) {
         return {worksViaReturn: true};
       }`);
@@ -504,21 +531,26 @@ describe("Entrypoint", () => {
           })
         })
       });
-      queue.enqueue(ev);
 
       const serverResponse = {
         writeHead: jasmine.createSpy("writeHead"),
         end: jasmine.createSpy("end").and.callFake((_, __, callback) => callback())
       };
-      httpQueue.enqueue(ev.id, new Http.Request(), serverResponse as any);
 
-      await spawn();
-      expect(serverResponse.end.calls.allArgs().map(args => args[0].toString())).toEqual([
-        JSON.stringify({worksViaReturn: true})
-      ]);
+      queue["_complete"] = () => {
+        expect(serverResponse.end.calls.allArgs().map(args => args[0].toString())).toEqual([
+          JSON.stringify({worksViaReturn: true})
+        ]);
+        done();
+      };
+
+      spawn();
+
+      queue.enqueue(ev);
+      httpQueue.enqueue(ev.id, new Http.Request(), serverResponse as any);
     });
 
-    it("should not send the response from the returned value if the response has been sent already", async () => {
+    it("should not send the response from the returned value if the response has been sent already", async done => {
       await initializeFn(`export default function(req, res) {
         res.send({hasBeenSentViaSend: true});
         return {worksViaReturn: true};
@@ -535,17 +567,22 @@ describe("Entrypoint", () => {
           })
         })
       });
-      queue.enqueue(ev);
 
       const serverResponse = {
         writeHead: jasmine.createSpy("writeHead"),
-        end: jasmine.createSpy("end").and.callFake((_, __, callback) => callback())
+        end: jasmine.createSpy("end").and.callFake((_, __, callback) => {
+          callback();
+          expect(serverResponse.end.calls.allArgs().map(args => args[0].toString())).toEqual([
+            JSON.stringify({hasBeenSentViaSend: true})
+          ]);
+          done();
+        })
       };
+
+      spawn();
+
+      queue.enqueue(ev);
       httpQueue.enqueue(ev.id, new Http.Request(), serverResponse as any);
-      await spawn();
-      expect(serverResponse.end.calls.allArgs().map(args => args[0].toString())).toEqual([
-        JSON.stringify({hasBeenSentViaSend: true})
-      ]);
     });
   });
 
@@ -559,7 +596,7 @@ describe("Entrypoint", () => {
       queue.listen();
     });
 
-    it("should pop from the queue", async () => {
+    it("should pop from the queue", async done => {
       await initializeFn(`export default function() {}`);
 
       const ev = new event.Event({
@@ -573,6 +610,12 @@ describe("Entrypoint", () => {
           })
         })
       });
+
+      queue["_complete"] = () => {
+        expect(databaseQueue.size).toBe(0);
+        done();
+      };
+
       queue.enqueue(ev);
 
       const change = new Database.Change();
@@ -580,9 +623,7 @@ describe("Entrypoint", () => {
 
       expect(databaseQueue.size).toBe(1);
 
-      await spawn();
-
-      expect(databaseQueue.size).toBe(0);
+      spawn();
     });
 
     it("should pass change to fn", async () => {
@@ -630,11 +671,11 @@ describe("Entrypoint", () => {
     it("pop from the queue", async () => {
       await initializeFn(`
       export default function({socket, pool}, message) {
-        if ( 
-          socket.remoteAddress == "[::1]" && 
+        if (
+          socket.remoteAddress == "[::1]" &&
           socket.id == "1" &&
           pool.size == 21 &&
-          message.name == "test" && 
+          message.name == "test" &&
           message.data == "test"
         ) {
           process.exit(4);
@@ -671,7 +712,7 @@ describe("Entrypoint", () => {
       expect(exitCode).toBe(4, "Assertion failed.");
     });
 
-    it("should send message to socket", async () => {
+    it("should send message to socket", async done => {
       await initializeFn(`export default function({socket, pool}, message) {
         socket.send('test', 'thisisthedata');
       }`);
@@ -687,6 +728,13 @@ describe("Entrypoint", () => {
           })
         })
       });
+
+      queue["_complete"] = () => {
+        expect(socketSpy.send).toHaveBeenCalledTimes(1);
+        expect(socketSpy.send.calls.argsFor(0)[0]).toBe(`{"name":"test","data":"thisisthedata"}`);
+        done();
+      };
+
       queue.enqueue(ev);
 
       const socketSpy = jasmine.createSpyObj("Socket", ["send"]);
@@ -705,12 +753,10 @@ describe("Entrypoint", () => {
         socketSpy
       );
 
-      await spawn();
-      expect(socketSpy.send).toHaveBeenCalledTimes(1);
-      expect(socketSpy.send.calls.argsFor(0)[0]).toBe(`{"name":"test","data":"thisisthedata"}`);
+      spawn();
     });
 
-    it("should close the socket connection", async () => {
+    it("should close the socket connection", async done => {
       await initializeFn(`export default function({socket, pool}, message) {
         socket.close();
       }`);
@@ -726,6 +772,12 @@ describe("Entrypoint", () => {
           })
         })
       });
+
+      queue["_complete"] = () => {
+        expect(socketSpy.close).toHaveBeenCalledTimes(1);
+        done();
+      };
+
       queue.enqueue(ev);
 
       const socketSpy = jasmine.createSpyObj("Socket", ["close"]);
@@ -744,12 +796,10 @@ describe("Entrypoint", () => {
         socketSpy
       );
 
-      await spawn();
-
-      expect(socketSpy.close).toHaveBeenCalledTimes(1);
+      spawn();
     });
 
-    it("should send message to all sockets", async () => {
+    it("should send message to all sockets", async done => {
       await initializeFn(`export default function({socket, pool}, message) {
         pool.send('test', 'thisisthedata');
       }`);
@@ -765,6 +815,17 @@ describe("Entrypoint", () => {
           })
         })
       });
+
+      queue["_complete"] = () => {
+        expect(firstSocket.send).toHaveBeenCalledTimes(1);
+        expect(firstSocket.send.calls.argsFor(0)[0]).toBe(`{"name":"test","data":"thisisthedata"}`);
+        expect(secondSocket.send).toHaveBeenCalledTimes(1);
+        expect(secondSocket.send.calls.argsFor(0)[0]).toBe(
+          `{"name":"test","data":"thisisthedata"}`
+        );
+        done();
+      };
+
       queue.enqueue(ev);
 
       const pool = new Firehose.PoolDescription({size: 21}),
@@ -802,11 +863,7 @@ describe("Entrypoint", () => {
         secondSocket
       );
 
-      await spawn();
-      expect(firstSocket.send).toHaveBeenCalledTimes(1);
-      expect(firstSocket.send.calls.argsFor(0)[0]).toBe(`{"name":"test","data":"thisisthedata"}`);
-      expect(secondSocket.send).toHaveBeenCalledTimes(1);
-      expect(secondSocket.send.calls.argsFor(0)[0]).toBe(`{"name":"test","data":"thisisthedata"}`);
+      spawn();
     });
   });
 });

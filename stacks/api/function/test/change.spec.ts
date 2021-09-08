@@ -1,4 +1,4 @@
-import {Function} from "../src/interface";
+import {Function} from "@spica-server/function/services";
 import {ChangeKind, createTargetChanges, changesFromTriggers} from "../src/change";
 
 describe("Change", () => {

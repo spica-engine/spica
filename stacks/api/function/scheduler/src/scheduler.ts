@@ -19,7 +19,6 @@ import {event} from "@spica-server/function/queue/proto";
 import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
 import {Node} from "@spica-server/function/runtime/node";
-import {FunctionService} from "@spica-server/function/services";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
@@ -40,10 +39,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   private output: StandartStream;
 
+  private readonly MAX_CONCURRENCY = 2;
+
   constructor(
     private http: HttpAdapterHost,
     private database: DatabaseService,
-    private service: FunctionService,
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>
   ) {
@@ -136,12 +136,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   getStatus() {
     const workers = Array.from(this.workers.values());
 
-    const activateds = workers.filter(w => w.target).length;
-    const freshes = workers.length - activateds;
+    const activated = workers.filter(w => w.target).length;
+    const fresh = workers.length - activated;
 
     return {
-      activateds: activateds,
-      freshes: freshes,
+      activated: activated,
+      fresh: fresh,
       unit: "count"
     };
   }
@@ -151,28 +151,24 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       return {id, worker};
     });
 
-    const fresh = workers.find(({worker}) => !worker.target) || {id: undefined, worker: undefined};
+    const fresh = workers.find(({worker}) => !worker.target);
     const activateds = workers.filter(({worker}) => worker.target && worker.target.id == target.id);
 
-    switch (activateds.length) {
-      case 0:
-        return fresh;
-      case 1:
-        return activateds[0].worker.schedule ? activateds[0] : fresh;
-      case 2:
-        return activateds.find(({worker}) => worker.schedule) || activateds[0];
+    if (!activateds.length) {
+      return fresh;
     }
+
+    const available = activateds.find(({worker}) => worker.schedule);
+    if (activateds.length == this.MAX_CONCURRENCY) {
+      return available || {id: undefined, worker: {} as any};
+    }
+
+    return available || fresh;
   }
 
   process() {
     for (const event of this.eventQueue.values()) {
       const {id: workerId, worker} = this.takeAWorker(event.target);
-
-      const [stdout, stderr] = this.output.create({
-        eventId: event.id,
-        functionId: event.target.id
-      });
-
       // if worker is busy, move to the next events
       if (!worker.schedule) {
         continue;
@@ -182,6 +178,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       worker.schedule = undefined;
       worker.target = event.target;
 
+      const [stdout, stderr] = this.output.create({
+        eventId: event.id,
+        functionId: event.target.id
+      });
       worker.attach(stdout, stderr);
 
       const timeoutInMs = Math.min(this.options.timeout, event.target.context.timeout) * 1000;
@@ -245,12 +245,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.timeouts.delete(id);
 
     console.debug(`lost a worker ${id}`);
-
-    if (process.env.TEST_TARGET) {
-      return console.log(`skipping auto-scale under testing`);
-    }
-
-    this.scaleWorkers();
   }
 
   private scaleWorkers() {
