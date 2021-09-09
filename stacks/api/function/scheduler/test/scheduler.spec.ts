@@ -2,7 +2,6 @@ import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {event} from "@spica-server/function/queue/proto";
-import {Worker} from "@spica-server/function/runtime";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {PassThrough} from "stream";
@@ -17,8 +16,6 @@ describe("Scheduler", () => {
     databaseUri: undefined,
     databaseName: undefined,
     databaseReplicaSet: undefined,
-    poolSize: 2,
-    poolMaxSize: 2,
     apiUrl: undefined,
     timeout: 60,
     corsOptions: {
@@ -27,8 +24,21 @@ describe("Scheduler", () => {
       allowedMethods: ["*"],
       allowedOrigins: ["*"]
     },
+    maxConcurrency: 2,
     debug: false
   };
+
+  function freeWorkers() {
+    return Array.from(scheduler["workers"].entries()).filter(([_, w]) => !w.target);
+  }
+
+  function activatedWorkers() {
+    return Array.from(scheduler["workers"].entries()).filter(([_, w]) => w.target);
+  }
+
+  function allWorkers() {
+    return Array.from(scheduler["workers"].entries());
+  }
 
   const now = new Date(2015, 1, 1, 1, 1, 31, 0);
 
@@ -39,13 +49,19 @@ describe("Scheduler", () => {
     entrypoint: "index.js"
   };
 
-  let worker1Id: string;
-  let worker1: Worker;
-  let worker1Schedule: (event) => void;
+  function completeEvent(evId: string) {
+    const [workerId] = Array.from(scheduler.workers.entries()).find(
+      ([id, worker]) => worker.target.id == evId
+    );
+    triggerGotWorker(workerId);
+  }
 
-  let worker2Id: string;
-  let worker2: Worker;
-  let worker2Schedule: (event) => void;
+  function triggerGotWorker(_id?: string) {
+    const [workerId] = Array.from(scheduler.workers.entries()).find(([id, worker]) =>
+      _id ? _id == id : !worker.target
+    );
+    scheduler.gotWorker(workerId, () => {});
+  }
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -53,6 +69,14 @@ describe("Scheduler", () => {
     }).compile();
 
     scheduler = module.get(Scheduler);
+
+    const enqueue = scheduler.enqueue;
+    scheduler.enqueue = (event: event.Event) => {
+      enqueue.bind(scheduler)(event);
+      // we need to trigger this method manually
+      // this happens automatically in real scenarios
+      triggerGotWorker();
+    };
 
     spawnSpy = spyOn(scheduler.runtimes.get("node"), "spawn").and.callThrough();
 
@@ -70,56 +94,29 @@ describe("Scheduler", () => {
     );
     await scheduler.languages.get("javascript").compile(compilation);
 
-    const [[firstWorkerId, firstWorker], [secondWorkerId, secondWorker]] = Array.from(
-      scheduler["pool"].entries()
-    );
-
-    worker1Id = firstWorkerId;
-    worker1 = firstWorker;
-
-    worker2Id = secondWorkerId;
-    worker2 = secondWorker;
-
-    worker1Schedule = event => {
-      if (!event) {
-        worker1.emit("exit");
-      }
-    };
-
-    worker2Schedule = event => {
-      if (!event) {
-        worker2.emit("exit");
-      }
-    };
-
-    scheduler.gotWorker(worker1Id, worker1Schedule);
-    scheduler.gotWorker(worker2Id, worker2Schedule);
+    triggerGotWorker();
   });
 
   afterEach(() => {
     scheduler.kill();
     app.close();
     clock.uninstall();
+    spawnSpy.calls.reset();
   });
 
-  it("should spawn N process", () => {
-    expect(spawnSpy).toHaveBeenCalledTimes(schedulerOptions.poolSize);
+  it("should spawn on module init", () => {
+    expect(spawnSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("should spawn max N process", () => {
-    expect(spawnSpy).toHaveBeenCalledTimes(schedulerOptions.poolSize);
-
-    scheduler["spawn"]();
-
-    scheduler["spawn"]();
-
-    scheduler["spawn"]();
-
-    expect(spawnSpy).toHaveBeenCalledTimes(2);
+  it("should not spawn if there is one worker available", () => {
+    spawnSpy.calls.reset();
+    scheduler["scaleWorkers"]();
+    expect(spawnSpy).toHaveBeenCalledTimes(0);
   });
 
-  it("should attach outputs when the event enqueued", () => {
-    const attachSpy = spyOn(worker1, "attach");
+  it("should attach outputs when the event is enqueued", () => {
+    const [[id, worker]] = freeWorkers();
+    const attachSpy = spyOn(worker, "attach").and.callThrough();
 
     const ev = new event.Event({
       target: new event.Target({
@@ -132,11 +129,29 @@ describe("Scheduler", () => {
 
     scheduler.enqueue(ev);
 
-    expect(attachSpy).toHaveBeenCalled();
+    expect(attachSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("should kill the worker when the execution times out", () => {
-    const kill = spyOn(worker1, "kill");
+  it("should spawn a worker after event scheduled", () => {
+    const ev = new event.Event({
+      target: new event.Target({
+        cwd: compilation.cwd,
+        handler: "default",
+        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
+      }),
+      type: -1
+    });
+
+    scheduler.enqueue(ev);
+
+    expect(allWorkers().length).toEqual(2);
+    expect(activatedWorkers().length).toEqual(1);
+    expect(freeWorkers().length).toEqual(1);
+  });
+
+  it("should kill the worker when the execution is timed out", () => {
+    const [[id, worker]] = freeWorkers();
+    const kill = spyOn(worker, "kill");
 
     const stream = new PassThrough();
     spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
@@ -160,12 +175,13 @@ describe("Scheduler", () => {
 
     expect(kill).toHaveBeenCalledTimes(1);
     expect(write).toHaveBeenCalledWith(
-      "Function (default) did not finish within 60 seconds. Aborting."
+      "60 seconds timeout value has been reached for function 'default'. The worker is being shut down."
     );
   });
 
   it("should pick the minimum timeout value when scheduling", () => {
-    const kill = spyOn(worker1, "kill");
+    const [[id, worker]] = freeWorkers();
+    const kill = spyOn(worker, "kill");
 
     const stream = new PassThrough();
     spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
@@ -189,173 +205,131 @@ describe("Scheduler", () => {
 
     expect(kill).toHaveBeenCalledTimes(1);
     expect(write).toHaveBeenCalledWith(
-      "Function (default) did not finish within 10 seconds. Aborting."
+      "10 seconds timeout value has been reached for function 'default'. The worker is being shut down."
     );
   });
 
-  it("should not write to stderr when the function quits within the timeout frame, delete worker from pool and workers", () => {
-    const stream = new PassThrough();
-    spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
-
-    const write = spyOn(stream, "write");
-
-    const ev = new event.Event({
+  it("should give the same events to the same workers", () => {
+    const ev1 = new event.Event({
       target: new event.Target({
+        id: "1",
         cwd: compilation.cwd,
         handler: "default",
-        context: new event.SchedulingContext({env: [], timeout: 10})
+        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
       type: -1
     });
-    scheduler.enqueue(ev);
 
-    expect(write).not.toHaveBeenCalled();
+    scheduler.enqueue(ev1);
+    // we have to simulate that the ev1 has been completed before another ev1 is enqueued
+    // otherwise scheduler will perform concurrent scheduling
+    completeEvent("1");
 
-    worker1.emit("exit");
+    scheduler.enqueue(ev1);
 
-    expect(scheduler["pool"].size).toEqual(1);
-    expect(scheduler["workers"].size).toEqual(1);
-
-    expect(write).not.toHaveBeenCalled();
+    expect(allWorkers().length).toEqual(2);
+    expect(activatedWorkers().length).toEqual(1);
+    expect(freeWorkers().length).toEqual(1);
   });
 
-  it("should create batch for event", () => {
-    const ev = new event.Event({
+  it("should take a new worker for different events", () => {
+    const ev1 = new event.Event({
       target: new event.Target({
-        id: "my_target",
+        id: "1",
         cwd: compilation.cwd,
         handler: "default",
-        context: new event.SchedulingContext({
-          env: [],
-          timeout: schedulerOptions.timeout,
-          batch: new event.SchedulingContext.Batch({
-            limit: 2,
-            deadline: 10
-          })
-        })
+        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
       type: -1
     });
 
-    scheduler.enqueue(ev);
-
-    expect(scheduler.batching.get(worker1Id)).toEqual({
-      schedule: scheduler.workers.get(worker1Id),
-      workerId: worker1Id,
-      deadline: now.getTime() + 10 * 1000,
-      remaining_enqueues: {
-        default: 1
-      },
-      started_at: now.getTime(),
-      target: "my_target"
+    const ev2 = new event.Event({
+      target: new event.Target({
+        id: "2",
+        cwd: compilation.cwd,
+        handler: "default",
+        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
+      }),
+      type: -1
     });
+
+    scheduler.enqueue(ev1);
+    scheduler.enqueue(ev2);
+
+    expect(scheduler.eventQueue.size).toEqual(0);
+
+    expect(allWorkers().length).toEqual(3);
+
+    const activateds = activatedWorkers();
+    expect(activatedWorkers().length).toEqual(2);
+    expect(activateds[0][1].target.id).toEqual("1");
+    expect(activateds[1][1].target.id).toEqual("2");
+
+    expect(freeWorkers().length).toEqual(1);
   });
 
-  it("should use limit batching, release finished batches and move batch to the next worker", () => {
-    const ev = new event.Event({
+  it("should perform concurrent scheduling", () => {
+    const ev1 = new event.Event({
       target: new event.Target({
-        id: "my_target",
+        id: "1",
         cwd: compilation.cwd,
         handler: "default",
-        context: new event.SchedulingContext({
-          env: [],
-          timeout: schedulerOptions.timeout,
-          batch: new event.SchedulingContext.Batch({
-            limit: 2,
-            deadline: 10
-          })
-        })
+        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
       type: -1
     });
 
-    scheduler.enqueue(ev);
-    scheduler.gotWorker(worker1Id, worker1Schedule);
+    scheduler.enqueue(ev1);
+    scheduler.enqueue(ev1);
 
-    const batch = scheduler.batching.get(worker1Id);
+    expect(scheduler.eventQueue.size).toEqual(0);
 
-    expect(batch.remaining_enqueues.default).toEqual(1);
-    expect(batch.deadline).toEqual(now.getTime() + 10 * 1000);
+    expect(allWorkers().length).toEqual(3);
 
-    expect(scheduler.batching.size).toEqual(1);
-    expect(scheduler.workers.size).toEqual(1);
+    const activateds = activatedWorkers();
+    expect(activateds.length).toEqual(2);
+    expect(activateds.every(([_, worker]) => worker.target.id == "1")).toBeTrue();
 
-    scheduler.enqueue(ev);
-
-    const scheduleSpy = jasmine.createSpy().and.callFake(event => worker1Schedule(event));
-
-    scheduler.gotWorker(worker1Id, scheduleSpy);
-
-    expect(scheduler.batching.size).toEqual(0);
-    expect(scheduler.workers.size).toEqual(1);
-
-    expect(batch.remaining_enqueues.default).toEqual(0);
-    expect(batch.deadline).toEqual(now.getTime() + 10 * 1000);
-    // it should be called with undefined if batch is expired
-    expect(scheduleSpy).toHaveBeenCalledWith(undefined);
-
-    scheduler.enqueue(ev);
-
-    const movedBatch = scheduler.batching.get(worker2Id);
-
-    expect(movedBatch.remaining_enqueues.default).toEqual(1);
-    expect(movedBatch.deadline).toEqual(now.getTime() + 10 * 1000);
-
-    expect(scheduler.batching.size).toEqual(1);
-    expect(scheduler.workers.size).toEqual(0);
+    expect(freeWorkers().length).toEqual(1);
   });
 
-  it("should use deadline batching, release finished batches and move batch to the next worker", () => {
-    const ev = new event.Event({
+  it("should not exceed the concurreny level", () => {
+    const ev1 = new event.Event({
       target: new event.Target({
-        id: "my_target",
+        id: "1",
         cwd: compilation.cwd,
         handler: "default",
-        context: new event.SchedulingContext({
-          env: [],
-          timeout: schedulerOptions.timeout,
-          batch: new event.SchedulingContext.Batch({
-            limit: 5,
-            deadline: 10
-          })
-        })
+        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
       type: -1
     });
 
-    scheduler.enqueue(ev);
-    scheduler.gotWorker(worker1Id, worker1Schedule);
+    scheduler.enqueue(ev1);
+    scheduler.enqueue(ev1);
+    scheduler.enqueue(ev1);
 
-    const batch = scheduler.batching.get(worker1Id);
+    // waiting for an available worker
+    expect(scheduler.eventQueue.size).toEqual(1);
 
-    expect(batch.remaining_enqueues.default).toEqual(4);
-    expect(batch.deadline).toEqual(now.getTime() + 10 * 1000);
-    expect(scheduler.batching.size).toEqual(1);
-    expect(scheduler.workers.size).toEqual(1);
+    expect(allWorkers().length).toEqual(3);
 
-    clock.tick(11 * 1000);
+    let activateds = activatedWorkers();
+    expect(activateds.length).toEqual(2);
+    expect(activateds.every(([_, worker]) => worker.target.id == "1")).toBeTrue();
 
-    scheduler.enqueue(ev);
+    expect(freeWorkers().length).toEqual(1);
 
-    const finishedBatch = scheduler.batching.get(worker1Id);
-    expect(finishedBatch.remaining_enqueues.default).toEqual(4);
-    expect(finishedBatch.deadline).toEqual(Date.now() - 1 * 1000);
+    // lets complete one of these events
+    completeEvent("1");
 
-    const movedBatch = scheduler.batching.get(worker2Id);
-    expect(movedBatch.remaining_enqueues.default).toEqual(4);
-    expect(movedBatch.deadline).toEqual(Date.now() + 10 * 1000);
+    expect(scheduler.eventQueue.size).toEqual(0);
 
-    // it acts different from limit batch
-    // it should be 2 until gotworker called and finished batches killed,
-    expect(scheduler.batching.size).toEqual(2);
-    // it should take a new worker
-    expect(scheduler.workers.size).toEqual(0);
+    expect(allWorkers().length).toEqual(3);
 
-    const scheduleSpy = spyOn(scheduler.batching.get(worker1Id), "schedule").and.callThrough();
-    scheduler.gotWorker(worker2Id, worker2Schedule);
+    activateds = activatedWorkers();
+    expect(activateds.length).toEqual(2);
+    expect(activateds.every(([_, worker]) => worker.target.id == "1")).toBeTrue();
 
-    // it should be called with undefined if batch is expired
-    expect(scheduleSpy).toHaveBeenCalledWith(undefined);
-    expect(scheduler.batching.size).toEqual(1);
+    expect(freeWorkers().length).toEqual(1);
   });
 });

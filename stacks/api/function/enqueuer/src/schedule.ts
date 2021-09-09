@@ -18,7 +18,10 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     description: "Designed for scheduled tasks and jobs."
   };
 
-  constructor(private queue: EventQueue) {}
+  constructor(
+    private queue: EventQueue,
+    private schedulerUnsubscription: (targetId: string) => void
+  ) {}
 
   subscribe(target: event.Target, options: ScheduleOptions): void {
     const job = new cron.CronJob({
@@ -38,6 +41,8 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
   }
 
   unsubscribe(target: event.Target): void {
+    this.schedulerUnsubscription(target.id);
+
     for (const job of this.jobs) {
       if (
         (!target.handler && job["target"].cwd == target.cwd) ||

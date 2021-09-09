@@ -211,7 +211,8 @@
               thumbLabel
               [displayWith]="formatTimeout"
               tickInterval="auto"
-              min="1"
+              min="0.1"
+              step="0.1"
               [max]="timeout"
               [ngModel]="function.timeout || timeout"
               (ngModelChange)="function.timeout = $event"
@@ -445,48 +446,6 @@
           <button type="button" mat-button class="new-trigger" (click)="addVariable()">
             <mat-icon>add</mat-icon>Add New Environment Variable
           </button>
-        </div>
-
-        <h4 mat-subheader (click)="sections.optionals = !sections.optionals">
-          <mat-icon>{{ sections.optionals ? "expand_more" : "chevron_right" }}</mat-icon> Optional
-          Settings
-        </h4>
-        <mat-divider></mat-divider>
-        <div [class.hidden]="!sections.optionals">
-          <mat-list-item class="optional-settings">
-            <div class="setting">
-              <mat-slide-toggle
-                [matAwareDialog]="{
-                  title: 'IMPORTANT CONFIRMATION! PLEASE READ CAREFULLY',
-                  templateOrDescription:
-                    'You can enable batching to run multiple process in the same worker. This action will
-                        share memory in each process. To enable batching, you have to set \'Deadline\' (seconds
-                        to wait after first execution). Once batch deadline expired, next process will be run on the new worker.',
-                  answer: '',
-                  noAnswer: true
-                }"
-                [matAwareDialogDisabled]="batching"
-                (cancel)="batching = false"
-                [(ngModel)]="batching"
-                name="batching"
-                labelPosition="before"
-                >Batching
-              </mat-slide-toggle>
-              <mat-form-field *ngIf="batching">
-                <mat-label>Deadline (s)</mat-label>
-                <input
-                  matInput
-                  type="number"
-                  placeholder="Deadline"
-                  #nameModel="ngModel"
-                  [min]="batching ? 1 : 0"
-                  [(ngModel)]="batchingDeadline"
-                  name="deadline"
-                  [required]="batching"
-                />
-              </mat-form-field>
-            </div>
-          </mat-list-item>
         </div>
       </mat-list>
       <button
