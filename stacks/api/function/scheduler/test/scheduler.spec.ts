@@ -23,7 +23,8 @@ describe("Scheduler", () => {
       allowedHeaders: ["*"],
       allowedMethods: ["*"],
       allowedOrigins: ["*"]
-    }
+    },
+    maxConcurrency: 2
   };
 
   function freeWorkers() {

@@ -39,8 +39,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   private output: StandartStream;
 
-  private readonly MAX_CONCURRENCY = 2;
-
   constructor(
     private http: HttpAdapterHost,
     private database: DatabaseService,
@@ -154,12 +152,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     const fresh = workers.find(({worker}) => !worker.target);
     const activateds = workers.filter(({worker}) => worker.target && worker.target.id == target.id);
 
-    if (!activateds.length) {
-      return fresh;
-    }
-
     const available = activateds.find(({worker}) => worker.schedule);
-    if (activateds.length == this.MAX_CONCURRENCY) {
+
+    if (activateds.length == this.options.maxConcurrency) {
       return available || {id: undefined, worker: {} as any};
     }
 
@@ -273,6 +268,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       this.workers.set(id, worker as ScheduleWorker);
     }
 
+    // REMOVE THESE
     console.log("---------------------");
     console.log("ACTIVATED : ", Array.from(this.workers.values()).filter(w => w.target).length);
     console.log("FRESH     : ", Array.from(this.workers.values()).filter(w => !w.target).length);

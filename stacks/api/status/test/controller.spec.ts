@@ -199,7 +199,8 @@ describe("Status", () => {
               allowedOrigins: ["*"]
             },
             logExpireAfterSeconds: 60,
-            entryLimit: 20
+            entryLimit: 20,
+            maxConcurrency: 1
           })
         ]
       }).compile();

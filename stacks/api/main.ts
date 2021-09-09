@@ -175,6 +175,12 @@ const args = yargs
     "function-limit": {
       number: true,
       description: "Maximum number of function that can be inserted."
+    },
+    "function-worker-concurrency": {
+      number: true,
+      description:
+        "Maximum number of worker than can run paralel for the same functions. Default value is two.",
+      default: 2
     }
   })
   /* Storage Options */
@@ -312,6 +318,10 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       args["function-api-url"] = args["public-url"];
     }
 
+    if (args["function-worker-concurrency"] < 1) {
+      throw new TypeError("--function-worker-concurrency must be a positive number");
+    }
+
     if (
       args["storage-strategy"] == "gcloud" &&
       (!args["gcloud-service-account-path"] || !args["gcloud-bucket-name"])
@@ -403,7 +413,8 @@ const modules = [
       allowedMethods: args["cors-allowed-methods"],
       allowedHeaders: args["cors-allowed-headers"],
       allowCredentials: args["cors-allow-credentials"]
-    }
+    },
+    maxConcurrency: args["function-worker-concurrency"]
   })
 ];
 

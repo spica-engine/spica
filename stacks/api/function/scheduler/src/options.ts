@@ -8,6 +8,7 @@ export interface SchedulingOptions {
   timeout: number;
   experimentalDevkitDatabaseCache?: boolean;
   corsOptions: CorsOptions;
+  maxConcurrency: number;
 }
 
 export const SCHEDULING_OPTIONS = Symbol.for("SCHEDULING_OPTIONS");
