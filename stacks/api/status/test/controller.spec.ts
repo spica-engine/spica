@@ -200,7 +200,8 @@ describe("Status", () => {
             },
             logExpireAfterSeconds: 60,
             entryLimit: 20,
-            maxConcurrency: 1
+            maxConcurrency: 1,
+            debug: false
           })
         ]
       }).compile();

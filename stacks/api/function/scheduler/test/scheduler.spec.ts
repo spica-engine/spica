@@ -24,7 +24,8 @@ describe("Scheduler", () => {
       allowedMethods: ["*"],
       allowedOrigins: ["*"]
     },
-    maxConcurrency: 2
+    maxConcurrency: 2,
+    debug: false
   };
 
   function freeWorkers() {

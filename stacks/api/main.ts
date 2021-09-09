@@ -181,6 +181,11 @@ const args = yargs
       description:
         "Maximum number of worker than can run paralel for the same functions. Default value is two.",
       default: 2
+    },
+    "function-debug": {
+      boolean: true,
+      description: "Enable/disable function workers debugging mode. Default value is false",
+      default: false
     }
   })
   /* Storage Options */
@@ -414,7 +419,8 @@ const modules = [
       allowedHeaders: args["cors-allowed-headers"],
       allowCredentials: args["cors-allow-credentials"]
     },
-    maxConcurrency: args["function-worker-concurrency"]
+    maxConcurrency: args["function-worker-concurrency"],
+    debug: args["function-debug"]
   })
 ];
 

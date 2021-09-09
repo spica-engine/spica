@@ -200,7 +200,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
       this.eventQueue.delete(event.id);
 
-      console.debug(`assigning ${event.id} to ${workerId}`);
+      this.print(`assigning ${event.id} to ${workerId}`);
 
       this.scaleWorkers();
     }
@@ -212,20 +212,18 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   cancel(id) {
-    console.debug(`an event got cancelled ${id}`);
+    this.print(`an event got cancelled ${id}`);
     this.eventQueue.delete(id);
   }
   complete(id: string, succedded: boolean) {
-    console.debug(
-      `an event has been completed ${id} with status ${succedded ? "success" : "fail"}`
-    );
+    this.print(`an event has been completed ${id} with status ${succedded ? "success" : "fail"}`);
   }
 
   gotWorker(id: string, schedule: (event: event.Event) => void) {
     const relatedWorker = this.workers.get(id);
     relatedWorker.schedule = schedule;
 
-    console.debug(
+    this.print(
       relatedWorker.target ? `worker ${id} is waiting for new event` : `got a new worker ${id}`
     );
 
@@ -238,7 +236,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     clearTimeout(this.timeouts.get(id));
     this.timeouts.delete(id);
 
-    console.debug(`lost a worker ${id}`);
+    this.print(`lost a worker ${id}`);
   }
 
   private scaleWorkers() {
@@ -267,12 +265,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
       this.workers.set(id, worker as ScheduleWorker);
     }
-
-    // REMOVE THESE
-    console.log("---------------------");
-    console.log("ACTIVATED : ", Array.from(this.workers.values()).filter(w => w.target).length);
-    console.log("FRESH     : ", Array.from(this.workers.values()).filter(w => !w.target).length);
-    console.log("---------------------");
   }
 
   /**
@@ -280,5 +272,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
    */
   kill() {
     this.queue.kill();
+  }
+
+  private print(message: string) {
+    if (this.options.debug) {
+      console.debug(message);
+    }
   }
 }

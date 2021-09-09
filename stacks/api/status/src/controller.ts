@@ -1,4 +1,5 @@
-import {BadRequestException, Controller, Get, Param} from "@nestjs/common";
+import {BadRequestException, Controller, Get, Param, Query} from "@nestjs/common";
+import {DATE} from "@spica-server/core";
 import {StatusProvider} from "./interface";
 
 export const providers = new Set<StatusProvider>();
@@ -12,6 +13,11 @@ export class StatusController {
   @Get()
   findAll() {
     return Promise.all(this.providers.map(p => p.provide()));
+  }
+
+  @Get("api")
+  findApi(@Query("begin", DATE) begin: Date, @Query("end", DATE) end: Date) {
+    return this.providers.find(p => p.module == "api").provide(begin, end);
   }
 
   @Get(":module")

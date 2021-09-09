@@ -44,7 +44,8 @@ export class FunctionModule {
           apiUrl: options.apiUrl,
           timeout: options.timeout,
           experimentalDevkitDatabaseCache: options.experimentalDevkitDatabaseCache,
-          corsOptions: options.corsOptions
+          corsOptions: options.corsOptions,
+          debug: options.debug
         }),
         ServicesModule.forRoot({
           logExpireAfterSeconds: options.logExpireAfterSeconds,
