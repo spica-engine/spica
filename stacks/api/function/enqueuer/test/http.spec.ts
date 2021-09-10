@@ -26,6 +26,8 @@ describe("http enqueuer", () => {
   let eventQueue: jasmine.SpyObj<EventQueue>;
   let httpQueue: jasmine.SpyObj<HttpQueue>;
 
+  let schedulerUnsubscriptionSpy: jasmine.Spy;
+
   let corsOptions = {
     allowCredentials: true,
     allowedHeaders: ["*"],
@@ -46,11 +48,14 @@ describe("http enqueuer", () => {
     httpQueue = jasmine.createSpyObj("httpQueue", ["enqueue", "dequeue"]);
 
     await app.listen(req.socket);
+
+    schedulerUnsubscriptionSpy = jasmine.createSpy("unsubscription", () => {});
     httpEnqueuer = new HttpEnqueuer(
       eventQueue,
       httpQueue,
       app.getHttpAdapter().getInstance(),
-      corsOptions
+      corsOptions,
+      schedulerUnsubscriptionSpy
     );
   });
 
@@ -110,6 +115,8 @@ describe("http enqueuer", () => {
     expect(routes.map(r => r.stack[0].method).includes("post")).toEqual(false);
     expect(routes.map(r => r.stack[0].method).includes("put")).toEqual(true);
     expect(routes.map(r => r.stack[0].method).includes("delete")).toEqual(true);
+
+    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledOnceWith(target1.id);
   });
 
   it("should not handle preflight requests on indistinct paths", async () => {

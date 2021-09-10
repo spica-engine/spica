@@ -1,15 +1,19 @@
 import {DynamicModule, Module} from "@nestjs/common";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
+import {Scheduler, SchedulerModule, SchedulingOptions} from "@spica-server/function/scheduler";
 import {WebhookModule} from "@spica-server/function/webhook";
 import * as path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
-import {FunctionService} from "./function.service";
 import {Github} from "./services/github";
 import {LogModule} from "./log";
 import {registerInformers} from "./machinery";
-import {FunctionOptions, FUNCTION_OPTIONS} from "./options";
+import {
+  FunctionOptions,
+  FUNCTION_OPTIONS,
+  FunctionService,
+  ServicesModule
+} from "@spica-server/function/services";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
 import {Http, RepoStrategies} from "./services/interface";
 import {Axios} from "./services/axios";
@@ -22,7 +26,7 @@ export class FunctionModule {
     registerStatusProvider(fs, scheduler);
   }
 
-  static forRoot(options: FunctionOptions): DynamicModule {
+  static forRoot(options: SchedulingOptions & FunctionOptions): DynamicModule {
     return {
       module: FunctionModule,
       imports: [
@@ -33,22 +37,25 @@ export class FunctionModule {
         }),
         WebhookModule.forRoot({expireAfterSeconds: options.logExpireAfterSeconds}),
         SchedulerModule.forRoot({
+          maxConcurrency: options.maxConcurrency,
           databaseName: options.databaseName,
           databaseReplicaSet: options.databaseReplicaSet,
           databaseUri: options.databaseUri,
-          poolSize: options.poolSize,
-          poolMaxSize: options.poolMaxSize,
           apiUrl: options.apiUrl,
           timeout: options.timeout,
           experimentalDevkitDatabaseCache: options.experimentalDevkitDatabaseCache,
           corsOptions: options.corsOptions,
           debug: options.debug
+        }),
+        ServicesModule.forRoot({
+          logExpireAfterSeconds: options.logExpireAfterSeconds,
+          path: options.path,
+          entryLimit: options.entryLimit
         })
       ],
       controllers: [FunctionController],
       providers: [
         FunctionEngine,
-        FunctionService,
         {
           provide: FUNCTION_OPTIONS,
           useValue: {

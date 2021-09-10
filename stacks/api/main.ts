@@ -157,16 +157,6 @@ const args = yargs
   .demandOption("passport-secret")
   /* Function Options */
   .options({
-    "function-pool-size": {
-      number: true,
-      description: "Number of worker processes to fork at start up.",
-      default: 10
-    },
-    "function-pool-maximum-size": {
-      number: true,
-      description: "Maximum number of worker processes to fork.",
-      default: 15
-    },
     "function-api-url": {
       string: true,
       description:
@@ -175,7 +165,7 @@ const args = yargs
     "function-timeout": {
       number: true,
       description: "Amount of time in seconds that has to elapse before aborting a function.",
-      default: 120
+      default: 60
     },
     "experimental-function-devkit-database-cache": {
       boolean: true,
@@ -185,6 +175,12 @@ const args = yargs
     "function-limit": {
       number: true,
       description: "Maximum number of function that can be inserted."
+    },
+    "function-worker-concurrency": {
+      number: true,
+      description:
+        "Maximum number of worker than can run paralel for the same functions. Default value is two.",
+      default: 2
     },
     "function-debug": {
       boolean: true,
@@ -332,6 +328,10 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       args["function-api-url"] = args["public-url"];
     }
 
+    if (args["function-worker-concurrency"] < 1) {
+      throw new TypeError("--function-worker-concurrency must be a positive number");
+    }
+
     if (
       args["storage-strategy"] == "gcloud" &&
       (!args["gcloud-service-account-path"] || !args["gcloud-bucket-name"])
@@ -414,8 +414,6 @@ const modules = [
     databaseName: args["database-name"],
     databaseReplicaSet: args["database-replica-set"],
     databaseUri: args["database-uri"],
-    poolSize: args["function-pool-size"],
-    poolMaxSize: args["function-pool-maximum-size"],
     apiUrl: args["function-api-url"],
     timeout: args["function-timeout"],
     experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
@@ -427,6 +425,7 @@ const modules = [
       allowCredentials: args["cors-allow-credentials"]
     },
     debug: args["function-debug"],
+    maxConcurrency: args["function-worker-concurrency"],
     realtimeLogs: args["function-realtime-logs"]
   })
 ];

@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {Validator} from "@spica-server/core/schema";
 import {FunctionEngine} from "../engine";
-import {Function} from "../interface";
+import {Function} from "@spica-server/function/services";
 import {Observable} from "rxjs";
 import {JSONSchema7} from "json-schema";
 
@@ -50,20 +50,6 @@ export function generate({body}: {body: Function}) {
                   active: {
                     type: "boolean",
                     default: true
-                  },
-                  batch: {
-                    type: "object",
-                    required: ["limit", "deadline"],
-                    properties: {
-                      limit: {
-                        type: "number",
-                        default: Number.MAX_SAFE_INTEGER
-                      },
-                      deadline: {
-                        type: "number",
-                        default: Number.MAX_SAFE_INTEGER
-                      }
-                    }
                   },
                   options: {
                     $ref: `http://spica.internal/function/enqueuer/${body.triggers[key].type}`

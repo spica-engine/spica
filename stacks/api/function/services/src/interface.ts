@@ -17,10 +17,6 @@ export interface Triggers {
 export interface Trigger {
   type: string;
   active?: boolean;
-  batch?: {
-    limit: number;
-    deadline: number;
-  };
   options: unknown;
 }
 

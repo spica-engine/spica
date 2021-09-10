@@ -5,7 +5,7 @@ import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {from} from "rxjs";
 import {bufferCount, take} from "rxjs/operators";
-import {FunctionService} from "../src/function.service";
+import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
 import {TargetChange, ChangeKind} from "../src/change";
 
@@ -30,8 +30,6 @@ describe("Engine", () => {
           databaseName: undefined,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
-          poolSize: 1,
-          poolMaxSize: 1,
           apiUrl: undefined,
           timeout: 60000,
           corsOptions: {
@@ -40,6 +38,7 @@ describe("Engine", () => {
             allowCredentials: true,
             allowedHeaders: ["*"]
           },
+          maxConcurrency: 1,
           debug: false
         }),
         DatabaseTestingModule.replicaSet()
@@ -185,8 +184,7 @@ describe("Engine", () => {
       handler: "test_handler",
       context: {
         env: [{key: "TEST", value: "true"}],
-        timeout: 60,
-        batch: undefined
+        timeout: 60
       }
     });
   });

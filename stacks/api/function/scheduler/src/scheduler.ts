@@ -20,9 +20,10 @@ import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
 import {Node} from "@spica-server/function/runtime/node";
 import * as uniqid from "uniqid";
-import {Batch, createBatch, updateBatch} from "./batch";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
+
+type ScheduleWorker = Worker & {target: event.Target; schedule: (event: event.Event) => void};
 
 @Injectable()
 export class Scheduler implements OnModuleInit, OnModuleDestroy {
@@ -69,22 +70,36 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
+    const schedulerUnsubscription = (targetId: string) => {
+      Array.from(this.workers.entries())
+        .filter(([id, worker]) => worker.target && worker.target.id == targetId)
+        .forEach(([id]) => this.workers.delete(id));
+    };
+
     this.enqueuers.add(
       new HttpEnqueuer(
         this.queue,
         this.httpQueue,
         this.http.httpAdapter.getInstance(),
-        this.options.corsOptions
+        this.options.corsOptions,
+        schedulerUnsubscription
       )
     );
 
     this.enqueuers.add(
-      new FirehoseEnqueuer(this.queue, this.firehoseQueue, this.http.httpAdapter.getHttpServer())
+      new FirehoseEnqueuer(
+        this.queue,
+        this.firehoseQueue,
+        this.http.httpAdapter.getHttpServer(),
+        schedulerUnsubscription
+      )
     );
 
-    this.enqueuers.add(new DatabaseEnqueuer(this.queue, this.databaseQueue, this.database));
+    this.enqueuers.add(
+      new DatabaseEnqueuer(this.queue, this.databaseQueue, this.database, schedulerUnsubscription)
+    );
 
-    this.enqueuers.add(new ScheduleEnqueuer(this.queue));
+    this.enqueuers.add(new ScheduleEnqueuer(this.queue, schedulerUnsubscription));
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
@@ -96,15 +111,13 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     await this.queue.listen();
 
-    for (let i = 0; i < this.options.poolSize; i++) {
-      this.spawn();
-    }
+    this.scaleWorkers();
   }
 
   async onModuleDestroy() {
-    for (const [id, worker] of this.pool.entries()) {
+    for (const [id, worker] of this.workers.entries()) {
       await worker.kill();
-      this.pool.delete(id);
+      this.workers.delete(id);
     }
     for (const language of this.languages.values()) {
       await language.kill();
@@ -112,139 +125,84 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     return this.queue.kill();
   }
 
-  private readonly pool = new Map<string, Worker>();
-
-  workers = new Map<string, (event: event.Event) => void>();
+  workers = new Map<string, ScheduleWorker>();
 
   eventQueue = new Map<string, event.Event>();
-
-  batching = new Map<string, Batch>();
 
   timeouts = new Map<string, NodeJS.Timeout>();
 
   getStatus() {
+    const workers = Array.from(this.workers.values());
+
+    const activated = workers.filter(w => w.target).length;
+    const fresh = workers.length - activated;
+
     return {
-      limit: this.options.poolSize,
-      current: this.workers.size,
+      activated: activated,
+      fresh: fresh,
       unit: "count"
     };
   }
 
-  getBatchForTarget(target: event.Target) {
-    for (const batch of this.batching.values()) {
-      if (
-        batch.target == target.id &&
-        batch.remaining_enqueues[target.handler] != 0 &&
-        Date.now() < batch.deadline
-      ) {
-        return batch;
-      }
+  takeAWorker(target: event.Target): {id: string; worker: ScheduleWorker} {
+    const workers = Array.from(this.workers.entries()).map(([id, worker]) => {
+      return {id, worker};
+    });
+
+    const fresh = workers.find(({worker}) => !worker.target);
+    const activateds = workers.filter(({worker}) => worker.target && worker.target.id == target.id);
+
+    const available = activateds.find(({worker}) => worker.schedule);
+
+    if (activateds.length == this.options.maxConcurrency) {
+      return available || {id: undefined, worker: {} as any};
     }
 
-    return undefined;
-  }
-
-  releaseFinishedBatches() {
-    for (const [workerId, batch] of this.batching.entries()) {
-      if (
-        Date.now() > batch.deadline ||
-        Object.values(batch.remaining_enqueues).every(n => n == 0)
-      ) {
-        if (batch.schedule) {
-          batch.schedule(undefined);
-          this.print("removing dead batch " + workerId);
-          this.batching.delete(workerId);
-        }
-      }
-    }
-  }
-
-  takeAWorker() {
-    const workerId: string = this.workers.keys().next().value;
-    if (!workerId) {
-      return undefined;
-    }
-    const schedule = this.workers.get(workerId);
-    this.workers.delete(workerId);
-    return {schedule, workerId};
+    return available || fresh;
   }
 
   process() {
     for (const event of this.eventQueue.values()) {
-      const {target} = event;
+      const {id: workerId, worker} = this.takeAWorker(event.target);
+      // if worker is busy, move to the next events
+      if (!worker.schedule) {
+        continue;
+      }
 
-      let schedule: (event: event.Event) => void;
-      let workerId: string;
+      const schedule = worker.schedule;
+      worker.schedule = undefined;
+      worker.target = event.target;
 
       const [stdout, stderr] = this.output.create({
         eventId: event.id,
         functionId: event.target.id
       });
-
-      if (target.context.batch) {
-        let batch = this.getBatchForTarget(target);
-        if (!batch) {
-          const worker = this.takeAWorker();
-
-          if (!worker) {
-            stderr.write(
-              `There is no worker left for ${event.target.handler}, it has been added to the queue.`
-            );
-            break;
-          }
-
-          this.print(`creating a new batch for ${target.id}`);
-
-          batch = createBatch(event.target, worker.workerId, worker.schedule);
-          this.batching.set(batch.workerId, batch);
-        } else if (!batch.schedule) {
-          continue;
-        }
-
-        workerId = batch.workerId;
-        schedule = batch.schedule;
-
-        updateBatch(batch, target);
-
-        batch.schedule = undefined;
-      } else {
-        const worker = this.takeAWorker();
-
-        if (!worker) {
-          stderr.write(
-            `There is no worker left for (${event.target.handler}), it has been added to the queue and will be executed when a worker available.`
-          );
-          break;
-        }
-
-        schedule = worker.schedule;
-        workerId = worker.workerId;
-      }
-
-      const worker = this.pool.get(workerId);
       worker.attach(stdout, stderr);
 
-      const timeoutInSeconds = Math.min(this.options.timeout, event.target.context.timeout);
+      const timeoutInMs = Math.min(this.options.timeout, event.target.context.timeout) * 1000;
+      const timeoutFn = () => {
+        if (stderr.writable) {
+          stderr.write(
+            `${timeoutInMs / 1000} seconds timeout value has been reached for function '${
+              event.target.handler
+            }'. The worker is being shut down.`
+          );
+        }
+        worker.kill();
+      };
 
-      if (!this.timeouts.has(workerId)) {
-        this.timeouts.set(
-          workerId,
-          setTimeout(() => {
-            if (stderr.writable) {
-              stderr.write(
-                `Function (${event.target.handler}) did not finish within ${timeoutInSeconds} seconds. Aborting.`
-              );
-            }
-            worker.kill();
-          }, timeoutInSeconds * 1000)
-        );
+      if (this.timeouts.has(workerId)) {
+        clearTimeout(this.timeouts.get(workerId));
       }
+      this.timeouts.set(workerId, setTimeout(timeoutFn, timeoutInMs));
 
       schedule(event);
 
       this.eventQueue.delete(event.id);
 
       this.print(`assigning ${event.id} to ${workerId}`);
+
+      this.scaleWorkers();
     }
   }
 
@@ -262,53 +220,51 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   gotWorker(id: string, schedule: (event: event.Event) => void) {
-    if (this.batching.has(id)) {
-      this.print(`worker ${id} is batching`);
-      const batch = this.batching.get(id);
-      batch.schedule = schedule;
-      this.releaseFinishedBatches();
-    } else {
-      this.workers.set(id, schedule);
-      this.print(`got a new worker ${id}`);
-    }
+    const relatedWorker = this.workers.get(id);
+    relatedWorker.schedule = schedule;
+
+    this.print(
+      relatedWorker.target ? `worker ${id} is waiting for new event` : `got a new worker ${id}`
+    );
+
     this.process();
   }
 
   lostWorker(id: string) {
-    this.pool.delete(id);
     this.workers.delete(id);
-    this.batching.delete(id);
 
     clearTimeout(this.timeouts.get(id));
     this.timeouts.delete(id);
 
-    if (process.env.TEST_TARGET) {
-      return this.print(`lost a worker ${id} and skipping auto spawn under testing`);
-    }
     this.print(`lost a worker ${id}`);
-    this.spawn();
   }
 
-  private spawn() {
-    if (this.pool.size >= this.options.poolMaxSize) {
-      return;
-    }
-    const id: string = uniqid();
-    const worker = this.runtimes.get("node").spawn({
-      id,
-      env: {
-        __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
-        __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
-        __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
-        __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
-        __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
-          ? "true"
-          : ""
-      }
-    });
+  private scaleWorkers() {
+    const activatedWorkers = Array.from(this.workers.values()).filter(w => w.target).length;
+    const desiredWorkers = activatedWorkers + 1;
 
-    worker.once("exit", () => this.lostWorker(id));
-    this.pool.set(id, worker);
+    for (let i = this.workers.size; i < desiredWorkers; i++) {
+      const id: string = uniqid();
+      const worker = this.runtimes.get("node").spawn({
+        id,
+        env: {
+          __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
+          __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
+          __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
+          __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
+          __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
+            ? "true"
+            : ""
+        }
+      });
+
+      worker.once("exit", () => this.lostWorker(id));
+
+      (worker as ScheduleWorker).schedule = undefined;
+      (worker as ScheduleWorker).target = undefined;
+
+      this.workers.set(id, worker as ScheduleWorker);
+    }
   }
 
   /**

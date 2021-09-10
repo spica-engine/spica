@@ -3,6 +3,10 @@ import {checkDocument, checkDocuments} from "./check";
 import {mongodb, _mongodb} from "./mongo";
 import {ObjectId} from "./objectid";
 
+process.once("SIGTERM", () => {
+  close(false, () => process.exit());
+});
+
 let connection: _mongodb.MongoClient = globalThis[Symbol.for("kDatabaseDevkitConn")];
 
 function ignoreWarnings() {
@@ -154,11 +158,12 @@ function validateDocs(doc: object | object[]) {
   }
 }
 
-export function close(force?: boolean): Promise<void> {
+export function close(force?: boolean, cb?: (...args: any) => void): Promise<void> | void {
   if (connection) {
     globalThis[Symbol.for("kDatabaseDevkitConn")] = undefined;
-    return connection.close(force);
+    return connection.close(force, cb);
   }
+  return typeof cb == "function" ? cb() : Promise.resolve();
 }
 
 export function connected() {

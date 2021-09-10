@@ -1,5 +1,5 @@
 import {Inject, Injectable, Optional, OnModuleDestroy} from "@nestjs/common";
-import {DatabaseService, MongoClient, ObjectId} from "@spica-server/database";
+import {DatabaseService, MongoClient} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {Package, PackageManager} from "@spica-server/function/pkgmanager";
 import {event} from "@spica-server/function/queue/proto";
@@ -9,10 +9,13 @@ import * as path from "path";
 import * as rimraf from "rimraf";
 import {Observable, Subject} from "rxjs";
 import * as util from "util";
-import {FunctionService} from "./function.service";
+import {
+  FunctionService,
+  Function,
+  FUNCTION_OPTIONS,
+  Options
+} from "@spica-server/function/services";
 import {ChangeKind, TargetChange} from "./change";
-import {Function} from "./interface";
-import {FUNCTION_OPTIONS, Options} from "./options";
 import {Schema, SCHEMA, SchemaWithName, SCHEMA1} from "./schema/schema";
 import {createTargetChanges} from "./change";
 import {RepoStrategies} from "./services/interface";
@@ -248,9 +251,6 @@ export class FunctionEngine implements OnModuleDestroy {
           timeout: change.target.context.timeout
         })
       });
-      if (change.target.context.batch) {
-        target.context.batch = new event.SchedulingContext.Batch(change.target.context.batch);
-      }
       enqueuer.subscribe(target, change.options);
     } else {
       console.warn(`Couldn't find enqueuer ${change.type}.`);

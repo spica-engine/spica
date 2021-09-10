@@ -16,7 +16,6 @@ export namespace event {
         | {
             env?: SchedulingContext.Env[];
             timeout?: number;
-            batch?: SchedulingContext.Batch;
           }
     ) {
       super();
@@ -24,7 +23,6 @@ export namespace event {
       if (!Array.isArray(data) && typeof data == "object") {
         this.env = data.env;
         this.timeout = data.timeout;
-        this.batch = data.batch;
       }
     }
     get env(): SchedulingContext.Env[] {
@@ -43,21 +41,10 @@ export namespace event {
     set timeout(value: number) {
       pb_1.Message.setField(this, 3, value);
     }
-    get batch(): SchedulingContext.Batch {
-      return pb_1.Message.getWrapperField(
-        this,
-        SchedulingContext.Batch,
-        4
-      ) as SchedulingContext.Batch;
-    }
-    set batch(value: SchedulingContext.Batch) {
-      pb_1.Message.setWrapperField(this, 4, value);
-    }
     toObject() {
       return {
         env: this.env.map((item: SchedulingContext.Env) => item.toObject()),
-        timeout: this.timeout,
-        batch: this.batch && this.batch.toObject()
+        timeout: this.timeout
       };
     }
     serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
@@ -66,9 +53,7 @@ export namespace event {
         writer.writeRepeatedMessage(2, this.env, (item: SchedulingContext.Env) =>
           item.serialize(writer)
         );
-      if (this.timeout !== undefined) writer.writeInt32(3, this.timeout);
-      if (this.batch !== undefined)
-        writer.writeMessage(4, this.batch, () => this.batch.serialize(writer));
+      if (this.timeout !== undefined) writer.writeFloat(3, this.timeout);
       if (!w) return writer.getResultBuffer();
     }
     serializeBinary(): Uint8Array {
@@ -91,13 +76,7 @@ export namespace event {
             );
             break;
           case 3:
-            message.timeout = reader.readInt32();
-            break;
-          case 4:
-            reader.readMessage(
-              message.batch,
-              () => (message.batch = SchedulingContext.Batch.deserialize(reader))
-            );
+            message.timeout = reader.readFloat();
             break;
           default:
             reader.skipField();
@@ -161,68 +140,6 @@ export namespace event {
               break;
             case 2:
               message.value = reader.readString();
-              break;
-            default:
-              reader.skipField();
-          }
-        }
-        return message;
-      }
-    }
-    export class Batch extends pb_1.Message {
-      constructor(
-        data?:
-          | any[]
-          | {
-              limit?: number;
-              deadline?: number;
-            }
-      ) {
-        super();
-        pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
-        if (!Array.isArray(data) && typeof data == "object") {
-          this.limit = data.limit;
-          this.deadline = data.deadline;
-        }
-      }
-      get limit(): number {
-        return pb_1.Message.getFieldWithDefault(this, 1, undefined) as number;
-      }
-      set limit(value: number) {
-        pb_1.Message.setField(this, 1, value);
-      }
-      get deadline(): number {
-        return pb_1.Message.getFieldWithDefault(this, 2, undefined) as number;
-      }
-      set deadline(value: number) {
-        pb_1.Message.setField(this, 2, value);
-      }
-      toObject() {
-        return {
-          limit: this.limit,
-          deadline: this.deadline
-        };
-      }
-      serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
-        const writer = w || new pb_1.BinaryWriter();
-        if (this.limit !== undefined) writer.writeUint64(1, this.limit);
-        if (this.deadline !== undefined) writer.writeUint64(2, this.deadline);
-        if (!w) return writer.getResultBuffer();
-      }
-      serializeBinary(): Uint8Array {
-        throw new Error("Method not implemented.");
-      }
-      static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Batch {
-        const reader = bytes instanceof Uint8Array ? new pb_1.BinaryReader(bytes) : bytes,
-          message = new Batch();
-        while (reader.nextField()) {
-          if (reader.isEndGroup()) break;
-          switch (reader.getFieldNumber()) {
-            case 1:
-              message.limit = reader.readUint64();
-              break;
-            case 2:
-              message.deadline = reader.readUint64();
               break;
             default:
               reader.skipField();

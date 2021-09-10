@@ -7,7 +7,7 @@ import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing"
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {FunctionModule} from "@spica-server/function";
-import {Function} from "@spica-server/function/src/interface";
+import {Function} from "@spica-server/function/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as os from "os";
@@ -56,8 +56,6 @@ xdescribe("Hooks Integration", () => {
         FunctionModule.forRoot({
           path: os.tmpdir(),
           databaseName: undefined,
-          poolSize: 1,
-          poolMaxSize: 1,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
           apiUrl: undefined,
@@ -69,6 +67,7 @@ xdescribe("Hooks Integration", () => {
             allowedOrigins: ["*"]
           },
           logExpireAfterSeconds: 60,
+          maxConcurrency: 1,
           debug: false
         })
       ]

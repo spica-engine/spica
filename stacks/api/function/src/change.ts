@@ -1,4 +1,4 @@
-import {Triggers, Function, Environment} from "./interface";
+import {Triggers, Function, Environment} from "@spica-server/function/services";
 import {diff} from "@spica-server/core/differ";
 
 export function changesFromTriggers(previousFn: Function, currentFn: Function) {
@@ -74,10 +74,6 @@ export function createTargetChanges(fn: Function, changeKind: ChangeKind): Targe
       }
     };
 
-    if (trigger.batch) {
-      change.target.context.batch = trigger.batch;
-    }
-
     changes.push(change);
   }
   return changes;
@@ -92,10 +88,6 @@ export enum ChangeKind {
 export interface Context {
   timeout: number;
   env: Environment;
-  batch?: {
-    limit: number;
-    deadline: number;
-  };
 }
 
 export interface TargetChange {
