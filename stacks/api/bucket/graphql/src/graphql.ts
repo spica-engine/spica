@@ -13,7 +13,7 @@ import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/servic
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectID, ObjectId} from "@spica-server/database";
 import {GuardService} from "@spica-server/passport";
-import {resourceFilterFunction} from "@spica-server/passport/guard/src/action.guard";
+import {resourceFilterFunction} from "@spica-server/passport/guard";
 import {graphqlHTTP} from "express-graphql";
 import {
   GraphQLError,

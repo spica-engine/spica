@@ -1,0 +1,27 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm//@bazel/typescript:index.bzl", "ts_library")
+
+ts_library(
+    name = "graphql",
+    srcs = glob([
+        "src/*.ts",
+    ]) + ["index.ts"],
+    module_name = "@spica-server/bucket/graphql",
+    deps = [
+        "//packages/core/schema",
+        "//packages/database",
+        "//stacks/api/activity/services",
+        "//stacks/api/bucket/common",
+        "//stacks/api/bucket/history",
+        "//stacks/api/bucket/hooks",
+        "//stacks/api/bucket/services",
+        "//stacks/api/passport",
+        "//stacks/api/passport/guard",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/core",
+        "@npm//express-graphql",
+        "@npm//graphql",
+        "@npm//graphql-tools",
+    ],
+)

@@ -14,7 +14,7 @@ import {
   bucketSpecificDefault,
   provideBucketSchemaResolver
 } from "./bucket.schema.resolver";
-import {GraphqlController} from "./graphql/graphql";
+import {GraphQLModule} from "@spica-server/bucket/graphql";
 import {provideLanguageFinalizer} from "@spica-server/bucket/common";
 import {registerInformers} from "./machinery";
 import {DocumentScheduler} from "./scheduler";
@@ -94,6 +94,12 @@ export class BucketModule {
       imports.push(realtime);
     }
 
+    if (options.graphql) {
+      const module = GraphQLModule.forRoot();
+      module.imports.push(schemaModule as any);
+      imports.push(module);
+    }
+
     return {
       module: BucketModule,
       controllers: [BucketController, BucketDataController],
@@ -104,8 +110,7 @@ export class BucketModule {
           provide: BucketSchemaResolver,
           useFactory: provideBucketSchemaResolver,
           inject: [Validator, BucketService]
-        },
-        GraphqlController
+        }
       ],
       exports: [ServicesModule]
     };
@@ -154,4 +159,5 @@ export interface BucketOptions {
   cache: boolean;
   cacheTtl?: number;
   bucketDataLimit?: number;
+  graphql: boolean;
 }

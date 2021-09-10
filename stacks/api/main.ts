@@ -91,7 +91,12 @@ const args = yargs
     },
     "bucket-data-limit": {
       number: true,
-      description: "Maximum document count in all bucket-data collections"
+      description: "Maximum document count in all bucket-data collections."
+    },
+    "bucket-graphql": {
+      boolean: true,
+      description: "Whether Bucket GraphQL feature is enabled.",
+      default: false
     }
   })
   /* Passport Options  */
@@ -378,7 +383,8 @@ const modules = [
     realtime: args["experimental-bucket-realtime"],
     cache: args["bucket-cache"],
     cacheTtl: args["bucket-cache-ttl"],
-    bucketDataLimit: args["bucket-data-limit"]
+    bucketDataLimit: args["bucket-data-limit"],
+    graphql: args["bucket-graphql"]
   }),
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud",
