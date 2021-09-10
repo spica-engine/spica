@@ -190,6 +190,11 @@ const args = yargs
       boolean: true,
       description: "Enable/disable function workers debugging mode. Default value is true",
       default: true
+    },
+    "function-realtime-logs": {
+      boolean: true,
+      description: "Enable/disable tracking function logs realtime. Default value is false.",
+      default: true
     }
   })
   /* Storage Options */
@@ -421,7 +426,8 @@ const modules = [
       allowedHeaders: args["cors-allowed-headers"],
       allowCredentials: args["cors-allow-credentials"]
     },
-    debug: args["function-debug"]
+    debug: args["function-debug"],
+    realtimeLogs: args["function-realtime-logs"]
   })
 ];
 

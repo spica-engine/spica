@@ -26,7 +26,7 @@ export class FunctionModule {
     return {
       module: FunctionModule,
       imports: [
-        LogModule.forRoot({expireAfterSeconds: options.logExpireAfterSeconds}),
+        LogModule.forRoot({expireAfterSeconds: options.logExpireAfterSeconds,realtime:options.realtimeLogs}),
         SchemaModule.forChild({
           schemas: [require("./schema/function.json")],
           customFields: ["viewEnum"]
