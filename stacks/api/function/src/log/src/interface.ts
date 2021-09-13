@@ -10,6 +10,7 @@ export interface Log {
 
 export interface LogOptions {
   expireAfterSeconds: number;
+  realtime: boolean;
 }
 
 export const FUNCTION_LOG_OPTIONS = Symbol.for("FUNCTION_LOG_OPTIONS");

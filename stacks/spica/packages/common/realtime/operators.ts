@@ -1,7 +1,17 @@
 import {Sequence, SequenceKind, ChunkKind} from "./interface";
-import {tap, delayWhen, map, debounceTime, retryWhen, filter} from "rxjs/operators";
+import {
+  tap,
+  delayWhen,
+  map,
+  debounceTime,
+  retryWhen,
+  filter,
+  take,
+  mapTo,
+  catchError
+} from "rxjs/operators";
 import {webSocket} from "rxjs/webSocket";
-import {timer, of} from "rxjs";
+import {timer, of, Observable} from "rxjs";
 
 export class IterableSet<T> implements Iterable<T> {
   ids = new Array<string>();
@@ -88,5 +98,20 @@ export function getWsObs<T>(url: string, sort: object = {}) {
     debounceTime(1),
     map(() => Array.from(data)),
     retryWhen(errors => errors.pipe(filter(error => error.code == 1006)))
+  );
+}
+
+export function checkConnectivity(url: string): Observable<boolean> {
+  return webSocket(url).pipe(
+    catchError(e => {
+      return of({error: e} as any);
+    }),
+    take(1),
+    map(r => {
+      if (r.error) {
+        return false;
+      }
+      return true;
+    })
   );
 }
