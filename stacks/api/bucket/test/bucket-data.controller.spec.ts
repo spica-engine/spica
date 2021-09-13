@@ -31,7 +31,7 @@ describe("BucketDataController", () => {
           history: false,
           realtime: false,
           cache: false,
-          graphql:false
+          graphql: false
         })
       ]
     }).compile();

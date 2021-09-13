@@ -31,7 +31,7 @@ describe("Scheduler", () => {
           realtime: false,
           history: false,
           cache: false,
-          graphql:false
+          graphql: false
         })
       ]
     })

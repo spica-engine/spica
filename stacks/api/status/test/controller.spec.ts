@@ -43,7 +43,7 @@ describe("Status", () => {
             hooks: false,
             realtime: false,
             bucketDataLimit: 100,
-            graphql:false
+            graphql: false
           })
         ]
       }).compile();
