@@ -9,4 +9,5 @@ export interface FunctionOptions {
   path: string;
   logExpireAfterSeconds: number;
   entryLimit?: number;
+  realtimeLogs: boolean;
 }
