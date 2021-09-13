@@ -12,7 +12,7 @@ import {
 import {Function, Information, Log, LogFilter, WEBSOCKET_INTERCEPTOR, Trigger} from "../interface";
 import * as fromFunction from "../reducers/function.reducer";
 import {PassportService} from "@spica-client/passport";
-import {getWsObs} from "@spica-client/common";
+import {getWsObs, checkConnectivity} from "@spica-client/common";
 import {examples} from "../statics/examples";
 
 @Injectable({providedIn: "root"})
@@ -53,6 +53,12 @@ export class FunctionService {
 
   getFunction(id: string): Observable<Function> {
     return this.store.pipe(select(fromFunction.selectEntities)).pipe(map(entities => entities[id]));
+  }
+
+  checkRealtimeLogConnectivity() {
+    const url = new URL(`${this.wsInterceptor}/function-logs`);
+    url.searchParams.set("Authorization", this.passport.token);
+    return checkConnectivity(url.toString());
   }
 
   getLogs(filter: LogFilter): Observable<Log[]> {

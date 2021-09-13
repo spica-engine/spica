@@ -30,7 +30,10 @@ export class FunctionModule {
     return {
       module: FunctionModule,
       imports: [
-        LogModule.forRoot({expireAfterSeconds: options.logExpireAfterSeconds,realtime:options.realtimeLogs}),
+        LogModule.forRoot({
+          expireAfterSeconds: options.logExpireAfterSeconds,
+          realtime: options.realtimeLogs
+        }),
         SchemaModule.forChild({
           schemas: [require("./schema/function.json")],
           customFields: ["viewEnum"]
@@ -50,7 +53,8 @@ export class FunctionModule {
         ServicesModule.forRoot({
           logExpireAfterSeconds: options.logExpireAfterSeconds,
           path: options.path,
-          entryLimit: options.entryLimit
+          entryLimit: options.entryLimit,
+          realtimeLogs: options.realtimeLogs
         })
       ],
       controllers: [FunctionController],

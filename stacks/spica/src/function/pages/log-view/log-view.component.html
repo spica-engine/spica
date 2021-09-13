@@ -19,6 +19,7 @@
 
 <mat-card class="mat-elevation-z25">
   <mat-slide-toggle
+    *ngIf="realtimeConnectivity"
     #realtimeToggle
     [checked]="(queryParams | async)?.realtime"
     (change)="next({realtime: $event.checked ? true : false})"
@@ -26,7 +27,7 @@
     Live Logs
   </mat-slide-toggle>
 
-  <mat-form-field *ngIf="!realtimeToggle.checked">
+  <mat-form-field *ngIf="!realtimeToggle?.checked">
     <mat-label>Select a date range</mat-label>
     <mat-date-range-input [max]="maxDate" [rangePicker]="picker">
       <input
@@ -86,7 +87,7 @@
         [minBufferPx]="bufferSize"
         [maxBufferPx]="bufferSize * 1.1"
         class="log-viewport"
-        (scrolledIndexChange)="!realtimeToggle.checked && onScroll($event)"
+        (scrolledIndexChange)="!realtimeToggle?.checked && onScroll($event)"
       >
         <div class="header">
           <span>Timestamp</span>
