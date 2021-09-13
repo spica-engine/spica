@@ -1,8 +1,8 @@
 import {CdkVirtualScrollViewport} from "@angular/cdk/scrolling";
-import {Component, OnInit, Input, ViewChild, AfterViewInit, OnDestroy} from "@angular/core";
+import {Component, OnInit, Input, ViewChild, OnDestroy} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Observable, forkJoin, BehaviorSubject, combineLatest, zip, Subject, of} from "rxjs";
-import {switchMap, tap, map, flatMap, takeUntil, filter} from "rxjs/operators";
+import {switchMap, tap, map, flatMap, takeUntil} from "rxjs/operators";
 import {Function, Log} from "../../../function/interface";
 import {FunctionService} from "../../services/function.service";
 
@@ -48,7 +48,13 @@ export class LogViewComponent implements OnInit, OnDestroy {
 
   dispose = new Subject();
 
+  realtimeConnectivity: boolean;
+
   constructor(private route: ActivatedRoute, private fs: FunctionService, public router: Router) {
+    this.fs
+      .checkRealtimeLogConnectivity()
+      .toPromise()
+      .then(r => (this.realtimeConnectivity = r));
     this.realtimeConnectionTime = this.realtimeConnectionTime || new Date();
   }
 

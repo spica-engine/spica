@@ -76,6 +76,9 @@ describe("LogViewComponent", () => {
             },
             clearLogs: () => {
               return of(undefined);
+            },
+            checkRealtimeLogConnectivity: () => {
+              return of(true);
             }
           }
         }

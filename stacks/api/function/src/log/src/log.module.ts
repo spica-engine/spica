@@ -8,13 +8,12 @@ import {LogService} from "./log.service";
 @Module({})
 export class LogModule {
   static forRoot(options: LogOptions): DynamicModule {
-    return {
+    const module = {
       module: LogModule,
-      imports: [RealtimeDatabaseModule],
+      imports: [],
       controllers: [LogController],
       providers: [
         LogService,
-        LogGateway,
         {
           provide: FUNCTION_LOG_OPTIONS,
           useValue: options
@@ -22,5 +21,12 @@ export class LogModule {
       ],
       exports: [LogService]
     };
+
+    if (options.realtime) {
+      module.imports.push(RealtimeDatabaseModule);
+      module.providers.push(LogGateway as any);
+    }
+
+    return module;
   }
 }
