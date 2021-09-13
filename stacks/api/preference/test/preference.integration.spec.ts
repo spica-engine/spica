@@ -35,7 +35,8 @@ describe("Preference Integration", () => {
           hooks: false,
           history: false,
           realtime: false,
-          cache: false
+          cache: false,
+          graphql:false
         }),
         BucketCoreModule
       ],

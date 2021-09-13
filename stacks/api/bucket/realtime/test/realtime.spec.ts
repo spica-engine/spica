@@ -57,7 +57,8 @@ describe("Realtime", () => {
           history: false,
           hooks: false,
           realtime: true,
-          cache: false
+          cache: false,
+          graphql: false
         }),
         PassportTestingModule.initialize()
       ]

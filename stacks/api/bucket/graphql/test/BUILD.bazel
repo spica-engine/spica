@@ -11,7 +11,7 @@ ts_library(
     ],
     deps = [
         "//packages/database",
-        "//stacks/api/bucket",
+        "//stacks/api/bucket/graphql",
         "@npm//@types/jasmine",
         "@npm//@types/prettier",
         "@npm//prettier",
