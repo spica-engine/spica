@@ -1,8 +1,6 @@
 import {CorsOptions} from "@spica-server/core/interfaces";
 
 export interface SchedulingOptions {
-  poolSize: number;
-  poolMaxSize: number;
   databaseUri: string;
   databaseName: string;
   databaseReplicaSet: string;
@@ -10,6 +8,7 @@ export interface SchedulingOptions {
   timeout: number;
   experimentalDevkitDatabaseCache?: boolean;
   corsOptions: CorsOptions;
+  maxConcurrency: number;
   debug: boolean;
 }
 

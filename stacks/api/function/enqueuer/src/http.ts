@@ -20,7 +20,8 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     private queue: EventQueue,
     private http: HttpQueue,
     httpServer: express.Application,
-    private corsOptions: CorsOptions
+    private corsOptions: CorsOptions,
+    private schedulerUnsubscription: (targetId: string) => void
   ) {
     super();
     this.router.use(
@@ -123,6 +124,8 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   }
 
   unsubscribe(target: event.Target): void {
+    this.schedulerUnsubscription(target.id);
+
     this.router.stack = this.router.stack.filter(layer => {
       if (layer.route) {
         return !layer.route.stack.some(layer => {

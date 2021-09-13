@@ -13,6 +13,8 @@ describe("FirehoseEnqueuer", () => {
   let app: INestApplication;
   let wsc: Websocket;
 
+  let schedulerUnsubscriptionSpy: jasmine.Spy;
+
   beforeEach(async () => {
     eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
     firehoseQueue = jasmine.createSpyObj("firehoseQueue", ["enqueue"]);
@@ -27,10 +29,13 @@ describe("FirehoseEnqueuer", () => {
     app = module.createNestApplication();
     wsc = module.get(Websocket);
     await app.listen(wsc.socket);
+
+    schedulerUnsubscriptionSpy = jasmine.createSpy("unsubscription", () => {});
     firehoseEnqueuer = new FirehoseEnqueuer(
       eventQueue,
       firehoseQueue,
-      app.getHttpAdapter().getHttpServer()
+      app.getHttpAdapter().getHttpServer(),
+      schedulerUnsubscriptionSpy
     );
   });
 
@@ -64,6 +69,8 @@ describe("FirehoseEnqueuer", () => {
         target: target2
       }
     ]);
+
+    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledOnceWith(target2.id);
   });
 
   it("should send client description", async () => {

@@ -15,9 +15,13 @@ describe("ScheduleEnqueuer", () => {
   let noopTarget: event.Target;
   let clock: jasmine.Clock;
 
+  let schedulerUnsubscriptionSpy: jasmine.Spy;
+
   beforeEach(() => {
     eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
-    enqueuer = new ScheduleEnqueuer(eventQueue);
+
+    schedulerUnsubscriptionSpy = jasmine.createSpy("unsubscription", () => {});
+    enqueuer = new ScheduleEnqueuer(eventQueue, schedulerUnsubscriptionSpy);
 
     noopTarget = createTarget();
 
@@ -77,6 +81,8 @@ describe("ScheduleEnqueuer", () => {
       ["/tmp/fn1", "handler2"],
       ["/tmp/fn2", "handler1"]
     ]);
+
+    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledOnceWith(target1.id);
   });
 
   it("should schedule the job", () => {

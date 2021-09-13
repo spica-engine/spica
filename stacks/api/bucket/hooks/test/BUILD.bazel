@@ -50,6 +50,7 @@ ts_library(
         "//stacks/api/bucket",
         "//stacks/api/bucket/services",
         "//stacks/api/function",
+        "//stacks/api/function/services",
         "//stacks/api/passport/testing",
         "//stacks/api/preference/testing",
         "@npm//@nestjs/common",

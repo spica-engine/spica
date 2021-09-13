@@ -37,8 +37,6 @@ describe("Scheduler Injection", () => {
           databaseName: undefined,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
-          poolSize: 0,
-          poolMaxSize: 0,
           apiUrl: undefined,
           timeout: 5,
           corsOptions: {
@@ -47,6 +45,7 @@ describe("Scheduler Injection", () => {
             allowedMethods: ["*"],
             allowedOrigins: ["*"]
           },
+          maxConcurrency: 1,
           debug: false
         }),
         SpySchedulerModule
