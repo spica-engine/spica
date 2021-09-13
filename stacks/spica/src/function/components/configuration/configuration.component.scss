@@ -21,6 +21,12 @@
         width: 100%;
       }
 
+      span.http-url {
+        margin-top: -40px;
+        font-size: 11px;
+        float: right;
+      }
+
       mat-select {
         mat-select-trigger {
           > * {

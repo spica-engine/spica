@@ -29,7 +29,6 @@ import {EditorModule} from "@spica-client/common/code-editor";
 import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
 import {provideActivityFactory} from "@spica-client/function/providers/activity";
-import {provideWsInterceptor} from "@spica-client/function/providers/websocket";
 import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
 import {PassportService} from "@spica-client/passport";
 import {PassportModule} from "../passport/passport.module";
@@ -109,8 +108,7 @@ export class FunctionModule {
         {provide: FUNCTION_OPTIONS, useValue: options},
         {
           provide: WEBSOCKET_INTERCEPTOR,
-          useFactory: provideWsInterceptor,
-          deps: [FUNCTION_OPTIONS]
+          useFactory: () => options.url.replace("http", "ws")
         },
         {
           provide: FunctionInitializer,

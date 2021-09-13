@@ -133,6 +133,9 @@
             [name]="propertyKv.key"
             [required]="options.required?.indexOf(propertyKv.key) > -1"
           ></div>
+          <span class="http-url" *ngIf="trigger.type == 'http'">
+            {{ apiUrl + trigger.options.path }}
+          </span>
         </mat-list-item>
       </ng-container>
     </ng-container>

@@ -7,14 +7,12 @@
   "properties": {
     "method": {
       "title": "Method",
-      "description": "Http trigger rely on request method.",
       "type": "string",
       "enum": ["All", "Get", "Post", "Put", "Delete", "Patch", "Head"],
       "default": "Get"
     },
     "path": {
       "title": "Path",
-      "description": "Full route path that function will be served on.",
       "type": "string",
       "examples": [
         "/v1/books",
