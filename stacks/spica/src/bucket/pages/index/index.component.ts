@@ -21,7 +21,7 @@ import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {DomSanitizer} from "@angular/platform-browser";
 import {NgModel} from "@angular/forms";
-import {BaseUrlCollection, BASE_URL, Scheme, SchemeObserver} from "@spica-client/core";
+import {Scheme, SchemeObserver} from "@spica-client/core";
 import {guides} from "./guides";
 
 @Component({
