@@ -65,6 +65,7 @@ import * as fromBucket from "./state/bucket.reducer";
 import {RequiredTranslate} from "./validators";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
 import {HighlightModule, HIGHLIGHT_OPTIONS} from "ngx-highlightjs";
+import {BucketOptions, BUCKET_OPTIONS} from "./interfaces/bucket";
 
 @NgModule({
   imports: [
@@ -161,7 +162,7 @@ import {HighlightModule, HIGHLIGHT_OPTIONS} from "ngx-highlightjs";
   ]
 })
 export class BucketModule {
-  public static forRoot(): ModuleWithProviders<BucketModule> {
+  public static forRoot(options: BucketOptions): ModuleWithProviders<BucketModule> {
     return {
       ngModule: BucketModule,
       providers: [
@@ -183,6 +184,10 @@ export class BucketModule {
           provide: ACTIVITY_FACTORY,
           useValue: provideActivityFactory,
           multi: true
+        },
+        {
+          provide: BUCKET_OPTIONS,
+          useValue: options
         },
         {
           provide: HIGHLIGHT_OPTIONS,

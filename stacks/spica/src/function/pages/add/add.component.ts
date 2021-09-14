@@ -7,7 +7,8 @@ import {
   ViewChild,
   Renderer2,
   ChangeDetectorRef,
-  RendererStyleFlags2
+  RendererStyleFlags2,
+  Inject
 } from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {SavingState} from "@spica-client/material";
@@ -32,6 +33,8 @@ import {
   denormalizeFunction,
   emptyFunction,
   emptyTrigger,
+  FunctionOptions,
+  FUNCTION_OPTIONS,
   Information,
   NormalizedFunction,
   normalizeFunction,
@@ -96,6 +99,8 @@ export class AddComponent implements OnInit, OnDestroy {
   editName = false;
   editDescription = false;
 
+  apiUrl;
+
   constructor(
     private activatedRoute: ActivatedRoute,
     private router: Router,
@@ -104,8 +109,10 @@ export class AddComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     public renderer: Renderer2,
     public changeDetector: ChangeDetectorRef,
-    private github: GithubService
+    private github: GithubService,
+    @Inject(FUNCTION_OPTIONS) options: FunctionOptions
   ) {
+    this.apiUrl = options.url;
     this.information = this.functionService.information().pipe(
       share(),
       tap(information => {
@@ -134,7 +141,8 @@ export class AddComponent implements OnInit, OnDestroy {
                 maxHeight: "90vh",
                 data: {
                   information: this.information,
-                  function: this.function
+                  function: this.function,
+                  apiUrl: this.apiUrl
                 }
               })
               .afterClosed()

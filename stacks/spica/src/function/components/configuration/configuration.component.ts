@@ -10,10 +10,12 @@ import {Observable} from "rxjs";
 export class ConfigurationComponent {
   information: Observable<any>;
 
+  apiUrl;
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
     public dialogRef: MatDialogRef<ConfigurationComponent>
   ) {
+    this.apiUrl = data.apiUrl;
     this.information = data.information;
     this.data.function.triggers = [
       {

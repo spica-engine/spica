@@ -1,3 +1,4 @@
+import {InjectionToken} from "@angular/core";
 import {InputSchema} from "@spica-client/common";
 import {JSONSchema7TypeName} from "json-schema";
 
@@ -78,3 +79,9 @@ export interface BucketTemplate {
   name: string;
   buckets: Bucket[];
 }
+
+// MODULE
+export interface BucketOptions {
+  url: string;
+}
+export const BUCKET_OPTIONS = new InjectionToken<BucketOptions>("BUCKET_OPTIONS");
