@@ -44,6 +44,9 @@ export class LogViewComponent implements OnInit, OnDestroy {
   @ViewChild(CdkVirtualScrollViewport)
   viewport: CdkVirtualScrollViewport;
 
+  // to use ngif with template var
+  @ViewChild("realtimeToggle") realtimeToggle: any;
+
   @Input() realtimeConnectionTime: Date;
 
   dispose = new Subject();

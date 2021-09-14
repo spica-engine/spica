@@ -32,7 +32,7 @@ import {of, Subject} from "rxjs";
 import {map} from "rxjs/operators";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {FilterComponent} from "../../components/filter/filter.component";
-import {Bucket} from "../../interfaces/bucket";
+import {Bucket, BUCKET_OPTIONS} from "../../interfaces/bucket";
 import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
@@ -118,8 +118,8 @@ describe("IndexComponent", () => {
           useValue: activatedRoute
         },
         {
-          provide: BASE_URL,
-          useValue: [{api: "http://insteadof"}]
+          provide: BUCKET_OPTIONS,
+          useValue: {url: "http://insteadof"}
         }
       ],
       declarations: [

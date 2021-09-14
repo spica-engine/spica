@@ -16,6 +16,10 @@ import {StorageModule} from "./storage/storage.module";
 import {ErrorStateMatcher, ShowOnDirtyErrorStateMatcher} from "@angular/material/core";
 import {OverlayContainer, FullscreenOverlayContainer} from "@angular/cdk/overlay";
 
+const API_FULL_URL = environment.api.startsWith("http")
+  ? environment.api
+  : window.location.origin + environment.api;
+
 @NgModule({
   imports: [
     /** Initialize main modules. */
@@ -37,9 +41,9 @@ import {OverlayContainer, FullscreenOverlayContainer} from "@angular/cdk/overlay
     DashboardModule,
     ActivityModule,
     PassportModule.forRoot(),
-    BucketModule.forRoot(),
+    BucketModule.forRoot({url: API_FULL_URL}),
     StorageModule.forRoot(),
-    FunctionModule.forRoot({url: environment.api})
+    FunctionModule.forRoot({url: API_FULL_URL})
   ],
   providers: [
     {provide: ErrorStateMatcher, useClass: ShowOnDirtyErrorStateMatcher},

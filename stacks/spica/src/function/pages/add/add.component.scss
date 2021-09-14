@@ -243,6 +243,13 @@
         padding: 0px;
         margin: 24px 10px 10px 10px;
         width: calc(100% - 20px);
+
+        span.http-url {
+          margin-top: -40px;
+          font-size: 11px;
+          float: right;
+        }
+
         ::ng-deep .input-placer-input {
           width: 100%;
         }

@@ -14,14 +14,14 @@ import {
   tap,
   takeUntil
 } from "rxjs/operators";
-import {Bucket} from "../../interfaces/bucket";
+import {Bucket, BucketOptions, BUCKET_OPTIONS} from "../../interfaces/bucket";
 import {BucketData, BucketEntry} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {DomSanitizer} from "@angular/platform-browser";
 import {NgModel} from "@angular/forms";
-import {BaseUrlCollection, BASE_URL, Scheme, SchemeObserver} from "@spica-client/core";
+import {Scheme, SchemeObserver} from "@spica-client/core";
 import {guides} from "./guides";
 
 @Component({
@@ -70,7 +70,6 @@ export class IndexComponent implements OnInit, OnDestroy {
   guideSDK: string = "js";
   guideResponse: {[key: string]: string};
   guideObjects: object;
-  rootUrl: string;
 
   readonly defaultPaginatorOptions = {
     pageSize: 10,
@@ -94,9 +93,8 @@ export class IndexComponent implements OnInit, OnDestroy {
     private router: Router,
     private sanitizer: DomSanitizer,
     private scheme: SchemeObserver,
-    @Inject(BASE_URL) private baseUrls: BaseUrlCollection[]
+    @Inject(BUCKET_OPTIONS) private options: BucketOptions
   ) {
-    this.rootUrl = this.baseUrls.find(urls => urls.api).api;
     this.scheme
       .observe(Scheme.Dark)
       .pipe(takeUntil(this.dispose))
@@ -222,7 +220,7 @@ export class IndexComponent implements OnInit, OnDestroy {
           const secondPropValue =
             response.data.length && secondProp ? response.data[0][secondProp] : "";
           this.guideObjects = guides(
-            this.rootUrl,
+            this.options.url,
             bucketUrl,
             firstProp,
             firstPropValue,
