@@ -20,7 +20,8 @@ describe("Bucket Module", () => {
           hooks: true,
           realtime: false,
           history: false,
-          cache: false
+          cache: false,
+          graphql: false
         })
       ]
     }).compile();
@@ -39,7 +40,8 @@ describe("Bucket Module", () => {
           hooks: false,
           realtime: false,
           history: false,
-          cache: false
+          cache: false,
+          graphql: false
         })
       ]
     }).compile();
@@ -63,7 +65,8 @@ describe("Bucket Module", () => {
           hooks: false,
           realtime: false,
           history: true,
-          cache: false
+          cache: false,
+          graphql: false
         })
       ]
     }).compile();
@@ -82,6 +85,7 @@ describe("Bucket Module", () => {
           hooks: false,
           realtime: false,
           history: false,
+          graphql: false,
           cache: false
         })
       ]
@@ -106,7 +110,8 @@ describe("Bucket Module", () => {
           hooks: false,
           realtime: false,
           history: false,
-          cache: true
+          cache: true,
+          graphql: false
         })
       ]
     }).compile();
@@ -125,7 +130,8 @@ describe("Bucket Module", () => {
           hooks: false,
           realtime: false,
           history: false,
-          cache: false
+          cache: false,
+          graphql: false
         })
       ]
     }).compile();

@@ -42,7 +42,8 @@ describe("Status", () => {
             history: false,
             hooks: false,
             realtime: false,
-            bucketDataLimit: 100
+            bucketDataLimit: 100,
+            graphql: false
           })
         ]
       }).compile();

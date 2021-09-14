@@ -30,7 +30,8 @@ describe("Scheduler", () => {
           hooks: false,
           realtime: false,
           history: false,
-          cache: false
+          cache: false,
+          graphql: false
         })
       ]
     })

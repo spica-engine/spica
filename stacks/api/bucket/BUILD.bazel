@@ -20,6 +20,7 @@ ts_library(
         "//stacks/api/bucket/cache",
         "//stacks/api/bucket/common",
         "//stacks/api/bucket/expression",
+        "//stacks/api/bucket/graphql",
         "//stacks/api/bucket/history",
         "//stacks/api/bucket/hooks",
         "//stacks/api/bucket/hooks/proto",
@@ -37,9 +38,6 @@ ts_library(
         "@npm//@types/mongodb",
         "@npm//@types/node",
         "@npm//cron",
-        "@npm//express-graphql",
-        "@npm//graphql",
-        "@npm//graphql-tools",
         "@npm//rxjs",
     ],
 )

@@ -33,7 +33,8 @@ describe("GraphQLController", () => {
           hooks: false,
           history: false,
           realtime: false,
-          cache: false
+          cache: false,
+          graphql: true
         }),
         ActivityModule.forRoot({expireAfterSeconds: 10})
       ]

@@ -51,7 +51,8 @@ xdescribe("Hooks Integration", () => {
           hooks: true,
           history: false,
           realtime: true,
-          cache: false
+          cache: false,
+          graphql: false
         }),
         FunctionModule.forRoot({
           path: os.tmpdir(),
