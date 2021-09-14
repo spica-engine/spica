@@ -31,7 +31,7 @@ const API_FULL_URL = environment.api.startsWith("http")
       relativeLinkResolution: "legacy"
     }),
     HttpClientModule,
-    BaseUrlInterceptorModule.forRoot({api: API_FULL_URL}),
+    BaseUrlInterceptorModule.forRoot({api: environment.api}),
     RouteModule.forRoot(),
     LayoutModule.forRoot(),
     StoreModule.forRoot([]),

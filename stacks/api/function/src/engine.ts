@@ -7,7 +7,7 @@ import * as fs from "fs";
 import {JSONSchema7} from "json-schema";
 import * as path from "path";
 import * as rimraf from "rimraf";
-import {Observable, of, Subject} from "rxjs";
+import {Observable, Subject} from "rxjs";
 import * as util from "util";
 import {
   FunctionService,
@@ -23,15 +23,7 @@ import {RepoStrategies} from "./services/interface";
 @Injectable()
 export class FunctionEngine implements OnModuleDestroy {
   readonly schemas = new Map<string, Schema>([
-    [
-      "http",
-      require("./schema/http.json")
-      // () => {
-      //   const module = require("./schema/http.json");
-      //   module.properties.path.description = "http://localhost:4300";
-      //   return of(module);
-      // }
-    ],
+    ["http", require("./schema/http.json")],
     ["schedule", require("./schema/schedule.json")],
     ["firehose", require("./schema/firehose.json")],
     ["system", require("./schema/system.json")],

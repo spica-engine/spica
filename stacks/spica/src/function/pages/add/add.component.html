@@ -332,7 +332,7 @@
                     [(ngModel)]="trigger.options[propertyKv.key]"
                     [name]="propertyKv.key"
                     [required]="options.required?.indexOf(propertyKv.key) > -1"
-                    >{{ propertyKv.value.description | json }}
+                  >
                   </span>
                   <span class="http-url" *ngIf="trigger.type == 'http'">
                     {{ apiUrl + trigger.options.path }}
