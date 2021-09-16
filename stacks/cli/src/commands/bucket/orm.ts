@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 import {spin} from "../../console";
 import {BucketSchema} from "./interface";
-import {buildInterface, buildMethod, prepareInterfaceTitle} from "./schema";
+import {createFileContent} from "./schema";
 
 async function orm({options}: ActionParameters) {
   const APIKEY = options.apikey as string;
@@ -24,43 +24,12 @@ async function orm({options}: ActionParameters) {
         .then(r => r.data);
 
       spinner.text = "Building interface and method definitions..";
-      let lines: string[] = [];
-      // DEVKIT INIT
-      lines.push("import * as Bucket from '@spica-devkit/bucket';");
-      lines.push(`\nBucket.initialize({apikey:'${APIKEY}',publicUrl:'${APIURL}'});`);
-
-      // HELPER TYPE DEFINITIONS
-      lines.push(
-        "\n\ntype Rest<T extends any[]> = ((...p: T) => void) extends ((p1: infer P1, ...rest: infer R) => void) ? R : never;"
-      );
-      lines.push("\ntype getArgs = Rest<Parameters<typeof Bucket.data.get>>;");
-      lines.push("\ntype getAllArgs = Rest<Parameters<typeof Bucket.data.getAll>>;");
-      lines.push("\ntype realtimeGetArgs = Rest<Parameters<typeof Bucket.data.realtime.get>>;");
-      lines.push(
-        "\ntype realtimeGetAllArgs = Rest<Parameters<typeof Bucket.data.realtime.getAll>>;"
-      );
-
-      // interface and methods definitions
-      for (const bucket of buckets) {
-        buildInterface(bucket, lines);
-        buildMethod(bucket, lines);
-      }
-
-      // relation replacement
-      buckets.forEach(bucket => {
-        const target = `<${bucket._id}>`;
-        lines = lines.map(line => {
-          if (line.includes(target)) {
-            return line.replace(target, prepareInterfaceTitle(bucket.title));
-          }
-          return line;
-        });
-      });
+      const content = createFileContent(buckets, APIKEY, APIURL);
 
       spinner.text = "Writing to the destination..";
-      fs.writeFileSync(DESTINATION, lines.join(""));
+      fs.writeFileSync(DESTINATION, content);
 
-      spinner.text = `Succesfully completed! File extracted to the ${
+      spinner.text = `Succesfully completed! File url is ${
         PATH ? DESTINATION : path.join(process.cwd(), "bucket.ts")
       }`;
     }

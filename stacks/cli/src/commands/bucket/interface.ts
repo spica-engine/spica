@@ -2,7 +2,8 @@ export interface BucketSchema {
   _id: string;
   title: string;
   properties: Properties;
-  required: string[];
+  required?: string[];
+  [key: string]: any;
 }
 
 export type Properties = {[key: string]: Property};
@@ -17,6 +18,7 @@ export type Property =
 interface IProperty {
   type: string;
   enum?: any[];
+  [key: string]: any;
 }
 
 interface BasicProperty extends IProperty {
@@ -31,7 +33,7 @@ interface ArrayProperty extends IProperty {
 interface ObjectProperty extends IProperty {
   type: "object";
   properties: Properties;
-  required: string[];
+  required?: string[];
 }
 
 interface RelationProperty extends IProperty {
