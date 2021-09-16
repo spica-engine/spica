@@ -175,7 +175,4 @@ export namespace new_bucket {
 
     expect(content).toEqual(expectation);
   });
-
-  
-
 });

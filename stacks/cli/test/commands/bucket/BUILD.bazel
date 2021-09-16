@@ -8,9 +8,9 @@ ts_library(
     testonly = True,
     srcs = ["schema.spec.ts"],
     deps = [
-        "@npm//@types/jasmine",
         "//stacks/cli",
-        "@npm//prettier"
+        "@npm//@types/jasmine",
+        "@npm//prettier",
     ],
 )
 

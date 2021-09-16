@@ -116,10 +116,7 @@ export namespace data {
     });
   }
 
-  export function insert<T = BucketDocument>(
-    bucketId: string,
-    document: T
-  ): Promise<T> {
+  export function insert<T = BucketDocument>(bucketId: string, document: T): Promise<T> {
     checkInitialized(authorization);
 
     return service.post<T>(`bucket/${bucketId}/data`, document);

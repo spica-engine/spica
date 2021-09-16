@@ -31,4 +31,4 @@ export function run(argv?: string[]) {
   return program.run(argv);
 }
 
-export * from "./src/commands/bucket"
+export * from "./src/commands/bucket";
