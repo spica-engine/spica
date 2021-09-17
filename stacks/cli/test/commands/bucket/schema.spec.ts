@@ -111,7 +111,6 @@ describe("ORM", () => {
 
   it("should create file content for bucket which includes all available types", () => {
     const content = createFileContent([bucketAllTypes], "APIKEY", "APIURL", []);
-    console.log(content);
     const expectation = `import * as Bucket from '@spica-devkit/bucket';
 Bucket.initialize({apikey:'APIKEY',publicUrl:'APIURL'});
 
