@@ -24,7 +24,9 @@ async function orm({options}: ActionParameters) {
         .then(r => r.data);
 
       spinner.text = "Building interface and method definitions..";
-      const content = createFileContent(buckets, APIKEY, APIURL);
+
+      const warnings: string[] = [];
+      const content = createFileContent(buckets, APIKEY, APIURL, warnings);
 
       spinner.text = "Writing to the destination..";
       fs.writeFileSync(DESTINATION, content);
@@ -32,6 +34,10 @@ async function orm({options}: ActionParameters) {
       spinner.text = `Succesfully completed! File url is ${
         PATH ? DESTINATION : path.join(process.cwd(), "bucket.ts")
       }`;
+
+      if (warnings.length) {
+        spinner.warn(warnings.join());
+      }
     }
   });
 }

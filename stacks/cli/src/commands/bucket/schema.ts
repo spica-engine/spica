@@ -1,6 +1,6 @@
 import {BucketSchema, Properties, Property} from "./interface";
 
-export function createFileContent(buckets: BucketSchema[], apikey: string, apiurl: string) {
+export function createFileContent(buckets: BucketSchema[], apikey: string, apiurl: string,warnings:string[]) {
   let lines: string[] = [];
   // DEVKIT INIT
   lines.push("import * as Bucket from '@spica-devkit/bucket';");
@@ -14,6 +14,8 @@ export function createFileContent(buckets: BucketSchema[], apikey: string, apiur
   lines.push("\ntype getAllArgs = Rest<Parameters<typeof Bucket.data.getAll>>;");
   lines.push("\ntype realtimeGetArgs = Rest<Parameters<typeof Bucket.data.realtime.get>>;");
   lines.push("\ntype realtimeGetAllArgs = Rest<Parameters<typeof Bucket.data.realtime.getAll>>;");
+
+  buckets = makeTitlesUnique(buckets,warnings);
 
   for (const bucket of buckets) {
     buildInterface(bucket, lines);
@@ -57,15 +59,21 @@ function buildMethod(schema: BucketSchema, lines: string[]) {
       return Bucket.data.getAll<${interfaceName}>(BUCKET_ID, ...args);
     };`);
 
+  const relationFields = getRelationFields(schema.properties);
+  const normalizeRelationCode = relationFields.length
+    ? getNormalizeRelationCode(relationFields)
+    : "";
   // INSERT
   lines.push(`
     export function insert (document: Omit<${interfaceName}, '_id'>) {
+      ${normalizeRelationCode}
       return Bucket.data.insert(BUCKET_ID, document);
     };`);
 
   // UPDATE
   lines.push(`
     export function update (document: ${interfaceName}) {
+      ${normalizeRelationCode}
       return Bucket.data.update(
         BUCKET_ID,
         document._id,
@@ -78,6 +86,7 @@ function buildMethod(schema: BucketSchema, lines: string[]) {
     export function patch (
       document: Omit<Partial<${interfaceName}>, '_id'> & { _id: string }
     ) {
+      ${normalizeRelationCode}
       return Bucket.data.patch(BUCKET_ID, document._id, document);
     };`);
 
@@ -210,4 +219,39 @@ function prepareNamespace(str: string) {
 
 function replaceNonWords(str: string) {
   return str.replace(/[^a-zA-Z0-9]/g, "_");
+}
+function getRelationFields(properties: Properties) {
+  const fields: string[] = [];
+  for (const [key, value] of Object.entries(properties)) {
+    if (value.type == "relation") {
+      fields.push(key);
+    }
+  }
+  return fields;
+}
+
+function getNormalizeRelationCode(fields: string[]) {
+  return `[${fields.map(f => `'${f}'`)}].forEach((field) => {
+        if (typeof document[field] == 'object') {
+          document[field] = Array.isArray(document[field])
+            ? document[field].map((v) => v._id)
+            : document[field]._id;
+        }
+      });`;
+}
+function makeTitlesUnique(buckets: BucketSchema[], warnings: string[]): BucketSchema[] {
+  const titles = [];
+  for (const bucket of buckets) {
+    const title = bucket.title;
+
+    const count = titles.filter(t => t == title).length;
+    if (count >= 1) {
+      warnings.push(`It seems there is more than one bucket that has the title '${bucket.title}'. 
+Number suffix will be added but should use unique titles for the best practice.`);
+      bucket.title += count + 1;
+    }
+
+    titles.push(title);
+  }
+  return buckets;
 }

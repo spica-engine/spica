@@ -110,7 +110,8 @@ describe("ORM", () => {
   } as any;
 
   it("should create file content for bucket which includes all available types", () => {
-    const content = createFileContent([bucketAllTypes], "APIKEY", "APIURL");
+    const content = createFileContent([bucketAllTypes], "APIKEY", "APIURL", []);
+    console.log(content);
     const expectation = `import * as Bucket from '@spica-devkit/bucket';
 Bucket.initialize({apikey:'APIKEY',publicUrl:'APIURL'});
 
@@ -146,9 +147,23 @@ export namespace new_bucket {
       return Bucket.data.getAll<New_Bucket>(BUCKET_ID, ...args);
     };
     export function insert (document: Omit<New_Bucket, '_id'>) {
+      ['relationmany'].forEach((field) => {
+        if (typeof document[field] == 'object') {
+          document[field] = Array.isArray(document[field])
+            ? document[field].map((v) => v._id)
+            : document[field]._id;
+        }
+      });
       return Bucket.data.insert(BUCKET_ID, document);
     };
     export function update (document: New_Bucket) {
+      ['relationmany'].forEach((field) => {
+        if (typeof document[field] == 'object') {
+          document[field] = Array.isArray(document[field])
+            ? document[field].map((v) => v._id)
+            : document[field]._id;
+        }
+      });
       return Bucket.data.update(
         BUCKET_ID,
         document._id,
@@ -158,6 +173,13 @@ export namespace new_bucket {
     export function patch (
       document: Omit<Partial<New_Bucket>, '_id'> & { _id: string }
     ) {
+      ['relationmany'].forEach((field) => {
+        if (typeof document[field] == 'object') {
+          document[field] = Array.isArray(document[field])
+            ? document[field].map((v) => v._id)
+            : document[field]._id;
+        }
+      });
       return Bucket.data.patch(BUCKET_ID, document._id, document);
     };  
     export function remove (documentId: string) {
@@ -174,5 +196,113 @@ export namespace new_bucket {
 }`;
 
     expect(content).toEqual(expectation);
+  });
+
+  it("should put number suffix and create warning if buckets have the same tilte", () => {
+    const bucket1 = {_id: "id1", title: "Users", properties: {title: {type: "string"}}};
+    const bucket2 = {_id: "id2", title: "Users", properties: {name: {type: "string"}}};
+
+    const warnings = [];
+    const content = createFileContent([bucket1, bucket2] as any, "APIKEY", "APIURL", warnings);
+    const expectation = `import * as Bucket from '@spica-devkit/bucket';
+Bucket.initialize({apikey:'APIKEY',publicUrl:'APIURL'});
+
+type Rest<T extends any[]> = ((...p: T) => void) extends ((p1: infer P1, ...rest: infer R) => void) ? R : never;
+type getArgs = Rest<Parameters<typeof Bucket.data.get>>;
+type getAllArgs = Rest<Parameters<typeof Bucket.data.getAll>>;
+type realtimeGetArgs = Rest<Parameters<typeof Bucket.data.realtime.get>>;
+type realtimeGetAllArgs = Rest<Parameters<typeof Bucket.data.realtime.getAll>>;
+
+interface Users{
+  _id: string;
+  title?: string;
+}
+export namespace users {
+  const BUCKET_ID = 'id1';
+    export function get (...args: getArgs) {
+      return Bucket.data.get<Users>(BUCKET_ID, ...args);
+    };
+    export function getAll (...args: getAllArgs) {
+      return Bucket.data.getAll<Users>(BUCKET_ID, ...args);
+    };
+    export function insert (document: Omit<Users, '_id'>) {
+      
+      return Bucket.data.insert(BUCKET_ID, document);
+    };
+    export function update (document: Users) {
+      
+      return Bucket.data.update(
+        BUCKET_ID,
+        document._id,
+        document
+      );
+    };  
+    export function patch (
+      document: Omit<Partial<Users>, '_id'> & { _id: string }
+    ) {
+      
+      return Bucket.data.patch(BUCKET_ID, document._id, document);
+    };  
+    export function remove (documentId: string) {
+      return Bucket.data.remove(BUCKET_ID, documentId);
+    };
+  export namespace realtime {
+      export function get (...args: realtimeGetArgs) {
+        return Bucket.data.realtime.get<New_Bucket>(BUCKET_ID, ...args);
+      };
+      export function getAll (...args: realtimeGetAllArgs) {
+        return Bucket.data.realtime.getAll<New_Bucket>(BUCKET_ID, ...args);
+      };
+  }
+}
+
+interface Users2{
+  _id: string;
+  name?: string;
+}
+export namespace users2 {
+  const BUCKET_ID = 'id2';
+    export function get (...args: getArgs) {
+      return Bucket.data.get<Users2>(BUCKET_ID, ...args);
+    };
+    export function getAll (...args: getAllArgs) {
+      return Bucket.data.getAll<Users2>(BUCKET_ID, ...args);
+    };
+    export function insert (document: Omit<Users2, '_id'>) {
+      
+      return Bucket.data.insert(BUCKET_ID, document);
+    };
+    export function update (document: Users2) {
+      
+      return Bucket.data.update(
+        BUCKET_ID,
+        document._id,
+        document
+      );
+    };  
+    export function patch (
+      document: Omit<Partial<Users2>, '_id'> & { _id: string }
+    ) {
+      
+      return Bucket.data.patch(BUCKET_ID, document._id, document);
+    };  
+    export function remove (documentId: string) {
+      return Bucket.data.remove(BUCKET_ID, documentId);
+    };
+  export namespace realtime {
+      export function get (...args: realtimeGetArgs) {
+        return Bucket.data.realtime.get<New_Bucket>(BUCKET_ID, ...args);
+      };
+      export function getAll (...args: realtimeGetAllArgs) {
+        return Bucket.data.realtime.getAll<New_Bucket>(BUCKET_ID, ...args);
+      };
+  }
+}`;
+
+    expect(content).toEqual(expectation)
+    expect(warnings).toEqual([
+      `It seems there is more than one bucket that has the title 'Users'. 
+Number suffix will be added but should use unique titles for the best practice.`
+    ]);
   });
 });
