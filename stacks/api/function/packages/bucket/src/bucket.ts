@@ -116,17 +116,13 @@ export namespace data {
     });
   }
 
-  export function insert<T = BucketDocument>(bucketId: string, document: T): Promise<T> {
+  export function insert<T>(bucketId: string, document: Omit<T, "_id">): Promise<T> {
     checkInitialized(authorization);
 
     return service.post<T>(`bucket/${bucketId}/data`, document);
   }
 
-  export function update<T = BucketDocument>(
-    bucketId: string,
-    documentId: string,
-    document: T
-  ): Promise<T> {
+  export function update<T>(bucketId: string, documentId: string, document: T): Promise<T> {
     checkInitialized(authorization);
 
     return service.put<T>(`bucket/${bucketId}/data/${documentId}`, document);

@@ -107,13 +107,13 @@ function buildMethod(schema: BucketSchema, lines: string[]) {
   // GET
   lines.push(`
       export function get (...args: realtimeGetArgs) {
-        return Bucket.data.realtime.get<New_Bucket>(BUCKET_ID, ...args);
+        return Bucket.data.realtime.get<${interfaceName}>(BUCKET_ID, ...args);
       };`);
 
   // GETALL
   lines.push(`
       export function getAll (...args: realtimeGetAllArgs) {
-        return Bucket.data.realtime.getAll<New_Bucket>(BUCKET_ID, ...args);
+        return Bucket.data.realtime.getAll<${interfaceName}>(BUCKET_ID, ...args);
       };`);
   lines.push("\n  }");
 
