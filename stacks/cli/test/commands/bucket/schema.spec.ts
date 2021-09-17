@@ -299,7 +299,7 @@ export namespace users2 {
   }
 }`;
 
-    expect(content).toEqual(expectation)
+    expect(content).toEqual(expectation);
     expect(warnings).toEqual([
       `It seems there is more than one bucket that has the title 'Users'. 
 Number suffix will be added but should use unique titles for the best practice.`

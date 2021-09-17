@@ -1,6 +1,11 @@
 import {BucketSchema, Properties, Property} from "./interface";
 
-export function createFileContent(buckets: BucketSchema[], apikey: string, apiurl: string,warnings:string[]) {
+export function createFileContent(
+  buckets: BucketSchema[],
+  apikey: string,
+  apiurl: string,
+  warnings: string[]
+) {
   let lines: string[] = [];
   // DEVKIT INIT
   lines.push("import * as Bucket from '@spica-devkit/bucket';");
@@ -15,7 +20,7 @@ export function createFileContent(buckets: BucketSchema[], apikey: string, apiur
   lines.push("\ntype realtimeGetArgs = Rest<Parameters<typeof Bucket.data.realtime.get>>;");
   lines.push("\ntype realtimeGetAllArgs = Rest<Parameters<typeof Bucket.data.realtime.getAll>>;");
 
-  buckets = makeTitlesUnique(buckets,warnings);
+  buckets = makeTitlesUnique(buckets, warnings);
 
   for (const bucket of buckets) {
     buildInterface(bucket, lines);
