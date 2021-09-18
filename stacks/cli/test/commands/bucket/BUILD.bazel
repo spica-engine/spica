@@ -10,7 +10,6 @@ ts_library(
     deps = [
         "//stacks/cli",
         "@npm//@types/jasmine",
-        "@npm//prettier",
     ],
 )
 
