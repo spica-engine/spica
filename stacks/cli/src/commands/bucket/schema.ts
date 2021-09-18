@@ -9,7 +9,17 @@ export function createFileContent(
   let lines: string[] = [];
   // DEVKIT INIT
   lines.push("import * as Bucket from '@spica-devkit/bucket';");
-  lines.push(`\nBucket.initialize({apikey:'${apikey}',publicUrl:'${apiurl}'});`);
+  lines.push(`
+/**
+ * Call this method before interacting with buckets.
+ * @param initOptions Initialize options to initialize the '@spica-devkit/bucket'.
+ */
+export function initialize(
+  ...initOptions: Parameters<typeof Bucket.initialize>
+) {
+  initOptions[0].publicUrl = '${apiurl}';
+  Bucket.initialize(...initOptions);
+}`);
 
   // HELPER TYPE DEFINITIONS
   lines.push(

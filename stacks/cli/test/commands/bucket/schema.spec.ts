@@ -111,9 +111,17 @@ describe("ORM", () => {
 
   it("should create file content for bucket which includes all available types", () => {
     const content = createFileContent([bucketAllTypes], "APIKEY", "APIURL", []);
-    console.log(content);
     const expectation = `import * as Bucket from '@spica-devkit/bucket';
-Bucket.initialize({apikey:'APIKEY',publicUrl:'APIURL'});
+/**
+ * Call this method before interacting with buckets.
+ * @param initOptions Initialize options to initialize the '@spica-devkit/bucket'.
+ */
+export function initialize(
+  ...initOptions: Parameters<typeof Bucket.initialize>
+) {
+  initOptions[0].publicUrl = 'APIURL';
+  Bucket.initialize(...initOptions);
+}
 
 type Rest<T extends any[]> = ((...p: T) => void) extends ((p1: infer P1, ...rest: infer R) => void) ? R : never;
 type getArgs = Rest<Parameters<typeof Bucket.data.get>>;
@@ -205,7 +213,16 @@ export namespace new_bucket {
     const warnings = [];
     const content = createFileContent([bucket1, bucket2] as any, "APIKEY", "APIURL", warnings);
     const expectation = `import * as Bucket from '@spica-devkit/bucket';
-Bucket.initialize({apikey:'APIKEY',publicUrl:'APIURL'});
+/**
+ * Call this method before interacting with buckets.
+ * @param initOptions Initialize options to initialize the '@spica-devkit/bucket'.
+ */
+export function initialize(
+  ...initOptions: Parameters<typeof Bucket.initialize>
+) {
+  initOptions[0].publicUrl = 'APIURL';
+  Bucket.initialize(...initOptions);
+}
 
 type Rest<T extends any[]> = ((...p: T) => void) extends ((p1: infer P1, ...rest: infer R) => void) ? R : never;
 type getArgs = Rest<Parameters<typeof Bucket.data.get>>;
@@ -291,13 +308,16 @@ export namespace users2 {
     };
   export namespace realtime {
       export function get (...args: realtimeGetArgs) {
-        return Bucket.data.realtime.get<New_Bucket>(BUCKET_ID, ...args);
+        return Bucket.data.realtime.get<Users2>(BUCKET_ID, ...args);
       };
       export function getAll (...args: realtimeGetAllArgs) {
-        return Bucket.data.realtime.getAll<New_Bucket>(BUCKET_ID, ...args);
+        return Bucket.data.realtime.getAll<Users2>(BUCKET_ID, ...args);
       };
   }
 }`;
+
+console.log(content);
+console.log(expectation)
 
     expect(content).toEqual(expectation);
     expect(warnings).toEqual([
