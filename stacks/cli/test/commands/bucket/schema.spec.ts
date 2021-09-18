@@ -316,8 +316,8 @@ export namespace users2 {
   }
 }`;
 
-console.log(content);
-console.log(expectation)
+    console.log(content);
+    console.log(expectation);
 
     expect(content).toEqual(expectation);
     expect(warnings).toEqual([
