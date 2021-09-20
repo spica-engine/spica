@@ -40,6 +40,8 @@ import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {CardComponent} from "./components/card/card.component";
 import {DragDropModule} from "@angular/cdk/drag-drop";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import {MatProgressBarModule} from "@angular/material/progress-bar";
+import {MatDividerModule} from "@angular/material/divider";
 
 @NgModule({
   imports: [
@@ -72,7 +74,9 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
     MatAwareDialogModule,
     PassportModule.forChild(),
     DragDropModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatProgressBarModule,
+    MatDividerModule
   ],
   declarations: [
     DashboardComponent,
