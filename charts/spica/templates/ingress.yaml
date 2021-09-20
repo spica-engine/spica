@@ -30,10 +30,16 @@ spec:
       {{ end }}
         paths:
           - path: {{ .Values.application.webBaseUrl }}?(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-application
-              servicePort: 80
+              service:
+                name: {{ .Release.Name }}-application
+                port:
+                  number: 80
           - path: {{ .Values.application.apiBaseUrl }}?(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-application
-              servicePort: 4300
+              service:
+                name: {{ .Release.Name }}-application
+                port:
+                  number: 4300

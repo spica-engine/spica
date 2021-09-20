@@ -175,13 +175,21 @@ spec:
       http:
         paths:
           - path: /spica/?(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: spica
-              servicePort: 80
+              service:
+                name: spica
+              service:
+                port: 
+                  number: 80
           - path: /api/?(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: spica
-              servicePort: 4300
+              service:
+                name: spica
+              service:
+                port: 
+                  number: 4300
 ---
 apiVersion: batch/v1
 kind: Job
