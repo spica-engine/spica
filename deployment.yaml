@@ -179,7 +179,6 @@ spec:
             backend:
               service:
                 name: spica
-              service:
                 port: 
                   number: 80
           - path: /api/?(.*)
@@ -187,7 +186,6 @@ spec:
             backend:
               service:
                 name: spica
-              service:
                 port: 
                   number: 4300
 ---
