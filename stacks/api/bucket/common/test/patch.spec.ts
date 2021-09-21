@@ -32,16 +32,20 @@ describe("Merge/Patch", () => {
     const query = getUpdateQueryForPatch(
       {
         nested_object: {
-          field2: null
+          field2: null,
+          field3: "put_me"
         }
       },
       {
-        nested_object: {}
+        nested_object: {
+          field3: "put_me"
+        }
       }
     );
 
     expect(query).toEqual({
-      $unset: {"nested_object.field2": ""}
+      $unset: {"nested_object.field2": ""},
+      $set: {"nested_object.field3": "put_me"}
     });
   });
 
