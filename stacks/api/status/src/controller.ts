@@ -17,7 +17,6 @@ export class StatusController {
 
   @Get("api")
   findApi(@Query("begin", DATE) begin: Date, @Query("end", DATE) end: Date) {
-    console.log(begin,end)
     return this.providers.find(p => p.module == "api").provide(begin, end);
   }
 

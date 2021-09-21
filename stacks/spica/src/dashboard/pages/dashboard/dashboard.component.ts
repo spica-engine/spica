@@ -1,9 +1,7 @@
 import {Component, OnInit} from "@angular/core";
-import {BucketService} from "@spica-client/bucket";
-import {map, switchMap} from "rxjs/operators";
-import {Observable, BehaviorSubject, of, combineLatest} from "rxjs";
-import {PassportService} from "@spica-client/passport";
-import {HttpClient, HttpParams} from "@angular/common/http";
+import {map} from "rxjs/operators";
+import {Observable, BehaviorSubject, of} from "rxjs";
+import {HttpClient} from "@angular/common/http";
 
 interface ApiStatus {
   module: string;
@@ -22,60 +20,21 @@ interface ApiStatus {
   styleUrls: ["./dashboard.component.scss"]
 })
 export class DashboardComponent implements OnInit {
+  stats: ApiStatus[] = [];
+
   apiCallData = [];
   apiDownloadedData = [];
   apiUploadedData = [];
 
-  updateApiChart(name: string, label: string, labels: string[], data: number[], unit: string) {
-    this.apiChart[name] = of({
-      datasets: [
-        {
-          data: data,
-          // label: label
-          // lineTension: 0
-        }
-      ],
-      label: labels,
-      options: {
-        responsive: true,
-
-        scales: {
-          yAxes: [
-            {
-              scaleLabel: {
-                display: true,
-                labelString: unit
-              }
-            }
-          ],
-          xAxes: [
-            {
-              scaleLabel: {
-                display: true,
-                labelString: "Hours"
-              }
-            }
-          ]
-        }
-      },
-      colors: [
-        {
-          borderColor: "rgba(255,0,0,0.3)",
-          backgroundColor: "rgba(255,0,0,0.3)"
-        }
-      ],
-      legend: true,
-      type: "bar",
-      plugins: []
-    });
-  }
-
-  stats: ApiStatus[] = [];
   apiChart = {
     call: of(),
     downloaded: of(),
     uploaded: of()
   };
+
+  today: Date;
+
+  apiStatusPending;
 
   constructor(private http: HttpClient) {
     this.http
@@ -83,16 +42,7 @@ export class DashboardComponent implements OnInit {
       .toPromise()
       .then(r => {
         this.stats = r
-          .filter(s => {
-            // for test purpose
-            // for (const [key, value] of Object.entries(s.status)) {
-            //   s.status[key].limit = value.limit || 100;
-            // }
-            if (s.module == "api") {
-              return false;
-            }
-            return true;
-          })
+          .filter(s => s.module != "api")
           .map(s => {
             switch (s.module) {
               case "bucket":
@@ -112,62 +62,11 @@ export class DashboardComponent implements OnInit {
             }
           });
       });
-    const hour = 60 * 60 * 1000;
 
-    const today = new Date();
-    today.setMinutes(0, 0, 0);
+    this.today = new Date();
+    this.today.setHours(0, 0, 0, 0);
 
-    let dates: Date[][] = [];
-
-    dates.push([today, new Date()]);
-
-    Array.from({length: 24}, (_, i) => i + 1).forEach(i => {
-      dates.push([
-        new Date(today.getTime() - i * hour),
-        new Date(today.getTime() - (i - 1) * hour)
-      ]);
-    });
-
-    dates.reverse();
-    
-
-    // const dates = [
-    //   [new Date(today.getTime() - 4 * hour), new Date(today.getTime() - 3 * hour)],
-    //   [new Date(today.getTime() - 3 * hour), new Date(today.getTime() - 2 * hour)],
-    //   [new Date(today.getTime() - 2 * hour), new Date(today.getTime() - 1 * hour)],
-    //   [new Date(today.getTime() - 1 * hour), today],
-    //   [today, new Date()]
-    // ];
-
-    const promises = dates.map((d, i) => {
-      const url = new URL("api:/status/api");
-      url.searchParams.set("begin", d[0].toISOString());
-      url.searchParams.set("end", d[1].toISOString());
-
-      this.apiCallData[i] = 0;
-      this.apiDownloadedData[i] = 0;
-      this.apiUploadedData[i] = 0;
-
-      return this.http
-        .get(url.toString())
-        .toPromise()
-        .then((r: any) => {
-          this.apiCallData[i] = r.status.calls.current;
-          this.apiDownloadedData[i] = r.status.downloaded.current;
-          this.apiUploadedData[i] = r.status.uploaded.current;
-        });
-    });
-
-    Promise.all(promises).then(() => {
-      let labels = dates.map(d => {
-        return d[0].getHours().toString();
-        // `${i.getHours().toString()}:${(i.getMinutes() < 10 ? "0" : "") +
-        //   i.getMinutes().toString()}`
-      });
-      this.updateApiChart("call", "Calls", labels.concat(), this.apiCallData, "count");
-      this.updateApiChart("downloaded", "Download size", labels, this.apiDownloadedData, "mb");
-      this.updateApiChart("uploaded", "Uploaded size", labels, this.apiUploadedData, "mb");
-    });
+    this.updateApiStatusCharts(this.today, new Date());
   }
 
   isTutorialEnabled$: Observable<Boolean>;
@@ -180,5 +79,147 @@ export class DashboardComponent implements OnInit {
   onDisable() {
     localStorage.setItem("hide-tutorial", "true");
     this.refresh$.next("");
+  }
+
+  getDateRangesBetween(begin: Date, end: Date, length: number = 20) {
+    const diff = (end.getTime() - begin.getTime()) / 20;
+
+    const dates: Date[][] = [];
+
+    Array.from({length}, (_, i) => i).forEach(i => {
+      dates.push([
+        new Date(begin.getTime() + i * diff),
+        new Date(begin.getTime() + (i + 1) * diff)
+      ]);
+    });
+
+    return dates;
+  }
+
+  setApiChart(
+    name: string,
+    dataLabel: string,
+    xLabels: string[],
+    data: number[],
+    unit: string,
+    filter: boolean = false,
+    begin: Date,
+    end: Date
+  ) {
+    const filters = [];
+
+    if (filter) {
+      filters.push(
+        ...[
+          {key: "begin", title: "Begin Date", type: "date", value: begin},
+          {key: "end", title: "End Date", type: "date", value: end}
+        ]
+      );
+    }
+
+    this.apiChart[name] = of({
+      datasets: [
+        {
+          data: data,
+          label: dataLabel
+        }
+      ],
+      label: xLabels,
+      colors: [{backgroundColor: "#28a745"}],
+      options: {
+        scaleBeginAtZero: false,
+        barBeginAtOrigin: true,
+        responsive: true,
+        maintainAspectRatio: false,
+        tooltips: {
+          callbacks: {
+            title: items => {
+              const _begin = xLabels[items[0].index];
+              let _end = xLabels[items[0].index + 1];
+              if (typeof _end == "undefined") {
+                _end = end.toLocaleString();
+              }
+              return _begin + " - " + _end;
+            }
+          }
+        },
+        scales: {
+          yAxes: [
+            {
+              ticks: {
+                beginAtZero: true
+              },
+              scaleLabel: {
+                display: true,
+                labelString: unit
+              }
+            }
+          ],
+          xAxes: [
+            {
+              display: false
+            }
+          ]
+        }
+      },
+      type: "bar",
+      plugins: [],
+      filters
+    });
+  }
+
+  onApiStatusFilterUpdate([{value: begin}, {value: end}]) {
+    this.updateApiStatusCharts(begin, end);
+  }
+
+  updateApiStatusCharts(begin: Date, end: Date) {
+    this.apiStatusPending = true;
+    const ranges = this.getDateRangesBetween(begin, end);
+
+    const promises = ranges.map((range, i) => {
+      const url = new URL("api:/status/api");
+      url.searchParams.set("begin", range[0].toISOString());
+      url.searchParams.set("end", range[1].toISOString());
+
+      this.apiCallData[i] = 0;
+      this.apiDownloadedData[i] = 0;
+      this.apiUploadedData[i] = 0;
+
+      return this.http
+        .get<ApiStatus>(url.toString())
+        .toPromise()
+        .then(({status: {calls, downloaded, uploaded}}) => {
+          this.apiCallData[i] = calls.current;
+          this.apiDownloadedData[i] = downloaded.current;
+          this.apiUploadedData[i] = uploaded.current;
+        });
+    });
+
+    return Promise.all(promises)
+      .then(() => {
+        const labels = ranges.map(d => d[0].toLocaleString());
+        this.setApiChart("call", "Calls", labels, this.apiCallData, "Count", true, begin, end);
+        this.setApiChart(
+          "downloaded",
+          "Download size(mb)",
+          labels,
+          this.apiDownloadedData,
+          "Mb",
+          false,
+          begin,
+          end
+        );
+        this.setApiChart(
+          "uploaded",
+          "Uploaded size(mb)",
+          labels,
+          this.apiUploadedData,
+          "Mb",
+          false,
+          begin,
+          end
+        );
+      })
+      .finally(() => (this.apiStatusPending = false));
   }
 }

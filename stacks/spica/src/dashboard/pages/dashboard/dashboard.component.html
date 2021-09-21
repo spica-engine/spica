@@ -69,16 +69,35 @@
     <mat-card-content>
       <div class="calls">
         <h3>Calls</h3>
-        <dashboard-default [componentData$]="apiChart.call" type="bar"> </dashboard-default>
+        <mat-spinner color="accent" diameter="35" *ngIf="apiStatusPending"> </mat-spinner>
+        <dashboard-default
+          *ngIf="!apiStatusPending"
+          [componentData$]="apiChart.call"
+          type="bar"
+          (onUpdate)="onApiStatusFilterUpdate($event)"
+        >
+        </dashboard-default>
       </div>
-      <div class="download">
+      <div class="downloads">
         <h3>Downloads</h3>
-        <dashboard-default [componentData$]="apiChart.downloaded" type="bar"> </dashboard-default>
+        <mat-spinner color="accent" diameter="35" *ngIf="apiStatusPending"> </mat-spinner>
+        <dashboard-default
+          *ngIf="!apiStatusPending"
+          [componentData$]="apiChart.downloaded"
+          type="bar"
+        >
+        </dashboard-default>
       </div>
-      <!-- <div class="upload">
+      <div class="uploads">
         <h3>Uploads</h3>
-        <dashboard-default [componentData$]="apiChart.uploaded" type="bar"> </dashboard-default>
-      </div> -->
+        <mat-spinner color="accent" diameter="35" *ngIf="apiStatusPending"> </mat-spinner>
+        <dashboard-default
+          *ngIf="!apiStatusPending"
+          [componentData$]="apiChart.uploaded"
+          type="bar"
+        >
+        </dashboard-default>
+      </div>
     </mat-card-content>
   </mat-card>
 </div>
@@ -112,30 +131,8 @@
               </span>
             </mat-list-item>
           </ng-container>
-          <!-- <ng-container *ngIf="!statKv.value.limit">
-            <mat-list-item>
-              <mat-progress-bar mode="determinate" value="50"></mat-progress-bar>
-            </mat-list-item>
-            <mat-list-item class="percentages">
-              <span class="inuse" [style.left]="'25%'">
-                {{ statKv.value.current }}
-              </span>
-              <span class="remain" [style.left]="'70%'">Unlimited</span>
-            </mat-list-item>
-          </ng-container> -->
         </mat-list>
       </mat-list>
     </mat-card-content>
   </mat-card>
 </div>
-
-<!-- <mat-card class="tutorial-videos" *ngIf="!!(isTutorialEnabled$ | async)">
-  <mat-card-content>
-    
-  </mat-card-content>
-  <mat-card-actions>
-    <button color="warn" mat-flat-button (click)="onDisable()">
-      Don't show this again
-    </button>
-  </mat-card-actions>
-</mat-card> -->

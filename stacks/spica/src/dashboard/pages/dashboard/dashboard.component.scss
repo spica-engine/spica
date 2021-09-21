@@ -102,7 +102,7 @@
           position: relative;
           margin: 0 16px;
           width: unset;
-          ::ng-deep div.mat-list-item-content{
+          ::ng-deep div.mat-list-item-content {
             padding: 0px !important;
           }
           mat-progress-bar + span {
@@ -129,25 +129,47 @@
     }
   }
 
-  div.api-container{
+  div.api-container {
     width: 100%;
-    mat-card{
-      height: 500px;
-      mat-card-content{
+    mat-card {
+      height: 1000px;
+      mat-card-content {
         display: flex;
         column-gap: 20px;
-        > div{
-          height: 100%;
-          flex: 1;
-          > h3{
-            text-align: center;
+        flex-wrap: wrap;
+        align-items: start;
+        > div > h3 {
+          text-align: center;
+        }
+
+        ::ng-deep dashboard-default {
+          button.refresh {
+            display: none;
           }
 
+          mat-form-field mat-hint {
+            display: none;
+          }
+        }
 
+        div.calls {
+          position: relative;
+          height: 500px;
+          width: 100%;
+        }
+        div.downloads,
+        div.uploads {
+          position: relative;
+          height: 500px;
+          width: calc(50% - 10px);
+        }
+
+        mat-spinner {
+          position: absolute;
+          left: 50%;
+          top: 50%;
         }
       }
     }
   }
-
-  
 }
