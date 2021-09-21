@@ -81,15 +81,15 @@ export class DashboardComponent implements OnInit {
     this.refresh$.next("");
   }
 
-  getDateRangesBetween(begin: Date, end: Date, length: number = 20) {
-    const diff = (end.getTime() - begin.getTime()) / 20;
+  getDateRangesBetween(begin: Date, end: Date, length: number = 40) {
+    const multiplier = (end.getTime() - begin.getTime()) / length;
 
     const dates: Date[][] = [];
 
     Array.from({length}, (_, i) => i).forEach(i => {
       dates.push([
-        new Date(begin.getTime() + i * diff),
-        new Date(begin.getTime() + (i + 1) * diff)
+        new Date(begin.getTime() + i * multiplier),
+        new Date(begin.getTime() + (i + 1) * multiplier)
       ]);
     });
 
