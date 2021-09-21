@@ -316,9 +316,6 @@ export namespace users2 {
   }
 }`;
 
-    console.log(content);
-    console.log(expectation);
-
     expect(content).toEqual(expectation);
     expect(warnings).toEqual([
       `It seems there is more than one bucket that has the title 'Users'. 
