@@ -19,7 +19,7 @@ export class ErrorInterceptor implements HttpInterceptor {
   constructor(
     public router: Router,
     private snackBar: MatSnackBar,
-    @Inject(IGNORE_HTTP_ERRORS) private ignoreFns: IgnoreHttpError[] = []
+    @Inject(IGNORE_HTTP_ERRORS) private ignoreFns: IgnoreHttpError[]
   ) {}
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     return next.handle(request).pipe(
