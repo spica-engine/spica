@@ -335,7 +335,7 @@
                   >
                   </span>
                   <span class="http-url" *ngIf="trigger.type == 'http'">
-                    {{ apiUrl + trigger.options.path }}
+                    {{ apiUrl + "/fn-execute" + trigger.options.path }}
                   </span>
                 </ng-container>
               </ng-container>

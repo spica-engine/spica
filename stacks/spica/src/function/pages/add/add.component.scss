@@ -245,6 +245,8 @@
         width: calc(100% - 20px);
 
         span.http-url {
+          position: relative;
+          z-index: 1;
           margin-top: -40px;
           font-size: 11px;
           float: right;

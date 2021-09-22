@@ -125,7 +125,7 @@
       >
         <mat-list-item
           class="trigger-details"
-          *ngFor="let propertyKv of options.properties | keyvalue"
+          *ngFor="let propertyKv of options.properties | keyvalue; last as isLast"
         >
           <div
             [inputPlacer]="propertyKv.value"
@@ -133,8 +133,8 @@
             [name]="propertyKv.key"
             [required]="options.required?.indexOf(propertyKv.key) > -1"
           ></div>
-          <span class="http-url" *ngIf="trigger.type == 'http'">
-            {{ apiUrl + trigger.options.path }}
+          <span class="http-url" *ngIf="data.function.triggers[0].type == 'http' && isLast">
+            {{ apiUrl + "/fn-execute" + data.function.triggers[0].options.path }}
           </span>
         </mat-list-item>
       </ng-container>
