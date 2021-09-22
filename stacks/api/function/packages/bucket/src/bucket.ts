@@ -74,7 +74,10 @@ export namespace data {
   export function get<T>(
     bucketId: string,
     documentId: string,
-    options: {headers?: object; queryParams?: object} = {}
+    options: {
+      headers?: object;
+      queryParams?: {[key: string]: any};
+    } = {}
   ): Promise<T> {
     checkInitialized(authorization);
 
@@ -86,38 +89,43 @@ export namespace data {
 
   export function getAll<T>(
     bucketId: string,
-    options?: {headers?: object; queryParams?: {[key: string]: any; paginate?: false}}
-  ): Promise<T[]>;
-  export function getAll<T>(
-    bucketId: string,
-    options?: {headers?: object; queryParams?: {[key: string]: any; paginate?: true}}
+    options?: {
+      headers?: object;
+      queryParams?: {[key: string]: any; paginate?: true};
+    }
   ): Promise<IndexResult<T>>;
   export function getAll<T>(
     bucketId: string,
-    options: {headers?: object; queryParams?: {[key: string]: any; paginate?: boolean}} = {}
-  ): Promise<T[] | IndexResult<T>> {
+    options?: {
+      headers?: object;
+      queryParams?: {[key: string]: any; paginate?: false};
+    }
+  ): Promise<T[]>;
+  export function getAll<T>(
+    bucketId: string,
+    options: {
+      headers?: object;
+      queryParams?: {[key: string]: any; paginate?: boolean};
+    } = {}
+  ): Promise<IndexResult<T> | T[]> {
     checkInitialized(authorization);
 
-    return service.get<T[] | IndexResult<T>>(`bucket/${bucketId}/data`, {
+    return service.get<IndexResult<T> | T[]>(`bucket/${bucketId}/data`, {
       params: options.queryParams,
       headers: options.headers
     });
   }
 
-  export function insert(bucketId: string, document: BucketDocument): Promise<BucketDocument> {
+  export function insert<T>(bucketId: string, document: Omit<T, "_id">): Promise<T> {
     checkInitialized(authorization);
 
-    return service.post<BucketDocument>(`bucket/${bucketId}/data`, document);
+    return service.post<T>(`bucket/${bucketId}/data`, document);
   }
 
-  export function update(
-    bucketId: string,
-    documentId: string,
-    document: BucketDocument
-  ): Promise<BucketDocument> {
+  export function update<T>(bucketId: string, documentId: string, document: T): Promise<T> {
     checkInitialized(authorization);
 
-    return service.put<BucketDocument>(`bucket/${bucketId}/data/${documentId}`, document);
+    return service.put<T>(`bucket/${bucketId}/data/${documentId}`, document);
   }
 
   export function patch(
