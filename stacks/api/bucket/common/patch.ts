@@ -12,12 +12,14 @@ export function getUpdateQueryForPatch(query: Partial<BucketDocument>, document:
 
   const visit = (partialPatch: any, base: string, document: BucketDocument) => {
     for (const name in partialPatch) {
-      const key = base ? `${base}.${name}` : name;
+      const target = base ? `${base}.${name}` : name;
+      const key = name;
+
       const value = partialPatch[name];
       const type = typeof value;
 
       if (value == null) {
-        unset[key] = "";
+        unset[target] = "";
       } else if (
         type == "boolean" ||
         type == "string" ||
@@ -26,9 +28,9 @@ export function getUpdateQueryForPatch(query: Partial<BucketDocument>, document:
         Array.isArray(value)
       ) {
         // patch query does not include some special types like date-string, but patched document does
-        set[key] = document[key];
+        set[target] = document[key];
       } else if (typeof value == "object") {
-        visit(value, key, document[key]);
+        visit(value, target, document[key]);
       }
     }
   };
