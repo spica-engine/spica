@@ -90,7 +90,7 @@ export interface IndexResult<T> {
 }
 
 export type RealtimeConnection<T> = Observable<T> & {
-  insert: (document: Singular<T>) => void;
+  insert: (document: Omit<Singular<T>, "_id">) => void;
   replace: (document: Singular<T> & {_id: string}) => void;
   patch: (document: Partial<Singular<T>> & {_id: string}) => void;
   remove: (document: Partial<Singular<T>> & {_id: string}) => void;

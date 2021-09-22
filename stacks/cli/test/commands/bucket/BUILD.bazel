@@ -1,0 +1,21 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm//@bazel/typescript:index.bzl", "ts_library")
+load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
+
+ts_library(
+    name = "schema_test_lib",
+    testonly = True,
+    srcs = ["schema.spec.ts"],
+    deps = [
+        "//stacks/cli",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "schema_test",
+    deps = [
+        ":schema_test_lib",
+    ],
+)
