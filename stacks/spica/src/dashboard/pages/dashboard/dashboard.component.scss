@@ -8,56 +8,168 @@
       margin-left: 5px;
     }
   }
+
+  mat-toolbar + mat-card {
+    margin-top: -85px;
+  }
+
   mat-card {
+    height: 320px;
     margin: 30px;
-    &:first-of-type {
-      margin-top: -85px;
-      mat-card-content {
-        mat-list {
-          a {
-            width: max-content;
-            text-decoration: none;
-            color: unset;
+    mat-card-content {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      mat-list.quicklinks {
+        flex: 1;
+        a {
+          width: max-content;
+          text-decoration: none;
+          color: unset;
+          font-size: 14px;
+          font-weight: bold;
+
+          mat-icon {
+            margin-left: 4px;
             font-size: 14px;
-            font-weight: bold;
+            transition: transform 0.1s ease-out;
+          }
 
+          &:hover mat-icon {
+            transform: translate(1px, -1px);
+          }
+        }
+      }
+
+      mat-divider {
+        height: 100%;
+      }
+
+      mat-list.tutorial-videos {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+
+        div.header {
+          > h1 {
+            display: inline-block;
+          }
+
+          > button {
+            float: right;
             mat-icon {
-              margin-left: 4px;
-              font-size: 14px;
-              transition: transform 0.1s ease-out;
+              font-size: 20px;
             }
+          }
+        }
 
-            &:hover mat-icon {
-              transform: translate(1px, -1px);
-            }
+        div.iframe-container {
+          height: 100%;
+          text-align: center;
+          iframe {
+            padding-left: 16px;
+            height: 100%;
+            width: 100%;
           }
         }
       }
     }
   }
 
-  mat-card.tutorial-videos {
-    mat-list-item {
-      position: relative !important;
-      width: 100% !important;
-      height: 90% !important;
-      padding-top: 56.25% !important; /* 16:9 Aspect Ratio */
+  h2.status-header {
+    text-align: center;
+  }
 
-      ::ng-deep .mat-list-item-content {
-        position: unset !important;
+  div.status-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 30px;
+    justify-content: space-between;
+    row-gap: 30px;
+    > mat-card {
+      margin: 0px;
+      height: unset;
+      width: calc(50% - 15px);
+      mat-list {
+        width: 100%;
+
+        h3 {
+          text-align: center;
+        }
+
+        mat-list-item.progress {
+          position: relative;
+          margin: 0 16px;
+          width: unset;
+          ::ng-deep div.mat-list-item-content {
+            padding: 0px !important;
+          }
+          mat-progress-bar + span {
+            position: absolute;
+            top: 40px;
+            width: 40px;
+            text-align: center;
+          }
+        }
       }
 
-      iframe {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+      mat-progress-bar {
+        height: 20px;
+        border-radius: 3px;
+      }
+
+      ::ng-deep .mat-progress-bar-fill::after {
+        background-color: #28a745;
+      }
+
+      ::ng-deep .mat-progress-bar-buffer {
+        background: #e9ecef;
       }
     }
   }
 
-  mat-card-actions > button {
-    float: right;
+  div.api-container {
+    width: 100%;
+    mat-card {
+      height: 1000px;
+      mat-card-content {
+        display: flex;
+        column-gap: 20px;
+        flex-wrap: wrap;
+        align-items: start;
+        > div > h3 {
+          text-align: center;
+        }
+
+        ::ng-deep dashboard-default {
+          button.refresh {
+            display: none;
+          }
+
+          mat-form-field mat-hint {
+            display: none;
+          }
+        }
+
+        div.calls {
+          position: relative;
+          height: 500px;
+          width: 100%;
+        }
+        div.downloads,
+        div.uploads {
+          position: relative;
+          height: 500px;
+          width: calc(50% - 10px);
+        }
+
+        mat-spinner {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+        }
+      }
+    }
   }
 }
