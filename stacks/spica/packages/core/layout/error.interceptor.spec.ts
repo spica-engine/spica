@@ -5,6 +5,7 @@ import {ErrorInterceptor} from "./error.interceptor";
 import {Router} from "@angular/router";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {SnackbarComponent} from "./snackbar/snackbar.component";
+import {IGNORE_HTTP_ERRORS} from "./config";
 
 describe("Error Interceptor", () => {
   let service: HttpClient;
@@ -30,6 +31,11 @@ describe("Error Interceptor", () => {
         {
           provide: MatSnackBar,
           useValue: mockSnackbar
+        },
+        {
+          provide: IGNORE_HTTP_ERRORS,
+          useValue: (_, code) => code == 422,
+          multi: true
         }
       ]
     });

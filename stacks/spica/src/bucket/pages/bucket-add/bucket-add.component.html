@@ -227,6 +227,7 @@
                   name="history"
                   placeholder="History"
                   [(ngModel)]="bucket.history"
+                  #historyToggle
                 >
                   History
                 </mat-slide-toggle>
@@ -240,7 +241,7 @@
                 </button>
               </div>
               <mat-error *ngIf="!(isHistoryEndpointEnabled$ | async)">
-                This feature is unavailable.
+                This feature is unavailable for this instance.
               </mat-error>
               <div class="limitations">
                 <mat-slide-toggle
@@ -452,7 +453,7 @@
       </button>
     </mat-card-actions>
     <mat-list-item
-      *ngIf="bucket._id"
+      *ngIf="bucket._id && !historyToggle.disabled"
       canInteract="bucket:update"
       [resource]="bucket._id"
       class="remove-history"

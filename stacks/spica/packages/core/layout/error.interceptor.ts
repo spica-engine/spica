@@ -5,18 +5,22 @@ import {
   HttpInterceptor,
   HttpRequest
 } from "@angular/common/http";
-import {Injectable} from "@angular/core";
+import {Inject, Injectable} from "@angular/core";
 import {Router} from "@angular/router";
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {SnackbarComponent} from "./snackbar/snackbar.component";
 import {SnackbarError} from "./snackbar/interface";
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {IgnoreHttpError, IGNORE_HTTP_ERRORS} from "./config";
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
-  ingoredCode = [422];
-  constructor(public router: Router, private snackBar: MatSnackBar) {}
+  constructor(
+    public router: Router,
+    private snackBar: MatSnackBar,
+    @Inject(IGNORE_HTTP_ERRORS) private ignoreFns: IgnoreHttpError[]
+  ) {}
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     return next.handle(request).pipe(
       tap({
@@ -30,16 +34,14 @@ export class ErrorInterceptor implements HttpInterceptor {
                   statusText: err.statusText
                 }
               });
-            } else {
-              if (this.ingoredCode.indexOf(err.status) == -1) {
-                this.snackBar.openFromComponent(SnackbarComponent, {
-                  data: {
-                    status: err.status,
-                    message: err.error.message
-                  } as SnackbarError,
-                  duration: 3000
-                });
-              }
+            } else if (this.ignoreFns.every(f => !f(request.url, err.status))) {
+              this.snackBar.openFromComponent(SnackbarComponent, {
+                data: {
+                  status: err.status,
+                  message: err.error.message
+                } as SnackbarError,
+                duration: 3000
+              });
             }
           }
         }
