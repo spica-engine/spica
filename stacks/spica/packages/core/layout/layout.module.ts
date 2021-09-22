@@ -11,7 +11,7 @@ import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {RouterModule, Routes} from "@angular/router";
-import {DEFAULT_LAYOUT, LayoutConfig, LAYOUT_ACTIONS} from "./config";
+import {DEFAULT_LAYOUT, IGNORE_HTTP_ERRORS, LayoutConfig, LAYOUT_ACTIONS} from "./config";
 import {ErrorInterceptor} from "./error.interceptor";
 import {ErrorPageComponent} from "./error/error.page";
 import {HomeLayoutComponent} from "./home/home.layout";
@@ -60,6 +60,11 @@ export class LayoutModule {
     return {
       ngModule: LayoutModule,
       providers: [
+        {
+          provide: IGNORE_HTTP_ERRORS,
+          useValue: (_, code) => code == 422,
+          multi: true
+        },
         {provide: DEFAULT_LAYOUT, useValue: config.defaultLayout || HomeLayoutComponent},
         {provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true},
         {provide: LAYOUT_ACTIONS, useValue: SchemeSwitcherComponent, multi: true},

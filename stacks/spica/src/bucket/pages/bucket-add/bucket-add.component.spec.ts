@@ -270,7 +270,7 @@ describe("BucketAddComponent", () => {
 
       expect(
         fixture.debugElement.query(By.css(".toggles mat-error")).nativeElement.textContent
-      ).toEqual(" This feature is unavailable. ");
+      ).toEqual(" This feature is unavailable for this instance.");
     });
   });
 

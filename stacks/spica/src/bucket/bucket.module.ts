@@ -66,6 +66,7 @@ import {RequiredTranslate} from "./validators";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
 import {HighlightModule, HIGHLIGHT_OPTIONS} from "ngx-highlightjs";
 import {BucketOptions, BUCKET_OPTIONS} from "./interfaces/bucket";
+import {IGNORE_HTTP_ERRORS} from "@spica-client/core/layout/config";
 
 @NgModule({
   imports: [
@@ -199,6 +200,19 @@ export class BucketModule {
               json: () => import("highlight.js/lib/languages/json")
             }
           }
+        },
+        {
+          provide: IGNORE_HTTP_ERRORS,
+          useValue: (url: string, code: number) => {
+            if (
+              url.endsWith("000000000000000000000000/history/000000000000000000000000") &&
+              code == 404
+            ) {
+              return true;
+            }
+            return false;
+          },
+          multi: true
         }
       ]
     };
