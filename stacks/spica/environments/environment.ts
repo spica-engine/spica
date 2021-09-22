@@ -5,5 +5,5 @@
 
 export const environment = {
   production: true,
-  api: "https://cloockie-cd6ea.hq.spicaengine.com/api"
+  api: "http://localhost:4300"
 };
