@@ -1,5 +1,13 @@
+## v0.9.10 (2021-09-22)
+
+* fix(bucket): hide history endpoint not found error on bucket add/edit page ([3c6d40e69](https://github.com/spica-engine/spica/commit/3c6d40e69))
+* fix(bucket): patch nested objects properly ([28adb437e](https://github.com/spica-engine/spica/commit/28adb437e))
+* feat(dashboard): instance limitations and stats ([332e61003](https://github.com/spica-engine/spica/commit/332e61003))
+* feat(cli): create object relational mapping applied version of spica-devkit/bucket ([b30da733a](https://github.com/spica-engine/spica/commit/b30da733a))
+
 ## v0.9.9 (2021-09-14)
 
+* docs: update changelog for 0.9.9 ([ba17e030d](https://github.com/spica-engine/spica/commit/ba17e030d))
 * refactor(bucket): feature toggling for graphql ([aa0c5365f](https://github.com/spica-engine/spica/commit/aa0c5365f))
 * style(function): display http trigger execution url ([07e9f94ae](https://github.com/spica-engine/spica/commit/07e9f94ae))
 * refactor(function): feature toggling for realtime logs ([f365e7b00](https://github.com/spica-engine/spica/commit/f365e7b00))
