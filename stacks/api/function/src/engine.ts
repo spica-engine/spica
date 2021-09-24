@@ -285,11 +285,12 @@ export function getDatabaseSchema(
           collection: {
             title: "Collection Name",
             type: "string",
-            enum: Array.from(collectionNames)
+            enum: Array.from(collectionNames),
+            description: "Collection name that the event will be tracked on"
           },
           type: {
             title: "Operation type",
-            description: "Event Type",
+            description: "Operation type that must be performed in the specified collection",
             type: "string",
             enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
           }
