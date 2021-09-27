@@ -3,29 +3,11 @@
   flex-direction: column;
   div.seperated-content {
     display: flex;
-    align-items: baseline;
     div.includeds,
     div.excludeds {
       flex: 1;
-    }
-
-    div.includeds {
-      margin-right: 10px;
-      mat-form-field {
-        width: 100%;
-      }
-    }
-
-    div.included-resource,
-    div.excluded-resource {
-      align-items: baseline;
-      display: flex;
-      > mat-form-field {
-        width: 300px;
+      mat-form-field:not(:last-of-type){
         margin-right: 10px;
-      }
-      button {
-        flex-grow: 1;
       }
     }
   }

@@ -105,9 +105,9 @@ export class PolicyAddComponent implements OnInit {
 
       const acceptResource = this.acceptsResource(statement, action);
       if (acceptResource) {
-        const includes = [this.services[statement.module][action].map(() => "*").join("/")];
+        // const includes = [this.services[statement.module][action].map(() => "*").join("/")];
         newStatement.resource = {
-          include: includes,
+          include: [],
           exclude: []
         };
       }
@@ -129,8 +129,8 @@ export class PolicyAddComponent implements OnInit {
       );
 
       this.dialog.open(PolicyResourceAddComponent, {
-        width: "880px",
-        maxWidth: "90%",
+        width: "90%",
+        maxWidth:"1200px",
         maxHeight: "800px",
         data: {
           services: this.services,
