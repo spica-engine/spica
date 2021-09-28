@@ -1,10 +1,15 @@
 import {Component, Inject, OnInit} from "@angular/core";
 import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
-import {Resource, Services, isSelectableResource} from "@spica-client/passport/interfaces/service";
-import {NgModel} from "@angular/forms";
+import {
+  SubResource,
+  Services,
+  isSelectableSubResource
+} from "@spica-client/passport/interfaces/service";
 import {DisplayedStatement, DisplayedAction} from "@spica-client/passport/interfaces/statement";
 import {HttpClient} from "@angular/common/http";
-import {map} from "rxjs/operators";
+import {filter, map, share, shareReplay, switchMapTo} from "rxjs/operators";
+import {PassportService} from "@spica-client/passport";
+import {of} from "rxjs";
 
 @Component({
   selector: "policy-resource-add",
@@ -12,7 +17,7 @@ import {map} from "rxjs/operators";
   styleUrls: ["./policy-resource-add.component.scss"]
 })
 export class PolicyResourceAddComponent implements OnInit {
-  resource: Resource[];
+  resource: SubResource[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<PolicyResourceAddComponent>,
@@ -22,25 +27,39 @@ export class PolicyResourceAddComponent implements OnInit {
       statement: DisplayedStatement;
       currentAction: DisplayedAction;
     },
-    private http: HttpClient
+    private http: HttpClient,
+    private passport: PassportService
   ) {}
 
-  ngOnInit(): void {
-    this.resource = this.data.services[this.data.statement.module][
+  async ngOnInit() {
+    const actualResource = this.data.services[this.data.statement.module][
       this.data.currentAction.name
-    ].map(resource => {
-      const copy = this.deepCopy(resource);
-      if (isSelectableResource(resource)) {
-        if (typeof resource.source == "string") {
-          copy.source = this.http.get<{_id: string}[]>(resource.source);
+    ];
+
+    for (const subResource of actualResource) {
+      const copySubResource = this.deepCopy(subResource);
+      if (isSelectableSubResource(subResource)) {
+        if (typeof subResource.source == "string") {
+          const isAllowed = await this.passport
+            .checkAllowed(subResource.requiredAction)
+            .toPromise();
+          if (!isAllowed) {
+            copySubResource.source = of([]);
+            this.resource.push(copySubResource);
+            break;
+          }
+
+          copySubResource.source = this.http
+            .get<{_id: string}[]>(subResource.source)
+            .pipe(shareReplay());
         } else {
-          copy.source = resource.source;
+          copySubResource.source = subResource.source;
         }
 
-        if (resource.maps) {
-          copy.source = copy.source.pipe(
-            map(v => {
-              for (const fn of resource.maps) {
+        if (subResource.maps) {
+          copySubResource.source = copySubResource.source.pipe(
+            map((v: any) => {
+              for (const fn of subResource.maps) {
                 v = fn(v);
               }
               return v;
@@ -48,8 +67,13 @@ export class PolicyResourceAddComponent implements OnInit {
           );
         }
       }
-      return copy;
-    });
+
+      this.resource.push(copySubResource);
+
+      if (!this.data.currentAction.resource.include.length) {
+        this.addInclude();
+      }
+    }
   }
 
   addInclude() {

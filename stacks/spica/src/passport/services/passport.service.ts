@@ -1,6 +1,5 @@
 import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
-import {Omit} from "@spica-client/core";
 import * as jwt_decode from "jwt-decode";
 import * as matcher from "matcher";
 import {Observable} from "rxjs";

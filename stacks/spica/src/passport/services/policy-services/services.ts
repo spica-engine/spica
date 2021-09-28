@@ -5,79 +5,89 @@ const paginationMap = <T>(res: {meta: number; data: T[]}) => {
   return res.data;
 };
 
-const asteriskMap = (values: any[]) => {
-  return values.concat({_id: "*"});
+const asteriskMap = (primary: string) => {
+  return (values: any[]) => values.concat({_id: "*", [primary]: "All Resources"});
 };
 
-const bucketSelectableResource = {
+const bucketResource = {
   title: "Bucket",
   source: "api:/bucket",
   primary: "title",
-  maps: [asteriskMap]
+  requiredAction: "bucket:index",
+  maps: [asteriskMap("title")]
 };
 
 const bucketDataResource = {title: "Bucket Data"};
 
-const apikeySelectableResource = {
+const apikeyResource = {
   title: "Apikey",
   source: "api:/passport/apikey",
   primary: "name",
-  maps: [paginationMap, asteriskMap]
+  requiredAction: "passport:apikey:index",
+  maps: [paginationMap, asteriskMap("name")]
 };
 
-const policySelectableResource = {
+const policyResource = {
   title: "Policy",
   source: "api:/passport/policy",
   primary: "name",
-  maps: [paginationMap, asteriskMap]
+  requiredAction: "passport:policy:index",
+  maps: [paginationMap, asteriskMap("name")]
 };
 
-const identitySelectableResource = {
+const identityResource = {
   title: "Identity",
   source: "api:/passport/identity",
   primary: "name",
-  maps: [asteriskMap]
+  requiredAction: "passport:identity:index",
+  maps: [asteriskMap("name")]
 };
 
 const strategyResource = {
   title: "Strategy",
   source: "api:/passport/strategy",
   primary: "title",
-  maps: [asteriskMap]
+  requiredAction: "passport:strategy:index",
+  maps: [asteriskMap("title")]
 };
 
 const dashboardResource = {
   title: "Dashboard",
   source: "api:/dashboard",
   primary: "name",
-  maps: [asteriskMap]
+  requiredAction: "dashboard:index",
+  maps: [asteriskMap("name")]
 };
 
 const functionResource = {
   title: "Function",
   source: "api:/function",
   primary: "name",
-  maps: [asteriskMap]
+  requiredAction: "function:index",
+  maps: [asteriskMap("name")]
 };
 
 const webhookResource = {
   title: "Webhook",
   source: "api:/webhook",
-  primary: "source",
-  maps: [paginationMap, asteriskMap]
+  primary: "url",
+  requiredAction: "webhook:index",
+  maps: [paginationMap, asteriskMap("url")]
 };
 
 const storageResource = {
   title: "Storage",
   source: "api:/storage",
   primary: "name",
-  maps: [paginationMap, asteriskMap]
+  requiredAction: "storage:index",
+  maps: [paginationMap, asteriskMap("url")]
 };
 
 const preferenceResource = {
   title: "Preference",
-  source: of([{_id: "bucket"}, {_id: "passport"}]),
-  maps: [asteriskMap]
+  primary: "title",
+  source: of([{_id: "bucket", title: "Bucket"}, {_id: "passport", title: "Passport"}]),
+  maps: [asteriskMap("title")]
 };
 
 export default {
@@ -88,49 +98,49 @@ export default {
   },
   // BUCKET
   bucket: {
-    "bucket:index": [bucketSelectableResource],
-    "bucket:show": [bucketSelectableResource],
+    "bucket:index": [bucketResource],
+    "bucket:show": [bucketResource],
     "bucket:create": [],
-    "bucket:updated": [bucketSelectableResource],
-    "bucket:delete": [bucketSelectableResource]
+    "bucket:updated": [bucketResource],
+    "bucket:delete": [bucketResource]
   },
   "bucket:data": {
-    "bucket:data:index": [bucketSelectableResource, bucketDataResource],
-    "bucket:data:show": [bucketSelectableResource, bucketDataResource],
-    "bucket:data:create": [bucketSelectableResource],
-    "bucket:data:update": [bucketSelectableResource, bucketDataResource],
-    "bucket:data:delete": [bucketSelectableResource, bucketDataResource],
-    "bucket:data:stream": [bucketSelectableResource, bucketDataResource]
+    "bucket:data:index": [bucketResource, bucketDataResource],
+    "bucket:data:show": [bucketResource, bucketDataResource],
+    "bucket:data:create": [bucketResource],
+    "bucket:data:update": [bucketResource, bucketDataResource],
+    "bucket:data:delete": [bucketResource, bucketDataResource],
+    "bucket:data:stream": [bucketResource, bucketDataResource]
   },
   // PASSPORT
   "passport:apikey": {
-    "passport:apikey:index": [apikeySelectableResource],
-    "passport:apikey:show": [apikeySelectableResource],
+    "passport:apikey:index": [apikeyResource],
+    "passport:apikey:show": [apikeyResource],
     "passport:apikey:create": [],
-    "passport:apikey:update": [apikeySelectableResource],
-    "passport:apikey:delete": [apikeySelectableResource]
+    "passport:apikey:update": [apikeyResource],
+    "passport:apikey:delete": [apikeyResource]
   },
   "passport:apikey:policy": {
-    "passport:apikey:policy:add": [apikeySelectableResource, policySelectableResource],
-    "passport:apikey:policy:remove": [apikeySelectableResource, policySelectableResource]
+    "passport:apikey:policy:add": [apikeyResource, policyResource],
+    "passport:apikey:policy:remove": [apikeyResource, policyResource]
   },
   "passport:identity": {
-    "passport:identity:index": [identitySelectableResource],
-    "passport:identity:show": [identitySelectableResource],
+    "passport:identity:index": [identityResource],
+    "passport:identity:show": [identityResource],
     "passport:identity:create": [],
-    "passport:identity:update": [identitySelectableResource],
-    "passport:identity:delete": [identitySelectableResource]
+    "passport:identity:update": [identityResource],
+    "passport:identity:delete": [identityResource]
   },
   "passport:identity:policy": {
-    "passport:identity:policy:add": [identitySelectableResource, policySelectableResource],
-    "passport:identity:policy:remove": [identitySelectableResource, policySelectableResource]
+    "passport:identity:policy:add": [identityResource, policyResource],
+    "passport:identity:policy:remove": [identityResource, policyResource]
   },
   "passport:policy": {
-    "passport:policy:index": [policySelectableResource],
-    "passport:policy:show": [policySelectableResource],
+    "passport:policy:index": [policyResource],
+    "passport:policy:show": [policyResource],
     "passport:policy:create": [],
-    "passport:policy:update": [policySelectableResource],
-    "passport:policy:delete": [policySelectableResource]
+    "passport:policy:update": [policyResource],
+    "passport:policy:delete": [policyResource]
   },
   "passport:strategy": {
     "passport:strategy:index": [strategyResource],

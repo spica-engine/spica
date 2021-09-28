@@ -2,22 +2,23 @@ import {Observable} from "rxjs";
 
 export interface Services {
   [module: string]: {
-    [action: string]: (SelectableResource | Resource)[];
+    [action: string]: (SelectableSubResource | SubResource)[];
   };
 }
 
-export interface Resource {
+export interface SubResource {
   title: string;
 }
 
-export interface SelectableResource extends Resource {
+export interface SelectableSubResource extends SubResource {
   source: string | Observable<any>;
   primary: string;
+  requiredAction: string;
   maps?: Function[];
 }
 
-export function isSelectableResource(
-  resource: Resource | SelectableResource
-): resource is SelectableResource {
+export function isSelectableSubResource(
+  resource: SubResource | SelectableSubResource
+): resource is SelectableSubResource {
   return Object.keys(resource).includes("source");
 }

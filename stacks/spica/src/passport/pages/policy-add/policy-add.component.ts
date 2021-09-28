@@ -105,9 +105,8 @@ export class PolicyAddComponent implements OnInit {
 
       const acceptResource = this.acceptsResource(statement, action);
       if (acceptResource) {
-        const includes = [this.services[statement.module][action].map(() => "*").join("/")];
         newStatement.resource = {
-          include: includes,
+          include: [],
           exclude: []
         };
       }

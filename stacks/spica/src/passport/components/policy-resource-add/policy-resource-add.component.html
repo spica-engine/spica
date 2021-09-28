@@ -25,13 +25,9 @@
               (ngModelChange)="onSubResourceChange('include', resIndex, subResIndex, $event._id)"
               required
             >
-              <mat-option
-                [matTooltip]="'_id: ' + value._id"
-                *ngFor="let value of values"
-                class="mat-accent"
-                [value]="value"
-                >{{ value[subResource.primary] || value._id }}</mat-option
-              >
+              <mat-option *ngFor="let value of values" class="mat-accent" [value]="value">{{
+                value[subResource.primary] || value._id
+              }}</mat-option>
             </mat-select>
           </mat-form-field>
           <mat-form-field *ngIf="!subResource.source">
@@ -41,7 +37,7 @@
               required
               [name]="'includedResourceInput' + resIndex + '' + subResIndex"
               #includedResource="ngModel"
-              [ngModel]="data.currentAction.resource.include[resIndex].split('/')[subResIndex]"
+              [ngModel]="data.currentAction.resource.include[resIndex]?.split('/')[subResIndex]"
               (ngModelChange)="onSubResourceChange('include', resIndex, subResIndex, $event)"
             />
           </mat-form-field>
