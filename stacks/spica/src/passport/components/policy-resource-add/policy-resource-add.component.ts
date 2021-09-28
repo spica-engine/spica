@@ -1,10 +1,6 @@
 import {Component, Inject, OnInit} from "@angular/core";
 import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
-import {
-  Resource,
-  Services,
-  isSelectableSubResource
-} from "@spica-client/passport/interfaces/service";
+import {Resource, Services, isSelectableResource} from "@spica-client/passport/interfaces/service";
 import {NgModel} from "@angular/forms";
 import {DisplayedStatement, DisplayedAction} from "@spica-client/passport/interfaces/statement";
 import {HttpClient} from "@angular/common/http";
@@ -30,50 +26,30 @@ export class PolicyResourceAddComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.resource = this.data.services[this.data.statement.module][this.data.currentAction.name];
+    this.resource = this.data.services[this.data.statement.module][
+      this.data.currentAction.name
+    ].map(resource => {
+      const copy = this.deepCopy(resource);
+      if (isSelectableResource(resource)) {
+        if (typeof resource.source == "string") {
+          copy.source = this.http.get<{_id: string}[]>(resource.source);
+        } else {
+          copy.source = resource.source;
+        }
 
-    this.resource.forEach(sr => {
-      if (isSelectableSubResource(sr)) {
-        sr.values = sr.url
-          ? this.http.get<{_id: string}[]>(sr.url).pipe(map(r => r.concat({_id: "*"})))
-          : sr.values;
+        if (resource.maps) {
+          copy.source = copy.source.pipe(
+            map(v => {
+              for (const fn of resource.maps) {
+                v = fn(v);
+              }
+              return v;
+            })
+          );
+        }
       }
+      return copy;
     });
-  }
-
-  onIncludeTyping(model: NgModel) {
-    let pattern = "";
-
-    let reason = "";
-
-    if (!this.data.currentAction.resource.exclude.length) {
-      pattern = this.buildPattern("default");
-      reason = "expectedFormat";
-    } else {
-      pattern = this.buildPattern("endswith");
-      reason = "endsWith";
-    }
-
-    if (!new RegExp(pattern).test(model.value)) {
-      model.control.setErrors({[reason]: true});
-    }
-  }
-
-  buildPattern(type: "default" | "endswith") {
-    const resourcePart = "[a-zA-Z0-9\\*]+";
-
-    const lastSegment = "\\*$";
-
-    const seperator = "\\/";
-
-    switch (type) {
-      case "default":
-        return this.resource.map(() => resourcePart).join(seperator);
-      case "endswith":
-        return this.resource
-          .map((_, index) => (index == this.resource.length - 1 ? lastSegment : resourcePart))
-          .join(seperator);
-    }
   }
 
   addInclude() {

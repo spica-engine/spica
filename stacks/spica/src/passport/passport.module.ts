@@ -100,7 +100,7 @@ import {MatFormFieldModule} from "@angular/material/form-field";
     SpicaCommon,
     MatResizeHeaderModule,
     MatSortModule,
-    MatFormFieldModule,
+    MatFormFieldModule
   ],
   exports: [CanInteractDirective],
   entryComponents: [IdentityBadgeComponent, StrategyDialogComponent]

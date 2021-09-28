@@ -17,43 +17,55 @@
         "
       >
         <ng-container *ngFor="let subResource of resource; index as subResIndex">
-          <mat-form-field *ngIf="subResource.values | async; let values">
+          <mat-form-field *ngIf="subResource.source | async; let values">
             <mat-label>{{ subResource.title }}</mat-label>
             <mat-select
-              [value]="selectionValue('include', resIndex, subResIndex, values)"
-              (selectionChange)="
-                onSubResourceChange('include', resIndex, subResIndex, $event.value._id)
-              "
+              [name]="'includedResourceSelection' + resIndex + '' + subResIndex"
+              [ngModel]="selectionValue('include', resIndex, subResIndex, values)"
+              (ngModelChange)="onSubResourceChange('include', resIndex, subResIndex, $event._id)"
+              required
             >
-              <mat-option *ngFor="let value of values" class="mat-accent" [value]="value">{{
-                value[subResource.primary] || value._id
-              }}</mat-option>
+              <mat-option
+                [matTooltip]="'_id: ' + value._id"
+                *ngFor="let value of values"
+                class="mat-accent"
+                [value]="value"
+                >{{ value[subResource.primary] || value._id }}</mat-option
+              >
             </mat-select>
           </mat-form-field>
-          <mat-form-field *ngIf="!subResource.values && !subResource.url">
+          <mat-form-field *ngIf="!subResource.source">
             <mat-label>{{ subResource.title }}</mat-label>
             <input
               matInput
               required
-              [name]="'includedResource' + resIndex + '' + subResIndex"
+              [name]="'includedResourceInput' + resIndex + '' + subResIndex"
               #includedResource="ngModel"
               [ngModel]="data.currentAction.resource.include[resIndex].split('/')[subResIndex]"
               (ngModelChange)="onSubResourceChange('include', resIndex, subResIndex, $event)"
             />
           </mat-form-field>
         </ng-container>
-        <button
-          mat-button
-          [disabled]="resIndex == 0"
-          color="warn"
-          (click)="data.currentAction.resource.include.splice(resIndex, 1)"
-        >
-          <mat-icon>
-            delete
-          </mat-icon>
-        </button>
+        <div class="delete-button">
+          <button
+            mat-button
+            [disabled]="resIndex == 0"
+            color="warn"
+            (click)="data.currentAction.resource.include.splice(resIndex, 1)"
+          >
+            <mat-icon>
+              delete
+            </mat-icon>
+          </button>
+        </div>
       </div>
-      <button type="submit" class="add-resource-button" mat-button (click)="addInclude()">
+      <button
+        type="submit"
+        [disabled]="includeForm.invalid"
+        class="add-resource-button"
+        mat-button
+        (click)="addInclude()"
+      >
         Add resource <mat-icon>add</mat-icon>
       </button>
     </form>
@@ -66,7 +78,7 @@
       #excludeForm="ngForm"
     >
       <div
-      class="resource"
+        class="resource"
         *ngFor="
           let excluded of data.currentAction.resource.exclude;
           index as resIndex;
@@ -74,20 +86,20 @@
         "
       >
         <ng-container *ngFor="let subResource of resource; index as subResIndex">
-          <mat-form-field *ngIf="subResource.values | async; let values">
+          <mat-form-field *ngIf="subResource.source | async; let values">
             <mat-label>{{ subResource.title }}</mat-label>
             <mat-select
-              [value]="selectionValue('exclude', resIndex, subResIndex, values)"
-              (selectionChange)="
-                onSubResourceChange('exclude', resIndex, subResIndex, $event.value._id)
-              "
+              required
+              [name]="'excludedResourceSelection' + resIndex + '' + subResIndex"
+              [ngModel]="selectionValue('exclude', resIndex, subResIndex, values)"
+              (ngModelChange)="onSubResourceChange('exclude', resIndex, subResIndex, $event._id)"
             >
               <mat-option *ngFor="let value of values" class="mat-accent" [value]="value">{{
                 value[subResource.primary] || value._id
               }}</mat-option>
             </mat-select>
           </mat-form-field>
-          <mat-form-field *ngIf="!subResource.url">
+          <mat-form-field *ngIf="!subResource.source">
             <mat-label>{{ subResource.title }}</mat-label>
             <input
               matInput
@@ -99,18 +111,26 @@
             />
           </mat-form-field>
         </ng-container>
-        <button
-          mat-button
-          [disabled]="resIndex == 0"
-          color="warn"
-          (click)="data.currentAction.resource.exclude.splice(resIndex, 1)"
-        >
-          <mat-icon>
-            delete
-          </mat-icon>
-        </button>
+        <div class="delete-button">
+          <button
+            mat-button
+            [disabled]="resIndex == 0"
+            color="warn"
+            (click)="data.currentAction.resource.exclude.splice(resIndex, 1)"
+          >
+            <mat-icon>
+              delete
+            </mat-icon>
+          </button>
+        </div>
       </div>
-      <button type="submit" class="add-resource-button" mat-button (click)="addExclude()">
+      <button
+        type="submit"
+        [disabled]="excludeForm.invalid"
+        class="add-resource-button"
+        mat-button
+        (click)="addExclude()"
+      >
         Add resource <mat-icon>add</mat-icon>
       </button>
     </form>

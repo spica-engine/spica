@@ -87,18 +87,6 @@ describe("Policy Add Component", () => {
       });
     });
 
-    it("should set services", () => {
-      expect(fixture.componentInstance.services).toEqual({
-        bucket: {
-          "bucket:index": ["bucket_id"],
-          "bucket:show": ["bucket_id"],
-          "bucket:create": [],
-          "bucket:update": ["bucket_id"],
-          "bucket:delete": ["bucket_id"]
-        }
-      });
-    });
-
     it("should get resource", () => {
       const statement = {
         module: "bucket",

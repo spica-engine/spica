@@ -6,8 +6,25 @@
     div.includeds,
     div.excludeds {
       flex: 1;
-      mat-form-field:not(:last-of-type){
-        margin-right: 10px;
+      form {
+        margin-top: 10px;
+      }
+
+      div.resource {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        column-gap: 10px;
+        > mat-form-field {
+          flex: 4;
+        }
+        > div.delete-button {
+          flex: 1;
+          text-align: center;
+          > button {
+            width: 64px;
+          }
+        }
       }
     }
   }

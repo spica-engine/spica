@@ -1,65 +1,83 @@
 import {of} from "rxjs";
 import {Services} from "../../interfaces/service";
 
+const paginationMap = <T>(res: {meta: number; data: T[]}) => {
+  return res.data;
+};
+
+const asteriskMap = (values: any[]) => {
+  return values.concat({_id: "*"});
+};
+
 const bucketSelectableResource = {
   title: "Bucket",
-  url: "api:/bucket",
-  primary: "title"
+  source: "api:/bucket",
+  primary: "title",
+  maps: [asteriskMap]
 };
 
 const bucketDataResource = {title: "Bucket Data"};
 
 const apikeySelectableResource = {
   title: "Apikey",
-  url: "api:/passport/apikey",
-  primary: "name"
+  source: "api:/passport/apikey",
+  primary: "name",
+  maps: [paginationMap, asteriskMap]
 };
 
 const policySelectableResource = {
   title: "Policy",
-  url: "api:/passport/policy",
-  primary: "name"
+  source: "api:/passport/policy",
+  primary: "name",
+  maps: [paginationMap, asteriskMap]
 };
 
 const identitySelectableResource = {
   title: "Identity",
-  url: "api:/passport/identity",
-  primary: "name"
+  source: "api:/passport/identity",
+  primary: "name",
+  maps: [asteriskMap]
 };
 
 const strategyResource = {
   title: "Strategy",
-  url: "api:/passport/strategy",
-  primary: "title"
+  source: "api:/passport/strategy",
+  primary: "title",
+  maps: [asteriskMap]
 };
 
 const dashboardResource = {
   title: "Dashboard",
-  url: "api:/dashboard",
-  primary: "name"
+  source: "api:/dashboard",
+  primary: "name",
+  maps: [asteriskMap]
 };
 
 const functionResource = {
   title: "Function",
-  url: "api:/function",
-  primary: "name"
+  source: "api:/function",
+  primary: "name",
+  maps: [asteriskMap]
 };
 
 const webhookResource = {
   title: "Webhook",
-  url: "api:/webhook",
-  primary: "url"
+  source: "api:/webhook",
+  primary: "source",
+  maps: [paginationMap, asteriskMap]
 };
 
 const storageResource = {
   title: "Storage",
-  url: "api:/storage",
-  primary: "name"
+  source: "api:/storage",
+  primary: "name",
+  maps: [paginationMap, asteriskMap]
 };
 
 const preferenceResource = {
   title: "Preference",
-  values: of([{_id: "bucket"}, {_id: "passport"}, {_id: "*"}])
+  source: of([{_id: "bucket"}, {_id: "passport"}]),
+  maps: [asteriskMap]
 };
 
 export default {
@@ -71,11 +89,17 @@ export default {
   // BUCKET
   bucket: {
     "bucket:index": [bucketSelectableResource],
-    "bucket:create": []
+    "bucket:show": [bucketSelectableResource],
+    "bucket:create": [],
+    "bucket:updated": [bucketSelectableResource],
+    "bucket:delete": [bucketSelectableResource]
   },
   "bucket:data": {
+    "bucket:data:index": [bucketSelectableResource, bucketDataResource],
     "bucket:data:show": [bucketSelectableResource, bucketDataResource],
-    "bucket:data:create": [bucketSelectableResource, bucketDataResource],
+    "bucket:data:create": [bucketSelectableResource],
+    "bucket:data:update": [bucketSelectableResource, bucketDataResource],
+    "bucket:data:delete": [bucketSelectableResource, bucketDataResource],
     "bucket:data:stream": [bucketSelectableResource, bucketDataResource]
   },
   // PASSPORT

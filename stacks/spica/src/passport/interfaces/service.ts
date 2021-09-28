@@ -11,14 +11,13 @@ export interface Resource {
 }
 
 export interface SelectableResource extends Resource {
-  // Reduce these two variable to one
-  url: string;
-  values: Observable<any[]>;
+  source: string | Observable<any>;
   primary: string;
+  maps?: Function[];
 }
 
-export function isSelectableSubResource(
+export function isSelectableResource(
   resource: Resource | SelectableResource
 ): resource is SelectableResource {
-  return Object.keys(resource).includes("values") || Object.keys(resource).includes("url");
+  return Object.keys(resource).includes("source");
 }
