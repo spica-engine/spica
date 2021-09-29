@@ -33,6 +33,7 @@ import {
   denormalizeFunction,
   emptyFunction,
   emptyTrigger,
+  Enqueuer,
   FunctionOptions,
   FUNCTION_OPTIONS,
   Information,
@@ -114,10 +115,11 @@ export class AddComponent implements OnInit, OnDestroy {
   ) {
     this.apiUrl = options.url;
     this.information = this.functionService.information().pipe(
-      share(),
       tap(information => {
         this.function.timeout = this.function.timeout || information.timeout * 0.1;
-      })
+        this.addBucketTitlesToColls(information.enqueuers);
+      }),
+      share()
     );
   }
 
@@ -336,6 +338,29 @@ export class AddComponent implements OnInit, OnDestroy {
         this.isHandlerDuplicated = true;
         break;
       }
+    }
+  }
+
+  addBucketTitlesToColls(enqueuers: Enqueuer[]) {
+    const bucketEnq = enqueuers.find(e => e.description.name == "bucket");
+    const dbEnq = enqueuers.find(e => e.description.name == "database");
+
+    const dbEnqEnum = dbEnq.options.properties.collection["enum"];
+    const dbEnqViewEnum = (dbEnq.options.properties.collection["viewEnum"] = [
+      ...dbEnq.options.properties.collection["enum"]
+    ]);
+
+    const bucketEnqEnum = bucketEnq.options.properties.bucket["enum"];
+    const bucketEnqViewEnum = bucketEnq.options.properties.bucket["viewEnum"];
+
+    for (const [i, coll] of dbEnqEnum.entries()) {
+      if (!coll.startsWith("bucket_")) {
+        continue;
+      }
+
+      const bucketIndex = bucketEnqEnum.findIndex(id => id == coll.replace("bucket_", ""));
+      const value = bucketIndex != -1 ? bucketEnqViewEnum[bucketIndex] : coll;
+      dbEnqViewEnum[i] = value;
     }
   }
 

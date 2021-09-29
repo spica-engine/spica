@@ -137,7 +137,7 @@ describe("Policy Add Component", () => {
           {
             name: "bucket:update",
             resource: {
-              include: ["*"],
+              include: [],
               exclude: []
             }
           }
