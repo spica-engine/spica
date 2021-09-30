@@ -287,6 +287,9 @@ const bucketSchema: JSONSchema7 = {
           ]
         }
       }
+    },
+    primary: {
+      type: "string"
     }
   }
 

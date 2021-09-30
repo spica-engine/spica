@@ -59,7 +59,7 @@
   <mat-card-content [class.handset]="isHandset$ | async">
     <form #form="ngForm">
       <div *ngFor="let layout of layouts" [class]="layout">
-        <ng-container *ngFor="let propertyKv of bucket['positioned'][layout]">
+        <ng-container *ngFor="let propertyKv of positioned[layout]">
           <div
             *ngIf="propertyKv.value.options?.translate && data[propertyKv.key]"
             [inputPlacer]="propertyKv.value"
