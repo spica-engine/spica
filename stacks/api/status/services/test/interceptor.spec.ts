@@ -67,7 +67,7 @@ describe("Status Interceptor", () => {
       expect(res.body).toEqual({
         module: "api",
         status: {
-          calls: {
+          request: {
             limit: 10,
             current: 1,
             unit: "count"
@@ -97,7 +97,7 @@ describe("Status Interceptor", () => {
       expect(res.body).toEqual({
         module: "api",
         status: {
-          calls: {
+          request: {
             limit: 10,
             current: 2,
             unit: "count"
