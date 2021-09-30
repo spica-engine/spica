@@ -43,7 +43,7 @@ import {
 } from "../../interface";
 import {MatDialog} from "@angular/material/dialog";
 import {ExampleComponent} from "@spica-client/common/example";
-import {GithubService, OAuthError} from "@spica-client/function/services";
+import {GithubService} from "@spica-client/function/services";
 import {RepositoryComponent} from "../../components/repository/repository.component";
 import {ConfigurationComponent} from "../../components/configuration/configuration.component";
 
@@ -101,6 +101,8 @@ export class AddComponent implements OnInit, OnDestroy {
   editDescription = false;
 
   apiUrl;
+
+  lastSavedIndex;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -188,6 +190,7 @@ export class AddComponent implements OnInit, OnDestroy {
         response => {
           this.isIndexPending = false;
           this.index = response.index;
+          this.updateLastSavedIndex();
         },
         () => (this.isIndexPending = false)
       );
@@ -257,7 +260,8 @@ export class AddComponent implements OnInit, OnDestroy {
             return of(new Date());
           }
           return throwError(error);
-        })
+        }),
+        tap(() => this.updateLastSavedIndex())
       ) as Observable<Date | "inprogress">;
     }
   }
@@ -286,6 +290,7 @@ export class AddComponent implements OnInit, OnDestroy {
               }
               return throwError(error);
             }),
+            tap(() => this.updateLastSavedIndex()),
             tap(() => isInsert && this.router.navigate([`function/${fn._id}`])),
             ignoreElements()
           )
@@ -297,6 +302,14 @@ export class AddComponent implements OnInit, OnDestroy {
         })
       )
     );
+  }
+
+  updateLastSavedIndex() {
+    this.lastSavedIndex = `${this.index}`;
+  }
+
+  hasUnsavedChanges() {
+    return this.lastSavedIndex != this.index;
   }
 
   getDependencies() {

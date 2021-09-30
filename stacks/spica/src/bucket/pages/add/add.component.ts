@@ -52,6 +52,8 @@ export class AddComponent implements OnInit {
 
   readonly isHandset$: Observable<boolean>;
 
+  positioned = {};
+
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
@@ -110,7 +112,8 @@ export class AddComponent implements OnInit {
             this.data[key] = this.data[key] || {};
           }
         });
-        schema["positioned"] = Object.entries(schema.properties).reduce(
+
+        this.positioned = Object.entries(schema.properties).reduce(
           (accumulator, [key, value]) => {
             if (accumulator[value.options.position]) {
               accumulator[value.options.position].push({key, value});
