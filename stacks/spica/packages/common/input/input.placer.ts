@@ -103,14 +103,15 @@ export class InputPlacerComponent
       const placer = this._inputResolver.resolve(this.schema.type);
       const placerFactory = this._componentFactoryResolver.resolveComponentFactory(placer.placer);
 
-      this.schema["$required"] = this.required;
-      this.schema["$name"] = `${this.name}$$`;
+      const copySchema = {...this.schema};
+      copySchema["$required"] = this.required;
+      copySchema["$name"] = `${this.name}$$`;
 
       const injector = Injector.create(
         [
           {
             provide: INPUT_SCHEMA,
-            useValue: this.schema
+            useValue: copySchema
           }
         ],
         this._injector
