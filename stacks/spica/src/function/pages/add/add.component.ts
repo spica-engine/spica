@@ -33,6 +33,7 @@ import {
   denormalizeFunction,
   emptyFunction,
   emptyTrigger,
+  Enqueuer,
   FunctionOptions,
   FUNCTION_OPTIONS,
   Information,
@@ -42,7 +43,7 @@ import {
 } from "../../interface";
 import {MatDialog} from "@angular/material/dialog";
 import {ExampleComponent} from "@spica-client/common/example";
-import {GithubService, OAuthError} from "@spica-client/function/services";
+import {GithubService} from "@spica-client/function/services";
 import {RepositoryComponent} from "../../components/repository/repository.component";
 import {ConfigurationComponent} from "../../components/configuration/configuration.component";
 
@@ -101,6 +102,8 @@ export class AddComponent implements OnInit, OnDestroy {
 
   apiUrl;
 
+  lastSavedIndex;
+
   constructor(
     private activatedRoute: ActivatedRoute,
     private router: Router,
@@ -114,10 +117,11 @@ export class AddComponent implements OnInit, OnDestroy {
   ) {
     this.apiUrl = options.url;
     this.information = this.functionService.information().pipe(
-      share(),
       tap(information => {
         this.function.timeout = this.function.timeout || information.timeout * 0.1;
-      })
+        this.addBucketTitlesToColls(information.enqueuers);
+      }),
+      share()
     );
   }
 
@@ -186,6 +190,7 @@ export class AddComponent implements OnInit, OnDestroy {
         response => {
           this.isIndexPending = false;
           this.index = response.index;
+          this.updateLastSavedIndex();
         },
         () => (this.isIndexPending = false)
       );
@@ -255,7 +260,8 @@ export class AddComponent implements OnInit, OnDestroy {
             return of(new Date());
           }
           return throwError(error);
-        })
+        }),
+        tap(() => this.updateLastSavedIndex())
       ) as Observable<Date | "inprogress">;
     }
   }
@@ -284,6 +290,7 @@ export class AddComponent implements OnInit, OnDestroy {
               }
               return throwError(error);
             }),
+            tap(() => this.updateLastSavedIndex()),
             tap(() => isInsert && this.router.navigate([`function/${fn._id}`])),
             ignoreElements()
           )
@@ -295,6 +302,14 @@ export class AddComponent implements OnInit, OnDestroy {
         })
       )
     );
+  }
+
+  updateLastSavedIndex() {
+    this.lastSavedIndex = `${this.index}`;
+  }
+
+  hasUnsavedChanges() {
+    return this.lastSavedIndex != this.index;
   }
 
   getDependencies() {
@@ -336,6 +351,29 @@ export class AddComponent implements OnInit, OnDestroy {
         this.isHandlerDuplicated = true;
         break;
       }
+    }
+  }
+
+  addBucketTitlesToColls(enqueuers: Enqueuer[]) {
+    const bucketEnq = enqueuers.find(e => e.description.name == "bucket");
+    const dbEnq = enqueuers.find(e => e.description.name == "database");
+
+    const dbEnqEnum = dbEnq.options.properties.collection["enum"];
+    const dbEnqViewEnum = (dbEnq.options.properties.collection["viewEnum"] = [
+      ...dbEnq.options.properties.collection["enum"]
+    ]);
+
+    const bucketEnqEnum = bucketEnq.options.properties.bucket["enum"];
+    const bucketEnqViewEnum = bucketEnq.options.properties.bucket["viewEnum"];
+
+    for (const [i, coll] of dbEnqEnum.entries()) {
+      if (!coll.startsWith("bucket_")) {
+        continue;
+      }
+
+      const bucketIndex = bucketEnqEnum.findIndex(id => id == coll.replace("bucket_", ""));
+      const value = bucketIndex != -1 ? bucketEnqViewEnum[bucketIndex] : coll;
+      dbEnqViewEnum[i] = value;
     }
   }
 

@@ -1,6 +1,5 @@
 import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
-import {Omit} from "@spica-client/core";
 import * as jwt_decode from "jwt-decode";
 import * as matcher from "matcher";
 import {Observable} from "rxjs";
@@ -51,6 +50,7 @@ export class PassportService {
   }
 
   identifyWith(strategy: string, openCallback?: (url: string) => void): Observable<any> {
+    let tab;
     return this.http
       .get<any>(`api:/passport/strategy/${strategy}/url`, {
         params: {strategy}
@@ -60,9 +60,11 @@ export class PassportService {
           if (openCallback) {
             openCallback(res.url);
           } else {
-            window.open(res.url);
+            tab = window.open(res.url);
           }
-          return this.http.get(`api:/passport/identify`, {params: {state: res.state}});
+          return this.http
+            .get(`api:/passport/identify`, {params: {state: res.state}})
+            .pipe(tap(() => tab.close()));
         }),
         tap(response => {
           this.token = `${response.scheme} ${response.token}`;

@@ -22,12 +22,12 @@ interface ApiStatus {
 export class DashboardComponent implements OnInit {
   stats: ApiStatus[] = [];
 
-  apiCallData = [];
+  apiRequestData = [];
   apiDownloadedData = [];
   apiUploadedData = [];
 
   apiChart = {
-    call: of(),
+    request: of(),
     downloaded: of(),
     uploaded: of()
   };
@@ -181,15 +181,15 @@ export class DashboardComponent implements OnInit {
       url.searchParams.set("begin", range[0].toISOString());
       url.searchParams.set("end", range[1].toISOString());
 
-      this.apiCallData[i] = 0;
+      this.apiRequestData[i] = 0;
       this.apiDownloadedData[i] = 0;
       this.apiUploadedData[i] = 0;
 
       return this.http
         .get<ApiStatus>(url.toString())
         .toPromise()
-        .then(({status: {calls, downloaded, uploaded}}) => {
-          this.apiCallData[i] = calls.current;
+        .then(({status: {request, downloaded, uploaded}}) => {
+          this.apiRequestData[i] = request.current;
           this.apiDownloadedData[i] = downloaded.current;
           this.apiUploadedData[i] = uploaded.current;
         });
@@ -198,10 +198,19 @@ export class DashboardComponent implements OnInit {
     return Promise.all(promises)
       .then(() => {
         const labels = ranges.map(d => d[0].toLocaleString());
-        this.setApiChart("call", "Calls", labels, this.apiCallData, "Count", true, begin, end);
+        this.setApiChart(
+          "request",
+          "Request",
+          labels,
+          this.apiRequestData,
+          "Count",
+          true,
+          begin,
+          end
+        );
         this.setApiChart(
           "downloaded",
-          "Download size(mb)",
+          "Downloaded(mb)",
           labels,
           this.apiDownloadedData,
           "Mb",
@@ -211,7 +220,7 @@ export class DashboardComponent implements OnInit {
         );
         this.setApiChart(
           "uploaded",
-          "Uploaded size(mb)",
+          "Uploaded(mb)",
           labels,
           this.apiUploadedData,
           "Mb",

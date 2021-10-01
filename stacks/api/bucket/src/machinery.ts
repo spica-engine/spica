@@ -31,7 +31,7 @@ async function v1_schema_to_internal(obj): Promise<Bucket> {
   for (const propertyName in spec.properties) {
     const property = {...spec.properties[propertyName]};
 
-    if (!raw.visible) {
+    if (!raw.primary) {
       raw.primary = propertyName;
     }
 

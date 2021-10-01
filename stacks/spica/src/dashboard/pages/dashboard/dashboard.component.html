@@ -34,31 +34,33 @@
         <mat-icon>open_in_new</mat-icon>
       </a>
     </mat-list>
-    <mat-divider [vertical]="true"></mat-divider>
-    <mat-list class="tutorial-videos" *ngIf="!!(isTutorialEnabled$ | async)">
-      <div class="header">
-        <h1 mat-subheader>Tutorials</h1>
-        <button
-          color="warn"
-          mat-icon-button
-          (click)="onDisable()"
-          matTooltip="Don't show this again"
-        >
-          <mat-icon>
-            visibility_off
-          </mat-icon>
-        </button>
-      </div>
-      <div class="iframe-container" mat-list-item>
-        <iframe
-          src="https://www.youtube.com/embed/videoseries?list=UUCfDC3-r1tIeYfylt_9QVJg"
-          title="Spica Tutorials"
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen
-        ></iframe>
-      </div>
-    </mat-list>
+    <ng-container *ngIf="!!(isTutorialEnabled$ | async)">
+      <mat-divider [vertical]="true"></mat-divider>
+      <mat-list class="tutorial-videos">
+        <div class="header">
+          <h1 mat-subheader>Tutorials</h1>
+          <button
+            color="warn"
+            mat-icon-button
+            (click)="onDisable()"
+            matTooltip="Don't show this again"
+          >
+            <mat-icon>
+              visibility_off
+            </mat-icon>
+          </button>
+        </div>
+        <div class="iframe-container" mat-list-item>
+          <iframe
+            src="https://www.youtube.com/embed/videoseries?list=UUCfDC3-r1tIeYfylt_9QVJg"
+            title="Spica Tutorials"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </mat-list>
+    </ng-container>
   </mat-card-content>
 </mat-card>
 <h2 class="status-header">
@@ -67,12 +69,12 @@
 <div class="api-container">
   <mat-card class="mat-elevation-z25">
     <mat-card-content>
-      <div class="calls">
-        <h3>Calls</h3>
+      <div class="requests">
+        <h3>Requests</h3>
         <mat-spinner color="accent" diameter="35" *ngIf="apiStatusPending"> </mat-spinner>
         <dashboard-default
           *ngIf="!apiStatusPending"
-          [componentData$]="apiChart.call"
+          [componentData$]="apiChart.request"
           type="bar"
           (onUpdate)="onApiStatusFilterUpdate($event)"
         >
