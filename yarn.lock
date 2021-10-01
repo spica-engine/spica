@@ -9483,20 +9483,20 @@ moment@2.19.3:
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.1.tgz#b2be769fa31940be9eeea6469c075e35006fa3d3"
   integrity sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
 
-monaco-editor-core@^0.18.1:
-  version "0.18.1"
-  resolved "https://registry.yarnpkg.com/monaco-editor-core/-/monaco-editor-core-0.18.1.tgz#6aa739a4a3b7444183876db83bac5c55e86c58e6"
-  integrity sha512-euzXzmwjZFG0oAPGjICMwINcZBzQDyfGDYlAR5YNMBJZO9Bmkqq1xpTTze/qQ0KKbVmawFXiwgUbg7WVgebP9Q==
+monaco-editor-core@^0.19.3:
+  version "0.19.3"
+  resolved "https://registry.yarnpkg.com/monaco-editor-core/-/monaco-editor-core-0.19.3.tgz#6d2b36f42f0f42be6def5604810fafc288c9cc3e"
+  integrity sha512-Fd6bTTaAxDAulh3q9Hordj80DSFZFGhjKX/Z3K/kElA9xkPyNwyaOjphYp8254nhUEKCk56TKP7qfRkUjjZF3w==
 
-monaco-editor@^0.23.0:
-  version "0.23.0"
-  resolved "https://registry.yarnpkg.com/monaco-editor/-/monaco-editor-0.23.0.tgz#24844ba5640c7adb3a2a3ff3b520cf2d7170a6f0"
-  integrity sha512-q+CP5zMR/aFiMTE9QlIavGyGicKnG2v/H8qVvybLzeFsARM8f6G9fL0sMST2tyVYCwDKkGamZUI6647A0jR/Lg==
+monaco-editor@^0.19.3:
+  version "0.19.3"
+  resolved "https://registry.yarnpkg.com/monaco-editor/-/monaco-editor-0.19.3.tgz#1c994b3186c00650dbcd034d5370d46bf56c0663"
+  integrity sha512-2n1vJBVQF2Hhi7+r1mMeYsmlf18hjVb6E0v5SoMZyb4aeOmYPKun+CE3gYpiNA1KEvtSdaDHFBqH9d7Wd9vREg==
 
-monaco-languages@^1.7.0:
-  version "1.10.0"
-  resolved "https://registry.yarnpkg.com/monaco-languages/-/monaco-languages-1.10.0.tgz#1e1b0f2b02c8c311b9db1ddb83f5c654f2f92fe1"
-  integrity sha512-ARAws17Xh0K4WsZYkJY6CqHn9EYdYN8CjzK6w/jgXIwU0owzCdUWxzu+FNJ/LeDLcKxL/YK3phcwGFj9IqX2yw==
+monaco-languages@^2.8.0:
+  version "2.8.1"
+  resolved "https://registry.yarnpkg.com/monaco-languages/-/monaco-languages-2.8.1.tgz#49d5c39ffaf2074bc46c35bbbff852c169509d4b"
+  integrity sha512-hzUZFhuhUtTicdfhbj1xUQt2aXI/7ef5Ava4NG1Qd1HHSPPG8vFWyeKOlA+QX+EiFkiq21NWXynx4smQ/Qp61A==
 
 mongodb-memory-server-core@^6.9.2:
   version "6.9.2"
