@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import {ActivityFilter, Activity} from "../interface";
-import {HttpClient, HttpParams} from "@angular/common/http";
+import {HttpClient} from "@angular/common/http";
 import {BucketService, BucketDataService} from "@spica-client/bucket";
 import {ApiKeyService} from "@spica-client/passport/services/apikey.service";
 import {IdentityService, PolicyService, PassportService} from "@spica-client/passport";

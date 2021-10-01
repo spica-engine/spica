@@ -1,8 +1,15 @@
 import {Component, Inject, OnInit} from "@angular/core";
 import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
-import {Services} from "@spica-client/passport/interfaces/service";
-import {NgModel} from "@angular/forms";
+import {
+  SubResource,
+  Services,
+  isSelectableSubResource
+} from "@spica-client/passport/interfaces/service";
 import {DisplayedStatement, DisplayedAction} from "@spica-client/passport/interfaces/statement";
+import {HttpClient} from "@angular/common/http";
+import {filter, map, share, shareReplay, switchMapTo} from "rxjs/operators";
+import {PassportService} from "@spica-client/passport";
+import {of} from "rxjs";
 
 @Component({
   selector: "policy-resource-add",
@@ -10,52 +17,62 @@ import {DisplayedStatement, DisplayedAction} from "@spica-client/passport/interf
   styleUrls: ["./policy-resource-add.component.scss"]
 })
 export class PolicyResourceAddComponent implements OnInit {
-  resourceParts: string[] = [];
+  resource: SubResource[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<PolicyResourceAddComponent>,
     @Inject(MAT_DIALOG_DATA)
-    public data: {services: Services; statement: DisplayedStatement; currentAction: DisplayedAction}
+    public data: {
+      services: Services;
+      statement: DisplayedStatement;
+      currentAction: DisplayedAction;
+    },
+    private http: HttpClient,
+    private passport: PassportService
   ) {}
 
-  ngOnInit(): void {
-    this.resourceParts = this.data.services[this.data.statement.module][
+  async ngOnInit() {
+    const actualResource = this.data.services[this.data.statement.module][
       this.data.currentAction.name
     ];
-  }
 
-  onIncludeTyping(model: NgModel) {
-    let pattern = "";
+    for (const subResource of actualResource) {
+      const copySubResource = this.deepCopy(subResource);
+      if (isSelectableSubResource(subResource)) {
+        if (typeof subResource.source == "string") {
+          const isAllowed = await this.passport
+            .checkAllowed(subResource.requiredAction)
+            .toPromise();
+          if (!isAllowed) {
+            copySubResource.source = of([]);
+            this.resource.push(copySubResource);
+            break;
+          }
 
-    let reason = "";
+          copySubResource.source = this.http
+            .get<{_id: string}[]>(subResource.source)
+            .pipe(shareReplay());
+        } else {
+          copySubResource.source = subResource.source;
+        }
 
-    if (!this.data.currentAction.resource.exclude.length) {
-      pattern = this.buildPattern("default");
-      reason = "expectedFormat";
-    } else {
-      pattern = this.buildPattern("endswith");
-      reason = "endsWith";
-    }
+        if (subResource.maps) {
+          copySubResource.source = copySubResource.source.pipe(
+            map((v: any) => {
+              for (const fn of subResource.maps) {
+                v = fn(v);
+              }
+              return v;
+            })
+          );
+        }
+      }
 
-    if (!new RegExp(pattern).test(model.value)) {
-      model.control.setErrors({[reason]: true});
-    }
-  }
+      this.resource.push(copySubResource);
 
-  buildPattern(type: "default" | "endswith") {
-    const resourcePart = "[a-zA-Z0-9\\*]+";
-
-    const lastSegment = "\\*$";
-
-    const seperator = "\\/";
-
-    switch (type) {
-      case "default":
-        return this.resourceParts.map(() => resourcePart).join(seperator);
-      case "endswith":
-        return this.resourceParts
-          .map((_, index) => (index == this.resourceParts.length - 1 ? lastSegment : resourcePart))
-          .join(seperator);
+      if (!this.data.currentAction.resource.include.length) {
+        this.addInclude();
+      }
     }
   }
 
@@ -65,7 +82,7 @@ export class PolicyResourceAddComponent implements OnInit {
   }
 
   addExclude() {
-    const included = this.resourceParts.map(() => "*").join("/");
+    const included = this.resource.map(() => "*").join("/");
 
     this.data.currentAction.resource.include = [included];
     this.data.currentAction.resource.exclude.push("");
@@ -83,7 +100,7 @@ export class PolicyResourceAddComponent implements OnInit {
     for (const action of this.data.statement.actions) {
       const targetResourceParts = this.data.services[this.data.statement.module][action.name];
 
-      if (targetResourceParts.length != this.resourceParts.length) {
+      if (targetResourceParts.length != this.resource.length) {
         continue;
       }
 
@@ -101,5 +118,33 @@ export class PolicyResourceAddComponent implements OnInit {
 
   trackByFn2(index: number) {
     return index;
+  }
+
+  selectionValue(
+    target: "include" | "exclude",
+    resourceIndex: number,
+    subResourceIndex: number,
+    values: any[]
+  ) {
+    const resource = this.data.currentAction.resource[target][resourceIndex];
+    const subResources = resource.split("/");
+
+    const value = subResources[subResourceIndex];
+
+    return values.find(v => v._id == value);
+  }
+
+  onSubResourceChange(
+    target: "include" | "exclude",
+    resourceIndex: number,
+    subResourceIndex: number,
+    value: string
+  ) {
+    const resource = this.data.currentAction.resource[target][resourceIndex];
+    const subResources = resource.split("/");
+
+    subResources[subResourceIndex] = value;
+
+    this.data.currentAction.resource[target][resourceIndex] = subResources.join("/");
   }
 }

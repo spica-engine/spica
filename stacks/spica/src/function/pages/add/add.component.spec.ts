@@ -30,7 +30,7 @@ import {of} from "rxjs";
 import {AddComponent} from "../../../function/pages/add/add.component";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {examples} from "../../statics/examples";
-import {emptyTrigger, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "../../interface";
+import {emptyTrigger, Enqueuer, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "../../interface";
 import {EnqueuerPipe} from "../../pipes/enqueuer";
 import {LogViewComponent} from "../log-view/log-view.component";
 import {MatDividerModule} from "@angular/material/divider";
@@ -161,6 +161,47 @@ describe("Function Add", () => {
     ]);
 
     expect(fixture.componentInstance.isHandlerDuplicated).toBe(false);
+  });
+
+  it("should change view of collections which are bucket", () => {
+    const dbEnqueuer = {
+      description: {
+        name: "database"
+      },
+      options: {
+        properties: {
+          collection: {
+            enum: ["apikeys", "bucket_111", "bucket_non_exist"]
+          }
+        }
+      }
+    };
+
+    const bucketEnqueuer = {
+      description: {
+        name: "bucket"
+      },
+      options: {
+        properties: {
+          bucket: {
+            enum: ["111"],
+            viewEnum: ["Users"]
+          }
+        }
+      }
+    };
+
+    fixture.componentInstance.addBucketTitlesToColls([dbEnqueuer, bucketEnqueuer] as any);
+    expect(dbEnqueuer.options.properties.collection.enum).toEqual(
+      ["apikeys", "bucket_111", "bucket_non_exist"],
+      "should work if actual collection names are in original form"
+    );
+
+    expect(dbEnqueuer.options.properties.collection["viewEnum"]).toEqual([
+      "apikeys",
+      "Users",
+      "bucket_non_exist"
+    ]);
   });
 
   describe("example codes", () => {

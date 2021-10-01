@@ -29,6 +29,7 @@ export function initialize(
   lines.push("\ntype getAllArgs = Rest<Parameters<typeof Bucket.data.getAll>>;");
   lines.push("\ntype realtimeGetArgs = Rest<Parameters<typeof Bucket.data.realtime.get>>;");
   lines.push("\ntype realtimeGetAllArgs = Rest<Parameters<typeof Bucket.data.realtime.getAll>>;");
+  lines.push("\ntype id = { _id: string };");
 
   buckets = makeTitlesUnique(buckets, warnings);
 
@@ -44,8 +45,7 @@ export function initialize(
 
 function buildInterface(schema: BucketSchema, lines: string[]) {
   const name = prepareInterfaceTitle(schema.title);
-  lines.push(`\n\ninterface ${name}{`);
-  lines.push(`\n  _id: string;`);
+  lines.push(`\n\nexport interface ${name}{`);
   buildProperties(schema.properties, schema.required || [], "bucket", lines);
   lines.push("\n}");
 }
@@ -65,13 +65,13 @@ function buildMethod(schema: BucketSchema, lines: string[]) {
   // GET
   lines.push(`
     export function get (...args: getArgs) {
-      return Bucket.data.get<${interfaceName}>(BUCKET_ID, ...args);
+      return Bucket.data.get<${interfaceName} & id>(BUCKET_ID, ...args);
     };`);
 
   // GETALL
   lines.push(`
     export function getAll (...args: getAllArgs) {
-      return Bucket.data.getAll<${interfaceName}>(BUCKET_ID, ...args);
+      return Bucket.data.getAll<${interfaceName} & id>(BUCKET_ID, ...args);
     };`);
 
   const relationFields = getRelationFields(schema.properties);
@@ -80,14 +80,14 @@ function buildMethod(schema: BucketSchema, lines: string[]) {
     : "";
   // INSERT
   lines.push(`
-    export function insert (document: Omit<${interfaceName}, '_id'>) {
+    export function insert (document: ${interfaceName}) {
       ${normalizeRelationCode}
       return Bucket.data.insert(BUCKET_ID, document);
     };`);
 
   // UPDATE
   lines.push(`
-    export function update (document: ${interfaceName}) {
+    export function update (document: ${interfaceName} & id) {
       ${normalizeRelationCode}
       return Bucket.data.update(
         BUCKET_ID,
@@ -99,7 +99,7 @@ function buildMethod(schema: BucketSchema, lines: string[]) {
   // PATCH
   lines.push(`  
     export function patch (
-      document: Omit<Partial<${interfaceName}>, '_id'> & { _id: string }
+      document: Partial<${interfaceName}> & id
     ) {
       ${normalizeRelationCode}
       return Bucket.data.patch(BUCKET_ID, document._id, document);
@@ -117,13 +117,13 @@ function buildMethod(schema: BucketSchema, lines: string[]) {
   // GET
   lines.push(`
       export function get (...args: realtimeGetArgs) {
-        return Bucket.data.realtime.get<${interfaceName}>(BUCKET_ID, ...args);
+        return Bucket.data.realtime.get<${interfaceName} & id>(BUCKET_ID, ...args);
       };`);
 
   // GETALL
   lines.push(`
       export function getAll (...args: realtimeGetAllArgs) {
-        return Bucket.data.realtime.getAll<${interfaceName}>(BUCKET_ID, ...args);
+        return Bucket.data.realtime.getAll<${interfaceName} & id>(BUCKET_ID, ...args);
       };`);
   lines.push("\n  }");
 
@@ -135,7 +135,7 @@ function replaceRelations(buckets: BucketSchema[], lines: string[]) {
     const target = `<${bucket._id}>`;
     lines = lines.map(line => {
       if (line.includes(target)) {
-        return line.replace(target, prepareInterfaceTitle(bucket.title));
+        return line.replace(target, prepareInterfaceTitle(bucket.title) + " & id");
       }
       return line;
     });
