@@ -38,23 +38,18 @@ export class BucketModule {
         "locationType"
       ]
     });
-    const imports: (Type<any> | DynamicModule)[] = [schemaModule, ServicesModule];
-
-    const BucketCore = BucketCoreModule.initialize(options);
+    const imports: (Type<any> | DynamicModule)[] = [
+      schemaModule,
+      ServicesModule,
+      BucketCoreModule.initialize(options)
+    ];
 
     let BucketCache;
 
     if (options.cache) {
       BucketCache = BucketCacheModule.register({ttl: options.cacheTtl || 60});
       imports.push(BucketCache);
-
-      BucketCore.imports.push(BucketCache as any);
-
-      BucketCore.providers.unshift(BucketCacheService as any);
-      BucketCore.providers[1].inject.push(BucketCacheService as any);
     }
-
-    imports.push(BucketCore);
 
     if (options.hooks) {
       imports.push(HookModule);
@@ -69,25 +64,14 @@ export class BucketModule {
 
     if (options.realtime) {
       const realtime = RealtimeModule.register();
-      const gateway = realtime.providers.shift();
-
-      const gatewayWithDependents = {
-        provide: gateway,
-        useClass: gateway,
-        inject: [Validator]
-      };
 
       if (options.history) {
         realtime.imports.push(History);
-        gatewayWithDependents.inject.push(HistoryService as any);
       }
 
       if (options.cache) {
         realtime.imports.push(BucketCache);
-        gatewayWithDependents.inject.push(BucketCacheService as any);
       }
-
-      realtime.providers.unshift(gatewayWithDependents as any);
 
       realtime.imports.push(schemaModule as any);
 
@@ -106,6 +90,7 @@ export class BucketModule {
       imports: imports,
       providers: [
         DocumentScheduler,
+        BucketController,
         {
           provide: BucketSchemaResolver,
           useFactory: provideBucketSchemaResolver,
