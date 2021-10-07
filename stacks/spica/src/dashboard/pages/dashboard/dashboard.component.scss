@@ -142,8 +142,8 @@
           text-align: center;
         }
 
-        ::ng-deep dashboard-default {
-          button.refresh {
+        ::ng-deep {
+          &:not(:first-of-type) dashboard-default button.refresh {
             display: none;
           }
 
