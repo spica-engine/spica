@@ -72,7 +72,7 @@ export class PassportController {
         .toPromise();
       assertObservers.delete(state);
 
-      const idenfitifer = user ? user.upn || user.name_id || user.email || user.id : undefined;
+      const idenfitifer = user ? user.upn || user.id || user.name_id || user.email : undefined;
 
       if (!idenfitifer) {
         throw new BadRequestException(

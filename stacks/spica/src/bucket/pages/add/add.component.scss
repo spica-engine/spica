@@ -67,6 +67,7 @@
           &.left,
           &.right {
             flex: 2.5;
+            overflow-x: scroll;
           }
           &.bottom {
             flex-basis: 100%;

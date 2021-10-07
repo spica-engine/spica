@@ -128,9 +128,9 @@ type getArgs = Rest<Parameters<typeof Bucket.data.get>>;
 type getAllArgs = Rest<Parameters<typeof Bucket.data.getAll>>;
 type realtimeGetArgs = Rest<Parameters<typeof Bucket.data.realtime.get>>;
 type realtimeGetAllArgs = Rest<Parameters<typeof Bucket.data.realtime.getAll>>;
+type id = { _id: string };
 
-interface New_Bucket{
-  _id: string;
+export interface New_Bucket{
   title?: string;
   description?: string;
   date?: Date | string;
@@ -142,19 +142,19 @@ interface New_Bucket{
   string?: string;};
   color?: string;
   storage?: string;
-  relationmany?: (New_Bucket | string)[];
+  relationmany?: (New_Bucket & id | string)[];
   richtext?: string;
   location?: { type: "Point", coordinates: [number,number]};
 }
 export namespace new_bucket {
   const BUCKET_ID = '614085d7d54da7002d0f52df';
     export function get (...args: getArgs) {
-      return Bucket.data.get<New_Bucket>(BUCKET_ID, ...args);
+      return Bucket.data.get<New_Bucket & id>(BUCKET_ID, ...args);
     };
     export function getAll (...args: getAllArgs) {
-      return Bucket.data.getAll<New_Bucket>(BUCKET_ID, ...args);
+      return Bucket.data.getAll<New_Bucket & id>(BUCKET_ID, ...args);
     };
-    export function insert (document: Omit<New_Bucket, '_id'>) {
+    export function insert (document: New_Bucket) {
       ['relationmany'].forEach((field) => {
         if (typeof document[field] == 'object') {
           document[field] = Array.isArray(document[field])
@@ -164,7 +164,7 @@ export namespace new_bucket {
       });
       return Bucket.data.insert(BUCKET_ID, document);
     };
-    export function update (document: New_Bucket) {
+    export function update (document: New_Bucket & id) {
       ['relationmany'].forEach((field) => {
         if (typeof document[field] == 'object') {
           document[field] = Array.isArray(document[field])
@@ -179,7 +179,7 @@ export namespace new_bucket {
       );
     };  
     export function patch (
-      document: Omit<Partial<New_Bucket>, '_id'> & { _id: string }
+      document: Partial<New_Bucket> & id
     ) {
       ['relationmany'].forEach((field) => {
         if (typeof document[field] == 'object') {
@@ -195,10 +195,10 @@ export namespace new_bucket {
     };
   export namespace realtime {
       export function get (...args: realtimeGetArgs) {
-        return Bucket.data.realtime.get<New_Bucket>(BUCKET_ID, ...args);
+        return Bucket.data.realtime.get<New_Bucket & id>(BUCKET_ID, ...args);
       };
       export function getAll (...args: realtimeGetAllArgs) {
-        return Bucket.data.realtime.getAll<New_Bucket>(BUCKET_ID, ...args);
+        return Bucket.data.realtime.getAll<New_Bucket & id>(BUCKET_ID, ...args);
       };
   }
 }`;
@@ -229,24 +229,24 @@ type getArgs = Rest<Parameters<typeof Bucket.data.get>>;
 type getAllArgs = Rest<Parameters<typeof Bucket.data.getAll>>;
 type realtimeGetArgs = Rest<Parameters<typeof Bucket.data.realtime.get>>;
 type realtimeGetAllArgs = Rest<Parameters<typeof Bucket.data.realtime.getAll>>;
+type id = { _id: string };
 
-interface Users{
-  _id: string;
+export interface Users{
   title?: string;
 }
 export namespace users {
   const BUCKET_ID = 'id1';
     export function get (...args: getArgs) {
-      return Bucket.data.get<Users>(BUCKET_ID, ...args);
+      return Bucket.data.get<Users & id>(BUCKET_ID, ...args);
     };
     export function getAll (...args: getAllArgs) {
-      return Bucket.data.getAll<Users>(BUCKET_ID, ...args);
+      return Bucket.data.getAll<Users & id>(BUCKET_ID, ...args);
     };
-    export function insert (document: Omit<Users, '_id'>) {
+    export function insert (document: Users) {
       
       return Bucket.data.insert(BUCKET_ID, document);
     };
-    export function update (document: Users) {
+    export function update (document: Users & id) {
       
       return Bucket.data.update(
         BUCKET_ID,
@@ -255,7 +255,7 @@ export namespace users {
       );
     };  
     export function patch (
-      document: Omit<Partial<Users>, '_id'> & { _id: string }
+      document: Partial<Users> & id
     ) {
       
       return Bucket.data.patch(BUCKET_ID, document._id, document);
@@ -265,31 +265,30 @@ export namespace users {
     };
   export namespace realtime {
       export function get (...args: realtimeGetArgs) {
-        return Bucket.data.realtime.get<Users>(BUCKET_ID, ...args);
+        return Bucket.data.realtime.get<Users & id>(BUCKET_ID, ...args);
       };
       export function getAll (...args: realtimeGetAllArgs) {
-        return Bucket.data.realtime.getAll<Users>(BUCKET_ID, ...args);
+        return Bucket.data.realtime.getAll<Users & id>(BUCKET_ID, ...args);
       };
   }
 }
 
-interface Users2{
-  _id: string;
+export interface Users2{
   name?: string;
 }
 export namespace users2 {
   const BUCKET_ID = 'id2';
     export function get (...args: getArgs) {
-      return Bucket.data.get<Users2>(BUCKET_ID, ...args);
+      return Bucket.data.get<Users2 & id>(BUCKET_ID, ...args);
     };
     export function getAll (...args: getAllArgs) {
-      return Bucket.data.getAll<Users2>(BUCKET_ID, ...args);
+      return Bucket.data.getAll<Users2 & id>(BUCKET_ID, ...args);
     };
-    export function insert (document: Omit<Users2, '_id'>) {
+    export function insert (document: Users2) {
       
       return Bucket.data.insert(BUCKET_ID, document);
     };
-    export function update (document: Users2) {
+    export function update (document: Users2 & id) {
       
       return Bucket.data.update(
         BUCKET_ID,
@@ -298,7 +297,7 @@ export namespace users2 {
       );
     };  
     export function patch (
-      document: Omit<Partial<Users2>, '_id'> & { _id: string }
+      document: Partial<Users2> & id
     ) {
       
       return Bucket.data.patch(BUCKET_ID, document._id, document);
@@ -308,10 +307,10 @@ export namespace users2 {
     };
   export namespace realtime {
       export function get (...args: realtimeGetArgs) {
-        return Bucket.data.realtime.get<Users2>(BUCKET_ID, ...args);
+        return Bucket.data.realtime.get<Users2 & id>(BUCKET_ID, ...args);
       };
       export function getAll (...args: realtimeGetAllArgs) {
-        return Bucket.data.realtime.getAll<Users2>(BUCKET_ID, ...args);
+        return Bucket.data.realtime.getAll<Users2 & id>(BUCKET_ID, ...args);
       };
   }
 }`;

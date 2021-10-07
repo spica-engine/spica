@@ -3,29 +3,28 @@
   flex-direction: column;
   div.seperated-content {
     display: flex;
-    align-items: baseline;
     div.includeds,
     div.excludeds {
       flex: 1;
-    }
-
-    div.includeds {
-      margin-right: 10px;
-      mat-form-field {
-        width: 100%;
+      form {
+        margin-top: 10px;
       }
-    }
 
-    div.included-resource,
-    div.excluded-resource {
-      align-items: baseline;
-      display: flex;
-      > mat-form-field {
-        width: 300px;
-        margin-right: 10px;
-      }
-      button {
-        flex-grow: 1;
+      div.resource {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        column-gap: 10px;
+        > mat-form-field {
+          flex: 4;
+        }
+        > div.delete-button {
+          flex: 1;
+          text-align: center;
+          > button {
+            width: 64px;
+          }
+        }
       }
     }
   }

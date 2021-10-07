@@ -26,7 +26,7 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
       {
         $group: {
           _id: null,
-          calls: {$sum: 1},
+          request: {$sum: 1},
           uploaded: {$sum: "$request.size"},
           downloaded: {$sum: "$response.size"}
         }
@@ -45,15 +45,15 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
     }
 
     const result = await super
-      .aggregate<{calls: number; downloaded: number; uploaded: number}>(pipeline)
+      .aggregate<{request: number; downloaded: number; uploaded: number}>(pipeline)
       .toArray()
       .then(r => {
-        return r.length ? r[0] : {calls: 0, uploaded: 0, downloaded: 0};
+        return r.length ? r[0] : {request: 0, uploaded: 0, downloaded: 0};
       });
     return {
-      calls: {
+      request: {
         limit: this.moduleOptions ? this.moduleOptions.requestLimit : undefined,
-        current: result.calls,
+        current: result.request,
         unit: "count"
       },
       uploaded: {

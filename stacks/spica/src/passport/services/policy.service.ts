@@ -5,7 +5,7 @@ import {Identity} from "../interfaces/identity";
 import {Policy} from "../interfaces/policy";
 import {Services} from "../interfaces/service";
 import {IndexResult} from "@spica-client/core/interfaces";
-import services from "./policy-services/services.json";
+import services from "./policy-services/services";
 
 @Injectable({providedIn: "root"})
 export class PolicyService {

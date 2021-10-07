@@ -84,29 +84,6 @@ describe("Policy Resource Add Component", () => {
     fixture.detectChanges();
   });
 
-  it("should set resource parts", () => {
-    expect(fixture.componentInstance.resourceParts).toEqual(["bucket_id", "document_id"]);
-  });
-
-  it("should create default pattern and match with resource if it's valid", () => {
-    const pattern = fixture.componentInstance.buildPattern("default");
-    expect(pattern).toEqual("[a-zA-Z0-9\\*]+\\/[a-zA-Z0-9\\*]+");
-
-    expect(new RegExp(pattern).test("bucketid/doc_id")).toEqual(true);
-    expect(new RegExp(pattern).test("*/*")).toEqual(true);
-
-    expect(new RegExp(pattern).test("doc_id")).toEqual(false);
-  });
-
-  it("should create endsWith pattern for include resources and match with resource if it's valid", () => {
-    const pattern = fixture.componentInstance.buildPattern("endswith");
-    expect(pattern).toEqual("[a-zA-Z0-9\\*]+\\/\\*$");
-
-    expect(new RegExp(pattern).test("bucketid/*")).toEqual(true);
-
-    expect(new RegExp(pattern).test("bucketid/doc_id")).toEqual(false);
-  });
-
   it("should switch to the include resorce definition", () => {
     fixture.componentInstance.data.currentAction.resource = {
       include: ["bucket1/*"],
