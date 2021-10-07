@@ -4,6 +4,7 @@ import {Middlewares} from "@spica-server/core";
 import {StatusModule} from "@spica-server/status";
 import {Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
 
 const MbInKb = 1000 * 1000;
 
@@ -39,7 +40,8 @@ describe("Status Interceptor", () => {
         imports: [
           DatabaseTestingModule.standalone(),
           CoreTestingModule,
-          StatusModule.forRoot({requestLimit: 10, expireAfterSeconds: 60 * 60})
+          StatusModule.forRoot({requestLimit: 10, expireAfterSeconds: 60 * 60}),
+          PassportTestingModule.initialize()
         ],
         controllers: [TestController]
       }).compile();
