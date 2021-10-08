@@ -203,7 +203,7 @@ function createActionGuard(
                     assertResourceAgainstDefinition(resource);
                   }
 
-                  match = resources.some(resource =>
+                  const matchedResources = resources.filter(resource =>
                     // Match all the positional resources when accessing to bucket data endpoints where the resource looks like below
                     // [ '5f30fffd4a51a68d6fec4d3b', '5f31002e4a51a68d6fec4d3f' ]
                     // and the first element is the id of the bucket while the second item is the identifier of the document
@@ -219,8 +219,10 @@ function createActionGuard(
                     )
                   );
 
+                  match = matchedResources.length > 0;
+
                   if (match && hasResourceFilter) {
-                    for (const resource of resources) {
+                    for (const resource of matchedResources) {
                       include.push(getLastSegment(resource));
                     }
                   }

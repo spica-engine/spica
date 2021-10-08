@@ -49,20 +49,20 @@ describe("ActionGuard", () => {
     };
   }
 
-  describe("matching the resource against definition", () => {
+  describe("errors", () => {
     it("should throw an error if the resource does not match the definition", async () => {
       const {guard} = createGuardAndRequest({
         actions: "bucket:data:show",
         path: "/bucket/:id/data/:row",
         params: {
-          id: "test",
-          row: "test1"
+          id: "bucket1",
+          row: "row1"
         },
         statements: [
           {
             action: "bucket:data:show",
             resource: {
-              include: ["test/test1/test1"],
+              include: ["bucket1/row1/row1"],
               exclude: []
             },
             module: "bucket:data"
@@ -81,14 +81,14 @@ describe("ActionGuard", () => {
         actions: "bucket:data:show",
         path: "/bucket/:id/data/:row",
         params: {
-          id: "test",
-          row: "test1"
+          id: "bucket1",
+          row: "row1"
         },
         statements: [
           {
             action: "bucket:data:show",
             resource: {
-              include: ["*/*/test1"],
+              include: ["*/*/row1"],
               exclude: []
             },
             module: "bucket:data"
@@ -107,8 +107,8 @@ describe("ActionGuard", () => {
         actions: "bucket:data:show",
         path: "/bucket/:id/data/:row",
         params: {
-          id: "test",
-          row: "test1"
+          id: "bucket1",
+          row: "row1"
         },
         statements: [
           {
@@ -125,156 +125,289 @@ describe("ActionGuard", () => {
     });
   });
 
+  describe("include", () => {
+    describe("allows", () => {
+      it("should not reject if the resource is empty and matches the definition", async () => {
+        const {guard} = createGuardAndRequest({
+          actions: "bucket:create",
+          path: "/bucket",
+          params: {},
+          statements: [
+            {
+              action: "bucket:create",
+              module: "bucket"
+            }
+          ]
+        });
+        expect(await guard()).toBe(true);
+      });
+
+      it("should generate correct resource filter for the same bucket definitions", async () => {
+        const {guard, request} = createGuardAndRequest({
+          actions: "bucket:data:index",
+          path: "/bucket/:id/data",
+          params: {
+            id: "bucket1"
+          },
+          statements: [
+            {
+              action: "bucket:data:index",
+              resource: {
+                include: ["bucket1/*"],
+                exclude: []
+              },
+              module: "bucket:data"
+            },
+            {
+              action: "bucket:data:index",
+              resource: {
+                include: ["bucket1/row1"],
+                exclude: []
+              },
+              module: "bucket:data"
+            }
+          ],
+          resourceFilter: true
+        });
+        await guard();
+
+        expect(request.resourceFilter).toEqual({
+          include: [],
+          exclude: []
+        });
+      });
+
+      it("should generate correct resource filter for different buckets", async () => {
+        const options = {
+          actions: "bucket:data:index",
+          path: "/bucket/:id/data",
+          params: {
+            id: "bucket1"
+          },
+          statements: [
+            {
+              action: "bucket:data:index",
+              resource: {
+                include: ["bucket1/row1"],
+                exclude: []
+              },
+              module: "bucket:data"
+            },
+            {
+              action: "bucket:data:index",
+              resource: {
+                include: ["bucket2/*"],
+                exclude: []
+              },
+              module: "bucket:data"
+            }
+          ],
+          resourceFilter: true
+        };
+        const {guard, request} = createGuardAndRequest(options);
+        await guard();
+
+        expect(request.resourceFilter).toEqual({
+          include: ["row1"],
+          exclude: []
+        });
+
+        const {guard: guard2, request: request2} = createGuardAndRequest({
+          ...options,
+          params: {id: "bucket2"}
+        });
+        await guard2();
+
+        expect(request2.resourceFilter).toEqual({
+          include: [],
+          exclude: []
+        });
+      });
+    });
+
+    describe("rejects", () => {
+      it("should reject if the first portion of the wildcard resource does not match", async () => {
+        const {guard} = createGuardAndRequest({
+          actions: "bucket:data:index",
+          path: "/bucket/:id/data",
+          params: {
+            id: "bucket1"
+          },
+          statements: [
+            {
+              action: "bucket:data:index",
+              resource: {
+                include: ["bucket2/row1"],
+                exclude: []
+              },
+              module: "bucket:data"
+            }
+          ],
+          resourceFilter: true
+        });
+
+        await expectAsync(guard()).toBeRejectedWith(
+          new Error(
+            "You do not have sufficient permissions to do bucket:data:index on resource bucket1"
+          )
+        );
+      });
+    });
+  });
+
   describe("exclude", () => {
-    it("should reject if all resource is excluded and should not be filtered out", async () => {
-      const {guard} = createGuardAndRequest({
-        actions: "bucket:data:index",
-        path: "/bucket/:id/data",
-        params: {
-          id: "test1"
-        },
-        statements: [
-          {
-            action: "bucket:data:index",
-            resource: {
-              include: ["*/*"],
-              exclude: ["test1/*"]
-            },
-            module: "bucket:data"
-          }
-        ],
-        resourceFilter: true
-      });
-
-      await expectAsync(guard()).toBeRejectedWith(
-        new Error(
-          "You do not have sufficient permissions to do bucket:data:index on resource test1"
-        )
-      );
-    });
-
-    it("should reject if all resource is excluded and has no resource filter", async () => {
-      const {guard} = createGuardAndRequest({
-        actions: "bucket:data:show",
-        path: "/bucket/:id/data/:row",
-        params: {
-          id: "bucket",
-          row: "row"
-        },
-        statements: [
-          {
-            action: "bucket:data:show",
-            resource: {
-              include: ["*/*"],
-              exclude: ["bucket/*"]
-            },
-            module: "bucket:data"
-          }
-        ]
-      });
-
-      await expectAsync(guard()).toBeRejectedWith(
-        new Error(
-          "You do not have sufficient permissions to do bucket:data:show on resource bucket/row"
-        )
-      );
-    });
-
-    it("should not reject if all resource is excluded but another statement allows it", async () => {
-      const {guard, request} = createGuardAndRequest({
-        actions: "bucket:data:index",
-        path: "/bucket/:id/data",
-        params: {
-          id: "test1"
-        },
-        statements: [
-          {
-            action: "bucket:data:index",
-            resource: {
-              include: ["*/*"],
-              exclude: ["test1/*"]
-            },
-            module: "bucket:data"
+    describe("allows", () => {
+      it("should not reject if all resource is excluded but another statement allows it", async () => {
+        const {guard, request} = createGuardAndRequest({
+          actions: "bucket:data:index",
+          path: "/bucket/:id/data",
+          params: {
+            id: "bucket1"
           },
-          {
-            action: "bucket:data:index",
-            resource: {
-              include: ["*/*"],
-              exclude: ["test1/test2", "test1/test3"]
+          statements: [
+            {
+              action: "bucket:data:index",
+              resource: {
+                include: ["*/*"],
+                exclude: ["bucket1/*"]
+              },
+              module: "bucket:data"
             },
-            module: "bucket:data"
-          }
-        ],
-        resourceFilter: true
+            {
+              action: "bucket:data:index",
+              resource: {
+                include: ["*/*"],
+                exclude: ["bucket1/row1", "bucket1/row2"]
+              },
+              module: "bucket:data"
+            }
+          ],
+          resourceFilter: true
+        });
+
+        await guard();
+        expect(request.resourceFilter).toEqual({
+          include: [],
+          exclude: [["row1", "row2"]]
+        });
       });
-
-      await guard();
-      expect(request.resourceFilter).toEqual({
-        include: [],
-        exclude: [["test2", "test3"]]
-      });
-    });
-
-    it("should reject if the resource is excluded", async () => {
-      const {guard} = createGuardAndRequest({
-        actions: "bucket:data:show",
-        path: "/bucket/:id/data/:row",
-        params: {
-          id: "test1",
-          row: "test2"
-        },
-        statements: [
-          {
-            action: "bucket:data:show",
-            resource: {
-              include: ["test/test1"],
-              exclude: ["test/test2"]
-            },
-            module: "bucket:data"
-          }
-        ]
-      });
-
-      await expectAsync(guard()).toBeRejectedWith(
-        new Error(
-          "You do not have sufficient permissions to do bucket:data:show on resource test1/test2"
-        )
-      );
-    });
-
-    it("should generate excluded resources correctly", async () => {
-      const {guard, request} = createGuardAndRequest({
-        actions: "bucket:data:index",
-        path: "/bucket/:id/data",
-        params: {
-          id: "test"
-        },
-        statements: [
-          {
-            action: "bucket:data:index",
-            resource: {
-              include: ["*/*"],
-              exclude: ["test/test1"]
-            },
-            module: "bucket:data"
+      it("should generate excluded resources correctly", async () => {
+        const {guard, request} = createGuardAndRequest({
+          actions: "bucket:data:index",
+          path: "/bucket/:id/data",
+          params: {
+            id: "bucket1"
           },
-          {
-            action: "bucket:data:index",
-            resource: {
-              include: ["*/*"],
-              exclude: ["test/test2"]
+          statements: [
+            {
+              action: "bucket:data:index",
+              resource: {
+                include: ["*/*"],
+                exclude: ["bucket1/row1"]
+              },
+              module: "bucket:data"
             },
-            module: "bucket:data"
-          }
-        ],
-        resourceFilter: true
+            {
+              action: "bucket:data:index",
+              resource: {
+                include: ["*/*"],
+                exclude: ["bucket1/row2"]
+              },
+              module: "bucket:data"
+            }
+          ],
+          resourceFilter: true
+        });
+
+        await guard();
+
+        expect(request.resourceFilter).toEqual({
+          include: [],
+          exclude: [["row1"], ["row2"]]
+        });
+      });
+    });
+
+    describe("rejects", () => {
+      it("should reject if all resource is excluded and should not be filtered out", async () => {
+        const {guard} = createGuardAndRequest({
+          actions: "bucket:data:index",
+          path: "/bucket/:id/data",
+          params: {
+            id: "bucket1"
+          },
+          statements: [
+            {
+              action: "bucket:data:index",
+              resource: {
+                include: ["*/*"],
+                exclude: ["bucket1/*"]
+              },
+              module: "bucket:data"
+            }
+          ],
+          resourceFilter: true
+        });
+
+        await expectAsync(guard()).toBeRejectedWith(
+          new Error(
+            "You do not have sufficient permissions to do bucket:data:index on resource bucket1"
+          )
+        );
       });
 
-      await guard();
+      it("should reject if all resource is excluded and has no resource filter", async () => {
+        const {guard} = createGuardAndRequest({
+          actions: "bucket:data:show",
+          path: "/bucket/:id/data/:row",
+          params: {
+            id: "bucket1",
+            row: "row1"
+          },
+          statements: [
+            {
+              action: "bucket:data:show",
+              resource: {
+                include: ["*/*"],
+                exclude: ["bucket1/*"]
+              },
+              module: "bucket:data"
+            }
+          ]
+        });
 
-      expect(request.resourceFilter).toEqual({
-        include: [],
-        exclude: [["test1"], ["test2"]]
+        await expectAsync(guard()).toBeRejectedWith(
+          new Error(
+            "You do not have sufficient permissions to do bucket:data:show on resource bucket1/row1"
+          )
+        );
+      });
+
+      it("should reject if the resource is excluded", async () => {
+        const {guard} = createGuardAndRequest({
+          actions: "bucket:data:show",
+          path: "/bucket/:id/data/:row",
+          params: {
+            id: "bucket1",
+            row: "row2"
+          },
+          statements: [
+            {
+              action: "bucket:data:show",
+              resource: {
+                include: ["bucket1/row1"],
+                exclude: ["bucket1/row2"]
+              },
+              module: "bucket:data"
+            }
+          ]
+        });
+
+        await expectAsync(guard()).toBeRejectedWith(
+          new Error(
+            "You do not have sufficient permissions to do bucket:data:show on resource bucket1/row2"
+          )
+        );
       });
     });
 
@@ -283,7 +416,7 @@ describe("ActionGuard", () => {
         actions: "custom",
         path: "/:id/:row",
         params: {
-          id: "test",
+          id: "bucket1",
           row: "row1"
         },
         statements: [
@@ -291,7 +424,7 @@ describe("ActionGuard", () => {
             action: "custom",
             resource: {
               include: ["*/*"],
-              exclude: ["test/row1"]
+              exclude: ["bucket1/row1"]
             },
             module: ""
           }
@@ -299,135 +432,8 @@ describe("ActionGuard", () => {
       });
 
       await expectAsync(guard()).toBeRejectedWith(
-        new Error("You do not have sufficient permissions to do custom on resource test/row1")
+        new Error("You do not have sufficient permissions to do custom on resource bucket1/row1")
       );
     });
-  });
-
-  it("should generate included resources correctly", async () => {
-    const {guard, request} = createGuardAndRequest({
-      actions: "bucket:data:index",
-      path: "/bucket/:id/data",
-      params: {
-        id: "test"
-      },
-      statements: [
-        {
-          action: "bucket:data:index",
-          resource: {
-            include: ["test/test1"],
-            exclude: []
-          },
-          module: "bucket:data"
-        },
-        {
-          action: "bucket:data:index",
-          resource: {
-            include: ["test/test2"],
-            exclude: []
-          },
-          module: "bucket:data"
-        },
-        {
-          action: "bucket:data:index",
-          resource: {
-            include: ["test/*"],
-            exclude: []
-          },
-          module: "bucket:data"
-        },
-        {
-          action: "bucket:data:index",
-          resource: {
-            include: ["test/test3"],
-            exclude: []
-          },
-          module: "bucket:data"
-        }
-      ],
-      resourceFilter: true
-    });
-    await guard();
-
-    // We expect an empty include array since there is wildcard which allow all resources
-    expect(request.resourceFilter).toEqual({
-      include: [],
-      exclude: []
-    });
-  });
-
-  it("should generate included resources correctly with empty exclude and wildcard include", async () => {
-    const {guard, request} = createGuardAndRequest({
-      actions: "bucket:data:index",
-      path: "/bucket/:id/data",
-      params: {
-        id: "test"
-      },
-      statements: [
-        {
-          action: "bucket:data:index",
-          resource: {
-            include: ["test/*"],
-            exclude: []
-          },
-          module: "bucket:data"
-        },
-        {
-          action: "bucket:data:index",
-          resource: {
-            include: ["test/test_1"],
-            exclude: []
-          },
-          module: "bucket:data"
-        }
-      ],
-      resourceFilter: true
-    });
-    await guard();
-
-    expect(request.resourceFilter).toEqual({
-      include: [],
-      exclude: []
-    });
-  });
-
-  it("should reject if the first portion of the wildcard resource does not match", async () => {
-    const {guard} = createGuardAndRequest({
-      actions: "bucket:data:index",
-      path: "/bucket/:id/data",
-      params: {
-        id: "test1"
-      },
-      statements: [
-        {
-          action: "bucket:data:index",
-          resource: {
-            include: ["test/not_evaluated_yet"],
-            exclude: []
-          },
-          module: "bucket:data"
-        }
-      ],
-      resourceFilter: true
-    });
-
-    await expectAsync(guard()).toBeRejectedWith(
-      new Error("You do not have sufficient permissions to do bucket:data:index on resource test1")
-    );
-  });
-
-  it("should not reject if the resource is empty and matches the definition", async () => {
-    const {guard} = createGuardAndRequest({
-      actions: "bucket:create",
-      path: "/bucket",
-      params: {},
-      statements: [
-        {
-          action: "bucket:create",
-          module: "bucket"
-        }
-      ]
-    });
-    expect(await guard()).toBe(true);
   });
 });

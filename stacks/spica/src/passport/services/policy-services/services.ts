@@ -101,7 +101,7 @@ export default {
     "bucket:index": [bucketResource],
     "bucket:show": [bucketResource],
     "bucket:create": [],
-    "bucket:updated": [bucketResource],
+    "bucket:update": [bucketResource],
     "bucket:delete": [bucketResource]
   },
   "bucket:data": {
