@@ -7,6 +7,7 @@ import {InputModule} from "@spica-client/common";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {CardComponent} from "./card.component";
 import {FormsModule} from "@angular/forms";
+import {PassportService} from "@spica-client/passport";
 
 // @TODO: put here better tests after found a way to check the request which created by html form (queryParams, body etc.)
 describe("CardComponent", () => {
@@ -25,6 +26,16 @@ describe("CardComponent", () => {
         InputModule.withPlacers([]),
         FormsModule,
         NoopAnimationsModule
+      ],
+      providers: [
+        {
+          provide: PassportService,
+          useValue: {
+            get token() {
+              return "access_token";
+            }
+          }
+        }
       ]
     }).compileComponents();
 
