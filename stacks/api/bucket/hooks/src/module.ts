@@ -25,13 +25,14 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
             type: "string",
             enum: Array.from(buckets.keys()),
             // @ts-expect-error
-            viewEnum: Array.from(buckets.values())
+            viewEnum: Array.from(buckets.values()),
+            description: "Bucket id that the event will be tracked on"
           },
-
           type: {
             title: "Operation type",
             type: "string",
-            enum: ["ALL", "INSERT", "UPDATE", "DELETE"]
+            enum: ["ALL", "INSERT", "UPDATE", "DELETE"],
+            description: "Operation type that must be performed in the specified bucket"
           }
         },
         additionalProperties: false
