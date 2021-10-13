@@ -6,6 +6,10 @@ import * as cron from "cron";
 @Injectable()
 export class BucketCacheService {
   invalidateJob;
+
+  // to prevent infinite loop while clearing bucket caches which has cross-relation or self-relation
+  invalidatedBucketIds = new Set();
+
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache, private db: DatabaseService) {
     if (!this.invalidateJob) {
       this.invalidateJob = new cron.CronJob({
@@ -42,13 +46,17 @@ export class BucketCacheService {
   }
 
   async invalidate(bucketId: string) {
-    const relatedBucketIds = await this.getRelatedBucketIds(bucketId);
+    this.invalidatedBucketIds.add(bucketId);
+
+    let relatedBucketIds = await this.getRelatedBucketIds(bucketId);
+    relatedBucketIds = relatedBucketIds.filter(id => !this.invalidatedBucketIds.has(id));
     for (const id of relatedBucketIds) {
       await this.invalidate(id);
     }
 
     const keys: string[] = await this.cacheManager.store.keys();
     const targets = keys.filter(key => key.startsWith(`/bucket/${bucketId}`));
-    return this.cacheManager.store.del(...targets);
+    await this.cacheManager.store.del(...targets);
+    this.invalidatedBucketIds.delete(bucketId);
   }
 }
