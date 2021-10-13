@@ -51,6 +51,7 @@
           <input type="hidden" [name]="input.key" [value]="input.value" />
         </span>
       </ng-container>
+      <input type="hidden" name="authorization" [value]="token" />
     </mat-card-content>
     <mat-card-actions>
       <button [color]="componentData.button.color" mat-flat-button (click)="form.submit()">

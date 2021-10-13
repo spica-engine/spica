@@ -34,6 +34,8 @@ import PassportReadOnlyAccess from "./passport/passport.readonly";
 import PreferenceFullAccess from "./preference.fullaccess";
 import PreferenceReadOnlyAccess from "./preference.readonly";
 
+import StatusFullaccess from "./status.fullaccess";
+
 export default [
   ApiKeyFullAccess,
   ApiKeyReadOnlyAccess,
@@ -69,5 +71,7 @@ export default [
   BucketReadOnlyAccess,
 
   PreferenceFullAccess,
-  PreferenceReadOnlyAccess
+  PreferenceReadOnlyAccess,
+
+  StatusFullaccess
 ];
