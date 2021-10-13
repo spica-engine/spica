@@ -31,9 +31,19 @@ export interface PrepareUser {
   (request: any): any;
 }
 
-export const resourceFilterFunction = (data: unknown, ctx: ExecutionContext) => {
+export const resourceFilterFunction = (
+  data: {pure?: boolean} = {pure: false},
+  ctx: ExecutionContext
+) => {
   const request = ctx.switchToHttp().getRequest();
   const {include, exclude: excluded} = request.resourceFilter;
+
+  if (data && data.pure) {
+    return {
+      includeds: include,
+      excludeds: [].concat(...excluded)
+    };
+  }
 
   let aggregation = [];
 
@@ -66,11 +76,13 @@ export const resourceFilterFunction = (data: unknown, ctx: ExecutionContext) => 
   };
 };
 
-export const ResourceFilter = createParamDecorator(resourceFilterFunction, [
-  (target, key, index) => {
-    Reflect.defineMetadata("resourceFilter", {key, index}, target.constructor);
-  }
-]);
+export const ResourceFilter = (data = {pure: false}) => {
+  return createParamDecorator<{pure: boolean}>(resourceFilterFunction, [
+    (target, key, index) => {
+      Reflect.defineMetadata("resourceFilter", {key, index}, target.constructor);
+    }
+  ])(data);
+};
 
 function buildResourceAndModuleName(path: string, params: object, format?: string) {
   if (format) {
