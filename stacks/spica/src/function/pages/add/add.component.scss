@@ -245,11 +245,25 @@
         width: calc(100% - 20px);
 
         span.http-url {
+          width: 340px;
+          overflow-x: auto;
+          overflow-y: hidden;
+          white-space: nowrap;
+
           position: relative;
           z-index: 1;
           margin-top: -40px;
           font-size: 11px;
           float: right;
+          text-align: end;
+          cursor: copy;
+
+          -ms-overflow-style: none; /* Internet Explorer 10+ */
+          scrollbar-width: none; /* Firefox */
+        }
+
+        span.http-url::-webkit-scrollbar {
+          display: none; /* Safari and Chrome */
         }
 
         ::ng-deep .input-placer-input {
