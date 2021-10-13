@@ -11,6 +11,7 @@ ts_library(
         "//packages/core",
         "//packages/core/testing",
         "//packages/database/testing",
+        "//stacks/api/passport/testing",
         "//stacks/api/status",
         "//stacks/api/status/services",
         "@npm//@nestjs/common",

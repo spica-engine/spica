@@ -151,7 +151,8 @@ const args = yargs
         "BucketFullAccess",
         "DashboardFullAccess",
         "WebhookFullAccess",
-        "PreferenceFullAccess"
+        "PreferenceFullAccess",
+        "StatusFullAccess"
       ]
     },
     "passport-identity-limit": {

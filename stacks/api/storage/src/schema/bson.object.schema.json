@@ -6,11 +6,13 @@
     "required": ["name", "content"],
     "properties": {
         "name": {
-            "type": "string"
+            "type": "string",
+            "title": "Name of the object"
         },
         "content": {
             "type": "object",
             "required": ["type", "data"],
+            "title": "Content type and data. Data is in BSON format",
             "properties": {
                 "type": {
                     "type": "string"

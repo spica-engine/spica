@@ -63,46 +63,48 @@
     </ng-container>
   </mat-card-content>
 </mat-card>
-<h2 class="status-header">
-  Instance Usages
-</h2>
-<div class="api-container">
-  <mat-card class="mat-elevation-z25">
-    <mat-card-content>
-      <div class="requests">
-        <h3>Requests</h3>
-        <mat-spinner color="accent" diameter="35" *ngIf="apiStatusPending"> </mat-spinner>
-        <dashboard-default
-          *ngIf="!apiStatusPending"
-          [componentData$]="apiChart.request"
-          type="bar"
-          (onUpdate)="onApiStatusFilterUpdate($event)"
-        >
-        </dashboard-default>
-      </div>
-      <div class="downloads">
-        <h3>Downloads</h3>
-        <mat-spinner color="accent" diameter="35" *ngIf="apiStatusPending"> </mat-spinner>
-        <dashboard-default
-          *ngIf="!apiStatusPending"
-          [componentData$]="apiChart.downloaded"
-          type="bar"
-        >
-        </dashboard-default>
-      </div>
-      <div class="uploads">
-        <h3>Uploads</h3>
-        <mat-spinner color="accent" diameter="35" *ngIf="apiStatusPending"> </mat-spinner>
-        <dashboard-default
-          *ngIf="!apiStatusPending"
-          [componentData$]="apiChart.uploaded"
-          type="bar"
-        >
-        </dashboard-default>
-      </div>
-    </mat-card-content>
-  </mat-card>
-</div>
+<ng-container *ngIf="apiChart">
+  <h2 class="status-header">
+    Instance Usages
+  </h2>
+  <div class="api-container">
+    <mat-card class="mat-elevation-z25">
+      <mat-card-content>
+        <div class="requests">
+          <h3>Requests</h3>
+          <mat-spinner color="accent" diameter="35" *ngIf="apiStatusPending"> </mat-spinner>
+          <dashboard-default
+            *ngIf="!apiStatusPending"
+            [componentData$]="apiChart.request"
+            type="bar"
+            (onUpdate)="onApiStatusFilterUpdate($event)"
+          >
+          </dashboard-default>
+        </div>
+        <div class="downloads">
+          <h3>Downloads</h3>
+          <mat-spinner color="accent" diameter="35" *ngIf="apiStatusPending"> </mat-spinner>
+          <dashboard-default
+            *ngIf="!apiStatusPending"
+            [componentData$]="apiChart.downloaded"
+            type="bar"
+          >
+          </dashboard-default>
+        </div>
+        <div class="uploads">
+          <h3>Uploads</h3>
+          <mat-spinner color="accent" diameter="35" *ngIf="apiStatusPending"> </mat-spinner>
+          <dashboard-default
+            *ngIf="!apiStatusPending"
+            [componentData$]="apiChart.uploaded"
+            type="bar"
+          >
+          </dashboard-default>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</ng-container>
 <div class="status-container">
   <mat-card *ngFor="let stat of stats" class="mat-elevation-z25">
     <mat-card-content>

@@ -11,6 +11,7 @@ ts_library(
     module_name = "@spica-server/status",
     deps = [
         "//packages/core",
+        "//stacks/api/passport/guard",
         "//stacks/api/status/services",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",

@@ -1,7 +1,9 @@
-import {Component, OnInit} from "@angular/core";
-import {map} from "rxjs/operators";
-import {Observable, BehaviorSubject, of} from "rxjs";
+import {Component, OnDestroy, OnInit} from "@angular/core";
+import {map, switchMap, takeUntil} from "rxjs/operators";
+import {Observable, BehaviorSubject, of, Subject} from "rxjs";
 import {HttpClient} from "@angular/common/http";
+import {PassportService} from "@spica-client/passport";
+import {ActivatedRoute} from "@angular/router";
 
 interface ApiStatus {
   module: string;
@@ -19,7 +21,7 @@ interface ApiStatus {
   templateUrl: "./dashboard.component.html",
   styleUrls: ["./dashboard.component.scss"]
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   stats: ApiStatus[] = [];
 
   apiRequestData = [];
@@ -28,52 +30,66 @@ export class DashboardComponent implements OnInit {
 
   apiChart = {
     request: of(),
-    downloaded: of(),
-    uploaded: of()
+    uploaded: of(),
+    downloaded: of()
   };
 
   today: Date;
 
   apiStatusPending;
 
-  constructor(private http: HttpClient) {
-    this.http
-      .get<ApiStatus[]>("api:/status")
-      .toPromise()
-      .then(r => {
-        this.stats = r
-          .filter(s => s.module != "api")
-          .map(s => {
-            switch (s.module) {
-              case "bucket":
-                Object.keys(s.status).forEach(k => {
-                  if (k != "bucketData") {
-                    delete s.status[k];
-                  }
-                });
-                return s;
-
-              case "function":
-                delete s.status.workers;
-                return s;
-
-              default:
-                return s;
-            }
-          });
-      });
-
-    this.today = new Date();
-    this.today.setHours(0, 0, 0, 0);
-
-    this.updateApiStatusCharts(this.today, new Date());
-  }
+  constructor(
+    private activatedRoute: ActivatedRoute,
+    private http: HttpClient,
+    private passport: PassportService
+  ) {}
 
   isTutorialEnabled$: Observable<Boolean>;
   refresh$: BehaviorSubject<any> = new BehaviorSubject("");
 
+  dispose = new Subject();
+
   ngOnInit() {
-    this.isTutorialEnabled$ = this.refresh$.pipe(map(() => !localStorage.getItem("hide-tutorial")));
+    this.activatedRoute.url.pipe(takeUntil(this.dispose)).subscribe(() => {
+      const storage = this.getModuleStatus("storage").then(res => res && this.stats.push(res));
+      const identity = this.getModuleStatus("identity").then(res => res && this.stats.push(res));
+
+      const fn = this.getModuleStatus("function").then(res => {
+        if (!res) {
+          return;
+        }
+
+        delete res.status.workers;
+        this.stats.push(res);
+      });
+
+      const bucket = this.getModuleStatus("bucket").then(res => {
+        if (!res) {
+          return;
+        }
+        Object.keys(res.status).forEach(subModule => {
+          if (subModule != "bucketData") {
+            delete res.status[subModule];
+          }
+        });
+        this.stats.push(res);
+      });
+
+      Promise.all([storage, fn, bucket, identity]);
+
+      this.today = new Date();
+      this.today.setHours(0, 0, 0, 0);
+
+      this.updateApiStatusCharts(this.today, new Date());
+
+      this.isTutorialEnabled$ = this.refresh$.pipe(
+        map(() => !localStorage.getItem("hide-tutorial"))
+      );
+    });
+  }
+
+  ngOnDestroy() {
+    this.dispose.next();
   }
 
   onDisable() {
@@ -185,14 +201,20 @@ export class DashboardComponent implements OnInit {
       this.apiDownloadedData[i] = 0;
       this.apiUploadedData[i] = 0;
 
-      return this.http
-        .get<ApiStatus>(url.toString())
-        .toPromise()
-        .then(({status: {request, downloaded, uploaded}}) => {
-          this.apiRequestData[i] = request.current;
-          this.apiDownloadedData[i] = downloaded.current;
-          this.apiUploadedData[i] = uploaded.current;
-        });
+      return this.getModuleStatus("api", url.toString()).then(res => {
+        if (!res) {
+          this.apiChart = undefined;
+          return;
+        }
+
+        const {
+          status: {request, downloaded, uploaded}
+        } = res;
+
+        this.apiRequestData[i] = request.current;
+        this.apiDownloadedData[i] = downloaded.current;
+        this.apiUploadedData[i] = uploaded.current;
+      });
     });
 
     return Promise.all(promises)
@@ -230,5 +252,16 @@ export class DashboardComponent implements OnInit {
         );
       })
       .finally(() => (this.apiStatusPending = false));
+  }
+
+  getModuleStatus(
+    module: string,
+    url = `api:/status/${module}`,
+    action = "show"
+  ): Promise<ApiStatus | undefined> {
+    return this.passport
+      .checkAllowed("status:" + action, module)
+      .pipe(switchMap(r => (r ? this.http.get<ApiStatus>(url) : of<undefined>())))
+      .toPromise();
   }
 }

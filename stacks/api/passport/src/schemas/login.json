@@ -13,7 +13,9 @@
       "title": "Password of the identity"
     },
     "state": {
-      "type": "string"
+      "type": "string",
+      "title": "State of the login strategy",
+      "description": "Auto generated state which returns on the strategy get requests"
     },
     "expires": {
       "type": "number",

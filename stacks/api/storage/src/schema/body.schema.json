@@ -10,6 +10,7 @@
       "properties": {
         "content": {
           "type": "array",
+          "title": "Content of the storage object",
           "items": {
             "$ref": "http://spica.internal/storage/body/bson/object"
           },
