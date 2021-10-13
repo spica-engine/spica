@@ -201,11 +201,12 @@ describe("Engine", () => {
           collection: {
             title: "Collection Name",
             type: "string",
-            enum: []
+            enum: [],
+            description: "Collection name that the event will be tracked on"
           },
           type: {
             title: "Operation type",
-            description: "Event Type",
+            description: "Operation type that must be performed in the specified collection",
             type: "string",
             enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
           }

@@ -16,19 +16,24 @@
     },
     "statement": {
       "type": "array",
+      "title": "Statements of the policy",
       "items": {
         "type": "object",
         "required": ["action", "module"],
         "properties": {
           "action": {
-            "type": "string"
+            "type": "string",
+            "title": "User action of the statement"
           },
           "module": {
-            "type": "string"
+            "type": "string",
+            "title": "Target module of the statement"
           },
           "resource": {
             "required": ["include", "exclude"],
             "type": "object",
+            "title": "Resource of the statement",
+            "description": "Specify which resource of module will be included or excluded to the statement",
             "properties": {
               "include": {
                 "type": "array",
@@ -36,7 +41,8 @@
                 "items": {
                   "type": "string"
                 },
-                "default": []
+                "default": [],
+                "title": "Resources that will be included"
               },
               "exclude": {
                 "type": "array",
@@ -44,7 +50,8 @@
                 "items": {
                   "type": "string"
                 },
-                "default": []
+                "default": [],
+                "title": "Resources that will be excluded"
               }
             },
             "if": {

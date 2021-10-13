@@ -115,7 +115,8 @@
         "minLength": {"$ref": "#/definitions/nonNegativeIntegerDefault0"},
         "pattern": {
           "type": "string",
-          "format": "regex"
+          "format": "regex",
+          "title": "Regex validation for the value"
         },
 
         "items": {
@@ -153,10 +154,13 @@
     },
     "history": {
       "type": "boolean",
-      "default": false
+      "default": false,
+      "description": "Allows keeping history for each bucket-data"
     },
     "acl": {
       "type": "object",
+      "title": "ACL Rule",
+      "description": "Definition of the condition that will run before any CRUD operation for bucket-data",
       "required": ["write", "read"],
       "default": {
         "write": "true==true",
@@ -164,17 +168,19 @@
       },
       "properties": {
         "write": {
-          "type": "string"
+          "type": "string",
+          "description": "Rule that will run for post, put and delete requests"
         },
         "read": {
-          "type": "string"
+          "type": "string",
+          "description": "Rule that will run for get requests"
         }
       }
     },
     "title": {
       "type": "string",
       "title": "Title of the bucket",
-      "description": "Title will appear within the related bucket pages.",
+      "description": "Title will appear within the related bucket pages",
       "examples": ["New bucket"],
       "maxLength": 100,
       "minLength": 4
@@ -182,7 +188,7 @@
     "description": {
       "type": "string",
       "title": "Description of the bucket",
-      "description": "Description will appear within the related bucket pages.",
+      "description": "Description will appear within the related bucket pages",
       "examples": ["This bucket will dominate the content world!"],
       "minLength": 5,
       "maxLength": 250
@@ -190,7 +196,7 @@
     "icon": {
       "type": "string",
       "title": "The icon of the bucket",
-      "description": "The icon will used to represent the bucket whereever representing the bucket wouldn't be possible with title.",
+      "description": "The icon will used to represent the bucket whereever representing the bucket wouldn't be possible with title",
       "default": "view_stream",
       "examples": ["offline_bolt"]
     },
@@ -208,21 +214,25 @@
       "uniqueItems": true,
       "items": {
         "type": "string"
-      }
+      },
+      "description": "Fields that must be existed for bucket-data"
     },
     "readOnly": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Data of this bucket will not be editable on bucket-data page"
     },
     "documentSettings": {
       "type": "object",
       "properties": {
         "countLimit": {
           "type": "number",
-          "minimum": 1
+          "minimum": 1,
+          "description": "Limit value of this bucket can have"
         },
         "limitExceedBehaviour": {
           "type": "string",
-          "enum": ["prevent", "remove"]
+          "enum": ["prevent", "remove"],
+          "description": "The behavior of the bucket against the data that will be tried to be inserted after the limit is exceeded. 'Prevent' will not accept these kinds of data while 'remove' accepts but removes the oldest data to keep data count in limit"
         }
       },
       "additionalProperties": false
@@ -243,19 +253,22 @@
                   "type": "object",
                   "properties": {
                     "translate": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "description": "Allows keeping bucket data in different languages"
                     },
                     "history": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "description": "Allows keeping history for each bucket-data"
                     },
                     "position": {
                       "type": "string",
-                      "enum": ["left", "right", "bottom"]
+                      "enum": ["left", "right", "bottom"],
+                      "description": "Set where will be placed of the field on the bucket-data page"
                     },
                     "unique": {
                       "type": "boolean",
                       "title": "Unique",
-                      "description": "If true, each document will have a different value for this field."
+                      "description": "If true, each document will have a different value for this field"
                     }
                   },
                   "additionalProperties": false

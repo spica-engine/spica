@@ -16,7 +16,8 @@
 			"minLength": 3
 		},
 		"attributes":{
-			"type":"object"
+			"type":"object",
+			"title": "Custom attributes of the identity"
 		}
 	},
 	"additionalProperties": false
