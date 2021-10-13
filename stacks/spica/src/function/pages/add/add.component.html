@@ -334,8 +334,20 @@
                     [required]="options.required?.indexOf(propertyKv.key) > -1"
                   >
                   </span>
-                  <span class="http-url" *ngIf="trigger.type == 'http'">
-                    {{ apiUrl + "/fn-execute" + trigger.options.path }}
+                  <span
+                    *ngIf="trigger.type == 'http'"
+                    class="http-url"
+                    #urlSpan
+                    #clipboard="matClipboard"
+                    [matClipboard]="urlSpan.textContent"
+                    [matTooltip]="clipboard.toolTip"
+                  >
+                    <ng-container *ngIf="clipboard.icon == 'check'">
+                      Copied!
+                    </ng-container>
+                    <ng-container *ngIf="clipboard.icon != 'check'">
+                      {{ apiUrl + "/fn-execute" + trigger.options.path }}
+                    </ng-container>
                   </span>
                 </ng-container>
               </ng-container>
