@@ -13,7 +13,7 @@ echo "" >CHANGELOG.md
 
 git tag "${VERSION}"
 
-TAGS=($(git tag))
+TAGS=($(git tag --sort=version:refname))
 
 CONTENT=""
 
