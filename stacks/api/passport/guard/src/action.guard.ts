@@ -31,9 +31,19 @@ export interface PrepareUser {
   (request: any): any;
 }
 
-export const resourceFilterFunction = (data: unknown, ctx: ExecutionContext) => {
+export const resourceFilterFunction = (
+  data: {pure?: boolean} = {pure: false},
+  ctx: ExecutionContext
+) => {
   const request = ctx.switchToHttp().getRequest();
   const {include, exclude: excluded} = request.resourceFilter;
+
+  if (data && data.pure) {
+    return {
+      includeds: include,
+      excludeds: [].concat(...excluded)
+    };
+  }
 
   let aggregation = [];
 
@@ -66,11 +76,13 @@ export const resourceFilterFunction = (data: unknown, ctx: ExecutionContext) => 
   };
 };
 
-export const ResourceFilter = createParamDecorator(resourceFilterFunction, [
-  (target, key, index) => {
-    Reflect.defineMetadata("resourceFilter", {key, index}, target.constructor);
-  }
-]);
+export const ResourceFilter = (data = {pure: false}) => {
+  return createParamDecorator<{pure: boolean}>(resourceFilterFunction, [
+    (target, key, index) => {
+      Reflect.defineMetadata("resourceFilter", {key, index}, target.constructor);
+    }
+  ])(data);
+};
 
 function buildResourceAndModuleName(path: string, params: object, format?: string) {
   if (format) {
@@ -203,7 +215,7 @@ function createActionGuard(
                     assertResourceAgainstDefinition(resource);
                   }
 
-                  match = resources.some(resource =>
+                  const matchedResources = resources.filter(resource =>
                     // Match all the positional resources when accessing to bucket data endpoints where the resource looks like below
                     // [ '5f30fffd4a51a68d6fec4d3b', '5f31002e4a51a68d6fec4d3f' ]
                     // and the first element is the id of the bucket while the second item is the identifier of the document
@@ -219,8 +231,10 @@ function createActionGuard(
                     )
                   );
 
+                  match = matchedResources.length > 0;
+
                   if (match && hasResourceFilter) {
-                    for (const resource of resources) {
+                    for (const resource of matchedResources) {
                       include.push(getLastSegment(resource));
                     }
                   }

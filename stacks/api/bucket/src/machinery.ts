@@ -17,7 +17,7 @@ function assingTitleIfNeeded(schema, name) {
   }
 }
 
-async function v1_schema_to_internal(obj): Promise<Bucket> {
+async function v1_schema_to_internal(obj, nonExistRelations): Promise<Bucket> {
   const {spec} = obj;
 
   const bucketStore = store({group: "bucket", resource: "schemas"});
@@ -45,7 +45,14 @@ async function v1_schema_to_internal(obj): Promise<Bucket> {
 
     raw.properties[propertyName] = property;
 
-    await convertRefToRelation(raw, propertyName, property, bucketStore, "object");
+    await convertRefToRelation(
+      raw,
+      propertyName,
+      property,
+      bucketStore,
+      "object",
+      nonExistRelations
+    );
   }
 
   return raw;
@@ -56,7 +63,8 @@ async function convertRefToRelation(
   propertyName,
   property,
   bucketStore,
-  parent: "object" | "array"
+  parent: "object" | "array",
+  nonExistRelations
 ) {
   if (property.type == "object") {
     for (const [key, value] of Object.entries(property.properties)) {
@@ -65,7 +73,8 @@ async function convertRefToRelation(
         key,
         value,
         bucketStore,
-        "object"
+        "object",
+        nonExistRelations
       );
     }
   } else if (property.type == "array") {
@@ -74,28 +83,31 @@ async function convertRefToRelation(
       propertyName,
       property.items,
       bucketStore,
-      "array"
+      "array",
+      nonExistRelations
     );
   } else if (property.type == "relation" && typeof property.bucket == "object") {
     const schemaName = property.bucket.resourceFieldRef.schemaName;
 
-    const relatedBucket = await bucketStore.get(schemaName);
-
-    if (!relatedBucket.metadata.uid) {
-      throw new Error("Related bucket is not ready.");
-    }
+    const relatedBucketId = await bucketStore.get(schemaName).then(bucket => {
+      if (!bucket || !bucket.metadata.uid) {
+        nonExistRelations.push(schemaName);
+        return schemaName;
+      }
+      return bucket.metadata.uid;
+    });
 
     if (parent == "object") {
       raw.properties[propertyName] = {
         ...property,
-        bucketId: relatedBucket.metadata.uid
+        bucketId: relatedBucketId
       };
 
       delete raw.properties[propertyName].bucket;
     } else if (parent == "array") {
       raw.items = {
         ...property,
-        bucketId: relatedBucket.metadata.uid
+        bucketId: relatedBucketId
       };
 
       delete raw.items.bucket;
@@ -112,13 +124,37 @@ export function registerInformers(bs: BucketService) {
     },
     {
       add: async (obj: any) => {
-        const bucketSchemaInternal = await v1_schema_to_internal(obj);
-        const bkt = await bs.insertOne(bucketSchemaInternal);
+        const bucketName = obj.metadata.name;
+        const nonExistRelations = [];
+        const bucketSchemaInternal = await v1_schema_to_internal(obj, nonExistRelations);
+
         const st = store({
           group: "bucket",
           resource: "schemas"
         });
-        await st.patch(obj.metadata.name, {metadata: {uid: String(bkt._id)}, status: "Ready"});
+
+        const existing = await st.get(bucketName);
+
+        let bkt;
+        if (existing.metadata.uid) {
+          bkt = await bs.findOneAndReplace(
+            {_id: new ObjectId(existing.metadata.uid)},
+            bucketSchemaInternal,
+            {returnOriginal: false}
+          );
+        } else {
+          bkt = await bs.insertOne(bucketSchemaInternal);
+        }
+
+        await st.patch(bucketName, {metadata: {uid: String(bkt._id)}, status: "Ready"});
+
+        if (nonExistRelations.length) {
+          throw Error(
+            `${bucketName} has been inserted with non-exist relations '${Array.from(
+              new Set(nonExistRelations)
+            ).join(", ")}'. They will be replaced in the next retries.`
+          );
+        }
       },
       update: async (_, newObj: any) => {
         const st = store({
@@ -131,7 +167,8 @@ export function registerInformers(bs: BucketService) {
           throw new Error("Bucket should have been inserted before updating");
         }
 
-        const bucketSchemaInternal = await v1_schema_to_internal(newObj);
+        const bucketSchemaInternal = await v1_schema_to_internal(newObj, []);
+
         await bs.updateOne(
           {_id: new ObjectId(existing.metadata.uid)},
           {$set: bucketSchemaInternal},

@@ -21,7 +21,7 @@
             },
             "certificate": {
               "type": "string",
-              "title": "Certificate of the identity provider that encrypted in SHA-1 signature algorithm."
+              "title": "Certificate of the identity provider that encrypted in SHA-1 signature algorithm"
             }
           },
           "required": ["login_url", "certificate"],
@@ -36,13 +36,16 @@
       "title": "The oauth options",
       "properties": {
         "code": {
-          "$ref": "#/definitions/requestDetails"
+          "$ref": "#/definitions/requestDetails",
+          "title": "Getting code step"
         },
         "access_token": {
-          "$ref": "#/definitions/requestDetails"
+          "$ref": "#/definitions/requestDetails",
+          "title": "Exchanging code for access token step"
         },
         "identifier": {
-          "$ref": "#/definitions/requestDetails"
+          "$ref": "#/definitions/requestDetails",
+          "title": "Getting user information by using access toe-ken"
         }
       },
       "additionalProperties": false
@@ -89,7 +92,9 @@
   "properties": {
     "icon": {
       "type": "string",
-      "default": "login"
+      "default": "login",
+      "title": "Icon of the strategy",
+      "description": "Icon that will be shown with strategy on the strategy pages"
     },
     "name": {
       "type": "string",

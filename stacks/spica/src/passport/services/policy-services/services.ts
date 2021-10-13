@@ -90,6 +90,19 @@ const preferenceResource = {
   maps: [asteriskMap("title")]
 };
 
+const statusResource = {
+  title: "Status",
+  primary: "title",
+  source: of([
+    {_id: "bucket", title: "Bucket"},
+    {_id: "identity", title: "Identity"},
+    {_id: "storage", title: "Storage"},
+    {_id: "function", title: "Function"},
+    {_id: "api", title: "API"}
+  ]),
+  maps: [asteriskMap("title")]
+};
+
 export default {
   // ACTIVITY
   activity: {
@@ -101,7 +114,7 @@ export default {
     "bucket:index": [bucketResource],
     "bucket:show": [bucketResource],
     "bucket:create": [],
-    "bucket:updated": [bucketResource],
+    "bucket:update": [bucketResource],
     "bucket:delete": [bucketResource]
   },
   "bucket:data": {
@@ -190,5 +203,10 @@ export default {
   preference: {
     "preference:show": [preferenceResource],
     "preference:update": [preferenceResource]
+  },
+  // STATUS
+  status: {
+    "status:index": [statusResource],
+    "status:show": [statusResource]
   }
 } as Services;

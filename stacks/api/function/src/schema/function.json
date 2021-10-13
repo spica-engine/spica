@@ -6,27 +6,33 @@
   "required": ["name", "triggers", "timeout", "language"],
   "properties": {
     "name": {
-      "type": "string"
+      "type": "string",
+      "description": "Name of the function"
     },
     "description": {
-      "type": "string"
+      "type": "string",
+      "description": "Description of the function"
     },
     "env": {
       "type": "object",
       "patternProperties": {
-        ".": {"type": "string"}
-      }
+        "": {"type": "string"}
+      },
+      "description": "Environment variables that will be accesible globally in the function"
     },
     "memoryLimit": {
       "type": "number",
-      "default": 100
+      "default": 100,
+      "description": "Memory value that function can use maximum"
     },
     "timeout": {
-      "type": "number"
+      "type": "number",
+      "description": "Value in seconds that function should be completed"
     },
     "language": {
       "type": "string",
-      "enum": ["typescript", "javascript"]
+      "enum": ["typescript", "javascript"],
+      "description": "Language of the function"
     },
     "triggers": true
   }
