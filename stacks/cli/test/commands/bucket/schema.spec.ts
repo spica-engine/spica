@@ -131,6 +131,7 @@ type realtimeGetAllArgs = Rest<Parameters<typeof Bucket.data.realtime.getAll>>;
 type id = { _id: string };
 
 export interface New_Bucket{
+  _id?: string;
   title?: string;
   description?: string;
   date?: Date | string;
@@ -154,7 +155,7 @@ export namespace new_bucket {
     export function getAll (...args: getAllArgs) {
       return Bucket.data.getAll<New_Bucket & id>(BUCKET_ID, ...args);
     };
-    export function insert (document: New_Bucket) {
+    export function insert (document: Omit<New_Bucket, "_id">) {
       ['relationmany'].forEach((field) => {
         if (typeof document[field] == 'object') {
           document[field] = Array.isArray(document[field])
@@ -206,12 +207,13 @@ export namespace new_bucket {
     expect(content).toEqual(expectation);
   });
 
-  it("should put number suffix and create warning if buckets have the same tilte", () => {
+  it("should put number suffix and create warning if buckets have the same title", () => {
     const bucket1 = {_id: "id1", title: "Users", properties: {title: {type: "string"}}};
     const bucket2 = {_id: "id2", title: "Users", properties: {name: {type: "string"}}};
 
     const warnings = [];
     const content = createFileContent([bucket1, bucket2] as any, "APIKEY", "APIURL", warnings);
+    console.log(content);
     const expectation = `import * as Bucket from '@spica-devkit/bucket';
 /**
  * Call this method before interacting with buckets.
@@ -232,6 +234,7 @@ type realtimeGetAllArgs = Rest<Parameters<typeof Bucket.data.realtime.getAll>>;
 type id = { _id: string };
 
 export interface Users{
+  _id?: string;
   title?: string;
 }
 export namespace users {
@@ -242,7 +245,7 @@ export namespace users {
     export function getAll (...args: getAllArgs) {
       return Bucket.data.getAll<Users & id>(BUCKET_ID, ...args);
     };
-    export function insert (document: Users) {
+    export function insert (document: Omit<Users, "_id">) {
       
       return Bucket.data.insert(BUCKET_ID, document);
     };
@@ -274,6 +277,7 @@ export namespace users {
 }
 
 export interface Users2{
+  _id?: string;
   name?: string;
 }
 export namespace users2 {
@@ -284,7 +288,7 @@ export namespace users2 {
     export function getAll (...args: getAllArgs) {
       return Bucket.data.getAll<Users2 & id>(BUCKET_ID, ...args);
     };
-    export function insert (document: Users2) {
+    export function insert (document: Omit<Users2, "_id">) {
       
       return Bucket.data.insert(BUCKET_ID, document);
     };

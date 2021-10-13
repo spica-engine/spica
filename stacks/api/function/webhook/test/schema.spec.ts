@@ -37,6 +37,7 @@ describe("Schema Resolver", () => {
         url: {
           type: "string",
           title: "Url",
+          description: "URL that the post request will be sent to",
           pattern:
             "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?|^((http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
         },
@@ -44,18 +45,30 @@ describe("Schema Resolver", () => {
         trigger: {
           type: "object",
           required: ["name", "options"],
+          description: "The condition that must be met for sending a request to URL",
           properties: {
-            name: {type: "string", enum: ["database"]},
-            active: {type: "boolean", title: "Active", default: true},
+            name: {type: "string", enum: ["database"], description: "Name of the trigger type"},
+            active: {
+              type: "boolean",
+              title: "Active",
+              default: true,
+              description: "Whether this trigger is active"
+            },
             options: {
               type: "object",
               required: ["collection", "type"],
               properties: {
-                collection: {type: "string", title: "Collection", enum: ["test"]},
+                collection: {
+                  type: "string",
+                  title: "Collection",
+                  enum: ["test"],
+                  description: "Target collection that event must be perfomed on"
+                },
                 type: {
                   type: "string",
                   title: "Event type",
-                  enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
+                  enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"],
+                  description: "Event type that must be performed in the specified collection"
                 }
               }
             }

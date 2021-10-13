@@ -38,6 +38,8 @@ export function generate({body}: {body: Function}) {
           triggers: {
             type: "object",
             minProperties: 1,
+            description:
+              "Allows defining which code part will be executed when which condition is met",
             properties: Object.keys(body.triggers).reduce((props, key) => {
               props[key] = {
                 type: "object",
@@ -45,11 +47,13 @@ export function generate({body}: {body: Function}) {
                 additionalProperties: false,
                 properties: {
                   type: {
-                    type: "string"
+                    type: "string",
+                    description: "Type of the trigger"
                   },
                   active: {
                     type: "boolean",
-                    default: true
+                    default: true,
+                    description: "Whether trigger is active"
                   },
                   options: {
                     $ref: `http://spica.internal/function/enqueuer/${body.triggers[key].type}`

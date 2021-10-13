@@ -42,12 +42,14 @@ describe("hook module", () => {
             type: "string",
             enum: [],
             // @ts-expect-error
-            viewEnum: []
+            viewEnum: [],
+            description: "Bucket id that the event will be tracked on"
           },
           type: {
             title: "Operation type",
             type: "string",
-            enum: ["ALL", "INSERT", "UPDATE", "DELETE"]
+            enum: ["ALL", "INSERT", "UPDATE", "DELETE"],
+            description: "Operation type that must be performed in the specified bucket"
           }
         },
         additionalProperties: false

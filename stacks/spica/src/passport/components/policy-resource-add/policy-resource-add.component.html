@@ -45,7 +45,7 @@
         <div class="delete-button">
           <button
             mat-button
-            [disabled]="resIndex == 0"
+            [disabled]="data.currentAction.resource.include.length == 1"
             color="warn"
             (click)="data.currentAction.resource.include.splice(resIndex, 1)"
           >
@@ -110,7 +110,7 @@
         <div class="delete-button">
           <button
             mat-button
-            [disabled]="resIndex == 0"
+            [disabled]="data.currentAction.resource.exclude.length == 1"
             color="warn"
             (click)="data.currentAction.resource.exclude.splice(resIndex, 1)"
           >

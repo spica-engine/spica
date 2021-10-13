@@ -46,6 +46,7 @@ export function initialize(
 function buildInterface(schema: BucketSchema, lines: string[]) {
   const name = prepareInterfaceTitle(schema.title);
   lines.push(`\n\nexport interface ${name}{`);
+  lines.push(`\n  _id?: string;`);
   buildProperties(schema.properties, schema.required || [], "bucket", lines);
   lines.push("\n}");
 }
@@ -80,7 +81,7 @@ function buildMethod(schema: BucketSchema, lines: string[]) {
     : "";
   // INSERT
   lines.push(`
-    export function insert (document: ${interfaceName}) {
+    export function insert (document: Omit<${interfaceName}, "_id">) {
       ${normalizeRelationCode}
       return Bucket.data.insert(BUCKET_ID, document);
     };`);
