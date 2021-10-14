@@ -8,7 +8,7 @@ import {
 import {DisplayedStatement, DisplayedAction} from "@spica-client/passport/interfaces/statement";
 import {HttpClient} from "@angular/common/http";
 import {filter, map, share, shareReplay, switchMapTo} from "rxjs/operators";
-import {PassportService} from "@spica-client/passport";
+import {PassportService} from "@spica-client/passport/services/passport.service";
 import {of} from "rxjs";
 
 @Component({
