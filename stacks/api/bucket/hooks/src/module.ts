@@ -1,7 +1,8 @@
 import {Global, Module} from "@nestjs/common";
-import {ServicesModule} from "@spica-server/bucket/services";
-import {DatabaseService} from "@spica-server/database";
+import {BucketService, ServicesModule} from "@spica-server/bucket/services";
+import {DatabaseService, ObjectId} from "@spica-server/database";
 import {SCHEMA} from "@spica-server/function";
+import {COLL_SLUG} from "@spica-server/function/services";
 import {EventQueue} from "@spica-server/function/queue";
 import {ENQUEUER} from "@spica-server/function/scheduler";
 import {JSONSchema7} from "json-schema";
@@ -87,7 +88,7 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
 @Global()
 @Module({
   imports: [ServicesModule],
-  exports: [ENQUEUER, SCHEMA, ChangeEmitter],
+  exports: [ENQUEUER, SCHEMA, COLL_SLUG, ChangeEmitter],
   providers: [
     ChangeEmitter,
     {
@@ -110,6 +111,19 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
         return {name: "bucket", schema: () => createSchema(db)};
       },
       inject: [DatabaseService]
+    },
+    {
+      provide: COLL_SLUG,
+      useFactory: (bs: BucketService) => {
+        return (collName: string) => {
+          const id = bs.collNameToId(collName);
+          if (!id) {
+            return Promise.resolve(collName);
+          }
+          return bs.findOne(new ObjectId(id)).then(b => (b ? b.title : collName));
+        };
+      },
+      inject: [BucketService]
     }
   ]
 })

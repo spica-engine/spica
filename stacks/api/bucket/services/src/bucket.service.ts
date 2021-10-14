@@ -150,4 +150,8 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     }
     return fields;
   }
+
+  collNameToId(collName: string) {
+    return collName.startsWith("bucket_") ? collName.replace("bucket_", "") : undefined;
+  }
 }

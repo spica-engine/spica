@@ -13,7 +13,9 @@ import {
   FunctionService,
   Function,
   FUNCTION_OPTIONS,
-  Options
+  Options,
+  COLL_SLUG,
+  CollectionSlug
 } from "@spica-server/function/services";
 import {ChangeKind, TargetChange} from "./change";
 import {Schema, SCHEMA, SchemaWithName, SCHEMA1} from "./schema/schema";
@@ -26,8 +28,7 @@ export class FunctionEngine implements OnModuleDestroy {
     ["http", require("./schema/http.json")],
     ["schedule", require("./schema/schedule.json")],
     ["firehose", require("./schema/firehose.json")],
-    ["system", require("./schema/system.json")],
-    ["database", () => getDatabaseSchema(this.db, this.mongo)]
+    ["system", require("./schema/system.json")]
   ]);
   readonly runSchemas = new Map<string, JSONSchema7>();
 
@@ -41,7 +42,8 @@ export class FunctionEngine implements OnModuleDestroy {
     private repos: RepoStrategies,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
-    @Optional() @Inject(SCHEMA1) schema1: SchemaWithName
+    @Optional() @Inject(SCHEMA1) schema1: SchemaWithName,
+    @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
@@ -49,6 +51,8 @@ export class FunctionEngine implements OnModuleDestroy {
     if (schema1) {
       this.schemas.set(schema1.name, schema1.schema);
     }
+
+    this.schemas.set("database", () => getDatabaseSchema(this.db, this.mongo, collSlug));
 
     this.fs.find().then(fns => {
       const targetChanges: TargetChange[] = [];
@@ -271,10 +275,12 @@ export class FunctionEngine implements OnModuleDestroy {
 
 export function getDatabaseSchema(
   db: DatabaseService,
-  mongo: MongoClient
+  mongo: MongoClient,
+  collSlug: CollectionSlug = id => Promise.resolve(id)
 ): Observable<JSONSchema7> {
   return new Observable(observer => {
-    const collectionNames = new Set<string>();
+    // <collection_id,collection_placeholder>
+    const collSlugMap: Map<string, string> = new Map();
 
     const notifyChanges = () => {
       const schema: JSONSchema7 = {
@@ -285,7 +291,9 @@ export function getDatabaseSchema(
           collection: {
             title: "Collection Name",
             type: "string",
-            enum: Array.from(collectionNames),
+            //@ts-ignore
+            viewEnum: Array.from(collSlugMap.values()),
+            enum: Array.from(collSlugMap.keys()),
             description: "Collection name that the event will be tracked on"
           },
           type: {
@@ -309,15 +317,16 @@ export function getDatabaseSchema(
       }
     ]);
 
-    stream.on("change", change => {
+    stream.on("change", async change => {
+      const coll_id = change.ns.coll;
       switch (change.operationType) {
         case "drop":
-          collectionNames.delete(change.ns.coll);
+          collSlugMap.delete(coll_id);
           notifyChanges();
           break;
         case "insert":
-          if (!collectionNames.has(change.ns.coll)) {
-            collectionNames.add(change.ns.coll);
+          if (!collSlugMap.has(coll_id)) {
+            collSlugMap.set(coll_id, await collSlug(coll_id));
             notifyChanges();
           }
           break;
@@ -326,9 +335,9 @@ export function getDatabaseSchema(
 
     stream.on("close", () => observer.complete());
 
-    db.collections().then(collections => {
+    db.collections().then(async collections => {
       for (const collection of collections) {
-        collectionNames.add(collection.collectionName);
+        collSlugMap.set(collection.collectionName, await collSlug(collection.collectionName));
       }
       notifyChanges();
     });
