@@ -111,10 +111,10 @@ export default {
   },
   // ASSET
   asset: {
-    "activity:index": [],
-    "activity:create": [],
-    "activity:update": [],
-    "activity:delete": []
+    "apis:index": [],
+    "apis:create": [],
+    "apis:update": [],
+    "apis:delete": []
   },
   // BUCKET
   bucket: {

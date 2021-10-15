@@ -7,8 +7,8 @@ export default {
   statement: [
     ...AssetReadOnlyAccess.statement,
     {
-      action: "asset:delete",
-      module: "asset"
+      action: "apis:delete",
+      module: "apis"
     }
   ]
 };
