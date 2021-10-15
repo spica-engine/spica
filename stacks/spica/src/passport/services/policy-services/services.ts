@@ -109,6 +109,13 @@ export default {
     "activity:index": [],
     "activity:delete": []
   },
+  // ASSET
+  asset: {
+    "activity:index": [],
+    "activity:create": [],
+    "activity:update": [],
+    "activity:delete": []
+  },
   // BUCKET
   bucket: {
     "bucket:index": [bucketResource],

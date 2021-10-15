@@ -7,14 +7,17 @@ import {
   ExceptionFilter,
   Get,
   Headers,
+  HttpException,
   Param,
   Patch,
   Post,
   Put,
   UseFilters,
+  UseGuards,
   UseInterceptors
 } from "@nestjs/common";
 import {DatabaseService} from "@spica-server/database";
+import {AuthGuard, ActionGuard} from "@spica-server/passport/guard";
 import {Resource} from "./definition";
 import {inform} from "./informer";
 import {PatchBodyParser} from "./patch";
@@ -35,8 +38,18 @@ const DEBUG = true;
 
 @Catch()
 export class StatusFilter implements ExceptionFilter {
+  isGuardException(exception) {
+    const guardExceptionCodes = [401, 403];
+    return guardExceptionCodes.includes(exception.status);
+  }
   catch(exceptionOrStatus: unknown, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse<any>();
+
+    if (this.isGuardException(exceptionOrStatus)) {
+      response.status(exceptionOrStatus["status"]).json(exceptionOrStatus["response"]);
+      return;
+    }
+
     if (!isStatusKind(exceptionOrStatus)) {
       let metadata: StatusMetadata;
       if (exceptionOrStatus["message"] && DEBUG) {
@@ -159,6 +172,7 @@ export class ApiMachineryController {
 @Controller("apis/:group/:version/:resource")
 export class ApiMachineryObjectController {
   @Get()
+  @UseGuards(AuthGuard(), ActionGuard("apis:index", "apis"))
   async list(
     @Headers("accept") accepts: string,
     @Param("group") groupName: string,
@@ -189,6 +203,7 @@ export class ApiMachineryObjectController {
   }
 
   @Get(":name")
+  @UseGuards(AuthGuard(), ActionGuard("apis:index", "apis"))
   get(
     @Param("group") groupName: string,
     @Param("version") versionName: string,
@@ -215,6 +230,7 @@ export class ApiMachineryObjectController {
   }
 
   @Post()
+  @UseGuards(AuthGuard(), ActionGuard("apis:create", "apis"))
   async add(
     @Param("group") groupName: string,
     @Param("version") versionName: string,
@@ -269,6 +285,7 @@ export class ApiMachineryObjectController {
   }
 
   @Put(":name")
+  @UseGuards(AuthGuard(), ActionGuard("apis:update", "apis"))
   async replace(
     @Param("group") groupName: string,
     @Param("version") versionName: string,
@@ -318,6 +335,7 @@ export class ApiMachineryObjectController {
   }
 
   @Delete(":name")
+  @UseGuards(AuthGuard(), ActionGuard("apis:delete", "apis"))
   async delete(
     @Param("group") groupName: string,
     @Param("version") versionName: string,

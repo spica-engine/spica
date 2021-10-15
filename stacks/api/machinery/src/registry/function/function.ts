@@ -13,7 +13,7 @@ const FunctionV1: JSONSchema7 = {
       type: "string"
     },
     timeout: {
-      type: "integer",
+      type: "number",
       default: 10
     },
     runtime: {
