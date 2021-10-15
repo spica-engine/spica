@@ -167,7 +167,12 @@ describe("Webhook Controller", () => {
 
   it("should list collections", async () => {
     const {body: collections} = await req.get("/webhook/collections", undefined);
-    expect(collections.sort((a, b) => a.localeCompare(b))).toEqual([
+    expect(collections.map(c => c.id).sort((a, b) => a.localeCompare(b))).toEqual([
+      "coll1",
+      "coll2",
+      "webhook_logs"
+    ]);
+    expect(collections.map(c => c.slug).sort((a, b) => a.localeCompare(b))).toEqual([
       "coll1",
       "coll2",
       "webhook_logs"
