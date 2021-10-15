@@ -85,6 +85,16 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
   });
 }
 
+export const collectionSlugFactory = (bs: BucketService) => {
+  return (collName: string) => {
+    const id = bs.collNameToId(collName);
+    if (!id) {
+      return Promise.resolve(collName);
+    }
+    return bs.findOne(new ObjectId(id)).then(b => (b ? b.title : collName));
+  };
+};
+
 @Global()
 @Module({
   imports: [ServicesModule],
@@ -114,15 +124,7 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
     },
     {
       provide: COLL_SLUG,
-      useFactory: (bs: BucketService) => {
-        return (collName: string) => {
-          const id = bs.collNameToId(collName);
-          if (!id) {
-            return Promise.resolve(collName);
-          }
-          return bs.findOne(new ObjectId(id)).then(b => (b ? b.title : collName));
-        };
-      },
+      useFactory: collectionSlugFactory,
       inject: [BucketService]
     }
   ]
