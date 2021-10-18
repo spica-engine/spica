@@ -7,6 +7,14 @@ export default {
   statement: [
     ...AssetReadOnlyAccess.statement,
     {
+      action: "apis:create",
+      module: "apis"
+    },
+    {
+      action: "apis:update",
+      module: "apis"
+    },
+    {
       action: "apis:delete",
       module: "apis"
     }

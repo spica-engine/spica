@@ -5,5 +5,5 @@
 
 export const environment = {
   production: true,
-  api: "https://master.spicaengine.com/api"
+  api: "http://localhost:4300"
 };

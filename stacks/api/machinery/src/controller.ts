@@ -7,7 +7,6 @@ import {
   ExceptionFilter,
   Get,
   Headers,
-  HttpException,
   Param,
   Patch,
   Post,
@@ -38,30 +37,37 @@ const DEBUG = true;
 
 @Catch()
 export class StatusFilter implements ExceptionFilter {
-  isGuardException(exception) {
-    const guardExceptionCodes = [401, 403];
-    return guardExceptionCodes.includes(exception.status);
+  isAuthException(exception) {
+    const authExceptionCodes = [401, 403];
+    return authExceptionCodes.includes(exception.status);
   }
   catch(exceptionOrStatus: unknown, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse<any>();
 
-    if (this.isGuardException(exceptionOrStatus)) {
-      response.status(exceptionOrStatus["status"]).json(exceptionOrStatus["response"]);
-      return;
-    }
-
     if (!isStatusKind(exceptionOrStatus)) {
       let metadata: StatusMetadata;
+
       if (exceptionOrStatus["message"] && DEBUG) {
         metadata = {stack: exceptionOrStatus["stack"]};
       }
-      exceptionOrStatus = status({
-        code: 500,
-        message: exceptionOrStatus["message"] ? exceptionOrStatus["message"] : "unknown error",
-        status: "Failure",
-        reason: "InternalError",
-        metadata
-      });
+
+      const isAuthException = this.isAuthException(exceptionOrStatus);
+      if (isAuthException) {
+        exceptionOrStatus = status({
+          code: exceptionOrStatus["status"],
+          message: exceptionOrStatus["response"]["message"],
+          status: "Failure",
+          reason: exceptionOrStatus["response"]["error"]
+        });
+      } else {
+        exceptionOrStatus = status({
+          code: 500,
+          message: exceptionOrStatus["message"] ? exceptionOrStatus["message"] : "unknown error",
+          status: "Failure",
+          reason: "InternalError",
+          metadata
+        });
+      }
     }
 
     if (isStatusKind(exceptionOrStatus)) {
