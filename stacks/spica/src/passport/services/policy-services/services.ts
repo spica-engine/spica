@@ -104,116 +104,170 @@ const statusResource = {
 };
 
 export default {
-  // ACTIVITY
-  activity: {
-    "activity:index": [],
-    "activity:delete": []
-  },
   // ASSET
   apis: {
-    "apis:index": [],
-    "apis:create": [],
-    "apis:update": [],
-    "apis:delete": []
+    title: "Asset",
+    actions: {
+      "apis:index": [],
+      "apis:create": [],
+      "apis:update": [],
+      "apis:delete": []
+    }
+  },
+  // ACTIVITY
+  activity: {
+    title: "Activity",
+    actions: {
+      "activity:index": [],
+      "activity:delete": []
+    }
   },
   // BUCKET
   bucket: {
-    "bucket:index": [bucketResource],
-    "bucket:show": [bucketResource],
-    "bucket:create": [],
-    "bucket:update": [bucketResource],
-    "bucket:delete": [bucketResource]
+    title: "Bucket",
+    actions: {
+      "bucket:index": [bucketResource],
+      "bucket:show": [bucketResource],
+      "bucket:create": [],
+      "bucket:update": [bucketResource],
+      "bucket:delete": [bucketResource]
+    }
   },
   "bucket:data": {
-    "bucket:data:index": [bucketResource, bucketDataResource],
-    "bucket:data:show": [bucketResource, bucketDataResource],
-    "bucket:data:create": [bucketResource],
-    "bucket:data:update": [bucketResource, bucketDataResource],
-    "bucket:data:delete": [bucketResource, bucketDataResource],
-    "bucket:data:stream": [bucketResource, bucketDataResource]
+    title: "Bucket Data",
+    actions: {
+      "bucket:data:index": [bucketResource, bucketDataResource],
+      "bucket:data:show": [bucketResource, bucketDataResource],
+      "bucket:data:create": [bucketResource],
+      "bucket:data:update": [bucketResource, bucketDataResource],
+      "bucket:data:delete": [bucketResource, bucketDataResource],
+      "bucket:data:stream": [bucketResource, bucketDataResource]
+    }
   },
   // PASSPORT
   "passport:apikey": {
-    "passport:apikey:index": [apikeyResource],
-    "passport:apikey:show": [apikeyResource],
-    "passport:apikey:create": [],
-    "passport:apikey:update": [apikeyResource],
-    "passport:apikey:delete": [apikeyResource]
+    title: "Apikey",
+    actions: {
+      "passport:apikey:index": [apikeyResource],
+      "passport:apikey:show": [apikeyResource],
+      "passport:apikey:create": [],
+      "passport:apikey:update": [apikeyResource],
+      "passport:apikey:delete": [apikeyResource]
+    }
   },
   "passport:apikey:policy": {
-    "passport:apikey:policy:add": [apikeyResource, policyResource],
-    "passport:apikey:policy:remove": [apikeyResource, policyResource]
+    title: "Apikey's Policy",
+    actions: {
+      "passport:apikey:policy:add": [apikeyResource, policyResource],
+      "passport:apikey:policy:remove": [apikeyResource, policyResource]
+    }
   },
   "passport:identity": {
-    "passport:identity:index": [identityResource],
-    "passport:identity:show": [identityResource],
-    "passport:identity:create": [],
-    "passport:identity:update": [identityResource],
-    "passport:identity:delete": [identityResource]
+    title: "Identity",
+    actions: {
+      "passport:identity:index": [identityResource],
+      "passport:identity:show": [identityResource],
+      "passport:identity:create": [],
+      "passport:identity:update": [identityResource],
+      "passport:identity:delete": [identityResource]
+    }
   },
   "passport:identity:policy": {
-    "passport:identity:policy:add": [identityResource, policyResource],
-    "passport:identity:policy:remove": [identityResource, policyResource]
+    title: "Identity's Policy",
+    actions: {
+      "passport:identity:policy:add": [identityResource, policyResource],
+      "passport:identity:policy:remove": [identityResource, policyResource]
+    }
   },
   "passport:policy": {
-    "passport:policy:index": [policyResource],
-    "passport:policy:show": [policyResource],
-    "passport:policy:create": [],
-    "passport:policy:update": [policyResource],
-    "passport:policy:delete": [policyResource]
+    title: "Policy",
+    actions: {
+      "passport:policy:index": [policyResource],
+      "passport:policy:show": [policyResource],
+      "passport:policy:create": [],
+      "passport:policy:update": [policyResource],
+      "passport:policy:delete": [policyResource]
+    }
   },
   "passport:strategy": {
-    "passport:strategy:index": [strategyResource],
-    "passport:strategy:show": [strategyResource],
-    "passport:strategy:update": [strategyResource],
-    "passport:strategy:delete": [strategyResource]
+    title: "Authentication Strategy",
+    actions: {
+      "passport:strategy:index": [strategyResource],
+      "passport:strategy:show": [strategyResource],
+      "passport:strategy:update": [strategyResource],
+      "passport:strategy:delete": [strategyResource]
+    }
   },
   // DASHBOARD
   dashboard: {
-    "dashboard:index": [dashboardResource],
-    "dashboard:show": [dashboardResource],
-    "dashboard:create": [],
-    "dashboard:update": [dashboardResource],
-    "dashboard:delete": [dashboardResource]
+    title: "Dashboard",
+    actions: {
+      "dashboard:index": [dashboardResource],
+      "dashboard:show": [dashboardResource],
+      "dashboard:create": [],
+      "dashboard:update": [dashboardResource],
+      "dashboard:delete": [dashboardResource]
+    }
   },
   // FUNCTION
   function: {
-    "function:index": [functionResource],
-    "function:show": [functionResource],
-    "function:create": [],
-    "function:update": [functionResource],
-    "function:delete": [functionResource],
-    "function:integrations": []
+    title: "Function",
+    actions: {
+      "function:index": [functionResource],
+      "function:show": [functionResource],
+      "function:create": [],
+      "function:update": [functionResource],
+      "function:delete": [functionResource],
+      "function:integrations": []
+    }
   },
   "function:logs": {
-    "function:logs:index": [],
-    "function:logs:delete": []
+    title: "Function Logs",
+    actions: {
+      "function:logs:index": [],
+      "function:logs:delete": []
+    }
   },
   webhook: {
-    "webhook:index": [webhookResource],
-    "webhook:show": [webhookResource],
-    "webhook:create": [],
-    "webhook:update": [webhookResource],
-    "webhook:delete": [webhookResource]
+    title: "Webhook",
+    actions: {
+      "webhook:index": [webhookResource],
+      "webhook:show": [webhookResource],
+      "webhook:create": [],
+      "webhook:update": [webhookResource],
+      "webhook:delete": [webhookResource]
+    }
   },
   "webhook:logs": {
-    "webhook:logs:index": [],
-    "webhook:logs:delete": []
+    title: "Webhook Logs",
+    actions: {
+      "webhook:logs:index": [],
+      "webhook:logs:delete": []
+    }
   },
   storage: {
-    "storage:index": [storageResource],
-    "storage:show:": [storageResource],
-    "storage:create": [],
-    "storage:update": [storageResource],
-    "storage:delete": [storageResource]
+    title: "Storage",
+    actions: {
+      "storage:index": [storageResource],
+      "storage:show:": [storageResource],
+      "storage:create": [],
+      "storage:update": [storageResource],
+      "storage:delete": [storageResource]
+    }
   },
   preference: {
-    "preference:show": [preferenceResource],
-    "preference:update": [preferenceResource]
+    title: "Preference",
+    actions: {
+      "preference:show": [preferenceResource],
+      "preference:update": [preferenceResource]
+    }
   },
   // STATUS
   status: {
-    "status:index": [statusResource],
-    "status:show": [statusResource]
+    title: "Status",
+    actions: {
+      "status:index": [statusResource],
+      "status:show": [statusResource]
+    }
   }
 } as Services;
