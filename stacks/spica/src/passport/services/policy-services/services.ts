@@ -110,7 +110,7 @@ export default {
     "activity:delete": []
   },
   // ASSET
-  asset: {
+  apis: {
     "apis:index": [],
     "apis:create": [],
     "apis:update": [],
