@@ -1,12 +1,17 @@
 <ng-container *ngIf="schema$ | async; let schema">
   <section>
-    <button *ngIf="!value?.length" mat-button [matMenuTriggerFor]="selector">
+    <button
+      *ngIf="!value || value.length == 0"
+      mat-button
+      [matMenuTriggerFor]="selector"
+      (click)="refresh.next()"
+    >
       <mat-icon>{{ schema?.icon }}</mat-icon>
       Select from {{ schema?.title }}
     </button>
     <div>
       <button
-        *ngFor="let row of selectedRows$ | async"
+        *ngFor="let row of _oneToManyRelation ? value : value ? [value] : []"
         mat-button
         mat-flat-button
         [matTooltip]="schema.primary + ' of the row'"
@@ -16,8 +21,13 @@
       </button>
     </div>
 
-    <ng-container *ngIf="value?.length">
-      <button mat-icon-button mat-flat-button [matMenuTriggerFor]="selector">
+    <ng-container *ngIf="value && value.length != 0">
+      <button
+        mat-icon-button
+        mat-flat-button
+        [matMenuTriggerFor]="selector"
+        (click)="refresh.next()"
+      >
         <mat-icon>edit</mat-icon>
       </button>
       <button mat-icon-button mat-flat-button matTooltip="Clear selected rows" (click)="clear()">
@@ -46,13 +56,20 @@
             [filter]="filter"
             [schema]="schema$ | async"
             (click)="$event.stopPropagation()"
-            (filterChange)="this.filter = $event; refresh.next(undefined); filterMenu.close.emit()"
+            (filterChange)="
+              this.filter = $event || {}; refresh.next(this.filter); filterMenu.close.emit()
+            "
           ></bucket-filter>
         </mat-menu>
       </button>
     </mat-card-subtitle>
     <mat-card-content>
-      <mat-table [dataSource]="data$" (click)="$event.stopPropagation()">
+      <mat-spinner *ngIf="isDataPending" color="accent" diameter="25"></mat-spinner>
+      <mat-table
+        [style.display]="isDataPending ? 'none' : 'initial'"
+        [dataSource]="data$"
+        (click)="$event.stopPropagation()"
+      >
         <ng-container
           *ngFor="let property of (schema$ | async)?.properties | keyvalue"
           [matColumnDef]="property.key"
@@ -62,7 +79,6 @@
           </mat-header-cell>
           <mat-cell *matCellDef="let row"> {{ row[property.key] }} </mat-cell>
         </ng-container>
-
         <ng-container matColumnDef="actions">
           <mat-header-cell *matHeaderCellDef></mat-header-cell>
           <mat-cell *matCellDef="let row">
@@ -70,7 +86,9 @@
               mat-icon-button
               (click)="_selectRow(row); _oneToManyRelation ? $event.stopPropagation() : undefined"
               [class.selected]="
-                _oneToManyRelation ? value?.indexOf(row._id) > -1 : row._id == value
+                _oneToManyRelation
+                  ? (value | map: '_id').indexOf(row._id) > -1
+                  : value?._id == row._id
               "
             >
               <mat-icon>check</mat-icon>
