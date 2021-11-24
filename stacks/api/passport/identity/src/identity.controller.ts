@@ -78,6 +78,7 @@ export class IdentityController {
 
     pipeline.push({$project: {password: 0}});
 
+    // remove this line
     pipeline.push({$set: {_id: {$toString: "$_id"}}});
 
     if (Object.keys(filter).length) {
