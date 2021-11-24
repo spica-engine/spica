@@ -322,7 +322,7 @@ export function buildRelationAggregation(
     pipeline.push({$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)});
   }
 
-  pipeline.push({$set: {_id: {$toString: "$_id"}}});
+  // pipeline.push({$set: {_id: {$toString: "$_id"}}});
 
   const lookup = {
     $lookup: {

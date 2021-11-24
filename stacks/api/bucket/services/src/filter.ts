@@ -81,3 +81,37 @@ export function extractFilterPropertyMap(filter: object) {
   }
   return maps;
 }
+
+export function replaceFilterObjectIds(filter: object) {
+  for (const [key, value] of Object.entries(filter)) {
+    // run recursively for each logical operators such as { $or : [ { expression1 } ,{ expression2 } ] }
+    if (LogicalExtractor.operators.includes(key)) {
+      value.forEach(expression => replaceFilterObjectIds(expression));
+    }
+
+    if (key != "_id" && !key.endsWith("._id")) {
+      continue;
+    }
+
+    // { "_id": { ... } }
+    if (typeof value == "object") {
+      for (let [k, v] of Object.entries(value)) {
+        // { "_id": { $in: [...] } }
+        if (typeof v == "object" && Array.isArray(v)) {
+          value[k] = v.map(id => {
+            return new ObjectId(id);
+          });
+        }
+        // { "_id": { $eq: "<id>" } }
+        else if (typeof v == "string") {
+          value[k] = new ObjectId(v);
+        }
+      }
+    }
+    // { "_id": "<id>" }
+    else if (typeof value == "string") {
+      filter[key] = new ObjectId(value);
+    }
+  }
+  return filter;
+}

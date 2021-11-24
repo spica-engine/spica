@@ -10,7 +10,7 @@ import {
   getRelationPipeline,
   RelationMap
 } from "./relation";
-import {extractFilterPropertyMap} from "@spica-server/bucket/services";
+import {extractFilterPropertyMap, replaceFilterObjectIds} from "@spica-server/bucket/services";
 
 export interface iPipelineBuilder {
   attachToPipeline(condition: any, ...attachedObject: object[]): this;
@@ -91,7 +91,7 @@ export class PipelineBuilder implements iPipelineBuilder {
     userId: string,
     callback?: (arg0: string[][], arg1: RelationMap[]) => void
   ): Promise<this> {
-    this.attachToPipeline(true, {$set: {_id: {$toString: "$_id"}}});
+    // this.attachToPipeline(true, {$set: {_id: {$toString: "$_id"}}});
 
     const rulePropertyMap = expression
       .extractPropertyMap(this.schema.acl.read)
@@ -120,6 +120,7 @@ export class PipelineBuilder implements iPipelineBuilder {
         !Array.isArray(filterByUserRequest) &&
         Object.keys(filterByUserRequest).length
       ) {
+        filterByUserRequest = replaceFilterObjectIds(filterByUserRequest);
         filterPropertyMap = extractFilterPropertyMap(filterByUserRequest);
         filterExpression = filterByUserRequest;
       } else if (typeof filterByUserRequest == "string") {
