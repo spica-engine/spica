@@ -1,5 +1,9 @@
 import {createFileContent} from "@spica/cli";
 
+function uglify(str) {
+  return str.replace(/[\n ]+/g, "");
+}
+
 describe("ORM", () => {
   const bucketAllTypes = {
     _id: "614085d7d54da7002d0f52df",
@@ -159,7 +163,7 @@ export namespace new_bucket {
       ['relationmany'].forEach((field) => {
         if (typeof document[field] == 'object') {
           document[field] = Array.isArray(document[field])
-            ? document[field].map((v) => v._id || v)
+            ? document[field].map((v) => v._id || v)
             : document[field]._id;
         }
       });
@@ -203,8 +207,7 @@ export namespace new_bucket {
       };
   }
 }`;
-
-    expect(content).toEqual(expectation);
+    expect(uglify(expectation)).toEqual(uglify(content));
   });
 
   it("should put number suffix and create warning if buckets have the same title", () => {
@@ -213,7 +216,6 @@ export namespace new_bucket {
 
     const warnings = [];
     const content = createFileContent([bucket1, bucket2] as any, "APIKEY", "APIURL", warnings);
-    console.log(content);
     const expectation = `import * as Bucket from '@spica-devkit/bucket';
 /**
  * Call this method before interacting with buckets.
@@ -319,7 +321,7 @@ export namespace users2 {
   }
 }`;
 
-    expect(content).toEqual(expectation);
+    expect(uglify(content)).toEqual(uglify(expectation));
     expect(warnings).toEqual([
       `It seems there is more than one bucket that has the title 'Users'. 
 Number suffix will be added but should use unique titles for the best practice.`
