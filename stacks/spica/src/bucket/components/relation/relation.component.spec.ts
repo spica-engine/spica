@@ -13,7 +13,7 @@ import {MatTooltip, MatTooltipModule} from "@angular/material/tooltip";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterTestingModule} from "@angular/router/testing";
-import {INPUT_SCHEMA} from "@spica-client/common";
+import {INPUT_SCHEMA, MapPipe} from "@spica-client/common";
 import {of} from "rxjs";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
@@ -70,7 +70,7 @@ describe("Relation Component", () => {
           useValue: bucketService
         }
       ],
-      declarations: [RelationComponent, DummyBucketFilterComponent]
+      declarations: [RelationComponent, DummyBucketFilterComponent, MapPipe]
     });
     fixture = TestBed.createComponent(RelationComponent);
     onChangeSpy = spyOn(fixture.componentInstance, "onChangeFn");
@@ -156,12 +156,12 @@ describe("Relation Component", () => {
   });
 
   it("should clear selected row(s)", () => {
-    fixture.componentInstance.value = "1";
+    fixture.componentInstance.value = {_id: "1"};
     fixture.detectChanges();
     expect(onChangeSpy).not.toHaveBeenCalled();
 
     fixture.debugElement
-      .query(By.css("section button:last-of-type"))
+      .query(By.css("section > button:last-of-type"))
       .triggerEventHandler("click", undefined);
 
     fixture.detectChanges();

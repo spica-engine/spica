@@ -165,13 +165,13 @@
         "
         ngModel
         required
-        pattern="^\w*$"
+        pattern="^[a-z_0-9]*$"
       />
       <mat-error *ngIf="pnm?.errors?.required">
         Property name is required.
       </mat-error>
       <mat-error *ngIf="pnm?.errors?.pattern">
-        Property name can not include any non-word character.
+        Property name can not include any non-word characters or uppercase letters.
       </mat-error>
       <mat-error *ngIf="pnm?.errors?.propertyExists">
         Property name already exists.

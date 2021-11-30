@@ -75,7 +75,7 @@ export class AddComponent implements OnInit {
       }),
       flatMap(params => {
         if (params.rid) {
-          return this.bds.findOne(params.id, params.rid, true).pipe(
+          return this.bds.findOne(params.id, params.rid, false, true).pipe(
             tap(data => {
               this.data = data;
             }),
