@@ -2,7 +2,10 @@ import {Observable} from "rxjs";
 
 export interface Services {
   [module: string]: {
-    [action: string]: (SelectableSubResource | SubResource)[];
+    title: string;
+    actions: {
+      [action: string]: (SelectableSubResource | SubResource)[];
+    };
   };
 }
 

@@ -12,6 +12,7 @@ ts_library(
     deps = [
         "//packages/core/schema",
         "//packages/database",
+        "//stacks/api/passport/guard",
         "@npm//@nestjs/common",
         "@npm//@types/body-parser",
         "@npm//@types/json-schema",

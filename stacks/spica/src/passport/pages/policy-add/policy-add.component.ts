@@ -145,8 +145,8 @@ export class PolicyAddComponent implements OnInit {
   acceptsResource(statement: DisplayedStatement, action: string) {
     return (
       this.services[statement.module] &&
-      this.services[statement.module][action] &&
-      this.services[statement.module][action].length > 0
+      this.services[statement.module].actions[action] &&
+      this.services[statement.module].actions[action].length > 0
     );
   }
 

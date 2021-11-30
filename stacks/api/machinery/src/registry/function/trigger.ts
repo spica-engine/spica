@@ -18,10 +18,10 @@ const TriggerV1: JSONSchema7 = {
     },
     scheduleOptions: {
       type: "object",
-      required: ["cronSpec", "timezone"],
+      required: ["frequency", "timezone"],
       additionalProperties: false,
       properties: {
-        cronSpec: {
+        frequency: {
           type: "string"
         },
         timezone: {
