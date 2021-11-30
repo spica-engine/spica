@@ -59,11 +59,14 @@ describe("Policy Add Component", () => {
               getServices: () => {
                 return {
                   bucket: {
-                    "bucket:index": ["bucket_id"],
-                    "bucket:show": ["bucket_id"],
-                    "bucket:create": [],
-                    "bucket:update": ["bucket_id"],
-                    "bucket:delete": ["bucket_id"]
+                    title: "Bucket",
+                    actions: {
+                      "bucket:index": ["bucket_id"],
+                      "bucket:show": ["bucket_id"],
+                      "bucket:create": [],
+                      "bucket:update": ["bucket_id"],
+                      "bucket:delete": ["bucket_id"]
+                    }
                   }
                 };
               },
@@ -505,11 +508,14 @@ describe("Policy Add Component", () => {
                 getServices: () => {
                   return {
                     bucket: {
-                      "bucket:index": ["bucket_id"],
-                      "bucket:show": ["bucket_id"],
-                      "bucket:create": [],
-                      "bucket:update": ["bucket_id"],
-                      "bucket:delete": ["bucket_id"]
+                      title: "Bucket",
+                      actions: {
+                        "bucket:index": ["bucket_id"],
+                        "bucket:show": ["bucket_id"],
+                        "bucket:create": [],
+                        "bucket:update": ["bucket_id"],
+                        "bucket:delete": ["bucket_id"]
+                      }
                     }
                   };
                 }

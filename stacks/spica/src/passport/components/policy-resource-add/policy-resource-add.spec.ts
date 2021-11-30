@@ -32,12 +32,15 @@ describe("Policy Resource Add Component", () => {
           useValue: {
             services: {
               "bucket:data": {
-                "bucket:data:index": ["bucket_id", "document_id"],
-                "bucket:data:show": ["bucket_id", "document_id"],
-                "bucket:data:create": ["bucket_id"],
-                "bucket:data:update": ["bucket_id", "document_id"],
-                "bucket:data:delete": ["bucket_id", "document_id"],
-                "bucket:data:stream": ["bucket_id", "document_id"]
+                title: "Bucket Data",
+                actions: {
+                  "bucket:data:index": ["bucket_id", "document_id"],
+                  "bucket:data:show": ["bucket_id", "document_id"],
+                  "bucket:data:create": ["bucket_id"],
+                  "bucket:data:update": ["bucket_id", "document_id"],
+                  "bucket:data:delete": ["bucket_id", "document_id"],
+                  "bucket:data:stream": ["bucket_id", "document_id"]
+                }
               }
             },
             statement: {

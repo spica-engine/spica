@@ -45,7 +45,7 @@ async function v1_trigger_to_internal(object: any) {
 
     case "schedule":
       triggerRaw.options = {
-        frequency: object.spec.scheduleOptions.cronSpec,
+        frequency: object.spec.scheduleOptions.frequency,
         timezone: object.spec.scheduleOptions.timezone
       };
       break;

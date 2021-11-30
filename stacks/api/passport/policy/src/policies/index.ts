@@ -36,6 +36,9 @@ import PreferenceReadOnlyAccess from "./preference.readonly";
 
 import StatusFullaccess from "./status.fullaccess";
 
+import AssetFullaccess from "./asset.fullaccess";
+import AssetReadOnlyAccess from "./asset.readonly";
+
 export default [
   ApiKeyFullAccess,
   ApiKeyReadOnlyAccess,
@@ -73,5 +76,8 @@ export default [
   PreferenceFullAccess,
   PreferenceReadOnlyAccess,
 
-  StatusFullaccess
+  StatusFullaccess,
+
+  AssetFullaccess,
+  AssetReadOnlyAccess
 ];
