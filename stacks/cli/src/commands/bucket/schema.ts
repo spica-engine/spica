@@ -250,7 +250,7 @@ function getNormalizeRelationCode(fields: string[]) {
   return `[${fields.map(f => `'${f}'`)}].forEach((field) => {
         if (typeof document[field] == 'object') {
           document[field] = Array.isArray(document[field])
-            ? document[field].map((v) => v._id)
+            ? document[field].map((v) => v._id || v)
             : document[field]._id;
         }
       });`;
