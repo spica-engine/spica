@@ -350,7 +350,6 @@ export class BucketDataController {
    */
   @UseInterceptors(activity(createBucketDataActivity), invalidateCache())
   @Patch(":documentId")
-  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
   async patch(
     @Req() req,
