@@ -6,6 +6,8 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
+  Optional,
   Param,
   Post,
   Put,
@@ -15,6 +17,7 @@ import {
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {DatabaseService, ObjectId, OBJECT_ID} from "@spica-server/database";
+import {CollectionSlug, COLL_SLUG} from "@spica-server/function/services";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {Webhook} from "./interface";
 import {WebhookInvoker} from "./invoker";
@@ -25,15 +28,35 @@ export class WebhookController {
   constructor(
     private webhookService: WebhookService,
     private invoker: WebhookInvoker,
-    private database: DatabaseService
+    private database: DatabaseService,
+    @Optional() @Inject(COLL_SLUG) private collSlug: CollectionSlug
   ) {}
 
   @Get("collections")
   @UseGuards(AuthGuard())
   collections() {
-    return this.database
-      .collections()
-      .then(collections => collections.map(coll => coll.collectionName));
+    return this.database.collections().then(collections => {
+      const definitions: {id: string; slug: string}[] = [];
+
+      const promises = collections.map(collection => {
+        const collName = collection.collectionName;
+
+        let promise = Promise.resolve(collName);
+
+        if (this.collSlug) {
+          promise = this.collSlug(collName);
+        }
+
+        return promise.then(slug =>
+          definitions.push({
+            id: collName,
+            slug: slug
+          })
+        );
+      });
+
+      return Promise.all(promises).then(() => definitions);
+    });
   }
 
   @Get()
