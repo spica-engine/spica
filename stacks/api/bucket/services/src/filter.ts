@@ -99,19 +99,23 @@ export function replaceFilterObjectIds(filter: object) {
         // { "_id": { $in: [...] } }
         if (typeof v == "object" && Array.isArray(v)) {
           value[k] = v.map(id => {
-            return new ObjectId(id);
+            return ObjectIdIfValid(id);
           });
         }
         // { "_id": { $eq: "<id>" } }
         else if (typeof v == "string") {
-          value[k] = new ObjectId(v);
+          value[k] = ObjectIdIfValid(v);
         }
       }
     }
     // { "_id": "<id>" }
     else if (typeof value == "string") {
-      filter[key] = new ObjectId(value);
+      filter[key] = ObjectIdIfValid(value);
     }
   }
   return filter;
+}
+
+function ObjectIdIfValid(val) {
+  return ObjectId.isValid(val) ? new ObjectId(val) : val;
 }
