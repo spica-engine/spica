@@ -46,8 +46,8 @@
           <mat-expansion-panel-header>
             <mat-panel-title
               ><b>Statement:&nbsp;</b>
-              {{ statement.module?.replaceAll(":", " ") | titlecase }}</mat-panel-title
-            >
+              {{ services[statement.module]?.title }}
+            </mat-panel-title>
           </mat-expansion-panel-header>
           <div class="statement">
             <mat-form-field>
@@ -63,13 +63,13 @@
                   [value]="service.key"
                   [disabled]="isServiceUsed(service.key)"
                 >
-                  {{ service.key.replaceAll(":", " ") | titlecase }}
+                  {{ service.value.title }}
                 </mat-option>
               </mat-select>
             </mat-form-field>
             <div class="actions">
               <div
-                *ngFor="let action of services[statement.module] | keyvalue"
+                *ngFor="let action of services[statement.module]?.actions | keyvalue"
                 class="action-card"
                 (click)="toggleAction(statement, action.key)"
                 [class.active]="isActionActive(statement, action.key)"

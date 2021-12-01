@@ -43,13 +43,13 @@ export class FilterComponent implements OnChanges {
   operators = {
     string: {
       equals: this.createValueBuilder("$eq"),
-      not_equal: this.createValueBuilder("$neq"),
+      not_equal: this.createValueBuilder("$ne"),
       contains: this.createValueBuilder("$regex", this.containsBuilder),
       regex: this.createValueBuilder("$regex")
     },
     textarea: {
       equals: this.createValueBuilder("$eq"),
-      not_equal: this.createValueBuilder("$neq"),
+      not_equal: this.createValueBuilder("$ne"),
       contains: this.createValueBuilder("$regex", this.containsBuilder),
       regex: this.createValueBuilder("$regex")
     },
