@@ -30,7 +30,9 @@ export const EMPTY_INPUT_SCHEMA: InputSchema = {
   type: undefined
 };
 
-export const DEFAULT_ARRAY_ITEM: InputSchema = {
-  title: "Title of the items",
-  type: "string"
+export const getDefaultArrayItems: () => InputSchema = () => {
+  return {
+    title: "Title of the items",
+    type: "string"
+  };
 };
