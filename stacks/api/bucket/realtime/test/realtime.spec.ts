@@ -208,7 +208,7 @@ describe("Realtime", () => {
 
       it("should do the initial sync with _id filter", async done => {
         const ws = wsc.get(
-          url(`/bucket/${bucket._id}/data`, {filter: `_id == "${rows[0]["_id"]}"`})
+          url(`/bucket/${bucket._id}/data`, {filter: `document._id == "${rows[0]["_id"]}"`})
         );
 
         ws.onmessage = async e => {
