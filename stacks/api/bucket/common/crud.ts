@@ -137,14 +137,6 @@ export async function findDocuments<T>(
 
   const pipeline = relationPathResolvedPipeline.paginate(options.paginate, seeking).result();
 
-  console.log([...pipeline, ...seeking]);
-  await collection
-    .aggregate<T>([...pipeline, ...seeking])
-    .explain()
-    .then(r => {
-      console.dir(r, {depth: Infinity});
-    });
-
   if (options.paginate) {
     const result = await collection
       .aggregate<CrudPagination<T>>(pipeline)

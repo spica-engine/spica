@@ -91,8 +91,6 @@ export class PipelineBuilder implements iPipelineBuilder {
     userId: string,
     callback?: (arg0: string[][], arg1: RelationMap[]) => void
   ): Promise<this> {
-    // this.attachToPipeline(true, {$set: {_id: {$toString: "$_id"}}});
-
     const rulePropertyMap = expression
       .extractPropertyMap(this.schema.acl.read)
       .map(path => path.split("."));

@@ -92,8 +92,6 @@ function generateMatchingPipeline(filter) {
       }
     },
     {$replaceWith: "$fullDocument"},
-    // TODO: reconsider this
-    // {$set: {_id: {$toString: "$_id"}}},
     {$match: filter},
     {$replaceWith: "$__changeStream__"}
   ];
@@ -306,10 +304,6 @@ export class RealtimeDatabaseService {
         const pipeline = [];
 
         if (options.filter) {
-          // TODO: reconsider this
-          // pipeline.push({
-          //   $set: {_id: {$toString: "$_id"}}
-          // });
           pipeline.push({
             $match: options.filter
           });

@@ -299,7 +299,7 @@ interface Replacer {
 // ObjectId
 const ObjectIdReplacer: Replacer = {
   condition: node => {
-    return ( 
+    return (
       (isIdSide(node.left) && isValueSide(node.right)) ||
       (isIdSide(node.right) && isValueSide(node.left))
     );
