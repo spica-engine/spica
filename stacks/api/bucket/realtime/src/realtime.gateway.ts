@@ -28,7 +28,8 @@ import {
   getBucketDataCollection,
   filterReviver,
   BucketDataService,
-  BucketDocument
+  BucketDocument,
+  replaceFilterObjectIds
 } from "@spica-server/bucket/services";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
@@ -465,7 +466,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     if (filter) {
       let parsedFilter = parseFilter((value: string) => JSON.parse(value, filterReviver), filter);
 
-      if (!parsedFilter) {
+      if (parsedFilter) {
+        parsedFilter = replaceFilterObjectIds(parsedFilter);
+      } else if (!parsedFilter) {
         parsedFilter = parseFilter(aggregate, filter, {});
       }
 

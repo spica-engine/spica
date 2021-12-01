@@ -13,6 +13,7 @@ ts_library(
     ],
     module_name = "@spica-server/bucket/expression",
     deps = [
+        "//packages/database",
         "@npm//@types/node",
         "@npm//pegjs",
     ],

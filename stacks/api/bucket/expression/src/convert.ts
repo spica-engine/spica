@@ -1,3 +1,4 @@
+import {ObjectId} from "@spica-server/database";
 import {getMostLeftSelectIdentifier} from "./ast";
 import {compile} from "./compile";
 import * as func from "./func";
@@ -22,6 +23,13 @@ function visit(node) {
     const fns = visitArgs(node);
     return ctx => visitArgFns(fns, ctx);
   }
+
+  replacers.forEach(replacer => {
+    if (replacer.condition(node)) {
+      replacer.replace(node);
+    }
+  });
+
   switch (node.kind) {
     case "operator":
       return visitOperator(node);
