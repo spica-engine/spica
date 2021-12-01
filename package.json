@@ -72,6 +72,7 @@
     "json-merge-patch": "^1.0.0",
     "locale": "^0.1.0",
     "matcher": "^3.0.0",
+    "mingo": "^4.4.1",
     "mongodb": "^3.5.8",
     "mongodb-memory-server-core": "^6.9.2",
     "multimatch": "^3.0.0",

@@ -106,14 +106,15 @@ describe("Realtime", () => {
         }
       });
 
-      ws.onmessage = e => {
+      ws.onmessage = async e => {
         expect(e.data).toEqual(`{"kind":1}`);
+        await ws.close();
         done();
       };
       await ws.connect;
     });
 
-    it("should show error messages", done => {
+    it("should show error messages", async done => {
       authGuardCheck.and.callFake(() => {
         throw new UnauthorizedException();
       });

@@ -9,7 +9,7 @@ import {timer} from "rxjs";
 import {bufferCount, delay, first, skip, take, takeUntil, tap} from "rxjs/operators";
 import {RealtimeDatabaseService} from "./database.service";
 import {SequenceKind} from "./levenshtein";
-import {ChunkKind} from "./stream";
+import {ChunkKind} from "./interface";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
 
@@ -387,6 +387,7 @@ describe("realtime database", () => {
       await wait();
       await coll.deleteOne({_id: insertedIds[1]});
       await coll.deleteOne({_id: insertedIds[2]});
+      await wait();
       // These operations should not affect anything in our cursor
       // They here to ensure correctness of our cursor despite the concurrent changes
       await coll.insertMany([{q: "do we rock?"}, {a: true}]);

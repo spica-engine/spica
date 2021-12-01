@@ -1,16 +1,24 @@
-import {OnGatewayConnection, WebSocketGateway} from "@nestjs/websockets";
-import {RealtimeDatabaseService, StreamChunk} from "@spica-server/database/realtime";
+import {OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway} from "@nestjs/websockets";
+import {RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {GuardService} from "@spica-server/passport";
-import {fromEvent, Observable, of} from "rxjs";
-import {catchError, takeUntil, tap} from "rxjs/operators";
+import {fromEvent, of} from "rxjs";
+import {catchError, takeUntil} from "rxjs/operators";
 
 @WebSocketGateway(31, {
   path: "/function-logs"
 })
-export class LogGateway implements OnGatewayConnection {
-  streams = new Map<string, Observable<StreamChunk<any>>>();
+export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  readonly COLLECTION = "function_logs";
 
   constructor(private realtime: RealtimeDatabaseService, private guardService: GuardService) {}
+
+  async handleDisconnect(client: any) {
+    const options = await this.prepareOptions(client, client.upgradeReq);
+
+    if (this.realtime.doesEmitterExist(this.COLLECTION, options)) {
+      this.realtime.removeEmitter(this.COLLECTION, options);
+    }
+  }
 
   async handleConnection(client: WebSocket, req) {
     req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
@@ -25,6 +33,23 @@ export class LogGateway implements OnGatewayConnection {
       return client.close(1003);
     }
 
+    const options = await this.prepareOptions(client, req);
+
+    const stream = this.realtime.find("function_logs", options).pipe(
+      catchError(e => {
+        client.send(JSON.stringify({code: e.status || 500, message: e.message}));
+        client.close(1003);
+
+        return of(null);
+      })
+    );
+
+    stream
+      .pipe(takeUntil(fromEvent(client, "close")))
+      .subscribe(data => client.send(JSON.stringify(data)));
+  }
+
+  async prepareOptions(client, req) {
     const options: any = {};
 
     if (req.query.has("functions")) {
@@ -44,11 +69,16 @@ export class LogGateway implements OnGatewayConnection {
       }
     };
 
+    if (req.query.has("end")) {
+      options.filter.created_at.$lt = new Date(req.query.get("end"));
+    }
+
     if (req.query.has("sort")) {
       try {
         options.sort = JSON.parse(req.query.get("sort"));
       } catch (e) {
         client.send(JSON.stringify({code: 400, message: e.message}));
+        return client.close(1003);
       }
     }
 
@@ -60,31 +90,6 @@ export class LogGateway implements OnGatewayConnection {
       options.skip = Number(req.query.get("skip"));
     }
 
-    const cursorName = `${JSON.stringify(options)}`;
-    let stream = this.streams.get(cursorName);
-
-    if (!stream) {
-      stream = this.realtime.find("function_logs", options, true).pipe(
-        catchError(e => {
-          client.send(JSON.stringify({code: e.status || 500, message: e.message}));
-          client.close(1003);
-
-          this.streams.delete(cursorName);
-
-          return of(null);
-        }),
-        tap({
-          complete: () => {
-            this.streams.delete(cursorName);
-          }
-        })
-      );
-
-      this.streams.set(cursorName, stream);
-    }
-
-    stream.pipe(takeUntil(fromEvent(client, "close"))).subscribe(data => {
-      client.send(JSON.stringify(data));
-    });
+    return options;
   }
 }
