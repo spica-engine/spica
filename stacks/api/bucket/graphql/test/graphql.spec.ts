@@ -6,7 +6,7 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
 import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId, stream} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
@@ -64,7 +64,7 @@ describe("GraphQLController", () => {
       }
 
       //wait until watcher send changes
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await stream.change.next();
 
       const params = {
         query: "{spica}"
@@ -113,7 +113,7 @@ describe("GraphQLController", () => {
         ].map(r => r.body);
 
         //wait until watcher send changes
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await stream.change.next();
       });
 
       it("should return document that matches with given id", async () => {
@@ -565,7 +565,7 @@ describe("GraphQLController", () => {
           ].map(r => r.body);
 
           //wait until watcher send changes
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await stream.change.next();
         });
 
         it("should return documents with english titles", async () => {
@@ -905,7 +905,7 @@ describe("GraphQLController", () => {
           ]);
 
           //wait until watcher send changes
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await stream.change.next();
         });
 
         it("should get book with its own publisher", async () => {
@@ -1492,7 +1492,7 @@ describe("GraphQLController", () => {
         bucketName = getBucketName(bucket._id);
 
         //wait until watcher send changes
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await stream.change.next();
       });
 
       afterEach(async () => {
@@ -1823,7 +1823,7 @@ describe("GraphQLController", () => {
       bucketName = getBucketName(bucket._id);
 
       //wait until watcher send changes
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await stream.change.next();
     });
 
     it("should return response with warnings", async () => {

@@ -153,7 +153,7 @@ export function resetNonOverlappingPathsInRelationMap(
         const path = rightMatch[0].slice(0, depth + 1).join(".");
 
         if (relation.type == "onetoone") {
-          paths[path] = `$${path}._id`;
+          paths[path] = {$toString: `$${path}._id`};
         } else {
           paths[path] = {
             $map: {

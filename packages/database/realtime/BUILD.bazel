@@ -9,6 +9,7 @@ ts_library(
         "database.module.ts",
         "database.service.ts",
         "index.ts",
+        "interface.ts",
         "levenshtein.ts",
         "operators.ts",
         "stream.ts",
@@ -18,8 +19,11 @@ ts_library(
         "//packages/database",
         "@npm//@nestjs/common",
         "@npm//@types/deep-diff",
+        "@npm//@types/lodash",
         "@npm//@types/mongodb",
+        "@npm//@types/node",
         "@npm//deep-diff",
+        "@npm//lodash",
         "@npm//rxjs",
     ],
 )
@@ -48,6 +52,5 @@ jasmine_node_test(
     srcs = [":test_lib"],
     tags = [
         "e2e",
-        "flaky",
     ],
 )

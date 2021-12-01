@@ -32,25 +32,16 @@ import {
 } from "@spica-server/bucket/services";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
-import {
-  FindOptions,
-  RealtimeDatabaseService,
-  StreamChunk,
-  ChunkKind
-} from "@spica-server/database/realtime";
+import {FindOptions, RealtimeDatabaseService, ChunkKind} from "@spica-server/database/realtime";
 import {GuardService} from "@spica-server/passport";
-import {fromEvent, Observable, of} from "rxjs";
-import {takeUntil, tap, catchError} from "rxjs/operators";
+import {fromEvent, of} from "rxjs";
+import {takeUntil, catchError} from "rxjs/operators";
 import {MessageKind} from "./interface";
 
 @WebSocketGateway({
   path: "/bucket/:id/data"
 })
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  streams = new Map<string, Observable<StreamChunk<any>>>();
-
-  cursorListeners = new Map<string, number>();
-
   constructor(
     private realtime: RealtimeDatabaseService,
     private guardService: GuardService,
@@ -64,8 +55,12 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {}
 
   async handleDisconnect(client: any) {
-    const {cursorName} = await this.initPreRequirements(client, client.upgradeReq);
-    this.updateListeners("decrease", cursorName);
+    const {schemaId, options} = await this.initPreRequirements(client, client.upgradeReq);
+
+    const collection = getBucketDataCollection(schemaId);
+    if (this.realtime.doesEmitterExist(collection, options)) {
+      this.realtime.removeEmitter(collection, options);
+    }
   }
 
   async authorize(req, client) {
@@ -92,31 +87,19 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return client.close(1003);
     }
 
-    const {cursorName, schemaId, options} = await this.initPreRequirements(client, req);
+    const {schemaId, options} = await this.initPreRequirements(client, req);
 
-    let stream = this.streams.get(cursorName);
-    if (!stream) {
-      stream = this.realtime.find(getBucketDataCollection(schemaId), options).pipe(
-        catchError(error => {
-          this.send(client, ChunkKind.Error, 500, error.toString());
-          client.close(1003);
+    const stream = this.realtime.find(getBucketDataCollection(schemaId), options).pipe(
+      catchError(error => {
+        this.send(client, ChunkKind.Error, 500, error.toString());
+        client.close(1003);
+        return of(null);
+      })
+    );
 
-          return of(null);
-        }),
-        tap({
-          complete: () => {
-            this.streams.delete(cursorName);
-          }
-        })
-      );
-      this.streams.set(cursorName, stream);
-    }
-
-    this.updateListeners("increase", cursorName);
-
-    stream.pipe(takeUntil(fromEvent(client, "close"))).subscribe(data => {
-      client.send(JSON.stringify(data));
-    });
+    stream
+      .pipe(takeUntil(fromEvent(client, "close")))
+      .subscribe(data => client.send(JSON.stringify(data)));
   }
 
   @SubscribeMessage(MessageKind.INSERT)
@@ -462,10 +445,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     return validationPipe.transform(document);
   }
 
-  async initPreRequirements(
-    client,
-    req
-  ): Promise<{cursorName: string; schemaId: string; options: any}> {
+  async initPreRequirements(client, req): Promise<{schemaId: string; options: any}> {
     const schemaId = req.params.id;
 
     if (!ObjectId.isValid(schemaId)) {
@@ -517,28 +497,22 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       options.skip = Number(req.query.get("skip"));
     }
 
-    const cursorName = `${schemaId}_${JSON.stringify(options)}`;
-
-    return {cursorName, options, schemaId};
+    return {options, schemaId};
   }
 
   extractSchema(client: any): Promise<any> {
     return new Promise(async (resolve, reject) => {
-      const {cursorName} = await this.initPreRequirements(client, client.upgradeReq);
+      await this.initPreRequirements(client, client.upgradeReq);
 
       try {
         await this.authorize(client.upgradeReq, client);
       } catch (error) {
-        this.streams.delete(cursorName);
-
         this.send(client, ChunkKind.Error, error.status, error.message);
         client.close(1003);
         reject();
       }
 
       if (!ObjectId.isValid(client.upgradeReq.params.id)) {
-        this.streams.delete(cursorName);
-
         this.send(
           client,
           ChunkKind.Error,
@@ -553,8 +527,6 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       const schema = await this.bucketService.findOne({_id: schemaId});
 
       if (!schema) {
-        this.streams.delete(cursorName);
-
         this.send(
           client,
           ChunkKind.Error,
@@ -571,24 +543,6 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   send(client, kind: ChunkKind, status: number, message: string) {
     client.send(JSON.stringify({kind, status, message}));
-  }
-
-  updateListeners(method: "increase" | "decrease", cursorName: string) {
-    let listenerCount = this.cursorListeners.get(cursorName) || 0;
-
-    if (method == "increase") {
-      listenerCount++;
-    } else {
-      listenerCount--;
-    }
-
-    if (listenerCount <= 0) {
-      this.cursorListeners.delete(cursorName);
-      this.streams.delete(cursorName);
-      return;
-    }
-
-    this.cursorListeners.set(cursorName, listenerCount);
   }
 }
 

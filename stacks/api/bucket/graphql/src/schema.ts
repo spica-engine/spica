@@ -545,10 +545,7 @@ function castToOriginalType(value: any, property: any): unknown {
     case "date":
       return new Date(value);
     case "objectid":
-      //@TODO: This line should be new ObjectId(value).
-      //But there are too many methods that uses $toString operator to convert object id to string.
-      //This issue will be handled on another task
-      return value.toString();
+      return new ObjectId(value);
     case "array":
       return value.map(val => castToOriginalType(val, property.items));
     default:
