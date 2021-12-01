@@ -16,6 +16,8 @@ ts_library(
     deps = [
         "@npm//@nestjs/common",
         "@npm//@types/mongodb",
+        "@npm//@types/node",
+        "@npm//mingo",
         "@npm//mongodb",
     ],
 )

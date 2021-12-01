@@ -106,14 +106,15 @@ describe("Realtime", () => {
         }
       });
 
-      ws.onmessage = e => {
+      ws.onmessage = async e => {
         expect(e.data).toEqual(`{"kind":1}`);
+        await ws.close();
         done();
       };
       await ws.connect;
     });
 
-    it("should show error messages", done => {
+    it("should show error messages", async done => {
       authGuardCheck.and.callFake(() => {
         throw new UnauthorizedException();
       });
@@ -208,7 +209,7 @@ describe("Realtime", () => {
 
       it("should do the initial sync with _id filter", async done => {
         const ws = wsc.get(
-          url(`/bucket/${bucket._id}/data`, {filter: `_id == "${rows[0]["_id"]}"`})
+          url(`/bucket/${bucket._id}/data`, {filter: `document._id == "${rows[0]["_id"]}"`})
         );
 
         ws.onmessage = async e => {

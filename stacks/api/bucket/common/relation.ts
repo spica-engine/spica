@@ -153,7 +153,7 @@ export function resetNonOverlappingPathsInRelationMap(
         const path = rightMatch[0].slice(0, depth + 1).join(".");
 
         if (relation.type == "onetoone") {
-          paths[path] = `$${path}._id`;
+          paths[path] = {$toString: `$${path}._id`};
         } else {
           paths[path] = {
             $map: {
@@ -321,8 +321,6 @@ export function buildRelationAggregation(
   if (locale) {
     pipeline.push({$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)});
   }
-
-  pipeline.push({$set: {_id: {$toString: "$_id"}}});
 
   const lookup = {
     $lookup: {

@@ -146,6 +146,7 @@ export async function findDocuments<T>(
       });
     return result.data.length ? result : {meta: {total: 0}, data: []};
   }
+
   return collection
     .aggregate<T>([...pipeline, ...seeking])
     .toArray()

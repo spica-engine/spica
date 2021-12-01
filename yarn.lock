@@ -9316,6 +9316,11 @@ min-indent@^1.0.0:
   resolved "https://registry.yarnpkg.com/min-indent/-/min-indent-1.0.1.tgz#a63f681673b30571fbe8bc25686ae746eefa9869"
   integrity sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg==
 
+mingo@^4.4.1:
+  version "4.4.1"
+  resolved "https://registry.yarnpkg.com/mingo/-/mingo-4.4.1.tgz#76ce40f9b7a909d704320cdb0ad2444155a74c12"
+  integrity sha512-aig/3anjeJ8VcXLqDQmB/iO8Z8BVzln2BeWcyeI5NtOiLMAQ5xX00QHX9piy8OBAC9pSDYWErY8MHoh8nlCHig==
+
 mini-css-extract-plugin@1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/mini-css-extract-plugin/-/mini-css-extract-plugin-1.2.1.tgz#30ea7dee632b3002b0c77aeed447790408cb247e"

@@ -1,3 +1,4 @@
+import {ObjectId} from "@spica-server/database";
 import {getMostLeftSelectIdentifier} from "./ast";
 import {compile} from "./compile";
 import * as func from "./func";
@@ -22,6 +23,13 @@ function visit(node) {
     const fns = visitArgs(node);
     return ctx => visitArgFns(fns, ctx);
   }
+
+  replacers.forEach(replacer => {
+    if (replacer.condition(node)) {
+      replacer.replace(node);
+    }
+  });
+
   switch (node.kind) {
     case "operator":
       return visitOperator(node);
@@ -281,3 +289,45 @@ function visitBinaryOperatorSubtract(node) {
 }
 
 export const convert = visit;
+
+// REPLACEMENTS
+interface Replacer {
+  condition: (...args) => boolean;
+  replace: (...args) => void;
+}
+
+// ObjectId
+const ObjectIdReplacer: Replacer = {
+  condition: node => {
+    return (
+      (isIdSide(node.left) && isValueSide(node.right)) ||
+      (isIdSide(node.right) && isValueSide(node.left))
+    );
+  },
+  replace: node => {
+    if (isIdSide(node.left) && isValueSide(node.right)) {
+      node.right.value = new ObjectId(node.right.value);
+    } else if (isIdSide(node.right) && isValueSide(node.left)) {
+      node.left.value = new ObjectId(node.left.value);
+    }
+  }
+};
+
+function isIdSide(node) {
+  return isOperator(node) && isIdIdentifier(node.right);
+}
+
+function isOperator(node) {
+  return node && node.kind == "operator" && node.type == "select";
+}
+
+function isIdIdentifier(node) {
+  return node && node.kind == "identifier" && node.name == "_id";
+}
+
+function isValueSide(node) {
+  return node && node.kind == "literal" && node.type == "string";
+}
+
+// define and add custom replacers here
+const replacers = [ObjectIdReplacer];

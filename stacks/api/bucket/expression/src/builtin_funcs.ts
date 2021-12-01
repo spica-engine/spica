@@ -1,41 +1,7 @@
 import * as func from "./func";
 import {convert} from "./convert";
 import {compile} from "./compile";
-
-interface ArgumentValidation {
-  validator: (node) => boolean;
-  mustBe: string;
-}
-
-export const PropertyAccesChainValidation: ArgumentValidation = {
-  validator: node => {
-    if (node.kind != "operator" || node.type != "select") {
-      return false;
-    }
-    return true;
-  },
-  mustBe: "property access chain"
-};
-
-export const LiteralValidation: ArgumentValidation = {
-  validator: node => {
-    if (node.kind != "literal") {
-      return false;
-    }
-    return true;
-  },
-  mustBe: "literal"
-};
-
-export const ArrayValidation: ArgumentValidation = {
-  validator: node => {
-    if (!Array.isArray(node)) {
-      return false;
-    }
-    return true;
-  },
-  mustBe: "array"
-};
+import {ObjectId} from "@spica-server/database";
 
 export const has: func.Func = context => {
   const fnName = "has";
@@ -145,14 +111,14 @@ export const some: func.Func = context => {
       const parsedArguments = parseArguments(context.arguments, ctx, convert);
 
       const propertyName: string = parsedArguments[0];
-      const compare: unknown[] = parsedArguments[1];
+      const compare: unknown[] = objectIdReplacer(propertyName, parsedArguments[1]);
 
       return createInQuery(compare, propertyName, "$or");
     } else {
       const parsedArguments = parseArguments(context.arguments, ctx, compile);
 
-      const target: unknown[] = parsedArguments[0];
-      const compare: unknown[] = parsedArguments[1];
+      const target: any[] = parsedArguments[0];
+      const compare: any[] = parsedArguments[1];
 
       if (!Array.isArray(target) || !Array.isArray(compare)) {
         return false;
@@ -189,14 +155,14 @@ export const every: func.Func = context => {
       const parsedArguments = parseArguments(context.arguments, ctx, convert);
 
       const propertyName: string = parsedArguments[0];
-      const compare: unknown[] = parsedArguments[1];
+      const compare: unknown[] = objectIdReplacer(propertyName, parsedArguments[1]);
 
       return createInQuery(compare, propertyName, "$and");
     } else {
       const parsedArguments = parseArguments(context.arguments, ctx, compile);
 
-      const target: unknown[] = parsedArguments[0];
-      const compare: unknown[] = parsedArguments[1];
+      const target: any[] = parsedArguments[0];
+      const compare: any[] = parsedArguments[1];
 
       if (!Array.isArray(target) || !Array.isArray(compare)) {
         return false;
@@ -233,7 +199,7 @@ export const equal: func.Func = context => {
       const parsedArguments = parseArguments(context.arguments, ctx, convert);
 
       const propertyName: string = parsedArguments[0];
-      const compare: unknown[] = parsedArguments[1];
+      const compare: unknown[] = objectIdReplacer(propertyName, parsedArguments[1]);
 
       const match = {
         $expr: {
@@ -264,8 +230,8 @@ export const equal: func.Func = context => {
     } else {
       const parsedArguments = parseArguments(context.arguments, ctx, compile);
 
-      const target: unknown[] = parsedArguments[0];
-      const compare: unknown[] = parsedArguments[1];
+      const target: any[] = parsedArguments[0];
+      const compare: any[] = parsedArguments[1];
 
       if (!Array.isArray(target) || !Array.isArray(compare)) {
         return false;
@@ -334,7 +300,17 @@ function parseArguments(args: object[], ctx: object, builder: Function) {
   return items;
 }
 
-export function createInQuery(items: unknown[], propertyName: string, operator: "$and" | "$or") {
+function objectIdReplacer(field: string, value: any[]) {
+  if (
+    (field == "_id" || field.endsWith("._id")) &&
+    (typeof value == "object" && Array.isArray(value))
+  ) {
+    return value.map(v => new ObjectId(v));
+  }
+  return value;
+}
+
+export function createInQuery(items: any[], propertyName: string, operator: "$and" | "$or") {
   const query = {
     [operator]: []
   };
@@ -361,6 +337,42 @@ export function createInQuery(items: unknown[], propertyName: string, operator: 
 
   return query;
 }
+
+// VALIDATIONS
+interface ArgumentValidation {
+  validator: (node) => boolean;
+  mustBe: string;
+}
+
+export const PropertyAccesChainValidation: ArgumentValidation = {
+  validator: node => {
+    if (node.kind != "operator" || node.type != "select") {
+      return false;
+    }
+    return true;
+  },
+  mustBe: "property access chain"
+};
+
+export const LiteralValidation: ArgumentValidation = {
+  validator: node => {
+    if (node.kind != "literal") {
+      return false;
+    }
+    return true;
+  },
+  mustBe: "literal"
+};
+
+export const ArrayValidation: ArgumentValidation = {
+  validator: node => {
+    if (!Array.isArray(node)) {
+      return false;
+    }
+    return true;
+  },
+  mustBe: "array"
+};
 
 export function validateArgumentsLength(
   fnName: string,
