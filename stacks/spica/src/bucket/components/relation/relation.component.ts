@@ -2,8 +2,8 @@ import {Component, forwardRef, HostListener, Inject, OnInit, ViewChild} from "@a
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {MatPaginator} from "@angular/material/paginator";
 import {INPUT_SCHEMA} from "@spica-client/common";
-import {BehaviorSubject, merge, Observable} from "rxjs";
-import {map, switchMap, tap} from "rxjs/operators";
+import {BehaviorSubject, merge, Observable, of, Subject} from "rxjs";
+import {map, share, shareReplay, switchMap, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData, BucketRow} from "../../interfaces/bucket-entry";
 import {BucketDataService} from "../../services/bucket-data.service";
@@ -21,7 +21,7 @@ import {RelationSchema, RelationType} from "../relation";
 export class RelationComponent implements ControlValueAccessor, OnInit {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
-  value: string | string[];
+  value: BucketRow | BucketData<BucketRow>;
 
   _oneToManyRelation = false;
 
@@ -29,12 +29,15 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
   onChangeFn = (val: string | string[]) => {};
 
   schema$: Observable<Bucket>;
-  selectedRows$: Observable<BucketRow[]>;
 
-  refresh = new BehaviorSubject(null);
+  refresh = new Subject();
+
   filter: {[key: string]: any} = {};
-  data$: Observable<BucketData>;
+  data$: Observable<BucketData> = of([]);
   displayedProperties: Array<string> = [];
+
+  isDataPending = false;
+  cachedData;
 
   constructor(
     @Inject(INPUT_SCHEMA) public _schema: RelationSchema,
@@ -49,15 +52,22 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
         this.displayedProperties = [schema.primary].concat("actions");
       })
     );
+
     this.data$ = merge(this.paginator.page, this.refresh).pipe(
-      switchMap(() =>
-        this.bds.find(this._schema.bucketId, {
+      tap(() => (this.isDataPending = true)),
+      switchMap(next => {
+        if (!next && this.cachedData) {
+          return of(this.cachedData);
+        }
+        return this.bds.find(this._schema.bucketId, {
           filter: this.filter && Object.keys(this.filter).length > 0 && this.filter,
           limit: this.paginator.pageSize,
           skip: this.paginator.pageSize * this.paginator.pageIndex
-        })
-      ),
+        });
+      }),
+      tap(() => (this.isDataPending = false)),
       map(result => {
+        this.cachedData = result;
         this.paginator.length = result.meta.total;
         return result.data;
       })
@@ -66,53 +76,44 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
 
   clear() {
     this.value = this._oneToManyRelation ? [] : undefined;
-    this.onChangeFn(this.value);
-    this._fetchRows();
+    this.detectChanges();
   }
 
   _selectRow(row: BucketRow): void {
     if (this._oneToManyRelation) {
       if (Array.isArray(this.value)) {
-        if (!this.value.includes(row._id)) {
-          this.value.push(row._id);
+        if (this.value.map(v => v._id).indexOf(row._id) == -1) {
+          // changing the reference will trigger the map pipe
+          // do not use push instead of it
+          this.value = [...this.value, row];
         } else {
-          this.value = this.value.filter(val => val != row._id);
+          this.value = this.value.filter(val => val._id != row._id);
         }
       } else {
-        this.value = [row._id];
+        this.value = [row];
       }
-      this.value = Array.from(new Set(this.value));
     } else {
-      if (this.value != row._id) {
-        this.value = row._id;
+      if (!this.value || this.value["_id"] != row._id) {
+        this.value = row;
       } else {
         this.value = undefined;
       }
     }
-    this._fetchRows();
+    this.detectChanges();
+  }
+
+  detectChanges() {
     if (this.onChangeFn) {
-      this.onChangeFn(this.value);
+      this.onChangeFn(this.valueIds());
     }
   }
 
-  _fetchRows() {
-    const ids: string[] = (this._oneToManyRelation
-      ? (this.value as string[])
-      : [this.value as string]
-    ).filter(Boolean);
-
-    if (ids.length == 0) {
-      this.selectedRows$ = undefined;
-    } else {
-      this.selectedRows$ = this.schema$.pipe(
-        switchMap(schema =>
-          this.bds.find(schema._id, {
-            filter: {_id: {$in: ids}}
-          })
-        ),
-        map(data => data.data)
-      );
-    }
+  valueIds() {
+    return this.value
+      ? Array.isArray(this.value)
+        ? this.value.map(v => v._id)
+        : this.value._id
+      : undefined;
   }
 
   @HostListener("click")
@@ -120,12 +121,12 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
     this.onTouchedFn();
   }
 
-  writeValue(val: string | string[]): void {
+  writeValue(val: BucketRow | BucketData): void {
     if (!val) {
       return;
     }
     this.value = val;
-    this._fetchRows();
+    this.detectChanges();
   }
 
   registerOnChange(fn: any): void {

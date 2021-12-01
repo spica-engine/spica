@@ -12,9 +12,11 @@ import {
   Post,
   Put,
   UseFilters,
+  UseGuards,
   UseInterceptors
 } from "@nestjs/common";
 import {DatabaseService} from "@spica-server/database";
+import {AuthGuard, ActionGuard} from "@spica-server/passport/guard";
 import {Resource} from "./definition";
 import {inform} from "./informer";
 import {PatchBodyParser} from "./patch";
@@ -35,20 +37,37 @@ const DEBUG = true;
 
 @Catch()
 export class StatusFilter implements ExceptionFilter {
+  isAuthException(exception) {
+    const authExceptionCodes = [401, 403];
+    return authExceptionCodes.includes(exception.status);
+  }
   catch(exceptionOrStatus: unknown, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse<any>();
+
     if (!isStatusKind(exceptionOrStatus)) {
       let metadata: StatusMetadata;
+
       if (exceptionOrStatus["message"] && DEBUG) {
         metadata = {stack: exceptionOrStatus["stack"]};
       }
-      exceptionOrStatus = status({
-        code: 500,
-        message: exceptionOrStatus["message"] ? exceptionOrStatus["message"] : "unknown error",
-        status: "Failure",
-        reason: "InternalError",
-        metadata
-      });
+
+      const isAuthException = this.isAuthException(exceptionOrStatus);
+      if (isAuthException) {
+        exceptionOrStatus = status({
+          code: exceptionOrStatus["status"],
+          message: exceptionOrStatus["response"]["message"],
+          status: "Failure",
+          reason: exceptionOrStatus["response"]["error"]
+        });
+      } else {
+        exceptionOrStatus = status({
+          code: 500,
+          message: exceptionOrStatus["message"] ? exceptionOrStatus["message"] : "unknown error",
+          status: "Failure",
+          reason: "InternalError",
+          metadata
+        });
+      }
     }
 
     if (isStatusKind(exceptionOrStatus)) {
@@ -159,6 +178,7 @@ export class ApiMachineryController {
 @Controller("apis/:group/:version/:resource")
 export class ApiMachineryObjectController {
   @Get()
+  @UseGuards(AuthGuard(), ActionGuard("apis:index", "apis"))
   async list(
     @Headers("accept") accepts: string,
     @Param("group") groupName: string,
@@ -189,6 +209,7 @@ export class ApiMachineryObjectController {
   }
 
   @Get(":name")
+  @UseGuards(AuthGuard(), ActionGuard("apis:index", "apis"))
   get(
     @Param("group") groupName: string,
     @Param("version") versionName: string,
@@ -215,6 +236,7 @@ export class ApiMachineryObjectController {
   }
 
   @Post()
+  @UseGuards(AuthGuard(), ActionGuard("apis:create", "apis"))
   async add(
     @Param("group") groupName: string,
     @Param("version") versionName: string,
@@ -269,6 +291,7 @@ export class ApiMachineryObjectController {
   }
 
   @Put(":name")
+  @UseGuards(AuthGuard(), ActionGuard("apis:update", "apis"))
   async replace(
     @Param("group") groupName: string,
     @Param("version") versionName: string,
@@ -318,6 +341,7 @@ export class ApiMachineryObjectController {
   }
 
   @Delete(":name")
+  @UseGuards(AuthGuard(), ActionGuard("apis:delete", "apis"))
   async delete(
     @Param("group") groupName: string,
     @Param("version") versionName: string,

@@ -1201,13 +1201,8 @@ describe("BucketDataController", () => {
           description: null
         });
 
-        expect(response.statusCode).toEqual(204);
-        expect(response.body).toEqual(undefined);
-
-        const bucketDocument = (await req.get(`/bucket/${myBucketId}/data/${insertedDocument._id}`))
-          .body;
-
-        expect(bucketDocument).toEqual({_id: insertedDocument._id, title: "new_title"});
+        expect(response.statusCode).toEqual(200);
+        expect(response.body).toEqual({_id: insertedDocument._id, title: "new_title"});
       });
 
       it("should throw error when patched document is not valid", async () => {

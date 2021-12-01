@@ -61,12 +61,12 @@ export class BucketDataService {
   findOne<T = BucketRow>(
     bucketId: string,
     documentId: string,
-    prune: boolean = true
+    localize: boolean = false,
+    relation: boolean = false
   ): Observable<T> {
     let params = new HttpParams();
-    if (prune) {
-      params = params.set("localize", "false").set("relation", "false");
-    }
+
+    params = params.set("localize", String(localize)).set("relation", String(relation));
     return this.http.get<T>(`api:/bucket/${bucketId}/data/${documentId}`, {params: params});
   }
 

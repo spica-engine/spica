@@ -7,8 +7,8 @@ import {
 } from "@spica-client/passport/interfaces/service";
 import {DisplayedStatement, DisplayedAction} from "@spica-client/passport/interfaces/statement";
 import {HttpClient} from "@angular/common/http";
-import {filter, map, share, shareReplay, switchMapTo} from "rxjs/operators";
-import {PassportService} from "@spica-client/passport/services/passport.service";
+import {map, shareReplay} from "rxjs/operators";
+import {PassportService} from "@spica-client/passport";
 import {of} from "rxjs";
 
 @Component({
@@ -32,7 +32,7 @@ export class PolicyResourceAddComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
-    const actualResource = this.data.services[this.data.statement.module][
+    const actualResource = this.data.services[this.data.statement.module].actions[
       this.data.currentAction.name
     ];
 
@@ -98,7 +98,9 @@ export class PolicyResourceAddComponent implements OnInit {
 
   copyResources() {
     for (const action of this.data.statement.actions) {
-      const targetResourceParts = this.data.services[this.data.statement.module][action.name];
+      const targetResourceParts = this.data.services[this.data.statement.module].actions[
+        action.name
+      ];
 
       if (targetResourceParts.length != this.resource.length) {
         continue;
