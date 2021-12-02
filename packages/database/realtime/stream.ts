@@ -212,6 +212,7 @@ export class Emitter<T extends {_id: string | ObjectId}> {
         this.sortSubscription.unsubscribe();
       }
       this.changeStream.unpipe(this.passThrough);
+      this.passThrough.removeAllListeners();
     };
   }
 
