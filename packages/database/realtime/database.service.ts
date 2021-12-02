@@ -76,16 +76,12 @@ export class RealtimeDatabaseService {
       if (!streamListenersRemain) {
         const changeStream = this.changeStreams.get(collName);
         changeStream.close();
-        changeStream.removeAllListeners(); // ??
-
         this.changeStreams.delete(collName);
       }
     }
   }
 
   getUniqueEmitterName(name: string, options: FindOptions<any>) {
-    // put here better comparison since string comparison might be mistaken if they were converted from object
-    // for example => '{name:"1",desc:"2"}' == '{desc:"2",name:"1"}' these are same filters but string comparsion will say opposite
     return `${name}_${JSON.stringify(options)}`;
   }
 
