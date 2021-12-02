@@ -19,6 +19,7 @@ ts_library(
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",
         "//stacks/api/function/scheduler",
+        "//stacks/api/function/services",
         "//stacks/api/preference",
         "@npm//@grpc/grpc-js",
         "@npm//@nestjs/common",

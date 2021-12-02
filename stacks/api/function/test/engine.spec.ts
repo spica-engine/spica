@@ -61,14 +61,15 @@ describe("Engine", () => {
         root: "test_root",
         timeout: 1
       },
-      null,
-      null
+      undefined,
+      undefined,
+      undefined
     );
 
     await app.init();
 
-    subscribeSpy = spyOn<any>(engine, "subscribe").and.returnValue(null);
-    unsubscribeSpy = spyOn<any>(engine, "unsubscribe").and.returnValue(null);
+    subscribeSpy = spyOn<any>(engine, "subscribe").and.returnValue(undefined);
+    unsubscribeSpy = spyOn<any>(engine, "unsubscribe").and.returnValue(undefined);
   });
 
   afterEach(async () => {
@@ -201,6 +202,8 @@ describe("Engine", () => {
           collection: {
             title: "Collection Name",
             type: "string",
+            //@ts-ignore
+            viewEnum: [],
             enum: [],
             description: "Collection name that the event will be tracked on"
           },
@@ -224,8 +227,10 @@ describe("Engine", () => {
           take(1)
         )
         .subscribe(changes => {
-          let collections = changes.map(c => c.properties.collection["enum"]);
+          const collections = changes.map(c => c.properties.collection["enum"]);
           expect(collections).toEqual([["initial"], ["initial", "inserted"]]);
+          const enums = changes.map(c => c.properties.collection["viewEnum"]);
+          expect(enums).toEqual([["initial"], ["initial", "inserted"]]);
           done();
         });
       await stream.wait();
@@ -241,8 +246,10 @@ describe("Engine", () => {
           take(1)
         )
         .subscribe(changes => {
-          let collections = changes.map(c => c.properties.collection["enum"]);
+          const collections = changes.map(c => c.properties.collection["enum"]);
           expect(collections).toEqual([["initial"], []]);
+          const enums = changes.map(c => c.properties.collection["enum"]);
+          expect(enums).toEqual([["initial"], []]);
           done();
         });
       await stream.wait();

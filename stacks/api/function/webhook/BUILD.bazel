@@ -13,6 +13,7 @@ ts_library(
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
+        "//stacks/api/function/services",
         "//stacks/api/passport/guard",
         "@npm//@nestjs/common",
         "@npm//@types/json-schema",

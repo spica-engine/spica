@@ -51,8 +51,8 @@
               #collectionModel="ngModel"
               required
             >
-              <mat-option *ngFor="let collection of collections$ | async" [value]="collection">
-                {{ collection }}
+              <mat-option *ngFor="let collection of collections$ | async" [value]="collection.id">
+                {{ collection.slug }}
               </mat-option>
             </mat-select>
             <mat-error *ngIf="collectionModel.errors?.required">Collection is required.</mat-error>
