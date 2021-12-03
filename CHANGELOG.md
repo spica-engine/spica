@@ -1,5 +1,20 @@
+## v0.9.13 (2021-12-03)
+
+* fix(cli): refactor file directories to make help command run ([82882e935](https://github.com/spica-engine/spica/commit/82882e935))
+* fix(database): remove event listeners for disconnections on realtime ([02f1759e4](https://github.com/spica-engine/spica/commit/02f1759e4))
+* fix(passport): show selectable resources on statement edit modal ([81ac53ac3](https://github.com/spica-engine/spica/commit/81ac53ac3))
+* perf(database): manage changestreams in a more efficient way ([c109179fd](https://github.com/spica-engine/spica/commit/c109179fd))
+* perf(bucket): remove conversion of objectid to string from aggregation pipelines ([e153e3e39](https://github.com/spica-engine/spica/commit/e153e3e39))
+* fix(bucket): reset array items for new properties on bucket schema ([13fb3bf87](https://github.com/spica-engine/spica/commit/13fb3bf87))
+* perf(bucket): load selectable relations after user clicked the relation ([301fb8e86](https://github.com/spica-engine/spica/commit/301fb8e86))
+* feat(machinery): authentication and authorization support for endpoints ([8c91ab57e](https://github.com/spica-engine/spica/commit/8c91ab57e))
+* fix(function): relation normalization should normalize string arrays on cli ORM command ([57cf2b0d8](https://github.com/spica-engine/spica/commit/57cf2b0d8))
+* fix(bucket): do not accept any uppercase letters on bucket field naming ([f4f0f75ef](https://github.com/spica-engine/spica/commit/f4f0f75ef))
+* fix(bucket): return patched document from bucket data patch endpoint ([f3e829453](https://github.com/spica-engine/spica/commit/f3e829453))
+
 ## v0.9.12 (2021-10-13)
 
+* docs: update changelog for v0.9.12 ([3ec18e59d](https://github.com/spica-engine/spica/commit/3ec18e59d))
 * style(function): http trigger execution url ([61d87f107](https://github.com/spica-engine/spica/commit/61d87f107))
 * refactor(dashboard): pass acces token to the card component target url ([9c97d87ba](https://github.com/spica-engine/spica/commit/9c97d87ba))
 * fix(machinery): allow users to send complex relational buckets more simple way ([e7137ce43](https://github.com/spica-engine/spica/commit/e7137ce43))
