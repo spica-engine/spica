@@ -30,5 +30,3 @@ export function run(argv?: string[]) {
 
   return program.run(argv);
 }
-
-export * from "./src/commands/bucket";
