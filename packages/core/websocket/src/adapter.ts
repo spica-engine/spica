@@ -7,8 +7,11 @@ export class WsAdapter extends BaseAdapter {
 
   create(port: number, options: any) {
     const server = new ws.Server({
-      noServer: true,
-      // perMessageDeflate: false
+      noServer: true
+      // Documentation of the ws package says this should not be set because it increases memory usage significantly when enabled.
+      // But enabling these lines reduces memory usage significantly on local development. It's clearly the opposite of what documentation says.
+      // Should be tested on a remote server for more results. See the https://github.com/websockets/ws#websocket-compression
+
       // perMessageDeflate: {
       //   zlibDeflateOptions: {
       //     // See zlib defaults.
