@@ -77,11 +77,18 @@ export class Validator {
           result.pipe(skip(1)).subscribe({
             next: schema => {
               this._ajv.removeSchema(uri);
-              this._ajv.addSchema(schema);
+              this._ajv.addSchema(schema, uri);
             },
             complete: () => this.removeSchema(uri)
           });
-          return result.pipe(take(1)).toPromise();
+          return result
+            .pipe(take(1))
+            .toPromise()
+            .then(schema => {
+              this._ajv.removeSchema(uri);
+              this._ajv.addSchema(schema, uri);
+              return schema;
+            });
         } else {
           return from(result).toPromise();
         }
@@ -111,8 +118,10 @@ export class Validator {
 
   async validate<T = unknown>(schemaOrUrl: object | string, value: T): Promise<void> {
     let schema: object;
+    let uri: string;
     if (typeof schemaOrUrl == "string") {
       schema = {$ref: schemaOrUrl};
+      uri = schemaOrUrl;
     } else if (typeof schemaOrUrl == "object" && schemaOrUrl != null) {
       schema = schemaOrUrl;
     } else {
@@ -120,7 +129,15 @@ export class Validator {
     }
 
     try {
-      const validate = await this._ajv.compileAsync(schema);
+      let validate;
+      if (uri) {
+        validate = this._ajv.getSchema(uri);
+      }
+
+      if (!validate) {
+        validate = await this._ajv.compileAsync(schema);
+      }
+
       const valid = validate(value);
       if (!valid) {
         throw new ValidationError(validate.errors);
