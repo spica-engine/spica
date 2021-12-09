@@ -6,36 +6,41 @@ export function applyPatch(previousDocument: BucketDocument, patchQuery: object)
   return JsonMergePatch.apply(document, patchQuery);
 }
 
-export function getUpdateQueryForPatch(query: Partial<BucketDocument>, document: BucketDocument) {
+export function getUpdateQueryForPatch(
+  query: Partial<BucketDocument>,
+  patchedDocument: BucketDocument
+) {
   const unset = {};
   const set = {};
 
-  const visit = (partialPatch: any, base: string, document: BucketDocument) => {
+  const visit = (partialPatch: any, base: string, patchedDocument: BucketDocument) => {
     for (const name in partialPatch) {
       const target = base ? `${base}.${name}` : name;
       const key = name;
 
-      const value = partialPatch[name];
-      const type = typeof value;
+      const patchValue = partialPatch[name];
+      const type = typeof patchValue;
 
-      if (value == null) {
+      if (patchValue == null) {
         unset[target] = "";
       } else if (
-        type == "boolean" ||
-        type == "string" ||
-        type == "number" ||
-        type == "bigint" ||
-        Array.isArray(value)
+        (type == "boolean" ||
+          type == "string" ||
+          type == "number" ||
+          type == "bigint" ||
+          Array.isArray(patchValue)) &&
+        // if patched document does not include this patch query field, it means this field is non existing bucket schema field
+        Object.keys(patchedDocument).includes(key)
       ) {
         // patch query does not include some special types like date-string, but patched document does
-        set[target] = document[key];
-      } else if (typeof value == "object") {
-        visit(value, target, document[key]);
+        set[target] = patchedDocument[key];
+      } else if (typeof patchValue == "object") {
+        visit(patchValue, target, patchedDocument[key]);
       }
     }
   };
 
-  visit(query, "", document);
+  visit(query, "", patchedDocument);
 
   let result: any = {};
 
