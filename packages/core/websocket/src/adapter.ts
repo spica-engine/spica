@@ -8,6 +8,29 @@ export class WsAdapter extends BaseAdapter {
   create(port: number, options: any) {
     const server = new ws.Server({
       noServer: true
+      // Documentation of the ws package says this should not be set because it increases memory usage significantly when enabled.
+      // But enabling these lines reduces memory usage significantly on local development. It's clearly the opposite of what documentation says.
+      // Should be tested on a remote server for more results. See the https://github.com/websockets/ws#websocket-compression
+
+      // perMessageDeflate: {
+      //   zlibDeflateOptions: {
+      //     // See zlib defaults.
+      //     chunkSize: 1024,
+      //     memLevel: 7,
+      //     level: 3
+      //   },
+      //   zlibInflateOptions: {
+      //     chunkSize: 10 * 1024
+      //   },
+      //   // Other options settable:
+      //   clientNoContextTakeover: true, // Defaults to negotiated value.
+      //   serverNoContextTakeover: true, // Defaults to negotiated value.
+      //   serverMaxWindowBits: 10, // Defaults to negotiated value.
+      //   // Below options specified as default values.
+      //   concurrencyLimit: 10, // Limits zlib concurrency for perf.
+      //   threshold: 1024 // Size (in bytes) below which messages
+      //   // should not be compressed if context takeover is disabled.
+      // }
     });
     this.paths.set(options.path, server);
     server.shouldHandle = (req: any) => {
