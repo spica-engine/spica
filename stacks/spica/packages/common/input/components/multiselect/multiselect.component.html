@@ -7,8 +7,15 @@
     [(ngModel)]="_value"
     (ngModelChange)="_onChangeFn($event)"
     multiple
+    [maxItems]="schema.maxItems"
   >
-    <mat-option class="mat-accent" *ngFor="let item of schema.items.enum" [value]="item">
+    <mat-option
+      #option
+      [disabled]="schema.maxItems && _value?.length == schema.maxItems && !option.selected"
+      class="mat-accent"
+      *ngFor="let item of schema.items.enum"
+      [value]="item"
+    >
       {{ item }}
     </mat-option>
   </mat-select>
