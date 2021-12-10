@@ -1,5 +1,13 @@
+## v0.9.14 (2021-12-10)
+
+* fix(bucket): enable scrolling on storage object listing modal ([4c97d576e](https://github.com/spica-engine/spica/commit/4c97d576e))
+* refactor(bucket): limiting maximum selected items on multiple selection ([ad98f6f84](https://github.com/spica-engine/spica/commit/ad98f6f84))
+* perf(core): cache schema validator function and reuse it ([a4b4e43b8](https://github.com/spica-engine/spica/commit/a4b4e43b8))
+* fix(bucket): ignore patch query fields which is non existing on bucket schema ([49c387650](https://github.com/spica-engine/spica/commit/49c387650))
+
 ## v0.9.13 (2021-12-03)
 
+* docs: update changelog for v0.9.13 ([9551f387c](https://github.com/spica-engine/spica/commit/9551f387c))
 * fix(cli): refactor file directories to make help command run ([82882e935](https://github.com/spica-engine/spica/commit/82882e935))
 * fix(database): remove event listeners for disconnections on realtime ([02f1759e4](https://github.com/spica-engine/spica/commit/02f1759e4))
 * fix(passport): show selectable resources on statement edit modal ([81ac53ac3](https://github.com/spica-engine/spica/commit/81ac53ac3))
