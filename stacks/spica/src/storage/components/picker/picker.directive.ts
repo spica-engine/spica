@@ -43,7 +43,8 @@ export class PickerDirective implements OnDestroy, ControlValueAccessor {
     }
     this._dialogRef = this.dialog.open(PickerComponent, {
       panelClass: "storage-picker",
-      minWidth: "80%"
+      minWidth: "80%",
+      maxHeight: "90vh"
     });
 
     this._dialogRef
