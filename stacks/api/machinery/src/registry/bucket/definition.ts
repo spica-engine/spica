@@ -31,7 +31,8 @@ const bucketSchema: JSONSchema7 = {
         "textarea",
         "color",
         "relation",
-        "location"
+        "location",
+        "multiselect"
       ]
     },
     stringArray: {

@@ -37,7 +37,7 @@ describe("MultiselectSchemaComponent", () => {
 
   it("should reset items on change", () => {
     component.schema.items = {type: "string", enum: ["some", "values"]};
-    component.onChange("number");
+    component.onTypeChange("number");
 
     expect(component.schema).toEqual({type: "multiselect", items: {type: "number", enum: []}});
   });
