@@ -135,7 +135,11 @@ export async function findDocuments<T>(
 
   const seeking = seekingPipeline.result();
 
-  const pipeline = relationPathResolvedPipeline.paginate(options.paginate, seeking).result();
+  const pipeline = (await relationPathResolvedPipeline.paginate(
+    options.paginate,
+    seeking,
+    collection.estimatedDocumentCount()
+  )).result();
 
   if (options.paginate) {
     const result = await collection

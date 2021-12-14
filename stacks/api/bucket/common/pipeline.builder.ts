@@ -31,11 +31,16 @@ export interface iPipelineBuilder {
   sort(sort: Object): this;
   limit(limit: number): this;
   skip(skip: number): this;
-  paginate(paginate: boolean, seekingPipeline: object[]): this;
+  paginate(
+    paginate: boolean,
+    seekingPipeline: object[],
+    totalDocumentCount: Promise<number>
+  ): Promise<this>;
   result(): object[];
 }
 
 export class PipelineBuilder implements iPipelineBuilder {
+  private isFilterApplied: boolean;
   private pipeline: object[] = [];
   private schema: Bucket;
   private factories: CrudFactories<any>;
@@ -137,6 +142,8 @@ export class PipelineBuilder implements iPipelineBuilder {
 
       this.attachToPipeline(true, ...filterRelationStage);
       this.attachToPipeline(filterExpression, {$match: filterExpression});
+
+      this.isFilterApplied = true;
     }
     return this;
   }
@@ -172,12 +179,36 @@ export class PipelineBuilder implements iPipelineBuilder {
     return this;
   }
 
-  paginate(paginate: boolean, seekingPipeline: object[]): this {
+  async paginate(
+    paginate: boolean,
+    seekingPipeline: object[],
+    totalDocumentCount: Promise<number>
+  ): Promise<this> {
+    let meta;
+
     if (paginate) {
+      const filteredDocuments = [{$count: "total"}];
+
+      const totalDocuments = [
+        {
+          $addFields: {
+            total: await totalDocumentCount
+          }
+        },
+        {
+          $project: {
+            total: 1,
+            _id: 0
+          }
+        }
+      ];
+
+      meta = this.isFilterApplied ? filteredDocuments : totalDocuments;
+
       this.pipeline.push(
         {
           $facet: {
-            meta: [{$count: "total"}],
+            meta,
             data: seekingPipeline.length ? seekingPipeline : [{$unwind: "$_id"}]
           }
         },
