@@ -55,7 +55,7 @@ async function create({args: cmdArgs, options, ddash}: ActionParameters) {
     `--function-api-url=http://localhost`,
     `--database-name=${name}`,
     `--database-replica-set=${name}`,
-    `--database-uri="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`,
+    `--database-uri="mongodb://${databaseName}-0,${databaseName}-1/test?replicaSet=test&readPreference=secondary"`,
     `--public-url=${publicHost}/api`,
     `--passport-password=${name}`,
     `--passport-secret=${name}`,
@@ -231,7 +231,7 @@ async function create({args: cmdArgs, options, ddash}: ActionParameters) {
       const replSetConfig = JSON.stringify({
         _id: name,
         members: new Array(databaseReplicas).fill(0).map((_, index) => {
-          return {_id: index, host: `${databaseName}-${index}`};
+          return {_id: index, host: `${databaseName}-${index}`, priority: index == 0 ? 2 : 1};
         })
       });
 
