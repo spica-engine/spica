@@ -57,8 +57,6 @@ interface FindResponse {
 export class GraphqlController implements OnModuleInit {
   buckets: Bucket[] = [];
 
-  validatorPipes: Map<ObjectId, PipeTransform<any, any>> = new Map();
-
   staticTypes = `
     scalar Date
 
@@ -654,13 +652,8 @@ export class GraphqlController implements OnModuleInit {
   }
 
   validateInput(bucketId: ObjectId, input: BucketDocument): Promise<any> {
-    let pipe: any = this.validatorPipes.get(bucketId);
-
-    if (!pipe) {
-      const validatorMixin = Schema.validate(bucketId.toHexString());
-      pipe = new validatorMixin(this.validator);
-      this.validatorPipes.set(bucketId, pipe);
-    }
+    const validatorMixin = Schema.validate(bucketId.toHexString());
+    const pipe: any = new validatorMixin(this.validator);
 
     return pipe.transform(input);
   }
