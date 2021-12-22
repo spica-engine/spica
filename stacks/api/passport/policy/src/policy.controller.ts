@@ -44,7 +44,7 @@ export class PolicyController {
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number
   ) {
-    return this.policy.find(filter, limit, skip);
+    return this.policy.paginate(filter, limit, skip);
   }
 
   @Get(":id")
@@ -80,7 +80,7 @@ export class PolicyController {
       const message = createDuplicatedActionsErrorMessage(duplicatedActionMaps);
       throw new BadRequestException(message);
     }
-    return this.policy.replaceOne({_id: id}, body);
+    return this.policy.replace({_id: id}, body);
   }
 
   @UseInterceptors(activity(createPolicyActivity))

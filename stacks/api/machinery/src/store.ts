@@ -9,9 +9,15 @@ let db: DatabaseService;
  */
 export function __setDb(databaseService: DatabaseService) {
   db = databaseService;
+  // in order to create collection on db
+  new ObjectStore(db);
 }
 
-class ObjectStore extends BaseCollection<Resource<unknown, unknown>>("objects") {}
+class ObjectStore extends BaseCollection<Resource<unknown, unknown>>("objects") {
+  constructor(db) {
+    super(db);
+  }
+}
 
 type DeepPartial<T> = {
   [P in keyof T]?: DeepPartial<T[P]>;
@@ -42,7 +48,7 @@ class Store<SpecType = unknown, StatusType = unknown> {
 
   async set(name: string, value: Resource<SpecType, StatusType>): Promise<void> {
     value["_id"] = `${this.groupKey}ɵ${name}`;
-    await this.store.replaceOne({_id: value["_id"]}, value, {
+    await this.store.replace({_id: value["_id"]}, value, {
       upsert: true
     });
   }

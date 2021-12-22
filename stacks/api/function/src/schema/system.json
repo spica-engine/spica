@@ -7,7 +7,6 @@
         "title": "Event",
         "type": "string",
         "enum": ["READY"],
-        "default": "READY",
         "description":"Lifecycle event of the instance"
       }
     },

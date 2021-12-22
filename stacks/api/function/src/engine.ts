@@ -311,24 +311,27 @@ export function getDatabaseSchema(
     const stream = mongo.watch([
       {
         $match: {
-          $or: [{operationType: "insert"}, {operationType: "drop"}],
-          "ns.db": db.databaseName
+          $or: [
+            // none of collections is able to be inserted or deleted except bucket
+            // @TODO: this filter is high coupled with bucket module, try to put some better filter
+            {"ns.coll": "buckets", operationType: "delete"},
+            {"ns.coll": "buckets", operationType: "insert"}
+          ]
         }
       }
     ]);
 
     stream.on("change", async change => {
+      console.log(change);
       const coll_id = change.ns.coll;
       switch (change.operationType) {
-        case "drop":
+        case "delete":
           collSlugMap.delete(coll_id);
           notifyChanges();
           break;
         case "insert":
-          if (!collSlugMap.has(coll_id)) {
-            collSlugMap.set(coll_id, await collSlug(coll_id));
-            notifyChanges();
-          }
+          collSlugMap.set(coll_id, await collSlug(coll_id));
+          notifyChanges();
           break;
       }
     });

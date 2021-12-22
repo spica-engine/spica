@@ -4,7 +4,7 @@ import formats from "ajv-formats";
 import {ValidationError} from "ajv/dist/compile/error_classes";
 import * as request from "request-promise-native";
 import {from, isObservable} from "rxjs";
-import {skip, take} from "rxjs/operators";
+import {last, skip, take, tap} from "rxjs/operators";
 import defaultVocabulary from "./default";
 import formatVocabulary from "./format";
 import {
@@ -74,23 +74,33 @@ export class Validator {
       const result = interceptor(uri);
       if (!!result) {
         if (isObservable<Object>(result)) {
-          result.pipe(skip(1)).subscribe({
-            next: schema => {
-              this._ajv.removeSchema(uri);
-              this._ajv.addSchema(schema, uri);
-            },
-            complete: () => this.removeSchema(uri)
-          });
+          result
+            .pipe(
+              skip(1),
+              tap(schema => {
+                this._ajv.removeSchema(uri);
+                this._ajv.addSchema(schema, uri);
+              })
+            )
+            .subscribe();
           return result
             .pipe(take(1))
             .toPromise()
             .then(schema => {
-              this._ajv.removeSchema(uri);
-              this._ajv.addSchema(schema, uri);
+              if (!this._ajv.getSchema(uri)) {
+                this._ajv.addSchema(schema, uri);
+              }
               return schema;
             });
         } else {
-          return from(result).toPromise();
+          return from(result)
+            .toPromise()
+            .then(schema => {
+              if (!this._ajv.getSchema(uri)) {
+                this._ajv.addSchema(schema, uri);
+              }
+              return schema;
+            });
         }
       }
     }
@@ -130,6 +140,7 @@ export class Validator {
 
     if (this.isSchema(schemaOrId)) {
       schema = schemaOrId;
+      uri = schemaOrId["$id"];
     } else if (this.isId(schemaOrId)) {
       schema = {$ref: schemaOrId};
       uri = schemaOrId;
@@ -142,7 +153,7 @@ export class Validator {
       if (uri) {
         validate = this._ajv.getSchema(uri);
       }
-
+      console.log(!!validate);
       if (!validate) {
         validate = await this._ajv.compileAsync(schema);
       }

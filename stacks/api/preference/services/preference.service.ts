@@ -1,5 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {
+  BaseCollection,
   Collection,
   DatabaseService,
   FilterQuery,
@@ -10,12 +11,11 @@ import {Preference} from "./interface";
 import {Observable} from "rxjs";
 
 @Injectable()
-export class PreferenceService {
-  private _collection: Collection<Preference>;
+export class PreferenceService extends BaseCollection("preferences") {
   private _defaults = new Map<string, Preference>();
 
-  constructor(database: DatabaseService) {
-    this._collection = database.collection("preferences");
+  constructor(db: DatabaseService) {
+    super(db);
   }
 
   watch<T extends Preference>(
@@ -27,7 +27,7 @@ export class PreferenceService {
         this.get<T>(scope).then(pref => observer.next(pref));
       }
 
-      const watcher = this._collection.watch(
+      const watcher = this._coll.watch(
         [
           {
             $match: {
@@ -51,7 +51,7 @@ export class PreferenceService {
   }
 
   get<T extends Preference>(scope: string) {
-    return this._collection
+    return this._coll
       .findOne<T>({scope})
       .then(preference => preference || (this._defaults.get(scope) as T));
   }
@@ -60,14 +60,14 @@ export class PreferenceService {
     filter: FilterQuery<Preference>,
     preference: T,
     options?: FindOneAndReplaceOption
-  ): Promise<Preference> {
-    return this._collection
+  ) {
+    return this._coll
       .findOneAndReplace(filter, preference, options)
       .then(preference => preference.value);
   }
 
   insertOne<T extends OptionalId<Preference>>(preference: T): Promise<Preference> {
-    return this._collection.insertOne(preference).then(result => result.ops[0]);
+    return this._coll.insertOne(preference).then(result => result.ops[0]);
   }
 
   default<T extends Preference>(preference: T) {
