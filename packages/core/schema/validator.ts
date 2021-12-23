@@ -4,7 +4,7 @@ import formats from "ajv-formats";
 import {ValidationError} from "ajv/dist/compile/error_classes";
 import * as request from "request-promise-native";
 import {from, isObservable} from "rxjs";
-import {last, skip, take, tap} from "rxjs/operators";
+import {skip, take, tap} from "rxjs/operators";
 import defaultVocabulary from "./default";
 import formatVocabulary from "./format";
 import {
@@ -78,8 +78,7 @@ export class Validator {
             .pipe(
               skip(1),
               tap(schema => {
-                this._ajv.removeSchema(uri);
-                this._ajv.addSchema(schema, uri);
+                this.upsertSchema(schema, uri);
               })
             )
             .subscribe();
@@ -87,18 +86,14 @@ export class Validator {
             .pipe(take(1))
             .toPromise()
             .then(schema => {
-              if (!this._ajv.getSchema(uri)) {
-                this._ajv.addSchema(schema, uri);
-              }
+              this.upsertSchema(schema, uri);
               return schema;
             });
         } else {
           return from(result)
             .toPromise()
             .then(schema => {
-              if (!this._ajv.getSchema(uri)) {
-                this._ajv.addSchema(schema, uri);
-              }
+              this.upsertSchema(schema, uri);
               return schema;
             });
         }
@@ -107,6 +102,13 @@ export class Validator {
     return request({uri, json: true}).catch(() =>
       Promise.reject(new Error(`Could not resolve the schema ${uri}`))
     );
+  }
+
+  upsertSchema(schema, uri) {
+    if (this._ajv.getSchema(uri)) {
+      this._ajv.removeSchema(uri);
+    }
+    this._ajv.addSchema(schema, uri);
   }
 
   registerUriResolver(uriResolver: UriResolver) {
@@ -153,7 +155,7 @@ export class Validator {
       if (uri) {
         validate = this._ajv.getSchema(uri);
       }
-      console.log(!!validate);
+      
       if (!validate) {
         validate = await this._ajv.compileAsync(schema);
       }

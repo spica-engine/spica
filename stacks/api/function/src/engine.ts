@@ -18,7 +18,7 @@ import {
   CollectionSlug
 } from "@spica-server/function/services";
 import {ChangeKind, TargetChange} from "./change";
-import {Schema, SCHEMA, SchemaWithName, SCHEMA1} from "./schema/schema";
+import {Schema, SCHEMA, SchemaWithName} from "./schema/schema";
 import {createTargetChanges} from "./change";
 import {RepoStrategies} from "./services/interface";
 
@@ -42,14 +42,10 @@ export class FunctionEngine implements OnModuleDestroy {
     private repos: RepoStrategies,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
-    @Optional() @Inject(SCHEMA1) schema1: SchemaWithName,
     @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
-    }
-    if (schema1) {
-      this.schemas.set(schema1.name, schema1.schema);
     }
 
     this.schemas.set("database", () => getDatabaseSchema(this.db, this.mongo, collSlug));
@@ -312,8 +308,8 @@ export function getDatabaseSchema(
       {
         $match: {
           $or: [
-            // none of collections is able to be inserted or deleted except bucket
-            // @TODO: this filter is high coupled with bucket module, try to put some better filter
+            // none of collections is able to be inserted or deleted except bucket-data
+            // @TODO: this filter is high coupled to bucket module, try to put some better filter
             {"ns.coll": "buckets", operationType: "delete"},
             {"ns.coll": "buckets", operationType: "insert"}
           ]
@@ -322,7 +318,6 @@ export function getDatabaseSchema(
     ]);
 
     stream.on("change", async change => {
-      console.log(change);
       const coll_id = change.ns.coll;
       switch (change.operationType) {
         case "delete":

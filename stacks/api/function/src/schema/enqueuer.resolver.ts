@@ -1,93 +1,54 @@
 import {Injectable} from "@nestjs/common";
 import {Validator} from "@spica-server/core/schema";
 import {FunctionEngine} from "../engine";
-import {Function} from "@spica-server/function/services";
-import {combineLatest, isObservable, Observable} from "rxjs";
+import {BehaviorSubject, isObservable, Observable, of} from "rxjs";
 import {JSONSchema7} from "json-schema";
-import {filter, skip, take, tap} from "rxjs/operators";
-
-const complete_schema = {
-  $id: "http://spica.internal/function/complete-schema",
-  type: "object",
-  allOf: [
-    {$ref: "http://spica.internal/function/schema"},
-    {
-      type: "object",
-      properties: {
-        triggers: {
-          type: "object",
-          minProperties: 1,
-          description: "Allows defining which function will invoke when which condition meets",
-          patternProperties: {
-            "": {
-              type: "object",
-              required: ["type", "options"],
-              additionalProperties: false,
-              properties: {
-                type: {
-                  type: "string",
-                  description: "Type of the trigger"
-                },
-                active: {
-                  type: "boolean",
-                  default: true,
-                  description: "Whether trigger is active"
-                },
-                options: {
-                  oneOf: [
-                    {
-                      $ref: "http://spica.internal/function/enqueuer/http"
-                    },
-                    {
-                      $ref: "http://spica.internal/function/enqueuer/firehose"
-                    },
-                    {
-                      $ref: "http://spica.internal/function/enqueuer/schedule"
-                    },
-                    {
-                      $ref: "http://spica.internal/function/enqueuer/system"
-                    },
-                    {
-                      $ref: "http://spica.internal/function/enqueuer/database"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  ]
-};
+import {skip, take, tap} from "rxjs/operators";
+const fnSchema = require("./function.json");
 
 @Injectable()
 export class EnqueuerSchemaResolver {
-  enqueuers = new Map<string, Observable<JSONSchema7> | Promise<JSONSchema7>>();
-  constructor(private registry: FunctionEngine, private validator: Validator) {}
+  enqueuerPrefix = "http://spica.internal/function/enqueuer";
+  fnSchema$: BehaviorSubject<JSONSchema7> = new BehaviorSubject(fnSchema);
+
+  constructor(private registry: FunctionEngine, private validator: Validator) {
+    const enqueuerIds = Array.from(this.registry.schemas.keys()).map(
+      e => `${this.enqueuerPrefix}/${e}`
+    );
+    this.addEnqueuersToSchema(enqueuerIds);
+  }
+
+  private addEnqueuersToSchema(enqueuerIds: string[]) {
+    fnSchema.properties.triggers.patternProperties[""].properties.options = {
+      oneOf: enqueuerIds.map(id => {
+        return {$ref: id};
+      })
+    };
+  }
 
   resolve(uri: string): Promise<object> | Observable<JSONSchema7 | null> | undefined {
+    if (uri == "http://spica.internal/function/schema") {
+      return this.fnSchema$.asObservable();
+    }
+
     const [, enqueuer] = /http:\/\/spica\.internal\/function\/enqueuer\/(.*)/g.exec(uri);
 
-    let schema = this.enqueuers.get(enqueuer);
+    const schema = this.registry.getSchema(enqueuer);
     if (!schema) {
-      schema = this.registry.getSchema(enqueuer);
-      if (!schema) {
-        console.warn(`Couldn't find the enqueuer with name ${enqueuer}`);
-        return;
-      }
-      this.enqueuers.set(enqueuer, schema);
+      console.warn(`Couldn't find the enqueuer with name ${enqueuer}`);
+      return;
     }
 
     if (isObservable(schema)) {
       const promise = schema.pipe(take(1)).toPromise();
+
       schema
         .pipe(
           skip(1),
           take(1),
           tap(schema => {
             // we should remove enqueuer and function schema in order to force schema validator to re-create it
-            this.validator.removeSchema(complete_schema.$id);
+            this.validator.removeSchema(fnSchema.$id);
             this.validator.removeSchema(schema.$id);
           })
         )
@@ -95,7 +56,7 @@ export class EnqueuerSchemaResolver {
 
       return promise;
     }
-    return schema
+    return schema;
   }
 }
 
@@ -103,9 +64,4 @@ export async function provideEnqueuerSchemaResolver(validator: Validator, engine
   const resolver = new EnqueuerSchemaResolver(engine, validator);
   validator.registerUriResolver(uri => resolver.resolve(uri));
   return resolver;
-}
-
-// Maybe later we can write a custom keyword for this
-export function generate({body}: {body: Function}) {
-  return complete_schema;
 }

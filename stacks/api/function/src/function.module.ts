@@ -35,7 +35,7 @@ export class FunctionModule {
           realtime: options.realtimeLogs
         }),
         SchemaModule.forChild({
-          schemas: [require("./schema/function.json")],
+          schemas: [],
           customFields: ["viewEnum"]
         }),
         WebhookModule.forRoot({expireAfterSeconds: options.logExpireAfterSeconds}),

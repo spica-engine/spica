@@ -22,11 +22,11 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
         required: ["bucket", "type"],
         properties: {
           bucket: {
+            enum: Array.from(buckets.keys()).length ? Array.from(buckets.keys()) : [null],
+            // @ts-ignore
+            viewEnum: Array.from(buckets.values()).length ? Array.from(buckets.values()) : [null],
             title: "Bucket",
             type: "string",
-            enum: Array.from(buckets.keys()),
-            // @ts-expect-error
-            viewEnum: Array.from(buckets.values()),
             description: "Bucket id that the event will be tracked on"
           },
           type: {
@@ -59,10 +59,8 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
           notifyChanges();
           break;
         case "insert":
-          if (!buckets.has(change.documentKey._id.toString())) {
-            buckets.set(change.documentKey._id.toString(), change.fullDocument.title);
-            notifyChanges();
-          }
+          buckets.set(change.documentKey._id.toString(), change.fullDocument.title);
+          notifyChanges();
           break;
       }
     });
