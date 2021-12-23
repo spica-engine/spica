@@ -1,5 +1,5 @@
 import {JSONSchema7} from "json-schema";
-import {BehaviorSubject} from "rxjs";
+import {BehaviorSubject, of} from "rxjs";
 import {Format} from "./interface";
 import {Validator} from "./validator";
 

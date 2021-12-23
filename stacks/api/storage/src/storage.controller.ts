@@ -201,6 +201,6 @@ export class StorageController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.storage.deleteOne(id);
+    return this.storage.delete(id);
   }
 }

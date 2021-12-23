@@ -41,9 +41,9 @@ describe("hook module", () => {
           bucket: {
             title: "Bucket",
             type: "string",
-            enum: [],
+            enum: [null],
             // @ts-expect-error
-            viewEnum: [],
+            viewEnum: [null],
             description: "Bucket id that the event will be tracked on"
           },
           type: {
@@ -88,7 +88,7 @@ describe("hook module", () => {
         )
         .subscribe(changes => {
           let collections = changes.map(c => c.properties.bucket["enum"]);
-          expect(collections).toEqual([[bucketId.toHexString()], []]);
+          expect(collections).toEqual([[bucketId.toHexString()], [null]]);
           done();
         });
       await stream.wait();

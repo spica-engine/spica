@@ -62,7 +62,6 @@ describe("Engine", () => {
         timeout: 1
       },
       undefined,
-      undefined,
       undefined
     );
 
@@ -190,6 +189,14 @@ describe("Engine", () => {
     });
   });
   describe("Database Schema", () => {
+    beforeEach(async () => {
+      await database.createCollection("buckets").catch(e => {
+        if (e.codeName == "NamespaceExists") {
+          return;
+        }
+        throw Error(e);
+      });
+    });
     it("should get initial schema", async () => {
       let schema = await from(engine.getSchema("database"))
         .pipe(take(1))
@@ -220,7 +227,7 @@ describe("Engine", () => {
 
     it("should report when a collection has been created", async done => {
       const schema = engine.getSchema("database");
-      await database.collection("initial").insertMany([{}, {}]);
+      await database.collection("buckets").insertMany([{}, {}]);
       from(schema)
         .pipe(
           bufferCount(2),
@@ -234,12 +241,12 @@ describe("Engine", () => {
           done();
         });
       await stream.wait();
-      await database.collection("inserted").insertOne({});
+      await database.collection("buckets").insertOne({});
     });
 
     it("should report when a collection has been dropped", async done => {
       const schema = engine.getSchema("database");
-      await database.collection("initial").insertMany([{}, {}]);
+      await database.createCollection("test");
       from(schema)
         .pipe(
           bufferCount(2),
@@ -247,13 +254,13 @@ describe("Engine", () => {
         )
         .subscribe(changes => {
           const collections = changes.map(c => c.properties.collection["enum"]);
-          expect(collections).toEqual([["initial"], []]);
+          expect(collections).toEqual([["buckets", "function"], ["function"]]);
           const enums = changes.map(c => c.properties.collection["enum"]);
-          expect(enums).toEqual([["initial"], []]);
+          expect(enums).toEqual([["buckets", "function"], ["function"]]);
           done();
         });
       await stream.wait();
-      await database.collection("initial").drop();
+      await database.collection("test").drop();
     });
   });
 });

@@ -78,37 +78,20 @@ export class Validator {
             .pipe(
               skip(1),
               tap(schema => {
-                this.upsertSchema(schema, uri);
+                this._ajv.removeSchema(uri);
+                this._ajv.addSchema(schema, uri);
               })
             )
             .subscribe();
-          return result
-            .pipe(take(1))
-            .toPromise()
-            .then(schema => {
-              this.upsertSchema(schema, uri);
-              return schema;
-            });
+          return result.pipe(take(1)).toPromise();
         } else {
-          return from(result)
-            .toPromise()
-            .then(schema => {
-              this.upsertSchema(schema, uri);
-              return schema;
-            });
+          return from(result).toPromise();
         }
       }
     }
     return request({uri, json: true}).catch(() =>
       Promise.reject(new Error(`Could not resolve the schema ${uri}`))
     );
-  }
-
-  upsertSchema(schema, uri) {
-    if (this._ajv.getSchema(uri)) {
-      this._ajv.removeSchema(uri);
-    }
-    this._ajv.addSchema(schema, uri);
   }
 
   registerUriResolver(uriResolver: UriResolver) {
@@ -155,7 +138,8 @@ export class Validator {
       if (uri) {
         validate = this._ajv.getSchema(uri);
       }
-      
+
+      console.log(!!validate);
       if (!validate) {
         validate = await this._ajv.compileAsync(schema);
       }
