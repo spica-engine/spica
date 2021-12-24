@@ -333,7 +333,7 @@ export function getDatabaseSchema(
           $or: [
             // none of collections is able to be inserted or deleted except bucket-data
             // @TODO: this filter is high coupled to bucket module, try to put some better filter
-            // possible solution is implementing onCollectionCreate and onCollectionCreate hook to the database service
+            // possible solution is implementing onCollectionCreate and onCollectionDelete hooks to the database service
             {"ns.coll": "buckets", operationType: "delete"},
             {"ns.coll": "buckets", operationType: "insert"}
           ]
