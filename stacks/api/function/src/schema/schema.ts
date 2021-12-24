@@ -3,7 +3,7 @@ import {Observable} from "rxjs";
 
 export type Schema =
   | JSONSchema7
-  | ((listen: boolean) => Promise<JSONSchema7> | Observable<JSONSchema7>);
+  | ((observe: boolean) => Promise<JSONSchema7> | Observable<JSONSchema7>);
 
 export type SchemaWithName = {name: string; schema: Schema};
 
