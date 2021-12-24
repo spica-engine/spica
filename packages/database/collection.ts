@@ -131,7 +131,7 @@ export class _MixinCollection<T> {
     return this._coll.findOneAndReplace(filter, Object(doc), options).then(r => r.value);
   }
 
-  replace(filter: FilterQuery<T>, doc: T, options?: FindOneAndReplaceOption): Promise<number> {
+  replaceOne(filter: FilterQuery<T>, doc: T, options?: FindOneAndReplaceOption): Promise<number> {
     return this._coll.replaceOne(filter, doc, options).then(r => r.modifiedCount);
   }
 
