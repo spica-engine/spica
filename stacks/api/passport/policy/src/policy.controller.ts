@@ -80,7 +80,7 @@ export class PolicyController {
       const message = createDuplicatedActionsErrorMessage(duplicatedActionMaps);
       throw new BadRequestException(message);
     }
-    return this.policy.replace({_id: id}, body);
+    return this.policy.replaceOne({_id: id}, body);
   }
 
   @UseInterceptors(activity(createPolicyActivity))
