@@ -58,17 +58,15 @@ describe("Webhook Service", () => {
       .targets()
       .pipe(take(1))
       .subscribe(targets => {
-        expect(targets).toEqual(
-          {
-            kind: ChangeKind.Added,
-            target: hook._id.toHexString(),
-            webhook: {
-              url: hook.url,
-              body: hook.body,
-              trigger: hook.trigger
-            }
+        expect(targets).toEqual({
+          kind: ChangeKind.Added,
+          target: hook._id.toHexString(),
+          webhook: {
+            url: hook.url,
+            body: hook.body,
+            trigger: hook.trigger
           }
-        );
+        });
         done();
       });
   });
@@ -78,17 +76,15 @@ describe("Webhook Service", () => {
       .targets()
       .pipe(take(1))
       .subscribe(targets => {
-        expect(targets).toEqual(
-          {
-            kind: ChangeKind.Added,
-            target: hook._id.toHexString(),
-            webhook: {
-              url: hook.url,
-              body: hook.body,
-              trigger: hook.trigger
-            }
+        expect(targets).toEqual({
+          kind: ChangeKind.Added,
+          target: hook._id.toHexString(),
+          webhook: {
+            url: hook.url,
+            body: hook.body,
+            trigger: hook.trigger
           }
-        );
+        });
         done();
       });
     await stream.wait();
@@ -162,7 +158,10 @@ describe("Webhook Service", () => {
     });
     service
       .targets()
-      .pipe(bufferCount(2),take(1))
+      .pipe(
+        bufferCount(2),
+        take(1)
+      )
       .subscribe(targets => {
         expect(targets).toEqual([
           {

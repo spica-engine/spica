@@ -59,7 +59,6 @@ export class PolicyService extends BaseCollection("policies") {
       data: policies.slice(skip || 0, (skip || 0) + (limit || policies.length))
     };
   }
-
 }
 
 type PolicyWithType = Policy & {system: boolean};

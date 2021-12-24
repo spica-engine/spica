@@ -113,7 +113,8 @@ describe("Preference Service", () => {
         });
 
       setTimeout(() => {
-        preferenceService.updateOne({scope: "bucket"}, {$set: {property: "updated bucket property"}})
+        preferenceService
+          .updateOne({scope: "bucket"}, {$set: {property: "updated bucket property"}})
           .catch();
       }, 100);
     });

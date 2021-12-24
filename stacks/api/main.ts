@@ -20,8 +20,6 @@ import * as https from "https";
 import * as path from "path";
 import * as yargs from "yargs";
 
-console.log(process.pid)
-
 const DAY_SEC = 30 * 24 * 60 * 60;
 
 const args = yargs

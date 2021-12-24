@@ -11,14 +11,8 @@ import {ChangeEmitter} from "./emitter";
 import {ChangeEnqueuer} from "./enqueuer";
 import {ChangeQueue} from "./queue";
 
-export function createSchema(
-  db: DatabaseService,
-  observe?: false
-):Promise<JSONSchema7>;
-export function createSchema(
-  db: DatabaseService,
-  observe?:true
-):Observable<JSONSchema7>;
+export function createSchema(db: DatabaseService, observe?: false): Promise<JSONSchema7>;
+export function createSchema(db: DatabaseService, observe?: true): Observable<JSONSchema7>;
 export function createSchema(
   db: DatabaseService,
   observe: boolean = false
