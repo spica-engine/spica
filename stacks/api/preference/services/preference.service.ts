@@ -56,7 +56,7 @@ export class PreferenceService extends BaseCollection("preferences") {
       .then(preference => preference || (this._defaults.get(scope) as T));
   }
 
-  replaceOne<T extends Preference>(
+  replace<T extends Preference>(
     filter: FilterQuery<Preference>,
     preference: T,
     options?: FindOneAndReplaceOption

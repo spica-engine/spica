@@ -48,7 +48,7 @@ class Store<SpecType = unknown, StatusType = unknown> {
 
   async set(name: string, value: Resource<SpecType, StatusType>): Promise<void> {
     value["_id"] = `${this.groupKey}ɵ${name}`;
-    await this.store.replace({_id: value["_id"]}, value, {
+    await this.store.replaceOne({_id: value["_id"]}, value, {
       upsert: true
     });
   }
