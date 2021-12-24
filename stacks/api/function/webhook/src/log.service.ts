@@ -5,6 +5,6 @@ import {Log, WEBHOOK_OPTIONS, WebhookOptions} from "./interface";
 @Injectable()
 export class WebhookLogService extends BaseCollection<Log>("webhook_logs") {
   constructor(db: DatabaseService, @Inject(WEBHOOK_OPTIONS) options: WebhookOptions) {
-    super(db, {onInit: () => this.upsertTTLIndex(options.expireAfterSeconds)});
+    super(db, {afterInit: () => this.upsertTTLIndex(options.expireAfterSeconds)});
   }
 }

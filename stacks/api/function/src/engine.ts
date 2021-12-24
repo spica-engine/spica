@@ -276,33 +276,42 @@ export function getDatabaseSchema(
 ): Observable<JSONSchema7> {
   return new Observable(observer => {
     // <collection_id,collection_placeholder>
-    const collSlugMap: Map<string, string> = new Map();
 
-    const notifyChanges = () => {
-      const schema: JSONSchema7 = {
-        $id: "http://spica.internal/function/enqueuer/database",
-        type: "object",
-        required: ["collection", "type"],
-        properties: {
-          collection: {
-            title: "Collection Name",
-            type: "string",
-            //@ts-ignore
-            viewEnum: Array.from(collSlugMap.values()),
-            enum: Array.from(collSlugMap.keys()),
-            description: "Collection name that the event will be tracked on"
+    const sendCollections = () => {
+      db.collections().then(async collections => {
+        const collSlugMap: Map<string, string> = new Map();
+
+        for (const collection of collections) {
+          collSlugMap.set(collection.collectionName, await collSlug(collection.collectionName));
+        }
+
+        const schema: JSONSchema7 = {
+          $id: "http://spica.internal/function/enqueuer/database",
+          type: "object",
+          required: ["collection", "type"],
+          properties: {
+            collection: {
+              title: "Collection Name",
+              type: "string",
+              //@ts-ignore
+              viewEnum: Array.from(collSlugMap.values()),
+              enum: Array.from(collSlugMap.keys()),
+              description: "Collection name that the event will be tracked on"
+            },
+            type: {
+              title: "Operation type",
+              description: "Operation type that must be performed in the specified collection",
+              type: "string",
+              enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
+            }
           },
-          type: {
-            title: "Operation type",
-            description: "Operation type that must be performed in the specified collection",
-            type: "string",
-            enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
-          }
-        },
-        additionalProperties: false
-      };
-      observer.next(schema);
+          additionalProperties: false
+        };
+        observer.next(schema);
+      });
     };
+
+    sendCollections();
 
     const stream = mongo.watch([
       {
@@ -317,28 +326,11 @@ export function getDatabaseSchema(
       }
     ]);
 
-    stream.on("change", async change => {
-      const coll_id = change.ns.coll;
-      switch (change.operationType) {
-        case "delete":
-          collSlugMap.delete(coll_id);
-          notifyChanges();
-          break;
-        case "insert":
-          collSlugMap.set(coll_id, await collSlug(coll_id));
-          notifyChanges();
-          break;
-      }
+    stream.on("change", () => {
+      sendCollections()
     });
 
     stream.on("close", () => observer.complete());
-
-    db.collections().then(async collections => {
-      for (const collection of collections) {
-        collSlugMap.set(collection.collectionName, await collSlug(collection.collectionName));
-      }
-      notifyChanges();
-    });
 
     return () => {
       stream.close();

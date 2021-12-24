@@ -190,6 +190,12 @@ describe("Engine", () => {
   });
   describe("Database Schema", () => {
     beforeEach(async () => {
+      await database.dropCollection("test").catch(e => {
+        if (e.codeName == "NamespaceNotFound") {
+          return;
+        }
+        throw Error(e);
+      });
       await database.createCollection("buckets").catch(e => {
         if (e.codeName == "NamespaceExists") {
           return;
@@ -197,6 +203,7 @@ describe("Engine", () => {
         throw Error(e);
       });
     });
+
     it("should get initial schema", async () => {
       let schema = await from(engine.getSchema("database"))
         .pipe(take(1))
@@ -210,8 +217,8 @@ describe("Engine", () => {
             title: "Collection Name",
             type: "string",
             //@ts-ignore
-            viewEnum: [],
-            enum: [],
+            viewEnum: ["function", "buckets"],
+            enum: ["function", "buckets"],
             description: "Collection name that the event will be tracked on"
           },
           type: {
@@ -227,40 +234,58 @@ describe("Engine", () => {
 
     it("should report when a collection has been created", async done => {
       const schema = engine.getSchema("database");
-      await database.collection("buckets").insertMany([{}, {}]);
       from(schema)
         .pipe(
           bufferCount(2),
           take(1)
         )
         .subscribe(changes => {
-          const collections = changes.map(c => c.properties.collection["enum"]);
-          expect(collections).toEqual([["initial"], ["initial", "inserted"]]);
-          const enums = changes.map(c => c.properties.collection["viewEnum"]);
-          expect(enums).toEqual([["initial"], ["initial", "inserted"]]);
+          const collections: string[][] = changes.map(c => c.properties.collection["enum"]);
+          const [before, after] = collections;
+          const beforeExpectations = ["function", "buckets"];
+          const afterExpectations = ["function", "buckets", "test"];
+
+          expect(beforeExpectations.every(e => before.includes(e))).toEqual(true);
+          expect(beforeExpectations.length).toEqual(2);
+
+          expect(afterExpectations.every(e => after.includes(e))).toEqual(true);
+          expect(afterExpectations.length).toEqual(3);
+
           done();
         });
       await stream.wait();
-      await database.collection("buckets").insertOne({});
+      await database
+        .createCollection("test")
+        .then(() => database.collection("buckets").insertOne({}));
     });
 
     it("should report when a collection has been dropped", async done => {
-      const schema = engine.getSchema("database");
       await database.createCollection("test");
+      await database.collection("buckets").insertOne({});
+      const schema = engine.getSchema("database");
       from(schema)
         .pipe(
           bufferCount(2),
           take(1)
         )
         .subscribe(changes => {
-          const collections = changes.map(c => c.properties.collection["enum"]);
-          expect(collections).toEqual([["buckets", "function"], ["function"]]);
-          const enums = changes.map(c => c.properties.collection["enum"]);
-          expect(enums).toEqual([["buckets", "function"], ["function"]]);
+          const collections: string[][] = changes.map(c => c.properties.collection["enum"]);
+          const [before, after] = collections;
+          const beforeExpectations = ["function", "buckets", "test"];
+          const afterExpectations = ["function", "buckets"];
+
+          expect(beforeExpectations.every(e => before.includes(e))).toEqual(true);
+          expect(beforeExpectations.length).toEqual(3);
+
+          expect(afterExpectations.every(e => after.includes(e))).toEqual(true);
+          expect(afterExpectations.length).toEqual(2);
+
           done();
         });
       await stream.wait();
-      await database.collection("test").drop();
+      await database
+        .dropCollection("test")
+        .then(() => database.collection("buckets").deleteOne({}));
     });
   });
 });

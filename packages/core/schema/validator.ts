@@ -139,7 +139,6 @@ export class Validator {
         validate = this._ajv.getSchema(uri);
       }
 
-      console.log(!!validate);
       if (!validate) {
         validate = await this._ajv.compileAsync(schema);
       }

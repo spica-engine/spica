@@ -17,7 +17,7 @@ import {DatabaseService} from "./database.service";
 export interface InitializeOptions {
   entryLimit?: number;
   collectionCreateOptions?: CollectionCreateOptions & {ignoreNamespaceExists: true};
-  onInit?: (...args) => any;
+  afterInit?: (...args) => any;
 }
 
 export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
@@ -38,9 +38,9 @@ export class _MixinCollection<T> {
 
     this.options = this._options;
 
-    this.initCollection().finally(() => {
-      if (this.options.onInit) {
-        this.options.onInit();
+    this.initCollection().then(() => {
+      if (this.options.afterInit) {
+        this.options.afterInit();
       }
     });
   }
@@ -54,7 +54,6 @@ export class _MixinCollection<T> {
 
     return this.db
       .createCollection(this._collection, this.options.collectionCreateOptions)
-      .then(coll => (this._coll = coll))
       .catch(error => {
         if (error.codeName == "NamespaceExists" && ignoreExists) {
           this._coll = this.db.collection(this._collection);

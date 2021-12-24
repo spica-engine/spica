@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {Validator} from "@spica-server/core/schema";
 import {FunctionEngine} from "../engine";
-import {BehaviorSubject, isObservable, Observable, of} from "rxjs";
+import {isObservable, Observable} from "rxjs";
 import {JSONSchema7} from "json-schema";
 import {skip, take, tap} from "rxjs/operators";
 const fnSchema = require("./function.json");
@@ -9,7 +9,6 @@ const fnSchema = require("./function.json");
 @Injectable()
 export class EnqueuerSchemaResolver {
   enqueuerPrefix = "http://spica.internal/function/enqueuer";
-  fnSchema$: BehaviorSubject<JSONSchema7> = new BehaviorSubject(fnSchema);
 
   constructor(private registry: FunctionEngine, private validator: Validator) {
     const enqueuerIds = Array.from(this.registry.schemas.keys()).map(
@@ -28,7 +27,7 @@ export class EnqueuerSchemaResolver {
 
   resolve(uri: string): Promise<object> | Observable<JSONSchema7 | null> | undefined {
     if (uri == "http://spica.internal/function/schema") {
-      return this.fnSchema$.asObservable();
+      return Promise.resolve(fnSchema);
     }
 
     const [, enqueuer] = /http:\/\/spica\.internal\/function\/enqueuer\/(.*)/g.exec(uri);
