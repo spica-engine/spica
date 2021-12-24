@@ -56,7 +56,6 @@ export class _MixinCollection<T> {
       .createCollection(this._collection, this.options.collectionCreateOptions)
       .catch(error => {
         if (error.codeName == "NamespaceExists" && ignoreExists) {
-          this._coll = this.db.collection(this._collection);
           return;
         }
         throw new Error(error);
