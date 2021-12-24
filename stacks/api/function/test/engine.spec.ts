@@ -3,7 +3,7 @@ import {DatabaseService, MongoClient} from "@spica-server/database";
 import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
-import {from} from "rxjs";
+import {Observable} from "rxjs";
 import {bufferCount, take} from "rxjs/operators";
 import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
@@ -204,11 +204,8 @@ describe("Engine", () => {
       });
     });
 
-    it("should get initial schema", async () => {
-      let schema = await from(engine.getSchema("database"))
-        .pipe(take(1))
-        .toPromise();
-      expect(schema).toEqual({
+    it("should get initial schema", async done => {
+      const expectedSchema: any = {
         $id: "http://spica.internal/function/enqueuer/database",
         type: "object",
         required: ["collection", "type"],
@@ -229,12 +226,20 @@ describe("Engine", () => {
           }
         },
         additionalProperties: false
+      };
+      const schemaPromise = (await engine.getSchema("database")) as Promise<any>;
+      expect(schemaPromise).toEqual(expectedSchema);
+
+      const schemaObs = engine.getSchema("database", true) as Observable<any>;
+      schemaObs.pipe(take(1)).subscribe(schema => {
+        expect(schema).toEqual(expectedSchema);
+        done();
       });
     });
 
     it("should report when a collection has been created", async done => {
-      const schema = engine.getSchema("database");
-      from(schema)
+      const schema = engine.getSchema("database", true) as Observable<any>;
+      schema
         .pipe(
           bufferCount(2),
           take(1)
@@ -262,8 +267,8 @@ describe("Engine", () => {
     it("should report when a collection has been dropped", async done => {
       await database.createCollection("test");
       await database.collection("buckets").insertOne({});
-      const schema = engine.getSchema("database");
-      from(schema)
+      const schema = engine.getSchema("database", true) as Observable<any>;
+      schema
         .pipe(
           bufferCount(2),
           take(1)

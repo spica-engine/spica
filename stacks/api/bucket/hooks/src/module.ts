@@ -13,7 +13,15 @@ import {ChangeQueue} from "./queue";
 
 export function createSchema(
   db: DatabaseService,
-  observe: boolean
+  observe?: false
+):Promise<JSONSchema7>;
+export function createSchema(
+  db: DatabaseService,
+  observe?:true
+):Observable<JSONSchema7>;
+export function createSchema(
+  db: DatabaseService,
+  observe: boolean = false
 ): Observable<JSONSchema7> | Promise<JSONSchema7> {
   const notifyChanges = (observer?) => {
     const slugs = new Map<string, string>();
@@ -34,9 +42,9 @@ export function createSchema(
           properties: {
             bucket: {
               // empty enums are not allowed on schema but the client will be able to send any value if enums are empty, it's a bit weird solution to solve this problem
-              enum: Array.from(buckets.keys()).length ? Array.from(buckets.keys()) : [null],
+              enum: Array.from(slugs.keys()).length ? Array.from(slugs.keys()) : [null],
               // @ts-ignore
-              viewEnum: Array.from(buckets.values()).length ? Array.from(buckets.values()) : [null],
+              viewEnum: Array.from(slugs.values()).length ? Array.from(slugs.values()) : [null],
               title: "Bucket",
               type: "string",
               description: "Bucket id that the event will be tracked on"
