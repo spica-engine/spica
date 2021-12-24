@@ -32,7 +32,7 @@ export class EnqueuerSchemaResolver {
 
     const [, enqueuer] = /http:\/\/spica\.internal\/function\/enqueuer\/(.*)/g.exec(uri);
 
-    const schema = this.registry.getSchema(enqueuer);
+    const schema = this.registry.getSchema(enqueuer, true);
     if (!schema) {
       console.warn(`Couldn't find the enqueuer with name ${enqueuer}`);
       return;

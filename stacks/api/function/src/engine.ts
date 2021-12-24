@@ -48,7 +48,9 @@ export class FunctionEngine implements OnModuleDestroy {
       this.schemas.set(schema.name, schema.schema);
     }
 
-    this.schemas.set("database", () => getDatabaseSchema(this.db, this.mongo, collSlug));
+    this.schemas.set("database", observe =>
+      getDatabaseSchema(this.db, this.mongo, collSlug, observe)
+    );
 
     this.fs.find().then(fns => {
       const targetChanges: TargetChange[] = [];
@@ -214,11 +216,14 @@ export class FunctionEngine implements OnModuleDestroy {
       .then(b => b.toString());
   }
 
-  getSchema(name: string): Observable<JSONSchema7 | null> | Promise<JSONSchema7 | null> {
+  getSchema(
+    name: string,
+    observe?: boolean
+  ): Observable<JSONSchema7 | null> | Promise<JSONSchema7 | null> {
     const schema = this.schemas.get(name);
     if (schema) {
       if (typeof schema == "function") {
-        return schema();
+        return schema(observe);
       } else {
         return Promise.resolve(schema);
       }
@@ -272,46 +277,55 @@ export class FunctionEngine implements OnModuleDestroy {
 export function getDatabaseSchema(
   db: DatabaseService,
   mongo: MongoClient,
-  collSlug: CollectionSlug = id => Promise.resolve(id)
-): Observable<JSONSchema7> {
-  return new Observable(observer => {
-    // <collection_id,collection_placeholder>
+  collSlug: CollectionSlug = id => Promise.resolve(id),
+  observe: boolean
+): Observable<JSONSchema7> | Promise<JSONSchema7> {
+  const sendCollections = (observer?) => {
+    return db.collections().then(async collections => {
+      const collSlugMap: Map<string, string> = new Map();
 
-    const sendCollections = () => {
-      db.collections().then(async collections => {
-        const collSlugMap: Map<string, string> = new Map();
+      for (const collection of collections) {
+        collSlugMap.set(collection.collectionName, await collSlug(collection.collectionName));
+      }
 
-        for (const collection of collections) {
-          collSlugMap.set(collection.collectionName, await collSlug(collection.collectionName));
-        }
-
-        const schema: JSONSchema7 = {
-          $id: "http://spica.internal/function/enqueuer/database",
-          type: "object",
-          required: ["collection", "type"],
-          properties: {
-            collection: {
-              title: "Collection Name",
-              type: "string",
-              //@ts-ignore
-              viewEnum: Array.from(collSlugMap.values()),
-              enum: Array.from(collSlugMap.keys()),
-              description: "Collection name that the event will be tracked on"
-            },
-            type: {
-              title: "Operation type",
-              description: "Operation type that must be performed in the specified collection",
-              type: "string",
-              enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
-            }
+      const schema: JSONSchema7 = {
+        $id: "http://spica.internal/function/enqueuer/database",
+        type: "object",
+        required: ["collection", "type"],
+        properties: {
+          collection: {
+            title: "Collection Name",
+            type: "string",
+            //@ts-ignore
+            viewEnum: Array.from(collSlugMap.values()),
+            enum: Array.from(collSlugMap.keys()),
+            description: "Collection name that the event will be tracked on"
           },
-          additionalProperties: false
-        };
-        observer.next(schema);
-      });
-    };
+          type: {
+            title: "Operation type",
+            description: "Operation type that must be performed in the specified collection",
+            type: "string",
+            enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
+          }
+        },
+        additionalProperties: false
+      };
 
-    sendCollections();
+      if (observer) {
+        observer.next(schema);
+        return;
+      }
+
+      return schema;
+    });
+  };
+
+  if (!observe) {
+    return Promise.resolve(sendCollections());
+  }
+
+  return new Observable(observer => {
+    sendCollections(observer);
 
     const stream = mongo.watch([
       {
@@ -319,6 +333,7 @@ export function getDatabaseSchema(
           $or: [
             // none of collections is able to be inserted or deleted except bucket-data
             // @TODO: this filter is high coupled to bucket module, try to put some better filter
+            // possible solution is implementing onCollectionCreate and onCollectionCreate hook to the database service
             {"ns.coll": "buckets", operationType: "delete"},
             {"ns.coll": "buckets", operationType: "insert"}
           ]
@@ -327,7 +342,7 @@ export function getDatabaseSchema(
     ]);
 
     stream.on("change", () => {
-      sendCollections()
+      sendCollections(observer);
     });
 
     stream.on("close", () => observer.complete());

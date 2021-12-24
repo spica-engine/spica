@@ -127,9 +127,7 @@ export class FunctionController {
     for (const enqueuer of this.scheduler.enqueuers) {
       enqueuers.push({
         description: enqueuer.description,
-        options: await from(this.engine.getSchema(enqueuer.description.name))
-          .pipe(take(1))
-          .toPromise()
+        options: await this.engine.getSchema(enqueuer.description.name)
       });
     }
 
