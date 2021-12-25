@@ -206,9 +206,11 @@ describe("Engine", () => {
 
     it("should get initial schema", async done => {
       const sortEnums = schema => {
-        schema.properties.collection.enum = schema.properties.collection.enum.sort((a, b) => a.localeCompare(b));
-        schema.properties.collection.viewEnum = schema.properties.collection.viewEnum.sort(
-          (a, b) => a.localeCompare(b)
+        schema.properties.collection.enum = schema.properties.collection.enum.sort((a, b) =>
+          a.localeCompare(b)
+        );
+        schema.properties.collection.viewEnum = schema.properties.collection.viewEnum.sort((a, b) =>
+          a.localeCompare(b)
         );
         return schema;
       };

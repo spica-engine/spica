@@ -16,7 +16,7 @@ import {DatabaseService} from "./database.service";
 
 export interface InitializeOptions {
   entryLimit?: number;
-  collectionCreateOptions?: CollectionCreateOptions & {ignoreNamespaceExists: true};
+  collectionCreateOptions?: CollectionCreateOptions;
   afterInit?: (...args) => any;
 }
 
@@ -30,9 +30,7 @@ export class _MixinCollection<T> {
   constructor(
     public readonly db: DatabaseService,
     public readonly _collection: string,
-    public readonly _options: InitializeOptions = {
-      collectionCreateOptions: {ignoreNamespaceExists: true}
-    }
+    public readonly _options: InitializeOptions = {}
   ) {
     this._coll = db.collection(this._collection);
 
@@ -46,20 +44,12 @@ export class _MixinCollection<T> {
   }
 
   initCollection() {
-    let ignoreExists = true;
-    if (this.options.collectionCreateOptions) {
-      ignoreExists = this.options.collectionCreateOptions.ignoreNamespaceExists;
-      delete this.options.collectionCreateOptions.ignoreNamespaceExists;
-    }
-
-    return this.db
-      .createCollection(this._collection, this.options.collectionCreateOptions)
-      .catch(error => {
-        if (error.codeName == "NamespaceExists" && ignoreExists) {
-          return;
-        }
-        throw new Error(error);
-      });
+    return this.db.createCollection(this._collection).catch(e => {
+      if (e.codeName == "NamespaceExists") {
+        return;
+      }
+      throw e;
+    });
   }
 
   async getStatus() {
