@@ -4,7 +4,7 @@ import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {Observable} from "rxjs";
-import {bufferCount, take} from "rxjs/operators";
+import {bufferCount, map, take} from "rxjs/operators";
 import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
 import {TargetChange, ChangeKind} from "../src/change";
@@ -205,6 +205,14 @@ describe("Engine", () => {
     });
 
     it("should get initial schema", async done => {
+      const sortEnums = schema => {
+        schema.properties.collection.enum = schema.properties.collection.enum.sort((a, b) => a.localeCompare(b));
+        schema.properties.collection.viewEnum = schema.properties.collection.viewEnum.sort(
+          (a, b) => a.localeCompare(b)
+        );
+        return schema;
+      };
+
       const expectedSchema: any = {
         $id: "http://spica.internal/function/enqueuer/database",
         type: "object",
@@ -214,8 +222,8 @@ describe("Engine", () => {
             title: "Collection Name",
             type: "string",
             //@ts-ignore
-            viewEnum: ["function", "buckets"],
-            enum: ["function", "buckets"],
+            viewEnum: ["buckets", "function"],
+            enum: ["buckets", "function"],
             description: "Collection name that the event will be tracked on"
           },
           type: {
@@ -227,14 +235,22 @@ describe("Engine", () => {
         },
         additionalProperties: false
       };
-      const schemaPromise = (await engine.getSchema("database")) as Promise<any>;
+      const schemaPromise = await (engine.getSchema("database") as Promise<any>).then(schema =>
+        sortEnums(schema)
+      );
+
       expect(schemaPromise).toEqual(expectedSchema);
 
       const schemaObs = engine.getSchema("database", true) as Observable<any>;
-      schemaObs.pipe(take(1)).subscribe(schema => {
-        expect(schema).toEqual(expectedSchema);
-        done();
-      });
+      schemaObs
+        .pipe(
+          take(1),
+          map(schema => sortEnums(schema))
+        )
+        .subscribe(schema => {
+          expect(schema).toEqual(expectedSchema);
+          done();
+        });
     });
 
     it("should report when a collection has been created", async done => {
@@ -245,17 +261,13 @@ describe("Engine", () => {
           take(1)
         )
         .subscribe(changes => {
-          const collections: string[][] = changes.map(c => c.properties.collection["enum"]);
-          const [before, after] = collections;
-          const beforeExpectations = ["function", "buckets"];
-          const afterExpectations = ["function", "buckets", "test"];
+          const collections: string[][] = changes.map(c =>
+            c.properties.collection["enum"].sort((a, b) => a.localeCompare(b))
+          );
+          const beforeExpectations = ["buckets", "function"];
+          const afterExpectations = ["buckets", "function", "test"];
 
-          expect(beforeExpectations.every(e => before.includes(e))).toEqual(true);
-          expect(beforeExpectations.length).toEqual(2);
-
-          expect(afterExpectations.every(e => after.includes(e))).toEqual(true);
-          expect(afterExpectations.length).toEqual(3);
-
+          expect(collections).toEqual([beforeExpectations, afterExpectations]);
           done();
         });
       await stream.wait();
@@ -274,16 +286,13 @@ describe("Engine", () => {
           take(1)
         )
         .subscribe(changes => {
-          const collections: string[][] = changes.map(c => c.properties.collection["enum"]);
-          const [before, after] = collections;
-          const beforeExpectations = ["function", "buckets", "test"];
-          const afterExpectations = ["function", "buckets"];
+          const collections: string[][] = changes.map(c =>
+            c.properties.collection["enum"].sort((a, b) => a.localeCompare(b))
+          );
+          const beforeExpectations = ["buckets", "function", "test"];
+          const afterExpectations = ["buckets", "function"];
 
-          expect(beforeExpectations.every(e => before.includes(e))).toEqual(true);
-          expect(beforeExpectations.length).toEqual(3);
-
-          expect(afterExpectations.every(e => after.includes(e))).toEqual(true);
-          expect(afterExpectations.length).toEqual(2);
+          expect(collections).toEqual([beforeExpectations, afterExpectations]);
 
           done();
         });
