@@ -1,7 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketDataService} from "@spica-server/bucket/services";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {BucketService} from "../src";
 import {BUCKET_DATA_LIMIT} from "../src/options";
 
 describe("Bucket Data Service", () => {

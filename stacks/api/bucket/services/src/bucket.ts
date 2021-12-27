@@ -37,6 +37,7 @@ interface PropertyOptions {
     history?: boolean;
     position: "left" | "right" | "bottom";
     unique?: boolean;
+    index?: 1 | -1;
   };
 }
 

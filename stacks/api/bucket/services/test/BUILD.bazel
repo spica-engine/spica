@@ -35,6 +35,29 @@ jasmine_node_test(
 )
 
 ts_library(
+    name = "bucket_service_test_lib",
+    testonly = True,
+    srcs = [
+        "bucket.service.spec.ts",
+    ],
+    deps = [
+        "@npm//@nestjs/testing",
+        "//packages/database/testing",
+        "//stacks/api/bucket/services",
+        "@npm//@types/jasmine",
+        "//stacks/api/preference/testing",
+        "//packages/core/schema",
+    ],
+)
+
+jasmine_node_test(
+    name = "bucket_service_acceptance_test",
+    deps = [
+        ":bucket_service_test_lib",
+    ],
+)
+
+ts_library(
     name = "bucket_filter_test_lib",
     testonly = True,
     srcs = [

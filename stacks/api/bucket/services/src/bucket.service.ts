@@ -1,11 +1,32 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
 import {Default, Validator} from "@spica-server/core/schema";
-import {BaseCollection, Collection, DatabaseService, ObjectId} from "@spica-server/database";
+import {
+  BaseCollection,
+  Collection,
+  DatabaseService,
+  IndexOptions,
+  ObjectId
+} from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference/services";
 import {BehaviorSubject, Observable} from "rxjs";
 import {Bucket, BucketPreferences} from "./bucket";
 import {getBucketDataCollection} from "@spica-server/bucket/services";
 import {BUCKET_DATA_LIMIT} from "./options";
+
+export interface IndexDefinition {
+  definition: {
+    [key: string]: 1 | -1;
+  };
+  options?: IndexOptions;
+}
+
+interface ExistingIndex {
+  v: number;
+  key: {
+    [key: string]: 1 | -1;
+  };
+  name: string;
+}
 
 @Injectable()
 export class BucketService extends BaseCollection<Bucket>("buckets") {
@@ -65,32 +86,24 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     );
 
     const insertedBucket = await super.insertOne(bucket);
-    const bucketCollection = await this.db.createCollection(
-      getBucketDataCollection(insertedBucket._id)
-    );
 
-    const indexDefinitions = this.createUniqueIndexDefs(bucket);
-    for (const definition of indexDefinitions) {
-      await bucketCollection.createIndex(definition, {unique: true});
-    }
+    await this.updateIndexes(bucket);
+
     return insertedBucket;
   }
 
-  async updateUniqueFields(id: string | ObjectId, newSchema: Bucket) {
-    const collection = this.db.collection(getBucketDataCollection(id));
+  async updateIndexes(bucket: Bucket) {
+    const indexDefinitions = this.createIndexDefinitions(bucket);
+    const indexesWillDrop = [];
 
-    const indexes = await collection
-      .listIndexes()
-      .toArray()
-      .then(indexes => indexes.filter(i => i.unique).map(i => Object.keys(i.key)[0]));
-
-    const newIndexes = this.getUniqueFields(newSchema);
-
-    for (const index of indexes) {
-      if (newIndexes.indexOf(index) == -1) {
-        await collection.dropIndex({[index]: 1} as any);
-      }
+    for (const index of await this.getIndexesWillBeDropped()) {
+      indexesWillDrop.push(this._coll.dropIndex(index));
     }
+
+    await Promise.all(indexesWillDrop);
+    await Promise.all(
+      indexDefinitions.map(index => this._coll.createIndex(index.definition, index.options))
+    );
   }
 
   async drop(id: string | ObjectId) {
@@ -133,22 +146,34 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     return this.validator.defaults;
   }
 
-  createUniqueIndexDefs(bucket: Bucket) {
-    return this.getUniqueFields(bucket).map(field => {
-      return {
-        [field]: 1
-      };
-    });
-  }
+  createIndexDefinitions(bucket: Bucket): IndexDefinition[] {
+    const indexDefinitions: IndexDefinition[] = [];
 
-  getUniqueFields(bucket: Bucket) {
-    const fields = [];
     for (const [name, definition] of Object.entries(bucket.properties)) {
-      if (definition.options && definition.options.unique) {
-        fields.push(name);
+      if (definition.options) {
+        if (definition.options.index) {
+          const direction = definition.options.index;
+          indexDefinitions.push({definition: {[name]: direction}});
+        } else if (definition.options.unique) {
+          indexDefinitions.push({definition: {[name]: 1}, options: {unique: true}});
+        }
       }
     }
-    return fields;
+
+    return indexDefinitions;
+  }
+
+  async getIndexesWillBeDropped(): Promise<string[]> {
+    const existings: ExistingIndex[] = await this._coll.listIndexes().toArray();
+    return existings
+      .filter(existing => this.isSingleFieldIndex(existing))
+      .map(existing => existing.name);
+  }
+
+  isSingleFieldIndex(index: ExistingIndex) {
+    const keys = Object.keys(index.key);
+    // we can not remove _id index since it's default index of mongodb
+    return keys.length == 1 && keys[0] != "_id";
   }
 
   collNameToId(collName: string) {
