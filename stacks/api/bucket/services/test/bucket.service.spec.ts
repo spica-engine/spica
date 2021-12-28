@@ -1,7 +1,8 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core/schema";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {getBucketDataCollection} from "../src/bucket-data.service";
 import {BucketService} from "../src/bucket.service";
 
 describe("Bucket Service", () => {
@@ -54,32 +55,45 @@ describe("Bucket Service", () => {
         {
           definition: {
             description: 1
+          },
+          options: {
+            unique: false
           }
         }
       ]);
     });
 
     it("should get indexes will be dropped", async () => {
-      await bs._coll.createIndex({title: 1});
-      await bs._coll.createIndex({description: -1});
-      await bs._coll.createIndex({its: 1, compound: 1});
+      const bucket = bs.insertOne({
+        properties: {
+          title: {
+            options: {
+              index: true
+            }
+          },
+          description: {
+            options: {
+              index: true
+            }
+          }
+        }
+      } as any);
 
-      const indexesWillBeDropped = await bs.getIndexesWillBeDropped();
-      expect(indexesWillBeDropped).toEqual(["title_1", "description_-1"]);
+      const coll = bs.db.collection(getBucketDataCollection((await bucket)._id));
+
+      const indexesWillBeDropped = await bs.getIndexesWillBeDropped(coll);
+      expect(indexesWillBeDropped).toEqual(["title_1", "description_1"]);
     });
 
-    it("should create bucket, update indexes", async () => {
-      await bs._coll.createIndex({title: 1});
-
-      // it should stay because it's compound
-      await bs._coll.createIndex({title: 1, description: -1});
-
+    it("should create bucket and indexes", async () => {
+      const bucketId = new ObjectId();
       const bucket: any = {
+        _id: bucketId,
         properties: {
           title: {},
           description: {
             options: {
-              index: 1
+              index: true
             }
           },
           email: {
@@ -90,19 +104,15 @@ describe("Bucket Service", () => {
         }
       };
 
-      let id;
-      const insertedBucket: any = await bs.insertOne(bucket).then(r => {
-        id = r._id;
-        return r;
-      });
+      const insertedBucket: any = await bs.insertOne(bucket);
 
       expect(insertedBucket).toEqual({
-        _id: id,
+        _id: bucketId,
         properties: {
           title: {},
           description: {
             options: {
-              index: 1
+              index: true
             }
           },
           email: {
@@ -113,17 +123,60 @@ describe("Bucket Service", () => {
         }
       });
 
-      const indexes = await bs._coll.listIndexes().toArray();
+      const indexes = await bs.db
+        .collection(getBucketDataCollection(bucketId))
+        .listIndexes()
+        .toArray();
 
       expect(indexes).toEqual([
         {v: 2, key: {_id: 1}, name: "_id_"},
-        {
-          v: 2,
-          key: {title: 1, description: -1},
-          name: "title_1_description_-1"
-        },
         {v: 2, key: {description: 1}, name: "description_1"},
         {v: 2, unique: true, key: {email: 1}, name: "email_1"}
+      ]);
+    });
+
+    it("should replace bucket and indexes", async () => {
+      const bucketId = new ObjectId();
+      const bucket: any = {
+        _id: bucketId,
+        properties: {
+          title: {},
+          description: {
+            options: {
+              index: true
+            }
+          },
+          email: {
+            options: {
+              unique: true
+            }
+          }
+        }
+      };
+
+      await bs.insertOne(bucket);
+
+      await bs.findOneAndReplace({_id: bucketId}, {
+        _id: bucketId,
+        properties: {
+          title: {
+            options: {index: true}
+          },
+          description: {},
+          email: {
+            options: {
+              index: true
+            }
+          }
+        }
+      } as any);
+
+      const collection = bs.db.collection(getBucketDataCollection(bucketId));
+      const indexes = await collection.listIndexes().toArray();
+      expect(indexes).toEqual([
+        {v: 2, key: {_id: 1}, name: "_id_"},
+        {v: 2, key: {title: 1}, name: "title_1"},
+        {v: 2, key: {email: 1}, name: "email_1"}
       ]);
     });
   });

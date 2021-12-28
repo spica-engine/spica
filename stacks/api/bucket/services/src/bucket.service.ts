@@ -4,6 +4,8 @@ import {
   BaseCollection,
   Collection,
   DatabaseService,
+  FilterQuery,
+  FindOneAndReplaceOption,
   IndexOptions,
   ObjectId
 } from "@spica-server/database";
@@ -15,7 +17,7 @@ import {BUCKET_DATA_LIMIT} from "./options";
 
 export interface IndexDefinition {
   definition: {
-    [key: string]: 1 | -1;
+    [key: string]: any;
   };
   options?: IndexOptions;
 }
@@ -23,9 +25,10 @@ export interface IndexDefinition {
 interface ExistingIndex {
   v: number;
   key: {
-    [key: string]: 1 | -1;
+    [key: string]: any;
   };
   name: string;
+  [key: string]: any;
 }
 
 @Injectable()
@@ -87,22 +90,46 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
 
     const insertedBucket = await super.insertOne(bucket);
 
+    await this.db.createCollection(getBucketDataCollection(insertedBucket._id));
+
     await this.updateIndexes(bucket);
 
     return insertedBucket;
   }
 
-  async updateIndexes(bucket: Bucket) {
-    const indexDefinitions = this.createIndexDefinitions(bucket);
-    const indexesWillDrop = [];
+  replaceOne(
+    filter: FilterQuery<Bucket>,
+    doc: Bucket,
+    options?: FindOneAndReplaceOption
+  ): Promise<number> {
+    return super.replaceOne(filter, doc, options).then(r => this.updateIndexes(doc).then(() => r));
+  }
 
-    for (const index of await this.getIndexesWillBeDropped()) {
-      indexesWillDrop.push(this._coll.dropIndex(index));
+  findOneAndReplace(
+    filter: FilterQuery<Bucket>,
+    doc: Bucket,
+    options?: FindOneAndReplaceOption
+  ): Promise<Bucket> {
+    return super
+      .findOneAndReplace(filter, doc, options)
+      .then(r => this.updateIndexes(doc).then(() => r));
+  }
+
+  async updateIndexes(bucket: Bucket) {
+    const bucketDataCollection = this.db.collection(getBucketDataCollection(bucket._id));
+
+    const indexDefinitions = this.createIndexDefinitions(bucket);
+    const indexesWillBeDropped = [];
+
+    for (const index of await this.getIndexesWillBeDropped(bucketDataCollection)) {
+      indexesWillBeDropped.push(bucketDataCollection.dropIndex(index));
     }
 
-    await Promise.all(indexesWillDrop);
+    await Promise.all(indexesWillBeDropped);
     await Promise.all(
-      indexDefinitions.map(index => this._coll.createIndex(index.definition, index.options))
+      indexDefinitions.map(index =>
+        bucketDataCollection.createIndex(index.definition, index.options)
+      )
     );
   }
 
@@ -150,27 +177,26 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     const indexDefinitions: IndexDefinition[] = [];
 
     for (const [name, definition] of Object.entries(bucket.properties)) {
-      if (definition.options) {
-        if (definition.options.index) {
-          const direction = definition.options.index;
-          indexDefinitions.push({definition: {[name]: direction}});
-        } else if (definition.options.unique) {
-          indexDefinitions.push({definition: {[name]: 1}, options: {unique: true}});
-        }
+      if (definition.options && (definition.options.index || definition.options.unique)) {
+        indexDefinitions.push({
+          // direction of index is unimportant for single field indexes
+          definition: {[name]: 1},
+          options: {unique: !!definition.options.unique}
+        });
       }
     }
 
     return indexDefinitions;
   }
 
-  async getIndexesWillBeDropped(): Promise<string[]> {
-    const existings: ExistingIndex[] = await this._coll.listIndexes().toArray();
+  async getIndexesWillBeDropped(collection: Collection<any>): Promise<string[]> {
+    const existings: ExistingIndex[] = await collection.listIndexes().toArray();
     return existings
-      .filter(existing => this.isSingleFieldIndex(existing))
+      .filter(existing => this.isExistingSingleFieldIndex(existing))
       .map(existing => existing.name);
   }
 
-  isSingleFieldIndex(index: ExistingIndex) {
+  isExistingSingleFieldIndex(index: ExistingIndex) {
     const keys = Object.keys(index.key);
     // we can not remove _id index since it's default index of mongodb
     return keys.length == 1 && keys[0] != "_id";
