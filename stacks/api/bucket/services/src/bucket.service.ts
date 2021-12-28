@@ -98,13 +98,13 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
   }
 
   findOneAndReplace(
-    filter: FilterQuery<Bucket>,
+    filter: FilterQuery<{_id: string}>,
     doc: Bucket,
     options?: FindOneAndReplaceOption
   ): Promise<Bucket> {
     return super
       .findOneAndReplace(filter, doc, options)
-      .then(r => this.updateIndexes(r).then(() => r));
+      .then(r => this.updateIndexes({...doc, _id: filter._id}).then(() => r));
   }
 
   async updateIndexes(bucket: Bucket) {
@@ -113,18 +113,17 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     const indexDefinitions = this.createIndexDefinitions(bucket);
     const indexesWillBeDropped = [];
 
-    for (const index of await this.getIndexesWillBeDropped(bucketDataCollection)) {
+    const indexes = await this.getIndexesWillBeDropped(bucketDataCollection);
+    for (const index of indexes) {
       indexesWillBeDropped.push(bucketDataCollection.dropIndex(index));
     }
 
     await Promise.all(indexesWillBeDropped);
-    // console.log(indexDefinitions)
     await Promise.all(
       indexDefinitions.map(index =>
         bucketDataCollection.createIndex(index.definition, index.options)
       )
     );
-    // await bucketDataCollection.listIndexes().toArray().then(console.log)
   }
 
   async drop(id: string | ObjectId) {

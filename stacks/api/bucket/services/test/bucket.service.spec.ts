@@ -2,13 +2,14 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {getBucketDataCollection} from "../src/bucket-data.service";
+import {BucketDataService} from "../src/bucket-data.service";
 import {BucketService} from "../src/bucket.service";
 
 describe("Bucket Service", () => {
   describe("index", () => {
     let module: TestingModule;
     let bs: BucketService;
+    let bds: BucketDataService;
 
     beforeEach(async () => {
       module = await Test.createTestingModule({
@@ -17,9 +18,10 @@ describe("Bucket Service", () => {
           PreferenceTestingModule,
           SchemaModule.forChild()
         ],
-        providers: [BucketService]
+        providers: [BucketService, BucketDataService]
       }).compile();
       bs = module.get(BucketService);
+      bds = module.get(BucketDataService);
 
       await bs.createCollection("buckets");
     });
@@ -64,7 +66,7 @@ describe("Bucket Service", () => {
     });
 
     it("should get indexes will be dropped", async () => {
-      const bucket = bs.insertOne({
+      const bucket = await bs.insertOne({
         properties: {
           title: {
             options: {
@@ -79,7 +81,7 @@ describe("Bucket Service", () => {
         }
       } as any);
 
-      const coll = bs.db.collection(getBucketDataCollection((await bucket)._id));
+      const coll = bds.children(bucket)._coll;
 
       const indexesWillBeDropped = await bs.getIndexesWillBeDropped(coll);
       expect(indexesWillBeDropped).toEqual(["title_1", "description_1"]);
@@ -123,9 +125,9 @@ describe("Bucket Service", () => {
         }
       });
 
-      const indexes = await bs.db
-        .collection(getBucketDataCollection(bucketId))
-        .listIndexes()
+      const indexes = await bds
+        .children(insertedBucket)
+        ._coll.listIndexes()
         .toArray();
 
       expect(indexes).toEqual([
@@ -157,7 +159,6 @@ describe("Bucket Service", () => {
       await bs.insertOne(bucket);
 
       await bs.findOneAndReplace({_id: bucketId}, {
-        _id: bucketId,
         properties: {
           title: {
             options: {index: true}
@@ -171,13 +172,63 @@ describe("Bucket Service", () => {
         }
       } as any);
 
-      const collection = bs.db.collection(getBucketDataCollection(bucketId));
+      const collection = bds.children(bucket)._coll;
       const indexes = await collection.listIndexes().toArray();
       expect(indexes).toEqual([
         {v: 2, key: {_id: 1}, name: "_id_"},
         {v: 2, key: {title: 1}, name: "title_1"},
         {v: 2, key: {email: 1}, name: "email_1"}
       ]);
+    });
+
+    it("should use IXSCAN instead of COLLSCAN", async () => {
+      const bucketId = new ObjectId();
+      const bucket: any = {
+        _id: bucketId,
+        properties: {
+          title: {
+            options: {
+              index: true
+            }
+          },
+          description: {}
+        }
+      };
+
+      await bs.insertOne(bucket);
+
+      const bucketData = bds.children(bucket);
+      await bucketData.insertMany([
+        {title: 1, description: 1},
+        {title: 2, description: 2},
+        {title: 3, description: 3},
+        {title: 4, description: 4}
+      ]);
+
+      const standartQueryStage = await bucketData._coll
+        .find({description: 1})
+        .explain()
+        .then((r: any) => {
+          return [r.executionStats.executionStages.stage, r.executionStats.totalDocsExamined];
+        });
+      expect(standartQueryStage).toEqual(
+        ["COLLSCAN", 4],
+        "if it has searched whole collection to find document"
+      );
+
+      const indexedQueryStage = await bucketData._coll
+        .find({title: 1})
+        .explain()
+        .then((r: any) => {
+          return [
+            r.executionStats.executionStages.inputStage.stage,
+            r.executionStats.totalDocsExamined
+          ];
+        });
+      expect(indexedQueryStage).toEqual(
+        ["IXSCAN", 1],
+        "if it has found the document from the collection making use of index"
+      );
     });
   });
 });
