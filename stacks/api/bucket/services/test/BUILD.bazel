@@ -41,12 +41,12 @@ ts_library(
         "bucket.service.spec.ts",
     ],
     deps = [
-        "@npm//@nestjs/testing",
+        "//packages/core/schema",
         "//packages/database/testing",
         "//stacks/api/bucket/services",
-        "@npm//@types/jasmine",
         "//stacks/api/preference/testing",
-        "//packages/core/schema",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
     ],
 )
 

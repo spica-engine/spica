@@ -168,7 +168,7 @@ export class BucketController {
       returnOriginal: false
     });
 
-    await this.bs.updateUniqueFields(id, currentSchema);
+    await this.bs.updateIndexes(currentSchema);
 
     await this.clearUpdatedFields(this.bds, previousSchema, currentSchema);
 

@@ -97,14 +97,6 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     return insertedBucket;
   }
 
-  replaceOne(
-    filter: FilterQuery<Bucket>,
-    doc: Bucket,
-    options?: FindOneAndReplaceOption
-  ): Promise<number> {
-    return super.replaceOne(filter, doc, options).then(r => this.updateIndexes(doc).then(() => r));
-  }
-
   findOneAndReplace(
     filter: FilterQuery<Bucket>,
     doc: Bucket,
@@ -112,7 +104,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
   ): Promise<Bucket> {
     return super
       .findOneAndReplace(filter, doc, options)
-      .then(r => this.updateIndexes(doc).then(() => r));
+      .then(r => this.updateIndexes(r).then(() => r));
   }
 
   async updateIndexes(bucket: Bucket) {
@@ -126,11 +118,13 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     }
 
     await Promise.all(indexesWillBeDropped);
+    // console.log(indexDefinitions)
     await Promise.all(
       indexDefinitions.map(index =>
         bucketDataCollection.createIndex(index.definition, index.options)
       )
     );
+    // await bucketDataCollection.listIndexes().toArray().then(console.log)
   }
 
   async drop(id: string | ObjectId) {
@@ -176,6 +170,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
   createIndexDefinitions(bucket: Bucket): IndexDefinition[] {
     const indexDefinitions: IndexDefinition[] = [];
 
+    // console.log(bucket);
     for (const [name, definition] of Object.entries(bucket.properties)) {
       if (definition.options && (definition.options.index || definition.options.unique)) {
         indexDefinitions.push({

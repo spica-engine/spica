@@ -61,7 +61,8 @@ describe("Bucket Data Service", () => {
     it("should insert entry if it does not cause to limit exceeding", async () => {
       const buckets = await db
         .collection("buckets")
-        .insertMany([{title: "bucket1"}, {title: "bucket2"}] as any[]);
+        .insertMany([{title: "bucket1"}, {title: "bucket2"}] as any[])
+        .then(r => Object.values(r.insertedIds));
 
       const bds1 = await bds.children({_id: buckets[0]} as any);
       let insertedDoc = await bds1.insertOne({title: "entry1"});
