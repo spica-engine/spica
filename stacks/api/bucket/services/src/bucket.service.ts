@@ -172,29 +172,37 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     return this.validator.defaults;
   }
 
-  createIndexDefinitions(bucket: Bucket, definitions:IndexDefinition[] = [], prefix: string = ""): IndexDefinition[] {
-    const keyGenerator = (prefix,name) => {
+  createIndexDefinitions(
+    bucket: Bucket,
+    definitions: IndexDefinition[] = [],
+    prefix: string = ""
+  ): IndexDefinition[] {
+    const keyGenerator = (prefix, name) => {
       return prefix ? `${prefix}.${name}` : name;
-    }
+    };
     for (const [name, spec] of Object.entries(bucket.properties)) {
       if (spec.options && (spec.options.index || spec.options.unique)) {
-        const key = keyGenerator(prefix,name)
+        const key = keyGenerator(prefix, name);
         definitions.push({
           // direction of index is unimportant for single field indexes
           definition: {[key]: 1},
           options: {unique: !!spec.options.unique}
         });
-      } else if (spec.type == "object") {
-        const key = keyGenerator(prefix,name)
-        this.createIndexDefinitions(spec as any,definitions,key)
-      }else if(spec.type == "array"){
-        const key = keyGenerator(prefix,name)
+      }
+
+      if (spec.type == "object") {
+        const key = keyGenerator(prefix, name);
+
+        this.createIndexDefinitions(spec as any, definitions, key);
+      } else if (spec.type == "array") {
+        const key = keyGenerator(prefix, name);
+
         const schema = {
-          properties:{
-            [key]:spec.items
+          properties: {
+            [key]: spec.items
           }
-        }
-        this.createIndexDefinitions(schema as any,definitions,"")
+        };
+        this.createIndexDefinitions(schema as any, definitions, "");
       }
     }
 

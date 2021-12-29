@@ -36,8 +36,8 @@ export interface PropertyOptions {
     translate?: boolean;
     history?: boolean;
     position: "left" | "right" | "bottom";
-    unique?:boolean,
-    index?:boolean,
+    unique?: boolean;
+    index?: boolean;
   };
 }
 

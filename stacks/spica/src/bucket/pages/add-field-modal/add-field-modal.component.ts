@@ -22,7 +22,7 @@ export class AddFieldModalComponent implements OnInit {
 
   translatableTypes = ["string", "textarea", "array", "object", "richtext", "storage"];
   basicPropertyTypes = ["string", "textarea", "boolean", "number"];
-  nonIndexablePropertyTypes = ["location", "object"];
+  nonIndexablePropertyTypes = ["location"];
 
   immutableProperties: Array<string> = [];
   predefinedDefaults: {[key: string]: PredefinedDefault[]};
