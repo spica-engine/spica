@@ -249,14 +249,10 @@ describe("Bucket Service", () => {
       });
 
       const bucketData = bds.children(insertedBucket);
-      await bucketData.insertOne({});
 
       const indexes = await bucketData._coll.listIndexes().toArray();
-      expect(indexes).toEqual([
-        {v: 2, key: {_id: 1}, name: "_id_"},
-        {v: 2, key: {description: 1}, name: "description_1"},
-        {v: 2, unique: true, key: {email: 1}, name: "email_1"}
-      ]);
+      expect(indexes.map(i => i.key)).toEqual([{_id: 1}, {description: 1}, {email: 1}]);
+      expect(indexes[indexes.length - 1].unique).toEqual(true);
     });
 
     it("should replace bucket and indexes", async () => {
@@ -295,14 +291,8 @@ describe("Bucket Service", () => {
       } as any);
 
       const bucketData = bds.children(bucket);
-      await bucketData.insertOne({});
-
       const indexes = await bucketData._coll.listIndexes().toArray();
-      expect(indexes).toEqual([
-        {v: 2, key: {_id: 1}, name: "_id_"},
-        {v: 2, key: {title: 1}, name: "title_1"},
-        {v: 2, key: {email: 1}, name: "email_1"}
-      ]);
+      expect(indexes.map(i => i.key)).toEqual([{_id: 1}, {title: 1}, {email: 1}]);
     });
 
     it("should use IXSCAN instead of COLLSCAN", async () => {
