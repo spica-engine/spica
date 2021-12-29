@@ -109,22 +109,30 @@
           "
         >
           <mat-checkbox
-            [disabled]="parentSchema._id"
-            matTooltip="You can not change this property after creation."
-            [matTooltipDisabled]="!parentSchema._id"
+            matTooltip="Enable this option to prevent the duplication of the field value on the bucket. For example: email, username, etc."
             [(ngModel)]="propertyKv.options.unique"
           >
             Unique
           </mat-checkbox>
         </div>
       </div>
+      
 
       <div *ngIf="fieldConfig.type != 'boolean'">
         <mat-checkbox
           [ngModel]="parentSchema.required && parentSchema.required.indexOf(propertyKey) > -1"
           (ngModelChange)="toggleRequired(propertyKey, $event)"
         >
-          <b>{{ propertyKv.title | titlecase }}</b> is required
+          Required
+        </mat-checkbox>
+      </div>
+
+      <div *ngIf="nonIndexablePropertyTypes.indexOf(fieldConfig.type) == -1">
+        <mat-checkbox
+          [(ngModel)]="propertyKv.options.index"
+          matTooltip="Enable this option to reduce the response time if this field is used in queries often"
+        >
+          Index
         </mat-checkbox>
       </div>
     </div>

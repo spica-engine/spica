@@ -8,6 +8,7 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  InternalServerErrorException,
   Optional,
   Param,
   Patch,
@@ -164,11 +165,15 @@ export class BucketController {
     this.ruleValidation(bucket);
 
     const previousSchema = await this.bs.findOne({_id: id});
-    const currentSchema = await this.bs.findOneAndReplace({_id: id}, bucket, {
-      returnOriginal: false
-    });
+    let currentSchema;
 
-    await this.bs.updateIndexes(currentSchema);
+    try {
+      currentSchema = await this.bs.findOneAndReplace({_id: id}, bucket, {
+        returnOriginal: false
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
 
     await this.clearUpdatedFields(this.bds, previousSchema, currentSchema);
 

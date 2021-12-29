@@ -107,23 +107,29 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
       .then(r => this.updateIndexes({...doc, _id: filter._id}).then(() => r));
   }
 
-  async updateIndexes(bucket: Bucket) {
+  async updateIndexes(bucket: Bucket): Promise<void> {
     const bucketDataCollection = this.db.collection(getBucketDataCollection(bucket._id));
 
     const indexDefinitions = this.createIndexDefinitions(bucket);
     const indexesWillBeDropped = [];
 
+    const errors = [];
+
     const indexes = await this.getIndexesWillBeDropped(bucketDataCollection);
     for (const index of indexes) {
-      indexesWillBeDropped.push(bucketDataCollection.dropIndex(index));
+      indexesWillBeDropped.push(bucketDataCollection.dropIndex(index).catch(e => errors.push(e)));
     }
 
     await Promise.all(indexesWillBeDropped);
     await Promise.all(
       indexDefinitions.map(index =>
-        bucketDataCollection.createIndex(index.definition, index.options)
+        bucketDataCollection.createIndex(index.definition, index.options).catch(e => errors.push(e))
       )
     );
+
+    if (errors.length) {
+      throw Error(errors.map(e => e.message).join(""));
+    }
   }
 
   async drop(id: string | ObjectId) {
