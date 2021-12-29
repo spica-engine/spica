@@ -30,7 +30,6 @@ export class EnumSchemaComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (changes._schema) {
       this.schema = changes._schema.currentValue;
-      this.schema.enum = this.schema.enum || [];
     }
   }
 
