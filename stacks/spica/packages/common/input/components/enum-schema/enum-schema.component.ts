@@ -53,6 +53,7 @@ export class EnumSchemaComponent implements OnChanges {
   removeItem(index) {
     this.schema.enum.splice(index, 1);
     if (this.schema.enum.length < 1) {
+      // empty enums are not allowed on the api
       delete this.schema.enum;
     }
   }
