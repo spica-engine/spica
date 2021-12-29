@@ -28,7 +28,7 @@ describe("Bucket Service", () => {
 
     afterEach(() => module.close());
 
-    it("should create index definitions from bucket schema", () => {
+    it("should create index definitions for basic types from bucket schema", () => {
       const bucket: any = {
         properties: {
           title: {
@@ -57,6 +57,129 @@ describe("Bucket Service", () => {
         {
           definition: {
             description: 1
+          },
+          options: {
+            unique: false
+          }
+        }
+      ]);
+    });
+
+    it("should create index definitions for arrays", () => {
+      const bucket: any = {
+        properties: {
+          // string array
+          tags: {
+            type: "array",
+            items: {
+              type: "string",
+              options: {
+                index: true
+              }
+            }
+          },
+          // object array
+          addresses: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                city: {
+                  type: "string",
+                  options: {
+                    index: true
+                  }
+                },
+                street: {
+                  type: "string"
+                  // no index
+                }
+              }
+            }
+          }
+        }
+      };
+
+      const indexDefinitions = bs.createIndexDefinitions(bucket);
+      expect(indexDefinitions).toEqual([
+        {
+          definition: {
+            tags: 1
+          },
+          options: {
+            unique: false
+          }
+        },
+        {
+          definition: {
+            "addresses.city": 1
+          },
+          options: {
+            unique: false
+          }
+        }
+      ]);
+    });
+
+    it("should create index definitions for objects", () => {
+      const bucket: any = {
+        properties: {
+          info: {
+            type: "object",
+            properties: {
+              age: {
+                type: "number",
+                options: {
+                  index: true
+                }
+              },
+              height: {
+                // no index
+                type: "number"
+              },
+              score: {
+                type: "object",
+                properties: {
+                  best: {
+                    type: "number",
+                    options: {index: true}
+                  },
+                  // no index
+                  worst: {
+                    type: "number"
+                  },
+                  average: {
+                    type: "number",
+                    options: {index: true}
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      const indexDefinitions = bs.createIndexDefinitions(bucket);
+      expect(indexDefinitions).toEqual([
+        {
+          definition: {
+            "info.age": 1
+          },
+          options: {
+            unique: false
+          }
+        },
+        {
+          definition: {
+            "info.score.best": 1
+          },
+          options: {
+            unique: false
+          }
+        },
+        {
+          definition: {
+            "info.score.average": 1
           },
           options: {
             unique: false

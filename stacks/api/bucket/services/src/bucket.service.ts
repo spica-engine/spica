@@ -172,21 +172,33 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     return this.validator.defaults;
   }
 
-  createIndexDefinitions(bucket: Bucket): IndexDefinition[] {
-    const indexDefinitions: IndexDefinition[] = [];
-
-    // console.log(bucket);
-    for (const [name, definition] of Object.entries(bucket.properties)) {
-      if (definition.options && (definition.options.index || definition.options.unique)) {
-        indexDefinitions.push({
+  createIndexDefinitions(bucket: Bucket, definitions:IndexDefinition[] = [], prefix: string = ""): IndexDefinition[] {
+    const keyGenerator = (prefix,name) => {
+      return prefix ? `${prefix}.${name}` : name;
+    }
+    for (const [name, spec] of Object.entries(bucket.properties)) {
+      if (spec.options && (spec.options.index || spec.options.unique)) {
+        const key = keyGenerator(prefix,name)
+        definitions.push({
           // direction of index is unimportant for single field indexes
-          definition: {[name]: 1},
-          options: {unique: !!definition.options.unique}
+          definition: {[key]: 1},
+          options: {unique: !!spec.options.unique}
         });
+      } else if (spec.type == "object") {
+        const key = keyGenerator(prefix,name)
+        this.createIndexDefinitions(spec as any,definitions,key)
+      }else if(spec.type == "array"){
+        const key = keyGenerator(prefix,name)
+        const schema = {
+          properties:{
+            [key]:spec.items
+          }
+        }
+        this.createIndexDefinitions(schema as any,definitions,"")
       }
     }
 
-    return indexDefinitions;
+    return definitions;
   }
 
   async getIndexesWillBeDropped(collection: Collection<any>): Promise<string[]> {
