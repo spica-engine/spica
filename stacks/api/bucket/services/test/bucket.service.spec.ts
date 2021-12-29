@@ -248,11 +248,10 @@ describe("Bucket Service", () => {
         }
       });
 
-      const indexes = await bds
-        .children(insertedBucket)
-        ._coll.listIndexes()
-        .toArray();
+      const bucketData = bds.children(insertedBucket);
+      bucketData.insertOne({});
 
+      const indexes = await bucketData._coll.listIndexes().toArray();
       expect(indexes).toEqual([
         {v: 2, key: {_id: 1}, name: "_id_"},
         {v: 2, key: {description: 1}, name: "description_1"},
@@ -295,8 +294,10 @@ describe("Bucket Service", () => {
         }
       } as any);
 
-      const collection = bds.children(bucket)._coll;
-      const indexes = await collection.listIndexes().toArray();
+      const bucketData = bds.children(bucket);
+      bucketData.insertOne({});
+
+      const indexes = await bucketData._coll.listIndexes().toArray();
       expect(indexes).toEqual([
         {v: 2, key: {_id: 1}, name: "_id_"},
         {v: 2, key: {title: 1}, name: "title_1"},
