@@ -27,7 +27,6 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     super();
   }
 
-  // check collection drop
   subscribe(target: event.Target, options: DatabaseOptions): void {
     const stream = this.db.collection(options.collection).watch(
       [
