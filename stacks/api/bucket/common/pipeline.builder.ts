@@ -109,7 +109,7 @@ export class PipelineBuilder implements iPipelineBuilder {
   async filterByUserRequest(filterByUserRequest: string | object): Promise<this> {
     let filterPropertyMap: string[][] = [];
     let filterRelationMap: object[] = [];
-    // filter
+
     if (filterByUserRequest) {
       let filterExpression: object;
 
@@ -149,6 +149,7 @@ export class PipelineBuilder implements iPipelineBuilder {
     let relationMap = [];
     if (relationPropertyMap.length) {
       relationMap = await this.buildRelationMap(relationPaths);
+      console.dir(relationMap,{depth:Infinity})
       const updatedRelationMap = compareAndUpdateRelations(
         deepCopy(relationMap),
         this.usedRelationPaths

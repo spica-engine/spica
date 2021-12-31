@@ -6,6 +6,7 @@ import {
   isDesiredRelation,
   RelationType
 } from "@spica-server/bucket/common";
+import {buildRelationAggregation} from "../relation";
 
 describe("Relation", () => {
   it("should check whether schema is object or not", () => {
@@ -64,6 +65,105 @@ describe("Relation", () => {
         ["root_relation", "onetoone"]
       ])
     );
+  });
+
+  it("should find relations which are inside of object array", () => {
+    const schema = {
+      nested_relation: {
+        type: "object",
+        properties: {
+          arr: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                one_to_one: {type: "relation", bucketId: "id1", relationType: "onetoone"},
+                count: {type: "number"}
+              }
+            }
+          },
+          one_to_many: {type: "relation", bucketId: "id1", relationType: "onetomany"},
+          not_here: {type: "relation", bucketId: "id2"}
+        }
+      },
+      root_relation: {type: "relation", bucketId: "id1", relationType: "onetoone"},
+      not_relation: {type: "string"}
+    };
+
+    const targets = findRelations(schema, "id1", "", new Map(), true);
+
+    expect(targets).toEqual(
+      new Map([
+        ["nested_relation.[arr].one_to_one", "onetoone"],
+        ["nested_relation.one_to_many", "onetomany"],
+        ["root_relation", "onetoone"]
+      ])
+    );
+  });
+
+  it("should build relation aggregation", () => {
+    const property = "info.age";
+    const bucketId = "some_id";
+    const type = RelationType.One;
+
+    const aggregation = buildRelationAggregation(property, bucketId, type, undefined);
+
+    expect(aggregation).toEqual([
+      {
+        $lookup: {
+          from: "bucket_some_id",
+          as: "info.age",
+          let: {documentId: {$toObjectId: "$info.age"}},
+          pipeline: [
+            {
+              $match: {$expr: {$eq: ["$_id", "$$documentId"]}}
+            }
+          ]
+        }
+      },
+      {
+        $unwind: {path: "$info.age", preserveNullAndEmptyArrays: true}
+      }
+    ]);
+  });
+
+  fit("should build relation aggregation for nested array objects", () => {
+    const property = "[foods].food_id";
+    const bucketId = "some_id";
+    const type = RelationType.One;
+
+    const aggregation = buildRelationAggregation(property, bucketId, type, undefined);
+    expect(aggregation).toEqual([
+      [
+        {
+          $unwind: {path: "$foods", preserveNullAndEmptyArrays: true}
+        },
+        {
+          $lookup: {
+            from: "bucket_some_id",
+            as: "foods.food_id",
+            let: {documentId: {$toObjectId: "$foods.food_id"}},
+            pipeline: [
+              {
+                $match: {$expr: {$eq: ["$_id", "$$documentId"]}}
+              }
+            ]
+          }
+        },
+        {
+          $unwind: {path: "$foods.food_id", preserveNullAndEmptyArrays: true}
+        },
+        {
+          $group: {
+            _id: "$_id",
+            _doc_: {$first: "$$ROOT"},
+            foods: {$push: "foods"}
+          }
+        },
+        {$addFields: {"_doc_.foods": "$foods"}},
+        {$replaceRoot: {newRoot: "$_doc_"}}
+      ]
+    ]);
   });
 
   it("should get update operation params for one to one relation", () => {

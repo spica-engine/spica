@@ -1,6 +1,8 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketDataService} from "@spica-server/bucket/services";
+import {SchemaModule} from "@spica-server/core/schema";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {BucketService} from "../src";
 import {BUCKET_DATA_LIMIT} from "../src/options";
 
@@ -95,6 +97,108 @@ describe("Bucket Data Service", () => {
       await bds2.insertMany([{title: "entry3"}, {title: "entry4"}]).catch(e => {
         expect(e).toEqual(new Error("Total bucket-data limit exceeded"));
       });
+    });
+  });
+
+  fdescribe("relations ", () => {
+    let module: TestingModule;
+    let bs: BucketService;
+    let bds: BucketDataService;
+
+    beforeEach(async () => {
+      module = await Test.createTestingModule({
+        imports: [
+          DatabaseTestingModule.standalone(),
+          PreferenceTestingModule,
+          SchemaModule.forChild()
+        ],
+        providers: [BucketDataService, BucketService]
+      }).compile();
+      bs = module.get(BucketService);
+      bds = module.get(BucketDataService);
+    });
+
+    it("should show", async () => {
+      const userBucketId = new ObjectId();
+      const buildingBucketId = new ObjectId();
+
+      const userBucket = {
+        _id: userBucketId,
+        properties: {
+          buildings: {
+            type: "array",
+            building: {
+              type: "object",
+              properties: {
+                building: {
+                  type: "relation",
+                  bucketId: buildingBucketId,
+                  relationType: "onetomany"
+                },
+                level: {
+                  type: "number"
+                }
+              }
+            }
+          }
+        }
+      };
+
+      const buildingBucket = {
+        _id: buildingBucketId,
+        properties: {
+          name: {
+            type: "string"
+          }
+        }
+      };
+
+      await bs.insertOne(userBucket as any);
+      await bs.insertOne(buildingBucket as any);
+
+      const userBucketData = bds.children(userBucket as any);
+      const buildingBucketData = bds.children(buildingBucket as any);
+
+      const insertedBuildings = await buildingBucketData.insertMany([
+        {name: "tower"},
+        {name: "basement"}
+      ]);
+      await userBucketData.insertOne({
+        buildings: [
+          {building: insertedBuildings[0], level: 2},
+          {building: insertedBuildings[1], level: 37},
+          {level: 3333}
+
+        ]
+      });
+
+      const res = await userBucketData._coll
+        .aggregate([
+          {$unwind}
+          {
+            $lookup: {
+              from: `bucket_${buildingBucketId}`,
+              let: {
+                documentIds: {
+                  $ifNull: [
+                    {
+                      $map: {input: "$buildings.building", in: {$toObjectId: "$$this"}}
+                    },
+                    []
+                  ]
+                }
+              },
+              pipeline: [
+                {
+                  $match: {$expr: {$in: ["$_id", "$$documentIds"]}}
+                }
+              ],
+              as: "_buildings"
+            }
+          },
+        ])
+        .toArray();
+      console.dir(res, {depth: Infinity});
     });
   });
 });

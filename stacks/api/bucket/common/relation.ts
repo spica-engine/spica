@@ -12,14 +12,18 @@ export function findRelations(
   schema: any,
   bucketId: string,
   path: string = "",
-  targets: Map<string, RelationType>
+  targets: Map<string, RelationType>,
+  findArrays = false
 ) {
   path = path ? `${path}.` : ``;
-  for (const field of Object.keys(schema)) {
-    if (isObject(schema[field])) {
-      findRelations(schema[field].properties, bucketId, `${path}${field}`, targets);
-    } else if (isDesiredRelation(schema[field], bucketId)) {
-      targets.set(`${path}${field}`, schema[field].relationType);
+  for (const [name, spec] of Object.entries(schema) as any) {
+    if (isObject(spec)) {
+      findRelations(spec.properties, bucketId, `${path}${name}`, targets, findArrays);
+      // revert these changes;
+    } else if (findArrays && isArray(spec)) {
+      findRelations(spec.items.properties || {}, bucketId, `${path}[${name}]`, targets, findArrays);
+    } else if (isDesiredRelation(spec, bucketId)) {
+      targets.set(`${path}${name}`, spec.relationType);
     }
   }
   return targets;
@@ -288,12 +292,15 @@ export function buildRelationAggregation(
   assertRelationType(type);
   const pipeline = [];
 
+  let path = deepCopy(property);
+  path = replaceArraysInPath(path);
+
   let _let;
 
   if (type == RelationType.One) {
     _let = {
       documentId: {
-        $toObjectId: `$${property}`
+        $toObjectId: `$${path}`
       }
     };
     pipeline.push({$match: {$expr: {$eq: ["$_id", "$$documentId"]}}});
@@ -303,7 +310,7 @@ export function buildRelationAggregation(
         $ifNull: [
           {
             $map: {
-              input: `$${property}`,
+              input: `$${path}`,
               in: {$toObjectId: "$$this"}
             }
           },
@@ -325,15 +332,74 @@ export function buildRelationAggregation(
   const lookup = {
     $lookup: {
       from: getBucketDataCollection(bucketId),
-      as: property,
+      as: path,
       let: _let,
       pipeline
     }
   };
 
-  return type == RelationType.One
-    ? [lookup, {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}]
-    : [lookup];
+  const aggregation: any =
+    type == RelationType.One
+      ? [lookup, {$unwind: {path: `$${path}`, preserveNullAndEmptyArrays: true}}]
+      : [lookup];
+
+  if (isOneOfParentsArray(property)) {
+    const arrayField = getUntilArrayPart(property);
+    aggregation.unshift({
+      $unwind: {
+        path: `$${arrayField}`,
+        preserveNullAndEmptyArrays: true
+      }
+    });
+
+    /*this field is for group aggregation, it does not accept nested fields, 
+    what we will do is replacing dots in the path with underline, 
+    then we will put them to the result at the final stage*/
+    const underlinedField = replaceDotsWithUnderline(arrayField);
+
+    aggregation.push({
+      $group: {
+        _id: "$_id",
+        // to keep all of fields
+        _doc_: {
+          $first: "$$ROOT"
+        },
+        [underlinedField]: {
+          $push: `${arrayField}`
+        }
+      }
+    });
+
+    aggregation.push({
+      $addFields: {
+        [`_doc_.${arrayField}`]: `$${underlinedField}`
+      }
+    });
+
+    aggregation.push({
+      $replaceRoot: {
+        newRoot: "$_doc_"
+      }
+    });
+  }
+
+  return aggregation;
+}
+
+function isOneOfParentsArray(str: string) {
+  return /\[.+\]/.test(str);
+}
+
+function getUntilArrayPart(str: string) {
+  return str.substring(0, str.indexOf("]")).replace(/[\[|\]]/g, "");
+}
+
+function replaceArraysInPath(str: string) {
+  return str.replace(/[\[|\]]/g, "");
+}
+
+function replaceDotsWithUnderline(str: string) {
+  return str.replace(".", "_");
 }
 
 export async function clearRelations(
