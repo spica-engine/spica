@@ -6,7 +6,12 @@ import {
   isDesiredRelation,
   RelationType
 } from "@spica-server/bucket/common";
-import {buildRelationAggregation} from "../relation";
+import {
+  buildRelationAggregation,
+  createPathFromRelationMap,
+  createRelationMap,
+  RelationMap
+} from "../relation";
 
 describe("Relation", () => {
   it("should check whether schema is object or not", () => {
@@ -127,42 +132,40 @@ describe("Relation", () => {
     ]);
   });
 
-  fit("should build relation aggregation for nested array objects", () => {
+  it("should build relation aggregation for nested array objects", () => {
     const property = "[foods].food_id";
     const bucketId = "some_id";
     const type = RelationType.One;
 
     const aggregation = buildRelationAggregation(property, bucketId, type, undefined);
     expect(aggregation).toEqual([
-      [
-        {
-          $unwind: {path: "$foods", preserveNullAndEmptyArrays: true}
-        },
-        {
-          $lookup: {
-            from: "bucket_some_id",
-            as: "foods.food_id",
-            let: {documentId: {$toObjectId: "$foods.food_id"}},
-            pipeline: [
-              {
-                $match: {$expr: {$eq: ["$_id", "$$documentId"]}}
-              }
-            ]
-          }
-        },
-        {
-          $unwind: {path: "$foods.food_id", preserveNullAndEmptyArrays: true}
-        },
-        {
-          $group: {
-            _id: "$_id",
-            _doc_: {$first: "$$ROOT"},
-            foods: {$push: "foods"}
-          }
-        },
-        {$addFields: {"_doc_.foods": "$foods"}},
-        {$replaceRoot: {newRoot: "$_doc_"}}
-      ]
+      {
+        $unwind: {path: "$foods", preserveNullAndEmptyArrays: true}
+      },
+      {
+        $lookup: {
+          from: "bucket_some_id",
+          as: "foods.food_id",
+          let: {documentId: {$toObjectId: "$foods.food_id"}},
+          pipeline: [
+            {
+              $match: {$expr: {$eq: ["$_id", "$$documentId"]}}
+            }
+          ]
+        }
+      },
+      {
+        $unwind: {path: "$foods.food_id", preserveNullAndEmptyArrays: true}
+      },
+      {
+        $group: {
+          _id: "$_id",
+          _doc_: {$first: "$$ROOT"},
+          foods: {$push: "foods"}
+        }
+      },
+      {$addFields: {"_doc_.foods": "$foods"}},
+      {$replaceRoot: {newRoot: "$_doc_"}}
     ]);
   });
 
@@ -179,6 +182,379 @@ describe("Relation", () => {
     expect(updateParams).toEqual({
       filter: {test_key: {$in: ["document_id"]}},
       update: {$pull: {test_key: "document_id"}}
+    });
+  });
+
+  describe("createRelationMap", () => {
+    const resolve = schemas => id => {
+      return Promise.resolve(schemas.find(s => s._id == id) as any);
+    };
+    describe("basic", () => {
+      it("should create relationMap for requested relations", async () => {
+        const userBucketSchema = {
+          _id: "user_bucket_id",
+          properties: {
+            name: {
+              type: "string"
+            }
+          }
+        };
+
+        const cityBucketSchema = {
+          _id: "city_bucket_id",
+          properties: {
+            title: {
+              type: "string"
+            }
+          }
+        };
+
+        const resourceBucketSchema = {
+          _id: "resource_bucket_id",
+          properties: {
+            type: {
+              type: "string"
+            }
+          }
+        };
+
+        const schemas = [userBucketSchema, cityBucketSchema, resourceBucketSchema];
+
+        const schema = {
+          properties: {
+            users: {
+              type: "relation",
+              relationType: "onetomany",
+              bucketId: "user_bucket_id"
+            },
+            city: {
+              type: "relation",
+              relationType: "onetoone",
+              bucketId: "city_bucket_id"
+            },
+            resources: {
+              type: "relation",
+              relationType: "onetoone",
+              bucketId: "resource_bucket_id"
+            }
+          }
+        };
+
+        // we dont want to resolve resources
+        const requestedRelations = [["users"], ["city", "_id"]];
+
+        const relationMap = await createRelationMap({
+          paths: requestedRelations,
+          properties: schema.properties,
+          resolve: resolve(schemas)
+        });
+
+        expect(relationMap).toEqual([
+          {
+            path: undefined,
+            field: "users",
+            target: "user_bucket_id",
+            type: RelationType.Many,
+            children: undefined
+          },
+          {
+            path: undefined,
+            field: "city",
+            target: "city_bucket_id",
+            type: RelationType.One,
+            children: undefined
+          }
+        ]);
+      });
+
+      it("should create relationMap with child relations", async () => {
+        const schema = {
+          properties: {
+            users: {
+              type: "relation",
+              relationType: "onetomany",
+              bucketId: "user_bucket_id"
+            }
+          }
+        };
+
+        const userBucketSchema = {
+          _id: "user_bucket_id",
+          properties: {
+            name: {
+              type: "string"
+            },
+            addresses: {
+              type: "relation",
+              relationType: "onetomany",
+              bucketId: "address_bucket_id"
+            }
+          }
+        };
+
+        const addressBucketSchema = {
+          _id: "address_bucket_id",
+          properties: {
+            street: {
+              type: "string"
+            }
+          }
+        };
+
+        const schemas = [userBucketSchema, addressBucketSchema];
+
+        const requestedRelations = [["users", "addresses"]];
+
+        const relationMap = await createRelationMap({
+          paths: requestedRelations,
+          properties: schema.properties,
+          resolve: resolve(schemas)
+        });
+
+        expect(relationMap).toEqual([
+          {
+            path: undefined,
+            field: "users",
+            target: "user_bucket_id",
+            type: RelationType.Many,
+            children: [
+              {
+                path: undefined,
+                field: "addresses",
+                target: "address_bucket_id",
+                type: RelationType.Many,
+                children: undefined
+              }
+            ]
+          }
+        ]);
+      });
+    });
+
+    describe("objects", () => {
+      it("should create relationMap for object field relations", async () => {
+        const userBucketSchema = {
+          _id: "user_bucket_id",
+          properties: {
+            name: {
+              type: "string"
+            },
+            addresses: {
+              type: "relation",
+              relationType: "onetomany",
+              bucketId: "address_bucket_id"
+            }
+          }
+        };
+
+        const addressBucketSchema = {
+          _id: "address_bucket_id",
+          properties: {
+            street: {
+              type: "string"
+            }
+          }
+        };
+
+        const schemas = [userBucketSchema, addressBucketSchema];
+
+        const schema = {
+          properties: {
+            info: {
+              type: "object",
+              properties: {
+                confirmation: {
+                  type: "object",
+                  properties: {
+                    users: {
+                      type: "relation",
+                      relationType: "onetomany",
+                      bucketId: "user_bucket_id"
+                    },
+                    city: {
+                      type: "relation",
+                      relationType: "onetoone",
+                      bucketId: "city_bucket_id"
+                    },
+                    confirmed: {
+                      type: "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        };
+
+        // we dont want to resolve city
+        const requestedRelations = [["info", "confirmation", "users", "addresses"]];
+
+        const relationMap = await createRelationMap({
+          paths: requestedRelations,
+          properties: schema.properties,
+          resolve: resolve(schemas)
+        });
+
+        expect(relationMap).toEqual([
+          {
+            path: {
+              field: "info",
+              type: "object",
+              children: {
+                field: "confirmation",
+                type: "object"
+              }
+            },
+            field: "users",
+            target: "user_bucket_id",
+            type: RelationType.Many,
+            children: [
+              {
+                path: undefined,
+                field: "addresses",
+                target: "address_bucket_id",
+                type: RelationType.Many,
+                children: undefined
+              }
+            ]
+          }
+        ]);
+      });
+    });
+
+    describe("arrays", () => {
+      it("should create relationMap for object field relations", async () => {
+        const userBucketSchema = {
+          _id: "user_bucket_id",
+          properties: {
+            name: {
+              type: "string"
+            },
+            addresses: {
+              type: "relation",
+              relationType: "onetomany",
+              bucketId: "address_bucket_id"
+            }
+          }
+        };
+
+        const addressBucketSchema = {
+          _id: "address_bucket_id",
+          properties: {
+            street: {
+              type: "string"
+            }
+          }
+        };
+
+        const schemas = [userBucketSchema, addressBucketSchema];
+
+        const schema = {
+          properties: {
+            confirmations: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  users: {
+                    type: "relation",
+                    relationType: "onetomany",
+                    bucketId: "user_bucket_id"
+                  },
+                  city: {
+                    type: "relation",
+                    relationType: "onetoone",
+                    bucketId: "city_bucket_id"
+                  },
+                  confirmed: {
+                    type: "boolean"
+                  }
+                }
+              }
+            }
+          }
+        };
+
+        // we dont want to resolve city
+        const requestedRelations = [["confirmations", "users", "addresses"]];
+
+        const relationMap = await createRelationMap({
+          paths: requestedRelations,
+          properties: schema.properties,
+          resolve: resolve(schemas)
+        });
+
+        expect(relationMap).toEqual([
+          {
+            path: {
+              field: "confirmations",
+              type: "array"
+            },
+            field: "users",
+            target: "user_bucket_id",
+            type: RelationType.Many,
+            children: [
+              {
+                path: undefined,
+                field: "addresses",
+                target: "address_bucket_id",
+                type: RelationType.Many,
+                children: undefined
+              }
+            ]
+          }
+        ]);
+      });
+    });
+  });
+
+  describe("path", () => {
+    it("should create path from relation map", () => {
+      const relationMapObject: RelationMap = {
+        field: "order_id",
+        target: "order_bucket_id",
+        type: RelationType.One,
+        children: undefined,
+        path: {
+          field: "orders",
+          type: "object"
+        }
+      };
+
+      expect(createPathFromRelationMap(relationMapObject)).toEqual("orders.order_id");
+
+      const relationMapArray: RelationMap = {
+        field: "order_id",
+        target: "order_bucket_id",
+        type: RelationType.One,
+        children: undefined,
+        path: {
+          field: "orders",
+          type: "array"
+        }
+      };
+
+      expect(createPathFromRelationMap(relationMapArray)).toEqual("[orders].order_id");
+
+      const relationMapObjectArray: RelationMap = {
+        field: "order_id",
+        target: "order_bucket_id",
+        type: RelationType.One,
+        children: undefined,
+        path: {
+          field: "orders",
+          type: "array",
+          children: {
+            field: "order_info",
+            type: "object",
+            children: undefined
+          }
+        }
+      };
+
+      expect(createPathFromRelationMap(relationMapObjectArray)).toEqual(
+        "[orders].order_info.order_id"
+      );
     });
   });
 });

@@ -149,7 +149,7 @@ export class PipelineBuilder implements iPipelineBuilder {
     let relationMap = [];
     if (relationPropertyMap.length) {
       relationMap = await this.buildRelationMap(relationPaths);
-      console.dir(relationMap,{depth:Infinity})
+      // console.dir(relationMap,{depth:Infinity});
       const updatedRelationMap = compareAndUpdateRelations(
         deepCopy(relationMap),
         this.usedRelationPaths

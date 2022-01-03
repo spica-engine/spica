@@ -31,7 +31,7 @@ export function findRelations(
 
 export function getRelationPaths(target: Bucket | string[]) {
   if (Array.isArray(target)) {
-    return target.map(pattern => pattern.split(".").concat(["_id"]));
+    return target.map(pattern => pattern.split("."));
   }
 
   const relationPaths = [];
@@ -39,15 +39,32 @@ export function getRelationPaths(target: Bucket | string[]) {
     if (target.properties[propertyKey].type != "relation") {
       continue;
     }
-    relationPaths.push([propertyKey, "_id"]);
+    relationPaths.push([propertyKey]);
   }
   return relationPaths;
+}
+
+export function visitPaths(path: RelationPath) {
+  const res = path.type == "array" ? `[${path.field}]` : path.field;
+  if (!path.children) {
+    return res;
+  }
+  return `${res}.${visitPaths(path.children)}`;
+}
+
+export function createPathFromRelationMap(map: RelationMap) {
+  if (map.path) {
+    return `${visitPaths(map.path)}.${map.field}`;
+  }
+
+  return map.field;
 }
 
 export function getRelationPipeline(map: RelationMap[], locale: Locale): object[] {
   const pipeline = [];
 
   for (const relation of map) {
+    const path = createPathFromRelationMap(relation);
     let subPipeline;
 
     if (relation.children) {
@@ -55,12 +72,14 @@ export function getRelationPipeline(map: RelationMap[], locale: Locale): object[
     }
 
     const stage = buildRelationAggregation(
-      relation.path,
+      path,
       relation.target,
       relation.type,
       locale,
       subPipeline
     );
+
+    // console.dir(stage,{depth:Infinity})
 
     pipeline.push(...stage);
   }
@@ -73,10 +92,17 @@ export const enum RelationType {
   Many = "onetomany"
 }
 
+export interface RelationPath {
+  type: "array" | "object";
+  field: string;
+  children?: RelationPath;
+}
+
 export interface RelationMap {
+  path?: RelationPath;
   type: RelationType;
   target: string;
-  path: string;
+  field: string;
   children?: RelationMap[];
 }
 
@@ -86,40 +112,66 @@ interface RelationMapOptions {
   properties: object;
 }
 
+function getDeepestChildren(path: RelationPath): RelationPath {
+  if (!path.children) {
+    return path;
+  }
+  return getDeepestChildren(path.children);
+}
+
+function addRelationPath(path: RelationPath, field: string, type: "object" | "array") {
+  if (!path) {
+    return {field, type};
+  }
+
+  const copyPath = deepCopy(path);
+  const deepestChildren = getDeepestChildren(copyPath);
+  deepestChildren.children = {field, type};
+
+  return copyPath;
+}
+
 export async function createRelationMap(options: RelationMapOptions): Promise<RelationMap[]> {
   const visit = async (
     properties: object,
     paths: string[][],
-    depth: number
+    depth: number,
+    path?: RelationPath
   ): Promise<RelationMap[]> => {
-    const maps: RelationMap[] = [];
-
+    const maps = [];
     for (const [propertyKey, propertySpec] of Object.entries(properties)) {
-      if (propertySpec.type != "relation") {
-        continue;
-      }
-
       const matchingPaths = paths.filter(
         segments =>
           segments[depth] == propertyKey &&
-          // if child field of this document requested
-          segments.length > depth + 1
+          // if the child field of this document is requested too
+          segments.length >= depth
       );
 
       if (!matchingPaths.length) {
         continue;
       }
 
-      const schema = await options.resolve(propertySpec.bucketId);
-
-      const children = await visit(schema.properties, matchingPaths, depth + 1);
-
-      maps.push({
-        path: propertyKey,
-        target: propertySpec.bucketId,
-        type: propertySpec.relationType,
-        children: children.length ? children : undefined
-      });
+      if (propertySpec.type == "object") {
+        const updatedPath = addRelationPath(path, propertyKey, "object");
+        const map = await visit(propertySpec.properties, matchingPaths, depth + 1, updatedPath);
+        maps.push(...map);
+      } else if (propertySpec.type == "array") {
+        const updatedPath = addRelationPath(path, propertyKey, "array");
+        // assume that array is an object array
+        const map = await visit(propertySpec.items.properties, matchingPaths, depth + 1, updatedPath);
+        maps.push(...map);
+      } else if (propertySpec.type == "relation") {
+        const schema = await options.resolve(propertySpec.bucketId);
+        const children = await visit(schema.properties, matchingPaths, depth + 1);
+        const map = {
+          path,
+          field: propertyKey,
+          target: propertySpec.bucketId,
+          type: propertySpec.relationType,
+          children: children.length ? children : undefined
+        };
+        maps.push(map);
+      }
     }
 
     return maps;
@@ -148,8 +200,8 @@ export function resetNonOverlappingPathsInRelationMap(
     let paths: {[path: string]: object | string} = {};
     let hasKeys = false;
     for (const relation of map) {
-      const leftMatch = left.filter(segments => segments[depth] == relation.path);
-      const rightMatch = right.filter(segments => segments[depth] == relation.path);
+      const leftMatch = left.filter(segments => segments[depth] == relation.field);
+      const rightMatch = right.filter(segments => segments[depth] == relation.field);
 
       if (!leftMatch.length && rightMatch.length) {
         hasKeys = true;
@@ -192,7 +244,7 @@ export function compareAndUpdateRelations(relationMap: RelationMap[], usedRelati
   const updatedRelationMap: RelationMap[] = [];
 
   for (const map of relationMap) {
-    if (!usedRelations.includes(map.path)) {
+    if (!usedRelations.includes(map.field)) {
       const paths = createRelationPaths(deepCopy(map));
       usedRelations.push(...paths);
       updatedRelationMap.push(map);
@@ -201,7 +253,7 @@ export function compareAndUpdateRelations(relationMap: RelationMap[], usedRelati
 
     if (map.children && map.children.length) {
       for (const child of map.children) {
-        child.path = map.path + "." + child.path;
+        child.field = map.field + "." + child.field;
       }
       const updatedChilds = compareAndUpdateRelations(map.children, usedRelations);
       updatedRelationMap.push(...updatedChilds);
@@ -212,11 +264,11 @@ export function compareAndUpdateRelations(relationMap: RelationMap[], usedRelati
 
 function createRelationPaths(relationMap: RelationMap): string[] {
   const paths = [];
-  paths.push(relationMap.path);
+  paths.push(relationMap.field);
 
   if (relationMap.children && relationMap.children.length) {
     for (const childMap of relationMap.children) {
-      childMap.path = relationMap.path + "." + childMap.path;
+      childMap.field = relationMap.field + "." + childMap.field;
       const path = createRelationPaths(childMap);
       paths.push(...path);
     }
@@ -352,9 +404,11 @@ export function buildRelationAggregation(
       }
     });
 
-    /*this field is for group aggregation, it does not accept nested fields, 
-    what we will do is replacing dots in the path with underline, 
-    then we will put them to the result at the final stage*/
+    /*
+    this field is for group aggregation because group aggregation doesn't accept nested fields, 
+    we will replace dots in the path with underline, 
+    then we will put them to the result at the final stage
+    */
     const underlinedField = replaceDotsWithUnderline(arrayField);
 
     aggregation.push({
@@ -365,7 +419,7 @@ export function buildRelationAggregation(
           $first: "$$ROOT"
         },
         [underlinedField]: {
-          $push: `${arrayField}`
+          $push: `$${arrayField}`
         }
       }
     });

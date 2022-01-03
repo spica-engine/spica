@@ -198,7 +198,6 @@ describe("Bucket Data Service", () => {
           },
         ])
         .toArray();
-      console.dir(res, {depth: Infinity});
     });
   });
 });
