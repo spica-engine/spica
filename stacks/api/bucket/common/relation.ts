@@ -79,8 +79,6 @@ export function getRelationPipeline(map: RelationMap[], locale: Locale): object[
       subPipeline
     );
 
-    // console.dir(stage,{depth:Infinity})
-
     pipeline.push(...stage);
   }
 
@@ -158,7 +156,12 @@ export async function createRelationMap(options: RelationMapOptions): Promise<Re
       } else if (propertySpec.type == "array") {
         const updatedPath = addRelationPath(path, propertyKey, "array");
         // assume that array is an object array
-        const map = await visit(propertySpec.items.properties, matchingPaths, depth + 1, updatedPath);
+        const map = await visit(
+          propertySpec.items.properties,
+          matchingPaths,
+          depth + 1,
+          updatedPath
+        );
         maps.push(...map);
       } else if (propertySpec.type == "relation") {
         const schema = await options.resolve(propertySpec.bucketId);
