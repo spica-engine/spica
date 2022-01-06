@@ -117,16 +117,24 @@ function getDeepestChildren(path: RelationPath): RelationPath {
   return getDeepestChildren(path.children);
 }
 
-function addRelationPath(path: RelationPath, field: string, type: "object" | "array") {
-  if (!path) {
-    return {field, type};
+function mergePaths(parent: RelationPath, children: RelationPath) {
+  if (!parent) {
+    return children;
   }
 
-  const copyPath = deepCopy(path);
+  const copyPath = deepCopy(parent);
   const deepestChildren = getDeepestChildren(copyPath);
-  deepestChildren.children = {field, type};
+  deepestChildren.children = children;
 
   return copyPath;
+}
+
+function getRelationMapDepth(path: RelationPath): number {
+  if (!path) {
+    return 0;
+  }
+
+  return getRelationMapDepth(path.children) + 1;
 }
 
 export async function createRelationMap(options: RelationMapOptions): Promise<RelationMap[]> {
@@ -150,12 +158,12 @@ export async function createRelationMap(options: RelationMapOptions): Promise<Re
       }
 
       if (propertySpec.type == "object") {
-        const updatedPath = addRelationPath(path, propertyKey, "object");
+        const updatedPath = mergePaths(path, {field: propertyKey, type: "object"});
         const map = await visit(propertySpec.properties, matchingPaths, depth + 1, updatedPath);
         maps.push(...map);
-      } else if (propertySpec.type == "array") {
-        const updatedPath = addRelationPath(path, propertyKey, "array");
+      } else if (propertySpec.type == "array" && propertySpec.items.properties) {
         // assume that array is an object array
+        const updatedPath = mergePaths(path, {field: propertyKey, type: "array"});
         const map = await visit(
           propertySpec.items.properties,
           matchingPaths,
@@ -203,13 +211,14 @@ export function resetNonOverlappingPathsInRelationMap(
     let paths: {[path: string]: object | string} = {};
     let hasKeys = false;
     for (const relation of map) {
-      const leftMatch = left.filter(segments => segments[depth] == relation.field);
-      const rightMatch = right.filter(segments => segments[depth] == relation.field);
+      const _depth = getRelationMapDepth(relation.path);
+      const leftMatch = left.filter(segments => segments[_depth + depth] == relation.field);
+      const rightMatch = right.filter(segments => segments[_depth + depth] == relation.field);
 
       if (!leftMatch.length && rightMatch.length) {
         hasKeys = true;
 
-        const path = rightMatch[0].slice(0, depth + 1).join(".");
+        const path = rightMatch[0].slice(0, _depth + depth + 1).join(".");
 
         if (relation.type == "onetoone") {
           paths[path] = {$toString: `$${path}._id`};
@@ -247,16 +256,21 @@ export function compareAndUpdateRelations(relationMap: RelationMap[], usedRelati
   const updatedRelationMap: RelationMap[] = [];
 
   for (const map of relationMap) {
-    if (!usedRelations.includes(map.field)) {
-      const paths = createRelationPaths(deepCopy(map));
+    const path = createPathFromRelationMap(map);
+    if (!usedRelations.includes(path)) {
+      const paths = createRelationPaths(map);
       usedRelations.push(...paths);
       updatedRelationMap.push(map);
       continue;
     }
 
+    const updatedPath = mergePaths(map.path, {
+      field: map.field,
+      type: map.type == RelationType.Many ? "array" : "object"
+    });
     if (map.children && map.children.length) {
       for (const child of map.children) {
-        child.field = map.field + "." + child.field;
+        child.path = mergePaths(updatedPath, child.path);
       }
       const updatedChilds = compareAndUpdateRelations(map.children, usedRelations);
       updatedRelationMap.push(...updatedChilds);
@@ -267,13 +281,17 @@ export function compareAndUpdateRelations(relationMap: RelationMap[], usedRelati
 
 function createRelationPaths(relationMap: RelationMap): string[] {
   const paths = [];
-  paths.push(relationMap.field);
+  const path = createPathFromRelationMap(relationMap);
+  paths.push(path);
 
+  const updatedPath = mergePaths(relationMap.path, {
+    field: relationMap.field,
+    type: relationMap.type == RelationType.Many ? "array" : "object"
+  });
   if (relationMap.children && relationMap.children.length) {
     for (const childMap of relationMap.children) {
-      childMap.field = relationMap.field + "." + childMap.field;
-      const path = createRelationPaths(childMap);
-      paths.push(...path);
+      childMap.path = mergePaths(updatedPath, childMap.path);
+      paths.push(...createRelationPaths(childMap));
     }
   }
 

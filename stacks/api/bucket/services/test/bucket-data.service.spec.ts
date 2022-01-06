@@ -168,13 +168,11 @@ describe("Bucket Data Service", () => {
           {building: insertedBuildings[0], level: 2},
           {building: insertedBuildings[1], level: 37},
           {level: 3333}
-
         ]
       });
 
       const res = await userBucketData._coll
         .aggregate([
-          {$unwind}
           {
             $lookup: {
               from: `bucket_${buildingBucketId}`,
@@ -195,7 +193,7 @@ describe("Bucket Data Service", () => {
               ],
               as: "_buildings"
             }
-          },
+          }
         ])
         .toArray();
     });

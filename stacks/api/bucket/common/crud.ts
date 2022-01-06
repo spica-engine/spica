@@ -113,6 +113,9 @@ export async function findDocuments<T>(
     .attachToPipeline(!!ruleResetStage, ruleResetStage)
     .filterByUserRequest(params.filter);
 
+    console.dir(filtersAppliedPipeline.result(),{depth:Infinity});
+  
+
   const seekingPipeline: iPipelineBuilder = seekingPipelineBuilder
     .sort(params.sort)
     .skip(params.skip)
