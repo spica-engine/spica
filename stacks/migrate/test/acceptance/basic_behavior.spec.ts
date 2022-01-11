@@ -1,20 +1,20 @@
 import {Db, getConnectionUri, getDatabaseName, start} from "@spica-server/database/testing";
 import * as color from "cli-color/lib/supports-color";
 import * as fs from "fs";
-import {run} from "../../src/main";
+import {run} from "@spica/migrate/src/main";
 
 describe("Basic behavior", () => {
   let db: Db;
   let args: string[];
 
   beforeAll(() => {
-    process.chdir(__dirname);
+    process.env.TESTONLY_MIGRATION_LOOKUP_DIR = __dirname;
     color.disableColor();
   });
 
   beforeEach(async () => {
     fs.writeFileSync(
-      "./migrations/index.json",
+      __dirname + "/migrations/index.json",
       JSON.stringify({
         "1.0.0": [
           __dirname + "/migrations/insert_an_item",
@@ -30,7 +30,7 @@ describe("Basic behavior", () => {
   }, 10000);
 
   afterEach(() => {
-    fs.unlinkSync("./migrations/index.json");
+    fs.unlinkSync( __dirname + "/migrations/index.json");
   });
 
   it("should throw an error when --to is not valid", async () => {

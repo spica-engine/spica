@@ -1,7 +1,7 @@
 import * as Storage from "@spica-devkit/storage";
 import {Axios} from "@spica-devkit/internal_common";
 import * as BSON from "bson";
-import {jsonToArrayBuffer} from "../src/utility";
+import {jsonToArrayBuffer} from "@spica-devkit/storage/src/utility";
 
 jasmine.getEnv().allowRespy(true);
 

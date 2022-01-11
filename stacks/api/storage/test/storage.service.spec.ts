@@ -4,7 +4,7 @@ import {StorageService} from "@spica-server/storage";
 import {StorageObject} from "@spica-server/storage/src/body";
 import {Default} from "@spica-server/storage/src/strategy/default";
 import {Strategy} from "@spica-server/storage/src/strategy/strategy";
-import {STORAGE_OPTIONS} from "../src/options";
+import {STORAGE_OPTIONS} from "@spica-server/storage/src/options";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 

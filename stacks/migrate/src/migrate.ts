@@ -1,18 +1,23 @@
 import * as color from "cli-color";
-import * as fs from "fs";
 import * as mongodb from "mongodb";
 import * as path from "path";
+import * as fs from "fs";
 import * as semver from "semver";
-import {setSession} from "./session";
+import { setSession } from "./session";
+import MigrationsIndex = require("./migrations/index.json")
 
 export type MigrationManifest = {
   [k: string]: string[];
 };
 
 export function loadMigrations(): MigrationManifest {
-  const index =
-    (fs.existsSync("./migrations/index.json") ? "." : __dirname) + "/migrations/index.json";
-  return JSON.parse(fs.readFileSync(index).toString());
+  try {
+    console.log("reading from manifest : " +     process.env.TESTONLY_MIGRATION_LOOKUP_DIR);
+    return JSON.parse(fs.readFileSync(path.join(process.env.TESTONLY_MIGRATION_LOOKUP_DIR, "migrations", "index.json")).toString())
+  } catch(e) {
+    console.log(e);
+    return MigrationsIndex as MigrationManifest
+  }
 }
 
 export function migrationVersions(from: string, to: string): string[] {

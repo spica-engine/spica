@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
+load("//tools/ts_project:index.bzl", "ts_project")
 load("@build_bazel_rules_nodejs//:index.bzl", "nodejs_binary")
 load(":worker.bzl", "database_worker")
 
@@ -27,7 +27,7 @@ database_worker(
     type = "standalone",
 )
 
-ts_library(
+ts_project(
     name = "testing",
     srcs = [
         "index.ts",
@@ -39,7 +39,7 @@ ts_library(
         ":replicaset",
         ":standalone",
     ],
-    module_name = "@spica-server/database/testing",
+    package_name = "@spica-server/database/testing",
     deps = [
         "//packages/database",
         "@npm//@nestjs/common",

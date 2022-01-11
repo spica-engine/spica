@@ -1,5 +1,4 @@
-import {Schema} from "./pipe";
-import {Validator} from "./validator";
+import {Schema, Validator} from "@spica-server/core/schema";
 
 describe("schema pipe", () => {
   it("should remove additional with ref", async () => {

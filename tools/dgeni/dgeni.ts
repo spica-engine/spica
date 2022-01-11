@@ -11,9 +11,9 @@ import { ListProcessor } from "./processors/list";
 import { SymbolFilterProcessor } from "./processors/symbol-filter";
 import { ReadMarkdownFiles, remarkPackage } from "./remark";
 
-const jsdocPackage = require("dgeni-packages/jsdoc");
-const nunjucksPackage = require("dgeni-packages/nunjucks");
-const typescriptPackage = require("dgeni-packages/typescript");
+import jsdocPackage = require("dgeni-packages/jsdoc");
+import nunjucksPackage = require("dgeni-packages/nunjucks");
+import typescriptPackage = require("dgeni-packages/typescript");
 
 export const defaultPackage = new Package("default", [
   jsdocPackage,

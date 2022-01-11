@@ -45,7 +45,6 @@ container_image(
         "maintainer": "Spica maintainers <dev@spicaengine.com>",
     },
     legacy_run_behavior = False,
-    stamp = True,
     symlinks = {
         "/etc/nginx/nginx.conf": "/container/nginx.conf",
         "/usr/share/nginx/html": "/spica_pkg/spica_stamp_pkg/dist/spica",

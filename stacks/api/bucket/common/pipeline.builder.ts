@@ -1,6 +1,6 @@
 import * as expression from "@spica-server/bucket/expression";
 import {ObjectId} from "@spica-server/database";
-import {Bucket} from "../services/src/bucket";
+import {Bucket} from "@spica-server/bucket/services";
 import {CrudFactories} from "./crud";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
 import {deepCopy} from "./patch";

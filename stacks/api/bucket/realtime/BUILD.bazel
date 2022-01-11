@@ -1,14 +1,14 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
-
-ts_library(
+ts_project(
     name = "realtime",
+    package_name = "@spica-server/bucket/realtime",
     srcs = glob([
         "src/*.ts",
         "index.ts",
     ]),
-    module_name = "@spica-server/bucket/realtime",
     deps = [
         "//packages/core/schema",
         "//packages/database",

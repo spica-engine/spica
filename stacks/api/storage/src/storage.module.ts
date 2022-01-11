@@ -9,6 +9,11 @@ import {Strategy} from "./strategy/strategy";
 import {BASE_64} from "./schema/format";
 import {registerStatusProvider} from "./status";
 
+import BsonObject = require("./schema/bson.object.schema.json");
+import JsonObject = require("./schema/json.object.schema.json");
+import BodySchema = require("./schema/body.schema.json");
+import BodySingleSchema = require("./schema/body.single.schema.json");
+
 @Module({})
 export class StorageModule {
   constructor(storageService: StorageService) {
@@ -20,12 +25,7 @@ export class StorageModule {
       module: StorageModule,
       imports: [
         SchemaModule.forChild({
-          schemas: [
-            require("./schema/bson.object.schema.json"),
-            require("./schema/json.object.schema.json"),
-            require("./schema/body.schema.json"),
-            require("./schema/body.single.schema.json")
-          ],
+          schemas: [BsonObject, JsonObject, BodySchema, BodySingleSchema],
           formats: [BASE_64]
         })
       ],
