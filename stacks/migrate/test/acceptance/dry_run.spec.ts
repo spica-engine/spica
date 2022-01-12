@@ -32,7 +32,7 @@ describe("DRY Run", () => {
   }, 10000);
 
   afterEach(() => {
-    fs.unlinkSync( __dirname + "/migrations/index.json");
+    fs.unlinkSync(__dirname + "/migrations/index.json");
   });
 
   it("should complete the migration but not commit anything", async () => {

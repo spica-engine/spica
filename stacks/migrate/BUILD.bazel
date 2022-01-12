@@ -7,11 +7,11 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_push")
 
 ts_project(
     name = "migrate",
+    package_name = "@spica/migrate",
     srcs = glob([
         "src/**/*.ts",
-        "src/migrations/index.json"
+        "src/migrations/index.json",
     ]),
-    package_name = "@spica/migrate",
     deps = [
         "@npm//@types/mongodb",
         "@npm//@types/node",

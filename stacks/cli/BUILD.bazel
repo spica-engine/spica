@@ -40,10 +40,12 @@ js_library(
     deps = [":compile_cli"],
 )
 
-
 nodejs_binary(
     name = "bin",
-    data = [":cli", "bin/spica"],
+    data = [
+        "bin/spica",
+        ":cli",
+    ],
     entry_point = "bin/spica",
 )
 

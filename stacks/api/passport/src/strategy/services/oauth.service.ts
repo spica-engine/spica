@@ -3,7 +3,7 @@ import {ObjectId} from "@spica-server/database";
 import {OAuthRequestDetails, OAuthStrategy, Strategy, StrategyTypeService} from "../interface";
 import {StrategyService} from "./strategy.service";
 import {PassportOptions, PASSPORT_OPTIONS, RequestService, REQUEST_SERVICE} from "../../options";
-import * as uuid from "uuid";
+import {v4 as uuidv4} from "uuid";
 
 @Injectable()
 export class OAuthService implements StrategyTypeService {
@@ -50,7 +50,7 @@ export class OAuthService implements StrategyTypeService {
       params.push(`${param}=${value}`);
     }
 
-    const state = uuid();
+    const state = uuidv4();
 
     params.push(`state=${state}`);
 

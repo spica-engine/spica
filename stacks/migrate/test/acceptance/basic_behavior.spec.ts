@@ -30,7 +30,7 @@ describe("Basic behavior", () => {
   }, 10000);
 
   afterEach(() => {
-    fs.unlinkSync( __dirname + "/migrations/index.json");
+    fs.unlinkSync(__dirname + "/migrations/index.json");
   });
 
   it("should throw an error when --to is not valid", async () => {

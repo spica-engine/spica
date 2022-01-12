@@ -29,6 +29,7 @@ database_worker(
 
 ts_project(
     name = "testing",
+    package_name = "@spica-server/database/testing",
     srcs = [
         "index.ts",
         "start.ts",
@@ -39,7 +40,6 @@ ts_project(
         ":replicaset",
         ":standalone",
     ],
-    package_name = "@spica-server/database/testing",
     deps = [
         "//packages/database",
         "@npm//@nestjs/common",

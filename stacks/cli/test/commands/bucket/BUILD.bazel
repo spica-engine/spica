@@ -8,8 +8,8 @@ ts_project(
     testonly = True,
     srcs = ["schema.spec.ts"],
     declaration = True,
-    source_map = True,
     resolve_json_module = True,
+    source_map = True,
     tsconfig = "//:tsconfig.json",
     deps = [
         "//stacks/cli",

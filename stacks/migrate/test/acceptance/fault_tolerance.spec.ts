@@ -6,7 +6,7 @@ describe("Fault Tolerance", () => {
   let database: {uri: string; name: string};
   let db: Db;
 
-  beforeAll(() =>     process.env.TESTONLY_MIGRATION_LOOKUP_DIR = __dirname);
+  beforeAll(() => (process.env.TESTONLY_MIGRATION_LOOKUP_DIR = __dirname));
 
   beforeEach(async () => {
     fs.writeFileSync(
@@ -28,7 +28,7 @@ describe("Fault Tolerance", () => {
   }, 10000);
 
   afterEach(() => {
-    fs.unlinkSync( __dirname + "/migrations/index.json");
+    fs.unlinkSync(__dirname + "/migrations/index.json");
   });
 
   it("should not commit any changes", async () => {

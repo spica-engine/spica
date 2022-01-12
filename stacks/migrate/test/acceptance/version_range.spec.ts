@@ -31,7 +31,7 @@ describe("Version range", () => {
   }, 10000);
 
   afterEach(() => {
-    fs.unlinkSync( __dirname + "/migrations/index.json");
+    fs.unlinkSync(__dirname + "/migrations/index.json");
   });
 
   it("should show versions", async () => {

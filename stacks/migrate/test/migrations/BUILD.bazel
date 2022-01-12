@@ -11,7 +11,7 @@ ts_project(
         "//packages/database/testing",
         "//stacks/migrate",
         "@npm//@types/jasmine",
-        "@npm//cli-color"
+        "@npm//cli-color",
     ],
 )
 
