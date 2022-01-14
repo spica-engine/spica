@@ -11,6 +11,8 @@ import * as open from "open";
 import {Stream} from "stream";
 import {spin} from "../../console";
 import {projectName} from "../../validator";
+import * as path from "path";
+import * as fs from "fs";
 
 function streamToBuffer(stream: Stream): Promise<Buffer> {
   return new Promise(resolve => {
@@ -33,7 +35,7 @@ export class ImageNotFoundError extends Error {
   }
 }
 
-async function create({args: cmdArgs, options, ddash}: ActionParameters) {
+async function create({args: cmdArgs, options}: ActionParameters) {
   const {name}: {name?: string} = cmdArgs;
 
   const machine = new docker();
@@ -41,23 +43,41 @@ async function create({args: cmdArgs, options, ddash}: ActionParameters) {
   const networkName = `${name}-network`,
     databaseName = `${name}-db`,
     port = await getport({port: options.port as number}),
-    publicHost = options.publicUrl ? options.publicUrl : `http://localhost:${port}`;
+    publicHost = `http://localhost:${port}`;
 
-  if (!options.publicUrl && options.port.toString() != port.toString() && options.port != 4500) {
+  if (options.port.toString() != port.toString() && options.port != 4500) {
     console.info(`Port ${options.port} already in use, the port ${port} will be used instead.`);
   }
 
-  let args = ddash.map(r => r.toString());
+  let identifier = "spica";
+  let password = "spica";
+  let args = [];
+  if (options.apiOptions) {
+    const filename = path.relative(process.cwd(), options.apiOptions as string);
+    const rawFile = fs.readFileSync(filename, {encoding: "utf8"});
+
+    let apiOptions = {};
+    try {
+      apiOptions = JSON.parse(rawFile);
+      identifier = apiOptions["passport-default-identity-identifier"] || identifier;
+      password = apiOptions["passport-default-identity-password"] || password;
+    } catch (error) {
+      throw Error(`Error while parsing api-options file. ${error}`);
+    }
+
+    for (const [key, value] of Object.entries(apiOptions)) {
+      args.push(`--${key}=${value}`);
+    }
+  }
 
   args = [
     ...args,
-    `--port=80`,
-    `--function-api-url=http://localhost`,
+    // If user defines some of these values in the apiOptions file, they will be overwriten.
+    // We should explain this behavior to users on the documentation or somewhere else.
     `--database-name=${name}`,
     `--database-replica-set=${name}`,
     `--database-uri="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`,
     `--public-url=${publicHost}/api`,
-    `--passport-password=${name}`,
     `--passport-secret=${name}`,
     `--persistent-path=/var/data`
   ];
@@ -429,8 +449,8 @@ async function create({args: cmdArgs, options, ddash}: ActionParameters) {
 Spica ${name} is serving on ${publicHost}.
 Open your browser on ${publicHost} to login.
 
-Identitifer: spica
-Password: ${name}
+Identitifer: ${identifier}
+Password: ${password}
   `);
 
   if (options.open) {
@@ -450,9 +470,6 @@ export default function({createCommand}: CreateCommandParameters): Command {
         validator: CaporalValidator.NUMBER
       }
     )
-    .option("--public-url", "Publicly accessible url of the project.", {
-      validator: CaporalValidator.STRING
-    })
     .option("--image-version", "Version of the spica to run.", {
       default: "latest",
       validator: CaporalValidator.STRING
@@ -482,6 +499,9 @@ export default function({createCommand}: CreateCommandParameters): Command {
     .option("--database-replicas", "Number of database nodes.", {
       default: "1",
       validator: CaporalValidator.NUMBER
+    })
+    .option("--api-options", "that contains the api options to apply", {
+      validator: CaporalValidator.STRING
     })
     .action((create as unknown) as Action);
 }

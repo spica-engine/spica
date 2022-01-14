@@ -42,4 +42,10 @@ export namespace context {
     const cxts = load();
     return Object.entries(cxts).map(([name, ctx]) => ({...ctx, name}));
   }
+
+  export function remove(name: string) {
+    const cxts = load();
+    delete cxts[name];
+    write(cxts);
+  }
 }
