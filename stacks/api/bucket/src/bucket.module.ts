@@ -1,12 +1,11 @@
 import {DynamicModule, Global, Module, Type} from "@nestjs/common";
-import {HistoryModule, HistoryService} from "@spica-server/bucket/history";
+import {HistoryModule} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
-import {BucketService, ServicesModule} from "@spica-server/bucket/services";
+import {BucketService, BucketDataService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {BUCKET_LANGUAGE_FINALIZER, PreferenceService} from "@spica-server/preference/services";
-import {BucketCacheModule, BucketCacheService} from "@spica-server/bucket/cache";
-import {BucketDataService} from "../services/src/bucket-data.service";
+import {BucketCacheModule} from "@spica-server/bucket/cache";
 import {BucketDataController} from "./bucket-data.controller";
 import {BucketController} from "./bucket.controller";
 import {
@@ -19,12 +18,14 @@ import {provideLanguageFinalizer} from "@spica-server/bucket/common";
 import {registerInformers} from "./machinery";
 import {DocumentScheduler} from "./scheduler";
 import {registerStatusProvider} from "./status";
+import BucketSchema = require("./schemas/bucket.schema.json");
+import BucketsSchema = require("./schemas/buckets.schema.json");
 
 @Module({})
 export class BucketModule {
   static forRoot(options: BucketOptions): DynamicModule {
     const schemaModule = SchemaModule.forChild({
-      schemas: [require("./schemas/bucket.schema.json"), require("./schemas/buckets.schema.json")],
+      schemas: [BucketSchema, BucketsSchema],
       keywords: [bucketSpecificDefault],
       customFields: [
         // common,

@@ -1,14 +1,14 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
-
-ts_library(
+ts_project(
     name = "machinery",
+    package_name = "@spica-server/machinery",
     srcs = glob([
         "src/**/*.ts",
         "index.ts",
     ]),
-    module_name = "@spica-server/machinery",
     deps = [
         "//packages/core/schema",
         "//packages/database",

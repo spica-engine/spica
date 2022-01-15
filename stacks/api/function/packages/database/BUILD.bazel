@@ -1,21 +1,28 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("@build_bazel_rules_nodejs//:index.bzl", "pkg_npm")
 load("@npm//@bazel/rollup:index.bzl", "rollup_bundle")
 
 SRCS = glob(["src/*.ts"]) + ["index.ts"]
 
-ts_library(
+ts_project(
     name = "database",
+    package_name = "@spica-devkit/database",
     srcs = SRCS,
-    module_name = "@spica-devkit/database",
     tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
         "@npm//@types/mongodb",
         "@npm//@types/node",
         "@npm//mongodb",
     ],
+)
+
+filegroup(
+    name = "types",
+    srcs = [":database"],
+    output_group = "types",
 )
 
 ROLLUP_DEPS = [
@@ -54,7 +61,7 @@ genrule(
     srcs = [
         ":esm",
         ":cjs",
-        ":database",
+        ":types",
     ],
     outs = [
         "dist/index.js",
@@ -76,6 +83,7 @@ genrule(
 
 pkg_npm(
     name = "package",
+    package_name = "@spica-devkit/database",
     srcs = [
         "package.json",
         "scripts/postinstall.js",

@@ -1,9 +1,10 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
-ts_library(
+ts_project(
     name = "service_test_lib",
     testonly = True,
     srcs = [
@@ -28,7 +29,7 @@ jasmine_node_test(
     ],
 )
 
-ts_library(
+ts_project(
     name = "schema_test_lib",
     testonly = True,
     srcs = [
@@ -54,7 +55,7 @@ jasmine_node_test(
     ],
 )
 
-ts_library(
+ts_project(
     name = "invoker_test_lib",
     testonly = True,
     srcs = [
@@ -65,7 +66,6 @@ ts_library(
         "//stacks/api/function/webhook",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
-        "@npm//@types/node-fetch",
         "@npm//node-fetch",
     ],
 )
@@ -80,7 +80,7 @@ jasmine_node_test(
     ],
 )
 
-ts_library(
+ts_project(
     name = "controller_test_lib",
     testonly = True,
     srcs = [
@@ -108,7 +108,7 @@ jasmine_node_test(
     ],
 )
 
-ts_library(
+ts_project(
     name = "log_controller_test_lib",
     testonly = True,
     srcs = [
@@ -135,7 +135,7 @@ jasmine_node_test(
     ],
 )
 
-ts_library(
+ts_project(
     name = "log_service_test_lib",
     testonly = True,
     srcs = [
