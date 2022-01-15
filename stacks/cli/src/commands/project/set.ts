@@ -1,7 +1,7 @@
 import {ActionParameters, CaporalValidator, Command, CreateCommandParameters} from "@caporal/core";
 import {projectName} from "../../validator";
 import {spin} from "../../console";
-import {DockerMachine} from "../project";
+import {DockerMachine} from "../../project";
 
 async function set({args, options}: ActionParameters) {
   const name = args.name as string;
@@ -18,27 +18,34 @@ async function set({args, options}: ActionParameters) {
     return console.error(`Project '${name}' does not exist.`);
   }
 
-  let oldClient = projectContainers.find(c => c.Image.startsWith("spicaengine/spica"));
-  if(!oldClient){
-    console.info("Client container is missing, it will be recreated.")
+  let clientVersion;
+  const oldClient = projectContainers.find(c => c.Image.startsWith("spicaengine/spica"));
+  if (!oldClient) {
+    return console.error(`Unable to set the version of the project since it is not working.`);
   }
+  clientVersion = oldClient.Image.substring(oldClient.Image.indexOf(":") + 1);
 
+  let apiVersion;
   const oldApi = projectContainers.find(c => c.Image.startsWith("spicaengine/api"));
-
-  const clientVersion = oldClient.Image.substring(oldClient.Image.indexOf(":") + 1);
-  const apiVersion = oldApi.Image.substring(oldApi.Image.indexOf(":") + 1);
+  if (!oldApi) {
+    return console.error(`Unable to set the version of the project since it is not working.`);
+  }
+  apiVersion = oldApi.Image.substring(oldApi.Image.indexOf(":") + 1);
 
   if (clientVersion == desiredVersion && apiVersion == desiredVersion) {
     return console.log(`Project '${name}' has been using '${desiredVersion}' image already.`);
   }
 
-  const commands = oldApi.Command.split(" ");
+  const commands = oldApi ? oldApi.Command.split(" ") : [];
 
   await spin({
     text: "Shutting down and removing the previous containers..",
     op: async () => {
       await Promise.all(
         [oldClient, oldApi].map(async containerInfo => {
+          if (!containerInfo) {
+            return;
+          }
           const container = await machine.getContainer(containerInfo.Id);
           await container.remove({
             v: true, // Remove volumes attached to the container
@@ -114,7 +121,7 @@ async function set({args, options}: ActionParameters) {
       spinner.text = `Creating spica containers (1/2)`;
 
       const api = await machine.createContainer({
-        Image: `spicaengine/api:${options.imageVersion}`,
+        Image: `spicaengine/api:${desiredVersion}`,
         name: `${name}-api`,
         Cmd: commands,
         Labels: {namespace: name},
@@ -149,21 +156,7 @@ async function set({args, options}: ActionParameters) {
     }
   });
 
-  console.dir(oldClient, {depth: Infinity});
-
-  //   console.info(`
-  // Spica ${name} is serving on ${oldClient}.
-  // Open your browser on ${publicHost} to login.
-
-  // Identitifer: ${identifier}
-  // Password: ${password}
-  //   `);
-
-  //   if (options.open) {
-  //     await open(`${publicHost}/spica`);
-  //   }
-
-  // await startSpicaContainers(name, {imageVersion: desiredVersion}, network, commands);
+  console.info(`Project '${name}' version has been set to ${desiredVersion}.`);
 }
 
 export default function({createCommand}: CreateCommandParameters): Command {

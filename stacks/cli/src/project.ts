@@ -12,9 +12,11 @@ export class DockerMachine extends docker {
   }
 
   doesImageExist(image: string, tag: string) {
-    return !!machine.listImages({
-      filters: JSON.stringify({reference: [`${image}:${tag}`]})
-    });
+    return machine
+      .listImages({
+        filters: JSON.stringify({reference: [`${image}:${tag}`]})
+      })
+      .then(images => images.length > 0);
   }
 
   pullImage(image: string, tag: string) {

@@ -12,7 +12,7 @@ import {spin} from "../../console";
 import {projectName} from "../../validator";
 import * as path from "path";
 import * as fs from "fs";
-import {DockerMachine} from "../project";
+import {DockerMachine} from "../../project";
 
 function streamToBuffer(stream: Stream): Promise<Buffer> {
   return new Promise(resolve => {
