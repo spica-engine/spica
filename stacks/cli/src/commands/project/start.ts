@@ -5,7 +5,6 @@ import {
   Command,
   CreateCommandParameters
 } from "@caporal/core";
-import * as docker from "dockerode";
 import * as getport from "get-port";
 import * as open from "open";
 import {Stream} from "stream";
@@ -13,6 +12,7 @@ import {spin} from "../../console";
 import {projectName} from "../../validator";
 import * as path from "path";
 import * as fs from "fs";
+import {DockerMachine} from "../project";
 
 function streamToBuffer(stream: Stream): Promise<Buffer> {
   return new Promise(resolve => {
@@ -29,16 +29,10 @@ function streamToBuffer(stream: Stream): Promise<Buffer> {
   });
 }
 
-export class ImageNotFoundError extends Error {
-  constructor(image: string, tag: string) {
-    super(`Could not find the image ${image}:${tag}.`);
-  }
-}
-
 async function create({args: cmdArgs, options}: ActionParameters) {
   const {name}: {name?: string} = cmdArgs;
 
-  const machine = new docker();
+  const machine = new DockerMachine();
 
   const networkName = `${name}-network`,
     databaseName = `${name}-db`,
@@ -125,29 +119,6 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     });
   }
 
-  async function doesImageExist(image: string, tag: string) {
-    const images = await machine.listImages({
-      filters: JSON.stringify({reference: [`${image}:${tag}`]})
-    });
-    return images.length > 0;
-  }
-
-  function pullImage(image: string, tag: string) {
-    return new Promise((resolve, reject) =>
-      machine.pull(`${image}:${tag}`, {}, function(err, stream) {
-        if (err) {
-          if (err.message && err.message.indexOf(`manifest for ${image}`)) {
-            reject(new ImageNotFoundError(image, tag));
-          } else {
-            reject(err);
-          }
-        } else {
-          machine.modem.followProgress(stream, resolve);
-        }
-      })
-    );
-  }
-
   await spin({
     text: `Pulling images.`,
     op: async spinner => {
@@ -173,7 +144,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
       const imagesToPull: typeof images = [];
 
       for (const image of images) {
-        const exists = await doesImageExist(image.image, image.tag);
+        const exists = await machine.doesImageExist(image.image, image.tag);
         if (exists && options.imagePullPolicy == "if-not-present") {
           continue;
         }
@@ -188,13 +159,13 @@ async function create({args: cmdArgs, options}: ActionParameters) {
       }
       return Promise.all(
         imagesToPull.map(image =>
-          pullImage(image.image, image.tag).then(() => increasePulledCount())
+          machine.pullImage(image.image, image.tag).then(() => increasePulledCount())
         )
       );
     }
   });
 
-  const network: docker.Network = await spin({
+  const network = await spin({
     text: `Creating a network named ${networkName}.`,
     op: machine.createNetwork({
       Name: networkName,
