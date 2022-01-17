@@ -2,6 +2,7 @@ import {ActionParameters, CaporalValidator, Command, CreateCommandParameters} fr
 import {projectName} from "../../validator";
 import {spin} from "../../console";
 import {DockerMachine} from "../../project";
+import * as semver from "semver";
 
 async function set({args, options}: ActionParameters) {
   const name = args.name as string;
@@ -18,23 +19,25 @@ async function set({args, options}: ActionParameters) {
     return console.error(`Project '${name}' does not exist.`);
   }
 
-  let clientVersion;
+  let oldClientVersion;
   const oldClient = projectContainers.find(c => c.Image.startsWith("spicaengine/spica"));
   if (!oldClient) {
-    return console.error(`Unable to set the version of the project since it is not working.`);
+    return console.error("Unable to set the version of the project. Make sure that it's running with no issue.");
   }
-  clientVersion = oldClient.Image.substring(oldClient.Image.indexOf(":") + 1);
+  oldClientVersion = oldClient.Image.substring(oldClient.Image.indexOf(":") + 1);
 
-  let apiVersion;
+  let oldApiVersion;
   const oldApi = projectContainers.find(c => c.Image.startsWith("spicaengine/api"));
   if (!oldApi) {
-    return console.error(`Unable to set the version of the project since it is not working.`);
+    return console.error("Unable to set the version of the project. Make sure that it's running with no issue");
   }
-  apiVersion = oldApi.Image.substring(oldApi.Image.indexOf(":") + 1);
+  oldApiVersion = oldApi.Image.substring(oldApi.Image.indexOf(":") + 1);
 
-  if (clientVersion == desiredVersion && apiVersion == desiredVersion) {
-    return console.log(`Project '${name}' has been using '${desiredVersion}' image already.`);
+  if (oldClientVersion == desiredVersion && oldApiVersion == desiredVersion) {
+    return console.warn(`Version of the project '${name}' is already '${desiredVersion}'.`);
   }
+
+  const isVersionUpgrade = semver.gt(desiredVersion, oldApiVersion);
 
   const commands = oldApi ? oldApi.Command.split(" ") : [];
 
@@ -76,6 +79,13 @@ async function set({args, options}: ActionParameters) {
           tag: desiredVersion
         }
       ];
+
+      if (isVersionUpgrade) {
+        images.push({
+          image: "spicaengine/migrate",
+          tag: desiredVersion
+        });
+      }
 
       const imagesToPull: typeof images = [];
 
@@ -156,11 +166,50 @@ async function set({args, options}: ActionParameters) {
     }
   });
 
+  if (isVersionUpgrade) {
+    await spin({
+      text: "Migrating existing data to the new version.",
+      op: async _ => {
+        const existingMigrate = projectContainers.find(p =>
+          p.Image.startsWith("spicaengine/migrate")
+        );
+
+        if (existingMigrate) {
+          await machine.getContainer(existingMigrate.Id).remove();
+        }
+
+        const databaseUriCommand = commands.find(c => c.startsWith("--database-uri="));
+        const databaseNameCommand = commands.find(c => c.startsWith("--database-name="));
+
+        const migrate = await machine.createContainer({
+          Image: `spicaengine/migrate:${desiredVersion}`,
+          name: `${name}-migrate`,
+          Labels: {namespace: name},
+          Cmd: [
+            `--from=${oldApiVersion}`,
+            `--to=${desiredVersion}`,
+            databaseUriCommand,
+            databaseNameCommand,
+            "--continue-if-versions-are-equal=true"
+          ],
+          HostConfig: {
+            RestartPolicy: {
+              Name: "on-failure",
+              MaximumRetryCount: 3
+            }
+          }
+        });
+        await network.connect({Container: migrate.id});
+        await migrate.start();
+      }
+    });
+  }
+
   console.info(`Project '${name}' version has been set to ${desiredVersion}.`);
 }
 
 export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand("Upgrade or downgrade your existing project version.")
+  return createCommand("Upgrade or downgrade the version of your existing project.")
     .argument("<name>", "Name of the project.", {validator: projectName})
     .argument("<version>", "Version of the spica.")
     .option(

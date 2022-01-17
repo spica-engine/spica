@@ -35,6 +35,8 @@ ts_library(
         "@npm//ora",
         "@npm//pretty-ms",
         "@npm//yaml",
+        "@npm//semver",
+        "@npm//@types/semver",
     ],
 )
 
