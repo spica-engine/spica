@@ -1,10 +1,10 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
+load("//tools/ts_project:index.bzl", "ts_project")
 load("@io_bazel_rules_docker//nodejs:image.bzl", "nodejs_image")
 
-ts_library(
+ts_project(
     name = "mongoreplicationcontroller",
     srcs = ["main.ts"],
     deps = [

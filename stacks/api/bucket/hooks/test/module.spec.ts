@@ -10,7 +10,7 @@ import {
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {from} from "rxjs";
 import {bufferCount, take} from "rxjs/operators";
-import {collectionSlugFactory} from "../src/module";
+import {collectionSlugFactory} from "@spica-server/bucket/hooks/src/module";
 
 describe("hook module", () => {
   describe("schema", () => {

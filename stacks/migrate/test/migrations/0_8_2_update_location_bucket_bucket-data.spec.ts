@@ -1,6 +1,6 @@
 import {Db, getConnectionUri, getDatabaseName, start} from "@spica-server/database/testing";
 import * as color from "cli-color/lib/supports-color";
-import {run} from "../../src/main";
+import {run} from "@spica/migrate/src/main";
 
 describe("Update location for bucket schema and bucket-data", () => {
   let db: Db;

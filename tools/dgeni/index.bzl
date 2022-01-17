@@ -3,8 +3,7 @@
   specified entry points and outputs the API docs into a package relative directory.
 """
 
-load("@build_bazel_rules_nodejs//internal/providers:npm_package_info.bzl", "NpmPackageInfo", "node_modules_aspect")
-load("@build_bazel_rules_nodejs//internal/providers:declaration_info.bzl", "DeclarationInfo")
+load("@build_bazel_rules_nodejs//:providers.bzl", "DeclarationInfo", "NpmPackageInfo", "node_modules_aspect")
 load("@npm//@bazel/typescript/internal:common/compilation.bzl", "DEPS_ASPECTS")
 
 DocumentationInfo = provider(
