@@ -20,6 +20,7 @@ ts_project(
         "@npm_cli//@types/dockerode",
         "@npm_cli//@types/json-schema",
         "@npm_cli//@types/node",
+        "@npm_cli//@types/semver",
         "@npm_cli//axios",
         "@npm_cli//colorette",
         "@npm_cli//columnify",
@@ -30,9 +31,8 @@ ts_project(
         "@npm_cli//open",
         "@npm_cli//ora",
         "@npm_cli//pretty-ms",
-        "@npm_cli//yaml",
         "@npm_cli//semver",
-        "@npm_cli//@types/semver",
+        "@npm_cli//yaml",
     ],
 )
 

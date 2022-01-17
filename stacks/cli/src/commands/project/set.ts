@@ -22,14 +22,18 @@ async function set({args, options}: ActionParameters) {
   let oldClientVersion;
   const oldClient = projectContainers.find(c => c.Image.startsWith("spicaengine/spica"));
   if (!oldClient) {
-    return console.error("Unable to set the version of the project. Make sure that it's running with no issue.");
+    return console.error(
+      "Unable to set the version of the project. Make sure that it's running with no issue."
+    );
   }
   oldClientVersion = oldClient.Image.substring(oldClient.Image.indexOf(":") + 1);
 
   let oldApiVersion;
   const oldApi = projectContainers.find(c => c.Image.startsWith("spicaengine/api"));
   if (!oldApi) {
-    return console.error("Unable to set the version of the project. Make sure that it's running with no issue");
+    return console.error(
+      "Unable to set the version of the project. Make sure that it's running with no issue"
+    );
   }
   oldApiVersion = oldApi.Image.substring(oldApi.Image.indexOf(":") + 1);
 
