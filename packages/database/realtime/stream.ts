@@ -8,7 +8,6 @@ import {levenshtein} from "./levenshtein";
 import {late} from "./operators";
 
 export class Emitter<T extends {_id: string | ObjectId}> {
-  private changeStream: ChangeStream;
   private sort = new Subject<DatabaseChange<T>>();
   private sortSubscription: Subscription;
 
@@ -21,8 +20,6 @@ export class Emitter<T extends {_id: string | ObjectId}> {
     subscriber: Subscriber<StreamChunk<T>>
   ) => TeardownLogic;
 
-  public listenerCount = 0;
-
   public collectionName;
 
   private passThrough = new PassThrough({
@@ -30,11 +27,10 @@ export class Emitter<T extends {_id: string | ObjectId}> {
   });
   constructor(
     private collection: Collection,
-    private stream: ChangeStream,
+    private changeStream: ChangeStream,
     private options: FindOptions<T>
   ) {
     this.collectionName = collection.collectionName;
-    this.changeStream = stream;
     this.subscribe = observer => {
       this.observer = observer;
       if (options.sort) {
@@ -168,14 +164,14 @@ export class Emitter<T extends {_id: string | ObjectId}> {
         .toArray()
         .then(documents => {
           for (const document of documents) {
-            // we can not use this.next since it's designed for notify all listeners
+            // we can not use this.next since it's designed for notifying all listeners
             subscriber.next({kind: ChunkKind.Initial, document: document});
             this.ids.add(document._id.toString());
           }
         })
         .catch(e => subscriber.error(e))
         .finally(() => {
-          // we can not use this.next since it's designed for notify all listeners
+          // we can not use this.next since it's designed for notifying all listeners
           subscriber.next({kind: ChunkKind.EndOfInitial});
           connect();
         });

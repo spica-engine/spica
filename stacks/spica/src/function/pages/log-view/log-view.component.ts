@@ -54,10 +54,7 @@ export class LogViewComponent implements OnInit, OnDestroy {
   realtimeConnectivity: boolean;
 
   constructor(private route: ActivatedRoute, private fs: FunctionService, public router: Router) {
-    this.fs
-      .checkRealtimeLogConnectivity()
-      .toPromise()
-      .then(r => (this.realtimeConnectivity = r));
+    this.fs.checkRealtimeLogConnectivity().subscribe(r => (this.realtimeConnectivity = r));
     this.realtimeConnectionTime = this.realtimeConnectionTime || new Date();
   }
 
@@ -142,7 +139,7 @@ export class LogViewComponent implements OnInit, OnDestroy {
             ...(!_filter.realtime ? {limit: this.logPerReq, skip: this.skip} : {})
           })
           .pipe(
-            // realtime sends undefined logs if functions creates logs so frequently
+            // realtime sends undefined logs if functions create logs so frequently
             map(logs => logs.filter(log => !!log)),
             map(logs => {
               return {
