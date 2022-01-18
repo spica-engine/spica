@@ -1,5 +1,5 @@
 import * as Bucket from "@spica-devkit/bucket";
-import * as Operators from "../src/operators";
+import * as Operators from "@spica-devkit/bucket/src/operators";
 import {Axios} from "@spica-devkit/internal_common";
 import {of} from "rxjs";
 

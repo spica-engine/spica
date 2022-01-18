@@ -1,7 +1,6 @@
 {
   "name": "@spica/server",
   "version": "0.0.0-PLACEHOLDER",
-  "devDependencies": {
-    "@types/node-fetch": "^2.5.7"
-  }
+  "devDependencies": {},
+  "dependencies": {}
 }

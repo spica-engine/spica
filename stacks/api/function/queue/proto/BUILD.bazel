@@ -1,11 +1,11 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
-
-ts_library(
+ts_project(
     name = "proto",
+    package_name = "@spica-server/function/queue/proto",
     srcs = glob(["*.ts"]),
-    module_name = "@spica-server/function/queue/proto",
     deps = [
         "@npm//@grpc/grpc-js",
         "@npm//@types/node",

@@ -66,7 +66,7 @@ export class Validator {
       this.registerKeyword(keyword);
     }
 
-    formats(this._ajv, {formats: ["regex"]});
+    formats(this._ajv as any, {formats: ["regex"]});
   }
 
   private _fetch(uri: string): Promise<Object> {

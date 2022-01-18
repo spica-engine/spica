@@ -20,8 +20,6 @@ import * as https from "https";
 import * as path from "path";
 import * as yargs from "yargs";
 
-const DAY_SEC = 30 * 24 * 60 * 60;
-
 const args = yargs
   /* TLS Options */
   .options({
@@ -283,7 +281,7 @@ const args = yargs
   .option("common-log-lifespan", {
     number: true,
     description: "Seconds that need to be passed to expire logs. Default value is one month.",
-    default: DAY_SEC
+    default: 30 * 24 * 60 * 60
   })
   .option("port", {
     number: true,
@@ -467,8 +465,7 @@ if (args["cert-file"] && args["key-file"]) {
 
 NestFactory.create(RootModule, {
   httpsOptions,
-  bodyParser: false,
-  logger: false
+  bodyParser: false
 })
   .then(app => {
     app.useWebSocketAdapter(new WsAdapter(app));

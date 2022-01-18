@@ -7,7 +7,7 @@ import {from} from "rxjs";
 import {bufferCount, take} from "rxjs/operators";
 import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
-import {TargetChange, ChangeKind} from "../src/change";
+import {TargetChange, ChangeKind} from "@spica-server/function/src/change";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
