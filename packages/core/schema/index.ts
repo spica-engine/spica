@@ -1,5 +1,5 @@
-export {Schema} from "./pipe";
-export {SchemaModule} from "./module";
+export {Schema} from "./src/pipe";
+export {SchemaModule} from "./src/module";
 export {
   ValidationError,
   Validator,
@@ -7,5 +7,5 @@ export {
   _,
   CodeKeywordDefinition,
   KeywordCxt
-} from "./validator";
-export {Default, Format, Keyword} from "./interface";
+} from "./src/validator";
+export {Default, Format, Keyword} from "./src/interface";

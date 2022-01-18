@@ -9,27 +9,34 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 # Setup nodejs workspace
 http_archive(
     name = "build_bazel_rules_nodejs",
-    sha256 = "f2194102720e662dbf193546585d705e645314319554c6ce7e47d8b59f459e9c",
-    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/2.2.2/rules_nodejs-2.2.2.tar.gz"],
+    sha256 = "ddb78717b802f8dd5d4c01c340ecdc007c8ced5c1df7db421d0df3d642ea0580",
+    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/4.6.0/rules_nodejs-4.6.0.tar.gz"],
 )
 
 load("@build_bazel_rules_nodejs//:index.bzl", "node_repositories", "yarn_install")
 
-node_repositories()
+node_repositories(
+    node_version = "16.0.0",
+)
 
 yarn_install(
     name = "npm",
     package_json = "//:package.json",
-    symlink_node_modules = True,
     yarn_lock = "//:yarn.lock",
 )
 
+yarn_install(
+    name = "npm_cli",
+    package_json = "//stacks/cli:package.json",
+    yarn_lock = "//stacks/cli:yarn.lock",
+)
+
 # Setup docker workspace
-git_repository(
+http_archive(
     name = "io_bazel_rules_docker",
-    commit = "faaa10a72fa9abde070e2a20d6046e9f9b849e9a",
-    remote = "https://github.com/bazelbuild/rules_docker.git",
-    shallow_since = "1592582964 -0400",
+    sha256 = "59536e6ae64359b716ba9c46c39183403b01eabfbd57578e84398b4829ca499a",
+    strip_prefix = "rules_docker-0.22.0",
+    urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v0.22.0/rules_docker-v0.22.0.tar.gz"],
 )
 
 load(
@@ -42,10 +49,6 @@ container_repositories()
 load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
 
 container_deps()
-
-load("@io_bazel_rules_docker//repositories:pip_repositories.bzl", "pip_deps")
-
-pip_deps()
 
 # Download base images, etc
 load("@io_bazel_rules_docker//container:container.bzl", "container_pull")

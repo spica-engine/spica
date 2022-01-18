@@ -4,7 +4,7 @@ import {event, Http} from "@spica-server/function/queue/proto";
 import {Description, Enqueuer} from "./enqueuer";
 import express = require("express");
 import bodyParser = require("body-parser");
-import {CorsOptions} from "@spica-server/core/interfaces";
+import {CorsOptions} from "@spica-server/core";
 
 export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   description: Description = {

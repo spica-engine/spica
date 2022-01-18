@@ -4,8 +4,7 @@ import {PredefinedDefault} from "@spica-client/bucket/interfaces/predefined-defa
 import {BucketService} from "@spica-client/bucket/services/bucket.service";
 import {InputPlacerWithMetaPlacer} from "@spica-client/common";
 import {InputResolver} from "@spica-client/common/input/input.resolver";
-import {map} from "rxjs/internal/operators/map";
-import {take} from "rxjs/operators";
+import {map, take} from "rxjs/operators";
 import {NgModel} from "@angular/forms";
 
 @Component({

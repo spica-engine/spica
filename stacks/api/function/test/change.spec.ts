@@ -1,5 +1,9 @@
 import {Function} from "@spica-server/function/services";
-import {ChangeKind, createTargetChanges, changesFromTriggers} from "../src/change";
+import {
+  ChangeKind,
+  createTargetChanges,
+  changesFromTriggers
+} from "@spica-server/function/src/change";
 
 describe("Change", () => {
   let fn: Function;

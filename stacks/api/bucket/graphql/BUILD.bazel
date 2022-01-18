@@ -1,13 +1,13 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
-
-ts_library(
+ts_project(
     name = "graphql",
+    package_name = "@spica-server/bucket/graphql",
     srcs = glob([
         "src/*.ts",
     ]) + ["index.ts"],
-    module_name = "@spica-server/bucket/graphql",
     deps = [
         "//packages/core/schema",
         "//packages/database",
@@ -18,10 +18,11 @@ ts_library(
         "//stacks/api/bucket/services",
         "//stacks/api/passport",
         "//stacks/api/passport/guard",
+        "@npm//@graphql-tools/merge",
+        "@npm//@graphql-tools/schema",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//express-graphql",
         "@npm//graphql",
-        "@npm//graphql-tools",
     ],
 )

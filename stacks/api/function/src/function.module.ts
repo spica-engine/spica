@@ -6,7 +6,7 @@ import * as path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
 import {Github} from "./services/github";
-import {LogModule} from "./log";
+import {LogModule} from "@spica-server/function/src/log";
 import {registerInformers} from "./machinery";
 import {
   FunctionOptions,
@@ -18,6 +18,7 @@ import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/en
 import {Http, RepoStrategies} from "./services/interface";
 import {Axios} from "./services/axios";
 import {registerStatusProvider} from "./status";
+import FunctionSchema = require("./schema/function.json");
 
 @Module({})
 export class FunctionModule {
@@ -35,7 +36,7 @@ export class FunctionModule {
           realtime: options.realtimeLogs
         }),
         SchemaModule.forChild({
-          schemas: [require("./schema/function.json")],
+          schemas: [FunctionSchema],
           customFields: ["viewEnum"]
         }),
         WebhookModule.forRoot({expireAfterSeconds: options.logExpireAfterSeconds}),

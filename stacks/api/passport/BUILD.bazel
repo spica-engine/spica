@@ -1,16 +1,17 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("//tools/dgeni:index.bzl", "docs")
 
-ts_library(
+ts_project(
     name = "passport",
+    package_name = "@spica-server/passport",
     srcs = glob([
         "index.ts",
         "src/**/*.ts",
+        "src/schemas/*.json",
     ]),
-    data = glob(["src/schemas/*.json"]),
-    module_name = "@spica-server/passport",
     deps = [
         "//packages/core",
         "//packages/core/schema",
