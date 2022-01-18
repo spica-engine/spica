@@ -1,9 +1,10 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
-
-ts_library(
+ts_project(
     name = "expression",
+    package_name = "@spica-server/bucket/expression",
     srcs = glob([
         "src/*.ts",
         "index.ts",
@@ -11,7 +12,6 @@ ts_library(
     data = [
         "src/grammar.pegjs",
     ],
-    module_name = "@spica-server/bucket/expression",
     deps = [
         "//packages/database",
         "@npm//@types/node",

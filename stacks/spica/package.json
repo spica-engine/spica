@@ -30,6 +30,7 @@
     "jwt-decode": "^2.2.0",
     "leaflet": "^1.5.1",
     "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
     "matcher": "^2.1.0",
     "material-community-components": "^10.0.0",
     "monaco-editor": "^0.19.3",

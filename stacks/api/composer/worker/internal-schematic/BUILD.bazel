@@ -1,8 +1,8 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
-
-ts_library(
+ts_project(
     name = "internal-schematic",
     srcs = glob(["**/*.ts"]),
     data = glob(["**/files/**/*.template"]) + [

@@ -1,17 +1,14 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
-load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
+load("//tools/ts_project:index.bzl", "ts_project")
 
-ts_library(
+ts_project(
     name = "core",
-    srcs = [
+    package_name = "@spica-server/core",
+    srcs = glob([
         "index.ts",
-        "interfaces.ts",
-        "middlewares.ts",
-        "pipes.ts",
-    ],
-    module_name = "@spica-server/core",
+        "src/*.ts",
+    ]),
     deps = [
         "@npm//@nestjs/common",
         "@npm//@types/body-parser",
@@ -23,26 +20,4 @@ ts_library(
         "@npm//matcher",
         "@npm//type-is",
     ],
-)
-
-ts_library(
-    name = "test_lib",
-    testonly = True,
-    srcs = [
-        "middlewares.spec.ts",
-        "pipes.spec.ts",
-    ],
-    tsconfig = "//:tsconfig.json",
-    deps = [
-        ":core",
-        "@npm//@nestjs/common",
-        "@npm//@types/jasmine",
-        "@npm//@types/json-schema",
-        "@npm//@types/node",
-    ],
-)
-
-jasmine_node_test(
-    name = "test",
-    srcs = [":test_lib"],
 )

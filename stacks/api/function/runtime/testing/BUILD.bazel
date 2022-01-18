@@ -1,15 +1,15 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
-
-ts_library(
+ts_project(
     name = "testing",
+    package_name = "@spica-server/function/runtime/testing",
     testonly = True,
     srcs = [
         "bed.ts",
         "index.ts",
     ],
-    module_name = "@spica-server/function/runtime/testing",
     deps = [
         "@npm//@types/node",
     ],
