@@ -1,10 +1,11 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
+load("//tools/ts_project:index.bzl", "ts_project")
 load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
-ts_library(
+ts_project(
     name = "realtime",
+    package_name = "@spica-server/database/realtime",
     srcs = [
         "database.module.ts",
         "database.service.ts",
@@ -14,7 +15,6 @@ ts_library(
         "operators.ts",
         "stream.ts",
     ],
-    module_name = "@spica-server/database/realtime",
     deps = [
         "//packages/database",
         "@npm//@nestjs/common",
@@ -28,7 +28,7 @@ ts_library(
     ],
 )
 
-ts_library(
+ts_project(
     name = "test_lib",
     testonly = True,
     srcs = [

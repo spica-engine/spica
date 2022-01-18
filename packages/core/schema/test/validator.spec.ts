@@ -1,7 +1,7 @@
+import {Format} from "@spica-server/core/schema/src/interface";
+import {Validator} from "@spica-server/core/schema/src/validator";
 import {JSONSchema7} from "json-schema";
 import {BehaviorSubject} from "rxjs";
-import {Format} from "./interface";
-import {Validator} from "./validator";
 
 describe("schema validator", () => {
   let validator: Validator;

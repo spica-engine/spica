@@ -12,8 +12,8 @@ import {StrategyController} from "./strategy/strategy.controller";
 import {StrategyService} from "./strategy/services/strategy.service";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OAuthService} from "./strategy/services/oauth.service";
-const LoginSchema = require("./schemas/login.json");
-const StrategySchema = require("./schemas/strategy.json");
+import LoginSchema = require("./schemas/login.json");
+import StrategySchema = require("./schemas/strategy.json");
 
 @Global()
 @Module({})

@@ -1,4 +1,4 @@
-import {levenshtein, SequenceKind} from "./levenshtein";
+import {levenshtein, SequenceKind} from "@spica-server/database/realtime/levenshtein";
 
 describe("levenstein", () => {
   it("should return 2-dist, insert at last", () => {

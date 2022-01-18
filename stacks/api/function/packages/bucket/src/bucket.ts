@@ -5,7 +5,7 @@ import {
   IdentityInitialization,
   IndexResult,
   RealtimeConnection
-} from "@spica-devkit/bucket";
+} from "./interface";
 import {
   initialize as _initialize,
   checkInitialized,

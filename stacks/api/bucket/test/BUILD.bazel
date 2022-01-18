@@ -1,9 +1,10 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
-ts_library(
+ts_project(
     name = "bucket_data_acceptance_test_lib",
     testonly = True,
     srcs = [
@@ -33,7 +34,7 @@ jasmine_node_test(
     ],
 )
 
-ts_library(
+ts_project(
     name = "bucket_acceptance_test_lib",
     testonly = True,
     srcs = [
@@ -62,7 +63,7 @@ jasmine_node_test(
     ],
 )
 
-ts_library(
+ts_project(
     name = "bucket_schema_resolver_test_lib",
     testonly = True,
     srcs = [
@@ -91,7 +92,7 @@ jasmine_node_test(
     ],
 )
 
-ts_library(
+ts_project(
     name = "scheduler_test_lib",
     testonly = True,
     srcs = [
@@ -116,7 +117,7 @@ jasmine_node_test(
     ],
 )
 
-ts_library(
+ts_project(
     name = "bucket_module_test_lib",
     testonly = True,
     srcs = ["bucket.module.spec.ts"],
@@ -141,7 +142,7 @@ jasmine_node_test(
     ],
 )
 
-ts_library(
+ts_project(
     name = "activity_test_lib",
     testonly = True,
     srcs = [

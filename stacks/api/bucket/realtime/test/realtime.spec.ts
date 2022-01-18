@@ -12,7 +12,7 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
-import {RealtimeGateway} from "../src/realtime.gateway";
+import {RealtimeGateway} from "@spica-server/bucket/realtime/src/realtime.gateway";
 
 function url(path: string, query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL(path, "ws://insteadof");

@@ -14,7 +14,7 @@ import {AddComponent} from "../pages/add/add.component";
 import {BucketAddComponent} from "../pages/bucket-add/bucket-add.component";
 import {BucketDataService} from "../services/bucket-data.service";
 import {BucketService} from "../services/bucket.service";
-import isEqual from "lodash/isEqual";
+import isEqual from "lodash-es/isEqual";
 import {MatAwareDialogComponent} from "@spica-client/material";
 import {SettingsComponent} from "../pages/settings/settings.component";
 import {PreferencesService} from "@spica-client/core";

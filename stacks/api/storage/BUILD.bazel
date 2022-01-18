@@ -1,16 +1,17 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("//tools/dgeni:index.bzl", "docs")
 
-ts_library(
+ts_project(
     name = "storage",
+    package_name = "@spica-server/storage",
     srcs = glob([
         "src/**/*.ts",
+        "src/schema/*.json",
         "index.ts",
     ]),
-    data = glob(["src/schema/*.json"]),
-    module_name = "@spica-server/storage",
     deps = [
         "//packages/core",
         "//packages/core/schema",

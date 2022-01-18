@@ -1,29 +1,29 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@build_bazel_rules_nodejs//:index.bzl", "nodejs_binary")
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
+load("//tools/ts_project:index.bzl", "ts_project")
 
-exports_files(["tsconfig.json"])
-
-ts_library(
+ts_project(
     name = "dgeni_sources",
-    srcs = [
+    srcs = glob([
         "dgeni.ts",
         "helper/evaluator.ts",
-        "processors/controller.ts",
-        "processors/copydata.ts",
-        "processors/filter.ts",
-        "processors/list.ts",
-        "processors/symbol-filter.ts",
-    ],
-    tsconfig = ":tsconfig.json",
+        "processors/*.ts",
+        "remark/*.ts",
+    ]),
     deps = [
-        "//tools/dgeni/remark",
         "@npm//@types/node",
         "@npm//dgeni",
         "@npm//dgeni-packages",
+        "@npm//mdast-util-toc",
         "@npm//path-to-regexp",
+        "@npm//remark",
+        "@npm//remark-frontmatter",
+        "@npm//remark-highlight.js",
+        "@npm//remark-html",
+        "@npm//remark-slug",
         "@npm//typescript",
+        "@npm//yaml",
     ],
 )
 
@@ -33,4 +33,5 @@ nodejs_binary(
         ":dgeni_sources",
     ],
     entry_point = ":dgeni.ts",
+    templated_args = ["--bazel_patch_module_resolver"],
 )

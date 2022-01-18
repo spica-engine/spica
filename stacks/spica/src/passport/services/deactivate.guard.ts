@@ -9,7 +9,7 @@ import {
 } from "@angular/router";
 import {Observable, of} from "rxjs";
 import {first, map, switchMap, tap} from "rxjs/operators";
-import isEqual from "lodash/isEqual";
+import isEqual from "lodash-es/isEqual";
 import {ApiKeyService} from "../services/apikey.service";
 import {ApiKeyAddComponent} from "../pages/apikey-add/apikey-add.component";
 import {MatAwareDialogComponent} from "@spica-client/material";
