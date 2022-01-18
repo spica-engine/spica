@@ -4,7 +4,7 @@ import {FunctionEngine} from "../engine";
 import {isObservable, Observable} from "rxjs";
 import {JSONSchema7} from "json-schema";
 import {skip, take, tap} from "rxjs/operators";
-const fnSchema = require("./function.json");
+import fnSchema = require("./function.json");
 
 @Injectable()
 export class EnqueuerSchemaResolver {
@@ -22,7 +22,7 @@ export class EnqueuerSchemaResolver {
       oneOf: enqueuerIds.map(id => {
         return {$ref: id};
       })
-    };
+    } as any;
   }
 
   resolve(uri: string): Promise<object> | Observable<JSONSchema7 | null> | undefined {

@@ -1,10 +1,4 @@
-import {
-  Sequence,
-  SequenceKind,
-  ChunkKind,
-  OperationKind,
-  RealtimeConnection
-} from "@spica-devkit/bucket";
+import {Sequence, SequenceKind, ChunkKind, OperationKind, RealtimeConnection} from "./interface";
 //@ts-ignore
 import WebSocket from "ws";
 import {tap, delayWhen, map, debounceTime, retryWhen, filter} from "rxjs/operators";

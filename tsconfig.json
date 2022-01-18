@@ -6,7 +6,9 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "noFallthroughCasesInSwitch": true,
-    "target": "ES2020",
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "target": "es2020",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
@@ -15,12 +17,11 @@
       "@spica-server/*": [
         "./packages/*",
         "./stacks/api/*"
+      ],
+      "@spica/*": [
+        "./stacks/*"
       ]
     }
-  },
-  "bazelOptions": {
-    "suppressTsconfigOverrideWarnings": true,
-    "devmodeTargetOverride": "es2018",
   },
   "exclude": ["dist", "bazel-*"]
 }

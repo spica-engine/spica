@@ -6,7 +6,7 @@ import * as path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
 import {Github} from "./services/github";
-import {LogModule} from "./log";
+import {LogModule} from "@spica-server/function/src/log";
 import {registerInformers} from "./machinery";
 import {
   FunctionOptions,

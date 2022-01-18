@@ -9,7 +9,7 @@ import {WebhookController} from "@spica-server/function/webhook/src/webhook.cont
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
 import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
-import {WEBHOOK_OPTIONS} from "../src";
+import {WEBHOOK_OPTIONS} from "@spica-server/function/webhook";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 

@@ -22,7 +22,8 @@ import {
   GraphQLSchema,
   ValueNode
 } from "graphql";
-import {makeExecutableSchema, mergeResolvers, mergeTypeDefs} from "graphql-tools";
+import {makeExecutableSchema} from "@graphql-tools/schema";
+import {mergeResolvers, mergeTypeDefs} from "@graphql-tools/merge";
 import {BucketDataService} from "@spica-server/bucket/services";
 import {
   deleteDocument,

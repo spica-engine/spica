@@ -4,6 +4,7 @@ import {PolicyResolver, POLICY_RESOLVER} from "@spica-server/passport/guard";
 import {Policy} from "./interface";
 import {PolicyController} from "./policy.controller";
 import {PolicyService} from "./policy.service";
+import PolicySchema = require("./schemas/policy.json");
 
 @Global()
 @Module({})
@@ -13,7 +14,7 @@ export class PolicyModule {
       module: PolicyModule,
       imports: [
         SchemaModule.forChild({
-          schemas: [require(`./schemas/policy.json`)]
+          schemas: [PolicySchema]
         })
       ],
       exports: [PolicyService, POLICY_RESOLVER],

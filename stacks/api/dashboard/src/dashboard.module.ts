@@ -3,7 +3,7 @@ import {DashboardController} from "./dashboard.controller";
 import {DashboardService} from "./dashboard.service";
 import {SchemaModule} from "@spica-server/core/schema";
 import {registerInformers} from "./machinery";
-const DashboardSchema = require("../schema/dashboard.json");
+import DashboardSchema = require("../schema/dashboard.json");
 
 @Module({})
 export class DashboardModule {

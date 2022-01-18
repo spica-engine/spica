@@ -1,4 +1,4 @@
-import {CorsOptions} from "@spica-server/core/interfaces";
+import {CorsOptions} from "@spica-server/core";
 
 export interface SchedulingOptions {
   databaseUri: string;

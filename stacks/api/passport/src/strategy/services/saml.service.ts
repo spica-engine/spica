@@ -1,6 +1,6 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
 import * as saml2 from "saml2-js";
-import * as uuid from "uuid/v4";
+import * as uuid from "uuid";
 import {SamlStrategy, StrategyTypeService} from "../interface";
 import {PassportOptions, PASSPORT_OPTIONS} from "../../options";
 import {StrategyService} from "./strategy.service";
@@ -30,7 +30,7 @@ export class SamlService implements StrategyTypeService {
   }
 
   getLoginUrl(strategy: SamlStrategy): Promise<{url: string; state: string}> {
-    const stateId = uuid();
+    const stateId = uuid.v4();
     const providers = this.getProviders(strategy, stateId);
 
     return new Promise((resolve, reject) =>

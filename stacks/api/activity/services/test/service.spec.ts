@@ -1,7 +1,6 @@
-import {ActivityService} from "../src/activity.service";
+import {ActivityService, ACTIVITY_OPTIONS} from "@spica-server/activity/services";
 import {TestingModule, Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {ACTIVITY_OPTIONS} from "../src/interface";
 
 describe("Activity Service", () => {
   let module: TestingModule;

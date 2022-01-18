@@ -1,7 +1,7 @@
 import * as Storage from "@spica-devkit/storage";
 import {Axios} from "@spica-devkit/internal_common";
 import * as BSON from "bson";
-import {jsonToArrayBuffer} from "../src/utility";
+import {jsonToArrayBuffer} from "@spica-devkit/storage/src/utility";
 
 jasmine.getEnv().allowRespy(true);
 
@@ -39,8 +39,8 @@ describe("@spica-devkit/Storage", () => {
           {
             name: "my_text.txt",
             content: {
-              type: "text/plain",
-              data: new BSON.Binary("spica")
+              data: new BSON.Binary("spica"),
+              type: "text/plain"
             }
           }
         ]
@@ -60,8 +60,8 @@ describe("@spica-devkit/Storage", () => {
           {
             name: "my_text.txt",
             content: {
-              type: "text/plain",
-              data: new BSON.Binary("spica")
+              data: new BSON.Binary("spica"),
+              type: "text/plain"
             }
           }
         ]
@@ -79,8 +79,8 @@ describe("@spica-devkit/Storage", () => {
       const body = {
         name: "my_text.txt",
         content: {
-          type: "text/plain",
-          data: new BSON.Binary("spica")
+          data: new BSON.Binary("spica"),
+          type: "text/plain"
         }
       };
 

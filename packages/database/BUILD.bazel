@@ -1,9 +1,10 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
+load("//tools/ts_project:index.bzl", "ts_project")
 
-ts_library(
+ts_project(
     name = "database",
+    package_name = "@spica-server/database",
     srcs = [
         "collection.ts",
         "database.module.ts",
@@ -12,7 +13,6 @@ ts_library(
         "interface.ts",
         "pipes.ts",
     ],
-    module_name = "@spica-server/database",
     deps = [
         "@npm//@nestjs/common",
         "@npm//@types/mongodb",
