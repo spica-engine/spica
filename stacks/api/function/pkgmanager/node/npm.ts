@@ -19,6 +19,8 @@ function getNpmPath() {
 }
 
 export class Npm extends PackageManager {
+  private readonly MAX_DEP_TYPE_SIZE_MB = 5;
+
   install(cwd: string, qualifiedNames: string | string[]): Observable<number> {
     qualifiedNames = Array.isArray(qualifiedNames) ? qualifiedNames : [qualifiedNames];
     return new Observable(observer => {
@@ -117,19 +119,23 @@ export class Npm extends PackageManager {
   }
 
   findTypes(cwd: string, depName: string) {
-    const typeFiles = glob.sync(`node_modules/${depName}/**/*.d.ts`, {cwd});
+    let typeFiles = glob.sync(`node_modules/${depName}/**/*.d.ts`, {cwd});
     const promises: Promise<{[file: string]: string}>[] = [];
 
-    if (typeFiles) {
-      for (const file of typeFiles) {
-        promises.push(
-          fs.promises.readFile(path.join(cwd, file)).then(b => {
-            return {
-              [file]: b.toString()
-            };
-          })
-        );
-      }
+    const size = this.calculateFileSizesMb(typeFiles, cwd);
+
+    if (size > this.MAX_DEP_TYPE_SIZE_MB) {
+      return Promise.resolve({});
+    }
+
+    for (const file of typeFiles) {
+      promises.push(
+        fs.promises.readFile(path.join(cwd, file)).then(b => {
+          return {
+            [file]: b.toString()
+          };
+        })
+      );
     }
 
     return Promise.all(promises).then(files => {
@@ -138,5 +144,11 @@ export class Npm extends PackageManager {
         return acc;
       }, {});
     });
+  }
+
+  calculateFileSizesMb(files: string[], cwd: string) {
+    return (
+      files.reduce((acc, curr) => acc + fs.statSync(path.join(cwd, curr)).size, 0) / (1024 * 1024)
+    );
   }
 }
