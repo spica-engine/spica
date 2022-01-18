@@ -14,20 +14,7 @@ export class SamlService implements StrategyTypeService {
   constructor(
     private strategy: StrategyService,
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions
-  ) {
-    // Some certificates are written to db directly before API is up so we should put service provider information for them.
-    this.strategy.find({type: "saml"}).then((strategies: SamlStrategy[]) => {
-      for (const strategy of strategies) {
-        if (!strategy.options.sp) {
-          this.prepareToInsert(strategy);
-          const _ = this.strategy.findOneAndUpdate(
-            {_id: strategy._id},
-            {$set: {"options.sp": strategy.options.sp}}
-          );
-        }
-      }
-    });
-  }
+  ) {}
 
   async createMetadata(id: string): Promise<string | null> {
     const strategy = await this.getStrategy(id);
