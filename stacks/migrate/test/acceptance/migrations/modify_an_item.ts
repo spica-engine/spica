@@ -1,4 +1,4 @@
-import {Context} from "../../../src/migrate";
+import {Context} from "@spica/migrate/src/migrate";
 
 export default function(ctx: Context) {
   const coll = ctx.database.collection("_test_");

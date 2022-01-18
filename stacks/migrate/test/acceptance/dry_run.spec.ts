@@ -1,20 +1,20 @@
 import {Db, getConnectionUri, getDatabaseName, start} from "@spica-server/database/testing";
 import * as color from "cli-color/lib/supports-color";
 import * as fs from "fs";
-import {migrate} from "../../src/migrate";
+import {migrate} from "@spica/migrate/src/migrate";
 
 describe("DRY Run", () => {
   let database: {uri: string; name: string};
   let db: Db;
 
   beforeAll(() => {
-    process.chdir(__dirname);
+    process.env.TESTONLY_MIGRATION_LOOKUP_DIR = __dirname;
     color.disableColor();
   });
 
   beforeEach(async () => {
     fs.writeFileSync(
-      "./migrations/index.json",
+      __dirname + "/migrations/index.json",
       JSON.stringify({
         "1.0.0": [
           __dirname + "/migrations/insert_an_item",
@@ -32,7 +32,7 @@ describe("DRY Run", () => {
   }, 10000);
 
   afterEach(() => {
-    fs.unlinkSync("./migrations/index.json");
+    fs.unlinkSync(__dirname + "/migrations/index.json");
   });
 
   it("should complete the migration but not commit anything", async () => {

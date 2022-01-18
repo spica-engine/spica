@@ -38,7 +38,7 @@ import {
 import {ChangeKind, hasContextChange} from "./change";
 import {generate} from "./schema/enqueuer.resolver";
 import {changesFromTriggers, createTargetChanges} from "./change";
-import {LogService} from "./log/src/log.service";
+import {LogService} from "@spica-server/function/src/log/src/log.service";
 
 /**
  * @name Function

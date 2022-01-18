@@ -1,23 +1,14 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
-load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
+load("//tools/ts_project:index.bzl", "ts_project")
 
-ts_library(
+ts_project(
     name = "schema",
-    srcs = [
-        "default.ts",
-        "defaults.ts",
-        "format.ts",
-        "formats.ts",
-        "index.ts",
-        "interface.ts",
-        "module.ts",
-        "pipe.ts",
-        "validator.ts",
-    ],
-    module_name = "@spica-server/core/schema",
-    tsconfig = "//:tsconfig.json",
+    package_name = "@spica-server/core/schema",
+    srcs = glob([
+        "*.ts",
+        "src/*.ts",
+    ]),
     deps = [
         "//packages/database",
         "@npm//@nestjs/common",
@@ -28,23 +19,4 @@ ts_library(
         "@npm//request-promise-native",
         "@npm//rxjs",
     ],
-)
-
-ts_library(
-    name = "test_lib",
-    testonly = True,
-    srcs = glob(["*.spec.ts"]),
-    tsconfig = "//:tsconfig.json",
-    deps = [
-        ":schema",
-        "@npm//@types/jasmine",
-        "@npm//@types/json-schema",
-        "@npm//@types/node",
-        "@npm//rxjs",
-    ],
-)
-
-jasmine_node_test(
-    name = "test",
-    srcs = [":test_lib"],
 )

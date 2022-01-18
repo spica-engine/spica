@@ -7,9 +7,9 @@ import {
 } from "@spica-server/database/testing";
 import {timer} from "rxjs";
 import {bufferCount, delay, first, skip, take, takeUntil, tap} from "rxjs/operators";
-import {RealtimeDatabaseService} from "./database.service";
-import {SequenceKind} from "./levenshtein";
-import {ChunkKind} from "./interface";
+import {RealtimeDatabaseService} from "@spica-server/database/realtime/database.service";
+import {SequenceKind} from "@spica-server/database/realtime/levenshtein";
+import {ChunkKind} from "@spica-server/database/realtime/interface";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
 

@@ -32,13 +32,13 @@ describe("MultiselectSchemaComponent", () => {
 
   it("should create", () => {
     expect(component.availableTypes).toEqual(["string", "number"]);
-    expect(component.schema.items).toEqual({type: "string", enum: []});
+    expect(component.schema.items).toEqual({type: "string"});
   });
 
   it("should reset items on change", () => {
     component.schema.items = {type: "string", enum: ["some", "values"]};
     component.onTypeChange("number");
 
-    expect(component.schema).toEqual({type: "multiselect", items: {type: "number", enum: []}});
+    expect(component.schema).toEqual({type: "multiselect", items: {type: "number"}});
   });
 });

@@ -1,7 +1,7 @@
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
+load("//tools/ts_project:index.bzl", "ts_project")
 load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
-ts_library(
+ts_project(
     name = "status_e2e_test_lib",
     testonly = True,
     srcs = [

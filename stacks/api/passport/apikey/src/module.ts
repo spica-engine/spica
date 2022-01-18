@@ -6,6 +6,7 @@ import {ApiKeyStrategy} from "./apikey.strategy";
 import {registerInformers} from "./machinery";
 import {APIKEY_POLICY_FINALIZER} from "@spica-server/passport/policy";
 import {providePolicyFinalizer} from "./utility";
+import ApiKeySchema = require("./schemas/apikey.json");
 
 @Global()
 @Module({})
@@ -18,7 +19,7 @@ export class ApiKeyModule {
       module: ApiKeyModule,
       imports: [
         SchemaModule.forChild({
-          schemas: [require(`./schemas/apikey.json`)]
+          schemas: [ApiKeySchema]
         })
       ],
       exports: [APIKEY_POLICY_FINALIZER],

@@ -213,7 +213,16 @@ async function _process(ev, queue) {
     queue.complete(new event.Complete({id: ev.id, succedded: true}));
   } catch (e) {
     queue.complete(new event.Complete({id: ev.id, succedded: false}));
-    throw e;
+    /* 
+      Unhandled promise rejections are changed with Nodejs v15.
+      Before v15, unhandled promise rejections were shown on the console with warning.
+      After v15, unhandled promise rejections throws an error instead.
+      If we throw an error, this worker won't be able to process any further tasks and they will hang until worker timeout.
+    */
+
+    // throw e;
+
+    console.error(e);
   }
 }
 

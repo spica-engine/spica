@@ -1,11 +1,13 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("@npm//@bazel/rollup:index.bzl", "rollup_bundle")
 load("@build_bazel_rules_nodejs//:index.bzl", "pkg_npm")
 
-ts_library(
+ts_project(
     name = "node",
+    package_name = "@spica-server/function/runtime/node",
     srcs = [
         "index.ts",
         "node.ts",
@@ -13,7 +15,6 @@ ts_library(
     data = [
         ":runtime",
     ],
-    module_name = "@spica-server/function/runtime/node",
     deps = [
         "//stacks/api/function/runtime",
         "@npm//@types/node",
@@ -25,6 +26,7 @@ pkg_npm(
     srcs = [
         "package.json",
     ],
+    validate = False,
     deps = [
         ":entrypoint",
     ],

@@ -17,7 +17,7 @@ import {
   BUCKET_LANGUAGE_FINALIZER,
   changeFactory,
   IDENTITY_SETTINGS_FINALIZER
-} from "../services";
+} from "@spica-server/preference/services";
 import {createPreferenceActivity} from "./activity.resource";
 
 @Controller("preference")
