@@ -1,16 +1,17 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 load("//tools/dgeni:index.bzl", "docs")
 
-ts_library(
+ts_project(
     name = "history",
+    package_name = "@spica-server/bucket/history",
     srcs = glob(
         include = ["*.ts"],
         exclude = ["*.spec.ts"],
     ),
-    module_name = "@spica-server/bucket/history",
     deps = [
         "//packages/core/differ",
         "//packages/database",
@@ -33,7 +34,7 @@ docs(
     deps = [":history"],
 )
 
-ts_library(
+ts_project(
     name = "history_e2e_test_lib",
     testonly = True,
     srcs = [
@@ -61,7 +62,7 @@ jasmine_node_test(
     ],
 )
 
-ts_library(
+ts_project(
     name = "history_service_test_lib",
     testonly = True,
     srcs = [
@@ -84,7 +85,7 @@ jasmine_node_test(
     srcs = [":history_service_test_lib"],
 )
 
-ts_library(
+ts_project(
     name = "history_unit_test_lib",
     testonly = True,
     srcs = [

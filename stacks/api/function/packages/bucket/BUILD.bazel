@@ -1,15 +1,16 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("@build_bazel_rules_nodejs//:index.bzl", "pkg_npm")
 load("@npm//@bazel/rollup:index.bzl", "rollup_bundle")
 
 SRCS = glob(["src/*.ts"]) + ["index.ts"]
 
-ts_library(
+ts_project(
     name = "bucket",
+    package_name = "@spica-devkit/bucket",
     srcs = SRCS,
-    module_name = "@spica-devkit/bucket",
     tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
         "//stacks/api/function/packages/internal_common",
@@ -18,6 +19,12 @@ ts_library(
         "@npm//rxjs",
         "@npm//ws",
     ],
+)
+
+filegroup(
+    name = "types",
+    srcs = [":bucket"],
+    output_group = "types",
 )
 
 ROLLUP_DEPS = [
@@ -56,7 +63,7 @@ genrule(
     srcs = [
         ":esm",
         ":cjs",
-        ":bucket",
+        ":types",
     ],
     outs = [
         "dist/index.js",
@@ -78,6 +85,7 @@ genrule(
 
 pkg_npm(
     name = "package",
+    package_name = "@spica-devkit/bucket",
     srcs = [
         "package.json",
     ],

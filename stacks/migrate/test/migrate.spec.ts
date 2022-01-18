@@ -1,17 +1,18 @@
 import * as fs from "fs";
 import * as rimraf from "rimraf";
-import {loadMigrations, migrationVersions, getMigrations} from "../src/migrate";
+import {loadMigrations, migrationVersions, getMigrations} from "@spica/migrate/src/migrate";
 
 function updateMigrationManifest(migrations: any) {
-  fs.writeFileSync("./migrations/index.json", JSON.stringify(migrations));
+  process.env.TESTONLY_MIGRATION_LOOKUP_DIR = __dirname;
+  fs.writeFileSync(__dirname + "/migrations/index.json", JSON.stringify(migrations));
 }
 
 describe("Migrate", () => {
   beforeEach(() => {
-    fs.mkdirSync("./migrations");
+    fs.mkdirSync(__dirname + "/migrations");
   });
   afterEach(() => {
-    rimraf.sync("./migrations");
+    rimraf.sync(__dirname + "/migrations");
   });
 
   it("should load migrations", () => {
