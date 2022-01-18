@@ -90,7 +90,7 @@ export class StorageController {
    * @param id Identifier of the object
    */
   @Get(":id")
-  async findOne(@Res() res, @Param("id", OBJECT_ID) id: ObjectId) {
+  async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     const object = await this.storage.get(id);
 
     if (!object) {
@@ -100,7 +100,7 @@ export class StorageController {
     object.url = await this.storage.getUrl(id.toHexString());
 
     delete object.content.data;
-    res.send(object);
+    return object;
   }
 
   /**
