@@ -1,9 +1,10 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
-ts_library(
+ts_project(
     name = "interceptor_unit_test_lib",
     testonly = True,
     srcs = ["activity.interceptor.spec.ts"],
@@ -20,7 +21,7 @@ jasmine_node_test(
     ],
 )
 
-ts_library(
+ts_project(
     name = "interceptor_integration_test_lib",
     testonly = True,
     srcs = ["activity.interceptor.integration.spec.ts"],
@@ -41,7 +42,7 @@ jasmine_node_test(
     ],
 )
 
-ts_library(
+ts_project(
     name = "service_test_lib",
     testonly = True,
     srcs = [

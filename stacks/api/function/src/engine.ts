@@ -22,13 +22,18 @@ import {Schema, SCHEMA, SchemaWithName, SCHEMA1} from "./schema/schema";
 import {createTargetChanges} from "./change";
 import {RepoStrategies} from "./services/interface";
 
+import HttpSchema = require("./schema/http.json");
+import ScheduleSchema = require("./schema/schedule.json");
+import FirehoseSchema = require("./schema/firehose.json");
+import SystemSchema = require("./schema/system.json");
+
 @Injectable()
 export class FunctionEngine implements OnModuleDestroy {
-  readonly schemas = new Map<string, Schema>([
-    ["http", require("./schema/http.json")],
-    ["schedule", require("./schema/schedule.json")],
-    ["firehose", require("./schema/firehose.json")],
-    ["system", require("./schema/system.json")]
+  readonly schemas = new Map<string, unknown>([
+    ["http", HttpSchema],
+    ["schedule", ScheduleSchema],
+    ["firehose", FirehoseSchema],
+    ["system", SystemSchema]
   ]);
   readonly runSchemas = new Map<string, JSONSchema7>();
 

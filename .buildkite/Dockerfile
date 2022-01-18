@@ -2,7 +2,7 @@
 # Run    docker build .buildkite -t spicaengine/buildkite-node-with-mongodb:12      from the workspace root
 # and publish the image by running    docker push spicaengine/buildkite-node-with-mongodb:12  
 # Note that the number 12 ought to be sync with node's version to keep us beware which version of node we are testing against
-FROM node:12
+FROM node:16
 
 # Install essentials
 RUN apt-get update && apt-get install apt-transport-https -y

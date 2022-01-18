@@ -1,8 +1,8 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
 package(default_visibility = ["//visibility:public"])
 
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
-
-ts_library(
+ts_project(
     name = "architect",
     srcs = ["architect.ts"],
     deps = [
@@ -14,7 +14,7 @@ ts_library(
     ],
 )
 
-ts_library(
+ts_project(
     name = "schematic",
     srcs = ["schematic.ts"],
     deps = [
