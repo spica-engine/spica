@@ -26,17 +26,25 @@ export class FirehoseQueue extends Queue<typeof Firehose.Queue> {
 
   constructor() {
     super();
+    setInterval(() => console.log(this.sockets.size), 5000);
   }
 
   enqueue(id: string, message: Firehose.Message.Incoming, socket: Websocket) {
     this.queue.set(id, message);
+    this.addToPool(message.client.id, socket);
+  }
 
-    if (message.message && message.message.name == "connection") {
-      this.sockets.set(message.client.id, socket);
+  addToPool(id: string, socket: Websocket) {
+    if (!this.sockets.has(id)) {
+      this.sockets.set(id, socket);
     }
+  }
 
-    if (message.message && message.message.name == "close") {
-      this.sockets.delete(message.client.id);
+  removeFromPool(id: string) {
+    if (this.sockets.has(id)) {
+      const socket = this.sockets.get(id);
+      socket.close();
+      this.sockets.delete(id);
     }
   }
 
@@ -91,13 +99,8 @@ export class FirehoseQueue extends Queue<typeof Firehose.Queue> {
     if (!socket) {
       callback(new Error(`Can not find socket with id ${call.request.client.id}`), undefined);
     } else {
-      if (socket.readyState != Websocket.OPEN) {
-        callback(new Error(`Socket ${call.request.client.id} is not open.`), undefined);
-      } else {
-        socket.close();
-        this.sockets.delete(call.request.client.id);
-        callback(undefined, new Firehose.Message.Result());
-      }
+      this.removeFromPool(call.request.client.id);
+      callback(undefined, new Firehose.Message.Result());
     }
   }
 

@@ -4,6 +4,7 @@ import * as url from "url";
 import * as ws from "ws";
 import {Description, Enqueuer} from "./enqueuer";
 import express = require("express");
+import {v4 as uuid} from "uuid";
 
 interface FirehoseOptions {
   event: "*" | "**" | "connection" | "close" | string;
@@ -50,9 +51,11 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
       ws["alive"] = true;
 
       const clDescription = new Firehose.ClientDescription({
-        id: String(ws["_socket"]["_handle"]["fd"]),
+        id: uuid(),
         remoteAddress: req.connection.remoteAddress
       });
+
+      ws["__id"] = clDescription.id;
 
       this.invoke(ws, clDescription, "connection", {
         url: req.url
@@ -81,6 +84,7 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
         ws.off("message", messageHandler);
         ws.off("pong", pongHandler);
         this.invoke(ws, clDescription, "close");
+        this.firehoseQueue.removeFromPool(ws["__id"]);
       });
     });
 
@@ -92,40 +96,57 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
         if (ws["alive"] === false) return ws.terminate();
         ws["alive"] = false;
         ws.ping(() => {});
+        this.firehoseQueue.removeFromPool(ws["__id"]);
       });
     }, 30000);
   }
 
   private invoke(ws: ws, cl: Firehose.ClientDescription, name: string, data?: any) {
     for (const pair of this.eventTargetPairs) {
-      if (
-        pair.name == name ||
-        pair.name == "*" ||
-        (pair.name == "**" && (name == "connection" || name == "close"))
-      ) {
-        const ev = new event.Event({
-          target: pair.target,
-          type: event.Type.FIREHOSE
-        });
+      const ev = new event.Event({
+        target: pair.target,
+        type: event.Type.FIREHOSE
+      });
+
+      const incomingMessage = new Firehose.Message.Incoming({
+        client: cl,
+        message: new Firehose.Message({
+          name
+        }),
+        pool: new Firehose.PoolDescription({
+          size: this.wss.clients.size
+        })
+      });
+
+      if (data) {
+        incomingMessage.message.data = JSON.stringify(data);
+      }
+
+      if (this.isListeningEvent(pair.name, name)) {
         this.queue.enqueue(ev);
-
-        const incomingMessage = new Firehose.Message.Incoming({
-          client: cl,
-          message: new Firehose.Message({
-            name
-          }),
-          pool: new Firehose.PoolDescription({
-            size: this.wss.clients.size
-          })
-        });
-
-        if (data) {
-          incomingMessage.message.data = JSON.stringify(data);
-        }
-
         this.firehoseQueue.enqueue(ev.id, incomingMessage, ws);
+      } else if (this.isConnection(name)) {
+        this.firehoseQueue.addToPool(incomingMessage.client.id, ws);
+      } else if (this.isClose(name)) {
+        this.firehoseQueue.removeFromPool(incomingMessage.client.id);
       }
     }
+  }
+
+  private isListeningEvent(listening: string, incoming: string) {
+    return (
+      listening == incoming ||
+      listening == "*" ||
+      (listening == "**" && (incoming == "connection" || incoming == "close"))
+    );
+  }
+
+  private isConnection(name: string) {
+    return name == "connection";
+  }
+
+  private isClose(name: string) {
+    return name == "close";
   }
 
   subscribe(target: event.Target, options: FirehoseOptions): void {
