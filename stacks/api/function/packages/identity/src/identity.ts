@@ -1,10 +1,18 @@
-import {Identity, IdentityInitialization, ApikeyInitialization, IndexResult} from "./interface";
+import {
+  Identity,
+  IdentityInitialization,
+  ApikeyInitialization,
+  IndexResult,
+  LoginWithStrategyResponse
+} from "./interface";
 import {
   initialize as _initialize,
   checkInitialized,
   HttpService,
   Axios
 } from "@spica-devkit/internal_common";
+import {Strategy} from "./interface";
+import {Observable} from "rxjs";
 
 let authorization;
 
@@ -52,6 +60,35 @@ export function login(
       expires: tokenLifeSpan
     })
     .then(response => response.token);
+}
+
+export async function loginWithStrategy(id: string): Promise<LoginWithStrategyResponse> {
+  checkInitialized(authorization);
+
+  const {url, state} = await service.get<{url: string; state: string}>(
+    `/passport/strategy/${id}/url`
+  );
+
+  const token: Observable<string> = new Observable(observer => {
+    service
+      .post<{token: string}>("/passport/identify", {
+        state
+      })
+      .then(({token}) => {
+        observer.next(token);
+        observer.complete();
+      })
+      .catch(e => observer.error(e));
+  });
+
+  return {
+    url,
+    token
+  };
+}
+
+export function getStrategies() {
+  return service.get<Strategy[]>("/passport/strategies");
 }
 
 export function get(id: string): Promise<Identity> {
