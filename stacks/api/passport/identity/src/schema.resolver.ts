@@ -40,6 +40,7 @@ export class SchemaResolver {
           required.push("attributes");
         }
         return {
+          $id: "http://spica.internal/passport/identity-attributes",
           type: "object",
           required,
           properties: {

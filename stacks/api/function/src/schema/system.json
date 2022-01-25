@@ -1,15 +1,15 @@
 {
-  "$id": "http://spica.internal/function/enqueuer/system",
-  "type": "object",
-  "required": ["name"],
-  "properties": {
-    "name": {
-      "title": "Event",
-      "type": "string",
-      "enum": ["READY"],
-      "default": "READY",
-      "description": "Lifecycle event of the instance"
-    }
-  },
-  "additionalProperties": false
-}
+    "$id": "http://spica.internal/function/enqueuer/system",
+    "type": "object",
+    "required": ["name"],
+    "properties": {
+      "name": {
+        "title": "Event",
+        "type": "string",
+        "enum": ["READY"],
+        "description":"Lifecycle event of the instance"
+      }
+    },
+    "additionalProperties": false
+  }
+  
