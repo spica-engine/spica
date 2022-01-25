@@ -170,11 +170,13 @@ describe("Webhook Controller", () => {
     expect(collections.map(c => c.id).sort((a, b) => a.localeCompare(b))).toEqual([
       "coll1",
       "coll2",
+      "webhook",
       "webhook_logs"
     ]);
     expect(collections.map(c => c.slug).sort((a, b) => a.localeCompare(b))).toEqual([
       "coll1",
       "coll2",
+      "webhook",
       "webhook_logs"
     ]);
   });

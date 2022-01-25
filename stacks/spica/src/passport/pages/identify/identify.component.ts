@@ -29,20 +29,7 @@ export class IdentifyComponent implements OnInit {
     this.strategies = this.passport.getStrategies();
     this.activatedRoute.queryParams.pipe(take(1)).subscribe(params => {
       if (params.strategy) {
-        let dialog: MatDialogRef<unknown, unknown>;
-        this.passport
-          .identifyWith(params.strategy, url => {
-            dialog = this.dialog.open(StrategyDialogComponent, {
-              data: {url},
-              closeOnNavigation: true,
-              panelClass: "strategy-dialog",
-              minWidth: "60vw",
-              minHeight: "70vh"
-            });
-          })
-          .pipe(finalize(() => dialog.close()))
-          .toPromise()
-          .then(() => this.router.navigate(["/dashboard"]));
+        this.identify(params.strategy);
       } else {
         if (params.token) {
           this.passport.token = params.token;
@@ -55,7 +42,25 @@ export class IdentifyComponent implements OnInit {
   }
 
   identify(strategy?: string) {
-    (strategy ? this.passport.identifyWith(strategy) : this.passport.identify(this.identity))
+    let identifyObs;
+    if (strategy) {
+      let dialog: MatDialogRef<unknown, unknown>;
+      identifyObs = this.passport
+        .identifyWith(strategy, url => {
+          dialog = this.dialog.open(StrategyDialogComponent, {
+            data: {url},
+            closeOnNavigation: true,
+            panelClass: "strategy-dialog",
+            minWidth: "60vw",
+            minHeight: "70vh"
+          });
+        })
+        .pipe(finalize(() => dialog.close()));
+    } else {
+      identifyObs = this.passport.identify(this.identity);
+    }
+
+    identifyObs
       .toPromise()
       .then(() => this.router.navigate(["/dashboard"]))
       .catch(response => (this.error = response.error.message));

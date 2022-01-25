@@ -5,10 +5,7 @@ import {Injectable, Inject} from "@nestjs/common";
 @Injectable()
 export class ActivityService extends BaseCollection<Activity>("activity") {
   constructor(db: DatabaseService, @Inject(ACTIVITY_OPTIONS) options: ActivityOptions) {
-    super(db);
-    this.createCollection(this._collection, {ignoreAlreadyExist: true}).then(() =>
-      this.upsertTTLIndex(options.expireAfterSeconds)
-    );
+    super(db, {afterInit: () => this.upsertTTLIndex(options.expireAfterSeconds)});
   }
 
   insert(activities: ModuleActivity[]) {

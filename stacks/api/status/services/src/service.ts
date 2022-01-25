@@ -9,11 +9,7 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
   constructor(db: DatabaseService, @Inject(STATUS_OPTIONS) _moduleOptions: StatusOptions) {
     // this service will insert document for each request, enabling entry limit feature here will increase request-response time.
     // we will apply entry limitation from somewhere else
-    super(db);
-    this.createCollection(this._collection, {ignoreAlreadyExist: true}).then(() =>
-      this.upsertTTLIndex(_moduleOptions.expireAfterSeconds)
-    );
-
+    super(db, {afterInit: () => this.upsertTTLIndex(_moduleOptions.expireAfterSeconds)});
     this.moduleOptions = _moduleOptions;
   }
 

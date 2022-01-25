@@ -1,8 +1,8 @@
 import {BadRequestException, Inject, mixin, PipeTransform, Type} from "@nestjs/common";
 import {REQUEST} from "@nestjs/core";
-import {ValidationError, Validator} from "./validator";
+import {Validator} from "./validator";
 
-abstract class MixinValidator {
+abstract class MixinValidator implements PipeTransform {
   abstract uriSchemaOrResolver: string | object | Function;
   constructor(public validator: Validator, @Inject(REQUEST) public req) {}
 

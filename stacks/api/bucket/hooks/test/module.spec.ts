@@ -29,11 +29,8 @@ describe("hook module", () => {
       await module.close();
     });
 
-    it("should get initial schema", async () => {
-      let schema = await createSchema(database)
-        .pipe(take(1))
-        .toPromise();
-      expect(schema).toEqual({
+    it("should get initial schema", async done => {
+      const expectedSchema: any = {
         $id: "http://spica.internal/function/enqueuer/bucket",
         type: "object",
         required: ["bucket", "type"],
@@ -41,9 +38,8 @@ describe("hook module", () => {
           bucket: {
             title: "Bucket",
             type: "string",
-            enum: [],
-            // @ts-expect-error
-            viewEnum: [],
+            enum: [null],
+            viewEnum: [null],
             description: "Bucket id that the event will be tracked on"
           },
           type: {
@@ -54,13 +50,22 @@ describe("hook module", () => {
           }
         },
         additionalProperties: false
+      };
+
+      let schemaPromise = await createSchema(database);
+      expect(schemaPromise).toEqual(expectedSchema);
+
+      const schemaObs = createSchema(database, true);
+      schemaObs.pipe(take(1)).subscribe(schema => {
+        expect(schema).toEqual(expectedSchema);
+        done();
       });
     });
 
     it("should report when a bucket has been created", async done => {
-      const schema = createSchema(database);
+      const schema = createSchema(database, true);
       const {insertedId: firstBucket} = await database.collection("buckets").insertOne({});
-      from(schema)
+      schema
         .pipe(
           bufferCount(2),
           take(1)
@@ -78,17 +83,17 @@ describe("hook module", () => {
     });
 
     it("should report when a bucket has been dropped", async done => {
-      const schema = createSchema(database);
+      const schema = createSchema(database, true);
       const bucketId = new ObjectId();
       await database.collection("buckets").insertOne({_id: bucketId});
-      from(schema)
+      schema
         .pipe(
           bufferCount(2),
           take(1)
         )
         .subscribe(changes => {
           let collections = changes.map(c => c.properties.bucket["enum"]);
-          expect(collections).toEqual([[bucketId.toHexString()], []]);
+          expect(collections).toEqual([[bucketId.toHexString()], [null]]);
           done();
         });
       await stream.wait();
