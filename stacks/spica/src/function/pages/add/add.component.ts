@@ -573,7 +573,9 @@ export class AddComponent implements OnInit, OnDestroy {
       let tab: Window;
 
       const onFailed = (reason: string) => {
-        tab.close();
+        if (tab) {
+          tab.close();
+        }
         this.repoPending = false;
         this.showRepoResponse({succeeded: false, message: reason});
       };
