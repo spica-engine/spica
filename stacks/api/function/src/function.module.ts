@@ -18,7 +18,6 @@ import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/en
 import {Http, RepoStrategies} from "./services/interface";
 import {Axios} from "./services/axios";
 import {registerStatusProvider} from "./status";
-import FunctionSchema = require("./schema/function.json");
 
 @Module({})
 export class FunctionModule {
@@ -36,7 +35,7 @@ export class FunctionModule {
           realtime: options.realtimeLogs
         }),
         SchemaModule.forChild({
-          schemas: [FunctionSchema],
+          schemas: [],
           customFields: ["viewEnum"]
         }),
         WebhookModule.forRoot({expireAfterSeconds: options.logExpireAfterSeconds}),

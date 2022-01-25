@@ -9,7 +9,6 @@ import {BUCKET_DATA_LIMIT} from "./options";
 
 @Injectable()
 export class BucketService extends BaseCollection<Bucket>("buckets") {
-  readonly buckets: Collection<Bucket>;
   schemaChangeEmitter: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
 
   constructor(
@@ -19,7 +18,6 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     @Optional() @Inject(BUCKET_DATA_LIMIT) private bucketDataLimit
   ) {
     super(db);
-    this.buckets = db.collection("buckets");
   }
 
   getPreferences() {
@@ -104,7 +102,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
       if (propagateOnStart) {
         super.findOne({_id: new ObjectId(bucketId)}).then(bucket => observer.next(bucket));
       }
-      const stream = this.buckets.watch(
+      const stream = this._coll.watch(
         [
           {
             $match: {

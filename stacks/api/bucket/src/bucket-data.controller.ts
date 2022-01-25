@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -373,19 +372,7 @@ export class BucketDataController {
 
     const patchedDocument = applyPatch(previousDocument, patch);
 
-    await this.validator.validate({$ref: bucketId.toString()}, patchedDocument).catch(error => {
-      throw new BadRequestException(
-        error.errors
-          ? error.errors
-              .map(e => {
-                const dataPath = e.dataPath.replace(/\//g, ".");
-                return `${dataPath} ${e.message}`;
-              })
-              .join("\n")
-          : [],
-        error.message
-      );
-    });
+    await this.validateDocument(bucketId, patchedDocument);
 
     const currentDocument = await patchDocument(
       schema,
@@ -495,5 +482,11 @@ export class BucketDataController {
 
   errorHandler(error: {status: number; message: string}) {
     throw new HttpException(error.message, error.status || 500);
+  }
+
+  validateDocument(bucketId: ObjectId, document: BucketDocument): Promise<void> {
+    const validatorMixin = Schema.validate(bucketId.toHexString());
+    const pipe: any = new validatorMixin(this.validator);
+    return pipe.transform(document);
   }
 }

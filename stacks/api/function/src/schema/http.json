@@ -8,8 +8,7 @@
     "method": {
       "title": "Method",
       "type": "string",
-      "enum": ["All", "Get", "Post", "Put", "Delete", "Patch", "Head"],
-      "default": "Get"
+      "enum": ["All", "Get", "Post", "Put", "Delete", "Patch", "Head"]
     },
     "path": {
       "title": "Path",
@@ -20,13 +19,11 @@
         "/v2beta1/books",
         "/v1/authorize",
         "/v2/authorize"
-      ],
-      "default": "/"
+      ]
     },
     "preflight": {
       "title": "Preflight (CORS)",
-      "type": "boolean",
-      "default": true
+      "type": "boolean"
     }
   },
   "additionalProperties": false
