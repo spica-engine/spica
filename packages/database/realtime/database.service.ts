@@ -46,7 +46,10 @@ export class RealtimeDatabaseService {
   private findEmitterName(name: string, options: FindOptions<any>) {
     for (const key of this.emitters.keys()) {
       const emitterFilter = key.includes(name) ? JSON.parse(key.replace(name + "_", "")) : false;
-      if (emitterFilter && isEqual(emitterFilter, options)) {
+
+      // we have to lose special types like ObjectId, Date in this options in order to compare it with emitterFilter correctly
+      const pureOptions = JSON.parse(JSON.stringify(options));
+      if (emitterFilter && isEqual(emitterFilter, pureOptions)) {
         return key;
       }
     }

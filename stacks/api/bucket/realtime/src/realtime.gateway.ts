@@ -56,8 +56,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {}
 
   async handleDisconnect(client: any) {
-    const {schemaId, options} = await this.initPreRequirements(client, client.upgradeReq);
+    const schemaIdAndOptions = await this.prepareClient(client, client.upgradeReq);
 
+    if (!schemaIdAndOptions) {
+      return;
+    }
+
+    const {schemaId, options} = schemaIdAndOptions;
     const collection = getBucketDataCollection(schemaId);
     if (this.realtime.doesEmitterExist(collection, options)) {
       this.realtime.removeEmitter(collection, options);
@@ -88,8 +93,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return client.close(1003);
     }
 
-    const {schemaId, options} = await this.initPreRequirements(client, req);
+    const schemaIdAndOptions = await this.prepareClient(client, req);
 
+    if (!schemaIdAndOptions) {
+      return;
+    }
+
+    const {schemaId, options} = schemaIdAndOptions;
     const stream = this.realtime.find(getBucketDataCollection(schemaId), options).pipe(
       catchError(error => {
         this.send(client, ChunkKind.Error, 500, error.toString());
@@ -446,7 +456,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     return validationPipe.transform(document);
   }
 
-  async initPreRequirements(client, req): Promise<{schemaId: string; options: any}> {
+  async prepareClient(client, req): Promise<{schemaId: string; options: any}> {
     const schemaId = req.params.id;
 
     if (!ObjectId.isValid(schemaId)) {
@@ -455,6 +465,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     const schema = await this.bucketService.findOne({_id: new ObjectId(schemaId)});
+
+    if (!schema) {
+      this.send(client, ChunkKind.Error, 400, `Could not find the schema with id ${schemaId}.`);
+      return client.close(1003);
+    }
 
     req = authIdToString(req);
     const match = expression.aggregate(schema.acl.read, {auth: req.user});
@@ -505,7 +520,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   extractSchema(client: any): Promise<any> {
     return new Promise(async (resolve, reject) => {
-      await this.initPreRequirements(client, client.upgradeReq);
+      await this.prepareClient(client, client.upgradeReq);
 
       try {
         await this.authorize(client.upgradeReq, client);

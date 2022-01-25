@@ -45,7 +45,7 @@ export class _MixinCollection<T> {
 
   initCollection() {
     return this.db.createCollection(this._collection).catch(e => {
-      if (e.codeName == "NamespaceExists") {
+      if (e.codeName == "NamespaceExists" || e.message.includes("already exists")) {
         return;
       }
       throw e;
