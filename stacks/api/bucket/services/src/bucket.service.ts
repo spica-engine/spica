@@ -1,11 +1,35 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
 import {Default, Validator} from "@spica-server/core/schema";
-import {BaseCollection, Collection, DatabaseService, ObjectId} from "@spica-server/database";
+import {
+  BaseCollection,
+  Collection,
+  DatabaseService,
+  FilterQuery,
+  FindOneAndReplaceOption,
+  IndexOptions,
+  ObjectId
+} from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference/services";
 import {BehaviorSubject, Observable} from "rxjs";
 import {Bucket, BucketPreferences} from "./bucket";
 import {getBucketDataCollection} from "@spica-server/bucket/services";
 import {BUCKET_DATA_LIMIT} from "./options";
+
+export interface IndexDefinition {
+  definition: {
+    [key: string]: any;
+  };
+  options?: IndexOptions;
+}
+
+interface ExistingIndex {
+  v: number;
+  key: {
+    [key: string]: any;
+  };
+  name: string;
+  [key: string]: any;
+}
 
 @Injectable()
 export class BucketService extends BaseCollection<Bucket>("buckets") {
@@ -63,31 +87,46 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     );
 
     const insertedBucket = await super.insertOne(bucket);
-    const bucketCollection = await this.db.createCollection(
-      getBucketDataCollection(insertedBucket._id)
-    );
 
-    const indexDefinitions = this.createUniqueIndexDefs(bucket);
-    for (const definition of indexDefinitions) {
-      await bucketCollection.createIndex(definition, {unique: true});
-    }
+    await this.db.createCollection(getBucketDataCollection(insertedBucket._id));
+
+    await this.updateIndexes(bucket);
+
     return insertedBucket;
   }
 
-  async updateUniqueFields(id: string | ObjectId, newSchema: Bucket) {
-    const collection = this.db.collection(getBucketDataCollection(id));
+  findOneAndReplace(
+    filter: FilterQuery<{_id: string}>,
+    doc: Bucket,
+    options?: FindOneAndReplaceOption
+  ): Promise<Bucket> {
+    return super
+      .findOneAndReplace(filter, doc, options)
+      .then(r => this.updateIndexes({...doc, _id: filter._id}).then(() => r));
+  }
 
-    const indexes = await collection
-      .listIndexes()
-      .toArray()
-      .then(indexes => indexes.filter(i => i.unique).map(i => Object.keys(i.key)[0]));
+  async updateIndexes(bucket: Bucket): Promise<void> {
+    const bucketDataCollection = this.db.collection(getBucketDataCollection(bucket._id));
 
-    const newIndexes = this.getUniqueFields(newSchema);
+    const indexDefinitions = this.createIndexDefinitions(bucket);
+    const indexesWillBeDropped = [];
 
+    const errors = [];
+
+    const indexes = await this.getIndexesWillBeDropped(bucketDataCollection);
     for (const index of indexes) {
-      if (newIndexes.indexOf(index) == -1) {
-        await collection.dropIndex({[index]: 1} as any);
-      }
+      indexesWillBeDropped.push(bucketDataCollection.dropIndex(index).catch(e => errors.push(e)));
+    }
+
+    await Promise.all(indexesWillBeDropped);
+    await Promise.all(
+      indexDefinitions.map(index =>
+        bucketDataCollection.createIndex(index.definition, index.options).catch(e => errors.push(e))
+      )
+    );
+
+    if (errors.length) {
+      throw Error(errors.map(e => e.message).join(""));
     }
   }
 
@@ -131,22 +170,54 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     return this.validator.defaults;
   }
 
-  createUniqueIndexDefs(bucket: Bucket) {
-    return this.getUniqueFields(bucket).map(field => {
-      return {
-        [field]: 1
-      };
-    });
-  }
+  createIndexDefinitions(
+    bucket: Bucket,
+    definitions: IndexDefinition[] = [],
+    prefix: string = ""
+  ): IndexDefinition[] {
+    const keyGenerator = (prefix, name) => {
+      return prefix ? `${prefix}.${name}` : name;
+    };
+    for (const [name, spec] of Object.entries(bucket.properties)) {
+      if (spec.options && (spec.options.index || spec.options.unique)) {
+        const key = keyGenerator(prefix, name);
+        definitions.push({
+          // direction of index is unimportant for single field indexes
+          definition: {[key]: 1},
+          options: {unique: !!spec.options.unique}
+        });
+      }
 
-  getUniqueFields(bucket: Bucket) {
-    const fields = [];
-    for (const [name, definition] of Object.entries(bucket.properties)) {
-      if (definition.options && definition.options.unique) {
-        fields.push(name);
+      if (spec.type == "object") {
+        const key = keyGenerator(prefix, name);
+
+        this.createIndexDefinitions(spec as any, definitions, key);
+      } else if (spec.type == "array") {
+        const key = keyGenerator(prefix, name);
+
+        const schema = {
+          properties: {
+            [key]: spec.items
+          }
+        };
+        this.createIndexDefinitions(schema as any, definitions, "");
       }
     }
-    return fields;
+
+    return definitions;
+  }
+
+  async getIndexesWillBeDropped(collection: Collection<any>): Promise<string[]> {
+    const existings: ExistingIndex[] = await collection.listIndexes().toArray();
+    return existings
+      .filter(existing => this.isExistingSingleFieldIndex(existing))
+      .map(existing => existing.name);
+  }
+
+  isExistingSingleFieldIndex(index: ExistingIndex) {
+    const keys = Object.keys(index.key);
+    // we can not remove _id index since it's default index of mongodb
+    return keys.length == 1 && keys[0] != "_id";
   }
 
   collNameToId(collName: string) {
