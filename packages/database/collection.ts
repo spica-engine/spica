@@ -55,7 +55,7 @@ export class _MixinCollection<T> {
     //     }
     //   });
     return this.db.createCollection(this._collection).catch(e => {
-      console.dir(e,{depth:Infinity});
+      console.log(e);
       if (e.codeName == "NamespaceExists") {
         return;
       }
