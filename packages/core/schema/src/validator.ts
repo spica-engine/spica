@@ -4,7 +4,7 @@ import formats from "ajv-formats";
 import {ValidationError} from "ajv/dist/compile/error_classes";
 import * as request from "request-promise-native";
 import {from, isObservable} from "rxjs";
-import {skip, take} from "rxjs/operators";
+import {skip, take, tap} from "rxjs/operators";
 import defaultVocabulary from "./default";
 import formatVocabulary from "./format";
 import {
@@ -74,21 +74,16 @@ export class Validator {
       const result = interceptor(uri);
       if (!!result) {
         if (isObservable<Object>(result)) {
-          result.pipe(skip(1)).subscribe({
-            next: schema => {
-              this._ajv.removeSchema(uri);
-              this._ajv.addSchema(schema, uri);
-            },
-            complete: () => this.removeSchema(uri)
-          });
-          return result
-            .pipe(take(1))
-            .toPromise()
-            .then(schema => {
-              this._ajv.removeSchema(uri);
-              this._ajv.addSchema(schema, uri);
-              return schema;
-            });
+          result
+            .pipe(
+              skip(1),
+              tap(schema => {
+                this._ajv.removeSchema(uri);
+                this._ajv.addSchema(schema, uri);
+              })
+            )
+            .subscribe();
+          return result.pipe(take(1)).toPromise();
         } else {
           return from(result).toPromise();
         }
@@ -116,16 +111,26 @@ export class Validator {
     this._ajv.removeSchema(schemaUri);
   }
 
-  async validate<T = unknown>(schemaOrUrl: object | string, value: T): Promise<void> {
+  private isId(schemaOrId: object | string): schemaOrId is string {
+    return typeof schemaOrId == "string";
+  }
+
+  private isSchema(schemaOrId: object | string): schemaOrId is object {
+    return typeof schemaOrId == "object" && schemaOrId != null;
+  }
+
+  async validate<T = unknown>(schemaOrId: object | string, value: T): Promise<void> {
     let schema: object;
     let uri: string;
-    if (typeof schemaOrUrl == "string") {
-      schema = {$ref: schemaOrUrl};
-      uri = schemaOrUrl;
-    } else if (typeof schemaOrUrl == "object" && schemaOrUrl != null) {
-      schema = schemaOrUrl;
+
+    if (this.isSchema(schemaOrId)) {
+      schema = schemaOrId;
+      uri = schemaOrId["$id"];
+    } else if (this.isId(schemaOrId)) {
+      schema = {$ref: schemaOrId};
+      uri = schemaOrId;
     } else {
-      throw new TypeError(`invalid schema type received ${typeof schemaOrUrl}`);
+      throw new TypeError(`invalid schema type received ${typeof schemaOrId}`);
     }
 
     try {

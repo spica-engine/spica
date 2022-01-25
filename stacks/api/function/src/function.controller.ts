@@ -36,7 +36,6 @@ import {
   Options
 } from "@spica-server/function/services";
 import {ChangeKind, hasContextChange} from "./change";
-import {generate} from "./schema/enqueuer.resolver";
 import {changesFromTriggers, createTargetChanges} from "./change";
 import {LogService} from "@spica-server/function/src/log/src/log.service";
 
@@ -128,9 +127,7 @@ export class FunctionController {
     for (const enqueuer of this.scheduler.enqueuers) {
       enqueuers.push({
         description: enqueuer.description,
-        options: await from(this.engine.getSchema(enqueuer.description.name))
-          .pipe(take(1))
-          .toPromise()
+        options: await this.engine.getSchema(enqueuer.description.name)
       });
     }
 
@@ -194,7 +191,7 @@ export class FunctionController {
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
   async replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate(generate)) fn: Function
+    @Body(Schema.validate("http://spica.internal/function/schema")) fn: Function
   ) {
     fn._id = id;
     delete fn._id;
@@ -225,7 +222,7 @@ export class FunctionController {
   @UseInterceptors(activity(createFunctionActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
-  async insertOne(@Body(Schema.validate(generate)) fn: Function) {
+  async insertOne(@Body(Schema.validate("http://spica.internal/function/schema")) fn: Function) {
     fn = await this.fs.insertOne(fn).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });

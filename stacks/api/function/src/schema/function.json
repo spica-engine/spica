@@ -34,6 +34,29 @@
       "enum": ["typescript", "javascript"],
       "description": "Language of the function"
     },
-    "triggers": true
+    "triggers": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "Define the met condition will invoke which function",
+      "patternProperties": {
+        "": {
+          "type": "object",
+          "required": ["type", "options"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Type of the trigger"
+            },
+            "active": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether trigger is active"
+            },
+            "options": true
+          }
+        }
+      }
+    }
   }
 }

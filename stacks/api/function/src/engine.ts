@@ -18,7 +18,7 @@ import {
   CollectionSlug
 } from "@spica-server/function/services";
 import {ChangeKind, TargetChange} from "./change";
-import {Schema, SCHEMA, SchemaWithName, SCHEMA1} from "./schema/schema";
+import {Schema, SCHEMA, SchemaWithName} from "./schema/schema";
 import {createTargetChanges} from "./change";
 import {RepoStrategies} from "./services/interface";
 
@@ -47,17 +47,15 @@ export class FunctionEngine implements OnModuleDestroy {
     private repos: RepoStrategies,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
-    @Optional() @Inject(SCHEMA1) schema1: SchemaWithName,
     @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
     }
-    if (schema1) {
-      this.schemas.set(schema1.name, schema1.schema);
-    }
 
-    this.schemas.set("database", () => getDatabaseSchema(this.db, this.mongo, collSlug));
+    this.schemas.set("database", observe =>
+      getDatabaseSchema(this.db, this.mongo, collSlug, observe)
+    );
 
     this.fs.find().then(fns => {
       const targetChanges: TargetChange[] = [];
@@ -223,11 +221,14 @@ export class FunctionEngine implements OnModuleDestroy {
       .then(b => b.toString());
   }
 
-  getSchema(name: string): Observable<JSONSchema7 | null> | Promise<JSONSchema7 | null> {
+  getSchema(
+    name: string,
+    observe?: boolean
+  ): Observable<JSONSchema7 | null> | Promise<JSONSchema7 | null> {
     const schema = this.schemas.get(name);
     if (schema) {
       if (typeof schema == "function") {
-        return schema();
+        return schema(observe);
       } else {
         return Promise.resolve(schema);
       }
@@ -281,13 +282,17 @@ export class FunctionEngine implements OnModuleDestroy {
 export function getDatabaseSchema(
   db: DatabaseService,
   mongo: MongoClient,
-  collSlug: CollectionSlug = id => Promise.resolve(id)
-): Observable<JSONSchema7> {
-  return new Observable(observer => {
-    // <collection_id,collection_placeholder>
-    const collSlugMap: Map<string, string> = new Map();
+  collSlug: CollectionSlug = id => Promise.resolve(id),
+  observe: boolean
+): Observable<JSONSchema7> | Promise<JSONSchema7> {
+  const sendCollections = (observer?) => {
+    return db.collections().then(async collections => {
+      const collSlugMap: Map<string, string> = new Map();
 
-    const notifyChanges = () => {
+      for (const collection of collections) {
+        collSlugMap.set(collection.collectionName, await collSlug(collection.collectionName));
+      }
+
       const schema: JSONSchema7 = {
         $id: "http://spica.internal/function/enqueuer/database",
         type: "object",
@@ -310,42 +315,42 @@ export function getDatabaseSchema(
         },
         additionalProperties: false
       };
-      observer.next(schema);
-    };
+
+      if (observer) {
+        observer.next(schema);
+        return;
+      }
+
+      return schema;
+    });
+  };
+
+  if (!observe) {
+    return Promise.resolve(sendCollections());
+  }
+
+  return new Observable(observer => {
+    sendCollections(observer);
 
     const stream = mongo.watch([
       {
         $match: {
-          $or: [{operationType: "insert"}, {operationType: "drop"}],
-          "ns.db": db.databaseName
+          $or: [
+            // none of collections is able to be inserted or deleted except bucket-data
+            // @TODO: this filter is high coupled to bucket module, try to put some better filter
+            // possible solution is implementing onCollectionCreate and onCollectionDelete hooks to the database service
+            {"ns.coll": "buckets", operationType: "delete"},
+            {"ns.coll": "buckets", operationType: "insert"}
+          ]
         }
       }
     ]);
 
-    stream.on("change", async change => {
-      const coll_id = change.ns.coll;
-      switch (change.operationType) {
-        case "drop":
-          collSlugMap.delete(coll_id);
-          notifyChanges();
-          break;
-        case "insert":
-          if (!collSlugMap.has(coll_id)) {
-            collSlugMap.set(coll_id, await collSlug(coll_id));
-            notifyChanges();
-          }
-          break;
-      }
+    stream.on("change", () => {
+      sendCollections(observer);
     });
 
     stream.on("close", () => observer.complete());
-
-    db.collections().then(async collections => {
-      for (const collection of collections) {
-        collSlugMap.set(collection.collectionName, await collSlug(collection.collectionName));
-      }
-      notifyChanges();
-    });
 
     return () => {
       stream.close();
