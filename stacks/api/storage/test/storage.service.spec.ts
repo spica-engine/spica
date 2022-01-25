@@ -46,7 +46,7 @@ describe("Storage Service", () => {
 
   it("should add storage objects", async () => {
     await expectAsync(
-      storageService.insertMany(
+      storageService.insert(
         Array.from(new Array(3), (val, index) => ({
           name: "name" + index,
           content: {
@@ -69,7 +69,7 @@ describe("Storage Service", () => {
   });
 
   it("should update storage object", async () => {
-    await expectAsync(storageService.insertMany([storageObject])).toBeResolved();
+    await expectAsync(storageService.insert([storageObject])).toBeResolved();
 
     const updatedData = {
       _id: storageObjectId,
@@ -81,7 +81,7 @@ describe("Storage Service", () => {
         size: 10
       }
     };
-    await expectAsync(storageService.updateOne(storageObjectId, updatedData)).toBeResolved();
+    await expectAsync(storageService.update(storageObjectId, updatedData)).toBeResolved();
 
     return await expectAsync(
       storageService.get(storageObjectId).then(result => {
@@ -101,8 +101,8 @@ describe("Storage Service", () => {
   });
 
   it("should delete single storage object", async () => {
-    await expectAsync(storageService.insertMany([storageObject])).toBeResolved();
-    await expectAsync(storageService.deleteOne(storageObjectId)).toBeResolved();
+    await expectAsync(storageService.insert([storageObject])).toBeResolved();
+    await expectAsync(storageService.delete(storageObjectId)).toBeResolved();
     return await expectAsync(storageService.get(storageObjectId)).toBeResolvedTo(null);
   });
 
@@ -181,7 +181,7 @@ describe("Storage Service", () => {
       }).compile();
       storageService = module.get(StorageService);
 
-      const [insertedObj] = await storageService.insertMany([
+      const [insertedObj] = await storageService.insert([
         {
           _id: new ObjectId(),
           name: "name",
@@ -236,7 +236,7 @@ describe("Storage Service", () => {
           }
         };
 
-        const [insertedObj] = await storageService.insertMany([storageObject]);
+        const [insertedObj] = await storageService.insert([storageObject]);
         expect(insertedObj._id).toEqual(storageObject._id);
       });
 
@@ -262,14 +262,14 @@ describe("Storage Service", () => {
       it("should update if it won't exceed the limit", async () => {
         storageObjects[0].content.size = 5.5 * MB;
 
-        const updatedObj = await storageService.updateOne(storageObjects[0]._id, storageObjects[0]);
+        const updatedObj = await storageService.update(storageObjects[0]._id, storageObjects[0]);
         expect(updatedObj.content.size).toEqual(5.5 * MB);
       });
 
       it("should not update if it exceed the limit", async () => {
         storageObjects[0].content.size = 5.6 * MB;
 
-        await storageService.updateOne(storageObjects[0]._id, storageObjects[0]).catch(e => {
+        await storageService.update(storageObjects[0]._id, storageObjects[0]).catch(e => {
           expect(e).toEqual(new Error("Total storage object size limit exceeded"));
         });
       });

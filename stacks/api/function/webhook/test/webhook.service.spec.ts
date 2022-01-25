@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {ChangeKind, WebhookService} from "@spica-server/function/webhook";
-import {bufferCount, bufferTime} from "rxjs/operators";
+import {bufferCount, bufferTime, take} from "rxjs/operators";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
@@ -56,19 +56,17 @@ describe("Webhook Service", () => {
 
     service
       .targets()
-      .pipe(bufferCount(1))
+      .pipe(take(1))
       .subscribe(targets => {
-        expect(targets).toEqual([
-          {
-            kind: ChangeKind.Added,
-            target: hook._id.toHexString(),
-            webhook: {
-              url: hook.url,
-              body: hook.body,
-              trigger: hook.trigger
-            }
+        expect(targets).toEqual({
+          kind: ChangeKind.Added,
+          target: hook._id.toHexString(),
+          webhook: {
+            url: hook.url,
+            body: hook.body,
+            trigger: hook.trigger
           }
-        ]);
+        });
         done();
       });
   });
@@ -76,19 +74,17 @@ describe("Webhook Service", () => {
   it("should report newly added hook", async done => {
     service
       .targets()
-      .pipe(bufferCount(1))
+      .pipe(take(1))
       .subscribe(targets => {
-        expect(targets).toEqual([
-          {
-            kind: ChangeKind.Added,
-            target: hook._id.toHexString(),
-            webhook: {
-              url: hook.url,
-              body: hook.body,
-              trigger: hook.trigger
-            }
+        expect(targets).toEqual({
+          kind: ChangeKind.Added,
+          target: hook._id.toHexString(),
+          webhook: {
+            url: hook.url,
+            body: hook.body,
+            trigger: hook.trigger
           }
-        ]);
+        });
         done();
       });
     await stream.wait();
@@ -121,7 +117,10 @@ describe("Webhook Service", () => {
     });
     service
       .targets()
-      .pipe(bufferCount(2))
+      .pipe(
+        bufferCount(2),
+        take(1)
+      )
       .subscribe(targets => {
         expect(targets).toEqual([
           {
@@ -159,7 +158,10 @@ describe("Webhook Service", () => {
     });
     service
       .targets()
-      .pipe(bufferCount(2))
+      .pipe(
+        bufferCount(2),
+        take(1)
+      )
       .subscribe(targets => {
         expect(targets).toEqual([
           {

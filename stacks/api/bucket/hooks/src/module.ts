@@ -11,35 +11,63 @@ import {ChangeEmitter} from "./emitter";
 import {ChangeEnqueuer} from "./enqueuer";
 import {ChangeQueue} from "./queue";
 
-export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
-  return new Observable(observer => {
-    const buckets = new Map<string, string>();
+export function createSchema(db: DatabaseService, observe?: false): Promise<JSONSchema7>;
+export function createSchema(db: DatabaseService, observe?: true): Observable<JSONSchema7>;
+export function createSchema(
+  db: DatabaseService,
+  observe: boolean = false
+): Observable<JSONSchema7> | Promise<JSONSchema7> {
+  const notifyChanges = (observer?) => {
+    const slugs = new Map<string, string>();
 
-    const notifyChanges = () => {
-      const schema: JSONSchema7 = {
-        $id: "http://spica.internal/function/enqueuer/bucket",
-        type: "object",
-        required: ["bucket", "type"],
-        properties: {
-          bucket: {
-            title: "Bucket",
-            type: "string",
-            enum: Array.from(buckets.keys()),
-            // @ts-expect-error
-            viewEnum: Array.from(buckets.values()),
-            description: "Bucket id that the event will be tracked on"
+    return db
+      .collection("buckets")
+      .find({})
+      .toArray()
+      .then(buckets => {
+        for (const bucket of buckets) {
+          slugs.set(bucket._id.toString(), bucket.title);
+        }
+
+        const schema: JSONSchema7 = {
+          $id: "http://spica.internal/function/enqueuer/bucket",
+          type: "object",
+          required: ["bucket", "type"],
+          properties: {
+            bucket: {
+              // empty enums are not allowed on schema but the client will be able to send any value if enums are empty, it's a bit weird solution to solve this problem
+              enum: Array.from(slugs.keys()).length ? Array.from(slugs.keys()) : [null],
+              // @ts-ignore
+              viewEnum: Array.from(slugs.values()).length ? Array.from(slugs.values()) : [null],
+              title: "Bucket",
+              type: "string",
+              description: "Bucket id that the event will be tracked on"
+            },
+            type: {
+              title: "Operation type",
+              type: "string",
+              enum: ["ALL", "INSERT", "UPDATE", "DELETE"],
+              description: "Operation type that must be performed in the specified bucket"
+            }
           },
-          type: {
-            title: "Operation type",
-            type: "string",
-            enum: ["ALL", "INSERT", "UPDATE", "DELETE"],
-            description: "Operation type that must be performed in the specified bucket"
-          }
-        },
-        additionalProperties: false
-      };
-      observer.next(schema);
-    };
+          additionalProperties: false
+        };
+
+        if (observer) {
+          observer.next(schema);
+          return;
+        }
+
+        return schema;
+      });
+  };
+
+  if (!observe) {
+    return Promise.resolve(notifyChanges());
+  }
+
+  return new Observable(observer => {
+    notifyChanges(observer);
 
     const stream = db.collection("buckets").watch(
       [
@@ -52,32 +80,9 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
       {fullDocument: "updateLookup"}
     );
 
-    stream.on("change", change => {
-      switch (change.operationType) {
-        case "delete":
-          buckets.delete(change.documentKey._id.toString());
-          notifyChanges();
-          break;
-        case "insert":
-          if (!buckets.has(change.documentKey._id.toString())) {
-            buckets.set(change.documentKey._id.toString(), change.fullDocument.title);
-            notifyChanges();
-          }
-          break;
-      }
-    });
+    stream.on("change", () => notifyChanges(observer));
 
     stream.on("close", () => observer.complete());
-
-    db.collection("buckets")
-      .find({})
-      .toArray()
-      .then(_buckets => {
-        for (const bucket of _buckets) {
-          buckets.set(bucket._id.toString(), bucket.title);
-        }
-        notifyChanges();
-      });
 
     return () => {
       stream.close();
@@ -118,7 +123,7 @@ export const collectionSlugFactory = (bs: BucketService) => {
     {
       provide: SCHEMA,
       useFactory: (db: DatabaseService) => {
-        return {name: "bucket", schema: () => createSchema(db)};
+        return {name: "bucket", schema: observe => createSchema(db, observe)};
       },
       inject: [DatabaseService]
     },

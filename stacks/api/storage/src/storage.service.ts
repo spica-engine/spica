@@ -1,23 +1,27 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {Collection, DatabaseService, FilterQuery, ObjectId} from "@spica-server/database";
+import {
+  BaseCollection,
+  Collection,
+  DatabaseService,
+  FilterQuery,
+  ObjectId
+} from "@spica-server/database";
 import {StorageObject} from "./body";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {Strategy} from "./strategy/strategy";
 
 @Injectable()
-export class StorageService {
-  private _collection: Collection<StorageObject>;
-
+export class StorageService extends BaseCollection<StorageObject>("storage") {
   constructor(
     database: DatabaseService,
     private service: Strategy,
-    @Inject(STORAGE_OPTIONS) private options: StorageOptions
+    @Inject(STORAGE_OPTIONS) private storageOptions: StorageOptions
   ) {
-    this._collection = database.collection("storage");
+    super(database);
   }
 
   private existingSize(): Promise<number> {
-    return this._collection
+    return this._coll
       .aggregate([
         {
           $group: {
@@ -35,7 +39,7 @@ export class StorageService {
 
   async getStatus() {
     return {
-      limit: this.options.totalSizeLimit,
+      limit: this.storageOptions.totalSizeLimit,
       current: await this.existingSize().then(bytes =>
         parseFloat((bytes * Math.pow(10, -6)).toFixed(2))
       ),
@@ -44,13 +48,13 @@ export class StorageService {
   }
 
   private async validateTotalStorageSize(size: number) {
-    if (!this.options.totalSizeLimit) {
+    if (!this.storageOptions.totalSizeLimit) {
       return;
     }
     const existing = await this.existingSize();
 
     const neededInMb = (existing + size) * Math.pow(10, -6);
-    if (neededInMb > this.options.totalSizeLimit) {
+    if (neededInMb > this.storageOptions.totalSizeLimit) {
       throw new Error("Total storage object size limit exceeded");
     }
   }
@@ -90,7 +94,7 @@ export class StorageService {
       }
     ];
 
-    return this._collection
+    return this._coll
       .aggregate<StorageResponse>(aggregation)
       .next()
       .then(async result => {
@@ -102,14 +106,14 @@ export class StorageService {
   }
 
   async get(id: ObjectId): Promise<StorageObject> {
-    const object = await this._collection.findOne({_id: new ObjectId(id)});
+    const object = await this._coll.findOne({_id: new ObjectId(id)});
     if (!object) return null;
     object.content.data = await this.service.read(id.toHexString());
     return object;
   }
 
-  async deleteOne(id: ObjectId): Promise<void> {
-    const deletedCount = await this._collection.deleteOne({_id: id}).then(res => res.deletedCount);
+  async delete(id: ObjectId): Promise<void> {
+    const deletedCount = await this._coll.deleteOne({_id: id}).then(res => res.deletedCount);
 
     if (!deletedCount) {
       return;
@@ -118,8 +122,8 @@ export class StorageService {
     await this.service.delete(id.toHexString());
   }
 
-  async updateOne(_id: ObjectId, object: StorageObject): Promise<StorageObject> {
-    const existing = await this._collection.findOne({_id});
+  async update(_id: ObjectId, object: StorageObject): Promise<StorageObject> {
+    const existing = await this._coll.findOne({_id});
     if (!existing) {
       throw new Error(`Storage object ${_id} could not be found`);
     }
@@ -131,10 +135,10 @@ export class StorageService {
     }
     delete object.content.data;
     delete object._id;
-    return this._collection.findOneAndUpdate({_id}, {$set: object}).then(() => object);
+    return this._coll.findOneAndUpdate({_id}, {$set: object}).then(() => object);
   }
 
-  async insertMany(objects: StorageObject[]): Promise<StorageObject[]> {
+  async insert(objects: StorageObject[]): Promise<StorageObject[]> {
     const datas = objects.map(object => object.content.data);
     const schemas = objects.map(object => {
       delete object.content.data;
@@ -143,7 +147,7 @@ export class StorageService {
 
     await this.validateTotalStorageSize(schemas.reduce((sum, curr) => sum + curr.content.size, 0));
 
-    const insertedObjects = await this._collection
+    const insertedObjects = await this._coll
       .insertMany(schemas)
       .then(result => result.ops as StorageObject[]);
 

@@ -128,7 +128,7 @@ export class StorageController {
     }
     object._id = id;
     object.content.size = object.content.data.byteLength;
-    object = await this.storage.updateOne(id, object).catch(error => {
+    object = await this.storage.update(id, object).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
     object.url = await this.storage.getUrl(id.toHexString());
@@ -182,7 +182,7 @@ export class StorageController {
       });
     }
 
-    objects = await this.storage.insertMany(objects).catch(error => {
+    objects = await this.storage.insert(objects).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
 
@@ -201,6 +201,6 @@ export class StorageController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.storage.deleteOne(id);
+    return this.storage.delete(id);
   }
 }

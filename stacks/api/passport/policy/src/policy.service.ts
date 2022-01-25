@@ -5,15 +5,14 @@ import {
   ObjectId,
   InsertOneWriteOpResult,
   FilterQuery,
-  FindOneAndReplaceOption
+  FindOneAndReplaceOption,
+  BaseCollection
 } from "@spica-server/database";
 import {Policy} from "./interface";
 import managedPolicies from "./policies";
 
 @Injectable()
-export class PolicyService {
-  private _policyCollection: Collection<UserManagedPolicy>;
-
+export class PolicyService extends BaseCollection("policies") {
   managedPolicies: Array<PolicyWithType>;
   customerManagedPolicies: Array<PolicyWithType>;
 
@@ -22,12 +21,12 @@ export class PolicyService {
   }
 
   constructor(db: DatabaseService) {
-    this._policyCollection = db.collection("policies");
+    super(db);
     this.managedPolicies = managedPolicies.map(p => ({...p, system: true} as PolicyWithType));
   }
 
   _findAll(): Promise<Policy[]> {
-    return this._policyCollection
+    return this._coll
       .find()
       .toArray()
       .then(policies => {
@@ -39,7 +38,7 @@ export class PolicyService {
       });
   }
 
-  find(filter: object, limit: number, skip: number = 0) {
+  paginate(filter: object, limit: number, skip: number = 0) {
     const policies = this.policies.filter(policy => {
       let isMatched = true;
 
@@ -59,26 +58,6 @@ export class PolicyService {
       },
       data: policies.slice(skip || 0, (skip || 0) + (limit || policies.length))
     };
-  }
-
-  findOne(id: ObjectId): Promise<Policy | null> {
-    return this._policyCollection.findOne({_id: new ObjectId(id)});
-  }
-
-  insertOne(policy: Policy): Promise<InsertOneWriteOpResult> {
-    return this._policyCollection.insertOne(policy).then(r => r.ops[0]);
-  }
-
-  replaceOne(
-    filter: FilterQuery<Policy>,
-    policy: Policy,
-    options: FindOneAndReplaceOption = {returnOriginal: false}
-  ): Promise<Policy> {
-    return this._policyCollection.findOneAndReplace(filter, policy, options).then(r => r.value);
-  }
-
-  deleteOne(id: ObjectId) {
-    return this._policyCollection.deleteOne({_id: new ObjectId(id)});
   }
 }
 
