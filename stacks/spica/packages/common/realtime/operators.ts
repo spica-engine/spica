@@ -103,10 +103,10 @@ export function getWsObs<T>(url: string, sort: object = {}) {
 
 export function checkConnectivity(url: string): Observable<boolean> {
   return webSocket(url).pipe(
+    take(1),
     catchError(e => {
       return of({error: e} as any);
     }),
-    take(1),
     map(r => {
       if (r.error) {
         return false;
