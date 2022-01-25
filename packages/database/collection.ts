@@ -44,7 +44,18 @@ export class _MixinCollection<T> {
   }
 
   initCollection() {
+    // console.log(this._collection)
+    // return this.db
+    //   .listCollections({name: this._collection})
+    //   .hasNext()
+    //   .then(isExist => {
+    //     console.log(isExist)
+    //     if (!isExist) {
+    //       return this.db.createCollection(this._collection);
+    //     }
+    //   });
     return this.db.createCollection(this._collection).catch(e => {
+      console.dir(e,{depth:Infinity});
       if (e.codeName == "NamespaceExists") {
         return;
       }
