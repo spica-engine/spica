@@ -1,15 +1,8 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {createSchema} from "@spica-server/bucket/hooks/src/module";
 import {BucketService, ServicesModule} from "@spica-server/bucket/services";
-import {
-  DatabaseService,
-  DatabaseTestingModule,
-  ObjectId,
-  stream
-} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {from} from "rxjs";
-import {bufferCount, take} from "rxjs/operators";
 import {collectionSlugFactory} from "@spica-server/bucket/hooks/src/module";
 
 describe("hook module", () => {
@@ -29,7 +22,7 @@ describe("hook module", () => {
       await module.close();
     });
 
-    it("should get initial schema", async done => {
+    it("should get initial schema", async () => {
       const expectedSchema: any = {
         $id: "http://spica.internal/function/enqueuer/bucket",
         type: "object",
@@ -52,53 +45,9 @@ describe("hook module", () => {
         additionalProperties: false
       };
 
-      let schemaPromise = await createSchema(database);
-      expect(schemaPromise).toEqual(expectedSchema);
-
-      const schemaObs = createSchema(database, true);
-      schemaObs.pipe(take(1)).subscribe(schema => {
-        expect(schema).toEqual(expectedSchema);
-        done();
-      });
-    });
-
-    it("should report when a bucket has been created", async done => {
-      const schema = createSchema(database, true);
-      const {insertedId: firstBucket} = await database.collection("buckets").insertOne({});
-      schema
-        .pipe(
-          bufferCount(2),
-          take(1)
-        )
-        .subscribe(changes => {
-          let collections = changes.map(c => c.properties.bucket["enum"]);
-          expect(collections).toEqual([
-            [firstBucket.toHexString()],
-            [firstBucket.toHexString(), secondBucket.toHexString()]
-          ]);
-          done();
-        });
-      await stream.wait();
-      const {insertedId: secondBucket} = await database.collection("buckets").insertOne({});
-    });
-
-    it("should report when a bucket has been dropped", async done => {
-      const schema = createSchema(database, true);
-      const bucketId = new ObjectId();
-      await database.collection("buckets").insertOne({_id: bucketId});
-      schema
-        .pipe(
-          bufferCount(2),
-          take(1)
-        )
-        .subscribe(changes => {
-          let collections = changes.map(c => c.properties.bucket["enum"]);
-          expect(collections).toEqual([[bucketId.toHexString()], [null]]);
-          done();
-        });
-      await stream.wait();
-      await database.collection("buckets").deleteOne({_id: bucketId});
-    });
+      const schema = await createSchema(database);
+      expect(schema).toEqual(expectedSchema);
+    }, 10000);
   });
 
   describe("factory", () => {

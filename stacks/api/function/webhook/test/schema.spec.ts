@@ -1,8 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core/schema";
-import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
 import {SchemaResolver} from "@spica-server/function/webhook/src/schema";
-import {bufferCount, take} from "rxjs/operators";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
@@ -27,9 +26,10 @@ describe("Schema Resolver", () => {
   });
 
   it("should resolve the inital schema", async () => {
-    const schema = resolver.resolve("http://spica.internal/webhook");
     await db.collection("test").insertOne({});
-    await expectAsync(schema.pipe(take(1)).toPromise()).toBeResolvedTo({
+    const schema = await resolver.resolve("http://spica.internal/webhook");
+
+    expect(schema).toEqual({
       $id: "http://spica.internal/webhook",
       type: "object",
       required: ["url", "body", "trigger"],
@@ -76,44 +76,5 @@ describe("Schema Resolver", () => {
         }
       }
     });
-  });
-
-  it("should report when a collection has been created", async done => {
-    const schema = resolver.resolve("http://spica.internal/webhook");
-    await db.collection("test").insertMany([{}, {}]);
-    schema
-      .pipe(
-        bufferCount(2),
-        take(1)
-      )
-      .subscribe(changes => {
-        changes = changes.map(
-          c => c.properties.trigger["properties"].options.properties.collection.enum
-        );
-        expect(changes as unknown).toEqual([["test"], ["test", "testing"]]);
-        done();
-      });
-    await stream.wait();
-    await db.collection("testing").insertOne({});
-  });
-
-  it("should report when a collection has been dropped", async done => {
-    const schema = resolver.resolve("http://spica.internal/webhook");
-    const coll = db.collection("test");
-    await coll.insertOne({});
-    schema
-      .pipe(
-        bufferCount(2),
-        take(1)
-      )
-      .subscribe(changes => {
-        changes = changes.map(
-          c => c.properties.trigger["properties"].options.properties.collection.enum
-        );
-        expect(changes as unknown).toEqual([["test"], []]);
-        done();
-      });
-    await stream.wait();
-    await coll.drop();
   });
 });

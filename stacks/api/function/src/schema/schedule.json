@@ -609,7 +609,8 @@
         "W-SU",
         "WET",
         "Zulu"
-      ]
+      ],
+      "default": "Europe/Istanbul"
     }
   },
   "additionalProperties": false
