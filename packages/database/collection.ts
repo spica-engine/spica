@@ -44,13 +44,8 @@ export class _MixinCollection<T> {
   }
 
   initCollection() {
-    return this.db.createCollection(this._collection).catch(e => {
-      console.warn(e);
-      // if (e.codeName == "NamespaceExists" || e.message.includes("already exists")) {
-      //   return;
-      // }
-      // throw e;
-    });
+    // @TODO: remove catch when you complete SP-801
+    return this.db.createCollection(this._collection).catch(e => e);
   }
 
   async getStatus() {
