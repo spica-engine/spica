@@ -609,7 +609,8 @@
         "W-SU",
         "WET",
         "Zulu"
-      ]
+      ],
+      "default": "UTC"
     }
   },
   "additionalProperties": false

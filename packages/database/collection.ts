@@ -36,11 +36,9 @@ export class _MixinCollection<T> {
 
     this.options = this._options;
 
-    this.initCollection().then(() => {
-      if (this.options.afterInit) {
-        this.options.afterInit();
-      }
-    });
+    if (this.options.afterInit) {
+      this.initCollection().then(() => this.options.afterInit());
+    }
   }
 
   initCollection() {
