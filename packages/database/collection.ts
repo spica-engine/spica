@@ -36,16 +36,18 @@ export class _MixinCollection<T> {
 
     this.options = this._options;
 
-    this.initCollection().then(() => {
-      if (this.options.afterInit) {
-        this.options.afterInit();
-      }
-    });
+    if (this.options.afterInit) {
+      this.initCollection().then(() => this.options.afterInit());
+    }
   }
 
   initCollection() {
-    // @TODO: remove catch when you complete SP-801
-    return this.db.createCollection(this._collection).catch(e => e);
+    return this.db.createCollection(this._collection).catch(e => {
+      if (e.codeName == "NamespaceExists") {
+        return;
+      }
+      throw e;
+    });
   }
 
   async getStatus() {
