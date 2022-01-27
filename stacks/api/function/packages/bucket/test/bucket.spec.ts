@@ -221,7 +221,7 @@ describe("@spica-devkit/bucket", () => {
           Bucket.data.realtime.get("bucket_id", "document_id");
 
           const url = new URL("ws://test/bucket/bucket_id/data");
-          url.searchParams.append("filter", '_id=="document_id"');
+          url.searchParams.append("filter", 'document._id=="document_id"');
           url.searchParams.append("Authorization", "APIKEY TEST_APIKEY");
 
           expect(wsSpy).toHaveBeenCalledTimes(1);
