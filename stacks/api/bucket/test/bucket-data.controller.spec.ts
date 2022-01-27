@@ -15,7 +15,7 @@ describe("BucketDataController", () => {
   let req: Request;
   let module: TestingModule;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
@@ -47,7 +47,7 @@ describe("BucketDataController", () => {
     });
   });
 
-  afterAll(() => app.close());
+  afterEach(() => app.close());
 
   describe("index", () => {
     let bucket = {
