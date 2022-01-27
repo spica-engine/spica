@@ -610,7 +610,7 @@
         "WET",
         "Zulu"
       ],
-      "default": "Europe/Istanbul"
+      "default": "UTC"
     }
   },
   "additionalProperties": false
