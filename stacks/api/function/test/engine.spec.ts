@@ -3,8 +3,6 @@ import {DatabaseService, MongoClient} from "@spica-server/database";
 import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
-import {Observable} from "rxjs";
-import {bufferCount, map, take} from "rxjs/operators";
 import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
 import {TargetChange, ChangeKind} from "@spica-server/function/src/change";
@@ -18,7 +16,6 @@ describe("Engine", () => {
 
   let scheduler: Scheduler;
   let database: DatabaseService;
-  let mongo: MongoClient;
 
   let module: TestingModule;
   let app: INestApplication;
@@ -49,12 +46,10 @@ describe("Engine", () => {
 
     scheduler = module.get(Scheduler);
     database = module.get(DatabaseService);
-    mongo = module.get(MongoClient);
 
     engine = new FunctionEngine(
       new FunctionService(database, {} as any),
       database,
-      mongo,
       scheduler,
       {} as any,
       {
@@ -189,32 +184,8 @@ describe("Engine", () => {
     });
   });
   describe("Database Schema", () => {
-    beforeEach(async () => {
-      await database.dropCollection("test").catch(e => {
-        if (e.codeName == "NamespaceNotFound") {
-          return;
-        }
-        throw Error(e);
-      });
-      await database.createCollection("buckets").catch(e => {
-        if (e.codeName == "NamespaceExists") {
-          return;
-        }
-        throw Error(e);
-      });
-    });
-
-    it("should get initial schema", async done => {
-      const sortEnums = schema => {
-        schema.properties.collection.enum = schema.properties.collection.enum.sort((a, b) =>
-          a.localeCompare(b)
-        );
-        schema.properties.collection.viewEnum = schema.properties.collection.viewEnum.sort((a, b) =>
-          a.localeCompare(b)
-        );
-        return schema;
-      };
-
+    it("should get initial schema", async () => {
+      await database.createCollection("functions");
       const expectedSchema: any = {
         $id: "http://spica.internal/function/enqueuer/database",
         type: "object",
@@ -224,8 +195,8 @@ describe("Engine", () => {
             title: "Collection Name",
             type: "string",
             //@ts-ignore
-            viewEnum: ["buckets", "function"],
-            enum: ["buckets", "function"],
+            viewEnum: ["functions"],
+            enum: ["functions"],
             description: "Collection name that the event will be tracked on"
           },
           type: {
@@ -237,71 +208,9 @@ describe("Engine", () => {
         },
         additionalProperties: false
       };
-      const schemaPromise = await (engine.getSchema("database") as Promise<any>).then(schema =>
-        sortEnums(schema)
-      );
+      const schemaPromise = await engine.getSchema("database");
 
       expect(schemaPromise).toEqual(expectedSchema);
-
-      const schemaObs = engine.getSchema("database", true) as Observable<any>;
-      schemaObs
-        .pipe(
-          take(1),
-          map(schema => sortEnums(schema))
-        )
-        .subscribe(schema => {
-          expect(schema).toEqual(expectedSchema);
-          done();
-        });
-    });
-
-    it("should report when a collection has been created", async done => {
-      const schema = engine.getSchema("database", true) as Observable<any>;
-      schema
-        .pipe(
-          bufferCount(2),
-          take(1)
-        )
-        .subscribe(changes => {
-          const collections: string[][] = changes.map(c =>
-            c.properties.collection["enum"].sort((a, b) => a.localeCompare(b))
-          );
-          const beforeExpectations = ["buckets", "function"];
-          const afterExpectations = ["buckets", "function", "test"];
-
-          expect(collections).toEqual([beforeExpectations, afterExpectations]);
-          done();
-        });
-      await stream.wait();
-      await database
-        .createCollection("test")
-        .then(() => database.collection("buckets").insertOne({}));
-    });
-
-    it("should report when a collection has been dropped", async done => {
-      await database.createCollection("test");
-      await database.collection("buckets").insertOne({});
-      const schema = engine.getSchema("database", true) as Observable<any>;
-      schema
-        .pipe(
-          bufferCount(2),
-          take(1)
-        )
-        .subscribe(changes => {
-          const collections: string[][] = changes.map(c =>
-            c.properties.collection["enum"].sort((a, b) => a.localeCompare(b))
-          );
-          const beforeExpectations = ["buckets", "function", "test"];
-          const afterExpectations = ["buckets", "function"];
-
-          expect(collections).toEqual([beforeExpectations, afterExpectations]);
-
-          done();
-        });
-      await stream.wait();
-      await database
-        .dropCollection("test")
-        .then(() => database.collection("buckets").deleteOne({}));
-    });
+    }, 10000);
   });
 });

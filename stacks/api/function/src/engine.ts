@@ -18,7 +18,7 @@ import {
   CollectionSlug
 } from "@spica-server/function/services";
 import {ChangeKind, TargetChange} from "./change";
-import {Schema, SCHEMA, SchemaWithName} from "./schema/schema";
+import {SCHEMA, SchemaWithName} from "./schema/schema";
 import {createTargetChanges} from "./change";
 import {RepoStrategies} from "./services/interface";
 
@@ -42,7 +42,6 @@ export class FunctionEngine implements OnModuleDestroy {
   constructor(
     private fs: FunctionService,
     private db: DatabaseService,
-    private mongo: MongoClient,
     private scheduler: Scheduler,
     private repos: RepoStrategies,
     @Inject(FUNCTION_OPTIONS) private options: Options,
@@ -53,9 +52,7 @@ export class FunctionEngine implements OnModuleDestroy {
       this.schemas.set(schema.name, schema.schema);
     }
 
-    this.schemas.set("database", observe =>
-      getDatabaseSchema(this.db, this.mongo, collSlug, observe)
-    );
+    this.schemas.set("database", () => getDatabaseSchema(this.db, collSlug));
 
     this.fs.find().then(fns => {
       const targetChanges: TargetChange[] = [];
@@ -221,14 +218,11 @@ export class FunctionEngine implements OnModuleDestroy {
       .then(b => b.toString());
   }
 
-  getSchema(
-    name: string,
-    observe?: boolean
-  ): Observable<JSONSchema7 | null> | Promise<JSONSchema7 | null> {
+  getSchema(name: string): Promise<JSONSchema7 | null> {
     const schema = this.schemas.get(name);
     if (schema) {
       if (typeof schema == "function") {
-        return schema(observe);
+        return schema();
       } else {
         return Promise.resolve(schema);
       }
@@ -281,79 +275,37 @@ export class FunctionEngine implements OnModuleDestroy {
 
 export function getDatabaseSchema(
   db: DatabaseService,
-  mongo: MongoClient,
-  collSlug: CollectionSlug = id => Promise.resolve(id),
-  observe: boolean
-): Observable<JSONSchema7> | Promise<JSONSchema7> {
-  const sendCollections = (observer?) => {
-    return db.collections().then(async collections => {
-      const collSlugMap: Map<string, string> = new Map();
+  collSlug: CollectionSlug = id => Promise.resolve(id)
+): Promise<JSONSchema7> {
+  return db.collections().then(async collections => {
+    const collSlugMap: Map<string, string> = new Map();
 
-      for (const collection of collections) {
-        collSlugMap.set(collection.collectionName, await collSlug(collection.collectionName));
-      }
+    for (const collection of collections) {
+      collSlugMap.set(collection.collectionName, await collSlug(collection.collectionName));
+    }
 
-      const schema: JSONSchema7 = {
-        $id: "http://spica.internal/function/enqueuer/database",
-        type: "object",
-        required: ["collection", "type"],
-        properties: {
-          collection: {
-            title: "Collection Name",
-            type: "string",
-            //@ts-ignore
-            viewEnum: Array.from(collSlugMap.values()),
-            enum: Array.from(collSlugMap.keys()),
-            description: "Collection name that the event will be tracked on"
-          },
-          type: {
-            title: "Operation type",
-            description: "Operation type that must be performed in the specified collection",
-            type: "string",
-            enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
-          }
+    const schema: JSONSchema7 = {
+      $id: "http://spica.internal/function/enqueuer/database",
+      type: "object",
+      required: ["collection", "type"],
+      properties: {
+        collection: {
+          title: "Collection Name",
+          type: "string",
+          //@ts-ignore
+          viewEnum: Array.from(collSlugMap.values()),
+          enum: Array.from(collSlugMap.keys()),
+          description: "Collection name that the event will be tracked on"
         },
-        additionalProperties: false
-      };
-
-      if (observer) {
-        observer.next(schema);
-        return;
-      }
-
-      return schema;
-    });
-  };
-
-  if (!observe) {
-    return Promise.resolve(sendCollections());
-  }
-
-  return new Observable(observer => {
-    sendCollections(observer);
-
-    const stream = mongo.watch([
-      {
-        $match: {
-          $or: [
-            // none of collections is able to be inserted or deleted except bucket-data
-            // @TODO: this filter is high coupled to bucket module, try to put some better filter
-            // possible solution is implementing onCollectionCreate and onCollectionDelete hooks to the database service
-            {"ns.coll": "buckets", operationType: "delete"},
-            {"ns.coll": "buckets", operationType: "insert"}
-          ]
+        type: {
+          title: "Operation type",
+          description: "Operation type that must be performed in the specified collection",
+          type: "string",
+          enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
         }
-      }
-    ]);
-
-    stream.on("change", () => {
-      sendCollections(observer);
-    });
-
-    stream.on("close", () => observer.complete());
-
-    return () => {
-      stream.close();
+      },
+      additionalProperties: false
     };
+    return schema;
   });
 }

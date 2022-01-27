@@ -9,15 +9,9 @@ let db: DatabaseService;
  */
 export function __setDb(databaseService: DatabaseService) {
   db = databaseService;
-  // in order to create collection on db
-  new ObjectStore(db);
 }
 
-class ObjectStore extends BaseCollection<Resource<unknown, unknown>>("objects") {
-  constructor(db) {
-    super(db);
-  }
-}
+class ObjectStore extends BaseCollection<Resource<unknown, unknown>>("objects") {}
 
 type DeepPartial<T> = {
   [P in keyof T]?: DeepPartial<T[P]>;

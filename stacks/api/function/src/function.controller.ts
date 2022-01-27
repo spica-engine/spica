@@ -38,6 +38,7 @@ import {
 import {ChangeKind, hasContextChange} from "./change";
 import {changesFromTriggers, createTargetChanges} from "./change";
 import {LogService} from "@spica-server/function/src/log/src/log.service";
+import {generate} from "./schema/enqueuer.resolver";
 
 /**
  * @name Function
@@ -191,7 +192,7 @@ export class FunctionController {
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
   async replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/function/schema")) fn: Function
+    @Body(Schema.validate(generate)) fn: Function
   ) {
     fn._id = id;
     delete fn._id;
@@ -222,7 +223,7 @@ export class FunctionController {
   @UseInterceptors(activity(createFunctionActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
-  async insertOne(@Body(Schema.validate("http://spica.internal/function/schema")) fn: Function) {
+  async insertOne(@Body(Schema.validate(generate)) fn: Function) {
     fn = await this.fs.insertOne(fn).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
