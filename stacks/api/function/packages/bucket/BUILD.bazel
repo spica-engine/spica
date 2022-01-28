@@ -93,4 +93,5 @@ pkg_npm(
     deps = [
         ":bundle",
     ],
+    substitutions = {"0.0.0-PLACEHOLDER": "{BUILD_SCM_VERSION}"}
 )
