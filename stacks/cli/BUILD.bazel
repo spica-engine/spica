@@ -60,4 +60,5 @@ pkg_npm(
     deps = [
         ":cli",
     ],
+    substitutions = {"0.0.0-PLACEHOLDER": "{BUILD_SCM_VERSION}"}
 )
