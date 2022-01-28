@@ -153,7 +153,7 @@ export namespace data {
       checkInitialized(authorization);
 
       const fullUrl = buildUrl(`${wsUrl}/${bucketId}/data`, {
-        filter: `_id=="${documentId}"`,
+        filter: `document._id=="${documentId}"`,
         Authorization: authorization
       });
 
