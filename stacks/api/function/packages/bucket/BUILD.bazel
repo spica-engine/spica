@@ -89,9 +89,9 @@ pkg_npm(
     srcs = [
         "package.json",
     ],
+    substitutions = {"0.0.0-PLACEHOLDER": "{BUILD_SCM_VERSION}"},
     tags = ["release-with-spica"],
     deps = [
         ":bundle",
     ],
-    substitutions = {"0.0.0-PLACEHOLDER": "{BUILD_SCM_VERSION}"}
 )

@@ -88,10 +88,10 @@ pkg_npm(
         "package.json",
         "scripts/postinstall.js",
     ],
+    substitutions = {"0.0.0-PLACEHOLDER": "{BUILD_SCM_VERSION}"},
     tags = ["release-with-spica"],
     deps = [
         ":bundle",
         ":database",
     ],
-    substitutions = {"0.0.0-PLACEHOLDER": "{BUILD_SCM_VERSION}"}
 )
