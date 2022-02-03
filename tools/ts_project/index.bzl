@@ -10,7 +10,7 @@ def ts_project(name, srcs, deps, package_name = None, tsconfig = "//:tsconfig.js
         name = "compile_%s" % name if package_name else name,
         srcs = srcs,
         deps = deps,
-        tsconfig = "//:tsconfig.json",
+        tsconfig = tsconfig,
         source_map = True,
         declaration = True,
         resolve_json_module = True,
