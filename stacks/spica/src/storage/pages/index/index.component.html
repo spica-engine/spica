@@ -95,6 +95,7 @@
       (click)="!progress ? fileSelector?.click() : undefined"
     >
       <input
+        class="file-selector"
         type="file"
         #fileSelector
         multiple
@@ -126,6 +127,13 @@
     [style.visibility]="(loading$ | async) ? 'hidden' : 'visible'"
     *ngFor="let storage of storages$ | async; let i = index"
   >
+    <div *ngIf="updates.has(storage._id)" class="loading">
+      <mat-progress-spinner
+        color="accent"
+        [diameter]="50"
+        [value]="updates.get(storage._id)"
+      ></mat-progress-spinner>
+    </div>
     <mat-card
       [class.unselected]="selectionActive && selectedStorageIds.indexOf(storage._id) == -1"
       class="mat-elevation-z25"
@@ -135,8 +143,11 @@
             ? selectedStorageIds.splice(selectedStorageIds.indexOf(storage._id), 1)
             : selectedStorageIds.push(storage._id))
       "
+      [class.updating]="updates.has(storage._id)"
     >
-      <mat-card-content [style.pointer-events]="selectionActive ? 'none' : 'initial'">
+      <mat-card-content
+        [style.pointer-events]="selectionActive || updates.has(storage._id) ? 'none' : 'initial'"
+      >
         <storage-view
           mat-card-image
           matTooltip="View this object"
@@ -145,7 +156,9 @@
         >
         </storage-view>
       </mat-card-content>
-      <mat-card-actions [style.pointer-events]="selectionActive ? 'none' : 'initial'">
+      <mat-card-actions
+        [style.pointer-events]="selectionActive || updates.has(storage._id) ? 'none' : 'initial'"
+      >
         <mat-label [matTooltip]="'Mime type: ' + storage?.content?.type">{{
           storage.name
         }}</mat-label>
@@ -165,6 +178,23 @@
             >
               <mat-icon>edit</mat-icon>
               Edit
+            </button>
+            <button
+              canInteract="storage:update"
+              [resource]="storage._id"
+              mat-menu-item
+              (click)="fileSelector?.click()"
+            >
+              <input
+                class="file-selector"
+                type="file"
+                #fileSelector
+                #fileModel="ngModel"
+                [ngModel]="undefined"
+                (ngModelChange)="updateStorage(storage, fileSelector.files[0])"
+              />
+              <mat-icon>sync_alt</mat-icon>
+              Replace
             </button>
             <button
               canInteract="storage:delete"
