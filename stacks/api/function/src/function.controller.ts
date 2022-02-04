@@ -311,8 +311,8 @@ export class FunctionController {
 
     let operators: OperatorFunction<unknown, unknown>[] = [
       catchError(err => {
-        res.status(400).send({message: err.toString()});
-        return err;
+        res.status(400).json({message: err.toString()});
+        return of(err);
       })
     ];
 
