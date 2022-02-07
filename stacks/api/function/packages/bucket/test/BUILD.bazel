@@ -1,24 +1,24 @@
-# https://dreamharvesters.atlassian.net/browse/SP-805
-# load("//tools/ts_project:index.bzl", "ts_project")
+load("//tools/ts_project:index.bzl", "ts_project")
 
-# package(default_visibility = ["//visibility:public"])
+package(default_visibility = ["//visibility:public"])
 
-# load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
+load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
-# ts_project(
-#     name = "test_lib",
-#     srcs = glob(
-#         include = ["*.spec.ts"],
-#     ),
-#     deps = [
-#         "//stacks/api/function/packages/bucket",
-#         "//stacks/api/function/packages/internal_common",
-#         "@npm//@types/jasmine",
-#         "@npm//rxjs",
-#     ],
-# )
+ts_project(
+    name = "test_lib",
+    srcs = glob(
+        include = ["*.spec.ts"],
+    ),
+    tsconfig = "//stacks/api/function/packages:tsconfig",
+    deps = [
+        "//stacks/api/function/packages/bucket",
+        "//stacks/api/function/packages/internal_common",
+        "@npm//@types/jasmine",
+        "@npm//rxjs",
+    ],
+)
 
-# jasmine_node_test(
-#     name = "test",
-#     srcs = [":test_lib"],
-# )
+jasmine_node_test(
+    name = "test",
+    srcs = [":test_lib"],
+)

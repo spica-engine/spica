@@ -16,6 +16,7 @@ def ts_project(name, srcs, deps, package_name = None, tsconfig = "//:tsconfig.js
         resolve_json_module = True,
         testonly = testonly,
         data = data,
+        **kwargs
     )
     if package_name:
         js_library(
