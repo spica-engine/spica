@@ -9,6 +9,7 @@ ts_project(
     srcs = glob(
         include = ["*.spec.ts"],
     ),
+    tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
         "//stacks/api/function/packages/bucket",
         "//stacks/api/function/packages/internal_common",

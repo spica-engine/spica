@@ -10,6 +10,7 @@ ts_project(
         include = ["*.spec.ts"],
         exclude = ["*.e2e.spec.ts"],
     ),
+    tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
         "//stacks/api/function/packages/database",
         "@npm//@types/jasmine",
@@ -27,6 +28,7 @@ jasmine_node_test(
 ts_project(
     name = "e2e_test_lib",
     srcs = glob(["database.e2e.spec.ts"]),
+    tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
         "//packages/database/testing",
         "//stacks/api/function/packages/database",
