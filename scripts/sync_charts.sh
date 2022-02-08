@@ -11,18 +11,24 @@ readonly GCS_BUCKET=gs://spica-charts
 readonly REPOSITORY_URL=https://spica-charts.storage.googleapis.com
 readonly OUT_DIR=./dist/charts
 
+VERSION=$(git describe --abbrev=7 --tags HEAD)
+
 # Clean up
+rm -rf charts-${VERSION}
+mkdir charts-${VERSION}
+
 rm -rf $OUT_DIR
 mkdir -p $OUT_DIR
 
 # Get current index.yaml from the repository
 gsutil cp "$GCS_BUCKET/index.yaml" "$OUT_DIR/index.yaml"
 
-# Stamp chart
-yarn bazel build //charts:spica --config=release
+# Substitute placeholder with current version
+cp -R charts/* charts-${VERSION}
+sed -i "s/0.0.0-PLACEHOLDER/${VERSION}/g" charts-${VERSION}/spica/Chart.yaml
 
-# Re-package stamped package
-helm package --destination $OUT_DIR ./bazel-bin/charts/spica/charts/spica
+# Re-package substituted package
+helm package --destination $OUT_DIR ./charts-${VERSION}/spica
 
 # Generate updated index file by merging it with the old one from the repository
 helm repo index --url $REPOSITORY_URL --merge "$OUT_DIR/index.yaml" $OUT_DIR
