@@ -34,7 +34,7 @@
 
 <mat-card class="mat-elevation-z25">
   <mat-card-content>
-    <mat-table [dataSource]="policies$">
+    <mat-table class="striped" [dataSource]="policies$">
       <ng-container matColumnDef="id">
         <mat-header-cell *matHeaderCellDef> # </mat-header-cell>
         <mat-cell *matCellDef="let policy">{{ policy._id }}</mat-cell>
