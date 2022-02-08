@@ -221,11 +221,17 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   gotWorker(id: string, schedule: (event: event.Event) => void) {
     const relatedWorker = this.workers.get(id);
-    relatedWorker.schedule = schedule;
 
-    this.print(
-      relatedWorker.target ? `worker ${id} is waiting for new event` : `got a new worker ${id}`
-    );
+    // scheduler unsubscription might have deleted the worker in order to direct next events to the new worker with the latest function index
+    if (!relatedWorker) {
+      this.print(`the worker ${id} that has stale function index won't be scheduled.`);
+    } else {
+      relatedWorker.schedule = schedule;
+
+      this.print(
+        relatedWorker.target ? `worker ${id} is waiting for new event` : `got a new worker ${id}`
+      );
+    }
 
     this.process();
   }

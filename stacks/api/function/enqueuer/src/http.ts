@@ -108,7 +108,12 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         return acc;
       }, []);
       this.http.enqueue(ev.id, request, res);
-      req.once("close", () => {
+
+      // https://github.com/nodejs/node/commit/0c545f0f72
+      // Due to changes above on nodejs v14, we can not listen request 'close' anymore because it will be invoked after request 'end' as well.
+      // After request body is read succesfully, request 'end' will be invoked for example.
+      // But actual 'close' we want to listen is for request cancellations, aborts etc. So we should listen connection 'close' instead.
+      req.connection.once("close", () => {
         if (!req.res.headersSent) {
           this.queue.dequeue(ev);
           this.http.dequeue(ev.id);
