@@ -15,6 +15,7 @@ import {Storage} from "../../interfaces/storage";
 import {StorageService} from "../../storage.service";
 import {StorageViewComponent} from "../storage-view/storage-view.component";
 import {PickerComponent} from "./picker.component";
+import {MatMenuModule} from "@angular/material/menu";
 
 describe("StorageComponent", () => {
   let fixture: ComponentFixture<PickerComponent>;
@@ -32,7 +33,8 @@ describe("StorageComponent", () => {
         MatGridListModule,
         MatPaginatorModule,
         MatProgressBarModule,
-        NoopAnimationsModule
+        NoopAnimationsModule,
+        MatMenuModule
       ],
       declarations: [PickerComponent, StorageViewComponent],
       providers: [
