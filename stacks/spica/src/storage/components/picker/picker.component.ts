@@ -23,14 +23,17 @@ export class PickerComponent implements OnInit {
 
   _pageSize: number = 8;
 
+  sorter: any = {_id: -1};
+
   constructor(private storage: StorageService, private ref: MatDialogRef<PickerComponent>) {}
 
   ngOnInit(): void {
-    this.storages$ = merge(this._paginator.page, of(null)).pipe(
+    this.storages$ = merge(this._paginator.page, of(null), this.refresh).pipe(
       switchMap(() =>
         this.storage.getAll(
           this._paginator.pageSize || this._pageSize,
-          this._paginator.pageSize * this._paginator.pageIndex
+          this._paginator.pageSize * this._paginator.pageIndex,
+          this.sorter
         )
       ),
       map(storage => {
@@ -39,6 +42,12 @@ export class PickerComponent implements OnInit {
         return storage.data;
       })
     );
+  }
+
+  sortStorage(value) {
+    value.direction = value.direction === "asc" ? 1 : -1;
+    this.sorter = {[value.name]: value.direction};
+    this.refresh.next();
   }
 
   close(storage: Storage) {

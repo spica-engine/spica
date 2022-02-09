@@ -11,6 +11,7 @@ ts_project(
             "index.ts",
         ],
     ),
+    tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
         "@npm//@types/node",
         "@npm//axios",

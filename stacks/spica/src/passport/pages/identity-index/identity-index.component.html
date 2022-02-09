@@ -82,7 +82,13 @@
 </ng-template>
 <mat-card class="mat-elevation-z25">
   <mat-card-content>
-    <table mat-table [dataSource]="identities$" matSort (matSortChange)="onSortChange($event)">
+    <table
+      class="striped"
+      mat-table
+      [dataSource]="identities$"
+      matSort
+      (matSortChange)="onSortChange($event)"
+    >
       <ng-container matColumnDef="$$spicainternal_select">
         <th class="select" mat-header-cell *matHeaderCellDef>
           <mat-checkbox
