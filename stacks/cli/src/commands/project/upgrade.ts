@@ -1,10 +1,10 @@
 import {ActionParameters, CaporalValidator, Command, CreateCommandParameters} from "@caporal/core";
 import {projectName} from "../../validator";
 import {spin} from "../../console";
-import {DockerMachine} from "../../project";
+import {DockerMachine,isVersionUpgrade} from "../../project";
 import * as semver from "semver";
 
-async function set({args, options}: ActionParameters) {
+async function upgrade({args, options}: ActionParameters) {
   const name = args.name as string;
   const desiredVersion = args.version as string;
 
@@ -23,25 +23,34 @@ async function set({args, options}: ActionParameters) {
   const oldClient = projectContainers.find(c => c.Image.startsWith("spicaengine/spica"));
   if (!oldClient) {
     return console.error(
-      "Unable to set the version of the project. Make sure that it's running with no issue."
+      "Unable to upgrade the version of the project. Make sure that it's running with no issue."
     );
   }
+  
+  isVersionUpgrade(desiredVersion,oldClient.Image);
+  return 
   oldClientVersion = oldClient.Image.substring(oldClient.Image.indexOf(":") + 1);
 
   let oldApiVersion;
   const oldApi = projectContainers.find(c => c.Image.startsWith("spicaengine/api"));
   if (!oldApi) {
     return console.error(
-      "Unable to set the version of the project. Make sure that it's running with no issue"
+      "Unable to upgrade the version of the project. Make sure that it's running with no issue"
     );
   }
   oldApiVersion = oldApi.Image.substring(oldApi.Image.indexOf(":") + 1);
 
-  if (oldClientVersion == desiredVersion && oldApiVersion == desiredVersion) {
-    return console.warn(`Version of the project '${name}' is already '${desiredVersion}'.`);
-  }
+  
+  const isDowngrade =
+    semver.lt(desiredVersion, oldApiVersion) || semver.lt(desiredVersion, oldClientVersion);
+  const isEqual =
+    semver.eq(desiredVersion, oldApiVersion) || semver.eq(desiredVersion, oldClientVersion);
 
-  const isVersionUpgrade = semver.gt(desiredVersion, oldApiVersion);
+  if (isDowngrade) {
+    return console.error(`Version of the project '${name}' is greater than '${desiredVersion}'.`);
+  } else if (isEqual) {
+    console.error(`Version of the project '${name}' is already '${desiredVersion}'.`);
+  }
 
   const commands = oldApi ? oldApi.Command.split(" ") : [];
 
@@ -84,12 +93,10 @@ async function set({args, options}: ActionParameters) {
         }
       ];
 
-      if (isVersionUpgrade) {
-        images.push({
-          image: "spicaengine/migrate",
-          tag: desiredVersion
-        });
-      }
+      images.push({
+        image: "spicaengine/migrate",
+        tag: desiredVersion
+      });
 
       const imagesToPull: typeof images = [];
 
@@ -170,50 +177,48 @@ async function set({args, options}: ActionParameters) {
     }
   });
 
-  if (isVersionUpgrade) {
-    await spin({
-      text: "Migrating existing data to the new version.",
-      op: async _ => {
-        const existingMigrate = projectContainers.find(p =>
-          p.Image.startsWith("spicaengine/migrate")
-        );
+  await spin({
+    text: "Migrating existing data to the new version.",
+    op: async _ => {
+      const existingMigrate = projectContainers.find(p =>
+        p.Image.startsWith("spicaengine/migrate")
+      );
 
-        if (existingMigrate) {
-          await machine.getContainer(existingMigrate.Id).remove();
-        }
-
-        const databaseUriCommand = commands.find(c => c.startsWith("--database-uri="));
-        const databaseNameCommand = commands.find(c => c.startsWith("--database-name="));
-
-        const migrate = await machine.createContainer({
-          Image: `spicaengine/migrate:${desiredVersion}`,
-          name: `${name}-migrate`,
-          Labels: {namespace: name},
-          Cmd: [
-            `--from=${oldApiVersion}`,
-            `--to=${desiredVersion}`,
-            databaseUriCommand,
-            databaseNameCommand,
-            "--continue-if-versions-are-equal=true"
-          ],
-          HostConfig: {
-            RestartPolicy: {
-              Name: "on-failure",
-              MaximumRetryCount: 3
-            }
-          }
-        });
-        await network.connect({Container: migrate.id});
-        await migrate.start();
+      if (existingMigrate) {
+        await machine.getContainer(existingMigrate.Id).remove();
       }
-    });
-  }
+
+      const databaseUriCommand = commands.find(c => c.startsWith("--database-uri="));
+      const databaseNameCommand = commands.find(c => c.startsWith("--database-name="));
+
+      const migrate = await machine.createContainer({
+        Image: `spicaengine/migrate:${desiredVersion}`,
+        name: `${name}-migrate`,
+        Labels: {namespace: name},
+        Cmd: [
+          `--from=${oldApiVersion}`,
+          `--to=${desiredVersion}`,
+          databaseUriCommand,
+          databaseNameCommand,
+          "--continue-if-versions-are-equal=true"
+        ],
+        HostConfig: {
+          RestartPolicy: {
+            Name: "on-failure",
+            MaximumRetryCount: 3
+          }
+        }
+      });
+      await network.connect({Container: migrate.id});
+      await migrate.start();
+    }
+  });
 
   console.info(`Project '${name}' version has been set to ${desiredVersion}.`);
 }
 
 export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand("Upgrade or downgrade the version of your existing project.")
+  return createCommand("Upgrade the version of your existing project.")
     .argument("<name>", "Name of the project.", {validator: projectName})
     .argument("<version>", "Version of the spica.")
     .option(
@@ -231,5 +236,5 @@ export default function({createCommand}: CreateCommandParameters): Command {
     .option("-o, --open", "Open project authorization page after creation.", {
       validator: CaporalValidator.BOOLEAN
     })
-    .action(set);
+    .action(upgrade);
 }

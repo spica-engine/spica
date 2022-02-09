@@ -41,3 +41,8 @@ export class ImageNotFoundError extends Error {
     super(`Could not find the image ${image}:${tag}.`);
   }
 }
+
+export function isVersionUpgrade(desiredVersion:string,oldImageName:string) {
+  console.log(machine.getImage(oldImageName))
+}
+
