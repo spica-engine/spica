@@ -4,7 +4,8 @@ import {
   ApikeyInitialization,
   IdentityInitialization,
   IndexResult,
-  RealtimeConnection
+  RealtimeConnection,
+  RealtimeConnectionOne
 } from "./interface";
 import {
   initialize as _initialize,
@@ -149,7 +150,7 @@ export namespace data {
       bucketId: string,
       documentId: string,
       messageCallback?: (res: {status: number; message: string}) => any
-    ): RealtimeConnection<T> {
+    ): RealtimeConnectionOne<T> {
       checkInitialized(authorization);
 
       const fullUrl = buildUrl(`${wsUrl}/${bucketId}/data`, {
@@ -157,7 +158,7 @@ export namespace data {
         Authorization: authorization
       });
 
-      return getWsObs<T>(fullUrl.toString(), undefined, true, messageCallback);
+      return getWsObs<T>(fullUrl.toString(), undefined, documentId, messageCallback);
     }
 
     export function getAll<T>(
@@ -174,7 +175,7 @@ export namespace data {
         Authorization: authorization
       });
 
-      return getWsObs<T>(fullUrl.toString(), sort, false, messageCallback);
+      return getWsObs<T>(fullUrl.toString(), sort, undefined, messageCallback);
     }
   }
 }
