@@ -6,6 +6,7 @@ import {MatCardModule} from "@angular/material/card";
 import {MatDialogModule} from "@angular/material/dialog";
 import {MatGridListModule} from "@angular/material/grid-list";
 import {MatIconModule} from "@angular/material/icon";
+import {MatMenuModule} from "@angular/material/menu";
 import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatTabsModule} from "@angular/material/tabs";
@@ -46,7 +47,8 @@ describe("StoragePicker", () => {
         MatGridListModule,
         MatPaginatorModule,
         MatProgressBarModule,
-        NoopAnimationsModule
+        NoopAnimationsModule,
+        MatMenuModule
       ],
       declarations: [TestCmp, PickerDirective, PickerComponent, StorageViewComponent],
       providers: [
