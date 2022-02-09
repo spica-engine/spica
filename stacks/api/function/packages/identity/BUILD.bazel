@@ -18,14 +18,26 @@ ts_project(
     ],
 )
 
+ts_project(
+    name = "identity_publish",
+    package_name = "@spica-devkit/identity",
+    srcs = SRCS,
+    out_dir = "publish",
+    tsconfig = "//stacks/api/function/packages:tsconfig_publish",
+    deps = [
+        "//stacks/api/function/packages/internal_common",
+        "@npm//rxjs",
+    ],
+)
+
 filegroup(
     name = "types",
-    srcs = [":identity"],
+    srcs = [":identity_publish"],
     output_group = "types",
 )
 
 ROLLUP_DEPS = [
-    ":identity",
+    ":identity_publish",
     "@npm//@rollup/plugin-commonjs",
     "@npm//@rollup/plugin-node-resolve",
     "@npm//@rollup/plugin-json",
@@ -35,7 +47,7 @@ rollup_bundle(
     name = "cjs",
     config_file = "//stacks/api/function/packages:rollup.config.js",
     entry_points = {
-        "index.ts": "index.js",
+        "publish/index.ts": "index.js",
     },
     format = "cjs",
     output_dir = True,
@@ -47,7 +59,7 @@ rollup_bundle(
     name = "esm",
     config_file = "//stacks/api/function/packages:rollup.config.js",
     entry_points = {
-        "index.ts": "index.mjs",
+        "publish/index.ts": "index.mjs",
     },
     format = "esm",
     output_dir = True,
@@ -72,7 +84,7 @@ genrule(
         for f in SRCS
     ],
     cmd = "cp -r $(locations :cjs)/* $(RULEDIR)/dist && cp -r $(locations :esm)/* $(RULEDIR)/dist && " + "&&".join([
-        "cp -r $(GENDIR)/stacks/api/function/packages/identity/%s.d.ts $(RULEDIR)/dist/%s.d.ts" % (
+        "cp -r $(GENDIR)/stacks/api/function/packages/identity/publish/%s.d.ts $(RULEDIR)/dist/%s.d.ts" % (
             f[:-3],
             f[:-3],
         )
@@ -86,6 +98,7 @@ pkg_npm(
     srcs = [
         "package.json",
     ],
+    substitutions = {"0.0.0-PLACEHOLDER": "{BUILD_SCM_VERSION}"},
     tags = ["release-with-spica"],
     deps = [
         ":bundle",

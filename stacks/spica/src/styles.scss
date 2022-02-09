@@ -152,6 +152,14 @@ $custom-typography: mat-typography-config(
   cursor: not-allowed;
 }
 
+table.striped tr:nth-child(even) td {
+  background-color: rgba(var(--background-app-bar-rgb), calc(0.1 + var(--tone-diff)));
+}
+
+mat-table.striped mat-row:nth-child(even) {
+  background-color: rgba(var(--background-app-bar-rgb), calc(0.1 + var(--tone-diff)));
+}
+
 .minimal-input-placer {
   > mat-form-field {
     .mat-form-field-wrapper {
