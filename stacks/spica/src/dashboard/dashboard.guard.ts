@@ -16,7 +16,7 @@ import {MatDialog} from "@angular/material/dialog";
 import {MatAwareDialogComponent} from "@spica-client/material";
 import {Observable, of} from "rxjs";
 import {getEmptyDashboard} from "./interfaces";
-import isEqual from "lodash/isEqual";
+import isEqual from "lodash-es/isEqual";
 
 @Injectable({providedIn: "root"})
 export class DashboardIndexGuard implements CanActivate {

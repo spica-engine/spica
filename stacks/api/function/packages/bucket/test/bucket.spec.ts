@@ -169,7 +169,7 @@ describe("@spica-devkit/bucket", () => {
           url.searchParams.append("Authorization", "APIKEY TEST_APIKEY");
 
           expect(wsSpy).toHaveBeenCalledTimes(1);
-          expect(wsSpy).toHaveBeenCalledWith(url.toString(), undefined, false, undefined);
+          expect(wsSpy).toHaveBeenCalledWith(url.toString(), undefined, undefined, undefined);
         });
 
         it("should get all with filter", () => {
@@ -182,7 +182,7 @@ describe("@spica-devkit/bucket", () => {
           url.searchParams.append("Authorization", "APIKEY TEST_APIKEY");
 
           expect(wsSpy).toHaveBeenCalledTimes(1);
-          expect(wsSpy).toHaveBeenCalledWith(url.toString(), undefined, false, undefined);
+          expect(wsSpy).toHaveBeenCalledWith(url.toString(), undefined, undefined, undefined);
         });
 
         it("should get all with sort", () => {
@@ -197,7 +197,7 @@ describe("@spica-devkit/bucket", () => {
           url.searchParams.append("Authorization", "APIKEY TEST_APIKEY");
 
           expect(wsSpy).toHaveBeenCalledTimes(1);
-          expect(wsSpy).toHaveBeenCalledWith(url.toString(), sort, false, undefined);
+          expect(wsSpy).toHaveBeenCalledWith(url.toString(), sort, undefined, undefined);
         });
 
         it("should get all with limit and skip", () => {
@@ -212,7 +212,7 @@ describe("@spica-devkit/bucket", () => {
           url.searchParams.append("Authorization", "APIKEY TEST_APIKEY");
 
           expect(wsSpy).toHaveBeenCalledTimes(1);
-          expect(wsSpy).toHaveBeenCalledWith(url.toString(), undefined, false, undefined);
+          expect(wsSpy).toHaveBeenCalledWith(url.toString(), undefined, undefined, undefined);
         });
       });
 
@@ -221,11 +221,11 @@ describe("@spica-devkit/bucket", () => {
           Bucket.data.realtime.get("bucket_id", "document_id");
 
           const url = new URL("ws://test/bucket/bucket_id/data");
-          url.searchParams.append("filter", '_id=="document_id"');
+          url.searchParams.append("filter", 'document._id=="document_id"');
           url.searchParams.append("Authorization", "APIKEY TEST_APIKEY");
 
           expect(wsSpy).toHaveBeenCalledTimes(1);
-          expect(wsSpy).toHaveBeenCalledWith(url.toString(), undefined, true, undefined);
+          expect(wsSpy).toHaveBeenCalledWith(url.toString(), undefined, "document_id", undefined);
         });
       });
     });

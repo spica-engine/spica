@@ -20,6 +20,9 @@ export class IndexComponent implements OnInit {
 
   storages$: Observable<Storage[]>;
   progress: number;
+
+  updates: Map<string, number> = new Map<string, number>();
+
   refresh: Subject<string> = new Subject();
   sorter: any = {_id: -1};
   cols: number = 5;
@@ -99,6 +102,29 @@ export class IndexComponent implements OnInit {
           console.error(err);
           this.progress = undefined;
         }
+      );
+    }
+  }
+
+  updateStorage(storage: Storage, file: File) {
+    if (file) {
+      this.updates.set(storage._id, 0);
+      storage.name = file.name;
+      this.storage.updateOne(storage, file).subscribe(
+        event => {
+          if (event.type === HttpEventType.UploadProgress) {
+            const progress = Math.round((100 * event.loaded) / event.total);
+            this.updates.set(storage._id, progress);
+          } else if (event.type === HttpEventType.Response) {
+            this.updates.delete(storage._id);
+            this.refresh.next();
+          }
+        },
+        err => {
+          console.error(err);
+          this.updates.delete(storage._id);
+        },
+        () => this.updates.delete(storage._id)
       );
     }
   }

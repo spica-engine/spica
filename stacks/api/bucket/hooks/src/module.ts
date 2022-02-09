@@ -6,27 +6,33 @@ import {COLL_SLUG} from "@spica-server/function/services";
 import {EventQueue} from "@spica-server/function/queue";
 import {ENQUEUER} from "@spica-server/function/scheduler";
 import {JSONSchema7} from "json-schema";
-import {Observable} from "rxjs";
 import {ChangeEmitter} from "./emitter";
 import {ChangeEnqueuer} from "./enqueuer";
 import {ChangeQueue} from "./queue";
 
-export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
-  return new Observable(observer => {
-    const buckets = new Map<string, string>();
+export function createSchema(db: DatabaseService): Promise<JSONSchema7> {
+  const slugs = new Map<string, string>();
+  return db
+    .collection("buckets")
+    .find({})
+    .toArray()
+    .then(buckets => {
+      for (const bucket of buckets) {
+        slugs.set(bucket._id.toString(), bucket.title);
+      }
 
-    const notifyChanges = () => {
       const schema: JSONSchema7 = {
         $id: "http://spica.internal/function/enqueuer/bucket",
         type: "object",
         required: ["bucket", "type"],
         properties: {
           bucket: {
+            // empty enums are not allowed on schema but the client will be able to send any value if enums are empty, it's a bit weird solution to solve this problem
+            enum: slugs.size ? Array.from(slugs.keys()) : [null],
+            // @ts-ignore
+            viewEnum: slugs.size ? Array.from(slugs.values()) : [null],
             title: "Bucket",
             type: "string",
-            enum: Array.from(buckets.keys()),
-            // @ts-expect-error
-            viewEnum: Array.from(buckets.values()),
             description: "Bucket id that the event will be tracked on"
           },
           type: {
@@ -38,51 +44,9 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
         },
         additionalProperties: false
       };
-      observer.next(schema);
-    };
 
-    const stream = db.collection("buckets").watch(
-      [
-        {
-          $match: {
-            $or: [{operationType: "insert"}, {operationType: "delete"}]
-          }
-        }
-      ],
-      {fullDocument: "updateLookup"}
-    );
-
-    stream.on("change", change => {
-      switch (change.operationType) {
-        case "delete":
-          buckets.delete(change.documentKey._id.toString());
-          notifyChanges();
-          break;
-        case "insert":
-          if (!buckets.has(change.documentKey._id.toString())) {
-            buckets.set(change.documentKey._id.toString(), change.fullDocument.title);
-            notifyChanges();
-          }
-          break;
-      }
+      return schema;
     });
-
-    stream.on("close", () => observer.complete());
-
-    db.collection("buckets")
-      .find({})
-      .toArray()
-      .then(_buckets => {
-        for (const bucket of _buckets) {
-          buckets.set(bucket._id.toString(), bucket.title);
-        }
-        notifyChanges();
-      });
-
-    return () => {
-      stream.close();
-    };
-  });
 }
 
 export const collectionSlugFactory = (bs: BucketService) => {

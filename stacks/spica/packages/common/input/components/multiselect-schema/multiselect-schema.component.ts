@@ -19,8 +19,7 @@ export class MultiselectSchemaComponent extends SchemaComponent {
   // we need to change whole items object in order to notify enum-schema component from changes
   onTypeChange(value: string) {
     this.schema.items = {
-      type: value,
-      enum: []
+      type: value
     };
   }
 }

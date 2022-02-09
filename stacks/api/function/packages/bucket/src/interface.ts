@@ -96,4 +96,10 @@ export type RealtimeConnection<T> = Observable<T> & {
   remove: (document: Partial<Singular<T>> & {_id: string}) => void;
 };
 
+export type RealtimeConnectionOne<T> = Observable<T> & {
+  replace: (document: Omit<Singular<T>, "_id">) => void;
+  patch: (document: Omit<Partial<Singular<T>>, "_id">) => void;
+  remove: () => void;
+};
+
 type Singular<T> = T extends Array<any> ? T[0] : T;

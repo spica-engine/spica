@@ -1,7 +1,14 @@
-import {Sequence, SequenceKind, ChunkKind, OperationKind, RealtimeConnection} from "./interface";
+import {
+  Sequence,
+  SequenceKind,
+  ChunkKind,
+  OperationKind,
+  RealtimeConnection,
+  RealtimeConnectionOne
+} from "./interface";
 //@ts-ignore
 import WebSocket from "ws";
-import {tap, delayWhen, map, debounceTime, retryWhen, filter} from "rxjs/operators";
+import {tap, delayWhen, map, debounceTime, retryWhen, filter, takeWhile} from "rxjs/operators";
 import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
 import {isPlatformBrowser} from "@spica-devkit/internal_common";
@@ -65,25 +72,25 @@ export class IterableSet<T> implements Iterable<T> {
 export function getWsObs<T>(
   url: string,
   sort?: object,
-  findOne?: true,
+  targetDocumentId?: string,
   messageCallback?: (res: {status: number; message: string}) => any
-): RealtimeConnection<T>;
+): RealtimeConnectionOne<T>;
 export function getWsObs<T>(
   url: string,
   sort?: object,
-  findOne?: false,
+  targetDocumentId?: null,
   messageCallback?: (res: {status: number; message: string}) => any
 ): RealtimeConnection<T[]>;
 export function getWsObs<T>(
   url: string,
   sort?: object,
-  findOne?: boolean,
+  targetDocumentId?: string | null,
   messageCallback: (res: {status: number; message: string}) => any = res => {
     if (res.status >= 400 && res.status < 600) {
       return console.error(res.message);
     }
   }
-): RealtimeConnection<T | T[]> {
+): RealtimeConnectionOne<T> | RealtimeConnection<T[]> {
   let data = new IterableSet<T>();
 
   let urlConfigOrSource: string | WebSocketSubjectConfig<any> = url;
@@ -132,20 +139,32 @@ export function getWsObs<T>(
       return of(null);
     }),
     debounceTime(1),
-    map(() => (findOne ? Array.from(data)[0] : Array.from(data)))
+    map(() => (targetDocumentId ? Array.from(data)[0] : Array.from(data))),
+    takeWhile(docs => (targetDocumentId ? !!(docs as T) : true))
   );
 
   const insert = document => subject.next({event: OperationKind.INSERT, data: document});
   observable["insert"] = insert;
 
   const replace = document => subject.next({event: OperationKind.REPLACE, data: document});
-  observable["replace"] = replace;
+  const replaceTargetDocument = document => {
+    document._id = targetDocumentId;
+    subject.next({event: OperationKind.REPLACE, data: document});
+  };
+  observable["replace"] = targetDocumentId ? replaceTargetDocument : replace;
 
   const patch = document => subject.next({event: OperationKind.PATCH, data: document});
-  observable["patch"] = patch;
+  const patchTargetDocument = document => {
+    document._id = targetDocumentId;
+    subject.next({event: OperationKind.PATCH, data: document});
+  };
+  observable["patch"] = targetDocumentId ? patchTargetDocument : patch;
 
   const remove = document => subject.next({event: OperationKind.DELETE, data: document});
-  observable["remove"] = remove;
+  const removeTargetDocument = () =>
+    subject.next({event: OperationKind.DELETE, data: {_id: targetDocumentId}});
+
+  observable["remove"] = targetDocumentId ? removeTargetDocument : remove;
 
   return observable as any;
 }

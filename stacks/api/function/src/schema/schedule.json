@@ -1,5 +1,5 @@
 {
-  "$id": "http://spica.internal/function/triggers/schedule/schema",
+  "$id": "http://spica.internal/function/enqueuer/schedule",
   "title": "Scheduled",
   "type": "object",
   "required": ["frequency", "timezone"],
@@ -610,7 +610,7 @@
         "WET",
         "Zulu"
       ],
-      "default": "Europe/Istanbul"
+      "default": "UTC"
     }
   },
   "additionalProperties": false

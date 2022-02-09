@@ -2,18 +2,22 @@ import {Injectable} from "@nestjs/common";
 import {Validator} from "@spica-server/core/schema";
 import {FunctionEngine} from "../engine";
 import {Function} from "@spica-server/function/services";
-import {Observable} from "rxjs";
-import {JSONSchema7} from "json-schema";
 
 @Injectable()
 export class EnqueuerSchemaResolver {
-  constructor(private registry: FunctionEngine) {}
+  enqueuerPrefix = "http://spica.internal/function/enqueuer";
 
-  resolve(uri: string): Promise<object> | Observable<JSONSchema7 | null> | undefined {
+  constructor(private registry: FunctionEngine, private validator: Validator) {}
+
+  resolve(uri: string): Promise<object> | undefined {
     const match = /http:\/\/spica\.internal\/function\/enqueuer\/(.*)/g.exec(uri);
 
     if (this.registry.schemas.has(match[1])) {
-      return this.registry.getSchema(match[1]);
+      return this.registry.getSchema(match[1]).then(schema => {
+        // remove schema right after it's used.
+        setImmediate(() => this.validator.removeSchema(schema.$id));
+        return schema;
+      });
     } else {
       console.warn(`Couldn't find the enqueuer with name ${match[1]}`);
     }
@@ -21,7 +25,7 @@ export class EnqueuerSchemaResolver {
 }
 
 export async function provideEnqueuerSchemaResolver(validator: Validator, engine: FunctionEngine) {
-  const resolver = new EnqueuerSchemaResolver(engine);
+  const resolver = new EnqueuerSchemaResolver(engine, validator);
   validator.registerUriResolver(uri => resolver.resolve(uri));
   return resolver;
 }

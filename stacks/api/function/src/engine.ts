@@ -18,7 +18,7 @@ import {
   CollectionSlug
 } from "@spica-server/function/services";
 import {ChangeKind, TargetChange} from "./change";
-import {Schema, SCHEMA, SchemaWithName, SCHEMA1} from "./schema/schema";
+import {SCHEMA, SchemaWithName} from "./schema/schema";
 import {createTargetChanges} from "./change";
 import {RepoStrategies} from "./services/interface";
 
@@ -42,22 +42,17 @@ export class FunctionEngine implements OnModuleDestroy {
   constructor(
     private fs: FunctionService,
     private db: DatabaseService,
-    private mongo: MongoClient,
     private scheduler: Scheduler,
     private repos: RepoStrategies,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
-    @Optional() @Inject(SCHEMA1) schema1: SchemaWithName,
     @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
     }
-    if (schema1) {
-      this.schemas.set(schema1.name, schema1.schema);
-    }
 
-    this.schemas.set("database", () => getDatabaseSchema(this.db, this.mongo, collSlug));
+    this.schemas.set("database", () => getDatabaseSchema(this.db, collSlug));
 
     this.fs.find().then(fns => {
       const targetChanges: TargetChange[] = [];
@@ -223,7 +218,7 @@ export class FunctionEngine implements OnModuleDestroy {
       .then(b => b.toString());
   }
 
-  getSchema(name: string): Observable<JSONSchema7 | null> | Promise<JSONSchema7 | null> {
+  getSchema(name: string): Promise<JSONSchema7 | null> {
     const schema = this.schemas.get(name);
     if (schema) {
       if (typeof schema == "function") {
@@ -280,75 +275,37 @@ export class FunctionEngine implements OnModuleDestroy {
 
 export function getDatabaseSchema(
   db: DatabaseService,
-  mongo: MongoClient,
   collSlug: CollectionSlug = id => Promise.resolve(id)
-): Observable<JSONSchema7> {
-  return new Observable(observer => {
-    // <collection_id,collection_placeholder>
+): Promise<JSONSchema7> {
+  return db.collections().then(async collections => {
     const collSlugMap: Map<string, string> = new Map();
 
-    const notifyChanges = () => {
-      const schema: JSONSchema7 = {
-        $id: "http://spica.internal/function/enqueuer/database",
-        type: "object",
-        required: ["collection", "type"],
-        properties: {
-          collection: {
-            title: "Collection Name",
-            type: "string",
-            //@ts-ignore
-            viewEnum: Array.from(collSlugMap.values()),
-            enum: Array.from(collSlugMap.keys()),
-            description: "Collection name that the event will be tracked on"
-          },
-          type: {
-            title: "Operation type",
-            description: "Operation type that must be performed in the specified collection",
-            type: "string",
-            enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
-          }
+    for (const collection of collections) {
+      collSlugMap.set(collection.collectionName, await collSlug(collection.collectionName));
+    }
+
+    const schema: JSONSchema7 = {
+      $id: "http://spica.internal/function/enqueuer/database",
+      type: "object",
+      required: ["collection", "type"],
+      properties: {
+        collection: {
+          title: "Collection Name",
+          type: "string",
+          //@ts-ignore
+          viewEnum: Array.from(collSlugMap.values()),
+          enum: Array.from(collSlugMap.keys()),
+          description: "Collection name that the event will be tracked on"
         },
-        additionalProperties: false
-      };
-      observer.next(schema);
-    };
-
-    const stream = mongo.watch([
-      {
-        $match: {
-          $or: [{operationType: "insert"}, {operationType: "drop"}],
-          "ns.db": db.databaseName
+        type: {
+          title: "Operation type",
+          description: "Operation type that must be performed in the specified collection",
+          type: "string",
+          enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
         }
-      }
-    ]);
-
-    stream.on("change", async change => {
-      const coll_id = change.ns.coll;
-      switch (change.operationType) {
-        case "drop":
-          collSlugMap.delete(coll_id);
-          notifyChanges();
-          break;
-        case "insert":
-          if (!collSlugMap.has(coll_id)) {
-            collSlugMap.set(coll_id, await collSlug(coll_id));
-            notifyChanges();
-          }
-          break;
-      }
-    });
-
-    stream.on("close", () => observer.complete());
-
-    db.collections().then(async collections => {
-      for (const collection of collections) {
-        collSlugMap.set(collection.collectionName, await collSlug(collection.collectionName));
-      }
-      notifyChanges();
-    });
-
-    return () => {
-      stream.close();
+      },
+      additionalProperties: false
     };
+    return schema;
   });
 }

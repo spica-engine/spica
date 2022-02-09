@@ -3,8 +3,6 @@ import {DatabaseService, MongoClient} from "@spica-server/database";
 import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
-import {from} from "rxjs";
-import {bufferCount, take} from "rxjs/operators";
 import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
 import {TargetChange, ChangeKind} from "@spica-server/function/src/change";
@@ -18,7 +16,6 @@ describe("Engine", () => {
 
   let scheduler: Scheduler;
   let database: DatabaseService;
-  let mongo: MongoClient;
 
   let module: TestingModule;
   let app: INestApplication;
@@ -49,19 +46,16 @@ describe("Engine", () => {
 
     scheduler = module.get(Scheduler);
     database = module.get(DatabaseService);
-    mongo = module.get(MongoClient);
 
     engine = new FunctionEngine(
       new FunctionService(database, {} as any),
       database,
-      mongo,
       scheduler,
       {} as any,
       {
         root: "test_root",
         timeout: 1
       },
-      undefined,
       undefined,
       undefined
     );
@@ -191,10 +185,8 @@ describe("Engine", () => {
   });
   describe("Database Schema", () => {
     it("should get initial schema", async () => {
-      let schema = await from(engine.getSchema("database"))
-        .pipe(take(1))
-        .toPromise();
-      expect(schema).toEqual({
+      await database.createCollection("functions");
+      const expectedSchema: any = {
         $id: "http://spica.internal/function/enqueuer/database",
         type: "object",
         required: ["collection", "type"],
@@ -203,8 +195,8 @@ describe("Engine", () => {
             title: "Collection Name",
             type: "string",
             //@ts-ignore
-            viewEnum: [],
-            enum: [],
+            viewEnum: ["functions"],
+            enum: ["functions"],
             description: "Collection name that the event will be tracked on"
           },
           type: {
@@ -215,45 +207,10 @@ describe("Engine", () => {
           }
         },
         additionalProperties: false
-      });
-    });
+      };
+      const schemaPromise = await engine.getSchema("database");
 
-    it("should report when a collection has been created", async done => {
-      const schema = engine.getSchema("database");
-      await database.collection("initial").insertMany([{}, {}]);
-      from(schema)
-        .pipe(
-          bufferCount(2),
-          take(1)
-        )
-        .subscribe(changes => {
-          const collections = changes.map(c => c.properties.collection["enum"]);
-          expect(collections).toEqual([["initial"], ["initial", "inserted"]]);
-          const enums = changes.map(c => c.properties.collection["viewEnum"]);
-          expect(enums).toEqual([["initial"], ["initial", "inserted"]]);
-          done();
-        });
-      await stream.wait();
-      await database.collection("inserted").insertOne({});
-    });
-
-    it("should report when a collection has been dropped", async done => {
-      const schema = engine.getSchema("database");
-      await database.collection("initial").insertMany([{}, {}]);
-      from(schema)
-        .pipe(
-          bufferCount(2),
-          take(1)
-        )
-        .subscribe(changes => {
-          const collections = changes.map(c => c.properties.collection["enum"]);
-          expect(collections).toEqual([["initial"], []]);
-          const enums = changes.map(c => c.properties.collection["enum"]);
-          expect(enums).toEqual([["initial"], []]);
-          done();
-        });
-      await stream.wait();
-      await database.collection("initial").drop();
-    });
+      expect(schemaPromise).toEqual(expectedSchema);
+    }, 10000);
   });
 });

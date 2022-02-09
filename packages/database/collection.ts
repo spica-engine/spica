@@ -15,7 +15,9 @@ import {
 import {DatabaseService} from "./database.service";
 
 export interface InitializeOptions {
-  entryLimit: number;
+  entryLimit?: number;
+  collectionCreateOptions?: CollectionCreateOptions;
+  afterInit?: (...args) => any;
 }
 
 export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
@@ -28,11 +30,24 @@ export class _MixinCollection<T> {
   constructor(
     public readonly db: DatabaseService,
     public readonly _collection: string,
-    public readonly _options?: InitializeOptions
+    public readonly _options: InitializeOptions = {}
   ) {
     this._coll = db.collection(this._collection);
 
     this.options = this._options;
+
+    if (this.options.afterInit) {
+      this.initCollection().then(() => this.options.afterInit());
+    }
+  }
+
+  initCollection() {
+    return this.db.createCollection(this._collection).catch(e => {
+      if (e.codeName == "NamespaceExists") {
+        return;
+      }
+      throw e;
+    });
   }
 
   async getStatus() {
@@ -52,22 +67,6 @@ export class _MixinCollection<T> {
     options?: CollectionAggregationOptions
   ): AggregationCursor<ResponseType> {
     return this._coll.aggregate(pipeline, options);
-  }
-
-  createCollection(
-    name: string,
-    options?: CollectionCreateOptions & {ignoreAlreadyExist?: boolean}
-  ): Promise<Collection<any>> {
-    if (options && options.ignoreAlreadyExist) {
-      delete options.ignoreAlreadyExist;
-      return this.db.createCollection(name, options).catch(error => {
-        if (error.codeName == "NamespaceExists") {
-          return this._coll;
-        }
-        throw new Error(error);
-      });
-    }
-    return this.db.createCollection(name, options);
   }
 
   async documentCountLimitValidation(insertedDocumentCount: number) {

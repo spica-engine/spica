@@ -30,7 +30,7 @@
         >
           <mat-icon>file_upload</mat-icon>
           {{ (fileSelector?.files)[0]?.name || input.title || "Select a file" }}
-          <!--change event triggers file name update even if it's undefined-->
+          <!--change event will trigger the file name update handler even if it's undefined-->
           <input
             hidden
             #fileSelector

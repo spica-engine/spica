@@ -58,7 +58,7 @@ describe("Preference Service", () => {
 
   it("should update preference", async () => {
     const insertedPref = await preferenceService.insertOne({scope: "test"});
-    await preferenceService.replaceOne(
+    await preferenceService.replace(
       {_id: insertedPref._id},
       {
         scope: "test",
@@ -113,7 +113,7 @@ describe("Preference Service", () => {
         });
 
       setTimeout(() => {
-        preferenceService["_collection"]
+        preferenceService
           .updateOne({scope: "bucket"}, {$set: {property: "updated bucket property"}})
           .catch();
       }, 100);

@@ -49,22 +49,15 @@ export class PassportService {
     );
   }
 
-  identifyWith(strategy: string, openCallback?: (url: string) => void): Observable<any> {
-    let tab;
+  identifyWith(strategy: string, openCallback: (url: string) => void): Observable<any> {
     return this.http
       .get<any>(`api:/passport/strategy/${strategy}/url`, {
         params: {strategy}
       })
       .pipe(
         concatMap(res => {
-          if (openCallback) {
-            openCallback(res.url);
-          } else {
-            tab = window.open(res.url);
-          }
-          return this.http
-            .get(`api:/passport/identify`, {params: {state: res.state}})
-            .pipe(tap(() => tab.close()));
+          openCallback(res.url);
+          return this.http.get(`api:/passport/identify`, {params: {state: res.state}});
         }),
         tap(response => {
           this.token = `${response.scheme} ${response.token}`;

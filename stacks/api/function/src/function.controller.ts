@@ -36,9 +36,9 @@ import {
   Options
 } from "@spica-server/function/services";
 import {ChangeKind, hasContextChange} from "./change";
-import {generate} from "./schema/enqueuer.resolver";
 import {changesFromTriggers, createTargetChanges} from "./change";
 import {LogService} from "@spica-server/function/src/log/src/log.service";
+import {generate} from "./schema/enqueuer.resolver";
 
 /**
  * @name Function
@@ -128,9 +128,7 @@ export class FunctionController {
     for (const enqueuer of this.scheduler.enqueuers) {
       enqueuers.push({
         description: enqueuer.description,
-        options: await from(this.engine.getSchema(enqueuer.description.name))
-          .pipe(take(1))
-          .toPromise()
+        options: await this.engine.getSchema(enqueuer.description.name)
       });
     }
 
@@ -313,8 +311,8 @@ export class FunctionController {
 
     let operators: OperatorFunction<unknown, unknown>[] = [
       catchError(err => {
-        res.status(400).send({message: err.toString()});
-        return err;
+        res.status(400).json({message: err.toString()});
+        return of(err);
       })
     ];
 
