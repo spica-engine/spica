@@ -1,4 +1,5 @@
 import * as docker from "dockerode";
+import * as semver from "semver";
 
 let machine: DockerMachine;
 
@@ -42,7 +43,35 @@ export class ImageNotFoundError extends Error {
   }
 }
 
-export function isVersionUpgrade(desiredVersion:string,oldImageName:string) {
-  console.log(machine.getImage(oldImageName))
+export const version = image => /^spicaengine\/(spica|api):(.*)/g.exec(image)[2];
+const nonActualVersions = ["latest"];
+
+export async function isVersionUpgrade(desiredVersion: string, oldImage: docker.ContainerInfo) {
+  if (desiredVersion == "latest") {
+    return true;
+  }
+
+  let oldImageVersion = version(oldImage.Image);
+  if (nonActualVersions.includes(oldImageVersion)) {
+    oldImageVersion = await getActualVersion(oldImage.Image);
+  }
+
+  return semver.gt(desiredVersion, oldImageVersion);
 }
 
+function getActualVersion(image: string) {
+  const machine = new DockerMachine();
+
+  const actualVersionMatch = /^spicaengine\/spica:\d+\.\d+\.\d+$/g;
+
+  return machine
+    .getImage(image)
+    .inspect()
+    .then(info => {
+      let match = info.RepoTags.find(tag => actualVersionMatch.test(tag));
+      if (!match) {
+        throw Error(`Could not find the actual version of image '${image}'`);
+      }
+      return version(match);
+    });
+}

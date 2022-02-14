@@ -1,12 +1,11 @@
 import {ActionParameters, CaporalValidator, Command, CreateCommandParameters} from "@caporal/core";
 import {projectName} from "../../validator";
 import {spin} from "../../console";
-import {DockerMachine,isVersionUpgrade} from "../../project";
-import * as semver from "semver";
+import {DockerMachine, isVersionUpgrade, version} from "../../project";
 
 async function upgrade({args, options}: ActionParameters) {
   const name = args.name as string;
-  const desiredVersion = args.version as string;
+  const desiredVersion = args.to as string;
 
   const machine = new DockerMachine();
 
@@ -19,39 +18,29 @@ async function upgrade({args, options}: ActionParameters) {
     return console.error(`Project '${name}' does not exist.`);
   }
 
-  let oldClientVersion;
   const oldClient = projectContainers.find(c => c.Image.startsWith("spicaengine/spica"));
   if (!oldClient) {
     return console.error(
       "Unable to upgrade the version of the project. Make sure that it's running with no issue."
     );
   }
-  
-  isVersionUpgrade(desiredVersion,oldClient.Image);
-  return 
-  oldClientVersion = oldClient.Image.substring(oldClient.Image.indexOf(":") + 1);
 
-  let oldApiVersion;
   const oldApi = projectContainers.find(c => c.Image.startsWith("spicaengine/api"));
   if (!oldApi) {
     return console.error(
       "Unable to upgrade the version of the project. Make sure that it's running with no issue"
     );
   }
-  oldApiVersion = oldApi.Image.substring(oldApi.Image.indexOf(":") + 1);
 
-  
-  const isDowngrade =
-    semver.lt(desiredVersion, oldApiVersion) || semver.lt(desiredVersion, oldClientVersion);
-  const isEqual =
-    semver.eq(desiredVersion, oldApiVersion) || semver.eq(desiredVersion, oldClientVersion);
-
-  if (isDowngrade) {
-    return console.error(`Version of the project '${name}' is greater than '${desiredVersion}'.`);
-  } else if (isEqual) {
-    console.error(`Version of the project '${name}' is already '${desiredVersion}'.`);
+  if (!(await isVersionUpgrade(desiredVersion, oldClient))) {
+    return console.error(`${desiredVersion} is not greater than ${oldClient.Image}.`);
   }
 
+  if (!(await isVersionUpgrade(desiredVersion, oldApi))) {
+    return console.error(`${desiredVersion} is greater than ${oldApi.Image}.`);
+  }
+
+  const oldApiVersion = version(oldApi.Image);
   const commands = oldApi ? oldApi.Command.split(" ") : [];
 
   await spin({
@@ -98,24 +87,14 @@ async function upgrade({args, options}: ActionParameters) {
         tag: desiredVersion
       });
 
-      const imagesToPull: typeof images = [];
-
-      for (const image of images) {
-        const exists = await machine.doesImageExist(image.image, image.tag);
-        if (exists && options.imagePullPolicy == "if-not-present") {
-          continue;
-        }
-        imagesToPull.push(image);
-      }
-
       let pulled = 0;
 
       function increasePulledCount() {
         pulled++;
-        spinner.text = `Pulling images (${pulled}/${imagesToPull.length})`;
+        spinner.text = `Pulling images (${pulled}/${images.length})`;
       }
       return Promise.all(
-        imagesToPull.map(image =>
+        images.map(image =>
           machine.pullImage(image.image, image.tag).then(() => increasePulledCount())
         )
       );
@@ -214,26 +193,15 @@ async function upgrade({args, options}: ActionParameters) {
     }
   });
 
-  console.info(`Project '${name}' version has been set to ${desiredVersion}.`);
+  console.info(`Project '${name}' version has been set to the version ${desiredVersion}.`);
 }
 
 export default function({createCommand}: CreateCommandParameters): Command {
   return createCommand("Upgrade the version of your existing project.")
     .argument("<name>", "Name of the project.", {validator: projectName})
-    .argument("<version>", "Version of the spica.")
-    .option(
-      "--image-pull-policy",
-      "Image pull policy. when 'if-not-present' images won't be pulled in if already present on the docker.",
-      {
-        default: "if-not-present",
-        validator: ["if-not-present", "default"]
-      }
-    )
+    .argument("<to>", "Version of the spica.")
     .option("--restart", "Restart failed containers if exits unexpectedly.", {
       default: true,
-      validator: CaporalValidator.BOOLEAN
-    })
-    .option("-o, --open", "Open project authorization page after creation.", {
       validator: CaporalValidator.BOOLEAN
     })
     .action(upgrade);
