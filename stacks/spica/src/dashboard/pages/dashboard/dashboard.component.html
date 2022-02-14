@@ -126,6 +126,11 @@
                 #progressBar
                 mode="determinate"
                 [value]="(statKv.value.current / statKv.value.limit) * 100"
+                [ngClass]="{
+                  low: progressBar.value < 50,
+                  medium: progressBar.value >= 50 && progressBar.value < 90,
+                  high: progressBar.value >= 90
+                }"
               ></mat-progress-bar>
               <span class="inuse" [style.left]="'calc(' + progressBar.value + '% - 20px)'">
                 {{ statKv.value.current / statKv.value.limit | percent }}
