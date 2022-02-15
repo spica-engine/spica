@@ -29,13 +29,9 @@ function streamToBuffer(stream: Stream): Promise<Buffer> {
   });
 }
 
-async function create({args: cmdArgs, options, ddash}: ActionParameters) {
+async function create({args: cmdArgs, options}: ActionParameters) {
   const {name}: {name?: string} = cmdArgs;
 
-  console.dir(options, {depth: Infinity});
-  console.dir(ddash, {depth: Infinity});
-  console.dir(cmdArgs, {depth: Infinity});
-  return;
   const machine = new DockerMachine();
 
   const networkName = `${name}-network`,
@@ -50,23 +46,23 @@ async function create({args: cmdArgs, options, ddash}: ActionParameters) {
   let identifier = "spica";
   let password = "spica";
   let args = [];
-  // if (options.apiOptions) {
-  //   const filename = path.relative(process.cwd(), options.apiOptions as string);
-  //   const rawFile = fs.readFileSync(filename, {encoding: "utf8"});
+  if (options.apiOptions) {
+    const filename = path.resolve(options.apiOptions as string);
+    const rawFile = fs.readFileSync(filename, {encoding: "utf8"});
 
-  //   let apiOptions = {};
-  //   try {
-  //     apiOptions = JSON.parse(rawFile);
-  //     identifier = apiOptions["passport-default-identity-identifier"] || identifier;
-  //     password = apiOptions["passport-default-identity-password"] || password;
-  //   } catch (error) {
-  //     throw Error(`Error while parsing api-options file. ${error}`);
-  //   }
+    let apiOptions = {};
+    try {
+      apiOptions = JSON.parse(rawFile);
+      identifier = apiOptions["passport-default-identity-identifier"] || identifier;
+      password = apiOptions["passport-default-identity-password"] || password;
+    } catch (error) {
+      throw Error(`Error while parsing api-options file. ${error}`);
+    }
 
-  //   for (const [key, value] of Object.entries(apiOptions)) {
-  //     args.push(`--${key}=${value}`);
-  //   }
-  // }
+    for (const [key, value] of Object.entries(apiOptions)) {
+      args.push(`--${key}=${value}`);
+    }
+  }
 
   args = [
     ...args,
@@ -475,6 +471,12 @@ export default function({createCommand}: CreateCommandParameters): Command {
       default: "1",
       validator: CaporalValidator.NUMBER
     })
-    .configure({strictArgsCount:false,strictOptions:false})
+    .option(
+      "--api-options",
+      "Absolute file path that contains api key options as key value in JSON format.",
+      {
+        validator: CaporalValidator.STRING
+      }
+    )
     .action((create as unknown) as Action);
 }
