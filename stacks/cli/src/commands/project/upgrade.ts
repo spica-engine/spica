@@ -32,41 +32,19 @@ async function upgrade({args, options}: ActionParameters) {
     );
   }
 
-  if (!(await isVersionUpgrade(desiredVersion, oldClient))) {
-    return console.error(`${desiredVersion} is not greater than ${oldClient.Image}.`);
+  const oldClientVersion = await version(oldClient.Image);
+  if (!isVersionUpgrade(desiredVersion, oldClientVersion)) {
+    return console.error(
+      `Requested version(${desiredVersion}) is not greater than current version(${oldClientVersion}).`
+    );
   }
 
-  if (!(await isVersionUpgrade(desiredVersion, oldApi))) {
-    return console.error(`${desiredVersion} is greater than ${oldApi.Image}.`);
+  const oldApiVersion = await version(oldApi.Image);
+  if (!isVersionUpgrade(desiredVersion, oldApiVersion)) {
+    return console.error(
+      `Requested version(${desiredVersion}) is greater than current version(${oldApiVersion}).`
+    );
   }
-
-  const oldApiVersion = version(oldApi.Image);
-  const commands = oldApi ? oldApi.Command.split(" ") : [];
-
-  await spin({
-    text: "Shutting down and removing the previous containers..",
-    op: async () => {
-      await Promise.all(
-        [oldClient, oldApi].map(async containerInfo => {
-          if (!containerInfo) {
-            return;
-          }
-          const container = await machine.getContainer(containerInfo.Id);
-          await container.remove({
-            v: true, // Remove volumes attached to the container
-            force: true // Stop if the container running
-          });
-          return new Promise(resolve => setTimeout(resolve, 1000));
-        })
-      );
-    }
-  });
-
-  const network = await machine
-    .listNetworks({
-      filters: JSON.stringify({label: [`namespace=${name}`]})
-    })
-    .then(([networkInfo]) => machine.getNetwork(networkInfo.Id));
 
   await spin({
     text: "Pulling images..",
@@ -100,6 +78,33 @@ async function upgrade({args, options}: ActionParameters) {
       );
     }
   });
+
+  const commands = oldApi ? oldApi.Command.split(" ") : [];
+
+  await spin({
+    text: "Shutting down and removing the old containers..",
+    op: async () => {
+      await Promise.all(
+        [oldClient, oldApi].map(async containerInfo => {
+          if (!containerInfo) {
+            return;
+          }
+          const container = await machine.getContainer(containerInfo.Id);
+          await container.remove({
+            v: true, // Remove volumes attached to the container
+            force: true // Stop if the container running
+          });
+          return new Promise(resolve => setTimeout(resolve, 1000));
+        })
+      );
+    }
+  });
+
+  const network = await machine
+    .listNetworks({
+      filters: JSON.stringify({label: [`namespace=${name}`]})
+    })
+    .then(([networkInfo]) => machine.getNetwork(networkInfo.Id));
 
   await spin({
     text: `Creating spica containers (0/2)`,

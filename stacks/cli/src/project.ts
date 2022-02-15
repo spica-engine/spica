@@ -43,35 +43,31 @@ export class ImageNotFoundError extends Error {
   }
 }
 
-export const version = image => /^spicaengine\/(spica|api):(.*)/g.exec(image)[2];
+export const version = image => {
+  const vers = /^spicaengine\/(spica|api):(.*)/g.exec(image)[2];
+
+  if (nonActualVersions.includes(vers)) {
+    return machine
+      .getImage(image)
+      .inspect()
+      .then(info => {
+        const actualVersion = info.RepoTags.map(tag => tag.slice(tag.indexOf(":") + 1)).find(tag =>
+          semver.valid(tag)
+        );
+        if (!actualVersion) {
+          throw Error(`Could not find the actual version of image '${image}'`);
+        }
+        return actualVersion;
+      });
+  }
+
+  return Promise.resolve(vers);
+};
 const nonActualVersions = ["latest"];
 
-export async function isVersionUpgrade(desiredVersion: string, oldImage: docker.ContainerInfo) {
+export function isVersionUpgrade(desiredVersion: string, oldVersion: string) {
   if (desiredVersion == "latest") {
     return true;
   }
-
-  let oldImageVersion = version(oldImage.Image);
-  if (nonActualVersions.includes(oldImageVersion)) {
-    oldImageVersion = await getActualVersion(oldImage.Image);
-  }
-
-  return semver.gt(desiredVersion, oldImageVersion);
-}
-
-function getActualVersion(image: string) {
-  const machine = new DockerMachine();
-
-  const actualVersionMatch = /^spicaengine\/spica:\d+\.\d+\.\d+$/g;
-
-  return machine
-    .getImage(image)
-    .inspect()
-    .then(info => {
-      let match = info.RepoTags.find(tag => actualVersionMatch.test(tag));
-      if (!match) {
-        throw Error(`Could not find the actual version of image '${image}'`);
-      }
-      return version(match);
-    });
+  return semver.gt(desiredVersion, oldVersion);
 }
