@@ -60,6 +60,14 @@ export class RealtimeDatabaseService {
   removeEmitter(name: string, options: FindOptions<any>) {
     const emitterName = this.findEmitterName(name, options);
 
+    if (!emitterName) {
+      return console.warn(
+        `Connection has already been closed for collection '${name}' with options '${JSON.stringify(
+          options
+        )}'.`
+      );
+    }
+
     const emitter = this.emitters.get(emitterName);
 
     emitter.listenerCount--;
