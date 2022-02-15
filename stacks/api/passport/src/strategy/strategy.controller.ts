@@ -13,19 +13,15 @@ import {
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {OAuthService} from "./services/oauth.service";
-import {PassportOptions, PASSPORT_OPTIONS} from "../options";
-import {SamlService} from "./services/saml.service";
-import {getStrategyService} from "../utilities";
-import {Strategy} from "./interface";
+import {PassportOptions, PASSPORT_OPTIONS, STRATEGIES} from "../options";
+import {Strategy, StrategyTypeService} from "./interface";
 import {StrategyService} from "./services/strategy.service";
 
 @Controller("passport/strategy")
 export class StrategyController {
   constructor(
     private strategy: StrategyService,
-    private saml: SamlService,
-    private oauth: OAuthService,
+    @Inject(STRATEGIES) private strategies: {find: (type: string) => StrategyTypeService},
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions
   ) {}
 
@@ -57,7 +53,7 @@ export class StrategyController {
   async insertOne(@Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy) {
     delete strategy._id;
 
-    const service = getStrategyService([this.saml, this.oauth], strategy.type);
+    const service = this.strategies.find(strategy.type);
 
     try {
       service.prepareToInsert(strategy);
@@ -82,7 +78,7 @@ export class StrategyController {
   ) {
     delete strategy._id;
 
-    const service = getStrategyService([this.saml, this.oauth], strategy.type);
+    const service = this.strategies.find(strategy.type);
 
     try {
       service.prepareToInsert(strategy);
