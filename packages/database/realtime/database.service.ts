@@ -57,10 +57,6 @@ export class RealtimeDatabaseService {
     return undefined;
   }
 
-  doesEmitterExist(name: string, options: FindOptions<any>) {
-    return !!this.findEmitterName(name, options);
-  }
-
   removeEmitter(name: string, options: FindOptions<any>) {
     const emitterName = this.findEmitterName(name, options);
 
@@ -78,6 +74,7 @@ export class RealtimeDatabaseService {
 
       if (!streamListenersRemain) {
         const changeStream = this.changeStreams.get(collName);
+        changeStream.unpipe();
         changeStream.close();
         this.changeStreams.delete(collName);
       }
