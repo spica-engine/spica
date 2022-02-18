@@ -1,13 +1,4 @@
-import {
-  Component,
-  EventEmitter,
-  Input,
-  OnChanges,
-  OnDestroy,
-  OnInit,
-  Output,
-  SimpleChanges
-} from "@angular/core";
+import {Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from "@angular/core";
 import {InputResolver, InputSchema} from "@spica-client/common";
 import {Bucket, PropertyOptions} from "../../interfaces/bucket";
 
@@ -28,11 +19,20 @@ export class FilterComponent implements OnChanges {
   mongodbHistory = [];
   expressionHistory = [];
 
+  advancedFilters = [];
+
   readonly filterOrigins = ["string", "boolean", "object"];
 
-  selectedOperator = "";
+  readonly defaultOperator = "equals";
+  selectedOperator = [this.defaultOperator];
 
-  containsBuilder = (value: string) => {
+  defaultFactory = operator => {
+    return value => {
+      return {[operator]: value};
+    };
+  };
+
+  stringContainsFactory = value => {
     return {
       // we should escape special characters
       $regex: value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
@@ -40,31 +40,41 @@ export class FilterComponent implements OnChanges {
     };
   };
 
+  dateBetweenFactory(value: string[]) {
+    return {
+      $gte: `Date(${new Date(value[0]).toISOString()})`,
+      $lt: `Date(${new Date(value[1]).toISOString()})`
+    };
+  }
+
   operators = {
     string: {
-      equals: this.createValueBuilder("$eq"),
-      not_equal: this.createValueBuilder("$ne"),
-      contains: this.createValueBuilder("$regex", this.containsBuilder),
-      regex: this.createValueBuilder("$regex")
+      equals: this.defaultFactory("$eq"),
+      not_equal: this.defaultFactory("$ne"),
+      contains: this.stringContainsFactory,
+      regex: this.defaultFactory("$regex")
     },
     textarea: {
-      equals: this.createValueBuilder("$eq"),
-      not_equal: this.createValueBuilder("$ne"),
-      contains: this.createValueBuilder("$regex", this.containsBuilder),
-      regex: this.createValueBuilder("$regex")
+      equals: this.defaultFactory("$eq"),
+      not_equal: this.defaultFactory("$ne"),
+      contains: this.stringContainsFactory,
+      regex: this.defaultFactory("$regex")
     },
     number: {
-      equals: this.createValueBuilder("$eq"),
-      not_equal: this.createValueBuilder("$ne"),
-      less_than: this.createValueBuilder("$lt"),
-      greater_than: this.createValueBuilder("$gt"),
-      less_than_or_equal: this.createValueBuilder("$lte"),
-      greater_than_or_equal: this.createValueBuilder("$gte")
+      equals: this.defaultFactory("$eq"),
+      not_equal: this.defaultFactory("$ne"),
+      less_than: this.defaultFactory("$lt"),
+      greater_than: this.defaultFactory("$gt"),
+      less_than_or_equal: this.defaultFactory("$lte"),
+      greater_than_or_equal: this.defaultFactory("$gte")
     },
     array: {
-      include_one: this.createValueBuilder("$in"),
-      not_include: this.createValueBuilder("$nin"),
-      include_all: this.createValueBuilder("$all")
+      include_one: this.defaultFactory("$in"),
+      not_include: this.defaultFactory("$nin"),
+      include_all: this.defaultFactory("$all")
+    },
+    date: {
+      between: this.dateBetweenFactory
     }
   };
 
@@ -74,21 +84,12 @@ export class FilterComponent implements OnChanges {
 
   properties: {[key: string]: InputSchema & PropertyOptions} = {};
 
-  property: string;
-  value: string | boolean | number | unknown[];
+  property = [];
+  value = [];
 
   typeMappings = new Map<string, string>([["richtext", "textarea"]]);
 
   constructor(private resolver: InputResolver) {}
-
-  createValueBuilder(
-    operator: string,
-    builder = value => {
-      return {[operator]: value};
-    }
-  ) {
-    return value => builder(value);
-  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.schema && this.schema) {
@@ -108,24 +109,55 @@ export class FilterComponent implements OnChanges {
   apply() {
     switch (this.currentTabIndex) {
       case 0:
-        this.filter = this.createBasicFilter();
+        const expressions = {
+          $or: []
+        };
+        for (const [k, v] of Object.entries(this.properties)) {
+          if (v.type == "string") {
+            const factory = this.defaultFactory(this.stringContainsFactory);
+            const expression = factory(this.value[0]);
+            expressions.$or.push({
+              [k]: expression
+            });
+          }
+        }
+        this.filter = expressions.$or.length ? expressions : {};
         break;
       case 1:
+        const filters = [];
+        for (let i = 0; i < this.selectedOperator.length; i++) {
+          const filter = this.createAdvancedFilter(i);
+          if (filter) {
+            filters.push(filter);
+          }
+        }
+
+        if (!filters.length) {
+          this.filter = {};
+          break;
+        }
+
+        this.filter = {
+          $and: filters
+        };
+
+        break;
+      case 2:
         try {
-          this.filter = JSON.parse(this.value as any);
+          this.filter = JSON.parse(this.value[0] as any);
         } catch (error) {
           this.errorMessage = error;
           setTimeout(() => (this.errorMessage = undefined), 3000);
           break;
         }
 
-        this.addToHistory(this.mongodbHistory, this.value as string);
+        this.addToHistory(this.mongodbHistory, this.value[0] as string);
         this.saveHistoryChanges("mongodb", this.mongodbHistory);
         break;
-      case 2:
-        this.filter = this.value;
+      case 3:
+        this.filter = this.value[0];
 
-        this.addToHistory(this.expressionHistory, this.value as string);
+        this.addToHistory(this.expressionHistory, this.value[0]);
         this.saveHistoryChanges("expression", this.expressionHistory);
         break;
       default:
@@ -136,35 +168,43 @@ export class FilterComponent implements OnChanges {
     this.filterChange.emit(this.filter);
   }
 
-  createBasicFilter() {
-    const type = this.properties[this.property].type;
+  createAdvancedFilter(i) {
+    if (!this.property[i]) {
+      return;
+    }
+
+    const type = this.properties[this.property[i]].type;
 
     switch (type) {
       case "relation":
         return {
-          [`${this.property}._id`]:
-            this.properties[this.property]["relationType"] == "onetomany"
-              ? {$in: this.value}
-              : this.value
-        };
-
-      case "date":
-        return {
-          [this.property]: {
-            $gte: `Date(${new Date(this.value[0]).toISOString()})`,
-            $lt: `Date(${new Date(this.value[1]).toISOString()})`
-          }
+          [`${this.property[this.property[i]]}._id`]:
+            this.properties[this.property[i]]["relationType"] == "onetomany"
+              ? {$in: this.value[i]}
+              : this.value[i]
         };
 
       default:
-        if (this.selectedOperator) {
-          const valueBuilder = this.operators[type][this.selectedOperator];
-          const preparedValue = valueBuilder(this.value);
-
-          return {[this.property]: preparedValue};
+        let filterValue = this.value[i];
+        if (this.operators[type]) {
+          const factory = this.operators[type][this.selectedOperator[i]];
+          filterValue = factory(this.value[i]);
         }
-        return {[this.property]: this.value};
+
+        return {[this.property[i]]: filterValue};
     }
+  }
+
+  addAdvancedFilter() {
+    this.value.push(undefined);
+    this.property.push(undefined);
+    this.selectedOperator.push(this.defaultOperator);
+  }
+
+  removeAdvancedFilter(i) {
+    this.value.splice(i, 1);
+    this.property.splice(i, 1);
+    this.selectedOperator.splice(i, 1);
   }
 
   fillHistory() {
@@ -204,13 +244,21 @@ export class FilterComponent implements OnChanges {
   }
 
   resetInputs() {
-    this.property = undefined;
-    this.onPropertyChange();
+    this.property = [undefined];
+    this.value = [undefined];
+    this.filter = undefined;
+    this.selectedOperator = [this.defaultOperator];
+    this.filter = undefined;
   }
 
-  onPropertyChange() {
-    this.value = undefined;
-    this.filter = undefined;
-    this.selectedOperator = undefined;
+  onPropertyChange(i = 0) {
+    this.value[i] = undefined;
+    this.selectedOperator[i] = this.defaultOperator;
+
+    const operators = this.operators[this.properties[this.property[i]].type];
+    if (operators) {
+      const first = Object.keys(operators)[0];
+      this.selectedOperator[i] = first;
+    }
   }
 }

@@ -11,66 +11,81 @@
     [class.selected]="currentTabIndex == 1"
     (click)="$event.stopPropagation(); currentTabIndex = 1; resetInputs()"
   >
-    MongoDB
+    Advanced
   </button>
   <button
     mat-flat-button
     [class.selected]="currentTabIndex == 2"
     (click)="$event.stopPropagation(); currentTabIndex = 2; resetInputs()"
   >
+    MongoDB
+  </button>
+  <button
+    mat-flat-button
+    [class.selected]="currentTabIndex == 3"
+    (click)="$event.stopPropagation(); currentTabIndex = 3; resetInputs()"
+  >
     Expression
   </button>
 </div>
 
 <div (click)="$event.stopPropagation()">
-  <ng-container *ngIf="currentTabIndex == 0">
+  <div class="basic-filter" *ngIf="currentTabIndex == 0">
     <mat-form-field (click)="$event.stopPropagation()">
-      <mat-select
-        placeholder="Attribute to Filter"
-        [(ngModel)]="property"
-        (ngModelChange)="onPropertyChange()"
-      >
-        <mat-option *ngFor="let propertyKv of properties | keyvalue" [value]="propertyKv.key">
-          {{ propertyKv.value.title || propertyKv.key }}
-        </mat-option>
-      </mat-select>
+      <input placeholder="Search a text" [(ngModel)]="value[0]" matInput />
     </mat-form-field>
-    <ng-container *ngIf="properties[property]?.type; let type">
-      <mat-form-field
-        (click)="$event.stopPropagation()"
-        class="operator"
-        *ngIf="operators.hasOwnProperty(type)"
-      >
-        <mat-select placeholder="Select an operator" [(ngModel)]="selectedOperator">
-          <mat-option
-            *ngFor="let operatorKv of operators[type] | keyvalue"
-            [value]="operatorKv.key"
-          >
-            {{
-              operatorKv.key
-                .replace(operatorKv.key[0], operatorKv.key[0].toUpperCase())
-                .replaceAll("_", " ")
-            }}
+  </div>
+  <ng-container *ngIf="currentTabIndex == 1">
+    <div class="advanced-filter" *ngFor="let filter of selectedOperator; let i = index">
+      <mat-form-field (click)="$event.stopPropagation()">
+        <mat-select
+          placeholder="Attribute to Filter"
+          [(ngModel)]="property[i]"
+          (ngModelChange)="onPropertyChange(i)"
+        >
+          <mat-option *ngFor="let propertyKv of properties | keyvalue" [value]="propertyKv.key">
+            {{ propertyKv.value.title || propertyKv.key }}
           </mat-option>
         </mat-select>
       </mat-form-field>
-    </ng-container>
-    <span
-      *ngIf="property && properties[property].type != 'date'"
-      [inputPlacer]="properties[property]"
-      [(ngModel)]="value"
-      (click)="$event.stopPropagation()"
-    ></span>
-    <span
-      *ngIf="property && properties[property].type == 'date'"
-      (click)="$event.stopPropagation()"
-    >
-      <mat-form-field>
-        <mat-label>{{ properties[property].title || properties[property].$name }}</mat-label>
+      <mat-form-field (click)="$event.stopPropagation()" class="operator">
+        <mat-select placeholder="Select an operator" [(ngModel)]="selectedOperator[i]">
+          <ng-container
+            *ngIf="operators.hasOwnProperty(properties[property[i]]?.type); else defaultOperator"
+          >
+            <mat-option
+              *ngFor="let operatorKv of operators[(properties[property[i]]?.type)] | keyvalue"
+              [value]="operatorKv.key"
+            >
+              {{
+                operatorKv.key
+                  .replace(operatorKv.key[0], operatorKv.key[0].toUpperCase())
+                  .replaceAll("_", " ")
+              }}
+            </mat-option>
+          </ng-container>
+          <ng-template #defaultOperator>
+            <mat-option value="equals">
+              Equals
+            </mat-option>
+          </ng-template>
+        </mat-select>
+      </mat-form-field>
+      <span
+        *ngIf="property[i] && properties[property[i]].type != 'date'"
+        [inputPlacer]="properties[property[i]]"
+        [(ngModel)]="value[i]"
+        (click)="$event.stopPropagation()"
+      ></span>
+      <mat-form-field
+        *ngIf="property[i] && properties[property[i]].type == 'date'"
+        (click)="$event.stopPropagation()"
+      >
+        <mat-label>{{ properties[property[i]].title || properties[property[i]].$name }}</mat-label>
         <input
           matInput
           type="datetime"
-          [(ngModel)]="value"
+          [(ngModel)]="value[i]"
           (focus)="dt1.open()"
           [owlDateTime]="dt1"
           [owlDateTimeTrigger]="dt1"
@@ -78,16 +93,29 @@
           selectMode="range"
         />
         <owl-date-time #dt1></owl-date-time>
-        <mat-hint *ngIf="schema.description">{{ properties[property].description }}</mat-hint>
+        <mat-hint *ngIf="schema.description">{{ properties[property[i]].description }}</mat-hint>
       </mat-form-field>
-    </span>
+      <mat-form-field *ngIf="!property[i]" (click)="$event.stopPropagation()">
+        <input matInput placeholder="Enter a value" disabled />
+      </mat-form-field>
+      <button color="warn" mat-button (click)="removeAdvancedFilter(i)">
+        <mat-icon>
+          delete
+        </mat-icon>
+      </button>
+    </div>
+    <div class="add-advanced-filter-container">
+      <button color="primary" mat-button (click)="addAdvancedFilter()">
+        Add filter
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
   </ng-container>
-  <ng-container *ngIf="currentTabIndex == 1">
+  <ng-container *ngIf="currentTabIndex == 2">
     <div class="tab-content">
       <code-editor
-        *ngIf="currentTabIndex == 1"
         placeholder="MongoDB Filter"
-        [(ngModel)]="value"
+        [(ngModel)]="value[0]"
         [options]="{
           minimap: {enabled: false},
           lineNumbers: 'off',
@@ -102,18 +130,17 @@
       <div class="history">
         <ng-container
           [ngTemplateOutlet]="historyTemplate"
-          [ngTemplateOutletContext]="{itemLength: 10, type: 'mongodb', histories: mongodbHistory}"
+          [ngTemplateOutletContext]="{itemLength: 15, type: 'mongodb', histories: mongodbHistory}"
         ></ng-container>
       </div>
     </div>
     <p class="mat-error" *ngIf="errorMessage">{{ errorMessage }}</p>
   </ng-container>
-  <ng-container *ngIf="currentTabIndex == 2">
+  <ng-container *ngIf="currentTabIndex == 3">
     <div class="tab-content">
       <code-editor
-        *ngIf="currentTabIndex == 2"
         placeholder="Expression Filter"
-        [(ngModel)]="value"
+        [(ngModel)]="value[0]"
         [options]="{
           minimap: {enabled: false},
           lineNumbers: 'off',
@@ -130,7 +157,7 @@
         <ng-container
           [ngTemplateOutlet]="historyTemplate"
           [ngTemplateOutletContext]="{
-            itemLength: 5,
+            itemLength: 8,
             type: 'expression',
             histories: expressionHistory
           }"
@@ -153,7 +180,7 @@
   <h4 class="mat-h4"><mat-icon>history</mat-icon><span>History</span></h4>
   <mat-chip-list>
     <mat-chip
-      (click)="value = history"
+      (click)="value[0] = history"
       [matTooltip]="history"
       *ngFor="let history of histories; index as i"
       removable
