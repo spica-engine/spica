@@ -245,6 +245,46 @@ export const equal: func.Func = context => {
   };
 };
 
+export const length: func.Func = context => {
+  const fnName = "length";
+  validateArgumentsLength(fnName, context.arguments, 1);
+
+  const argValidations: ArgumentValidation[] = [
+    {
+      validator: node => {
+        return PropertyAccesChainValidation.validator(node) || ArrayValidation.validator(node);
+      },
+      mustBe: "property access chain or array"
+    }
+  ];
+
+  validateArgumentsOrder(fnName, context.arguments, argValidations);
+
+  return ctx => {
+    if (context.target == "aggregation") {
+      const parsedArguments = parseArguments(context.arguments, ctx, convert);
+
+      const propertyName: string = parsedArguments[0];
+
+      const match = {
+        $size: propertyName
+      };
+
+      return match;
+    } else {
+      const parsedArguments = parseArguments(context.arguments, ctx, compile);
+
+      const target: unknown = parsedArguments[0];
+
+      if (!target || !target["length"]) {
+        return -1;
+      }
+
+      return target["length"];
+    }
+  };
+};
+
 export const regex: func.Func = context => {
   const fnName = "regex";
   validateArgumentsLength(fnName, context.arguments, undefined, 2, 3);

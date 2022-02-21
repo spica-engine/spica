@@ -22,6 +22,7 @@ export function extractPropertyMap(expression: string) {
   return extract(tree);
 }
 
+// object
 func.register("has", builtin.has);
 
 // array comparison
@@ -29,7 +30,11 @@ func.register("some", builtin.some);
 func.register("every", builtin.every);
 func.register("equal", builtin.equal);
 
+// string
 func.register("regex", builtin.regex);
+
+// iterables
+func.register("length", builtin.length);
 
 // date
 func.register("unixTime", builtin.unixTime);

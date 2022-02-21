@@ -11,7 +11,8 @@ import {
   some,
   every,
   equal,
-  regex
+  regex,
+  length
 } from "@spica-server/bucket/expression/src/builtin_funcs";
 import {parser} from "@spica-server/bucket/expression/src/parser";
 
@@ -692,6 +693,72 @@ Function 'macro' arg[2] must be property access chain.`
                 true
               ]
             }
+          });
+        });
+      });
+    });
+
+    fdescribe("length", () => {
+      const target = parser.parse("document.tags");
+      describe("compile", () => {
+        const context: any = {
+          arguments: [target],
+          target: "default"
+        };
+
+        const lengthFn = length(context);
+
+        it("should return length of array", () => {
+          const request = {
+            document: {
+              tags: ["nodejs", "firebase"]
+            }
+          };
+
+          const result = lengthFn(request);
+
+          expect(result).toEqual(2);
+        });
+
+        it("should return length of string", () => {
+          const request = {
+            document: {
+              tags: "ten length"
+            }
+          };
+
+          const result = lengthFn(request);
+
+          expect(result).toEqual(10);
+        });
+
+        it("should return -1 if target is not iterable", () => {
+          const request = {
+            document: {
+              tags: 123
+            }
+          };
+
+          const result = lengthFn(request);
+
+          expect(result).toEqual(-1);
+        });
+      });
+
+      describe("convert", () => {
+        const context: any = {
+          arguments: [target],
+          target: "aggregation"
+        };
+
+        const lengthFn = length(context);
+
+        it("should return aggregation", () => {
+          const request = {};
+
+          const result = lengthFn(request);
+          expect(result).toEqual({
+            $size: "$tags"
           });
         });
       });
