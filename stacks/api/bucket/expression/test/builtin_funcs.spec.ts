@@ -698,7 +698,7 @@ Function 'macro' arg[2] must be property access chain.`
       });
     });
 
-    fdescribe("length", () => {
+    describe("length", () => {
       const target = parser.parse("document.tags");
       describe("compile", () => {
         const context: any = {
