@@ -68,6 +68,20 @@ describe("FilterComponent", () => {
             origin: "string",
             type: "relation",
             placer: NoopPlacer
+          },
+          {
+            color: "#fff",
+            icon: "format_qoute",
+            origin: "string",
+            type: "string",
+            placer: NoopPlacer
+          },
+          {
+            color: "#fff",
+            icon: "format_qoute",
+            origin: "string",
+            type: "textarea",
+            placer: NoopPlacer
           }
         ]),
         NoopAnimationsModule,
@@ -93,6 +107,12 @@ describe("FilterComponent", () => {
         },
         test2: {
           type: "relation"
+        },
+        title: {
+          type: "string"
+        },
+        description: {
+          type: "textarea"
         }
       }
     };
@@ -107,88 +127,220 @@ describe("FilterComponent", () => {
     localStorage.removeItem(`bucket_objectid_expression_filter_history`);
   });
 
-  it("should render properties", () => {
-    fixture.debugElement.query(By.css("mat-select")).nativeElement.click();
-    fixture.detectChanges();
-    const properties = document.body.querySelectorAll(".mat-select-panel > mat-option");
-    expect(properties[0].textContent).toBe(" test ");
-    expect(properties[1].textContent).toBe(" test1 ");
-  });
-
-  it("should render properties with title", () => {
-    fixture.componentInstance.schema.properties.test.title = "string title";
-    fixture.debugElement.query(By.css("mat-select")).nativeElement.click();
-    fixture.detectChanges();
-    const property = document.body.querySelector("mat-option");
-    expect(property.textContent).toBe(" string title ");
-  });
-
-  it("should select the property", () => {
-    fixture.debugElement.query(By.css("mat-select")).nativeElement.click();
-    fixture.detectChanges();
-    const property = document.body.querySelector(".mat-select-panel > mat-option") as HTMLElement;
-    property.click();
-    fixture.detectChanges();
-    expect(fixture.componentInstance.property).toBe("test");
-  });
-
-  it("should render the selected property", () => {
-    fixture.componentInstance.property = "test";
-    fixture.detectChanges();
-    const placer = fixture.debugElement.query(By.directive(NoopPlacer));
-    expect(placer).toBeTruthy();
-  });
-
-  xit("should render date picker when the selected property is a date", () => {
-    fixture.componentInstance.property = "test1";
-    fixture.detectChanges();
-    const directive = fixture.debugElement
-      .query(By.directive(OwlDateTimeInputDirective))
-      .injector.get(OwlDateTimeInputDirective);
-    expect(directive.selectMode).toBe("range");
-  });
-
-  describe("apply and clear", () => {
-    const changeSpy = jasmine.createSpy("changeSpy");
-
+  describe("Basic", () => {
     beforeEach(() => {
-      fixture.componentInstance.filterChange.subscribe(changeSpy);
-      fixture.componentInstance.property = "test";
+      // switch to the basic filter
+      fixture.debugElement
+        .query(By.css("div.labels > button:nth-of-type(1)"))
+        .nativeElement.click();
       fixture.detectChanges();
-      fixture.debugElement.query(By.directive(NoopPlacer)).componentInstance._change("test1");
     });
 
-    it("should generate the basic filter", () => {
-      fixture.componentInstance.property = "test";
-      fixture.detectChanges();
-      fixture.debugElement.query(By.directive(NoopPlacer)).componentInstance._change("test1");
-      fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
-      fixture.detectChanges();
-      expect(fixture.componentInstance.filter).toEqual({test: "test1"});
+    it("should search text in all string fields", () => {
+      fixture.componentInstance.value[0] = "bad_word";
+      fixture.componentInstance.apply();
+
+      expect(fixture.componentInstance.filter).toEqual({
+        $or: [
+          {
+            title: {
+              $regex: "bad_word",
+              $options: "i"
+            }
+          },
+          {
+            description: {
+              $regex: "bad_word",
+              $options: "i"
+            }
+          }
+        ]
+      });
     });
+  });
 
-    it("should generate the basic filter with operator", () => {
-      fixture.componentInstance.property = "test";
-      fixture.componentInstance.properties.test.type = "string";
-
-      fixture.componentInstance.selectedOperator = "contains";
-      fixture.detectChanges();
-      fixture.debugElement.query(By.directive(NoopPlacer)).componentInstance._change("test1");
-      fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
-      fixture.detectChanges();
-      expect(fixture.componentInstance.filter).toEqual({test: {$regex: "test1", $options: "i"}});
-    });
-
-    it("should generate the mongodb filter, add it to the history", () => {
+  describe("Advanced", () => {
+    beforeEach(() => {
+      // switch to the advanced filter
       fixture.debugElement
         .query(By.css("div.labels > button:nth-of-type(2)"))
         .nativeElement.click();
+      fixture.detectChanges();
+    });
 
-      fixture.componentInstance.value = '{"test":"value"}';
+    describe("placer", () => {
+      beforeEach(() => {
+        fixture.componentInstance.property[0] = "test";
+        fixture.componentInstance.selectedOperator[0] = "equals";
+        fixture.detectChanges();
+      });
+      it("should render the value of property", () => {
+        const placer = fixture.debugElement.query(By.directive(NoopPlacer));
+        expect(placer.nativeElement.textContent).toBe(" i'm a lonely placer ");
+      });
+
+      it("should write value to filter", () => {
+        const placer = fixture.debugElement.query(By.directive(NoopPlacer));
+        placer.componentInstance._change("test1");
+        expect(fixture.componentInstance.value[0]).toBe("test1");
+      });
+    });
+
+    it("should render properties", () => {
+      fixture.debugElement.query(By.css("mat-select")).nativeElement.click();
+      fixture.detectChanges();
+      const properties = document.body.querySelectorAll(".mat-select-panel > mat-option");
+      expect(properties[0].textContent).toBe(" description ");
+      expect(properties[1].textContent).toBe(" test ");
+      expect(properties[2].textContent).toBe(" test1 ");
+    });
+
+    it("should render properties with title", () => {
+      fixture.componentInstance.schema.properties.test.title = "string title";
+      fixture.debugElement.query(By.css("mat-select")).nativeElement.click();
+      fixture.detectChanges();
+      const property = document.body.querySelectorAll("mat-option")[1];
+      expect(property.textContent).toBe(" string title ");
+    });
+
+    it("should select the property", () => {
+      fixture.debugElement.query(By.css("mat-select")).nativeElement.click();
+      fixture.detectChanges();
+      const property = document.body.querySelectorAll(
+        ".mat-select-panel > mat-option"
+      )[1] as HTMLElement;
+      property.click();
+      fixture.detectChanges();
+      expect(fixture.componentInstance.property).toEqual(["test"]);
+    });
+
+    it("should render the selected property", () => {
+      fixture.componentInstance.property[0] = "test";
+      fixture.detectChanges();
+      const placer = fixture.debugElement.query(By.directive(NoopPlacer));
+      expect(placer).toBeTruthy();
+    });
+
+    xit("should render date picker when the selected property is a date", () => {
+      fixture.componentInstance.property[0] = "test1";
+      fixture.detectChanges();
+      const directive = fixture.debugElement
+        .query(By.directive(OwlDateTimeInputDirective))
+        .injector.get(OwlDateTimeInputDirective);
+      expect(directive.selectMode).toBe("range");
+    });
+
+    it("should generate the filter", () => {
+      fixture.componentInstance.property[0] = "title";
+      fixture.componentInstance.selectedOperator[0] = "equals";
+      fixture.componentInstance.value[0] = "test1";
+
+      fixture.componentInstance.apply();
+
+      expect(fixture.componentInstance.filter).toEqual({$and: [{title: {$eq: "test1"}}]});
+    });
+
+    it("should generate the filter with operator", () => {
+      fixture.componentInstance.property[0] = "title";
+      fixture.componentInstance.selectedOperator[0] = "contains";
+      fixture.componentInstance.value[0] = "test1";
+
+      fixture.componentInstance.apply();
+
+      expect(fixture.componentInstance.filter).toEqual({
+        $and: [{title: {$regex: "test1", $options: "i"}}]
+      });
+    });
+
+    it("should generate the filter with date", () => {
+      fixture.componentInstance.property[0] = "test1";
+      fixture.componentInstance.selectedOperator[0] = "between";
+      fixture.componentInstance.value[0] = [
+        new Date("2020-04-20T10:00:00.000Z"),
+        new Date("2020-05-20T10:00:00.000Z")
+      ];
+
+      fixture.componentInstance.apply();
+
+      expect(fixture.componentInstance.filter).toEqual({
+        $and: [
+          {
+            test1: {$gte: "Date(2020-04-20T10:00:00.000Z)", $lt: "Date(2020-05-20T10:00:00.000Z)"}
+          }
+        ]
+      });
+    });
+
+    it("should generate the filter for onetomany relation", () => {
+      fixture.componentInstance.schema.properties.test2["relationType"] = "onetomany";
+      fixture.componentInstance.property[0] = "test2";
+      fixture.componentInstance.value[0] = ["anobjectid"];
+
+      fixture.componentInstance.apply();
+      expect(fixture.componentInstance.filter).toEqual({
+        $and: [
+          {
+            "test2._id": {
+              $in: ["anobjectid"]
+            }
+          }
+        ]
+      });
+    });
+
+    it("should generate the filter for onetoone relation", () => {
+      fixture.componentInstance.schema.properties.test2["relationType"] = "onetoone";
+      fixture.componentInstance.property[0] = "test2";
+      fixture.componentInstance.value[0] = "anobjectid";
+
+      fixture.componentInstance.apply();
+
+      expect(fixture.componentInstance.filter).toEqual({
+        $and: [
+          {
+            "test2._id": "anobjectid"
+          }
+        ]
+      });
+    });
+
+    it("should create multiple filters", () => {
+      fixture.componentInstance.property = ["title", "title"];
+      fixture.componentInstance.selectedOperator = ["contains", "not_equal"];
+      fixture.componentInstance.value = ["dragon", "revenge of dragon"];
+
+      fixture.componentInstance.apply();
+
+      expect(fixture.componentInstance.filter).toEqual({
+        $and: [
+          {
+            title: {
+              $regex: "dragon",
+              $options: "i"
+            }
+          },
+          {
+            title: {
+              $ne: "revenge of dragon"
+            }
+          }
+        ]
+      });
+    });
+  });
+
+  describe("MongoDB", () => {
+    beforeEach(() => {
+      // switch to the mongodb filter
+      fixture.debugElement
+        .query(By.css("div.labels > button:nth-of-type(3)"))
+        .nativeElement.click();
+    });
+    it("should generate the mongodb filter, add it to the history", () => {
+      fixture.componentInstance.value[0] = '{"test":"value"}';
 
       fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
       fixture.detectChanges();
-
       expect(fixture.componentInstance.filter).toEqual({test: "value"});
       expect(fixture.componentInstance.mongodbHistory).toEqual(['{"test":"value"}']);
 
@@ -198,53 +350,8 @@ describe("FilterComponent", () => {
       expect(mongodbHistory).toEqual(['{"test":"value"}']);
     });
 
-    it("should generate the expression filter, add it to the history", () => {
-      fixture.debugElement
-        .query(By.css("div.labels > button:nth-of-type(3)"))
-        .nativeElement.click();
-
-      fixture.componentInstance.value = 'document.title == "test"';
-
-      fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
-      fixture.detectChanges();
-
-      expect(fixture.componentInstance.filter).toEqual('document.title == "test"');
-      expect(fixture.componentInstance.expressionHistory).toEqual(['document.title == "test"']);
-
-      const expressionFilter = JSON.parse(
-        localStorage.getItem(`bucket_objectid_expression_filter_history`)
-      );
-      expect(expressionFilter).toEqual(['document.title == "test"']);
-    });
-
-    it("should keep history length 10", () => {
-      const histories = Array.from(new Array(10), (_, index) => (10 - index).toString());
-
-      fixture.componentInstance.addToHistory(histories, "11");
-      expect(histories[0]).toEqual("11");
-      expect(histories[1]).toEqual("10");
-
-      expect(histories[8]).toEqual("3");
-      expect(histories[9]).toEqual("2");
-    });
-
-    it("should generate the filter with date", () => {
-      const dates = [new Date("2020-04-20T10:00:00.000Z"), new Date("2020-05-20T10:00:00.000Z")];
-      fixture.componentInstance.property = "test1";
-      fixture.componentInstance.value = dates;
-      fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
-      fixture.detectChanges();
-      expect(fixture.componentInstance.filter).toEqual({
-        test1: {$gte: "Date(2020-04-20T10:00:00.000Z)", $lt: "Date(2020-05-20T10:00:00.000Z)"}
-      });
-    });
-
     it("should show error of mongodb filter if json.parse fails, and should not write it to the storage", fakeAsync(() => {
-      fixture.debugElement
-        .query(By.css("div.labels > button:nth-of-type(2)"))
-        .nativeElement.click();
-
-      fixture.componentInstance.value = "{";
+      fixture.componentInstance.value[0] = "{";
 
       fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
       fixture.detectChanges();
@@ -267,36 +374,55 @@ describe("FilterComponent", () => {
 
       expect(fixture.debugElement.query(By.css("p.mat-error"))).toEqual(null);
     }), 10000);
+  });
 
-    it("should generate the filter for onetoone relation", () => {
-      fixture.componentInstance.schema.properties.test2["relationType"] = "onetoone";
-      fixture.componentInstance.property = "test2";
-      fixture.componentInstance.value = "anobjectid";
+  describe("Expression", () => {
+    it("should generate the expression filter, add it to the history", () => {
+      fixture.debugElement
+        .query(By.css("div.labels > button:nth-of-type(4)"))
+        .nativeElement.click();
+
+      fixture.componentInstance.value[0] = 'document.title == "test"';
+
       fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
       fixture.detectChanges();
-      expect(fixture.componentInstance.filter).toEqual({
-        "test2._id": "anobjectid"
-      });
+
+      expect(fixture.componentInstance.filter).toEqual('document.title == "test"');
+      expect(fixture.componentInstance.expressionHistory).toEqual(['document.title == "test"']);
+
+      const expressionFilter = JSON.parse(
+        localStorage.getItem(`bucket_objectid_expression_filter_history`)
+      );
+      expect(expressionFilter).toEqual(['document.title == "test"']);
     });
+  });
 
-    it("should generate the filter for onetomany relation", () => {
-      fixture.componentInstance.schema.properties.test2["relationType"] = "onetomany";
-      fixture.componentInstance.property = "test2";
-      fixture.componentInstance.value = ["anobjectid"];
-      fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
+  describe("apply and clear", () => {
+    const changeSpy = jasmine.createSpy("changeSpy");
+
+    beforeEach(() => {
+      fixture.componentInstance.resetInputs();
+      fixture.componentInstance.filterChange.subscribe(changeSpy);
+
+      // switch to the advanced filter
+      fixture.debugElement
+        .query(By.css("div.labels > button:nth-of-type(2)"))
+        .nativeElement.click();
       fixture.detectChanges();
-      expect(fixture.componentInstance.filter).toEqual({
-        "test2._id": {
-          $in: ["anobjectid"]
-        }
-      });
+
+      fixture.componentInstance.property[0] = "title";
+      fixture.componentInstance.selectedOperator[0] = "equals";
+      fixture.componentInstance.value[0] = "test1";
     });
 
     it("should emit filter", () => {
       fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
       fixture.detectChanges();
-      expect(fixture.componentInstance.filter).toEqual({test: "test1"});
-      expect(changeSpy).toHaveBeenCalledWith({test: "test1"});
+      const expectation = {
+        $and: [{title: {$eq: "test1"}}]
+      };
+      expect(fixture.componentInstance.filter).toEqual(expectation);
+      expect(changeSpy).toHaveBeenCalledWith(expectation);
     });
 
     it("should clear filter and emit", () => {
@@ -306,23 +432,16 @@ describe("FilterComponent", () => {
       expect(fixture.componentInstance.filter).toBeUndefined();
       expect(changeSpy).toHaveBeenCalledWith(undefined);
     });
-  });
 
-  describe("placer", () => {
-    beforeEach(() => {
-      fixture.componentInstance.property = "test";
-      fixture.detectChanges();
-    });
+    it("should keep history length 10", () => {
+      const histories = Array.from(new Array(10), (_, index) => (10 - index).toString());
 
-    it("should render the selected property", () => {
-      const placer = fixture.debugElement.query(By.directive(NoopPlacer));
-      expect(placer.nativeElement.textContent).toBe(" i'm a lonely placer ");
-    });
+      fixture.componentInstance.addToHistory(histories, "11");
+      expect(histories[0]).toEqual("11");
+      expect(histories[1]).toEqual("10");
 
-    it("should write value to filter", () => {
-      const placer = fixture.debugElement.query(By.directive(NoopPlacer));
-      placer.componentInstance._change("test1");
-      expect(fixture.componentInstance.value).toBe("test1");
+      expect(histories[8]).toEqual("3");
+      expect(histories[9]).toEqual("2");
     });
   });
 });

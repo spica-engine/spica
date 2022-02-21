@@ -32,7 +32,7 @@
 <div (click)="$event.stopPropagation()">
   <div class="basic-filter" *ngIf="currentTabIndex == 0">
     <mat-form-field (click)="$event.stopPropagation()">
-      <input placeholder="Search a text" [(ngModel)]="value[0]" matInput />
+      <input type="text" placeholder="Search a text" [(ngModel)]="value[0]" matInput />
     </mat-form-field>
   </div>
   <ng-container *ngIf="currentTabIndex == 1">
@@ -96,7 +96,7 @@
         <mat-hint *ngIf="schema.description">{{ properties[property[i]].description }}</mat-hint>
       </mat-form-field>
       <mat-form-field *ngIf="!property[i]" (click)="$event.stopPropagation()">
-        <input matInput placeholder="Enter a value" disabled />
+        <input matInput type="text" placeholder="Enter a value" />
       </mat-form-field>
       <button color="warn" mat-button (click)="removeAdvancedFilter(i)">
         <mat-icon>

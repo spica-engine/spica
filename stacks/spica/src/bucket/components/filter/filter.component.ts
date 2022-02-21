@@ -21,8 +21,6 @@ export class FilterComponent implements OnChanges {
 
   advancedFilters = [];
 
-  readonly filterOrigins = ["string", "boolean", "object"];
-
   readonly defaultOperator = "equals";
   selectedOperator = [this.defaultOperator];
 
@@ -98,6 +96,7 @@ export class FilterComponent implements OnChanges {
       for (const [key, value] of Object.entries(this.schema.properties)) {
         if (this.resolver.getOriginByType(value.type)) {
           this.properties[key] = value;
+          console.log(this.typeMappings, value.type);
           if (this.typeMappings.has(value.type)) {
             this.properties[key] = {...value, type: this.typeMappings.get(value.type)};
           }
@@ -108,14 +107,15 @@ export class FilterComponent implements OnChanges {
 
   apply() {
     switch (this.currentTabIndex) {
+      // BASIC
       case 0:
         const expressions = {
           $or: []
         };
+        console.log(this.properties);
         for (const [k, v] of Object.entries(this.properties)) {
-          if (v.type == "string") {
-            const factory = this.defaultFactory(this.stringContainsFactory);
-            const expression = factory(this.value[0]);
+          if (v.type == "string" || v.type == "textarea") {
+            const expression = this.stringContainsFactory(this.value[0]);
             expressions.$or.push({
               [k]: expression
             });
@@ -123,6 +123,7 @@ export class FilterComponent implements OnChanges {
         }
         this.filter = expressions.$or.length ? expressions : {};
         break;
+      // ADVANCED
       case 1:
         const filters = [];
         for (let i = 0; i < this.selectedOperator.length; i++) {
@@ -142,6 +143,7 @@ export class FilterComponent implements OnChanges {
         };
 
         break;
+      // MONGODB
       case 2:
         try {
           this.filter = JSON.parse(this.value[0] as any);
@@ -154,6 +156,7 @@ export class FilterComponent implements OnChanges {
         this.addToHistory(this.mongodbHistory, this.value[0] as string);
         this.saveHistoryChanges("mongodb", this.mongodbHistory);
         break;
+      // EXPRESSION
       case 3:
         this.filter = this.value[0];
 
@@ -174,11 +177,10 @@ export class FilterComponent implements OnChanges {
     }
 
     const type = this.properties[this.property[i]].type;
-
     switch (type) {
       case "relation":
         return {
-          [`${this.property[this.property[i]]}._id`]:
+          [`${this.property[i]}._id`]:
             this.properties[this.property[i]]["relationType"] == "onetomany"
               ? {$in: this.value[i]}
               : this.value[i]
