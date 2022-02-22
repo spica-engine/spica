@@ -64,7 +64,7 @@ export class _MixinCollection<T> {
 
   aggregate<ResponseType>(
     pipeline?: object[],
-    options?: CollectionAggregationOptions
+    options: CollectionAggregationOptions = {allowDiskUse: true}
   ): AggregationCursor<ResponseType> {
     return this._coll.aggregate(pipeline, options);
   }

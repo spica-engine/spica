@@ -187,9 +187,10 @@ export class PipelineBuilder implements iPipelineBuilder {
     let meta;
 
     if (paginate) {
-      const filteredDocuments = [{$count: "total"}];
+      const filteredsLength = [{$count: "total"}];
 
-      const totalDocuments = [
+      const totalLength = [
+        {$limit: 1},
         {
           $addFields: {
             total: await totalDocumentCount
@@ -203,7 +204,7 @@ export class PipelineBuilder implements iPipelineBuilder {
         }
       ];
 
-      meta = this.isFilterApplied ? filteredDocuments : totalDocuments;
+      meta = this.isFilterApplied ? filteredsLength : totalLength;
 
       this.pipeline.push(
         {
