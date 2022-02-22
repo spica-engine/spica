@@ -14,10 +14,7 @@ export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleDisconnect(client: any) {
     const options = await this.prepareOptions(client, client.upgradeReq);
-
-    if (this.realtime.doesEmitterExist(this.COLLECTION, options)) {
-      this.realtime.removeEmitter(this.COLLECTION, options);
-    }
+    this.realtime.removeEmitter(this.COLLECTION, options);
   }
 
   async handleConnection(client: WebSocket, req) {
@@ -61,6 +58,11 @@ export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     const begin = req.query.has("begin") ? new Date(req.query.get("begin")) : new Date();
+    // 'new Date' adds current miliseconds if the given parameter(req.query.get("begin") for this case) missing miliseconds
+    begin.setMilliseconds(0);
+    // we should apply this manipulation to the request object too,
+    // in order to find it on change streams when disconnection
+    req.query.set("begin", begin);
 
     options.filter = {
       ...options.filter,
@@ -68,10 +70,6 @@ export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
         $gte: begin
       }
     };
-
-    if (req.query.has("end")) {
-      options.filter.created_at.$lt = new Date(req.query.get("end"));
-    }
 
     if (req.query.has("sort")) {
       try {
