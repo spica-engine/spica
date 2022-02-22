@@ -1,15 +1,24 @@
 import {Command, CreateCommandParameters} from "@caporal/core";
 
 import {context} from "../../context";
+import {config} from "../../config";
 
 async function listContexts() {
-  const contexts = context.list().map(ctx => ({
-    ...ctx,
-    authorization: new Array(ctx.authorization.length)
+  const currentContext = await config.get();
+  const contexts = context.list().map(ctx => {
+    let authorization = new Array(ctx.authorization.length)
       .fill("*")
       .slice(0, 10)
-      .join(" ")
-  }));
+      .join(" ");
+    if (ctx.name == currentContext.context) {
+      authorization = authorization + "   (selected)";
+    }
+
+    return {
+      ...ctx,
+      authorization
+    };
+  });
 
   console.table(contexts, ["name", "url", "authorization"]);
 }
