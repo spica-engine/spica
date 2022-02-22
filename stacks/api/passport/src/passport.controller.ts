@@ -14,19 +14,19 @@ import {
   UnauthorizedException,
   UseInterceptors,
   Req,
-  All
+  All,
+  Inject
 } from "@nestjs/common";
 import {Identity, IdentityService, LoginCredentials} from "@spica-server/passport/identity";
 import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
 import {UrlEncodedBodyParser} from "./body";
-import {SamlService} from "./strategy/services/saml.service";
 import {StrategyService} from "./strategy/services/strategy.service";
 import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
-import {OAuthService} from "./strategy/services/oauth.service";
-import {getStrategyService} from "./utilities";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {STRATEGIES} from "./options";
+import {StrategyTypeServices} from "./strategy/interface";
 
 const assertObservers = new Map<string, Subject<any>>();
 /**
@@ -36,9 +36,8 @@ const assertObservers = new Map<string, Subject<any>>();
 export class PassportController {
   constructor(
     private identity: IdentityService,
-    private saml: SamlService,
-    private oauth: OAuthService,
-    private strategy: StrategyService
+    private strategy: StrategyService,
+    @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices
   ) {}
 
   async _identify(identifier: string, password: string, state: string, expiresIn: number) {
@@ -139,7 +138,7 @@ export class PassportController {
       throw new BadRequestException("Strategy does not exist.");
     }
 
-    const service = getStrategyService([this.saml, this.oauth], strategy.type);
+    const service = this.strategyTypes.find(strategy.type);
 
     const login = await service.getLoginUrl(strategy);
 
@@ -157,7 +156,7 @@ export class PassportController {
   @Get("strategy/:name/metadata")
   @Header("Content-type", "application/xml")
   metadata(@Param("name") name: string) {
-    return this.saml.createMetadata(name);
+    return this.strategyTypes.find("saml").createMetadata(name);
   }
 
   @All("strategy/:id/complete")
@@ -183,7 +182,7 @@ export class PassportController {
       throw new BadRequestException("Strategy does not exist.");
     }
 
-    const service = getStrategyService([this.saml, this.oauth], strategy.type);
+    const service = this.strategyTypes.find(strategy.type);
 
     const observer = assertObservers.get(stateId);
 
