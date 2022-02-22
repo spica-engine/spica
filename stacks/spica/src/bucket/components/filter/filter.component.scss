@@ -32,16 +32,21 @@
     align-items: center;
     justify-content: space-between;
 
-    > * {
-      width: 30%;
-    }
-
-    > *:nth-child(2) {
+    > *:not(div.diamond, button) {
       width: 25%;
     }
 
     > button {
       width: 10%;
+    }
+
+    > div.diamond {
+      min-width: 40px;
+      min-height: 40px;
+      background-color: red;
+      transform: rotate(45deg);
+      margin-left: -10px;
+      margin-right: -10px;
     }
   }
 

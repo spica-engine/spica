@@ -48,6 +48,8 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+      <div class="diamond">
+      </div>
       <mat-form-field (click)="$event.stopPropagation()" class="operator">
         <mat-select placeholder="Select an operator" [(ngModel)]="selectedOperator[i]">
           <ng-container
@@ -71,6 +73,8 @@
           </ng-template>
         </mat-select>
       </mat-form-field>
+      <div class="diamond">
+      </div>
       <span
         *ngIf="property[i] && properties[property[i]].type != 'date'"
         [inputPlacer]="properties[property[i]]"
