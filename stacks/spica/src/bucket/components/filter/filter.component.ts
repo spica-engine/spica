@@ -30,7 +30,7 @@ export class FilterComponent implements OnChanges {
     };
   };
 
-  stringContainsFactory = value => {
+  stringIncludesFactory = value => {
     return {
       // we should escape special characters
       $regex: value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
@@ -49,13 +49,13 @@ export class FilterComponent implements OnChanges {
     string: {
       equals: this.defaultFactory("$eq"),
       not_equal: this.defaultFactory("$ne"),
-      contains: this.stringContainsFactory,
+      includes: this.stringIncludesFactory,
       regex: this.defaultFactory("$regex")
     },
     textarea: {
       equals: this.defaultFactory("$eq"),
       not_equal: this.defaultFactory("$ne"),
-      contains: this.stringContainsFactory,
+      includes: this.stringIncludesFactory,
       regex: this.defaultFactory("$regex")
     },
     number: {
@@ -105,29 +105,38 @@ export class FilterComponent implements OnChanges {
     }
   }
 
+  getTextSearchFilter(text: string, schema: any) {
+    if (!text) {
+      return {};
+    }
+
+    const expressions = {
+      $or: []
+    };
+    for (const [k, v] of Object.entries(schema.properties) as any) {
+      const searchableTypes = ["string", "textarea", "richtext"];
+      if (searchableTypes.includes(v.type)) {
+        const expression = this.stringIncludesFactory(text);
+        expressions.$or.push({
+          [k]: expression
+        });
+      }
+    }
+
+    if (!expressions.$or.length) {
+      return {};
+    }
+
+    return expressions;
+  }
+
   apply() {
     switch (this.currentTabIndex) {
       // BASIC
       case 0:
-        const expressions = {
-          $or: []
-        };
-        console.log(this.properties);
-        for (const [k, v] of Object.entries(this.properties)) {
-          if (v.type == "string" || v.type == "textarea") {
-            const expression = this.stringContainsFactory(this.value[0]);
-            expressions.$or.push({
-              [k]: expression
-            });
-          }
-        }
-        this.filter = expressions.$or.length ? expressions : {};
-        break;
-      // ADVANCED
-      case 1:
         const filters = [];
         for (let i = 0; i < this.selectedOperator.length; i++) {
-          const filter = this.createAdvancedFilter(i);
+          const filter = this.createBasicFilter(i);
           if (filter) {
             filters.push(filter);
           }
@@ -157,7 +166,7 @@ export class FilterComponent implements OnChanges {
         this.saveHistoryChanges("mongodb", this.mongodbHistory);
         break;
       // EXPRESSION
-      case 3:
+      case 2:
         this.filter = this.value[0];
 
         this.addToHistory(this.expressionHistory, this.value[0]);
@@ -168,10 +177,11 @@ export class FilterComponent implements OnChanges {
         break;
     }
 
+    console.log(this.filter);
     this.filterChange.emit(this.filter);
   }
 
-  createAdvancedFilter(i) {
+  createBasicFilter(i) {
     if (!this.property[i]) {
       return;
     }
@@ -197,13 +207,13 @@ export class FilterComponent implements OnChanges {
     }
   }
 
-  addAdvancedFilter() {
+  addBasicFilter() {
     this.value.push(undefined);
     this.property.push(undefined);
     this.selectedOperator.push(this.defaultOperator);
   }
 
-  removeAdvancedFilter(i) {
+  removeBasicFilter(i) {
     this.value.splice(i, 1);
     this.property.splice(i, 1);
     this.selectedOperator.splice(i, 1);

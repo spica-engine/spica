@@ -1,5 +1,13 @@
 import {animate, style, transition, trigger} from "@angular/animations";
-import {Component, Inject, OnDestroy, OnInit, SecurityContext, ViewChild} from "@angular/core";
+import {
+  Component,
+  ElementRef,
+  Inject,
+  OnDestroy,
+  OnInit,
+  SecurityContext,
+  ViewChild
+} from "@angular/core";
 import {MatPaginator, PageEvent} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute, Router} from "@angular/router";
@@ -12,7 +20,8 @@ import {
   switchMap,
   take,
   tap,
-  takeUntil
+  takeUntil,
+  debounceTime
 } from "rxjs/operators";
 import {Bucket, BucketOptions, BUCKET_OPTIONS} from "../../interfaces/bucket";
 import {BucketData, BucketEntry} from "../../interfaces/bucket-entry";
@@ -23,6 +32,7 @@ import {DomSanitizer} from "@angular/platform-browser";
 import {NgModel} from "@angular/forms";
 import {Scheme, SchemeObserver} from "@spica-client/core";
 import {guides} from "./guides";
+import {FilterComponent} from "@spica-client/bucket/components/filter/filter.component";
 
 @Component({
   selector: "bucket-data-index",
@@ -51,6 +61,9 @@ export class IndexComponent implements OnInit, OnDestroy {
   data$: Observable<BucketData>;
   refresh = new Subject();
   loaded: boolean;
+
+  search$ = new Subject<string>();
+  searchValue = "";
 
   filter: {[key: string]: any} = {};
   sort: {[key: string]: number} = {};
@@ -86,6 +99,11 @@ export class IndexComponent implements OnInit, OnDestroy {
   nonEditableTypes = ["storage", "relation", "richtext"];
   dispose = new Subject();
 
+  @ViewChild(FilterComponent) bucketFilter: FilterComponent;
+
+  displayTranslateButton = false;
+  // displayScheduleButton = false;
+
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
@@ -111,6 +129,8 @@ export class IndexComponent implements OnInit, OnDestroy {
       tap(params => {
         this.bucketId = params.id;
         this.showScheduled = false;
+
+        this.searchValue = "";
 
         this.filter = {};
         this.sort = {};
@@ -171,6 +191,18 @@ export class IndexComponent implements OnInit, OnDestroy {
           }
         });
       }),
+      tap(schema => {
+        this.search$
+          .pipe(
+            takeUntil(this.dispose),
+            debounceTime(1000)
+          )
+          .subscribe(_ => {
+            const filter = this.bucketFilter.getTextSearchFilter(this.searchValue, schema);
+            return this.onFilterChange(filter);
+          });
+      }),
+      tap(schema => (this.displayTranslateButton = this.hasTranslatableProp(schema))),
       publishReplay(),
       refCount()
     );
@@ -231,9 +263,28 @@ export class IndexComponent implements OnInit, OnDestroy {
 
         return response.data;
       }),
-      tap(entries => (this.copyEntries = JSON.parse(JSON.stringify(entries))))
+      tap(entries => (this.copyEntries = JSON.parse(JSON.stringify(entries)))),
     );
   }
+
+  hasTranslatableProp(schema) {
+    let has = false;
+    for (const [k, v] of Object.entries(schema.properties) as any) {
+      if (v.options && v.options.translate) {
+        has = true;
+        break;
+      }
+    }
+
+    return has;
+  }
+
+  // hasSchedulableData(documents) {
+  //   this.bds
+  //     .find(this.bucketId, {limit: 1, schedule: true})
+  //     .toPromise()
+  //     .then(data => (this.displayScheduleButton = data.meta.total > 0));
+  // }
 
   ngOnDestroy() {
     this.dispose.next();

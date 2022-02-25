@@ -23,34 +23,65 @@
     }
   }
 
-  div.basic-filter > mat-form-field {
-    width: 100%;
+  ::ng-deep .mat-form-field-infix {
+    width: unset;
+    &,
+    .mat-form-field-label {
+      padding-left: 15px;
+    }
   }
 
-  div.advanced-filter {
+  div.basic-filter {
     display: flex;
     align-items: center;
     justify-content: space-between;
 
-    > *:not(div.diamond, button) {
-      width: 25%;
+    > div.inputs {
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex: 99;
+
+      > mat-form-field.property {
+        flex: 3;
+      }
+
+      mat-form-field.operator {
+        flex: 2;
+      }
+
+      .value {
+        flex: 4;
+        max-width: 240px;
+      }
+
+      ::ng-deep span.value > * {
+        width: 100%;
+      }
+
+      > mat-form-field {
+        div.diamond {
+          min-width: 32px;
+          min-height: 32px;
+          background-color: #3b3b3b;
+          transform: rotate(45deg);
+          position: absolute;
+          border-top: 1px solid white;
+          border-right: 1px solid white;
+          right: -26px;
+          top: 5px;
+          z-index: 1000;
+          border-radius: 2px;
+        }
+      }
     }
 
     > button {
-      width: 10%;
-    }
-
-    > div.diamond {
-      min-width: 40px;
-      min-height: 40px;
-      background-color: red;
-      transform: rotate(45deg);
-      margin-left: -10px;
-      margin-right: -10px;
+      flex: 1;
     }
   }
 
-  div.add-advanced-filter-container {
+  div.add-basic-filter-container {
     text-align: center;
   }
 

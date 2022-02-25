@@ -11,111 +11,104 @@
     [class.selected]="currentTabIndex == 1"
     (click)="$event.stopPropagation(); currentTabIndex = 1; resetInputs()"
   >
-    Advanced
+    MongoDB
   </button>
   <button
     mat-flat-button
     [class.selected]="currentTabIndex == 2"
     (click)="$event.stopPropagation(); currentTabIndex = 2; resetInputs()"
   >
-    MongoDB
-  </button>
-  <button
-    mat-flat-button
-    [class.selected]="currentTabIndex == 3"
-    (click)="$event.stopPropagation(); currentTabIndex = 3; resetInputs()"
-  >
     Expression
   </button>
 </div>
 
 <div (click)="$event.stopPropagation()">
-  <div class="basic-filter" *ngIf="currentTabIndex == 0">
-    <mat-form-field (click)="$event.stopPropagation()">
-      <input type="text" placeholder="Search a text" [(ngModel)]="value[0]" matInput />
-    </mat-form-field>
-  </div>
-  <ng-container *ngIf="currentTabIndex == 1">
-    <div class="advanced-filter" *ngFor="let filter of selectedOperator; let i = index">
-      <mat-form-field (click)="$event.stopPropagation()">
-        <mat-select
-          placeholder="Attribute to Filter"
-          [(ngModel)]="property[i]"
-          (ngModelChange)="onPropertyChange(i)"
-        >
-          <mat-option *ngFor="let propertyKv of properties | keyvalue" [value]="propertyKv.key">
-            {{ propertyKv.value.title || propertyKv.key }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-      <div class="diamond">
-      </div>
-      <mat-form-field (click)="$event.stopPropagation()" class="operator">
-        <mat-select placeholder="Select an operator" [(ngModel)]="selectedOperator[i]">
-          <ng-container
-            *ngIf="operators.hasOwnProperty(properties[property[i]]?.type); else defaultOperator"
+  <ng-container *ngIf="currentTabIndex == 0">
+    <div class="basic-filter" *ngFor="let filter of selectedOperator; let i = index">
+      <div class="inputs">
+        <mat-form-field (click)="$event.stopPropagation()" class="property">
+          <mat-select
+            placeholder="Attribute to Filter"
+            [(ngModel)]="property[i]"
+            (ngModelChange)="onPropertyChange(i)"
           >
-            <mat-option
-              *ngFor="let operatorKv of operators[(properties[property[i]]?.type)] | keyvalue"
-              [value]="operatorKv.key"
+            <mat-option *ngFor="let propertyKv of properties | keyvalue" [value]="propertyKv.key">
+              {{ propertyKv.value.title || propertyKv.key }}
+            </mat-option>
+          </mat-select>
+          <div class="diamond"></div>
+        </mat-form-field>
+        <mat-form-field (click)="$event.stopPropagation()" class="operator">
+          <mat-select placeholder="Select an operator" [(ngModel)]="selectedOperator[i]">
+            <ng-container
+              *ngIf="operators.hasOwnProperty(properties[property[i]]?.type); else defaultOperator"
             >
-              {{
-                operatorKv.key
-                  .replace(operatorKv.key[0], operatorKv.key[0].toUpperCase())
-                  .replaceAll("_", " ")
-              }}
-            </mat-option>
-          </ng-container>
-          <ng-template #defaultOperator>
-            <mat-option value="equals">
-              Equals
-            </mat-option>
-          </ng-template>
-        </mat-select>
-      </mat-form-field>
-      <div class="diamond">
-      </div>
-      <span
-        *ngIf="property[i] && properties[property[i]].type != 'date'"
-        [inputPlacer]="properties[property[i]]"
-        [(ngModel)]="value[i]"
-        (click)="$event.stopPropagation()"
-      ></span>
-      <mat-form-field
-        *ngIf="property[i] && properties[property[i]].type == 'date'"
-        (click)="$event.stopPropagation()"
-      >
-        <mat-label>{{ properties[property[i]].title || properties[property[i]].$name }}</mat-label>
-        <input
-          matInput
-          type="datetime"
+              <mat-option
+                *ngFor="let operatorKv of operators[(properties[property[i]]?.type)] | keyvalue"
+                [value]="operatorKv.key"
+              >
+                {{
+                  operatorKv.key
+                    .replace(operatorKv.key[0], operatorKv.key[0].toUpperCase())
+                    .replaceAll("_", " ")
+                }}
+              </mat-option>
+            </ng-container>
+            <ng-template #defaultOperator>
+              <mat-option value="equals">
+                Equals
+              </mat-option>
+            </ng-template>
+          </mat-select>
+          <div class="diamond"></div>
+        </mat-form-field>
+
+        <span
+          *ngIf="property[i] && properties[property[i]].type != 'date'"
+          [inputPlacer]="properties[property[i]]"
           [(ngModel)]="value[i]"
-          (focus)="dt1.open()"
-          [owlDateTime]="dt1"
-          [owlDateTimeTrigger]="dt1"
-          placeholder="Date Time"
-          selectMode="range"
-        />
-        <owl-date-time #dt1></owl-date-time>
-        <mat-hint *ngIf="schema.description">{{ properties[property[i]].description }}</mat-hint>
-      </mat-form-field>
-      <mat-form-field *ngIf="!property[i]" (click)="$event.stopPropagation()">
-        <input matInput type="text" placeholder="Enter a value" />
-      </mat-form-field>
-      <button color="warn" mat-button (click)="removeAdvancedFilter(i)">
+          (click)="$event.stopPropagation()"
+          class="value"
+        ></span>
+        <mat-form-field
+          *ngIf="property[i] && properties[property[i]].type == 'date'"
+          (click)="$event.stopPropagation()"
+          class="value"
+        >
+          <mat-label>{{
+            properties[property[i]].title || properties[property[i]].$name
+          }}</mat-label>
+          <input
+            matInput
+            type="datetime"
+            [(ngModel)]="value[i]"
+            (focus)="dt1.open()"
+            [owlDateTime]="dt1"
+            [owlDateTimeTrigger]="dt1"
+            placeholder="Date Time"
+            selectMode="range"
+          />
+          <owl-date-time #dt1></owl-date-time>
+          <mat-hint *ngIf="schema.description">{{ properties[property[i]].description }}</mat-hint>
+        </mat-form-field>
+        <mat-form-field *ngIf="!property[i]" (click)="$event.stopPropagation()" class="value">
+          <input matInput type="text" placeholder="Enter a value" />
+        </mat-form-field>
+      </div>
+      <button color="warn" mat-button (click)="removeBasicFilter(i)">
         <mat-icon>
-          delete
+          remove
         </mat-icon>
       </button>
     </div>
-    <div class="add-advanced-filter-container">
-      <button color="primary" mat-button (click)="addAdvancedFilter()">
+    <div class="add-basic-filter-container">
+      <button color="primary" mat-button (click)="addBasicFilter()">
         Add filter
         <mat-icon>add</mat-icon>
       </button>
     </div>
   </ng-container>
-  <ng-container *ngIf="currentTabIndex == 2">
+  <ng-container *ngIf="currentTabIndex == 1">
     <div class="tab-content">
       <code-editor
         placeholder="MongoDB Filter"
@@ -140,7 +133,7 @@
     </div>
     <p class="mat-error" *ngIf="errorMessage">{{ errorMessage }}</p>
   </ng-container>
-  <ng-container *ngIf="currentTabIndex == 3">
+  <ng-container *ngIf="currentTabIndex == 2">
     <div class="tab-content">
       <code-editor
         placeholder="Expression Filter"

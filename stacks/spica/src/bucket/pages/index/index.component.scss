@@ -51,24 +51,23 @@
       }
     }
 
-    div.actions {
-      max-width: 100%;
-      align-self: flex-end;
-      overflow-x: scroll;
+    
+  }
 
-      -ms-overflow-style: none; /* Internet Explorer 10+ */
-      scrollbar-width: none; /* Firefox */
-      &::-webkit-scrollbar {
-        display: none; /* Safari and Chrome */
-      }
-    }
+  div.actions-line{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
   }
   ::ng-deep div.monaco-editor {
     display: none;
   }
   div.data-guide {
-    display: flex;
-    align-items: flex-start;
+    margin: 30px;
+    margin-top: -85px;
+
     a,
     button {
       border-color: var(--primary-400);
@@ -161,12 +160,7 @@
       }
     }
     mat-card {
-      display: inline-block;
-      width: calc(100% - 60px);
-      margin: 30px;
-      margin-top: -85px;
       overflow: auto;
-
       table {
         min-width: 100%;
         width: max-content;
