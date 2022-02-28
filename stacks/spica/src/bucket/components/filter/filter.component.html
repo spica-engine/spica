@@ -36,7 +36,7 @@
               {{ propertyKv.value.title || propertyKv.key }}
             </mat-option>
           </mat-select>
-          <div class="diamond"></div>
+          <div class="separator"></div>
         </mat-form-field>
         <mat-form-field (click)="$event.stopPropagation()" class="operator">
           <mat-select placeholder="Select an operator" [(ngModel)]="selectedOperator[i]">
@@ -60,7 +60,7 @@
               </mat-option>
             </ng-template>
           </mat-select>
-          <div class="diamond"></div>
+          <div class="separator"></div>
         </mat-form-field>
 
         <span
