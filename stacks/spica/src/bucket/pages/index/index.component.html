@@ -45,22 +45,22 @@
           />
         </mat-form-field>
         <button
-            mat-button
-            [matMenuTriggerFor]="filterMenu"
-            [color]="filterer.active ? 'accent' : ''"
-          >
-            <mat-icon>filter_list</mat-icon>
-            Filter
-            <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
-              <bucket-filter
-                (keydown.tab)="$event.stopPropagation()"
-                #filterer
-                [filter]="filter"
-                [schema]="schema"
-                (filterChange)="searchValue = ''; onFilterChange($event ? $event : {})"
-              ></bucket-filter>
-            </mat-menu>
-          </button>
+          mat-button
+          [matMenuTriggerFor]="filterMenu"
+          [color]="filterer.active ? 'accent' : ''"
+        >
+          <mat-icon>filter_list</mat-icon>
+          Filter
+          <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
+            <bucket-filter
+              (keydown.tab)="$event.stopPropagation()"
+              #filterer
+              [filter]="filter"
+              [schema]="schema"
+              (filterChange)="searchValue = ''; onFilterChange($event ? $event : {})"
+            ></bucket-filter>
+          </mat-menu>
+        </button>
       </div>
       <div class="actions">
         <button
@@ -98,7 +98,6 @@
           <mat-icon>refresh</mat-icon>
           Refresh
         </button>
-        
 
         <button mat-button [matMenuTriggerFor]="propertiesMenu">
           <mat-icon>view_column</mat-icon>

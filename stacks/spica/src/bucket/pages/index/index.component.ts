@@ -263,7 +263,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
         return response.data;
       }),
-      tap(entries => (this.copyEntries = JSON.parse(JSON.stringify(entries)))),
+      tap(entries => (this.copyEntries = JSON.parse(JSON.stringify(entries))))
     );
   }
 

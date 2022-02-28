@@ -35,6 +35,9 @@
     justify-content: space-between;
 
     > div.inputs {
+      > * {
+        margin-right: 5px;
+      }
       position: relative;
       display: flex;
       align-items: center;
@@ -60,19 +63,20 @@
       > mat-form-field {
         div.separator {
           height: 32px;
-          min-width: 14px;
+          min-width: 8px;
           border-bottom: 2px solid var(--primary-text);
           position: absolute;
-          right: -20px;
+          right: -17px;
           top: -10px;
           z-index: 1000;
-          border-radius: 3px;
+          border-radius: 0px;
         }
       }
     }
 
     > button {
       flex: 1;
+      margin-top: -10px;
     }
   }
 
