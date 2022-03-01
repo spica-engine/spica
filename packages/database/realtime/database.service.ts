@@ -10,20 +10,20 @@ export class RealtimeDatabaseService {
   constructor(private database: DatabaseService) {}
 
   private changeStreams = new Map<string, ChangeStream>();
-  private getChangeStream(name: string) {
-    if (this.changeStreams.has(name)) {
-      return this.changeStreams.get(name);
+  private getChangeStream(coll: string) {
+    if (this.changeStreams.has(coll)) {
+      return this.changeStreams.get(coll);
     }
 
-    const changeStream = this.database.collection(name).watch([], {fullDocument: "updateLookup"});
-    this.changeStreams.set(name, changeStream);
+    const changeStream = this.database.collection(coll).watch([], {fullDocument: "updateLookup"});
+    this.changeStreams.set(coll, changeStream);
 
     return changeStream;
   }
 
   private emitters = new Map<string, {value: Emitter<any>; listenerCount: number}>();
-  private getEmitter(name: string, options: FindOptions<any>) {
-    let emitterName = this.findEmitterName(name, options);
+  private getEmitter(coll: string, options: FindOptions<any>) {
+    let emitterName = this.findEmitterName(coll, options);
 
     if (emitterName) {
       const emitter = this.emitters.get(emitterName);
@@ -31,25 +31,25 @@ export class RealtimeDatabaseService {
       return emitter.value;
     }
 
-    const changeStream = this.getChangeStream(name);
+    const changeStream = this.getChangeStream(coll);
     const emitter = {
-      value: new Emitter(this.database.collection(name), changeStream, options),
+      value: new Emitter(this.database.collection(coll), changeStream, options),
       listenerCount: 1
     };
 
-    emitterName = this.getUniqueEmitterName(name, options);
+    emitterName = this.getUniqueEmitterName(coll, options);
     this.emitters.set(emitterName, emitter);
 
     return emitter.value;
   }
 
-  private findEmitterName(name: string, options: FindOptions<any>) {
+  private findEmitterName(coll: string, options: FindOptions<any>) {
     for (const key of this.emitters.keys()) {
-      const emitterFilter = key.includes(name) ? JSON.parse(key.replace(name + "_", "")) : false;
+      const emitterOptions = key.includes(coll) ? JSON.parse(key.replace(coll + "_", "")) : false;
 
       // we have to lose special types like ObjectId, Date in this options in order to compare it with emitterFilter correctly
       const pureOptions = JSON.parse(JSON.stringify(options));
-      if (emitterFilter && isEqual(emitterFilter, pureOptions)) {
+      if (emitterOptions && isEqual(emitterOptions, pureOptions)) {
         return key;
       }
     }
@@ -57,12 +57,12 @@ export class RealtimeDatabaseService {
     return undefined;
   }
 
-  removeEmitter(name: string, options: FindOptions<any>) {
-    const emitterName = this.findEmitterName(name, options);
+  removeEmitter(coll: string, options: FindOptions<any>) {
+    const emitterName = this.findEmitterName(coll, options);
 
     if (!emitterName) {
       return console.warn(
-        `Connection has already been closed for collection '${name}' with options '${JSON.stringify(
+        `Connection has already been closed for collection '${coll}' with options '${JSON.stringify(
           options
         )}'.`
       );
@@ -89,14 +89,14 @@ export class RealtimeDatabaseService {
     }
   }
 
-  getUniqueEmitterName(name: string, options: FindOptions<any>) {
-    return `${name}_${JSON.stringify(options)}`;
+  getUniqueEmitterName(coll: string, options: FindOptions<any>) {
+    return `${coll}_${JSON.stringify(options)}`;
   }
 
   find<T extends Document = any>(
-    name: string,
+    coll: string,
     options: FindOptions<T> = {}
   ): Observable<StreamChunk<T>> {
-    return this.getEmitter(name, options).getObservable();
+    return this.getEmitter(coll, options).getObservable();
   }
 }
