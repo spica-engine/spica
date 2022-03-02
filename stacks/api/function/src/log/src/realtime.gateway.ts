@@ -52,7 +52,8 @@ export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async prepareOptions(client, req) {
     const options: any = {};
 
-    if (req.query.has("functions")) {
+    if (req.
+        ("functions")) {
       options.filter = {
         function: {
           $in: req.query.getAll("functions")
@@ -73,10 +74,6 @@ export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
         $gte: begin
       }
     };
-
-    if (req.query.has("end")) {
-      options.filter.created_at.$lt = new Date(req.query.get("end"));
-    }
 
     if (req.query.has("sort")) {
       try {
