@@ -52,8 +52,7 @@ export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async prepareOptions(client, req) {
     const options: any = {};
 
-    if (req.
-        ("functions")) {
+    if (req.query.has("functions")) {
       options.filter = {
         function: {
           $in: req.query.getAll("functions")
