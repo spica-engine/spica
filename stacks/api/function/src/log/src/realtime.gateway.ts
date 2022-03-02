@@ -61,6 +61,11 @@ export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     const begin = req.query.has("begin") ? new Date(req.query.get("begin")) : new Date();
+    // 'new Date' adds current miliseconds if the given parameter(req.query.get("begin") for this case) missing miliseconds
+    begin.setMilliseconds(0);
+    // we should apply this manipulation to the request object too,
+    // in order to find it on change streams when disconnection
+    req.query.set("begin", begin);
 
     options.filter = {
       ...options.filter,
