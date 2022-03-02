@@ -82,7 +82,6 @@ export class RealtimeDatabaseService {
 
       if (!streamListenersRemain) {
         const changeStream = this.changeStreams.get(collName);
-        changeStream.unpipe();
         changeStream.close();
         this.changeStreams.delete(collName);
       }
