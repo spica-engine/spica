@@ -5,12 +5,14 @@ import {
   Command,
   CreateCommandParameters
 } from "@caporal/core";
-import * as docker from "dockerode";
 import * as getport from "get-port";
 import * as open from "open";
 import {Stream} from "stream";
 import {spin} from "../../console";
 import {projectName} from "../../validator";
+import * as path from "path";
+import * as fs from "fs";
+import {DockerMachine} from "../../project";
 
 function streamToBuffer(stream: Stream): Promise<Buffer> {
   return new Promise(resolve => {
@@ -27,37 +29,49 @@ function streamToBuffer(stream: Stream): Promise<Buffer> {
   });
 }
 
-export class ImageNotFoundError extends Error {
-  constructor(image: string, tag: string) {
-    super(`Could not find the image ${image}:${tag}.`);
-  }
-}
-
-async function create({args: cmdArgs, options, ddash}: ActionParameters) {
+async function create({args: cmdArgs, options}: ActionParameters) {
   const {name}: {name?: string} = cmdArgs;
 
-  const machine = new docker();
+  const machine = new DockerMachine();
 
   const networkName = `${name}-network`,
     databaseName = `${name}-db`,
     port = await getport({port: options.port as number}),
-    publicHost = options.publicUrl ? options.publicUrl : `http://localhost:${port}`;
+    publicHost = `http://localhost:${port}`;
 
-  if (!options.publicUrl && options.port.toString() != port.toString() && options.port != 4500) {
+  if (options.port.toString() != port.toString() && options.port != 4500) {
     console.info(`Port ${options.port} already in use, the port ${port} will be used instead.`);
   }
 
-  let args = ddash.map(r => r.toString());
+  let identifier = "spica";
+  let password = "spica";
+  let args = [];
+  if (options.apiOptions) {
+    const filename = path.resolve(options.apiOptions as string);
+    const rawFile = fs.readFileSync(filename, {encoding: "utf8"});
+
+    let apiOptions = {};
+    try {
+      apiOptions = JSON.parse(rawFile);
+      identifier = apiOptions["passport-default-identity-identifier"] || identifier;
+      password = apiOptions["passport-default-identity-password"] || password;
+    } catch (error) {
+      throw Error(`Error while parsing api-options file. ${error}`);
+    }
+
+    for (const [key, value] of Object.entries(apiOptions)) {
+      args.push(`--${key}=${value}`);
+    }
+  }
 
   args = [
     ...args,
-    `--port=80`,
-    `--function-api-url=http://localhost`,
+    // If user defines some of these values in the apiOptions file, they will be overwriten.
+    // We should explain this behavior to users on the documentation or somewhere else.
     `--database-name=${name}`,
     `--database-replica-set=${name}`,
     `--database-uri="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`,
     `--public-url=${publicHost}/api`,
-    `--passport-password=${name}`,
     `--passport-secret=${name}`,
     `--persistent-path=/var/data`
   ];
@@ -105,29 +119,6 @@ async function create({args: cmdArgs, options, ddash}: ActionParameters) {
     });
   }
 
-  async function doesImageExist(image: string, tag: string) {
-    const images = await machine.listImages({
-      filters: JSON.stringify({reference: [`${image}:${tag}`]})
-    });
-    return images.length > 0;
-  }
-
-  function pullImage(image: string, tag: string) {
-    return new Promise((resolve, reject) =>
-      machine.pull(`${image}:${tag}`, {}, function(err, stream) {
-        if (err) {
-          if (err.message && err.message.indexOf(`manifest for ${image}`)) {
-            reject(new ImageNotFoundError(image, tag));
-          } else {
-            reject(err);
-          }
-        } else {
-          machine.modem.followProgress(stream, resolve);
-        }
-      })
-    );
-  }
-
   await spin({
     text: `Pulling images.`,
     op: async spinner => {
@@ -153,7 +144,7 @@ async function create({args: cmdArgs, options, ddash}: ActionParameters) {
       const imagesToPull: typeof images = [];
 
       for (const image of images) {
-        const exists = await doesImageExist(image.image, image.tag);
+        const exists = await machine.doesImageExist(image.image, image.tag);
         if (exists && options.imagePullPolicy == "if-not-present") {
           continue;
         }
@@ -168,13 +159,13 @@ async function create({args: cmdArgs, options, ddash}: ActionParameters) {
       }
       return Promise.all(
         imagesToPull.map(image =>
-          pullImage(image.image, image.tag).then(() => increasePulledCount())
+          machine.pullImage(image.image, image.tag).then(() => increasePulledCount())
         )
       );
     }
   });
 
-  const network: docker.Network = await spin({
+  const network = await spin({
     text: `Creating a network named ${networkName}.`,
     op: machine.createNetwork({
       Name: networkName,
@@ -429,8 +420,8 @@ async function create({args: cmdArgs, options, ddash}: ActionParameters) {
 Spica ${name} is serving on ${publicHost}.
 Open your browser on ${publicHost} to login.
 
-Identitifer: spica
-Password: ${name}
+Identitifer: ${identifier}
+Password: ${password}
   `);
 
   if (options.open) {
@@ -450,9 +441,6 @@ export default function({createCommand}: CreateCommandParameters): Command {
         validator: CaporalValidator.NUMBER
       }
     )
-    .option("--public-url", "Publicly accessible url of the project.", {
-      validator: CaporalValidator.STRING
-    })
     .option("--image-version", "Version of the spica to run.", {
       default: "latest",
       validator: CaporalValidator.STRING
@@ -483,5 +471,12 @@ export default function({createCommand}: CreateCommandParameters): Command {
       default: "1",
       validator: CaporalValidator.NUMBER
     })
+    .option(
+      "--api-options",
+      "Absolute file path that contains api key options as key value in JSON format.",
+      {
+        validator: CaporalValidator.STRING
+      }
+    )
     .action((create as unknown) as Action);
 }

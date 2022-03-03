@@ -1,5 +1,15 @@
+## v0.9.17 (2022-02-22)
+
+* perf(bucket): improve pagination performance and enalbe allowDiskUse option ([c879910db](https://github.com/spica-engine/spica/commit/c879910db))
+* feat(bucket): introduce length macro to the expressions ([ac1409baf](https://github.com/spica-engine/spica/commit/ac1409baf))
+* chore(passport): update dependecy injection of strategies ([748394a82](https://github.com/spica-engine/spica/commit/748394a82))
+* fix(realtime): move unpipe call to the database service ([830186483](https://github.com/spica-engine/spica/commit/830186483))
+* style: colored instance usages ([ea4de7f38](https://github.com/spica-engine/spica/commit/ea4de7f38))
+* feat(cli): api options, context remove and project set commands ([86bb9be8d](https://github.com/spica-engine/spica/commit/86bb9be8d))
+
 ## v0.9.16 (2022-02-09)
 
+* docs: update changelog for v0.9.16 ([4133168c2](https://github.com/spica-engine/spica/commit/4133168c2))
 * fix(devkit): close connection logic, refactor methods of @spica-devkit/bucket realtime connection ([4339ac6a9](https://github.com/spica-engine/spica/commit/4339ac6a9))
 * fix(storage): sort button for storage picker ([f563290ae](https://github.com/spica-engine/spica/commit/f563290ae))
 * fix(function): use 'json' method for returning response on dependency install ([10a039f00](https://github.com/spica-engine/spica/commit/10a039f00))

@@ -3,6 +3,7 @@ import axios from "axios";
 import {IdentityOptions} from "@spica-server/passport/identity";
 
 export const PASSPORT_OPTIONS = Symbol.for("PASSPORT_OPTIONS");
+export const STRATEGIES = Symbol.for("STRATEGIES");
 
 export interface PassportOptions extends IdentityOptions {
   publicUrl: string;
