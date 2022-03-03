@@ -1,5 +1,5 @@
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
-import {FormsModule} from "@angular/forms";
+import {FormsModule, NgModel} from "@angular/forms";
 import {MatBadgeModule} from "@angular/material/badge";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
@@ -213,8 +213,8 @@ describe("IndexComponent", () => {
       fixture.detectChanges();
 
       expect(
-        fixture.debugElement.query(By.css("mat-toolbar > div.actions >button:first-of-type"))
-          .nativeElement.textContent
+        fixture.debugElement.query(By.css("div.actions >button:first-of-type")).nativeElement
+          .textContent
       ).toContain("refresh");
 
       expect(bucketService.getBucket).toHaveBeenCalledTimes(1);
@@ -240,9 +240,26 @@ describe("IndexComponent", () => {
     });
 
     describe("language", () => {
+      beforeEach(() => {
+        bucket.next({
+          _id: "1",
+          primary: "test",
+          properties: {
+            test: {
+              title: "test",
+              type: "string",
+              options: {
+                position: "bottom",
+                translate: true
+              }
+            }
+          }
+        });
+        fixture.detectChanges();
+      });
       it("should render languages", () => {
         fixture.debugElement
-          .query(By.css("mat-toolbar > div.actions > button:nth-of-type(5)"))
+          .query(By.css("div.actions > button:nth-of-type(4)"))
           .nativeElement.click();
         fixture.detectChanges();
         const options = document.body.querySelectorAll(".mat-menu-content .mat-menu-item");
@@ -253,7 +270,7 @@ describe("IndexComponent", () => {
       it("should change language", () => {
         bucketDataService.find.calls.reset();
         fixture.debugElement
-          .query(By.css("mat-toolbar > div.actions > button:nth-of-type(5)"))
+          .query(By.css("div.actions > button:nth-of-type(4)"))
           .nativeElement.click();
         fixture.detectChanges();
         document.body.querySelector<HTMLButtonElement>(".mat-menu-content .mat-menu-item").click();
@@ -273,7 +290,7 @@ describe("IndexComponent", () => {
     describe("columns", () => {
       it("should render", () => {
         fixture.debugElement
-          .query(By.css("mat-toolbar > div.actions > button:nth-of-type(4)"))
+          .query(By.css("div.actions > button:nth-of-type(3)"))
           .nativeElement.click();
         fixture.detectChanges();
         expect(
@@ -327,7 +344,7 @@ describe("IndexComponent", () => {
         });
         fixture.detectChanges();
         fixture.debugElement
-          .query(By.css("mat-toolbar > div.actions > button:nth-of-type(3)"))
+          .query(By.css("div.actions > button:nth-of-type(2)"))
           .nativeElement.click();
         fixture.detectChanges();
 
@@ -342,7 +359,7 @@ describe("IndexComponent", () => {
         fixture.componentInstance.displayedProperties = [];
 
         fixture.debugElement
-          .query(By.css("mat-toolbar > div.actions > button:nth-of-type(4)"))
+          .query(By.css("div.actions > button:nth-of-type(3)"))
           .nativeElement.click();
         fixture.detectChanges();
 
@@ -368,7 +385,7 @@ describe("IndexComponent", () => {
     it("should refresh", () => {
       bucketDataService.find.calls.reset();
       fixture.debugElement
-        .query(By.css("mat-toolbar > div.actions > button:nth-of-type(2)"))
+        .query(By.css("div.actions > button:nth-of-type(2)"))
         .nativeElement.click();
       fixture.detectChanges();
       expect(bucketDataService.find).toHaveBeenCalledTimes(1);
@@ -377,7 +394,7 @@ describe("IndexComponent", () => {
     it("should show scheduled", () => {
       bucketDataService.find.calls.reset();
       fixture.debugElement
-        .query(By.css("mat-toolbar > div.actions > button:nth-of-type(6)"))
+        .query(By.css("div.actions > button:nth-of-type(4)"))
         .nativeElement.click();
       fixture.detectChanges();
       expect(bucketDataService.find).toHaveBeenCalledTimes(1);
@@ -386,13 +403,13 @@ describe("IndexComponent", () => {
 
     it("should show guide button", () => {
       expect(
-        fixture.debugElement.query(By.css("mat-toolbar > div.actions >button:nth-of-type(6)"))
-          .nativeElement
+        fixture.debugElement.query(By.css("div.actions >button:nth-of-type(4)")).nativeElement
       ).toBeTruthy();
     });
+
     it("should show guide panel when clicked guide button", () => {
       fixture.debugElement
-        .query(By.css("mat-toolbar > div.actions > button:nth-of-type(7)"))
+        .query(By.css("div.actions > button:nth-of-type(5)"))
         .nativeElement.click();
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css("mat-card.hide"))).toBeNull();
@@ -495,9 +512,8 @@ describe("IndexComponent", () => {
         fixture.componentInstance.selectedItems.push({_id: "1", test: "123"});
         fixture.detectChanges();
         expect(
-          fixture.debugElement.nativeElement.querySelector(
-            "mat-toolbar > div.actions > button:first-of-type"
-          ).textContent
+          fixture.debugElement.nativeElement.querySelector("div.actions > button:first-of-type")
+            .textContent
         ).toContain("delete");
       });
     });
@@ -750,6 +766,59 @@ describe("IndexComponent", () => {
         ).textContent
       ).toBe("remove_red_eye");
     });
+  });
+
+  describe("filter", () => {
+    beforeEach(() => {
+      bucket.next({
+        _id: "1",
+        primary: "test",
+        properties: {
+          test: {
+            title: "test",
+            type: "string",
+            options: {
+              position: "bottom"
+            }
+          }
+        }
+      });
+      fixture.detectChanges();
+    });
+
+    it("should navigate the page after filter input has been filled", fakeAsync(() => {
+      const searchArea = fixture.debugElement
+        .query(By.css("div.filters > mat-form-field input"))
+        .injector.get(NgModel);
+      searchArea.control.setValue("hey");
+      fixture.detectChanges();
+
+      expect(navigateSpy).toHaveBeenCalledTimes(0);
+
+      tick(1000);
+
+      expect(navigateSpy).toHaveBeenCalledOnceWith([], {
+        queryParams: {
+          filter: JSON.stringify({
+            $or: [
+              {
+                test: {
+                  $regex: "hey",
+                  $options: "i"
+                }
+              }
+            ]
+          }),
+          paginator: JSON.stringify({
+            pageSize: fixture.componentInstance.paginator.pageSize,
+            pageIndex: fixture.componentInstance.paginator.pageIndex,
+            length: fixture.componentInstance.paginator.length
+          }),
+          sort: JSON.stringify(fixture.componentInstance.sort),
+          language: JSON.stringify(fixture.componentInstance.language)
+        }
+      });
+    }));
   });
 
   describe("sort", () => {

@@ -102,7 +102,6 @@ export class IndexComponent implements OnInit, OnDestroy {
   @ViewChild(FilterComponent) bucketFilter: FilterComponent;
 
   displayTranslateButton = false;
-  // displayScheduleButton = false;
 
   constructor(
     private bs: BucketService,
@@ -269,7 +268,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   hasTranslatableProp(schema) {
     let has = false;
-    for (const [k, v] of Object.entries(schema.properties) as any) {
+    for (const v of Object.values(schema.properties) as any) {
       if (v.options && v.options.translate) {
         has = true;
         break;
@@ -278,13 +277,6 @@ export class IndexComponent implements OnInit, OnDestroy {
 
     return has;
   }
-
-  // hasSchedulableData(documents) {
-  //   this.bds
-  //     .find(this.bucketId, {limit: 1, schedule: true})
-  //     .toPromise()
-  //     .then(data => (this.displayScheduleButton = data.meta.total > 0));
-  // }
 
   ngOnDestroy() {
     this.dispose.next();

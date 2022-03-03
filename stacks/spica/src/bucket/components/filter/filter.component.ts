@@ -96,7 +96,6 @@ export class FilterComponent implements OnChanges {
       for (const [key, value] of Object.entries(this.schema.properties)) {
         if (this.resolver.getOriginByType(value.type)) {
           this.properties[key] = value;
-          console.log(this.typeMappings, value.type);
           if (this.typeMappings.has(value.type)) {
             this.properties[key] = {...value, type: this.typeMappings.get(value.type)};
           }
@@ -153,7 +152,7 @@ export class FilterComponent implements OnChanges {
 
         break;
       // MONGODB
-      case 2:
+      case 1:
         try {
           this.filter = JSON.parse(this.value[0] as any);
         } catch (error) {
@@ -177,7 +176,6 @@ export class FilterComponent implements OnChanges {
         break;
     }
 
-    console.log(this.filter);
     this.filterChange.emit(this.filter);
   }
 

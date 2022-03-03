@@ -127,47 +127,75 @@ describe("FilterComponent", () => {
     localStorage.removeItem(`bucket_objectid_expression_filter_history`);
   });
 
-  describe("Basic", () => {
-    beforeEach(() => {
-      // switch to the basic filter
-      fixture.debugElement
-        .query(By.css("div.labels > button:nth-of-type(1)"))
-        .nativeElement.click();
-      fixture.detectChanges();
-    });
+  describe("getTextSearchFilter", () => {
+    it("should get filter if schema has searchable properties", () => {
+      const schema = {
+        properties: {
+          title: {
+            type: "string"
+          },
+          description: {
+            type: "textarea"
+          },
+          banner: {
+            type: "richtext"
+          },
+          age: {
+            type: "number"
+          }
+        }
+      };
 
-    it("should search text in all string fields", () => {
-      fixture.componentInstance.value[0] = "bad_word";
-      fixture.componentInstance.apply();
+      const text = "hey";
 
-      expect(fixture.componentInstance.filter).toEqual({
+      const expression = fixture.componentInstance.getTextSearchFilter(text, schema);
+
+      expect(expression).toEqual({
         $or: [
           {
             title: {
-              $regex: "bad_word",
+              $regex: "hey",
               $options: "i"
             }
           },
           {
             description: {
-              $regex: "bad_word",
+              $regex: "hey",
+              $options: "i"
+            }
+          },
+          {
+            banner: {
+              $regex: "hey",
               $options: "i"
             }
           }
         ]
       });
     });
-  });
 
-  describe("Advanced", () => {
-    beforeEach(() => {
-      // switch to the advanced filter
-      fixture.debugElement
-        .query(By.css("div.labels > button:nth-of-type(2)"))
-        .nativeElement.click();
-      fixture.detectChanges();
+    it("should return empty filter if text is empty", () => {
+      const expression = fixture.componentInstance.getTextSearchFilter("", {});
+      expect(expression).toEqual({});
     });
 
+    it("should return empty filter if schema has no searchable property", () => {
+      const schema = {
+        properties: {
+          age: {
+            type: "number"
+          }
+        }
+      };
+
+      const text = "hey";
+
+      const expression = fixture.componentInstance.getTextSearchFilter(text, schema);
+      expect(expression).toEqual({});
+    });
+  });
+
+  describe("Basic", () => {
     describe("placer", () => {
       beforeEach(() => {
         fixture.componentInstance.property[0] = "test";
@@ -242,7 +270,7 @@ describe("FilterComponent", () => {
 
     it("should generate the filter with operator", () => {
       fixture.componentInstance.property[0] = "title";
-      fixture.componentInstance.selectedOperator[0] = "contains";
+      fixture.componentInstance.selectedOperator[0] = "includes";
       fixture.componentInstance.value[0] = "test1";
 
       fixture.componentInstance.apply();
@@ -306,7 +334,7 @@ describe("FilterComponent", () => {
 
     it("should create multiple filters", () => {
       fixture.componentInstance.property = ["title", "title"];
-      fixture.componentInstance.selectedOperator = ["contains", "not_equal"];
+      fixture.componentInstance.selectedOperator = ["includes", "not_equal"];
       fixture.componentInstance.value = ["dragon", "revenge of dragon"];
 
       fixture.componentInstance.apply();
@@ -333,14 +361,15 @@ describe("FilterComponent", () => {
     beforeEach(() => {
       // switch to the mongodb filter
       fixture.debugElement
-        .query(By.css("div.labels > button:nth-of-type(3)"))
+        .query(By.css("div.labels > button:nth-of-type(2)"))
         .nativeElement.click();
+      fixture.detectChanges();
     });
     it("should generate the mongodb filter, add it to the history", () => {
       fixture.componentInstance.value[0] = '{"test":"value"}';
-
       fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
       fixture.detectChanges();
+
       expect(fixture.componentInstance.filter).toEqual({test: "value"});
       expect(fixture.componentInstance.mongodbHistory).toEqual(['{"test":"value"}']);
 
@@ -379,7 +408,7 @@ describe("FilterComponent", () => {
   describe("Expression", () => {
     it("should generate the expression filter, add it to the history", () => {
       fixture.debugElement
-        .query(By.css("div.labels > button:nth-of-type(4)"))
+        .query(By.css("div.labels > button:nth-of-type(3)"))
         .nativeElement.click();
 
       fixture.componentInstance.value[0] = 'document.title == "test"';
@@ -403,12 +432,6 @@ describe("FilterComponent", () => {
     beforeEach(() => {
       fixture.componentInstance.resetInputs();
       fixture.componentInstance.filterChange.subscribe(changeSpy);
-
-      // switch to the advanced filter
-      fixture.debugElement
-        .query(By.css("div.labels > button:nth-of-type(2)"))
-        .nativeElement.click();
-      fixture.detectChanges();
 
       fixture.componentInstance.property[0] = "title";
       fixture.componentInstance.selectedOperator[0] = "equals";
