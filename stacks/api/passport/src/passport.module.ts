@@ -5,7 +5,13 @@ import {IdentityModule} from "@spica-server/passport/identity";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {PreferenceService} from "@spica-server/preference/services";
 import {GuardService} from "./guard.service";
-import {PassportOptions, PASSPORT_OPTIONS, RequestService, REQUEST_SERVICE} from "./options";
+import {
+  PassportOptions,
+  PASSPORT_OPTIONS,
+  RequestService,
+  REQUEST_SERVICE,
+  STRATEGIES
+} from "./options";
 import {PassportController} from "./passport.controller";
 import {SamlService} from "./strategy/services/saml.service";
 import {StrategyController} from "./strategy/strategy.controller";
@@ -68,8 +74,16 @@ export class PassportModule {
           useClass: RequestService
         },
         StrategyService,
-        SamlService,
-        OAuthService,
+        {
+          provide: STRATEGIES,
+          useFactory: (ser, ops, req) => {
+            const strategies = [new OAuthService(ser, ops, req), new SamlService(ser, ops)];
+            return {
+              find: (type: string) => strategies.find(s => s.type == type)
+            };
+          },
+          inject: [StrategyService, PASSPORT_OPTIONS, REQUEST_SERVICE]
+        },
         {provide: PASSPORT_OPTIONS, useValue: options}
       ]
     };

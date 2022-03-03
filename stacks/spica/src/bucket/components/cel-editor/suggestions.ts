@@ -27,7 +27,7 @@ const macros = [
   },
   {
     label: "some",
-    detail: "(method) some(target: unknown | any[], compare: unknown | any[]): boolean",
+    detail: "(method) some(target: unknown | any[], compare: unknown | any[]): boolean",
     description: {
       value: `Returns true if **target** includes at least one of **compare**\n 
 *@param* **target** The array which includes one of **compare** item at least.\n
@@ -81,6 +81,15 @@ const macros = [
 `
     },
     text: "regex(document$1, '${2:regular_expression}', '${3:gm}')"
+  },
+  {
+    label: "length",
+    detail: "(method) length(fieldPath: unknown): number",
+    description: {
+      value: `Returns length of the **fieldPath**.\n
+*@param* **fieldPath** - The path that represents the actual value on the document or auth. Actual value must be array.`
+    },
+    text: "length(document$0)"
   }
 ];
 

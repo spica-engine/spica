@@ -54,4 +54,10 @@ export interface StrategyTypeService {
   ): {url: string; state: string} | Promise<{url: string; state: string}>;
 
   assert(strategy: Strategy, body?: unknown, code?: string): Promise<any>;
+
+  createMetadata?(id: String): any;
+}
+
+export interface StrategyTypeServices {
+  find: (type: string) => StrategyTypeService;
 }
