@@ -2,7 +2,7 @@ import axios, {AxiosInstance} from "axios";
 import {context} from "./context";
 import {config} from "./config";
 
-export namespace machinery {
+export namespace httpService {
   export type Client = {
     [P in keyof Pick<AxiosInstance, "get" | "delete" | "head" | "post" | "patch" | "put">]: <R>(
       ...parameters: Parameters<AxiosInstance[P]>
@@ -27,7 +27,7 @@ export namespace machinery {
         if (!error.response) {
           return Promise.reject(error);
         }
-        return error.response.data;
+        return Promise.reject(error.response.data);
       }
     );
     instance.defaults.headers.common["Authorization"] = authorization;

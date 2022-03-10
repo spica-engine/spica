@@ -2,11 +2,11 @@ import {ActionParameters, CaporalValidator, Command, CreateCommandParameters} fr
 import * as fs from "fs";
 import * as path from "path";
 import * as YAML from "yaml";
-import {machinery} from "../machinery";
-import {formatFailureStatus, isFailureStatus} from "../status";
+import {httpService} from "../../http";
+import {formatFailureStatus, isFailureStatus} from "../../status";
 
 async function _delete({options}: ActionParameters) {
-  const machineryClient = await machinery.createFromConfig();
+  const machineryClient = await httpService.createFromConfig();
 
   const filename = path.normalize(options.filename as string);
   const documents = YAML.parseAllDocuments(fs.readFileSync(filename).toString());

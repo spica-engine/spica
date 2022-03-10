@@ -1,11 +1,11 @@
 import {ActionParameters, Command, CreateCommandParameters} from "@caporal/core";
 import * as jsonpath from "jsonpath";
 import * as duration from "pretty-ms";
-import {machinery} from "../machinery";
-import {formatFailureStatus, isFailureStatus} from "../status";
+import {httpService} from "../../http";
+import {formatFailureStatus, isFailureStatus} from "../../status";
 
 async function get({args}: ActionParameters) {
-  const machineryClient = await machinery.createFromConfig();
+  const machineryClient = await httpService.createFromConfig();
   const groupList = await machineryClient.get<any>("/apis");
   const kind = args.kind as string;
 
@@ -45,7 +45,7 @@ async function get({args}: ActionParameters) {
   }
 }
 
-async function printTable(client: machinery.Client, groupVersion, resource) {
+async function printTable(client: httpService.Client, groupVersion, resource) {
   const table = await client.get<any>(`/apis/${groupVersion}/${resource.plural}`, {
     headers: {
       Accept: "application/json;as=Table;v=1"

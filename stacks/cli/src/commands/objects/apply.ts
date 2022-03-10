@@ -8,20 +8,20 @@ import {
 import * as fs from "fs";
 import * as path from "path";
 import * as YAML from "yaml";
-import {machinery} from "../machinery";
+import {httpService} from "../../http";
 import {
   formatFailureStatus,
   formatValidationErrors,
   isFailureStatus,
   isValidationError
-} from "../status";
+} from "../../status";
 
 async function apply({options}: ActionParameters) {
   const filename = path.relative(process.cwd(), options.filename as string);
   const rawDocument = fs.readFileSync(filename).toString();
   const documents = YAML.parseAllDocuments(rawDocument);
 
-  const machineryClient = await machinery.createFromConfig();
+  const machineryClient = await httpService.createFromConfig();
 
   for (const document of documents) {
     const {apiVersion, kind, metadata, spec} = document.toJSON();
