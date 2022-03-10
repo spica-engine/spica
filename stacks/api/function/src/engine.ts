@@ -215,9 +215,10 @@ export class FunctionEngine implements OnModuleDestroy {
     const language = this.scheduler.languages.get(fn.language);
     return fs.promises
       .readFile(path.join(functionRoot, `index.${language.description.extension}`))
-      .then(b => b.toString()).catch(e => {
-        if(e.code == "ENOENT"){
-          return Promise.reject("Not Found")
+      .then(b => b.toString())
+      .catch(e => {
+        if (e.code == "ENOENT") {
+          return Promise.reject("Not Found");
         }
         throw Error(e);
       });

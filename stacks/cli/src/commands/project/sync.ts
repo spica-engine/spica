@@ -25,6 +25,8 @@ async function sync({
     .split(",")
     .map(m => m.trim());
 
+  const synchronizers = [];
+
   const fnSynchronizer = new FunctionSynchronizer(sourceService, targetService, {syncFnEnv});
   const fnSubModuleSynchronizers = await fnSynchronizer.initialize();
   synchronizers.push(fnSynchronizer);
@@ -54,10 +56,10 @@ async function sync({
         });
       } else {
         await synchronizer.synchronize();
-      console.log(`\n${synchronizer.getObjectName()} synchronization has been completed!`.toUpperCase())
-
+        console.log(
+          `\n${synchronizer.getObjectName()} synchronization has been completed!`.toUpperCase()
+        );
       }
-
     }
   }
 }
@@ -127,7 +129,7 @@ export class ObjectActionDecider {
     this.existingObjectIds = this.existingObjects.map(o => o[this.uniqueField]);
   }
 
-  getUpdateObjects() {
+  updates() {
     const updates = [];
     for (const existing of this.existingObjects) {
       const source = this.sourceObjects.find(
@@ -141,26 +143,43 @@ export class ObjectActionDecider {
     return updates;
   }
 
-  getInsertObjects() {
+  inserts() {
     return this.sourceObjects.filter(
       source => this.existingObjectIds.indexOf(source[this.uniqueField]) == -1
     );
   }
 
-  getDeleteObjects() {
+  deletes() {
     return this.targetObjects.filter(
       target => this.existingObjectIds.indexOf(target[this.uniqueField]) == -1
     );
   }
 }
 
-class FunctionSynchronizer implements ModuleSynchronizer {
-  moduleName = "function";
-  primaryField = "name";
+interface ModuleSynchronizer {
+  moduleName: string;
+  subModuleName?: string;
+  primaryField: string;
 
   inserts: any[];
   updates: any[];
   deletes: any[];
+
+  initialize(): Promise<ModuleSynchronizer[]>;
+
+  analyze(): Promise<{inserts: any[]; updates: any[]; deletes: any[]}>;
+  synchronize(): Promise<any>;
+
+  getObjectName(): string;
+}
+
+export class FunctionSynchronizer implements ModuleSynchronizer {
+  moduleName = "function";
+  primaryField = "name";
+
+  inserts = [];
+  updates = [];
+  deletes = [];
 
   constructor(
     private sourceService: httpService.Client,
@@ -212,9 +231,9 @@ class FunctionSynchronizer implements ModuleSynchronizer {
 
     const decider = new ObjectActionDecider(sourceFns, targetFns);
 
-    this.inserts = decider.getInsertObjects();
-    this.updates = decider.getUpdateObjects();
-    this.deletes = decider.getDeleteObjects();
+    this.inserts = decider.inserts();
+    this.updates = decider.updates();
+    this.deletes = decider.deletes();
 
     return {
       inserts: this.inserts,
@@ -266,7 +285,7 @@ class FunctionSynchronizer implements ModuleSynchronizer {
   }
 }
 
-class FunctionDependencySynchronizer implements ModuleSynchronizer {
+export class FunctionDependencySynchronizer implements ModuleSynchronizer {
   moduleName = "function";
   primaryField = "name";
 
@@ -308,9 +327,9 @@ class FunctionDependencySynchronizer implements ModuleSynchronizer {
 
     const decider = new ObjectActionDecider(sourceDeps, targetDeps, "name");
 
-    this.inserts = decider.getInsertObjects();
-    this.updates = decider.getUpdateObjects();
-    this.deletes = decider.getDeleteObjects();
+    this.inserts = decider.inserts();
+    this.updates = decider.updates();
+    this.deletes = decider.deletes();
 
     return {
       inserts: this.inserts,
@@ -358,13 +377,109 @@ class FunctionDependencySynchronizer implements ModuleSynchronizer {
   }
 }
 
-class FunctionIndexSynchronizer implements ModuleSynchronizer {
+// export class ModuleSynchronizerTest {
+//   private inserts = [];
+//   private updates = [];
+//   private deletes = [];
+
+//   constructor(
+//     private objectName: string,
+//     private path: string,
+//     private idField: string,
+//     private sourceService: httpService.Client,
+//     private targetService: httpService.Client,
+//     private subModuleInitializer?: (...args) => Promise<ModuleSynchronizer[]>,
+//     private applyOptionsBeforeComparison?: (
+//       sourceObjects,
+//       targetObjects
+//     ) => {sourceObjects: []; targetObjects: []}
+//   ) {}
+
+//   initialize = this.subModuleInitializer || Promise.resolve;
+
+//   async analyze() {
+//     console.log();
+//     let sourceObjects = await spin<any>({
+//       text: `Fetching ${this.objectName}(s) from source instance`,
+//       op: () => this.sourceService.get(this.path)
+//     });
+
+//     let targetObjects = await spin<any>({
+//       text: `Fetching ${this.objectName}(s) from target instance`,
+//       op: () => this.targetService.get(this.path)
+//     });
+
+//     if (typeof this.applyOptionsBeforeComparison == "function") {
+//       const modifiedObjects = this.applyOptionsBeforeComparison(sourceObjects, targetObjects);
+//       sourceObjects = modifiedObjects.sourceObjects;
+//       targetObjects = modifiedObjects.targetObjects;
+//     }
+
+//     const decider = new ObjectActionDecider(sourceObjects, targetObjects);
+
+//     this.inserts = decider.inserts();
+//     this.updates = decider.updates();
+//     this.deletes = decider.deletes();
+
+//     return {
+//       inserts: this.inserts,
+//       updates: this.updates,
+//       deletes: this.deletes
+//     };
+//   }
+
+//   async synchronize() {
+//     const insertPromises = this.inserts.map(object =>
+//       this.targetService.post(this.path, object).catch(e =>
+//         handleRejection({
+//           action: "insert",
+//           objectName: object,
+//           message: e.message,
+//           objectId: object[this.primaryField]
+//         })
+//       )
+//     );
+//     await spinUntilPromiseEnd(
+//       insertPromises,
+//       `Inserting ${this.objectName}(s) to the target instance`
+//     );
+
+//     const updatePromises = this.updates.map(object =>
+//       this.targetService.put(`${this.path}/${object._id}`, object).catch(e =>
+//         handleRejection({
+//           action: "update",
+//           objectName: object,
+//           message: e.message,
+//           objectId: object[this.primaryField]
+//         })
+//       )
+//     );
+//     await spinUntilPromiseEnd(
+//       updatePromises,
+//       `Updating ${this.objectName}(s) on the target instance`
+//     );
+
+//     const deletePromises = this.deletes.map(object =>
+//       this.targetService.delete(`${this.path}/${object._id}`).catch(e =>
+//         handleRejection({
+//           action: "delete",
+//           objectName: this.objectName,
+//           message: e.message,
+//           objectId: bucket.title
+//         })
+//       )
+//     );
+//     await spinUntilPromiseEnd(deletePromises, "Deleting bucket from the target instance");
+//   }
+// }
+
+export class FunctionIndexSynchronizer implements ModuleSynchronizer {
   moduleName = "function";
   primaryField = "name";
 
-  inserts: any[];
-  updates: any[] = [];
-  deletes: any[];
+  inserts = [];
+  updates = [];
+  deletes = [];
 
   constructor(
     private sourceService: httpService.Client,
@@ -412,9 +527,9 @@ class FunctionIndexSynchronizer implements ModuleSynchronizer {
 
     const decider = new ObjectActionDecider(sourceFnIndexes, targetFnIndexes);
 
-    this.inserts = decider.getInsertObjects();
-    this.updates = decider.getUpdateObjects();
-    this.deletes = decider.getDeleteObjects();
+    this.inserts = decider.inserts();
+    this.updates = decider.updates();
+    this.deletes = decider.deletes();
 
     return {
       inserts: this.inserts,
@@ -444,13 +559,13 @@ class FunctionIndexSynchronizer implements ModuleSynchronizer {
   }
 }
 
-class BucketSynchronizer implements ModuleSynchronizer {
+export class BucketSynchronizer implements ModuleSynchronizer {
   moduleName = "bucket";
   primaryField = "title";
 
-  inserts: any[];
-  updates: any[];
-  deletes: any[];
+  inserts = [];
+  updates = [];
+  deletes = [];
 
   constructor(
     private sourceService: httpService.Client,
@@ -475,9 +590,9 @@ class BucketSynchronizer implements ModuleSynchronizer {
 
     const decider = new ObjectActionDecider(sourceBuckets, targetBuckets);
 
-    this.inserts = decider.getInsertObjects();
-    this.updates = decider.getUpdateObjects();
-    this.deletes = decider.getDeleteObjects();
+    this.inserts = decider.inserts();
+    this.updates = decider.updates();
+    this.deletes = decider.deletes();
 
     return {
       inserts: this.inserts,
@@ -529,25 +644,6 @@ class BucketSynchronizer implements ModuleSynchronizer {
   }
 }
 
-interface ModuleSynchronizer {
-  moduleName: string;
-  subModuleName?: string;
-  primaryField: string;
-
-  inserts: any[];
-  updates: any[];
-  deletes: any[];
-
-  initialize(): Promise<ModuleSynchronizer[]>;
-
-  analyze(): Promise<{inserts: any[]; updates: any[]; deletes: any[]}>;
-  synchronize(): Promise<any>;
-
-  getObjectName(): string;
-}
-
-const synchronizers: ModuleSynchronizer[] = [];
-
 function printActions({inserts, updates, deletes, field, objectName}) {
   console.log();
   console.log(`----- ${objectName.toUpperCase()} -----`);
@@ -567,7 +663,7 @@ ${deletes.map(i => `- ${i[field]}`).join("\n")}`
   );
 }
 
-async function spinUntilPromiseEnd(promises: Promise<any>[], label: string, paralel = true) {
+function spinUntilPromiseEnd(promises: Promise<any>[], label: string, paralel = true) {
   if (!promises.length) {
     return;
   }
@@ -596,8 +692,6 @@ async function spinUntilPromiseEnd(promises: Promise<any>[], label: string, para
         progress = (100 / promises.length) * count;
         spinner.text = `${label} (%${Math.round(progress)})`;
       }
-
-      spinner.text = label;
     }
   });
 }
