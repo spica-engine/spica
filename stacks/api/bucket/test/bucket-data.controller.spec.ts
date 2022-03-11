@@ -50,8 +50,7 @@ describe("BucketDataController", () => {
   afterEach(() => app.close());
 
   describe("index", () => {
-    let bucket = {
-      _id: "",
+    let bucket: any = {
       title: "Persons",
       description: "Person bucket",
       icon: "view_stream",

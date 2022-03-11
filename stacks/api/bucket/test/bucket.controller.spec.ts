@@ -6,7 +6,7 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
 import {OBJECTID_STRING, OBJECT_ID, DATE_TIME} from "@spica-server/core/schema/formats";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
@@ -16,30 +16,8 @@ describe("BucketController", () => {
   let app: INestApplication;
   let req: Request;
 
-  const bucket = {
-    _id: "__skip__",
-    title: "New Bucket",
-    description: "Describe your new bucket",
-    icon: "view_stream",
-    primary: "title",
-    readOnly: false,
-    history: true,
-    acl: {write: "true==true", read: "true==true"},
-    properties: {
-      title: {
-        type: "string",
-        title: "title",
-        description: "Title of the row",
-        options: {position: "left"}
-      },
-      description: {
-        type: "textarea",
-        title: "description",
-        description: "Description of the row",
-        options: {position: "right"}
-      }
-    }
-  };
+  let bucket;
+  let bucket2;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -71,6 +49,50 @@ describe("BucketController", () => {
         return true;
       }
     });
+
+    bucket = {
+      _id: new ObjectId().toHexString(),
+      title: "New Bucket",
+      description: "Describe your new bucket",
+      icon: "view_stream",
+      primary: "title",
+      readOnly: false,
+      history: true,
+      acl: {write: "true==true", read: "true==true"},
+      properties: {
+        title: {
+          type: "string",
+          title: "title",
+          description: "Title of the row",
+          options: {position: "left"}
+        },
+        description: {
+          type: "textarea",
+          title: "description",
+          description: "Description of the row",
+          options: {position: "right"}
+        }
+      }
+    };
+
+    bucket2 = {
+      ...bucket,
+      _id: new ObjectId().toHexString(),
+      properties: {
+        name: {
+          type: "string",
+          title: "title",
+          description: "Title of the row",
+          options: {position: "left"}
+        },
+        age: {
+          type: "number",
+          title: "Age",
+          description: "Age of the row",
+          options: {position: "right"}
+        }
+      }
+    };
   });
 
   afterEach(() => app.close());
@@ -96,23 +118,7 @@ describe("BucketController", () => {
 
     it("should get all buckets", async () => {
       const {body: firstBucket} = await req.post("/bucket", bucket);
-      const {body: secondBucket} = await req.post("/bucket", {
-        ...bucket,
-        properties: {
-          name: {
-            type: "string",
-            title: "title",
-            description: "Title of the row",
-            options: {position: "left"}
-          },
-          age: {
-            type: "number",
-            title: "Age",
-            description: "Age of the row",
-            options: {position: "right"}
-          }
-        }
-      });
+      const {body: secondBucket} = await req.post("/bucket", bucket2);
 
       const {body: buckets} = await req.get("/bucket");
       expect(buckets.length).toBe(2);
@@ -129,6 +135,17 @@ describe("BucketController", () => {
 
       expect(buckets.length).toBe(1);
       expect(buckets[0]).toEqual(bucket);
+    });
+
+    it("should add new bucket and create object id if it's not provided", async () => {
+      delete bucket._id;
+      const {body: inserted} = await req.post("/bucket", bucket);
+      expect(inserted).toEqual({...bucket, _id: "__skip__"});
+
+      const {body: buckets} = await req.get("/bucket");
+
+      expect(buckets.length).toBe(1);
+      expect(buckets[0]).toEqual({...bucket, _id: "__skip__"});
     });
 
     it("should replace a single bucket", async () => {
@@ -162,12 +179,11 @@ describe("BucketController", () => {
 
     it("should update bucket indexes", async () => {
       const {body: firstBucket} = await req.post("/bucket", {...bucket, title: "First Bucket"});
-      const {body: secondBucket} = await req.post("/bucket", {...bucket, title: "Second Bucket"});
-      const {body: thirdBucket} = await req.post("/bucket", {...bucket, title: "Third Bucket"});
+      const {body: secondBucket} = await req.post("/bucket", {...bucket2, title: "Second Bucket"});
 
       await req.patch(
         `/bucket/${firstBucket._id}`,
-        {order: 3},
+        {order: 2},
         {
           "content-type": "application/merge-patch+json"
         }
@@ -179,27 +195,16 @@ describe("BucketController", () => {
           "content-type": "application/merge-patch+json"
         }
       );
-      await req.patch(
-        `/bucket/${thirdBucket._id}`,
-        {order: 2},
-        {
-          "content-type": "application/merge-patch+json"
-        }
-      );
 
       const {body: buckets} = await req.get("/bucket");
-      expect(buckets.map(bucket => bucket.title)).toEqual([
-        "Second Bucket",
-        "Third Bucket",
-        "First Bucket"
-      ]);
+      expect(buckets.map(bucket => bucket.title)).toEqual(["Second Bucket", "First Bucket"]);
     });
   });
 
   describe("delete", () => {
     it("should delete spesific bucket and it's documents", async () => {
       const firstInsertedBukcet = (await req.post("/bucket", bucket)).body;
-      const secondInsertedBucket = (await req.post("/bucket", bucket)).body;
+      const secondInsertedBucket = (await req.post("/bucket", bucket2)).body;
 
       let {body: insertedDocument} = await req.post(`/bucket/${secondInsertedBucket._id}/data`, {
         title: "title",
