@@ -9,7 +9,7 @@ import {BucketModule, BucketCoreModule} from "@spica-server/bucket";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {PreferenceService} from "@spica-server/preference/services";
 import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECTID_STRING, DATE_TIME} from "@spica-server/core/schema/formats";
+import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
 
 describe("Preference Integration", () => {
   let module: TestingModule;
@@ -20,7 +20,7 @@ describe("Preference Integration", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [OBJECTID_STRING, DATE_TIME]
+          formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME]
         }),
         DatabaseTestingModule.replicaSet(),
         PassportTestingModule.initialize(),
