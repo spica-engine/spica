@@ -42,6 +42,7 @@ import {DragDropModule} from "@angular/cdk/drag-drop";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatDividerModule} from "@angular/material/divider";
+import { StatisticComponent } from './components/statistic/statistic.component';
 
 @NgModule({
   imports: [
@@ -87,7 +88,8 @@ import {MatDividerModule} from "@angular/material/divider";
     DefaultComponent,
     TableComponent,
     WelcomeComponent,
-    CardComponent
+    CardComponent,
+    StatisticComponent
   ],
   providers: [
     DashboardService,

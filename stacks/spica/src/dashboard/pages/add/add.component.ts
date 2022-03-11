@@ -35,7 +35,8 @@ export class AddComponent implements OnInit, OnDestroy {
     "radar",
     "bar",
     "table",
-    "card"
+    "card",
+    "statistic"
   ];
 
   readonly icons: Array<string> = ICONS;

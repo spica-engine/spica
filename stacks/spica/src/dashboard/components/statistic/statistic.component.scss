@@ -1,0 +1,40 @@
+div.content {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+
+  div.icon-container {
+    padding: 20px;
+    border-radius: 50px;
+    mat-icon {
+      width: 50px;
+      height: 50px;
+      font-size: 50px;
+    }
+  }
+
+  div.statistic {
+    div.title {
+      font-size: 20px;
+      opacity: 0.8;
+      font-weight: 100;
+    }
+
+    div.value {
+      font-size: 50px;
+      font-weight: 500;
+    }
+  }
+  div.difference {
+    span:first-of-type {
+      font-size: 15px;
+      font-weight: 450;
+    }
+
+    span:last-of-type {
+      font-weight: 100;
+      opacity: 0.8;
+    }
+  }
+}
