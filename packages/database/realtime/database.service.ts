@@ -57,16 +57,12 @@ export class RealtimeDatabaseService {
     return undefined;
   }
 
+  doesEmitterExist(name: string, options: FindOptions<any>) {
+    return !!this.findEmitterName(name, options);
+  }
+
   removeEmitter(name: string, options: FindOptions<any>) {
     const emitterName = this.findEmitterName(name, options);
-
-    if (!emitterName) {
-      return console.warn(
-        `Connection has already been closed for collection '${name}' with options '${JSON.stringify(
-          options
-        )}'.`
-      );
-    }
 
     const emitter = this.emitters.get(emitterName);
 
@@ -82,7 +78,6 @@ export class RealtimeDatabaseService {
 
       if (!streamListenersRemain) {
         const changeStream = this.changeStreams.get(collName);
-        changeStream.unpipe();
         changeStream.close();
         this.changeStreams.delete(collName);
       }
