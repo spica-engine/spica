@@ -14,7 +14,10 @@ export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleDisconnect(client: any) {
     const options = await this.prepareOptions(client, client.upgradeReq);
-    this.realtime.removeEmitter(this.COLLECTION, options);
+
+    if (this.realtime.doesEmitterExist(this.COLLECTION, options)) {
+      this.realtime.removeEmitter(this.COLLECTION, options);
+    }
   }
 
   async handleConnection(client: WebSocket, req) {
