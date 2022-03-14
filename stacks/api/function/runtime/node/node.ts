@@ -2,7 +2,6 @@ import {Description, Runtime, SpawnOptions, Worker} from "@spica-server/function
 import * as child_process from "child_process";
 import * as path from "path";
 import {Transform, Writable} from "stream";
-const runfiles = require(process.env.BAZEL_NODE_RUNFILES_HELPER);
 
 class FilterExperimentalWarnings extends Transform {
   _transform(rawChunk: Buffer, encoding: string, cb: Function) {
@@ -34,8 +33,6 @@ class NodeWorker extends Worker {
     this._process = child_process.spawn(
       `node`,
       [
-        "--experimental-modules",
-        "--enable-source-maps",
         "--es-module-specifier-resolution=node",
         path.join(__dirname, "runtime", "entrypoint", "bootstrap")
       ],
