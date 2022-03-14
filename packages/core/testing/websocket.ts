@@ -1,6 +1,7 @@
 import {Inject, Injectable} from "@nestjs/common";
 import * as CL from "ws";
-import * as url from "url";
+
+const TIMEOUT_MS = 100;
 
 export type WebsocketOptions = CL.ClientOptions;
 
@@ -18,12 +19,16 @@ export class Websocket {
 
 export class Client extends CL {
   get connect() {
-    return new Promise(resolve => this.once("open", (...args) => setTimeout(resolve, 2, args)));
+    return new Promise(resolve =>
+      this.once("open", (...args) => setTimeout(resolve, TIMEOUT_MS, args))
+    );
   }
 
   close() {
     super.close();
-    return new Promise(resolve => this.once("close", (...args) => setTimeout(resolve, 2, args)));
+    return new Promise(resolve =>
+      this.once("close", (...args) => setTimeout(resolve, TIMEOUT_MS, args))
+    );
   }
 
   send(data: any) {
@@ -32,7 +37,7 @@ export class Client extends CL {
         if (err) {
           return reject(err);
         }
-        setTimeout(resolve, 1);
+        setTimeout(resolve, TIMEOUT_MS);
       })
     );
   }
