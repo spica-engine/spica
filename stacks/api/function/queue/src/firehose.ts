@@ -94,7 +94,8 @@ export class FirehoseQueue extends Queue<typeof Firehose.Queue> {
       if (socket.readyState != Websocket.OPEN) {
         callback(new Error(`Socket ${call.request.client.id} is not open.`), undefined);
       } else {
-        socket.close();
+        // 4000 is reserved for server-side close calls
+        socket.close(4000);
         this.sockets.delete(call.request.client.id);
         callback(undefined, new Firehose.Message.Result());
       }

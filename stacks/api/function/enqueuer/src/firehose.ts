@@ -77,10 +77,13 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
 
       ws.on("pong", pongHandler);
 
-      ws.once("close", () => {
+      ws.once("close", code => {
         ws.off("message", messageHandler);
         ws.off("pong", pongHandler);
-        this.invoke(ws, clDescription, "close");
+        // 4000 is reserved for server-side close calls
+        if (code != 4000) {
+          this.invoke(ws, clDescription, "close");
+        }
       });
     });
 
