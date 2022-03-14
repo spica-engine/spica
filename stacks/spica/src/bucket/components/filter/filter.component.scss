@@ -1,21 +1,7 @@
 :host {
-  ::ng-deep {
-    .input-placer-input {
-      display: block;
-      &.boolean,
-      &.storage {
-        padding: 0 10%;
-      }
-
-      > mat-form-field,
-      section,
-      section ~ mat-hint {
-        width: 80% !important;
-        margin: 0 10%;
-      }
-    }
+  > * {
+    margin-bottom: 10px;
   }
-
   div.labels {
     display: flex;
     align-items: baseline;
@@ -29,11 +15,6 @@
     border-bottom: 1px solid #c0c0c0;
   }
 
-  mat-form-field,
-  section {
-    width: 80% !important;
-    margin: 0 10%;
-  }
   .filter-buttons {
     display: flex;
     justify-content: center;
@@ -42,10 +23,70 @@
     }
   }
 
+  ::ng-deep {
+    .mat-form-field-infix {
+      width: unset;
+    }
+  }
+
+  div.basic-filter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    > div.inputs {
+      > * {
+        margin-right: 5px;
+      }
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex: 99;
+
+      > mat-form-field.property {
+        flex: 3;
+      }
+
+      mat-form-field.operator {
+        flex: 2;
+      }
+
+      .value {
+        flex: 4;
+        max-width: 240px;
+      }
+
+      ::ng-deep span.value > * {
+        width: 100%;
+      }
+
+      > mat-form-field {
+        div.separator {
+          height: 32px;
+          min-width: 8px;
+          border-bottom: 2px solid var(--primary-text);
+          position: absolute;
+          right: -17px;
+          top: -10px;
+          z-index: 1000;
+          border-radius: 0px;
+        }
+      }
+    }
+
+    > button {
+      flex: 1;
+      margin-top: -10px;
+    }
+  }
+
+  div.add-basic-filter-container {
+    text-align: center;
+  }
+
   div.tab-content {
     margin: 10px 0px;
     display: flex;
-    flex-direction: row;
     height: 400px;
     code-editor {
       flex: 4;
@@ -61,10 +102,16 @@
       }
       mat-chip-list {
         margin-top: 15px;
+        ::ng-deep .mat-chip-list-wrapper {
+          justify-content: center;
+        }
       }
 
       mat-chip {
-        margin: 5px auto;
+        width: 80%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
       }
     }
   }
