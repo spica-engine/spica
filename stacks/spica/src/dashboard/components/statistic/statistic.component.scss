@@ -1,3 +1,14 @@
+button.refresh {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  mat-icon {
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+  }
+}
+
 div.content {
   height: 200px;
   display: flex;
