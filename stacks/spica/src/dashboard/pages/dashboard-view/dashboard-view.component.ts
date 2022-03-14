@@ -27,7 +27,7 @@ export class DashboardViewComponent implements OnInit {
 
   defaultTypes = ["line", "pie", "doughnut", "polarArea", "scatter", "bubble", "radar", "bar"];
 
-  customTypes = ["table", "card","statistic"];
+  customTypes = ["table", "card", "statistic"];
 
   componentStyles: ComponentStyle[] = [];
 
