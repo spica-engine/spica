@@ -64,7 +64,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     const {schemaId, options} = schemaIdAndOptions;
     const collection = getBucketDataCollection(schemaId);
-    this.realtime.removeEmitter(collection, options);
+    if (this.realtime.doesEmitterExist(collection, options)) {
+      this.realtime.removeEmitter(collection, options);
+    }
   }
 
   async authorize(req, client) {

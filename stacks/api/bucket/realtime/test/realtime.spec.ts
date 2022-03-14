@@ -322,52 +322,43 @@ describe("Realtime", () => {
       });
     });
 
-    //@TODO: enable them when you find a way to solve the timeout problem
-    xdescribe("sending message", () => {
+    describe("sending message", () => {
       it("should perform insert action and send changes to the clients", async done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
 
-        ws.onmessage = e => {
-          messageSpy(JSON.parse(e.data as string));
+        ws.onmessage = async e => {
+          const message = JSON.parse(e.data as string);
+          messageSpy(message);
+
+          if (message.kind == ChunkKind.Insert) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[0]},
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.EndOfInitial},
+              {kind: ChunkKind.Response, status: 201, message: "Created"},
+              {
+                kind: ChunkKind.Insert,
+                document: {_id: "__objectid__", title: "hey"}
+              }
+            ]);
+            await ws.close();
+            done();
+          }
         };
 
         await ws.connect;
 
-        const controller = app.get(RealtimeGateway);
-        const client = undefined;
-        // const client = controller.clients.keys().next().value;
-
-        const document = {title: "title"};
-
-        await controller.insert(client, document);
-
-        await stream.change.next();
-
-        await ws.close();
-
-        expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
-          {kind: ChunkKind.Initial, document: rows[0]},
-          {kind: ChunkKind.Initial, document: rows[1]},
-          {kind: ChunkKind.EndOfInitial},
-          {kind: ChunkKind.Response, status: 201, message: "Created"},
-          {
-            kind: ChunkKind.Insert,
-            document: {_id: "__objectid__", title: "title"}
-          }
-        ]);
+        await ws.send(JSON.stringify({event: "insert", data: {title: "hey"}}));
       });
 
       it("should perform replace action and send changes to the clients", async done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
 
-        const lastMessageKind = ChunkKind.Replace;
-
         ws.onmessage = async e => {
           const message = JSON.parse(e.data as string);
-
           messageSpy(message);
 
-          if (message.kind == lastMessageKind) {
+          if (message.kind == ChunkKind.Replace) {
             expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
               {kind: ChunkKind.Initial, document: rows[0]},
               {kind: ChunkKind.Initial, document: rows[1]},
@@ -375,10 +366,9 @@ describe("Realtime", () => {
               {kind: ChunkKind.Response, status: 200, message: "OK"},
               {
                 kind: ChunkKind.Replace,
-                document: {_id: rows[0]._id.toString(), title: "updated_title"}
+                document: {_id: rows[0]._id, title: "hello"}
               }
             ]);
-
             await ws.close();
             done();
           }
@@ -386,25 +376,17 @@ describe("Realtime", () => {
 
         await ws.connect;
 
-        const controller = app.get(RealtimeGateway);
-        const client = undefined;
-        //const client = controller.clients.keys().next().value;
-
-        const document = {_id: rows[0]._id.toString(), title: "updated_title"};
-
-        await controller.replace(client, document);
+        await ws.send(JSON.stringify({event: "replace", data: {_id: rows[0]._id, title: "hello"}}));
       });
 
       it("should perform patch action and send changes to the clients", async done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
 
-        const lastMessageKind = ChunkKind.Update;
-
         ws.onmessage = async e => {
           const message = JSON.parse(e.data as string);
           messageSpy(message);
 
-          if (message.kind == lastMessageKind) {
+          if (message.kind == ChunkKind.Update) {
             expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
               {kind: ChunkKind.Initial, document: rows[0]},
               {kind: ChunkKind.Initial, document: rows[1]},
@@ -412,10 +394,9 @@ describe("Realtime", () => {
               {kind: ChunkKind.Response, status: 204, message: "No Content"},
               {
                 kind: ChunkKind.Update,
-                document: {_id: rows[0]._id.toString()}
+                document: {_id: rows[0]._id}
               }
             ]);
-
             await ws.close();
             done();
           }
@@ -423,26 +404,17 @@ describe("Realtime", () => {
 
         await ws.connect;
 
-        const controller = app.get(RealtimeGateway);
-
-        const client = undefined;
-        //const client = controller.clients.keys().next().value;
-
-        const document = {_id: rows[0]._id.toString(), title: null};
-
-        await controller.patch(client, document);
+        await ws.send(JSON.stringify({event: "patch", data: {_id: rows[0]._id, title: null}}));
       });
 
       it("should perform delete action and send changes to the clients", async done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
 
-        const lastMessageKind = ChunkKind.Delete;
-
         ws.onmessage = async e => {
           const message = JSON.parse(e.data as string);
           messageSpy(message);
 
-          if (message.kind == lastMessageKind) {
+          if (message.kind == ChunkKind.Delete) {
             expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
               {kind: ChunkKind.Initial, document: rows[0]},
               {kind: ChunkKind.Initial, document: rows[1]},
@@ -450,10 +422,9 @@ describe("Realtime", () => {
               {kind: ChunkKind.Response, status: 204, message: "No Content"},
               {
                 kind: ChunkKind.Delete,
-                document: {_id: rows[0]._id.toString()}
+                document: {_id: rows[0]._id}
               }
             ]);
-
             await ws.close();
             done();
           }
@@ -461,17 +432,11 @@ describe("Realtime", () => {
 
         await ws.connect;
 
-        const controller = app.get(RealtimeGateway);
-
-        const client = undefined;
-        // const client = controller.clients.keys().next().value;
-        const document = {_id: rows[0]._id.toString()};
-
-        await controller.delete(client, document);
+        await ws.send(JSON.stringify({event: "delete", data: {_id: rows[0]._id}}));
       });
     });
 
-    xdescribe("errors", () => {
+    describe("errors", () => {
       const lastMessageKind = ChunkKind.Response;
 
       describe("schema validation", () => {
@@ -494,7 +459,6 @@ describe("Realtime", () => {
 
           ws.onmessage = async e => {
             const message = JSON.parse(e.data as string);
-
             messageSpy(message);
 
             if (message.kind == lastMessageKind) {
@@ -506,7 +470,6 @@ describe("Realtime", () => {
                   message: " should have required property 'title'"
                 }
               ]);
-
               await ws.close();
               done();
             }
@@ -514,14 +477,7 @@ describe("Realtime", () => {
 
           await ws.connect;
 
-          const controller = app.get(RealtimeGateway);
-
-          const client = undefined;
-          //const client = controller.clients.keys().next().value;
-
-          const document = {};
-
-          await controller.insert(client, document);
+          await ws.send(JSON.stringify({event: "insert", data: {}}));
         });
       });
 
@@ -548,7 +504,6 @@ describe("Realtime", () => {
 
           ws.onmessage = async e => {
             const message = JSON.parse(e.data as string);
-
             messageSpy(message);
 
             if (message.kind == lastMessageKind) {
@@ -560,7 +515,6 @@ describe("Realtime", () => {
                   message: "ACL rules has rejected this operation."
                 }
               ]);
-
               await ws.close();
               done();
             }
@@ -568,14 +522,7 @@ describe("Realtime", () => {
 
           await ws.connect;
 
-          const controller = app.get(RealtimeGateway);
-
-          const client = undefined;
-          //const client = controller.clients.keys().next().value;
-
-          const document = {title: "reject_this"};
-
-          await controller.insert(client, document);
+          await ws.send(JSON.stringify({event: "insert", data: {title: "reject_me"}}));
         });
       });
     });
