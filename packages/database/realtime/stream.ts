@@ -208,6 +208,10 @@ export class Emitter<T extends {_id: string | ObjectId}> {
         this.sortSubscription.unsubscribe();
       }
 
+      if (!this.changeStream.isClosed()) {
+        this.changeStream.unpipe(this.passThrough);
+      }
+
       this.passThrough.removeAllListeners();
     };
   }

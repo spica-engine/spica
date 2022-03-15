@@ -58,6 +58,9 @@ body {
   &.dark {
     @include angular-material-theme($app-dark-theme);
     @include vars($app-dark-theme, 0);
+    .mat-input-element {
+      color: white;
+    }
   }
 }
 

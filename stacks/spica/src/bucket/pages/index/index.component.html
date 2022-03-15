@@ -28,125 +28,148 @@
       {{ schema.description }}
     </h5>
   </span>
-
-  <div class="actions">
-    <button
-      *ngIf="selectedItems.length > 0"
-      class="delete mat-elevation-z0"
-      mat-button
-      mat-raised-button
-      color="warn"
-      [disabled]="readOnly"
-      [matTooltip]="'Delete ' + selectedItems.length + ' entries.'"
-      [matAwareDialog]="{
-        title: 'Confirmation',
-        templateOrDescription: getDependents(schema, selectedItems).length
-          ? deleteRowsWithDependentsDialog
-          : deleteRowsDialog,
-        answer: 'agree',
-        list: getDependents(schema, selectedItems)
-      }"
-      (confirm)="deleteSelectedItems()"
-    >
-      <mat-icon>delete</mat-icon>
-      Delete
-    </button>
-    <button
-      *ngIf="!readOnly"
-      mat-button
-      canInteract="bucket:data:create"
-      [resource]="schema._id"
-      routerLink="add"
-    >
-      <mat-icon>add</mat-icon>
-      Add New
-    </button>
-    <button mat-button (click)="refresh.next()">
-      <mat-icon>refresh</mat-icon>
-      Refresh
-    </button>
-    <button mat-button [matMenuTriggerFor]="filterMenu" [color]="filterer.active ? 'accent' : ''">
-      <mat-icon>filter_alt</mat-icon>
-      Filter
-      <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
-        <bucket-filter
-          (keydown.tab)="$event.stopPropagation()"
-          #filterer
-          [filter]="filter"
-          [schema]="schema"
-          (filterChange)="onFilterChange($event ? $event : {})"
-        ></bucket-filter>
-      </mat-menu>
-    </button>
-
-    <button mat-button [matMenuTriggerFor]="propertiesMenu">
-      <mat-icon>view_column</mat-icon>
-      Columns
-      <mat-menu xPosition="before" #propertiesMenu="matMenu">
-        <button mat-menu-item (click)="$event.stopPropagation()">
-          <mat-checkbox
-            [ngModel]="properties.length == displayedProperties.length"
-            [indeterminate]="
-              displayedProperties.length > 1 && displayedProperties.length < properties.length
-            "
-            (ngModelChange)="toggleDisplayAll($event, schema)"
-          >
-            Display all
-          </mat-checkbox>
-        </button>
-        <mat-divider></mat-divider>
-        <button
-          mat-menu-item
-          disableRipple
-          *ngFor="let property of properties"
-          [disabled]="property.name == '$$spicainternal_select' && readOnly"
-          (click)="$event.stopPropagation()"
-        >
-          <mat-checkbox
-            [disabled]="property.name == '$$spicainternal_select' && readOnly"
-            [ngModel]="displayedProperties.indexOf(property.name) > -1"
-            (ngModelChange)="toggleProperty(property.name, $event)"
-          >
-            {{ property.title }}
-          </mat-checkbox>
-        </button>
-      </mat-menu>
-    </button>
-
-    <button mat-button [matMenuTriggerFor]="languageMenu">
-      <mat-icon>translate</mat-icon>
-      Translate
-      <mat-menu #languageMenu="matMenu">
-        <ng-template matMenuContent>
-          <button
-            mat-menu-item
-            *ngFor="let languageKv of ($preferences | async)?.language.available | keyvalue"
-            (click)="onLanguageChange(languageKv.key)"
-          >
-            {{ languageKv.value }} ({{ languageKv.key }})
-          </button>
-        </ng-template>
-      </mat-menu>
-    </button>
-
-    <button
-      mat-button
-      [matTooltip]="(showScheduled ? 'Hide' : 'Show') + ' scheduled documents'"
-      [color]="showScheduled ? 'accent' : 'secondary'"
-      (click)="toggleScheduled()"
-    >
-      <mat-icon>schedule</mat-icon>
-      Schedule
-    </button>
-
-    <button mat-button [matTooltip]="(guide ? 'Hide' : 'Show') + ' Guide'" (click)="guide = !guide">
-      <mat-icon>contact_support</mat-icon>
-      For Developers
-    </button>
-  </div>
 </mat-toolbar>
 
 <div class="data-guide">
+  <ng-container *ngIf="schema$ | async; let schema">
+    <div class="actions-line">
+      <div class="filters">
+        <mat-form-field>
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            type="text"
+            matInput
+            placeholder="Search a text.."
+            [(ngModel)]="searchValue"
+            (ngModelChange)="search$.next()"
+          />
+        </mat-form-field>
+        <button
+          mat-button
+          [matMenuTriggerFor]="filterMenu"
+          [color]="filterer.active ? 'accent' : ''"
+        >
+          <mat-icon>filter_list</mat-icon>
+          Filter
+          <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
+            <bucket-filter
+              (keydown.tab)="$event.stopPropagation()"
+              #filterer
+              [filter]="filter"
+              [schema]="schema"
+              (filterChange)="searchValue = ''; onFilterChange($event ? $event : {})"
+            ></bucket-filter>
+          </mat-menu>
+        </button>
+      </div>
+      <div class="actions">
+        <button
+          *ngIf="selectedItems.length > 0"
+          class="delete mat-elevation-z0"
+          mat-button
+          mat-raised-button
+          color="warn"
+          [disabled]="readOnly"
+          [matTooltip]="'Delete ' + selectedItems.length + ' entries.'"
+          [matAwareDialog]="{
+            title: 'Confirmation',
+            templateOrDescription: getDependents(schema, selectedItems).length
+              ? deleteRowsWithDependentsDialog
+              : deleteRowsDialog,
+            answer: 'agree',
+            list: getDependents(schema, selectedItems)
+          }"
+          (confirm)="deleteSelectedItems()"
+        >
+          <mat-icon>delete</mat-icon>
+          Delete
+        </button>
+        <button
+          *ngIf="!readOnly"
+          mat-button
+          canInteract="bucket:data:create"
+          [resource]="schema._id"
+          routerLink="add"
+        >
+          <mat-icon>add</mat-icon>
+          Add New
+        </button>
+        <button mat-button (click)="refresh.next()">
+          <mat-icon>refresh</mat-icon>
+          Refresh
+        </button>
+
+        <button mat-button [matMenuTriggerFor]="propertiesMenu">
+          <mat-icon>view_column</mat-icon>
+          Columns
+          <mat-menu xPosition="before" #propertiesMenu="matMenu">
+            <button mat-menu-item (click)="$event.stopPropagation()">
+              <mat-checkbox
+                [ngModel]="properties.length == displayedProperties.length"
+                [indeterminate]="
+                  displayedProperties.length > 1 && displayedProperties.length < properties.length
+                "
+                (ngModelChange)="toggleDisplayAll($event, schema)"
+              >
+                Display all
+              </mat-checkbox>
+            </button>
+            <mat-divider></mat-divider>
+            <button
+              mat-menu-item
+              disableRipple
+              *ngFor="let property of properties"
+              [disabled]="property.name == '$$spicainternal_select' && readOnly"
+              (click)="$event.stopPropagation()"
+            >
+              <mat-checkbox
+                [disabled]="property.name == '$$spicainternal_select' && readOnly"
+                [ngModel]="displayedProperties.indexOf(property.name) > -1"
+                (ngModelChange)="toggleProperty(property.name, $event)"
+              >
+                {{ property.title }}
+              </mat-checkbox>
+            </button>
+          </mat-menu>
+        </button>
+
+        <button *ngIf="displayTranslateButton" mat-button [matMenuTriggerFor]="languageMenu">
+          <mat-icon>translate</mat-icon>
+          Translate
+          <mat-menu #languageMenu="matMenu">
+            <ng-template matMenuContent>
+              <button
+                mat-menu-item
+                *ngFor="let languageKv of ($preferences | async)?.language.available | keyvalue"
+                (click)="onLanguageChange(languageKv.key)"
+              >
+                {{ languageKv.value }} ({{ languageKv.key }})
+              </button>
+            </ng-template>
+          </mat-menu>
+        </button>
+
+        <button
+          mat-button
+          [matTooltip]="(showScheduled ? 'Hide' : 'Show') + ' scheduled documents'"
+          [color]="showScheduled ? 'accent' : 'secondary'"
+          (click)="toggleScheduled()"
+        >
+          <mat-icon>schedule</mat-icon>
+          Schedule
+        </button>
+
+        <button
+          mat-button
+          [matTooltip]="(guide ? 'Hide' : 'Show') + ' Guide'"
+          (click)="guide = !guide"
+        >
+          <mat-icon>contact_support</mat-icon>
+          For Developers
+        </button>
+      </div>
+    </div>
+  </ng-container>
   <mat-card class="mat-elevation-z25">
     <mat-card-content>
       <table
