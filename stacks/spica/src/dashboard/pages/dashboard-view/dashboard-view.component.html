@@ -79,6 +79,13 @@
             (onUpdate)="onUpdate($event, i)"
           >
           </dashboard-card>
+          <dashboard-statistic
+            *ngIf="component.type == 'statistic'"
+            [componentData$]="componentData$[i]"
+            [type]="component.type"
+            (onUpdate)="onUpdate($event, i)"
+          >
+          </dashboard-statistic>
         </div>
       </mat-card>
     </div>
