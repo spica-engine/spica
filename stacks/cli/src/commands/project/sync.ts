@@ -2,9 +2,7 @@ import {ActionParameters, CaporalValidator, Command, CreateCommandParameters} fr
 import {spin} from "../../console";
 import {httpService} from "../../http";
 import {validateMigrationModules} from "../../validator";
-import {bold, green, red, underline} from "colorette";
-
-// we might want to use our differ instead
+import {bold, red} from "colorette";
 const isEqual = require("lodash/isEqual");
 
 async function sync({
@@ -69,7 +67,7 @@ export default function({createCommand}: CreateCommandParameters): Command {
     `Synchronize selected module objects between two spica instances(local or remote).
 ${red(
   "ATTENTION"
-)}: Source and target instance versions must be higher than v0.9.17 and for the best results both instance versions should be the same. 
+)}: Source and target instance versions must be minimum v0.9.19 and for the best results both instance versions should be the same. 
 Also this command will perform adding, overwriting and removing actions of the target instance and it's irreversible. 
 We highly recommend you to use --dry-run=true and check the changes that will be applied before start.`
   )
@@ -190,7 +188,7 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
   async initialize() {
     const synchronizers = [];
 
-    let sourceFns = await this.sourceService.get<any[]>("function");
+    const sourceFns = await this.sourceService.get<any[]>("function");
 
     // put dependency synchronizer for each function
     for (const fn of sourceFns) {
@@ -376,102 +374,6 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
     return `${this.moduleName} '${this.fn.name}' dependency`;
   }
 }
-
-// export class ModuleSynchronizerTest {
-//   private inserts = [];
-//   private updates = [];
-//   private deletes = [];
-
-//   constructor(
-//     private objectName: string,
-//     private path: string,
-//     private idField: string,
-//     private sourceService: httpService.Client,
-//     private targetService: httpService.Client,
-//     private subModuleInitializer?: (...args) => Promise<ModuleSynchronizer[]>,
-//     private applyOptionsBeforeComparison?: (
-//       sourceObjects,
-//       targetObjects
-//     ) => {sourceObjects: []; targetObjects: []}
-//   ) {}
-
-//   initialize = this.subModuleInitializer || Promise.resolve;
-
-//   async analyze() {
-//     console.log();
-//     let sourceObjects = await spin<any>({
-//       text: `Fetching ${this.objectName}(s) from source instance`,
-//       op: () => this.sourceService.get(this.path)
-//     });
-
-//     let targetObjects = await spin<any>({
-//       text: `Fetching ${this.objectName}(s) from target instance`,
-//       op: () => this.targetService.get(this.path)
-//     });
-
-//     if (typeof this.applyOptionsBeforeComparison == "function") {
-//       const modifiedObjects = this.applyOptionsBeforeComparison(sourceObjects, targetObjects);
-//       sourceObjects = modifiedObjects.sourceObjects;
-//       targetObjects = modifiedObjects.targetObjects;
-//     }
-
-//     const decider = new ObjectActionDecider(sourceObjects, targetObjects);
-
-//     this.inserts = decider.inserts();
-//     this.updates = decider.updates();
-//     this.deletes = decider.deletes();
-
-//     return {
-//       inserts: this.inserts,
-//       updates: this.updates,
-//       deletes: this.deletes
-//     };
-//   }
-
-//   async synchronize() {
-//     const insertPromises = this.inserts.map(object =>
-//       this.targetService.post(this.path, object).catch(e =>
-//         handleRejection({
-//           action: "insert",
-//           objectName: object,
-//           message: e.message,
-//           objectId: object[this.primaryField]
-//         })
-//       )
-//     );
-//     await spinUntilPromiseEnd(
-//       insertPromises,
-//       `Inserting ${this.objectName}(s) to the target instance`
-//     );
-
-//     const updatePromises = this.updates.map(object =>
-//       this.targetService.put(`${this.path}/${object._id}`, object).catch(e =>
-//         handleRejection({
-//           action: "update",
-//           objectName: object,
-//           message: e.message,
-//           objectId: object[this.primaryField]
-//         })
-//       )
-//     );
-//     await spinUntilPromiseEnd(
-//       updatePromises,
-//       `Updating ${this.objectName}(s) on the target instance`
-//     );
-
-//     const deletePromises = this.deletes.map(object =>
-//       this.targetService.delete(`${this.path}/${object._id}`).catch(e =>
-//         handleRejection({
-//           action: "delete",
-//           objectName: this.objectName,
-//           message: e.message,
-//           objectId: bucket.title
-//         })
-//       )
-//     );
-//     await spinUntilPromiseEnd(deletePromises, "Deleting bucket from the target instance");
-//   }
-// }
 
 export class FunctionIndexSynchronizer implements ModuleSynchronizer {
   moduleName = "function";
