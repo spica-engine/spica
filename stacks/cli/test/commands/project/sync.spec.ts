@@ -1,4 +1,5 @@
 import {
+  BucketDataSynchronizer,
   BucketSynchronizer,
   FunctionDependencySynchronizer,
   FunctionIndexSynchronizer,
@@ -135,11 +136,6 @@ describe("Synchronize", () => {
 
     describe("BucketSynchronizer", () => {
       const synchronizer = new BucketSynchronizer(sourceService as any, targetService as any);
-
-      it("should sync sub modules if any", async () => {
-        const subModules = await synchronizer.initialize();
-        expect(subModules).toEqual([]);
-      });
 
       it("should analyze buckets", async () => {
         const {inserts, updates, deletes} = await synchronizer.analyze();
@@ -446,6 +442,113 @@ describe("Synchronize", () => {
         ]);
 
         expect(targetService.delete).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("Bucket Data", () => {
+      const sourceObjects = [
+        // put
+        {_id: "dataid2", title: "updated_title2", description: "updated_description2"},
+        // no-op
+        {_id: "dataid3", title: "title3", description: "description3"},
+        // post
+        {_id: "dataid4", title: "added_title4", description: "added_description4"}
+      ];
+      const targetObjects = [
+        // delete
+        {_id: "dataid1", title: "title1", description: "description1"},
+        {_id: "dataid2", title: "title2", description: "description2"},
+        {_id: "dataid3", title: "title3", description: "description3"}
+      ];
+
+      const sourceService = {
+        get: jasmine.createSpy().and.callFake(() => {
+          return Promise.resolve(sourceObjects);
+        }),
+        post: jasmine.createSpy().and.callFake(() => Promise.resolve()),
+        put: jasmine.createSpy().and.callFake(() => Promise.resolve()),
+        delete: jasmine.createSpy().and.callFake(() => Promise.resolve())
+      };
+
+      const targetService = {
+        get: jasmine.createSpy().and.callFake(() => {
+          return Promise.resolve(targetObjects);
+        }),
+        post: jasmine.createSpy().and.callFake(() => Promise.resolve()),
+        put: jasmine.createSpy().and.callFake(() => Promise.resolve()),
+        delete: jasmine.createSpy().and.callFake(() => Promise.resolve())
+      };
+
+      const synchronizer = new BucketDataSynchronizer(sourceService as any, targetService as any, {
+        _id: "bucket_id",
+        title: "title1",
+        primary: "title"
+      });
+
+      beforeEach(() => {
+        sourceService.get.calls.reset();
+        sourceService.post.calls.reset();
+        sourceService.put.calls.reset();
+        sourceService.delete.calls.reset();
+
+        targetService.get.calls.reset();
+        targetService.post.calls.reset();
+        targetService.put.calls.reset();
+        targetService.delete.calls.reset();
+      });
+
+      it("should analyze bucket-data", async () => {
+        const {inserts, updates, deletes} = await synchronizer.analyze();
+
+        const expectations = {
+          inserts: [{_id: "dataid4", title: "added_title4", description: "added_description4"}],
+          updates: [{_id: "dataid2", title: "updated_title2", description: "updated_description2"}],
+          deletes: [{_id: "dataid1", title: "title1", description: "description1"}]
+        };
+
+        expect(inserts).toEqual(expectations.inserts);
+        expect(updates).toEqual(expectations.updates);
+        expect(deletes).toEqual(expectations.deletes);
+
+        expect(synchronizer.inserts).toEqual(expectations.inserts);
+        expect(synchronizer.updates).toEqual(expectations.updates);
+        expect(synchronizer.deletes).toEqual(expectations.deletes);
+
+        expect(sourceService.get).toHaveBeenCalledOnceWith("bucket/bucket_id/data", {
+          params: {localize: false}
+        });
+        expect(sourceService.post).not.toHaveBeenCalled();
+        expect(sourceService.put).not.toHaveBeenCalled();
+        expect(sourceService.delete).not.toHaveBeenCalled();
+
+        expect(targetService.get).toHaveBeenCalledOnceWith("bucket/bucket_id/data", {
+          params: {localize: false}
+        });
+        expect(sourceService.post).not.toHaveBeenCalled();
+        expect(sourceService.put).not.toHaveBeenCalled();
+        expect(sourceService.delete).not.toHaveBeenCalled();
+      });
+
+      it("should synchronize bucket-data", async () => {
+        await synchronizer.analyze();
+        await synchronizer.synchronize();
+
+        expect(sourceService.post).not.toHaveBeenCalled();
+        expect(sourceService.put).not.toHaveBeenCalled();
+        expect(sourceService.delete).not.toHaveBeenCalled();
+
+        expect(targetService.post).toHaveBeenCalledOnceWith("bucket/bucket_id/data", {
+          _id: "dataid4",
+          title: "added_title4",
+          description: "added_description4"
+        });
+        expect(targetService.put).toHaveBeenCalledOnceWith("bucket/bucket_id/data/dataid2", {
+          _id: "dataid2",
+          title: "updated_title2",
+          description: "updated_description2"
+        });
+
+        expect(targetService.delete).toHaveBeenCalledOnceWith("bucket/bucket_id/data/dataid1");
       });
     });
   });

@@ -509,7 +509,7 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
         return Promise.reject(e.message);
       });
 
-    const decider = new ObjectActionDecider(sourceData, targetData, "_id");
+    const decider = new ObjectActionDecider(sourceData, targetData);
 
     this.inserts = decider.inserts();
     this.updates = decider.updates();
