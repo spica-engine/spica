@@ -11,7 +11,7 @@ export const CREATED_AT: Default = {
 export const UPDATED_AT: Default = {
   match: ":updated_at",
   type: "date",
-  create: () => {
-    return new Date().toISOString();
+  create: (data: string) => {
+    return data || new Date().toISOString();
   }
 };

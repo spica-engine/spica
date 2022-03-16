@@ -1130,7 +1130,7 @@ describe("BucketDataController", () => {
     });
 
     describe("post", () => {
-      it("should add document to bucket and return inserted document", async () => {
+      it("should insert document to bucket and return inserted document", async () => {
         const insertedDocument = (await req.post(`/bucket/${myBucketId}/data`, {
           title: "first title",
           description: "first description"
@@ -1145,6 +1145,66 @@ describe("BucketDataController", () => {
 
         delete insertedDocument._id;
         expect(insertedDocument).toEqual({title: "first title", description: "first description"});
+      });
+
+      it("should insert document with id", async () => {
+        const _id = new ObjectId();
+        const insertedDocument = (await req.post(`/bucket/${myBucketId}/data`, {
+          _id: _id,
+          title: "first title",
+          description: "first description"
+        })).body;
+
+        const bucketDocument = (await req.get(`/bucket/${myBucketId}/data/${_id}`, {})).body;
+
+        expect(bucketDocument).toEqual(insertedDocument);
+        expect(insertedDocument).toEqual({
+          _id: _id.toHexString(),
+          title: "first title",
+          description: "first description"
+        });
+      });
+
+      fit("should return error if id is not valid", async () => {
+        const _id = "invalid_objectid";
+
+        const response = await req
+          .post(`/bucket/${myBucketId}/data`, {
+            _id: _id,
+            title: "title",
+            description: "description"
+          })
+          .catch(e => e);
+        expect(response.statusCode).toBe(400);
+        expect(response.statusText).toBe("Bad Request");
+        expect(response.body).toEqual({
+          statusCode: 400,
+          message: '._id should match format "objectid"',
+          error: "validation failed"
+        });
+      });
+
+      fit("should return error if id has already exist", async () => {
+        const existingId = await req
+          .post(`/bucket/${myBucketId}/data`, {
+            title: "title",
+            description: "description"
+          })
+          .then(r => r.body._id);
+
+        const response = await req
+          .post(`/bucket/${myBucketId}/data`, {
+            _id: existingId,
+            title: "title2",
+            description: "description2"
+          })
+          .catch(e => e);
+        expect(response.statusCode).toBe(400);
+        expect(response.statusText).toBe("Bad Request");
+        expect(response.body).toEqual({
+          statusCode: 400,
+          message: "Value of the property ._id should unique across all documents."
+        });
       });
 
       it("should return error if title isnt valid for bucket", async () => {

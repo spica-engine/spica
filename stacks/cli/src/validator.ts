@@ -11,22 +11,22 @@ export function projectName(input: string): string {
   return input;
 }
 
-const migratableModules = ["bucket", "function"];
-export function validateMigrationModules(input: string): string {
+export const availableSyncModules = ["bucket", "function", "bucket-data"];
+export function validateSyncModules(input: string): string {
   const moduleNames = input.split(",").map(m => m.trim());
 
   if (!moduleNames.length) {
     throw new Error(`You should select one or more of these modules:
-${migratableModules.map(m => `- ${green(m)}`).join("\n")}`);
+${availableSyncModules.map(m => `- ${green(m)}`).join("\n")}`);
   }
 
-  const nonMigratables = moduleNames.filter(module => migratableModules.indexOf(module) == -1);
+  const nonMigratables = moduleNames.filter(module => availableSyncModules.indexOf(module) == -1);
   if (nonMigratables.length) {
     throw new Error(`Some of selected modules are not valid:
 ${nonMigratables.map(m => `- ${red(m)}`).join("\n")}
 
-Migratable modules are:
-${migratableModules.map(m => `- ${green(m)}`).join("\n")}
+Synchronizable modules are:
+${availableSyncModules.map(m => `- ${green(m)}`).join("\n")}
     `);
   }
 
