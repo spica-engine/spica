@@ -1165,7 +1165,7 @@ describe("BucketDataController", () => {
         });
       });
 
-      fit("should return error if id is not valid", async () => {
+      it("should return error if id is not valid", async () => {
         const _id = "invalid_objectid";
 
         const response = await req
@@ -1184,7 +1184,7 @@ describe("BucketDataController", () => {
         });
       });
 
-      fit("should return error if id has already exist", async () => {
+      it("should return error if id has already exist", async () => {
         const existingId = await req
           .post(`/bucket/${myBucketId}/data`, {
             title: "title",
