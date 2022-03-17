@@ -6,8 +6,6 @@ import {
   RealtimeConnection,
   RealtimeConnectionOne
 } from "./interface";
-//@ts-ignore
-import WebSocket from "ws";
 import {tap, delayWhen, map, debounceTime, retryWhen, filter, takeWhile} from "rxjs/operators";
 import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
@@ -96,9 +94,10 @@ export function getWsObs<T>(
   let urlConfigOrSource: string | WebSocketSubjectConfig<any> = url;
 
   if (!isPlatformBrowser()) {
+    const wsCtor = require("ws");
     urlConfigOrSource = {
       url: url,
-      WebSocketCtor: WebSocket
+      WebSocketCtor: wsCtor
     };
   }
 
