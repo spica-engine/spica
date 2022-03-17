@@ -1,13 +1,14 @@
 const {Query} = require("mingo");
+import {ChunkKind, StreamChunk} from "@spica-server/interface/realtime";
 import {ChangeStream, Collection, ObjectId} from "mongodb";
 import {asyncScheduler, Observable, Subject, Subscriber, Subscription, TeardownLogic} from "rxjs";
 import {filter, bufferTime, switchMap, share} from "rxjs/operators";
 import {PassThrough} from "stream";
-import {ChunkKind, DatabaseChange, DatabaseChangeType, FindOptions, StreamChunk} from "./interface";
+import {DatabaseChange, FindOptions, OperationType} from "./interface";
 import {levenshtein} from "./levenshtein";
 import {late} from "./operators";
 
-export class Emitter<T extends {_id: string | ObjectId}> {
+export class Emitter<T extends {_id: ObjectId}> {
   private sort = new Subject<DatabaseChange<T>>();
   private sortSubscription: Subscription;
 
@@ -39,7 +40,7 @@ export class Emitter<T extends {_id: string | ObjectId}> {
 
       this.passThrough.on("data", (change: DatabaseChange<T>) => {
         switch (change.operationType) {
-          case DatabaseChangeType.INSERT:
+          case OperationType.INSERT:
             if (
               (options.filter && !this.doesMatch(change.fullDocument)) ||
               (options.limit && this.ids.size >= options.limit && !options.sort)
@@ -56,7 +57,7 @@ export class Emitter<T extends {_id: string | ObjectId}> {
 
             break;
 
-          case DatabaseChangeType.DELETE:
+          case OperationType.DELETE:
             const documentId = change.documentKey._id.toString();
 
             if (this.ids.has(documentId)) {
@@ -69,8 +70,8 @@ export class Emitter<T extends {_id: string | ObjectId}> {
 
             break;
 
-          case DatabaseChangeType.REPLACE:
-          case DatabaseChangeType.UPDATE:
+          case OperationType.REPLACE:
+          case OperationType.UPDATE:
             if (!options.filter || this.doesMatch(change.fullDocument)) {
               if (
                 !this.isChangeAlreadyPresentInCursor(change) &&
@@ -88,7 +89,7 @@ export class Emitter<T extends {_id: string | ObjectId}> {
               if (change.fullDocument != null) {
                 this.next({
                   kind:
-                    change.operationType == DatabaseChangeType.UPDATE
+                    change.operationType == OperationType.UPDATE
                       ? ChunkKind.Update
                       : ChunkKind.Replace,
                   document: change.fullDocument
@@ -107,7 +108,7 @@ export class Emitter<T extends {_id: string | ObjectId}> {
 
             break;
 
-          case DatabaseChangeType.DROP:
+          case OperationType.DROP:
             this.ids.clear();
             this.observer.complete();
 
@@ -243,7 +244,7 @@ export class Emitter<T extends {_id: string | ObjectId}> {
             changes = changes.reverse();
           }
           for (const change of changes) {
-            if (change.operationType == DatabaseChangeType.INSERT) {
+            if (change.operationType == OperationType.INSERT) {
               // CHANGE STREAM DOES THE SAME THING, CHECK WHY
               this.next({kind: ChunkKind.Insert, document: change.fullDocument});
             }
@@ -324,7 +325,7 @@ export class Emitter<T extends {_id: string | ObjectId}> {
   ): boolean {
     // If the change occurred because of an update operation, we can check if the change affects our cursor by
     // comparing the changed keys and our sorted keys
-    if (change.operationType == DatabaseChangeType.UPDATE) {
+    if (change.operationType == OperationType.UPDATE) {
       // TODO: Check this for subdocument updates (optimization)
       // This check can be optimized for subdocument updates.
       // Right now it only checks the root properties.

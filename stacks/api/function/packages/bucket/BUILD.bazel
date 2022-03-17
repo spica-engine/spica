@@ -13,6 +13,7 @@ ts_project(
     srcs = SRCS,
     tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
+        "//packages/interface/realtime",
         "//stacks/api/function/packages/internal_common",
         "@npm//@types/json-schema",
         "@npm//@types/ws",
@@ -28,6 +29,7 @@ ts_project(
     out_dir = "publish",
     tsconfig = "//stacks/api/function/packages:tsconfig_publish",
     deps = [
+        "//packages/interface/realtime",
         "//stacks/api/function/packages/internal_common",
         "@npm//@types/json-schema",
         "@npm//@types/ws",
