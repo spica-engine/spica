@@ -1,12 +1,16 @@
 import {Observable} from "rxjs";
 
-export interface Identity {
-  _id?: string;
+interface Identity {
+  _id: string;
   identifier: string;
   password: string;
-  policies?: string[];
+  policies: string[];
   attributes?: object;
 }
+
+export type IdentityUpdate = Partial<Identity>;
+export type IdentityCreate = Omit<Identity, "_id">;
+export type IdentityGet = Omit<Identity, "password">;
 
 export interface Strategy {
   _id: string;

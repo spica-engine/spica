@@ -1,9 +1,11 @@
 import {
-  Identity,
+  IdentityCreate,
+  IdentityGet,
   IdentityInitialization,
   ApikeyInitialization,
   IndexResult,
-  LoginWithStrategyResponse
+  LoginWithStrategyResponse,
+  IdentityUpdate
 } from "./interface";
 import {
   initialize as _initialize,
@@ -91,24 +93,46 @@ export function getStrategies() {
   return service.get<Strategy[]>("/passport/strategies");
 }
 
-export function get(id: string): Promise<Identity> {
+export function get(id: string): Promise<IdentityGet> {
   checkInitialized(authorization);
 
-  return service.get<Identity>(`${identitySegment}/${id}`);
+  return service.get<IdentityGet>(`${identitySegment}/${id}`);
 }
 
-export function getAll(queryParams: object = {}): Promise<Identity[] | IndexResult<Identity>> {
+export function getAll(queryParams?: {
+  paginate?: false;
+  limit?: number;
+  skip?: number;
+  filter?: object;
+  sort?: object;
+}): Promise<IdentityGet[]>;
+export function getAll(queryParams?: {
+  paginate?: true;
+  limit?: number;
+  skip?: number;
+  filter?: object;
+  sort?: object;
+}): Promise<IndexResult<IdentityGet>>;
+export function getAll(
+  queryParams: {
+    paginate?: boolean;
+    limit?: number;
+    skip?: number;
+    filter?: object;
+    sort?: object;
+  } = {}
+): Promise<IdentityGet[] | IndexResult<IdentityGet>> {
   checkInitialized(authorization);
 
-  return service.get<Identity[] | IndexResult<Identity>>(identitySegment, {
+  return service.get<IdentityGet[] | IndexResult<IdentityGet>>(identitySegment, {
     params: queryParams
   });
 }
 
-export async function insert(identity: Identity): Promise<Identity> {
+export async function insert(identity: IdentityCreate): Promise<IdentityGet> {
   checkInitialized(authorization);
 
-  const insertedIdentity = await service.post<Identity>(identitySegment, identity);
+  const insertedIdentity = await service.post<IdentityGet>(identitySegment, identity);
 
   return policy.attach(insertedIdentity._id, identity.policies).then(policies => {
     insertedIdentity.policies = policies;
@@ -116,10 +140,19 @@ export async function insert(identity: Identity): Promise<Identity> {
   });
 }
 
-export function update(id: string, identity: Identity): Promise<Identity> {
+export async function update(id: string, identity: IdentityUpdate): Promise<IdentityGet> {
   checkInitialized(authorization);
 
-  return service.put<Identity>(`${identitySegment}/${id}`, identity);
+  const existingIdentity = await service.get<IdentityGet>(`${identitySegment}/${id}`);
+
+  await policy.detach(id, existingIdentity.policies || []);
+
+  const updatedIdentity = await service.put<IdentityGet>(`${identitySegment}/${id}`, identity);
+
+  return policy.attach(id, identity.policies || []).then(policies => {
+    updatedIdentity.policies = policies;
+    return updatedIdentity;
+  });
 }
 
 export function remove(id: string): Promise<any> {
@@ -133,7 +166,7 @@ export namespace policy {
   export function attach(identityId: string, policyIds: string[] = []): Promise<string[]> {
     checkInitialized(authorization);
 
-    const promises: Promise<Identity>[] = [];
+    const promises: Promise<IdentityGet>[] = [];
     const attachedPolicies = new Set<string>();
 
     for (const policyId of policyIds) {
@@ -153,7 +186,7 @@ export namespace policy {
   export function detach(identityId: string, policyIds: string[] = []): Promise<string[]> {
     checkInitialized(authorization);
 
-    const promises: Promise<Identity>[] = [];
+    const promises: Promise<IdentityGet>[] = [];
     const detachedPolicies = new Set<string>();
 
     for (const policyId of policyIds) {

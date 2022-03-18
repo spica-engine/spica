@@ -4,11 +4,11 @@ import {BucketModule} from "@spica-server/bucket";
 import {SchemaModule} from "@spica-server/core/schema";
 import {DATE_TIME, OBJECTID_STRING} from "@spica-server/core/schema/formats";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
+import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as Bucket from "@spica-devkit/bucket";
-import {buffer, bufferCount, take} from "rxjs/operators";
+import {bufferCount, take} from "rxjs/operators";
 import {WsAdapter} from "@spica-server/core/websocket";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
@@ -200,16 +200,36 @@ describe("Bucket", () => {
       expect(existingData).toEqual([{_id: "__objectid__", title: "hello", description: "hi"}]);
     });
 
-    it("should getAll with index result", async () => {
+    // suggestion: test them separately
+    it("should getAll with query params", async () => {
+      // we should make sure that this one was inserted first
       await Bucket.data.insert<any>(bucketid, {
-        title: "hello",
-        description: "hi"
+        title: "doc1",
+        description: "desc1"
       });
 
-      const existingData = await Bucket.data.getAll(bucketid, {queryParams: {paginate: true}});
+      await Promise.all([
+        Bucket.data.insert<any>(bucketid, {
+          title: "doc1",
+          description: "desc2"
+        }),
+        Bucket.data.insert<any>(bucketid, {
+          title: "doc2"
+        })
+      ]);
+
+      const existingData = await Bucket.data.getAll(bucketid, {
+        queryParams: {paginate: true, limit: 1, skip: 1, filter: {title: "doc1"}}
+      });
       expect(existingData).toEqual({
-        meta: {total: 1},
-        data: [{_id: "__objectid__", title: "hello", description: "hi"}]
+        meta: {total: 2},
+        data: [
+          {
+            _id: "__objectid__",
+            title: "doc1",
+            description: "desc2"
+          }
+        ]
       });
     });
 
