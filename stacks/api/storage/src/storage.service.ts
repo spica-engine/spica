@@ -135,7 +135,9 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
     }
     delete object.content.data;
     delete object._id;
-    return this._coll.findOneAndUpdate({_id}, {$set: object}).then(() => object);
+    return this._coll.findOneAndUpdate({_id}, {$set: object}).then(() => {
+      return {...object, _id: _id};
+    });
   }
 
   async insert(objects: StorageObject[]): Promise<StorageObject[]> {

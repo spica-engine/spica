@@ -65,7 +65,7 @@ describe("Bucket", () => {
       }
     });
 
-    Bucket.initialize({identity: "mock_apikey", publicUrl: `http://localhost:3000`});
+    Bucket.initialize({identity: "token", publicUrl: `http://localhost:3000`});
   });
 
   afterEach(async () => await app.close());
