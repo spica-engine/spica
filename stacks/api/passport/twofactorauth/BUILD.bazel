@@ -1,0 +1,16 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
+package(default_visibility = ["//visibility:public"])
+
+ts_project(
+    name = "twofactorauth",
+    package_name = "@spica-server/passport/twofactorauth",
+    srcs = glob([
+        "index.ts",
+        "src/*.ts",
+    ]),
+    deps = [
+        "@npm//@nestjs/common",
+        "@npm//nodemailer",
+    ],
+)

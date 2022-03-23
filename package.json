@@ -33,6 +33,7 @@
     "run-cli": "bazel run //stacks/cli:bin"
   },
   "dependencies": {
+    "nodemailer":"^6.7.3",
     "@google-cloud/storage": "^5.0.1",
     "@grpc/grpc-js": "1.1.1",
     "@ionic/cli-framework": "^4.1.0",

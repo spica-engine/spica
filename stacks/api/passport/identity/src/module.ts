@@ -10,7 +10,6 @@ import {IdentityStrategy} from "./identity.strategy";
 import {provideSettingsFinalizer, providePolicyFinalizer} from "./utility";
 import {IDENTITY_POLICY_FINALIZER, PolicyService} from "@spica-server/passport/policy";
 import {registerStatusProvider} from "./status";
-
 import IdentitySchema = require("./schemas/identity.json");
 import IdentityCreateSchema = require("./schemas/identity-create.json");
 
@@ -55,6 +54,7 @@ export class IdentityModule {
         })
       ],
       providers: [
+        IdentityController,
         IdentityService,
         IdentityStrategy,
         {

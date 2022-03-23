@@ -1,8 +1,9 @@
 :host {
   mat-card {
     mat-card-content {
-      form > button {
-        margin-bottom: 1.25em;
+      mat-divider {
+        position: static;
+        margin: 20px 0px 20px 0px;
       }
 
       form {
@@ -20,6 +21,17 @@
         justify-content: space-between;
         mat-list {
           flex-grow: 1;
+        }
+      }
+
+      div.twofactorauth {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        > mat-form-field{
+          width: 30%;
         }
       }
     }

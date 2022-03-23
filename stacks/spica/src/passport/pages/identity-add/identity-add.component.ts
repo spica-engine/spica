@@ -2,7 +2,7 @@ import {Component, OnDestroy, OnInit, TemplateRef, ViewChild} from "@angular/cor
 import {ActivatedRoute, Router} from "@angular/router";
 import {PreferencesService} from "@spica-client/core";
 import {Subject, of} from "rxjs";
-import {filter, switchMap, takeUntil, tap} from "rxjs/operators";
+import {filter, map, switchMap, takeUntil, tap} from "rxjs/operators";
 import {emptyIdentity, Identity} from "../../interfaces/identity";
 import {Policy} from "../../interfaces/policy";
 import {IdentityService} from "../../services/identity.service";
@@ -20,6 +20,8 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
   identity: Identity = emptyIdentity();
   policies: Policy[];
   changePasswordState: boolean;
+
+  twoFactorAuthSchemas = [];
 
   public error: string;
   public preferences: PassportPreference;
@@ -47,9 +49,22 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
       .pipe(
         filter(params => params.id),
         switchMap(params => this.identityService.findOne(params.id)),
+        switchMap(identity =>
+          this.identityService.getTwoFactorAuthSchemas().pipe(
+            map(schemas => {
+              return {
+                schemas,
+                identity
+              };
+            })
+          )
+        ),
         takeUntil(this.onDestroy)
       )
-      .subscribe(identity => (this.identity = identity));
+      .subscribe(({schemas, identity}) => {
+        this.identity = identity;
+        this.twoFactorAuthSchemas = schemas;
+      });
 
     this.passportService
       .checkAllowed("passport:policy:index")
@@ -114,6 +129,20 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
         })
         .catch(err => (this.error = err.error.message));
     }
+  }
+
+  switch2FA() {
+    if (this.identity.authFactor) {
+      delete this.identity.authFactor;
+    } else {
+      this.identity.authFactor = {
+        type: undefined
+      };
+    }
+  }
+
+  on2FAMethodChange(selection:string){
+    console.log(selection)
   }
 
   ngOnDestroy(): void {

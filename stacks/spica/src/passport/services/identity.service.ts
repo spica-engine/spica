@@ -2,7 +2,7 @@ import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {IndexResult} from "@spica-client/core/interfaces";
 import {Observable} from "rxjs";
-import {Identity} from "../interfaces/identity";
+import {Identity, TwoFactorAuthSchema} from "../interfaces/identity";
 import {PredefinedDefault} from "../interfaces/predefined-default";
 
 @Injectable({
@@ -59,5 +59,9 @@ export class IdentityService {
 
   getPredefinedDefaults(): Observable<PredefinedDefault[]> {
     return this.http.get<PredefinedDefault[]>(`api:/passport/identity/predefs`);
+  }
+
+  getTwoFactorAuthSchemas(): Observable<TwoFactorAuthSchema[]> {
+    return this.http.get<any>("api:/passport/identity/factors");
   }
 }

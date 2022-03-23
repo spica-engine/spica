@@ -74,6 +74,7 @@
       <mat-error *ngIf="error">{{ error }}</mat-error>
     </form>
     <div class="policies" *ngIf="identity._id">
+      <mat-divider></mat-divider>
       <mat-list>
         <h3 mat-subheader>Owned Policies</h3>
         <mat-list-item *ngFor="let policy of ownedPolicies">
@@ -110,6 +111,24 @@
           </mat-list-item>
         </ng-container>
       </mat-list>
+    </div>
+    <div class="twofactorauth" *ngIf="identity._id">
+      <mat-divider></mat-divider>
+      <button mat-button (click)="switch2FA()">
+        {{ !identity.authFactor ? "Enable" : "Disable" }} 2FA
+        <mat-icon>fingerprint</mat-icon>
+      </button>
+      <mat-form-field *ngIf="identity.authFactor">
+        <mat-label>2FA Method</mat-label>
+        <mat-select
+          [(ngModel)]="identity.authFactor.type"
+          (ngModelChange)="on2FAMethodChange($event)"
+        >
+          <mat-option *ngFor="let schema of twoFactorAuthSchemas" [value]="schema.type">
+            {{ schema.title }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </div>
   </mat-card-content>
   <mat-card-actions>

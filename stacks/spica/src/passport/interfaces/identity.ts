@@ -19,6 +19,10 @@ export interface Identity {
     [key: string]: any;
   };
   system?: boolean;
+  authFactor?: {
+    type: string;
+    [key: string]: any;
+  };
 }
 
 export interface IdentitySchema {
@@ -39,3 +43,10 @@ export interface PropertyOptions {
 }
 
 export type Property = InputSchema & PropertyOptions;
+
+export interface TwoFactorAuthSchema {
+  type: "string";
+  config: {
+    [key: string]: any;
+  };
+}
