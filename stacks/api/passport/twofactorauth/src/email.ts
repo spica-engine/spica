@@ -58,10 +58,7 @@ export class Email implements Factor {
         subject: "Your 2FA Code", // Subject line
         text: this.code // plain text body
       })
-      .then(
-        () =>
-          `Please enter the code that has been sent to the '${this.meta.config.email}'. You might need to check spam folder too.`
-      );
+      .then(() => `Please enter the code that has been sent to the ${this.meta.config.email}.`);
   }
 
   authenticate(code: string) {

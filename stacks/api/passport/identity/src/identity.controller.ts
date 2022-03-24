@@ -194,7 +194,7 @@ export class IdentityController {
     // to keep this global value clear
     setTimeout(() => {
       this.identityFactors.delete(id);
-    }, 1000 * 60);
+    }, 1000 * 60 * 5);
 
     const message = await factor.start();
 
@@ -204,7 +204,7 @@ export class IdentityController {
       },
       answer: {
         url: `passport/identity/${id}/factors/complete-verification`,
-        method: "POST"
+        method: "post"
       }
     };
   }

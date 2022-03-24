@@ -27,7 +27,7 @@ export class Totp implements Factor {
 
   start() {
     if (this.meta.secret) {
-      return Promise.resolve("Please enter the six digits code");
+      return Promise.resolve("Please enter the 6 digit code");
     }
 
     const secret = speakeasy.generateSecret({

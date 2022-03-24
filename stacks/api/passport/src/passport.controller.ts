@@ -107,7 +107,7 @@ export class PassportController {
       res.status(200).json({
         challenge: {
           url: `passport/identify/${identity._id}/factor-authentication`,
-          method: "GET"
+          method: "get"
         }
       });
     } else {
@@ -132,7 +132,7 @@ export class PassportController {
       },
       answer: {
         url: `passport/identify/${id}/factor-authentication`,
-        method: "POST"
+        method: "post"
       }
     };
   }

@@ -1,55 +1,80 @@
 <img src="assets/dark-icon.svg" />
 
 <mat-card class="mat-elevation-z25">
-  <mat-card-content>
-    <form #form="ngForm">
-      <mat-error *ngIf="error">{{ error }}</mat-error>
+  <ng-container *ngIf="!secondFactor">
+    <mat-card-content>
+      <form #form="ngForm">
+        <mat-error *ngIf="error">{{ error }}</mat-error>
+        <mat-form-field>
+          <mat-icon matPrefix>perm_identity</mat-icon>
+          <input
+            matInput
+            type="text"
+            name="identifier"
+            placeholder="Username"
+            autocomplete="username"
+            minlength="3"
+            required
+            [(ngModel)]="identity.identifier"
+          />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-icon matPrefix>vpn_key</mat-icon>
+          <input
+            matInput
+            name="password"
+            type="password"
+            placeholder="Password"
+            autocomplete="current-password"
+            minlength="3"
+            required
+            [(ngModel)]="identity.password"
+            (keyup.enter)="identify()"
+          />
+        </mat-form-field>
+      </form>
+    </mat-card-content>
+    <button
+      mat-raised-button
+      type="submit"
+      color="primary"
+      (click)="identify()"
+      [disabled]="form.invalid"
+    >
+      Login
+    </button>
+    <button
+      *ngFor="let strategy of strategies | async"
+      mat-stroked-button
+      color="primary"
+      [matTooltip]="strategy.title"
+      (click)="identify(strategy._id)"
+    >
+      <mat-icon *ngIf="strategy.icon">{{ strategy.icon }}</mat-icon>
+      {{ strategy.title }}
+    </button>
+  </ng-container>
+  <ng-container *ngIf="secondFactor">
+    <mat-card-content>
+      <button class="back" mat-icon-button (click)="secondFactor = undefined">
+        <mat-icon>
+          arrow_back
+        </mat-icon>
+      </button>
       <mat-form-field>
-        <mat-icon matPrefix>perm_identity</mat-icon>
-        <input
-          matInput
-          type="text"
-          name="identifier"
-          placeholder="Username"
-          autocomplete="username"
-          minlength="3"
-          required
-          [(ngModel)]="identity.identifier"
-        />
+        <mat-icon matPrefix>fingerprint</mat-icon>
+        <input matInput ngModel placeholder="answer" #answerModel />
+        <mat-hint>{{ secondFactor.challenge.message }}</mat-hint>
       </mat-form-field>
-      <mat-form-field>
-        <mat-icon matPrefix>vpn_key</mat-icon>
-        <input
-          matInput
-          name="password"
-          type="password"
-          placeholder="Password"
-          autocomplete="current-password"
-          minlength="3"
-          required
-          [(ngModel)]="identity.password"
-          (keyup.enter)="identify()"
-        />
-      </mat-form-field>
-    </form>
-  </mat-card-content>
-  <button
-    mat-raised-button
-    type="submit"
-    color="primary"
-    (click)="identify()"
-    [disabled]="form.invalid"
-  >
-    Login
-  </button>
-  <button
-    *ngFor="let strategy of strategies | async"
-    mat-stroked-button
-    color="primary"
-    [matTooltip]="strategy.title"
-    (click)="identify(strategy._id)"
-  >
-    <mat-icon *ngIf="strategy.icon">{{ strategy.icon }}</mat-icon>
-    {{ strategy.title }}
-  </button>
+    </mat-card-content>
+
+    <button
+      color="primary"
+      mat-raised-button
+      [disabled]="!answerModel.value"
+      (click)="answerChallenge(answerModel.value)"
+    >
+      Confirm
+    </button>
+  </ng-container>
 </mat-card>
