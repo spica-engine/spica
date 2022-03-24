@@ -3,7 +3,12 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {PreferencesService} from "@spica-client/core";
 import {Subject, of} from "rxjs";
 import {filter, map, switchMap, takeUntil, tap} from "rxjs/operators";
-import {emptyIdentity, Identity} from "../../interfaces/identity";
+import {
+  AuthFactorSchema,
+  emptyAuthFactor,
+  emptyIdentity,
+  Identity
+} from "../../interfaces/identity";
 import {Policy} from "../../interfaces/policy";
 import {IdentityService} from "../../services/identity.service";
 import {PolicyService} from "../../services/policy.service";
@@ -21,7 +26,10 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
   policies: Policy[];
   changePasswordState: boolean;
 
-  twoFactorAuthSchemas = [];
+  factorAuthSchemas: AuthFactorSchema[] = [];
+  selectedAuthFactor;
+  factorAuthChallenge;
+  verificationResponse;
 
   public error: string;
   public preferences: PassportPreference;
@@ -63,7 +71,7 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
       )
       .subscribe(({schemas, identity}) => {
         this.identity = identity;
-        this.twoFactorAuthSchemas = schemas;
+        this.factorAuthSchemas = schemas;
       });
 
     this.passportService
@@ -131,18 +139,56 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
     }
   }
 
-  switch2FA() {
-    if (this.identity.authFactor) {
-      delete this.identity.authFactor;
+  switch2FA(isEnabled: boolean) {
+    if (isEnabled) {
+      this.selectedAuthFactor = emptyAuthFactor();
     } else {
-      this.identity.authFactor = {
-        type: undefined
-      };
+      if (this.identity.authFactor) {
+        this.identityService.removeTwoFactorAuth(this.identity._id).toPromise();
+        this.identity.authFactor = undefined;
+      }
+      this.selectedAuthFactor = undefined;
+      this.factorAuthChallenge = undefined;
     }
   }
 
-  on2FAMethodChange(selection:string){
-    console.log(selection)
+  on2FAMethodChange(selection: string) {
+    const selectedFactor = this.factorAuthSchemas.find(s => s.type == selection);
+    this.selectedAuthFactor = JSON.parse(JSON.stringify(selectedFactor));
+
+    Object.keys(selectedFactor.config).forEach(key => {
+      this.selectedAuthFactor.config[key] = undefined;
+    });
+
+    this.factorAuthChallenge = undefined;
+  }
+
+  getAuthFactorSchema(type: string) {
+    return this.factorAuthSchemas.find(s => s.type == type);
+  }
+
+  async startVerification() {
+    this.factorAuthChallenge = await this.identityService
+      .getTwoFactorAuthChallenge(this.identity._id, this.selectedAuthFactor)
+      .toPromise();
+  }
+
+  async completeVerification(answer) {
+    const isVerified = await this.identityService
+      .answerTwoFactorChallenge(this.identity._id, answer)
+      .toPromise();
+
+    if (isVerified) {
+      this.verificationResponse = "Verification has been completed successfully.";
+      this.identity.authFactor = JSON.parse(JSON.stringify(this.selectedAuthFactor));
+      this.selectedAuthFactor = undefined;
+    }
+
+    this.factorAuthChallenge = undefined;
+
+    setTimeout(() => {
+      this.verificationResponse = "";
+    }, 5000);
   }
 
   ngOnDestroy(): void {

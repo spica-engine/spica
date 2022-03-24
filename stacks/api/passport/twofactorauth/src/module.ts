@@ -1,6 +1,8 @@
 import {Global, Module} from "@nestjs/common";
 import {Email, EmailFactorSchemaProvider} from "./email";
-import {Question, QuestionFactorMeta, QuestionFactorSchemaProvider} from "./question";
+// consider removing
+import {Question, QuestionFactorSchemaProvider} from "./question";
+import { Totp, TotpFactorSchemaProvider } from "./totp";
 import {TwoFactorAuth} from "./twofactorauth";
 
 @Global()
@@ -12,9 +14,9 @@ import {TwoFactorAuth} from "./twofactorauth";
         const map = new Map();
 
         map.set("email", Email);
-        map.set("question", Question);
+        map.set("totp", Totp);
 
-        const schemas = [EmailFactorSchemaProvider, QuestionFactorSchemaProvider];
+        const schemas = [EmailFactorSchemaProvider,TotpFactorSchemaProvider];
 
         return new TwoFactorAuth(map, schemas);
       }

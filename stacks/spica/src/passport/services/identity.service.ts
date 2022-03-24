@@ -1,8 +1,14 @@
 import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {IndexResult} from "@spica-client/core/interfaces";
-import {Observable} from "rxjs";
-import {Identity, TwoFactorAuthSchema} from "../interfaces/identity";
+import {Observable, of} from "rxjs";
+import {catchError, map} from "rxjs/operators";
+import {
+  AuthFactorGetChallengeResponse,
+  AuthFactorMeta,
+  Identity,
+  TwoFactorAuthSchema
+} from "../interfaces/identity";
 import {PredefinedDefault} from "../interfaces/predefined-default";
 
 @Injectable({
@@ -63,5 +69,28 @@ export class IdentityService {
 
   getTwoFactorAuthSchemas(): Observable<TwoFactorAuthSchema[]> {
     return this.http.get<any>("api:/passport/identity/factors");
+  }
+
+  getTwoFactorAuthChallenge(
+    id: string,
+    meta: AuthFactorMeta
+  ): Observable<AuthFactorGetChallengeResponse> {
+    return this.http.post<AuthFactorGetChallengeResponse>(
+      `api:/passport/identity/${id}/start-factor-verification`,
+      meta
+    );
+  }
+
+  answerTwoFactorChallenge(id: string, answer: string) {
+    return this.http
+      .post<any>(`api:/passport/identity/${id}/complete-factor-verification`, {answer})
+      .pipe(
+        catchError(() => of(false)),
+        map(r => !!r)
+      );
+  }
+
+  removeTwoFactorAuth(id: string) {
+    return this.http.delete<any>(`api:/passport/identity/${id}/factors`);
   }
 }

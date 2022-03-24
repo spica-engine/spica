@@ -23,7 +23,7 @@ import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {Factor, FactorMeta, schemas, TwoFactorAuth} from "@spica-server/passport/twofactorauth";
+import {Factor, FactorMeta, TwoFactorAuth} from "@spica-server/passport/twofactorauth";
 import {createIdentityActivity} from "./activity.resource";
 import {hash} from "./hash";
 import {IdentityService} from "./identity.service";
@@ -164,20 +164,28 @@ export class IdentityController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(
     AuthGuard(),
-    ActionGuard("passport:identity:update", undefined, registerPolicyAttacher("IdentityFullAccess"))
+    ActionGuard(
+      "passport:identity:update",
+      "passport/identity/:id",
+      registerPolicyAttacher("IdentityFullAccess")
+    )
   )
-  async deleteFactor(@Param("id") id: string) {
-    this.identityFactors.delete(id);
+  async deleteFactor(@Param("id", OBJECT_ID) id: ObjectId) {
+    this.identityFactors.delete(id.toHexString());
 
-    this.twoFactorAuth.unregister(id);
+    this.twoFactorAuth.unregister(id.toHexString());
 
     await this.identityService.findOneAndUpdate({_id: id}, {$unset: {authFactor: ""}});
   }
 
-  @Get(":id/factors/start-verification")
+  @Post(":id/start-factor-verification")
   @UseGuards(
     AuthGuard(),
-    ActionGuard("passport:identity:update", undefined, registerPolicyAttacher("IdentityFullAccess"))
+    ActionGuard(
+      "passport:identity:update",
+      "passport/identity/:id",
+      registerPolicyAttacher("IdentityFullAccess")
+    )
   )
   async startFactorVerification(@Param("id") id: string, @Body() body: FactorMeta) {
     const factor = this.twoFactorAuth.getFactor(body);
@@ -188,7 +196,7 @@ export class IdentityController {
       this.identityFactors.delete(id);
     }, 1000 * 60);
 
-    const message = factor.start();
+    const message = await factor.start();
 
     return {
       challenge: {
@@ -196,16 +204,19 @@ export class IdentityController {
       },
       answer: {
         url: `passport/identity/${id}/factors/complete-verification`,
-        method: "POST",
-        requiredFields: ["answer"]
+        method: "POST"
       }
     };
   }
 
-  @Post(":id/factors/complete-verification")
+  @Post(":id/complete-factor-verification")
   @UseGuards(
     AuthGuard(),
-    ActionGuard("passport:identity:update", undefined, registerPolicyAttacher("IdentityFullAccess"))
+    ActionGuard(
+      "passport:identity:update",
+      "passport/identity/:id",
+      registerPolicyAttacher("IdentityFullAccess")
+    )
   )
   async completeFactorVerification(@Param("id", OBJECT_ID) id: ObjectId, @Body() {answer}: any) {
     const factor = this.identityFactors.get(id.toHexString());
@@ -214,7 +225,7 @@ export class IdentityController {
       throw new BadRequestException("Start a verification process before complete it.");
     }
 
-    const isVerified = factor.authenticate(answer).catch(e => {
+    const isVerified = await factor.authenticate(answer).catch(e => {
       throw new BadRequestException(e);
     });
 

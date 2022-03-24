@@ -1,4 +1,4 @@
-import {Factor, FactorMeta, TwoFactorAuthSchemaProvider} from "./interface";
+import {Factor, FactorMeta, FactorSchema, TwoFactorAuthSchemaProvider} from "./interface";
 import {Injectable} from "@nestjs/common";
 
 @Injectable()
@@ -26,7 +26,7 @@ export class TwoFactorAuth {
     return this.userFactor.delete(identity);
   }
 
-  getFactor(factorMeta: FactorMeta) {
+  getFactor(factorMeta: FactorMeta): Factor {
     const ctor = this.factors.get(factorMeta.type);
 
     if (!ctor) {

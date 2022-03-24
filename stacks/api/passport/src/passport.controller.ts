@@ -16,7 +16,7 @@ import {
   Req,
   All,
   Inject,
-  Res,
+  Res
 } from "@nestjs/common";
 import {Identity, IdentityService, LoginCredentials} from "@spica-server/passport/identity";
 import {Subject, throwError} from "rxjs";
@@ -43,9 +43,7 @@ export class PassportController {
     private strategyService: StrategyService,
     private twoFactorAuth: TwoFactorAuth,
     @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices
-  ) {
-    
-  }
+  ) {}
 
   async _identify(identifier: string, password: string, state: string, expiresIn: number, res) {
     let identity: Identity;
@@ -134,8 +132,7 @@ export class PassportController {
       },
       answer: {
         url: `passport/identify/${id}/factor-authentication`,
-        method: "POST",
-        requiredFields: ["answer"]
+        method: "POST"
       }
     };
   }

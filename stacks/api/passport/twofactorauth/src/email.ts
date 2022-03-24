@@ -7,7 +7,7 @@ export const EmailFactorSchemaProvider: TwoFactorAuthSchemaProvider = () => {
     title: "Email",
     description: "Security code verification via email.",
     config: {
-      address: {
+      email: {
         type: "string"
       }
     }
@@ -18,7 +18,7 @@ export const EmailFactorSchemaProvider: TwoFactorAuthSchemaProvider = () => {
 export interface EmailFactorMeta extends FactorMeta {
   type: "email";
   config: {
-    address: string;
+    email: string;
   };
 }
 
@@ -54,13 +54,13 @@ export class Email implements Factor {
     return this.transporter
       .sendMail({
         from: "noreply@spicaengine.com", // sender address
-        to: this.meta.email, // list of receivers
+        to: this.meta.config.email, // list of receivers
         subject: "Your 2FA Code", // Subject line
         text: this.code // plain text body
       })
       .then(
         () =>
-          `Please enter the code that has been sent to the '${this.meta.email}'. Do not forget the checking spam folder.`
+          `Please enter the code that has been sent to the '${this.meta.config.email}'. You might need to check spam folder too.`
       );
   }
 
