@@ -599,11 +599,18 @@ describe("IndexComponent", () => {
     it("should return storage", () => {
       fixture.componentInstance.onImageError = undefined;
 
-      const template = fixture.componentInstance.buildTemplate(
+      let template = fixture.componentInstance.buildTemplate(
         "test_url",
         {type: "storage"},
         "avatar"
       );
+
+      const timestampRegex = /\?timestamp=([0-9]*)/;
+      const timestamp = timestampRegex.exec(template)[1];
+      const date = new Date(Number(timestamp));
+      expect(isNaN(date.getTime())).toBeFalse();
+
+      template = template.replace(timestampRegex, "");
       expect(template).toEqual(
         "<img style='width:100px;height:100px;margin:10px;border-radius:3px' src=test_url alt=test_url onerror=undefined>"
       );
