@@ -17,7 +17,7 @@ import {IdentifyComponent} from "./identify.component";
 describe("Identify Component", () => {
   let fixture: ComponentFixture<IdentifyComponent>;
   let routerSpy;
-  let identifyWithSpy: jasmine.Spy<typeof fixture.componentInstance.passport.identifyWith>;
+  let identifySpy: jasmine.Spy<typeof fixture.componentInstance.passport.identify>;
 
   const strategies = [
     {
@@ -70,12 +70,16 @@ describe("Identify Component", () => {
     fixture = TestBed.createComponent(IdentifyComponent);
 
     spyOn(fixture.componentInstance.passport, "getStrategies").and.returnValue(of(strategies));
-    identifyWithSpy = spyOn(fixture.componentInstance.passport, "identifyWith").and.callFake(
-      (id: string) => {
-        return id == "id2" ? throwError({error: {message: "Here is the error."}}) : of(null);
+    identifySpy = spyOn(fixture.componentInstance.passport, "identify").and.callFake(
+      idOrStrategy => {
+        if (typeof idOrStrategy != "string") {
+          return of({});
+        }
+        return idOrStrategy == "id2"
+          ? throwError({error: {message: "Here is the error."}})
+          : of({});
       }
     );
-    spyOn(fixture.componentInstance.passport, "identify").and.returnValue(of({}));
 
     routerSpy = spyOn(fixture.componentInstance.router, "navigate");
     fixture.detectChanges();
@@ -198,9 +202,9 @@ describe("Identify Component", () => {
     it("should initiate login via strategy in a modal", fakeAsync(() => {
       activatedRoute.queryParams.next({strategy: "name"});
       tick();
-      expect(identifyWithSpy).toHaveBeenCalled();
-      expect(identifyWithSpy.calls.mostRecent().args[0]).toBe("name");
-      expect(typeof identifyWithSpy.calls.mostRecent().args[1]).toBe("function");
+      expect(identifySpy).toHaveBeenCalled();
+      expect(identifySpy.calls.mostRecent().args[0]).toBe("name");
+      expect(typeof identifySpy.calls.mostRecent().args[1]).toBe("function");
     }));
   });
 });

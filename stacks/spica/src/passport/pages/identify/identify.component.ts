@@ -77,10 +77,7 @@ export class IdentifyComponent implements OnInit {
           this.passport.onTokenRecieved(r);
           return this.router.navigate(["/dashboard"]);
         },
-        e => {
-          console.log(e);
-          this.error = e.message;
-        }
+        r => (this.error = r.error.message)
       );
   }
 
