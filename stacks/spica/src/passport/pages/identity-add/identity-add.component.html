@@ -144,7 +144,7 @@
             [(ngModel)]="selectedAuthFactor.type"
             (ngModelChange)="on2FAMethodChange($event)"
           >
-            <mat-option *ngFor="let method of factorAuthSchemas" [value]="method.type">
+            <mat-option *ngFor="let method of authFactorSchemas" [value]="method.type">
               {{ method.title }}
             </mat-option>
           </mat-select>
@@ -169,20 +169,20 @@
           </mat-form-field>
           <button
             mat-button
-            *ngIf="!factorAuthChallenge && selectedAuthFactor.type"
+            *ngIf="!authFactorChallenge && selectedAuthFactor.type"
             (click)="startVerification()"
           >
             Start Verification
           </button>
         </ng-container>
 
-        <ng-container *ngIf="factorAuthChallenge">
+        <ng-container *ngIf="authFactorChallenge">
           <img
-            *ngIf="factorAuthChallenge.challenge.startsWith('data:image'); else info"
-            [src]="factorAuthChallenge.challenge"
+            *ngIf="authFactorChallenge.challenge.startsWith('data:image'); else info"
+            [src]="authFactorChallenge.challenge"
           />
           <ng-template #info>
-            {{ factorAuthChallenge.challenge }}
+            {{ authFactorChallenge.challenge }}
           </ng-template>
           <mat-form-field>
             <mat-label>Answer</mat-label>

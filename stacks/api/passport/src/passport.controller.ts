@@ -41,7 +41,7 @@ export class PassportController {
   constructor(
     private identityService: IdentityService,
     private strategyService: StrategyService,
-    private factorAuth: AuthFactor,
+    private authFactor: AuthFactor,
     @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices
   ) {}
 
@@ -101,10 +101,10 @@ export class PassportController {
 
     const tokenSchema = this.identityService.sign(identity, expiresIn);
 
-    if (this.factorAuth.hasFactor(identity._id.toHexString())) {
+    if (this.authFactor.hasFactor(identity._id.toHexString())) {
       this.identityToken.set(identity._id.toHexString(), tokenSchema);
 
-      const challenge = await this.factorAuth.start(identity._id.toHexString());
+      const challenge = await this.authFactor.start(identity._id.toHexString());
 
       return res.status(200).json({
         challenge,
@@ -147,7 +147,7 @@ export class PassportController {
 
   @Post("identify/:id/factor-authentication")
   async authenticateWithFactor(@Param("id") id: string, @Body() body) {
-    const hasFactor = this.factorAuth.hasFactor(id);
+    const hasFactor = this.authFactor.hasFactor(id);
     const token = this.identityToken.get(id);
 
     if (!hasFactor || !token) {
@@ -160,7 +160,7 @@ export class PassportController {
 
     const {answer} = body;
 
-    const isAuthenticated = await this.factorAuth.authenticate(id, answer).catch(e => {
+    const isAuthenticated = await this.authFactor.authenticate(id, answer).catch(e => {
       this.identityToken.delete(id);
       throw new BadRequestException(e);
     });

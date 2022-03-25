@@ -1,8 +1,5 @@
 import {Global, Module} from "@nestjs/common";
-import {Email, EmailFactorSchemaProvider} from "./email";
-// consider removing
-import {Question, QuestionFactorSchemaProvider} from "./question";
-import { Totp, TotpFactorSchemaProvider } from "./totp";
+import {Totp, TotpFactorSchemaProvider} from "./totp";
 import {AuthFactor} from "./authfactor";
 
 @Global()
@@ -13,10 +10,9 @@ import {AuthFactor} from "./authfactor";
       useFactory: () => {
         const map = new Map();
 
-        map.set("email", Email);
         map.set("totp", Totp);
 
-        const schemas = [EmailFactorSchemaProvider,TotpFactorSchemaProvider];
+        const schemas = [TotpFactorSchemaProvider];
 
         return new AuthFactor(map, schemas);
       }

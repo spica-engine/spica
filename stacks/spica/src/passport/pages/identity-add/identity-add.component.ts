@@ -26,9 +26,9 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
   policies: Policy[];
   changePasswordState: boolean;
 
-  factorAuthSchemas: AuthFactorSchema[] = [];
+  authFactorSchemas: AuthFactorSchema[] = [];
   selectedAuthFactor;
-  factorAuthChallenge;
+  authFactorChallenge;
   verificationResponse;
 
   public error: string;
@@ -71,7 +71,7 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
       )
       .subscribe(({schemas, identity}) => {
         this.identity = identity;
-        this.factorAuthSchemas = schemas;
+        this.authFactorSchemas = schemas;
       });
 
     this.passportService
@@ -148,27 +148,27 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
         this.identity.authFactor = undefined;
       }
       this.selectedAuthFactor = undefined;
-      this.factorAuthChallenge = undefined;
+      this.authFactorChallenge = undefined;
     }
   }
 
   on2FAMethodChange(selection: string) {
-    const selectedFactor = this.factorAuthSchemas.find(s => s.type == selection);
+    const selectedFactor = this.authFactorSchemas.find(s => s.type == selection);
     this.selectedAuthFactor = JSON.parse(JSON.stringify(selectedFactor));
 
     Object.keys(selectedFactor.config).forEach(key => {
       this.selectedAuthFactor.config[key] = undefined;
     });
 
-    this.factorAuthChallenge = undefined;
+    this.authFactorChallenge = undefined;
   }
 
   getAuthFactorSchema(type: string) {
-    return this.factorAuthSchemas.find(s => s.type == type);
+    return this.authFactorSchemas.find(s => s.type == type);
   }
 
   async startVerification() {
-    this.factorAuthChallenge = await this.identityService
+    this.authFactorChallenge = await this.identityService
       .startAuthFactorVerification(this.identity._id, this.selectedAuthFactor)
       .toPromise();
   }
@@ -184,7 +184,7 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
       this.selectedAuthFactor = undefined;
     }
 
-    this.factorAuthChallenge = undefined;
+    this.authFactorChallenge = undefined;
 
     setTimeout(() => {
       this.verificationResponse = "";

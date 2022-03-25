@@ -16,8 +16,8 @@ ts_project(
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
-        "//stacks/api/passport/authfactor",
         "//stacks/api/passport/apikey",
+        "//stacks/api/passport/authfactor",
         "//stacks/api/passport/guard",
         "//stacks/api/passport/identity",
         "//stacks/api/passport/policy",
@@ -30,10 +30,10 @@ ts_project(
         "@npm//axios",
         "@npm//body-parser",
         "@npm//node-forge",
+        "@npm//nodemailer",
         "@npm//rxjs",
         "@npm//saml2-js",
         "@npm//uuid",
-        "@npm//nodemailer",
     ],
 )
 

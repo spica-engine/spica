@@ -39,12 +39,12 @@ export class IdentityController {
     private identityService: IdentityService,
     @Inject(POLICY_PROVIDER)
     private identityPolicyResolver: (req: any) => Promise<[{statement: []}]>,
-    private factorAuth: AuthFactor
+    private authFactor: AuthFactor
   ) {
     this.identityService.find({}).then(identities => {
       for (const identity of identities) {
         if (identity.authFactor) {
-          this.factorAuth.register(identity._id.toHexString(), identity.authFactor);
+          this.authFactor.register(identity._id.toHexString(), identity.authFactor);
         }
       }
     });
@@ -79,7 +79,7 @@ export class IdentityController {
   private hideSecretsExpression(): {[key: string]: 0} {
     const hideSecretsPipeline: any = {password: 0};
 
-    const authFactorSecretPaths = this.factorAuth.getSecretPaths();
+    const authFactorSecretPaths = this.authFactor.getSecretPaths();
     authFactorSecretPaths.forEach(path => {
       hideSecretsPipeline[`authFactor.${path}`] = 0;
     });
@@ -155,7 +155,7 @@ export class IdentityController {
   @Get("factors")
   @UseGuards(AuthGuard())
   getFactors() {
-    return this.factorAuth.getSchemas();
+    return this.authFactor.getSchemas();
   }
 
   @Delete(":id/factors")
@@ -171,11 +171,11 @@ export class IdentityController {
   async deleteFactor(@Param("id", OBJECT_ID) id: ObjectId) {
     this.identityFactors.delete(id.toHexString());
 
-    this.factorAuth.unregister(id.toHexString());
+    this.authFactor.unregister(id.toHexString());
 
     await this.identityService.findOneAndUpdate({_id: id}, {$unset: {authFactor: ""}});
   }
-  
+
   @Get(":id")
   @UseGuards(
     AuthGuard(),
@@ -188,8 +188,6 @@ export class IdentityController {
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.identityService.findOne({_id: id}, {projection: this.hideSecretsExpression()});
   }
-
-  
 
   @Post(":id/start-factor-verification")
   @UseGuards(
@@ -208,7 +206,7 @@ export class IdentityController {
     let factor;
 
     try {
-      factor = this.factorAuth.getFactor(body);
+      factor = this.authFactor.getFactor(body);
     } catch (error) {
       throw new BadRequestException(error);
     }
@@ -269,7 +267,7 @@ export class IdentityController {
       throw new UnauthorizedException("Verification has been failed.");
     }
 
-    this.factorAuth.register(id.toHexString(), factor);
+    this.authFactor.register(id.toHexString(), factor);
 
     const meta = factor.getMeta();
     return this.identityService
@@ -308,7 +306,7 @@ export class IdentityController {
     delete identity.password;
 
     if (identity.authFactor) {
-      this.factorAuth.getSecretPaths().map(path => {
+      this.authFactor.getSecretPaths().map(path => {
         delete identity.authFactor[path];
       });
     }

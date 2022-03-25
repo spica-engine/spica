@@ -50,7 +50,7 @@ export class Totp implements Factor {
       encoding: "base32",
       token: payload
     });
-    
+
     return Promise.resolve(isVerified);
   }
 
