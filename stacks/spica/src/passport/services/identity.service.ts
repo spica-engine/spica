@@ -7,7 +7,7 @@ import {
   AuthFactorGetChallengeResponse,
   AuthFactorMeta,
   Identity,
-  TwoFactorAuthSchema
+  AuthFactorSchema
 } from "../interfaces/identity";
 import {PredefinedDefault} from "../interfaces/predefined-default";
 
@@ -67,11 +67,11 @@ export class IdentityService {
     return this.http.get<PredefinedDefault[]>(`api:/passport/identity/predefs`);
   }
 
-  getTwoFactorAuthSchemas(): Observable<TwoFactorAuthSchema[]> {
+  getAuthFactorSchemas(): Observable<AuthFactorSchema[]> {
     return this.http.get<any>("api:/passport/identity/factors");
   }
 
-  getTwoFactorAuthChallenge(
+  startAuthFactorVerification(
     id: string,
     meta: AuthFactorMeta
   ): Observable<AuthFactorGetChallengeResponse> {
@@ -81,7 +81,7 @@ export class IdentityService {
     );
   }
 
-  answerTwoFactorChallenge(id: string, answer: string) {
+  completeAuthFactorVerification(id: string, answer: string) {
     return this.http
       .post<any>(`api:/passport/identity/${id}/complete-factor-verification`, {answer})
       .pipe(
@@ -90,7 +90,7 @@ export class IdentityService {
       );
   }
 
-  removeTwoFactorAuth(id: string) {
+  removeAuthFactor(id: string) {
     return this.http.delete<any>(`api:/passport/identity/${id}/factors`);
   }
 }

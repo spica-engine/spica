@@ -12,6 +12,7 @@ import {IDENTITY_POLICY_FINALIZER, PolicyService} from "@spica-server/passport/p
 import {registerStatusProvider} from "./status";
 import IdentitySchema = require("./schemas/identity.json");
 import IdentityCreateSchema = require("./schemas/identity-create.json");
+import AuthFactorSchema = require("./schemas/authfactor.json");
 
 @Global()
 @Module({})
@@ -49,7 +50,7 @@ export class IdentityModule {
           }
         }),
         SchemaModule.forChild({
-          schemas: [IdentitySchema, IdentityCreateSchema],
+          schemas: [IdentitySchema, IdentityCreateSchema, AuthFactorSchema],
           customFields: ["options"]
         })
       ],

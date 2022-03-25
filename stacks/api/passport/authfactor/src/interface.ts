@@ -20,9 +20,8 @@ export interface FactorSchema {
   title: string;
   description: string;
   config: {
-    [key: string]: {type: any; enum?: any[]; value?: any};
+    [key: string]: {type: string; enum?: any[]};
   };
-  secret?: string;
 }
 
-export type TwoFactorAuthSchemaProvider = () => Promise<FactorSchema>;
+export type AuthFactorSchemaProvider = () => Promise<FactorSchema>;

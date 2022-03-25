@@ -58,7 +58,7 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
         filter(params => params.id),
         switchMap(params => this.identityService.findOne(params.id)),
         switchMap(identity =>
-          this.identityService.getTwoFactorAuthSchemas().pipe(
+          this.identityService.getAuthFactorSchemas().pipe(
             map(schemas => {
               return {
                 schemas,
@@ -144,7 +144,7 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
       this.selectedAuthFactor = emptyAuthFactor();
     } else {
       if (this.identity.authFactor) {
-        this.identityService.removeTwoFactorAuth(this.identity._id).toPromise();
+        this.identityService.removeAuthFactor(this.identity._id).toPromise();
         this.identity.authFactor = undefined;
       }
       this.selectedAuthFactor = undefined;
@@ -169,13 +169,13 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
 
   async startVerification() {
     this.factorAuthChallenge = await this.identityService
-      .getTwoFactorAuthChallenge(this.identity._id, this.selectedAuthFactor)
+      .startAuthFactorVerification(this.identity._id, this.selectedAuthFactor)
       .toPromise();
   }
 
   async completeVerification(answer) {
     const isVerified = await this.identityService
-      .answerTwoFactorChallenge(this.identity._id, answer)
+      .completeAuthFactorVerification(this.identity._id, answer)
       .toPromise();
 
     if (isVerified) {

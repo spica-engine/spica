@@ -4,12 +4,11 @@ import {
   ApikeyInitialization,
   IndexResult,
   LoginWithStrategyResponse,
-  TokenSchemeOrChallenge,
   TokenScheme,
+  ChallengeRes,
   Challenge,
-  isTokenScheme,
-  TokenOrChallenge,
-  RequestTarget
+  FactorSchema,
+  FactorMeta
 } from "./interface";
 import {
   initialize as _initialize,
@@ -25,6 +24,18 @@ let authorization;
 let service: HttpService;
 
 const identitySegment = "passport/identity";
+
+class _Challenge implements Challenge {
+  constructor(private res: ChallengeRes, private answerResponseMapper: (res) => string = r => r) {}
+
+  show() {
+    return this.res.challenge;
+  }
+
+  answer(answer: string): Promise<string> {
+    return service.post(this.res.answerUrl, {answer}).then(r => this.answerResponseMapper(r));
+  }
+}
 
 export function initialize(options: ApikeyInitialization | IdentityInitialization) {
   const {authorization: _authorization, service: _service} = _initialize(options);
@@ -52,23 +63,15 @@ export function verifyToken(token: string, baseUrl?: string) {
   return req.get(`${identitySegment}/verify`, {headers: {Authorization: token}});
 }
 
-function handleLoginResponse(response: TokenSchemeOrChallenge): Promise<string | Challenge> {
-  if (isTokenScheme(response)) {
-    return Promise.resolve(response.token);
-  }
-
-  return service.request<Challenge>({});
-}
-
 export async function login(
   identifier: string,
   password: string,
   tokenLifeSpan?: number
-): Promise<TokenOrChallenge> {
+): Promise<string | Challenge> {
   checkInitialized(authorization);
 
   return service
-    .post<TokenSchemeOrChallenge>("/passport/identify", {
+    .post<TokenScheme | ChallengeRes>("/passport/identify", {
       identifier,
       password,
       expires: tokenLifeSpan
@@ -77,18 +80,19 @@ export async function login(
       if (isTokenScheme(r)) {
         return r.token;
       }
-      return r;
+
+      const challenge = new _Challenge(r, r => r.token);
+      return challenge;
     });
 }
 
-export function answerChallenge(answer: string, target: RequestTarget): Promise<string> {
-  return service.request({
-    url: target.url,
-    method: target.method,
-    data: {
-      answer
-    }
-  });
+// we don't want to export this function because it's for internal usages
+function isTokenScheme(response: any): response is TokenScheme {
+  return typeof response.token == "string";
+}
+
+export function isChallenge(tokenOrChallenge: any): tokenOrChallenge is Challenge {
+  return typeof tokenOrChallenge.show == "function" && typeof tokenOrChallenge.answer == "function";
 }
 
 export async function loginWithStrategy(id: string): Promise<LoginWithStrategyResponse> {
@@ -98,16 +102,17 @@ export async function loginWithStrategy(id: string): Promise<LoginWithStrategyRe
     `/passport/strategy/${id}/url`
   );
 
-  const token: Observable<TokenOrChallenge> = new Observable(observer => {
+  const token: Observable<string | Challenge> = new Observable(observer => {
     service
-      .post<TokenSchemeOrChallenge>("/passport/identify", {
+      .post<TokenScheme | ChallengeRes>("/passport/identify", {
         state
       })
-      .then(response => {
-        if (isTokenScheme(response)) {
-          observer.next(response.token);
+      .then(r => {
+        if (isTokenScheme(r)) {
+          observer.next(r.token);
         } else {
-          observer.next(response);
+          const challenge = new _Challenge(r, r => r.token);
+          observer.next(challenge);
         }
         observer.complete();
       })
@@ -118,6 +123,26 @@ export async function loginWithStrategy(id: string): Promise<LoginWithStrategyRe
     url,
     token
   };
+}
+
+export namespace authfactor {
+  export function list(): Promise<FactorSchema[]> {
+    return service.get<FactorSchema[]>("passport/identity/factors");
+  }
+
+  export async function register(identityId: string, factor: FactorMeta): Promise<Challenge> {
+    const response = await service.post<ChallengeRes>(
+      `passport/identity/${identityId}/start-factor-verification`,
+      factor
+    );
+
+    const challenge = new _Challenge(response, response => response.message);
+    return challenge;
+  }
+
+  export function unregister(identityId: string) {
+    return service.delete(`passport/identity/${identityId}/factors`);
+  }
 }
 
 export function getStrategies() {

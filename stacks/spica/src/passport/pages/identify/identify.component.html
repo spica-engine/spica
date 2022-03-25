@@ -63,11 +63,16 @@
       </button>
       <mat-form-field>
         <mat-icon matPrefix>fingerprint</mat-icon>
-        <input matInput ngModel placeholder="answer" #answerModel />
+        <input
+          matInput
+          ngModel
+          placeholder="answer"
+          #answerModel
+          (keyup.enter)="answerChallenge(answerModel.value)"
+        />
         <mat-hint>{{ secondFactor.challenge }}</mat-hint>
       </mat-form-field>
     </mat-card-content>
-
     <button
       color="primary"
       mat-raised-button

@@ -72,10 +72,3 @@ export interface PropertyOptions {
 }
 
 export type Property = InputSchema & PropertyOptions;
-
-export interface TwoFactorAuthSchema {
-  type: "string";
-  config: {
-    [key: string]: any;
-  };
-}

@@ -1,8 +1,8 @@
-import {Factor, FactorMeta, FactorSchema, TwoFactorAuthSchemaProvider} from "./interface";
+import {Factor, FactorMeta, FactorSchema, AuthFactorSchemaProvider} from "./interface";
 import * as speakeasy from "speakeasy";
 import * as qrcode from "qrcode";
 
-export const TotpFactorSchemaProvider: TwoFactorAuthSchemaProvider = () => {
+export const TotpFactorSchemaProvider: AuthFactorSchemaProvider = () => {
   const schema: FactorSchema = {
     type: "totp",
     title: "Time based One Time Password",

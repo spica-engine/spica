@@ -18,7 +18,7 @@ import {StrategyController} from "./strategy/strategy.controller";
 import {StrategyService} from "./strategy/services/strategy.service";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OAuthService} from "./strategy/services/oauth.service";
-import {TwoFactorAuthModule} from "@spica-server/passport/twofactorauth";
+import {AuthFactorModule} from "@spica-server/passport/authfactor";
 import LoginSchema = require("./schemas/login.json");
 import StrategySchema = require("./schemas/strategy.json");
 
@@ -68,7 +68,7 @@ export class PassportModule {
         }),
         PolicyModule.forRoot(),
         ApiKeyModule.forRoot(),
-        TwoFactorAuthModule
+        AuthFactorModule
       ],
       providers: [
         PassportController,

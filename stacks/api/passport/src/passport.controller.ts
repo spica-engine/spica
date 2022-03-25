@@ -28,7 +28,7 @@ import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {STRATEGIES} from "./options";
 import {StrategyTypeServices} from "./strategy/interface";
-import {TwoFactorAuth} from "@spica-server/passport/twofactorauth";
+import {AuthFactor} from "@spica-server/passport/authfactor";
 
 /**
  * @name passport
@@ -41,7 +41,7 @@ export class PassportController {
   constructor(
     private identityService: IdentityService,
     private strategyService: StrategyService,
-    private twoFactorAuth: TwoFactorAuth,
+    private factorAuth: AuthFactor,
     @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices
   ) {}
 
@@ -101,10 +101,10 @@ export class PassportController {
 
     const tokenSchema = this.identityService.sign(identity, expiresIn);
 
-    if (this.twoFactorAuth.hasFactor(identity._id.toHexString())) {
+    if (this.factorAuth.hasFactor(identity._id.toHexString())) {
       this.identityToken.set(identity._id.toHexString(), tokenSchema);
 
-      const challenge = await this.twoFactorAuth.start(identity._id.toHexString());
+      const challenge = await this.factorAuth.start(identity._id.toHexString());
 
       return res.status(200).json({
         challenge,
@@ -147,7 +147,7 @@ export class PassportController {
 
   @Post("identify/:id/factor-authentication")
   async authenticateWithFactor(@Param("id") id: string, @Body() body) {
-    const hasFactor = this.twoFactorAuth.hasFactor(id);
+    const hasFactor = this.factorAuth.hasFactor(id);
     const token = this.identityToken.get(id);
 
     if (!hasFactor || !token) {
@@ -160,7 +160,7 @@ export class PassportController {
 
     const {answer} = body;
 
-    const isAuthenticated = await this.twoFactorAuth.authenticate(id, answer).catch(e => {
+    const isAuthenticated = await this.factorAuth.authenticate(id, answer).catch(e => {
       this.identityToken.delete(id);
       throw new BadRequestException(e);
     });

@@ -3,13 +3,13 @@ import {Email, EmailFactorSchemaProvider} from "./email";
 // consider removing
 import {Question, QuestionFactorSchemaProvider} from "./question";
 import { Totp, TotpFactorSchemaProvider } from "./totp";
-import {TwoFactorAuth} from "./twofactorauth";
+import {AuthFactor} from "./authfactor";
 
 @Global()
 @Module({
   providers: [
     {
-      provide: TwoFactorAuth,
+      provide: AuthFactor,
       useFactory: () => {
         const map = new Map();
 
@@ -18,10 +18,10 @@ import {TwoFactorAuth} from "./twofactorauth";
 
         const schemas = [EmailFactorSchemaProvider,TotpFactorSchemaProvider];
 
-        return new TwoFactorAuth(map, schemas);
+        return new AuthFactor(map, schemas);
       }
     }
   ],
-  exports: [TwoFactorAuth]
+  exports: [AuthFactor]
 })
-export class TwoFactorAuthModule {}
+export class AuthFactorModule {}

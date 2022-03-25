@@ -1,11 +1,11 @@
-import {Factor, FactorMeta, TwoFactorAuthSchemaProvider} from "./interface";
+import {Factor, FactorMeta, AuthFactorSchemaProvider} from "./interface";
 import {Injectable} from "@nestjs/common";
 
 @Injectable()
-export class TwoFactorAuth {
+export class AuthFactor {
   private userFactor = new Map<string, {hasStarted: boolean; factor: Factor}>();
 
-  constructor(private factors: Map<string, any>, private schemas: TwoFactorAuthSchemaProvider[]) {}
+  constructor(private factors: Map<string, any>, private schemas: AuthFactorSchemaProvider[]) {}
 
   getSchemas() {
     return Promise.all(this.schemas.map(fn => fn()));

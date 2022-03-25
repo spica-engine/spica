@@ -1,6 +1,6 @@
-import {Factor, FactorMeta, FactorSchema, TwoFactorAuthSchemaProvider} from "./interface";
+import {Factor, FactorMeta, FactorSchema, AuthFactorSchemaProvider} from "./interface";
 
-export const QuestionFactorSchemaProvider: TwoFactorAuthSchemaProvider = () => {
+export const QuestionFactorSchemaProvider: AuthFactorSchemaProvider = () => {
   const schema: FactorSchema = {
     type: "question",
     title: "Security Question",

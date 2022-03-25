@@ -1,7 +1,7 @@
 import * as nodemailer from "nodemailer";
-import {Factor, FactorMeta, FactorSchema, TwoFactorAuthSchemaProvider} from "./interface";
+import {Factor, FactorMeta, FactorSchema, AuthFactorSchemaProvider} from "./interface";
 
-export const EmailFactorSchemaProvider: TwoFactorAuthSchemaProvider = () => {
+export const EmailFactorSchemaProvider: AuthFactorSchemaProvider = () => {
   const schema: FactorSchema = {
     type: "email",
     title: "Email",

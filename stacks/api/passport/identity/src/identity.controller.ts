@@ -23,7 +23,7 @@ import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {Factor, FactorMeta, TwoFactorAuth} from "@spica-server/passport/twofactorauth";
+import {Factor, FactorMeta, AuthFactor} from "@spica-server/passport/authfactor";
 import {createIdentityActivity} from "./activity.resource";
 import {hash} from "./hash";
 import {IdentityService} from "./identity.service";
@@ -39,12 +39,12 @@ export class IdentityController {
     private identityService: IdentityService,
     @Inject(POLICY_PROVIDER)
     private identityPolicyResolver: (req: any) => Promise<[{statement: []}]>,
-    private twoFactorAuth: TwoFactorAuth
+    private factorAuth: AuthFactor
   ) {
     this.identityService.find({}).then(identities => {
       for (const identity of identities) {
         if (identity.authFactor) {
-          this.twoFactorAuth.register(identity._id.toHexString(), identity.authFactor);
+          this.factorAuth.register(identity._id.toHexString(), identity.authFactor);
         }
       }
     });
@@ -79,7 +79,7 @@ export class IdentityController {
   private hideSecretsExpression(): {[key: string]: 0} {
     const hideSecretsPipeline: any = {password: 0};
 
-    const authFactorSecretPaths = this.twoFactorAuth.getSecretPaths();
+    const authFactorSecretPaths = this.factorAuth.getSecretPaths();
     authFactorSecretPaths.forEach(path => {
       hideSecretsPipeline[`authFactor.${path}`] = 0;
     });
@@ -155,20 +155,7 @@ export class IdentityController {
   @Get("factors")
   @UseGuards(AuthGuard())
   getFactors() {
-    return this.twoFactorAuth.getSchemas();
-  }
-
-  @Get(":id")
-  @UseGuards(
-    AuthGuard(),
-    ActionGuard(
-      "passport:identity:show",
-      undefined,
-      registerPolicyAttacher("IdentityReadOnlyAccess")
-    )
-  )
-  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.identityService.findOne({_id: id}, {projection: this.hideSecretsExpression()});
+    return this.factorAuth.getSchemas();
   }
 
   @Delete(":id/factors")
@@ -184,10 +171,25 @@ export class IdentityController {
   async deleteFactor(@Param("id", OBJECT_ID) id: ObjectId) {
     this.identityFactors.delete(id.toHexString());
 
-    this.twoFactorAuth.unregister(id.toHexString());
+    this.factorAuth.unregister(id.toHexString());
 
     await this.identityService.findOneAndUpdate({_id: id}, {$unset: {authFactor: ""}});
   }
+  
+  @Get(":id")
+  @UseGuards(
+    AuthGuard(),
+    ActionGuard(
+      "passport:identity:show",
+      undefined,
+      registerPolicyAttacher("IdentityReadOnlyAccess")
+    )
+  )
+  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    return this.identityService.findOne({_id: id}, {projection: this.hideSecretsExpression()});
+  }
+
+  
 
   @Post(":id/start-factor-verification")
   @UseGuards(
@@ -198,11 +200,15 @@ export class IdentityController {
       registerPolicyAttacher("IdentityFullAccess")
     )
   )
-  async startFactorVerification(@Param("id") id: string, @Body() body: FactorMeta) {
+  async startFactorVerification(
+    @Param("id") id: string,
+    @Body(Schema.validate("http://spica.internal/passport/authfactor"))
+    body: FactorMeta
+  ) {
     let factor;
 
     try {
-      factor = this.twoFactorAuth.getFactor(body);
+      factor = this.factorAuth.getFactor(body);
     } catch (error) {
       throw new BadRequestException(error);
     }
@@ -218,7 +224,7 @@ export class IdentityController {
 
     return {
       challenge,
-      answerUrl: `passport/identity/${id}/factors/complete-verification`
+      answerUrl: `passport/identity/${id}/complete-factor-verification`
     };
   }
 
@@ -231,11 +237,26 @@ export class IdentityController {
       registerPolicyAttacher("IdentityFullAccess")
     )
   )
-  async completeFactorVerification(@Param("id", OBJECT_ID) id: ObjectId, @Body() {answer}: any) {
+  async completeFactorVerification(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body(
+      Schema.validate({
+        type: "object",
+        required: ["answer"],
+        properties: {
+          answer: {
+            type: "string"
+          }
+        },
+        additionalProperties: false
+      })
+    )
+    {answer}: {answer: string}
+  ) {
     const factor = this.identityFactors.get(id.toHexString());
 
     if (!factor) {
-      throw new BadRequestException("Start a verification process before complete it.");
+      throw new BadRequestException("Start a factor verification before complete it.");
     }
 
     const isVerified = await factor.authenticate(answer).catch(e => {
@@ -248,14 +269,14 @@ export class IdentityController {
       throw new UnauthorizedException("Verification has been failed.");
     }
 
-    this.twoFactorAuth.register(id.toHexString(), factor);
+    this.factorAuth.register(id.toHexString(), factor);
 
     const meta = factor.getMeta();
     return this.identityService
       .findOneAndUpdate({_id: id}, {$set: {authFactor: meta}})
-      .then(r => {
+      .then(() => {
         return {
-          message: "Created"
+          message: "Verification has been completed successfully."
         };
       })
       .catch(e => {
@@ -287,7 +308,7 @@ export class IdentityController {
     delete identity.password;
 
     if (identity.authFactor) {
-      this.twoFactorAuth.getSecretPaths().map(path => {
+      this.factorAuth.getSecretPaths().map(path => {
         delete identity.authFactor[path];
       });
     }

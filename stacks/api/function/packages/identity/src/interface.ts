@@ -15,19 +15,16 @@ export interface Strategy {
   title: string;
 }
 
-export function isTokenScheme(tokenOrScheme: TokenSchemeOrChallenge): tokenOrScheme is TokenScheme {
-  return typeof tokenOrScheme["token"] == "string";
+export interface Challenge {
+  show(): string;
+  answer(answer: string): Promise<string>;
 }
 
 export type TokenScheme = {token: string};
-export type RequestTarget = {url: string; method: string};
-export type Challenge = {
-  challenge: {message: string};
-  answer: RequestTarget;
+export type ChallengeRes = {
+  challenge: string;
+  answerUrl: string;
 };
-
-export type TokenSchemeOrChallenge = TokenScheme | Challenge;
-export type TokenOrChallenge = string | Challenge;
 
 export interface LoginWithStrategyResponse {
   /**
@@ -35,9 +32,21 @@ export interface LoginWithStrategyResponse {
    */
   url: string;
   /**
-   * Observable that sends the token of the user has logged in
+   * Observable that sends the token of user or challenge of login process
    */
-  token: Observable<TokenOrChallenge>;
+  token: Observable<string | Challenge>;
+}
+
+export interface FactorSchema {
+  type: string;
+  title: string;
+  description: string;
+  config: {[key: string]: {type: string; enum?: any[]}};
+}
+
+export interface FactorMeta {
+  type: string;
+  config: {[key: string]: any};
 }
 
 interface InitializeOptions {
