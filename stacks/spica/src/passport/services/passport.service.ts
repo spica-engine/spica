@@ -45,7 +45,7 @@ export class PassportService {
     this._statements = undefined;
   }
 
-  answerSecondFactor(factor, answer) {
+  answerAuthFactor(factor, answer) {
     return this.http.post(`api:/${factor.answerUrl}`, {
       answer
     });

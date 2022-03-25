@@ -348,7 +348,12 @@ export class IdentityController {
     if (userCount == 1) {
       return;
     }
-    return this.identityService.deleteOne({_id: id});
+
+    return this.identityService.deleteOne({_id: id}).then(() => {
+      if (this.authFactor.hasFactor(id.toHexString())) {
+        this.authFactor.unregister(id.toHexString());
+      }
+    });
   }
 
   @UseInterceptors(activity(createIdentityActivity))

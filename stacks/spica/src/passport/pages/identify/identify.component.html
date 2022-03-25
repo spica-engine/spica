@@ -1,7 +1,7 @@
 <img src="assets/dark-icon.svg" />
 
 <mat-card class="mat-elevation-z25">
-  <ng-container *ngIf="!secondFactor">
+  <ng-container *ngIf="!authFactor">
     <mat-card-content>
       <form #form="ngForm">
         <mat-error *ngIf="error">{{ error }}</mat-error>
@@ -54,9 +54,9 @@
       {{ strategy.title }}
     </button>
   </ng-container>
-  <ng-container *ngIf="secondFactor">
+  <ng-container *ngIf="authFactor">
     <mat-card-content>
-      <button class="back" mat-icon-button (click)="secondFactor = undefined">
+      <button class="back" mat-icon-button (click)="authFactor = undefined">
         <mat-icon>
           arrow_back
         </mat-icon>
@@ -70,7 +70,7 @@
           #answerModel
           (keyup.enter)="answerChallenge(answerModel.value)"
         />
-        <mat-hint>{{ secondFactor.challenge }}</mat-hint>
+        <mat-hint>{{ authFactor.challenge }}</mat-hint>
       </mat-form-field>
     </mat-card-content>
     <button

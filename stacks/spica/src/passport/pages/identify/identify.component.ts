@@ -18,7 +18,7 @@ export class IdentifyComponent implements OnInit {
 
   strategies: Observable<Strategy[]>;
 
-  secondFactor;
+  authFactor;
 
   constructor(
     public passport: PassportService,
@@ -67,9 +67,9 @@ export class IdentifyComponent implements OnInit {
         take(1),
         filter((r: any) => {
           if (r.challenge) {
-            this.secondFactor = r;
+            this.authFactor = r;
           }
-          return !this.secondFactor;
+          return !this.authFactor;
         })
       )
       .subscribe(
@@ -83,7 +83,7 @@ export class IdentifyComponent implements OnInit {
 
   answerChallenge(answer: string) {
     return this.passport
-      .answerSecondFactor(this.secondFactor, answer)
+      .answerAuthFactor(this.authFactor, answer)
       .toPromise()
       .then(r => {
         this.passport.onTokenRecieved(r);
@@ -91,7 +91,7 @@ export class IdentifyComponent implements OnInit {
       })
       .catch(response => {
         this.error = response.error.message;
-        this.secondFactor = undefined;
+        this.authFactor = undefined;
       });
   }
 }
