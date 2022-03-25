@@ -15,6 +15,20 @@ export interface Strategy {
   title: string;
 }
 
+export function isTokenScheme(tokenOrScheme: TokenSchemeOrChallenge): tokenOrScheme is TokenScheme {
+  return typeof tokenOrScheme["token"] == "string";
+}
+
+export type TokenScheme = {token: string};
+export type RequestTarget = {url: string; method: string};
+export type Challenge = {
+  challenge: {message: string};
+  answer: RequestTarget;
+};
+
+export type TokenSchemeOrChallenge = TokenScheme | Challenge;
+export type TokenOrChallenge = string | Challenge;
+
 export interface LoginWithStrategyResponse {
   /**
    * Login url of the identity provider that is necessary to start the login process.
@@ -23,7 +37,7 @@ export interface LoginWithStrategyResponse {
   /**
    * Observable that sends the token of the user has logged in
    */
-  token: Observable<string>;
+  token: Observable<TokenOrChallenge>;
 }
 
 interface InitializeOptions {

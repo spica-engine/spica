@@ -1,4 +1,4 @@
-import {Factor, FactorMeta, FactorSchema, TwoFactorAuthSchemaProvider} from "./interface";
+import {Factor, FactorMeta, TwoFactorAuthSchemaProvider} from "./interface";
 import {Injectable} from "@nestjs/common";
 
 @Injectable()
@@ -9,6 +9,11 @@ export class TwoFactorAuth {
 
   getSchemas() {
     return Promise.all(this.schemas.map(fn => fn()));
+  }
+
+  // we may want to get these fields from each factor.
+  getSecretPaths() {
+    return ["secret"];
   }
 
   register(identity: string, factorOrMeta: Factor | FactorMeta) {

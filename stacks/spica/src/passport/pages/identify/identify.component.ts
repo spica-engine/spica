@@ -64,12 +64,7 @@ export class IdentifyComponent implements OnInit {
 
     identifyObs
       .pipe(
-        switchMap((r: any) => {
-          if (r.challenge) {
-            return this.passport.getSecondFactor(r);
-          }
-          return of(r);
-        }),
+        take(1),
         filter((r: any) => {
           if (r.challenge) {
             this.secondFactor = r;
@@ -77,14 +72,16 @@ export class IdentifyComponent implements OnInit {
           return !this.secondFactor;
         })
       )
-      .toPromise()
-      .then(r => {
-        this.passport.onTokenRecieved(r);
-        return this.router.navigate(["/dashboard"]);
-      })
-      .catch(response => {
-        this.error = response.error.message;
-      });
+      .subscribe(
+        r => {
+          this.passport.onTokenRecieved(r);
+          return this.router.navigate(["/dashboard"]);
+        },
+        e => {
+          console.log(e);
+          this.error = e.message;
+        }
+      );
   }
 
   answerChallenge(answer: string) {

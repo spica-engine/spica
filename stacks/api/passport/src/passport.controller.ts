@@ -104,37 +104,15 @@ export class PassportController {
     if (this.twoFactorAuth.hasFactor(identity._id.toHexString())) {
       this.identityToken.set(identity._id.toHexString(), tokenSchema);
 
-      res.status(200).json({
-        challenge: {
-          url: `passport/identify/${identity._id}/factor-authentication`,
-          method: "get"
-        }
+      const challenge = await this.twoFactorAuth.start(identity._id.toHexString());
+
+      return res.status(200).json({
+        challenge,
+        answerUrl: `passport/identify/${identity._id}/factor-authentication`
       });
     } else {
       res.status(200).json(tokenSchema);
     }
-  }
-
-  @Get("identify/:id/factor-authentication")
-  async getFactor(@Param("id") id: string) {
-    const hasFactor = this.twoFactorAuth.hasFactor(id);
-    const token = this.identityToken.get(id);
-
-    if (!hasFactor || !token) {
-      throw new BadRequestException("Login with credentials process should be started first.");
-    }
-
-    const message = await this.twoFactorAuth.start(id);
-
-    return {
-      challenge: {
-        message
-      },
-      answer: {
-        url: `passport/identify/${id}/factor-authentication`,
-        method: "post"
-      }
-    };
   }
 
   @Get("identify")
@@ -260,7 +238,6 @@ export class PassportController {
       .assert(strategy, body, code)
       .then(identity => observer.next(identity))
       .catch(e => {
-        console.log(e);
         observer.error(e.toString());
       });
   }

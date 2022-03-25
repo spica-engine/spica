@@ -178,11 +178,11 @@
 
         <ng-container *ngIf="factorAuthChallenge">
           <img
-            *ngIf="factorAuthChallenge.challenge.message.startsWith('data:image'); else info"
-            [src]="factorAuthChallenge.challenge.message"
+            *ngIf="factorAuthChallenge.challenge.startsWith('data:image'); else info"
+            [src]="factorAuthChallenge.challenge"
           />
           <ng-template #info>
-            {{ factorAuthChallenge.challenge.message }}
+            {{ factorAuthChallenge.challenge }}
           </ng-template>
           <mat-form-field>
             <mat-label>Answer</mat-label>

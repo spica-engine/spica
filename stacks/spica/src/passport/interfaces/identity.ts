@@ -50,13 +50,8 @@ export interface AuthFactorSchema {
 }
 
 export interface AuthFactorGetChallengeResponse {
-  challenge: {
-    message: string;
-  };
-  answer: {
-    url: string;
-    method: string;
-  };
+  challenge: string;
+  answerUrl: string;
 }
 
 export interface IdentitySchema {

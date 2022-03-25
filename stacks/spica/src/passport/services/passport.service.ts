@@ -45,36 +45,27 @@ export class PassportService {
     this._statements = undefined;
   }
 
-  getSecondFactor(factor) {
-    return this.http.request(factor.challenge.method, `api:/${factor.challenge.url}`);
-  }
-
   answerSecondFactor(factor, answer) {
-    return this.http.request(factor.answer.method, `api:/${factor.answer.url}`, {
-      body: {
-        answer
-      }
+    return this.http.post(`api:/${factor.answerUrl}`, {
+      answer
     });
   }
 
   identify(identityOrStrategy: IdentifyParams | string, openCallback?: (url: string) => void) {
-    let loginObs: Observable<any>;
-    if (typeof identityOrStrategy == "string") {
-      loginObs = this.http
-        .get<any>(`api:/passport/strategy/${identityOrStrategy}/url`, {
-          params: {identityOrStrategy}
-        })
-        .pipe(
-          concatMap(res => {
-            openCallback(res.url);
-            return this.http.get(`api:/passport/identify`, {params: {state: res.state}});
-          })
-        );
-    } else {
-      loginObs = this.http.post<any>("api:/passport/identify", identityOrStrategy);
+    if (typeof identityOrStrategy != "string") {
+      return this.http.post<any>("api:/passport/identify", identityOrStrategy);
     }
 
-    return loginObs;
+    return this.http
+      .get<any>(`api:/passport/strategy/${identityOrStrategy}/url`, {
+        params: {identityOrStrategy}
+      })
+      .pipe(
+        concatMap(res => {
+          openCallback(res.url);
+          return this.http.get(`api:/passport/identify`, {params: {state: res.state}});
+        })
+      );
   }
 
   getStrategies() {

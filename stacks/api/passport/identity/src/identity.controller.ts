@@ -76,6 +76,17 @@ export class IdentityController {
       }, []);
   }
 
+  private hideSecretsExpression(): {[key: string]: 0} {
+    const hideSecretsPipeline: any = {password: 0};
+
+    const authFactorSecretPaths = this.twoFactorAuth.getSecretPaths();
+    authFactorSecretPaths.forEach(path => {
+      hideSecretsPipeline[`authFactor.${path}`] = 0;
+    });
+
+    return hideSecretsPipeline;
+  }
+
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:index"))
   async find(
@@ -90,7 +101,7 @@ export class IdentityController {
 
     pipeline.push(resourceFilter);
 
-    pipeline.push({$project: {password: 0}});
+    pipeline.push({$project: this.hideSecretsExpression()});
 
     //@TODO: remove this line
     pipeline.push({$set: {_id: {$toString: "$_id"}}});
@@ -157,7 +168,7 @@ export class IdentityController {
     )
   )
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.identityService.findOne({_id: id}, {projection: {password: 0}});
+    return this.identityService.findOne({_id: id}, {projection: this.hideSecretsExpression()});
   }
 
   @Delete(":id/factors")
@@ -188,7 +199,14 @@ export class IdentityController {
     )
   )
   async startFactorVerification(@Param("id") id: string, @Body() body: FactorMeta) {
-    const factor = this.twoFactorAuth.getFactor(body);
+    let factor;
+
+    try {
+      factor = this.twoFactorAuth.getFactor(body);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+
     this.identityFactors.set(id, factor);
 
     // to keep this global value clear
@@ -196,16 +214,11 @@ export class IdentityController {
       this.identityFactors.delete(id);
     }, 1000 * 60 * 5);
 
-    const message = await factor.start();
+    const challenge = await factor.start();
 
     return {
-      challenge: {
-        message
-      },
-      answer: {
-        url: `passport/identity/${id}/factors/complete-verification`,
-        method: "post"
-      }
+      challenge,
+      answerUrl: `passport/identity/${id}/factors/complete-verification`
     };
   }
 
@@ -230,23 +243,24 @@ export class IdentityController {
     });
 
     this.identityFactors.delete(id.toHexString());
-    if (isVerified) {
-      this.twoFactorAuth.register(id.toHexString(), factor);
 
-      const meta = factor.getMeta();
-      return this.identityService
-        .findOneAndUpdate({_id: id}, {$set: {authFactor: meta}})
-        .then(r => {
-          return {
-            message: "Created"
-          };
-        })
-        .catch(e => {
-          throw new InternalServerErrorException(e);
-        });
-    } else {
+    if (!isVerified) {
       throw new UnauthorizedException("Verification has been failed.");
     }
+
+    this.twoFactorAuth.register(id.toHexString(), factor);
+
+    const meta = factor.getMeta();
+    return this.identityService
+      .findOneAndUpdate({_id: id}, {$set: {authFactor: meta}})
+      .then(r => {
+        return {
+          message: "Created"
+        };
+      })
+      .catch(e => {
+        throw new InternalServerErrorException(e);
+      });
   }
 
   @UseInterceptors(activity(createIdentityActivity))
@@ -258,11 +272,10 @@ export class IdentityController {
   ) {
     identity.password = await hash(identity.password);
     identity.policies = [];
-    delete identity.authFactor;
 
     return this.identityService
       .insertOne(identity)
-      .then(insertedIdentity => this.afterIdentityUpdate(insertedIdentity))
+      .then(insertedIdentity => this.afterIdentityUpsert(insertedIdentity))
       .catch(exception => {
         throw new BadRequestException(
           exception.code === 11000 ? "Identity already exists." : exception.message
@@ -270,13 +283,13 @@ export class IdentityController {
       });
   }
 
-  private afterIdentityUpdate(identity: Identity) {
+  private afterIdentityUpsert(identity: Identity) {
     delete identity.password;
 
     if (identity.authFactor) {
-      this.twoFactorAuth.register(identity._id.toHexString(), identity.authFactor);
-
-      delete identity.authFactor.secret;
+      this.twoFactorAuth.getSecretPaths().map(path => {
+        delete identity.authFactor[path];
+      });
     }
 
     return identity;
@@ -298,7 +311,7 @@ export class IdentityController {
     }
     return this.identityService
       .findOneAndUpdate({_id: id}, {$set: identity}, {returnOriginal: false})
-      .then(updatedIdentity => this.afterIdentityUpdate(updatedIdentity))
+      .then(updatedIdentity => this.afterIdentityUpsert(updatedIdentity))
       .catch(exception => {
         throw new BadRequestException(
           exception.code === 11000 ? "Identity already exists." : exception.message

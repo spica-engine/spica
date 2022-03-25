@@ -3,7 +3,13 @@ import {
   IdentityInitialization,
   ApikeyInitialization,
   IndexResult,
-  LoginWithStrategyResponse
+  LoginWithStrategyResponse,
+  TokenSchemeOrChallenge,
+  TokenScheme,
+  Challenge,
+  isTokenScheme,
+  TokenOrChallenge,
+  RequestTarget
 } from "./interface";
 import {
   initialize as _initialize,
@@ -46,20 +52,43 @@ export function verifyToken(token: string, baseUrl?: string) {
   return req.get(`${identitySegment}/verify`, {headers: {Authorization: token}});
 }
 
-export function login(
+function handleLoginResponse(response: TokenSchemeOrChallenge): Promise<string | Challenge> {
+  if (isTokenScheme(response)) {
+    return Promise.resolve(response.token);
+  }
+
+  return service.request<Challenge>({});
+}
+
+export async function login(
   identifier: string,
   password: string,
   tokenLifeSpan?: number
-): Promise<string> {
+): Promise<TokenOrChallenge> {
   checkInitialized(authorization);
 
   return service
-    .post<{token: string}>("/passport/identify", {
+    .post<TokenSchemeOrChallenge>("/passport/identify", {
       identifier,
       password,
       expires: tokenLifeSpan
     })
-    .then(response => response.token);
+    .then(r => {
+      if (isTokenScheme(r)) {
+        return r.token;
+      }
+      return r;
+    });
+}
+
+export function answerChallenge(answer: string, target: RequestTarget): Promise<string> {
+  return service.request({
+    url: target.url,
+    method: target.method,
+    data: {
+      answer
+    }
+  });
 }
 
 export async function loginWithStrategy(id: string): Promise<LoginWithStrategyResponse> {
@@ -69,13 +98,17 @@ export async function loginWithStrategy(id: string): Promise<LoginWithStrategyRe
     `/passport/strategy/${id}/url`
   );
 
-  const token: Observable<string> = new Observable(observer => {
+  const token: Observable<TokenOrChallenge> = new Observable(observer => {
     service
-      .post<{token: string}>("/passport/identify", {
+      .post<TokenSchemeOrChallenge>("/passport/identify", {
         state
       })
-      .then(({token}) => {
-        observer.next(token);
+      .then(response => {
+        if (isTokenScheme(response)) {
+          observer.next(response.token);
+        } else {
+          observer.next(response);
+        }
         observer.complete();
       })
       .catch(e => observer.error(e));
