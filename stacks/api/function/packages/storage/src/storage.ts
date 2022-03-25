@@ -38,9 +38,11 @@ export async function insert(
   checkInitialized(authorization);
   const body = await preparePostBody([object]);
 
-  return service.post<StorageObject>("storage", body, {
-    onUploadProgress
-  });
+  return service
+    .post<StorageObject[]>("storage", body, {
+      onUploadProgress
+    })
+    .then(([r]) => r);
 }
 
 export async function insertMany(

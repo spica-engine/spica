@@ -16,7 +16,7 @@ describe("@spica-devkit/Storage", () => {
 
   beforeEach(() => {
     getSpy = spyOn(Axios.prototype, "get").and.returnValue(Promise.resolve());
-    postSpy = spyOn(Axios.prototype, "post").and.returnValue(Promise.resolve());
+    postSpy = spyOn(Axios.prototype, "post").and.returnValue(Promise.resolve([]));
     putSpy = spyOn(Axios.prototype, "put").and.returnValue(Promise.resolve());
     deleteSpy = spyOn(Axios.prototype, "delete").and.returnValue(Promise.resolve());
 

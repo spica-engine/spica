@@ -92,23 +92,23 @@ export namespace data {
     bucketId: string,
     options?: {
       headers?: object;
-      queryParams?: {[key: string]: any; paginate?: true};
+      queryParams?: {[key: string]: any; paginate?: false};
     }
-  ): Promise<IndexResult<T>>;
+  ): Promise<T[]>;
   export function getAll<T>(
     bucketId: string,
     options?: {
       headers?: object;
-      queryParams?: {[key: string]: any; paginate?: false};
+      queryParams?: {[key: string]: any; paginate?: true};
     }
-  ): Promise<T[]>;
+  ): Promise<IndexResult<T>>;
   export function getAll<T>(
     bucketId: string,
     options: {
       headers?: object;
       queryParams?: {[key: string]: any; paginate?: boolean};
     } = {}
-  ): Promise<IndexResult<T> | T[]> {
+  ): Promise<T[] | IndexResult<T>> {
     checkInitialized(authorization);
 
     return service.get<IndexResult<T> | T[]>(`bucket/${bucketId}/data`, {
