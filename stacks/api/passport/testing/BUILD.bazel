@@ -12,6 +12,7 @@ ts_project(
     ]),
     deps = [
         "//stacks/api/passport",
+        "//stacks/api/passport/authfactor",
         "@npm//@nestjs/common",
         "@npm//@nestjs/passport",
     ],

@@ -65,6 +65,16 @@ export function verifyToken(token: string, baseUrl?: string) {
   return req.get(`${identitySegment}/verify`, {headers: {Authorization: token}});
 }
 
+export async function login<TFA extends false>(
+  identifier: string,
+  password: string,
+  tokenLifeSpan?: number
+): Promise<string>;
+export async function login<TFA extends true>(
+  identifier: string,
+  password: string,
+  tokenLifeSpan?: number
+): Promise<Challenge>;
 export async function login(
   identifier: string,
   password: string,
