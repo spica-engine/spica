@@ -2,8 +2,13 @@ import {Component, OnDestroy, OnInit, TemplateRef, ViewChild} from "@angular/cor
 import {ActivatedRoute, Router} from "@angular/router";
 import {PreferencesService} from "@spica-client/core";
 import {Subject, of} from "rxjs";
-import {filter, switchMap, takeUntil, tap} from "rxjs/operators";
-import {emptyIdentity, Identity} from "../../interfaces/identity";
+import {filter, map, switchMap, takeUntil, tap} from "rxjs/operators";
+import {
+  AuthFactorSchema,
+  emptyAuthFactor,
+  emptyIdentity,
+  Identity
+} from "../../interfaces/identity";
 import {Policy} from "../../interfaces/policy";
 import {IdentityService} from "../../services/identity.service";
 import {PolicyService} from "../../services/policy.service";
@@ -20,6 +25,11 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
   identity: Identity = emptyIdentity();
   policies: Policy[];
   changePasswordState: boolean;
+
+  authFactorSchemas: AuthFactorSchema[] = [];
+  selectedAuthFactor;
+  authFactorChallenge;
+  verificationResponse;
 
   public error: string;
   public preferences: PassportPreference;
@@ -47,9 +57,22 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
       .pipe(
         filter(params => params.id),
         switchMap(params => this.identityService.findOne(params.id)),
+        switchMap(identity =>
+          this.identityService.getAuthFactorSchemas().pipe(
+            map(schemas => {
+              return {
+                schemas,
+                identity
+              };
+            })
+          )
+        ),
         takeUntil(this.onDestroy)
       )
-      .subscribe(identity => (this.identity = identity));
+      .subscribe(({schemas, identity}) => {
+        this.identity = identity;
+        this.authFactorSchemas = schemas;
+      });
 
     this.passportService
       .checkAllowed("passport:policy:index")
@@ -114,6 +137,58 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
         })
         .catch(err => (this.error = err.error.message));
     }
+  }
+
+  switch2FA(isEnabled: boolean) {
+    if (isEnabled) {
+      this.selectedAuthFactor = emptyAuthFactor();
+    } else {
+      if (this.identity.authFactor) {
+        this.identityService.removeAuthFactor(this.identity._id).toPromise();
+        this.identity.authFactor = undefined;
+      }
+      this.selectedAuthFactor = undefined;
+      this.authFactorChallenge = undefined;
+    }
+  }
+
+  on2FAMethodChange(selection: string) {
+    const selectedFactor = this.authFactorSchemas.find(s => s.type == selection);
+    this.selectedAuthFactor = JSON.parse(JSON.stringify(selectedFactor));
+
+    Object.keys(selectedFactor.config).forEach(key => {
+      this.selectedAuthFactor.config[key] = undefined;
+    });
+
+    this.authFactorChallenge = undefined;
+  }
+
+  getAuthFactorSchema(type: string) {
+    return this.authFactorSchemas.find(s => s.type == type);
+  }
+
+  async startVerification() {
+    this.authFactorChallenge = await this.identityService
+      .startAuthFactorVerification(this.identity._id, this.selectedAuthFactor)
+      .toPromise();
+  }
+
+  async completeVerification(answer) {
+    const isVerified = await this.identityService
+      .completeAuthFactorVerification(this.identity._id, answer)
+      .toPromise();
+
+    if (isVerified) {
+      this.verificationResponse = "Verification has been completed successfully.";
+      this.identity.authFactor = JSON.parse(JSON.stringify(this.selectedAuthFactor));
+      this.selectedAuthFactor = undefined;
+    }
+
+    this.authFactorChallenge = undefined;
+
+    setTimeout(() => {
+      this.verificationResponse = "";
+    }, 5000);
   }
 
   ngOnDestroy(): void {

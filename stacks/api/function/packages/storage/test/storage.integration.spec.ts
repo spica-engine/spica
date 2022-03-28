@@ -11,7 +11,7 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 20_000;
 
 jasmine.getEnv().allowRespy(true);
 
-const PORT = 3000;
+const PORT = 3001;
 const PUBLIC_URL = `http://localhost:${PORT}`;
 
 describe("Storage", () => {

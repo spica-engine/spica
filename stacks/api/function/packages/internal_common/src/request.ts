@@ -11,6 +11,7 @@ export interface HttpService {
   put<T>(url: string, body: any, options?: any): Promise<T>;
   patch<T>(url: string, body: any, options?: any): Promise<T>;
   delete(url: string, options?: any);
+  request<T>(options: any): Promise<T>;
 }
 
 export function logWarning(response: any) {
@@ -98,5 +99,9 @@ export class Axios implements HttpService {
 
   delete(url: string, config?: AxiosRequestConfig): Promise<any> {
     return this.instance.delete(url, config);
+  }
+
+  request<T>(config: AxiosRequestConfig): Promise<T> {
+    return this.instance.request(config);
   }
 }

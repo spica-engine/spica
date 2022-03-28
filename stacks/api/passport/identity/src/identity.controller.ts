@@ -14,13 +14,16 @@ import {
   HttpStatus,
   HttpCode,
   Headers,
-  Inject
+  Inject,
+  UnauthorizedException,
+  InternalServerErrorException
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {Factor, FactorMeta, AuthFactor} from "@spica-server/passport/authfactor";
 import {createIdentityActivity} from "./activity.resource";
 import {hash} from "./hash";
 import {IdentityService} from "./identity.service";
@@ -30,11 +33,22 @@ import {registerPolicyAttacher} from "./utility";
 
 @Controller("passport/identity")
 export class IdentityController {
+  identityFactors = new Map<string, Factor>();
+
   constructor(
-    private identity: IdentityService,
+    private identityService: IdentityService,
     @Inject(POLICY_PROVIDER)
-    private identityPolicyResolver: (req: any) => Promise<[{statement: []}]>
-  ) {}
+    private identityPolicyResolver: (req: any) => Promise<[{statement: []}]>,
+    private authFactor: AuthFactor
+  ) {
+    this.identityService.find({}).then(identities => {
+      for (const identity of identities) {
+        if (identity.authFactor) {
+          this.authFactor.register(identity._id.toHexString(), identity.authFactor);
+        }
+      }
+    });
+  }
 
   @Get("verify")
   verify(@Headers("Authorization") token: string) {
@@ -42,7 +56,7 @@ export class IdentityController {
       throw new BadRequestException("Authorization header is missing.");
     }
 
-    return this.identity.verify(token).catch(e => {
+    return this.identityService.verify(token).catch(e => {
       throw new BadRequestException(e.message);
     });
   }
@@ -62,6 +76,17 @@ export class IdentityController {
       }, []);
   }
 
+  private hideSecretsExpression(): {[key: string]: 0} {
+    const expression: any = {password: 0};
+
+    const authFactorSecretPaths = this.authFactor.getSecretPaths();
+    authFactorSecretPaths.forEach(path => {
+      expression[`authFactor.${path}`] = 0;
+    });
+
+    return expression;
+  }
+
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:index"))
   async find(
@@ -76,7 +101,7 @@ export class IdentityController {
 
     pipeline.push(resourceFilter);
 
-    pipeline.push({$project: {password: 0}});
+    pipeline.push({$project: this.hideSecretsExpression()});
 
     //@TODO: remove this line
     pipeline.push({$set: {_id: {$toString: "$_id"}}});
@@ -113,16 +138,42 @@ export class IdentityController {
         {$unwind: {path: "$meta", preserveNullAndEmptyArrays: true}}
       );
 
-      const result = await this.identity.aggregate<PaginationResponse<Identity>>(pipeline).next();
+      const result = await this.identityService
+        .aggregate<PaginationResponse<Identity>>(pipeline)
+        .next();
 
       return result.data.length ? result : {meta: {total: 0}, data: []};
     }
-    return this.identity.aggregate<Identity>([...pipeline, ...seekingPipeline]).toArray();
+    return this.identityService.aggregate<Identity>([...pipeline, ...seekingPipeline]).toArray();
   }
   @Get("predefs")
   @UseGuards(AuthGuard())
   getPredefinedDefaults() {
-    return this.identity.getPredefinedDefaults();
+    return this.identityService.getPredefinedDefaults();
+  }
+
+  @Get("factors")
+  @UseGuards(AuthGuard())
+  getFactors() {
+    return this.authFactor.getSchemas();
+  }
+
+  @Delete(":id/factors")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(
+    AuthGuard(),
+    ActionGuard(
+      "passport:identity:update",
+      "passport/identity/:id",
+      registerPolicyAttacher("IdentityFullAccess")
+    )
+  )
+  async deleteFactor(@Param("id", OBJECT_ID) id: ObjectId) {
+    this.identityFactors.delete(id.toHexString());
+
+    this.authFactor.unregister(id.toHexString());
+
+    await this.identityService.findOneAndUpdate({_id: id}, {$unset: {authFactor: ""}});
   }
 
   @Get(":id")
@@ -135,7 +186,100 @@ export class IdentityController {
     )
   )
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.identity.findOne({_id: id}, {projection: {password: 0}});
+    return this.identityService.findOne({_id: id}, {projection: this.hideSecretsExpression()});
+  }
+
+  @Post(":id/start-factor-verification")
+  @UseGuards(
+    AuthGuard(),
+    ActionGuard(
+      "passport:identity:update",
+      "passport/identity/:id",
+      registerPolicyAttacher("IdentityFullAccess")
+    )
+  )
+  async startFactorVerification(
+    @Param("id") id: string,
+    @Body(Schema.validate("http://spica.internal/passport/authfactor"))
+    body: FactorMeta
+  ) {
+    let factor;
+
+    try {
+      factor = this.authFactor.getFactor(body);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+
+    this.identityFactors.set(id, factor);
+
+    // to keep this global value clear
+    setTimeout(() => {
+      this.identityFactors.delete(id);
+    }, 1000 * 60 * 5);
+
+    const challenge = await factor.start();
+
+    return {
+      challenge,
+      answerUrl: `passport/identity/${id}/complete-factor-verification`
+    };
+  }
+
+  @Post(":id/complete-factor-verification")
+  @UseGuards(
+    AuthGuard(),
+    ActionGuard(
+      "passport:identity:update",
+      "passport/identity/:id",
+      registerPolicyAttacher("IdentityFullAccess")
+    )
+  )
+  async completeFactorVerification(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body(
+      Schema.validate({
+        type: "object",
+        required: ["answer"],
+        properties: {
+          answer: {
+            type: "string"
+          }
+        },
+        additionalProperties: false
+      })
+    )
+    {answer}: {answer: string}
+  ) {
+    const factor = this.identityFactors.get(id.toHexString());
+
+    if (!factor) {
+      throw new BadRequestException("Start a factor verification before complete it.");
+    }
+
+    const isVerified = await factor.authenticate(answer).catch(e => {
+      throw new BadRequestException(e);
+    });
+
+    this.identityFactors.delete(id.toHexString());
+
+    if (!isVerified) {
+      throw new UnauthorizedException("Verification has been failed.");
+    }
+
+    this.authFactor.register(id.toHexString(), factor);
+
+    const meta = factor.getMeta();
+    return this.identityService
+      .findOneAndUpdate({_id: id}, {$set: {authFactor: meta}})
+      .then(() => {
+        return {
+          message: "Verification has been completed successfully."
+        };
+      })
+      .catch(e => {
+        throw new InternalServerErrorException(e);
+      });
   }
 
   @UseInterceptors(activity(createIdentityActivity))
@@ -147,17 +291,27 @@ export class IdentityController {
   ) {
     identity.password = await hash(identity.password);
     identity.policies = [];
-    return this.identity
+
+    return this.identityService
       .insertOne(identity)
-      .then(insertedIdentity => {
-        delete insertedIdentity.password;
-        return insertedIdentity;
-      })
+      .then(insertedIdentity => this.afterIdentityUpsert(insertedIdentity))
       .catch(exception => {
         throw new BadRequestException(
           exception.code === 11000 ? "Identity already exists." : exception.message
         );
       });
+  }
+
+  private afterIdentityUpsert(identity: Identity) {
+    delete identity.password;
+
+    if (identity.authFactor) {
+      this.authFactor.getSecretPaths().map(path => {
+        delete identity.authFactor[path];
+      });
+    }
+
+    return identity;
   }
 
   @UseInterceptors(activity(createIdentityActivity))
@@ -174,12 +328,9 @@ export class IdentityController {
     if (identity.password) {
       identity.password = await hash(identity.password);
     }
-    return this.identity
-      .findOneAndUpdate(
-        {_id: id},
-        {$set: identity},
-        {returnOriginal: false, projection: {password: 0}}
-      )
+    return this.identityService
+      .findOneAndUpdate({_id: id}, {$set: identity}, {returnOriginal: false})
+      .then(updatedIdentity => this.afterIdentityUpsert(updatedIdentity))
       .catch(exception => {
         throw new BadRequestException(
           exception.code === 11000 ? "Identity already exists." : exception.message
@@ -193,11 +344,16 @@ export class IdentityController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     // prevent to delete the last user
-    const userCount = await this.identity.estimatedDocumentCount();
+    const userCount = await this.identityService.estimatedDocumentCount();
     if (userCount == 1) {
       return;
     }
-    return this.identity.deleteOne({_id: id});
+
+    return this.identityService.deleteOne({_id: id}).then(() => {
+      if (this.authFactor.hasFactor(id.toHexString())) {
+        this.authFactor.unregister(id.toHexString());
+      }
+    });
   }
 
   @UseInterceptors(activity(createIdentityActivity))
@@ -205,7 +361,7 @@ export class IdentityController {
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:add"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
-    return this.identity.findOneAndUpdate(
+    return this.identityService.findOneAndUpdate(
       {
         _id: id
       },
@@ -224,7 +380,7 @@ export class IdentityController {
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:remove"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
-    return this.identity.findOneAndUpdate(
+    return this.identityService.findOneAndUpdate(
       {
         _id: id
       },

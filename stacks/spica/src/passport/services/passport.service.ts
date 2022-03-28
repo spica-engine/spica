@@ -1,9 +1,9 @@
 import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
-import * as jwt_decode from "jwt-decode";
+import jwt_decode from "jwt-decode";
 import * as matcher from "matcher";
 import {Observable} from "rxjs";
-import {concatMap, map, shareReplay, tap} from "rxjs/operators";
+import {concatMap, map, shareReplay} from "rxjs/operators";
 import {Identity} from "../interfaces/identity";
 import {Statement} from "../interfaces/statement";
 import {Strategy} from "../interfaces/strategy";
@@ -40,28 +40,30 @@ export class PassportService {
     localStorage.removeItem("access_token");
   }
 
-  identify(identity: IdentifyParams): Observable<any> {
-    return this.http.post("api:/passport/identify", identity).pipe(
-      tap(response => {
-        this.token = `${response.scheme} ${response.token}`;
-        this._statements = undefined;
-      })
-    );
+  onTokenRecieved(response) {
+    this.token = `${response.scheme} ${response.token}`;
+    this._statements = undefined;
   }
 
-  identifyWith(strategy: string, openCallback: (url: string) => void): Observable<any> {
+  answerAuthFactor(factor, answer) {
+    return this.http.post(`api:/${factor.answerUrl}`, {
+      answer
+    });
+  }
+
+  identify(identityOrStrategy: IdentifyParams | string, openCallback?: (url: string) => void) {
+    if (typeof identityOrStrategy != "string") {
+      return this.http.post<any>("api:/passport/identify", identityOrStrategy);
+    }
+
     return this.http
-      .get<any>(`api:/passport/strategy/${strategy}/url`, {
-        params: {strategy}
+      .get<any>(`api:/passport/strategy/${identityOrStrategy}/url`, {
+        params: {identityOrStrategy}
       })
       .pipe(
         concatMap(res => {
           openCallback(res.url);
           return this.http.get(`api:/passport/identify`, {params: {state: res.state}});
-        }),
-        tap(response => {
-          this.token = `${response.scheme} ${response.token}`;
-          this._statements = undefined;
         })
       );
   }
