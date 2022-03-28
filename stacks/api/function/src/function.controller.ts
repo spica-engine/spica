@@ -9,6 +9,7 @@ import {
   HttpException,
   HttpStatus,
   Inject,
+  InternalServerErrorException,
   NotFoundException,
   Param,
   Post,
@@ -269,7 +270,12 @@ export class FunctionController {
     if (!fn) {
       throw new NotFoundException("Can not find function.");
     }
-    const index = await this.engine.read(fn);
+    const index = await this.engine.read(fn).catch(e => {
+      if (e == "Not Found") {
+        throw new NotFoundException("Index does not exist.");
+      }
+      throw new InternalServerErrorException(e);
+    });
     return {index};
   }
 

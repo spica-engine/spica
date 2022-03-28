@@ -202,7 +202,7 @@ async function upgrade({args, options}: ActionParameters) {
 }
 
 export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand("Upgrade the version of your existing project.")
+  return createCommand("Upgrade the version of existing local project.")
     .argument("<name>", "Name of the project.", {validator: projectName})
     .argument("<to>", "Version of the spica.")
     .option("--restart", "Restart failed containers if exits unexpectedly.", {

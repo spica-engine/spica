@@ -2,7 +2,7 @@ import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {SchemaModule} from "@spica-server/core/schema";
-import {DATE_TIME, OBJECTID_STRING} from "@spica-server/core/schema/formats";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
@@ -26,7 +26,7 @@ describe("Bucket", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
-        SchemaModule.forRoot({formats: [OBJECTID_STRING, DATE_TIME]}),
+        SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME]}),
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
         PassportTestingModule.initialize({
