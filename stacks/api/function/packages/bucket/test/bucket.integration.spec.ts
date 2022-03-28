@@ -44,7 +44,7 @@ describe("Bucket", () => {
     wsc = module.get(Websocket);
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
-    await app.listen(3000);
+    await app.listen(3002);
 
     bucket = {
       title: "New Bucket",
