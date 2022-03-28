@@ -1,8 +1,19 @@
-## v0.9.18 (2022-03-14)
+## v0.9.19 (2022-03-28)
 
-* refresh button([32dbfa478](https://github.com/spica-engine/spica/commit/32dbfa478))
-* lint([0b5063358](https://github.com/spica-engine/spica/commit/0b5063358))
-* initial commit([9a1868020](https://github.com/spica-engine/spica/commit/9a1868020))
+* feat(cli): introduce new project command named sync ([b2ba8904c](https://github.com/spica-engine/spica/commit/b2ba8904c))
+* refactor: merging realtime interfaces into a package ([9e31c689e](https://github.com/spica-engine/spica/commit/9e31c689e))
+* fix(bucket): invalidate storage value cache ([6bbfc5487](https://github.com/spica-engine/spica/commit/6bbfc5487))
+* feat(passport): two factor authentication for identities ([7860dff56](https://github.com/spica-engine/spica/commit/7860dff56))
+* test(function): integration tests for devkit packages ([99b59c0ce](https://github.com/spica-engine/spica/commit/99b59c0ce))
+
+## v0.9.18 (2022-03-15)
+
+* feat(dashboard): introduce new dashboard type named statistic ([1764e4804](https://github.com/spica-engine/spica/commit/1764e4804))
+* fix(function): don't fire the firehose trigger for server-side close calls ([e0dc8689d](https://github.com/spica-engine/spica/commit/e0dc8689d))
+* perf(function): disable source mapping for workers ([ef1a8cabd](https://github.com/spica-engine/spica/commit/ef1a8cabd))
+* test(bucket): re-enable bucket-data realtime tests([e656394ca](https://github.com/spica-engine/spica/commit/e656394ca))
+* Revert "fix(realtime): move unpipe call to the database service" ([8031134c7](https://github.com/spica-engine/spica/commit/8031134c7))
+* feat(bucket): improved filtering on bucket-data index page ([a5f448453](https://github.com/spica-engine/spica/commit/a5f448453))
 
 ## v0.9.17 (2022-02-22)
 
