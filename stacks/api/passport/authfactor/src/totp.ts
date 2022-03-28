@@ -45,13 +45,13 @@ export class Totp implements Factor {
       return Promise.reject("No verified secret has been found.");
     }
 
-    const isVerified = speakeasy.totp.verify({
+    const isAuthenticated = speakeasy.totp.verify({
       secret: this.meta.secret,
       encoding: "base32",
       token: payload
     });
 
-    return Promise.resolve(isVerified);
+    return Promise.resolve(isAuthenticated);
   }
 
   getMeta() {
