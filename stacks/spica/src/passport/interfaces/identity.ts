@@ -10,6 +10,14 @@ export function emptyIdentity(): Identity {
   };
 }
 
+export function emptyAuthFactor(): AuthFactorMeta {
+  return {
+    type: undefined,
+    config: {},
+    secret: undefined
+  };
+}
+
 export interface Identity {
   _id?: string;
   identifier: string;
@@ -19,6 +27,31 @@ export interface Identity {
     [key: string]: any;
   };
   system?: boolean;
+  authFactor?: AuthFactorMeta;
+}
+
+export interface AuthFactorMeta {
+  type: string;
+  config: {
+    [key: string]: any;
+  };
+  secret: string;
+}
+
+export interface AuthFactorSchema {
+  type: string;
+  config: {
+    [key: string]: {
+      type: string;
+      value?: any;
+      enum?: any[];
+    };
+  };
+}
+
+export interface AuthFactorGetChallengeResponse {
+  challenge: string;
+  answerUrl: string;
 }
 
 export interface IdentitySchema {

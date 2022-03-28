@@ -2,8 +2,8 @@ import {Component, OnInit} from "@angular/core";
 import {MatDialog, MatDialogRef} from "@angular/material/dialog";
 import {ActivatedRoute, Router} from "@angular/router";
 import {StrategyDialogComponent} from "@spica-client/passport/components/strategy-dialog/strategy-dialog.component";
-import {Observable} from "rxjs";
-import {take, finalize} from "rxjs/operators";
+import {Observable, of} from "rxjs";
+import {take, finalize, tap, skipWhile, map, filter, switchMap} from "rxjs/operators";
 import {Strategy} from "../../interfaces/strategy";
 import {IdentifyParams, PassportService} from "../../services/passport.service";
 
@@ -17,6 +17,8 @@ export class IdentifyComponent implements OnInit {
   public error: string;
 
   strategies: Observable<Strategy[]>;
+
+  authFactor;
 
   constructor(
     public passport: PassportService,
@@ -46,7 +48,7 @@ export class IdentifyComponent implements OnInit {
     if (strategy) {
       let dialog: MatDialogRef<unknown, unknown>;
       identifyObs = this.passport
-        .identifyWith(strategy, url => {
+        .identify(strategy, url => {
           dialog = this.dialog.open(StrategyDialogComponent, {
             data: {url},
             closeOnNavigation: true,
@@ -61,8 +63,35 @@ export class IdentifyComponent implements OnInit {
     }
 
     identifyObs
+      .pipe(
+        take(1),
+        filter((r: any) => {
+          if (r.challenge) {
+            this.authFactor = r;
+          }
+          return !this.authFactor;
+        })
+      )
+      .subscribe(
+        r => {
+          this.passport.onTokenRecieved(r);
+          return this.router.navigate(["/dashboard"]);
+        },
+        r => (this.error = r.error.message)
+      );
+  }
+
+  answerChallenge(answer: string) {
+    return this.passport
+      .answerAuthFactor(this.authFactor, answer)
       .toPromise()
-      .then(() => this.router.navigate(["/dashboard"]))
-      .catch(response => (this.error = response.error.message));
+      .then(r => {
+        this.passport.onTokenRecieved(r);
+        return this.router.navigate(["/dashboard"]);
+      })
+      .catch(response => {
+        this.error = response.error.message;
+        this.authFactor = undefined;
+      });
   }
 }
