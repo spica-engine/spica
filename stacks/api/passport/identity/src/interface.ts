@@ -1,4 +1,5 @@
 import {ObjectId} from "@spica-server/database";
+import {FactorMeta} from "@spica-server/passport/authfactor";
 
 export interface Identity {
   _id?: ObjectId;
@@ -8,6 +9,7 @@ export interface Identity {
   attributes?: {
     [key: string]: any;
   };
+  authFactor?: FactorMeta;
 }
 
 export interface LoginCredentials {

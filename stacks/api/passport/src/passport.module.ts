@@ -18,6 +18,7 @@ import {StrategyController} from "./strategy/strategy.controller";
 import {StrategyService} from "./strategy/services/strategy.service";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OAuthService} from "./strategy/services/oauth.service";
+import {AuthFactorModule} from "@spica-server/passport/authfactor";
 import LoginSchema = require("./schemas/login.json");
 import StrategySchema = require("./schemas/strategy.json");
 
@@ -66,9 +67,11 @@ export class PassportModule {
           entryLimit: options.entryLimit
         }),
         PolicyModule.forRoot(),
-        ApiKeyModule.forRoot()
+        ApiKeyModule.forRoot(),
+        AuthFactorModule
       ],
       providers: [
+        PassportController,
         {
           provide: REQUEST_SERVICE,
           useClass: RequestService

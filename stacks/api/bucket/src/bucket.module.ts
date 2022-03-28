@@ -91,7 +91,6 @@ export class BucketModule {
       imports: imports,
       providers: [
         DocumentScheduler,
-        BucketController,
         {
           provide: BucketSchemaResolver,
           useFactory: provideBucketSchemaResolver,

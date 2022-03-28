@@ -66,7 +66,8 @@ describe("Identity Add Component", () => {
         })
       ),
       updateOne: null,
-      insertOne: null
+      insertOne: null,
+      getAuthFactorSchemas: jasmine.createSpy("getAuthFactorSchemas").and.returnValue(of([]))
     };
 
     passportService = {
@@ -185,7 +186,7 @@ describe("Identity Add Component", () => {
 
       expect(
         fixture.debugElement.query(
-          By.css("div.policies mat-list:nth-child(2) mat-list-item:first-of-type label")
+          By.css("div.policies mat-list:nth-of-type(2) mat-list-item:first-of-type label")
         ).nativeElement.textContent
       ).toBe("function");
 
@@ -208,7 +209,7 @@ describe("Identity Add Component", () => {
       );
 
       fixture.debugElement
-        .query(By.css("div.policies mat-list:nth-child(2) mat-list-item:first-of-type button"))
+        .query(By.css("div.policies mat-list:nth-of-type(2) mat-list-item:first-of-type button"))
         .nativeElement.click();
 
       tick();
@@ -243,7 +244,7 @@ describe("Identity Add Component", () => {
       expect(detachSpy).toHaveBeenCalledWith("bucket", "1");
 
       const ownablePolicies = fixture.debugElement
-        .queryAll(By.css("div.policies mat-list:nth-child(2) mat-list-item"))
+        .queryAll(By.css("div.policies mat-list:nth-of-type(2) mat-list-item"))
         .map(item => item.nativeElement.querySelector("label").textContent);
 
       expect(ownablePolicies).toEqual(["bucket", "function"]);

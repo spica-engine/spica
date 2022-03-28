@@ -533,7 +533,7 @@ export class IndexComponent implements OnInit, OnDestroy {
           };
 
           props = {
-            src: value,
+            src: value + "?timestamp=" + new Date().getTime(),
             alt: value,
             onerror: this.onImageError
           };

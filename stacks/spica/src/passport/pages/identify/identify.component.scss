@@ -15,24 +15,31 @@
     width: 357px;
     mat-card-content {
       margin-top: 26px;
-      form {
-        mat-form-field {
-          width: 100%;
-          ::ng-deep .mat-form-field-prefix {
-            margin-left: 5px;
-            align-self: center;
-          }
+      mat-form-field {
+        width: 100%;
+        ::ng-deep .mat-form-field-prefix {
+          margin-left: 5px;
+          align-self: center;
         }
       }
     }
   }
 
-  button {
+  button:not(.back) {
     width: 100%;
     margin: 5px 0px;
     overflow: hidden;
     &:first-of-type {
       margin-bottom: 10px;
+    }
+  }
+
+  button.back {
+    position: absolute;
+    left: 0;
+    top: 0;
+    mat-icon {
+      font-size: 20px;
     }
   }
 }

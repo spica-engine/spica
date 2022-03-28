@@ -31,9 +31,10 @@ describe("@spica-devkit/identity", () => {
   });
 
   describe("Identity", () => {
-    const identity: Identity.Identity = {
+    const identity: Identity.IdentityCreate = {
       identifier: "test",
-      password: "test"
+      password: "test",
+      policies: []
     };
 
     it("should insert identity", () => {
@@ -52,14 +53,6 @@ describe("@spica-devkit/identity", () => {
 
       expect(putSpy).toHaveBeenCalledTimes(1);
       expect(putSpy).toHaveBeenCalledWith("passport/identity/identity_id/policy/policy_id", {});
-    });
-
-    it("should update identity", () => {
-      const updatedIdentity = {...identity, identifier: "new_identifier"};
-      Identity.update("identity_id", updatedIdentity);
-
-      expect(putSpy).toHaveBeenCalledTimes(1);
-      expect(putSpy).toHaveBeenCalledWith("passport/identity/identity_id", updatedIdentity);
     });
 
     it("should get all identities", () => {
