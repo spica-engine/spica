@@ -13,6 +13,9 @@ import {WsAdapter} from "@spica-server/core/websocket";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
+const PORT = 3002;
+const PUBLIC_URL = `http://localhost:${PORT}`;
+
 describe("Bucket", () => {
   let wsc: Websocket;
   let module: TestingModule;
@@ -44,7 +47,7 @@ describe("Bucket", () => {
     wsc = module.get(Websocket);
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
-    await app.listen(3000);
+    await app.listen(PORT);
 
     bucket = {
       title: "New Bucket",
@@ -65,7 +68,7 @@ describe("Bucket", () => {
       }
     });
 
-    Bucket.initialize({identity: "token", publicUrl: `http://localhost:3000`});
+    Bucket.initialize({identity: "token", publicUrl: PUBLIC_URL});
   });
 
   afterEach(async () => await app.close());

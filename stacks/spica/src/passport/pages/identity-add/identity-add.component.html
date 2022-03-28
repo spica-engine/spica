@@ -74,6 +74,7 @@
       <mat-error *ngIf="error">{{ error }}</mat-error>
     </form>
     <div class="policies" *ngIf="identity._id">
+      <mat-divider></mat-divider>
       <mat-list>
         <h3 mat-subheader>Owned Policies</h3>
         <mat-list-item *ngFor="let policy of ownedPolicies">
@@ -110,6 +111,89 @@
           </mat-list-item>
         </ng-container>
       </mat-list>
+    </div>
+    <div class="factor-auth" *ngIf="identity._id">
+      <mat-divider></mat-divider>
+      <button
+        mat-stroked-button
+        (click)="switch2FA(!identity.authFactor && !selectedAuthFactor ? true : false)"
+      >
+        {{ !identity.authFactor && !selectedAuthFactor ? "Enable" : "Disable" }} 2FA
+      </button>
+      <!-- Template if user has verified factor -->
+      <ng-container *ngIf="identity.authFactor">
+        <mat-form-field>
+          <mat-label>2FA Method</mat-label>
+          <mat-select [ngModel]="identity.authFactor.type" disabled>
+            <mat-option [value]="identity.authFactor.type">
+              {{ identity.authFactor.type | titlecase }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field *ngFor="let config of identity.authFactor.config | keyvalue">
+          <mat-label>{{ config.key | titlecase }}</mat-label>
+          <input matInput [value]="config.value" disabled />
+        </mat-form-field>
+      </ng-container>
+
+      <!-- Template if user has no verified factor -->
+      <ng-container *ngIf="selectedAuthFactor">
+        <mat-form-field>
+          <mat-label>2FA Method</mat-label>
+          <mat-select
+            [(ngModel)]="selectedAuthFactor.type"
+            (ngModelChange)="on2FAMethodChange($event)"
+          >
+            <mat-option *ngFor="let method of authFactorSchemas" [value]="method.type">
+              {{ method.title }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <ng-container *ngIf="selectedAuthFactor.type">
+          <mat-form-field
+            *ngFor="let config of getAuthFactorSchema(selectedAuthFactor.type).config | keyvalue"
+          >
+            <mat-label>{{ config.key | titlecase }}</mat-label>
+            <input
+              matInput
+              *ngIf="config.value.type == 'string' && !config.value.enum"
+              [(ngModel)]="selectedAuthFactor.config[config.key]"
+            />
+
+            <mat-select
+              *ngIf="config.value.enum"
+              [(ngModel)]="selectedAuthFactor.config[config.key]"
+            >
+              <mat-option *ngFor="let option of config.value.enum"> {{ option }} </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button
+            mat-button
+            *ngIf="!authFactorChallenge && selectedAuthFactor.type"
+            (click)="startVerification()"
+          >
+            Start Verification
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="authFactorChallenge">
+          <img
+            *ngIf="authFactorChallenge.challenge.startsWith('data:image'); else info"
+            [src]="authFactorChallenge.challenge"
+          />
+          <ng-template #info>
+            {{ authFactorChallenge.challenge }}
+          </ng-template>
+          <mat-form-field>
+            <mat-label>Answer</mat-label>
+            <input matInput ngModel #answerModel />
+          </mat-form-field>
+          <button mat-button (click)="completeVerification(answerModel.value)">
+            Complete verification
+          </button>
+        </ng-container>
+      </ng-container>
+      <span>{{ verificationResponse }}</span>
     </div>
   </mat-card-content>
   <mat-card-actions>

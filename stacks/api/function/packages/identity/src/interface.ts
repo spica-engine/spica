@@ -19,15 +19,38 @@ export interface Strategy {
   title: string;
 }
 
+export interface Challenge {
+  show(): string;
+  answer(answer: string): Promise<string>;
+}
+
+export type TokenScheme = {token: string};
+export type ChallengeRes = {
+  challenge: string;
+  answerUrl: string;
+};
+
 export interface LoginWithStrategyResponse {
   /**
    * Login url of the identity provider that is necessary to start the login process.
    */
   url: string;
   /**
-   * Observable that sends the token of the user has logged in
+   * Observable that sends the token of user or challenge of login process
    */
-  token: Observable<string>;
+  token: Observable<string | Challenge>;
+}
+
+export interface FactorSchema {
+  type: string;
+  title: string;
+  description: string;
+  config: {[key: string]: {type: string; enum?: any[]}};
+}
+
+export interface FactorMeta {
+  type: string;
+  config: {[key: string]: any};
 }
 
 interface InitializeOptions {
