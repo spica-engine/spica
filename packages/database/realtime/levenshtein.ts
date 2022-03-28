@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {Sequence, SequenceKind} from "@spica-server/interface/realtime";
 
 export function levenshtein(
   a: Set<string> | Array<string>,
@@ -61,17 +61,4 @@ export function levenshtein(
     }
   }
   return {distance: m[a.length][b.length], sequence};
-}
-
-export interface Sequence {
-  kind: SequenceKind;
-  item: string | ObjectId;
-  at: number;
-  with?: string | ObjectId;
-}
-
-export enum SequenceKind {
-  Delete = 0,
-  Substitute = 1,
-  Insert = 2
 }

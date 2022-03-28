@@ -33,7 +33,8 @@ import {
 } from "@spica-server/bucket/services";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
-import {FindOptions, RealtimeDatabaseService, ChunkKind} from "@spica-server/database/realtime";
+import {FindOptions, RealtimeDatabaseService} from "@spica-server/database/realtime";
+import {ChunkKind} from "@spica-server/interface/realtime";
 import {GuardService} from "@spica-server/passport";
 import {fromEvent, of} from "rxjs";
 import {takeUntil, catchError} from "rxjs/operators";

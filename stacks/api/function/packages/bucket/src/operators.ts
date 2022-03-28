@@ -1,11 +1,5 @@
-import {
-  Sequence,
-  SequenceKind,
-  ChunkKind,
-  OperationKind,
-  RealtimeConnection,
-  RealtimeConnectionOne
-} from "./interface";
+import {ChunkKind, Sequence, SequenceKind} from "@spica-server/interface/realtime";
+import {RealtimeConnection, RealtimeConnectionOne} from "./interface";
 import {tap, delayWhen, map, debounceTime, retryWhen, filter, takeWhile} from "rxjs/operators";
 import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
@@ -142,26 +136,25 @@ export function getWsObs<T>(
     takeWhile(docs => (targetDocumentId ? !!(docs as T) : true))
   );
 
-  const insert = document => subject.next({event: OperationKind.INSERT, data: document});
+  const insert = document => subject.next({event: "insert", data: document});
   observable["insert"] = insert;
 
-  const replace = document => subject.next({event: OperationKind.REPLACE, data: document});
+  const replace = document => subject.next({event: "replace", data: document});
   const replaceTargetDocument = document => {
     document._id = targetDocumentId;
-    subject.next({event: OperationKind.REPLACE, data: document});
+    subject.next({event: "replace", data: document});
   };
   observable["replace"] = targetDocumentId ? replaceTargetDocument : replace;
 
-  const patch = document => subject.next({event: OperationKind.PATCH, data: document});
+  const patch = document => subject.next({event: "patch", data: document});
   const patchTargetDocument = document => {
     document._id = targetDocumentId;
-    subject.next({event: OperationKind.PATCH, data: document});
+    subject.next({event: "patch", data: document});
   };
   observable["patch"] = targetDocumentId ? patchTargetDocument : patch;
 
-  const remove = document => subject.next({event: OperationKind.DELETE, data: document});
-  const removeTargetDocument = () =>
-    subject.next({event: OperationKind.DELETE, data: {_id: targetDocumentId}});
+  const remove = document => subject.next({event: "delete", data: document});
+  const removeTargetDocument = () => subject.next({event: "delete", data: {_id: targetDocumentId}});
 
   observable["remove"] = targetDocumentId ? removeTargetDocument : remove;
 
