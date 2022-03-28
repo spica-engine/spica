@@ -77,14 +77,14 @@ export class IdentityController {
   }
 
   private hideSecretsExpression(): {[key: string]: 0} {
-    const hideSecretsPipeline: any = {password: 0};
+    const expression: any = {password: 0};
 
     const authFactorSecretPaths = this.authFactor.getSecretPaths();
     authFactorSecretPaths.forEach(path => {
-      hideSecretsPipeline[`authFactor.${path}`] = 0;
+      expression[`authFactor.${path}`] = 0;
     });
 
-    return hideSecretsPipeline;
+    return expression;
   }
 
   @Get()
