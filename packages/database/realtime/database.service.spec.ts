@@ -1,15 +1,8 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {
-  DatabaseService,
-  DatabaseTestingModule,
-  ObjectId,
-  stream
-} from "@spica-server/database/testing";
-import {timer} from "rxjs";
-import {bufferCount, delay, first, skip, take, takeUntil, tap} from "rxjs/operators";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {bufferCount, delay, first, skip, take, tap} from "rxjs/operators";
 import {RealtimeDatabaseService} from "@spica-server/database/realtime/database.service";
-import {SequenceKind} from "@spica-server/database/realtime/levenshtein";
-import {ChunkKind} from "@spica-server/database/realtime/interface";
+import {ChunkKind, SequenceKind} from "@spica-server/interface/realtime";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
 

@@ -15,6 +15,7 @@ ts_project(
         "//packages/core/websocket",
         "//packages/database/realtime",
         "//packages/database/testing",
+        "//packages/interface/realtime",
         "//stacks/api/function/src/log",
         "//stacks/api/passport/testing",
         "@npm//@nestjs/common",

@@ -17,6 +17,7 @@ ts_project(
     ],
     deps = [
         "//packages/database",
+        "//packages/interface/realtime",
         "@npm//@nestjs/common",
         "@npm//@types/deep-diff",
         "@npm//@types/lodash",
