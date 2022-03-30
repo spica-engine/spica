@@ -1,0 +1,23 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
+package(default_visibility = ["//visibility:public"])
+
+load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
+
+ts_project(
+    name = "test_lib",
+    testonly = True,
+    srcs = [
+        "synchronizer.spec.ts",
+    ],
+    deps = [
+        "//packages/core/differ",
+        "@npm//yaml",
+    ],
+)
+
+jasmine_node_test(
+    name = "test",
+    srcs = [":test_lib"],
+)
+
