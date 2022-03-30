@@ -321,10 +321,10 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
       .get<any[]>(`function/${this.fn._id}/dependencies`)
       .then(deleteTypes)
       .catch(e => {
-        if (e.statusCode == 404) {
+        if (e.status == 404 || (e.data && e.data.statusCode == 404)) {
           return [];
         }
-        return Promise.reject(e.message);
+        return Promise.reject(e.data);
       });
 
     const decider = new ObjectActionDecider(sourceDeps, targetDeps, "name");
@@ -430,10 +430,10 @@ export class FunctionIndexSynchronizer implements ModuleSynchronizer {
             };
           })
           .catch(e => {
-            if (e.statusCode == 404) {
+            if (e.status == 404 || (e.data && e.data.statusCode == 404)) {
               return false;
             }
-            return Promise.reject(e.message);
+            return Promise.reject(e.data);
           })
       )
     ).then(indexes => indexes.filter(Boolean));
@@ -503,10 +503,10 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
         params
       })
       .catch(e => {
-        if (e.statusCode == 404) {
+        if (e.status == 404 || (e.data && e.data.statusCode == 404)) {
           return [];
         }
-        return Promise.reject(e.message);
+        return Promise.reject(e.data);
       });
 
     const decider = new ObjectActionDecider(sourceData, targetData);

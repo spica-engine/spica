@@ -27,7 +27,7 @@ export namespace httpService {
         if (!error.response) {
           return Promise.reject(error);
         }
-        return Promise.reject(error.response.data);
+        return Promise.reject(error.response);
       }
     );
     instance.defaults.headers.common["Authorization"] = authorization;
