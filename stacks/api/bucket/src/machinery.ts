@@ -1,6 +1,41 @@
 import {Bucket, BucketService} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
-import {register, store} from "@spica-server/machinery";
+import {
+  DocumentProvider,
+  register,
+  RepresentativeManager,
+  RepresentativeProvider,
+  store
+} from "@spica-server/machinery";
+import {BucketController} from "./bucket.controller";
+
+// consider using service instead of controller
+export const returnSyncProviders = (
+  controller: BucketController,
+  manager: RepresentativeManager
+) => {
+  const module = "bucket";
+  const docProvider: DocumentProvider = {
+    module,
+    insert: doc => controller.add(doc),
+    update: doc => controller.replaceOne(doc._id, doc),
+    delete: id => controller.deleteOne(id),
+    getAll: () => controller.index({$match: {}})
+  };
+
+  const repProvider: RepresentativeProvider = {
+    module,
+    insert: doc => manager.write(module, doc._id, "schema", doc),
+    update: doc => manager.write(module, doc._id, "schema", doc),
+    getAll: () => manager.readAll(module),
+    delete: id => manager.delete(id)
+  };
+
+  return {
+    doc: docProvider,
+    rep: repProvider
+  };
+};
 
 function assingTitleIfNeeded(schema, name) {
   if (!schema.title) {

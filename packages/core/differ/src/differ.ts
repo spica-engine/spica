@@ -120,8 +120,10 @@ export function compareResourceGroups(
   ignoredFields = []
 ) {
   const existings = targets.filter(target =>
-    sources.some(source => source[this.uniqueField] == target[this.uniqueField])
+    sources.some(source => source[uniqueField] == target[uniqueField])
   );
+
+  const existingIds = existings.map(existing => existing[uniqueField]);
 
   const updates = () => {
     const updates = [];
@@ -146,9 +148,7 @@ export function compareResourceGroups(
   const inserts = () => sources.filter(source => existingIds.indexOf(source[uniqueField]) == -1);
 
   const deletes = () =>
-    targets.filter(target => this.existingIds.indexOf(target[this.uniqueField]) == -1);
-
-  const existingIds = existings.map(existing => existing[uniqueField]);
+    targets.filter(target => existingIds.indexOf(target[uniqueField]) == -1);
 
   return {
     inserts: inserts(),

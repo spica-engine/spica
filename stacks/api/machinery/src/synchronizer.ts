@@ -1,21 +1,19 @@
 import {compareResourceGroups} from "@spica-server/core/differ";
 
 export interface RepresentativeProvider<T = any> {
-  kind: string;
-  convert: (document: DocumentProvider) => T;
+  module: string;
   getAll: () => Promise<T[]>;
-  insert: (document: DocumentProvider) => Promise<T>;
-  update: (id: string, document: DocumentProvider) => Promise<T>;
+  insert: (document: T) => Promise<T>;
+  update: (document: T) => Promise<T>;
   delete: (id: string) => Promise<void>;
 }
 
 export interface DocumentProvider<T = any> {
-  kind: string;
-  convert: (rep: RepresentativeProvider) => T;
+  module: string;
   getAll: () => Promise<T[]>;
-  insert: (rep: RepresentativeProvider) => Promise<T>;
-  update: (id: string, rep: RepresentativeProvider) => Promise<T>;
-  delete: (rep: RepresentativeProvider) => Promise<void>;
+  insert: (rep: T) => Promise<T>;
+  update: (rep: T) => Promise<T>;
+  delete: (rep: T) => Promise<void>;
 }
 
 export class Synchronizer {
@@ -25,9 +23,10 @@ export class Synchronizer {
   ) {}
 
   async synchronize(modules: string[] = []) {
+    // documents => representative
     for (const module of modules) {
-      const repsProvider = this.repsProviders.find(p => p.kind == module);
-      const docsProvider = this.docsProviders.find(p => p.kind == module);
+      const repsProvider = this.repsProviders.find(p => p.module == module);
+      const docsProvider = this.docsProviders.find(p => p.module == module);
 
       const sources = await docsProvider.getAll();
       const targets = await repsProvider.getAll();
@@ -36,9 +35,9 @@ export class Synchronizer {
 
       const promises = [];
 
-      promises.push(inserts.map(insert => docsProvider.insert(insert)));
-      promises.push(updates.map(update => docsProvider.update(update._id, update)));
-      promises.push(deletes.map(del => docsProvider.delete(del._id)));
+      promises.push(inserts.map(doc => repsProvider.insert(doc)));
+      promises.push(updates.map(doc => repsProvider.update(doc)));
+      promises.push(deletes.map(doc => repsProvider.delete(doc)));
 
       await Promise.all(promises);
     }

@@ -11,8 +11,8 @@ ts_project(
         "synchronizer.spec.ts",
     ],
     deps = [
-        "//packages/core/differ",
-        "@npm//yaml",
+        "//stacks/api/machinery",
+        "@npm//@types/jasmine",
     ],
 )
 
