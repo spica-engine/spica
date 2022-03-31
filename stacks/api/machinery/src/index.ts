@@ -1,4 +1,4 @@
-export {ApiMachineryModule} from "./module";
+export {ApiMachineryModule,REGISTER_SYNC_PROVIDER} from "./module";
 export {register, ResourceEventHandlerFuncs} from "./informer";
 export {store} from "./store";
 import "./registry";

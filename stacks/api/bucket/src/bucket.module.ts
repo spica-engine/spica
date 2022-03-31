@@ -1,4 +1,4 @@
-import {DynamicModule, Global, Module, Type} from "@nestjs/common";
+import {DynamicModule, Global, Inject, Module, Type} from "@nestjs/common";
 import {HistoryModule} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
@@ -15,11 +15,12 @@ import {
 } from "./bucket.schema.resolver";
 import {GraphQLModule} from "@spica-server/bucket/graphql";
 import {provideLanguageFinalizer} from "@spica-server/bucket/common";
-import {registerInformers} from "./machinery";
+import {registerInformers, returnSyncProviders} from "./machinery";
 import {DocumentScheduler} from "./scheduler";
 import {registerStatusProvider} from "./status";
 import BucketSchema = require("./schemas/bucket.schema.json");
 import BucketsSchema = require("./schemas/buckets.schema.json");
+import {REGISTER_SYNC_PROVIDER} from "@spica-server/machinery";
 
 @Module({})
 export class BucketModule {
@@ -101,7 +102,15 @@ export class BucketModule {
     };
   }
 
-  constructor(preference: PreferenceService, bs: BucketService, bds: BucketDataService) {
+  constructor(
+    preference: PreferenceService,
+    bs: BucketService,
+    bds: BucketDataService,
+    @Inject(REGISTER_SYNC_PROVIDER) obj: {manager; register}
+  ) {
+    const provider = returnSyncProviders(bs,obj.manager)
+    obj.register(provider.rep,provider.doc)
+
     preference.default({
       scope: "bucket",
       language: {

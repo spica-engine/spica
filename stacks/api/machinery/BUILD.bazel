@@ -18,6 +18,7 @@ ts_project(
         "@npm//@types/json-schema",
         "@npm//body-parser",
         "@npm//rxjs",
+        "@npm//yaml",
         "//packages/core/differ",
     ],
 )

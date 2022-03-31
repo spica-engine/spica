@@ -7,28 +7,61 @@ import {
   RepresentativeProvider,
   store
 } from "@spica-server/machinery";
-import {BucketController} from "./bucket.controller";
 
-// consider using service instead of controller
 export const returnSyncProviders = (
-  controller: BucketController,
-  manager: RepresentativeManager
+  service: BucketService,
+  representative: RepresentativeManager
 ) => {
   const module = "bucket";
+  const resourceNameValidator = str => ObjectId.isValid(str);
+
+  const gainObjectId = doc => {
+    if (doc._id && typeof doc._id == "string") {
+      doc._id = new ObjectId(doc._id);
+    }
+    return doc;
+  };
+  const loseObjectId = doc => {
+    if (doc._id && typeof doc._id != "string") {
+      doc._id = doc._id.toString();
+    }
+    return doc;
+  };
+
   const docProvider: DocumentProvider = {
     module,
-    insert: doc => controller.add(doc),
-    update: doc => controller.replaceOne(doc._id, doc),
-    delete: id => controller.deleteOne(id),
-    getAll: () => controller.index({$match: {}})
+    insert: doc => service.insertOne(gainObjectId(doc)),
+
+    update: doc => {
+      doc = gainObjectId(doc);
+      const copy = JSON.parse(JSON.stringify(doc));
+      delete copy._id;
+      return service.findOneAndReplace({_id: doc._id}, copy);
+    },
+
+    delete: id => service.findOneAndDelete({_id: new ObjectId(id)}).then(() => {}),
+
+    getAll: () => service.find().then(docs => docs.map(doc => loseObjectId(doc)))
   };
 
   const repProvider: RepresentativeProvider = {
     module,
-    insert: doc => manager.write(module, doc._id, "schema", doc),
-    update: doc => manager.write(module, doc._id, "schema", doc),
-    getAll: () => manager.readAll(module),
-    delete: id => manager.delete(id)
+
+    insert: doc => {
+      doc = loseObjectId(doc);
+      return representative.write(module, doc._id, "schema", doc, "yaml");
+    },
+
+    update: doc => {
+      doc = loseObjectId(doc);
+      return representative.write(module, doc._id, "schema", doc, "yaml");
+    },
+
+    delete: doc => representative.delete(module, doc._id),
+    getAll: () =>
+      representative
+        .readAll(module, resourceNameValidator)
+        .then(resources => resources.map(resource => resource.contents.schema))
   };
 
   return {

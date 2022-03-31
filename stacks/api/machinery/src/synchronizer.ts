@@ -1,26 +1,35 @@
+import {Injectable} from "@nestjs/common";
 import {compareResourceGroups} from "@spica-server/core/differ";
 
-export interface RepresentativeProvider<T = any> {
+export interface RepresentativeProvider {
   module: string;
-  getAll: () => Promise<T[]>;
-  insert: (document: T) => Promise<T>;
-  update: (document: T) => Promise<T>;
-  delete: (id: string) => Promise<void>;
+  getAll: () => Promise<any[]>;
+  insert: (document) => Promise<any>;
+  update: (document) => Promise<any>;
+  delete: (id) => Promise<void>;
 }
 
-export interface DocumentProvider<T = any> {
+export interface DocumentProvider {
   module: string;
-  getAll: () => Promise<T[]>;
-  insert: (rep: T) => Promise<T>;
-  update: (rep: T) => Promise<T>;
-  delete: (rep: T) => Promise<void>;
+  getAll: () => Promise<any[]>;
+  insert: (rep) => Promise<any>;
+  update: (rep) => Promise<any>;
+  delete: (rep) => Promise<void>;
 }
 
+@Injectable()
 export class Synchronizer {
-  constructor(
-    private repsProviders: RepresentativeProvider[],
-    private docsProviders: DocumentProvider[]
-  ) {}
+  private repsProviders: RepresentativeProvider[] = [];
+  private docsProviders: DocumentProvider[] = [];
+  constructor() {}
+
+  register(rep: RepresentativeProvider, doc: DocumentProvider) {
+    this.repsProviders.push(rep);
+    this.docsProviders.push(doc);
+    setTimeout(() => {
+      this.synchronize(["bucket"]);
+    },5000);
+  }
 
   async synchronize(modules: string[] = []) {
     // documents => representative

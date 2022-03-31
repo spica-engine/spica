@@ -9,6 +9,7 @@ ts_project(
     testonly = True,
     srcs = [
         "synchronizer.spec.ts",
+        "representative.spec.ts",
     ],
     deps = [
         "//stacks/api/machinery",
@@ -19,5 +20,29 @@ ts_project(
 jasmine_node_test(
     name = "test",
     srcs = [":test_lib"],
+)
+
+
+ts_project(
+    name = "test_lib_vers",
+    testonly = True,
+    srcs = [
+        "versioning.spec.ts",
+    ],
+    deps = [
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/preference/testing",
+        "//stacks/api/bucket",
+        "//stacks/api/machinery",
+        "@npm//@types/jasmine",
+        "@npm//@nestjs/testing",
+
+    ],
+)
+
+jasmine_node_test(
+    name = "test_vers",
+    srcs = [":test_lib_vers"],
 )
 
