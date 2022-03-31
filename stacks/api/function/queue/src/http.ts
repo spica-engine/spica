@@ -32,7 +32,7 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
       callback({code: 1}, undefined);
     } else {
       const serverResponse = this.streamMap.get(call.request.id);
-      serverResponse.write(Buffer.from(call.request.data), call.request.encoding, error =>
+      serverResponse.write(Buffer.from(call.request.data), call.request.encoding as any, error =>
         callback(error, error ? undefined : new Http.Write.Result())
       );
     }
@@ -75,7 +75,7 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
     } else {
       const serverResponse = this.streamMap.get(call.request.id);
       if (call.request.data) {
-        serverResponse.end(Buffer.from(call.request.data), call.request.encoding, () => {
+        serverResponse.end(Buffer.from(call.request.data), call.request.encoding as any, () => {
           callback(undefined, new Http.End.Result());
         });
       } else {

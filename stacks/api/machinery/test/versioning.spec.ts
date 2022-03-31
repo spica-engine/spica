@@ -114,7 +114,6 @@ describe("Versioning", () => {
       await synchronizer.synchronize(["bucket"]);
 
       // it takes some time to remove
-      await new Promise(resolve => setTimeout(resolve, 2000));
       const file = await rep.read("bucket", id.toString());
       expect(file).toEqual({});
     });

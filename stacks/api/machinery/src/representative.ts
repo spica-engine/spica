@@ -69,9 +69,14 @@ export class RepresentativeManager {
     const moduleDir = this.getModuleDir(module);
 
     const resourcesPath = path.join(moduleDir, id);
-    const resources = fs.readdirSync(resourcesPath);
 
     const contents = {};
+
+    if (!fs.existsSync(resourcesPath)) {
+      return Promise.resolve(contents);
+    }
+
+    const resources = fs.readdirSync(resourcesPath);
     const promises: Promise<any>[] = [];
 
     for (const resource of resources) {
@@ -132,7 +137,7 @@ export class RepresentativeManager {
 
   delete(module: string, id: string) {
     const dir = path.join(this.getModuleDir(module), id);
-    return fs.promises.rmdir(dir, {recursive: true});
+    return Promise.resolve(fs.rmSync(dir, {recursive: true, force: true}));
   }
 
   /**
