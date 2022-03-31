@@ -7,7 +7,7 @@ describe("Representative", () => {
   const rootDir = path.join(process.cwd(), "representatives");
 
   afterEach(() => {
-    fs.rmdirSync(rootDir, {recursive: true});
+    fs.rmSync(rootDir, {recursive: true, force: true});
   });
 
   describe("write", () => {
@@ -74,7 +74,7 @@ describe("Representative", () => {
       await representative.write("module1", "id1", "schema", {title: "hi"}, "yaml");
       await representative.write("module1", "id1", "index", "console.log(123)", "js");
 
-      const contents = await representative.readAll("module1");
+      const contents = await representative.readAll("module1", () => true);
       expect(contents).toEqual([
         {
           id: "id1",

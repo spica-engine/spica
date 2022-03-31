@@ -62,7 +62,7 @@ export class RepresentativeManager {
 
     content = this.serializeContent(content, extension);
 
-    return fs.promises.writeFile(fullPath, content);
+    return fs.promises.writeFile(fullPath, content)
   }
 
   read(module: string, id: string): Promise<any> {
@@ -138,12 +138,5 @@ export class RepresentativeManager {
   delete(module: string, id: string) {
     const dir = path.join(this.getModuleDir(module), id);
     return Promise.resolve(fs.rmSync(dir, {recursive: true, force: true}));
-  }
-
-  /**
-   * This is for only tidying up on the test environments. Do not call this in anywhere except tests.
-   */
-  _reset() {
-    fs.rmdirSync(this.directory, {recursive: true});
   }
 }

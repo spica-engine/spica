@@ -21,19 +21,22 @@ export interface DocumentProvider {
 export class Synchronizer {
   private repsProviders: RepresentativeProvider[] = [];
   private docsProviders: DocumentProvider[] = [];
-  constructor() {}
-
-  register(rep: RepresentativeProvider, doc: DocumentProvider) {
-    this.repsProviders.push(rep);
-    this.docsProviders.push(doc);
-    setTimeout(() => {
-      this.synchronize(["bucket"]);
-    },5000);
+  private modules = [];
+  constructor() {
+    setTimeout(async () => {
+      await this.synchronize();
+    }, 5000);
   }
 
-  async synchronize(modules: string[] = []) {
-    // documents => representative
-    for (const module of modules) {
+  register(reps: RepresentativeProvider[], docs: DocumentProvider[]) {
+    this.repsProviders.push(...reps);
+    this.docsProviders.push(...docs);
+
+    this.modules.push(...reps.map(rep => rep.module));
+  }
+
+  async synchronize() {
+    for (const module of this.modules) {
       const repsProvider = this.repsProviders.find(p => p.module == module);
       const docsProvider = this.docsProviders.find(p => p.module == module);
 

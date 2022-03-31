@@ -1,4 +1,4 @@
-import {DynamicModule, Module} from "@nestjs/common";
+import {DynamicModule, Inject, Module} from "@nestjs/common";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {Scheduler, SchedulerModule, SchedulingOptions} from "@spica-server/function/scheduler";
 import {WebhookModule} from "@spica-server/function/webhook";
@@ -7,7 +7,7 @@ import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
 import {Github} from "./services/github";
 import {LogModule} from "@spica-server/function/src/log";
-import {registerInformers} from "./machinery";
+import {registerInformers, returnSyncProviders} from "./machinery";
 import {
   FunctionOptions,
   FUNCTION_OPTIONS,
@@ -19,10 +19,19 @@ import {Http, RepoStrategies} from "./services/interface";
 import {Axios} from "./services/axios";
 import {registerStatusProvider} from "./status";
 import FunctionSchema = require("./schema/function.json");
+import {REGISTER_SYNC_PROVIDER} from "@spica-server/machinery";
 
 @Module({})
 export class FunctionModule {
-  constructor(fs: FunctionService, fe: FunctionEngine, scheduler: Scheduler) {
+  constructor(
+    fs: FunctionService,
+    fe: FunctionEngine,
+    scheduler: Scheduler,
+    @Inject(REGISTER_SYNC_PROVIDER) obj: {manager; register}
+  ) {
+    const provider = returnSyncProviders(fs, obj.manager, fe);
+    obj.register(provider.reps, provider.docs);
+
     registerInformers(fs, fe);
     registerStatusProvider(fs, scheduler);
   }

@@ -53,11 +53,11 @@ describe("Synchronizer", () => {
     };
 
     synchronizer = new Synchronizer();
-    synchronizer.register(repsProvider, docsProvider);
+    synchronizer.register([repsProvider], [docsProvider]);
   });
 
   it("should synchronize module", async () => {
-    await synchronizer.synchronize(["bucket"]);
+    await synchronizer.synchronize();
 
     expect(repsProvider.getAll).toHaveBeenCalledTimes(1);
     expect(repsProvider.insert).toHaveBeenCalledOnceWith({

@@ -65,8 +65,8 @@ export const returnSyncProviders = (
   };
 
   return {
-    doc: docProvider,
-    rep: repProvider
+    docs: [docProvider],
+    reps: [repProvider]
   };
 };
 

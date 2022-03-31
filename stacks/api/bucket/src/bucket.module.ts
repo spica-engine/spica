@@ -109,7 +109,7 @@ export class BucketModule {
     @Inject(REGISTER_SYNC_PROVIDER) obj: {manager; register}
   ) {
     const provider = returnSyncProviders(bs,obj.manager)
-    obj.register(provider.rep,provider.doc)
+    obj.register(provider.reps,provider.docs)
 
     preference.default({
       scope: "bucket",
