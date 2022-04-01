@@ -6,8 +6,8 @@ import * as path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
 import {Github} from "./services/github";
-import {LogModule} from "@spica-server/function/src/log";
-import {registerInformers, returnSyncProviders} from "./machinery";
+import {LogModule, LogService} from "@spica-server/function/src/log";
+import {registerInformers} from "./machinery";
 import {
   FunctionOptions,
   FUNCTION_OPTIONS,
@@ -20,6 +20,7 @@ import {Axios} from "./services/axios";
 import {registerStatusProvider} from "./status";
 import FunctionSchema = require("./schema/function.json");
 import {REGISTER_SYNC_PROVIDER} from "@spica-server/machinery";
+import {getSyncProviders} from "./sync";
 
 @Module({})
 export class FunctionModule {
@@ -27,12 +28,13 @@ export class FunctionModule {
     fs: FunctionService,
     fe: FunctionEngine,
     scheduler: Scheduler,
-    @Inject(REGISTER_SYNC_PROVIDER) obj: {manager; register}
+    @Inject(REGISTER_SYNC_PROVIDER) sync: {manager; register},
+    logs: LogService
   ) {
-    const provider = returnSyncProviders(fs, obj.manager, fe);
-    obj.register(provider.reps, provider.docs);
+    getSyncProviders(fs, sync.manager, fe, logs).forEach(provider => sync.register(provider));
 
     registerInformers(fs, fe);
+
     registerStatusProvider(fs, scheduler);
   }
 

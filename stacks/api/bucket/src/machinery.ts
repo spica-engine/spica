@@ -5,13 +5,14 @@ import {
   register,
   RepresentativeManager,
   RepresentativeProvider,
-  store
+  store,
+  SyncProvider
 } from "@spica-server/machinery";
 
-export const returnSyncProviders = (
+export const getSyncProvider = (
   service: BucketService,
-  representative: RepresentativeManager
-) => {
+  manager: RepresentativeManager
+): SyncProvider => {
   const module = "bucket";
   const resourceNameValidator = str => ObjectId.isValid(str);
 
@@ -28,7 +29,7 @@ export const returnSyncProviders = (
     return doc;
   };
 
-  const docProvider: DocumentProvider = {
+  const document: DocumentProvider = {
     module,
     insert: doc => service.insertOne(gainObjectId(doc)),
 
@@ -44,29 +45,29 @@ export const returnSyncProviders = (
     getAll: () => service.find().then(docs => docs.map(doc => loseObjectId(doc)))
   };
 
-  const repProvider: RepresentativeProvider = {
+  const representative: RepresentativeProvider = {
     module,
 
     insert: doc => {
       doc = loseObjectId(doc);
-      return representative.write(module, doc._id, "schema", doc, "yaml");
+      return manager.write(module, doc._id, "schema", doc, "yaml");
     },
 
     update: doc => {
       doc = loseObjectId(doc);
-      return representative.write(module, doc._id, "schema", doc, "yaml");
+      return manager.write(module, doc._id, "schema", doc, "yaml");
     },
 
-    delete: doc => representative.delete(module, doc._id),
+    delete: doc => manager.delete(module, doc._id),
     getAll: () =>
-      representative
+      manager
         .readAll(module, resourceNameValidator)
         .then(resources => resources.map(resource => resource.contents.schema))
   };
 
   return {
-    docs: [docProvider],
-    reps: [repProvider]
+    document,
+    representative
   };
 };
 

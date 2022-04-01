@@ -9,7 +9,7 @@ export class RepresentativeManager {
   private parsers = new Map<string, (val: string) => any>();
 
   constructor() {
-    this.directory = path.join(process.cwd(), "representatives");
+    this.directory = path.join("/Users/tuna/Desktop", "representatives");
 
     // JSON
     this.serializer.set("json", val => JSON.stringify(val));
@@ -62,10 +62,10 @@ export class RepresentativeManager {
 
     content = this.serializeContent(content, extension);
 
-    return fs.promises.writeFile(fullPath, content)
+    return fs.promises.writeFile(fullPath, content);
   }
 
-  read(module: string, id: string): Promise<any> {
+  read(module: string, id: string, fileNames = []): Promise<any> {
     const moduleDir = this.getModuleDir(module);
 
     const resourcesPath = path.join(moduleDir, id);
@@ -76,7 +76,12 @@ export class RepresentativeManager {
       return Promise.resolve(contents);
     }
 
-    const resources = fs.readdirSync(resourcesPath);
+    let resources = fs.readdirSync(resourcesPath);
+
+    if (fileNames.length) {
+      resources = resources.filter(resource => fileNames.includes(resource));
+    }
+
     const promises: Promise<any>[] = [];
 
     for (const resource of resources) {
@@ -99,8 +104,9 @@ export class RepresentativeManager {
 
   readAll(
     module: string,
-    resNameValidator: (name: string) => boolean
-  ): Promise<{id: string; contents: {[key: string]: any}}[]> {
+    resNameValidator: (name: string) => boolean,
+    fileNameFilter = []
+  ): Promise<{_id: string; contents: {[key: string]: any}}[]> {
     const moduleDir = this.getModuleDir(module);
 
     let ids;
@@ -119,10 +125,10 @@ export class RepresentativeManager {
         continue;
       }
 
-      const promise = this.read(module, id).then(contents => {
+      const promise = this.read(module, id, fileNameFilter).then(contents => {
         if (Object.keys(contents).length) {
           const result = {
-            id,
+            _id: id,
             contents
           };
           results.push(result);
@@ -137,6 +143,6 @@ export class RepresentativeManager {
 
   delete(module: string, id: string) {
     const dir = path.join(this.getModuleDir(module), id);
-    return Promise.resolve(fs.rmSync(dir, {recursive: true, force: true}));
+    return fs.promises.rmdir(dir, {recursive: true});
   }
 }

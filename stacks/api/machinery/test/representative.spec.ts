@@ -44,6 +44,16 @@ describe("Representative", () => {
   });
 
   describe("read", () => {
+    it("should read content of specific file", async () => {
+      await representative.write("module1", "id1", "schema", {title: "hi"}, "yaml");
+      await representative.write("module1", "id1", "index", "console.log(123)", "js");
+
+      const contents = await representative.read("module1", "id1", ["schema.yaml"]);
+      expect(contents).toEqual({
+        schema: {title: "hi"}
+      });
+    });
+
     it("should read content of multiple files", async () => {
       await representative.write(
         "module1",
@@ -77,7 +87,7 @@ describe("Representative", () => {
       const contents = await representative.readAll("module1", () => true);
       expect(contents).toEqual([
         {
-          id: "id1",
+          _id: "id1",
           contents: {
             package: {dependencies: {dep1: "1.1"}},
             schema: {title: "hi"},

@@ -17,39 +17,53 @@ export interface DocumentProvider {
   delete: (rep) => Promise<void>;
 }
 
+export interface SyncProvider {
+  document: DocumentProvider;
+  representative: RepresentativeProvider;
+}
+
 @Injectable()
 export class Synchronizer {
-  private repsProviders: RepresentativeProvider[] = [];
-  private docsProviders: DocumentProvider[] = [];
-  private modules = [];
+  private providers: SyncProvider[] = [];
   constructor() {
-    setTimeout(async () => {
-      await this.synchronize();
-    }, 5000);
+    setTimeout(() => {
+      this._synchronize();
+    },5000);
   }
 
-  register(reps: RepresentativeProvider[], docs: DocumentProvider[]) {
-    this.repsProviders.push(...reps);
-    this.docsProviders.push(...docs);
-
-    this.modules.push(...reps.map(rep => rep.module));
+  register({representative, document}: SyncProvider) {
+    this.providers.push({representative, document});
   }
 
   async synchronize() {
-    for (const module of this.modules) {
-      const repsProvider = this.repsProviders.find(p => p.module == module);
-      const docsProvider = this.docsProviders.find(p => p.module == module);
-
-      const sources = await docsProvider.getAll();
-      const targets = await repsProvider.getAll();
+    for (const provider of this.providers) {
+      const sources = await provider.document.getAll();
+      const targets = await provider.representative.getAll();
 
       const {inserts, updates, deletes} = compareResourceGroups(sources, targets);
 
       const promises = [];
 
-      promises.push(inserts.map(doc => repsProvider.insert(doc)));
-      promises.push(updates.map(doc => repsProvider.update(doc)));
-      promises.push(deletes.map(doc => repsProvider.delete(doc)));
+      promises.push(inserts.map(doc => provider.representative.insert(doc)));
+      promises.push(updates.map(doc => provider.representative.update(doc)));
+      promises.push(deletes.map(doc => provider.representative.delete(doc)));
+
+      await Promise.all(promises);
+    }
+  }
+
+  async _synchronize() {
+    for (const provider of this.providers) {
+      const sources = await provider.representative.getAll();
+      const targets = await provider.document.getAll();
+
+      const {inserts, updates, deletes} = compareResourceGroups(sources, targets);
+
+      const promises = [];
+
+      promises.push(inserts.map(doc => provider.document.insert(doc)));
+      promises.push(updates.map(doc => provider.document.update(doc)));
+      promises.push(deletes.map(doc => provider.document.delete(doc)));
 
       await Promise.all(promises);
     }

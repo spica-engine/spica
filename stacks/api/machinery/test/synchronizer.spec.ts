@@ -53,7 +53,7 @@ describe("Synchronizer", () => {
     };
 
     synchronizer = new Synchronizer();
-    synchronizer.register([repsProvider], [docsProvider]);
+    synchronizer.register({document: docsProvider, representative: repsProvider});
   });
 
   it("should synchronize module", async () => {

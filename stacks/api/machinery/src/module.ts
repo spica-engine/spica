@@ -16,7 +16,7 @@ export const REGISTER_SYNC_PROVIDER = Symbol.for("REGISTER_SYNC_PROVIDER");
       useFactory: (sync: Synchronizer, manager: RepresentativeManager) => {
         return {
           manager: manager,
-          register: (rep, doc) => sync.register(rep, doc)
+          register: (provider) => sync.register(provider)
         };
       },
       inject: [Synchronizer, RepresentativeManager]

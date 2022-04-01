@@ -139,14 +139,13 @@ describe("Versioning", () => {
         await bs.findOneAndDelete({_id: id});
         await synchronizer.synchronize();
 
-        // it takes some time to remove
         const file = await rep.read("bucket", id.toString());
         expect(file).toEqual({});
       });
     });
 
-    fdescribe("function", () => {
-      it("should make initial function sync", async () => {
+    describe("function", () => {
+      it("should sync changes", async () => {
         const id = new ObjectId();
         const fn = {
           _id: id,
@@ -162,104 +161,52 @@ describe("Versioning", () => {
         await engine.update(fn, "");
         await engine.compile(fn);
 
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
         await synchronizer.synchronize();
 
-        const file = await rep.read("function", id.toString());
+        let file = await rep.read("function", id.toString());
         expect(file).toEqual({
           index: "",
           package: {dependencies: []},
           schema: {...fn, _id: id.toString()}
         });
-      });
 
-      it("should update if function meta has changes", async () => {
-        const id = new ObjectId();
-        const fn: any = {
-          _id: id,
-          name: "fn1",
-          env: {},
-          language: "javascript",
-          timeout: 100,
-          triggers: {}
-        };
-
-        await fs.insertOne(fn);
-        await engine.createFunction(fn);
-        await engine.update(fn, "");
-        await engine.compile(fn);
-
-        fn.triggers.new_trigger = {
+        // SCHEMA UPDATES
+        const onCall = {
           type: "http",
           active: true,
           options: {}
         };
-        await fs.findOneAndReplace({_id: id}, fn);
-
+        await fs.findOneAndUpdate({_id: id}, {$set: {"triggers.onCall": onCall}});
         await synchronizer.synchronize();
 
-        const file = await rep.read("function", id.toString());
+        file = await rep.read("function", id.toString());
         expect(file).toEqual({
           index: "",
           package: {dependencies: []},
-          schema: {...fn, _id: id.toString()}
+          schema: {...fn, _id: id.toString(), triggers: {onCall}}
         });
-      });
 
-      it("should update if function index has changes", async () => {
-        const id = new ObjectId();
-        const fn = {
-          _id: id,
-          name: "fn1",
-          env: {},
-          language: "javascript",
-          timeout: 100,
-          triggers: {}
-        };
-
-        await fs.insertOne(fn);
-        await engine.createFunction(fn);
-        await engine.update(fn, "");
-        await engine.compile(fn);
-
+        // INDEX UPDATES
         await engine.update(fn, "console.log(123)");
-
         await synchronizer.synchronize();
 
-        const file = await rep.read("function", id.toString());
+        file = await rep.read("function", id.toString());
         expect(file).toEqual({
           index: "console.log(123)",
           package: {dependencies: []},
-          schema: {...fn, _id: id.toString()}
+          schema: {...fn, _id: id.toString(), triggers: {onCall}}
         });
-      });
 
-      xit("should update if function dependencies have changes", async () => {
-        const id = new ObjectId();
-        const fn = {
-          _id: id,
-          name: "fn1",
-          env: {},
-          language: "javascript",
-          timeout: 100,
-          triggers: {}
-        };
-
-        await fs.insertOne(fn);
-        await engine.createFunction(fn);
-        await engine.update(fn, "");
-        await engine.compile(fn);
-
-        await engine.addPackage(fn, "debug@4.1.1").toPromise();
-
+        // SCHEMA DELETE
+        await fs.findOneAndDelete({_id: id});
         await synchronizer.synchronize();
 
-        const file = await rep.read("function", id.toString());
-        expect(file).toEqual({
-          index: "",
-          package: {dependencies: [{name: "debug", version: "4.1.1"}]},
-          schema: {...fn, _id: id.toString()}
-        });
-      });
+        file = await rep.read("function", id.toString());
+        expect(file).toEqual({});
+        // we can not install dependency on test environment
+      }, 20000);
     });
   });
 });
