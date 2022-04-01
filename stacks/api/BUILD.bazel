@@ -25,6 +25,7 @@ ts_project(
         "//stacks/api/preference",
         "//stacks/api/status",
         "//stacks/api/storage",
+        "//stacks/api/versioncontrol",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@nestjs/platform-express",

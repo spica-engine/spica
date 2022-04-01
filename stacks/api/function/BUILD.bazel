@@ -29,6 +29,7 @@ ts_project(
         "//stacks/api/passport/guard",
         "//stacks/api/passport/policy",
         "//stacks/api/status",
+        "//stacks/api/versioncontrol",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@nestjs/websockets",

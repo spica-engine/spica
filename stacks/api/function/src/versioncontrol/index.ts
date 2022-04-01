@@ -1,5 +1,5 @@
 import {FunctionService} from "@spica-server/function/services";
-import {RepresentativeManager, SyncProvider} from "@spica-server/machinery";
+import {IRepresentativeManager, SyncProvider} from "@spica-server/versioncontrol";
 import {FunctionEngine} from "../engine";
 import {LogService} from "@spica-server/function/src/log";
 import {dependecySyncProviders} from "./dependency";
@@ -8,7 +8,7 @@ import {schemaSyncProviders} from "./schema";
 
 export const getSyncProviders = (
   service: FunctionService,
-  manager: RepresentativeManager,
+  manager: IRepresentativeManager,
   engine: FunctionEngine,
   logs: LogService
 ): SyncProvider[] => {

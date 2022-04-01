@@ -1,35 +1,11 @@
 import {Injectable} from "@nestjs/common";
 import {compareResourceGroups} from "@spica-server/core/differ";
-
-export interface RepresentativeProvider {
-  module: string;
-  getAll: () => Promise<any[]>;
-  insert: (document) => Promise<any>;
-  update: (document) => Promise<any>;
-  delete: (id) => Promise<void>;
-}
-
-export interface DocumentProvider {
-  module: string;
-  getAll: () => Promise<any[]>;
-  insert: (rep) => Promise<any>;
-  update: (rep) => Promise<any>;
-  delete: (rep) => Promise<void>;
-}
-
-export interface SyncProvider {
-  document: DocumentProvider;
-  representative: RepresentativeProvider;
-}
+import {SynchronizationDirection, SyncProvider} from "./interface";
 
 @Injectable()
 export class Synchronizer {
   private providers: SyncProvider[] = [];
-  constructor() {
-    setTimeout(() => {
-      this._synchronize();
-    },5000);
-  }
+  constructor() {}
 
   register({representative, document}: SyncProvider) {
     this.providers.push({representative, document});
@@ -52,9 +28,20 @@ export class Synchronizer {
     }
   }
 
-  async _synchronize() {
+  async _synchronize(direction: SynchronizationDirection) {
     for (const provider of this.providers) {
-      const sources = await provider.representative.getAll();
+      let source;
+      let target;
+
+      if (direction == SynchronizationDirection.RepresentativeToDatabase) {
+        source = provider.representative;
+        target = provider.document;
+      } else if (direction == SynchronizationDirection.DatabaseToRepresentative) {
+        source = provider.document;
+        target = provider.representative;
+      }
+
+      const sources = await source.getAll();
       const targets = await provider.document.getAll();
 
       const {inserts, updates, deletes} = compareResourceGroups(sources, targets);

@@ -1,15 +1,16 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as YAML from "yaml";
+import {IRepresentativeManager} from "./interface";
 
-export class RepresentativeManager {
+export class RepresentativeManager implements IRepresentativeManager {
   private directory: string;
 
   private serializer = new Map<string, (val: any) => string>();
   private parsers = new Map<string, (val: string) => any>();
 
   constructor() {
-    this.directory = path.join("/Users/tuna/Desktop", "representatives");
+    this.directory = path.join(process.cwd(), "representatives");
 
     // JSON
     this.serializer.set("json", val => JSON.stringify(val));
@@ -65,7 +66,7 @@ export class RepresentativeManager {
     return fs.promises.writeFile(fullPath, content);
   }
 
-  read(module: string, id: string, fileNames = []): Promise<any> {
+  readResource(module: string, id: string, fileNames = []): Promise<any> {
     const moduleDir = this.getModuleDir(module);
 
     const resourcesPath = path.join(moduleDir, id);
@@ -102,11 +103,7 @@ export class RepresentativeManager {
     return Promise.all(promises).then(() => contents);
   }
 
-  readAll(
-    module: string,
-    resNameValidator: (name: string) => boolean,
-    fileNameFilter = []
-  ): Promise<{_id: string; contents: {[key: string]: any}}[]> {
+  read(module: string, resNameValidator: (name: string) => boolean, fileNameFilter = []) {
     const moduleDir = this.getModuleDir(module);
 
     let ids;
@@ -125,7 +122,7 @@ export class RepresentativeManager {
         continue;
       }
 
-      const promise = this.read(module, id, fileNameFilter).then(contents => {
+      const promise = this.readResource(module, id, fileNameFilter).then(contents => {
         if (Object.keys(contents).length) {
           const result = {
             _id: id,

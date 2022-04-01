@@ -1,17 +1,12 @@
 import {ObjectId} from "@spica-server/database";
 import {FunctionService} from "@spica-server/function/services";
-import {
-  DocumentProvider,
-  RepresentativeManager,
-  RepresentativeProvider,
-  SyncProvider
-} from "@spica-server/machinery";
+import {IRepresentativeManager, SyncProvider} from "@spica-server/versioncontrol";
 import {ChangeKind, createTargetChanges} from "../change";
 import {FunctionEngine} from "../engine";
 
 export function indexSyncProviders(
   service: FunctionService,
-  manager: RepresentativeManager,
+  manager: IRepresentativeManager,
   engine: FunctionEngine
 ): SyncProvider {
   const module = "function";
@@ -57,7 +52,7 @@ export function indexSyncProviders(
 
   const readAll = async () => {
     const resourceNameValidator = str => ObjectId.isValid(str);
-    const files = await manager.readAll(module, resourceNameValidator, ["index.js", "index.ts"]);
+    const files = await manager.read(module, resourceNameValidator, ["index.js", "index.ts"]);
     return files.map(file => {
       return {_id: file._id, index: file.contents.index};
     });

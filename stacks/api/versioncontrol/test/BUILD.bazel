@@ -12,7 +12,7 @@ ts_project(
         "representative.spec.ts",
     ],
     deps = [
-        "//stacks/api/machinery",
+        "//stacks/api/versioncontrol",
         "@npm//@types/jasmine",
     ],
 )
@@ -34,7 +34,7 @@ ts_project(
         "//packages/database/testing",
         "//stacks/api/preference/testing",
         "//stacks/api/bucket",
-        "//stacks/api/machinery",
+        "//stacks/api/versioncontrol",
         "@npm//@types/jasmine",
         "@npm//@nestjs/testing",
 

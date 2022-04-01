@@ -1,13 +1,13 @@
 import {ObjectId} from "@spica-server/database";
 import {FunctionService} from "@spica-server/function/services";
-import {RepresentativeManager, SyncProvider} from "@spica-server/machinery";
+import {IRepresentativeManager, SyncProvider} from "@spica-server/versioncontrol";
 import {ChangeKind, changesFromTriggers, createTargetChanges, hasContextChange} from "../change";
 import {FunctionEngine} from "../engine";
 import {LogService} from "@spica-server/function/src/log/src/log.service";
 
 export function schemaSyncProviders(
   service: FunctionService,
-  manager: RepresentativeManager,
+  manager: IRepresentativeManager,
   engine: FunctionEngine,
   logs: LogService
 ): SyncProvider {
@@ -78,7 +78,7 @@ export function schemaSyncProviders(
 
   const readAll = async () => {
     const resourceNameValidator = str => ObjectId.isValid(str);
-    const files = await manager.readAll(module, resourceNameValidator, ["schema.yaml"]);
+    const files = await manager.read(module, resourceNameValidator, ["schema.yaml"]);
     return files.map(file => file.contents.schema);
   };
 

@@ -15,12 +15,13 @@ import {
 } from "./bucket.schema.resolver";
 import {GraphQLModule} from "@spica-server/bucket/graphql";
 import {provideLanguageFinalizer} from "@spica-server/bucket/common";
-import {registerInformers, getSyncProvider} from "./machinery";
+import {registerInformers} from "./machinery";
 import {DocumentScheduler} from "./scheduler";
 import {registerStatusProvider} from "./status";
 import BucketSchema = require("./schemas/bucket.schema.json");
 import BucketsSchema = require("./schemas/buckets.schema.json");
-import {REGISTER_SYNC_PROVIDER} from "@spica-server/machinery";
+import {IREGISTER_SYNC_PROVIDER, REGISTER_SYNC_PROVIDER} from "@spica-server/versioncontrol";
+import {getSyncProvider} from "./versioncontrol/schema";
 
 @Module({})
 export class BucketModule {
@@ -106,10 +107,10 @@ export class BucketModule {
     preference: PreferenceService,
     bs: BucketService,
     bds: BucketDataService,
-    @Inject(REGISTER_SYNC_PROVIDER) obj: {manager; register}
+    @Inject(REGISTER_SYNC_PROVIDER) registerer: IREGISTER_SYNC_PROVIDER
   ) {
-    const provider = getSyncProvider(bs, obj.manager);
-    obj.register(provider);
+    const provider = getSyncProvider(bs, registerer.manager);
+    registerer.register(provider);
 
     preference.default({
       scope: "bucket",

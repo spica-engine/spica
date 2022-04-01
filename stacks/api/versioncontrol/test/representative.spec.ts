@@ -1,4 +1,4 @@
-import {RepresentativeManager} from "@spica-server/machinery";
+import {RepresentativeManager} from "../src/representative";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -48,7 +48,7 @@ describe("Representative", () => {
       await representative.write("module1", "id1", "schema", {title: "hi"}, "yaml");
       await representative.write("module1", "id1", "index", "console.log(123)", "js");
 
-      const contents = await representative.read("module1", "id1", ["schema.yaml"]);
+      const contents = await representative.readResource("module1", "id1", ["schema.yaml"]);
       expect(contents).toEqual({
         schema: {title: "hi"}
       });
@@ -65,7 +65,7 @@ describe("Representative", () => {
       await representative.write("module1", "id1", "schema", {title: "hi"}, "yaml");
       await representative.write("module1", "id1", "index", "console.log(123)", "js");
 
-      const contents = await representative.read("module1", "id1");
+      const contents = await representative.readResource("module1", "id1");
       expect(contents).toEqual({
         package: {dependencies: {dep1: "1.1"}},
         schema: {title: "hi"},
@@ -84,7 +84,7 @@ describe("Representative", () => {
       await representative.write("module1", "id1", "schema", {title: "hi"}, "yaml");
       await representative.write("module1", "id1", "index", "console.log(123)", "js");
 
-      const contents = await representative.readAll("module1", () => true);
+      const contents = await representative.read("module1", () => true);
       expect(contents).toEqual([
         {
           _id: "id1",

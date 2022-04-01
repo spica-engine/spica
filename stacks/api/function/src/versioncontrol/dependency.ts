@@ -1,16 +1,11 @@
 import {ObjectId} from "@spica-server/database";
 import {FunctionService} from "@spica-server/function/services";
-import {
-  DocumentProvider,
-  RepresentativeManager,
-  RepresentativeProvider,
-  SyncProvider
-} from "@spica-server/machinery";
+import {IRepresentativeManager, SyncProvider} from "@spica-server/versioncontrol";
 import {FunctionEngine} from "../engine";
 
 export function dependecySyncProviders(
   service: FunctionService,
-  manager: RepresentativeManager,
+  manager: IRepresentativeManager,
   engine: FunctionEngine
 ): SyncProvider {
   const module = "function";
@@ -67,7 +62,7 @@ export function dependecySyncProviders(
 
   const readAll = async () => {
     const resourceNameValidator = str => ObjectId.isValid(str);
-    const files = await manager.readAll(module, resourceNameValidator, ["package.json"]);
+    const files = await manager.read(module, resourceNameValidator, ["package.json"]);
     return files.map(file => {
       return {_id: file._id, dependencies: file.contents.package.dependencies};
     });
