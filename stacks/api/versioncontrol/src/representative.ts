@@ -1,17 +1,14 @@
+import {Inject} from "@nestjs/common";
 import * as fs from "fs";
 import * as path from "path";
 import * as YAML from "yaml";
-import {IRepresentativeManager} from "./interface";
+import {IRepresentativeManager, WORKING_DIR} from "./interface";
 
 export class RepresentativeManager implements IRepresentativeManager {
-  private directory: string;
-
   private serializer = new Map<string, (val: any) => string>();
   private parsers = new Map<string, (val: string) => any>();
 
-  constructor() {
-    this.directory = path.join(process.cwd(), "representatives");
-
+  constructor(@Inject(WORKING_DIR) private cwd: string) {
     // JSON
     this.serializer.set("json", val => JSON.stringify(val));
     this.parsers.set("json", val => JSON.parse(val));
@@ -32,7 +29,7 @@ export class RepresentativeManager implements IRepresentativeManager {
   }
 
   private getModuleDir(module: string) {
-    return path.join(this.directory, module);
+    return path.join(this.cwd, module);
   }
 
   private serializeContent(content: any, extension: string) {
@@ -54,7 +51,7 @@ export class RepresentativeManager implements IRepresentativeManager {
   }
 
   write(module: string, id: string, fileName: string, content: any, extension: string) {
-    const resourcesDirectory = path.join(this.directory, module, id);
+    const resourcesDirectory = path.join(this.cwd, module, id);
     if (!fs.existsSync(resourcesDirectory)) {
       fs.mkdirSync(resourcesDirectory, {recursive: true});
     }
@@ -63,7 +60,7 @@ export class RepresentativeManager implements IRepresentativeManager {
 
     content = this.serializeContent(content, extension);
 
-    return fs.promises.writeFile(fullPath, content);
+    return fs.promises.writeFile(fullPath, content).then(() => console.log(fullPath, content));
   }
 
   readResource(module: string, id: string, fileNames = []): Promise<any> {

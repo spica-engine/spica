@@ -7,9 +7,12 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {FunctionModule} from "@spica-server/function";
 import {FunctionService} from "@spica-server/function/services";
 import {FunctionEngine} from "@spica-server/function/src/engine";
-import {Synchronizer, ApiMachineryModule, RepresentativeManager} from "@spica-server/machinery";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as os from "os";
+
+import {Synchronizer} from "../src/synchronizer";
+import {RepresentativeManager} from "../src/representative";
+import {SyncDirection, VersionControlModule} from "../src";
 
 describe("Versioning", () => {
   describe("Synchronization between database and files", () => {
@@ -24,7 +27,6 @@ describe("Versioning", () => {
     beforeEach(async () => {
       module = await Test.createTestingModule({
         imports: [
-          ApiMachineryModule,
           CoreTestingModule,
           DatabaseTestingModule.replicaSet(),
           PreferenceTestingModule,
@@ -52,7 +54,8 @@ describe("Versioning", () => {
             maxConcurrency: 1,
             debug: false,
             realtimeLogs: false
-          })
+          }),
+          VersionControlModule
         ]
       }).compile();
 
@@ -83,9 +86,9 @@ describe("Versioning", () => {
 
         await bs.insertOne(bucket);
 
-        await synchronizer.synchronize();
+        await synchronizer.synchronize(SyncDirection.DocToRep);
 
-        const file = await rep.read("bucket", id.toString());
+        const file = await rep.readResource("bucket", id.toString());
 
         expect(file).toEqual({schema: {...bucket, _id: id.toString()}});
       });
@@ -106,12 +109,12 @@ describe("Versioning", () => {
         };
 
         await bs.insertOne(bucket);
-        await synchronizer.synchronize();
+        await synchronizer.synchronize(SyncDirection.DocToRep);
 
         await bs.updateOne({_id: id}, {$set: {"properties.title.type": "number"}});
-        await synchronizer.synchronize();
+        await synchronizer.synchronize(SyncDirection.DocToRep);
 
-        const file = await rep.read("bucket", id.toString());
+        const file = await rep.readResource("bucket", id.toString());
         const expectedBucket = {...bucket, _id: id.toString()};
         expectedBucket.properties.title.type = "number";
 
@@ -134,12 +137,12 @@ describe("Versioning", () => {
         };
 
         await bs.insertOne(bucket);
-        await synchronizer.synchronize();
+        await synchronizer.synchronize(SyncDirection.DocToRep);
 
         await bs.findOneAndDelete({_id: id});
-        await synchronizer.synchronize();
+        await synchronizer.synchronize(SyncDirection.DocToRep);
 
-        const file = await rep.read("bucket", id.toString());
+        const file = await rep.readResource("bucket", id.toString());
         expect(file).toEqual({});
       });
     });
@@ -163,9 +166,9 @@ describe("Versioning", () => {
 
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        await synchronizer.synchronize();
+        await synchronizer.synchronize(SyncDirection.DocToRep);
 
-        let file = await rep.read("function", id.toString());
+        let file = await rep.readResource("function", id.toString());
         expect(file).toEqual({
           index: "",
           package: {dependencies: []},
@@ -179,9 +182,9 @@ describe("Versioning", () => {
           options: {}
         };
         await fs.findOneAndUpdate({_id: id}, {$set: {"triggers.onCall": onCall}});
-        await synchronizer.synchronize();
+        await synchronizer.synchronize(SyncDirection.DocToRep);
 
-        file = await rep.read("function", id.toString());
+        file = await rep.readResource("function", id.toString());
         expect(file).toEqual({
           index: "",
           package: {dependencies: []},
@@ -190,9 +193,9 @@ describe("Versioning", () => {
 
         // INDEX UPDATES
         await engine.update(fn, "console.log(123)");
-        await synchronizer.synchronize();
+        await synchronizer.synchronize(SyncDirection.DocToRep);
 
-        file = await rep.read("function", id.toString());
+        file = await rep.readResource("function", id.toString());
         expect(file).toEqual({
           index: "console.log(123)",
           package: {dependencies: []},
@@ -201,9 +204,9 @@ describe("Versioning", () => {
 
         // SCHEMA DELETE
         await fs.findOneAndDelete({_id: id});
-        await synchronizer.synchronize();
+        await synchronizer.synchronize(SyncDirection.DocToRep);
 
-        file = await rep.read("function", id.toString());
+        file = await rep.readResource("function", id.toString());
         expect(file).toEqual({});
         // we can not install dependency on test environment
       }, 20000);

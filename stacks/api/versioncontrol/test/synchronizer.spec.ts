@@ -1,4 +1,5 @@
-import {Synchronizer, DocumentProvider, RepresentativeProvider} from "@spica-server/machinery";
+import {DocumentProvider, RepresentativeProvider, SyncDirection} from "../src";
+import {Synchronizer} from "../src/synchronizer";
 
 describe("Synchronizer", () => {
   let synchronizer: Synchronizer;
@@ -56,8 +57,8 @@ describe("Synchronizer", () => {
     synchronizer.register({document: docsProvider, representative: repsProvider});
   });
 
-  it("should synchronize module", async () => {
-    await synchronizer.synchronize();
+  it("should synchronize module from representatives to document", async () => {
+    await synchronizer.synchronize(SyncDirection.RepToDoc);
 
     expect(repsProvider.getAll).toHaveBeenCalledTimes(1);
     expect(repsProvider.insert).toHaveBeenCalledOnceWith({

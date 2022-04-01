@@ -27,7 +27,7 @@ export const getSyncProvider = (
     return doc;
   };
 
-  const document: DocumentProvider = {
+  const document = {
     module,
     insert: doc => service.insertOne(gainObjectId(doc)),
 
@@ -43,7 +43,7 @@ export const getSyncProvider = (
     getAll: () => service.find().then(docs => docs.map(doc => loseObjectId(doc)))
   };
 
-  const representative: RepresentativeProvider = {
+  const representative = {
     module,
 
     insert: doc => {

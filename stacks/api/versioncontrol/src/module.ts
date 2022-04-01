@@ -1,13 +1,21 @@
 import {Global, Module} from "@nestjs/common";
-import {REGISTER_SYNC_PROVIDER} from "./interface";
+import {VersionControlController} from "./controller";
+import {REGISTER_SYNC_PROVIDER, WORKING_DIR} from "./interface";
 import {RepresentativeManager} from "./representative";
 import {Synchronizer} from "./synchronizer";
+import {Git} from "./versionmanager";
 
 @Global()
 @Module({
+  controllers: [VersionControlController],
   providers: [
+    {
+      provide: WORKING_DIR,
+      useValue: `${process.cwd}/representatives`
+    },
     RepresentativeManager,
     Synchronizer,
+    Git,
     {
       provide: REGISTER_SYNC_PROVIDER,
       useFactory: (sync: Synchronizer, manager: RepresentativeManager) => {
