@@ -15,7 +15,14 @@ import {Synchronizer} from "./synchronizer";
 @Controller("versioncontrol")
 export class VersionControlController {
   constructor(private synchronizer: Synchronizer, private vers: VersionManager) {}
-  @Post("sync")
+
+  @Get("latest")
+  @UseGuards(AuthGuard())
+  getSyncLog() {
+    return this.synchronizer.getLastSync();
+  }
+
+  @Post("save")
   @UseGuards(AuthGuard())
   sync() {
     return this.synchronizer.synchronize(SyncDirection.DocToRep).catch(e => {
@@ -23,10 +30,16 @@ export class VersionControlController {
     });
   }
 
-  @Get("sync")
+  @Get("remote")
   @UseGuards(AuthGuard())
-  getSyncLog() {
-    return this.synchronizer.getLastSync();
+  getRemote() {
+    return this.vers.getRemote();
+  }
+
+  @Post("remote")
+  @UseGuards(AuthGuard())
+  setRemote(@Body() body: any) {
+    return this.vers.setRemote(body);
   }
 
   // @TODO: add action guads

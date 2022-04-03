@@ -6,6 +6,7 @@ import {Provider, SyncDirection, SyncLog, SyncProvider} from "./interface";
 export class Synchronizer {
   private providers: SyncProvider[] = [];
 
+  //@TODO: consider keeping this log at db level
   private lastSync: SyncLog;
 
   getLastSync() {

@@ -58,11 +58,13 @@ export abstract class VersionManager {
   abstract commit(options: {files: string | string[]; message: string}): Promise<any>;
   abstract reset(options: {files: string | string[]}): Promise<any>;
 
-  // upstream
-  abstract addUpstream(options: {address: string});
+  // remote
+  abstract getRemote();
+  abstract setRemote(options: {url: string});
+
   abstract clone(options: {address: string});
-  abstract pull(options: {branch: string});
-  abstract push(options: {branch: string});
+  abstract pull();
+  abstract push();
 }
 
 export interface SyncLog {

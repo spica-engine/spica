@@ -1,4 +1,4 @@
-import {VersionManager, WORKING_DIR} from "./interface";
+import {VersionManager} from "./interface";
 import {Injectable} from "@nestjs/common";
 import simpleGit, {SimpleGit} from "simple-git";
 
@@ -10,7 +10,10 @@ export class Git implements VersionManager {
   private maps: {name: string; call: Function}[] = [
     {name: "commit", call: (ops?) => this.commit(ops)},
     {name: "checkout", call: (ops?) => this.checkout(ops)},
-    {name: "reset", call: (ops?) => this.reset(ops)}
+    {name: "push", call: () => this.push()},
+    {name: "pull", call: () => this.pull()}
+    // {name: "remove", call: (ops?) => this.reset(ops)},
+    // {name: "revert", call: (ops?) => this.reset(ops)}
   ];
 
   run(action: string, options: any): Promise<any> {
@@ -48,16 +51,28 @@ export class Git implements VersionManager {
     return this.git.checkout(["--", ...files]);
   }
 
-  addUpstream({address}) {
-    throw new Error("Method not implemented.");
+  setRemote({url}) {
+    return this.git.addRemote("origin", url);
   }
+
+  getRemote() {
+    return this.git.getRemotes(true);
+  }
+
   clone({address}) {
     throw new Error("Method not implemented.");
   }
-  pull({branch}) {
+
+  pull() {
     throw new Error("Method not implemented.");
   }
-  push({branch}) {
-    throw new Error("Method not implemented.");
+
+  private listBranches() {
+    return this.git.branch();
+  }
+
+  async push() {
+    const branches = await this.listBranches();
+    return this.git.push("origin", branches.current);
   }
 }
