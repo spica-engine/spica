@@ -15,5 +15,6 @@ ts_project(
         "@npm//@nestjs/common",
         "@npm//yaml",
         "//packages/core/differ",
+        "@npm//simple-git",
     ],
 )

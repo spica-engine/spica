@@ -8,6 +8,7 @@ export function dependecySyncProviders(
   manager: IRepresentativeManager,
   engine: FunctionEngine
 ): SyncProvider {
+  const name = "function-dependency";
   const module = "function";
 
   const getAll = async () => {
@@ -53,7 +54,6 @@ export function dependecySyncProviders(
   };
 
   const document = {
-    module,
     getAll,
     insert: reinstall,
     update: reinstall,
@@ -81,7 +81,6 @@ export function dependecySyncProviders(
   const rm = () => Promise.resolve();
 
   const representative = {
-    module,
     getAll: readAll,
     insert: write,
     update: write,
@@ -89,6 +88,7 @@ export function dependecySyncProviders(
   };
 
   return {
+    name,
     document,
     representative
   };

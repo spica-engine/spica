@@ -14,7 +14,6 @@ export enum SyncDirection {
 export type Provider = RepresentativeProvider | DocumentProvider;
 
 export interface RepresentativeProvider {
-  module: string;
   getAll: () => Promise<any[]>;
   insert: (doc) => Promise<any>;
   update: (doc) => Promise<any>;
@@ -22,7 +21,6 @@ export interface RepresentativeProvider {
 }
 
 export interface DocumentProvider {
-  module: string;
   getAll: () => Promise<any[]>;
   insert: (rep) => Promise<any>;
   update: (rep) => Promise<any>;
@@ -30,6 +28,7 @@ export interface DocumentProvider {
 }
 
 export interface SyncProvider {
+  name: string;
   document: DocumentProvider;
   representative: RepresentativeProvider;
 }
@@ -52,16 +51,26 @@ export interface IRepresentativeManager {
   delete(module: string, id: string): Promise<void>;
 }
 
-export interface VersionManager {
-  createBranch(name: string);
-  switchBranch(name: string);
+export abstract class VersionManager {
+  abstract run(action: string, options: any): Promise<any>;
 
-  addUpstream(address: string);
-  clone(address: string);
+  abstract checkout(options: {branch: string}): Promise<any>;
+  abstract commit(options: {files: string | string[]; message: string}): Promise<any>;
+  abstract reset(options: {files: string | string[]}): Promise<any>;
 
-  pull(branch: string);
-  push(branch: string);
+  // upstream
+  abstract addUpstream(options: {address: string});
+  abstract clone(options: {address: string});
+  abstract pull(options: {branch: string});
+  abstract push(options: {branch: string});
+}
 
-  add(files: string[]);
-  commit(message: string);
+export interface SyncLog {
+  changes: {
+    module: string;
+    insertions: any[];
+    updations: any[];
+    deletions: any[];
+  }[];
+  date: string;
 }

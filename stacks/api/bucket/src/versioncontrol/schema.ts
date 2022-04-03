@@ -1,69 +1,101 @@
-import {BucketService} from "@spica-server/bucket/services";
+import {HistoryService} from "@spica-server/bucket/history";
+import {BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
-import {
-  DocumentProvider,
-  IRepresentativeManager,
-  RepresentativeProvider,
-  SyncProvider
-} from "@spica-server/versioncontrol";
+import {IRepresentativeManager, SyncProvider} from "@spica-server/versioncontrol";
+import {clearRelationsOnDrop, updateDocumentsOnChange} from "../changes";
 
 export const getSyncProvider = (
-  service: BucketService,
+  bs: BucketService,
+  bds: BucketDataService,
+  history: HistoryService,
   manager: IRepresentativeManager
 ): SyncProvider => {
+  const name = "bucket-schema";
   const module = "bucket";
-  const resourceNameValidator = str => ObjectId.isValid(str);
 
-  const gainObjectId = doc => {
-    if (doc._id && typeof doc._id == "string") {
-      doc._id = new ObjectId(doc._id);
-    }
-    return doc;
+  const getAll = () => {
+    return bs.find().then(buckets =>
+      buckets.map(bucket => {
+        return {...bucket, _id: bucket._id.toString()};
+      })
+    );
   };
-  const loseObjectId = doc => {
-    if (doc._id && typeof doc._id != "string") {
-      doc._id = doc._id.toString();
+
+  const insert = async bucket => {
+    await bs.insertOne({...bucket, _id: new ObjectId(bucket._id)});
+    bs.emitSchemaChanges();
+    return bucket;
+  };
+
+  const update = async bucket => {
+    const _id = new ObjectId(bucket._id);
+    delete bucket._id;
+
+    const previousSchema = await bs.findOne({_id});
+
+    const currentSchema = await bs.findOneAndReplace({_id}, bucket, {
+      returnOriginal: false
+    });
+
+    await updateDocumentsOnChange(bds, previousSchema, currentSchema);
+
+    bs.emitSchemaChanges();
+
+    if (history) {
+      await history.updateHistories(previousSchema, currentSchema);
     }
-    return doc;
+
+    return currentSchema;
+  };
+
+  const remove = async bucket => {
+    const schema = await bs.drop(bucket._id);
+
+    if (schema) {
+      const promises = [];
+
+      promises.push(clearRelationsOnDrop(bs, bds, schema._id));
+      if (history) {
+        promises.push(history.deleteMany({bucket_id: schema._id}));
+      }
+
+      await Promise.all(promises);
+
+      bs.emitSchemaChanges();
+    }
   };
 
   const document = {
-    module,
-    insert: doc => service.insertOne(gainObjectId(doc)),
+    getAll,
+    insert,
+    update,
+    delete: remove
+  };
 
-    update: doc => {
-      doc = gainObjectId(doc);
-      const copy = JSON.parse(JSON.stringify(doc));
-      delete copy._id;
-      return service.findOneAndReplace({_id: doc._id}, copy);
-    },
+  const write = bucket => {
+    bucket._id = bucket._id.toString();
+    return manager.write(module, bucket._id, "schema", bucket, "yaml");
+  };
 
-    delete: id => service.findOneAndDelete({_id: new ObjectId(id)}).then(() => {}),
+  const rm = bucket => {
+    return manager.delete(module, bucket._id);
+  };
 
-    getAll: () => service.find().then(docs => docs.map(doc => loseObjectId(doc)))
+  const readAll = async () => {
+    const resourceNameValidator = id => ObjectId.isValid(id);
+    const files = await manager.read(module, resourceNameValidator, ["schema.yaml"]);
+    return files.map(file => file.contents.schema);
   };
 
   const representative = {
-    module,
-
-    insert: doc => {
-      doc = loseObjectId(doc);
-      return manager.write(module, doc._id, "schema", doc, "yaml");
-    },
-
-    update: doc => {
-      doc = loseObjectId(doc);
-      return manager.write(module, doc._id, "schema", doc, "yaml");
-    },
-
-    delete: doc => manager.delete(module, doc._id),
-    getAll: () =>
-      manager
-        .read(module, resourceNameValidator, [])
-        .then(resources => resources.map(resource => resource.contents.schema))
+    getAll: readAll,
+    insert: write,
+    update: write,
+    delete: rm
   };
 
   return {
+    name,
     document,
     representative
   };

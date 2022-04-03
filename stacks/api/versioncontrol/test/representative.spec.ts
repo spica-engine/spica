@@ -3,11 +3,11 @@ import * as fs from "fs";
 import * as path from "path";
 
 describe("Representative", () => {
-  const representative: RepresentativeManager = new RepresentativeManager();
+  const representative: RepresentativeManager = new RepresentativeManager(process.cwd());
   const rootDir = path.join(process.cwd(), "representatives");
 
   afterEach(() => {
-    fs.rmSync(rootDir, {recursive: true, force: true});
+    fs.rmdirSync(rootDir, {recursive: true});
   });
 
   describe("write", () => {

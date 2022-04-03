@@ -9,6 +9,7 @@ export function indexSyncProviders(
   manager: IRepresentativeManager,
   engine: FunctionEngine
 ): SyncProvider {
+  const name = "function-index";
   const module = "function";
 
   const getAll = async () => {
@@ -31,7 +32,7 @@ export function indexSyncProviders(
     const index = fn.index;
     fn = await service.findOne({_id: new ObjectId(fn._id)});
 
-    await engine.update(fn, index).catch(console.log);
+    await engine.update(fn, index);
 
     const changes = createTargetChanges(fn, ChangeKind.Updated);
     engine.categorizeChanges(changes);
@@ -43,7 +44,6 @@ export function indexSyncProviders(
   const rm = () => Promise.resolve();
 
   const document = {
-    module,
     getAll,
     insert,
     update: insert,
@@ -64,7 +64,6 @@ export function indexSyncProviders(
   };
 
   const representative = {
-    module,
     getAll: readAll,
     insert: write,
     update: write,
@@ -72,6 +71,7 @@ export function indexSyncProviders(
   };
 
   return {
+    name,
     document,
     representative
   };

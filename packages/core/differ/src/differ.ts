@@ -125,8 +125,8 @@ export function compareResourceGroups(
 
   const existingIds = existings.map(existing => existing[uniqueField]);
 
-  const updates = () => {
-    const updates = [];
+  const updations = () => {
+    const updations = [];
     for (const existing of existings) {
       const source = sources.find(source => source[uniqueField] == existing[uniqueField]);
 
@@ -138,21 +138,21 @@ export function compareResourceGroups(
       }
 
       if (diff(source, existing).length) {
-        updates.push(source);
+        updations.push(source);
       }
     }
 
-    return updates;
+    return updations;
   };
 
-  const inserts = () => sources.filter(source => existingIds.indexOf(source[uniqueField]) == -1);
+  const insertions = () => sources.filter(source => existingIds.indexOf(source[uniqueField]) == -1);
 
-  const deletes = () =>
+  const deletions = () =>
     targets.filter(target => existingIds.indexOf(target[uniqueField]) == -1);
 
   return {
-    inserts: inserts(),
-    updates: updates(),
-    deletes: deletes()
+    insertions: insertions(),
+    updations: updations(),
+    deletions: deletions()
   };
 }

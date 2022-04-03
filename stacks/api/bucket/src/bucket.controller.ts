@@ -23,10 +23,10 @@ import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/ser
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {findRelations, createBucketActivity} from "@spica-server/bucket/common";
-import {schemaDiff, ChangeKind} from "@spica-server/core/differ";
+import {createBucketActivity} from "@spica-server/bucket/common";
 import * as expression from "@spica-server/bucket/expression";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket/cache";
+import {clearRelationsOnDrop, updateDocumentsOnChange} from "./changes";
 /**
  * All APIs related to bucket schemas.
  * @name bucket
@@ -175,7 +175,7 @@ export class BucketController {
       throw new InternalServerErrorException(error.message);
     }
 
-    await this.clearUpdatedFields(this.bds, previousSchema, currentSchema);
+    await updateDocumentsOnChange(this.bds, previousSchema, currentSchema);
 
     this.bs.emitSchemaChanges();
 
@@ -231,7 +231,7 @@ export class BucketController {
     const schema = await this.bs.drop(id);
     if (schema) {
       const promises = [];
-      promises.push(this.clearRelations(this.bs, this.bds, id));
+      promises.push(clearRelationsOnDrop(this.bs, this.bds, id));
       if (this.history) {
         promises.push(this.history.deleteMany({bucket_id: id}));
       }
@@ -239,83 +239,5 @@ export class BucketController {
       this.bs.emitSchemaChanges();
     }
     return;
-  }
-
-  async clearRelations(
-    bucketService: BucketService,
-    bucketDataService: BucketDataService,
-    bucketId: ObjectId
-  ) {
-    const buckets = await bucketService.find();
-
-    const updatePromises = [];
-
-    for (const bucket of buckets) {
-      const targets = Array.from(
-        findRelations(bucket.properties, bucketId.toHexString(), "", new Map()).keys()
-      );
-
-      const unsetFieldsBucket = targets.reduce((acc, current) => {
-        current = "properties." + current.replace(/\./g, ".properties.");
-        acc = {...acc, [current]: ""};
-        return acc;
-      }, {});
-
-      if (Object.keys(unsetFieldsBucket).length) {
-        updatePromises.push(
-          bucketService.updateMany({_id: bucket._id}, {$unset: unsetFieldsBucket})
-        );
-      }
-
-      const unsetFieldsBucketData = targets.reduce((acc, current) => {
-        acc = {...acc, [current]: ""};
-        return acc;
-      }, {});
-
-      if (Object.keys(unsetFieldsBucketData).length) {
-        updatePromises.push(
-          bucketDataService.children(bucket).updateMany({}, {$unset: unsetFieldsBucketData})
-        );
-      }
-    }
-
-    return Promise.all(updatePromises);
-  }
-  async clearUpdatedFields(
-    bucketDataService: BucketDataService,
-    previousSchema: Bucket,
-    currentSchema: Bucket
-  ) {
-    const targets = schemaDiff(previousSchema, currentSchema)
-      .filter(change => {
-        if (change.kind == ChangeKind.Add) {
-          return false;
-        }
-
-        if (change.lastPath.length) {
-          for (const keyword of ["type", "relationType", "bucketId"]) {
-            if (change.lastPath.includes(keyword)) {
-              return true;
-            }
-          }
-          return false;
-        }
-
-        return true;
-      })
-      // for array targets
-      .map(change => change.path.join(".").replace(/\/\[0-9]\*\//g, "$[]"));
-
-    const unsetFields = {};
-
-    for (const target of targets) {
-      unsetFields[target] = "";
-    }
-
-    if (!Object.keys(unsetFields).length) {
-      return;
-    }
-
-    await bucketDataService.children(previousSchema).updateMany({}, {$unset: unsetFields});
   }
 }

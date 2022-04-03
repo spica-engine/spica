@@ -33,6 +33,7 @@
     "run-cli": "bazel run //stacks/cli:bin"
   },
   "dependencies": {
+    "simple-git": "^3.5.0",
     "@google-cloud/storage": "^5.0.1",
     "@graphql-tools/merge": "^8.2.1",
     "@graphql-tools/schema": "^8.3.1",

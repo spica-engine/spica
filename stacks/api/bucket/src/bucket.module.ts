@@ -1,5 +1,5 @@
-import {DynamicModule, Global, Inject, Module, Type} from "@nestjs/common";
-import {HistoryModule} from "@spica-server/bucket/history";
+import {DynamicModule, Global, Inject, Module, Optional, Type} from "@nestjs/common";
+import {HistoryModule, HistoryService} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {BucketService, BucketDataService, ServicesModule} from "@spica-server/bucket/services";
@@ -107,9 +107,10 @@ export class BucketModule {
     preference: PreferenceService,
     bs: BucketService,
     bds: BucketDataService,
+    @Optional() private history: HistoryService,
     @Inject(REGISTER_SYNC_PROVIDER) registerer: IREGISTER_SYNC_PROVIDER
   ) {
-    const provider = getSyncProvider(bs, registerer.manager);
+    const provider = getSyncProvider(bs, bds, history, registerer.manager);
     registerer.register(provider);
 
     preference.default({

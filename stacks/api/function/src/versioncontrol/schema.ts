@@ -11,6 +11,7 @@ export function schemaSyncProviders(
   engine: FunctionEngine,
   logs: LogService
 ): SyncProvider {
+  const name = "function-schema";
   const module = "function";
 
   const getAll = async () => {
@@ -29,6 +30,7 @@ export function schemaSyncProviders(
     engine.categorizeChanges(changes);
 
     await engine.createFunction(fn);
+    await engine.update(fn, "");
 
     return fn;
   };
@@ -69,7 +71,6 @@ export function schemaSyncProviders(
   };
 
   const document = {
-    module,
     getAll,
     insert,
     update,
@@ -91,7 +92,6 @@ export function schemaSyncProviders(
   };
 
   const representative = {
-    module,
     getAll: readAll,
     insert: write,
     update: write,
@@ -99,6 +99,7 @@ export function schemaSyncProviders(
   };
 
   return {
+    name,
     document,
     representative
   };

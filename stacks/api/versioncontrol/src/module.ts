@@ -1,9 +1,11 @@
 import {Global, Module} from "@nestjs/common";
 import {VersionControlController} from "./controller";
-import {REGISTER_SYNC_PROVIDER, WORKING_DIR} from "./interface";
+import {REGISTER_SYNC_PROVIDER, WORKING_DIR, VersionManager} from "./interface";
 import {RepresentativeManager} from "./representative";
 import {Synchronizer} from "./synchronizer";
 import {Git} from "./versionmanager";
+
+import * as fs from "fs";
 
 @Global()
 @Module({
@@ -11,11 +13,18 @@ import {Git} from "./versionmanager";
   providers: [
     {
       provide: WORKING_DIR,
-      useValue: `${process.cwd}/representatives`
+      useFactory: () => {
+        // const dir = `${process.cwd()}/representatives`;
+        const dir = `/Users/tuna/Desktop/representatives`;
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir);
+        }
+        return dir;
+      }
     },
     RepresentativeManager,
     Synchronizer,
-    Git,
+    {provide: VersionManager, useFactory: cwd => new Git(cwd), inject: [WORKING_DIR]},
     {
       provide: REGISTER_SYNC_PROVIDER,
       useFactory: (sync: Synchronizer, manager: RepresentativeManager) => {

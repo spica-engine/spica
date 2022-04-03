@@ -1,44 +1,63 @@
 import {VersionManager, WORKING_DIR} from "./interface";
-import * as child_process from "child_process";
-import {Inject} from "@nestjs/common";
+import {Injectable} from "@nestjs/common";
+import simpleGit, {SimpleGit} from "simple-git";
 
+@Injectable()
 export class Git implements VersionManager {
-  constructor(@Inject(WORKING_DIR) private cwd: string) {}
+  private git: SimpleGit;
 
-  private run = (cmd: string) => {
-    child_process.exec(cmd, {cwd: this.cwd});
-  };
+  //@TODO: try to get rid of this
+  private maps: {name: string; call: Function}[] = [
+    {name: "commit", call: (ops?) => this.commit(ops)},
+    {name: "checkout", call: (ops?) => this.checkout(ops)},
+    {name: "reset", call: (ops?) => this.reset(ops)}
+  ];
 
-  createBranch(name: string) {
-    this.run(`git branch ${name}`);
+  run(action: string, options: any): Promise<any> {
+    const {call} = this.maps.find(fn => fn.name == action);
+    if (!call || typeof call != "function") {
+      return Promise.reject(`Unknown action ${action}`);
+    }
+
+    return call(options);
   }
 
-  switchBranch(name: string) {
-    this.run(`git checkout ${name}`);
+  constructor(private cwd: string) {
+    this.git = simpleGit({baseDir: this.cwd, binary: "git", maxConcurrentProcesses: 6});
+    this.git.init();
   }
 
-  add(files: string[]) {
-    this.run(`git add ${files.join(",")}`);
+  async checkout({branch}): Promise<string> {
+    const branches = await this.git.branchLocal();
+
+    const command = [branch];
+    if (!branches.all.includes(branch)) {
+      command.unshift("-b");
+    }
+
+    return this.git.checkout(command);
   }
 
-  commit(message: string) {
-    this.run(`git commit -m '${message}'`);
+  async commit({files, message}) {
+    await this.git.add(files);
+    return this.git.commit(message, files);
   }
 
-  // these commands might be handled with upstream manager
-  addUpstream(address: string) {
+  reset({files}): Promise<string> {
+    files = Array.isArray(files) ? files : [files];
+    return this.git.checkout(["--", ...files]);
+  }
+
+  addUpstream({address}) {
     throw new Error("Method not implemented.");
   }
-
-  clone(address: string) {
+  clone({address}) {
     throw new Error("Method not implemented.");
   }
-
-  pull(branch: string) {
+  pull({branch}) {
     throw new Error("Method not implemented.");
   }
-
-  push(branch: string) {
+  push({branch}) {
     throw new Error("Method not implemented.");
   }
 }
