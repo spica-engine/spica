@@ -52,23 +52,11 @@ export interface IRepresentativeManager {
 }
 
 export abstract class VersionManager {
-  abstract run(action: string, options: any): Promise<any>;
-
-  abstract checkout(options: {branch: string}): Promise<any>;
-  abstract commit(options: {files: string | string[]; message: string}): Promise<any>;
-  abstract reset(options: {files: string | string[]}): Promise<any>;
-
-  // remote
-  abstract getRemote();
-  abstract setRemote(options: {url: string});
-
-  abstract clone(options: {address: string});
-  abstract pull();
-  abstract push();
+  abstract run(action: string, options: {args?: string[]}): Promise<any>;
 }
 
 export interface SyncLog {
-  changes: {
+  resources: {
     module: string;
     insertions: any[];
     updations: any[];

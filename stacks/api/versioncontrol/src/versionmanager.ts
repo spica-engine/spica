@@ -7,22 +7,35 @@ export class Git implements VersionManager {
   private git: SimpleGit;
 
   //@TODO: try to get rid of this
+  private map(action: string, options: any) {
+    return () => this[action](options);
+  }
   private maps: {name: string; call: Function}[] = [
-    {name: "commit", call: (ops?) => this.commit(ops)},
-    {name: "checkout", call: (ops?) => this.checkout(ops)},
-    {name: "push", call: () => this.push()},
-    {name: "pull", call: () => this.pull()}
-    // {name: "remove", call: (ops?) => this.reset(ops)},
-    // {name: "revert", call: (ops?) => this.reset(ops)}
+    {name: "reset", call: ops => this.reset(ops)},
+    {name: "add", call: ops => this.add(ops)},
+    {name: "commit", call: ops => this.commit(ops)},
+
+    {name: "checkout", call: ops => this.checkout(ops)},
+    {name: "branch", call: ops => this.branch(ops)},
+
+    {name: "fetch", call: ops => this.fetch(ops)},
+    {name: "pull", call: ops => this.pull(ops)},
+    {name: "push", call: ops => this.push(ops)},
+    {name: "merge", call: ops => this.merge(ops)},
+
+    {name: "remote", call: ops => this.remote(ops)},
+
+    {name: "diff", call: ops => this.diff(ops)},
+    {name: "log", call: ops => this.log(ops)}
   ];
 
   run(action: string, options: any): Promise<any> {
-    const {call} = this.maps.find(fn => fn.name == action);
-    if (!call || typeof call != "function") {
+    const map = this.maps.find(fn => fn.name == action);
+    if (!map) {
       return Promise.reject(`Unknown action ${action}`);
     }
 
-    return call(options);
+    return map.call(options);
   }
 
   constructor(private cwd: string) {
@@ -30,49 +43,51 @@ export class Git implements VersionManager {
     this.git.init();
   }
 
-  async checkout({branch}): Promise<string> {
-    const branches = await this.git.branchLocal();
-
-    const command = [branch];
-    if (!branches.all.includes(branch)) {
-      command.unshift("-b");
-    }
-
-    return this.git.checkout(command);
+  checkout({args}) {
+    return this.git.checkout(args);
   }
 
-  async commit({files, message}) {
-    await this.git.add(files);
-    return this.git.commit(message, files);
+  branch({args}) {
+    return this.git.branch(args);
   }
 
-  reset({files}): Promise<string> {
-    files = Array.isArray(files) ? files : [files];
-    return this.git.checkout(["--", ...files]);
+  add({files}) {
+    return this.git.add(files);
   }
 
-  setRemote({url}) {
-    return this.git.addRemote("origin", url);
+  commit({message}) {
+    return this.git.commit(message);
   }
 
-  getRemote() {
-    return this.git.getRemotes(true);
+  merge({args}) {
+    return this.git.merge(args);
   }
 
-  clone({address}) {
-    throw new Error("Method not implemented.");
+  reset({args}) {
+    return this.git.reset(args);
   }
 
-  pull() {
-    throw new Error("Method not implemented.");
+  remote({args}) {
+    return this.git.remote(args);
   }
 
-  private listBranches() {
-    return this.git.branch();
+  fetch({args}) {
+    return this.git.fetch(args);
   }
 
-  async push() {
-    const branches = await this.listBranches();
-    return this.git.push("origin", branches.current);
+  log({args}) {
+    return this.git.log(args);
+  }
+
+  push({args}) {
+    return this.git.push(args);
+  }
+
+  diff({args}) {
+    return this.git.diff(args);
+  }
+
+  pull({args}) {
+    return this.git.pull(args);
   }
 }

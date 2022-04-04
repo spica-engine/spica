@@ -20,7 +20,7 @@ export class Synchronizer {
   }
 
   async synchronize(direction: SyncDirection) {
-    const syncLog: SyncLog = {changes: [], date: new Date().toISOString()};
+    const syncLog: SyncLog = {resources: [], date: new Date().toISOString()};
 
     for (const provider of this.providers) {
       const {source, target} = this.setSourceAndTarget(provider, direction);
@@ -38,13 +38,13 @@ export class Synchronizer {
 
       await Promise.all(promises);
 
-      const change = {module: provider.name, insertions: [], updations: [], deletions: []};
+      const resouce = {module: provider.name, insertions: [], updations: [], deletions: []};
 
-      change.insertions.push(...insertions);
-      change.updations.push(...updations);
-      change.deletions.push(...deletions);
+      resouce.insertions.push(...insertions);
+      resouce.updations.push(...updations);
+      resouce.deletions.push(...deletions);
 
-      syncLog.changes.push(change);
+      syncLog.resources.push(resouce);
     }
 
     this.lastSync = syncLog;
