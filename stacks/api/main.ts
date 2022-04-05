@@ -152,7 +152,8 @@ const args = yargs
         "WebhookFullAccess",
         "PreferenceFullAccess",
         "StatusFullAccess",
-        "AssetFullAccess"
+        "AssetFullAccess",
+        "VersionControlFullAccess"
       ]
     },
     "passport-identity-limit": {
