@@ -10,9 +10,12 @@ import {FunctionEngine} from "@spica-server/function/src/engine";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as os from "os";
 
-import {Synchronizer} from "../src/synchronizer";
-import {RepresentativeManager} from "../src/representative";
-import {SyncDirection, VersionControlModule} from "../src";
+import {
+  Synchronizer,
+  RepresentativeManager,
+  SyncDirection,
+  VersionControlModule
+} from "@spica-server/versioncontrol";
 
 describe("Versioning", () => {
   describe("Synchronization between database and files", () => {
@@ -171,7 +174,7 @@ describe("Versioning", () => {
         let file = await rep.readResource("function", id.toString());
         expect(file).toEqual({
           index: "",
-          package: {dependencies: []},
+          package: {dependencies: {}},
           schema: {...fn, _id: id.toString()}
         });
 
@@ -187,7 +190,7 @@ describe("Versioning", () => {
         file = await rep.readResource("function", id.toString());
         expect(file).toEqual({
           index: "",
-          package: {dependencies: []},
+          package: {dependencies: {}},
           schema: {...fn, _id: id.toString(), triggers: {onCall}}
         });
 
@@ -198,7 +201,7 @@ describe("Versioning", () => {
         file = await rep.readResource("function", id.toString());
         expect(file).toEqual({
           index: "console.log(123)",
-          package: {dependencies: []},
+          package: {dependencies: {}},
           schema: {...fn, _id: id.toString(), triggers: {onCall}}
         });
 

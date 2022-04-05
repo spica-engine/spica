@@ -38,13 +38,13 @@ export class Synchronizer {
 
       await Promise.all(promises);
 
-      const resouce = {module: provider.name, insertions: [], updations: [], deletions: []};
+      const resource = {module: provider.name, insertions: [], updations: [], deletions: []};
 
-      resouce.insertions.push(...insertions);
-      resouce.updations.push(...updations);
-      resouce.deletions.push(...deletions);
+      resource.insertions.push(...insertions);
+      resource.updations.push(...updations);
+      resource.deletions.push(...deletions);
 
-      syncLog.resources.push(resouce);
+      syncLog.resources.push(resource);
     }
 
     this.lastSync = syncLog;

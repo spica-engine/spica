@@ -6,36 +6,43 @@ import simpleGit, {SimpleGit} from "simple-git";
 export class Git implements VersionManager {
   private git: SimpleGit;
 
-  //@TODO: try to get rid of this
-  private map(action: string, options: any) {
-    return () => this[action](options);
-  }
-  private maps: {name: string; call: Function}[] = [
-    {name: "reset", call: ops => this.reset(ops)},
-    {name: "add", call: ops => this.add(ops)},
-    {name: "commit", call: ops => this.commit(ops)},
+  //@TODO: consider removing this map and calling dynamically
+  private maps: {cmd: string; exec: Function}[] = [
+    {cmd: "reset", exec: ops => this.reset(ops)},
+    {cmd: "add", exec: ops => this.add(ops)},
+    {cmd: "commit", exec: ops => this.commit(ops)},
+    {cmd: "tag", exec: ops => this.tag(ops)},
+    {cmd: "stash", exec: ops => this.stash(ops)},
 
-    {name: "checkout", call: ops => this.checkout(ops)},
-    {name: "branch", call: ops => this.branch(ops)},
+    {cmd: "checkout", exec: ops => this.checkout(ops)},
+    {cmd: "branch", exec: ops => this.branch(ops)},
 
-    {name: "fetch", call: ops => this.fetch(ops)},
-    {name: "pull", call: ops => this.pull(ops)},
-    {name: "push", call: ops => this.push(ops)},
-    {name: "merge", call: ops => this.merge(ops)},
+    {cmd: "fetch", exec: ops => this.fetch(ops)},
+    {cmd: "pull", exec: ops => this.pull(ops)},
+    {cmd: "push", exec: ops => this.push(ops)},
+    {cmd: "merge", exec: ops => this.merge(ops)},
+    {cmd: "rebase", exec: ops => this.rebase(ops)},
 
-    {name: "remote", call: ops => this.remote(ops)},
+    {cmd: "remote", exec: ops => this.remote(ops)},
 
-    {name: "diff", call: ops => this.diff(ops)},
-    {name: "log", call: ops => this.log(ops)}
+    {cmd: "diff", exec: ops => this.diff(ops)},
+    {cmd: "log", exec: ops => this.log(ops)}
   ];
 
-  run(action: string, options: any): Promise<any> {
-    const map = this.maps.find(fn => fn.name == action);
-    if (!map) {
-      return Promise.reject(`Unknown action ${action}`);
-    }
+  availables() {
+    return this.maps.map(map => map.cmd);
+  }
 
-    return map.call(options);
+  get(cmd: string) {
+    const map = this.maps.find(map => map.cmd == cmd);
+    if (!map) {
+      throw Error(`Unknown command ${cmd}`);
+    }
+    return map;
+  }
+
+  exec(cmd: string, options: any): Promise<any> {
+    return this.get(cmd).exec(options);
   }
 
   constructor(private cwd: string) {
@@ -55,8 +62,20 @@ export class Git implements VersionManager {
     return this.git.add(files);
   }
 
-  commit({message}) {
-    return this.git.commit(message);
+  commit({message, args}) {
+    return this.git.commit(message, args);
+  }
+
+  tag({args}) {
+    return this.git.tag(args);
+  }
+
+  stash({args}) {
+    return this.git.stash(args);
+  }
+
+  rebase({args}) {
+    return this.git.rebase(args);
   }
 
   merge({args}) {

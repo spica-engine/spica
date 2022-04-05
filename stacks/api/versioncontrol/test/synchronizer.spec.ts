@@ -1,10 +1,14 @@
-import {DocumentProvider, RepresentativeProvider, SyncDirection} from "../src";
-import {Synchronizer} from "../src/synchronizer";
+import {
+  DocumentProvider,
+  RepresentativeProvider,
+  SyncDirection,
+  Synchronizer,
+  SyncProvider
+} from "@spica-server/versioncontrol";
 
 describe("Synchronizer", () => {
   let synchronizer: Synchronizer;
-  let repsProvider: RepresentativeProvider;
-  let docsProvider: DocumentProvider;
+  let syncProvider: SyncProvider;
 
   beforeEach(() => {
     const reps = [
@@ -14,7 +18,7 @@ describe("Synchronizer", () => {
       },
       {
         _id: "2",
-        title: "this representation should be deleted"
+        title: "this representation should be inserted"
       }
     ];
 
@@ -25,58 +29,64 @@ describe("Synchronizer", () => {
       },
       {
         _id: "3",
-        title: "this representation should be inserted"
+        title: "this representation should be deleted"
       }
     ];
 
-    repsProvider = {
-      module: "bucket",
+    syncProvider = {
+      name: "bucket",
+      representative: {
+        insert: jasmine.createSpy().and.callFake(d => Promise.resolve(d)),
+        update: jasmine.createSpy().and.callFake(() => Promise.resolve()),
+        delete: jasmine.createSpy().and.callFake(() => Promise.resolve()),
 
-      insert: jasmine.createSpy().and.callFake(d => Promise.resolve(d)),
-      update: jasmine.createSpy().and.callFake(() => Promise.resolve()),
-      delete: jasmine.createSpy().and.callFake(() => Promise.resolve()),
+        getAll: jasmine.createSpy().and.callFake(() => {
+          return Promise.resolve(reps);
+        })
+      },
 
-      getAll: jasmine.createSpy().and.callFake(() => {
-        return Promise.resolve(reps);
-      })
-    };
+      document: {
+        insert: jasmine.createSpy().and.callFake(() => Promise.resolve()),
+        update: jasmine.createSpy().and.callFake(() => Promise.resolve()),
+        delete: jasmine.createSpy().and.callFake(() => Promise.resolve()),
 
-    docsProvider = {
-      module: "bucket",
-
-      insert: jasmine.createSpy().and.callFake(() => Promise.resolve()),
-      update: jasmine.createSpy().and.callFake(() => Promise.resolve()),
-      delete: jasmine.createSpy().and.callFake(() => Promise.resolve()),
-
-      getAll: jasmine.createSpy().and.callFake(() => {
-        return Promise.resolve(docs);
-      })
+        getAll: jasmine.createSpy().and.callFake(() => {
+          return Promise.resolve(docs);
+        })
+      }
     };
 
     synchronizer = new Synchronizer();
-    synchronizer.register({document: docsProvider, representative: repsProvider});
+
+    synchronizer.register(syncProvider);
   });
 
-  it("should synchronize module from representatives to document", async () => {
+  it("should get last sync", async () => {
+    const now = new Date();
+    jasmine.clock().mockDate(now);
+
     await synchronizer.synchronize(SyncDirection.RepToDoc);
 
-    expect(repsProvider.getAll).toHaveBeenCalledTimes(1);
-    expect(repsProvider.insert).toHaveBeenCalledOnceWith({
-      _id: "3",
-      title: "this representation should be inserted"
+    expect(synchronizer.getLastSync()).toEqual({
+      resources: [
+        {
+          module: "bucket",
+          insertions: [{_id: "2", title: "this representation should be inserted"}],
+          updations: [
+            {
+              _id: "1",
+              title: "this representation should be updated"
+            }
+          ],
+          deletions: [
+            {
+              _id: "3",
+              title: "this representation should be deleted"
+            }
+          ]
+        }
+      ],
+      date: now.toISOString()
     });
-    expect(repsProvider.update).toHaveBeenCalledOnceWith({
-      _id: "1",
-      title: "updated title"
-    });
-    expect(repsProvider.delete).toHaveBeenCalledOnceWith({
-      _id: "2",
-      title: "this representation should be deleted"
-    });
-
-    expect(docsProvider.getAll).toHaveBeenCalledTimes(1);
-    expect(docsProvider.insert).not.toHaveBeenCalled();
-    expect(docsProvider.update).not.toHaveBeenCalled();
-    expect(docsProvider.delete).not.toHaveBeenCalled();
   });
 });

@@ -1,20 +1,20 @@
-import {RepresentativeManager} from "../src/representative";
+import {RepresentativeManager} from "@spica-server/versioncontrol";
 import * as fs from "fs";
 import * as path from "path";
 
 describe("Representative", () => {
-  const representative: RepresentativeManager = new RepresentativeManager(process.cwd());
-  const rootDir = path.join(process.cwd(), "representatives");
+  const cwd = path.join(process.cwd(), "representatives");
+  const representative: RepresentativeManager = new RepresentativeManager(cwd);
 
   afterEach(() => {
-    fs.rmdirSync(rootDir, {recursive: true});
+    fs.rmdirSync(cwd, {recursive: true});
   });
 
   describe("write", () => {
     it("should write yaml", async () => {
       await representative.write("module1", "id1", "schema", {write_me: "ok"}, "yaml");
 
-      const directory = path.join(rootDir, "module1", "id1");
+      const directory = path.join(cwd, "module1", "id1");
       expect(fs.existsSync(directory)).toEqual(true);
 
       const fileNames = fs.readdirSync(directory);
@@ -29,7 +29,7 @@ describe("Representative", () => {
     it("should write js file", async () => {
       await representative.write("module1", "id1", "index", "console.log()", "js");
 
-      const fileContent = fs.readFileSync(path.join(rootDir, "module1", "id1", "index.js"));
+      const fileContent = fs.readFileSync(path.join(cwd, "module1", "id1", "index.js"));
 
       expect(fileContent.toString()).toEqual("console.log()");
     });
@@ -37,7 +37,7 @@ describe("Representative", () => {
     it("should write json file", async () => {
       await representative.write("module1", "id1", "index", {imjson: "ok"}, "json");
 
-      const fileContent = fs.readFileSync(path.join(rootDir, "module1", "id1", "index.json"));
+      const fileContent = fs.readFileSync(path.join(cwd, "module1", "id1", "index.json"));
 
       expect(fileContent.toString()).toEqual('{"imjson":"ok"}');
     });

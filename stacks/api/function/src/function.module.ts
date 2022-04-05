@@ -19,7 +19,7 @@ import {Http, RepoStrategies} from "./services/interface";
 import {Axios} from "./services/axios";
 import {registerStatusProvider} from "./status";
 import FunctionSchema = require("./schema/function.json");
-import {IREGISTER_SYNC_PROVIDER, REGISTER_SYNC_PROVIDER} from "@spica-server/versioncontrol";
+import {RegisterSyncProvider, REGISTER_SYNC_PROVIDER} from "@spica-server/versioncontrol";
 import {getSyncProviders} from "./versioncontrol";
 
 @Module({})
@@ -28,7 +28,7 @@ export class FunctionModule {
     fs: FunctionService,
     fe: FunctionEngine,
     scheduler: Scheduler,
-    @Inject(REGISTER_SYNC_PROVIDER) registerer: IREGISTER_SYNC_PROVIDER,
+    @Inject(REGISTER_SYNC_PROVIDER) registerer: RegisterSyncProvider,
     logs: LogService
   ) {
     getSyncProviders(fs, registerer.manager, fe, logs).forEach(provider =>

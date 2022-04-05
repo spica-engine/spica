@@ -1,7 +1,7 @@
 export const REGISTER_SYNC_PROVIDER = Symbol.for("REGISTER_SYNC_PROVIDER");
 export const WORKING_DIR = Symbol.for("WORKING_DIR");
 
-export interface IREGISTER_SYNC_PROVIDER {
+export interface RegisterSyncProvider {
   manager: IRepresentativeManager;
   register: (provider: SyncProvider) => void;
 }
@@ -52,7 +52,9 @@ export interface IRepresentativeManager {
 }
 
 export abstract class VersionManager {
-  abstract run(action: string, options: {args?: string[]}): Promise<any>;
+  abstract availables(): string[];
+  abstract get(cmd: string): {cmd: string; exec: Function};
+  abstract exec(cmd: string, options: {args?: string[]}): Promise<any>;
 }
 
 export interface SyncLog {
