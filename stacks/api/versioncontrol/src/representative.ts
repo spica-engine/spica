@@ -61,7 +61,7 @@ export class RepresentativeManager implements IRepresentativeManager {
 
     content = this.serializeContent(content, extension);
 
-    return fs.promises.writeFile(fullPath, content).then(() => console.log(fullPath, content));
+    return fs.promises.writeFile(fullPath, content);
   }
 
   readResource(module: string, id: string, fileNames = []): Promise<any> {

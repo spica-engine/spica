@@ -108,10 +108,12 @@ export class BucketModule {
     bs: BucketService,
     bds: BucketDataService,
     @Optional() private history: HistoryService,
-    @Inject(REGISTER_SYNC_PROVIDER) registerer: RegisterSyncProvider
+    @Optional() @Inject(REGISTER_SYNC_PROVIDER) registerer: RegisterSyncProvider
   ) {
-    const provider = getSyncProvider(bs, bds, this.history, registerer.manager);
-    registerer.register(provider);
+    if (registerer) {
+      const provider = getSyncProvider(bs, bds, this.history, registerer.manager);
+      registerer.register(provider);
+    }
 
     preference.default({
       scope: "bucket",

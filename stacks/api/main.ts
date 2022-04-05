@@ -250,6 +250,15 @@ const args = yargs
       description: "Maximum request count that server can process"
     }
   })
+  /* Version Control Options */
+  .options({
+    "version-control": {
+      boolean: true,
+      description:
+        "When enabled, server will track version of changes and there will be appliable commands to manage these versions.",
+      default: true
+    }
+  })
   /* CORS Options */
   .option({
     "cors-allowed-origins": {
@@ -434,8 +443,7 @@ const modules = [
     debug: args["function-debug"],
     maxConcurrency: args["function-worker-concurrency"],
     realtimeLogs: args["function-realtime-logs"]
-  }),
-  VersionControlModule
+  })
 ];
 
 if (args["activity-stream"]) {
@@ -449,6 +457,10 @@ if (args["status-tracking"]) {
       expireAfterSeconds: args["common-log-lifespan"]
     })
   );
+}
+
+if (args["version-control"]) {
+  modules.push(VersionControlModule);
 }
 
 @Module({

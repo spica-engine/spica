@@ -1,4 +1,4 @@
-import {DynamicModule, Inject, Module} from "@nestjs/common";
+import {DynamicModule, Inject, Module, Optional} from "@nestjs/common";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {Scheduler, SchedulerModule, SchedulingOptions} from "@spica-server/function/scheduler";
 import {WebhookModule} from "@spica-server/function/webhook";
@@ -28,12 +28,14 @@ export class FunctionModule {
     fs: FunctionService,
     fe: FunctionEngine,
     scheduler: Scheduler,
-    @Inject(REGISTER_SYNC_PROVIDER) registerer: RegisterSyncProvider,
+    @Optional() @Inject(REGISTER_SYNC_PROVIDER) registerer: RegisterSyncProvider,
     logs: LogService
   ) {
-    getSyncProviders(fs, registerer.manager, fe, logs).forEach(provider =>
-      registerer.register(provider)
-    );
+    if (registerer) {
+      getSyncProviders(fs, registerer.manager, fe, logs).forEach(provider =>
+        registerer.register(provider)
+      );
+    }
 
     registerInformers(fs, fe);
 
