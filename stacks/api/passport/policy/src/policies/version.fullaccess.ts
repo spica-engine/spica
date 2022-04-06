@@ -1,11 +1,14 @@
 export default {
-  _id: "VersionFullAccess",
+  _id: "VersionControlFullAccess",
   name: "Version Control Full Access",
   description: "Full access to version control service.",
   statement: [
     {
+      action: "versioncontrol:show",
+      module: "versioncontrol"
+    },
+    {
       action: "versioncontrol:update",
-      resource: {include: ["*"], exclude: []},
       module: "versioncontrol"
     }
   ]

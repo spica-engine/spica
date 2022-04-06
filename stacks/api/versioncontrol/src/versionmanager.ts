@@ -4,33 +4,67 @@ import simpleGit, {SimpleGit} from "simple-git";
 
 @Injectable()
 export class Git implements VersionManager {
+  private getCommonSchema() {
+    return {
+      args: {
+        type: "array",
+        items: {
+          type: "string"
+        }
+      }
+    };
+  }
+
   private git: SimpleGit;
 
-  //@TODO: consider removing this map and calling dynamically
-  private maps: {cmd: string; exec: Function}[] = [
-    {cmd: "reset", exec: ops => this.reset(ops)},
-    {cmd: "add", exec: ops => this.add(ops)},
-    {cmd: "commit", exec: ops => this.commit(ops)},
-    {cmd: "tag", exec: ops => this.tag(ops)},
-    {cmd: "stash", exec: ops => this.stash(ops)},
+  private maps: {
+    cmd: string;
+    exec: Function;
+    schema: {[key: string]: any};
+  }[] = [
+    {
+      cmd: "add",
+      exec: ops => this.add(ops),
+      schema: {
+        files: {
+          type: "array",
+          items: {
+            type: "string"
+          }
+        }
+      }
+    },
+    {
+      cmd: "commit",
+      exec: ops => this.commit(ops),
+      schema: {...this.getCommonSchema(), message: {type: "string"}}
+    },
+    {cmd: "reset", exec: ops => this.reset(ops), schema: this.getCommonSchema()},
+    {cmd: "tag", exec: ops => this.tag(ops), schema: this.getCommonSchema()},
+    {cmd: "stash", exec: ops => this.stash(ops), schema: this.getCommonSchema()},
 
-    {cmd: "checkout", exec: ops => this.checkout(ops)},
-    {cmd: "branch", exec: ops => this.branch(ops)},
+    {cmd: "checkout", exec: ops => this.checkout(ops), schema: this.getCommonSchema()},
+    {cmd: "branch", exec: ops => this.branch(ops), schema: this.getCommonSchema()},
 
-    {cmd: "fetch", exec: ops => this.fetch(ops)},
-    {cmd: "pull", exec: ops => this.pull(ops)},
-    {cmd: "push", exec: ops => this.push(ops)},
-    {cmd: "merge", exec: ops => this.merge(ops)},
-    {cmd: "rebase", exec: ops => this.rebase(ops)},
+    {cmd: "fetch", exec: ops => this.fetch(ops), schema: this.getCommonSchema()},
+    {cmd: "pull", exec: ops => this.pull(ops), schema: this.getCommonSchema()},
+    {cmd: "push", exec: ops => this.push(ops), schema: this.getCommonSchema()},
+    {cmd: "merge", exec: ops => this.merge(ops), schema: this.getCommonSchema()},
+    {cmd: "rebase", exec: ops => this.rebase(ops), schema: this.getCommonSchema()},
 
-    {cmd: "remote", exec: ops => this.remote(ops)},
+    {cmd: "remote", exec: ops => this.remote(ops), schema: this.getCommonSchema()},
 
-    {cmd: "diff", exec: ops => this.diff(ops)},
-    {cmd: "log", exec: ops => this.log(ops)}
+    {cmd: "diff", exec: ops => this.diff(ops), schema: this.getCommonSchema()},
+    {cmd: "log", exec: ops => this.log(ops), schema: this.getCommonSchema()}
   ];
 
   availables() {
-    return this.maps.map(map => map.cmd);
+    return this.maps.map(map => {
+      return {
+        command: map.cmd,
+        schema: map.schema
+      };
+    });
   }
 
   get(cmd: string) {

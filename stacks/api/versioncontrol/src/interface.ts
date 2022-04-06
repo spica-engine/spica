@@ -52,7 +52,7 @@ export interface IRepresentativeManager {
 }
 
 export abstract class VersionManager {
-  abstract availables(): string[];
+  abstract availables(): {command: string; schema: {[key: string]: any}}[];
   abstract get(cmd: string): {cmd: string; exec: Function};
   abstract exec(cmd: string, options: {args?: string[]}): Promise<any>;
 }
