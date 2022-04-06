@@ -71,7 +71,7 @@ describe("Versioning", () => {
   });
 
   afterEach(async () => {
-    await rep.delete("bucket", "").catch(() => {});
+    await rep.rm("bucket", "").catch(() => {});
   });
 
   describe("Synchronization from database to files", () => {
@@ -242,7 +242,7 @@ describe("Versioning", () => {
         await rep.write("bucket", id, "schema", bucket, "yaml");
         await synchronizer.synchronize(SyncDirection.RepToDoc);
 
-        await rep.delete("bucket", id);
+        await rep.rm("bucket", id);
         await synchronizer.synchronize(SyncDirection.RepToDoc);
 
         const buckets = await bs.find({});
@@ -308,7 +308,7 @@ describe("Versioning", () => {
         expect(index).toEqual("console.log('hi2')");
 
         // SCHEMA DELETE
-        await rep.delete("function", id);
+        await rep.rm("function", id);
 
         await synchronizer.synchronize(SyncDirection.RepToDoc);
 

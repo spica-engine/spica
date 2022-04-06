@@ -37,7 +37,6 @@ export class VersionControlController {
     return this.vers.availables();
   }
 
-  // @TODO: add action guads
   @Post("commands/:cmd")
   @UseGuards(AuthGuard(), ActionGuard("version:update"))
   async performAction(@Param("cmd") cmd: string, @Body() body: any) {

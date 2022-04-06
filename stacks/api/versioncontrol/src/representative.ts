@@ -136,8 +136,17 @@ export class RepresentativeManager implements IRepresentativeManager {
     return Promise.all(promises).then(() => results);
   }
 
-  delete(module: string, id: string) {
-    const dir = path.join(this.getModuleDir(module), id);
+  rm(module?: string, id?: string) {
+    let dir = this.cwd
+
+    if (module) {
+      dir = path.join(dir, module);
+    }
+
+    if (id) {
+      dir = path.join(dir, id);
+    }
+
     return fs.promises.rmdir(dir, {recursive: true});
   }
 }

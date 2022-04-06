@@ -24,16 +24,17 @@ jasmine_node_test(
 
 
 ts_project(
-    name = "test_lib_vers",
+    name = "test_lib_integration",
     testonly = True,
     srcs = [
-        "versioning.spec.ts",
+        "integration.spec.ts",
     ],
     deps = [
         "//packages/core/testing",
         "//packages/database/testing",
         "//stacks/api/preference/testing",
         "//stacks/api/bucket",
+        "//stacks/api/function",
         "//stacks/api/versioncontrol",
         "@npm//@types/jasmine",
         "@npm//@nestjs/testing",
@@ -42,7 +43,40 @@ ts_project(
 )
 
 jasmine_node_test(
-    name = "test_vers",
-    srcs = [":test_lib_vers"],
+    name = "test_integration",
+    srcs = [":test_lib_integration"],
 )
 
+
+ts_project(
+    name = "test_lib_e2e",
+    testonly = True,
+    srcs = [
+        "e2e.spec.ts",
+    ],
+    deps = [
+        "//packages/core",
+        "//packages/core/schema",
+        "//packages/core/testing",
+        "//packages/core/websocket",
+        "//packages/database/testing",
+        "//stacks/api/preference/testing",
+        "//stacks/api/bucket",
+        "//stacks/api/function",
+        "//stacks/api/passport/testing",
+        "//stacks/api/versioncontrol",
+        "@npm//@types/jasmine",
+        "@npm//@nestjs/testing",
+        "@npm//@nestjs/common",
+
+
+    ],
+)
+
+jasmine_node_test(
+    name = "test_e2e",
+    srcs = [":test_lib_e2e"],
+    tags = [
+        "e2e",
+    ],
+)

@@ -88,7 +88,7 @@ export function schemaSyncProviders(
   };
 
   const rm = fn => {
-    return manager.delete(module, fn._id);
+    return manager.rm(module, fn._id);
   };
 
   const representative = {

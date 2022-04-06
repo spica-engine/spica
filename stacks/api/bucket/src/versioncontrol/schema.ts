@@ -78,7 +78,7 @@ export const getSyncProvider = (
   };
 
   const rm = bucket => {
-    return manager.delete(module, bucket._id);
+    return manager.rm(module, bucket._id);
   };
 
   const readAll = async () => {
