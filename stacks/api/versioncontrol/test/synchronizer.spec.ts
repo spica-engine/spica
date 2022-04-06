@@ -1,10 +1,4 @@
-import {
-  DocumentProvider,
-  RepresentativeProvider,
-  SyncDirection,
-  Synchronizer,
-  SyncProvider
-} from "@spica-server/versioncontrol";
+import {SyncDirection, Synchronizer, SyncProvider} from "@spica-server/versioncontrol";
 
 describe("Synchronizer", () => {
   let synchronizer: Synchronizer;
