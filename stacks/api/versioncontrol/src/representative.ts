@@ -137,7 +137,7 @@ export class RepresentativeManager implements IRepresentativeManager {
   }
 
   rm(module?: string, id?: string) {
-    let dir = this.cwd
+    let dir = this.cwd;
 
     if (module) {
       dir = path.join(dir, module);

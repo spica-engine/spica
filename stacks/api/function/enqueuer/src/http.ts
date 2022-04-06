@@ -24,12 +24,10 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     private schedulerUnsubscription: (targetId: string) => void
   ) {
     super();
-    this.router.use(
-      bodyParser.raw({
-        limit: "10mb",
-        type: "*/*",
-      }) as any
-    );
+    this.router.use(bodyParser.raw({
+      limit: "10mb",
+      type: "*/*"
+    }) as any);
     this.router.use(this.handleUnhandled);
     const stack = httpServer._router.stack;
     httpServer.use("/fn-execute", this.router);

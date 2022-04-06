@@ -8,8 +8,8 @@ ts_project(
     name = "test_lib",
     testonly = True,
     srcs = [
-        "synchronizer.spec.ts",
         "representative.spec.ts",
+        "synchronizer.spec.ts",
     ],
     deps = [
         "//stacks/api/versioncontrol",
@@ -22,7 +22,6 @@ jasmine_node_test(
     srcs = [":test_lib"],
 )
 
-
 ts_project(
     name = "test_lib_integration",
     testonly = True,
@@ -32,13 +31,12 @@ ts_project(
     deps = [
         "//packages/core/testing",
         "//packages/database/testing",
-        "//stacks/api/preference/testing",
         "//stacks/api/bucket",
         "//stacks/api/function",
+        "//stacks/api/preference/testing",
         "//stacks/api/versioncontrol",
-        "@npm//@types/jasmine",
         "@npm//@nestjs/testing",
-
+        "@npm//@types/jasmine",
     ],
 )
 
@@ -46,7 +44,6 @@ jasmine_node_test(
     name = "test_integration",
     srcs = [":test_lib_integration"],
 )
-
 
 ts_project(
     name = "test_lib_e2e",
@@ -60,16 +57,14 @@ ts_project(
         "//packages/core/testing",
         "//packages/core/websocket",
         "//packages/database/testing",
-        "//stacks/api/preference/testing",
         "//stacks/api/bucket",
         "//stacks/api/function",
         "//stacks/api/passport/testing",
+        "//stacks/api/preference/testing",
         "//stacks/api/versioncontrol",
-        "@npm//@types/jasmine",
-        "@npm//@nestjs/testing",
         "@npm//@nestjs/common",
-
-
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
     ],
 )
 

@@ -502,7 +502,9 @@ describe("Synchronize", () => {
 
         const expectations = {
           insertions: [{_id: "dataid4", title: "added_title4", description: "added_description4"}],
-          updations: [{_id: "dataid2", title: "updated_title2", description: "updated_description2"}],
+          updations: [
+            {_id: "dataid2", title: "updated_title2", description: "updated_description2"}
+          ],
           deletions: [{_id: "dataid1", title: "title1", description: "description1"}]
         };
 

@@ -147,8 +147,7 @@ export function compareResourceGroups(
 
   const insertions = () => sources.filter(source => existingIds.indexOf(source[uniqueField]) == -1);
 
-  const deletions = () =>
-    targets.filter(target => existingIds.indexOf(target[uniqueField]) == -1);
+  const deletions = () => targets.filter(target => existingIds.indexOf(target[uniqueField]) == -1);
 
   return {
     insertions: insertions(),
