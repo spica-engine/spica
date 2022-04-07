@@ -1,0 +1,25 @@
+<mat-toolbar>
+  <h4 class="mat-h4">
+    <span>
+      Version Control
+    </span>
+  </h4>
+</mat-toolbar>
+<mat-card class="mat-elevation-z25 dashboard">
+  <mat-card-content>
+    <span class="label">
+      Last Save:
+    </span>
+    <pre class="last-save" *ngIf="lastSave$ | async; let lastSave">
+          {{ lastSave | json }}
+        </pre
+    >
+    <button class="save" (click)="save()" mat-stroked-button>Save</button>
+  </mat-card-content>
+</mat-card>
+
+<mat-card class="mat-elevation-z25 dashboard">
+  <mat-card-content>
+    
+  </mat-card-content>
+</mat-card>

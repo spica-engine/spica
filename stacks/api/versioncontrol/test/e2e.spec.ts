@@ -142,12 +142,12 @@ describe("Versioning e2e", () => {
     });
 
     it("should get empty log if sync has not been performed yet", async () => {
-      const res = await req.get("/versioncontrol/sync");
+      const res = await req.get("/versioncontrol/save");
       expect([res.statusCode, res.statusText, res.body]).toEqual([200, "OK", undefined]);
     });
 
     it("should sync and get last sync log", async () => {
-      const res = await req.post("/versioncontrol/sync");
+      const res = await req.post("/versioncontrol/save");
       const expectedLastSync = {
         resources: [
           {
@@ -204,7 +204,7 @@ describe("Versioning e2e", () => {
         expectedLastSync
       ]);
 
-      const {body: lastSync} = await req.get("/versioncontrol/sync");
+      const {body: lastSync} = await req.get("/versioncontrol/save");
       expect(lastSync).toEqual(expectedLastSync);
     });
   });

@@ -1,0 +1,39 @@
+:host {
+  mat-toolbar {
+    min-height: 250px;
+    padding: 0 30px;
+    align-items: flex-start;
+    h4 > * {
+      vertical-align: middle;
+      margin-left: 5px;
+    }
+  }
+
+  mat-toolbar + mat-card {
+    margin-top: -85px;
+  }
+
+  mat-card {
+    height: auto;
+    margin: 30px;
+    mat-card-content {
+      display: flex;
+      flex-direction: column;
+      height: 500px;
+      align-items: center;
+
+      .label {
+      }
+
+      .last-save {
+        background-color: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
+        overflow-x: scroll;
+        border-radius: 3px;
+        width: 100%;
+      }
+
+      button.save {
+      }
+    }
+  }
+}

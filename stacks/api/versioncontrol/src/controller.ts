@@ -17,13 +17,13 @@ import {Synchronizer} from "./synchronizer";
 export class VersionControlController {
   constructor(private synchronizer: Synchronizer, private vers: VersionManager) {}
 
-  @Get("sync")
-  @UseGuards(AuthGuard(), ActionGuard("versioncontrol:show", "versioncontrol"))
+  @Get("save")
+  @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
   getSyncLog() {
     return this.synchronizer.getLastSync();
   }
 
-  @Post("sync")
+  @Post("save")
   @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
   sync() {
     return this.synchronizer.synchronize(SyncDirection.DocToRep).catch(e => {
@@ -32,7 +32,7 @@ export class VersionControlController {
   }
 
   @Get("commands")
-  @UseGuards(AuthGuard(), ActionGuard("versioncontrol:show", "versioncontrol"))
+  @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
   async getCommands() {
     return this.vers.availables();
   }

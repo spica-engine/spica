@@ -9,6 +9,7 @@ import {IndexComponent} from "./pages/index/index.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {DashboardIndexGuard} from "./dashboard.guard";
 import {AssetStoreComponent} from "./pages/asset-store/asset-store.component";
+import {VersionControlComponent} from "./pages/versioncontrol/versioncontrol.component";
 
 const routes: Routes = [
   {pathMatch: "full", path: "", redirectTo: "dashboard"},
@@ -47,7 +48,16 @@ const routes: Routes = [
       }
     ]
   },
-  {path: "assets", component: AssetStoreComponent}
+  {path: "assets", component: AssetStoreComponent},
+  {
+    path: "versioncontrol",
+    component: VersionControlComponent,
+    canActivateChild: [IdentityGuard, PolicyGuard],
+    data: {
+      service: "versioncontrol",
+      action: "show"
+    }
+  }
 ];
 
 const route: Route[] = [
@@ -73,6 +83,15 @@ const route: Route[] = [
     display: "Asset Store",
     id: "asset_store",
     index: 3
+  },
+  {
+    category: RouteCategory.Primary,
+    icon: "account_tree",
+    path: "versioncontrol",
+    display: "Version Control",
+    id: "versioncontrol",
+    data: {action: "versioncontrol:update"},
+    index: 4
   }
 ];
 
