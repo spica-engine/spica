@@ -73,6 +73,7 @@ export function indexSyncProviders(
   return {
     name,
     document,
-    representative
+    representative,
+    parents: 1
   };
 }

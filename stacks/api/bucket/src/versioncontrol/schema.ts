@@ -97,6 +97,7 @@ export const getSyncProvider = (
   return {
     name,
     document,
-    representative
+    representative,
+    parents: 0
   };
 };

@@ -67,16 +67,13 @@ export class Git implements VersionManager {
     });
   }
 
-  get(cmd: string) {
+  exec(cmd: string, options: any): Promise<any> {
     const map = this.maps.find(map => map.cmd == cmd);
     if (!map) {
-      throw Error(`Unknown command ${cmd}`);
+      return Promise.reject(`Unknown command ${cmd}`);
     }
-    return map;
-  }
 
-  exec(cmd: string, options: any): Promise<any> {
-    return this.get(cmd).exec(options);
+    return map.exec(options);
   }
 
   constructor(private cwd: string) {

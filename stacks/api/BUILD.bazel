@@ -6,6 +6,8 @@ load("@build_bazel_rules_nodejs//:index.bzl", "nodejs_binary")
 load("@io_bazel_rules_docker//nodejs:image.bzl", "nodejs_image")
 load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
 
+load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
+
 ts_project(
     name = "api",
     srcs = [
@@ -57,9 +59,20 @@ nodejs_binary(
     entry_point = "//stacks/api:main.ts",
 )
 
+container_run_and_commit(
+    name = "plugins",
+    image = "@debian_image//image",
+    commands = ["apt -y update && apt install -y git"],
+)
+
+container_image(
+    name = "base",
+    base = ":plugins",
+)
+
 nodejs_image(
     name = "image_base",
-    base = "@debian_image//image",
+    base = ":base",
     data = ["//stacks/api"],
     entry_point = "//stacks/api:main.ts",
     layers = [
@@ -87,7 +100,7 @@ container_push(
     format = "Docker",
     image = ":image",
     registry = "index.docker.io",
-    repository = "spicaengine/api",
-    tag = "{BUILD_SCM_VERSION}",
+    repository = "htuna07/spica-api",
+    tag = "git4",
     tags = ["release-with-spica"],
 )

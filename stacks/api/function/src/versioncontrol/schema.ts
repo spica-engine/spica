@@ -101,6 +101,7 @@ export function schemaSyncProviders(
   return {
     name,
     document,
-    representative
+    representative,
+    parents: 0
   };
 }

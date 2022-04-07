@@ -43,7 +43,7 @@ export function dependecySyncProviders(
     await Promise.all(oldDeps.map(dep => engine.removePackage(fn, dep.name)));
 
     const newDeps = Object.entries(fn.dependencies).map(([name, version]) => {
-      return `${name}@${version}`;
+      return `${name}@${(version as string).slice(1)}`;
     });
 
     await engine.addPackage(fn, newDeps).toPromise();
@@ -93,6 +93,7 @@ export function dependecySyncProviders(
   return {
     name,
     document,
-    representative
+    representative,
+    parents: 1
   };
 }
