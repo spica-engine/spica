@@ -4,66 +4,41 @@ import simpleGit, {SimpleGit} from "simple-git";
 
 @Injectable()
 export class Git implements VersionManager {
-  private getCommonSchema() {
-    return {
-      args: {
-        type: "array",
-        items: {
-          type: "string"
-        }
-      }
-    };
-  }
-
   private git: SimpleGit;
 
   private maps: {
     name: string;
     exec: Function;
-    schema: {[key: string]: any};
   }[] = [
     {
       name: "add",
-      exec: ops => this.add(ops),
-      schema: {
-        files: {
-          required: true,
-          type: "array",
-          items: {
-            type: "string"
-          }
-        }
-      }
+      exec: ops => this.add(ops)
     },
     {
       name: "commit",
-      exec: ops => this.commit(ops),
-      schema: {message: {type: "string", required: true}, ...this.getCommonSchema()}
+      exec: ops => this.commit(ops)
     },
-    {name: "reset", exec: ops => this.reset(ops), schema: this.getCommonSchema()},
-    {name: "tag", exec: ops => this.tag(ops), schema: this.getCommonSchema()},
-    {name: "stash", exec: ops => this.stash(ops), schema: this.getCommonSchema()},
+    {name: "reset", exec: ops => this.reset(ops)},
+    {name: "tag", exec: ops => this.tag(ops)},
+    {name: "stash", exec: ops => this.stash(ops)},
 
-    {name: "checkout", exec: ops => this.checkout(ops), schema: this.getCommonSchema()},
-    {name: "branch", exec: ops => this.branch(ops), schema: this.getCommonSchema()},
+    {name: "checkout", exec: ops => this.checkout(ops)},
+    {name: "branch", exec: ops => this.branch(ops)},
 
-    {name: "fetch", exec: ops => this.fetch(ops), schema: this.getCommonSchema()},
-    {name: "pull", exec: ops => this.pull(ops), schema: this.getCommonSchema()},
-    {name: "push", exec: ops => this.push(ops), schema: this.getCommonSchema()},
-    {name: "merge", exec: ops => this.merge(ops), schema: this.getCommonSchema()},
-    {name: "rebase", exec: ops => this.rebase(ops), schema: this.getCommonSchema()},
+    {name: "fetch", exec: ops => this.fetch(ops)},
+    {name: "pull", exec: ops => this.pull(ops)},
+    {name: "push", exec: ops => this.push(ops)},
+    {name: "merge", exec: ops => this.merge(ops)},
+    {name: "rebase", exec: ops => this.rebase(ops)},
 
-    {name: "remote", exec: ops => this.remote(ops), schema: this.getCommonSchema()},
+    {name: "remote", exec: ops => this.remote(ops)},
 
-    {name: "diff", exec: ops => this.diff(ops), schema: this.getCommonSchema()},
-    {name: "log", exec: ops => this.log(ops), schema: this.getCommonSchema()}
+    {name: "diff", exec: ops => this.diff(ops)},
+    {name: "log", exec: ops => this.log(ops)}
   ];
 
   availables() {
-    return this.maps.reduce((acc, curr) => {
-      acc[curr.name] = curr.schema;
-      return acc;
-    }, {});
+    return this.maps.map(m => m.name);
   }
 
   exec(name: string, options: any): Promise<any> {
@@ -88,14 +63,16 @@ export class Git implements VersionManager {
     return this.git.branch(args);
   }
 
-  add({files}) {
-    return this.git.add(files);
+  add({args}) {
+    return this.git.add(args);
   }
 
-  commit({message, args}) {
+  commit({args}) {
     // this command will be executed with -m as default
     // we shouldn't specify it again
-    args = args.filter(arg => arg != "-m")
+    args = args.filter(arg => arg != "-m");
+    const message = args.find(arg => !(arg.startsWith("-") || arg.startsWith("--")));
+    console.log(message);
     return this.git.commit(message, args);
   }
 

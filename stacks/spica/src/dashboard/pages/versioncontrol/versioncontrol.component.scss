@@ -28,52 +28,18 @@
     overflow: scroll;
     border-radius: 3px;
 
-    width: 100%;
     padding-top: 15px;
     padding-left: 10px;
   }
 
-  // mat-card.save-container {
-  //   mat-card-content {
-  //     min-height: 200px;
-
-  //     .last-save {
-  //       overflow-x: scroll;
-  //       border-radius: 3px;
-  //       width: 100%;
-  //       min-height: 200px;
-  //     }
-  //   }
-  // }
-
-  mat-card.commands-container {
-    mat-card-content {
-      min-height: 200px;
-
-      form {
-        text-align: center;
-        width: 100%;
-
-        > * {
-          margin-bottom: 10px;
-        }
-
-        div.fields {
-          > * {
-            margin: 5px;
-          }
-        }
-
-        h4 {
-          text-align: left;
-        }
-
-        button {
-          mat-spinner {
-            display: inline-block;
-          }
-        }
-      }
+  mat-card{
+    div.command-line{
+      
     }
   }
+
+  mat-form-field.command-field{
+    width: 100%;
+  }
+
 }

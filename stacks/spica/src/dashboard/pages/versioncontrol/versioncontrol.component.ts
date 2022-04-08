@@ -15,7 +15,7 @@ export class VersionControlComponent {
   refresh$ = new BehaviorSubject("");
 
   selectedCmd;
-  body = {};
+  command = "";
   response;
 
   isPending = false;
@@ -32,32 +32,32 @@ export class VersionControlComponent {
       .toPromise();
   }
 
-  onBodyChange(field, definition, value: string) {
-    let preparedValue;
-
-    if (definition.type == "array") {
-      preparedValue = value != "" ? value.split(" ") : [];
-    } else {
-      preparedValue = value;
-    }
-
-    if (!preparedValue || !preparedValue.length) {
-      delete this.body[field];
-      return;
-    }
-
-    this.body[field] = preparedValue;
-  }
-
   execute() {
+    const {action,args} = this.separateCommand();
+    console.log(action,args)
     this.isPending = true;
     return this.vcs
-      .exec(this.selectedCmd, this.body)
+      .exec(action, args)
       .pipe(
         tap(res => (this.response = res)),
         tap(() => this.refresh$.next(""))
       )
       .toPromise()
       .finally(() => (this.isPending = false));
+  }
+
+  separateCommand() {
+    const words = this.command.split(" ");
+
+    const actionIndex = words.findIndex(word => !this.isOption(word));
+
+    const action = words[actionIndex];
+    const args = words.slice(actionIndex + 1);
+
+    return {action, args};
+  }
+
+  isOption(word: string) {
+    return word.startsWith("--") || word.startsWith("-");
   }
 }

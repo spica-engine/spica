@@ -5,68 +5,26 @@
     </span>
   </h4>
 </mat-toolbar>
-<mat-card class="commands-container">
+<mat-card>
   <mat-card-content>
-    <form #cmdForm="ngForm" *ngIf="commands$ | async; let commands">
-      <mat-form-field>
-        <mat-label>
-          Command
-        </mat-label>
-        <mat-select
-          name="command-selection"
-          required
-          [(ngModel)]="selectedCmd"
-          (ngModelChange)="body = {}"
-        >
-          <mat-option *ngFor="let cmdKv of commands | keyvalue" [value]="cmdKv.key">
-            {{ cmdKv.key }}
-          </mat-option>
-        </mat-select>
+    <div class="command-line">
+      <pre>$ git </pre>
+      <mat-form-field class="command-field">
+        <input matInput [(ngModel)]="command" />
       </mat-form-field>
-      <div class="fields" *ngIf="selectedCmd">
-        <mat-form-field *ngFor="let schemaKv of commands[selectedCmd] | keyvalue; index as i">
-          <mat-label>{{ schemaKv.key }}</mat-label>
-          <input
-            matInput
-            ngModel
-            (ngModelChange)="onBodyChange(schemaKv.key, schemaKv.value, $event)"
-            [name]="i + '.' + 'value'"
-            [required]="schemaKv.value.required"
-          />
-        </mat-form-field>
-      </div>
-      <h4>Preview</h4>
-      <pre
-        class="preview"
-      >$ git {{ selectedCmd || '' }}<ng-container *ngFor="let bodyKv of body | keyvalue"> {{ bodyKv.value['join'] ? bodyKv.value.join(" ") : '"' + bodyKv.value + '"' }}</ng-container>
-      </pre>
-      <button mat-stroked-button (click)="execute()" [disabled]="cmdForm.invalid || isPending">
-        <mat-spinner *ngIf="isPending" color="accent" diameter="20"> </mat-spinner>
-        {{ isPending ? "Executing.." : "Execute" }}
-      </button>
-      <ng-container *ngIf="response">
-        <mat-divider></mat-divider>
-        <h4>Response</h4>
-        <pre>
+    </div>
+    <button mat-stroked-button (click)="execute()" [disabled]="!command || isPending">
+      <mat-spinner *ngIf="isPending" color="accent" diameter="20"> </mat-spinner>
+      {{ isPending ? "Executing.." : "Execute" }}
+    </button>
+
+    <ng-container *ngIf="response">
+      <mat-divider></mat-divider>
+      <h4>Response</h4>
+      <pre>
           {{ response | json }}
-        </pre>
-      </ng-container>
-    </form>
+        </pre
+      >
+    </ng-container>
   </mat-card-content>
 </mat-card>
-<!-- <mat-card class="save-container">
-  <mat-card-content>
-    <span class="label">
-      Last Save:
-    </span>
-    <pre class="last-save">
-      <ng-container  *ngIf="lastSave$ | async;else none;let lastSave">
-        {{ lastSave | json }}
-      </ng-container>
-      <ng-template #none>
-        None
-      </ng-template>
-    </pre>
-    <button class="save" (click)="save()" mat-stroked-button>Save</button>
-  </mat-card-content>
-</mat-card> -->

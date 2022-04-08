@@ -25,10 +25,10 @@ export class VersionControlService {
     return this.http.get<any>("api:/versioncontrol/commands");
   }
 
-  exec(command: string, options: any) {
+  exec(command: string, args: string[]) {
     return this.http.post<{cmdResult: any; syncResult: any}>(
       `api:/versioncontrol/commands/${command}`,
-      options
+      {args}
     );
   }
 }
