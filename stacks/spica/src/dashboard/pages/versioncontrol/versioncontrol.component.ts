@@ -34,7 +34,7 @@ export class VersionControlComponent {
 
   execute() {
     const {action,args} = this.separateCommand();
-    console.log(action,args)
+
     this.isPending = true;
     return this.vcs
       .exec(action, args)
@@ -47,13 +47,11 @@ export class VersionControlComponent {
   }
 
   separateCommand() {
+    // handle spaces in quotes somehow
     const words = this.command.split(" ");
 
-    const actionIndex = words.findIndex(word => !this.isOption(word));
-
-    const action = words[actionIndex];
-    const args = words.slice(actionIndex + 1);
-
+    const action = words[0]
+    const args = words.slice(1)
     return {action, args};
   }
 

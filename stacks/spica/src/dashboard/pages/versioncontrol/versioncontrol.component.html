@@ -7,21 +7,22 @@
 </mat-toolbar>
 <mat-card>
   <mat-card-content>
-    <div class="command-line">
-      <pre>$ git </pre>
-      <mat-form-field class="command-field">
-        <input matInput [(ngModel)]="command" />
-      </mat-form-field>
-    </div>
-    <button mat-stroked-button (click)="execute()" [disabled]="!command || isPending">
-      <mat-spinner *ngIf="isPending" color="accent" diameter="20"> </mat-spinner>
-      {{ isPending ? "Executing.." : "Execute" }}
-    </button>
+    <mat-label>
+      Command Line
+    </mat-label>
+    <mat-form-field class="command-field">
+      <pre>$ git <input [disabled]="isPending" matInput [(ngModel)]="command" (keyup.enter)="command && !isPending && execute()" />
+        <button mat-icon-button (click)="execute()" [disabled]="!command || isPending">
+          <mat-spinner *ngIf="isPending" color="accent" diameter="20"> </mat-spinner>
+          <mat-icon *ngIf="!isPending">send</mat-icon>
+        </button>
+    </pre>
+    </mat-form-field>
 
     <ng-container *ngIf="response">
       <mat-divider></mat-divider>
-      <h4>Response</h4>
-      <pre>
+      <mat-label>Response</mat-label>
+      <pre class="response">
           {{ response | json }}
         </pre
       >

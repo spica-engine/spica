@@ -125,90 +125,6 @@ describe("Versioning e2e", () => {
     await app.close();
   });
 
-  describe("sync", () => {
-    let bucket;
-    let bucketId: string;
-
-    let fn;
-    let fnId: string;
-
-    beforeEach(async () => {
-      bucket = getEmptyBucket();
-      await insertBucket(bucket).then(bkt => (bucketId = bkt._id));
-
-      fn = getEmptyFunction();
-      await insertFunction(fn).then(fn => (fnId = fn._id));
-      await insertFunctionIndex(fnId, "console.log()");
-    });
-
-    it("should get empty log if sync has not been performed yet", async () => {
-      const res = await req.get("/versioncontrol/save");
-      expect([res.statusCode, res.statusText, res.body]).toEqual([200, "OK", undefined]);
-    });
-
-    it("should sync and get last sync log", async () => {
-      const res = await req.post("/versioncontrol/save");
-      const expectedLastSync = {
-        resources: [
-          {
-            module: "bucket-schema",
-            insertions: [
-              {
-                ...bucket,
-                _id: bucketId
-              }
-            ],
-            updations: [],
-            deletions: []
-          },
-          {
-            module: "function-schema",
-            insertions: [
-              {
-                ...fn,
-                _id: fnId
-              }
-            ],
-            updations: [],
-            deletions: []
-          },
-          {
-            module: "function-index",
-            insertions: [
-              {
-                _id: fnId,
-                index: "console.log()"
-              }
-            ],
-            updations: [],
-            deletions: []
-          },
-          {
-            module: "function-dependency",
-            insertions: [
-              {
-                _id: fnId,
-                dependencies: {}
-              }
-            ],
-            updations: [],
-            deletions: []
-          }
-        ],
-        date: now.toISOString()
-      };
-
-      expect([res.statusCode, res.statusText, res.body]).toEqual([
-        201,
-        "Created",
-        expectedLastSync
-      ]);
-
-      const {body: lastSync} = await req.get("/versioncontrol/save");
-      expect(lastSync).toEqual(expectedLastSync);
-    });
-  });
-
   describe("commands", () => {
     it("should get available commands", async () => {
       const res = await req.get("/versioncontrol/commands");
@@ -234,9 +150,5 @@ describe("Versioning e2e", () => {
         ]
       ]);
     });
-
-    // it("should commit changes", async() => {
-    //   await req.post();
-    // });
   });
 });

@@ -28,6 +28,7 @@ describe("Synchronizer", () => {
     ];
 
     syncProvider = {
+      parents: 0,
       name: "bucket",
       representative: {
         insert: jasmine.createSpy().and.callFake(d => Promise.resolve(d)),

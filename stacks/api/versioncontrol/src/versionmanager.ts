@@ -71,8 +71,13 @@ export class Git implements VersionManager {
     // this command will be executed with -m as default
     // we shouldn't specify it again
     args = args.filter(arg => arg != "-m");
-    const message = args.find(arg => !(arg.startsWith("-") || arg.startsWith("--")));
-    console.log(message);
+
+    const messageIndex = args.findIndex(
+      arg => arg.startsWith("`") || args.startsWith("'") || args.startsWith('"')
+    );
+    const message = args[messageIndex];
+    args = args.slice(messageIndex + 1);
+
     return this.git.commit(message, args);
   }
 
