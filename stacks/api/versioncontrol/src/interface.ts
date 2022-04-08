@@ -52,8 +52,18 @@ export interface IRepresentativeManager {
   rm(module: string, id: string): Promise<void>;
 }
 
+export interface AvailableCommands {
+  [command: string]: {
+    required?: boolean;
+    type: string;
+    items?: {
+      type: string;
+    };
+  };
+}
+
 export abstract class VersionManager {
-  abstract availables(): {command: string; schema: {[key: string]: any}}[];
+  abstract availables(): AvailableCommands;
   abstract exec(cmd: string, options: {args?: string[]}): Promise<any>;
 }
 

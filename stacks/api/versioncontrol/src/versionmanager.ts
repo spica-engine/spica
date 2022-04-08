@@ -18,15 +18,16 @@ export class Git implements VersionManager {
   private git: SimpleGit;
 
   private maps: {
-    cmd: string;
+    name: string;
     exec: Function;
     schema: {[key: string]: any};
   }[] = [
     {
-      cmd: "add",
+      name: "add",
       exec: ops => this.add(ops),
       schema: {
         files: {
+          required: true,
           type: "array",
           items: {
             type: "string"
@@ -35,42 +36,40 @@ export class Git implements VersionManager {
       }
     },
     {
-      cmd: "commit",
+      name: "commit",
       exec: ops => this.commit(ops),
-      schema: {...this.getCommonSchema(), message: {type: "string"}}
+      schema: {message: {type: "string", required: true}, ...this.getCommonSchema()}
     },
-    {cmd: "reset", exec: ops => this.reset(ops), schema: this.getCommonSchema()},
-    {cmd: "tag", exec: ops => this.tag(ops), schema: this.getCommonSchema()},
-    {cmd: "stash", exec: ops => this.stash(ops), schema: this.getCommonSchema()},
+    {name: "reset", exec: ops => this.reset(ops), schema: this.getCommonSchema()},
+    {name: "tag", exec: ops => this.tag(ops), schema: this.getCommonSchema()},
+    {name: "stash", exec: ops => this.stash(ops), schema: this.getCommonSchema()},
 
-    {cmd: "checkout", exec: ops => this.checkout(ops), schema: this.getCommonSchema()},
-    {cmd: "branch", exec: ops => this.branch(ops), schema: this.getCommonSchema()},
+    {name: "checkout", exec: ops => this.checkout(ops), schema: this.getCommonSchema()},
+    {name: "branch", exec: ops => this.branch(ops), schema: this.getCommonSchema()},
 
-    {cmd: "fetch", exec: ops => this.fetch(ops), schema: this.getCommonSchema()},
-    {cmd: "pull", exec: ops => this.pull(ops), schema: this.getCommonSchema()},
-    {cmd: "push", exec: ops => this.push(ops), schema: this.getCommonSchema()},
-    {cmd: "merge", exec: ops => this.merge(ops), schema: this.getCommonSchema()},
-    {cmd: "rebase", exec: ops => this.rebase(ops), schema: this.getCommonSchema()},
+    {name: "fetch", exec: ops => this.fetch(ops), schema: this.getCommonSchema()},
+    {name: "pull", exec: ops => this.pull(ops), schema: this.getCommonSchema()},
+    {name: "push", exec: ops => this.push(ops), schema: this.getCommonSchema()},
+    {name: "merge", exec: ops => this.merge(ops), schema: this.getCommonSchema()},
+    {name: "rebase", exec: ops => this.rebase(ops), schema: this.getCommonSchema()},
 
-    {cmd: "remote", exec: ops => this.remote(ops), schema: this.getCommonSchema()},
+    {name: "remote", exec: ops => this.remote(ops), schema: this.getCommonSchema()},
 
-    {cmd: "diff", exec: ops => this.diff(ops), schema: this.getCommonSchema()},
-    {cmd: "log", exec: ops => this.log(ops), schema: this.getCommonSchema()}
+    {name: "diff", exec: ops => this.diff(ops), schema: this.getCommonSchema()},
+    {name: "log", exec: ops => this.log(ops), schema: this.getCommonSchema()}
   ];
 
   availables() {
-    return this.maps.map(map => {
-      return {
-        command: map.cmd,
-        schema: map.schema
-      };
-    });
+    return this.maps.reduce((acc, curr) => {
+      acc[curr.name] = curr.schema;
+      return acc;
+    }, {});
   }
 
-  exec(cmd: string, options: any): Promise<any> {
-    const map = this.maps.find(map => map.cmd == cmd);
+  exec(name: string, options: any): Promise<any> {
+    const map = this.maps.find(map => map.name == name);
     if (!map) {
-      return Promise.reject(`Unknown command ${cmd}`);
+      return Promise.reject(`Unknown command ${name}`);
     }
 
     return map.exec(options);
@@ -94,6 +93,9 @@ export class Git implements VersionManager {
   }
 
   commit({message, args}) {
+    // this command will be executed with -m as default
+    // we shouldn't specify it again
+    args = args.filter(arg => arg != "-m")
     return this.git.commit(message, args);
   }
 

@@ -1,5 +1,6 @@
 import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
+import {Observable} from "rxjs";
 
 @Injectable()
 export class VersionControlService {
@@ -13,11 +14,21 @@ export class VersionControlService {
     return this.http.post("api:/versioncontrol/save", {});
   }
 
-  getCommands() {
-    return this.http.get("api:/versioncontrol/commands");
+  getCommands(): Observable<{
+    [command: string]: {
+      type: string;
+      items?: {
+        type: string;
+      };
+    };
+  }> {
+    return this.http.get<any>("api:/versioncontrol/commands");
   }
 
-  run(command: string, options: any) {
-    return this.http.post(`api:/versioncontrol/commands/${command}`, options);
+  exec(command: string, options: any) {
+    return this.http.post<{cmdResult: any; syncResult: any}>(
+      `api:/versioncontrol/commands/${command}`,
+      options
+    );
   }
 }

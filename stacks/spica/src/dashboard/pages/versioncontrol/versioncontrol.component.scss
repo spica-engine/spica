@@ -14,25 +14,65 @@
   }
 
   mat-card {
-    height: auto;
     margin: 30px;
     mat-card-content {
       display: flex;
       flex-direction: column;
-      height: 500px;
       align-items: center;
+    }
+  }
 
-      .label {
-      }
+  pre {
+    background-color: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
+    text-align: left;
+    overflow: scroll;
+    border-radius: 3px;
 
-      .last-save {
-        background-color: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
-        overflow-x: scroll;
-        border-radius: 3px;
+    width: 100%;
+    padding-top: 15px;
+    padding-left: 10px;
+  }
+
+  // mat-card.save-container {
+  //   mat-card-content {
+  //     min-height: 200px;
+
+  //     .last-save {
+  //       overflow-x: scroll;
+  //       border-radius: 3px;
+  //       width: 100%;
+  //       min-height: 200px;
+  //     }
+  //   }
+  // }
+
+  mat-card.commands-container {
+    mat-card-content {
+      min-height: 200px;
+
+      form {
+        text-align: center;
         width: 100%;
-      }
 
-      button.save {
+        > * {
+          margin-bottom: 10px;
+        }
+
+        div.fields {
+          > * {
+            margin: 5px;
+          }
+        }
+
+        h4 {
+          text-align: left;
+        }
+
+        button {
+          mat-spinner {
+            display: inline-block;
+          }
+        }
       }
     }
   }

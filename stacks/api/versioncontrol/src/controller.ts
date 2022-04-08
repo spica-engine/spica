@@ -17,19 +17,19 @@ import {Synchronizer} from "./synchronizer";
 export class VersionControlController {
   constructor(private synchronizer: Synchronizer, private vers: VersionManager) {}
 
-  @Get("save")
-  @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
-  getSyncLog() {
-    return this.synchronizer.getLastSync();
-  }
+  // @Get("save")
+  // @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
+  // getSyncLog() {
+  //   return this.synchronizer.getLastSync();
+  // }
 
-  @Post("save")
-  @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
-  sync() {
-    return this.synchronizer.synchronize(SyncDirection.DocToRep).catch(e => {
-      throw new InternalServerErrorException(e);
-    });
-  }
+  // @Post("save")
+  // @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
+  // sync() {
+  //   return this.synchronizer.synchronize(SyncDirection.DocToRep).catch(e => {
+  //     throw new InternalServerErrorException(e);
+  //   });
+  // }
 
   @Get("commands")
   @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
@@ -40,20 +40,23 @@ export class VersionControlController {
   @Post("commands/:cmd")
   @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
   async performAction(@Param("cmd") cmd: string, @Body() body: any) {
-    const cmdResult = await this.vers.exec(cmd, body).catch(e => {
-      throw new BadRequestException(e.message || e);
+    // before executing any command, we should synchronize representatives from documents
+    await this.synchronizer.synchronize(SyncDirection.DocToRep).catch(e => {
+      throw new InternalServerErrorException(e);
     });
+
+    const cmdResult = await this.vers
+      .exec(cmd, body)
+      .catch(e => {
+        throw new BadRequestException(e.message || e);
+      })
+      .then(res => (typeof res == "string" ? {message: res} : res));
 
     return this.synchronizer
       .synchronize(SyncDirection.RepToDoc)
-      .then(syncResult => {
-        return {
-          cmdResult,
-          syncResult
-        };
-      })
-      // .catch(e => {
-      //   throw new InternalServerErrorException(e);
-      // });
+      .then(() => cmdResult)
+      .catch(e => {
+        throw new InternalServerErrorException(e);
+      });
   }
 }
