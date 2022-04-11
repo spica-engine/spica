@@ -9,27 +9,13 @@ import {
   InternalServerErrorException,
   Param
 } from "@nestjs/common";
-import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {SyncDirection, VersionManager} from "./interface";
 import {Synchronizer} from "./synchronizer";
 
 @Controller("versioncontrol")
 export class VersionControlController {
   constructor(private synchronizer: Synchronizer, private vers: VersionManager) {}
-
-  // @Get("save")
-  // @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
-  // getSyncLog() {
-  //   return this.synchronizer.getLastSync();
-  // }
-
-  // @Post("save")
-  // @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
-  // sync() {
-  //   return this.synchronizer.synchronize(SyncDirection.DocToRep).catch(e => {
-  //     throw new InternalServerErrorException(e);
-  //   });
-  // }
 
   @Get("commands")
   @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
@@ -40,7 +26,6 @@ export class VersionControlController {
   @Post("commands/:cmd")
   @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
   async performAction(@Param("cmd") cmd: string, @Body() body: any) {
-    // before executing any command, we should synchronize representatives from documents
     await this.synchronizer.synchronize(SyncDirection.DocToRep).catch(e => {
       throw new InternalServerErrorException(e);
     });

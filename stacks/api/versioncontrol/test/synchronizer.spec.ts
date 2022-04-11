@@ -60,9 +60,9 @@ describe("Synchronizer", () => {
     const now = new Date();
     jasmine.clock().mockDate(now);
 
-    await synchronizer.synchronize(SyncDirection.RepToDoc);
+    const lastSync = await synchronizer.synchronize(SyncDirection.RepToDoc);
 
-    expect(synchronizer.getLastSync()).toEqual({
+    expect(lastSync).toEqual({
       resources: [
         {
           module: "bucket",

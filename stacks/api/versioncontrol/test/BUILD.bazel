@@ -1,49 +1,49 @@
-# load("//tools/ts_project:index.bzl", "ts_project")
+load("//tools/ts_project:index.bzl", "ts_project")
 
-# package(default_visibility = ["//visibility:public"])
+package(default_visibility = ["//visibility:public"])
 
-# load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
+load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
-# ts_project(
-#     name = "test_lib",
-#     testonly = True,
-#     srcs = [
-#         "representative.spec.ts",
-#         "synchronizer.spec.ts",
-#     ],
-#     deps = [
-#         "//stacks/api/versioncontrol",
-#         "@npm//@types/jasmine",
-#     ],
-# )
+ts_project(
+    name = "test_lib",
+    testonly = True,
+    srcs = [
+        "representative.spec.ts",
+        "synchronizer.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/versioncontrol",
+        "@npm//@types/jasmine",
+    ],
+)
 
-# jasmine_node_test(
-#     name = "test",
-#     srcs = [":test_lib"],
-# )
+jasmine_node_test(
+    name = "test",
+    srcs = [":test_lib"],
+)
 
-# ts_project(
-#     name = "test_lib_integration",
-#     testonly = True,
-#     srcs = [
-#         "integration.spec.ts",
-#     ],
-#     deps = [
-#         "//packages/core/testing",
-#         "//packages/database/testing",
-#         "//stacks/api/bucket",
-#         "//stacks/api/function",
-#         "//stacks/api/preference/testing",
-#         "//stacks/api/versioncontrol",
-#         "@npm//@nestjs/testing",
-#         "@npm//@types/jasmine",
-#     ],
-# )
+ts_project(
+    name = "test_lib_integration",
+    testonly = True,
+    srcs = [
+        "integration.spec.ts",
+    ],
+    deps = [
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/bucket",
+        "//stacks/api/function",
+        "//stacks/api/preference/testing",
+        "//stacks/api/versioncontrol",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
 
-# jasmine_node_test(
-#     name = "test_integration",
-#     srcs = [":test_lib_integration"],
-# )
+jasmine_node_test(
+    name = "test_integration",
+    srcs = [":test_lib_integration"],
+)
 
 # ts_project(
 #     name = "test_lib_e2e",

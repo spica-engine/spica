@@ -6,13 +6,6 @@ import {Provider, SyncDirection, SyncLog, SyncProvider} from "./interface";
 export class Synchronizer {
   private providers: SyncProvider[] = [];
 
-  //@TODO: consider keeping this log at db level
-  private lastSync: SyncLog;
-
-  getLastSync() {
-    return this.lastSync;
-  }
-
   constructor() {}
 
   register(provider: SyncProvider) {
@@ -58,9 +51,7 @@ export class Synchronizer {
       await Promise.all(promises);
     }
 
-    this.lastSync = syncLog;
-
-    return this.lastSync;
+    return syncLog;
   }
 
   private setSourceAndTarget(provider: SyncProvider, direction: SyncDirection) {
