@@ -19,18 +19,17 @@
       display: flex;
       flex-direction: row;
       align-items: flex-start;
-      justify-content:space-between;
+      justify-content: space-between;
 
-      gap:10px;
-      
-      div.cli{
+      gap: 10px;
+
+      div.cli {
         flex: 1;
       }
 
-      div.response{
-        flex:1
+      div.response {
+        flex: 1;
       }
-
     }
   }
 
@@ -46,8 +45,7 @@
   }
 
   mat-form-field.command-field {
-
-    ::ng-deep .mat-form-field-infix{
+    ::ng-deep .mat-form-field-infix {
       padding: 0;
     }
 

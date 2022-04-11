@@ -5,7 +5,6 @@ package(default_visibility = ["//visibility:public"])
 load("@build_bazel_rules_nodejs//:index.bzl", "nodejs_binary")
 load("@io_bazel_rules_docker//nodejs:image.bzl", "nodejs_image")
 load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
-
 load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
 
 ts_project(
@@ -61,8 +60,8 @@ nodejs_binary(
 
 container_run_and_commit(
     name = "plugins",
-    image = "@debian_image//image",
     commands = ["apt -y update && apt install -y git"],
+    image = "@debian_image//image",
 )
 
 container_image(

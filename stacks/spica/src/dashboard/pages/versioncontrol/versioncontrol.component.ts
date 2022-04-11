@@ -15,7 +15,7 @@ export class VersionControlComponent {
   refresh$ = new BehaviorSubject("");
 
   command = "";
-  response = this.prettfyJson({})
+  response = this.prettfyJson({});
 
   isPending = false;
 
