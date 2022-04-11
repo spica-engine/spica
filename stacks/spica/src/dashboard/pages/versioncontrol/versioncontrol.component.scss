@@ -17,12 +17,20 @@
     margin: 30px;
     mat-card-content {
       display: flex;
-      flex-direction: column;
-      align-items: center;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content:space-between;
 
-      > * {
-        margin-bottom: 10px;
+      gap:10px;
+      
+      div.cli{
+        flex: 1;
       }
+
+      div.response{
+        flex:1
+      }
+
     }
   }
 
@@ -33,11 +41,16 @@
     border-radius: 3px;
 
     width: 100%;
-    padding-top: 15px;
-    padding-left: 10px;
+    padding: 10px;
+    min-height: 100px;
   }
 
   mat-form-field.command-field {
+
+    ::ng-deep .mat-form-field-infix{
+      padding: 0;
+    }
+
     width: 100%;
     pre {
       margin: 0 !important;

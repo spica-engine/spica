@@ -73,7 +73,7 @@ export class Git implements VersionManager {
     args = args.filter(arg => arg != "-m");
 
     const messageIndex = args.findIndex(
-      arg => arg.startsWith("`") || args.startsWith("'") || args.startsWith('"')
+      arg => arg.startsWith("`") || arg.startsWith("'") || arg.startsWith('"')
     );
     const message = args[messageIndex];
     args = args.slice(messageIndex + 1);

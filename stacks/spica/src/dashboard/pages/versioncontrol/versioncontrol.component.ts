@@ -14,9 +14,8 @@ export class VersionControlComponent {
 
   refresh$ = new BehaviorSubject("");
 
-  selectedCmd;
   command = "";
-  response;
+  response = this.prettfyJson({})
 
   isPending = false;
 
@@ -39,7 +38,7 @@ export class VersionControlComponent {
     return this.vcs
       .exec(action, args)
       .pipe(
-        tap(res => (this.response = res)),
+        tap(res => (this.response = this.prettfyJson(res))),
         tap(() => this.refresh$.next(""))
       )
       .toPromise()
@@ -47,15 +46,15 @@ export class VersionControlComponent {
   }
 
   separateCommand() {
-    // handle spaces in quotes somehow
-    const words = this.command.split(" ");
+    const regex = /(?:[^\s"']+|['"][^'"]*["'])+/g;
+    const words = this.command.match(regex);
 
     const action = words[0];
     const args = words.slice(1);
     return {action, args};
   }
 
-  isOption(word: string) {
-    return word.startsWith("--") || word.startsWith("-");
+  prettfyJson(obj) {
+    return JSON.stringify(obj, null, 4);
   }
 }

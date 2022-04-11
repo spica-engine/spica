@@ -1,19 +1,23 @@
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 
-import {VersioncontrolComponent} from "./versioncontrol.component";
+import {VersionControlComponent} from "./versioncontrol.component";
+import {VersionControlService} from "../../services/versioncontrol.service";
+import { HttpClientTestingModule } from "@angular/common/http/testing";
 
-describe("VersioncontrolComponent", () => {
-  let component: VersioncontrolComponent;
-  let fixture: ComponentFixture<VersioncontrolComponent>;
+fdescribe("VersionControlComponent", () => {
+  let component: VersionControlComponent;
+  let fixture: ComponentFixture<VersionControlComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [VersioncontrolComponent]
+      imports:[HttpClientTestingModule],
+      declarations: [VersionControlComponent],
+      providers: [VersionControlService,]
     }).compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(VersioncontrolComponent);
+    fixture = TestBed.createComponent(VersionControlComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -21,4 +25,7 @@ describe("VersioncontrolComponent", () => {
   it("should create", () => {
     expect(component).toBeTruthy();
   });
+
+  
+
 });
