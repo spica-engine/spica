@@ -33,7 +33,7 @@ export class VersionControlComponent {
   }
 
   execute() {
-    const {action,args} = this.separateCommand();
+    const {action, args} = this.separateCommand();
 
     this.isPending = true;
     return this.vcs
@@ -50,8 +50,8 @@ export class VersionControlComponent {
     // handle spaces in quotes somehow
     const words = this.command.split(" ");
 
-    const action = words[0]
-    const args = words.slice(1)
+    const action = words[0];
+    const args = words.slice(1);
     return {action, args};
   }
 

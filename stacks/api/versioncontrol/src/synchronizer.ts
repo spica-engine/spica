@@ -40,7 +40,6 @@ export class Synchronizer {
         const sources = await source.getAll();
         const targets = await target.getAll();
 
-
         const {insertions, updations, deletions} = compareResourceGroups(sources, targets);
 
         promises.push(...insertions.map(doc => target.insert(doc)));
