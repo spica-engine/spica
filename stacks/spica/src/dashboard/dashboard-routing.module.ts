@@ -55,7 +55,7 @@ const routes: Routes = [
     canActivateChild: [IdentityGuard, PolicyGuard],
     data: {
       service: "versioncontrol",
-      action: "show"
+      action: "update"
     }
   }
 ];
