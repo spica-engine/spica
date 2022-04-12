@@ -10,7 +10,6 @@ ts_project(
         "index.ts",
     ]),
     deps = [
-        "//packages/core/differ",
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/passport/guard",
@@ -19,6 +18,5 @@ ts_project(
         "@npm//@types/json-schema",
         "@npm//body-parser",
         "@npm//rxjs",
-        "@npm//yaml",
     ],
 )
