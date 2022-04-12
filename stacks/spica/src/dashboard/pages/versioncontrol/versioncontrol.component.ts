@@ -9,26 +9,13 @@ import {switchMap, tap} from "rxjs/operators";
   styleUrls: ["./versioncontrol.component.scss"]
 })
 export class VersionControlComponent {
-  lastSave$ = of();
-  commands$ = of({});
-
-  refresh$ = new BehaviorSubject("");
-
   command = "";
   response = this.prettfyJson({});
 
   isPending = false;
 
   constructor(private vcs: VersionControlService) {
-    this.lastSave$ = this.refresh$.pipe(switchMap(() => this.vcs.getLastSave()));
     this.commands$ = this.vcs.getCommands();
-  }
-
-  save() {
-    return this.vcs
-      .save()
-      .pipe(tap(() => this.refresh$.next("")))
-      .toPromise();
   }
 
   execute() {
