@@ -14,9 +14,7 @@ export class VersionControlComponent {
 
   isPending = false;
 
-  constructor(private vcs: VersionControlService) {
-    this.commands$ = this.vcs.getCommands();
-  }
+  constructor(private vcs: VersionControlService) {}
 
   execute() {
     const {action, args} = this.separateCommand();
