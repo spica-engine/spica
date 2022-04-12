@@ -22,10 +22,7 @@ export class VersionControlComponent {
     this.isPending = true;
     return this.vcs
       .exec(action, args)
-      .pipe(
-        tap(res => (this.response = this.prettfyJson(res))),
-        tap(() => this.refresh$.next(""))
-      )
+      .pipe(tap(res => (this.response = this.prettfyJson(res))))
       .toPromise()
       .finally(() => (this.isPending = false));
   }
