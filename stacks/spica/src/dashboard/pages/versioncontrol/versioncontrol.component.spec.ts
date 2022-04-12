@@ -4,7 +4,7 @@ import {VersionControlComponent} from "./versioncontrol.component";
 import {VersionControlService} from "../../services/versioncontrol.service";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 
-fdescribe("VersionControlComponent", () => {
+describe("VersionControlComponent", () => {
   let component: VersionControlComponent;
   let fixture: ComponentFixture<VersionControlComponent>;
 
