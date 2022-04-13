@@ -1,0 +1,29 @@
+<mat-toolbar>
+  <h4 class="mat-h4">
+    <span>
+      Version Control
+    </span>
+  </h4>
+</mat-toolbar>
+<mat-card>
+  <mat-card-content>
+    <div class="cli">
+      <mat-label>
+        Command Line
+      </mat-label>
+      <mat-form-field class="command-field">
+        <pre>$ git <input [disabled]="isPending" matInput [(ngModel)]="command" (keyup.enter)="command && !isPending && execute()" />
+          <button mat-icon-button (click)="execute()" [disabled]="!command || isPending">
+            <mat-spinner *ngIf="isPending" color="accent" diameter="20"> </mat-spinner>
+            <mat-icon *ngIf="!isPending">send</mat-icon>
+          </button>
+      </pre>
+      </mat-form-field>
+    </div>
+
+    <div class="response">
+      <mat-label>Response</mat-label>
+      <pre class="response">{{ response }}</pre>
+    </div>
+  </mat-card-content>
+</mat-card>

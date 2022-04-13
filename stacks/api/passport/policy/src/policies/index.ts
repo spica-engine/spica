@@ -39,6 +39,8 @@ import StatusFullaccess from "./status.fullaccess";
 import AssetFullaccess from "./asset.fullaccess";
 import AssetReadOnlyAccess from "./asset.readonly";
 
+import VersionControlFullAccess from "./version.fullaccess";
+
 export default [
   ApiKeyFullAccess,
   ApiKeyReadOnlyAccess,
@@ -79,5 +81,7 @@ export default [
   StatusFullaccess,
 
   AssetFullaccess,
-  AssetReadOnlyAccess
+  AssetReadOnlyAccess,
+
+  VersionControlFullAccess
 ];

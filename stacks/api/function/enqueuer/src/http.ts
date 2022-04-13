@@ -24,12 +24,10 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     private schedulerUnsubscription: (targetId: string) => void
   ) {
     super();
-    this.router.use(
-      bodyParser.raw({
-        limit: "10mb",
-        type: "*/*"
-      })
-    );
+    this.router.use(bodyParser.raw({
+      limit: "10mb",
+      type: "*/*"
+    }) as any);
     this.router.use(this.handleUnhandled);
     const stack = httpServer._router.stack;
     httpServer.use("/fn-execute", this.router);
@@ -107,7 +105,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         acc.push(header);
         return acc;
       }, []);
-      this.http.enqueue(ev.id, request, res);
+      this.http.enqueue(ev.id, request, res as any);
 
       // https://github.com/nodejs/node/commit/0c545f0f72
       // Due to changes above on nodejs v14, we can not listen request 'close' anymore because it will be invoked after request 'end' as well.

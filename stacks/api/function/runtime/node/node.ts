@@ -1,24 +1,7 @@
 import {Description, Runtime, SpawnOptions, Worker} from "@spica-server/function/runtime";
 import * as child_process from "child_process";
 import * as path from "path";
-import {Transform, Writable} from "stream";
-
-class FilterExperimentalWarnings extends Transform {
-  _transform(rawChunk: Buffer, encoding: string, cb: Function) {
-    const chunk = rawChunk.toString();
-    if (
-      chunk.indexOf("ExperimentalWarning: The ESM module loader is experimental.") == -1 &&
-      chunk.indexOf(
-        "ExperimentalWarning: --experimental-loader is an experimental feature. This feature could change at any time"
-      ) == -1
-    ) {
-      this.push(rawChunk, encoding);
-      cb();
-    } else {
-      cb();
-    }
-  }
-}
+import {Writable} from "stream";
 
 class NodeWorker extends Worker {
   private _process: child_process.ChildProcess;
@@ -58,7 +41,7 @@ class NodeWorker extends Worker {
     this._process.stderr.unpipe();
 
     this._process.stdout.pipe(stdout);
-    this._process.stderr.pipe(new FilterExperimentalWarnings()).pipe(stderr);
+    this._process.stderr.pipe(stderr);
   }
 
   kill() {

@@ -15,6 +15,7 @@ import {PreferenceModule} from "@spica-server/preference";
 import {ApiMachineryModule} from "@spica-server/machinery";
 import {StatusModule} from "@spica-server/status";
 import {StorageModule} from "@spica-server/storage";
+import {VersionControlModule} from "@spica-server/versioncontrol";
 import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
@@ -151,7 +152,8 @@ const args = yargs
         "WebhookFullAccess",
         "PreferenceFullAccess",
         "StatusFullAccess",
-        "AssetFullAccess"
+        "AssetFullAccess",
+        "VersionControlFullAccess"
       ]
     },
     "passport-identity-limit": {
@@ -247,6 +249,15 @@ const args = yargs
     "request-limit": {
       number: true,
       description: "Maximum request count that server can process"
+    }
+  })
+  /* Version Control Options */
+  .options({
+    "version-control": {
+      boolean: true,
+      description:
+        "When enabled, server will track version of changes and there will be appliable commands to manage these versions.",
+      default: true
     }
   })
   /* CORS Options */
@@ -447,6 +458,10 @@ if (args["status-tracking"]) {
       expireAfterSeconds: args["common-log-lifespan"]
     })
   );
+}
+
+if (args["version-control"]) {
+  modules.push(VersionControlModule);
 }
 
 @Module({
