@@ -33,6 +33,7 @@ ts_project(
         "//stacks/api/preference",
         "//stacks/api/preference/services",
         "//stacks/api/status",
+        "//stacks/api/versioncontrol",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@types/json-schema",

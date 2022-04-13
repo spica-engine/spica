@@ -3,7 +3,7 @@ import {spin} from "../../console";
 import {httpService} from "../../http";
 import {availableSyncModules, validateSyncModules} from "../../validator";
 import {bold, green, red} from "colorette";
-const isEqual = require("lodash/isEqual");
+import {isEqual} from "lodash";
 
 async function sync({
   options: {sourceUrl, sourceApikey, targetUrl, targetApikey, modules, dryRun, syncFnEnv}
@@ -43,12 +43,12 @@ async function sync({
     }
 
     for (const synchronizer of moduleSynchronizers) {
-      const {inserts, updates, deletes} = await synchronizer.analyze();
+      const {insertions, updations, deletions} = await synchronizer.analyze();
       if (dryRun) {
         printActions({
-          inserts,
-          updates,
-          deletes,
+          insertions,
+          updations,
+          deletions,
           field: synchronizer.primaryField,
           moduleName: synchronizer.getDisplayableModuleName()
         });
@@ -114,63 +114,66 @@ We highly recommend you to use --dry-run=true and check the changes that will be
     .action(sync);
 }
 
-export class ObjectActionDecider {
-  private existingObjects = [];
-  private existingObjectIds = [];
+// @TODO: use it from packages/core/differ
+export class ResourceGroupComparisor {
+  private existings = [];
+  private existingIds = [];
 
   constructor(
-    private sourceObjects: any[],
-    private targetObjects: any[],
-    private uniqueField = "_id"
+    private sources: any[],
+    private targets: any[],
+    private uniqueField = "_id",
+    private ignoredFields = []
   ) {
-    this.existingObjects = targetObjects.filter(targetObject =>
-      sourceObjects.some(
-        sourceObject => sourceObject[this.uniqueField] == targetObject[this.uniqueField]
-      )
+    this.existings = targets.filter(target =>
+      sources.some(source => source[this.uniqueField] == target[this.uniqueField])
     );
 
-    this.existingObjectIds = this.existingObjects.map(o => o[this.uniqueField]);
+    this.existingIds = this.existings.map(existing => existing[this.uniqueField]);
   }
 
-  updates() {
-    const updates = [];
-    for (const existing of this.existingObjects) {
-      const source = this.sourceObjects.find(
+  updations() {
+    const updations = [];
+    for (const existing of this.existings) {
+      const source = this.sources.find(
         source => source[this.uniqueField] == existing[this.uniqueField]
       );
+
+      if (this.ignoredFields.length) {
+        this.ignoredFields.forEach(field => {
+          delete source[field];
+          delete existing[field];
+        });
+      }
+
       if (!isEqual(source, existing)) {
-        updates.push(source);
+        updations.push(source);
       }
     }
 
-    return updates;
+    return updations;
   }
 
-  inserts() {
-    return this.sourceObjects.filter(
-      source => this.existingObjectIds.indexOf(source[this.uniqueField]) == -1
-    );
+  insertions() {
+    return this.sources.filter(source => this.existingIds.indexOf(source[this.uniqueField]) == -1);
   }
 
-  deletes() {
-    return this.targetObjects.filter(
-      target => this.existingObjectIds.indexOf(target[this.uniqueField]) == -1
-    );
+  deletions() {
+    return this.targets.filter(target => this.existingIds.indexOf(target[this.uniqueField]) == -1);
   }
 }
-
 interface ModuleSynchronizer {
   moduleName: string;
   subModuleName?: string;
   primaryField: string;
 
-  inserts: any[];
-  updates: any[];
-  deletes: any[];
+  insertions: any[];
+  updations: any[];
+  deletions: any[];
 
   initialize(): Promise<ModuleSynchronizer[]>;
 
-  analyze(): Promise<{inserts: any[]; updates: any[]; deletes: any[]}>;
+  analyze(): Promise<{insertions: any[]; updations: any[]; deletions: any[]}>;
   synchronize(): Promise<any>;
 
   getDisplayableModuleName(): string;
@@ -180,9 +183,9 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
   moduleName = "function";
   primaryField = "name";
 
-  inserts = [];
-  updates = [];
-  deletes = [];
+  insertions = [];
+  updations = [];
+  deletions = [];
 
   constructor(
     private sourceService: httpService.Client,
@@ -232,22 +235,22 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
       }
     }
 
-    const decider = new ObjectActionDecider(sourceFns, targetFns);
+    const decider = new ResourceGroupComparisor(sourceFns, targetFns);
 
-    this.inserts = decider.inserts();
-    this.updates = decider.updates();
-    this.deletes = decider.deletes();
+    this.insertions = decider.insertions();
+    this.updations = decider.updations();
+    this.deletions = decider.deletions();
 
     return {
-      inserts: this.inserts,
-      updates: this.updates,
-      deletes: this.deletes
+      insertions: this.insertions,
+      updations: this.updations,
+      deletions: this.deletions
     };
   }
 
   async synchronize() {
     console.log();
-    const insertPromises = this.inserts.map(fn =>
+    const insertPromises = this.insertions.map(fn =>
       this.targetService.post("function", fn).catch(e =>
         handleRejection({
           action: "insert",
@@ -258,7 +261,7 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
     );
     await spinUntilPromiseEnd(insertPromises, "Inserting functions to the target instance");
 
-    const updatePromises = this.updates.map(fn =>
+    const updatePromises = this.updations.map(fn =>
       this.targetService.put(`function/${fn._id}`, fn).catch(e =>
         handleRejection({
           action: "update",
@@ -269,7 +272,7 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
     );
     await spinUntilPromiseEnd(updatePromises, "Updating target instance functions");
 
-    const deletePromises = this.deletes.map(fn =>
+    const deletePromises = this.deletions.map(fn =>
       this.targetService.delete(`function/${fn._id}`).catch(e =>
         handleRejection({
           action: "delete",
@@ -291,9 +294,9 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
   subModuleName = "dependency";
   primaryField = "name";
 
-  inserts = [];
-  updates = [];
-  deletes = [];
+  insertions = [];
+  updations = [];
+  deletions = [];
 
   promises = [];
 
@@ -327,22 +330,22 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
         return Promise.reject(e.data);
       });
 
-    const decider = new ObjectActionDecider(sourceDeps, targetDeps, "name");
+    const decider = new ResourceGroupComparisor(sourceDeps, targetDeps, "name");
 
-    this.inserts = decider.inserts();
-    this.updates = decider.updates();
-    this.deletes = decider.deletes();
+    this.insertions = decider.insertions();
+    this.updations = decider.updations();
+    this.deletions = decider.deletions();
 
     return {
-      inserts: this.inserts,
-      updates: this.updates,
-      deletes: this.deletes
+      insertions: this.insertions,
+      updations: this.updations,
+      deletions: this.deletions
     };
   }
 
   async synchronize() {
     console.log();
-    const insertBody = [...this.inserts, ...this.updates].reduce(
+    const insertBody = [...this.insertions, ...this.updations].reduce(
       (acc, dep) => {
         const depName = `${dep.name}@${dep.version.slice(1)}`;
         acc.name.push(depName);
@@ -363,7 +366,7 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
       );
     }
 
-    const deletePromises = this.deletes.map(dep =>
+    const deletePromises = this.deletions.map(dep =>
       this.targetService.delete(`function/${this.fn._id}/dependencies/${dep.name}`).catch(e =>
         handleRejection({
           action: "update",
@@ -390,9 +393,9 @@ export class FunctionIndexSynchronizer implements ModuleSynchronizer {
   subModuleName = "index";
   primaryField = "name";
 
-  inserts = [];
-  updates = [];
-  deletes = [];
+  insertions = [];
+  updations = [];
+  deletions = [];
 
   constructor(
     private sourceService: httpService.Client,
@@ -438,22 +441,22 @@ export class FunctionIndexSynchronizer implements ModuleSynchronizer {
       )
     ).then(indexes => indexes.filter(Boolean));
 
-    const decider = new ObjectActionDecider(sourceFnIndexes, targetFnIndexes);
+    const decider = new ResourceGroupComparisor(sourceFnIndexes, targetFnIndexes);
 
-    this.inserts = decider.inserts();
-    this.updates = decider.updates();
-    this.deletes = decider.deletes();
+    this.insertions = decider.insertions();
+    this.updations = decider.updations();
+    this.deletions = decider.deletions();
 
     return {
-      inserts: this.inserts,
-      updates: this.updates,
-      deletes: this.deletes
+      insertions: this.insertions,
+      updations: this.updations,
+      deletions: this.deletions
     };
   }
 
   synchronize() {
     // except others, we don't need to remove any function index because they are supposed to be deleted with function module synchronization
-    const promises = [...this.inserts, ...this.updates].map(fn =>
+    const promises = [...this.insertions, ...this.updations].map(fn =>
       this.targetService.post(`function/${fn._id}/index`, {index: fn.index}).catch(e =>
         handleRejection({
           action: "insert",
@@ -474,9 +477,9 @@ export class FunctionIndexSynchronizer implements ModuleSynchronizer {
 export class BucketDataSynchronizer implements ModuleSynchronizer {
   moduleName = "bucket-data";
   primaryField;
-  inserts = [];
-  updates = [];
-  deletes = [];
+  insertions = [];
+  updations = [];
+  deletions = [];
 
   constructor(
     private sourceService: httpService.Client,
@@ -490,7 +493,7 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
     return Promise.resolve([]);
   }
 
-  async analyze(): Promise<{inserts: any[]; updates: any[]; deletes: any[]}> {
+  async analyze(): Promise<{insertions: any[]; updations: any[]; deletions: any[]}> {
     const params = {
       localize: false
     };
@@ -509,22 +512,22 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
         return Promise.reject(e.data);
       });
 
-    const decider = new ObjectActionDecider(sourceData, targetData);
+    const decider = new ResourceGroupComparisor(sourceData, targetData);
 
-    this.inserts = decider.inserts();
-    this.updates = decider.updates();
-    this.deletes = decider.deletes();
+    this.insertions = decider.insertions();
+    this.updations = decider.updations();
+    this.deletions = decider.deletions();
 
     return {
-      inserts: this.inserts,
-      updates: this.updates,
-      deletes: this.deletes
+      insertions: this.insertions,
+      updations: this.updations,
+      deletions: this.deletions
     };
   }
 
   async synchronize(): Promise<any> {
     console.log();
-    const insertPromises = this.inserts.map(data =>
+    const insertPromises = this.insertions.map(data =>
       this.targetService.post(`bucket/${this.bucket._id}/data`, data).catch(e =>
         handleRejection({
           action: "insert",
@@ -538,7 +541,7 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
       `Inserting bucket ${this.bucket.title} data to the target instance`
     );
 
-    const updatePromises = this.updates.map(data =>
+    const updatePromises = this.updations.map(data =>
       this.targetService.put(`bucket/${this.bucket._id}/data/${data._id}`, data).catch(e =>
         handleRejection({
           action: "update",
@@ -552,7 +555,7 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
       `Updating bucket ${this.bucket.title} data to the target instance`
     );
 
-    const deletePromises = this.deletes.map(data =>
+    const deletePromises = this.deletions.map(data =>
       this.targetService.delete(`bucket/${this.bucket._id}/data/${data._id}`).catch(e =>
         handleRejection({
           action: "delete",
@@ -575,9 +578,9 @@ export class BucketSynchronizer implements ModuleSynchronizer {
   moduleName = "bucket";
   primaryField = "title";
 
-  inserts = [];
-  updates = [];
-  deletes = [];
+  insertions = [];
+  updations = [];
+  deletions = [];
 
   constructor(
     private sourceService: httpService.Client,
@@ -608,22 +611,22 @@ export class BucketSynchronizer implements ModuleSynchronizer {
       op: () => this.targetService.get("bucket")
     });
 
-    const decider = new ObjectActionDecider(sourceBuckets, targetBuckets);
+    const decider = new ResourceGroupComparisor(sourceBuckets, targetBuckets);
 
-    this.inserts = decider.inserts();
-    this.updates = decider.updates();
-    this.deletes = decider.deletes();
+    this.insertions = decider.insertions();
+    this.updations = decider.updations();
+    this.deletions = decider.deletions();
 
     return {
-      inserts: this.inserts,
-      updates: this.updates,
-      deletes: this.deletes
+      insertions: this.insertions,
+      updations: this.updations,
+      deletions: this.deletions
     };
   }
 
   async synchronize() {
     console.log();
-    const insertPromises = this.inserts.map(bucket =>
+    const insertPromises = this.insertions.map(bucket =>
       this.targetService.post("bucket", bucket).catch(e =>
         handleRejection({
           action: "insert",
@@ -634,7 +637,7 @@ export class BucketSynchronizer implements ModuleSynchronizer {
     );
     await spinUntilPromiseEnd(insertPromises, "Inserting buckets to the target instance");
 
-    const updatePromises = this.updates.map(bucket =>
+    const updatePromises = this.updations.map(bucket =>
       this.targetService.put(`bucket/${bucket._id}`, bucket).catch(e =>
         handleRejection({
           action: "update",
@@ -645,7 +648,7 @@ export class BucketSynchronizer implements ModuleSynchronizer {
     );
     await spinUntilPromiseEnd(updatePromises, "Updating buckets on the target instance");
 
-    const deletePromises = this.deletes.map(bucket =>
+    const deletePromises = this.deletions.map(bucket =>
       this.targetService.delete(`bucket/${bucket._id}`).catch(e =>
         handleRejection({
           action: "delete",
@@ -662,22 +665,22 @@ export class BucketSynchronizer implements ModuleSynchronizer {
   }
 }
 
-function printActions({inserts, updates, deletes, field, moduleName}) {
+function printActions({insertions, updations, deletions, field, moduleName}) {
   console.log();
   console.log(`----- ${moduleName.toUpperCase()} -----`);
   console.log(
-    `\n* Found ${bold(inserts.length)} objects to ${bold("insert")}: 
-${inserts.map(i => `- ${i[field]}`).join("\n")}`
+    `\n* Found ${bold(insertions.length)} objects to ${bold("insert")}: 
+${insertions.map(i => `- ${i[field]}`).join("\n")}`
   );
 
   console.log(
-    `\n* Found ${bold(updates.length)} objects to ${bold("update")}: 
-${updates.map(i => `- ${i[field]}`).join("\n")}`
+    `\n* Found ${bold(updations.length)} objects to ${bold("update")}: 
+${updations.map(i => `- ${i[field]}`).join("\n")}`
   );
 
   console.log(
-    `\n* Found ${bold(deletes.length)} objects to ${bold("delete")}: 
-${deletes.map(i => `- ${i[field]}`).join("\n")}`
+    `\n* Found ${bold(deletions.length)} objects to ${bold("delete")}: 
+${deletions.map(i => `- ${i[field]}`).join("\n")}`
   );
 }
 

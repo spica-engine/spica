@@ -4,45 +4,45 @@ import {
   FunctionDependencySynchronizer,
   FunctionIndexSynchronizer,
   FunctionSynchronizer,
-  ObjectActionDecider
+  ResourceGroupComparisor
 } from "@spica/cli/src/commands/project/sync";
 
 describe("Synchronize", () => {
-  describe("ObjectActionDecider", () => {
+  describe("ResourceGroupComparisor", () => {
     it("should get insert object", () => {
       const sourceObjects = [{_id: "1"}];
       const targetObjects = [];
 
-      const decider = new ObjectActionDecider(sourceObjects, targetObjects);
+      const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
-      expect(decider.inserts()).toEqual([{_id: "1"}]);
+      expect(decider.insertions()).toEqual([{_id: "1"}]);
     });
 
     it("should get update objects", () => {
       const sourceObjects = [{_id: "1", test: "a"}];
       const targetObjects = [{_id: "1", test: "b"}];
 
-      const decider = new ObjectActionDecider(sourceObjects, targetObjects);
+      const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
-      expect(decider.updates()).toEqual([{_id: "1", test: "a"}]);
+      expect(decider.updations()).toEqual([{_id: "1", test: "a"}]);
     });
 
     it("should not get any update object if they are same", () => {
       const sourceObjects = [{_id: "1", test: "a"}];
       const targetObjects = [{_id: "1", test: "a"}];
 
-      const decider = new ObjectActionDecider(sourceObjects, targetObjects);
+      const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
-      expect(decider.updates()).toEqual([]);
+      expect(decider.updations()).toEqual([]);
     });
 
     it("should get delete objects", () => {
       const sourceObjects = [];
       const targetObjects = [{_id: "2"}];
 
-      const decider = new ObjectActionDecider(sourceObjects, targetObjects);
+      const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
-      expect(decider.deletes()).toEqual([{_id: "2"}]);
+      expect(decider.deletions()).toEqual([{_id: "2"}]);
     });
 
     it("should get all of them correctly", () => {
@@ -64,22 +64,22 @@ describe("Synchronize", () => {
         {_id: "4", test: "d"}
       ];
 
-      const decider = new ObjectActionDecider(sourceObjects, targetObjects);
+      const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
-      expect(decider.inserts()).toEqual([{_id: "1", test: "a"}]);
-      expect(decider.updates()).toEqual([{_id: "2", test: "b"}]);
-      expect(decider.deletes()).toEqual([{_id: "4", test: "d"}]);
+      expect(decider.insertions()).toEqual([{_id: "1", test: "a"}]);
+      expect(decider.updations()).toEqual([{_id: "2", test: "b"}]);
+      expect(decider.deletions()).toEqual([{_id: "4", test: "d"}]);
     });
 
     it("should not get any insert, update, delete object", () => {
       const sourceObjects = [];
       const targetObjects = [];
 
-      const decider = new ObjectActionDecider(sourceObjects, targetObjects);
+      const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
-      expect(decider.inserts()).toEqual([]);
-      expect(decider.updates()).toEqual([]);
-      expect(decider.deletes()).toEqual([]);
+      expect(decider.insertions()).toEqual([]);
+      expect(decider.updations()).toEqual([]);
+      expect(decider.deletions()).toEqual([]);
     });
   });
 
@@ -138,14 +138,14 @@ describe("Synchronize", () => {
       const synchronizer = new BucketSynchronizer(sourceService as any, targetService as any);
 
       it("should analyze buckets", async () => {
-        const {inserts, updates, deletes} = await synchronizer.analyze();
-        expect(inserts).toEqual([{_id: "3", prop: "insert_me"}]);
-        expect(updates).toEqual([{_id: "2", prop: "update_me"}]);
-        expect(deletes).toEqual([{_id: "4", prop: "delete_me"}]);
+        const {insertions, updations, deletions} = await synchronizer.analyze();
+        expect(insertions).toEqual([{_id: "3", prop: "insert_me"}]);
+        expect(updations).toEqual([{_id: "2", prop: "update_me"}]);
+        expect(deletions).toEqual([{_id: "4", prop: "delete_me"}]);
 
-        expect(synchronizer.inserts).toEqual([{_id: "3", prop: "insert_me"}]);
-        expect(synchronizer.updates).toEqual([{_id: "2", prop: "update_me"}]);
-        expect(synchronizer.deletes).toEqual([{_id: "4", prop: "delete_me"}]);
+        expect(synchronizer.insertions).toEqual([{_id: "3", prop: "insert_me"}]);
+        expect(synchronizer.updations).toEqual([{_id: "2", prop: "update_me"}]);
+        expect(synchronizer.deletions).toEqual([{_id: "4", prop: "delete_me"}]);
 
         expect(sourceService.get).toHaveBeenCalledOnceWith("bucket");
         expect(sourceService.put).not.toHaveBeenCalled();
@@ -182,14 +182,14 @@ describe("Synchronize", () => {
       });
 
       it("should analyze function", async () => {
-        const {inserts, updates, deletes} = await synchronizer.analyze();
-        expect(inserts).toEqual([{_id: "3", prop: "insert_me"}]);
-        expect(updates).toEqual([{_id: "2", prop: "update_me"}]);
-        expect(deletes).toEqual([{_id: "4", prop: "delete_me"}]);
+        const {insertions, updations, deletions} = await synchronizer.analyze();
+        expect(insertions).toEqual([{_id: "3", prop: "insert_me"}]);
+        expect(updations).toEqual([{_id: "2", prop: "update_me"}]);
+        expect(deletions).toEqual([{_id: "4", prop: "delete_me"}]);
 
-        expect(synchronizer.inserts).toEqual([{_id: "3", prop: "insert_me"}]);
-        expect(synchronizer.updates).toEqual([{_id: "2", prop: "update_me"}]);
-        expect(synchronizer.deletes).toEqual([{_id: "4", prop: "delete_me"}]);
+        expect(synchronizer.insertions).toEqual([{_id: "3", prop: "insert_me"}]);
+        expect(synchronizer.updations).toEqual([{_id: "2", prop: "update_me"}]);
+        expect(synchronizer.deletions).toEqual([{_id: "4", prop: "delete_me"}]);
 
         expect(sourceService.get).toHaveBeenCalledOnceWith("function");
         expect(sourceService.put).not.toHaveBeenCalled();
@@ -267,15 +267,15 @@ describe("Synchronize", () => {
       });
 
       it("should analyze dependencies", async () => {
-        const {inserts, updates, deletes} = await synchronizer.analyze();
+        const {insertions, updations, deletions} = await synchronizer.analyze();
 
-        expect(inserts).toEqual([{name: "storage", version: "^1"}]);
-        expect(updates).toEqual([{name: "bucket", version: "^2"}]);
-        expect(deletes).toEqual([{name: "identity", version: "^1"}]);
+        expect(insertions).toEqual([{name: "storage", version: "^1"}]);
+        expect(updations).toEqual([{name: "bucket", version: "^2"}]);
+        expect(deletions).toEqual([{name: "identity", version: "^1"}]);
 
-        expect(synchronizer.inserts).toEqual([{name: "storage", version: "^1"}]);
-        expect(synchronizer.updates).toEqual([{name: "bucket", version: "^2"}]);
-        expect(synchronizer.deletes).toEqual([{name: "identity", version: "^1"}]);
+        expect(synchronizer.insertions).toEqual([{name: "storage", version: "^1"}]);
+        expect(synchronizer.updations).toEqual([{name: "bucket", version: "^2"}]);
+        expect(synchronizer.deletions).toEqual([{name: "identity", version: "^1"}]);
 
         expect(sourceService.get).toHaveBeenCalledOnceWith("function/1/dependencies");
         expect(sourceService.post).not.toHaveBeenCalled();
@@ -373,7 +373,7 @@ describe("Synchronize", () => {
       });
 
       it("should analyze indexes", async () => {
-        const {inserts, updates, deletes} = await synchronizer.analyze();
+        const {insertions, updations, deletions} = await synchronizer.analyze();
 
         const expectedInserts = [
           {
@@ -383,7 +383,7 @@ describe("Synchronize", () => {
           }
         ];
 
-        const expectedUpdates = [
+        const expectedupdations = [
           {
             _id: "2",
             name: "fn2",
@@ -391,13 +391,13 @@ describe("Synchronize", () => {
           }
         ];
 
-        expect(inserts).toEqual(expectedInserts);
-        expect(updates).toEqual(expectedUpdates);
-        expect(deletes).toEqual([]);
+        expect(insertions).toEqual(expectedInserts);
+        expect(updations).toEqual(expectedupdations);
+        expect(deletions).toEqual([]);
 
-        expect(synchronizer.inserts).toEqual(expectedInserts);
-        expect(synchronizer.updates).toEqual(expectedUpdates);
-        expect(synchronizer.deletes).toEqual([]);
+        expect(synchronizer.insertions).toEqual(expectedInserts);
+        expect(synchronizer.updations).toEqual(expectedupdations);
+        expect(synchronizer.deletions).toEqual([]);
 
         expect(sourceService.get).toHaveBeenCalledTimes(4);
         expect(sourceService.get.calls.allArgs()).toEqual([
@@ -498,21 +498,23 @@ describe("Synchronize", () => {
       });
 
       it("should analyze bucket-data", async () => {
-        const {inserts, updates, deletes} = await synchronizer.analyze();
+        const {insertions, updations, deletions} = await synchronizer.analyze();
 
         const expectations = {
-          inserts: [{_id: "dataid4", title: "added_title4", description: "added_description4"}],
-          updates: [{_id: "dataid2", title: "updated_title2", description: "updated_description2"}],
-          deletes: [{_id: "dataid1", title: "title1", description: "description1"}]
+          insertions: [{_id: "dataid4", title: "added_title4", description: "added_description4"}],
+          updations: [
+            {_id: "dataid2", title: "updated_title2", description: "updated_description2"}
+          ],
+          deletions: [{_id: "dataid1", title: "title1", description: "description1"}]
         };
 
-        expect(inserts).toEqual(expectations.inserts);
-        expect(updates).toEqual(expectations.updates);
-        expect(deletes).toEqual(expectations.deletes);
+        expect(insertions).toEqual(expectations.insertions);
+        expect(updations).toEqual(expectations.updations);
+        expect(deletions).toEqual(expectations.deletions);
 
-        expect(synchronizer.inserts).toEqual(expectations.inserts);
-        expect(synchronizer.updates).toEqual(expectations.updates);
-        expect(synchronizer.deletes).toEqual(expectations.deletes);
+        expect(synchronizer.insertions).toEqual(expectations.insertions);
+        expect(synchronizer.updations).toEqual(expectations.updations);
+        expect(synchronizer.deletions).toEqual(expectations.deletions);
 
         expect(sourceService.get).toHaveBeenCalledOnceWith("bucket/bucket_id/data", {
           params: {localize: false}
