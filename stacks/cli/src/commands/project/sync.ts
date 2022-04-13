@@ -324,10 +324,10 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
       .get<any[]>(`function/${this.fn._id}/dependencies`)
       .then(deleteTypes)
       .catch(e => {
-        if (e.statusCode == 404) {
+        if (isNotFoundException(e)) {
           return [];
         }
-        return Promise.reject(e.message);
+        return Promise.reject(e.data);
       });
 
     const decider = new ResourceGroupComparisor(sourceDeps, targetDeps, "name");
@@ -433,10 +433,10 @@ export class FunctionIndexSynchronizer implements ModuleSynchronizer {
             };
           })
           .catch(e => {
-            if (e.statusCode == 404) {
+            if (isNotFoundException(e)) {
               return false;
             }
-            return Promise.reject(e.message);
+            return Promise.reject(e.data);
           })
       )
     ).then(indexes => indexes.filter(Boolean));
@@ -506,10 +506,10 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
         params
       })
       .catch(e => {
-        if (e.statusCode == 404) {
+        if (isNotFoundException(e)) {
           return [];
         }
-        return Promise.reject(e.message);
+        return Promise.reject(e.data);
       });
 
     const decider = new ResourceGroupComparisor(sourceData, targetData);
@@ -720,4 +720,9 @@ function spinUntilPromiseEnd(promises: Promise<any>[], label: string, paralel = 
 function handleRejection({action, objectName, message}) {
   return Promise.reject(`Failed to ${action} ${bold(objectName)}.
 ${message}`);
+}
+
+function isNotFoundException(e) {
+  const code = 404;
+  return e.status == code || e.statusCode == code || (e.data && e.data.statusCode == code);
 }
