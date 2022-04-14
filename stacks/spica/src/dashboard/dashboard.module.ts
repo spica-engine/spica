@@ -45,6 +45,7 @@ import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatDividerModule} from "@angular/material/divider";
 import {StatisticComponent} from "./components/statistic/statistic.component";
 import {VersionControlComponent} from "./pages/versioncontrol/versioncontrol.component";
+import {MatExpansionModule} from "@angular/material/expansion";
 
 @NgModule({
   imports: [
@@ -79,7 +80,8 @@ import {VersionControlComponent} from "./pages/versioncontrol/versioncontrol.com
     DragDropModule,
     MatProgressSpinnerModule,
     MatProgressBarModule,
-    MatDividerModule
+    MatDividerModule,
+    MatExpansionModule
   ],
   declarations: [
     DashboardComponent,
