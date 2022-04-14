@@ -5,6 +5,40 @@
     </span>
   </h4>
 </mat-toolbar>
+<mat-accordion>
+  <mat-expansion-panel>
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Quick Start Guide
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <mat-divider></mat-divider>
+    <h3>
+      First commit
+    </h3>
+    <pre>
+git add .
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://&lt;username&gt;:&lt;access_token_or_password&gt;@&lt;repo_address&gt;
+git push -u origin main</pre
+    >
+    <mat-divider></mat-divider>
+    <h3>
+      Clone repository
+    </h3>
+    <pre>
+git remote add origin https://&lt;username&gt;:&lt;access_token_or_password&gt;@&lt;repo_address&gt;
+git fetch --all
+<span class="comment"># perform it for each branch that will be switched to</span>
+<span class="comment"># local changes will be overwritten from now</span>
+git checkout -b &lt;branch_name&gt; origin/&lt;branch_name&gt; --force
+git reset --hard origin/&lt;branch_name&gt;
+<span class="comment"># in case there are untracked directories, files</span>
+git clean -d -f
+</pre>
+  </mat-expansion-panel>
+</mat-accordion>
 <mat-card>
   <mat-card-content>
     <div class="cli">
@@ -12,7 +46,7 @@
         Command Line
       </mat-label>
       <mat-form-field class="command-field">
-        <pre>$ git <input [disabled]="isPending" matInput [(ngModel)]="command" (keyup.enter)="command && !isPending && execute()" />
+        <pre>$ git <input [disabled]="isPending" matInput [(ngModel)]="command" (ngModelChange)="onCommandChange($event)" (keyup.enter)="command && !isPending && execute()" />
           <button mat-icon-button (click)="execute()" [disabled]="!command || isPending">
             <mat-spinner *ngIf="isPending" color="accent" diameter="20"> </mat-spinner>
             <mat-icon *ngIf="!isPending">send</mat-icon>

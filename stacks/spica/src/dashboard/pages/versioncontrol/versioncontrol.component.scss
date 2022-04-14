@@ -9,8 +9,18 @@
     }
   }
 
-  mat-toolbar + mat-card {
-    margin-top: -85px;
+  mat-expansion-panel {
+    margin-top: -85px !important;
+    margin: 30px;
+    pre {
+      background-color: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
+      padding: 10px;
+      border-radius: 3px;
+
+      span.comment {
+        color: grey;
+      }
+    }
   }
 
   mat-card {

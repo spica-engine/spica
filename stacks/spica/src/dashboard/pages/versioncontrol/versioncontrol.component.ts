@@ -1,7 +1,6 @@
 import {Component} from "@angular/core";
 import {VersionControlService} from "@spica-client/dashboard/services/versioncontrol.service";
-import {BehaviorSubject, of} from "rxjs";
-import {switchMap, tap} from "rxjs/operators";
+import {tap} from "rxjs/operators";
 
 @Component({
   selector: "versioncontrol",
@@ -38,5 +37,11 @@ export class VersionControlComponent {
 
   prettfyJson(obj) {
     return JSON.stringify(obj, null, 4);
+  }
+
+  onCommandChange(cmd) {
+    if (cmd && cmd.trim().startsWith("git")) {
+      this.command = cmd = cmd.replace("git", "");
+    }
   }
 }

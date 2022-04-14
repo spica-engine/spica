@@ -34,7 +34,8 @@ export class Git implements VersionManager {
     {name: "remote", exec: ops => this.remote(ops)},
 
     {name: "diff", exec: ops => this.diff(ops)},
-    {name: "log", exec: ops => this.log(ops)}
+    {name: "log", exec: ops => this.log(ops)},
+    {name: "clean", exec: ops => this.clean(ops)}
   ];
 
   availables() {
@@ -79,6 +80,12 @@ export class Git implements VersionManager {
     args = args.slice(messageIndex + 1);
 
     return this.git.commit(message, args);
+  }
+
+  clean({args}) {
+    // clean method only accepts options without dash
+    args = args.map(arg => arg.replace("-", ""));
+    return this.git.clean(args);
   }
 
   tag({args}) {
