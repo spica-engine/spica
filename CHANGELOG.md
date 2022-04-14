@@ -1,5 +1,12 @@
+## v0.9.20 (2022-04-14)
+
+* refactor(versioncontrol): add quick start guide ([90b2b3bef](https://github.com/spica-engine/spica/commit/90b2b3bef))
+* fix(cli): better error handling for sync command ([eb6e3bb92](https://github.com/spica-engine/spica/commit/eb6e3bb92))
+* feat(versioncontrol): introduce module that enables controlling version of resources ([5d243f7dc](https://github.com/spica-engine/spica/commit/5d243f7dc))
+
 ## v0.9.19 (2022-03-28)
 
+* docs: update changelog for v0.9.19 ([b5deda0ea](https://github.com/spica-engine/spica/commit/b5deda0ea))
 * feat(cli): introduce new project command named sync ([b2ba8904c](https://github.com/spica-engine/spica/commit/b2ba8904c))
 * refactor: merging realtime interfaces into a package ([9e31c689e](https://github.com/spica-engine/spica/commit/9e31c689e))
 * fix(bucket): invalidate storage value cache ([6bbfc5487](https://github.com/spica-engine/spica/commit/6bbfc5487))
