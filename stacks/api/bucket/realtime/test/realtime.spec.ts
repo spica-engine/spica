@@ -94,7 +94,13 @@ describe("Realtime", () => {
     beforeEach(() => {
       const guardService = app.get(GuardService);
       authGuardCheck = spyOn(guardService, "checkAuthorization");
-      actionGuardCheck = spyOn(guardService, "checkAction");
+      actionGuardCheck = spyOn(guardService, "checkAction").and.callFake(({request}) => {
+        request.resourceFilter = {
+          include: [],
+          exclude: []
+        };
+        return Promise.resolve(true);
+      });
     });
 
     it("should authorize and do the initial sync", async done => {
