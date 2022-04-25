@@ -98,7 +98,9 @@ export class RepresentativeManager implements IRepresentativeManager {
       promises.push(promise);
     }
 
-    return Promise.all(promises).then(() => contents);
+    return Promise.all(promises).then(() => {
+      return {_id: id, contents};
+    });
   }
 
   read(module: string, resNameValidator: (name: string) => boolean, fileNameFilter = []) {
@@ -120,13 +122,9 @@ export class RepresentativeManager implements IRepresentativeManager {
         continue;
       }
 
-      const promise = this.readResource(module, id, fileNameFilter).then(contents => {
-        if (Object.keys(contents).length) {
-          const result = {
-            _id: id,
-            contents
-          };
-          results.push(result);
+      const promise = this.readResource(module, id, fileNameFilter).then(resource => {
+        if (resource.contents && Object.keys(resource.contents).length) {
+          results.push(resource);
         }
       });
 

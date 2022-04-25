@@ -102,6 +102,7 @@ export function schemaSyncProviders(
     name,
     document,
     representative,
-    parents: 0
+    parents: 0,
+    comparisonOptions: {ignoredFields: ["env"], uniqueField: "_id"}
   };
 }

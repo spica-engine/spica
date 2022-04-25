@@ -116,9 +116,16 @@ export class Patch {
 export function compareResourceGroups(
   sources: any[],
   targets: any[],
-  uniqueField = "_id",
-  ignoredFields = []
+  comparisonOptions: {
+    uniqueField: string;
+    ignoredFields: string[];
+  } = {
+    uniqueField: "_id",
+    ignoredFields: []
+  }
 ) {
+  const {ignoredFields, uniqueField} = comparisonOptions;
+
   const existings = targets.filter(target =>
     sources.some(source => source[uniqueField] == target[uniqueField])
   );
@@ -130,6 +137,8 @@ export function compareResourceGroups(
     for (const existing of existings) {
       const source = sources.find(source => source[uniqueField] == existing[uniqueField]);
 
+      const copySource = JSON.parse(JSON.stringify(source));
+
       if (ignoredFields.length) {
         ignoredFields.forEach(field => {
           delete source[field];
@@ -138,7 +147,7 @@ export function compareResourceGroups(
       }
 
       if (diff(source, existing).length) {
-        updations.push(source);
+        updations.push(copySource);
       }
     }
 

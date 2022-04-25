@@ -99,7 +99,10 @@ describe("Versioning", () => {
         await synchronizer.synchronize(SyncDirection.DocToRep);
 
         const file = await rep.readResource("bucket", id.toString());
-        expect(file).toEqual({schema: {...bucket, _id: id.toString()}});
+        expect(file).toEqual({
+          _id: id.toHexString(),
+          contents: {schema: {...bucket, _id: id.toString()}}
+        });
       });
 
       it("should update if schema has changes", async () => {
@@ -113,7 +116,12 @@ describe("Versioning", () => {
         const expectedBucket = {...bucket, _id: id.toString()};
         expectedBucket.properties.title.type = "number";
 
-        expect(file).toEqual({schema: expectedBucket});
+        expect(file).toEqual({
+          _id: id.toHexString(),
+          contents: {
+            schema: expectedBucket
+          }
+        });
       });
 
       it("should delete if schema has been deleted", async () => {
@@ -154,9 +162,12 @@ describe("Versioning", () => {
 
         let file = await rep.readResource("function", id.toString());
         expect(file).toEqual({
-          index: "",
-          package: {dependencies: {}},
-          schema: {...fn, _id: id.toString()}
+          _id: id.toHexString(),
+          contents: {
+            index: "",
+            package: {dependencies: {}},
+            schema: {...fn, _id: id.toString()}
+          }
         });
 
         // SCHEMA UPDATE
@@ -170,9 +181,12 @@ describe("Versioning", () => {
 
         file = await rep.readResource("function", id.toString());
         expect(file).toEqual({
-          index: "",
-          package: {dependencies: {}},
-          schema: {...fn, _id: id.toString(), triggers: {onCall}}
+          _id: id.toHexString(),
+          contents: {
+            index: "",
+            package: {dependencies: {}},
+            schema: {...fn, _id: id.toString(), triggers: {onCall}}
+          }
         });
 
         // INDEX UPDATE
@@ -181,9 +195,12 @@ describe("Versioning", () => {
 
         file = await rep.readResource("function", id.toString());
         expect(file).toEqual({
-          index: "console.log(123)",
-          package: {dependencies: {}},
-          schema: {...fn, _id: id.toString(), triggers: {onCall}}
+          _id: id.toHexString(),
+          contents: {
+            index: "console.log(123)",
+            package: {dependencies: {}},
+            schema: {...fn, _id: id.toString(), triggers: {onCall}}
+          }
         });
 
         // SCHEMA DELETE

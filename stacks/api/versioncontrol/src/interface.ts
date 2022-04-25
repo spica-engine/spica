@@ -1,10 +1,7 @@
 export const REGISTER_SYNC_PROVIDER = Symbol.for("REGISTER_SYNC_PROVIDER");
 export const WORKING_DIR = Symbol.for("WORKING_DIR");
 
-export interface RegisterSyncProvider {
-  manager: IRepresentativeManager;
-  register: (provider: SyncProvider) => void;
-}
+export type RegisterSyncProvider = (provider: SyncProvider) => void;
 
 export enum SyncDirection {
   RepToDoc,
@@ -31,6 +28,10 @@ export interface SyncProvider {
   name: string;
   document: DocumentProvider;
   representative: RepresentativeProvider;
+  comparisonOptions?: {
+    ignoredFields: string[];
+    uniqueField: string;
+  };
   parents: number;
 }
 

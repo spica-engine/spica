@@ -48,9 +48,12 @@ describe("Representative", () => {
       await representative.write("module1", "id1", "schema", {title: "hi"}, "yaml");
       await representative.write("module1", "id1", "index", "console.log(123)", "js");
 
-      const contents = await representative.readResource("module1", "id1", ["schema.yaml"]);
-      expect(contents).toEqual({
-        schema: {title: "hi"}
+      const resource = await representative.readResource("module1", "id1", ["schema.yaml"]);
+      expect(resource).toEqual({
+        _id: "id1",
+        contents: {
+          schema: {title: "hi"}
+        }
       });
     });
 
@@ -65,11 +68,14 @@ describe("Representative", () => {
       await representative.write("module1", "id1", "schema", {title: "hi"}, "yaml");
       await representative.write("module1", "id1", "index", "console.log(123)", "js");
 
-      const contents = await representative.readResource("module1", "id1");
-      expect(contents).toEqual({
-        package: {dependencies: {dep1: "1.1"}},
-        schema: {title: "hi"},
-        index: "console.log(123)"
+      const resource = await representative.readResource("module1", "id1");
+      expect(resource).toEqual({
+        _id: "id1",
+        contents: {
+          package: {dependencies: {dep1: "1.1"}},
+          schema: {title: "hi"},
+          index: "console.log(123)"
+        }
       });
     });
 

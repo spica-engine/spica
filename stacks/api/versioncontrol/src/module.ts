@@ -26,15 +26,10 @@ import * as fs from "fs";
     {provide: VersionManager, useFactory: cwd => new Git(cwd), inject: [WORKING_DIR]},
     {
       provide: REGISTER_SYNC_PROVIDER,
-      useFactory: (sync: Synchronizer, manager: RepresentativeManager) => {
-        return {
-          manager: manager,
-          register: provider => sync.register(provider)
-        };
-      },
+      useFactory: (sync: Synchronizer) => provider => sync.register(provider),
       inject: [Synchronizer, RepresentativeManager]
     }
   ],
-  exports: [REGISTER_SYNC_PROVIDER]
+  exports: [REGISTER_SYNC_PROVIDER, RepresentativeManager]
 })
 export class VersionControlModule {}

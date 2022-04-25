@@ -20,7 +20,11 @@ import {DocumentScheduler} from "./scheduler";
 import {registerStatusProvider} from "./status";
 import BucketSchema = require("./schemas/bucket.schema.json");
 import BucketsSchema = require("./schemas/buckets.schema.json");
-import {RegisterSyncProvider, REGISTER_SYNC_PROVIDER} from "@spica-server/versioncontrol";
+import {
+  RegisterSyncProvider,
+  REGISTER_SYNC_PROVIDER,
+  RepresentativeManager
+} from "@spica-server/versioncontrol";
 import {getSyncProvider} from "./versioncontrol/schema";
 
 @Module({})
@@ -108,11 +112,12 @@ export class BucketModule {
     bs: BucketService,
     bds: BucketDataService,
     @Optional() private history: HistoryService,
-    @Optional() @Inject(REGISTER_SYNC_PROVIDER) registerer: RegisterSyncProvider
+    @Optional() private repManager: RepresentativeManager,
+    @Optional() @Inject(REGISTER_SYNC_PROVIDER) register: RegisterSyncProvider
   ) {
-    if (registerer) {
-      const provider = getSyncProvider(bs, bds, this.history, registerer.manager);
-      registerer.register(provider);
+    if (register) {
+      const provider = getSyncProvider(bs, bds, this.history, this.repManager);
+      register(provider);
     }
 
     preference.default({
