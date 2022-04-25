@@ -2,6 +2,7 @@ import {Inject, Injectable} from "@nestjs/common";
 import * as fs from "fs";
 import * as path from "path";
 import * as YAML from "yaml";
+import * as dotenv from "dotenv";
 import {IRepresentativeManager, WORKING_DIR} from "./interface";
 
 @Injectable()
@@ -27,6 +28,18 @@ export class RepresentativeManager implements IRepresentativeManager {
     this.parsers.set("js", val => val);
     this.serializer.set("ts", val => val);
     this.parsers.set("ts", val => val);
+
+    // .env
+    this.serializer.set("env", content => {
+      let lines = [];
+      for (const [key, value] of Object.entries(content)) {
+        lines.push(`${key}=${value}`);
+      }
+      return lines.join("\n");
+    });
+    this.parsers.set("env", content => {
+      return dotenv.parse(content);
+    });
   }
 
   private getModuleDir(module: string) {

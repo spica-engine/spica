@@ -14,7 +14,8 @@ import * as fs from "fs";
     {
       provide: WORKING_DIR,
       useFactory: () => {
-        const dir = `${process.cwd()}/representatives`;
+        const dir = "/Users/tuna/Desktop/representatives";
+        // const dir = `${process.cwd()}/representatives`;
         if (!fs.existsSync(dir)) {
           fs.mkdirSync(dir);
         }
