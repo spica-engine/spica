@@ -53,7 +53,10 @@ export class Git implements VersionManager {
 
   constructor(private cwd: string) {
     this.git = simpleGit({baseDir: this.cwd, binary: "git", maxConcurrentProcesses: 6});
-    this.git.init();
+    this.git.init().then(() => {
+      this.git.addConfig("user.name", "Spica", false, "worktree");
+      this.git.addConfig("user.email", "Spica", false, "worktree");
+    });
   }
 
   checkout({args}) {
