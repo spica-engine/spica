@@ -9,34 +9,37 @@
     }
   }
 
-  .guides {
+  mat-expansion-panel {
+    margin-top: -85px !important;
     margin: 30px;
-    margin-top: -115px !important;
 
-    display: flex;
-    gap: 10px;
+    .expansion-content {
+      display: flex;
 
-    > mat-accordion {
-      flex: 1;
+      gap: 30px;
+
+      .starter {
+        flex: 1;
+      }
+
+      .advanced {
+        flex: 1;
+      }
     }
 
-    mat-expansion-panel {
-      margin-top: 30px;
+    pre {
+      background-color: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
+      padding: 10px;
+      border-radius: 3px;
 
-      pre {
-        background-color: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
-        padding: 10px;
+      span.comment {
+        color: grey;
+      }
+
+      span.editable {
+        border: 1px solid rgba(var(--foreground-base-rgb), 0.3);
         border-radius: 3px;
-
-        span.comment {
-          color: grey;
-        }
-
-        span.editable {
-          border: 1px solid rgba(var(--foreground-base-rgb), 0.3);
-          border-radius: 3px;
-          padding: 2px;
-        }
+        padding: 2px;
       }
     }
   }
