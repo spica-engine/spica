@@ -20,6 +20,13 @@
       span.comment {
         color: grey;
       }
+
+      span.editable{
+        border: 1px solid rgba(var(--foreground-base-rgb),0.3);
+        border-radius: 3px;
+        padding: 2px
+      }
+
     }
   }
 
