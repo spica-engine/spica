@@ -113,19 +113,20 @@ export function schemaSyncProviders(
     name,
     document,
     representative,
-    parents: 0,
-    comparisonOptions: {ignoredFields: ["env"], uniqueField: "_id"}
+    parents: 0
   };
 }
 
 export function putActualEnvs(files) {
   for (const file of files) {
-    const environments = file.contents.schema.env || {};
-    for (const [key, value] of Object.entries<string>(environments)) {
+    const placeholders = file.contents.schema.env || {};
+    const actualEnvs = file.contents.env || {};
+
+    for (const [key, value] of Object.entries<string>(placeholders)) {
       const match = /{(.*?)}/gm.exec(value);
 
       let replacedValue = value;
-      if (match && match.length && Object.keys(file.contents.env).includes(match[1])) {
+      if (match && match.length && Object.keys(actualEnvs).includes(match[1])) {
         replacedValue = file.contents.env[match[1]];
       }
 

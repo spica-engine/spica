@@ -27,7 +27,7 @@ export class VersionControlController {
   @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
   async performAction(@Param("cmd") cmd: string, @Body() body: any) {
     await this.synchronizer.synchronize(SyncDirection.DocToRep).catch(e => {
-      throw new InternalServerErrorException(e);
+      throw new InternalServerErrorException(e.message || e);
     });
 
     const cmdResult = await this.vers
@@ -41,7 +41,7 @@ export class VersionControlController {
       .synchronize(SyncDirection.RepToDoc)
       .then(() => cmdResult)
       .catch(e => {
-        throw new InternalServerErrorException(e);
+        throw new InternalServerErrorException(e.message || e);
       });
   }
 }
