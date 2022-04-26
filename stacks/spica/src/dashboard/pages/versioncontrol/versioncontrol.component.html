@@ -37,6 +37,34 @@ git reset --hard origin/&lt;branch_name&gt;
 <span class="comment"># in case there are untracked directories, files</span>
 git clean -d -f
 </pre>
+    <mat-divider></mat-divider>
+    <h3>
+      Adding specific files
+    </h3>
+    <pre>
+<span class="comment">1. Module scoped</span>      
+git add /&lt;module_name&gt;/*
+<span class="comment"># git add /bucket/*</span>
+
+<span class="comment">2. Resource scoped</span>      
+git add /&lt;module_name&gt;/&lt;resource_id&gt;/*
+<span class="comment"># git add /bucket/6267978d69d28205eaa76baa/*</span>
+
+<span class="comment">3. Sub-module scoped</span>      
+git add /&lt;module_name&gt;/&lt;resource_id&gt;/&lt;submodule_name&gt;*
+
+<span class="comment">- Environment variables </span>
+<span class="comment"># git add /function/6267978d69d28205eaa76baa/env* </span>
+
+<span class="comment">- Index </span>
+<span class="comment"># git add /function/6267978d69d28205eaa76baa/index* </span>
+
+<span class="comment">- Dependencies </span>
+<span class="comment"># git add /function/6267978d69d28205eaa76baa/package* </span>
+
+<span class="comment">- Schema(name,triggers,timeout etc.) </span>
+<span class="comment"># git add /function/6267978d69d28205eaa76baa/schema* </span>
+</pre>
   </mat-expansion-panel>
 </mat-accordion>
 <mat-card>
