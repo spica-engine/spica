@@ -93,46 +93,49 @@ describe("Synchronizer", () => {
 
     // synchronizer.register() method will push this provider at the end of array,
     // but we want to make sure that submodule synchronized last because of prioritizing logic
-    synchronizer['providers'].unshift(subSyncProvider)
+    synchronizer["providers"].unshift(subSyncProvider);
 
     const lastSync = await synchronizer.synchronize(SyncDirection.RepToDoc);
 
-    expect(lastSync).toEqual({
-      resources: [
-        {
-          module: "bucket",
-          insertions: [{_id: "2", title: "this representation should be inserted"}],
-          updations: [
-            {
-              _id: "1",
-              title: "this representation should be updated"
-            }
-          ],
-          deletions: [
-            {
-              _id: "3",
-              title: "this representation should be deleted"
-            }
-          ]
-        },
-        {
-          module: "submodule",
-          insertions: [{_id: "2", title: "this representation should be inserted"}],
-          updations: [
-            {
-              _id: "1",
-              title: "this representation should be updated"
-            }
-          ],
-          deletions: [
-            {
-              _id: "3",
-              title: "this representation should be deleted"
-            }
-          ]
-        }
-      ],
-      date: now.toISOString()
-    },"should work if submodule synchronized last because it has a parent");
+    expect(lastSync).toEqual(
+      {
+        resources: [
+          {
+            module: "bucket",
+            insertions: [{_id: "2", title: "this representation should be inserted"}],
+            updations: [
+              {
+                _id: "1",
+                title: "this representation should be updated"
+              }
+            ],
+            deletions: [
+              {
+                _id: "3",
+                title: "this representation should be deleted"
+              }
+            ]
+          },
+          {
+            module: "submodule",
+            insertions: [{_id: "2", title: "this representation should be inserted"}],
+            updations: [
+              {
+                _id: "1",
+                title: "this representation should be updated"
+              }
+            ],
+            deletions: [
+              {
+                _id: "3",
+                title: "this representation should be deleted"
+              }
+            ]
+          }
+        ],
+        date: now.toISOString()
+      },
+      "should work if submodule synchronized last because it has a parent"
+    );
   });
 });
