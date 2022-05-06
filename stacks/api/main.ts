@@ -461,7 +461,7 @@ if (args["status-tracking"]) {
 }
 
 if (args["version-control"]) {
-  modules.push(VersionControlModule);
+  modules.push(VersionControlModule.forRoot({persistentPath: args["persistent-path"]}));
 }
 
 @Module({
