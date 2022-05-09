@@ -36,6 +36,7 @@ import {ObjectId} from "@spica-server/database";
 import {FindOptions, RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {ChunkKind} from "@spica-server/interface/realtime";
 import {GuardService} from "@spica-server/passport";
+import {resourceFilterFunction} from "@spica-server/passport/guard";
 import {fromEvent, of} from "rxjs";
 import {takeUntil, catchError} from "rxjs/operators";
 import {MessageKind} from "./interface";
@@ -82,6 +83,14 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       actions: "bucket:data:stream",
       options: {resourceFilter: true}
     });
+
+    req.resourceFilter = resourceFilterFunction({}, {
+      switchToHttp: () => {
+        return {
+          getRequest: () => req
+        };
+      }
+    } as any);
   }
 
   async handleConnection(client: any, req) {
@@ -472,10 +481,14 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return client.close(1003);
     }
 
-    req = authIdToString(req);
-    const match = expression.aggregate(schema.acl.read, {auth: req.user});
+    const options: any = {filter: {$and: []}};
 
-    const options: FindOptions<{}> = {};
+    const policyMatch = req.resourceFilter || {$match: {}};
+    options.filter.$and.push(policyMatch.$match);
+
+    req = authIdToString(req);
+    const ruleMatch = expression.aggregate(schema.acl.read, {auth: req.user});
+    options.filter.$and.push(ruleMatch);
 
     let filter = req.query.get("filter");
 
@@ -499,9 +512,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         return client.close(1003);
       }
 
-      options.filter = {$and: [match, parsedFilter]};
-    } else {
-      options.filter = match;
+      options.filter.$and.push(parsedFilter);
     }
 
     if (req.query.has("sort")) {
