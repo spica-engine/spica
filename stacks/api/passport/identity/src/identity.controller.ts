@@ -41,13 +41,15 @@ export class IdentityController {
     private identityPolicyResolver: (req: any) => Promise<[{statement: []}]>,
     private authFactor: AuthFactor
   ) {
-    this.identityService.find({}).then(identities => {
-      for (const identity of identities) {
-        if (identity.authFactor) {
+    this.identityService
+      .find({
+        authFactor: {$exists: true}
+      })
+      .then(identities => {
+        for (const identity of identities) {
           this.authFactor.register(identity._id.toHexString(), identity.authFactor);
         }
-      }
-    });
+      });
   }
 
   @Get("verify")
