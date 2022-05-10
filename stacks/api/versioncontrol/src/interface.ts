@@ -67,3 +67,7 @@ export interface SyncLog {
   }[];
   date: string;
 }
+
+export interface VersionControlOptions {
+  persistentPath: string;
+}

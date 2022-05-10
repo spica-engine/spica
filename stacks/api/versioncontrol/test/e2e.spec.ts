@@ -103,7 +103,7 @@ describe("Versioning e2e", () => {
           debug: false,
           realtimeLogs: false
         }),
-        VersionControlModule
+        VersionControlModule.forRoot({persistentPath: os.tmpdir()})
       ]
     }).compile();
 

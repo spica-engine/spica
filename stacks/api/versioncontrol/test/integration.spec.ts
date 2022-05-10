@@ -57,7 +57,7 @@ describe("Versioning", () => {
           debug: false,
           realtimeLogs: false
         }),
-        VersionControlModule
+        VersionControlModule.forRoot({persistentPath: os.tmpdir()})
       ]
     }).compile();
 
