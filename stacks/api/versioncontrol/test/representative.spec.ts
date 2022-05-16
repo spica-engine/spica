@@ -41,6 +41,14 @@ describe("Representative", () => {
 
       expect(fileContent.toString()).toEqual('{"imjson":"ok"}');
     });
+
+    it("should write env file", async () => {
+      await representative.write("module1", "id1", "env", {APIKEY: "SECRET"}, "env");
+
+      const fileContent = fs.readFileSync(path.join(cwd, "module1", "id1", "env.env"));
+
+      expect(fileContent.toString()).toEqual("APIKEY=SECRET");
+    });
   });
 
   describe("read", () => {
@@ -48,9 +56,12 @@ describe("Representative", () => {
       await representative.write("module1", "id1", "schema", {title: "hi"}, "yaml");
       await representative.write("module1", "id1", "index", "console.log(123)", "js");
 
-      const contents = await representative.readResource("module1", "id1", ["schema.yaml"]);
-      expect(contents).toEqual({
-        schema: {title: "hi"}
+      const resource = await representative.readResource("module1", "id1", ["schema.yaml"]);
+      expect(resource).toEqual({
+        _id: "id1",
+        contents: {
+          schema: {title: "hi"}
+        }
       });
     });
 
@@ -64,12 +75,19 @@ describe("Representative", () => {
       );
       await representative.write("module1", "id1", "schema", {title: "hi"}, "yaml");
       await representative.write("module1", "id1", "index", "console.log(123)", "js");
+      await representative.write("module1", "id1", "env", {APIKEY: "SECRET"}, "env");
 
-      const contents = await representative.readResource("module1", "id1");
-      expect(contents).toEqual({
-        package: {dependencies: {dep1: "1.1"}},
-        schema: {title: "hi"},
-        index: "console.log(123)"
+      const resource = await representative.readResource("module1", "id1");
+      expect(resource).toEqual({
+        _id: "id1",
+        contents: {
+          package: {dependencies: {dep1: "1.1"}},
+          schema: {title: "hi"},
+          index: "console.log(123)",
+          env: {
+            APIKEY: "SECRET"
+          }
+        }
       });
     });
 

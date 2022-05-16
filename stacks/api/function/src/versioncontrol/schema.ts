@@ -79,12 +79,23 @@ export function schemaSyncProviders(
 
   const readAll = async () => {
     const resourceNameValidator = str => ObjectId.isValid(str);
-    const files = await manager.read(module, resourceNameValidator, ["schema.yaml"]);
+    let files = await manager.read(module, resourceNameValidator, ["schema.yaml", "env.env"]);
+
+    files = putActualEnvs(files);
+
     return files.map(file => file.contents.schema);
   };
 
   const write = fn => {
-    return manager.write(module, fn._id, "schema", fn, "yaml");
+    const env = JSON.parse(JSON.stringify(fn.env || {}));
+    for (const key of Object.keys(env)) {
+      fn.env[key] = `{${key}}`;
+    }
+
+    return Promise.all([
+      manager.write(module, fn._id, "schema", fn, "yaml"),
+      manager.write(module, fn._id, "env", env, "env")
+    ]);
   };
 
   const rm = fn => {
@@ -104,4 +115,23 @@ export function schemaSyncProviders(
     representative,
     parents: 0
   };
+}
+
+export function putActualEnvs(files) {
+  for (const file of files) {
+    const placeholders = file.contents.schema.env || {};
+    const actualEnvs = file.contents.env || {};
+
+    for (const [key, value] of Object.entries<string>(placeholders)) {
+      const match = /{(.*?)}/gm.exec(value);
+
+      let replacedValue = value;
+      if (match && match.length && Object.keys(actualEnvs).includes(match[1])) {
+        replacedValue = file.contents.env[match[1]];
+      }
+
+      file.contents.schema.env[key] = replacedValue;
+    }
+  }
+  return files;
 }

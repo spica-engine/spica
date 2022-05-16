@@ -99,7 +99,10 @@ describe("Versioning", () => {
         await synchronizer.synchronize(SyncDirection.DocToRep);
 
         const file = await rep.readResource("bucket", id.toString());
-        expect(file).toEqual({schema: {...bucket, _id: id.toString()}});
+        expect(file).toEqual({
+          _id: id.toHexString(),
+          contents: {schema: {...bucket, _id: id.toString()}}
+        });
       });
 
       it("should update if schema has changes", async () => {
@@ -113,7 +116,12 @@ describe("Versioning", () => {
         const expectedBucket = {...bucket, _id: id.toString()};
         expectedBucket.properties.title.type = "number";
 
-        expect(file).toEqual({schema: expectedBucket});
+        expect(file).toEqual({
+          _id: id.toHexString(),
+          contents: {
+            schema: expectedBucket
+          }
+        });
       });
 
       it("should delete if schema has been deleted", async () => {
@@ -136,7 +144,10 @@ describe("Versioning", () => {
         const fn = {
           _id: id,
           name: "fn1",
-          env: {},
+          env: {
+            APIKEY: "SECRET",
+            BUCKET_ID: "SOME_ID"
+          },
           language: "javascript",
           timeout: 100,
           triggers: {}
@@ -153,10 +164,24 @@ describe("Versioning", () => {
         await synchronizer.synchronize(SyncDirection.DocToRep);
 
         let file = await rep.readResource("function", id.toString());
+        const expectedSchema = {...fn, _id: id.toHexString()};
+        expectedSchema.env = {
+          APIKEY: "{APIKEY}",
+          BUCKET_ID: "{BUCKET_ID}"
+        };
+
+        // console.dir(file,{depth:Infinity})
         expect(file).toEqual({
-          index: "",
-          package: {dependencies: {}},
-          schema: {...fn, _id: id.toString()}
+          _id: id.toHexString(),
+          contents: {
+            index: "",
+            package: {dependencies: {}},
+            schema: expectedSchema,
+            env: {
+              APIKEY: "SECRET",
+              BUCKET_ID: "SOME_ID"
+            }
+          }
         });
 
         // SCHEMA UPDATE
@@ -170,9 +195,16 @@ describe("Versioning", () => {
 
         file = await rep.readResource("function", id.toString());
         expect(file).toEqual({
-          index: "",
-          package: {dependencies: {}},
-          schema: {...fn, _id: id.toString(), triggers: {onCall}}
+          _id: id.toHexString(),
+          contents: {
+            index: "",
+            package: {dependencies: {}},
+            schema: {...expectedSchema, triggers: {onCall}},
+            env: {
+              APIKEY: "SECRET",
+              BUCKET_ID: "SOME_ID"
+            }
+          }
         });
 
         // INDEX UPDATE
@@ -181,9 +213,16 @@ describe("Versioning", () => {
 
         file = await rep.readResource("function", id.toString());
         expect(file).toEqual({
-          index: "console.log(123)",
-          package: {dependencies: {}},
-          schema: {...fn, _id: id.toString(), triggers: {onCall}}
+          _id: id.toHexString(),
+          contents: {
+            index: "console.log(123)",
+            package: {dependencies: {}},
+            schema: {...expectedSchema, triggers: {onCall}},
+            env: {
+              APIKEY: "SECRET",
+              BUCKET_ID: "SOME_ID"
+            }
+          }
         });
 
         // SCHEMA DELETE
@@ -259,12 +298,21 @@ describe("Versioning", () => {
         let fn = {
           _id: id,
           name: "fn1",
-          env: {},
+          env: {
+            APIKEY: "{APIKEY}",
+            BUCKET_ID: "{BUCKET_ID}"
+          },
           language: "javascript",
           timeout: 100,
           triggers: {}
         };
         await rep.write("function", id, "schema", fn, "yaml");
+
+        const env = {
+          APIKEY: "SECRET",
+          BUCKET_ID: "SOME_ID"
+        };
+        await rep.write("function", id, "env", env, "env");
 
         let index = "console.log('hi')";
         await rep.write("function", id, "index", index, "ts");
@@ -277,7 +325,16 @@ describe("Versioning", () => {
         await synchronizer.synchronize(SyncDirection.RepToDoc);
 
         let fns = await fs.find();
-        expect(fns).toEqual([{...fn, _id: new ObjectId(id)}]);
+        expect(fns).toEqual([
+          {
+            ...fn,
+            _id: new ObjectId(id),
+            env: {
+              APIKEY: "SECRET",
+              BUCKET_ID: "SOME_ID"
+            }
+          }
+        ]);
 
         packages = await engine.getPackages(fn);
         expect(packages).toEqual([]);
@@ -296,7 +353,17 @@ describe("Versioning", () => {
         await synchronizer.synchronize(SyncDirection.RepToDoc);
 
         fns = await fs.find();
-        expect(fns).toEqual([{...fn, triggers: {onCall}, _id: new ObjectId(id)}]);
+        expect(fns).toEqual([
+          {
+            ...fn,
+            triggers: {onCall},
+            _id: new ObjectId(id),
+            env: {
+              APIKEY: "SECRET",
+              BUCKET_ID: "SOME_ID"
+            }
+          }
+        ]);
 
         // INDEX UPDATES
         index = "console.log('hi2')";

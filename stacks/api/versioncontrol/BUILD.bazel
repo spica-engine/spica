@@ -13,6 +13,7 @@ ts_project(
         "//packages/core/differ",
         "//stacks/api/passport/guard",
         "@npm//@nestjs/common",
+        "@npm//dotenv",
         "@npm//simple-git",
         "@npm//yaml",
     ],

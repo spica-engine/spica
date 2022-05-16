@@ -33,7 +33,6 @@
     "run-cli": "bazel run //stacks/cli:bin"
   },
   "dependencies": {
-    "simple-git": "^3.5.0",
     "@google-cloud/storage": "^5.0.1",
     "@graphql-tools/merge": "^8.2.1",
     "@graphql-tools/schema": "^8.3.1",
@@ -62,6 +61,7 @@
     "deep-diff": "^1.0.2",
     "diff-match-patch": "^1.0.4",
     "dockerode": "^3.2.1",
+    "dotenv": "^16.0.0",
     "error-stack-parser": "^2.0.2",
     "etag": "^1.8.1",
     "express": "^4.17.2",
@@ -106,6 +106,7 @@
     "samlp": "^6.0.2",
     "semver": "^7.3.2",
     "short-id": "^0.1.0-1",
+    "simple-git": "^3.5.0",
     "speakeasy": "^2.0.0",
     "symlink-dir": "^3.1.2",
     "type-is": "^1.6.18",

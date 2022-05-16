@@ -2,6 +2,7 @@ import {Inject, Injectable} from "@nestjs/common";
 import * as fs from "fs";
 import * as path from "path";
 import * as YAML from "yaml";
+import * as dotenv from "dotenv";
 import {IRepresentativeManager, WORKING_DIR} from "./interface";
 
 @Injectable()
@@ -27,6 +28,18 @@ export class RepresentativeManager implements IRepresentativeManager {
     this.parsers.set("js", val => val);
     this.serializer.set("ts", val => val);
     this.parsers.set("ts", val => val);
+
+    // .env
+    this.serializer.set("env", content => {
+      let lines = [];
+      for (const [key, value] of Object.entries(content)) {
+        lines.push(`${key}=${value}`);
+      }
+      return lines.join("\n");
+    });
+    this.parsers.set("env", content => {
+      return dotenv.parse(content);
+    });
   }
 
   private getModuleDir(module: string) {
@@ -98,7 +111,9 @@ export class RepresentativeManager implements IRepresentativeManager {
       promises.push(promise);
     }
 
-    return Promise.all(promises).then(() => contents);
+    return Promise.all(promises).then(() => {
+      return {_id: id, contents};
+    });
   }
 
   read(module: string, resNameValidator: (name: string) => boolean, fileNameFilter = []) {
@@ -120,13 +135,9 @@ export class RepresentativeManager implements IRepresentativeManager {
         continue;
       }
 
-      const promise = this.readResource(module, id, fileNameFilter).then(contents => {
-        if (Object.keys(contents).length) {
-          const result = {
-            _id: id,
-            contents
-          };
-          results.push(result);
+      const promise = this.readResource(module, id, fileNameFilter).then(resource => {
+        if (resource.contents && Object.keys(resource.contents).length) {
+          results.push(resource);
         }
       });
 

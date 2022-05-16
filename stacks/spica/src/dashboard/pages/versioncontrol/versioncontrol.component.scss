@@ -12,6 +12,21 @@
   mat-expansion-panel {
     margin-top: -85px !important;
     margin: 30px;
+
+    .expansion-content {
+      display: flex;
+
+      gap: 30px;
+
+      .starter {
+        flex: 1;
+      }
+
+      .advanced {
+        flex: 1;
+      }
+    }
+
     pre {
       background-color: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
       padding: 10px;
@@ -19,6 +34,12 @@
 
       span.comment {
         color: grey;
+      }
+
+      span.editable {
+        border: 1px solid rgba(var(--foreground-base-rgb), 0.3);
+        border-radius: 3px;
+        padding: 2px;
       }
     }
   }
