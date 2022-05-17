@@ -5,6 +5,7 @@
 * fix(realtime): parse resource filters and apply ([1adec9fad](https://github.com/spica-engine/spica/commit/1adec9fad))
 * fix(versioncontrol): use persistent path to keep version info ([c037b5b5f](https://github.com/spica-engine/spica/commit/c037b5b5f))
 
+
 ## v0.9.20 (2022-04-14)
 
 * docs: update changelog for v0.9.20 ([c23044103](https://github.com/spica-engine/spica/commit/c23044103))
