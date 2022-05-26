@@ -708,21 +708,33 @@ export class BucketSynchronizer implements ModuleSynchronizer {
 }
 
 function printActions({insertions, updations, deletions, field, moduleName}) {
+  const joinActions = (actions: any[]) => {
+    const MAX_LINES = 20;
+    actions = actions.map(a => `- ${a[field]}`);
+
+    if (actions.length > MAX_LINES) {
+      actions = actions.slice(0, MAX_LINES);
+      actions.push("...more");
+    }
+
+    return actions.join("\n");
+  };
+
   console.log();
   console.log(`----- ${moduleName.toUpperCase()} -----`);
   console.log(
     `\n* Found ${bold(insertions.length)} objects to ${bold("insert")}: 
-${insertions.map(i => `- ${i[field]}`).join("\n")}`
+${joinActions(insertions)}`
   );
 
   console.log(
     `\n* Found ${bold(updations.length)} objects to ${bold("update")}: 
-${updations.map(i => `- ${i[field]}`).join("\n")}`
+${joinActions(updations)}`
   );
 
   console.log(
     `\n* Found ${bold(deletions.length)} objects to ${bold("delete")}: 
-${deletions.map(i => `- ${i[field]}`).join("\n")}`
+${joinActions(deletions)}`
   );
 }
 
