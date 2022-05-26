@@ -4,16 +4,16 @@ import {
   FunctionDependencySynchronizer,
   FunctionIndexSynchronizer,
   FunctionSynchronizer,
-  ObjectActionDecider
+  ResourceGroupComparisor
 } from "@spica/cli/src/commands/project/sync";
 
 describe("Synchronize", () => {
-  describe("ObjectActionDecider", () => {
+  describe("ResourceGroupComparisor", () => {
     it("should get insert object", () => {
       const sourceObjects = [{_id: "1"}];
       const targetObjects = [];
 
-      const decider = new ObjectActionDecider(sourceObjects, targetObjects);
+      const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
       expect(decider.insertions()).toEqual([{_id: "1"}]);
     });
@@ -22,7 +22,7 @@ describe("Synchronize", () => {
       const sourceObjects = [{_id: "1", test: "a"}];
       const targetObjects = [{_id: "1", test: "b"}];
 
-      const decider = new ObjectActionDecider(sourceObjects, targetObjects);
+      const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
       expect(decider.updations()).toEqual([{_id: "1", test: "a"}]);
     });
@@ -31,7 +31,7 @@ describe("Synchronize", () => {
       const sourceObjects = [{_id: "1", test: "a"}];
       const targetObjects = [{_id: "1", test: "a"}];
 
-      const decider = new ObjectActionDecider(sourceObjects, targetObjects);
+      const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
       expect(decider.updations()).toEqual([]);
     });
@@ -40,7 +40,7 @@ describe("Synchronize", () => {
       const sourceObjects = [];
       const targetObjects = [{_id: "2"}];
 
-      const decider = new ObjectActionDecider(sourceObjects, targetObjects);
+      const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
       expect(decider.deletions()).toEqual([{_id: "2"}]);
     });
@@ -64,7 +64,7 @@ describe("Synchronize", () => {
         {_id: "4", test: "d"}
       ];
 
-      const decider = new ObjectActionDecider(sourceObjects, targetObjects);
+      const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
       expect(decider.insertions()).toEqual([{_id: "1", test: "a"}]);
       expect(decider.updations()).toEqual([{_id: "2", test: "b"}]);
@@ -75,7 +75,7 @@ describe("Synchronize", () => {
       const sourceObjects = [];
       const targetObjects = [];
 
-      const decider = new ObjectActionDecider(sourceObjects, targetObjects);
+      const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
       expect(decider.insertions()).toEqual([]);
       expect(decider.updations()).toEqual([]);

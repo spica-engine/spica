@@ -22,6 +22,7 @@ import {DashboardViewComponent} from "./pages/dashboard-view/dashboard-view.comp
 import {DashboardComponent} from "./pages/dashboard/dashboard.component";
 import {DashboardInitializer} from "./services/dashboard.initializer";
 import {DashboardService} from "./services/dashboard.service";
+import {VersionControlService} from "./services/versioncontrol.service";
 import * as fromDashboard from "./state/dashboard.reducer";
 import {TutorialComponent} from "./pages/tutorial/tutorial.component";
 import {MatStepperModule} from "@angular/material/stepper";
@@ -43,6 +44,8 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatDividerModule} from "@angular/material/divider";
 import {StatisticComponent} from "./components/statistic/statistic.component";
+import {VersionControlComponent} from "./pages/versioncontrol/versioncontrol.component";
+import {MatExpansionModule} from "@angular/material/expansion";
 
 @NgModule({
   imports: [
@@ -77,7 +80,8 @@ import {StatisticComponent} from "./components/statistic/statistic.component";
     DragDropModule,
     MatProgressSpinnerModule,
     MatProgressBarModule,
-    MatDividerModule
+    MatDividerModule,
+    MatExpansionModule
   ],
   declarations: [
     DashboardComponent,
@@ -89,9 +93,11 @@ import {StatisticComponent} from "./components/statistic/statistic.component";
     TableComponent,
     WelcomeComponent,
     CardComponent,
-    StatisticComponent
+    StatisticComponent,
+    VersionControlComponent
   ],
   providers: [
+    VersionControlService,
     DashboardService,
     {
       provide: DashboardInitializer,

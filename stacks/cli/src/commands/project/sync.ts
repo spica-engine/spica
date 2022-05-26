@@ -3,7 +3,7 @@ import {spin} from "../../console";
 import {httpService} from "../../http";
 import {availableSyncModules, validateSyncModules} from "../../validator";
 import {bold, green, red} from "colorette";
-const isEqual = require("lodash/isEqual");
+import {isEqual} from "lodash";
 
 let IGNORE_ERRORS;
 let CONCURRENCY_LIMIT;
@@ -149,30 +149,38 @@ We highly recommend you to use --dry-run=true and check the changes that will be
     .action(sync);
 }
 
-export class ObjectActionDecider {
-  private existingObjects = [];
-  private existingObjectIds = [];
+// @TODO: use it from packages/core/differ
+export class ResourceGroupComparisor {
+  private existings = [];
+  private existingIds = [];
 
   constructor(
-    private sourceObjects: any[],
-    private targetObjects: any[],
-    private uniqueField = "_id"
+    private sources: any[],
+    private targets: any[],
+    private uniqueField = "_id",
+    private ignoredFields = []
   ) {
-    this.existingObjects = targetObjects.filter(targetObject =>
-      sourceObjects.some(
-        sourceObject => sourceObject[this.uniqueField] == targetObject[this.uniqueField]
-      )
+    this.existings = targets.filter(target =>
+      sources.some(source => source[this.uniqueField] == target[this.uniqueField])
     );
 
-    this.existingObjectIds = this.existingObjects.map(o => o[this.uniqueField]);
+    this.existingIds = this.existings.map(existing => existing[this.uniqueField]);
   }
 
   updations() {
     const updations = [];
-    for (const existing of this.existingObjects) {
-      const source = this.sourceObjects.find(
+    for (const existing of this.existings) {
+      const source = this.sources.find(
         source => source[this.uniqueField] == existing[this.uniqueField]
       );
+
+      if (this.ignoredFields.length) {
+        this.ignoredFields.forEach(field => {
+          delete source[field];
+          delete existing[field];
+        });
+      }
+
       if (!isEqual(source, existing)) {
         updations.push(source);
       }
@@ -182,18 +190,13 @@ export class ObjectActionDecider {
   }
 
   insertions() {
-    return this.sourceObjects.filter(
-      source => this.existingObjectIds.indexOf(source[this.uniqueField]) == -1
-    );
+    return this.sources.filter(source => this.existingIds.indexOf(source[this.uniqueField]) == -1);
   }
 
   deletions() {
-    return this.targetObjects.filter(
-      target => this.existingObjectIds.indexOf(target[this.uniqueField]) == -1
-    );
+    return this.targets.filter(target => this.existingIds.indexOf(target[this.uniqueField]) == -1);
   }
 }
-
 interface ModuleSynchronizer {
   moduleName: string;
   subModuleName?: string;
@@ -267,7 +270,7 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
       }
     }
 
-    const decider = new ObjectActionDecider(sourceFns, targetFns);
+    const decider = new ResourceGroupComparisor(sourceFns, targetFns);
 
     this.insertions = decider.insertions();
     this.updations = decider.updations();
@@ -361,7 +364,7 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
         return Promise.reject(e.data);
       });
 
-    const decider = new ObjectActionDecider(sourceDeps, targetDeps, "name");
+    const decider = new ResourceGroupComparisor(sourceDeps, targetDeps, "name");
 
     this.insertions = decider.insertions();
     this.updations = decider.updations();
@@ -477,7 +480,7 @@ export class FunctionIndexSynchronizer implements ModuleSynchronizer {
       )
     ).then(indexes => indexes.filter(Boolean));
 
-    const decider = new ObjectActionDecider(sourceFnIndexes, targetFnIndexes);
+    const decider = new ResourceGroupComparisor(sourceFnIndexes, targetFnIndexes);
 
     this.insertions = decider.insertions();
     this.updations = decider.updations();
@@ -551,7 +554,7 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
         return Promise.reject(e.data);
       });
 
-    const decider = new ObjectActionDecider(sourceData, targetData);
+    const decider = new ResourceGroupComparisor(sourceData, targetData);
 
     this.insertions = decider.insertions();
     this.updations = decider.updations();
@@ -650,7 +653,7 @@ export class BucketSynchronizer implements ModuleSynchronizer {
       op: () => this.targetService.get("bucket")
     });
 
-    const decider = new ObjectActionDecider(sourceBuckets, targetBuckets);
+    const decider = new ResourceGroupComparisor(sourceBuckets, targetBuckets);
 
     this.insertions = decider.insertions();
     this.updations = decider.updations();
@@ -775,11 +778,11 @@ ${message}`;
   }
 }
 
+function returnErrorMessage(e) {
+  return e.data ? e.data.message || e.data : e;
+}
+
 function isNotFoundException(e) {
   const code = 404;
   return e.status == code || e.statusCode == code || (e.data && e.data.statusCode == code);
-}
-
-function returnErrorMessage(e) {
-  return e.data ? e.data.message || e.data : e;
 }

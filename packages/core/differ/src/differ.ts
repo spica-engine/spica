@@ -112,3 +112,55 @@ export class Patch {
   length1: number;
   length2: number;
 }
+
+export function compareResourceGroups(
+  sources: any[],
+  targets: any[],
+  comparisonOptions: {
+    uniqueField: string;
+    ignoredFields: string[];
+  } = {
+    uniqueField: "_id",
+    ignoredFields: []
+  }
+) {
+  const {ignoredFields, uniqueField} = comparisonOptions;
+
+  const existings = targets.filter(target =>
+    sources.some(source => source[uniqueField] == target[uniqueField])
+  );
+
+  const existingIds = existings.map(existing => existing[uniqueField]);
+
+  const updations = () => {
+    const updations = [];
+    for (const existing of existings) {
+      const source = sources.find(source => source[uniqueField] == existing[uniqueField]);
+
+      const copySource = JSON.parse(JSON.stringify(source));
+
+      if (ignoredFields.length) {
+        ignoredFields.forEach(field => {
+          delete source[field];
+          delete existing[field];
+        });
+      }
+
+      if (diff(source, existing).length) {
+        updations.push(copySource);
+      }
+    }
+
+    return updations;
+  };
+
+  const insertions = () => sources.filter(source => existingIds.indexOf(source[uniqueField]) == -1);
+
+  const deletions = () => targets.filter(target => existingIds.indexOf(target[uniqueField]) == -1);
+
+  return {
+    insertions: insertions(),
+    updations: updations(),
+    deletions: deletions()
+  };
+}

@@ -26,8 +26,8 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as os from "os";
-import {from, of, OperatorFunction} from "rxjs";
-import {catchError, finalize, last, map, take, tap} from "rxjs/operators";
+import {of, OperatorFunction} from "rxjs";
+import {catchError, finalize, last, map, tap} from "rxjs/operators";
 import {createFunctionActivity} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {
