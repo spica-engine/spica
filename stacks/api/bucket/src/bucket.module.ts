@@ -113,11 +113,11 @@ export class BucketModule {
     bds: BucketDataService,
     @Optional() private history: HistoryService,
     @Optional() private repManager: RepresentativeManager,
-    @Optional() @Inject(REGISTER_SYNC_PROVIDER) register: RegisterSyncProvider
+    @Optional() @Inject(REGISTER_SYNC_PROVIDER) registerSync: RegisterSyncProvider
   ) {
-    if (register) {
+    if (registerSync) {
       const provider = getSyncProvider(bs, bds, this.history, this.repManager);
-      register(provider);
+      registerSync(provider);
     }
 
     preference.default({

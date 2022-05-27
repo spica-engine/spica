@@ -33,11 +33,11 @@ export class FunctionModule {
     fe: FunctionEngine,
     scheduler: Scheduler,
     @Optional() private repManager: RepresentativeManager,
-    @Optional() @Inject(REGISTER_SYNC_PROVIDER) register: RegisterSyncProvider,
+    @Optional() @Inject(REGISTER_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
     logs: LogService
   ) {
-    if (register) {
-      getSyncProviders(fs, this.repManager, fe, logs).forEach(provider => register(provider));
+    if (registerSync) {
+      getSyncProviders(fs, this.repManager, fe, logs).forEach(provider => registerSync(provider));
     }
 
     registerInformers(fs, fe);

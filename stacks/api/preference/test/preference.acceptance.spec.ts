@@ -23,7 +23,7 @@ describe("PreferenceController", () => {
       imports: [
         DatabaseTestingModule.replicaSet(),
         PassportTestingModule.initialize(),
-        PreferenceModule,
+        PreferenceModule.forRoot(),
         CoreTestingModule
       ],
       providers: []

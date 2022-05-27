@@ -379,7 +379,7 @@ Example: http(s)://doomed-d45f1.spica.io/api`
 
 const modules = [
   DashboardModule.forRoot(),
-  PreferenceModule,
+  PreferenceModule.forRoot(),
   ApiMachineryModule,
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
