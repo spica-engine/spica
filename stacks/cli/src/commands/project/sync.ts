@@ -5,9 +5,25 @@ import {availableSyncModules, validateSyncModules} from "../../validator";
 import {bold, green, red} from "colorette";
 import {isEqual} from "lodash";
 
+let IGNORE_ERRORS;
+let CONCURRENCY_LIMIT;
+
 async function sync({
-  options: {sourceUrl, sourceApikey, targetUrl, targetApikey, modules, dryRun, syncFnEnv}
+  options: {
+    sourceUrl,
+    sourceApikey,
+    targetUrl,
+    targetApikey,
+    modules,
+    dryRun,
+    syncFnEnv,
+    ignoreErrors,
+    concurrencyLimit
+  }
 }: ActionParameters) {
+  IGNORE_ERRORS = ignoreErrors;
+  CONCURRENCY_LIMIT = concurrencyLimit as number;
+
   const sourceService = httpService.create({
     baseUrl: sourceUrl.toString(),
     authorization: `APIKEY ${sourceApikey}`
@@ -29,7 +45,9 @@ async function sync({
 
   for (const Ctor of coreSynchronizers) {
     const synchronizer = new Ctor(sourceService, targetService, {syncFnEnv});
-    const subSynchronizers = await synchronizer.initialize();
+    const subSynchronizers = await synchronizer.initialize().catch(e => {
+      return Promise.reject(returnErrorMessage(e));
+    });
 
     synchronizers.push(synchronizer);
     synchronizers.push(...subSynchronizers);
@@ -39,11 +57,13 @@ async function sync({
     const moduleSynchronizers = synchronizers.filter(s => s.moduleName == name);
 
     if (!moduleSynchronizers.length) {
-      throw Error(`Module ${name} does not exist.`);
+      return Promise.reject(`Module ${name} does not exist.`);
     }
 
     for (const synchronizer of moduleSynchronizers) {
-      const {insertions, updations, deletions} = await synchronizer.analyze();
+      const {insertions, updations, deletions} = await synchronizer.analyze().catch(e => {
+        return Promise.reject(returnErrorMessage(e));
+      });
       if (dryRun) {
         printActions({
           insertions,
@@ -53,7 +73,7 @@ async function sync({
           moduleName: synchronizer.getDisplayableModuleName()
         });
       } else {
-        await synchronizer.synchronize();
+        await synchronizer.synchronize().catch(e => Promise.reject(returnErrorMessage(e)));
         console.log(
           `\n${synchronizer.getDisplayableModuleName()} synchronization has been completed!`.toUpperCase()
         );
@@ -109,6 +129,21 @@ We highly recommend you to use --dry-run=true and check the changes that will be
       "Set true if you need to sync function environment variables as well.",
       {
         default: false
+      }
+    )
+    .option(
+      "--ignore-errors",
+      "Set true if you don't want to interrupt sync process because of failed requests.",
+      {
+        default: false
+      }
+    )
+    .option(
+      "--concurrency-limit",
+      "Increase(if you want to speed up), decrease(if you get some error like ECONNRESET) this value to adjust how many parallel requests that will be sent to the target instance",
+      {
+        default: 100 as number,
+        validator: CaporalValidator.NUMBER
       }
     )
     .action(sync);
@@ -250,38 +285,39 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
 
   async synchronize() {
     console.log();
-    const insertPromises = this.insertions.map(fn =>
+    const insertPromiseFactories = this.insertions.map(fn => () =>
       this.targetService.post("function", fn).catch(e =>
         handleRejection({
           action: "insert",
-          message: e.message,
+          message: returnErrorMessage(e),
           objectName: this.moduleName + " " + fn.name
         })
       )
     );
-    await spinUntilPromiseEnd(insertPromises, "Inserting functions to the target instance");
 
-    const updatePromises = this.updations.map(fn =>
+    await spinUntilPromiseEnd(insertPromiseFactories, "Inserting functions to the target instance");
+
+    const updatePromiseFactories = this.updations.map(fn => () =>
       this.targetService.put(`function/${fn._id}`, fn).catch(e =>
         handleRejection({
           action: "update",
-          message: e.message,
+          message: returnErrorMessage(e),
           objectName: this.moduleName + " " + fn.name
         })
       )
     );
-    await spinUntilPromiseEnd(updatePromises, "Updating target instance functions");
+    await spinUntilPromiseEnd(updatePromiseFactories, "Updating target instance functions");
 
-    const deletePromises = this.deletions.map(fn =>
+    const deletePromiseFactories = this.deletions.map(fn => () =>
       this.targetService.delete(`function/${fn._id}`).catch(e =>
         handleRejection({
           action: "delete",
           objectName: this.moduleName + " " + fn.name,
-          message: e.message
+          message: returnErrorMessage(e)
         })
       )
     );
-    await spinUntilPromiseEnd(deletePromises, "Deleting target instance functions");
+    await spinUntilPromiseEnd(deletePromiseFactories, "Deleting target instance functions");
   }
 
   getDisplayableModuleName() {
@@ -297,8 +333,6 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
   insertions = [];
   updations = [];
   deletions = [];
-
-  promises = [];
 
   constructor(
     private sourceService: httpService.Client,
@@ -345,6 +379,8 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
 
   async synchronize() {
     console.log();
+
+    const promiseFactories: (() => Promise<any>)[] = [];
     const insertBody = [...this.insertions, ...this.updations].reduce(
       (acc, dep) => {
         const depName = `${dep.name}@${dep.version.slice(1)}`;
@@ -355,32 +391,35 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
     );
 
     if (insertBody.name.length) {
-      this.promises.push(
+      promiseFactories.push(() =>
         this.targetService.post(`function/${this.fn._id}/dependencies`, insertBody).catch(e => {
           handleRejection({
             action: "insert",
-            message: e.message,
+            message: returnErrorMessage(e),
             objectName: this.getDisplayableModuleName()
           });
         })
       );
     }
 
-    const deletePromises = this.deletions.map(dep =>
+    const deletePromiseFactories = this.deletions.map(dep => () =>
       this.targetService.delete(`function/${this.fn._id}/dependencies/${dep.name}`).catch(e =>
         handleRejection({
           action: "update",
-          message: e.message,
+          message: returnErrorMessage(e),
           objectName: this.getDisplayableModuleName()
         })
       )
     );
 
-    if (deletePromises.length) {
-      this.promises.push(...deletePromises);
+    if (deletePromiseFactories.length) {
+      promiseFactories.push(...deletePromiseFactories);
     }
 
-    return spinUntilPromiseEnd(this.promises, `Updating function '${this.fn.name}' dependencies`);
+    return spinUntilPromiseEnd(
+      promiseFactories,
+      `Updating function '${this.fn.name}' dependencies`
+    );
   }
 
   getDisplayableModuleName() {
@@ -456,17 +495,20 @@ export class FunctionIndexSynchronizer implements ModuleSynchronizer {
 
   synchronize() {
     // except others, we don't need to remove any function index because they are supposed to be deleted with function module synchronization
-    const promises = [...this.insertions, ...this.updations].map(fn =>
+    const promiseFactories = [...this.insertions, ...this.updations].map(fn => () =>
       this.targetService.post(`function/${fn._id}/index`, {index: fn.index}).catch(e =>
         handleRejection({
           action: "insert",
           objectName: this.getDisplayableModuleName() + " " + fn.name,
-          message: e.message
+          message: returnErrorMessage(e)
         })
       )
     );
 
-    return spinUntilPromiseEnd(promises, "Writing indexes to the target instance functions");
+    return spinUntilPromiseEnd(
+      promiseFactories,
+      "Writing indexes to the target instance functions"
+    );
   }
 
   getDisplayableModuleName() {
@@ -527,46 +569,46 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
 
   async synchronize(): Promise<any> {
     console.log();
-    const insertPromises = this.insertions.map(data =>
+    const insertPromiseFactories = this.insertions.map(data => () =>
       this.targetService.post(`bucket/${this.bucket._id}/data`, data).catch(e =>
         handleRejection({
           action: "insert",
           objectName: this.getDisplayableModuleName() + " " + data[this.primaryField],
-          message: e.message
+          message: returnErrorMessage(e)
         })
       )
     );
     await spinUntilPromiseEnd(
-      insertPromises,
+      insertPromiseFactories,
       `Inserting bucket ${this.bucket.title} data to the target instance`
     );
 
-    const updatePromises = this.updations.map(data =>
+    const updatePromiseFactories = this.updations.map(data => () =>
       this.targetService.put(`bucket/${this.bucket._id}/data/${data._id}`, data).catch(e =>
         handleRejection({
           action: "update",
-          message: e.message,
+          message: returnErrorMessage(e),
           objectName: this.getDisplayableModuleName() + " " + data[this.primaryField]
         })
       )
     );
     await spinUntilPromiseEnd(
-      updatePromises,
-      `Updating bucket ${this.bucket.title} data to the target instance`
+      updatePromiseFactories,
+      `Updating bucket ${this.bucket.title} data on the target instance`
     );
 
-    const deletePromises = this.deletions.map(data =>
+    const deletePromiseFactories = this.deletions.map(data => () =>
       this.targetService.delete(`bucket/${this.bucket._id}/data/${data._id}`).catch(e =>
         handleRejection({
           action: "delete",
           objectName: this.getDisplayableModuleName() + " " + data[this.primaryField],
-          message: e.message
+          message: returnErrorMessage(e)
         })
       )
     );
     await spinUntilPromiseEnd(
-      deletePromises,
-      `Deleting bucket ${this.bucket.title} data to the target instance`
+      deletePromiseFactories,
+      `Deleting bucket ${this.bucket.title} data from the target instance`
     );
   }
   getDisplayableModuleName(): string {
@@ -626,38 +668,38 @@ export class BucketSynchronizer implements ModuleSynchronizer {
 
   async synchronize() {
     console.log();
-    const insertPromises = this.insertions.map(bucket =>
+    const insertPromiseFactories = this.insertions.map(bucket => () =>
       this.targetService.post("bucket", bucket).catch(e =>
         handleRejection({
           action: "insert",
           objectName: this.getDisplayableModuleName() + " " + bucket.title,
-          message: e.message
+          message: returnErrorMessage(e)
         })
       )
     );
-    await spinUntilPromiseEnd(insertPromises, "Inserting buckets to the target instance");
+    await spinUntilPromiseEnd(insertPromiseFactories, "Inserting buckets to the target instance");
 
-    const updatePromises = this.updations.map(bucket =>
+    const updatePromiseFactories = this.updations.map(bucket => () =>
       this.targetService.put(`bucket/${bucket._id}`, bucket).catch(e =>
         handleRejection({
           action: "update",
           objectName: this.getDisplayableModuleName() + " " + bucket.title,
-          message: e.message
+          message: returnErrorMessage(e)
         })
       )
     );
-    await spinUntilPromiseEnd(updatePromises, "Updating buckets on the target instance");
+    await spinUntilPromiseEnd(updatePromiseFactories, "Updating buckets on the target instance");
 
-    const deletePromises = this.deletions.map(bucket =>
+    const deletePromiseFactories = this.deletions.map(bucket => () =>
       this.targetService.delete(`bucket/${bucket._id}`).catch(e =>
         handleRejection({
           action: "delete",
           objectName: bucket.title,
-          message: e.message
+          message: returnErrorMessage(e)
         })
       )
     );
-    await spinUntilPromiseEnd(deletePromises, "Deleting bucket from the target instance");
+    await spinUntilPromiseEnd(deletePromiseFactories, "Deleting bucket from the target instance");
   }
 
   getDisplayableModuleName(): string {
@@ -666,26 +708,45 @@ export class BucketSynchronizer implements ModuleSynchronizer {
 }
 
 function printActions({insertions, updations, deletions, field, moduleName}) {
+  const joinActions = (actions: any[]) => {
+    const MAX_LINES = 20;
+    actions = actions.map(a => `- ${a[field]}`);
+
+    if (actions.length > MAX_LINES) {
+      actions = actions.slice(0, MAX_LINES);
+      actions.push("...more");
+    }
+
+    return actions.join("\n");
+  };
+
   console.log();
   console.log(`----- ${moduleName.toUpperCase()} -----`);
   console.log(
     `\n* Found ${bold(insertions.length)} objects to ${bold("insert")}: 
-${insertions.map(i => `- ${i[field]}`).join("\n")}`
+${joinActions(insertions)}`
   );
 
   console.log(
     `\n* Found ${bold(updations.length)} objects to ${bold("update")}: 
-${updations.map(i => `- ${i[field]}`).join("\n")}`
+${joinActions(updations)}`
   );
 
   console.log(
     `\n* Found ${bold(deletions.length)} objects to ${bold("delete")}: 
-${deletions.map(i => `- ${i[field]}`).join("\n")}`
+${joinActions(deletions)}`
   );
 }
 
-function spinUntilPromiseEnd(promises: Promise<any>[], label: string, paralel = true) {
-  if (!promises.length) {
+export enum SendingPromiseStrategy {
+  All,
+  OneByOne,
+  Batch,
+  Retry
+}
+
+function spinUntilPromiseEnd(promiseFactories: (() => Promise<any>)[], label: string) {
+  if (!promiseFactories.length) {
     return;
   }
 
@@ -695,31 +756,42 @@ function spinUntilPromiseEnd(promises: Promise<any>[], label: string, paralel = 
       let progress = 0;
       let count = 0;
 
-      if (paralel) {
-        return Promise.all(
-          promises.map(p =>
-            p.then(() => {
-              count++;
-              progress = (100 / promises.length) * count;
-              spinner.text = `${label} (%${Math.round(progress)})`;
-            })
-          )
-        );
-      }
+      const concurrency = Math.min(promiseFactories.length, CONCURRENCY_LIMIT);
 
-      for (const promise of promises) {
-        await promise;
+      let batchPromises = [];
+      for (let i = 0; i < promiseFactories.length; i++) {
+        batchPromises.push(promiseFactories[i]);
+
+        // if it reaches the concurrency limit or the last index
+        if (batchPromises.length == concurrency || i == promiseFactories.length - 1) {
+          await Promise.all(batchPromises.map(b => b()));
+          batchPromises = [];
+        }
+
         count++;
-        progress = (100 / promises.length) * count;
+        progress = (100 / promiseFactories.length) * count;
         spinner.text = `${label} (%${Math.round(progress)})`;
       }
+
+      return;
     }
   });
 }
 
 function handleRejection({action, objectName, message}) {
-  return Promise.reject(`Failed to ${action} ${bold(objectName)}.
-${message}`);
+  const msg: any = `
+Failed to ${action} ${bold(objectName)}.
+${message}`;
+
+  if (IGNORE_ERRORS) {
+    return console.warn(msg);
+  } else {
+    return Promise.reject(msg);
+  }
+}
+
+function returnErrorMessage(e) {
+  return e.data ? e.data.message || e.data : e;
 }
 
 function isNotFoundException(e) {
