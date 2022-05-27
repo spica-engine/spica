@@ -8,23 +8,30 @@ export const getSyncProvider = (
 ): SyncProvider => {
   //@TODO: check the name convension
   const name = "identity-schema";
-  const module = "identity";
+  const module = "preference";
 
-  const getAll = () => prefService.get("passport").then(s => [s]);
-  const insert = schema => prefService.insertOne(schema);
-  const update = async schema => {
-    await prefService.replace({scope: "passport"}, schema);
+  const getAll = () =>
+    prefService.get("passport").then(s => {
+      return [{...s.identity, _id: "identity"}];
+    });
+
+  const upsert = schema => {
+    delete schema._id;
+    return prefService.updateOne({scope: "passport"}, {$set: {identity: schema}}, {upsert: true});
   };
+  const insert = upsert;
+  const update = upsert;
 
   //@TODO: check why we don't have remove method on preference service
   const remove = async () => {
-    await prefService.replace(
+    await prefService.updateOne(
       {scope: "passport"},
       {
-        scope: "passport",
-        identity: {
-          attributes: {
-            properties: {}
+        $set: {
+          identity: {
+            attributes: {
+              properties: {}
+            }
           }
         }
       }
@@ -39,14 +46,14 @@ export const getSyncProvider = (
   };
 
   const write = schema => {
-    schema._id = schema._id.toString();
-    return manager.write(module, schema._id, "schema", schema, "yaml");
+    console.log(schema);
+    return manager.write(module, "identity", "schema", schema, "yaml");
   };
 
   const rm = schema => manager.rm(module, schema._id);
 
   const readAll = async () => {
-    const resourceNameValidator = id => ObjectId.isValid(id);
+    const resourceNameValidator = name => name == "identity";
     const files = await manager.read(module, resourceNameValidator, ["schema.yaml"]);
     return files.map(file => file.contents.schema);
   };
@@ -62,10 +69,6 @@ export const getSyncProvider = (
     name,
     document,
     representative,
-    parents: 0,
-    comparisonOptions: {
-      uniqueField: "scope",
-      ignoredFields: ["_id"]
-    }
+    parents: 0
   };
 };
