@@ -16,6 +16,8 @@ import {
   SyncDirection,
   VersionControlModule
 } from "@spica-server/versioncontrol";
+import {PreferenceModule} from "@spica-server/preference";
+import {PreferenceService} from "@spica-server/preference/services";
 
 describe("Versioning", () => {
   let module: TestingModule;
@@ -70,30 +72,153 @@ describe("Versioning", () => {
     engine = module.get(FunctionEngine);
   });
 
-  afterEach(async () => {
-    await rep.rm("bucket", "").catch(() => {});
+  describe("preference", () => {
+    const defaultPref = {scope: "passport", identity: {attributes: {}}};
+    let module: TestingModule;
+    let app: INestApplication;
+    let synchronizer: Synchronizer;
+    let rep: RepresentativeManager;
+    let prefService: PreferenceService;
+
+    beforeEach(async () => {
+      module = await Test.createTestingModule({
+        imports: [
+          DatabaseTestingModule.replicaSet(),
+          PreferenceModule.forRoot(),
+          VersionControlModule.forRoot({persistentPath: os.tmpdir()})
+        ]
+      }).compile();
+
+      app = module.createNestApplication();
+
+      synchronizer = module.get(Synchronizer);
+      rep = module.get(RepresentativeManager);
+      prefService = module.get(PreferenceService);
+
+      prefService.default(defaultPref);
+    });
+
+    describe("passport", () => {
+      describe("identity", () => {
+        let preference;
+
+        beforeEach(async () => {
+          preference = {
+            scope: "passport",
+            identity: {
+              attributes: {
+                properties: {
+                  name: {
+                    type: "string",
+                    title: "Name",
+                    description: "Name of the user"
+                  }
+                }
+              }
+            }
+          };
+        });
+
+        describe("Document to representative", () => {
+          beforeEach(async () => {
+            await prefService.insertOne(preference);
+            await synchronizer.synchronize(SyncDirection.DocToRep);
+          });
+          it("should do the initial sync", async () => {
+            const file = await rep.readResource("preference", "identity");
+            expect(file).toEqual({_id: "identity", contents: {schema: preference.identity}});
+          });
+
+          it("should update if schema has changes", async () => {
+            await prefService.updateOne(
+              {scope: "passport"},
+              {$set: {"identity.attributes.properties.name.type": "number"}}
+            );
+            await synchronizer.synchronize(SyncDirection.DocToRep);
+
+            const file = await rep.readResource("preference", "identity");
+            const expectedSchema = {...preference.identity};
+            expectedSchema.attributes.properties.name.type = "number";
+            expect(file).toEqual({_id: "identity", contents: {schema: expectedSchema}});
+          });
+
+          it("should delete if schema has been deleted", async () => {
+            await prefService.deleteOne({scope: "passport"});
+            await synchronizer.synchronize(SyncDirection.DocToRep);
+
+            // it returns the default schema
+            const file = await rep.readResource("preference", "identity");
+            expect(file).toEqual({
+              _id: "identity",
+              contents: {schema: defaultPref.identity}
+            });
+          });
+        });
+
+        describe("Representative to document", () => {
+          beforeEach(async () => {
+            await rep.write("preference", "identity", "schema", preference.identity, "yaml");
+            await synchronizer.synchronize(SyncDirection.RepToDoc);
+          });
+
+          it("should do the initial synchronization", async () => {
+            const document = await prefService.findOne({scope: "passport"});
+            delete document._id;
+            expect(document).toEqual(preference);
+          });
+
+          it("should update if schema has changes", async () => {
+            const updatedSchema = {...preference.identity};
+            updatedSchema.attributes.properties.name.type = "number";
+
+            await rep.write("preference", "identity", "schema", updatedSchema, "yaml");
+            await synchronizer.synchronize(SyncDirection.RepToDoc);
+
+            const document = await prefService.findOne({scope: "passport"});
+            delete document._id;
+            expect(document).toEqual({...preference, identity: updatedSchema});
+          });
+
+          it("should delete if schema is deleted", async () => {
+            await rep.rm("preference", "identity");
+            await synchronizer.synchronize(SyncDirection.RepToDoc);
+
+            const document = await prefService.findOne({scope: "passport"});
+            delete document._id;
+            expect(document).toEqual(defaultPref);
+          });
+        });
+      });
+    });
   });
 
-  describe("Synchronization from database to files", () => {
-    describe("bucket", () => {
-      let bucket;
-      let id: ObjectId;
+  afterEach(async () => {
+    await rep.rm("bucket").catch(() => {});
+    await rep.rm("function").catch(() => {});
+    await rep.rm("preference").catch(() => {});
+  });
 
-      beforeEach(async () => {
-        id = new ObjectId();
-        bucket = {
-          _id: id,
-          title: "bucket1",
-          properties: {
-            title: {
-              type: "string",
-              options: {position: "bottom"}
-            }
-          },
-          acl: {read: "true==true", write: "true==true"},
-          primary: "title"
-        };
-      });
+  describe("bucket", () => {
+    let bucket;
+    let id: ObjectId;
+
+    beforeEach(async () => {
+      id = new ObjectId();
+      bucket = {
+        _id: id,
+        title: "bucket1",
+        properties: {
+          title: {
+            type: "string",
+            options: {position: "bottom"}
+          }
+        },
+        acl: {read: "true==true", write: "true==true"},
+        primary: "title"
+      };
+    });
+
+    describe("Synchronization from database to files", () => {
       it("should make first synchronization", async () => {
         await bs.insertOne(bucket);
         await synchronizer.synchronize(SyncDirection.DocToRep);
@@ -136,7 +261,48 @@ describe("Versioning", () => {
       });
     });
 
-    describe("function", () => {
+    describe("Synchronization from files to database", () => {
+      it("should make first synchronization", async () => {
+        await rep.write("bucket", id.toHexString(), "schema", bucket, "yaml");
+
+        await synchronizer.synchronize(SyncDirection.RepToDoc);
+
+        const buckets = await bs.find();
+        expect(buckets).toEqual([{...bucket, _id: id}]);
+      });
+
+      it("should update if schema has changes", async () => {
+        await rep.write("bucket", id.toHexString(), "schema", bucket, "yaml");
+        await synchronizer.synchronize(SyncDirection.RepToDoc);
+
+        await rep.write(
+          "bucket",
+          id.toHexString(),
+          "schema",
+          {...bucket, title: "new title"},
+          "yaml"
+        );
+        await synchronizer.synchronize(SyncDirection.RepToDoc);
+
+        const buckets = await bs.find({});
+        expect(buckets).toEqual([{...bucket, _id: id, title: "new title"}]);
+      });
+
+      it("should delete if schema has been deleted", async () => {
+        await rep.write("bucket", id.toHexString(), "schema", bucket, "yaml");
+        await synchronizer.synchronize(SyncDirection.RepToDoc);
+
+        await rep.rm("bucket", id.toHexString());
+        await synchronizer.synchronize(SyncDirection.RepToDoc);
+
+        const buckets = await bs.find({});
+        expect(buckets).toEqual([]);
+      });
+    });
+  });
+
+  describe("function", () => {
+    describe("Synchronization from database to files", () => {
       // seperating function tests will increase test duration
       // that's why we are testing all cases in one 'it'
       it("should sync changes", async () => {
@@ -234,64 +400,8 @@ describe("Versioning", () => {
         // we can not install dependency on test environment
       }, 20000);
     });
-  });
 
-  describe("Synchronization from files to database", () => {
-    describe("bucket", () => {
-      let bucket;
-      let id: string;
-
-      beforeEach(async () => {
-        id = new ObjectId().toHexString();
-        bucket = {
-          _id: id,
-          title: "bucket1",
-          properties: {
-            title: {
-              type: "string",
-              options: {position: "bottom"}
-            }
-          },
-          acl: {read: "true==true", write: "true==true"},
-          primary: "title"
-        };
-      });
-
-      it("should make first synchronization", async () => {
-        await rep.write("bucket", id, "schema", bucket, "yaml");
-
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
-
-        const buckets = await bs.find();
-        expect(buckets).toEqual([{...bucket, _id: new ObjectId(id)}]);
-      });
-
-      it("should update if schema has changes", async () => {
-        await rep.write("bucket", id, "schema", bucket, "yaml");
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
-
-        await rep.write("bucket", id, "schema", {...bucket, title: "new title"}, "yaml");
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
-
-        const buckets = await bs.find({});
-        expect(buckets).toEqual([{...bucket, _id: new ObjectId(id), title: "new title"}]);
-      });
-
-      it("should delete if schema has been deleted", async () => {
-        await rep.write("bucket", id, "schema", bucket, "yaml");
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
-
-        await rep.rm("bucket", id);
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
-
-        const buckets = await bs.find({});
-        expect(buckets).toEqual([]);
-      });
-    });
-
-    describe("function", () => {
-      // seperating function tests will increase test duration
-      // that's why we are testing all cases in one 'it'
+    describe("Synchronization from files to database", () => {
       it("should sync changes", async () => {
         // SCHEMA INSERT
         const id = new ObjectId().toHexString();
