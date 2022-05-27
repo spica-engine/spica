@@ -375,7 +375,7 @@ describe("Synchronize", () => {
       it("should analyze indexes", async () => {
         const {insertions, updations, deletions} = await synchronizer.analyze();
 
-        const expectedInserts = [
+        const expectedinsertions = [
           {
             _id: "3",
             name: "fn3",
@@ -391,11 +391,11 @@ describe("Synchronize", () => {
           }
         ];
 
-        expect(insertions).toEqual(expectedInserts);
+        expect(insertions).toEqual(expectedinsertions);
         expect(updations).toEqual(expectedupdations);
         expect(deletions).toEqual([]);
 
-        expect(synchronizer.insertions).toEqual(expectedInserts);
+        expect(synchronizer.insertions).toEqual(expectedinsertions);
         expect(synchronizer.updations).toEqual(expectedupdations);
         expect(synchronizer.deletions).toEqual([]);
 
