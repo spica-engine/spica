@@ -62,6 +62,10 @@ export const getSyncProvider = (
     name,
     document,
     representative,
-    parents: 0
+    parents: 0,
+    comparisonOptions: {
+      uniqueField: "scope",
+      ignoredFields: ["_id"]
+    }
   };
 };
