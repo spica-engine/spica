@@ -24,7 +24,7 @@ describe("Preference Integration", () => {
         }),
         DatabaseTestingModule.replicaSet(),
         PassportTestingModule.initialize(),
-        PreferenceModule,
+        PreferenceModule.forRoot(),
         CoreTestingModule,
         //@ts-ignore
         IdentityModule.forRoot({

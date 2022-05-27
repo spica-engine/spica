@@ -6,13 +6,12 @@ export const getSyncProvider = (
   prefService: PreferenceService,
   manager: IRepresentativeManager
 ): SyncProvider => {
-  //@TODO: check the name convension
   const name = "identity-schema";
   const module = "preference";
 
   const getAll = () =>
     prefService.get("passport").then(s => {
-      return [{...s.identity, _id: "identity"}];
+      return [{...s.identity}];
     });
 
   const upsert = schema => {
@@ -22,16 +21,13 @@ export const getSyncProvider = (
   const insert = upsert;
   const update = upsert;
 
-  //@TODO: check why we don't have remove method on preference service
   const remove = async () => {
     await prefService.updateOne(
       {scope: "passport"},
       {
         $set: {
           identity: {
-            attributes: {
-              properties: {}
-            }
+            attributes: {}
           }
         }
       }
@@ -46,7 +42,6 @@ export const getSyncProvider = (
   };
 
   const write = schema => {
-    console.log(schema);
     return manager.write(module, "identity", "schema", schema, "yaml");
   };
 
