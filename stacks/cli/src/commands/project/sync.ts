@@ -40,7 +40,7 @@ async function sync({
     .map(m => m.trim());
 
   // add new core synchronizer here
-  const coreSynchronizers = [FunctionSynchronizer, BucketSynchronizer];
+  const coreSynchronizers = [FunctionSynchronizer, BucketSynchronizer, ApikeySynchronizer];
   const synchronizers = [];
 
   for (const Ctor of coreSynchronizers) {
@@ -700,6 +700,95 @@ export class BucketSynchronizer implements ModuleSynchronizer {
       )
     );
     await spinUntilPromiseEnd(deletePromiseFactories, "Deleting bucket from the target instance");
+  }
+
+  getDisplayableModuleName(): string {
+    return this.moduleName;
+  }
+}
+
+export class ApikeySynchronizer implements ModuleSynchronizer {
+  moduleName = "apikey";
+  primaryField = "name";
+
+  insertions = [];
+  updations = [];
+  deletions = [];
+
+  constructor(
+    private sourceService: httpService.Client,
+    private targetService: httpService.Client
+  ) {}
+
+  initialize() {
+    return Promise.resolve([]);
+  }
+
+  async analyze() {
+    console.log();
+    const sourceApikeys = await spin<any>({
+      text: "Fetching apikeys from source instance",
+      op: () =>
+        this.sourceService
+          .get<{meta: {total: number}; data: any[]}>("passport/apikey")
+          .then(r => r.data)
+    });
+
+    const targetApikeys = await spin<any>({
+      text: "Fetching apikeys from target instance",
+      op: () =>
+        this.targetService
+          .get<{meta: {total: number}; data: any[]}>("passport/apikey")
+          .then(r => r.data)
+    });
+
+    const decider = new ResourceGroupComparisor(sourceApikeys, targetApikeys);
+
+    this.insertions = decider.insertions();
+    this.updations = decider.updations();
+    this.deletions = decider.deletions();
+
+    return {
+      insertions: this.insertions,
+      updations: this.updations,
+      deletions: this.deletions
+    };
+  }
+
+  async synchronize() {
+    console.log();
+    const insertPromiseFactories = this.insertions.map(apikey => () =>
+      this.targetService.post("passport/apikey", apikey).catch(e =>
+        handleRejection({
+          action: "insert",
+          objectName: this.getDisplayableModuleName() + " " + apikey.name,
+          message: e.message
+        })
+      )
+    );
+    await spinUntilPromiseEnd(insertPromiseFactories, "Inserting apikeys to the target instance");
+
+    const updatePromiseFactories = this.updations.map(apikey => () =>
+      this.targetService.put(`passport/apikey/${apikey._id}`, apikey).catch(e =>
+        handleRejection({
+          action: "update",
+          objectName: this.getDisplayableModuleName() + " " + apikey.name,
+          message: e.message
+        })
+      )
+    );
+    await spinUntilPromiseEnd(updatePromiseFactories, "Updating apikeys on the target instance");
+
+    const deletePromiseFactories = this.deletions.map(apikey => () =>
+      this.targetService.delete(`passport/apikey/${apikey._id}`).catch(e =>
+        handleRejection({
+          action: "delete",
+          objectName: apikey.name,
+          message: e.message
+        })
+      )
+    );
+    await spinUntilPromiseEnd(deletePromiseFactories, "Deleting apikeys from the target instance");
   }
 
   getDisplayableModuleName(): string {
