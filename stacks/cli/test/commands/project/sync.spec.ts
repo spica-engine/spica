@@ -5,6 +5,7 @@ import {
   FunctionDependencySynchronizer,
   FunctionIndexSynchronizer,
   FunctionSynchronizer,
+  PolicySynchronizer,
   ResourceGroupComparisor
 } from "@spica/cli/src/commands/project/sync";
 
@@ -339,6 +340,105 @@ describe("Synchronize", () => {
           ["passport/apikey/2"],
           ["passport/apikey/4"]
         ]);
+      });
+    });
+
+    describe("PolicySynchronizer", () => {
+      const moduleUrl = "passport/policy";
+      const sourceObjects = [
+        {_id: "1", name: "dont_update_me", statements: []},
+        {_id: "2", name: "update_me", statements: []},
+        {_id: "3", name: "insert_me", statements: []}
+      ];
+      const targetObjects = [
+        {_id: "1", name: "dont_update_me", statements: []},
+        {_id: "2", name: "update_me_pls", statements: []},
+        {_id: "4", name: "delete_me"}
+      ];
+      const sourceService = {
+        get: jasmine.createSpy().and.callFake(url => {
+          if (url == moduleUrl) {
+            return Promise.resolve({meta: {total: sourceObjects.length}, data: sourceObjects});
+          }
+          const id = url.split("/")[2];
+          return Promise.resolve(sourceObjects.find(b => b._id == id));
+        }),
+
+        put: jasmine.createSpy().and.callFake(() => Promise.resolve()),
+        post: jasmine.createSpy().and.callFake(() => Promise.resolve()),
+        delete: jasmine.createSpy().and.callFake(() => Promise.resolve())
+      };
+
+      const targetService = {
+        get: jasmine.createSpy().and.callFake(url => {
+          if (url == moduleUrl) {
+            return Promise.resolve({meta: {total: targetObjects.length}, data: targetObjects});
+          }
+          const id = url.split("/")[2];
+          return Promise.resolve(targetObjects.find(b => b._id == id));
+        }),
+
+        put: jasmine.createSpy().and.callFake(policy => Promise.resolve(policy)),
+        post: jasmine.createSpy().and.callFake(policy => Promise.resolve(policy)),
+        delete: jasmine.createSpy().and.callFake(() => Promise.resolve())
+      };
+
+      beforeEach(() => {
+        sourceService.get.calls.reset();
+        sourceService.put.calls.reset();
+        sourceService.post.calls.reset();
+        sourceService.delete.calls.reset();
+
+        targetService.get.calls.reset();
+        targetService.put.calls.reset();
+        targetService.post.calls.reset();
+        targetService.delete.calls.reset();
+      });
+
+      const synchronizer = new PolicySynchronizer(sourceService as any, targetService as any);
+
+      it("should analyze policies", async () => {
+        const result = await synchronizer.analyze();
+
+        const expecteds = {
+          insertions: [{_id: "3", name: "insert_me", statements: []}],
+          updations: [{_id: "2", name: "update_me", statements: []}],
+          deletions: [{_id: "4", name: "delete_me"}]
+        };
+        expect(result).toEqual(expecteds);
+
+        expect(synchronizer.insertions).toEqual(expecteds.insertions);
+        expect(synchronizer.updations).toEqual(expecteds.updations);
+        expect(synchronizer.deletions).toEqual(expecteds.deletions);
+
+        expect(sourceService.get).toHaveBeenCalledOnceWith("passport/policy");
+        expect(sourceService.put).not.toHaveBeenCalled();
+        expect(sourceService.post).not.toHaveBeenCalled();
+
+        expect(targetService.get).toHaveBeenCalledOnceWith("passport/policy");
+        expect(targetService.put).not.toHaveBeenCalled();
+        expect(targetService.post).not.toHaveBeenCalled();
+      });
+
+      it("should synchronize policies", async () => {
+        await synchronizer.analyze();
+        await synchronizer.synchronize();
+
+        expect(sourceService.put).not.toHaveBeenCalled();
+        expect(sourceService.post).not.toHaveBeenCalled();
+        expect(sourceService.delete).not.toHaveBeenCalled();
+
+        expect(targetService.put).toHaveBeenCalledOnceWith("passport/policy/2", {
+          _id: "2",
+          name: "update_me",
+          statements: []
+        });
+        expect(targetService.post).toHaveBeenCalledOnceWith("passport/policy", {
+          _id: "3",
+          name: "insert_me",
+          statements: []
+        });
+        expect(targetService.delete).toHaveBeenCalledOnceWith("passport/policy/4");
       });
     });
   });
