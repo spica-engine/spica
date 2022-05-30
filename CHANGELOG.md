@@ -1,5 +1,19 @@
+## v0.9.22 (2022-05-30)
+
+* feat(cli): synchronize apikeys and policies ([34913dcdb](https://github.com/spica-engine/spica/commit/34913dcdb))
+* fix(cli): ignore-errors and concurrency-limit options for sync command ([ce447fa25](https://github.com/spica-engine/spica/commit/ce447fa25))
+* feat(versioncontrol): adding identity schema to version control ([c0f675fc5](https://github.com/spica-engine/spica/commit/c0f675fc5))
+
+## v0.9.21 (2022-05-16)
+
+* feat(versioncontrol): able to work with different function envs ([cb8ea1e94](https://github.com/spica-engine/spica/commit/cb8ea1e94))
+* fix(passport): filter 2FA enabled identities on DB level ([0e81a4756](https://github.com/spica-engine/spica/commit/0e81a4756))
+* fix(realtime): parse resource filters and apply ([1adec9fad](https://github.com/spica-engine/spica/commit/1adec9fad))
+* fix(versioncontrol): use persistent path to keep version info ([c037b5b5f](https://github.com/spica-engine/spica/commit/c037b5b5f))
+
 ## v0.9.20 (2022-04-14)
 
+* docs: update changelog for v0.9.20 ([c23044103](https://github.com/spica-engine/spica/commit/c23044103))
 * refactor(versioncontrol): add quick start guide ([90b2b3bef](https://github.com/spica-engine/spica/commit/90b2b3bef))
 * fix(cli): better error handling for sync command ([eb6e3bb92](https://github.com/spica-engine/spica/commit/eb6e3bb92))
 * feat(versioncontrol): introduce module that enables controlling version of resources ([5d243f7dc](https://github.com/spica-engine/spica/commit/5d243f7dc))
