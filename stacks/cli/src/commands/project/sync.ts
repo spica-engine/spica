@@ -40,7 +40,12 @@ async function sync({
     .map(m => m.trim());
 
   // add new core synchronizer here
-  const coreSynchronizers = [FunctionSynchronizer, BucketSynchronizer];
+  const coreSynchronizers = [
+    FunctionSynchronizer,
+    BucketSynchronizer,
+    ApikeySynchronizer,
+    PolicySynchronizer
+  ];
   const synchronizers = [];
 
   for (const Ctor of coreSynchronizers) {
@@ -289,7 +294,7 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
       this.targetService.post("function", fn).catch(e =>
         handleRejection({
           action: "insert",
-          message: returnErrorMessage(e),
+          e,
           objectName: this.moduleName + " " + fn.name
         })
       )
@@ -301,7 +306,7 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
       this.targetService.put(`function/${fn._id}`, fn).catch(e =>
         handleRejection({
           action: "update",
-          message: returnErrorMessage(e),
+          e,
           objectName: this.moduleName + " " + fn.name
         })
       )
@@ -313,7 +318,7 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
         handleRejection({
           action: "delete",
           objectName: this.moduleName + " " + fn.name,
-          message: returnErrorMessage(e)
+          e
         })
       )
     );
@@ -395,7 +400,7 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
         this.targetService.post(`function/${this.fn._id}/dependencies`, insertBody).catch(e => {
           handleRejection({
             action: "insert",
-            message: returnErrorMessage(e),
+            e,
             objectName: this.getDisplayableModuleName()
           });
         })
@@ -406,7 +411,7 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
       this.targetService.delete(`function/${this.fn._id}/dependencies/${dep.name}`).catch(e =>
         handleRejection({
           action: "update",
-          message: returnErrorMessage(e),
+          e,
           objectName: this.getDisplayableModuleName()
         })
       )
@@ -500,7 +505,7 @@ export class FunctionIndexSynchronizer implements ModuleSynchronizer {
         handleRejection({
           action: "insert",
           objectName: this.getDisplayableModuleName() + " " + fn.name,
-          message: returnErrorMessage(e)
+          e
         })
       )
     );
@@ -574,7 +579,7 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
         handleRejection({
           action: "insert",
           objectName: this.getDisplayableModuleName() + " " + data[this.primaryField],
-          message: returnErrorMessage(e)
+          e
         })
       )
     );
@@ -587,7 +592,7 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
       this.targetService.put(`bucket/${this.bucket._id}/data/${data._id}`, data).catch(e =>
         handleRejection({
           action: "update",
-          message: returnErrorMessage(e),
+          e,
           objectName: this.getDisplayableModuleName() + " " + data[this.primaryField]
         })
       )
@@ -602,7 +607,7 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
         handleRejection({
           action: "delete",
           objectName: this.getDisplayableModuleName() + " " + data[this.primaryField],
-          message: returnErrorMessage(e)
+          e
         })
       )
     );
@@ -673,7 +678,7 @@ export class BucketSynchronizer implements ModuleSynchronizer {
         handleRejection({
           action: "insert",
           objectName: this.getDisplayableModuleName() + " " + bucket.title,
-          message: returnErrorMessage(e)
+          e
         })
       )
     );
@@ -684,7 +689,7 @@ export class BucketSynchronizer implements ModuleSynchronizer {
         handleRejection({
           action: "update",
           objectName: this.getDisplayableModuleName() + " " + bucket.title,
-          message: returnErrorMessage(e)
+          e
         })
       )
     );
@@ -695,11 +700,217 @@ export class BucketSynchronizer implements ModuleSynchronizer {
         handleRejection({
           action: "delete",
           objectName: bucket.title,
-          message: returnErrorMessage(e)
+          e
         })
       )
     );
     await spinUntilPromiseEnd(deletePromiseFactories, "Deleting bucket from the target instance");
+  }
+
+  getDisplayableModuleName(): string {
+    return this.moduleName;
+  }
+}
+
+export class ApikeySynchronizer implements ModuleSynchronizer {
+  moduleName = "apikey";
+  primaryField = "name";
+
+  insertions = [];
+  updations = [];
+  deletions = [];
+
+  constructor(
+    private sourceService: httpService.Client,
+    private targetService: httpService.Client
+  ) {}
+
+  initialize() {
+    return Promise.resolve([]);
+  }
+
+  async analyze() {
+    console.log();
+    const sourceApikeys = await spin<any>({
+      text: "Fetching apikeys from source instance",
+      op: () =>
+        this.sourceService
+          .get<{meta: {total: number}; data: any[]}>("passport/apikey")
+          .then(r => r.data)
+    });
+
+    const targetApikeys = await spin<any>({
+      text: "Fetching apikeys from target instance",
+      op: () =>
+        this.targetService
+          .get<{meta: {total: number}; data: any[]}>("passport/apikey")
+          .then(r => r.data)
+    });
+
+    const decider = new ResourceGroupComparisor(sourceApikeys, targetApikeys);
+
+    this.insertions = decider.insertions();
+    this.updations = decider.updations();
+    this.deletions = decider.deletions();
+
+    return {
+      insertions: this.insertions,
+      updations: this.updations,
+      deletions: this.deletions
+    };
+  }
+
+  async synchronize() {
+    console.log();
+    const insertPromiseFactories = this.insertions.map(apikey => () => {
+      const insertRejectionHandler = e =>
+        handleRejection({
+          action: "insert",
+          objectName: this.getDisplayableModuleName() + " " + apikey.name,
+          e
+        });
+      const apikeyInsertPromise = this.targetService
+        .post("passport/apikey", apikey)
+        .catch(e => insertRejectionHandler(e));
+
+      return apikeyInsertPromise.then(() => {
+        const policyAttachPromises = apikey.policies.map(policy =>
+          this.targetService
+            .put(`passport/apikey/${apikey._id}/policy/${policy}`)
+            .catch(e => insertRejectionHandler(e))
+        );
+        return Promise.all(policyAttachPromises);
+      });
+    });
+    await spinUntilPromiseEnd(insertPromiseFactories, "Inserting apikeys to the target instance");
+
+    const updatePromiseFactories = this.updations.map(apikey => () => {
+      const rejectionHandler = e => {
+        handleRejection({
+          action: "update",
+          objectName: this.getDisplayableModuleName() + " " + apikey.name,
+          e
+        });
+      };
+
+      // detaching all policies then attaching policies will cause sending a lot of requests, instead we will remove apikey
+      const apikeyDeletePromise = this.targetService
+        .delete(`passport/apikey/${apikey._id}`)
+        .catch(e => rejectionHandler(e));
+      const apikeyInsertPromise = apikeyDeletePromise.then(() =>
+        this.targetService.post(`passport/apikey`, apikey).catch(e => rejectionHandler(e))
+      );
+
+      return apikeyInsertPromise.then(() => {
+        const policyAttachPromises = apikey.policies.map(policy =>
+          this.targetService
+            .put(`passport/apikey/${apikey._id}/policy/${policy}`)
+            .catch(e => rejectionHandler(e))
+        );
+        return Promise.all(policyAttachPromises);
+      });
+    });
+    await spinUntilPromiseEnd(updatePromiseFactories, "Updating apikeys on the target instance");
+
+    const deletePromiseFactories = this.deletions.map(apikey => () =>
+      this.targetService.delete(`passport/apikey/${apikey._id}`).catch(e =>
+        handleRejection({
+          action: "delete",
+          objectName: apikey.name,
+          e
+        })
+      )
+    );
+    await spinUntilPromiseEnd(deletePromiseFactories, "Deleting apikeys from the target instance");
+  }
+
+  getDisplayableModuleName(): string {
+    return this.moduleName;
+  }
+}
+
+export class PolicySynchronizer implements ModuleSynchronizer {
+  moduleName = "policy";
+  primaryField = "name";
+
+  insertions = [];
+  updations = [];
+  deletions = [];
+
+  constructor(
+    private sourceService: httpService.Client,
+    private targetService: httpService.Client
+  ) {}
+
+  initialize() {
+    return Promise.resolve([]);
+  }
+
+  async analyze() {
+    console.log();
+    const sourcePolicies = await spin<any>({
+      text: "Fetching policies from source instance",
+      op: () =>
+        this.sourceService
+          .get<{meta: {total: number}; data: any[]}>("passport/policy")
+          .then(r => r.data)
+    });
+
+    const targetPolicies = await spin<any>({
+      text: "Fetching policies from target instance",
+      op: () =>
+        this.targetService
+          .get<{meta: {total: number}; data: any[]}>("passport/policy")
+          .then(r => r.data)
+    });
+
+    const decider = new ResourceGroupComparisor(sourcePolicies, targetPolicies);
+
+    this.insertions = decider.insertions();
+    this.updations = decider.updations();
+    this.deletions = decider.deletions();
+
+    return {
+      insertions: this.insertions,
+      updations: this.updations,
+      deletions: this.deletions
+    };
+  }
+
+  async synchronize() {
+    console.log();
+    const insertPromiseFactories = this.insertions.map(policy => () =>
+      this.targetService.post("passport/policy", policy).catch(e =>
+        handleRejection({
+          action: "insert",
+          objectName: this.getDisplayableModuleName() + " " + policy.name,
+          e
+        })
+      )
+    );
+    await spinUntilPromiseEnd(insertPromiseFactories, "Inserting policies to the target instance");
+
+    const updatePromiseFactories = this.updations.map(policy => () =>
+      this.targetService.put(`passport/policy/${policy._id}`, policy).catch(e =>
+        handleRejection({
+          action: "update",
+          objectName: this.getDisplayableModuleName() + " " + policy.name,
+          e
+        })
+      )
+    );
+    await spinUntilPromiseEnd(updatePromiseFactories, "Updating policies on the target instance");
+
+    const deletePromiseFactories = this.deletions.map(policy => () =>
+      this.targetService.delete(`passport/policy/${policy._id}`).catch(e =>
+        handleRejection({
+          action: "delete",
+          objectName: policy.name,
+          e
+        })
+      )
+    );
+    await spinUntilPromiseEnd(deletePromiseFactories, "Deleting policies from the target instance");
   }
 
   getDisplayableModuleName(): string {
@@ -778,10 +989,11 @@ function spinUntilPromiseEnd(promiseFactories: (() => Promise<any>)[], label: st
   });
 }
 
-function handleRejection({action, objectName, message}) {
+function handleRejection({action, objectName, e}) {
+  const errorMessage = returnErrorMessage(e);
   const msg: any = `
 Failed to ${action} ${bold(objectName)}.
-${message}`;
+${errorMessage}`;
 
   if (IGNORE_ERRORS) {
     return console.warn(msg);

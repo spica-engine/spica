@@ -4,6 +4,15 @@
   "type": "object",
   "required": ["name"],
   "properties": {
+    "_id": {
+      "type": "string",
+      "format": "objectid",
+      "description": "Unique objectid of the apikey"
+    },
+    "key":{
+      "type":"string",
+      "description": "Key of the apikey."
+    },
     "name": {
       "type": "string"
     },

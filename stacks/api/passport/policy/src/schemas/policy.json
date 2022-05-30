@@ -6,6 +6,11 @@
   "additionalProperties": false,
   "required": ["name", "description", "statement"],
   "properties": {
+    "_id": {
+      "type": "string",
+      "format": "objectid",
+      "description": "Unique objectid of the policy"
+    },
     "name": {
       "type": "string",
       "title": "Name of the policy"

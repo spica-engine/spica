@@ -5,6 +5,8 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {ApiKeyModule} from "@spica-server/passport/apikey";
+import {SchemaModule} from "@spica-server/core/schema";
+import {OBJECT_ID} from "@spica-server/core/schema/formats";
 
 describe("ApiKey", () => {
   let req: Request;
@@ -17,7 +19,8 @@ describe("ApiKey", () => {
         CoreTestingModule,
         PreferenceTestingModule,
         PassportTestingModule.initialize(),
-        ApiKeyModule.forRoot()
+        ApiKeyModule.forRoot(),
+        SchemaModule.forRoot({formats: [OBJECT_ID]})
       ]
     }).compile();
 
@@ -139,6 +142,19 @@ describe("ApiKey", () => {
       expect(apiKey.description).toBe("test");
       expect(apiKey.key).not.toBeFalsy();
       expect(apiKey.active).toBe(true);
+    });
+
+    it("should add apikey with id and key", async () => {
+      const id = new ObjectId();
+      const body = {
+        _id: id,
+        key: "super_secret_key",
+        name: "test",
+        description: "test"
+      };
+      const {body: apiKey} = await req.post("/passport/apikey", body);
+
+      expect(apiKey).toEqual({...body, _id: id.toHexString(), active: true, policies: []});
     });
 
     it("should return validation errors", async () => {
