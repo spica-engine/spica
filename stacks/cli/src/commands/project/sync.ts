@@ -757,26 +757,56 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
 
   async synchronize() {
     console.log();
-    const insertPromiseFactories = this.insertions.map(apikey => () =>
-      this.targetService.post("passport/apikey", apikey).catch(e =>
+    const insertPromiseFactories = this.insertions.map(apikey => () => {
+      const rejectionHandler = e => {
         handleRejection({
           action: "insert",
           objectName: this.getDisplayableModuleName() + " " + apikey.name,
           message: e.message
-        })
-      )
-    );
+        });
+      };
+
+      const apikeyInsertPromise = this.targetService
+        .post("passport/apikey", apikey)
+        .catch(e => rejectionHandler(e));
+
+      return apikeyInsertPromise.then(() => {
+        const policyAttachPromises = apikey.policies.map(policy =>
+          this.targetService
+            .put(`passport/apikey/${apikey._id}/policy/${policy}`)
+            .catch(e => rejectionHandler(e))
+        );
+        return Promise.all(policyAttachPromises);
+      });
+    });
     await spinUntilPromiseEnd(insertPromiseFactories, "Inserting apikeys to the target instance");
 
-    const updatePromiseFactories = this.updations.map(apikey => () =>
-      this.targetService.put(`passport/apikey/${apikey._id}`, apikey).catch(e =>
+    const updatePromiseFactories = this.updations.map(apikey => () => {
+      const rejectionHandler = e => {
         handleRejection({
           action: "update",
           objectName: this.getDisplayableModuleName() + " " + apikey.name,
           message: e.message
-        })
-      )
-    );
+        });
+      };
+
+      // detaching all policies then attaching policies will cause sending a lot of requests, instead we will remove apikey
+      const apikeyDeletePromise = this.targetService
+        .delete(`passport/apikey/${apikey._id}`)
+        .catch(e => rejectionHandler(e));
+      const apikeyInsertPromise = apikeyDeletePromise.then(() =>
+        this.targetService.post(`passport/apikey`, apikey).catch(e => rejectionHandler(e))
+      );
+
+      return apikeyInsertPromise.then(() => {
+        const policyAttachPromises = apikey.policies.map(policy =>
+          this.targetService
+            .put(`passport/apikey/${apikey._id}/policy/${policy}`)
+            .catch(e => rejectionHandler(e))
+        );
+        return Promise.all(policyAttachPromises);
+      });
+    });
     await spinUntilPromiseEnd(updatePromiseFactories, "Updating apikeys on the target instance");
 
     const deletePromiseFactories = this.deletions.map(apikey => () =>
