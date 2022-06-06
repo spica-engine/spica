@@ -1,0 +1,9 @@
+<button
+  mat-icon-button
+  [class.mat-flat-button]="dark$ | async"
+  [matTooltip]="passport.token"
+  #clipboard="matClipboard"
+  [matClipboard]="passport.token"
+>
+  <mat-icon>{{ clipboard.icon == "content_paste" ? "key" : clipboard.icon }}</mat-icon>
+</button>

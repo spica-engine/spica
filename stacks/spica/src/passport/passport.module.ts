@@ -26,8 +26,9 @@ import {MatTooltipModule} from "@angular/material/tooltip";
 import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
 import {LAYOUT_ACTIONS, ROUTE_FILTERS} from "@spica-client/core";
 import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
-import {MatAwareDialogModule} from "@spica-client/material";
+import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {provideActivityFactory} from "@spica-client/passport/providers/activity";
+import {AccessTokenComponent} from "./components/access-token/access-token.component";
 import {IdentityBadgeComponent} from "./components/identity-badge/identity-badge.component";
 import {StrategyDialogComponent} from "./components/strategy-dialog/strategy-dialog.component";
 import {CanInteractDirective} from "./directives/can-interact.directive";
@@ -68,7 +69,8 @@ import {MatFormFieldModule} from "@angular/material/form-field";
     ApiKeyIndexComponent,
     ApiKeyAddComponent,
     StrategyDialogComponent,
-    PolicyResourceAddComponent
+    PolicyResourceAddComponent,
+    AccessTokenComponent
   ],
   imports: [
     CommonModule,
@@ -100,7 +102,8 @@ import {MatFormFieldModule} from "@angular/material/form-field";
     SpicaCommon,
     MatResizeHeaderModule,
     MatSortModule,
-    MatFormFieldModule
+    MatFormFieldModule,
+    MatClipboardModule
   ],
   exports: [CanInteractDirective],
   entryComponents: [IdentityBadgeComponent, StrategyDialogComponent]
@@ -112,6 +115,7 @@ export class PassportModule {
       providers: [
         {provide: HTTP_INTERCEPTORS, useClass: AuthorizationInterceptor, multi: true},
         {provide: LAYOUT_ACTIONS, useValue: IdentityBadgeComponent, multi: true},
+        {provide: LAYOUT_ACTIONS, useValue: AccessTokenComponent, multi: true},
         {provide: ROUTE_FILTERS, useExisting: PassportRouteFilter, multi: true},
         {provide: ACTIVITY_FACTORY, useValue: provideActivityFactory, multi: true}
       ]
