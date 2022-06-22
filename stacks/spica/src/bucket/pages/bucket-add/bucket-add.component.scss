@@ -17,6 +17,16 @@
       display: none;
     }
   }
+  .icon-container {
+    padding: 8px;
+    .search-icon {
+      width: 100%;
+      mat-icon {
+        color: var(--foreground-icon);
+      }
+    }
+  }
+
   .property {
     width: 100%;
     padding: 5px 0px;
