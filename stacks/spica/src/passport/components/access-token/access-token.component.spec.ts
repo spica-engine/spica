@@ -1,16 +1,15 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from "@angular/core/testing";
 
-import { AccessTokenComponent } from './access-token.component';
+import {AccessTokenComponent} from "./access-token.component";
 
-describe('AccessTokenComponent', () => {
+describe("AccessTokenComponent", () => {
   let component: AccessTokenComponent;
   let fixture: ComponentFixture<AccessTokenComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ AccessTokenComponent ]
-    })
-    .compileComponents();
+      declarations: [AccessTokenComponent]
+    }).compileComponents();
   });
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('AccessTokenComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });
