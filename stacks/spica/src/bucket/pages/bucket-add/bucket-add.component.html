@@ -15,27 +15,34 @@
           <mat-icon>{{ bucket?.icon }}</mat-icon>
           <mat-menu #iconSelector="matMenu">
             <ng-container matMenuContent>
-              <button
-                *ngFor="let icon of visibleIcons"
-                mat-icon-button
-                mat-flat-button
-                [matTooltip]="icon"
-                (click)="bucket.icon = icon"
-              >
-                <mat-icon>{{ icon }}</mat-icon>
-              </button>
-              <mat-paginator
-                (page)="
-                  this.visibleIcons = this.icons.slice(
-                    $event.pageIndex * $event.pageSize,
-                    ($event.pageIndex + 1) * $event.pageSize
-                  )
-                "
-                (click)="$event.stopPropagation()"
-                [length]="icons.length"
-                [pageSize]="iconPageSize"
-              >
-              </mat-paginator>
+              <div class="icon-container">
+                <mat-form-field class="search-icon" (click)="$event.stopPropagation()">
+                  <mat-icon matPrefix>search</mat-icon>
+                  <input
+                    type="text"
+                    matInput
+                    placeholder="Search an icon.."
+                    [(ngModel)]="searchIconText"
+                    (ngModelChange)="setIcons()"
+                  />
+                </mat-form-field>
+                <button
+                  *ngFor="let icon of visibleIcons"
+                  mat-icon-button
+                  mat-flat-button
+                  [matTooltip]="icon"
+                  (click)="bucket.icon = icon; searchIconText = ''; setIcons()"
+                >
+                  <mat-icon>{{ icon }}</mat-icon>
+                </button>
+                <mat-paginator
+                  (page)="setIcons($event)"
+                  (click)="$event.stopPropagation()"
+                  [length]="icons.length"
+                  [pageSize]="iconPageSize"
+                >
+                </mat-paginator>
+              </div>
             </ng-container>
           </mat-menu>
         </button>
