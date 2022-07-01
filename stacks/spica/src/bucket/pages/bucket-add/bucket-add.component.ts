@@ -40,10 +40,11 @@ import {AddFieldModalComponent} from "../add-field-modal/add-field-modal.compone
 })
 export class BucketAddComponent implements OnInit, OnDestroy {
   readonly inputTypes: string[];
-  readonly icons: Array<string> = ICONS;
-  readonly iconPageSize = 21;
+  readonly iconPageSize = 24;
 
+  icons: Array<string> = ICONS;
   configurationState = "meta";
+  searchIconText: string = "";
 
   visibleIcons: Array<any> = this.icons.slice(0, this.iconPageSize);
 
@@ -213,5 +214,14 @@ export class BucketAddComponent implements OnInit, OnDestroy {
         limitExceedBehaviour: LimitExceedBehaviour.PREVENT
       };
     }
+  }
+
+  setIcons(event = {pageIndex: 0, pageSize: this.iconPageSize}) {
+    this.icons = ICONS.filter(icon => icon.includes(this.searchIconText.toLowerCase()));
+
+    this.visibleIcons = this.icons.slice(
+      event.pageIndex * event.pageSize,
+      (event.pageIndex + 1) * event.pageSize
+    );
   }
 }
