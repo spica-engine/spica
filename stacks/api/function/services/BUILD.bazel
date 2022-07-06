@@ -10,6 +10,7 @@ ts_project(
         "index.ts",
     ]),
     deps = [
+        "//packages/interface/function",
         "//packages/database",
         "@npm//@nestjs/common",
         "@npm//@types/mongodb",

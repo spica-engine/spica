@@ -1,8 +1,7 @@
 import {ObjectId} from "@spica-server/database";
-
 export interface Function {
   _id?: string | ObjectId;
-  name?: string;
+  name: string;
   description?: string;
   env: Environment;
   triggers: Triggers;
