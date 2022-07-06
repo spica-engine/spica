@@ -1,48 +1,222 @@
-// async function orm({options}: ActionParameters) {
-//     const APIKEY = options.apikey as string;
-//     const APIURL = options.url as string;
-//     const PATH = (options.path as string) || "";
-//     const DESTINATION = path.join(PATH, "bucket.ts");
-  
-//     await spin({
-//       text: "Fetching functions..",
-//       op: async spinner => {
-//         const buckets = await axios
-//           .get<BucketSchema[]>(APIURL + "/bucket", {
-//             headers: {
-//               Authorization: `APIKEY ${APIKEY}`
-//             }
-//           })
-//           .then(r => r.data);
-  
-//         spinner.text = "Building interface and method definitions..";
-  
-//         const warnings: string[] = [];
-//         const content = Schema.createFileContent(buckets, APIKEY, APIURL, warnings);
-  
-//         spinner.text = "Writing to the destination..";
-//         fs.writeFileSync(DESTINATION, content);
-  
-//         spinner.text = `Succesfully completed! File url is ${
-//           PATH ? DESTINATION : path.join(process.cwd(), "bucket.ts")
-//         }`;
-  
-//         if (warnings.length) {
-//           spinner.warn(warnings.join());
-//         }
-//       }
-//     });
-//   }
-  
-//   export default function({createCommand}: CreateCommandParameters): Command {
-//     return createCommand("Create object relational mapping applied version of @spica-devkit/bucket")
-//       .option("--url <url>", "Url of the API.", {required: true})
-//       .option("-a <apikey>, --apikey <apikey>", "Authorize via an API Key.", {required: true})
-//       .option(
-//         "--path <path>",
-//         "Full URL of the destination folder that the file will be created into. The current directory will be used as default"
-//       )
-//       .action(orm);
-//   }
+import {ActionParameters, CreateCommandParameters, Command} from "@caporal/core";
+import {Function, Triggers, Trigger} from "@spica-server/interface/function";
+import axios from "axios";
+import * as path from "path";
+import * as fs from "fs";
+import * as ts from "typescript";
+import {spin} from "../../console";
 
-//   export interface FunctionSchema
+async function orm({options}: ActionParameters) {
+  const APIKEY = options.apikey as string;
+  const APIURL = options.url as string;
+  const PATH = (options.path as string) || "";
+  const TRIGGER_TYPES = options.triggerTypes as string[];
+
+  await spin({
+    text: "Fetching functions..",
+    op: async spinner => {
+      const config = {
+        headers: {
+          Authorization: `APIKEY ${APIKEY}`
+        }
+      };
+
+      const functions = await axios
+        .get<FunctionWithIndex[]>(APIURL + "/function", config)
+        .then(r => {
+          const fns = r.data;
+          const promises = fns.map(fn =>
+            axios.get(`${APIURL}/function/${fn._id}/index`, config).then(r => {
+              fn.index = r.data.index;
+            })
+          );
+          return Promise.all(promises).then(() => fns);
+        });
+
+      spinner.text = "Building interface and method definitions..";
+
+      const warnings: string[] = [];
+      const content = Schema.createFileContent(functions, APIURL, TRIGGER_TYPES);
+
+      //   spinner.text = "Writing to the destination..";
+      //   fs.writeFileSync(DESTINATION, content);
+
+      //   spinner.text = `Succesfully completed! File url is ${
+      //     PATH ? DESTINATION : path.join(process.cwd(), "bucket.ts")
+      //   }`;
+
+      //   if (warnings.length) {
+      //     spinner.warn(warnings.join());
+      //   }
+    }
+  });
+}
+
+export default function({createCommand}: CreateCommandParameters): Command {
+  return createCommand(
+    "Create object relational mapping applied file to interact with spica API functions"
+  )
+    .option("--url <url>", "Url of the API.", {required: true})
+    .option("-a <apikey>, --apikey <apikey>", "Authorize via an API Key.", {required: true})
+    .option(
+      "--path <path>",
+      "Full URL of the destination folder that the file will be created into. The current directory will be used as default"
+    )
+    .option(
+      "--trigger-types <trigger-types>",
+      "Trigger types that will be filtered. Default value is http.",
+      {
+        default: ["http"]
+      }
+    )
+    .action(orm);
+}
+
+export namespace Schema {
+  export function createFileContent(
+    functions: FunctionWithIndex[],
+    apiUrl: string,
+    triggerTypes: string[]
+  ) {
+    for (const fn of functions) {
+      const ast = ts.createSourceFile("source.ts", fn.index, ts.ScriptTarget.Latest);
+      fn.triggers = filterTriggerTypes(fn.triggers, triggerTypes);
+
+      //@ts-ignore
+      ast.statements = filterAstStatements(ast.statements, fn.triggers);
+
+      for (const [handler, trigger] of Object.entries(fn.triggers)) {
+        const builder = builders.find(b => b.name == trigger.type);
+        if (!builder) {
+          throw Error(`There is no code builder for trigger type ${trigger.type}`);
+        }
+
+        const topStatements = builder.topStatements();
+
+        //@ts-ignore
+        ast.statements = ast.statements.concat(topStatements, ast.statements);
+
+        const handlerStatemet = findHandlerStatement(handler, ast.statements);
+        builder.build(handlerStatemet, trigger, apiUrl);
+      }
+    }
+  }
+
+  export function getTriggerHandlers(triggers: Triggers) {
+    return Object.keys(triggers);
+  }
+
+  export function filterTriggerTypes(triggers: Triggers, types: string[]) {
+    return Object.entries(triggers)
+      .filter(([_, value]) => types.includes(value.type))
+      .reduce((acc, [key, value]) => {
+        acc[key] = value;
+        return acc;
+      }, {});
+  }
+
+  export function filterAstStatements(
+    statements: ts.NodeArray<ts.Statement>,
+    triggers: Triggers
+  ): ts.FunctionDeclaration[] {
+    const triggerHandlers = getTriggerHandlers(triggers);
+    return statements.filter(
+      node =>
+        ts.isFunctionDeclaration(node) && triggerHandlers.includes(node.name.escapedText as string)
+    ) as ts.FunctionDeclaration[];
+  }
+
+  export function findHandlerStatement(
+    handler: string,
+    statements: ts.NodeArray<ts.Statement>
+  ): ts.FunctionDeclaration {
+    return statements.find(
+      node => ts.isFunctionDeclaration(node) && (node.name.escapedText as string) == handler
+    ) as ts.FunctionDeclaration;
+  }
+
+  export const Http: CodeBuilder = {
+    name: "http",
+    topStatements: () =>
+      [
+        ts.factory.createImportDeclaration(
+          undefined,
+          undefined,
+          ts.factory.createImportClause(undefined, ts.factory.createIdentifier("axios"), undefined),
+          ts.factory.createStringLiteral("axios")
+        )
+      ] as ts.Statement[],
+    build: (node, trigger, baseUrl) => {
+      // empty body and parameters
+      //@ts-ignore
+      node.parameters = [
+        createParameterDeclaration("params", ts.SyntaxKind.AnyKeyword),
+        createParameterDeclaration("data", ts.SyntaxKind.AnyKeyword)
+      ];
+      //@ts-ignore
+      node.body = ts.factory.createBlock(
+        [
+          ts.factory.createReturnStatement(
+            ts.factory.createCallExpression(
+              ts.factory.createPropertyAccessExpression(
+                ts.factory.createIdentifier("axios"),
+                ts.factory.createIdentifier("request")
+              ),
+              undefined,
+              [
+                ts.factory.createObjectLiteralExpression(
+                  [
+                    ts.factory.createShorthandPropertyAssignment(
+                      ts.factory.createIdentifier("params"),
+                      undefined
+                    ),
+                    ts.factory.createShorthandPropertyAssignment(
+                      ts.factory.createIdentifier("data"),
+                      undefined
+                    ),
+                    ts.factory.createPropertyAssignment(
+                      ts.factory.createIdentifier("method"),
+                      ts.factory.createStringLiteral(trigger.options.method)
+                    ),
+                    ts.factory.createShorthandPropertyAssignment(
+                      ts.factory.createIdentifier("url"),
+                      ts.factory.createStringLiteral(
+                        `${baseUrl}/fn-execute/${trigger.options.path}`
+                      )
+                    )
+                  ],
+                  false
+                )
+              ]
+            )
+          )
+        ],
+        true
+      );
+
+      return node;
+    }
+  };
+
+  export function createParameterDeclaration(name: string, type: ts.KeywordTypeSyntaxKind) {
+    return ts.factory.createParameterDeclaration(
+      undefined,
+      undefined,
+      undefined,
+      ts.factory.createIdentifier(name),
+      undefined,
+      ts.factory.createKeywordTypeNode(type),
+      undefined
+    );
+  }
+
+  const builders: CodeBuilder[] = [Http];
+}
+
+type FunctionWithIndex = Function & {index: string};
+
+export interface CodeBuilder {
+  name: string;
+  topStatements: () => ts.Statement[];
+  build: (node: ts.FunctionDeclaration, trigger: Trigger, baseUrl?: string) => ts.Statement;
+}
