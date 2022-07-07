@@ -5,6 +5,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as ts from "typescript";
 import {spin} from "../../console";
+import {FunctionWithIndex} from "../../compile";
 
 async function orm({options}: ActionParameters) {
   const APIKEY = options.apikey as string;
@@ -79,26 +80,21 @@ export namespace Schema {
     triggerTypes: string[]
   ) {
     for (const fn of functions) {
-      const ast = ts.createSourceFile("source.ts", fn.index, ts.ScriptTarget.Latest);
-      fn.triggers = filterTriggerTypes(fn.triggers, triggerTypes);
-
-      //@ts-ignore
-      ast.statements = filterAstStatements(ast.statements, fn.triggers);
-
-      for (const [handler, trigger] of Object.entries(fn.triggers)) {
-        const builder = builders.find(b => b.name == trigger.type);
-        if (!builder) {
-          throw Error(`There is no code builder for trigger type ${trigger.type}`);
-        }
-
-        const topStatements = builder.topStatements();
-
-        //@ts-ignore
-        ast.statements = ast.statements.concat(topStatements, ast.statements);
-
-        const handlerStatemet = findHandlerStatement(handler, ast.statements);
-        builder.build(handlerStatemet, trigger, apiUrl);
-      }
+      // const ast = ts.createSourceFile("source.ts", fn.index, ts.ScriptTarget.Latest);
+      // fn.triggers = filterTriggerTypes(fn.triggers, triggerTypes);
+      // //@ts-ignore
+      // ast.statements = filterAstStatements(ast.statements, fn.triggers);
+      // for (const [handler, trigger] of Object.entries(fn.triggers)) {
+      //   const builder = builders.find(b => b.name == trigger.type);
+      //   if (!builder) {
+      //     throw Error(`There is no code builder for trigger type ${trigger.type}`);
+      //   }
+      //   const topStatements = builder.getImportStatements();
+      //   //@ts-ignore
+      //   ast.statements = ast.statements.concat(topStatements, ast.statements);
+      //   const handlerStatemet = findHandlerStatement(handler, ast.statements);
+      //   builder.build(handlerStatemet, trigger, apiUrl);
+      // }
     }
   }
 
@@ -137,7 +133,7 @@ export namespace Schema {
 
   export const Http: CodeBuilder = {
     name: "http",
-    topStatements: () =>
+    getImportStatements: () =>
       [
         ts.factory.createImportDeclaration(
           undefined,
@@ -148,52 +144,6 @@ export namespace Schema {
       ] as ts.Statement[],
     build: (node, trigger, baseUrl) => {
       // empty body and parameters
-      //@ts-ignore
-      node.parameters = [
-        createParameterDeclaration("params", ts.SyntaxKind.AnyKeyword),
-        createParameterDeclaration("data", ts.SyntaxKind.AnyKeyword)
-      ];
-      //@ts-ignore
-      node.body = ts.factory.createBlock(
-        [
-          ts.factory.createReturnStatement(
-            ts.factory.createCallExpression(
-              ts.factory.createPropertyAccessExpression(
-                ts.factory.createIdentifier("axios"),
-                ts.factory.createIdentifier("request")
-              ),
-              undefined,
-              [
-                ts.factory.createObjectLiteralExpression(
-                  [
-                    ts.factory.createShorthandPropertyAssignment(
-                      ts.factory.createIdentifier("params"),
-                      undefined
-                    ),
-                    ts.factory.createShorthandPropertyAssignment(
-                      ts.factory.createIdentifier("data"),
-                      undefined
-                    ),
-                    ts.factory.createPropertyAssignment(
-                      ts.factory.createIdentifier("method"),
-                      ts.factory.createStringLiteral(trigger.options.method)
-                    ),
-                    ts.factory.createShorthandPropertyAssignment(
-                      ts.factory.createIdentifier("url"),
-                      ts.factory.createStringLiteral(
-                        `${baseUrl}/fn-execute/${trigger.options.path}`
-                      )
-                    )
-                  ],
-                  false
-                )
-              ]
-            )
-          )
-        ],
-        true
-      );
-
       return node;
     }
   };
@@ -213,10 +163,8 @@ export namespace Schema {
   const builders: CodeBuilder[] = [Http];
 }
 
-type FunctionWithIndex = Function & {index: string};
-
 export interface CodeBuilder {
   name: string;
-  topStatements: () => ts.Statement[];
+  getImportStatements: () => ts.Statement[];
   build: (node: ts.FunctionDeclaration, trigger: Trigger, baseUrl?: string) => ts.Statement;
 }

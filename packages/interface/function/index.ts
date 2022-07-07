@@ -15,7 +15,7 @@ export interface Triggers {
 export interface Trigger {
   type: string;
   active?: boolean;
-  options: unknown;
+  options: any;
 }
 
 export interface Environment {

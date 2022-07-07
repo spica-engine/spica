@@ -6,7 +6,7 @@ load("@npm_cli//@bazel/jasmine:index.bzl", "jasmine_node_test")
 ts_project(
     name = "schema_test_lib",
     testonly = True,
-    srcs = ["schema.spec.ts"],
+    srcs = ["schema.spec.ts","compile.spec.ts"],
     declaration = True,
     resolve_json_module = True,
     source_map = True,
