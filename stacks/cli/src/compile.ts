@@ -6,7 +6,7 @@ export class HttpTransformer implements TriggerTransformer {
   constructor(private triggers: Triggers, private baseUrl: string) {}
 
   getImportDeclarations(): ts.ImportDeclaration[] {
-    const src = codeToAst("import * as axios from 'axios';");
+    const src = codeToAst("import axios from 'axios';");
     return [src.statements[0]] as ts.ImportDeclaration[];
   }
 
