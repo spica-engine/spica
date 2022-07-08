@@ -60,7 +60,7 @@ export function unrelated(){
 
   it("should filter handlers on code", () => {
     let src = createSrc(index);
-    const transformer = compiler.getCodeHandlerFilterer(["register"]);
+    const transformer = compiler.getHandlerFiltererTransformer(["register"]);
 
     src = ts.transform(src, [transformer]).transformed[0] as ts.SourceFile;
 

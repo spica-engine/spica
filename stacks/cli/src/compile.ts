@@ -1,10 +1,9 @@
-import { Triggers, Function } from "@spica-server/interface/function";
+import { Triggers, Function, Trigger } from "@spica-server/interface/function";
 import * as ts from "typescript";
 
-export class HttpTransformer implements Transformer {
+export class HttpTransformer implements TriggerTransformer {
   static _name = "http";
-  constructor(private triggers: Triggers, private baseUrl: string) {
-  }
+  constructor(private triggers: Triggers, private baseUrl: string) {}
 
   getImportDeclarations(): ts.ImportDeclaration[] {
     const src = codeToAst("import * as axios from 'axios';");
@@ -12,26 +11,24 @@ export class HttpTransformer implements Transformer {
   }
 
   getTransformer() {
-    const transformer =
-      <T extends ts.Node>(context: ts.TransformationContext) =>
-      (rootNode: T) => {
-        const visitor = this.getVisitor(this.triggers, context);
-        return ts.visitNode(rootNode, visitor);
-      };
+    const transformer: Transformer = (context) => (rootNode) => {
+      const visitor = this.getVisitor(this.triggers, context);
+      return ts.visitNode(rootNode, visitor);
+    };
     return transformer;
   }
 
   getVisitor(triggers: Triggers, context: ts.TransformationContext) {
-    const visitor = (node: ts.Node): ts.Node => {
-      if(ts.isSourceFile(node)){
+    const visitor: Visitor = (node) => {
+      if (ts.isSourceFile(node)) {
         return ts.visitEachChild(node, visitor, context);
       }
       // if node is one of trigger handler, modify and return it
-      const handler = (node as ts.FunctionDeclaration).name?.escapedText as string
+      const handler = (node as ts.FunctionDeclaration).name
+        ?.escapedText as string;
       const trigger = triggers[handler];
       if (ts.isFunctionDeclaration(node) && trigger) {
-
-        const url = `${this.baseUrl}/fn-execute${trigger.options.path}`
+        const url = `${this.baseUrl}/fn-execute${trigger.options.path}`;
         const method = trigger.options.method;
         const isDefault = handler == "default";
 
@@ -112,14 +109,17 @@ export class HttpTransformer implements Transformer {
 
         const fnBody = ts.factory.createBlock([returnStatement], true);
 
-        const modifiers:ts.ModifierToken<ts.ModifierSyntaxKind>[] = [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)];
-        let name = ts.factory.createIdentifier(handler)
-        if(isDefault){
-          modifiers.push(ts.factory.createModifier(ts.SyntaxKind.DefaultKeyword))
-          name = undefined
+        const modifiers: ts.ModifierToken<ts.ModifierSyntaxKind>[] = [
+          ts.factory.createModifier(ts.SyntaxKind.ExportKeyword),
+        ];
+        let name = ts.factory.createIdentifier(handler);
+        if (isDefault) {
+          modifiers.push(
+            ts.factory.createModifier(ts.SyntaxKind.DefaultKeyword)
+          );
+          name = undefined;
         }
 
-        
         return ts.factory.updateFunctionDeclaration(
           node,
           undefined,
@@ -133,17 +133,19 @@ export class HttpTransformer implements Transformer {
         );
       }
 
-      return node
+      return node;
     };
 
     return visitor;
   }
 }
 
-export const defaultTriggerTransformerFactories: Map<
+export type TriggerTransformerFactoryMap = Map<
   string,
-  (...args) => Transformer
-> = new Map();
+  (...args) => TriggerTransformer
+>;
+export const defaultTriggerTransformerFactories: TriggerTransformerFactoryMap =
+  new Map();
 defaultTriggerTransformerFactories.set(
   HttpTransformer._name,
   (triggers, baseUrl) => new HttpTransformer(triggers, baseUrl)
@@ -158,12 +160,11 @@ export class FunctionCompiler {
     private fn: FunctionWithIndex,
     private triggerTypes: string[],
     private baseUrl: string,
-    private triggerTransformerFactories: Map<
-      string,
-      (...args) => Transformer
-    > = defaultTriggerTransformerFactories
+    private triggerTransformerFactories: TriggerTransformerFactoryMap = defaultTriggerTransformerFactories
   ) {
-    this.filterNecessaryTriggers();
+    this.fn.triggers = this.filterTriggers(this.fn.triggers, ([_, trigger]) =>
+      this.triggerTypes.includes(trigger.type)
+    );
     this.sourceFile = ts.createSourceFile(
       fn.name,
       fn.index,
@@ -174,12 +175,15 @@ export class FunctionCompiler {
   compile() {
     const transformers = [];
     const imports: ts.ImportDeclaration[] = [];
+
     // eliminate unnecessary statements
     const handlerNames = this.getHandlerNames();
-    const baseFilterTransformer = this.getCodeHandlerFilterer(handlerNames);
-    transformers.push(baseFilterTransformer);
+    const handlerFiltererTransormer =
+      this.getHandlerFiltererTransformer(handlerNames);
+    transformers.push(handlerFiltererTransormer);
 
-    for(const triggerType of this.triggerTypes){
+    // update triggers
+    for (const triggerType of this.triggerTypes) {
       const factory = this.triggerTransformerFactories.get(triggerType);
       if (!factory) {
         throw Error(
@@ -187,14 +191,14 @@ export class FunctionCompiler {
         );
       }
 
-      const relevantTriggers = Object.entries(this.fn.triggers).filter(([_,trigger]) => trigger.type == triggerType).reduce((acc,[handler,trigger]) => {
-        acc[handler] = trigger;
-        return acc;
-      },{})
+      const relevantTriggers = this.filterTriggers(
+        this.fn.triggers,
+        ([_, trigger]) => trigger.type == triggerType
+      );
 
       const transformer = factory(relevantTriggers, this.baseUrl);
       imports.push(...transformer.getImportDeclarations());
-      transformers.push(transformer.getTransformer())
+      transformers.push(transformer.getTransformer());
     }
 
     this.sourceFile = ts.transform(
@@ -215,57 +219,61 @@ export class FunctionCompiler {
     return Object.keys(this.fn.triggers);
   }
 
-  filterNecessaryTriggers() {
-    this.fn.triggers = Object.entries(this.fn.triggers)
-      .filter(([_, trigger]) => this.triggerTypes.includes(trigger.type))
+  filterTriggers(
+    triggers: Triggers,
+    filter: ([handler, trigger]: [handler: string, trigger: Trigger]) => boolean
+  ): Triggers {
+    return Object.entries(triggers)
+      .filter(filter)
       .reduce((acc, [handler, trigger]) => {
         acc[handler] = trigger;
         return acc;
       }, {});
   }
 
-  getCodeHandlerFilterer(handlerNames: string[]) {
-    const transformer =
-      <T extends ts.Node>(context: ts.TransformationContext) =>
-      (rootNode: T) => {
-        const visitor = (node: ts.Node): ts.Node => {
-          const isRootNode = node.kind == ts.SyntaxKind.SourceFile;
+  getHandlerFiltererTransformer(handlerNames: string[]) {
+    const transformer: Transformer = (context) => (rootNode) => {
+      const visitor = (node: ts.Node): ts.Node => {
+        const isRootNode = node.kind == ts.SyntaxKind.SourceFile;
 
-          const isNecessaryHandler =
-            ts.isFunctionDeclaration(node) &&
-            handlerNames.includes(node.name?.escapedText as string);
+        const isNecessaryHandler =
+          ts.isFunctionDeclaration(node) &&
+          handlerNames.includes(node.name?.escapedText as string);
 
-          if (isRootNode) {
-            return ts.visitEachChild(node, visitor, context);
-          }
+        if (isRootNode) {
+          return ts.visitEachChild(node, visitor, context);
+        }
 
-          // we don't need to visit child node of these handlers
-          if (isNecessaryHandler) {
-            return node;
-          }
+        // we don't need to visit child node of these handlers
+        if (isNecessaryHandler) {
+          return node;
+        }
 
-          // returning undefined for any statement is not allowed, returning empty statement is an option, but it will leave `;` line behind.
-          // there should be a better option
-          return ts.factory.createEmptyStatement();
-        };
-
-        return ts.visitNode(rootNode, visitor);
+        // returning undefined for any statement is not allowed, returning empty statement is an option, but it will leave `;` line behind.
+        // there should be a better option
+        return ts.factory.createEmptyStatement();
       };
+
+      return ts.visitNode(rootNode, visitor);
+    };
 
     return transformer;
   }
 }
 
-export class Transformer {
+export type Transformer = (
+  context: ts.TransformationContext
+) => (rootNode: ts.Node) => ts.Node;
+export type Visitor = (node: ts.Node) => ts.Node;
+
+export class TriggerTransformer {
   static _name: string;
   getImportDeclarations: () => ts.ImportDeclaration[];
-  getTransformer: () => (
-    context: ts.TransformationContext
-  ) => (rootNode: ts.Node) => ts.Node;
+  getTransformer: () => Transformer;
   getVisitor: (
     triggers: Triggers,
     context: ts.TransformationContext
-  ) => (node: ts.Node) => ts.Node;
+  ) => Visitor;
 }
 
 export function codeToAst(code: string) {
