@@ -24,111 +24,107 @@ export class HttpTransformer implements TriggerTransformer {
         return ts.visitEachChild(node, visitor, context);
       }
 
-      if (!ts.isFunctionDeclaration(node)) {
+      const handler = ts.isFunctionDeclaration(node) ? getFunctionName(node) : undefined;
+      if(!handler){
         return node;
       }
 
-      const handler = node.name ? (node.name.escapedText as string) : (node.name as undefined);
       const trigger = triggers[handler];
 
       // if node is one of trigger handler, modify and return it
-      if (trigger) {
-        const url = `${this.baseUrl}/fn-execute${trigger.options.path}`;
-        const method = (trigger.options.method as string).toLowerCase();
-        const isDefault = handler == "default";
+      const url = `${this.baseUrl}/fn-execute${trigger.options.path}`;
+      const method = (trigger.options.method as string).toLowerCase();
+      const isDefault = handler == "default";
 
-        // @TODO: writing code in this way is so unreadable and unmaintable.
-        // I tried to create my code in string, give that string to the ts.sourcefile and return the node
-        // for example: ts.createSourceFile("foo.ts","export function bar(param1,param2){ return console.log('OK'); }").statements[0]
-        // but it cause to see some other issues, like some wrong placement of comment lines, probably because of the start,end position of nodes on that code.
-        // put a better implementation here.
+      // @TODO: writing code in this way is so unreadable and unmaintable.
+      // I tried to create my code in string, give that string to the ts.sourcefile and return the node
+      // for example: ts.createSourceFile("foo.ts","export function bar(param1,param2){ return console.log('OK'); }").statements[0]
+      // but it cause to see some other issues, like some wrong placement of comment lines, probably because of the start,end position of nodes on that code.
+      // put a better implementation here.
 
-        const fnParams = [
-          createParam("params", ts.SyntaxKind.AnyKeyword),
-          createParam("data", ts.SyntaxKind.AnyKeyword)
-        ];
+      const fnParams = [
+        createParam("params", ts.SyntaxKind.AnyKeyword),
+        createParam("data", ts.SyntaxKind.AnyKeyword)
+      ];
 
-        const requestAccess = ts.factory.createPropertyAccessExpression(
-          ts.factory.createIdentifier("axios"),
-          ts.factory.createIdentifier("request")
-        );
+      const requestAccess = ts.factory.createPropertyAccessExpression(
+        ts.factory.createIdentifier("axios"),
+        ts.factory.createIdentifier("request")
+      );
 
-        const requestArgs = [
-          ts.factory.createObjectLiteralExpression(
-            [
-              ts.factory.createPropertyAssignment(
-                ts.factory.createIdentifier("params"),
-                ts.factory.createIdentifier("params")
-              ),
-              ts.factory.createPropertyAssignment(
-                ts.factory.createIdentifier("data"),
-                ts.factory.createIdentifier("data")
-              ),
-              ts.factory.createPropertyAssignment(
-                ts.factory.createIdentifier("method"),
-                ts.factory.createStringLiteral(method)
-              ),
-              ts.factory.createPropertyAssignment(
-                ts.factory.createIdentifier("url"),
-                ts.factory.createStringLiteral(url)
-              )
-            ],
-            false
-          )
-        ];
+      const requestArgs = [
+        ts.factory.createObjectLiteralExpression(
+          [
+            ts.factory.createPropertyAssignment(
+              ts.factory.createIdentifier("params"),
+              ts.factory.createIdentifier("params")
+            ),
+            ts.factory.createPropertyAssignment(
+              ts.factory.createIdentifier("data"),
+              ts.factory.createIdentifier("data")
+            ),
+            ts.factory.createPropertyAssignment(
+              ts.factory.createIdentifier("method"),
+              ts.factory.createStringLiteral(method)
+            ),
+            ts.factory.createPropertyAssignment(
+              ts.factory.createIdentifier("url"),
+              ts.factory.createStringLiteral(url)
+            )
+          ],
+          false
+        )
+      ];
 
-        const requestCall = ts.factory.createCallExpression(requestAccess, undefined, requestArgs);
+      const requestCall = ts.factory.createCallExpression(requestAccess, undefined, requestArgs);
 
-        const thenParams = [createParam("r", ts.SyntaxKind.AnyKeyword)];
+      const thenParams = [createParam("r", ts.SyntaxKind.AnyKeyword)];
 
-        const thenBody = ts.factory.createPropertyAccessExpression(
-          ts.factory.createIdentifier("r"),
-          ts.factory.createIdentifier("data")
-        );
+      const thenBody = ts.factory.createPropertyAccessExpression(
+        ts.factory.createIdentifier("r"),
+        ts.factory.createIdentifier("data")
+      );
 
-        const thenArgs = ts.factory.createArrowFunction(
-          undefined,
-          undefined,
-          thenParams,
-          undefined,
-          ts.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-          thenBody
-        );
+      const thenArgs = ts.factory.createArrowFunction(
+        undefined,
+        undefined,
+        thenParams,
+        undefined,
+        ts.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+        thenBody
+      );
 
-        const thenAccess = ts.factory.createPropertyAccessExpression(
-          requestCall,
-          ts.factory.createIdentifier("then")
-        );
+      const thenAccess = ts.factory.createPropertyAccessExpression(
+        requestCall,
+        ts.factory.createIdentifier("then")
+      );
 
-        const thenCall = ts.factory.createCallExpression(thenAccess, undefined, [thenArgs]);
+      const thenCall = ts.factory.createCallExpression(thenAccess, undefined, [thenArgs]);
 
-        const returnStatement = ts.factory.createReturnStatement(thenCall);
+      const returnStatement = ts.factory.createReturnStatement(thenCall);
 
-        const fnBody = ts.factory.createBlock([returnStatement], true);
+      const fnBody = ts.factory.createBlock([returnStatement], true);
 
-        const modifiers: ts.ModifierToken<ts.ModifierSyntaxKind>[] = [
-          ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)
-        ];
-        let name = ts.factory.createIdentifier(handler);
-        if (isDefault) {
-          modifiers.push(ts.factory.createModifier(ts.SyntaxKind.DefaultKeyword));
-          name = undefined;
-        }
-
-        return ts.factory.updateFunctionDeclaration(
-          node,
-          undefined,
-          modifiers,
-          undefined,
-          name,
-          undefined,
-          fnParams,
-          undefined,
-          fnBody
-        );
+      const modifiers: ts.ModifierToken<ts.ModifierSyntaxKind>[] = [
+        ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)
+      ];
+      let name = ts.factory.createIdentifier(handler);
+      if (isDefault) {
+        modifiers.push(ts.factory.createModifier(ts.SyntaxKind.DefaultKeyword));
+        name = undefined;
       }
 
-      return node;
+      return ts.factory.updateFunctionDeclaration(
+        node as ts.FunctionDeclaration,
+        undefined,
+        modifiers,
+        undefined,
+        name,
+        undefined,
+        fnParams,
+        undefined,
+        fnBody
+      );
     };
 
     return visitor;
@@ -221,21 +217,22 @@ export class FunctionCompiler {
       const visitor = (node: ts.Node): ts.Node => {
         const isRootNode = node.kind == ts.SyntaxKind.SourceFile;
 
-        const isNecessaryHandler =
-          ts.isFunctionDeclaration(node) && handlerNames.includes(node.name.escapedText as string);
-
         if (isRootNode) {
           return ts.visitEachChild(node, visitor, context);
         }
 
-        // we don't need to visit child node of these handlers
-        if (isNecessaryHandler) {
-          return node;
-        }
-
         // returning undefined for any statement is not allowed, returning empty statement is an option, but it will leave `;` line behind.
         // there should be a better option
-        return ts.factory.createEmptyStatement();
+        const isNecessaryStatement = ts.isFunctionDeclaration(node)
+          ? handlerNames.includes(getFunctionName(node))
+          : false;
+
+        if (!isNecessaryStatement) {
+          return ts.factory.createEmptyStatement();
+        }
+
+        // we don't need to visit child node of these handlers
+        return node;
       };
 
       return ts.visitNode(rootNode, visitor);
@@ -269,6 +266,19 @@ export function createParam(name: string, type: ts.KeywordTypeSyntaxKind) {
     ts.factory.createKeywordTypeNode(type),
     undefined
   );
+}
+
+export function getFunctionName(node: ts.FunctionDeclaration) {
+  if (node.name) {
+    return node.name.escapedText as string;
+  }
+
+  const isDefault = node.modifiers.findIndex(m => m.kind == ts.SyntaxKind.DefaultKeyword) != -1;
+  if (isDefault) {
+    return "default";
+  }
+
+  return undefined;
 }
 
 export type FunctionWithIndex = Function & {index: string};
