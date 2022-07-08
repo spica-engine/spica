@@ -29,7 +29,7 @@ export class HttpTransformer implements TriggerTransformer {
       const trigger = triggers[handler];
       if (ts.isFunctionDeclaration(node) && trigger) {
         const url = `${this.baseUrl}/fn-execute${trigger.options.path}`;
-        const method = trigger.options.method;
+        const method = (trigger.options.method as string).toLowerCase();
         const isDefault = handler == "default";
 
         // @TODO: writing code in this way is so unreadable and unmaintable.
