@@ -37,23 +37,23 @@ describe("Function Compiler", () => {
     };
 
     index = `
-    import * as ts from "typescript";
-    
-    /**
-    * Some js doc that should be kept
-    */
-    export function register(req,res){
-      const a = 4;
-      // some other ops...
-      return res.send("OK");
-    }
+import * as ts from "typescript";
 
-    /**
-    * Some js doc that should be removed
-    */
-    export function unrelated(){
-      console.log("REMOVE ME!")
-    }
+/**
+ * Some js doc that should be kept
+ */
+export function register(req,res){
+  const a = 4;
+  // some other ops...
+  return res.send("OK");
+}
+
+/**
+ * Some js doc that should be removed
+ */
+export function unrelated(){
+  console.log("REMOVE ME!")
+}
     `;
     compiler = new FunctionCompiler({...fn, index}, ["http"], "http://test.com");
   });
@@ -66,8 +66,8 @@ describe("Function Compiler", () => {
 
     const expectedSrc = createSrc(`;
     /**
-    * Some js doc that should be kept
-    */
+     * Some js doc that should be kept
+     */
     export function register(req, res) {
         const a = 4;
         // some other ops...
@@ -85,8 +85,8 @@ describe("Function Compiler", () => {
 import * as axios from "axios";
 ;
 /**
-* Some js doc that should be kept
-*/
+ * Some js doc that should be kept
+ */
 export function register(params:any,data:any){
 return axios.request({params:params,data:data,method:"get",url:"http://test.com/fn-execute/register"}).then((r:any) => r.data);
 }

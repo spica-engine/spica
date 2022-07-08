@@ -3,26 +3,12 @@ import * as ts from "typescript";
 
 export class HttpTransformer implements Transformer {
   static _name = "http";
-  constructor(private triggers: Triggers, private baseUrl: string) {}
+  constructor(private triggers: Triggers, private baseUrl: string) {
+  }
 
   getImportDeclarations(): ts.ImportDeclaration[] {
-    const namespaceImport = ts.factory.createNamespaceImport(
-      ts.factory.createIdentifier("axios")
-    );
-    const importClause = ts.factory.createImportClause(
-      undefined,
-      undefined,
-      namespaceImport
-    );
-
-    return [
-      ts.factory.createImportDeclaration(
-        undefined,
-        undefined,
-        importClause,
-        ts.factory.createStringLiteral("axios")
-      ),
-    ];
+    const src = codeToAst("import * as axios from 'axios';");
+    return [src.statements[0]] as ts.ImportDeclaration[];
   }
 
   getTransformer() {
@@ -37,10 +23,24 @@ export class HttpTransformer implements Transformer {
 
   getVisitor(triggers: Triggers, context: ts.TransformationContext) {
     const visitor = (node: ts.Node): ts.Node => {
+      if(ts.isSourceFile(node)){
+        return ts.visitEachChild(node, visitor, context);
+      }
       // if node is one of trigger handler, modify and return it
-      const trigger =
-        triggers[(node as ts.FunctionDeclaration).name?.escapedText as string];
+      const handler = (node as ts.FunctionDeclaration).name?.escapedText as string
+      const trigger = triggers[handler];
       if (ts.isFunctionDeclaration(node) && trigger) {
+
+        const url = `${this.baseUrl}/fn-execute${trigger.options.path}`
+        const method = trigger.options.method;
+        const isDefault = handler == "default";
+
+        // @TODO: writing code in this way is so unreadable and unmaintable.
+        // I tried to create my code in string, give that string to the ts.sourcefile and return the node
+        // for example: ts.createSourceFile("foo.ts","export function bar(param1,param2){ return console.log('OK'); }").statements[0]
+        // but it cause to see some other issues, like some wrong placement of comment lines, probably because of the start,end position of nodes on that code.
+        // put a better implementation here.
+
         const fnParams = [
           createParam("params", ts.SyntaxKind.AnyKeyword),
           createParam("data", ts.SyntaxKind.AnyKeyword),
@@ -64,13 +64,11 @@ export class HttpTransformer implements Transformer {
               ),
               ts.factory.createPropertyAssignment(
                 ts.factory.createIdentifier("method"),
-                ts.factory.createStringLiteral(trigger.options.method)
+                ts.factory.createStringLiteral(method)
               ),
               ts.factory.createPropertyAssignment(
                 ts.factory.createIdentifier("url"),
-                ts.factory.createStringLiteral(
-                  `${this.baseUrl}/fn-execute${trigger.options.path}`
-                )
+                ts.factory.createStringLiteral(url)
               ),
             ],
             false
@@ -114,12 +112,20 @@ export class HttpTransformer implements Transformer {
 
         const fnBody = ts.factory.createBlock([returnStatement], true);
 
+        const modifiers:ts.ModifierToken<ts.ModifierSyntaxKind>[] = [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)];
+        let name = ts.factory.createIdentifier(handler)
+        if(isDefault){
+          modifiers.push(ts.factory.createModifier(ts.SyntaxKind.DefaultKeyword))
+          name = undefined
+        }
+
+        
         return ts.factory.updateFunctionDeclaration(
           node,
           undefined,
-          [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+          modifiers,
           undefined,
-          node.name,
+          name,
           undefined,
           fnParams,
           undefined,
@@ -127,8 +133,7 @@ export class HttpTransformer implements Transformer {
         );
       }
 
-      // for all the other kind of nodes, we just return the node (no transformation or replacement)
-      return ts.visitEachChild(node, visitor, context);
+      return node
     };
 
     return visitor;
@@ -174,16 +179,20 @@ export class FunctionCompiler {
     const baseFilterTransformer = this.getCodeHandlerFilterer(handlerNames);
     transformers.push(baseFilterTransformer);
 
-    // get transformer for each trigger type
-    for (const [handler, trigger] of Object.entries(this.fn.triggers)) {
-      const factory = this.triggerTransformerFactories.get(trigger.type);
+    for(const triggerType of this.triggerTypes){
+      const factory = this.triggerTransformerFactories.get(triggerType);
       if (!factory) {
         throw Error(
-          `Trigger type ${trigger.type} does not have any transformer.`
+          `Trigger type ${triggerType} does not have any transformer.`
         );
       }
 
-      const transformer = factory({ [handler]: trigger }, this.baseUrl);
+      const relevantTriggers = Object.entries(this.fn.triggers).filter(([_,trigger]) => trigger.type == triggerType).reduce((acc,[handler,trigger]) => {
+        acc[handler] = trigger;
+        return acc;
+      },{})
+
+      const transformer = factory(relevantTriggers, this.baseUrl);
       imports.push(...transformer.getImportDeclarations());
       transformers.push(transformer.getTransformer())
     }
@@ -193,7 +202,7 @@ export class FunctionCompiler {
       transformers
     ).transformed[0];
 
-    // add imports at the end of transformation processes
+    // add imports at the end of transformation processes, otherwise they might be deleted
     this.sourceFile = ts.factory.updateSourceFile(this.sourceFile, [
       ...imports,
       ...this.sourceFile.statements,
@@ -257,6 +266,10 @@ export class Transformer {
     triggers: Triggers,
     context: ts.TransformationContext
   ) => (node: ts.Node) => ts.Node;
+}
+
+export function codeToAst(code: string) {
+  return ts.createSourceFile("name.ts", code, ts.ScriptTarget.Latest);
 }
 
 export function createParam(name: string, type: ts.KeywordTypeSyntaxKind) {
