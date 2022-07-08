@@ -1,4 +1,4 @@
-import { Triggers, Function, Trigger } from "@spica-server/interface/function";
+import {Triggers, Function, Trigger} from "@spica-server/interface/function";
 import * as ts from "typescript";
 
 export class HttpTransformer implements TriggerTransformer {
@@ -11,7 +11,7 @@ export class HttpTransformer implements TriggerTransformer {
   }
 
   getTransformer() {
-    const transformer: Transformer = (context) => (rootNode) => {
+    const transformer: Transformer = context => rootNode => {
       const visitor = this.getVisitor(this.triggers, context);
       return ts.visitNode(rootNode, visitor);
     };
@@ -19,15 +19,20 @@ export class HttpTransformer implements TriggerTransformer {
   }
 
   getVisitor(triggers: Triggers, context: ts.TransformationContext) {
-    const visitor: Visitor = (node) => {
+    const visitor: Visitor = node => {
       if (ts.isSourceFile(node)) {
         return ts.visitEachChild(node, visitor, context);
       }
-      // if node is one of trigger handler, modify and return it
-      const handler = (node as ts.FunctionDeclaration).name
-        ?.escapedText as string;
+
+      if (!ts.isFunctionDeclaration(node)) {
+        return node;
+      }
+
+      const handler = node.name ? (node.name.escapedText as string) : (node.name as undefined);
       const trigger = triggers[handler];
-      if (ts.isFunctionDeclaration(node) && trigger) {
+
+      // if node is one of trigger handler, modify and return it
+      if (trigger) {
         const url = `${this.baseUrl}/fn-execute${trigger.options.path}`;
         const method = (trigger.options.method as string).toLowerCase();
         const isDefault = handler == "default";
@@ -40,7 +45,7 @@ export class HttpTransformer implements TriggerTransformer {
 
         const fnParams = [
           createParam("params", ts.SyntaxKind.AnyKeyword),
-          createParam("data", ts.SyntaxKind.AnyKeyword),
+          createParam("data", ts.SyntaxKind.AnyKeyword)
         ];
 
         const requestAccess = ts.factory.createPropertyAccessExpression(
@@ -66,17 +71,13 @@ export class HttpTransformer implements TriggerTransformer {
               ts.factory.createPropertyAssignment(
                 ts.factory.createIdentifier("url"),
                 ts.factory.createStringLiteral(url)
-              ),
+              )
             ],
             false
-          ),
+          )
         ];
 
-        const requestCall = ts.factory.createCallExpression(
-          requestAccess,
-          undefined,
-          requestArgs
-        );
+        const requestCall = ts.factory.createCallExpression(requestAccess, undefined, requestArgs);
 
         const thenParams = [createParam("r", ts.SyntaxKind.AnyKeyword)];
 
@@ -99,24 +100,18 @@ export class HttpTransformer implements TriggerTransformer {
           ts.factory.createIdentifier("then")
         );
 
-        const thenCall = ts.factory.createCallExpression(
-          thenAccess,
-          undefined,
-          [thenArgs]
-        );
+        const thenCall = ts.factory.createCallExpression(thenAccess, undefined, [thenArgs]);
 
         const returnStatement = ts.factory.createReturnStatement(thenCall);
 
         const fnBody = ts.factory.createBlock([returnStatement], true);
 
         const modifiers: ts.ModifierToken<ts.ModifierSyntaxKind>[] = [
-          ts.factory.createModifier(ts.SyntaxKind.ExportKeyword),
+          ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)
         ];
         let name = ts.factory.createIdentifier(handler);
         if (isDefault) {
-          modifiers.push(
-            ts.factory.createModifier(ts.SyntaxKind.DefaultKeyword)
-          );
+          modifiers.push(ts.factory.createModifier(ts.SyntaxKind.DefaultKeyword));
           name = undefined;
         }
 
@@ -140,12 +135,8 @@ export class HttpTransformer implements TriggerTransformer {
   }
 }
 
-export type TriggerTransformerFactoryMap = Map<
-  string,
-  (...args) => TriggerTransformer
->;
-export const defaultTriggerTransformerFactories: TriggerTransformerFactoryMap =
-  new Map();
+export type TriggerTransformerFactoryMap = Map<string, (...args) => TriggerTransformer>;
+export const defaultTriggerTransformerFactories: TriggerTransformerFactoryMap = new Map();
 defaultTriggerTransformerFactories.set(
   HttpTransformer._name,
   (triggers, baseUrl) => new HttpTransformer(triggers, baseUrl)
@@ -165,11 +156,7 @@ export class FunctionCompiler {
     this.fn.triggers = this.filterTriggers(this.fn.triggers, ([_, trigger]) =>
       this.triggerTypes.includes(trigger.type)
     );
-    this.sourceFile = ts.createSourceFile(
-      fn.name,
-      fn.index,
-      ts.ScriptTarget.Latest
-    );
+    this.sourceFile = ts.createSourceFile(fn.name, fn.index, ts.ScriptTarget.Latest);
   }
 
   compile() {
@@ -178,17 +165,14 @@ export class FunctionCompiler {
 
     // eliminate unnecessary statements
     const handlerNames = this.getHandlerNames();
-    const handlerFiltererTransormer =
-      this.getHandlerFiltererTransformer(handlerNames);
+    const handlerFiltererTransormer = this.getHandlerFiltererTransformer(handlerNames);
     transformers.push(handlerFiltererTransormer);
 
     // update triggers
     for (const triggerType of this.triggerTypes) {
       const factory = this.triggerTransformerFactories.get(triggerType);
       if (!factory) {
-        throw Error(
-          `Trigger type ${triggerType} does not have any transformer.`
-        );
+        throw Error(`Trigger type ${triggerType} does not have any transformer.`);
       }
 
       const relevantTriggers = this.filterTriggers(
@@ -201,15 +185,12 @@ export class FunctionCompiler {
       transformers.push(transformer.getTransformer());
     }
 
-    this.sourceFile = ts.transform(
-      this.sourceFile,
-      transformers
-    ).transformed[0];
+    this.sourceFile = ts.transform(this.sourceFile, transformers).transformed[0];
 
     // add imports at the end of transformation processes, otherwise they might be deleted
     this.sourceFile = ts.factory.updateSourceFile(this.sourceFile, [
       ...imports,
-      ...this.sourceFile.statements,
+      ...this.sourceFile.statements
     ]);
 
     return ts.createPrinter().printFile(this.sourceFile);
@@ -221,7 +202,7 @@ export class FunctionCompiler {
 
   filterTriggers(
     triggers: Triggers,
-    filter: ([handler, trigger]: [handler: string, trigger: Trigger]) => boolean
+    filter: ([handler, trigger]: [string, Trigger]) => boolean
   ): Triggers {
     return Object.entries(triggers)
       .filter(filter)
@@ -232,13 +213,12 @@ export class FunctionCompiler {
   }
 
   getHandlerFiltererTransformer(handlerNames: string[]) {
-    const transformer: Transformer = (context) => (rootNode) => {
+    const transformer: Transformer = context => rootNode => {
       const visitor = (node: ts.Node): ts.Node => {
         const isRootNode = node.kind == ts.SyntaxKind.SourceFile;
 
         const isNecessaryHandler =
-          ts.isFunctionDeclaration(node) &&
-          handlerNames.includes(node.name?.escapedText as string);
+          ts.isFunctionDeclaration(node) && handlerNames.includes(node.name.escapedText as string);
 
         if (isRootNode) {
           return ts.visitEachChild(node, visitor, context);
@@ -261,19 +241,14 @@ export class FunctionCompiler {
   }
 }
 
-export type Transformer = (
-  context: ts.TransformationContext
-) => (rootNode: ts.Node) => ts.Node;
+export type Transformer = (context: ts.TransformationContext) => (rootNode: ts.Node) => ts.Node;
 export type Visitor = (node: ts.Node) => ts.Node;
 
 export class TriggerTransformer {
   static _name: string;
   getImportDeclarations: () => ts.ImportDeclaration[];
   getTransformer: () => Transformer;
-  getVisitor: (
-    triggers: Triggers,
-    context: ts.TransformationContext
-  ) => Visitor;
+  getVisitor: (triggers: Triggers, context: ts.TransformationContext) => Visitor;
 }
 
 export function codeToAst(code: string) {
@@ -292,4 +267,4 @@ export function createParam(name: string, type: ts.KeywordTypeSyntaxKind) {
   );
 }
 
-export type FunctionWithIndex = Function & { index: string };
+export type FunctionWithIndex = Function & {index: string};

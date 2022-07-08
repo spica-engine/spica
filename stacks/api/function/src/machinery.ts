@@ -3,7 +3,7 @@ import {register, store} from "@spica-server/machinery";
 import {ChangeKind} from "./change";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "@spica-server/function/services";
-import {Function, Trigger} from "@spica-server/interface/function"
+import {Function, Trigger} from "@spica-server/interface/function";
 
 async function v1_trigger_to_internal(object: any) {
   const bucketStore = store({
