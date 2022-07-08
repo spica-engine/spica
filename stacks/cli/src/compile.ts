@@ -180,6 +180,10 @@ export class FunctionCompiler {
         ([_, trigger]) => trigger.type == triggerType
       );
 
+      if (!Object.keys(relevantTriggers).length) {
+        continue;
+      }
+
       const transformer = factory(relevantTriggers, this.baseUrl);
       imports.push(...transformer.getImportDeclarations());
       transformers.push(transformer.getTransformer());
