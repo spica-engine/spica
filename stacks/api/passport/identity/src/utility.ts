@@ -3,12 +3,23 @@ import {schemaDiff, ChangeKind} from "@spica-server/core/differ";
 
 export function registerPolicyAttacher(policy: string | string[]) {
   policy = Array.isArray(policy) ? policy : [policy];
-  return request => {
-    if (request.params.id == request.user._id) {
-      request.user.policies = Array.from(new Set(request.user.policies.concat(policy)));
+  return req => {
+    if (isOwnselfAccess(req) && !isAttributeUpdate(req)) {
+      req.user.policies = Array.from(new Set(req.user.policies.concat(policy)));
     }
-    return request;
+    return req;
   };
+}
+
+function isOwnselfAccess(req) {
+  return req.params.id == req.user._id;
+}
+
+function isAttributeUpdate(req) {
+  return (
+    req.method == "PUT" &&
+    JSON.stringify(req.body.attributes) != JSON.stringify(req.user.attributes)
+  );
 }
 
 export function provideSettingsFinalizer(identityService: IdentityService) {
