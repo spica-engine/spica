@@ -4,21 +4,29 @@ import {
 } from "@spica-server/passport/identity/src/utility";
 
 describe("Utilities", () => {
-  it("should attach IdentityFullAccess when condition is valid", () => {
-    let request = {
+  let request;
+
+  beforeEach(() => {
+    request = {
       params: {
         id: "test_user"
       },
       user: {
         _id: "test_user",
         policies: []
-      }
+      },
+      body: {},
+      method: "PUT"
     };
+  });
+
+  it("should attach IdentityFullAccess if user tries to update password", () => {
+    request.user.password = "new_pass";
 
     let policyAttachedRequest = registerPolicyAttacher("IdentityFullAccess")(request);
     expect(policyAttachedRequest).toEqual({
       ...request,
-      user: {_id: "test_user", policies: ["IdentityFullAccess"]}
+      user: {...request.user, policies: ["IdentityFullAccess"]}
     });
 
     policyAttachedRequest = registerPolicyAttacher([
@@ -27,8 +35,19 @@ describe("Utilities", () => {
     ])(request);
     expect(policyAttachedRequest).toEqual({
       ...request,
-      user: {_id: "test_user", policies: ["IdentityFullAccess", "PreferenceReadOnlyAccess"]}
+      user: {...request.user, policies: ["IdentityFullAccess", "PreferenceReadOnlyAccess"]}
     });
+  });
+
+  it("should not attach IdentityFullAccess if user tries to update attributes", () => {
+    request.user.attributes = {
+      role: "customer"
+    };
+
+    request.body = {...request.user, attributes: {role: "admin"}};
+
+    const policyAttachedRequest = registerPolicyAttacher("IdentityFullAccess")(request);
+    expect(policyAttachedRequest).toEqual(request);
   });
 
   it("should pull policy from identity policies", async () => {

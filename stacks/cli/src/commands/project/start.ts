@@ -37,7 +37,9 @@ async function create({args: cmdArgs, options}: ActionParameters) {
   const networkName = `${name}-network`,
     databaseName = `${name}-db`,
     port = await getport({port: options.port as number}),
-    publicHost = `http://localhost:${port}`;
+    publicHost = `http://localhost:${port}`,
+    apiUrl = `${publicHost}/api`,
+    functionApiUrl = apiUrl.replace("localhost", "host.docker.internal");
 
   if (options.port.toString() != port.toString() && options.port != 4500) {
     console.info(`Port ${options.port} already in use, the port ${port} will be used instead.`);
@@ -71,7 +73,8 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     `--database-name=${name}`,
     `--database-replica-set=${name}`,
     `--database-uri="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`,
-    `--public-url=${publicHost}/api`,
+    `--public-url=${apiUrl}`,
+    `--function-api-url=${functionApiUrl}`,
     `--passport-secret=${name}`,
     `--persistent-path=/var/data`
   ];
