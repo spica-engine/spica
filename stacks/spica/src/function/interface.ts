@@ -16,6 +16,7 @@ export interface FunctionDescription {
   memoryLimit?: number;
   timeout?: number;
   language: string;
+  category?: string;
 }
 
 export interface NormalizedFunction extends FunctionDescription {

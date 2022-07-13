@@ -12,7 +12,7 @@ import {
 } from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {SavingState} from "@spica-client/material";
-import {merge, Observable, of, Subject, throwError, BehaviorSubject} from "rxjs";
+import {merge, Observable, of, Subject, throwError, BehaviorSubject, Subscription} from "rxjs";
 import {
   catchError,
   delay,
@@ -103,6 +103,8 @@ export class AddComponent implements OnInit, OnDestroy {
   apiUrl;
 
   lastSavedIndex;
+  categories: string[] = [];
+  fnSubscription: Subscription;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -121,6 +123,14 @@ export class AddComponent implements OnInit, OnDestroy {
         information => (this.function.timeout = this.function.timeout || information.timeout * 0.1)
       ),
       share()
+    );
+    this.fnSubscription = this.functionService
+    .getFunctions()
+    .subscribe(
+      functions =>
+        (this.categories = [
+          ...new Set(functions.filter(findex => findex.category).map(findex => findex.category))
+        ])
     );
   }
 
@@ -197,6 +207,7 @@ export class AddComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.dispose.emit();
+    this.fnSubscription.unsubscribe();
   }
 
   formatTimeout(value: number) {

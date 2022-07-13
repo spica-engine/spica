@@ -172,6 +172,14 @@
             ></textarea>
             <mat-hint>Description of the function.</mat-hint>
           </mat-form-field>
+          <div class="category">
+            Category
+            <categorizing
+              (onSelectCategory)="function.category = $event"
+              [categories]="categories"
+              [schema]="function"
+            ></categorizing>
+          </div>
           <p class="description" *ngIf="function._id" (click)="editDescription = true">
             <b>{{ function.language + " Engine" | titlecase }}</b>
           </p>

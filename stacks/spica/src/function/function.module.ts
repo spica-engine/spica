@@ -25,6 +25,7 @@ import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {StoreModule} from "@ngrx/store";
 import {InputModule} from "@spica-client/common";
+import {CategorizingModule} from "@spica-client/common/categorizing";
 import {EditorModule} from "@spica-client/common/code-editor";
 import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
@@ -86,7 +87,8 @@ import {MatDialogModule} from "@angular/material/dialog";
     MatDatepickerModule,
     ScrollingModule,
     MatClipboardModule,
-    EditorModule
+    EditorModule,
+    CategorizingModule
   ],
   declarations: [
     RepositoryComponent,
