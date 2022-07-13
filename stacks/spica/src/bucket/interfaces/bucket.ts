@@ -7,6 +7,7 @@ export interface Bucket {
   primary: string;
   title?: string;
   order?: number;
+  category?: string;
   icon?: string;
   history?: boolean;
   readOnly?: boolean;

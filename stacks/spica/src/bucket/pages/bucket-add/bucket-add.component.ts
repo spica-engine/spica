@@ -6,7 +6,7 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {InputResolver} from "@spica-client/common";
 import {deepCopy} from "@spica-client/core";
 import {ICONS, SavingState} from "@spica-client/material";
-import {Subject, Observable, merge, of} from "rxjs";
+import {Subject, Observable, merge, of, Subscription} from "rxjs";
 import {
   filter,
   flatMap,
@@ -58,6 +58,9 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   isHistoryEndpointEnabled$: Observable<boolean>;
 
   propertyPositionMap: {[k: string]: any[]} = {};
+  bsSubscription: Subscription;
+  categories: string[] = [];
+
 
   private onDestroy: Subject<void> = new Subject<void>();
 
@@ -70,10 +73,13 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     private dialog: MatDialog
   ) {
     this.inputTypes = _inputResolver.entries();
-    this.bs
-      .getBuckets()
-      .pipe(take(1))
-      .subscribe(buckets => (this.buckets = buckets));
+    this.bsSubscription = this.bs.getBuckets().subscribe(buckets => {
+      this.buckets = buckets;
+      if (this.buckets)
+        this.categories = [
+          ...new Set(this.buckets.filter(bucket => bucket.category).map(bucket => bucket.category))
+        ];
+    });
   }
 
   ngOnInit(): void {
@@ -203,6 +209,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.onDestroy.next();
+    this.bsSubscription.unsubscribe();
   }
 
   onDocumentSettingsChange() {
@@ -223,5 +230,8 @@ export class BucketAddComponent implements OnInit, OnDestroy {
       event.pageIndex * event.pageSize,
       (event.pageIndex + 1) * event.pageSize
     );
+  }
+  setCategory(event) {
+    this.bucket.category = event;
   }
 }

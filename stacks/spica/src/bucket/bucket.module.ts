@@ -34,6 +34,7 @@ import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular
 import {StoreModule} from "@ngrx/store";
 import {provideActivityFactory} from "@spica-client/bucket/providers/activity";
 import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
+import {CategorizingModule} from "@spica-client/common/categorizing";
 import {EditorModule} from "@spica-client/common/code-editor";
 import {LAYOUT_INITIALIZER, PreferencesModule, RouteService} from "@spica-client/core";
 import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
@@ -140,7 +141,8 @@ import {IGNORE_HTTP_ERRORS} from "@spica-client/core/layout/config";
     PassportModule.forChild(),
     SpicaCommon,
     EditorModule,
-    HighlightModule
+    HighlightModule,
+    CategorizingModule
   ],
   declarations: [
     IndexComponent,

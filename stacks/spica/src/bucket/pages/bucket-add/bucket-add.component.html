@@ -205,6 +205,15 @@
               <mat-icon>add</mat-icon> Add new property
             </button>
           </mat-list-item>
+          <h4 mat-subheader>
+            <mat-icon>group_work</mat-icon>Category
+            <categorizing
+              (onSelectCategory)="setCategory($event)"
+              [categories]="categories"
+              [schema]="bucket"
+            ></categorizing>
+          </h4>
+          <mat-divider></mat-divider>
           <h4 mat-subheader><mat-icon>settings</mat-icon>Options</h4>
           <mat-divider></mat-divider>
           <mat-list-item>

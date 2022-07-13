@@ -23,7 +23,8 @@ export class BucketInitializer {
               id: `bucket_${bucket._id}`,
               icon: bucket.icon,
               path: `/bucket/${bucket._id}`,
-              display: bucket.title
+              display: bucket.title,
+              group: bucket?.category
             })
           );
         }
