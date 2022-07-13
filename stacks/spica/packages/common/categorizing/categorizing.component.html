@@ -1,0 +1,38 @@
+<mat-select class="select-category" [(ngModel)]="schema.category" placeholder="Select category">
+  <mat-option
+    (click)="selectCategory(category)"
+    *ngFor="let category of categories"
+    [value]="category"
+  >
+    {{ category }}
+  </mat-option>
+  <mat-option value="createNewCategory">
+    <div
+      *ngIf="schema.category != 'createNewCategory'"
+      class="add-category"
+      (click)="createNewCategory(categoryDialog)"
+    >
+      <mat-icon>add</mat-icon> Add new category
+    </div>
+  </mat-option>
+  <mat-option value="discardCategory" *ngIf="schema.category">
+    <div class="add-category" (click)="discardCategory()">
+      <mat-icon>remove</mat-icon> Discard from category
+    </div>
+  </mat-option>
+</mat-select>
+
+<ng-template #categoryDialog>
+  <div class="new-category-modal">
+    <h3>Add New Category</h3>
+    <mat-divider></mat-divider>
+    <mat-form-field>
+      <input matInput placeholder="Enter category name..." [(ngModel)]="newCategory" />
+    </mat-form-field>
+    <div class="actions">
+      <button mat-button [disabled]="!newCategory" (click)="addCategory()">
+        <mat-icon>add</mat-icon> Add new category
+      </button>
+    </div>
+  </div>
+</ng-template>

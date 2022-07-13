@@ -1,0 +1,20 @@
+:host {
+  min-width: 120px;
+  display: flex;
+  justify-content: space-between;
+  height: 40px;
+  align-items: center;
+}
+
+::ng-deep {
+  .new-category-modal {
+    mat-form-field {
+      width: 100%;
+    }
+  }
+  .actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+  }
+}

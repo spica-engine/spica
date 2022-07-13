@@ -19,7 +19,7 @@ export class HomeLayoutComponent implements OnInit {
 
   expanded = true;
 
-  routes$: Observable<Route[]>;
+  routes$: Observable<[Route[]]>;
   isHandset$: Observable<boolean> = this.breakpointObserver
     .observe([Breakpoints.Medium, Breakpoints.Small, Breakpoints.XSmall])
     .pipe(
@@ -107,7 +107,18 @@ export class HomeLayoutComponent implements OnInit {
           map(routes => routes.filter(r => r.category == currentCategory.category))
         );
       }),
-      map(routes => routes.sort((a, b) => a.index - b.index))
+      map(routes => routes.sort((a, b) => a.index - b.index)),
+      map(
+        routes =>
+          Array.from(
+            routes
+              .reduce(
+                (m, o) => m.set(o["group"] || o["id"], [...(m.get(o["group"]) || []), o]),
+                new Map()
+              )
+              .values()
+          ) as [Route[]] //Grouping by 'group' key
+      )
     );
   }
 

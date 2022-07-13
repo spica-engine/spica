@@ -60,15 +60,40 @@
             </div>
           </div>
         </h4>
-        <mat-list-item
-          *ngFor="let route of routes$ | async"
-          [routerLink]="route.path"
-          routerLinkActive="active"
-          [queryParams]="route.queryParams"
-        >
-          <mat-icon>{{ route.icon }}</mat-icon>
-          {{ route.display }}
-        </mat-list-item>
+        <ng-container *ngFor="let routes of routes$ | async ">
+          <ng-container *ngIf="!routes[0]?.group; else elseTemplate">
+            <mat-list-item
+              [routerLink]="routes[0].path"
+              routerLinkActive="active"
+              [queryParams]="routes[0].queryParams"
+            >
+              <mat-icon>{{ routes[0].icon }}</mat-icon>
+              {{ routes[0].display }}
+            </mat-list-item>
+          </ng-container>
+          <ng-template #elseTemplate>
+            <mat-accordion>
+              <mat-expansion-panel class="mat-elevation-z0">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon>group_work</mat-icon>
+                    {{ routes[0].group}}
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+
+                <mat-list-item
+                  *ngFor="let route of routes"
+                  [routerLink]="route.path"
+                  routerLinkActive="active"
+                  [queryParams]="route.queryParams"
+                >
+                  <mat-icon>{{ route.icon }}</mat-icon>
+                  {{ route.display }}
+                </mat-list-item>
+              </mat-expansion-panel>
+            </mat-accordion>
+          </ng-template>
+        </ng-container>
       </mat-nav-list>
     </section>
   </mat-sidenav>
