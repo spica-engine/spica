@@ -95,6 +95,6 @@ export class PolicyController {
       await this.identityFinalizer(id.toHexString());
     }
 
-    return this.policy.deleteOne(id);
+    return this.policy.deleteOne({_id: id});
   }
 }
