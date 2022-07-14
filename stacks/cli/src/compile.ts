@@ -160,7 +160,19 @@ export class Axios extends HttpService {
       ts.factory.createIdentifier("request")
     );
 
-    const requestArgs = [ts.factory.createIdentifier("config")];
+    const requestArgs = [
+      ts.factory.createObjectLiteralExpression([
+        ts.factory.createSpreadAssignment(ts.factory.createIdentifier("config")),
+        ts.factory.createPropertyAssignment(
+          ts.factory.createIdentifier("method"),
+          ts.factory.createStringLiteral(this.method.toLowerCase())
+        ),
+        ts.factory.createPropertyAssignment(
+          ts.factory.createIdentifier("url"),
+          ts.factory.createStringLiteral(this.url)
+        )
+      ])
+    ];
 
     const requestCall = ts.factory.createCallExpression(requestAccess, undefined, requestArgs);
 
@@ -356,8 +368,31 @@ export class FunctionCompiler {
       ...this.sourceFile.statements
     ]);
 
-    // return ts.createPrinter().printFile(this.sourceFile);
-    return ts.createPrinter().printFile(this.sourceFile);
+    const code = ts.createPrinter().printFile(this.sourceFile);
+    const types = this.generateTypesOfCode(code);
+    return [{extension: "js", content: code}, {extension: "d.ts", content: types}];
+  }
+
+  generateTypesOfCode(code: string) {
+    let types;
+
+    const options = {
+      allowJs: true,
+      declaration: true,
+      emitDeclarationOnly: true
+    };
+    const host = ts.createCompilerHost(options);
+
+    host.writeFile = (_, data) => {
+      console.log(data);
+      types = data;
+    };
+    host.readFile = () => code;
+
+    const program = ts.createProgram(["dummy.js"], options, host);
+    program.emit();
+
+    return types;
   }
 
   getHandlerNames() {

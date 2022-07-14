@@ -44,17 +44,21 @@ async function orm({options}: ActionParameters) {
 
       const writeFilePromises = [];
       for (const fn of functions) {
-        const compiledCode = new FunctionCompiler(fn, TRIGGER_TYPES, APIURL, {
+        const sources = new FunctionCompiler(fn, TRIGGER_TYPES, APIURL, {
           http: {selectedHttpService: HTTP_SERVICE}
         }).compile();
-        if (compiledCode == "") {
-          continue;
+
+        const replacedName = fn.name.replace(/ /gm, "_");
+        const folderPath = path.join(PATH,replacedName);
+        if(!fs.existsSync(folderPath)){
+          fs.mkdirSync(folderPath)
         }
 
-        const replacedName = fn.name.replace(" ", "_");
-        const _path = path.join(PATH, `${replacedName}.ts`);
+        for (const source of sources) {
+          const _path = path.join(folderPath, `index.${source.extension}`);
 
-        writeFilePromises.push(fs.promises.writeFile(_path, compiledCode, {}));
+          writeFilePromises.push(fs.promises.writeFile(_path, source.content, {}));
+        }
       }
 
       spinner.text = "Writing to the destination..";
