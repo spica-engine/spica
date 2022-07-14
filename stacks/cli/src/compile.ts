@@ -384,7 +384,6 @@ export class FunctionCompiler {
     const host = ts.createCompilerHost(options);
 
     host.writeFile = (_, data) => {
-      console.log(data);
       types = data;
     };
     host.readFile = () => code;
