@@ -357,8 +357,7 @@ export class FunctionCompiler {
     ]);
 
     // return ts.createPrinter().printFile(this.sourceFile);
-    const compiledCode = ts.createPrinter().printFile(this.sourceFile);
-    return clearEmptyStatementTraces(compiledCode);
+    return ts.createPrinter().printFile(this.sourceFile);
   }
 
   getHandlerNames() {
@@ -393,7 +392,7 @@ export class FunctionCompiler {
           : false;
 
         if (!isNecessaryStatement) {
-          return ts.factory.createEmptyStatement();
+          return disableStatement(node);
         }
 
         // we don't need to visit child node of these handlers
@@ -434,18 +433,18 @@ export function getFunctionName(node: ts.FunctionDeclaration) {
   return undefined;
 }
 
-export function clearEmptyStatementTraces(code: string) {
-  return code.replace(/^;[\n|;]*$\n/gm, "");
-}
-
-// export function disableStatement(node: ts.Node) {
-//   node = ts.factory.createEmptyStatement();
-//   node = ts.addSyntheticLeadingComment(
-//     node,
-//     ts.SyntaxKind.SingleLineCommentTrivia,
-//     "This statement has been deleted."
-//   );
-//   return node;
+// export function clearEmptyStatementTraces(code: string) {
+//   return code.replace(/^;[\n|;]*$\n/gm, "");
 // }
+
+export function disableStatement(node: ts.Node) {
+  node = ts.factory.createEmptyStatement();
+  node = ts.addSyntheticLeadingComment(
+    node,
+    ts.SyntaxKind.SingleLineCommentTrivia,
+    " This statement has been deleted."
+  );
+  return node;
+}
 
 export type FunctionWithIndex = Function & {index: string};
