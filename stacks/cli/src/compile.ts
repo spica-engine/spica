@@ -1,13 +1,257 @@
 import {Triggers, Function, Trigger} from "@spica-server/interface/function";
 import * as ts from "typescript";
 
+export interface FunctionDeclarationModifier {
+  decorators: ts.Decorator[];
+  setDecorators: () => void;
+
+  modifiers: ts.Modifier[];
+  setModifiers: () => void;
+
+  asteriksToken: ts.AsteriskToken;
+  setAsteriksToken: () => void;
+
+  name: ts.Identifier;
+  setName: () => void;
+
+  typeParameters: ts.TypeParameterDeclaration[];
+  setTypeParameters: () => void;
+
+  parameters: ts.ParameterDeclaration[];
+  setParameters: () => void;
+
+  type: ts.TypeNode;
+  setType: () => void;
+
+  body: ts.Block;
+  setBody: () => void;
+
+  setAllDeclarationDependencies: () => void;
+
+  getImportDeclarations: () => ts.ImportDeclaration[];
+
+  modify: () => ts.FunctionDeclaration;
+}
+
+export abstract class HttpService implements FunctionDeclarationModifier {
+  static _name: string;
+
+  url: string;
+  method: string;
+
+  private _isHandlerDefault: boolean;
+  public get isHandlerDefault(): boolean {
+    return this.handler == "default";
+  }
+
+  modifiers: ts.Modifier[] = [];
+  setModifiers() {
+    const modifiers: ts.ModifierToken<ts.ModifierSyntaxKind>[] = [
+      ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)
+    ];
+
+    if (this.isHandlerDefault) {
+      modifiers.push(ts.factory.createModifier(ts.SyntaxKind.DefaultKeyword));
+    }
+
+    this.modifiers = modifiers;
+  }
+
+  name: ts.Identifier;
+  setName() {
+    this.name = !this.isHandlerDefault ? ts.factory.createIdentifier(this.handler) : undefined;
+  }
+
+  body: ts.FunctionBody;
+  setBody() {}
+
+  parameters: ts.ParameterDeclaration[] = [];
+  setParameters() {
+    this.parameters = [
+      ts.factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        undefined,
+        ts.factory.createIdentifier("config"),
+        undefined,
+        undefined,
+        undefined
+      )
+    ];
+  }
+
+  decorators: ts.Decorator[];
+  setDecorators() {}
+
+  asteriksToken: ts.AsteriskToken;
+  setAsteriksToken() {}
+
+  typeParameters: ts.TypeParameterDeclaration[];
+  setTypeParameters() {}
+
+  type: ts.TypeNode;
+  setType() {}
+
+  constructor(
+    private node: ts.FunctionDeclaration,
+    private baseUrl: string,
+    private handler: string,
+    private trigger: Trigger
+  ) {
+    this.url = `${this.baseUrl}/fn-execute${this.trigger.options.path}`;
+    this.method = this.trigger.options.method;
+
+    this.setAllDeclarationDependencies();
+  }
+
+  getImportDeclarations() {
+    return [];
+  }
+
+  setAllDeclarationDependencies() {
+    this.setModifiers();
+    this.setName();
+    this.setBody();
+    this.setParameters();
+
+    // unused for now
+    this.setDecorators();
+    this.setAsteriksToken();
+    this.setTypeParameters();
+    this.setType();
+  }
+
+  modify() {
+    return ts.factory.updateFunctionDeclaration(
+      this.node,
+      this.decorators,
+      this.modifiers,
+      this.asteriksToken,
+      this.name,
+      this.typeParameters,
+      this.parameters,
+      this.type,
+      this.body
+    );
+  }
+}
+
+export class Axios extends HttpService {
+  static _name = "axios";
+
+  static getImportDeclarations() {
+    const importClause = ts.factory.createImportClause(
+      false,
+      ts.factory.createIdentifier("axios"),
+      undefined
+    );
+    const importDeclaration = ts.factory.createImportDeclaration(
+      undefined,
+      undefined,
+      importClause,
+      ts.factory.createStringLiteral("axios")
+    );
+    return [importDeclaration];
+  }
+
+  setBody(): void {
+    const requestAccess = ts.factory.createPropertyAccessExpression(
+      ts.factory.createIdentifier("axios"),
+      ts.factory.createIdentifier("request")
+    );
+
+    const requestArgs = [ts.factory.createIdentifier("config")];
+
+    const requestCall = ts.factory.createCallExpression(requestAccess, undefined, requestArgs);
+
+    const thenParams = [
+      ts.factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        undefined,
+        ts.factory.createIdentifier("r"),
+        undefined,
+        undefined,
+        undefined
+      )
+    ];
+
+    const thenBody = ts.factory.createPropertyAccessExpression(
+      ts.factory.createIdentifier("r"),
+      ts.factory.createIdentifier("data")
+    );
+
+    const thenArgs = ts.factory.createArrowFunction(
+      undefined,
+      undefined,
+      thenParams,
+      undefined,
+      ts.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+      thenBody
+    );
+
+    const thenAccess = ts.factory.createPropertyAccessExpression(
+      requestCall,
+      ts.factory.createIdentifier("then")
+    );
+
+    const thenCall = ts.factory.createCallExpression(thenAccess, undefined, [thenArgs]);
+
+    const returnStatement = ts.factory.createReturnStatement(thenCall);
+
+    this.body = ts.factory.createBlock([returnStatement], true);
+  }
+}
+
+export type HttpServiceFactory = (node, baseUrl, handler, trigger) => HttpService;
+export type HttpServiceFactoryMap = Map<string, HttpServiceFactory>;
+export const defaulHttpServiceFactoryMap: HttpServiceFactoryMap = new Map();
+defaulHttpServiceFactoryMap.set(
+  Axios._name,
+  (node, baseUrl, handler, trigger) => new Axios(node, baseUrl, handler, trigger)
+);
+// add new http services here, like got, node-fetch etc.
+
+export type HttpServiceImportsMap = Map<string, () => ts.ImportDeclaration[]>;
+export const defaultHttpServiceImportsMap: HttpServiceImportsMap = new Map();
+defaultHttpServiceImportsMap.set(Axios._name, Axios.getImportDeclarations);
+// import declarations does not need to be created on the visiting node phase.
+// mark each HttpService import as static and add this map so HttpTransformer will be able to
+// return import declarations before visit each node
+
 export class HttpTransformer implements TriggerTransformer {
   static _name = "http";
-  constructor(private triggers: Triggers, private baseUrl: string) {}
 
-  getImportDeclarations(): ts.ImportDeclaration[] {
-    const src = codeToAst("import axios from 'axios';");
-    return [src.statements[0]] as ts.ImportDeclaration[];
+  private _importDeclarations: ts.ImportDeclaration[];
+  public get importDeclarations(): ts.ImportDeclaration[] {
+    return this._importDeclarations;
+  }
+  public set importDeclarations(value: ts.ImportDeclaration[]) {
+    this._importDeclarations = value;
+  }
+
+  httpServiceFactory: HttpServiceFactory;
+
+  constructor(
+    private triggers: Triggers,
+    private baseUrl: string,
+    private additionals: {selectedHttpService: string},
+    private httpServiceFactoryMap: HttpServiceFactoryMap = defaulHttpServiceFactoryMap,
+    private httpServiceImportsMap: HttpServiceImportsMap = defaultHttpServiceImportsMap
+  ) {
+    const factory = this.httpServiceFactoryMap.get(additionals.selectedHttpService);
+    if (!factory) {
+      throw new Error(
+        `Http service named ${additionals.selectedHttpService} is not implemented yet`
+      );
+    }
+
+    this.httpServiceFactory = factory;
+
+    const getImports = this.httpServiceImportsMap.get(additionals.selectedHttpService);
+    if (getImports) {
+      this.importDeclarations = getImports();
+    }
   }
 
   getTransformer() {
@@ -25,106 +269,13 @@ export class HttpTransformer implements TriggerTransformer {
       }
 
       const handler = ts.isFunctionDeclaration(node) ? getFunctionName(node) : undefined;
-      if(!handler){
+      if (!handler || !triggers[handler]) {
         return node;
       }
 
-      const trigger = triggers[handler];
+      const httpService = this.httpServiceFactory(node, this.baseUrl, handler, triggers[handler]);
 
-      // if node is one of trigger handler, modify and return it
-      const url = `${this.baseUrl}/fn-execute${trigger.options.path}`;
-      const method = (trigger.options.method as string).toLowerCase();
-      const isDefault = handler == "default";
-
-      // @TODO: writing code in this way is so unreadable and unmaintable.
-      // I tried to create my code in string, give that string to the ts.sourcefile and return the node
-      // for example: ts.createSourceFile("foo.ts","export function bar(param1,param2){ return console.log('OK'); }").statements[0]
-      // but it cause to see some other issues, like some wrong placement of comment lines, probably because of the start,end position of nodes on that code.
-      // put a better implementation here.
-
-      const fnParams = [
-        createParam("params", ts.SyntaxKind.AnyKeyword),
-        createParam("data", ts.SyntaxKind.AnyKeyword)
-      ];
-
-      const requestAccess = ts.factory.createPropertyAccessExpression(
-        ts.factory.createIdentifier("axios"),
-        ts.factory.createIdentifier("request")
-      );
-
-      const requestArgs = [
-        ts.factory.createObjectLiteralExpression(
-          [
-            ts.factory.createPropertyAssignment(
-              ts.factory.createIdentifier("params"),
-              ts.factory.createIdentifier("params")
-            ),
-            ts.factory.createPropertyAssignment(
-              ts.factory.createIdentifier("data"),
-              ts.factory.createIdentifier("data")
-            ),
-            ts.factory.createPropertyAssignment(
-              ts.factory.createIdentifier("method"),
-              ts.factory.createStringLiteral(method)
-            ),
-            ts.factory.createPropertyAssignment(
-              ts.factory.createIdentifier("url"),
-              ts.factory.createStringLiteral(url)
-            )
-          ],
-          false
-        )
-      ];
-
-      const requestCall = ts.factory.createCallExpression(requestAccess, undefined, requestArgs);
-
-      const thenParams = [createParam("r", ts.SyntaxKind.AnyKeyword)];
-
-      const thenBody = ts.factory.createPropertyAccessExpression(
-        ts.factory.createIdentifier("r"),
-        ts.factory.createIdentifier("data")
-      );
-
-      const thenArgs = ts.factory.createArrowFunction(
-        undefined,
-        undefined,
-        thenParams,
-        undefined,
-        ts.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-        thenBody
-      );
-
-      const thenAccess = ts.factory.createPropertyAccessExpression(
-        requestCall,
-        ts.factory.createIdentifier("then")
-      );
-
-      const thenCall = ts.factory.createCallExpression(thenAccess, undefined, [thenArgs]);
-
-      const returnStatement = ts.factory.createReturnStatement(thenCall);
-
-      const fnBody = ts.factory.createBlock([returnStatement], true);
-
-      const modifiers: ts.ModifierToken<ts.ModifierSyntaxKind>[] = [
-        ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)
-      ];
-      let name = ts.factory.createIdentifier(handler);
-      if (isDefault) {
-        modifiers.push(ts.factory.createModifier(ts.SyntaxKind.DefaultKeyword));
-        name = undefined;
-      }
-
-      return ts.factory.updateFunctionDeclaration(
-        node as ts.FunctionDeclaration,
-        undefined,
-        modifiers,
-        undefined,
-        name,
-        undefined,
-        fnParams,
-        undefined,
-        fnBody
-      );
+      return httpService.modify();
     };
 
     return visitor;
@@ -135,9 +286,16 @@ export type TriggerTransformerFactoryMap = Map<string, (...args) => TriggerTrans
 export const defaultTriggerTransformerFactories: TriggerTransformerFactoryMap = new Map();
 defaultTriggerTransformerFactories.set(
   HttpTransformer._name,
-  (triggers, baseUrl) => new HttpTransformer(triggers, baseUrl)
+  (triggers, baseUrl, options: {selectedHttpService}) =>
+    new HttpTransformer(triggers, baseUrl, options)
 );
 // add new TriggerTransformers here
+
+export interface TriggerTransformerAdditionalParams {
+  http?: {
+    selectedHttpService: string;
+  };
+}
 
 export class FunctionCompiler {
   variables: string[] = [];
@@ -147,6 +305,7 @@ export class FunctionCompiler {
     private fn: FunctionWithIndex,
     private triggerTypes: string[],
     private baseUrl: string,
+    private triggerTransformerAdditionalParams: TriggerTransformerAdditionalParams,
     private triggerTransformerFactories: TriggerTransformerFactoryMap = defaultTriggerTransformerFactories
   ) {
     this.fn.triggers = this.filterTriggers(this.fn.triggers, ([_, trigger]) =>
@@ -180,8 +339,12 @@ export class FunctionCompiler {
         continue;
       }
 
-      const transformer = factory(relevantTriggers, this.baseUrl);
-      imports.push(...transformer.getImportDeclarations());
+      const transformer = factory(
+        relevantTriggers,
+        this.baseUrl,
+        this.triggerTransformerAdditionalParams[triggerType]
+      );
+      imports.push(...transformer.importDeclarations);
       transformers.push(transformer.getTransformer());
     }
 
@@ -193,7 +356,9 @@ export class FunctionCompiler {
       ...this.sourceFile.statements
     ]);
 
-    return ts.createPrinter().printFile(this.sourceFile);
+    // return ts.createPrinter().printFile(this.sourceFile);
+    const compiledCode = ts.createPrinter().printFile(this.sourceFile);
+    return clearEmptyStatementTraces(compiledCode);
   }
 
   getHandlerNames() {
@@ -247,25 +412,13 @@ export type Visitor = (node: ts.Node) => ts.Node;
 
 export class TriggerTransformer {
   static _name: string;
-  getImportDeclarations: () => ts.ImportDeclaration[];
+  importDeclarations: ts.ImportDeclaration[];
   getTransformer: () => Transformer;
   getVisitor: (triggers: Triggers, context: ts.TransformationContext) => Visitor;
 }
 
 export function codeToAst(code: string) {
   return ts.createSourceFile("name.ts", code, ts.ScriptTarget.Latest);
-}
-
-export function createParam(name: string, type: ts.KeywordTypeSyntaxKind) {
-  return ts.factory.createParameterDeclaration(
-    undefined,
-    undefined,
-    undefined,
-    ts.factory.createIdentifier(name),
-    undefined,
-    ts.factory.createKeywordTypeNode(type),
-    undefined
-  );
 }
 
 export function getFunctionName(node: ts.FunctionDeclaration) {
@@ -280,5 +433,19 @@ export function getFunctionName(node: ts.FunctionDeclaration) {
 
   return undefined;
 }
+
+export function clearEmptyStatementTraces(code: string) {
+  return code.replace(/^;[\n|;]*$\n/gm, "");
+}
+
+// export function disableStatement(node: ts.Node) {
+//   node = ts.factory.createEmptyStatement();
+//   node = ts.addSyntheticLeadingComment(
+//     node,
+//     ts.SyntaxKind.SingleLineCommentTrivia,
+//     "This statement has been deleted."
+//   );
+//   return node;
+// }
 
 export type FunctionWithIndex = Function & {index: string};

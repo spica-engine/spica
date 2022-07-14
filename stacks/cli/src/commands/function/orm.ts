@@ -3,15 +3,17 @@ import {Function, Triggers, Trigger} from "@spica-server/interface/function";
 import axios from "axios";
 import * as path from "path";
 import * as fs from "fs";
-import * as ts from "typescript";
 import {spin} from "../../console";
 import {FunctionCompiler, FunctionWithIndex} from "../../compile";
+import {availableHttpServices, separateToNewLines} from "../../validator";
+import {green} from "colorette";
 
 async function orm({options}: ActionParameters) {
   const APIKEY = options.apikey as string;
   const APIURL = options.url as string;
   const PATH = (options.path as string) || path.join(process.cwd(), "functions");
   const TRIGGER_TYPES = options.triggerTypes as string[];
+  const HTTP_SERVICE = options.httpService as string;
 
   await spin({
     text: "Fetching functions..",
@@ -42,7 +44,13 @@ async function orm({options}: ActionParameters) {
 
       const writeFilePromises = [];
       for (const fn of functions) {
-        const compiledCode = new FunctionCompiler(fn, TRIGGER_TYPES, APIURL).compile();
+        const compiledCode = new FunctionCompiler(fn, TRIGGER_TYPES, APIURL, {
+          http: {selectedHttpService: HTTP_SERVICE}
+        }).compile();
+        if (compiledCode == "") {
+          continue;
+        }
+
         const replacedName = fn.name.replace(" ", "_");
         const _path = path.join(PATH, `${replacedName}.ts`);
 
@@ -72,6 +80,16 @@ export default function({createCommand}: CreateCommandParameters): Command {
       "Trigger types that will be filtered. Default value is http.",
       {
         default: ["http"]
+      }
+    )
+    .option(
+      "--http-service <http-service>",
+      `Third party library that is responsible for sending http requests. Available services are: ${separateToNewLines(
+        availableHttpServices,
+        green
+      )}}.`,
+      {
+        default: "axios"
       }
     )
     .action(orm);
