@@ -4,9 +4,10 @@ import axios from "axios";
 import * as path from "path";
 import * as fs from "fs";
 import {spin} from "../../console";
-import {FunctionCompiler, FunctionWithIndex} from "../../compile";
+import {FunctionCompiler} from "../../compile";
 import {availableHttpServices, separateToNewLines} from "../../validator";
 import {green} from "colorette";
+import {FunctionWithIndex} from "../../function/interface";
 
 async function orm({options}: ActionParameters) {
   const APIKEY = options.apikey as string;
@@ -44,14 +45,15 @@ async function orm({options}: ActionParameters) {
 
       const writeFilePromises = [];
       for (const fn of functions) {
-        const sources = new FunctionCompiler(fn, TRIGGER_TYPES, APIURL, {
-          http: {selectedHttpService: HTTP_SERVICE}
-        }).compile();
+        const options = {
+          http: {selectedService: HTTP_SERVICE}
+        };
+        const sources = new FunctionCompiler(fn, TRIGGER_TYPES, APIURL, options).compile();
 
         const replacedName = fn.name.replace(/ /gm, "_");
-        const folderPath = path.join(PATH,replacedName);
-        if(!fs.existsSync(folderPath)){
-          fs.mkdirSync(folderPath)
+        const folderPath = path.join(PATH, replacedName);
+        if (!fs.existsSync(folderPath)) {
+          fs.mkdirSync(folderPath);
         }
 
         for (const source of sources) {

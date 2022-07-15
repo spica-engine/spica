@@ -1,5 +1,6 @@
 import {Function} from "@spica-server/interface/function";
-import {FunctionCompiler, HttpTransformer} from "@spica/cli/src/compile";
+import {FunctionCompiler} from "@spica/cli/src/compile";
+import {HttpTransformer} from "@spica/cli/src/function/triggers/http/transformer";
 import * as ts from "typescript";
 
 describe("Function Compiler", () => {
@@ -55,7 +56,7 @@ export function unrelated(){
 }
     `;
     compiler = new FunctionCompiler({...fn, index}, ["http"], "http://test.com", {
-      http: {selectedHttpService: "axios"}
+      http: {selectedService: "axios"}
     });
   });
 
@@ -106,7 +107,7 @@ return axios.request(config).then(r => r.data);
           active: true
         }
       };
-      http = new HttpTransformer(httpTrigger, "http://test.com", {selectedHttpService: "axios"});
+      http = new HttpTransformer(httpTrigger, "http://test.com", {selectedService: "axios"});
     });
 
     it("should get import declarations", () => {
