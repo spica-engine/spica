@@ -3,10 +3,10 @@ import * as ts from "typescript";
 import {FunctionDeclarationModifier} from "../../../modifier";
 
 export class Axios extends FunctionDeclarationModifier {
-  modifierName = "axios";
+  static modifierName = "axios";
 
-  private url: string;
-  private method: string;
+  url: string;
+  method: string;
 
   constructor(node: ts.FunctionDeclaration, handler: string, baseUrl: string, trigger: Trigger) {
     super(node, handler);
@@ -109,5 +109,5 @@ export class Axios extends FunctionDeclarationModifier {
 
 export const axios = {
   name: Axios.modifierName,
-  factory: (node, baseUrl, handler, trigger) => new Axios(node, baseUrl, handler, trigger)
+  factory: (node, handler, baseUrl, trigger) => new Axios(node, handler, baseUrl, trigger)
 };

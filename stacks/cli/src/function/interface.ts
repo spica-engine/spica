@@ -12,8 +12,8 @@ export type FunctionWithIndex = Function & {index: string};
 
 export type FunctionModifier = (
   node: ts.FunctionDeclaration,
-  baseUrl: string,
   handler: string,
+  baseUrl: string,
   trigger: Trigger
 ) => FunctionDeclarationModifier;
 export type FunctionModifiers = Map<string, FunctionModifier>;

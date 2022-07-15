@@ -13,9 +13,7 @@ export abstract class FunctionDeclarationModifier {
   parameters: ts.ParameterDeclaration[] = [];
   decorators: ts.Decorator[] = [];
 
-  constructor(private node: ts.FunctionDeclaration, private handler: string) {
-    this.setAllDeclarationDependencies();
-  }
+  constructor(private node: ts.FunctionDeclaration, private handler: string) {}
 
   private get isHandlerDefault(): boolean {
     return this.handler == "default";
@@ -65,6 +63,8 @@ export abstract class FunctionDeclarationModifier {
   abstract getImports(): ts.ImportDeclaration[];
 
   public modify(): ts.Node {
+    this.setAllDeclarationDependencies();
+
     return ts.factory.updateFunctionDeclaration(
       this.node,
       this.decorators,

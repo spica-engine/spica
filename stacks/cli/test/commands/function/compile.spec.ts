@@ -4,6 +4,8 @@ import {HttpTransformer} from "@spica/cli/src/function/triggers/http/transformer
 import * as ts from "typescript";
 
 describe("Function Compiler", () => {
+  const deletedStatement = `// This statement has been deleted.`;
+
   const print = src => {
     return ts.createPrinter().printFile(src);
   };
@@ -20,7 +22,7 @@ describe("Function Compiler", () => {
     fn = {
       name: "fn1",
       env: {},
-      language: "js",
+      language: "javascript",
       timeout: 100,
       triggers: {
         register: {
@@ -66,7 +68,8 @@ export function unrelated(){
 
     src = ts.transform(src, [transformer]).transformed[0] as ts.SourceFile;
 
-    const expectedSrc = createSrc(`;
+    const expectedSrc = createSrc(`${deletedStatement}
+    ;
     /**
      * Some js doc that should be kept
      */
@@ -75,6 +78,7 @@ export function unrelated(){
         // some other ops...
         return res.send("OK");
     }
+    ${deletedStatement}
     ;`);
 
     expect(print(src)).toEqual(print(expectedSrc));
@@ -83,23 +87,38 @@ export function unrelated(){
   it("should transform function", () => {
     const compiledFn = compiler.compile();
 
-    const expectedSrc = createSrc(`
-import axios from "axios";
+    const expectedJs = createSrc(`import axios from "axios";
+${deletedStatement}
+;
 /**
  * Some js doc that should be kept
  */
 export function register(config){
-return axios.request(config).then(r => r.data);
+return axios.request({...config, method: "get", url: "http://test.com/fn-execute/register"}).then(r => r.data);
 }
+${deletedStatement}
+;
 `);
 
-    expect(compiledFn).toEqual(print(expectedSrc));
+    const expectedDTs = createSrc(`
+/**
+ * Some js doc that should be kept
+ */
+export function register(config: any): any;
+`);
+
+    expect(compiledFn).toEqual([
+      {extension: "js", content: print(expectedJs)},
+      {extension: "d.ts", content: print(expectedDTs)}
+    ]);
   });
 
   describe("HttpTriggerTransformer", () => {
     let http: HttpTransformer;
+    let imports = [];
 
     beforeEach(() => {
+      imports = [];
       const httpTrigger = {
         register: {
           type: "http",
@@ -107,18 +126,12 @@ return axios.request(config).then(r => r.data);
           active: true
         }
       };
-      http = new HttpTransformer(httpTrigger, "http://test.com", {selectedService: "axios"});
-    });
-
-    it("should get import declarations", () => {
-      let src = createSrc("");
-
-      const imports = http.importDeclarations;
-      src = ts.factory.updateSourceFile(src, [...imports, ...src.statements]);
-
-      const expectedSrc = createSrc("import axios from 'axios'");
-
-      expect(print(src)).toEqual(print(expectedSrc));
+      http = new HttpTransformer(httpTrigger, "http://test.com", {
+        selectedService: "axios",
+        addImports: _imports => {
+          imports.push(...imports);
+        }
+      });
     });
 
     it("should transform http trigger", () => {
@@ -133,7 +146,7 @@ return axios.request(config).then(r => r.data);
       src = ts.transform(src, [transformer]).transformed[0] as ts.SourceFile;
       const expectedSrc = createSrc(
         `export function register(config){
-            return axios.request(config).then(r => r.data);
+            return axios.request({ ...config, method: "get", url: "http://test.com/fn-execute/register" }).then(r => r.data);
         }`
       );
 

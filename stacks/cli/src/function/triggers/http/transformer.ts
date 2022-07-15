@@ -49,8 +49,8 @@ export class HttpTransformer implements TriggerTransformer<ts.Node> {
 
       const modifier = this.modifier(
         node as ts.FunctionDeclaration,
-        this.baseUrl,
         handler,
+        this.baseUrl,
         triggers[handler]
       );
 
