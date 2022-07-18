@@ -116,6 +116,7 @@ export function register(config: any): any;
   describe("HttpTriggerTransformer", () => {
     let http: HttpTransformer;
     let imports = [];
+    let extraFns = [];
 
     beforeEach(() => {
       imports = [];
@@ -130,7 +131,8 @@ export function register(config: any): any;
         selectedService: "axios",
         addImports: _imports => {
           imports.push(...imports);
-        }
+        },
+        addExtraFunctions: (fns) => extraFns.push(...fns)
       });
     });
 

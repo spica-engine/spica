@@ -1,6 +1,6 @@
-import {Triggers, Function, Trigger} from "@spica-server/interface/function";
+import { Triggers, Function, Trigger } from "@spica-server/interface/function";
 import * as ts from "typescript";
-import {FunctionDeclarationModifier} from "./modifier";
+import { FunctionDeclarationModifier } from "./modifier";
 
 export abstract class TriggerTransformer<T extends ts.Node> {
   static _name: string;
@@ -8,7 +8,7 @@ export abstract class TriggerTransformer<T extends ts.Node> {
   abstract getVisitor: (triggers: Triggers, context: ts.TransformationContext) => ts.Visitor;
 }
 
-export type FunctionWithIndex = Function & {index: string};
+export type FunctionWithIndex = Function & { index: string };
 
 export type FunctionModifier = (
   node: ts.FunctionDeclaration,
@@ -33,8 +33,9 @@ export interface HttpOptions {
 
 export interface CommonTriggerTransformerOptions {
   addImports: (imports: ts.ImportDeclaration[]) => void;
+  addExtraFunctions: (fns: ts.FunctionDeclaration[]) => void;
 }
 
-export type TriggerTransformerOptions = {[key: string]: any} & CommonTriggerTransformerOptions;
+export type TriggerTransformerOptions = { [key: string]: any } & CommonTriggerTransformerOptions;
 
 export type HttpTriggerTransformerOptions = HttpOptions & CommonTriggerTransformerOptions;

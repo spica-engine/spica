@@ -3,66 +3,52 @@ import * as ts from "typescript";
 export abstract class FunctionDeclarationModifier {
   static modifierName: string;
 
-  private modifiers: ts.Modifier[] = [];
-  private name: ts.Identifier;
-  private asteriksToken: ts.AsteriskToken;
-  private typeParameters: ts.TypeParameterDeclaration[] = [];
-  private type: ts.TypeNode;
+  modifiers: ts.Modifier[]
+  name: ts.Identifier;
+  asteriksToken: ts.AsteriskToken;
+  typeParameters: ts.TypeParameterDeclaration[];
+  type: ts.TypeNode;
 
   body: ts.FunctionBody;
-  parameters: ts.ParameterDeclaration[] = [];
-  decorators: ts.Decorator[] = [];
+  parameters: ts.ParameterDeclaration[];
+  decorators: ts.Decorator[];
 
-  constructor(private node: ts.FunctionDeclaration, private handler: string) {}
+  constructor(private node: ts.FunctionDeclaration) { }
 
-  private get isHandlerDefault(): boolean {
-    return this.handler == "default";
-  }
+  abstract setBody(): ts.FunctionBody;
 
-  private setModifiers(): void {
-    const modifiers: ts.ModifierToken<ts.ModifierSyntaxKind>[] = [
-      ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)
-    ];
+  abstract setParameters(): ts.ParameterDeclaration[];
 
-    if (this.isHandlerDefault) {
-      modifiers.push(ts.factory.createModifier(ts.SyntaxKind.DefaultKeyword));
-    }
+  abstract setDecorators(): ts.Decorator[];
 
-    this.modifiers = modifiers;
-  }
+  abstract setAsteriksToken(): ts.AsteriskToken;
 
-  private setName(): void {
-    this.name = !this.isHandlerDefault ? ts.factory.createIdentifier(this.handler) : undefined;
-  }
+  abstract setTypeParameters(): ts.TypeParameterDeclaration[];
 
-  abstract setBody(): void;
+  abstract setType(): ts.TypeNode;
 
-  abstract setParameters(): void;
+  abstract setModifiers(): ts.Modifier[];
 
-  abstract setDecorators(): void;
+  abstract setName(): ts.Identifier;
 
-  private setAsteriksToken() {}
-
-  private setTypeParameters() {}
-
-  private setType() {}
+  abstract getExtraFunctionDeclarations(): ts.FunctionDeclaration[]
 
   private setAllDeclarationDependencies(): void {
-    this.setModifiers();
-    this.setName();
-    this.setBody();
-    this.setParameters();
+    this.modifiers = this.setModifiers();
+    this.name = this.setName();
+    this.body = this.setBody();
+    this.parameters = this.setParameters();
 
     // unused for now
-    this.setDecorators();
-    this.setAsteriksToken();
-    this.setTypeParameters();
-    this.setType();
+    this.decorators = this.setDecorators();
+    this.asteriksToken = this.setAsteriksToken();
+    this.typeParameters = this.setTypeParameters();
+    this.type = this.setType();
   }
 
   abstract getImports(): ts.ImportDeclaration[];
 
-  public modify(): ts.Node {
+  public modify(): ts.FunctionDeclaration {
     this.setAllDeclarationDependencies();
 
     return ts.factory.updateFunctionDeclaration(
@@ -77,4 +63,66 @@ export abstract class FunctionDeclarationModifier {
       this.body
     );
   }
+}
+
+export class SpicaFunctionModifier extends FunctionDeclarationModifier {
+
+  handler: string;
+
+  setBody() {
+    return undefined
+  }
+  setParameters() {
+    return [];
+  }
+
+  setDecorators() {
+    return undefined
+  }
+
+  setAsteriksToken() {
+    return undefined
+  }
+
+  setTypeParameters() {
+    return undefined
+  }
+
+  setType() {
+    return undefined
+  }
+
+  constructor(node: ts.FunctionDeclaration, handler: string) {
+    super(node);
+    this.handler = handler
+  }
+
+  private get isHandlerDefault(): boolean {
+    return this.handler == "default";
+  }
+
+  setModifiers(): ts.Modifier[] {
+    const modifiers: ts.Modifier[] = [
+      ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)
+    ];
+
+    if (this.isHandlerDefault) {
+      modifiers.push(ts.factory.createModifier(ts.SyntaxKind.DefaultKeyword));
+    }
+
+    return modifiers;
+  }
+
+  setName() {
+    return !this.isHandlerDefault ? ts.factory.createIdentifier(this.handler) : undefined;
+  }
+
+  getImports(): ts.ImportDeclaration[] {
+    return []
+  }
+
+  getExtraFunctionDeclarations(): ts.FunctionDeclaration[] {
+    return []
+  }
+
 }

@@ -15,6 +15,7 @@ export class HttpTransformer implements TriggerTransformer<ts.Node> {
   modifier: FunctionModifier;
 
   importsAdded = false;
+  extraFnsAdded = false;
 
   constructor(
     private triggers: Triggers,
@@ -59,6 +60,11 @@ export class HttpTransformer implements TriggerTransformer<ts.Node> {
       if (!this.importsAdded) {
         this.options.addImports(modifier.getImports());
         this.importsAdded = true;
+      }
+
+      if (!this.extraFnsAdded) {
+        this.options.addExtraFunctions(modifier.getExtraFunctionDeclarations());
+        this.extraFnsAdded = true;
       }
 
       return modifier.modify();

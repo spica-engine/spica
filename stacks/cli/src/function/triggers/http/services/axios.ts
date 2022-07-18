@@ -1,18 +1,36 @@
-import {Trigger} from "@spica-server/interface/function";
+import { Trigger } from "@spica-server/interface/function";
 import * as ts from "typescript";
-import {FunctionDeclarationModifier} from "../../../modifier";
+import { FunctionDeclarationModifier, SpicaFunctionModifier } from "../../../modifier";
 
-export class Axios extends FunctionDeclarationModifier {
+export class Axios extends SpicaFunctionModifier {
+
   static modifierName = "axios";
 
   url: string;
   method: string;
 
-  constructor(node: ts.FunctionDeclaration, handler: string, baseUrl: string, trigger: Trigger) {
+  extraFunctionDeclarations: ts.FunctionDeclaration[] = []
+  registeredValidators: string[] = []
+
+  constructor(node: ts.FunctionDeclaration, handler: string, baseUrl: string, trigger: Trigger, private validators = axiosValidators) {
     super(node, handler);
 
     this.url = `${baseUrl}/fn-execute${trigger.options.path}`;
     this.method = trigger.options.method;
+
+
+
+    for (const [name, validatorFactory] of this.validators.entries()) {
+      const emptyFn = ts.factory.createFunctionDeclaration([], [], undefined, undefined, [], [], undefined, undefined);
+      const validator = validatorFactory(emptyFn);
+
+      this.registeredValidators.push(name)
+      this.extraFunctionDeclarations.push(validator.modify() as ts.FunctionDeclaration);
+    }
+  }
+
+  getExtraFunctionDeclarations(): ts.FunctionDeclaration[] {
+    return this.extraFunctionDeclarations
   }
 
   getImports() {
@@ -30,8 +48,8 @@ export class Axios extends FunctionDeclarationModifier {
     return [importDeclaration];
   }
 
-  setParameters(): void {
-    this.parameters = [
+  setParameters() {
+    return [
       ts.factory.createParameterDeclaration(
         undefined,
         undefined,
@@ -44,26 +62,39 @@ export class Axios extends FunctionDeclarationModifier {
     ];
   }
 
-  setDecorators(): void {}
+  setBody() {
 
-  setBody(): void {
+    const configValue = ts.factory.createObjectLiteralExpression([
+      ts.factory.createSpreadAssignment(ts.factory.createIdentifier("config")),
+      ts.factory.createPropertyAssignment(
+        ts.factory.createIdentifier("method"),
+        ts.factory.createStringLiteral(this.method.toLowerCase())
+      ),
+      ts.factory.createPropertyAssignment(
+        ts.factory.createIdentifier("url"),
+        ts.factory.createStringLiteral(this.url)
+      )
+    ])
+
+    const configAssigment = ts.factory.createBinaryExpression(ts.factory.createIdentifier("config"), ts.SyntaxKind.FirstAssignment, configValue)
+
+    const configStatement = ts.factory.createExpressionStatement(configAssigment)
+
+    const validatorCalls: ts.Statement[] = []
+    for (const name of this.registeredValidators) {
+      const call = ts.factory.createCallExpression(ts.factory.createIdentifier(name), undefined, [ts.factory.createIdentifier("config")])
+      validatorCalls.push(ts.factory.createExpressionStatement(call))
+    }
+
+
+
     const requestAccess = ts.factory.createPropertyAccessExpression(
       ts.factory.createIdentifier("axios"),
       ts.factory.createIdentifier("request")
     );
 
     const requestArgs = [
-      ts.factory.createObjectLiteralExpression([
-        ts.factory.createSpreadAssignment(ts.factory.createIdentifier("config")),
-        ts.factory.createPropertyAssignment(
-          ts.factory.createIdentifier("method"),
-          ts.factory.createStringLiteral(this.method.toLowerCase())
-        ),
-        ts.factory.createPropertyAssignment(
-          ts.factory.createIdentifier("url"),
-          ts.factory.createStringLiteral(this.url)
-        )
-      ])
+      ts.factory.createIdentifier("config")
     ];
 
     const requestCall = ts.factory.createCallExpression(requestAccess, undefined, requestArgs);
@@ -103,9 +134,99 @@ export class Axios extends FunctionDeclarationModifier {
 
     const returnStatement = ts.factory.createReturnStatement(thenCall);
 
-    this.body = ts.factory.createBlock([returnStatement], true);
+    return ts.factory.createBlock([configStatement,...validatorCalls, returnStatement], true);
   }
 }
+
+export class AxiosWriteValidator extends FunctionDeclarationModifier {
+
+
+  static modifierName = "axiosWriteValidator"
+
+  setAsteriksToken(): ts.AsteriskToken {
+    return undefined
+  }
+
+  setTypeParameters(): ts.TypeParameterDeclaration[] {
+    return []
+  }
+
+
+  setModifiers() {
+    return []
+  }
+
+  setType(): ts.TypeNode {
+    return undefined
+  }
+
+  setDecorators() {
+    return []
+  }
+
+  getImports() {
+    return []
+  }
+
+  getExtraFunctionDeclarations(): ts.FunctionDeclaration[] {
+    return []
+  }
+
+  setName(): ts.Identifier {
+    return ts.factory.createIdentifier(AxiosWriteValidator.modifierName)
+  }
+
+  setParameters() {
+    return [ts.factory.createParameterDeclaration(
+      undefined,
+      undefined,
+      undefined,
+      ts.factory.createIdentifier("config"),
+    )]
+  }
+
+  setBody() {
+    const writeMethods = ["post", "put"]
+    const writeMethodsArray = ts.factory.createArrayLiteralExpression(
+      writeMethods.map(m => ts.factory.createStringLiteral(m)),
+      false
+    );
+
+    const includes = ts.factory.createPropertyAccessExpression(
+      writeMethodsArray,
+      ts.factory.createIdentifier('includes')
+    );
+
+    const configMethodAccess = ts.factory.createPropertyAccessExpression(ts.factory.createIdentifier("config"), ts.factory.createIdentifier("method"))
+
+    const includesCall = ts.factory.createCallExpression(
+      includes,
+      undefined,
+      [configMethodAccess]
+    );
+
+    const configData = ts.factory.createPropertyAccessExpression(ts.factory.createIdentifier("config"), ts.factory.createIdentifier("data"))
+
+    const binaryExpression = ts.factory.createLogicalAnd(includesCall, ts.factory.createPrefixUnaryExpression(ts.SyntaxKind.ExclamationToken, configData))
+
+    const warningMessage = `Sending empty request body for ${writeMethods.join(", ")} requests is unusual. If it's not intented, please use config.data to send request body.`
+
+    const consoleWarnAccess = ts.factory.createPropertyAccessExpression(ts.factory.createIdentifier("console"), ts.factory.createIdentifier("warn"));
+
+    const consoleWarnCall = ts.factory.createCallExpression(consoleWarnAccess, [], [ts.factory.createStringLiteral(warningMessage)])
+
+    const ifStatementBody = ts.factory.createBlock([ts.factory.createExpressionStatement(consoleWarnCall)], true)
+
+    const IfStatement = ts.factory.createIfStatement(binaryExpression, ifStatementBody)
+
+    return ts.factory.createBlock([IfStatement], true)
+
+  }
+
+
+}
+
+const axiosValidators = new Map<string, (node) => FunctionDeclarationModifier>([[AxiosWriteValidator.modifierName, (node) => new AxiosWriteValidator(node)]])
 
 export const axios = {
   name: Axios.modifierName,
