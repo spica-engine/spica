@@ -34,6 +34,7 @@ ts_project(
         "@npm_cli//pretty-ms",
         "@npm_cli//semver",
         "@npm_cli//yaml",
+        "@npm_cli//typescript",
     ],
 )
 
