@@ -1,6 +1,5 @@
-import {Function} from "@spica-server/interface/function";
-import {FunctionCompiler} from "@spica/cli/src/compile";
-import {HttpTransformer} from "@spica/cli/src/function/triggers/http/transformer";
+import { Function } from "@spica-server/interface/function";
+import { FunctionCompiler } from "@spica/cli/src/compile";
 import * as ts from "typescript";
 
 describe("Function Compiler", () => {
@@ -27,12 +26,12 @@ describe("Function Compiler", () => {
       triggers: {
         register: {
           type: "http",
-          options: {path: "/register", method: "get"},
+          options: { path: "/register", method: "get" },
           active: true
         },
         onColUpdate: {
           type: "database",
-          options: {collection: "col1"},
+          options: { collection: "col1" },
           active: true
         }
       }
@@ -42,7 +41,14 @@ describe("Function Compiler", () => {
 import * as ts from "typescript";
 
 /**
- * Some js doc that should be kept
+ * @typedef RequestConfig
+ * @type {Object}
+ * @property {object} params - params of the request
+ * @property {object} [body] - body of the request
+ */
+/**
+ * @param {RequestConfig} config
+ * @returns {Promise<any>}
  */
 export function register(req,res){
   const a = 4;
@@ -57,8 +63,8 @@ export function unrelated(){
   console.log("REMOVE ME!")
 }
     `;
-    compiler = new FunctionCompiler({...fn, index}, ["http"], "http://test.com", {
-      http: {selectedService: "axios"}
+    compiler = new FunctionCompiler({ ...fn, index }, ["http"], "http://test.com", {
+      http: { selectedService: "axios" }
     });
   });
 
@@ -71,7 +77,14 @@ export function unrelated(){
     const expectedSrc = createSrc(`${deletedStatement}
     ;
     /**
-     * Some js doc that should be kept
+     * @typedef RequestConfig
+     * @type {Object}
+     * @property {object} params - params of the request
+     * @property {object} [body] - body of the request
+     */
+    /**
+     * @param {RequestConfig} config
+     * @returns {Promise<any>}
      */
     export function register(req, res) {
         const a = 4;
@@ -91,84 +104,67 @@ export function unrelated(){
 ${deletedStatement}
 ;
 /**
- * Some js doc that should be kept
+ * @typedef RequestConfig
+ * @type {Object}
+ * @property {object} params - params of the request
+ * @property {object} [body] - body of the request
+ */
+/**
+ * @param {RequestConfig} config
+ * @returns {Promise<any>}
  */
 export function register(config){
-return axios.request({...config, method: "get", url: "http://test.com/fn-execute/register"}).then(r => r.data);
+  config = {...config, method: "get", url: "http://test.com/fn-execute/register"};
+  axiosWriteValidator(config);
+  axiosReadValidator(config);
+  return axios.request(config).then(r => r.data);
 }
 ${deletedStatement}
 ;
+function axiosWriteValidator(config) {
+  if(["post", "put", "patch"].includes(config.method) && !config.data){
+      console.warn("Sending empty request body for post, put, patch requests is unusual. If it's not intented, please use config.data or update your spica function.")
+  }
+}
+
+function axiosReadValidator(config) {
+  if(["get", "delete", "trace", "options", "head"].includes(config.method) && config.data){
+      console.warn("Sending request body for get, delete, trace, options, head requests is unusual. If it's not intented, please remove config.data or update your spica function.")
+  }
+}
 `);
 
     const expectedDTs = createSrc(`
 /**
- * Some js doc that should be kept
+ * @typedef RequestConfig
+ * @type {Object}
+ * @property {object} params - params of the request
+ * @property {object} [body] - body of the request
  */
-export function register(config: any): any;
+/**
+ * @param {RequestConfig} config
+ * @returns {Promise<any>}
+ */
+export function register(config: RequestConfig): Promise<any>;
+export type RequestConfig = {
+  /**
+   * - params of the request
+   */
+   params: object;
+  /**
+   * - body of the request
+   */
+   body?: object
+};
 `);
 
+console.log(compiledFn[1].content)
+console.log(print(expectedDTs));
+
+
     expect(compiledFn).toEqual([
-      {extension: "js", content: print(expectedJs)},
-      {extension: "d.ts", content: print(expectedDTs)}
+      { extension: "js", content: print(expectedJs) },
+      { extension: "d.ts", content: print(expectedDTs) }
     ]);
-  });
-
-  describe("HttpTriggerTransformer", () => {
-    let http: HttpTransformer;
-    let imports = [];
-    let extraFns = [];
-
-    beforeEach(() => {
-      imports = [];
-      const httpTrigger = {
-        register: {
-          type: "http",
-          options: {path: "/register", method: "get"},
-          active: true
-        }
-      };
-      http = new HttpTransformer(httpTrigger, "http://test.com", {
-        selectedService: "axios",
-        addImports: _imports => {
-          imports.push(...imports);
-        },
-        addExtraFunctions: (fns) => extraFns.push(...fns)
-      });
-    });
-
-    it("should transform http trigger", () => {
-      let index = `
-        export function register(req,res){
-            return res.send("Hello")
-        }
-        `;
-      let src = createSrc(index);
-      const transformer = http.getTransformer();
-
-      src = ts.transform(src, [transformer]).transformed[0] as ts.SourceFile;
-      const expectedSrc = createSrc(
-        `export function register(config){
-            return axios.request({ ...config, method: "get", url: "http://test.com/fn-execute/register" }).then(r => r.data);
-        }`
-      );
-
-      expect(print(src)).toEqual(print(expectedSrc));
-    });
-
-    it("should not transform trigger if it's not http", () => {
-      let index = `
-          export function test(){
-              return console.log("Don't touch me!")
-          }
-          `;
-      let src = createSrc(index);
-      const transformer = http.getTransformer();
-
-      src = ts.transform(src, [transformer]).transformed[0] as ts.SourceFile;
-
-      const expectedSrc = createSrc(index);
-
-      expect(print(src)).toEqual(print(expectedSrc));
-    });
   });
 });

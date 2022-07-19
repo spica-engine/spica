@@ -4,9 +4,9 @@ load("@npm_cli//@bazel/typescript:index.bzl", "ts_project")
 load("@npm_cli//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
 ts_project(
-    name = "schema_test_lib",
+    name = "compile_test_lib",
     testonly = True,
-    srcs = ["schema.spec.ts","compile.spec.ts"],
+    srcs = ["compile.spec.ts"],
     declaration = True,
     resolve_json_module = True,
     source_map = True,
@@ -19,8 +19,8 @@ ts_project(
 )
 
 jasmine_node_test(
-    name = "schema_test",
+    name = "compile_test",
     deps = [
-        ":schema_test_lib",
+        ":compile_test_lib",
     ],
 )
