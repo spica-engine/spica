@@ -18,8 +18,6 @@ export class Axios extends SpicaFunctionModifier {
     this.url = `${baseUrl}/fn-execute${trigger.options.path}`;
     this.method = trigger.options.method;
 
-
-
     for (const factory of this.validators) {
       const emptyFn = ts.factory.createFunctionDeclaration([], [], undefined, undefined, [], [], undefined, undefined);
       const validator = factory(emptyFn);
@@ -85,8 +83,6 @@ export class Axios extends SpicaFunctionModifier {
       validatorCalls.push(ts.factory.createExpressionStatement(call))
     }
 
-
-
     const requestAccess = ts.factory.createPropertyAccessExpression(
       ts.factory.createIdentifier("axios"),
       ts.factory.createIdentifier("request")
@@ -138,7 +134,6 @@ export class Axios extends SpicaFunctionModifier {
 }
 
 export class AxiosWriteValidator extends FunctionDeclarationModifier {
-
 
   static modifierName = "axiosWriteValidator"
 

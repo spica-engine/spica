@@ -1,6 +1,7 @@
 import {HttpTriggerTransformerOptions} from "../../interface";
 import {httpServiceModifiers} from "./services";
 import {HttpTransformer} from "./transformer";
+export {HttpTransformer} from "./transformer"
 
 export const http = {
   name: HttpTransformer._name,
