@@ -1,5 +1,5 @@
-import { Function } from "@spica-server/interface/function";
-import { FunctionCompiler } from "@spica/cli/src/compile";
+import {Function} from "@spica-server/interface/function";
+import {FunctionCompiler} from "@spica/cli/src/compile";
 import * as ts from "typescript";
 
 describe("Function Compiler", () => {
@@ -26,12 +26,12 @@ describe("Function Compiler", () => {
       triggers: {
         register: {
           type: "http",
-          options: { path: "/register", method: "get" },
+          options: {path: "/register", method: "get"},
           active: true
         },
         onColUpdate: {
           type: "database",
-          options: { collection: "col1" },
+          options: {collection: "col1"},
           active: true
         }
       }
@@ -63,8 +63,8 @@ export function unrelated(){
   console.log("REMOVE ME!")
 }
     `;
-    compiler = new FunctionCompiler({ ...fn, index }, ["http"], "http://test.com", {
-      http: { selectedService: "axios" }
+    compiler = new FunctionCompiler({...fn, index}, ["http"], "http://test.com", {
+      http: {selectedService: "axios"}
     });
   });
 
@@ -158,13 +158,12 @@ export type RequestConfig = {
 };
 `);
 
-console.log(compiledFn[1].content)
-console.log(print(expectedDTs));
-
+    console.log(compiledFn[1].content);
+    console.log(print(expectedDTs));
 
     expect(compiledFn).toEqual([
-      { extension: "js", content: print(expectedJs) },
-      { extension: "d.ts", content: print(expectedDTs) }
+      {extension: "js", content: print(expectedJs)},
+      {extension: "d.ts", content: print(expectedDTs)}
     ]);
   });
 });

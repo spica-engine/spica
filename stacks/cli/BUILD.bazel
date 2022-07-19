@@ -33,8 +33,8 @@ ts_project(
         "@npm_cli//ora",
         "@npm_cli//pretty-ms",
         "@npm_cli//semver",
-        "@npm_cli//yaml",
         "@npm_cli//typescript",
+        "@npm_cli//yaml",
     ],
 )
 

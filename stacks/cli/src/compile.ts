@@ -1,8 +1,8 @@
-import { Triggers, Function, Trigger } from "@spica-server/interface/function";
+import {Triggers, Function, Trigger} from "@spica-server/interface/function";
 import * as ts from "typescript";
-import { getFunctionName } from "./function/helpers";
-import { FunctionWithIndex, TriggerOptions } from "./function/interface";
-import { triggerTransformers } from "./function/triggers";
+import {getFunctionName} from "./function/helpers";
+import {FunctionWithIndex, TriggerOptions} from "./function/interface";
+import {triggerTransformers} from "./function/triggers";
 
 export class FunctionCompiler {
   sourceFile: ts.SourceFile;
@@ -26,7 +26,7 @@ export class FunctionCompiler {
     const extraFunctions: ts.FunctionDeclaration[] = [];
 
     const addImports = (_imports: ts.ImportDeclaration[]) => imports.push(..._imports);
-    const addExtraFunctions = (fns: ts.FunctionDeclaration[]) => extraFunctions.push(...fns)
+    const addExtraFunctions = (fns: ts.FunctionDeclaration[]) => extraFunctions.push(...fns);
 
     // eliminate unnecessary statements
     const handlerNames = this.getHandlerNames();
@@ -72,10 +72,10 @@ export class FunctionCompiler {
 
     switch (this.fn.language) {
       case "typescript":
-        return [{ extension: "ts", content: code }];
+        return [{extension: "ts", content: code}];
       case "javascript":
         const types = this.generateTypesOfCode(code);
-        return [{ extension: "js", content: code }, { extension: "d.ts", content: types }];
+        return [{extension: "js", content: code}, {extension: "d.ts", content: types}];
       default:
         throw Error(`Language named ${this.fn.language} has no compiler yet.`);
     }

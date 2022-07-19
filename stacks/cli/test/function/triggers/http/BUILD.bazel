@@ -11,7 +11,10 @@ ts_project(
     resolve_json_module = True,
     source_map = True,
     tsconfig = "//:tsconfig.json",
-    deps = ["//stacks/cli", "@npm_cli//@types/jasmine"]
+    deps = [
+        "//stacks/cli",
+        "@npm_cli//@types/jasmine",
+    ],
 )
 
 jasmine_node_test(

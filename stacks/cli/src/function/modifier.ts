@@ -3,7 +3,7 @@ import * as ts from "typescript";
 export abstract class FunctionDeclarationModifier {
   static modifierName: string;
 
-  modifiers: ts.Modifier[]
+  modifiers: ts.Modifier[];
   name: ts.Identifier;
   asteriksToken: ts.AsteriskToken;
   typeParameters: ts.TypeParameterDeclaration[];
@@ -13,7 +13,7 @@ export abstract class FunctionDeclarationModifier {
   parameters: ts.ParameterDeclaration[];
   decorators: ts.Decorator[];
 
-  constructor(private node: ts.FunctionDeclaration) { }
+  constructor(private node: ts.FunctionDeclaration) {}
 
   abstract setBody(): ts.FunctionBody;
 
@@ -31,7 +31,7 @@ export abstract class FunctionDeclarationModifier {
 
   abstract setName(): ts.Identifier;
 
-  abstract getExtraFunctionDeclarations(): ts.FunctionDeclaration[]
+  abstract getExtraFunctionDeclarations(): ts.FunctionDeclaration[];
 
   private setAllDeclarationDependencies(): void {
     this.modifiers = this.setModifiers();
@@ -66,35 +66,34 @@ export abstract class FunctionDeclarationModifier {
 }
 
 export class SpicaFunctionModifier extends FunctionDeclarationModifier {
-
   handler: string;
 
   setBody() {
-    return undefined
+    return undefined;
   }
   setParameters() {
     return [];
   }
 
   setDecorators() {
-    return undefined
+    return undefined;
   }
 
   setAsteriksToken() {
-    return undefined
+    return undefined;
   }
 
   setTypeParameters() {
-    return undefined
+    return undefined;
   }
 
   setType() {
-    return undefined
+    return undefined;
   }
 
   constructor(node: ts.FunctionDeclaration, handler: string) {
     super(node);
-    this.handler = handler
+    this.handler = handler;
   }
 
   private get isHandlerDefault(): boolean {
@@ -102,9 +101,7 @@ export class SpicaFunctionModifier extends FunctionDeclarationModifier {
   }
 
   setModifiers(): ts.Modifier[] {
-    const modifiers: ts.Modifier[] = [
-      ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)
-    ];
+    const modifiers: ts.Modifier[] = [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)];
 
     if (this.isHandlerDefault) {
       modifiers.push(ts.factory.createModifier(ts.SyntaxKind.DefaultKeyword));
@@ -118,11 +115,10 @@ export class SpicaFunctionModifier extends FunctionDeclarationModifier {
   }
 
   getImports(): ts.ImportDeclaration[] {
-    return []
+    return [];
   }
 
   getExtraFunctionDeclarations(): ts.FunctionDeclaration[] {
-    return []
+    return [];
   }
-
 }
