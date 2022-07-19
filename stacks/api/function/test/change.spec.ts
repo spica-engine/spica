@@ -11,6 +11,7 @@ describe("Change", () => {
   beforeEach(() => {
     fn = {
       _id: "fn_id",
+      name:"my_fn",
       env: {test: "123"},
       language: "javascript",
       timeout: 50,
