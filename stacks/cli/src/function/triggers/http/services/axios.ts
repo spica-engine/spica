@@ -10,7 +10,7 @@ export class Axios extends SpicaFunctionModifier {
   method: string;
 
   extraFunctionDeclarations: ts.FunctionDeclaration[] = []
-  registeredValidators: string[] = []
+  registeredValidators: FunctionDeclarationModifier[] = [];
 
   constructor(node: ts.FunctionDeclaration, handler: string, baseUrl: string, trigger: Trigger, private validators = axiosValidators) {
     super(node, handler);
@@ -20,11 +20,10 @@ export class Axios extends SpicaFunctionModifier {
 
 
 
-    for (const [name, validatorFactory] of this.validators.entries()) {
+    for (const factory of this.validators) {
       const emptyFn = ts.factory.createFunctionDeclaration([], [], undefined, undefined, [], [], undefined, undefined);
-      const validator = validatorFactory(emptyFn);
-
-      this.registeredValidators.push(name)
+      const validator = factory(emptyFn);
+      this.registeredValidators.push(validator);
       this.extraFunctionDeclarations.push(validator.modify() as ts.FunctionDeclaration);
     }
   }
@@ -81,8 +80,8 @@ export class Axios extends SpicaFunctionModifier {
     const configStatement = ts.factory.createExpressionStatement(configAssigment)
 
     const validatorCalls: ts.Statement[] = []
-    for (const name of this.registeredValidators) {
-      const call = ts.factory.createCallExpression(ts.factory.createIdentifier(name), undefined, [ts.factory.createIdentifier("config")])
+    for (const validator of this.registeredValidators) {
+      const call = ts.factory.createCallExpression(validator.name, undefined, [ts.factory.createIdentifier("config")])
       validatorCalls.push(ts.factory.createExpressionStatement(call))
     }
 
@@ -186,7 +185,7 @@ export class AxiosWriteValidator extends FunctionDeclarationModifier {
   }
 
   setBody() {
-    const writeMethods = ["post", "put","patch"]
+    const writeMethods = ["post", "put", "patch"]
     const writeMethodsArray = ts.factory.createArrayLiteralExpression(
       writeMethods.map(m => ts.factory.createStringLiteral(m)),
       false
@@ -227,7 +226,6 @@ export class AxiosWriteValidator extends FunctionDeclarationModifier {
 }
 
 export class AxiosReadValidator extends FunctionDeclarationModifier {
-
 
   static modifierName = "axiosReadValidator"
 
@@ -314,8 +312,7 @@ export class AxiosReadValidator extends FunctionDeclarationModifier {
 
 }
 
-const axiosValidators = new Map<string, (node) => FunctionDeclarationModifier>([[AxiosWriteValidator.modifierName, (node) => new AxiosWriteValidator(node)],
-[AxiosReadValidator.modifierName, (node) => new AxiosReadValidator(node)]])
+const axiosValidators = [(node) => new AxiosWriteValidator(node), (node) => new AxiosReadValidator(node)]
 
 export const axios = {
   name: Axios.modifierName,
