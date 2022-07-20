@@ -156,11 +156,11 @@ $custom-typography: mat-typography-config(
 }
 
 table.striped tr:nth-child(even) td {
-  background-color: rgba(var(--background-app-bar-rgb), calc(0.1 + var(--tone-diff)));
+  background-color: rgba(var(--background-background-rgb), 1) !important;
 }
 
 mat-table.striped mat-row:nth-child(even) {
-  background-color: rgba(var(--background-app-bar-rgb), calc(0.1 + var(--tone-diff)));
+  background-color: rgba(var(--background-background-rgb),1) !important;
 }
 
 .minimal-input-placer {

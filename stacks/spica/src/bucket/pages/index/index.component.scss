@@ -8,26 +8,28 @@
 }
 
 :host {
-  mat-toolbar {
-    min-height: 250px;
-    padding: 0 30px;
-    align-items: flex-start;
-    flex-direction: column;
-
+  div.actions-line {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 0px 0px 0px 5px;
+    .filters{
+      display: flex;
+    }
     span:first-of-type {
-      h4 {
-        & > * {
-          vertical-align: middle;
-          display: inline-block;
-        }
-        mat-icon {
-          margin-left: -3px;
-        }
-        span {
-          margin-left: 5px;
+      h6 {
+        margin: 0px;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        line-height: 60px;
+        .mat-icon {
+          font-size: 17px;
         }
         mat-chip-list {
-          margin-left: 10px;
+          margin-right: 10px;
           mat-chip {
             font-size: 11px;
             padding: 7px 10px;
@@ -37,35 +39,16 @@
           }
         }
       }
-
-      h6 {
-        margin-top: -10px;
-        font-size: 13px;
-        .mat-icon {
-          font-size: 17px;
-        }
-      }
-
-      h5 {
-        font-size: 15px;
-      }
     }
-  }
-
-  div.actions-line {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
+    mat-form-field{
+      margin-top: -0.65em;
+      margin-bottom: -1.34375em;
+    }
   }
   ::ng-deep div.monaco-editor {
     display: none;
   }
   div.data-guide {
-    margin: 30px;
-    margin-top: -85px;
-
     a,
     button {
       border-color: var(--primary-400);
@@ -159,18 +142,26 @@
     }
     mat-card {
       overflow: auto;
+      padding: 16px 0px;
+      
       table {
         min-width: 100%;
-        width: max-content;
+        width: 100%;
+
+        overflow: auto;
         .select {
-          width: 75px;
+          min-width: 75px;
+        }
+        .mat-column---spicainternal_id{
+          left: 75px !important;
         }
         th:not(.select):not(:last-of-type) {
           position: relative;
-          &:after {
+          padding-left: 5px;
+          &:not(.mat-column---spicainternal_id):after {
             content: "||";
             position: absolute;
-            right: 10px;
+            right: 2px;
             top: 10px;
           }
         }
@@ -184,22 +175,51 @@
           }
         }
 
-        td.mat-cell:not(.action) {
+        td.mat-cell {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          .cell{
+            padding-right: 5px;
+            padding-left: 5px;
+          }
+          &.mat-column---spicainternal_id{
+            padding-left: 5px;
+            padding-right: 5px;
+            border-right: 1px solid var(--foreground-divider);
+            min-width: 200px;
+          }
+          &.mat-column---spicainternal_actions{
+            border-left: 1px solid var(--foreground-divider);
+            padding: 0px 10px;
+          }
+        }
+        td.mat-cell:not(.action) {
           max-width: 0;
-
-          button.inline-edit {
-            display: none;
+          &.editable{
+            cursor: pointer;
+            &:hover{
+              border: 1px solid var(--accent-900);
+            }
           }
 
-          button.inline-edit:hover {
+          .cell{
+            display: inline-flex;
+            width: 100%;
+          }
+
+          .input-placer{
             display: inline-block;
-          }
-
-          span.cell:hover + button.inline-edit {
-            display: inline;
+            width: 100%;
+            ::ng-deep{
+              ng-component {
+                width: 100%;
+                display: inline-block;
+                mat-form-field{
+                  margin-top: -0.45em;
+                }
+              }
+            }
           }
         }
       }
