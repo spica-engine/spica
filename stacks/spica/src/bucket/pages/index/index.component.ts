@@ -72,7 +72,11 @@ export class IndexComponent implements OnInit, OnDestroy {
   readOnly: boolean = true;
 
   displayedProperties: Array<string> = [];
-  stickyProperties: Array<string> = ["$$spicainternal_select","$$spicainternal_id","$$spicainternal_actions"];
+  stickyProperties: Array<string> = [
+    "$$spicainternal_select",
+    "$$spicainternal_id",
+    "$$spicainternal_actions"
+  ];
   properties: Array<{name: string; title: string}> = [];
 
   $preferences: Observable<BucketSettings>;
@@ -154,8 +158,9 @@ export class IndexComponent implements OnInit, OnDestroy {
           {name: "$$spicainternal_actions", title: "Actions"}
         ];
 
-        this.editableProps = Object.entries(schema.properties)
-          .filter(([k, v]) => !this.nonEditableTypes.includes(v.type));
+        this.editableProps = Object.entries(schema.properties).filter(
+          ([k, v]) => !this.nonEditableTypes.includes(v.type)
+        );
 
         if (!schema.readOnly) {
           this.properties.unshift({name: "$$spicainternal_select", title: "Select"});
@@ -324,7 +329,7 @@ export class IndexComponent implements OnInit, OnDestroy {
       ];
     } else {
       this.displayedProperties = [...this.stickyProperties];
-      this.displayedProperties.splice(2,0,schema.primary);
+      this.displayedProperties.splice(2, 0, schema.primary);
     }
     localStorage.setItem(
       `${this.bucketId}-displayedProperties`,
@@ -647,7 +652,9 @@ export class IndexComponent implements OnInit, OnDestroy {
 
       nextField = this.editableProps[0];
     }
-    this.addPostRenderingQueue(() => this.enableEditMode(nextDataId, {key: nextField[0], value: nextField[1]}));
+    this.addPostRenderingQueue(() =>
+      this.enableEditMode(nextDataId, {key: nextField[0], value: nextField[1]})
+    );
   }
 
   focusManually(id: string, key: string) {
@@ -657,7 +664,6 @@ export class IndexComponent implements OnInit, OnDestroy {
       if (el) {
         const input = el.querySelector(".mat-input-element") as HTMLElement;
         if (input) {
-          console.log("test");
           input.focus();
         }
       }
@@ -684,12 +690,16 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.onImageError = `this.src='${src}';this.style.width='${width}';this.style.height='${height}';this.style.marginLeft='${marginHorizontal}';this.style.marginRight='${marginHorizontal}';this.style.marginTop='${marginVertical}';this.style.marginBottom='${marginVertical}';this.style.filter='${filter}';`;
   }
 
-  addPostRenderingQueue(callbackFn: () => void){
-    this.postRenderingQueue.push(callbackFn)
+  addPostRenderingQueue(callbackFn: () => void) {
+    this.postRenderingQueue.push(callbackFn);
   }
 
-  applyPostRendering(){
-    for(let postRenderingIndex = 0; postRenderingIndex < this.postRenderingQueue.length; postRenderingIndex++){
+  applyPostRendering() {
+    for (
+      let postRenderingIndex = 0;
+      postRenderingIndex < this.postRenderingQueue.length;
+      postRenderingIndex++
+    ) {
       this.postRenderingQueue[postRenderingIndex]();
     }
     this.postRenderingQueue = [];

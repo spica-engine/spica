@@ -509,7 +509,8 @@ describe("IndexComponent", () => {
 
   describe("row template", () => {
     let templateCache;
-    const defaultDiv = val => `<div style='display:inline-block;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' >${val}</div>`;
+    const defaultDiv = val =>
+      `<div style='display:inline-block;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' >${val}</div>`;
 
     beforeEach(() => {
       templateCache = fixture.componentInstance.templateMap;
