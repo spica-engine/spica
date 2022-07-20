@@ -5,5 +5,5 @@
 
 export const environment = {
   production: true,
-  api: "https://math-tcell-c6415.hq.spicaengine.com/api"
+  api: "http://localhost:4300"
 };

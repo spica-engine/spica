@@ -15,7 +15,7 @@
     align-items: center;
     flex-wrap: wrap;
     padding: 0px 0px 0px 5px;
-    .filters{
+    .filters {
       display: flex;
     }
     span:first-of-type {
@@ -40,7 +40,7 @@
         }
       }
     }
-    mat-form-field{
+    mat-form-field {
       margin-top: -0.65em;
       margin-bottom: -1.34375em;
     }
@@ -143,7 +143,7 @@
     mat-card {
       overflow: auto;
       padding: 16px 0px;
-      
+
       table {
         min-width: 100%;
         width: 100%;
@@ -152,7 +152,7 @@
         .select {
           min-width: 75px;
         }
-        .mat-column---spicainternal_id{
+        .mat-column---spicainternal_id {
           left: 75px !important;
         }
         th:not(.select):not(:last-of-type) {
@@ -179,43 +179,43 @@
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          .cell{
+          .cell {
             padding-right: 5px;
             padding-left: 5px;
           }
-          &.mat-column---spicainternal_id{
+          &.mat-column---spicainternal_id {
             padding-left: 5px;
             padding-right: 5px;
             border-right: 1px solid var(--foreground-divider);
             min-width: 200px;
           }
-          &.mat-column---spicainternal_actions{
+          &.mat-column---spicainternal_actions {
             border-left: 1px solid var(--foreground-divider);
             padding: 0px 10px;
           }
         }
         td.mat-cell:not(.action) {
           max-width: 0;
-          &.editable{
+          &.editable {
             cursor: pointer;
-            &:hover{
+            &:hover {
               border: 1px solid var(--accent-900);
             }
           }
 
-          .cell{
+          .cell {
             display: inline-flex;
             width: 100%;
           }
 
-          .input-placer{
+          .input-placer {
             display: inline-block;
             width: 100%;
-            ::ng-deep{
+            ::ng-deep {
               ng-component {
                 width: 100%;
                 display: inline-block;
-                mat-form-field{
+                mat-form-field {
                   margin-top: -0.45em;
                 }
               }
