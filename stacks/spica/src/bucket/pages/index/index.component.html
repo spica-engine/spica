@@ -106,11 +106,7 @@
               <button
                 mat-menu-item
                 disableRipple
-                *ngIf="
-                  property.name != '$$spicainternal_select' &&
-                  property.name != '$$spicainternal_id' &&
-                  property.name != '$$spicainternal_actions'
-                "
+                *ngIf="!stickyProperties.includes(property.name)"
                 [disabled]="property.name == '$$spicainternal_select' && readOnly"
                 (click)="$event.stopPropagation()"
               >

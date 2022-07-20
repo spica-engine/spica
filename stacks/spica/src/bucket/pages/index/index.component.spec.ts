@@ -164,20 +164,8 @@ describe("IndexComponent", () => {
       });
       fixture.detectChanges();
       expect(
-        fixture.debugElement.query(By.css("mat-toolbar > span > h4 > mat-icon")).nativeElement
-          .textContent
-      ).toBe("test");
-      expect(
-        fixture.debugElement.query(By.css("mat-toolbar > span > h4 > span")).nativeElement
-          .textContent
-      ).toBe("My Bucket");
-      expect(
-        fixture.debugElement.query(By.css("mat-toolbar > span > h6")).nativeElement.textContent
+        fixture.debugElement.query(By.css(".actions-line > span > h6")).nativeElement.textContent
       ).toContain("Bucket ID: bucket_id");
-      expect(
-        fixture.debugElement.query(By.css("mat-toolbar > span > h5")).nativeElement.textContent
-      ).toBe(" My bucket's description. ");
-
       expect(bucketService.getBucket).toHaveBeenCalledTimes(1);
     });
 
@@ -193,7 +181,7 @@ describe("IndexComponent", () => {
       });
       fixture.detectChanges();
       expect(
-        fixture.debugElement.query(By.css("mat-toolbar > span > h4 > mat-chip-list mat-chip"))
+        fixture.debugElement.query(By.css(".actions-line > span > h6 > mat-chip-list mat-chip"))
           .nativeElement.textContent
       ).toBe("Read Only");
 
@@ -297,7 +285,7 @@ describe("IndexComponent", () => {
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
             e.textContent.trim()
           )
-        ).toEqual(["Display all", "Select", "_id", "test", "Scheduled", "Actions"]);
+        ).toEqual(["Display all", "test", "Scheduled"]);
       });
 
       it("should set displayed properties from local storage", async () => {
@@ -352,7 +340,7 @@ describe("IndexComponent", () => {
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
             e.textContent.trim()
           )
-        ).toEqual(["Display all", "_id", "test", "Scheduled", "Actions"]);
+        ).toEqual(["Display all", "test", "Scheduled"]);
       });
 
       it("should display later checked properties", fakeAsync(() => {
@@ -365,7 +353,7 @@ describe("IndexComponent", () => {
 
         document.body
           .querySelector<HTMLButtonElement>(
-            ".mat-menu-content .mat-menu-item:nth-of-type(4) .mat-checkbox-label"
+            ".mat-menu-content .mat-menu-item:nth-of-type(2) .mat-checkbox-label"
           )
           .click();
         tick(1);
@@ -441,10 +429,10 @@ describe("IndexComponent", () => {
         "table[mat-table] tr[mat-header-row] th[mat-header-cell]"
       );
       const cell = fixture.debugElement.nativeElement.querySelector(
-        "table[mat-table] tr[mat-row] td[mat-cell] span:first-of-type"
+        "table[mat-table] tr[mat-row] td[mat-cell].mat-column-test span"
       );
-      expect(headerCells[0].textContent).toBe(" test ");
-      expect(headerCells[1].textContent).toBe("Actions");
+      expect(headerCells[2].textContent).toBe(" test ");
+      expect(headerCells[3].textContent).toBe("Actions");
       expect(cell.textContent).toBe("123");
     });
 
@@ -521,7 +509,7 @@ describe("IndexComponent", () => {
 
   describe("row template", () => {
     let templateCache;
-    const defaultDiv = val => `<div style='display:inline-block;min-width:20px' >${val}</div>`;
+    const defaultDiv = val => `<div style='display:inline-block;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' >${val}</div>`;
 
     beforeEach(() => {
       templateCache = fixture.componentInstance.templateMap;
@@ -849,7 +837,7 @@ describe("IndexComponent", () => {
 
     it("should sort ascending", () => {
       fixture.debugElement.nativeElement
-        .querySelector("table[mat-table] th[mat-header-cell]")
+        .querySelector("table[mat-table] th[mat-header-cell].mat-column-test")
         .click();
 
       expect(navigateSpy).toHaveBeenCalledTimes(1);
@@ -865,7 +853,7 @@ describe("IndexComponent", () => {
 
     it("should sort descending", () => {
       const sort = fixture.debugElement.nativeElement.querySelector(
-        "table[mat-table] th[mat-header-cell]"
+        "table[mat-table] th[mat-header-cell].mat-column-test"
       );
       sort.click();
       sort.click();
@@ -889,14 +877,14 @@ describe("IndexComponent", () => {
     let paginator: MatPaginator;
 
     beforeEach(() => {
-      rows.next(new Array(20).fill({_id: "1", test: "123"}));
+      rows.next(new Array(40).fill({_id: "1", test: "123"}));
       fixture.detectChanges();
       paginator = fixture.debugElement.query(By.directive(MatPaginator)).injector.get(MatPaginator);
       bucketDataService.find.calls.reset();
     });
 
     it("should assign total count", () => {
-      expect(paginator.length).toBe(20);
+      expect(paginator.length).toBe(40);
     });
 
     it("should change page", () => {
@@ -905,7 +893,7 @@ describe("IndexComponent", () => {
       expect(navigateSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledWith([], {
         queryParams: {
-          paginator: JSON.stringify({previousPageIndex: 0, pageIndex: 1, pageSize: 10, length: 20}),
+          paginator: JSON.stringify({previousPageIndex: 0, pageIndex: 1, pageSize: 25, length: 40}),
           filter: "{}",
           sort: "{}",
           language: undefined
@@ -919,7 +907,7 @@ describe("IndexComponent", () => {
       expect(navigateSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledWith([], {
         queryParams: {
-          paginator: JSON.stringify({previousPageIndex: 0, pageIndex: 0, pageSize: 5, length: 20}),
+          paginator: JSON.stringify({previousPageIndex: 0, pageIndex: 0, pageSize: 5, length: 40}),
           filter: "{}",
           sort: "{}",
           language: undefined
