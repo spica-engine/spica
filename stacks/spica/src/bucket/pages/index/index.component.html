@@ -1,35 +1,3 @@
-<mat-toolbar *ngIf="schema$ | async; let schema">
-  <span>
-    <h4>
-      <mat-icon>{{ schema.icon }}</mat-icon>
-      <span>{{ schema.title }}</span>
-
-      <mat-chip-list *ngIf="schema.readOnly">
-        <mat-chip disableRipple>Read Only</mat-chip>
-      </mat-chip-list>
-      <mat-spinner *ngIf="!loaded" color="accent" diameter="20" @smooth></mat-spinner>
-    </h4>
-
-    <h6>
-      Bucket ID: {{ schema._id }}
-      <button
-        mat-icon-button
-        #clipboard="matClipboard"
-        [matClipboard]="bucketId"
-        (mouseenter)="$event.stopImmediatePropagation()"
-      >
-        <mat-icon [matTooltip]="clipboard.toolTip">
-          {{ clipboard.icon }}
-        </mat-icon>
-      </button>
-    </h6>
-
-    <h5>
-      {{ schema.description }}
-    </h5>
-  </span>
-</mat-toolbar>
-
 <div class="data-guide">
   <ng-container *ngIf="schema$ | async; let schema">
     <div class="actions-line">
@@ -62,6 +30,25 @@
           </mat-menu>
         </button>
       </div>
+      <span>
+        <h6>
+          <mat-chip-list *ngIf="schema.readOnly">
+            <mat-chip disableRipple>Read Only</mat-chip>
+          </mat-chip-list>
+          Bucket ID: {{ schema._id }}
+          <button
+            mat-icon-button
+            #clipboard="matClipboard"
+            [matClipboard]="bucketId"
+            (mouseenter)="$event.stopImmediatePropagation()"
+          >
+            <mat-icon [matTooltip]="clipboard.toolTip">
+              {{ clipboard.icon }}
+            </mat-icon>
+          </button>
+          <mat-spinner *ngIf="!loaded" color="accent" diameter="20" @smooth></mat-spinner>
+        </h6>
+      </span>
       <div class="actions">
         <button
           *ngIf="selectedItems.length > 0"
@@ -115,21 +102,23 @@
               </mat-checkbox>
             </button>
             <mat-divider></mat-divider>
-            <button
-              mat-menu-item
-              disableRipple
-              *ngFor="let property of properties"
-              [disabled]="property.name == '$$spicainternal_select' && readOnly"
-              (click)="$event.stopPropagation()"
-            >
-              <mat-checkbox
+            <ng-container *ngFor="let property of properties">
+              <button
+                mat-menu-item
+                disableRipple
+                *ngIf="!stickyProperties.includes(property.name)"
                 [disabled]="property.name == '$$spicainternal_select' && readOnly"
-                [ngModel]="displayedProperties.indexOf(property.name) > -1"
-                (ngModelChange)="toggleProperty(property.name, $event)"
+                (click)="$event.stopPropagation()"
               >
-                {{ property.title }}
-              </mat-checkbox>
-            </button>
+                <mat-checkbox
+                  [disabled]="property.name == '$$spicainternal_select' && readOnly"
+                  [ngModel]="displayedProperties.indexOf(property.name) > -1"
+                  (ngModelChange)="toggleProperty(property.name, $event)"
+                >
+                  {{ property.title }}
+                </mat-checkbox>
+              </button>
+            </ng-container>
           </mat-menu>
         </button>
 
@@ -180,7 +169,7 @@
         matSort
         (matSortChange)="onSortChange($event)"
       >
-        <ng-container matColumnDef="$$spicainternal_select">
+        <ng-container matColumnDef="$$spicainternal_select" sticky>
           <th class="select" mat-header-cell *matHeaderCellDef>
             <mat-checkbox
               *ngIf="dataIds?.length > 0"
@@ -196,14 +185,8 @@
             ></mat-checkbox>
           </td>
         </ng-container>
-        <ng-container matColumnDef="$$spicainternal_id" *ngIf="schema$ | async; let schema">
-          <th
-            mat-header-cell
-            *matHeaderCellDef
-            mat-sort-header
-            mat-resize-header
-            [persist-header-width]="schema._id"
-          >
+        <ng-container matColumnDef="$$spicainternal_id" *ngIf="schema$ | async; let schema" sticky>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>
             _id
           </th>
           <td mat-cell *matCellDef="let row">
@@ -216,6 +199,7 @@
             *matHeaderCellDef
             mat-sort-header
             mat-resize-header
+            [overrideMinWidth]="true"
             [persist-header-width]="schema._id"
           >
             Scheduled
@@ -224,7 +208,11 @@
             {{ row._schedule | date: "MMM d, y, h:mm:ss a" }}
           </td>
         </ng-container>
-        <ng-container matColumnDef="$$spicainternal_actions" *ngIf="schema$ | async; let schema">
+        <ng-container
+          matColumnDef="$$spicainternal_actions"
+          *ngIf="schema$ | async; let schema"
+          stickyEnd
+        >
           <th mat-header-cell class="action" *matHeaderCellDef>Actions</th>
           <td mat-cell class="action" *matCellDef="let row">
             <button
@@ -269,10 +257,18 @@
               mat-sort-header
               [persist-header-width]="schema._id"
               mat-resize-header
+              [overrideMinWidth]="true"
             >
               {{ property.value.title }}
             </th>
-            <td mat-cell *matCellDef="let row">
+            <td
+              mat-cell
+              *matCellDef="let row"
+              [ngClass]="{editable: nonEditableTypes.indexOf(property.value.type) == -1}"
+              canInteract="bucket:data:update"
+              [resource]="schema._id + '/' + row._id"
+              (click)="enableEditMode(row._id, property)"
+            >
               <span
                 *ngIf="editingCellId != getEditingCellId(row._id, property.key)"
                 class="cell"
@@ -300,19 +296,6 @@
                 "
               >
               </span>
-              <button
-                *ngIf="
-                  nonEditableTypes.indexOf(property.value.type) == -1 &&
-                  editingCellId != getEditingCellId(row._id, property.key)
-                "
-                canInteract="bucket:data:update"
-                [resource]="schema._id + '/' + row._id"
-                class="inline-edit"
-                mat-icon-button
-                (click)="enableEditMode(row._id, property.key)"
-              >
-                <mat-icon>edit</mat-icon>
-              </button>
             </td>
           </ng-container>
         </ng-container>
