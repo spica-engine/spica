@@ -72,6 +72,11 @@ export class IndexComponent implements OnInit, OnDestroy {
   readOnly: boolean = true;
 
   displayedProperties: Array<string> = [];
+  stickyProperties: Array<string> = [
+    "$$spicainternal_select",
+    "$$spicainternal_id",
+    "$$spicainternal_actions"
+  ];
   properties: Array<{name: string; title: string}> = [];
 
   $preferences: Observable<BucketSettings>;
@@ -85,7 +90,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   guideObjects: object;
 
   readonly defaultPaginatorOptions = {
-    pageSize: 10,
+    pageSize: 25,
     pageIndex: 0,
     length: 0
   };
@@ -96,12 +101,14 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   editingCellId;
 
-  nonEditableTypes = ["storage", "relation", "richtext"];
+  nonEditableTypes = ["storage", "relation", "richtext", "object", "array", "location"];
   dispose = new Subject();
 
   @ViewChild(FilterComponent) bucketFilter: FilterComponent;
 
   displayTranslateButton = false;
+
+  private postRenderingQueue: Array<any> = [];
 
   constructor(
     private bs: BucketService,
@@ -151,9 +158,9 @@ export class IndexComponent implements OnInit, OnDestroy {
           {name: "$$spicainternal_actions", title: "Actions"}
         ];
 
-        this.editableProps = Object.entries(schema.properties)
-          .filter(([k, v]) => !this.nonEditableTypes.includes(v.type))
-          .map(([k, v]) => k);
+        this.editableProps = Object.entries(schema.properties).filter(
+          ([k, v]) => !this.nonEditableTypes.includes(v.type)
+        );
 
         if (!schema.readOnly) {
           this.properties.unshift({name: "$$spicainternal_select", title: "Select"});
@@ -175,10 +182,7 @@ export class IndexComponent implements OnInit, OnDestroy {
                 ])
                 .some(schemaProps => schemaProps == dispProps)
             )
-          : [
-              schema.primary || Object.keys(schema.properties)[0] || "$$spicainternal_id",
-              "$$spicainternal_actions"
-            ];
+          : this.properties.map(p => p.name).filter(p => p != "$$spicainternal_schedule");
       }),
       tap(schema => {
         Object.keys(schema.properties).map(key => {
@@ -262,7 +266,8 @@ export class IndexComponent implements OnInit, OnDestroy {
 
         return response.data;
       }),
-      tap(entries => (this.copyEntries = JSON.parse(JSON.stringify(entries))))
+      tap(entries => (this.copyEntries = JSON.parse(JSON.stringify(entries)))),
+      tap(() => this.applyPostRendering())
     );
   }
 
@@ -323,7 +328,8 @@ export class IndexComponent implements OnInit, OnDestroy {
         "$$spicainternal_actions"
       ];
     } else {
-      this.displayedProperties = [schema.primary, "$$spicainternal_actions"];
+      this.displayedProperties = [...this.stickyProperties];
+      this.displayedProperties.splice(2, 0, schema.primary);
     }
     localStorage.setItem(
       `${this.bucketId}-displayedProperties`,
@@ -569,7 +575,10 @@ export class IndexComponent implements OnInit, OnDestroy {
       name: "div",
       style: {
         display: "inline-block",
-        "min-width": "20px"
+        width: "100%",
+        overflow: "hidden",
+        "text-overflow": "ellipsis",
+        "white-space": "nowrap"
       },
       value
     };
@@ -618,16 +627,20 @@ export class IndexComponent implements OnInit, OnDestroy {
     return `${id}_${key}`;
   }
 
-  enableEditMode(id: string, key: string) {
-    this.editingCellId = this.getEditingCellId(id, key);
+  enableEditMode(id: string, property) {
+    if (
+      this.nonEditableTypes.indexOf(property.value.type) == -1 &&
+      this.editingCellId != this.getEditingCellId(id, property.key)
+    ) {
+      this.editingCellId = this.getEditingCellId(id, property.key);
+      this.focusManually(id, property.key);
+    }
   }
 
   editNext(id: string, key: string) {
-    const fields = this.editableProps.filter(p => this.displayedProperties.includes(p));
-
+    const fields = this.editableProps.filter(p => this.displayedProperties.includes(p[0]));
     let nextDataId = id;
-    let nextField = fields[fields.indexOf(key) + 1];
-
+    let nextField = fields[fields.map(p => p[0]).indexOf(key) + 1];
     if (!nextField) {
       const dataIds = this.copyEntries.map(v => v._id);
 
@@ -639,10 +652,9 @@ export class IndexComponent implements OnInit, OnDestroy {
 
       nextField = this.editableProps[0];
     }
-
-    this.enableEditMode(nextDataId, nextField);
-
-    this.focusManually(nextDataId, nextField);
+    this.addPostRenderingQueue(() =>
+      this.enableEditMode(nextDataId, {key: nextField[0], value: nextField[1]})
+    );
   }
 
   focusManually(id: string, key: string) {
@@ -655,7 +667,7 @@ export class IndexComponent implements OnInit, OnDestroy {
           input.focus();
         }
       }
-    }, 1000);
+    }, 50);
   }
 
   revertEditModeChanges(id: string, key: string, model: NgModel) {
@@ -676,5 +688,20 @@ export class IndexComponent implements OnInit, OnDestroy {
     const filter = `invert(${isDark ? 100 : 0}%)`;
 
     this.onImageError = `this.src='${src}';this.style.width='${width}';this.style.height='${height}';this.style.marginLeft='${marginHorizontal}';this.style.marginRight='${marginHorizontal}';this.style.marginTop='${marginVertical}';this.style.marginBottom='${marginVertical}';this.style.filter='${filter}';`;
+  }
+
+  addPostRenderingQueue(callbackFn: () => void) {
+    this.postRenderingQueue.push(callbackFn);
+  }
+
+  applyPostRendering() {
+    for (
+      let postRenderingIndex = 0;
+      postRenderingIndex < this.postRenderingQueue.length;
+      postRenderingIndex++
+    ) {
+      this.postRenderingQueue[postRenderingIndex]();
+    }
+    this.postRenderingQueue = [];
   }
 }

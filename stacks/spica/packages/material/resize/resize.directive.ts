@@ -17,6 +17,7 @@ import {MatSortHeader} from "@angular/material/sort";
   host: {
     "[style.padding-right.px]": "size",
     "[style.width.px]": "_width",
+    "[style.min-width.px]": "overrideMinWidth ? _width : initial",
     "[style.cursor]": "_cursor",
     "[style.user-select]": "_cursor ? 'none':'initial'",
     "[attr.disabled]": "_isDragging",
@@ -28,6 +29,8 @@ import {MatSortHeader} from "@angular/material/sort";
 })
 export class MatResizeHeader implements AfterViewInit {
   @Input() size: number = 100;
+
+  @Input() overrideMinWidth: boolean = false;
 
   @Output() resize = new EventEmitter<number>();
 
