@@ -1,4 +1,4 @@
-import {Function} from "@spica-server/function/services";
+import {Function} from "@spica-server/interface/function";
 import {
   ChangeKind,
   createTargetChanges,
@@ -11,6 +11,7 @@ describe("Change", () => {
   beforeEach(() => {
     fn = {
       _id: "fn_id",
+      name: "my_fn",
       env: {test: "123"},
       language: "javascript",
       timeout: 50,

@@ -11,6 +11,7 @@ ts_project(
     ]),
     deps = [
         "//packages/database",
+        "//packages/interface/function",
         "@npm//@nestjs/common",
         "@npm//@types/mongodb",
         "@npm//@types/node",
