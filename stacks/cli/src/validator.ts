@@ -32,3 +32,9 @@ ${availableSyncModules.map(m => `- ${green(m)}`).join("\n")}
 
   return input;
 }
+
+export const availableHttpServices = ["axios"];
+
+export function separateToNewLines(iterable: any[], colorCtor?: (input) => any) {
+  return iterable.map(i => `- ${colorCtor ? colorCtor(i) : i}`).join("\n");
+}

@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {Validator} from "@spica-server/core/schema";
 import {FunctionEngine} from "../engine";
-import {Function} from "@spica-server/function/services";
+import {Function} from "@spica-server/interface/function";
 
 @Injectable()
 export class EnqueuerSchemaResolver {

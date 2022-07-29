@@ -11,12 +11,13 @@ import {Observable, Subject} from "rxjs";
 import * as util from "util";
 import {
   FunctionService,
-  Function,
   FUNCTION_OPTIONS,
   Options,
   COLL_SLUG,
   CollectionSlug
 } from "@spica-server/function/services";
+import {Function} from "@spica-server/interface/function";
+
 import {ChangeKind, TargetChange} from "./change";
 import {SCHEMA, SchemaWithName} from "./schema/schema";
 import {createTargetChanges} from "./change";

@@ -30,12 +30,8 @@ import {of, OperatorFunction} from "rxjs";
 import {catchError, finalize, last, map, tap} from "rxjs/operators";
 import {createFunctionActivity} from "./activity.resource";
 import {FunctionEngine} from "./engine";
-import {
-  FunctionService,
-  Function,
-  FUNCTION_OPTIONS,
-  Options
-} from "@spica-server/function/services";
+import {FunctionService, FUNCTION_OPTIONS, Options} from "@spica-server/function/services";
+import {Function} from "@spica-server/interface/function";
 import {ChangeKind, hasContextChange} from "./change";
 import {changesFromTriggers, createTargetChanges} from "./change";
 import {LogService} from "@spica-server/function/src/log/src/log.service";
