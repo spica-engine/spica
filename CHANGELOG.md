@@ -1,5 +1,17 @@
+## v0.9.23 (2022-07-31)
+
+* feat(passport): display and copy access token of current user ([d5c2f16cc](https://github.com/spica-engine/spica/commit/d5c2f16cc))
+* feat(bucket): navigator active page indicator ([bcf5524d4](https://github.com/spica-engine/spica/commit/bcf5524d4))
+* feat(cli): introduce new command named function orm ([598fb75e8](https://github.com/spica-engine/spica/commit/598fb75e8))
+* feat(bucket): new UI of bucket data index page ([23619ef2d](https://github.com/spica-engine/spica/commit/23619ef2d))
+* fix(passport): correcting the filter to delete policies ([fdb5b7c65](https://github.com/spica-engine/spica/commit/fdb5b7c65))
+* fix(cli): set function api url for docker environments ([bcc1e0bc6](https://github.com/spica-engine/spica/commit/bcc1e0bc6))
+* fix(passport): prevent to update identity attributes without relevant policy ([2594f0af5](https://github.com/spica-engine/spica/commit/2594f0af5))
+* feat(bucket): bucket icon search by keyword ([b48d04a38](https://github.com/spica-engine/spica/commit/b48d04a38))
+
 ## v0.9.22 (2022-05-30)
 
+* docs: update changelog for v0.9.22 ([cce13be1f](https://github.com/spica-engine/spica/commit/cce13be1f))
 * feat(cli): synchronize apikeys and policies ([34913dcdb](https://github.com/spica-engine/spica/commit/34913dcdb))
 * fix(cli): ignore-errors and concurrency-limit options for sync command ([ce447fa25](https://github.com/spica-engine/spica/commit/ce447fa25))
 * feat(versioncontrol): adding identity schema to version control ([c0f675fc5](https://github.com/spica-engine/spica/commit/c0f675fc5))
