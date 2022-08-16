@@ -27,6 +27,7 @@ import HttpSchema = require("./schema/http.json");
 import ScheduleSchema = require("./schema/schedule.json");
 import FirehoseSchema = require("./schema/firehose.json");
 import SystemSchema = require("./schema/system.json");
+import {ClassCommander} from "@spica-server/replication";
 
 @Injectable()
 export class FunctionEngine implements OnModuleDestroy {
@@ -45,10 +46,13 @@ export class FunctionEngine implements OnModuleDestroy {
     private db: DatabaseService,
     private scheduler: Scheduler,
     private repos: RepoStrategies,
+    private commander: ClassCommander,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
     @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug
   ) {
+    this.commander.register(this);
+
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
     }
@@ -72,13 +76,15 @@ export class FunctionEngine implements OnModuleDestroy {
     for (const change of changes) {
       switch (change.kind) {
         case ChangeKind.Added:
+          this.emitCommand("subscribe", [change]);
           this.subscribe(change);
           break;
         case ChangeKind.Updated:
-          this.unsubscribe(change);
-          this.subscribe(change);
+          this.emitCommand("updateSubscription", [change]);
+          this.updateSubscription(change);
           break;
         case ChangeKind.Removed:
+          this.emitCommand("unsubscribe", [change]);
           this.unsubscribe(change);
           break;
       }
@@ -268,6 +274,11 @@ export class FunctionEngine implements OnModuleDestroy {
     }
   }
 
+  private updateSubscription(change: TargetChange) {
+    this.unsubscribe(change);
+    this.subscribe(change);
+  }
+
   private unsubscribe(change: TargetChange) {
     for (const enqueuer of this.scheduler.enqueuers) {
       const target = new event.Target({
@@ -277,6 +288,16 @@ export class FunctionEngine implements OnModuleDestroy {
       });
       enqueuer.unsubscribe(target);
     }
+  }
+
+  emitCommand(handler: string, args: any[]) {
+    this.commander.emit({
+      command: {
+        class: this.constructor.name,
+        handler,
+        args
+      }
+    });
   }
 }
 
