@@ -1,10 +1,6 @@
 import {Injectable, Inject} from "@nestjs/common";
 import {PartialObserver} from "rxjs";
-import {
-  CommandMessage,
-  CommandMessageFilter,
-  REPLICA_ID,
-} from "../interface";
+import {CommandMessage, CommandMessageFilter, REPLICA_ID} from "../interface";
 import {CommandMemory} from "../memory";
 import {Messenger} from "./messenger";
 

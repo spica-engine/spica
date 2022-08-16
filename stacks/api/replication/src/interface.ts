@@ -35,7 +35,7 @@ export enum Condition {
   READY
 }
 
-export type Message = CommandMessage
+export type Message = CommandMessage;
 
 export interface CommandMessage {
   _id?: string;

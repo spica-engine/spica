@@ -8,16 +8,16 @@ ts_project(
     name = "test_lib",
     testonly = True,
     srcs = [
-        "messenger.spec.ts",
         "commander.spec.ts",
-        "memory.spec.ts"
+        "memory.spec.ts",
+        "messenger.spec.ts",
     ],
     deps = [
+        "//packages/database/testing",
         "//stacks/api/replication",
         "//stacks/api/replication/testing",
-        "@npm//@types/jasmine",
         "@npm//@nestjs/testing",
-        "//packages/database/testing"
+        "@npm//@types/jasmine",
     ],
 )
 

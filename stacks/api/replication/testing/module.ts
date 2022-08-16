@@ -8,10 +8,9 @@ import {
   ClassCommander,
   CommandMemory
 } from "@spica-server/replication";
-import {MockConditionService, MockMemoryService} from "./utilities";
+import {MockMemoryService} from "./utilities";
 
 const memoryService = new MockMemoryService();
-const conditionService = new MockConditionService();
 
 @Module({})
 export class ReplicationTestingModule implements OnModuleDestroy {
@@ -40,6 +39,5 @@ export class ReplicationTestingModule implements OnModuleDestroy {
 
   onModuleDestroy() {
     memoryService.clear();
-    conditionService.clear();
   }
 }
