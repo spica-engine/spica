@@ -28,6 +28,7 @@ application:
     apiResources: {}
     webResources: {}
     args: []
+    diskAccessMode: ReadWriteOnce
 
 ingress:
     host: 

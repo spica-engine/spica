@@ -1,5 +1,23 @@
+{{- if eq .Values.application.diskAccessMode "ReadWriteMany"}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-data
+spec:
+  accessModes:
+    - {{ .Values.application.diskAccessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.application.storageSize }}
+  storageClassName: {{ .Values.application.storageClass }}
+---
+{{- end}}
 apiVersion: apps/v1
+{{- if eq .Values.application.diskAccessMode "ReadWriteMany"}}
+kind: Deployment
+{{- else }}
 kind: StatefulSet
+{{- end }}
 metadata:
   namespace: {{.Release.Namespace}}
   name: {{ .Release.Name }}-application
@@ -11,7 +29,9 @@ metadata:
     app.kubernetes.io/part-of: {{ .Chart.Name }}
     app.kubernetes.io/managed-by: helm
 spec:
+  {{- if ne .Values.application.diskAccessMode "ReadWriteMany"}}
   serviceName: {{ .Release.Name }}-application
+  {{- end }}
   replicas: 1
   selector:
     matchLabels:
@@ -61,13 +81,20 @@ spec:
           volumeMounts:
             - name: {{ .Release.Name }}-data
               mountPath: /data
+      {{- if eq .Values.application.diskAccessMode "ReadWriteMany"}}
+      volumes:
+      - name: {{ .Release.Name }}-data
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-data
+      {{- else}}
   volumeClaimTemplates:
     - metadata:
         name: {{ .Release.Name }}-data
       spec:
         storageClassName: {{ .Values.application.storageClass }}
         accessModes:
-          - ReadWriteOnce
+          - {{ .Values.application.diskAccessMode }}
         resources:
           requests:
             storage: {{ .Values.application.storageSize }}
+      {{- end}}
