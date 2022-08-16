@@ -1,0 +1,27 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
+package(default_visibility = ["//visibility:public"])
+
+load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
+
+ts_project(
+    name = "test_lib",
+    testonly = True,
+    srcs = [
+        "messenger.spec.ts",
+        "commander.spec.ts",
+        "memory.spec.ts"
+    ],
+    deps = [
+        "//stacks/api/replication",
+        "//stacks/api/replication/testing",
+        "@npm//@types/jasmine",
+        "@npm//@nestjs/testing",
+        "//packages/database/testing"
+    ],
+)
+
+jasmine_node_test(
+    name = "test",
+    srcs = [":test_lib"],
+)
