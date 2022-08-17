@@ -29,23 +29,39 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {STRATEGIES} from "./options";
 import {StrategyTypeServices} from "./strategy/interface";
 import {AuthFactor} from "@spica-server/passport/authfactor";
+import {ClassCommander, ReplicationMap} from "@spica-server/replication";
 
 /**
  * @name passport
  */
 @Controller("passport")
 export class PassportController {
-  assertObservers = new Map<string, Subject<any>>();
-  identityToken = new Map<string, any>();
+  assertObservers = new ReplicationMap<string, Subject<any>>(
+    this.commander,
+    `${this.constructor.name}.assertObservers`
+  );
+
+  identityToken = new ReplicationMap<string, any>(
+    this.commander,
+    `${this.constructor.name}.identityToken`
+  );
 
   constructor(
     private identityService: IdentityService,
     private strategyService: StrategyService,
     private authFactor: AuthFactor,
+    private commander: ClassCommander,
     @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices
-  ) {}
+  ) {
+    commander.register(this);
+  }
 
-  async _identify(identifier: string, password: string, state: string, expiresIn: number, res) {
+  async _identify(
+    identifier: string,
+    password: string,
+    state: string,
+    expiresIn: number
+  ): Promise<object> {
     let identity: Identity;
 
     if (!state) {
@@ -106,17 +122,14 @@ export class PassportController {
 
       const challenge = await this.authFactor.start(identity._id.toHexString());
 
-      return res.status(200).json({
-        challenge,
-        answerUrl: `passport/identify/${identity._id}/factor-authentication`
-      });
+      return {challenge, answerUrl: `passport/identify/${identity._id}/factor-authentication`};
     } else {
-      res.status(200).json(tokenSchema);
+      return tokenSchema;
     }
   }
 
   @Get("identify")
-  identify(
+  async identify(
     @Query("identifier") identifier: string,
     @Query("password") password: string,
     @Query("state") state: string,
@@ -128,21 +141,30 @@ export class PassportController {
       `299 "Identify with 'GET' method has been deprecated. Use 'POST' instead."`
     );
 
-    return this._identify(identifier, password, state, expiresIn, req.res);
+    this.emitCommand("_identify", [identifier, password, state, expiresIn]);
+    const body = await this._identify(identifier, password, state, expiresIn);
+    return req.res.status(200).json(body);
   }
 
   @Post("identify")
-  identifyWithPost(
+  async identifyWithPost(
     @Body(Schema.validate("http://spica.internal/login")) credentials: LoginCredentials,
     @Res() res: any
   ) {
-    return this._identify(
+    this.emitCommand("_identify", [
       credentials.identifier,
       credentials.password,
       credentials.state,
-      credentials.expires,
-      res
+      credentials.expires
+    ]);
+    const body = await this._identify(
+      credentials.identifier,
+      credentials.password,
+      credentials.state,
+      credentials.expires
     );
+
+    return res.status(200).send(body);
   }
 
   @Post("identify/:id/factor-authentication")
@@ -240,5 +262,15 @@ export class PassportController {
       .catch(e => {
         observer.error(e.toString());
       });
+  }
+
+  private emitCommand(handler, args) {
+    this.commander.emit({
+      command: {
+        class: this.constructor.name,
+        handler,
+        args
+      }
+    });
   }
 }

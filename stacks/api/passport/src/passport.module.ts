@@ -71,7 +71,6 @@ export class PassportModule {
         AuthFactorModule
       ],
       providers: [
-        PassportController,
         {
           provide: REQUEST_SERVICE,
           useClass: RequestService
