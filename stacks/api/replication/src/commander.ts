@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common";
+import {Injectable, Scope} from "@nestjs/common";
 import {CommandMessenger} from "./messenger";
 import {
   CommandMessage,
@@ -9,7 +9,7 @@ import {
   Command
 } from "./interface";
 
-export class Commander implements ICommander {
+abstract class Commander implements ICommander {
   protected filters: CommandMessageFilter[] = [];
 
   public readonly replicaId: string;
@@ -17,8 +17,8 @@ export class Commander implements ICommander {
     this.replicaId = this.cmdMessenger.replicaId;
   }
 
-  register(ctx: Object): void {
-    const onMessageReceived = async (msg: CommandMessage) => {
+  register(ctx: Object, ...args): void {
+    const onMessageReceived = (msg: CommandMessage) => {
       if (!this.filters.every(filter => filter(msg))) {
         return;
       }
@@ -43,7 +43,7 @@ export class Commander implements ICommander {
   private executeCommand(ctx: Object, cmd: Command) {
     if (!ctx[cmd.handler]) {
       return console.error(
-        `Replica ${this.cmdMessenger.replicaId} has no method named ${cmd.handler}`
+        `Replica ${this.cmdMessenger.replicaId} has no method named ${cmd.handler} on ${cmd.class}`
       );
     }
 
@@ -58,13 +58,31 @@ export class Commander implements ICommander {
   }
 }
 
-@Injectable()
+@Injectable({scope: Scope.TRANSIENT})
 export class ClassCommander extends Commander {
   constructor(cmdMessenger: CommandMessenger) {
     super(cmdMessenger);
   }
 
-  register(ctx: Object) {
+  register(ctx: Object, handlers: string[]) {
+    // basically it refactors original handler as it will emit the command to others
+    // but others will not emit the same otherwise there will be infinite loop
+    for (const handler of handlers) {
+      const fn = ctx[handler];
+      ctx[`__${handler}__`] = fn;
+
+      ctx[handler] = (...args) => {
+        this.emit({
+          command: {
+            class: ctx.constructor.name,
+            handler: `__${handler}__`,
+            args
+          }
+        });
+        return ctx[`__${handler}__`];
+      };
+    }
+
     const filter = (msg: CommandMessage) => this.isSameClass(msg, ctx);
 
     this.filters.push(filter);

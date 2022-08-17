@@ -5,41 +5,18 @@ import {ReplicationTestingModule} from "@spica-server/replication/testing";
 
 @Controller()
 export class MockController {
+  calls = {fn1: [], fn2: [], failedFn: []};
   constructor(private commander: ClassCommander) {
-    this.commander.register(this);
+    this.commander.register(this, ["fn1", "fn2", "failedFn"]);
   }
 
-  fireFn1(arg1, arg2) {
-    this.commander.emit({
-      command: {class: this.constructor.name, handler: "fn1", args: [arg1, arg2]}
-    });
-    this.fn1(arg1, arg2);
-  }
-
-  fn1(arg1, args2) {}
-
-  fireFn2() {
-    this.commander.emit({
-      command: {class: this.constructor.name, handler: "fn2", args: []}
-    });
-    this.fn2();
+  fn1(arg1, arg2) {
+    this.calls.fn1.push([arg1, arg2]);
   }
 
   fn2() {}
 
-  fireNonExistFn() {
-    this.commander.emit({
-      command: {class: this.constructor.name, handler: "nonexistFn", args: []}
-    });
-  }
-
-  fireFailedFn() {
-    this.commander.emit({
-      command: {class: this.constructor.name, handler: "failedFn", args: ["arg1"]}
-    });
-  }
-
-  failedFn() {
+  failedFn(arg1) {
     throw Error("Failed!");
   }
 }
@@ -77,38 +54,24 @@ describe("Commander", () => {
   });
 
   it("should execute command on all other controllers", () => {
-    spyOn(ctrl1, "fn1");
-    spyOn(ctrl1, "fn2");
+    ctrl1.fn1("call", "me");
 
-    spyOn(ctrl2, "fn1");
-    spyOn(ctrl2, "fn2");
+    expect(ctrl1.calls.fn1).toEqual([]);
+    expect(ctrl1.calls.fn2).toEqual([]);
+    expect(ctrl1.calls.failedFn).toEqual([]);
 
-    ctrl1.fireFn1("call", "me");
-
-    expect(ctrl1.fn1).toHaveBeenCalledTimes(1);
-    expect(ctrl1.fn2).not.toHaveBeenCalled();
-
-    expect(ctrl2.fn1).toHaveBeenCalledOnceWith("call", "me");
-    expect(ctrl2.fn2).not.toHaveBeenCalled();
-  });
-
-  it("should log error if nonexist command emitted", () => {
-    spyOn(console, "error");
-
-    ctrl1.fireNonExistFn();
-
-    expect(console.error).toHaveBeenCalledOnceWith(
-      `Replica ${replica2Id} has no method named nonexistFn`
-    );
+    expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
+    expect(ctrl2.calls.fn2).toEqual([]);
+    expect(ctrl2.calls.failedFn).toEqual([]);
   });
 
   it("should log error if command execution failed", () => {
     const err = spyOn(console, "error");
 
-    ctrl1.fireFailedFn();
+    ctrl1.failedFn("*!'^");
 
     expect(err.calls.allArgs()).toEqual([
-      [`Replica ${replica2Id} has failed to execute command MockController.failedFn(arg1)`],
+      [`Replica ${replica2Id} has failed to execute command MockController.__failedFn__(*!'^)`],
       [Error("Failed!")]
     ]);
   });

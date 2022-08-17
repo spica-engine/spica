@@ -19,7 +19,7 @@ export interface CommandMessengerOptions {
 }
 
 export interface ICommander {
-  register(context: Object): void;
+  register(context: Object,...args): void;
   emit(source: CommandSource, target: CommandTarget);
 }
 
