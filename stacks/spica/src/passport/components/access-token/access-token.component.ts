@@ -11,9 +11,9 @@ import {startWith} from "rxjs/operators";
 export class AccessTokenComponent {
   dark$: Observable<boolean>;
 
-  passport:PassportService;
+  passport: PassportService;
   constructor(passport: PassportService, private schemeObserver: SchemeObserver) {
-    this.passport = passport
+    this.passport = passport;
     this.dark$ = this.schemeObserver
       .observe(Scheme.Dark)
       .pipe(startWith(this.schemeObserver.isMatched(Scheme.Dark)));
