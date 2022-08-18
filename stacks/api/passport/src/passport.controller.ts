@@ -163,17 +163,28 @@ export class PassportController {
   }
 
   async _identify(identifier, password, expires, state, res) {
+    const catchError = e => {
+      res.status(e.status || 500).json(e);
+    };
+
     if (state) {
       this.stateReqs.set(state, res);
       setTimeout(() => this.stateReqs.delete(state), 60 * 1000);
 
-      this.startIdentifyWithState(state, expires);
+      this.startIdentifyWithState(state, expires).catch(catchError);
 
       return;
     }
 
-    const identity = await this.getIdentity(identifier, password);
-    const body = await this.signIdentity(identity, expires);
+    const identity = await this.getIdentity(identifier, password).catch(catchError);
+    if (!identity) {
+      return;
+    }
+
+    const body = await this.signIdentity(identity, expires).catch(catchError);
+    if (!body) {
+      return;
+    }
 
     return res.status(200).json(body);
   }
