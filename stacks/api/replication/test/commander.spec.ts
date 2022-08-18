@@ -55,8 +55,7 @@ describe("Commander", () => {
     await module2.close();
   });
 
-  fit("should execute command on all other controllers", () => {
-    console.log(ctrl1);
+  it("should execute command on all other controllers", () => {
     ctrl1.fn1("call", "me");
 
     expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
@@ -71,10 +70,12 @@ describe("Commander", () => {
   it("should log error if command execution failed", () => {
     const err = spyOn(console, "error");
 
-    ctrl1.failedFn("*!'^");
+    try {
+      ctrl1.failedFn("*!'^");
+    } catch (error) {}
 
     expect(err.calls.allArgs()).toEqual([
-      [`Replica ${replica2Id} has failed to execute command MockController.__failedFn__(*!'^)`],
+      [`Replica ${replica2Id} has failed to execute command MockController.copy_failedFn(*!'^)`],
       [Error("Failed!")]
     ]);
   });
