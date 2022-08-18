@@ -101,14 +101,4 @@ export class ClassCommander extends Commander {
   private isSameClass(msg: CommandMessage, ctx: Object) {
     return msg.source.command.class == ctx.constructor.name;
   }
-
-  private updateFilters(filters: CommandMessageFilter[]) {
-    return this;
-    // const commander = new ClassCommander(this["cmdMessenger"]);
-    // commander.register = ctx => {
-    //   commander.filters.push(...filters);
-    //   super.register(ctx);
-    // };
-    // return commander;
-  }
 }
