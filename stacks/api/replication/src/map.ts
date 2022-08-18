@@ -5,8 +5,8 @@ import {ClassCommander} from "@spica-server/replication";
 export class ReplicationMap<K, V> extends Map<K, V> {
   constructor(private commander: ClassCommander, private name: string) {
     super();
-    this.commander = this.commander.updateFilters([ctx => ctx.source.command.class == name]);
-    this.commander.register(this);
+    // this.commander = this.commander.updateFilters([ctx => ctx.source.command.class == name]);
+    // this.commander.register(this);
   }
 
   set(key: K, value: V): this {
@@ -38,6 +38,6 @@ export class ReplicationMap<K, V> extends Map<K, V> {
 
   private emitCmd(handler: string, args: any[]) {
     // we cannot use this class name since it's same for each generation
-    this.commander.emit({command: {class: this.name, handler, args}});
+    // this.commander.emit({command: {class: this.name, handler, args}});
   }
 }

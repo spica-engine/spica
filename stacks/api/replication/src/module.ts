@@ -12,7 +12,7 @@ import {
 } from "./interface";
 import {CommandService} from "./database";
 import {CommandMemory} from "./memory";
-import {ClassCommander, Commander} from "./commander";
+import {ClassCommander} from "./commander";
 
 @Global()
 @Module({})

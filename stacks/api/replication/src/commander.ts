@@ -5,11 +5,10 @@ import {
   CommandMessageFilter,
   CommandSource,
   CommandTarget,
-  ICommander,
   Command
 } from "./interface";
 
-abstract class Commander implements ICommander {
+abstract class Commander {
   protected filters: CommandMessageFilter[] = [];
 
   public readonly replicaId: string;
@@ -33,7 +32,7 @@ abstract class Commander implements ICommander {
     });
   }
 
-  emit(source: CommandSource, target: CommandTarget) {
+  protected emit(source: CommandSource, target: CommandTarget) {
     this.cmdMessenger.publish({
       source,
       target
@@ -64,22 +63,24 @@ export class ClassCommander extends Commander {
     super(cmdMessenger);
   }
 
-  register(ctx: Object, handlers: string[]) {
-    // basically it refactors original handler as it will emit the command to others
-    // but others will not emit the same otherwise there will be infinite loop
-    for (const handler of handlers) {
-      const fn = ctx[handler];
-      ctx[`__${handler}__`] = fn;
+  register(ctx: Object, fns: Function[]) {
+    // add new function named copy_fn and call the original fn inside of it
+    // modify original fn as it will emit copy_fn to others and call the copy_fn
+    // since copy_fn will call the original fn, there won't be any change on original implementation
+    // but it's important to emiting copy_fn not original fn, otherwise all replicas will emit these calls infinitely.
+    for (const fn of fns) {
+      const handler = fn.name;
+      ctx[`copy_${handler}`] = fn;
 
       ctx[handler] = (...args) => {
-        this.emit({
+        this._emit({
           command: {
             class: ctx.constructor.name,
-            handler: `__${handler}__`,
+            handler: `copy_${handler}`,
             args
           }
         });
-        return ctx[`__${handler}__`];
+        return ctx[`copy_${handler}`](...args);
       };
     }
 
@@ -90,7 +91,7 @@ export class ClassCommander extends Commander {
     super.register(ctx);
   }
 
-  emit(source: CommandSource) {
+  private _emit(source: CommandSource) {
     const target: CommandTarget = {
       commands: [source.command]
     };
@@ -101,12 +102,13 @@ export class ClassCommander extends Commander {
     return msg.source.command.class == ctx.constructor.name;
   }
 
-  updateFilters(filters: CommandMessageFilter[]) {
-    const commander = new ClassCommander(this["cmdMessenger"]);
-    commander.register = ctx => {
-      commander.filters.push(...filters);
-      super.register(ctx);
-    };
-    return commander;
+  private updateFilters(filters: CommandMessageFilter[]) {
+    return this;
+    // const commander = new ClassCommander(this["cmdMessenger"]);
+    // commander.register = ctx => {
+    //   commander.filters.push(...filters);
+    //   super.register(ctx);
+    // };
+    // return commander;
   }
 }

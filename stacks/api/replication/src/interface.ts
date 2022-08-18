@@ -18,11 +18,6 @@ export interface CommandMessengerOptions {
   listenOwnCommands?: boolean;
 }
 
-export interface ICommander {
-  register(context: Object,...args): void;
-  emit(source: CommandSource, target: CommandTarget);
-}
-
 export interface ReplicaCondition {
   _id?: string;
   replicaId: string;

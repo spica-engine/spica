@@ -7,14 +7,16 @@ import {ReplicationTestingModule} from "@spica-server/replication/testing";
 export class MockController {
   calls = {fn1: [], fn2: [], failedFn: []};
   constructor(private commander: ClassCommander) {
-    this.commander.register(this, ["fn1", "fn2", "failedFn"]);
+    this.commander.register(this, [this.fn1, this.fn2, this.failedFn]);
   }
 
   fn1(arg1, arg2) {
     this.calls.fn1.push([arg1, arg2]);
   }
 
-  fn2() {}
+  fn2() {
+    this.calls.fn2.push([]);
+  }
 
   failedFn(arg1) {
     throw Error("Failed!");
@@ -53,10 +55,11 @@ describe("Commander", () => {
     await module2.close();
   });
 
-  it("should execute command on all other controllers", () => {
+  fit("should execute command on all other controllers", () => {
+    console.log(ctrl1);
     ctrl1.fn1("call", "me");
 
-    expect(ctrl1.calls.fn1).toEqual([]);
+    expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
     expect(ctrl1.calls.fn2).toEqual([]);
     expect(ctrl1.calls.failedFn).toEqual([]);
 
