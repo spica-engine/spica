@@ -56,13 +56,13 @@
 //   }
 // }
 
-import {BadRequestException, Inject, mixin, PipeTransform, Type} from "@nestjs/common";
+import {BadRequestException, Inject, mixin, Optional, PipeTransform, Type} from "@nestjs/common";
 import {REQUEST} from "@nestjs/core";
 import {Validator} from "./validator";
 
 abstract class MixinValidator implements PipeTransform {
   abstract uriSchemaOrResolver: string | object;
-  constructor(public validator: Validator) {}
+  constructor(@Optional() public validator: Validator) {}
 
   transform(value: any) {
     let schema: object | string = this.uriSchemaOrResolver;
@@ -113,20 +113,18 @@ export namespace Schema {
   export function validate(resolver: (req) => string): Type<PipeTransform>;
   export function validate(resolver: (req) => object): Type<PipeTransform>;
   export function validate(uriSchemaOrResolver: object | Function | string): Type<PipeTransform> {
-    let pipe = mixin(
-      class extends MixinValidator {
-        uriSchemaOrResolver = uriSchemaOrResolver;
-      }
-    );
-
     if (typeof uriSchemaOrResolver == "function") {
-      pipe = mixin(
+      return mixin(
         class extends MixinValidatorRequestScope {
           uriSchemaOrResolver = uriSchemaOrResolver;
         }
       );
+    } else {
+      return mixin(
+        class extends MixinValidator {
+          uriSchemaOrResolver = uriSchemaOrResolver;
+        }
+      );
     }
-
-    return pipe;
   }
 }

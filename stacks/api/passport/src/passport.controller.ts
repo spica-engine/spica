@@ -29,103 +29,153 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {STRATEGIES} from "./options";
 import {StrategyTypeServices} from "./strategy/interface";
 import {AuthFactor} from "@spica-server/passport/authfactor";
-import {ClassCommander, ReplicationMap} from "@spica-server/replication";
+import {ClassCommander} from "@spica-server/replication";
 
 /**
  * @name passport
  */
 @Controller("passport")
 export class PassportController {
-  assertObservers = new ReplicationMap<string, Subject<any>>(
-    this.commander,
-    `${this.constructor.name}.assertObservers`
-  );
+  assertObservers = new Map<string, Subject<any>>();
 
-  identityToken = new ReplicationMap<string, any>(
-    this.commander,
-    `${this.constructor.name}.identityToken`
-  );
+  setAssertObservers(id) {
+    const subject = new Subject();
+    this.assertObservers.set(id, subject);
+    return subject;
+  }
+
+  deleteAssertObservers(id) {
+    this.assertObservers.delete(id);
+  }
+
+  identityToken = new Map<string, any>();
+
+  setIdentityToken(id, token) {
+    this.identityToken.set(id, token);
+  }
+
+  deleteIdentityToken(id) {
+    this.identityToken.delete(id);
+  }
+
+  stateReqs = new Map<string, any>();
 
   constructor(
     private identityService: IdentityService,
     private strategyService: StrategyService,
     private authFactor: AuthFactor,
-    private commander: ClassCommander,
-    @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices
+    @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices,
+    private command: ClassCommander
   ) {
-    commander.register(this);
+    this.command.register(this, [
+      this.startIdentifyWithState,
+      this.completeIdentifyWithState,
+      this.setIdentityToken,
+      this.deleteIdentityToken,
+      this.setAssertObservers,
+      this.deleteAssertObservers
+    ]);
   }
 
-  async _identify(
-    identifier: string,
-    password: string,
-    state: string,
-    expiresIn: number
-  ): Promise<object> {
+  async getIdentity(identifier: string, password: string) {
+    const identity = await this.identityService.identify(identifier, password);
+    if (!identity) {
+      throw new UnauthorizedException("Identifier or password was incorrect.");
+    }
+    return identity;
+  }
+
+  async startIdentifyWithState(state: string, expires: number) {
     let identity: Identity;
 
-    if (!state) {
-      identity = await this.identityService.identify(identifier, password);
-      if (!identity) {
-        throw new UnauthorizedException("Identifier or password was incorrect.");
-      }
-    } else {
-      if (!this.assertObservers.has(state)) {
-        throw new BadRequestException("Authentication has failed due to invalid state.");
-      }
+    if (!this.assertObservers.has(state)) {
+      throw new BadRequestException("Authentication has failed due to invalid state.");
+    }
+    const observer = this.assertObservers.get(state);
 
-      const observer = this.assertObservers.get(state);
+    const {user} = await observer
+      .pipe(
+        timeout(60000),
+        take(1),
+        catchError(error => {
+          this.deleteAssertObservers(state);
+          return throwError(
+            error && error.name == "TimeoutError"
+              ? new GatewayTimeoutException("Operation did not complete within one minute.")
+              : new UnauthorizedException(JSON.stringify(error))
+          );
+        })
+      )
+      .toPromise();
+    this.deleteAssertObservers(state);
 
-      const {user} = await observer
-        .pipe(
-          timeout(60000),
-          take(1),
-          catchError(error => {
-            this.assertObservers.delete(state);
-            return throwError(
-              error && error.name == "TimeoutError"
-                ? new GatewayTimeoutException("Operation did not complete within one minute.")
-                : new UnauthorizedException(JSON.stringify(error))
-            );
-          })
-        )
-        .toPromise();
-      this.assertObservers.delete(state);
+    const idenfitifer = user ? user.upn || user.id || user.name_id || user.email : undefined;
 
-      const idenfitifer = user ? user.upn || user.id || user.name_id || user.email : undefined;
-
-      if (!idenfitifer) {
-        throw new BadRequestException(
-          "Response should include at least one of these values: upn, name_id, email, id."
-        );
-      }
-
-      identity = await this.identityService.findOne({identifier: idenfitifer});
-
-      // HQ sends attributes field which contains unacceptable fields for mongodb
-      delete user.attributes;
-
-      if (!identity) {
-        identity = await this.identityService.insertOne({
-          identifier: idenfitifer,
-          password: undefined,
-          policies: [],
-          attributes: user
-        });
-      }
+    if (!idenfitifer) {
+      throw new BadRequestException(
+        "Response should include at least one of these values: upn, name_id, email, id."
+      );
     }
 
+    identity = await this.identityService.findOne({identifier: idenfitifer});
+
+    // HQ sends attributes field which contains unacceptable fields for mongodb
+    delete user.attributes;
+
+    if (!identity) {
+      identity = await this.identityService.insertOne({
+        identifier: idenfitifer,
+        password: undefined,
+        policies: [],
+        attributes: user
+      });
+    }
+
+    this.completeIdentifyWithState(state, identity, expires);
+  }
+
+  async completeIdentifyWithState(state, identity, expires) {
+    const res = this.stateReqs.get(state);
+    this.stateReqs.delete(state);
+    if (!res) {
+      return;
+    }
+
+    const body = await this.signIdentity(identity, expires);
+    res.status(200).json(body);
+  }
+
+  async signIdentity(identity: Identity, expiresIn: number) {
     const tokenSchema = this.identityService.sign(identity, expiresIn);
 
     if (this.authFactor.hasFactor(identity._id.toHexString())) {
-      this.identityToken.set(identity._id.toHexString(), tokenSchema);
+      this.setIdentityToken(identity._id.toHexString(), tokenSchema);
 
       const challenge = await this.authFactor.start(identity._id.toHexString());
 
-      return {challenge, answerUrl: `passport/identify/${identity._id}/factor-authentication`};
+      return {
+        challenge,
+        answerUrl: `passport/identify/${identity._id}/factor-authentication`
+      };
     } else {
       return tokenSchema;
     }
+  }
+
+  async _identify(identifier, password, expires, state, res) {
+    if (state) {
+      this.stateReqs.set(state, res);
+      setTimeout(() => this.stateReqs.delete(state), 60 * 1000);
+
+      this.startIdentifyWithState(state, expires);
+
+      return;
+    }
+
+    const identity = await this.getIdentity(identifier, password);
+    const body = await this.signIdentity(identity, expires);
+
+    return res.status(200).json(body);
   }
 
   @Get("identify")
@@ -134,37 +184,22 @@ export class PassportController {
     @Query("password") password: string,
     @Query("state") state: string,
     @Req() req: any,
-    @Query("expires", NUMBER) expiresIn?: number
+    @Query("expires", NUMBER) expires?: number
   ) {
     req.res.append(
       "Warning",
       `299 "Identify with 'GET' method has been deprecated. Use 'POST' instead."`
     );
-
-    this.emitCommand("_identify", [identifier, password, state, expiresIn]);
-    const body = await this._identify(identifier, password, state, expiresIn);
-    return req.res.status(200).json(body);
+    this._identify(identifier, password, state, expires, req.res);
   }
 
   @Post("identify")
   async identifyWithPost(
-    @Body(Schema.validate("http://spica.internal/login")) credentials: LoginCredentials,
+    @Body(Schema.validate("http://spica.internal/login"))
+    {identifier, password, expires, state}: LoginCredentials,
     @Res() res: any
   ) {
-    this.emitCommand("_identify", [
-      credentials.identifier,
-      credentials.password,
-      credentials.state,
-      credentials.expires
-    ]);
-    const body = await this._identify(
-      credentials.identifier,
-      credentials.password,
-      credentials.state,
-      credentials.expires
-    );
-
-    return res.status(200).send(body);
+    this._identify(identifier, password, state, expires, res);
   }
 
   @Post("identify/:id/factor-authentication")
@@ -183,12 +218,12 @@ export class PassportController {
     const {answer} = body;
 
     const isAuthenticated = await this.authFactor.authenticate(id, answer).catch(e => {
-      this.identityToken.delete(id);
+      this.deleteIdentityToken(id);
       throw new BadRequestException(e);
     });
 
     if (!isAuthenticated) {
-      this.identityToken.delete(id);
+      this.deleteIdentityToken(id);
       throw new UnauthorizedException();
     }
 
@@ -216,9 +251,7 @@ export class PassportController {
       throw new InternalServerErrorException("Cannot generate login url.");
     }
 
-    const observer = new Subject();
-
-    this.assertObservers.set(login.state, observer);
+    this.setAssertObservers(login.state);
 
     return login;
   }
@@ -262,15 +295,5 @@ export class PassportController {
       .catch(e => {
         observer.error(e.toString());
       });
-  }
-
-  private emitCommand(handler, args) {
-    this.commander.emit({
-      command: {
-        class: this.constructor.name,
-        handler,
-        args
-      }
-    });
   }
 }
