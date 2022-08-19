@@ -24,6 +24,7 @@ ts_project(
         "//stacks/api/machinery",
         "//stacks/api/passport",
         "//stacks/api/preference",
+        "//stacks/api/replication",
         "//stacks/api/status",
         "//stacks/api/storage",
         "//stacks/api/versioncontrol",

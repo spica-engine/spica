@@ -16,6 +16,7 @@ import {ApiMachineryModule} from "@spica-server/machinery";
 import {StatusModule} from "@spica-server/status";
 import {StorageModule} from "@spica-server/storage";
 import {VersionControlModule} from "@spica-server/versioncontrol";
+import {ReplicationModule} from "@spica-server/replication";
 import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
@@ -464,6 +465,8 @@ if (args["version-control"]) {
   modules.push(VersionControlModule.forRoot({persistentPath: args["persistent-path"]}));
 }
 
+modules.push(ReplicationModule.forRoot());
+
 @Module({
   imports: modules
 })
@@ -497,6 +500,7 @@ NestFactory.create(RootModule, {
       }),
       Middlewares.MergePatchJsonParser(args["payload-size-limit"])
     );
+    app.enableShutdownHooks();
     return app.listen(args.port);
   })
   .then(() => {
