@@ -64,12 +64,4 @@ export class AuthFactor {
   hasFactor(identity: string) {
     return this.userFactor.has(identity);
   }
-
-  // // better type check would be better
-  // isFactor = (factorOrMeta: Factor | FactorMeta): factorOrMeta is Factor => {
-  //   return (
-  //     typeof factorOrMeta["start"] == "function" ||
-  //     typeof factorOrMeta["authenticate"] == "function"
-  //   );
-  // };
 }

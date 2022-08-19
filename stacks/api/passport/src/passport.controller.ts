@@ -16,7 +16,8 @@ import {
   Req,
   All,
   Inject,
-  Res
+  Res,
+  Next
 } from "@nestjs/common";
 import {Identity, IdentityService, LoginCredentials} from "@spica-server/passport/identity";
 import {Subject, throwError} from "rxjs";
@@ -36,6 +37,7 @@ import {ClassCommander} from "@spica-server/replication";
  */
 @Controller("passport")
 export class PassportController {
+  readonly SESSION_TIMEOUT_MS = 60 * 1000;
   assertObservers = new Map<string, Subject<any>>();
 
   setAssertObservers(id) {
@@ -95,13 +97,15 @@ export class PassportController {
 
     const {user} = await observer
       .pipe(
-        timeout(60000),
+        timeout(this.SESSION_TIMEOUT_MS),
         take(1),
         catchError(error => {
           this.deleteAssertObservers(state);
           return throwError(
             error && error.name == "TimeoutError"
-              ? new GatewayTimeoutException("Operation did not complete within one minute.")
+              ? new GatewayTimeoutException(
+                  `Operation did not complete within ${this.SESSION_TIMEOUT_MS / 1000} seconds.`
+                )
               : new UnauthorizedException(JSON.stringify(error))
           );
         })
@@ -134,10 +138,10 @@ export class PassportController {
     this.completeIdentifyWithState(state, identity, expires);
   }
 
-  async completeIdentifyWithState(state, identity, expires) {
+  async completeIdentifyWithState(state: string, identity: Identity, expires: number) {
     const res = this.stateReqs.get(state);
     this.stateReqs.delete(state);
-    if (!res) {
+    if (!res || res.headerSent) {
       return;
     }
 
@@ -148,10 +152,12 @@ export class PassportController {
   async signIdentity(identity: Identity, expiresIn: number) {
     const tokenSchema = this.identityService.sign(identity, expiresIn);
 
-    if (this.authFactor.hasFactor(identity._id.toHexString())) {
-      this.setIdentityToken(identity._id.toHexString(), tokenSchema);
+    const id = identity._id.toHexString();
+    if (this.authFactor.hasFactor(id)) {
+      this.setIdentityToken(id, tokenSchema);
+      setTimeout(() => this.deleteIdentityToken(id), this.SESSION_TIMEOUT_MS);
 
-      const challenge = await this.authFactor.start(identity._id.toHexString());
+      const challenge = await this.authFactor.start(id);
 
       return {
         challenge,
@@ -162,14 +168,16 @@ export class PassportController {
     }
   }
 
-  async _identify(identifier, password, expires, state, res) {
+  async _identify(identifier: string, password: string, state: string, expires: number, res) {
     const catchError = e => {
-      res.status(e.status || 500).json(e);
+      if (!res.headerSent) {
+        res.status(e.status || 500).json(e);
+      }
     };
 
     if (state) {
       this.stateReqs.set(state, res);
-      setTimeout(() => this.stateReqs.delete(state), 60 * 1000);
+      setTimeout(() => this.stateReqs.delete(state), this.SESSION_TIMEOUT_MS);
 
       this.startIdentifyWithState(state, expires).catch(catchError);
 
@@ -195,6 +203,7 @@ export class PassportController {
     @Query("password") password: string,
     @Query("state") state: string,
     @Req() req: any,
+    @Next() next,
     @Query("expires", NUMBER) expires?: number
   ) {
     req.res.append(
@@ -208,7 +217,8 @@ export class PassportController {
   async identifyWithPost(
     @Body(Schema.validate("http://spica.internal/login"))
     {identifier, password, expires, state}: LoginCredentials,
-    @Res() res: any
+    @Res() res: any,
+    @Next() next
   ) {
     this._identify(identifier, password, state, expires, res);
   }
@@ -219,7 +229,7 @@ export class PassportController {
     const token = this.identityToken.get(id);
 
     if (!hasFactor || !token) {
-      throw new BadRequestException("Login with credentials process should be started first.");
+      throw new BadRequestException("Login with credentials session is not started or timeouted.");
     }
 
     if (Object.keys(body).indexOf("answer") == -1) {
