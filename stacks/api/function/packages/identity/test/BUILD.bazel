@@ -30,7 +30,6 @@ ts_project(
     ),
     tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
-        "//stacks/api/replication/testing",
         "//packages/core/schema",
         "//packages/core/testing",
         "//packages/database/testing",
@@ -40,6 +39,7 @@ ts_project(
         "//stacks/api/passport/identity",
         "//stacks/api/passport/policy",
         "//stacks/api/preference/testing",
+        "//stacks/api/replication/testing",
         "@npm//@nestjs/common",
         "@npm//@nestjs/jwt",
         "@npm//@nestjs/passport",

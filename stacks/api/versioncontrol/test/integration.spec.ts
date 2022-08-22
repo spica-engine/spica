@@ -18,7 +18,7 @@ import {
 } from "@spica-server/versioncontrol";
 import {PreferenceModule} from "@spica-server/preference";
 import {PreferenceService} from "@spica-server/preference/services";
-import { ReplicationTestingModule } from "@spica-server/replication/testing";
+import {ReplicationTestingModule} from "@spica-server/replication/testing";
 
 describe("Versioning", () => {
   let module: TestingModule;

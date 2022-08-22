@@ -9,7 +9,7 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {FunctionModule} from "@spica-server/function";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import { ReplicationTestingModule } from "@spica-server/replication/testing";
+import {ReplicationTestingModule} from "@spica-server/replication/testing";
 import {VersionControlModule, RepresentativeManager} from "@spica-server/versioncontrol";
 
 import * as os from "os";
