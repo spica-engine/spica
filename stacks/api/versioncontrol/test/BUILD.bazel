@@ -29,6 +29,7 @@ ts_project(
         "integration.spec.ts",
     ],
     deps = [
+        "//stacks/api/replication",
         "//packages/core/testing",
         "//packages/database/testing",
         "//stacks/api/bucket",
@@ -37,6 +38,7 @@ ts_project(
         "//stacks/api/versioncontrol",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
+        "//stacks/api/replication/testing"
     ],
 )
 

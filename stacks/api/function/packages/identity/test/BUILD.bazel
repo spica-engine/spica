@@ -30,6 +30,7 @@ ts_project(
     ),
     tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
+        "//stacks/api/replication/testing",
         "//packages/core/schema",
         "//packages/core/testing",
         "//packages/database/testing",

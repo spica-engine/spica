@@ -51,6 +51,7 @@ ts_project(
         "//stacks/api/bucket",
         "//stacks/api/bucket/services",
         "//stacks/api/function",
+        "//stacks/api/replication/testing",
         "//stacks/api/function/services",
         "//stacks/api/passport/testing",
         "//stacks/api/preference/testing",
