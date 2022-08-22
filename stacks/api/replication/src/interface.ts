@@ -36,6 +36,7 @@ export interface CommandMessage {
   _id?: string;
   source: CommandSource;
   target: CommandTarget;
+  created_at?: Date;
 }
 
 export interface CommandSource {
@@ -62,9 +63,6 @@ export const REPLICATION_SERVICE_OPTIONS = Symbol.for("REPLICATION_SERVICE_OPTIO
 export interface ReplicationServiceOptions {
   expireAfterSeconds: number;
 }
-export const replicationServiceOptions: ReplicationServiceOptions = {
-  expireAfterSeconds: 60 * 1000
-};
 
 export const COMMAND_MEMORY_OPTIONS = Symbol.for("COMMAND_MEMORY_OPTIONS");
 export const CONDITION_MEMORY_OPTIONS = Symbol.for("CONDITION_MEMORY_OPTIONS");
@@ -83,15 +81,9 @@ export const conditionMemoryOptions: MemoryOptions = {
   changeType: ["insert", "update", "replace", "delete"]
 };
 
-export const COMMAND_MESSENGER_OPTIONS = Symbol.for("COMMAND_MESSENGER_OPTIONS");
-export const commandMessengerOptions: CommandMessengerOptions = {
-  listenOwnCommands: false
-};
-
 export const MEMORY_SERVICE = Symbol.for("MEMORY_SERVICE");
 
 export const REPLICA_ID = Symbol.for("REPLICA_ID");
 export const replicaIdProvider = () => {
-  // we could use process id to track which api failed to execute command, publish etc.
   return uniqid();
 };

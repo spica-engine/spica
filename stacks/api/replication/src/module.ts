@@ -6,9 +6,9 @@ import {
   REPLICA_ID,
   replicaIdProvider,
   COMMAND_MEMORY_OPTIONS,
-  replicationServiceOptions,
   REPLICATION_SERVICE_OPTIONS,
-  commandMemoryOptions
+  commandMemoryOptions,
+  ReplicationServiceOptions
 } from "./interface";
 import {CommandService} from "./database";
 import {CommandMemory} from "./memory";
@@ -17,7 +17,7 @@ import {ClassCommander} from "./commander";
 @Global()
 @Module({})
 export class ReplicationModule {
-  static forRoot() {
+  static forRoot(replicationServiceOptions: ReplicationServiceOptions) {
     return {
       module: ReplicationModule,
       providers: [

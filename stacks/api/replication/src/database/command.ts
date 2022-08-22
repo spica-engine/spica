@@ -10,4 +10,9 @@ export class CommandService extends BaseCollection<CommandMessage>("commands") {
   ) {
     super(db, {afterInit: () => this.upsertTTLIndex(options.expireAfterSeconds)});
   }
+
+  insertOne(doc: CommandMessage): Promise<CommandMessage> {
+    doc.created_at = new Date();
+    return super.insertOne(doc);
+  }
 }

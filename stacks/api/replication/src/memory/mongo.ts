@@ -22,7 +22,7 @@ export class MongoMemory<T> implements IPubSub<T> {
   constructor(private service: BaseCollection<any>, private options: MemoryOptions) {}
 
   publish(document: T) {
-    this.service._coll.insertOne(document).then(r => r.ops[0]);
+    this.service.insertOne(document).then(r => r.ops[0]);
   }
 
   subscribe(observer: PartialObserver<T>) {

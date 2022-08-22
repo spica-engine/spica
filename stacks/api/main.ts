@@ -260,6 +260,14 @@ const args = yargs
         "When enabled, server will track version of changes and there will be appliable commands to manage these versions.",
       default: true
     }
+  }) /* Replication Options */
+  .options({
+    "replication-messages-ttl": {
+      number: true,
+      description:
+        "Lifespan of the replication messages that are using for keep replicas at the same level. Unit: second",
+      default: 60
+    }
   })
   /* CORS Options */
   .option({
@@ -465,7 +473,7 @@ if (args["version-control"]) {
   modules.push(VersionControlModule.forRoot({persistentPath: args["persistent-path"]}));
 }
 
-modules.push(ReplicationModule.forRoot());
+modules.push(ReplicationModule.forRoot({expireAfterSeconds: args["replication-messages-ttl"]}));
 
 @Module({
   imports: modules
