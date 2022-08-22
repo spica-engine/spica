@@ -4,4 +4,4 @@ export * from "./memory";
 export * from "./interface";
 export * from "./module";
 export * from "./commander";
-export * from "./reducer"
+export * from "./reducer";

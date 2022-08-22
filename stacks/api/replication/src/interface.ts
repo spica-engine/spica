@@ -16,7 +16,7 @@ export interface IJobReducer {
 }
 
 export interface JobMeta {
-  _id:string;
+  _id: string;
   [key: string]: any;
 }
 

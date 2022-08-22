@@ -11,7 +11,7 @@ ts_project(
         "commander.spec.ts",
         "memory.spec.ts",
         "messenger.spec.ts",
-        "reducer.spec.ts"
+        "reducer.spec.ts",
     ],
     deps = [
         "//packages/database/testing",
