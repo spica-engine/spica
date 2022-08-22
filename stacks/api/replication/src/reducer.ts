@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {JobService} from "./database/process";
+import {JobService} from "./database/job";
 import {IJobReducer, JobMeta} from "./interface";
 
 @Injectable()
