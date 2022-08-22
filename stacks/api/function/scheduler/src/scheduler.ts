@@ -47,6 +47,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>
   ) {
+    this.commander.register(this, [this.deleteWorkersOfTarget]);
+
     this.output = new DatabaseOutput(database);
 
     this.languages.set("typescript", new Typescript());
@@ -73,13 +75,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     const schedulerUnsubscription = (targetId: string) => {
-      this.commander.emit({
-        command: {
-          class: this.constructor.name,
-          handler: "deleteWorkersOfTarget",
-          args: [targetId]
-        }
-      });
       this.deleteWorkersOfTarget(targetId);
     };
 
@@ -252,7 +247,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.print(`lost a worker ${id}`);
   }
 
-  private deleteWorkersOfTarget(targetId: string) {
+  deleteWorkersOfTarget(targetId: string) {
     Array.from(this.workers.entries())
       .filter(([id, worker]) => worker.target && worker.target.id == targetId)
       .forEach(([id]) => this.workers.delete(id));

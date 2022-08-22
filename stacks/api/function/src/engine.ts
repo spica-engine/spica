@@ -51,8 +51,6 @@ export class FunctionEngine implements OnModuleDestroy {
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
     @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug
   ) {
-    this.commander.register(this);
-
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
     }
@@ -65,6 +63,8 @@ export class FunctionEngine implements OnModuleDestroy {
         targetChanges.push(...createTargetChanges(fn, ChangeKind.Added));
       }
       this.categorizeChanges(targetChanges);
+      // skip the initial trigger subscriptions, since other replicas have already subscribed
+      this.commander.register(this, [this.categorizeChanges]);
     });
   }
 
@@ -76,15 +76,12 @@ export class FunctionEngine implements OnModuleDestroy {
     for (const change of changes) {
       switch (change.kind) {
         case ChangeKind.Added:
-          this.emitCommand("subscribe", [change]);
           this.subscribe(change);
           break;
         case ChangeKind.Updated:
-          this.emitCommand("updateSubscription", [change]);
           this.updateSubscription(change);
           break;
         case ChangeKind.Removed:
-          this.emitCommand("unsubscribe", [change]);
           this.unsubscribe(change);
           break;
       }
@@ -288,16 +285,6 @@ export class FunctionEngine implements OnModuleDestroy {
       });
       enqueuer.unsubscribe(target);
     }
-  }
-
-  emitCommand(handler: string, args: any[]) {
-    this.commander.emit({
-      command: {
-        class: this.constructor.name,
-        handler,
-        args
-      }
-    });
   }
 }
 
