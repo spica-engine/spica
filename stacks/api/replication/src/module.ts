@@ -1,8 +1,6 @@
 import {Global, Module} from "@nestjs/common";
 import {CommandMessenger} from "./messenger";
 import {
-  commandMessengerOptions,
-  COMMAND_MESSENGER_OPTIONS,
   REPLICA_ID,
   replicaIdProvider,
   COMMAND_MEMORY_OPTIONS,
@@ -13,6 +11,8 @@ import {
 import {CommandService} from "./database";
 import {CommandMemory} from "./memory";
 import {ClassCommander} from "./commander";
+import {JobReducer} from "./reducer";
+import {JobService} from "./database/job";
 
 @Global()
 @Module({})
@@ -37,10 +37,12 @@ export class ReplicationModule {
         CommandService,
         CommandMemory,
         CommandMessenger,
+        ClassCommander,
 
-        ClassCommander
+        JobService,
+        JobReducer
       ],
-      exports: [CommandMessenger, ClassCommander]
+      exports: [CommandMessenger, ClassCommander, JobReducer]
     };
   }
 }

@@ -1,6 +1,5 @@
-import { PartialObserver } from "rxjs";
+import {PartialObserver} from "rxjs";
 import * as uniqid from "uniqid";
-import { number } from "yargs";
 
 export interface IPublisher<T> {
   publish(msg: T): void;
@@ -10,17 +9,16 @@ export interface ISubscriber<T> {
   subscribe(observer: PartialObserver<T>);
 }
 
-export interface IPubSub<T> extends IPublisher<T>, ISubscriber<T> { }
+export interface IPubSub<T> extends IPublisher<T>, ISubscriber<T> {}
 
-export interface IRedundancyChecker {
-  isRedundant(jobMeta: JobMeta): Promise<boolean>
+export interface IJobReducer {
+  do(meta: JobMeta, job: Function): Promise<boolean>;
 }
 
-export type JobMeta = ObjectWithBase | Array<ObjectWithBase | BaseTypes>
-
-type ObjectWithBase = { [key: string]: ObjectWithBase | BaseTypes }
-
-type BaseTypes = string | number | boolean | null | undefined
+export interface JobMeta {
+  _id:string;
+  [key: string]: any;
+}
 
 export interface CommandMessengerOptions {
   /**

@@ -1,6 +1,7 @@
 import {ChangeStream, DatabaseService} from "@spica-server/database";
 import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
 import {Database, event} from "@spica-server/function/queue/proto";
+import {JobReducer} from "@spica-server/replication";
 import {Description, Enqueuer} from "./enqueuer";
 
 interface DatabaseOptions {
@@ -22,6 +23,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     private queue: EventQueue,
     private databaseQueue: DatabaseQueue,
     private db: DatabaseService,
+    private jobReducer: JobReducer,
     private schedulerUnsubscription: (targetId: string) => void
   ) {
     super();
@@ -37,28 +39,33 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
       {fullDocument: "updateLookup"}
     );
 
-    stream.on("change", rawChange => {
-      const change = new Database.Change({
-        kind: getChangeKind(rawChange.operationType),
-        document: rawChange.fullDocument ? JSON.stringify(rawChange.fullDocument) : undefined,
-        documentKey: rawChange.documentKey._id.toString(),
-        collection: rawChange.ns.coll
-      });
-
-      if (change.kind == Database.Change.Kind.UPDATE) {
-        change.updateDescription = new Database.Change.UpdateDescription({
-          removedFields: JSON.stringify(rawChange.updateDescription.removedFields),
-          updatedFields: JSON.stringify(rawChange.updateDescription.updatedFields)
+    const onChangeHandler = rawChange => {
+      const onChange = () => {
+        const change = new Database.Change({
+          kind: getChangeKind(rawChange.operationType),
+          document: rawChange.fullDocument ? JSON.stringify(rawChange.fullDocument) : undefined,
+          documentKey: rawChange.documentKey._id.toString(),
+          collection: rawChange.ns.coll
         });
-      }
 
-      const ev = new event.Event({
-        target,
-        type: event.Type.DATABASE
-      });
-      this.queue.enqueue(ev);
-      this.databaseQueue.enqueue(ev.id, change);
-    });
+        if (change.kind == Database.Change.Kind.UPDATE) {
+          change.updateDescription = new Database.Change.UpdateDescription({
+            removedFields: JSON.stringify(rawChange.updateDescription.removedFields),
+            updatedFields: JSON.stringify(rawChange.updateDescription.updatedFields)
+          });
+        }
+
+        const ev = new event.Event({
+          target,
+          type: event.Type.DATABASE
+        });
+        this.queue.enqueue(ev);
+        this.databaseQueue.enqueue(ev.id, change);
+      };
+
+      return this.jobReducer.do({...rawChange, _id: rawChange._id._data}, onChange);
+    };
+    stream.on("change", onChangeHandler);
 
     Object.defineProperty(stream, "target", {writable: false, value: target});
 

@@ -1,13 +1,19 @@
-import { Inject } from "@nestjs/common";
-import { ProcessService } from "./database/process";
-import { IRedundancyChecker, JobMeta, REPLICA_ID } from "./interface";
+import {Injectable} from "@nestjs/common";
+import {JobService} from "./database/process";
+import {IJobReducer, JobMeta} from "./interface";
 
+@Injectable()
+export class JobReducer implements IJobReducer {
+  constructor(private service: JobService) {}
 
-export class RedundancyChecker implements IRedundancyChecker {
-
-    constructor(private service: ProcessService) { }
-
-    isRedundant(jobMeta: JobMeta): Promise<boolean> {
-        return this.service._coll.updateOne(jobMeta, { $setOnInsert: jobMeta }, { upsert: true }).then(r => r.upsertedCount == 0)
-    }
+  do(meta: JobMeta, job: Function): Promise<any> {
+    return this.service._coll
+      .updateOne(meta, {$setOnInsert: meta}, {upsert: true})
+      .then(({upsertedCount}) => {
+        if (!upsertedCount) {
+          return;
+        }
+        return job();
+      });
+  }
 }
