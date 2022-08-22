@@ -107,7 +107,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       )
     );
 
-    this.enqueuers.add(new ScheduleEnqueuer(this.queue, schedulerUnsubscription));
+    this.enqueuers.add(new ScheduleEnqueuer(this.queue, this.jobReducer, schedulerUnsubscription));
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
