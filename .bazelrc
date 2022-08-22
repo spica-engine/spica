@@ -71,5 +71,5 @@ build:debug --compilation_mode=dbg
 
 
 # Use phyton 2 instead of 3
-# build --host_force_python=PY2
-# run --host_force_python=PY2
+build --host_force_python=PY2
+run --host_force_python=PY2
