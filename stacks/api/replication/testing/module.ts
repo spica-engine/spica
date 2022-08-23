@@ -1,4 +1,4 @@
-import {Module, OnModuleDestroy} from "@nestjs/common";
+import {Global, Module, OnModuleDestroy} from "@nestjs/common";
 import {
   REPLICATION_SERVICE_OPTIONS,
   replicationServiceOptions,
@@ -6,12 +6,16 @@ import {
   replicaIdProvider,
   CommandMessenger,
   ClassCommander,
-  CommandMemory
+  CommandMemory,
+  JobService,
+  JobReducer
 } from "@spica-server/replication";
-import {MockMemoryService} from "./utilities";
+import {MockJobReducer, MockMemoryService} from "./utilities";
 
 const memoryService = new MockMemoryService();
+const jobReducer = new MockJobReducer();
 
+@Global()
 @Module({})
 export class ReplicationTestingModule implements OnModuleDestroy {
   static create() {
@@ -31,13 +35,19 @@ export class ReplicationTestingModule implements OnModuleDestroy {
           useFactory: replicaIdProvider
         },
         CommandMessenger,
-        ClassCommander
+        ClassCommander,
+
+        {
+          provide: JobReducer,
+          useFactory: () => jobReducer
+        }
       ],
-      exports: [CommandMessenger, ClassCommander]
+      exports: [CommandMessenger, ClassCommander, JobReducer]
     };
   }
 
   onModuleDestroy() {
     memoryService.clear();
+    jobReducer.clear();
   }
 }

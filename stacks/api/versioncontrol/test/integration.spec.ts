@@ -18,6 +18,7 @@ import {
 } from "@spica-server/versioncontrol";
 import {PreferenceModule} from "@spica-server/preference";
 import {PreferenceService} from "@spica-server/preference/services";
+import {ReplicationTestingModule} from "@spica-server/replication/testing";
 
 describe("Versioning", () => {
   let module: TestingModule;
@@ -41,6 +42,7 @@ describe("Versioning", () => {
           cache: false,
           graphql: false
         }),
+        ReplicationTestingModule.create(),
         FunctionModule.forRoot({
           path: os.tmpdir(),
           databaseName: undefined,

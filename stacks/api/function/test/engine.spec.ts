@@ -6,6 +6,7 @@ import {FunctionEngine} from "@spica-server/function/src/engine";
 import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
 import {TargetChange, ChangeKind} from "@spica-server/function/src/change";
+import {ReplicationTestingModule} from "@spica-server/replication/testing";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
@@ -23,6 +24,7 @@ describe("Engine", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
+        ReplicationTestingModule.create(),
         SchedulerModule.forRoot({
           databaseName: undefined,
           databaseReplicaSet: undefined,

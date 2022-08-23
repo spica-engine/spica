@@ -2,7 +2,9 @@ import {
   ReplicationServiceOptions,
   IPubSub,
   CommandMessengerOptions,
-  CommandMessage
+  CommandMessage,
+  IJobReducer,
+  JobMeta
 } from "@spica-server/replication";
 import {EventEmitter} from "events";
 import {PartialObserver} from "rxjs";
@@ -32,5 +34,26 @@ export class MockMemoryService implements IPubSub<CommandMessage> {
 
   clear() {
     this.emitter.removeAllListeners();
+  }
+}
+
+export class MockJobReducer implements IJobReducer {
+  jobsDone: JobMeta[] = [];
+
+  do(meta: JobMeta, job: Function) {
+    const isFirst = this.jobsDone.findIndex(j => j._id == meta._id) == -1;
+
+    if (!isFirst) {
+      return Promise.resolve(false);
+    }
+
+    this.jobsDone.push(meta);
+    job();
+
+    return Promise.resolve(true);
+  }
+
+  clear() {
+    this.jobsDone = [];
   }
 }

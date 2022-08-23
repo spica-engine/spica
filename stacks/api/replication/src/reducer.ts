@@ -6,14 +6,16 @@ import {IJobReducer, JobMeta} from "./interface";
 export class JobReducer implements IJobReducer {
   constructor(private service: JobService) {}
 
-  do(meta: JobMeta, job: Function): Promise<any> {
+  do(meta: JobMeta, job: Function) {
     return this.service._coll
       .updateOne(meta, {$setOnInsert: meta}, {upsert: true})
       .then(({upsertedCount}) => {
         if (!upsertedCount) {
-          return;
+          return false;
         }
-        return job();
+
+        job();
+        return true;
       });
   }
 }
