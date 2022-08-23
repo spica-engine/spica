@@ -90,7 +90,7 @@ describe("schema pipe", () => {
     let dynamicUri: jasmine.Spy;
     const req: any = {};
 
-    beforeAll(() => {
+    beforeEach(() => {
       dynamicUri = jasmine.createSpy("dynamic-uri").and.returnValue("schema-uri");
       uriResolver = jasmine
         .createSpy("uri-resolver")

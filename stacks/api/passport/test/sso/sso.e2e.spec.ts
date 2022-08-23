@@ -6,6 +6,7 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportModule} from "@spica-server/passport";
 import {REQUEST_SERVICE} from "@spica-server/passport/src/options";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {ReplicationTestingModule} from "@spica-server/replication/testing";
 const EXPIRES_IN = 60_000;
 
 const samlp = require("samlp");
@@ -182,6 +183,7 @@ describe("SSO E2E Test", () => {
         imports: [
           SchemaModule.forRoot(),
           DatabaseTestingModule.standalone(),
+          ReplicationTestingModule.create(),
           PassportModule.forRoot({
             expiresIn: EXPIRES_IN,
             issuer: "spica",
@@ -333,6 +335,7 @@ describe("SSO E2E Test", () => {
           CoreTestingModule,
           SchemaModule.forRoot(),
           DatabaseTestingModule.standalone(),
+          ReplicationTestingModule.create(),
           PassportModule.forRoot({
             expiresIn: EXPIRES_IN,
             issuer: "spica",
