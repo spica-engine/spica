@@ -181,6 +181,7 @@ describe("SSO E2E Test", () => {
       const module = await Test.createTestingModule({
         controllers: [SAMLController],
         imports: [
+          ReplicationTestingModule.create(),
           SchemaModule.forRoot(),
           DatabaseTestingModule.standalone(),
           ReplicationTestingModule.create(),
