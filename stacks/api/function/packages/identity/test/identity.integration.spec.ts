@@ -8,6 +8,7 @@ import {PassportModule} from "@spica-server/passport";
 import * as Identity from "@spica-devkit/identity";
 import Axios from "axios";
 import jwt_decode from "jwt-decode";
+import {ReplicationTestingModule} from "@spica-server/replication/testing";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 20_000;
 const EXPIRES_IN = 60 * 60 * 24;
@@ -23,6 +24,7 @@ describe("Identity", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
+        ReplicationTestingModule.create(),
         SchemaModule.forRoot(),
         DatabaseTestingModule.replicaSet(),
         PassportModule.forRoot({
