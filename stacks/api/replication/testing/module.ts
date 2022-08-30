@@ -1,4 +1,4 @@
-import {Module, OnModuleDestroy} from "@nestjs/common";
+import {Global, Module, OnModuleDestroy} from "@nestjs/common";
 import {
   REPLICATION_SERVICE_OPTIONS,
   replicationServiceOptions,
@@ -12,6 +12,7 @@ import {MockMemoryService} from "./utilities";
 
 const memoryService = new MockMemoryService();
 
+@Global()
 @Module({})
 export class ReplicationTestingModule implements OnModuleDestroy {
   static create() {

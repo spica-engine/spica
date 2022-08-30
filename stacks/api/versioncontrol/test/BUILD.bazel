@@ -34,6 +34,8 @@ ts_project(
         "//stacks/api/bucket",
         "//stacks/api/function",
         "//stacks/api/preference/testing",
+        "//stacks/api/replication",
+        "//stacks/api/replication/testing",
         "//stacks/api/versioncontrol",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",

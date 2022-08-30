@@ -18,6 +18,7 @@ import {
 } from "@spica-server/versioncontrol";
 import {PreferenceModule} from "@spica-server/preference";
 import {PreferenceService} from "@spica-server/preference/services";
+import {ReplicationTestingModule} from "@spica-server/replication/testing";
 
 describe("Versioning", () => {
   let module: TestingModule;
@@ -31,6 +32,7 @@ describe("Versioning", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
+        ReplicationTestingModule.create(),
         CoreTestingModule,
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
@@ -83,6 +85,7 @@ describe("Versioning", () => {
     beforeEach(async () => {
       module = await Test.createTestingModule({
         imports: [
+          ReplicationTestingModule.create(),
           DatabaseTestingModule.replicaSet(),
           PreferenceModule.forRoot(),
           VersionControlModule.forRoot({persistentPath: os.tmpdir()})

@@ -27,6 +27,7 @@ import HttpSchema = require("./schema/http.json");
 import ScheduleSchema = require("./schema/schedule.json");
 import FirehoseSchema = require("./schema/firehose.json");
 import SystemSchema = require("./schema/system.json");
+import {ClassCommander} from "@spica-server/replication";
 
 @Injectable()
 export class FunctionEngine implements OnModuleDestroy {
@@ -45,6 +46,7 @@ export class FunctionEngine implements OnModuleDestroy {
     private db: DatabaseService,
     private scheduler: Scheduler,
     private repos: RepoStrategies,
+    private commander: ClassCommander,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
     @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug
@@ -61,6 +63,8 @@ export class FunctionEngine implements OnModuleDestroy {
         targetChanges.push(...createTargetChanges(fn, ChangeKind.Added));
       }
       this.categorizeChanges(targetChanges);
+      // skip the initial trigger subscriptions, since other replicas have already subscribed
+      this.commander.register(this, [this.categorizeChanges]);
     });
   }
 
@@ -75,8 +79,7 @@ export class FunctionEngine implements OnModuleDestroy {
           this.subscribe(change);
           break;
         case ChangeKind.Updated:
-          this.unsubscribe(change);
-          this.subscribe(change);
+          this.updateSubscription(change);
           break;
         case ChangeKind.Removed:
           this.unsubscribe(change);
@@ -266,6 +269,11 @@ export class FunctionEngine implements OnModuleDestroy {
     } else {
       console.warn(`Couldn't find enqueuer ${change.type}.`);
     }
+  }
+
+  private updateSubscription(change: TargetChange) {
+    this.unsubscribe(change);
+    this.subscribe(change);
   }
 
   private unsubscribe(change: TargetChange) {
