@@ -30,17 +30,36 @@ import {IdentityService} from "./identity.service";
 import {Identity, PaginationResponse} from "./interface";
 import {POLICY_PROVIDER} from "./options";
 import {registerPolicyAttacher} from "./utility";
+import {ClassCommander} from "@spica-server/replication";
 
 @Controller("passport/identity")
 export class IdentityController {
   identityFactors = new Map<string, Factor>();
 
+  setIdentityFactor(id, meta) {
+    let factor: Factor;
+    try {
+      factor = this.authFactor.getFactor(meta);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+
+    this.identityFactors.set(id, factor);
+    return factor;
+  }
+
+  deleteIdentityFactor(id) {
+    this.identityFactors.delete(id);
+  }
+
   constructor(
     private identityService: IdentityService,
     @Inject(POLICY_PROVIDER)
     private identityPolicyResolver: (req: any) => Promise<[{statement: []}]>,
-    private authFactor: AuthFactor
+    private authFactor: AuthFactor,
+    private commander: ClassCommander
   ) {
+    this.commander.register(this, [this.setIdentityFactor, this.deleteIdentityFactor]);
     this.identityService
       .find({
         authFactor: {$exists: true}
@@ -171,7 +190,7 @@ export class IdentityController {
     )
   )
   async deleteFactor(@Param("id", OBJECT_ID) id: ObjectId) {
-    this.identityFactors.delete(id.toHexString());
+    this.deleteIdentityFactor(id.toHexString());
 
     this.authFactor.unregister(id.toHexString());
 
@@ -203,21 +222,13 @@ export class IdentityController {
   async startFactorVerification(
     @Param("id") id: string,
     @Body(Schema.validate("http://spica.internal/passport/authfactor"))
-    body: FactorMeta
+    meta: FactorMeta
   ) {
-    let factor;
-
-    try {
-      factor = this.authFactor.getFactor(body);
-    } catch (error) {
-      throw new BadRequestException(error);
-    }
-
-    this.identityFactors.set(id, factor);
+    const factor = this.setIdentityFactor(id, meta);
 
     // to keep this global value clear
     setTimeout(() => {
-      this.identityFactors.delete(id);
+      this.deleteIdentityFactor(id);
     }, 1000 * 60 * 5);
 
     const challenge = await factor.start();
@@ -263,13 +274,13 @@ export class IdentityController {
       throw new BadRequestException(e);
     });
 
-    this.identityFactors.delete(id.toHexString());
+    this.deleteIdentityFactor(id.toHexString());
 
     if (!isVerified) {
       throw new UnauthorizedException("Verification has been failed.");
     }
 
-    this.authFactor.register(id.toHexString(), factor);
+    this.authFactor.register(id.toHexString(), factor.getMeta());
 
     const meta = factor.getMeta();
     return this.identityService
