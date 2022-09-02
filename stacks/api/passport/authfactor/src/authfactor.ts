@@ -1,11 +1,18 @@
 import {Factor, FactorMeta, AuthFactorSchemaProvider} from "./interface";
 import {Injectable} from "@nestjs/common";
+import {ClassCommander} from "@spica-server/replication";
 
 @Injectable()
 export class AuthFactor {
   private userFactor = new Map<string, {hasStarted: boolean; factor: Factor}>();
 
-  constructor(private factors: Map<string, any>, private schemas: AuthFactorSchemaProvider[]) {}
+  constructor(
+    private factors: Map<string, any>,
+    private schemas: AuthFactorSchemaProvider[],
+    private commander: ClassCommander
+  ) {
+    this.commander.register(this, [this.register, this.unregister, this.start]);
+  }
 
   getSchemas() {
     return Promise.all(this.schemas.map(fn => fn()));
@@ -16,13 +23,8 @@ export class AuthFactor {
     return ["secret"];
   }
 
-  register(identity: string, factorOrMeta: Factor | FactorMeta) {
-    let factor;
-    if (this.isFactor(factorOrMeta)) {
-      factor = factorOrMeta;
-    } else {
-      factor = this.getFactor(factorOrMeta);
-    }
+  register(identity: string, meta: FactorMeta) {
+    const factor = this.getFactor(meta);
 
     this.userFactor.set(identity, {hasStarted: false, factor});
   }
@@ -31,14 +33,14 @@ export class AuthFactor {
     return this.userFactor.delete(identity);
   }
 
-  getFactor(factorMeta: FactorMeta): Factor {
-    const ctor = this.factors.get(factorMeta.type);
+  getFactor(meta: FactorMeta): Factor {
+    const ctor = this.factors.get(meta.type);
 
     if (!ctor) {
-      throw Error(`Unknown factor named '${factorMeta.type}'.`);
+      throw Error(`Unknown factor named '${meta.type}'.`);
     }
 
-    return new ctor(factorMeta);
+    return new ctor(meta);
   }
 
   start(identity: string) {
@@ -62,12 +64,4 @@ export class AuthFactor {
   hasFactor(identity: string) {
     return this.userFactor.has(identity);
   }
-
-  // better type check would be better
-  isFactor = (factorOrMeta: Factor | FactorMeta): factorOrMeta is Factor => {
-    return (
-      typeof factorOrMeta["start"] == "function" ||
-      typeof factorOrMeta["authenticate"] == "function"
-    );
-  };
 }

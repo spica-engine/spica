@@ -2,12 +2,21 @@ import {DynamicModule, Global, Module} from "@nestjs/common";
 import {PassportModule} from "@nestjs/passport";
 import {GuardService} from "@spica-server/passport";
 import {AuthFactor} from "@spica-server/passport/authfactor";
+import {ClassCommander} from "@spica-server/replication";
+import {ReplicationTestingModule} from "@spica-server/replication/testing";
 import {TestingOptions} from "./interface";
 import {NoopStrategy} from "./noop.strategy";
 
 @Global()
 @Module({
-  providers: [{provide: AuthFactor, useFactory: () => new AuthFactor(new Map(), [])}],
+  imports: [ReplicationTestingModule.create()],
+  providers: [
+    {
+      provide: AuthFactor,
+      useFactory: cmd => new AuthFactor(new Map(), [], cmd),
+      inject: [ClassCommander]
+    }
+  ],
   exports: [AuthFactor]
 })
 export class MockAuthFactorModule {}

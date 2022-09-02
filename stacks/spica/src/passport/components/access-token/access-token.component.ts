@@ -10,7 +10,6 @@ import {startWith} from "rxjs/operators";
 })
 export class AccessTokenComponent {
   dark$: Observable<boolean>;
-
   passport: PassportService;
   constructor(passport: PassportService, private schemeObserver: SchemeObserver) {
     this.passport = passport;
