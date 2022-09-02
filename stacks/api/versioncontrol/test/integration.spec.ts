@@ -32,6 +32,7 @@ describe("Versioning", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
+        ReplicationTestingModule.create(),
         CoreTestingModule,
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
@@ -85,6 +86,7 @@ describe("Versioning", () => {
     beforeEach(async () => {
       module = await Test.createTestingModule({
         imports: [
+          ReplicationTestingModule.create(),
           DatabaseTestingModule.replicaSet(),
           PreferenceModule.forRoot(),
           VersionControlModule.forRoot({persistentPath: os.tmpdir()})

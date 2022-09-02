@@ -55,7 +55,6 @@ export class IdentityModule {
         })
       ],
       providers: [
-        IdentityController,
         IdentityService,
         IdentityStrategy,
         {

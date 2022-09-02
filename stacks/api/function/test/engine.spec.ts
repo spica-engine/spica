@@ -7,7 +7,7 @@ import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
 import {TargetChange, ChangeKind} from "@spica-server/function/src/change";
 import {ReplicationTestingModule} from "@spica-server/replication/testing";
-
+import {ClassCommander} from "@spica-server/replication";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
 describe("Engine", () => {
@@ -49,11 +49,14 @@ describe("Engine", () => {
     scheduler = module.get(Scheduler);
     database = module.get(DatabaseService);
 
+    const cmd = await module.resolve(ClassCommander);
+
     engine = new FunctionEngine(
       new FunctionService(database, {} as any),
       database,
       scheduler,
       {} as any,
+      cmd,
       {
         root: "test_root",
         timeout: 1

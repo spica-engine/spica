@@ -187,6 +187,7 @@ describe("Status", () => {
           StatusModule.forRoot({expireAfterSeconds: 60, requestLimit: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),
+          ReplicationTestingModule.create(),
           SchemaModule.forRoot({formats: [OBJECT_ID]}),
           ReplicationTestingModule.create(),
           FunctionModule.forRoot({

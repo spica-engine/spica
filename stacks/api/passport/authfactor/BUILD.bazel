@@ -10,6 +10,7 @@ ts_project(
         "src/*.ts",
     ]),
     deps = [
+        "//stacks/api/replication",
         "@npm//@nestjs/common",
         "@npm//nodemailer",
         "@npm//qrcode",

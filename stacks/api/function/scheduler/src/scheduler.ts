@@ -19,7 +19,7 @@ import {event} from "@spica-server/function/queue/proto";
 import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
 import {Node} from "@spica-server/function/runtime/node";
-import {JobReducer} from "@spica-server/replication";
+import {ClassCommander, JobReducer} from "@spica-server/replication";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
@@ -43,10 +43,13 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   constructor(
     private http: HttpAdapterHost,
     private database: DatabaseService,
+    private commander: ClassCommander,
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>,
     private jobReducer: JobReducer
   ) {
+    this.commander.register(this, [this.deleteWorkersOfTarget]);
+
     this.output = new DatabaseOutput(database);
 
     this.languages.set("typescript", new Typescript());
@@ -73,9 +76,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     const schedulerUnsubscription = (targetId: string) => {
-      Array.from(this.workers.entries())
-        .filter(([id, worker]) => worker.target && worker.target.id == targetId)
-        .forEach(([id]) => this.workers.delete(id));
+      this.deleteWorkersOfTarget(targetId);
     };
 
     this.enqueuers.add(
@@ -251,6 +252,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.timeouts.delete(id);
 
     this.print(`lost a worker ${id}`);
+  }
+
+  deleteWorkersOfTarget(targetId: string) {
+    Array.from(this.workers.entries())
+      .filter(([id, worker]) => worker.target && worker.target.id == targetId)
+      .forEach(([id]) => this.workers.delete(id));
   }
 
   private scaleWorkers() {
