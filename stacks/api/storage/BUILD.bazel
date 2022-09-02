@@ -26,11 +26,11 @@ ts_project(
         "@npm//@types/bson",
         "@npm//@types/mongodb",
         "@npm//@types/node",
+        "@npm//aws-sdk",
         "@npm//body-parser",
         "@npm//bson",
         "@npm//etag",
         "@npm//rxjs",
-        "@npm//aws-sdk"
     ],
 )
 

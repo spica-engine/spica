@@ -1,7 +1,7 @@
 export const STORAGE_OPTIONS = Symbol.for("STORAGE_OPTIONS");
 
 export interface StorageOptions {
-  strategy: "default" | "gcloud" | "awss3";
+  strategy: "default" | "gcloud" | "awss3";
   defaultPath?: string;
   defaultPublicUrl?: string;
   gcloudServiceAccountPath?: string;
