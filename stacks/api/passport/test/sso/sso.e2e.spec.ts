@@ -184,6 +184,7 @@ describe("SSO E2E Test", () => {
           ReplicationTestingModule.create(),
           SchemaModule.forRoot(),
           DatabaseTestingModule.standalone(),
+          ReplicationTestingModule.create(),
           PassportModule.forRoot({
             expiresIn: EXPIRES_IN,
             issuer: "spica",
@@ -335,6 +336,7 @@ describe("SSO E2E Test", () => {
           CoreTestingModule,
           SchemaModule.forRoot(),
           DatabaseTestingModule.standalone(),
+          ReplicationTestingModule.create(),
           PassportModule.forRoot({
             expiresIn: EXPIRES_IN,
             issuer: "spica",
