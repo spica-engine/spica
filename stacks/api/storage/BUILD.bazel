@@ -30,6 +30,7 @@ ts_project(
         "@npm//bson",
         "@npm//etag",
         "@npm//rxjs",
+        "@npm//aws-sdk"
     ],
 )
 
