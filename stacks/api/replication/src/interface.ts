@@ -11,23 +11,20 @@ export interface ISubscriber<T> {
 
 export interface IPubSub<T> extends IPublisher<T>, ISubscriber<T> {}
 
+export interface IJobReducer {
+  do(meta: JobMeta, job: Function): Promise<boolean>;
+}
+
+export interface JobMeta {
+  _id: string;
+  [key: string]: any;
+}
+
 export interface CommandMessengerOptions {
   /**
    * default: false
    */
   listenOwnCommands?: boolean;
-}
-
-export interface ReplicaCondition {
-  _id?: string;
-  replicaId: string;
-  condition: Condition;
-  module: string;
-}
-
-export enum Condition {
-  BUSY,
-  READY
 }
 
 export type Message = CommandMessage;
