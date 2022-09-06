@@ -189,6 +189,7 @@ describe("Status", () => {
           PassportTestingModule.initialize(),
           ReplicationTestingModule.create(),
           SchemaModule.forRoot({formats: [OBJECT_ID]}),
+          ReplicationTestingModule.create(),
           FunctionModule.forRoot({
             path: os.tmpdir(),
             databaseName: undefined,

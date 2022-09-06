@@ -40,6 +40,7 @@ ts_project(
     deps = [
         "//stacks/api/function",
         "//stacks/api/function/services",
+        "//stacks/api/replication/testing",
         "@npm//@types/jasmine",
     ],
 )

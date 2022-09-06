@@ -43,6 +43,7 @@ describe("Versioning", () => {
           cache: false,
           graphql: false
         }),
+        ReplicationTestingModule.create(),
         FunctionModule.forRoot({
           path: os.tmpdir(),
           databaseName: undefined,

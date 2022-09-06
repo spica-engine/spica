@@ -19,7 +19,7 @@ import {event} from "@spica-server/function/queue/proto";
 import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
 import {Node} from "@spica-server/function/runtime/node";
-import {ClassCommander} from "@spica-server/replication";
+import {ClassCommander, JobReducer} from "@spica-server/replication";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
@@ -45,7 +45,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     private database: DatabaseService,
     private commander: ClassCommander,
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
-    @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>
+    @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>,
+    private jobReducer: JobReducer
   ) {
     this.commander.register(this, [this.deleteWorkersOfTarget]);
 
@@ -98,10 +99,16 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     );
 
     this.enqueuers.add(
-      new DatabaseEnqueuer(this.queue, this.databaseQueue, this.database, schedulerUnsubscription)
+      new DatabaseEnqueuer(
+        this.queue,
+        this.databaseQueue,
+        this.database,
+        this.jobReducer,
+        schedulerUnsubscription
+      )
     );
 
-    this.enqueuers.add(new ScheduleEnqueuer(this.queue, schedulerUnsubscription));
+    this.enqueuers.add(new ScheduleEnqueuer(this.queue, this.jobReducer, schedulerUnsubscription));
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
