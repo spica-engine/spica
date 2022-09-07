@@ -13,6 +13,7 @@ import BsonObject = require("./schema/bson.object.schema.json");
 import JsonObject = require("./schema/json.object.schema.json");
 import BodySchema = require("./schema/body.schema.json");
 import BodySingleSchema = require("./schema/body.single.schema.json");
+import {AWSS3} from "./strategy/aws.s3";
 
 @Module({})
 export class StorageModule {
@@ -39,6 +40,8 @@ export class StorageModule {
           provide: Strategy,
           useFactory: (options: StorageOptions) => {
             switch (options.strategy) {
+              case "awss3":
+                return new AWSS3(options.awss3CredentialsPath, options.awss3BucketName);
               case "gcloud":
                 return new GCloud(options.gcloudServiceAccountPath, options.gcloudBucketName);
               case "default":

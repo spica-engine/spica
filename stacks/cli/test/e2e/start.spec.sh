@@ -16,7 +16,7 @@ assert_contains "$OUTPUT" "Creating an ingress to route traffic."
 assert_contains "$OUTPUT" "Spica $NAME is serving on http://localhost"
 
 echo "## Waiting for a few seconds to let the server become available"
-sleep 5
+sleep 20
 echo "## Checking if the server available"
 echo ""
 

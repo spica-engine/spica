@@ -206,9 +206,9 @@ const args = yargs
     "storage-strategy": {
       string: true,
       description:
-        "Cloud Storage service to store documents. Available options are default and gcloud.",
+        "Cloud Storage service to store documents. Available options are default, gcloud and awss3.",
       default: "default",
-      choices: ["default", "gcloud"]
+      choices: ["default", "gcloud", "awss3"]
     },
     "default-storage-path": {
       string: true,
@@ -228,6 +228,14 @@ const args = yargs
     "gcloud-bucket-name": {
       string: true,
       description: "Name of the bucket to store documents on GCS."
+    },
+    "awss3-credentials-path": {
+      string: true,
+      description: "Path for the credentials file to authorize on aws."
+    },
+    "awss3-bucket-name": {
+      string: true,
+      description: "Name of the bucket to store documents on AWS S3."
     },
     "storage-object-size-limit": {
       number: true,
@@ -358,6 +366,15 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       );
     }
 
+    if (
+      args["storage-strategy"] == "awss3" &&
+      (!args["awss3-credentials-path"] || !args["awss3-bucket-name"])
+    ) {
+      throw new TypeError(
+        "--awss3-credentials-path and --awss3-bucket-name options must be present when --storage-strategy is set to 'awss3'."
+      );
+    }
+
     if (args["storage-strategy"] == "default") {
       if (!args["default-storage-path"]) {
         throw new TypeError(
@@ -404,11 +421,13 @@ const modules = [
     graphql: args["bucket-graphql"]
   }),
   StorageModule.forRoot({
-    strategy: args["storage-strategy"] as "default" | "gcloud",
+    strategy: args["storage-strategy"] as "default" | "gcloud" | "awss3",
     defaultPath: path.join(args["persistent-path"], args["default-storage-path"]),
     defaultPublicUrl: args["default-storage-public-url"],
     gcloudServiceAccountPath: args["gcloud-service-account-path"],
     gcloudBucketName: args["gcloud-bucket-name"],
+    awss3CredentialsPath: args["awss3-credentials-path"],
+    awss3BucketName: args["awss3-bucket-name"],
     objectSizeLimit: args["storage-object-size-limit"],
     totalSizeLimit: args["storage-total-size-limit"]
   }),
