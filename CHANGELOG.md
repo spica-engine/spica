@@ -1,5 +1,16 @@
-## v0.9.23 (2022-07-31)
+## v0.9.24 (2022-09-07)
 
+* feat(storage): aws s3 bucket support ([ab5c8fd72](https://github.com/spica-engine/spica/commit/ab5c8fd72))
+* feat(replication): prevent replicas from doing same job ([71cf8b430](https://github.com/spica-engine/spica/commit/71cf8b430))
+* build: helm chart support for disk access mode RWX ([41e344933](https://github.com/spica-engine/spica/commit/41e344933))
+* feat(passport):  keep all replicas at the same state ([030684d6a](https://github.com/spica-engine/spica/commit/030684d6a))
+* feat(function): keep all replicas at the same state ([444c189c5](https://github.com/spica-engine/spica/commit/444c189c5))
+* fix(passport): make passport service public to access it's variables in html ([9722a90cd](https://github.com/spica-engine/spica/commit/9722a90cd))
+* feat(replication): introduce a module to interact with api replicas ([fccdf0349](https://github.com/spica-engine/spica/commit/fccdf0349))
+
+## v0.9.23 (2022-08-01)
+
+* docs: update changelog for v0.9.23 ([22cbbd887](https://github.com/spica-engine/spica/commit/22cbbd887))
 * feat(passport): display and copy access token of current user ([d5c2f16cc](https://github.com/spica-engine/spica/commit/d5c2f16cc))
 * feat(bucket): navigator active page indicator ([bcf5524d4](https://github.com/spica-engine/spica/commit/bcf5524d4))
 * feat(cli): introduce new command named function orm ([598fb75e8](https://github.com/spica-engine/spica/commit/598fb75e8))
