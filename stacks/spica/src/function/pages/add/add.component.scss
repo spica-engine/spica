@@ -298,26 +298,36 @@
         }
       }
 
-      &.environment  {
+      &.environment {
         ::ng-deep .mat-list-item-content {
-          padding-bottom: 0px !important;
-          padding-top: 10px !important;
+          margin: 0px 16px !important;
+          padding: 16px 0px !important;
+
           display: flex !important;
-          align-items: center;
-        }
+          align-items: baseline;
+          justify-content: space-between;
 
-        mat-form-field:nth-of-type(1) {
-          width: 120px;
-        }
+          border-bottom: 1px solid rgba(var(--foreground-base-rgb), 0.1);
 
-        mat-form-field:nth-of-type(2) {
-          margin-left: 10px;
-          width: calc(100% - 170px);
-        }
+          div.env-inputs {
+            width: 85%;
 
-        button {
-          margin-left: 10px;
-          margin-bottom: 16px;
+            > mat-form-field {
+              width: 100%;
+
+              .mat-form-field-wrapper {
+                padding-bottom: 0px !important;
+              }
+            }
+
+            > *:not(:last-of-type) {
+              margin-bottom: 10px;
+            }
+          }
+
+          button {
+            width: 10%;
+          }
         }
       }
 

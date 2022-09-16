@@ -440,20 +440,22 @@
             [ngModelGroup]="index"
             class="environment"
           >
-            <mat-form-field>
-              <mat-label>Key</mat-label>
-              <input matInput placeholder="Key" [(ngModel)]="env.key" name="key" />
-            </mat-form-field>
-            <mat-form-field>
-              <mat-label>Value</mat-label>
-              <textarea
-                matInput
-                placeholder="Value"
-                [(ngModel)]="env.value"
-                name="value"
-                rows="1"
-              ></textarea>
-            </mat-form-field>
+            <div class="env-inputs">
+              <mat-form-field>
+                <mat-label>Key</mat-label>
+                <input matInput placeholder="Key" [(ngModel)]="env.key" name="key" />
+              </mat-form-field>
+              <mat-form-field>
+                <mat-label>Value</mat-label>
+                <textarea
+                  matInput
+                  placeholder="Value"
+                  [(ngModel)]="env.value"
+                  name="value"
+                  rows="1"
+                ></textarea>
+              </mat-form-field>
+            </div>
             <button type="button" mat-icon-button color="warn" (click)="removeVariable(index)">
               <mat-icon>delete</mat-icon>
             </button>
