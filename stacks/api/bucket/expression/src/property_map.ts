@@ -59,17 +59,9 @@ function visitBinaryOperatorSelect(node) {
 
   const mostLeft = getMostLeftSelectIdentifier(node);
 
-  if (mostLeft == "auth") {
-    return undefined;
-  }
-
   const right = visit(node.right);
 
   let path = `${left}.${right}`;
-
-  if (left == "document") {
-    path = right;
-  }
 
   return path;
 }

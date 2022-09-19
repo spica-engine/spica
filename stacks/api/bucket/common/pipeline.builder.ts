@@ -22,7 +22,7 @@ export interface iPipelineBuilder {
     language: string,
     callback?: (locale: Locale) => void
   ): Promise<this>;
-  rules(userId: string, callback?: (arg0: string[][], arg1: RelationMap[]) => void): Promise<this>;
+  rules(user: any, callback?: (arg0: string[][], arg1: RelationMap[]) => void): Promise<this>;
   filterByUserRequest(filterByUserRequest: string | object): Promise<this>;
   resolveRelationPath(
     relationPaths: string[][],
@@ -93,22 +93,37 @@ export class PipelineBuilder implements iPipelineBuilder {
     return this;
   }
   async rules(
-    userId: string,
+    user: any,
     callback?: (arg0: string[][], arg1: RelationMap[]) => void
   ): Promise<this> {
-    const rulePropertyMap = expression
-      .extractPropertyMap(this.schema.acl.read)
-      .map(path => path.split("."));
+    const documentPropertyMap = [];
 
-    const ruleRelationMap = await this.buildRelationMap(rulePropertyMap);
+    const authPropertyMap = [];
+
+    expression
+      .extractPropertyMap(this.schema.acl.read)
+      .map(path => path.split("."))
+      .forEach(pmap =>
+        pmap[0] == "auth" ? authPropertyMap.push(pmap) : documentPropertyMap.push(pmap)
+      );
+
+    const authRelationStage = await this.getAuthRelationStage(user, authPropertyMap);
+    this.attachToPipeline(true, ...authRelationStage);
+
+    const ruleRelationMap = await this.buildRelationMap(documentPropertyMap);
     const ruleRelationStage = getRelationPipeline(ruleRelationMap, this.locale);
-    const ruleExpression = expression.aggregate(this.schema.acl.read, {auth: userId});
+    const ruleExpression = expression.aggregate(this.schema.acl.read, {auth: user});
 
     this.attachToPipeline(true, ...ruleRelationStage);
     this.attachToPipeline(true, {$match: ruleExpression});
 
-    callback(rulePropertyMap, ruleRelationMap);
+    callback(documentPropertyMap, ruleRelationMap);
     return this;
+  }
+
+  getAuthRelationStage(user: any, propertyMap: string[][]) {
+    console.warn("Method not implemented!");
+    return Promise.resolve([]);
   }
 
   async filterByUserRequest(filterByUserRequest: string | object): Promise<this> {
