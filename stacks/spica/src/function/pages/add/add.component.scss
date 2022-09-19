@@ -301,33 +301,36 @@
       &.environment {
         ::ng-deep .mat-list-item-content {
           margin: 0px 16px !important;
-          padding: 16px 0px !important;
+          padding: 12px 0px !important;
 
           display: flex !important;
-          align-items: baseline;
+          align-items: center;
           justify-content: space-between;
 
           border-bottom: 1px solid rgba(var(--foreground-base-rgb), 0.1);
+        }
 
-          div.env-inputs {
-            width: 85%;
+        span.left {
+          width: 75%;
 
-            > mat-form-field {
-              width: 100%;
+          > mat-form-field {
+            width: 100%;
 
-              .mat-form-field-wrapper {
-                padding-bottom: 0px !important;
-              }
-            }
-
-            > *:not(:last-of-type) {
-              margin-bottom: 10px;
+            ::ng-deep .mat-form-field-wrapper {
+              padding-bottom: 0px !important;
             }
           }
 
-          button {
-            width: 10%;
+          > *:not(:last-of-type) {
+            margin-bottom: 10px;
           }
+        }
+
+        span.right {
+          width: 20%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
       }
 

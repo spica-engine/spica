@@ -90,6 +90,7 @@ export class AddComponent implements OnInit, OnDestroy {
   $markers = new Subject<unknown[]>();
 
   triggersEditMode = [];
+  envsEditMode = [];
 
   sections = {
     triggers: true,
@@ -180,6 +181,9 @@ export class AddComponent implements OnInit, OnDestroy {
           for (const [index, trigger] of this.function.triggers.entries()) {
             this.triggersEditMode[index] = false;
           }
+          for (const [index, env] of this.function.env.entries()) {
+            this.envsEditMode[index] = false;
+          }
           this.getDependencies();
         }),
         switchMap(fn => this.functionService.getIndex(fn._id)),
@@ -219,10 +223,15 @@ export class AddComponent implements OnInit, OnDestroy {
 
   addVariable() {
     this.function.env.push({value: undefined, key: undefined});
+    this.envsEditMode.push(true);
   }
 
-  removeVariable(index: number) {
+  deleteEnvironment(index: number) {
     this.function.env.splice(index, 1);
+  }
+
+  switchEnvEditMode(index) {
+    this.envsEditMode[index] = !this.envsEditMode[index];
   }
 
   showExample(trigger: Trigger) {
