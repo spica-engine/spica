@@ -228,7 +228,10 @@ function buildArray(def: Property, lines: string[]) {
 function buildPropDef(prop: Property, lines: string[]) {
   if (prop.enum) {
     lines.push("(");
-    lines.push(prop.enum.map(v => (prop.type == "string" ? `'${v}'` : v)).join("|"));
+    lines.push(
+      // escape the quote character otherwise it breaks the definition
+      prop.enum.map(v => (prop.type == "string" ? `'${v.replace(/'/g, "\\'")}'` : v)).join("|")
+    );
     lines.push(")");
     return;
   }
