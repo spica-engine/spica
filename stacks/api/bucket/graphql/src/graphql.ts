@@ -349,7 +349,8 @@ export class GraphqlController implements OnModuleInit {
           deleteOne: async documentId => {
             const deleteFn = this.delete(bucket, false);
             await deleteFn(root, {_id: documentId}, context, info);
-          }
+          },
+          authResolver: this.authResolver
         }
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
       if (!insertedDocument) {
@@ -424,7 +425,8 @@ export class GraphqlController implements OnModuleInit {
         {req: context},
         {
           collection: bucketId => this.bds.children(bucketId),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
+          authResolver: this.authResolver
         }
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
@@ -513,7 +515,8 @@ export class GraphqlController implements OnModuleInit {
         {req: context},
         {
           collection: bucketId => this.bds.children(bucketId),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
+          authResolver: this.authResolver
         },
         {returnOriginal: false}
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
@@ -594,7 +597,8 @@ export class GraphqlController implements OnModuleInit {
         {req: context},
         {
           collection: schema => this.bds.children(schema),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
+          authResolver: this.authResolver
         }
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 

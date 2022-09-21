@@ -114,17 +114,17 @@ export class PipelineBuilder implements iPipelineBuilder {
       properties: this.factories.authResolver.getProperties(),
       resolve: this.factories.schema
     });
-    const authRelationStage = getRelationPipeline(authRelationMap, this.locale);
+    const authRelationStage = getRelationPipeline(authRelationMap, undefined);
     user = await this.factories.authResolver.resolveRelations(user, authRelationStage);
 
-    const ruleRelationMap = await this.buildRelationMap(documentPropertyMap);
-    const ruleRelationStage = getRelationPipeline(ruleRelationMap, this.locale);
+    const documentRelationMap = await this.buildRelationMap(documentPropertyMap);
+    const documentRelationStage = getRelationPipeline(documentRelationMap, this.locale);
     const ruleExpression = expression.aggregate(this.schema.acl.read, {auth: user});
 
-    this.attachToPipeline(true, ...ruleRelationStage);
+    this.attachToPipeline(true, ...documentRelationStage);
     this.attachToPipeline(true, {$match: ruleExpression});
 
-    callback(documentPropertyMap, ruleRelationMap);
+    callback(documentPropertyMap, documentRelationMap);
     return this;
   }
 
