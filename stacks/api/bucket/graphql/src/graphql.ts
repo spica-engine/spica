@@ -1,5 +1,6 @@
 import {
   ForbiddenException,
+  Inject,
   Injectable,
   OnModuleInit,
   Optional,
@@ -34,10 +35,12 @@ import {
   applyPatch,
   deepCopy,
   clearRelations,
-  getDependents
+  getDependents,
+  findLocale,
+  insertActivity,
+  AUTH_RESOLVER,
+  IAuthResolver
 } from "@spica-server/bucket/common";
-
-import {findLocale, insertActivity} from "@spica-server/bucket/common";
 
 import {
   createSchema,
@@ -141,6 +144,7 @@ export class GraphqlController implements OnModuleInit {
     private bds: BucketDataService,
     private guardService: GuardService,
     private validator: Validator,
+    @Inject(AUTH_RESOLVER) private authResolver: IAuthResolver,
     @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService,
     @Optional() private hookChangeEmitter: ChangeEmitter
@@ -271,7 +275,8 @@ export class GraphqlController implements OnModuleInit {
         {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
+          authResolver: this.authResolver
         }
       );
     };
@@ -308,7 +313,8 @@ export class GraphqlController implements OnModuleInit {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) =>
-            Promise.resolve(this.buckets.find(b => b._id.toString() == bucketId))
+            Promise.resolve(this.buckets.find(b => b._id.toString() == bucketId)),
+          authResolver: this.authResolver
         }
       );
 
@@ -374,7 +380,8 @@ export class GraphqlController implements OnModuleInit {
         {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
+          authResolver: this.authResolver
         }
       );
 
@@ -455,7 +462,8 @@ export class GraphqlController implements OnModuleInit {
         {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
+          authResolver: this.authResolver
         }
       );
 
@@ -542,7 +550,8 @@ export class GraphqlController implements OnModuleInit {
         {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
+          authResolver: this.authResolver
         }
       );
 

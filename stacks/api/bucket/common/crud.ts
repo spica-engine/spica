@@ -20,6 +20,7 @@ import {
   DatabaseException,
   ForbiddenException
 } from "./exception";
+import {IAuthResolver} from "./interface";
 
 interface CrudOptions<Paginate> {
   schedule?: boolean;
@@ -44,6 +45,7 @@ export interface CrudFactories<T> {
   collection: (schema: Bucket) => BaseCollection<T>;
   preference: () => Promise<BucketPreferences>;
   schema: (id: string | ObjectId) => Promise<Bucket>;
+  authResolver: IAuthResolver;
 }
 
 export interface CrudPagination<T> {

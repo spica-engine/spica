@@ -15,7 +15,7 @@ export class PreferenceService extends BaseCollection("preferences") {
   private _defaults = new Map<string, Preference>();
 
   constructor(db: DatabaseService) {
-    super(db);
+    super(db, {afterInit: () => {}});
   }
 
   watch<T extends Preference>(

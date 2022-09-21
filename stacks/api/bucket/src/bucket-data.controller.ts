@@ -51,7 +51,9 @@ import {
   patchDocument,
   replaceDocument,
   authIdToString,
-  applyPatch
+  applyPatch,
+  AUTH_RESOLVER,
+  IAuthResolver
 } from "@spica-server/bucket/common";
 import {expressionFilterParser} from "./filter";
 import {
@@ -71,10 +73,12 @@ export class BucketDataController {
     private bs: BucketService,
     private bds: BucketDataService,
     private validator: Validator,
+    @Inject(AUTH_RESOLVER) private authResolver: IAuthResolver,
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService,
     @Optional() @Inject() private activityService: ActivityService
-  ) {}
+  ) {
+  }
 
   /**
    * Returns documents in the bucket.
@@ -142,7 +146,8 @@ export class BucketDataController {
       {
         collection: schema => this.bds.children(schema),
         preference: () => this.bs.getPreferences(),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
+        authResolver: this.authResolver
       }
     ).catch(this.errorHandler);
   }
@@ -195,7 +200,8 @@ export class BucketDataController {
       {
         collection: schema => this.bds.children(schema),
         preference: () => this.bs.getPreferences(),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
+        authResolver: this.authResolver
       }
     ).catch(this.errorHandler);
 

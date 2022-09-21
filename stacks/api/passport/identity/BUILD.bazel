@@ -15,6 +15,7 @@ ts_project(
         "//packages/core/differ",
         "//packages/core/schema",
         "//packages/database",
+        "//stacks/api/bucket/common",
         "//stacks/api/activity/services",
         "//stacks/api/passport/authfactor",
         "//stacks/api/passport/guard",

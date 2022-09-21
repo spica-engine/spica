@@ -104,11 +104,18 @@ export class PipelineBuilder implements iPipelineBuilder {
       .extractPropertyMap(this.schema.acl.read)
       .map(path => path.split("."))
       .forEach(pmap =>
-        pmap[0] == "auth" ? authPropertyMap.push(pmap) : documentPropertyMap.push(pmap)
+        pmap[0] == "auth"
+          ? authPropertyMap.push(pmap.slice(1))
+          : documentPropertyMap.push(pmap.slice(1))
       );
 
-    const authRelationStage = await this.getAuthRelationStage(user, authPropertyMap);
-    this.attachToPipeline(true, ...authRelationStage);
+    const authRelationMap = await createRelationMap({
+      paths: authPropertyMap,
+      properties: this.factories.authResolver.getProperties(),
+      resolve: this.factories.schema
+    });
+    const authRelationStage = getRelationPipeline(authRelationMap, this.locale);
+    user = await this.factories.authResolver.resolveRelations(user, authRelationStage);
 
     const ruleRelationMap = await this.buildRelationMap(documentPropertyMap);
     const ruleRelationStage = getRelationPipeline(ruleRelationMap, this.locale);
@@ -119,11 +126,6 @@ export class PipelineBuilder implements iPipelineBuilder {
 
     callback(documentPropertyMap, ruleRelationMap);
     return this;
-  }
-
-  getAuthRelationStage(user: any, propertyMap: string[][]) {
-    console.warn("Method not implemented!");
-    return Promise.resolve([]);
   }
 
   async filterByUserRequest(filterByUserRequest: string | object): Promise<this> {
