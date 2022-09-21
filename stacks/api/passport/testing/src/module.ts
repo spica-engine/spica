@@ -21,6 +21,29 @@ import {NoopStrategy} from "./noop.strategy";
 })
 export class MockAuthFactorModule {}
 
+const AUTH_RESOLVER = Symbol.for("AUTH_RESOLVER");
+
+@Global()
+@Module({
+  providers: [
+    {
+      provide: AUTH_RESOLVER,
+      useFactory: (i, p) => {
+        return {
+          getProperties: () => {
+            return {};
+          },
+          resolveRelations: (identity, aggregation) => {
+            return Promise.resolve(identity);
+          }
+        };
+      }
+    }
+  ],
+  exports: [AUTH_RESOLVER]
+})
+export class MockAuthResolverModule {}
+
 @Global()
 @Module({})
 export class PassportTestingModule {
@@ -31,7 +54,8 @@ export class PassportTestingModule {
       module: PassportTestingModule,
       imports: [
         PassportModule.register({defaultStrategy: "noop", session: false}),
-        MockAuthFactorModule
+        MockAuthFactorModule,
+        MockAuthResolverModule
       ],
       exports: [PassportModule, NoopStrategy, GuardService],
       providers: [
