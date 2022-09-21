@@ -39,7 +39,8 @@ export class SchemaResolver {
         ) {
           required.push("attributes");
         }
-        return {
+
+        let schema = {
           $id: "http://spica.internal/passport/identity-attributes",
           type: "object",
           required,
@@ -50,6 +51,9 @@ export class SchemaResolver {
             }
           }
         };
+
+        schema.properties.attributes = compileSchema(schema.properties.attributes);
+        return compileSchema(schema);
       });
     }
   }
@@ -58,4 +62,41 @@ export async function provideSchemaResolver(validator: Validator, pref: Preferen
   const resolver = new SchemaResolver(validator, pref);
   validator.registerUriResolver(uri => resolver.resolve(uri));
   return resolver;
+}
+
+function compileSchema(schema) {
+  if (typeof schema.properties == "object") {
+    for (const key in schema.properties) {
+      const spec = schema.properties[key];
+      if (typeof spec == "object") {
+        schema.properties[key] = mapProperty(spec);
+      } else {
+        console.debug(`ignoring boolean property at ${key}`);
+      }
+    }
+  } else if (schema.items) {
+    schema.items = mapProperty(schema.items);
+  }
+
+  return schema;
+}
+
+function mapProperty(property) {
+  switch (property.type) {
+    case "relation":
+      if (property["relationType"] == "onetomany") {
+        property.type = "array";
+        property.items = {
+          format: "objectid-string",
+          type: "string"
+        };
+      } else {
+        property.type = "string";
+        property.format = "objectid-string";
+      }
+
+      break;
+  }
+
+  return property;
 }

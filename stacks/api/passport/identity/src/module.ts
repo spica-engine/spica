@@ -54,7 +54,13 @@ export class IdentityModule {
         }),
         SchemaModule.forChild({
           schemas: [IdentitySchema, IdentityCreateSchema, AuthFactorSchema],
-          customFields: ["options"]
+          customFields: [
+            "options",
+            // relation
+            "bucketId",
+            "relationType"
+            // "dependent"
+          ]
         })
       ],
       providers: [
