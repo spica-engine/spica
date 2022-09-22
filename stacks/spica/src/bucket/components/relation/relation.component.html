@@ -15,9 +15,9 @@
         mat-button
         mat-flat-button
         [matTooltip]="schema.primary + ' of the row'"
-        [routerLink]="['/bucket', schema._id, row._id]"
+        [routerLink]="['/bucket', schema._id, row._id || row]"
       >
-        <mat-icon>{{ schema.icon }}</mat-icon> {{ row[schema.primary] }}
+        <mat-icon>{{ schema.icon }}</mat-icon> {{ row[schema.primary] || row }}
       </button>
     </div>
 
