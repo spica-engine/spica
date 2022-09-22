@@ -19,6 +19,7 @@ import {
 import {PreferenceModule} from "@spica-server/preference";
 import {PreferenceService} from "@spica-server/preference/services";
 import {ReplicationTestingModule} from "@spica-server/replication/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
 
 describe("Versioning", () => {
   let module: TestingModule;
@@ -36,6 +37,7 @@ describe("Versioning", () => {
         CoreTestingModule,
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
+        PassportTestingModule.initialize(),
         BucketModule.forRoot({
           hooks: false,
           history: false,
