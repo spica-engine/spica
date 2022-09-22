@@ -95,5 +95,5 @@ function visitNode(node) {
 }
 
 export const extract = node => {
-  return Array.from<string>(new Set(visit(node)));
+  return Array.from<string>(new Set(visit(node))).map(p => p.split("."));
 };

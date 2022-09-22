@@ -21,6 +21,7 @@ import {
   ForbiddenException
 } from "./exception";
 import {IAuthResolver} from "./interface";
+import {categorizePropertyMap} from "./helpers";
 
 interface CrudOptions<Paginate> {
   schedule?: boolean;
@@ -321,21 +322,15 @@ async function executeWriteRule(
   auth: object,
   authResolver: IAuthResolver
 ) {
-  const documentPropertyMap = [];
-  const authPropertyMap = [];
+  let propertyMap = [];
 
   try {
-    expression
-      .extractPropertyMap(schema.acl.write)
-      .map(path => path.split("."))
-      .forEach(pmap =>
-        pmap[0] == "auth"
-          ? authPropertyMap.push(pmap.slice(1))
-          : documentPropertyMap.push(pmap.slice(1))
-      );
+    propertyMap = expression.extractPropertyMap(schema.acl.write);
   } catch (error) {
     throw new ACLSyntaxException(error.message);
   }
+
+  const {authPropertyMap, documentPropertyMap} = categorizePropertyMap(propertyMap);
 
   const authRelationMap = await createRelationMap({
     paths: authPropertyMap,

@@ -11,6 +11,7 @@ import {
   RelationMap
 } from "./relation";
 import {extractFilterPropertyMap, replaceFilterObjectIds} from "@spica-server/bucket/services";
+import {categorizePropertyMap} from "./helpers";
 
 export interface iPipelineBuilder {
   attachToPipeline(condition: any, ...attachedObject: object[]): this;
@@ -96,18 +97,8 @@ export class PipelineBuilder implements iPipelineBuilder {
     user: any,
     callback?: (arg0: string[][], arg1: RelationMap[]) => void
   ): Promise<this> {
-    const documentPropertyMap = [];
-
-    const authPropertyMap = [];
-
-    expression
-      .extractPropertyMap(this.schema.acl.read)
-      .map(path => path.split("."))
-      .forEach(pmap =>
-        pmap[0] == "auth"
-          ? authPropertyMap.push(pmap.slice(1))
-          : documentPropertyMap.push(pmap.slice(1))
-      );
+    const propertyMap = expression.extractPropertyMap(this.schema.acl.read);
+    const {documentPropertyMap, authPropertyMap} = categorizePropertyMap(propertyMap);
 
     const authRelationMap = await createRelationMap({
       paths: authPropertyMap,
@@ -144,9 +135,7 @@ export class PipelineBuilder implements iPipelineBuilder {
         filterPropertyMap = extractFilterPropertyMap(filterByUserRequest);
         filterExpression = filterByUserRequest;
       } else if (typeof filterByUserRequest == "string") {
-        filterPropertyMap = expression
-          .extractPropertyMap(filterByUserRequest)
-          .map(path => path.split("."));
+        filterPropertyMap = expression.extractPropertyMap(filterByUserRequest);
         filterExpression = expression.aggregate(filterByUserRequest, {});
       }
 
