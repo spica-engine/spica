@@ -15,15 +15,14 @@ describe("schema validator", () => {
     await expectAsync(validator.validate(schema, {})).toBeRejected();
   });
 
-  it("should remove additional", async () => {
+  it("should fail if additional exists", async () => {
     const data: any = {prop_should_be_removed: "i am evil"};
     const schema: JSONSchema7 = {
       type: "object",
       properties: {prop: {type: "string", default: "schema_default"}},
       additionalProperties: false
     };
-    await expectAsync(validator.validate(schema, data)).toBeResolved(true);
-    expect(data).toEqual({prop: "schema_default"});
+    await expectAsync(validator.validate(schema, data)).toBeRejected();
   });
 
   it("should assign defaults", async () => {

@@ -17,8 +17,7 @@ abstract class MixinValidator implements PipeTransform {
           error.errors
             ? error.errors
                 .map(e => {
-                  const dataPath = e.dataPath.replace(/\//g, ".");
-                  return `${dataPath} ${e.message}`;
+                  return buildErrorMessage(e);
                 })
                 .join("\n")
             : [],
@@ -26,6 +25,15 @@ abstract class MixinValidator implements PipeTransform {
         );
       });
   }
+}
+
+function buildErrorMessage(e) {
+  let dataPath = e.dataPath.replace(/\//g, ".");
+
+  if (!dataPath && e.params && e.params.additionalProperty) {
+    return `${e.message} '${e.params.additionalProperty}'`;
+  }
+  return `${dataPath} ${e.message}`;
 }
 
 // we need to separate request injected validator and base validator
