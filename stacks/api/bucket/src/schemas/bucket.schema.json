@@ -132,6 +132,7 @@
 
         "properties": {
           "type": "object",
+          "minProperties": 1,
           "additionalProperties": {"$ref": "#/definitions/schema"}
         },
 
@@ -245,6 +246,7 @@
     },
     "properties": {
       "type": "object",
+      "minProperties": 1,
       "propertyNames": {
         "pattern": "^\\w*$"
       },
