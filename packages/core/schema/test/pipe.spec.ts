@@ -21,7 +21,9 @@ describe("schema pipe", () => {
     );
     const data: object = {evil: "hahah"};
 
-    await expectAsync(pipe.transform(data, undefined)).toBeRejected();
+    await expectAsync(pipe.transform(data, undefined)).toBeRejectedWith(
+      new Error("should NOT have additional properties 'evil'")
+    );
   });
 
   describe("validation with schema", () => {
