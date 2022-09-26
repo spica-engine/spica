@@ -6,11 +6,14 @@ export enum RouteCategory {
   Content = "Buckets",
   Developer = "Developer Area",
   System = "Access Management",
+  Webhook = "Webhook",
+  
 
   Primary_Sub = "Settings",
   Content_Sub = "All Buckets",
-  Developer_Sub = "Logs",
-  System_Sub = "IA Management"
+  Developer_Sub = "Function Logs",
+  Webhook_Sub = "Webhook Logs",
+  System_Sub = "IA Management",
 }
 
 export interface Route {
@@ -22,6 +25,7 @@ export interface Route {
   data?: {[key: string]: any};
   queryParams?: {[key: string]: any};
   index?: number;
+  displayType?: string;
 }
 
 export interface RouteFilter {

@@ -1,6 +1,6 @@
-import {InjectionToken} from "@angular/core";
-import {JSONSchema7} from "json-schema";
-import {Observable} from "rxjs";
+import { InjectionToken } from "@angular/core";
+import { JSONSchema7 } from "json-schema";
+import { Observable } from "rxjs";
 
 export interface FunctionOptions {
   url: string;
@@ -72,31 +72,31 @@ export function emptyTrigger(handler?: string): Trigger {
 }
 
 export function normalizeFunction(fn: Function): NormalizedFunction {
-  const {triggers, env, ...fnDescription} = fn;
+  const { triggers, env, ...fnDescription } = fn;
   return {
     ...fnDescription,
     triggers: Object.keys(triggers).reduce((acc, handler) => {
-      acc.push({...triggers[handler], handler});
+      acc.push({ ...triggers[handler], handler });
       return acc;
     }, new Array<Trigger>()),
     env: Object.keys(env).reduce((acc, key) => {
-      acc.push({key, value: env[key]});
+      acc.push({ key, value: env[key] });
       return acc;
     }, new Array<Environment>())
   };
 }
 
 export function denormalizeFunction(fn: NormalizedFunction): Function {
-  const {triggers, env, ...fnDescription} = fn;
+  const { triggers, env, ...fnDescription } = fn;
   return {
     ...fnDescription,
     triggers: triggers.reduce(
       (acc, trigger) => {
-        const {handler, ...triggerDescription} = trigger;
+        const { handler, ...triggerDescription } = trigger;
         acc[handler] = triggerDescription;
         return acc;
       },
-      {default: undefined}
+      { default: undefined }
     ),
     env: env
       .filter(variable => variable.key && variable.value)
@@ -114,13 +114,13 @@ export interface RepositoryService {
 
   username: string;
 
-  selectedRepoBranch: {repo: string; branch: string; commit?: string};
+  selectedRepoBranch: { repo: string; branch: string; commit?: string };
 
   initialize(token: string): Promise<any>;
 
-  listRepos(): Observable<{name: string}[]>;
+  listRepos(): Observable<{ name: string }[]>;
 
-  listBranches(repo: string): Observable<{name: string}[]>;
+  listBranches(repo: string): Observable<{ name: string }[]>;
 
   listCommits(repo: string, branch: string): any;
 
@@ -137,7 +137,7 @@ export interface LogFilter {
   end?: Date;
   limit: number;
   skip: number;
-  sort: {[key: string]: 1 | -1};
+  sort: { [key: string]: 1 | -1 };
   realtime: boolean;
   showErrors: boolean;
 }
@@ -156,6 +156,7 @@ export interface Webhook {
   url: string;
   body: string;
   trigger: WebhookTrigger;
+  title: string;
 }
 
 export interface WebhookTrigger {
@@ -169,9 +170,10 @@ export interface WebhookTrigger {
 
 export function emptyWebhook(): Webhook {
   return {
+    title:undefined,
     url: undefined,
     body: "{{{ toJSON this }}}",
-    trigger: {active: true, name: "database", options: {collection: undefined, type: undefined}}
+    trigger: { active: true, name: "database", options: { collection: undefined, type: undefined } }
   };
 }
 

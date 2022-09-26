@@ -27,6 +27,9 @@
       transition-duration: 0.4s;
       transition-timing-function: ease-in-out;
 
+      .subcategory-items {
+        display: flex;
+      }
       .mat-nav-list:nth-child(2) {
         min-width: 180px;
         opacity: 1;
