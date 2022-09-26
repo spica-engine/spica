@@ -4,6 +4,9 @@
   "required": ["title", "description", "properties"],
   "type": "object",
   "definitions": {
+    "propertyNames": {
+      "pattern": "^(?!(_id)$)([a-z_0-9]*)+$"
+    },
     "schemaArray": {
       "type": "array",
       "minItems": 1,
@@ -132,7 +135,10 @@
 
         "properties": {
           "type": "object",
-          "additionalProperties": {"$ref": "#/definitions/schema"}
+          "propertyNames": {"$ref": "#/definitions/propertyNames"},
+          "additionalProperties": {
+            "$ref": "#/definitions/schema"
+          }
         },
 
         "enum": {
@@ -147,12 +153,12 @@
       }
     }
   },
-  
+
   "properties": {
-    "_id":{
-      "type":"string",
-      "format":"objectid",
-      "description":"Unique objectid id of schema."
+    "_id": {
+      "type": "string",
+      "format": "objectid",
+      "description": "Unique objectid id of schema."
     },
     "type": {
       "type": "string",
@@ -245,9 +251,7 @@
     },
     "properties": {
       "type": "object",
-      "propertyNames": {
-        "pattern": "^\\w*$"
-      },
+      "propertyNames": {"$ref": "#/definitions/propertyNames"},
       "patternProperties": {
         "": {
           "allOf": [
