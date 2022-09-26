@@ -5,7 +5,7 @@ import {httpService} from "../../http";
 import {formatFailureStatus, isFailureStatus} from "../../status";
 
 async function get({args}: ActionParameters) {
-  const machineryClient = await httpService.createFromConfig();
+  const machineryClient = await httpService.createFromCurrentCtx();
   const groupList = await machineryClient.get<any>("/apis");
   const kind = args.kind as string;
 

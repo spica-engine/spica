@@ -1,7 +1,6 @@
 import {ActionParameters, Command, CreateCommandParameters} from "@caporal/core";
 
 import {context} from "../../context";
-import {config} from "../../config";
 
 async function removeContext({args}: ActionParameters) {
   const name = args.name as string;
@@ -11,11 +10,6 @@ async function removeContext({args}: ActionParameters) {
 
   context.remove(name);
   console.info(`Context "${name}" has been deleted.`);
-
-  const selected = await config.get();
-  if (selected.context == name) {
-    await config.set({context: undefined});
-  }
 }
 
 export default function({createCommand}: CreateCommandParameters): Command {
