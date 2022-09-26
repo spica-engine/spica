@@ -46,14 +46,6 @@ const routes: Routes = [
 ];
 
 const route: Route[] = [
-  // {
-  //   id: "webhook",
-  //   category: RouteCategory.Webhook,
-  //   icon: "http",
-  //   path: "/webhook",
-  //   display: "Webhooks",
-  //   data: {action: "webhook:index"}
-  // },
   {
     id: "webhook_list",
     category: RouteCategory.Webhook_Sub,

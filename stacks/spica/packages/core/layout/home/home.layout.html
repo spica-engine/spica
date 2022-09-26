@@ -33,7 +33,7 @@
           {{ currentCategory.category }}
           <div *ngIf="currentCategory.children.items" class="subcategory-items">
             <ng-container
-              *ngFor="let subCategory of filterArray(currentCategory.children.items,'displayType','row')"
+              *ngFor="let subCategory of filterArrayByDisplay(currentCategory.children.items,'row')"
             >
               <button
                 mat-icon-button
@@ -47,7 +47,7 @@
             </ng-container>
 
             <ng-container
-              *ngIf="filterArray(currentCategory.children.items,'displayType','menu').length>1"
+              *ngIf="filterArrayByDisplay(currentCategory.children.items,'menu').length>1"
             >
               <div>
                 <button mat-icon-button [matMenuTriggerFor]="menu">
@@ -56,7 +56,7 @@
                 <mat-menu #menu="matMenu">
                   <button
                     mat-menu-item
-                    *ngFor="let subCategory of filterArray(currentCategory.children.items,'displayType','menu')"
+                    *ngFor="let subCategory of filterArrayByDisplay(currentCategory.children.items,'menu')"
                     [routerLink]="subCategory.path"
                     routerLinkActive="active"
                     canInteract="subCategory.data.action"

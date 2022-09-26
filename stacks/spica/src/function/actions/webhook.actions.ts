@@ -60,7 +60,6 @@ export class UpdateWebhooks implements Action {
 
 export class DeleteWebhook implements Action {
   readonly type = WebhookActionTypes.DeleteWebhook;
-
   constructor(public payload: {id: string}) {}
 }
 

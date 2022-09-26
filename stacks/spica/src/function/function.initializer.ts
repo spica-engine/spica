@@ -22,7 +22,7 @@ export class FunctionInitializer {
 
     webhookService.getWebhooks().subscribe(webhooks => {
       this.routeService.dispatch(
-        new CherryPickAndRemove(e => e.icon == "http" && /\/function\//.test(e.path))
+        new CherryPickAndRemove(e => e.icon == "http" && /\/webhook\//.test(e.path))
       );
       webhooks.forEach(webhook => {
         this.routeService.dispatch(

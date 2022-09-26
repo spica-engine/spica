@@ -18,7 +18,7 @@ export class HomeLayoutComponent implements OnInit {
   @ViewChild(MatSidenavContainer, { static: true }) sidenav: MatSidenavContainer;
 
   expanded = true;
-
+  DEFAULT_DISPLAY_TYPE = "row";
   routes$: Observable<Route[]>;
   isHandset$: Observable<boolean> = this.breakpointObserver
     .observe([Breakpoints.Medium, Breakpoints.Small, Breakpoints.XSmall])
@@ -72,15 +72,7 @@ export class HomeLayoutComponent implements OnInit {
   ) {
     this.categories$ = this.routeService.routes.pipe(
       map(routes => {
-        const categoryNames = Array.from(
-          routes.reduce((prev, current) => {
-            if (this._categories.has(current.category)) {
-              prev.add(current.category);
-            }
-            return prev;
-          }, new Set<RouteCategory>())
-        );
-
+        const categoryNames = Array.from(this._categories.keys());
         const categories = categoryNames
           .map(categoryName => {
             const category = this._categories.get(categoryName);
@@ -125,7 +117,8 @@ export class HomeLayoutComponent implements OnInit {
   toggle(): void {
     this.expanded = !this.expanded;
   }
-  filterArray(array: [], key: string, value: any) {
-    return array.filter(item => (item[key] || "row") == value);
+  
+  filterArrayByDisplay(array: [], value: any) {
+    return array.filter(item => (item["displayType"] || this.DEFAULT_DISPLAY_TYPE) == value);
   }
 }
