@@ -1681,7 +1681,7 @@ describe("BucketDataController", () => {
 
       it("should remove halls from ticket when deleted", async () => {
         const {body: firstHall} = await req.post(`/bucket/${hallBucket}/data`, {
-          name: "first hall"
+          title: "first hall"
         });
 
         await req.post(`/bucket/${ticketBucket}/data`, {
