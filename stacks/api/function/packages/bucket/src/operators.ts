@@ -132,8 +132,7 @@ export function getWsObs<T>(
       return of(null);
     }),
     debounceTime(1),
-    map(() => (targetDocumentId ? Array.from(data)[0] : Array.from(data))),
-    takeWhile(docs => (targetDocumentId ? !!(docs as T) : true))
+    map(() => (targetDocumentId ? Array.from(data)[0] : Array.from(data)))
   );
 
   const insert = document => subject.next({event: "insert", data: document});
