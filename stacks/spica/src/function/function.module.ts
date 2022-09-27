@@ -46,7 +46,6 @@ import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
 import {WebhookModule} from "./webhook.module";
-import {RepositoryComponent} from "./components/repository/repository.component";
 import {MatDialogModule} from "@angular/material/dialog";
 
 @NgModule({
@@ -89,7 +88,6 @@ import {MatDialogModule} from "@angular/material/dialog";
     EditorModule
   ],
   declarations: [
-    RepositoryComponent,
     AddComponent,
     IndexComponent,
     LogViewComponent,

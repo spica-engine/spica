@@ -51,68 +51,6 @@ export class FunctionController {
     @Inject(FUNCTION_OPTIONS) private options: Options
   ) {}
 
-  @Put("integrations/:integration/repos/:repo/branches/:branch/commits/:commit")
-  @UseGuards(AuthGuard(), ActionGuard("function:integrations", "function"))
-  async pull(
-    @Param("integration") integration: string,
-    @Param("repo") repo: string,
-    @Param("branch") branch: string,
-    @Param("commit") commit: string = "latest",
-    @Body() options: any
-  ) {
-    if (commit != "latest") {
-      throw new BadRequestException(
-        "Pulling the specific commit is still in development progress. You can use 'latest' for pulling the latest commit for now."
-      );
-    }
-
-    return this.engine
-      .pullCommit(integration, repo, branch, options.token)
-      .then(count => {
-        return {
-          message: `${count} function(s) updated.`
-        };
-      })
-      .catch(e => {
-        throw new BadRequestException(e.toString());
-      });
-  }
-
-  @Post("integrations/:integration/repos/:repo/branches/:branch/commits")
-  @UseGuards(AuthGuard(), ActionGuard("function:integrations", "function"))
-  async push(
-    @Param("integration") integration: string,
-    @Param("repo") repo: string,
-    @Param("branch") branch: string,
-    @Body() options: any
-  ) {
-    return this.engine
-      .pushCommit(integration, repo, branch, options.message)
-      .then(() => {
-        return {
-          message: "Changes have been pushed successfully."
-        };
-      })
-      .catch(e => {
-        throw new BadRequestException(e.toString());
-      });
-  }
-
-  @Post("integrations/:integration/repos")
-  @UseGuards(AuthGuard(), ActionGuard("function:integrations", "function"))
-  async create(@Param("integration") integration: string, @Body() options: any) {
-    return this.engine
-      .createRepo(integration, options.repo, options.token)
-      .then(() => {
-        return {
-          message: "Changes have been pushed successfully."
-        };
-      })
-      .catch(e => {
-        throw new BadRequestException(e.toString());
-      });
-  }
-
   /**
    * @description Returns all available enqueuers, runtimes, and the timeout information.
    * @param id Identifier of the function

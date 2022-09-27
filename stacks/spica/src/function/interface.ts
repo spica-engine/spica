@@ -107,30 +107,6 @@ export function denormalizeFunction(fn: NormalizedFunction): Function {
   };
 }
 
-export interface RepositoryService {
-  name: string;
-
-  token: string;
-
-  username: string;
-
-  selectedRepoBranch: {repo: string; branch: string; commit?: string};
-
-  initialize(token: string): Promise<any>;
-
-  listRepos(): Observable<{name: string}[]>;
-
-  listBranches(repo: string): Observable<{name: string}[]>;
-
-  listCommits(repo: string, branch: string): any;
-
-  pullCommit(repo: string, branch: string, commit: string): void;
-
-  pushCommit(repo: string, branch: string, message: string): void;
-
-  createRepo(repo: string): void;
-}
-
 export interface LogFilter {
   function: string[];
   begin?: Date;
