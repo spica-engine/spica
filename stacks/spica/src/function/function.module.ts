@@ -49,7 +49,7 @@ import * as fromWebhook from "./reducers/webhook.reducer";
 import {WebhookModule} from "./webhook.module";
 import {RepositoryComponent} from "./components/repository/repository.component";
 import {MatDialogModule} from "@angular/material/dialog";
-import { WebhookService } from "./services";
+import {WebhookService} from "./services";
 
 @NgModule({
   imports: [
@@ -116,7 +116,7 @@ export class FunctionModule {
         {
           provide: FunctionInitializer,
           useClass: FunctionInitializer,
-          deps: [FunctionService,WebhookService, RouteService, PassportService]
+          deps: [FunctionService, WebhookService, RouteService, PassportService]
         },
         {
           provide: LAYOUT_INITIALIZER,

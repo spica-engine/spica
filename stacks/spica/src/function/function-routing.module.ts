@@ -52,7 +52,7 @@ const route: Route[] = [
     icon: "format_list_numbered",
     path: "/webhook",
     display: "Webhooks",
-    data: {action: "webhook:index"},
+    data: {action: "webhook:index"}
   },
   {
     id: "webhook_logs",
@@ -68,7 +68,7 @@ const route: Route[] = [
     icon: "format_list_numbered",
     path: `/function`,
     display: "Functions",
-    data: {action: "function:index"},
+    data: {action: "function:index"}
   },
   {
     category: RouteCategory.Developer_Sub,
@@ -81,7 +81,7 @@ const route: Route[] = [
       end: new Date(new Date().setHours(23, 59, 59, 999)),
       showErrors: true
     },
-    data: {action: "function:logs:index"},
+    data: {action: "function:logs:index"}
   }
 ];
 

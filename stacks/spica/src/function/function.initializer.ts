@@ -21,7 +21,7 @@ export class FunctionInitializer {
     private passport: PassportService
   ) {
 
-    webhookService.getWebhooks().subscribe(async webhooks => {
+    webhookService.getWebhooks().subscribe(webhooks => {
       this.routeService.dispatch(
         new CherryPickAndRemove(e => e.icon == "http" && /\/webhook\//.test(e.path))
       );

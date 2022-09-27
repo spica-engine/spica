@@ -1,10 +1,10 @@
-import { BreakpointObserver, Breakpoints } from "@angular/cdk/layout";
-import { Component, Inject, OnInit, Optional, Type, ViewChild } from "@angular/core";
-import { MatSidenavContainer } from "@angular/material/sidenav";
-import { BehaviorSubject, Observable } from "rxjs";
-import { debounceTime, map, shareReplay, switchMap, tap } from "rxjs/operators";
-import { Route, RouteCategory, RouteService } from "../../route";
-import { LAYOUT_ACTIONS, LAYOUT_INITIALIZER } from "../config";
+import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
+import {Component, Inject, OnInit, Optional, Type, ViewChild} from "@angular/core";
+import {MatSidenavContainer} from "@angular/material/sidenav";
+import {BehaviorSubject, Observable} from "rxjs";
+import {debounceTime, map, shareReplay, switchMap, tap} from "rxjs/operators";
+import {Route, RouteCategory, RouteService} from "../../route";
+import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
 
 @Component({
   selector: "layout-home",
@@ -15,7 +15,7 @@ import { LAYOUT_ACTIONS, LAYOUT_INITIALIZER } from "../config";
   }
 })
 export class HomeLayoutComponent implements OnInit {
-  @ViewChild(MatSidenavContainer, { static: true }) sidenav: MatSidenavContainer;
+  @ViewChild(MatSidenavContainer, {static: true}) sidenav: MatSidenavContainer;
 
   expanded = true;
   DEFAULT_DISPLAY_TYPE = "row";
@@ -30,14 +30,14 @@ export class HomeLayoutComponent implements OnInit {
   private _categories = new Map([
     [
       RouteCategory.Primary,
-      { icon: "stars", index: 0, children: { name: RouteCategory.Primary_Sub, icon: "list" } }
+      {icon: "stars", index: 0, children: {name: RouteCategory.Primary_Sub, icon: "list"}}
     ],
     [
       RouteCategory.Content,
       {
         icon: "view_stream",
         index: 1,
-        children: { name: RouteCategory.Content_Sub, icon: "format_list_numbered" }
+        children: {name: RouteCategory.Content_Sub, icon: "format_list_numbered"}
       }
     ],
     [
@@ -45,21 +45,21 @@ export class HomeLayoutComponent implements OnInit {
       {
         icon: "supervisor_account",
         index: 2,
-        children: { name: RouteCategory.System_Sub, icon: "list" }
+        children: {name: RouteCategory.System_Sub, icon: "list"}
       }
     ],
     [
       RouteCategory.Developer,
-      { icon: "memory", index: 3, children: { name: RouteCategory.Developer_Sub, icon: "bug_report" } }
+      {icon: "memory", index: 3, children: {name: RouteCategory.Developer_Sub, icon: "bug_report"}}
     ],
     [
       RouteCategory.Webhook,
-      { icon: "http", index: 4, children: { name: RouteCategory.Webhook_Sub, icon: "bug_report" } }
+      {icon: "http", index: 4, children: {name: RouteCategory.Webhook_Sub, icon: "bug_report"}}
     ]
   ]);
 
   categories$: Observable<
-    Array<{ icon: string; category: RouteCategory; index: number; children: object }>
+    Array<{icon: string; category: RouteCategory; index: number; children: object}>
   >;
 
   currentCategory = new BehaviorSubject(null);
@@ -103,8 +103,7 @@ export class HomeLayoutComponent implements OnInit {
           map(routes => routes.filter(r => r.category == currentCategory.category))
         );
       }),
-      tap((test) => console.log("test :", test)),
-      map(routes => routes.sort((a, b) => a.index - b.index)),
+      map(routes => routes.sort((a, b) => a.index - b.index))
     );
   }
 
