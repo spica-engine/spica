@@ -313,7 +313,18 @@
         span.left {
           width: 75%;
 
-          > mat-form-field {
+          div.env-display {
+            display: flex;
+            flex-wrap: wrap;
+
+            > span {
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+          }
+
+          form > mat-form-field {
             width: 100%;
 
             ::ng-deep .mat-form-field-wrapper {

@@ -228,6 +228,7 @@ export class AddComponent implements OnInit, OnDestroy {
 
   deleteEnvironment(index: number) {
     this.function.env.splice(index, 1);
+    this.envsEditMode.splice(index, 1);
   }
 
   switchEnvEditMode(index) {

@@ -442,33 +442,37 @@
             class="environment"
           >
             <span class="left">
-              <ng-container *ngIf="!envsEditMode[index]">
-                {{ env.key }}=
-                {{ env.value }}
-              </ng-container>
-              <ng-container *ngIf="envsEditMode[index]">
-                <mat-form-field>
-                  <mat-label>Key</mat-label>
-                  <input
-                    (keyup.enter)="switchEnvEditMode(index)"
-                    matInput
-                    placeholder="Key"
-                    [(ngModel)]="env.key"
-                    name="key"
-                  />
-                </mat-form-field>
-                <mat-form-field>
-                  <mat-label>Value</mat-label>
-                  <textarea
-                    (keyup.enter)="switchEnvEditMode(index)"
-                    matInput
-                    placeholder="Value"
-                    [(ngModel)]="env.value"
-                    name="value"
-                    rows="1"
-                  ></textarea>
-                </mat-form-field>
-              </ng-container>
+              <div class="env-display" *ngIf="!envsEditMode[index]">
+                <span>{{ env.key }}</span
+                >=<span>{{ env.value }}</span>
+              </div>
+              <form #envForm="ngForm">
+                <ng-container *ngIf="envsEditMode[index]">
+                  <mat-form-field>
+                    <mat-label>Key</mat-label>
+                    <input
+                      (keyup.enter)="switchEnvEditMode(index)"
+                      matInput
+                      placeholder="Key"
+                      [(ngModel)]="env.key"
+                      name="key"
+                      required
+                    />
+                  </mat-form-field>
+                  <mat-form-field>
+                    <mat-label>Value</mat-label>
+                    <textarea
+                      (keyup.enter)="switchEnvEditMode(index)"
+                      matInput
+                      placeholder="Value"
+                      [(ngModel)]="env.value"
+                      name="value"
+                      rows="1"
+                      required
+                    ></textarea>
+                  </mat-form-field>
+                </ng-container>
+              </form>
             </span>
             <span class="right">
               <ng-container *ngIf="!envsEditMode[index]">
@@ -480,7 +484,11 @@
                 </button>
               </ng-container>
               <ng-container *ngIf="envsEditMode[index]">
-                <button mat-icon-button (click)="switchEnvEditMode(index)">
+                <button
+                  [disabled]="envForm.invalid"
+                  mat-icon-button
+                  (click)="switchEnvEditMode(index)"
+                >
                   <mat-icon>done</mat-icon>
                 </button>
               </ng-container>
