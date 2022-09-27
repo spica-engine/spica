@@ -1,5 +1,5 @@
-import {InjectionToken} from "@angular/core";
-import {Observable} from "rxjs";
+import { InjectionToken } from "@angular/core";
+import { Observable } from "rxjs";
 
 export enum RouteCategory {
   Primary = "Primary",
@@ -7,7 +7,7 @@ export enum RouteCategory {
   Developer = "Developer Area",
   System = "Access Management",
   Webhook = "Webhook",
-  
+
 
   Primary_Sub = "Settings",
   Content_Sub = "All Buckets",
@@ -22,10 +22,11 @@ export interface Route {
   display: string;
   path: string;
   category: RouteCategory;
-  data?: {[key: string]: any};
-  queryParams?: {[key: string]: any};
+  data?: { [key: string]: any };
+  queryParams?: { [key: string]: any };
   index?: number;
   displayType?: string;
+  customClass?: string
 }
 
 export interface RouteFilter {

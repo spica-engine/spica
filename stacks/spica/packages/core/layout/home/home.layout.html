@@ -73,6 +73,7 @@
           [routerLink]="route.path"
           routerLinkActive="active"
           [queryParams]="route.queryParams"
+          [class]="route.customClass"
         >
           <mat-icon>{{ route.icon }}</mat-icon>
           {{ route.display }}

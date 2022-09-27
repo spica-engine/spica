@@ -103,6 +103,7 @@ export class HomeLayoutComponent implements OnInit {
           map(routes => routes.filter(r => r.category == currentCategory.category))
         );
       }),
+      tap((test) => console.log("test :", test)),
       map(routes => routes.sort((a, b) => a.index - b.index)),
     );
   }
@@ -117,7 +118,7 @@ export class HomeLayoutComponent implements OnInit {
   toggle(): void {
     this.expanded = !this.expanded;
   }
-  
+
   filterArrayByDisplay(array: [], value: any) {
     return array.filter(item => (item["displayType"] || this.DEFAULT_DISPLAY_TYPE) == value);
   }
