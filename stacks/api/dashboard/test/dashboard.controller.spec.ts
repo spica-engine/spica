@@ -132,12 +132,14 @@ describe("DashboardController", () => {
     let {body: insertedDashboard} = await request.post("/dashboard", dashboard);
 
     insertedDashboard.name = "Updated name";
+    const id = insertedDashboard._id;
+    delete insertedDashboard._id;
 
-    const response = await request.put(`/dashboard/${insertedDashboard._id}`, insertedDashboard);
+    const response = await request.put(`/dashboard/${id}`, insertedDashboard);
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
     expect(response.body).toEqual({
-      _id: insertedDashboard._id,
+      _id: id,
       name: "Updated name",
       icon: "offline_bolt",
       components: [
