@@ -114,7 +114,7 @@ describe("ORM", () => {
   } as any;
 
   it("should create file content for bucket which includes all available types", () => {
-    const content = Schema.createFileContent([bucketAllTypes], "APIKEY", "APIURL", []);
+    const content = Schema.createFileContent([bucketAllTypes], "APIURL", []);
     const expectation = `import * as Bucket from '@spica-devkit/bucket';
 /**
  * Call this method before interacting with buckets.
@@ -215,12 +215,7 @@ export namespace new_bucket {
     const bucket2 = {_id: "id2", title: "Users", properties: {name: {type: "string"}}};
 
     const warnings = [];
-    const content = Schema.createFileContent(
-      [bucket1, bucket2] as any,
-      "APIKEY",
-      "APIURL",
-      warnings
-    );
+    const content = Schema.createFileContent([bucket1, bucket2] as any, "APIURL", warnings);
     const expectation = `import * as Bucket from '@spica-devkit/bucket';
 /**
  * Call this method before interacting with buckets.
