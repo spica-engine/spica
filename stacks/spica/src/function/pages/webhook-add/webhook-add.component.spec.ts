@@ -108,6 +108,7 @@ describe("Webhook", () => {
 
     it("should insert webhook and navigate to the webhook page", fakeAsync(() => {
       fixture.componentInstance.webhook = {
+        title: "test",
         url: "http://www.test.com",
         body: "",
         trigger: {active: true, name: "database", options: {collection: "bucket", type: "DELETE"}}
@@ -120,6 +121,7 @@ describe("Webhook", () => {
 
       expect(webhookService.add).toHaveBeenCalledTimes(1);
       expect(webhookService.add).toHaveBeenCalledWith({
+        title: "test",
         url: "http://www.test.com",
         body: "",
         trigger: {active: true, name: "database", options: {collection: "bucket", type: "DELETE"}}
@@ -138,6 +140,7 @@ describe("Webhook", () => {
 
   describe("Edit", () => {
     let hook: Webhook = {
+      title: "test",
       _id: "1",
       body: "",
       url: "http://www.test.com",
@@ -165,7 +168,8 @@ describe("Webhook", () => {
             active: true,
             name: "database",
             options: {collection: "identity", type: "INSERT"}
-          }
+          },
+          title: "test"
         })
       );
       const editButton = fixture.debugElement.query(By.css("mat-card mat-card-actions button"));
@@ -183,6 +187,7 @@ describe("Webhook", () => {
       fixture.detectChanges(false);
 
       expect(fixture.componentInstance.webhook).toEqual({
+        title: "test",
         _id: "1",
         body: "",
         url: "http://www.test.com",
