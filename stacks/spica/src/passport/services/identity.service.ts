@@ -48,10 +48,12 @@ export class IdentityService {
   }
 
   insertOne(identity: Identity): Observable<Identity> {
+    delete identity.policies;
     return this.http.post<Identity>(`api:/passport/identity`, identity);
   }
 
   updateOne(identity: Identity): Observable<Identity> {
+    delete identity.policies;
     const identityRequest = {
       ...identity,
       _id: undefined
