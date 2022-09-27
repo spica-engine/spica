@@ -136,9 +136,8 @@
         "properties": {
           "type": "object",
           "propertyNames": {"$ref": "#/definitions/propertyNames"},
-          "additionalProperties": {
-            "$ref": "#/definitions/schema"
-          }
+          "minProperties": 1,
+          "additionalProperties": {"$ref": "#/definitions/schema"}
         },
 
         "enum": {
@@ -252,6 +251,7 @@
     "properties": {
       "type": "object",
       "propertyNames": {"$ref": "#/definitions/propertyNames"},
+      "minProperties": 1,
       "patternProperties": {
         "": {
           "allOf": [

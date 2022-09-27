@@ -38,7 +38,7 @@ export class Validator {
     );
     this._ajv = new Ajv({
       useDefaults: true,
-      removeAdditional: true,
+      removeAdditional: false,
       loadSchema: uri => this._fetch(uri),
       formats: new Array<Format>()
         .concat(local.formats || [])

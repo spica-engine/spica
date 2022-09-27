@@ -15,15 +15,36 @@ describe("schema validator", () => {
     await expectAsync(validator.validate(schema, {})).toBeRejected();
   });
 
-  it("should remove additional", async () => {
-    const data: any = {prop_should_be_removed: "i am evil"};
+  it("should fail if additional exists", async () => {
+    const data: any = {prop_should_be_rejected: "i am evil"};
     const schema: JSONSchema7 = {
       type: "object",
       properties: {prop: {type: "string", default: "schema_default"}},
       additionalProperties: false
     };
+
+    const errors = await validator.validate(schema, data).catch(e => e.errors);
+    expect(errors).toEqual([
+      {
+        keyword: "additionalProperties",
+        dataPath: "",
+        schemaPath: "#/additionalProperties",
+        params: {additionalProperty: "prop_should_be_rejected"},
+        message: "should NOT have additional properties"
+      }
+    ]);
+  });
+
+  it("should accept additionals", async () => {
+    const data: any = {prop_should_be_accepted: "i am evil"};
+    const schema: JSONSchema7 = {
+      type: "object",
+      properties: {prop: {type: "string", default: "schema_default"}},
+      additionalProperties: true
+    };
+
     await expectAsync(validator.validate(schema, data)).toBeResolved(true);
-    expect(data).toEqual({prop: "schema_default"});
+    expect(data.prop_should_be_accepted).toBe("i am evil");
   });
 
   it("should assign defaults", async () => {
