@@ -1,4 +1,4 @@
-import { Injectable } from "@angular/core";
+import {Injectable} from "@angular/core";
 import {
   Add,
   CherryPickAndRemove,
@@ -7,10 +7,9 @@ import {
   RouteService,
   Upsert
 } from "@spica-client/core/route";
-import { PassportService } from "@spica-client/passport";
-import { WebhookService } from "./services/webhook.service";
-import { FunctionService } from "./services/function.service";
-
+import {PassportService} from "@spica-client/passport";
+import {WebhookService} from "./services/webhook.service";
+import {FunctionService} from "./services/function.service";
 
 @Injectable()
 export class FunctionInitializer {
@@ -20,10 +19,9 @@ export class FunctionInitializer {
     private routeService: RouteService,
     private passport: PassportService
   ) {
-
     webhookService.getWebhooks().subscribe(webhooks => {
       this.routeService.dispatch(
-        new CherryPickAndRemove(e => e.icon == "http" && /\/webhook\//.test(e.path))
+        new CherryPickAndRemove(e => e.icon == "webhook" && /\/webhook\//.test(e.path))
       );
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Webhook));
 
@@ -32,9 +30,9 @@ export class FunctionInitializer {
           new Upsert({
             category: RouteCategory.Webhook,
             id: webhook._id,
-            icon: "http",
+            icon: "webhook",
             path: `/webhook/${webhook._id}`,
-            display: webhook?.title
+            display: webhook.title
           })
         );
       }
@@ -49,7 +47,7 @@ export class FunctionInitializer {
           customClass: "dashed-item"
         })
       );
-    })
+    });
 
     functionService.getFunctions().subscribe(async funcs => {
       this.routeService.dispatch(
@@ -87,12 +85,7 @@ export class FunctionInitializer {
           customClass: "dashed-item"
         })
       );
-
     });
-
-
-
-
   }
 
   async appInitializer() {
@@ -126,8 +119,7 @@ export class FunctionInitializer {
 
     if (!functionLog && !webhookLog) {
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Developer_Sub));
-    }
-    else if (!functionLog) {
+    } else if (!functionLog) {
       this.routeService.dispatch(new CherryPickAndRemove(e => e.id == "list_all_logs"));
     } else if (!webhookLog) {
       this.routeService.dispatch(new CherryPickAndRemove(e => e.id == "webhook_logs"));
