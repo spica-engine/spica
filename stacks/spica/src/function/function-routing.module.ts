@@ -47,23 +47,23 @@ const routes: Routes = [
 
 const route: Route[] = [
   {
-    id: "webhook",
-    category: RouteCategory.Developer,
-    icon: "http",
+    id: "webhook_list",
+    category: RouteCategory.Webhook_Sub,
+    icon: "format_list_numbered",
     path: "/webhook",
     display: "Webhooks",
     data: {action: "webhook:index"}
   },
   {
     id: "webhook_logs",
-    category: RouteCategory.Developer_Sub,
+    category: RouteCategory.Webhook_Sub,
     icon: "pest_control",
     path: "/webhook/logs",
     display: "Webhook Logs",
     data: {action: "webhook:logs:index"}
   },
   {
-    category: RouteCategory.Developer,
+    category: RouteCategory.Developer_Sub,
     id: `list_all_functions`,
     icon: "format_list_numbered",
     path: `/function`,

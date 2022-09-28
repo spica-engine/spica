@@ -69,7 +69,9 @@ describe("Home Layout", () => {
           {category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1"},
           {category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2"},
           {category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1"},
-          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"}
+          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"},
+          {category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1"},
+          {category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2"}
         ])
       );
       tick();
@@ -77,7 +79,7 @@ describe("Home Layout", () => {
       const navCategories = fixture.debugElement.nativeElement.querySelectorAll(
         "mat-nav-list:first-of-type > mat-list-item:not(:first-of-type)"
       );
-      expect(navCategories.length).toBe(5);
+      expect(navCategories.length).toBe(6);
       expect(navCategories[0].getAttribute("class")).toContain("active");
     }));
 
@@ -91,7 +93,9 @@ describe("Home Layout", () => {
           {category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1"},
           {category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2"},
           {category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1"},
-          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"}
+          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"},
+          {category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1"},
+          {category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2"}
         ])
       );
       tick();
@@ -112,30 +116,64 @@ describe("Home Layout", () => {
     it("should show sub menu", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
-          {category: RouteCategory.Content, id: "9", path: "", icon: "", display: "system1"},
-          {category: RouteCategory.Content, id: "0", path: "", icon: "", display: "system2"},
-          {category: RouteCategory.Content_Sub, id: "3", path: "", icon: "", display: "sub1"},
-          {category: RouteCategory.Content_Sub, id: "4", path: "", icon: "", display: "sub2"}
+          {
+            category: RouteCategory.Primary,
+            id: "9",
+            path: "",
+            icon: "",
+            display: "system1",
+            displayType: "menu"
+          },
+          {
+            category: RouteCategory.Primary,
+            id: "0",
+            path: "",
+            icon: "",
+            display: "system2",
+            displayType: "menu"
+          },
+          {
+            category: RouteCategory.Primary_Sub,
+            id: "3",
+            path: "",
+            icon: "",
+            display: "sub1",
+            displayType: "menu"
+          },
+          {
+            category: RouteCategory.Primary_Sub,
+            id: "4",
+            path: "",
+            icon: "",
+            display: "sub2",
+            displayType: "menu"
+          }
         ])
       );
       tick();
       fixture.detectChanges();
-      const matMenu = fixture.debugElement.nativeElement.querySelectorAll("h4 mat-menu");
+      const matMenu = fixture.debugElement.nativeElement.querySelectorAll(
+        "h4 .subcategory-items mat-menu"
+      );
       expect(matMenu.length).toEqual(1);
     }));
 
     it("should show action button instead of mat menu", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
-          {category: RouteCategory.Content, id: "9", path: "", icon: "", display: "system1"},
-          {category: RouteCategory.Content_Sub, id: "3", path: "", icon: "", display: "sub1"}
+          {category: RouteCategory.Primary, id: "9", path: "", icon: "", display: "system1"},
+          {category: RouteCategory.Primary_Sub, id: "3", path: "", icon: "", display: "sub1"}
         ])
       );
       tick();
       fixture.detectChanges();
-      const matMenu = fixture.debugElement.nativeElement.querySelectorAll("h4 mat-menu");
+      const matMenu = fixture.debugElement.nativeElement.querySelectorAll(
+        "h4 .subcategory-items mat-menu"
+      );
       expect(matMenu.length).toEqual(0);
-      const actionButton = fixture.debugElement.nativeElement.querySelectorAll("h4 button");
+      const actionButton = fixture.debugElement.nativeElement.querySelectorAll(
+        "h4 .subcategory-items button"
+      );
       expect(actionButton.length).toEqual(1);
     }));
   });

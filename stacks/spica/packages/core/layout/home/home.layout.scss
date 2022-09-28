@@ -27,6 +27,9 @@
       transition-duration: 0.4s;
       transition-timing-function: ease-in-out;
 
+      .subcategory-items {
+        display: flex;
+      }
       .mat-nav-list:nth-child(2) {
         min-width: 180px;
         opacity: 1;
@@ -40,11 +43,22 @@
         display: flex;
         flex-flow: row;
         justify-content: stretch;
+
+        mat-list-item {
+          &.dashed-item {
+            border-top: 1px dashed rgba(255, 255, 255, 0.2);
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+          }
+        }
         [category="buckets"] {
           mat-list-item:last-of-type {
             border-top: 1px dashed rgba(255, 255, 255, 0.2);
             border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
           }
+        }
+        .dashed-item {
+          border-top: 1px dashed rgba(255, 255, 255, 0.2);
+          border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
         }
         mat-nav-list:last-child {
           min-height: 100vh;

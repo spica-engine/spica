@@ -156,6 +156,7 @@ export interface Webhook {
   url: string;
   body: string;
   trigger: WebhookTrigger;
+  title: string;
 }
 
 export interface WebhookTrigger {
@@ -169,6 +170,7 @@ export interface WebhookTrigger {
 
 export function emptyWebhook(): Webhook {
   return {
+    title: undefined,
     url: undefined,
     body: "{{{ toJSON this }}}",
     trigger: {active: true, name: "database", options: {collection: undefined, type: undefined}}

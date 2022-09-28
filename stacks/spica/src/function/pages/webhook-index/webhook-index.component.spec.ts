@@ -37,7 +37,8 @@ describe("Webhook Index", () => {
               options: {collection: "test_collection", type: "INSERT"}
             },
             body: "",
-            url: "test_url"
+            url: "test_url",
+            title: "test title"
           } as Webhook)
       );
 
@@ -84,10 +85,12 @@ describe("Webhook Index", () => {
     expect(webhookService.getAll).toHaveBeenCalledWith(10, 0, {_id: -1});
 
     const id = fixture.debugElement.query(By.css("table td:nth-of-type(1)"));
-    const url = fixture.debugElement.query(By.css("table td:nth-of-type(2)"));
+    const title = fixture.debugElement.query(By.css("table td:nth-of-type(2)"));
+    const url = fixture.debugElement.query(By.css("table td:nth-of-type(3)"));
 
     expect(id.nativeElement.textContent).toBe("0");
     expect(url.nativeElement.textContent).toBe("test_url");
+    expect(title.nativeElement.textContent).toBe("test title");
   });
 
   it("should advance to the next page", async () => {
@@ -101,10 +104,12 @@ describe("Webhook Index", () => {
     expect(webhookService.getAll.calls.argsFor(1)).toEqual([10, 10, {_id: -1}]);
 
     const id = fixture.debugElement.query(By.css("table td:nth-of-type(1)"));
-    const url = fixture.debugElement.query(By.css("table td:nth-of-type(2)"));
+    const title = fixture.debugElement.query(By.css("table td:nth-of-type(2)"));
+    const url = fixture.debugElement.query(By.css("table td:nth-of-type(3)"));
 
     expect(id.nativeElement.textContent).toBe("10");
     expect(url.nativeElement.textContent).toBe("test_url");
+    expect(title.nativeElement.textContent).toBe("test title");
   });
 
   it("should delete webhook", fakeAsync(() => {

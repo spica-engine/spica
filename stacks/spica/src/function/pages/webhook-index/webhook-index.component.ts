@@ -16,9 +16,10 @@ export class WebhookIndexComponent implements OnInit {
   public $data: Observable<Webhook[]>;
   refresh: Subject<void> = new Subject<void>();
 
-  properties = ["_id", "url", "type", "collection", "actions"];
+  properties = ["_id", "title", "url", "type", "collection", "actions"];
   displayedProperties = JSON.parse(localStorage.getItem("Webhooks-displayedProperties")) || [
     "_id",
+    "title",
     "url",
     "actions"
   ];
@@ -68,7 +69,7 @@ export class WebhookIndexComponent implements OnInit {
     if (display) {
       this.displayedProperties = JSON.parse(JSON.stringify(this.properties));
     } else {
-      this.displayedProperties = ["_id", "url", "actions"];
+      this.displayedProperties = ["_id", "title", "url", "actions"];
     }
 
     localStorage.setItem("Webhooks-displayedProperties", JSON.stringify(this.displayedProperties));
