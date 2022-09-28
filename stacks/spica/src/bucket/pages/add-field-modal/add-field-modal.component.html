@@ -172,6 +172,7 @@
         "
         ngModel
         required
+        pattern="^(?!(_id)$)([a-z_0-9]*)+$"
       />
       <mat-error *ngIf="pnm?.errors?.required">
         Property name is required.
