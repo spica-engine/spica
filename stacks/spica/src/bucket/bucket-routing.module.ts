@@ -1,14 +1,14 @@
-import {NgModule} from "@angular/core";
-import {RouterModule, Routes} from "@angular/router";
-import {Route, RouteCategory, RouteModule} from "@spica-client/core";
-import {IdentityGuard, PolicyGuard} from "../passport";
-import {AddComponent} from "./pages/add/add.component";
-import {BucketAddComponent} from "./pages/bucket-add/bucket-add.component";
-import {BucketIndexComponent} from "./pages/bucket-index/bucket-index.component";
-import {IndexComponent} from "./pages/index/index.component";
-import {SettingsComponent} from "./pages/settings/settings.component";
-import {WelcomeComponent} from "./pages/welcome/welcome.component";
-import {BucketIndexGuard} from "./state/index.guard";
+import { NgModule } from "@angular/core";
+import { RouterModule, Routes } from "@angular/router";
+import { Route, RouteCategory, RouteModule } from "@spica-client/core";
+import { IdentityGuard, PolicyGuard } from "../passport";
+import { AddComponent } from "./pages/add/add.component";
+import { BucketAddComponent } from "./pages/bucket-add/bucket-add.component";
+import { BucketIndexComponent } from "./pages/bucket-index/bucket-index.component";
+import { IndexComponent } from "./pages/index/index.component";
+import { SettingsComponent } from "./pages/settings/settings.component";
+import { WelcomeComponent } from "./pages/welcome/welcome.component";
+import { BucketIndexGuard } from "./state/index.guard";
 
 const routes: Routes = [
   {
@@ -93,12 +93,23 @@ const route: Route[] = [
   {
     id: "bucket",
     category: RouteCategory.Content_Sub,
-    icon: "view_day",
+    icon: "format_list_numbered",
     path: "/buckets",
     display: "Buckets",
     data: {
       action: "bucket:index"
     }
+  },
+  {
+    id: "bucket-settings",
+    category: RouteCategory.Content_Sub,
+    icon: "settings",
+    path: "/buckets/settings",
+    display: "Settings",
+    data: {
+      action: "preference:show"
+    }
+    
   }
 ];
 
@@ -106,4 +117,4 @@ const route: Route[] = [
   imports: [RouterModule.forChild(routes), RouteModule.forChild(route)],
   exports: [RouterModule, RouteModule]
 })
-export class BucketRoutingModule {}
+export class BucketRoutingModule { }

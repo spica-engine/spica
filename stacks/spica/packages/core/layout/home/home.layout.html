@@ -14,10 +14,13 @@
           <img src="assets/astro-composer.svg" />
         </mat-list-item>
         <mat-list-item
+         
           disableRipple
           *ngFor="let category of  categories$ | async"
           [class.active]="(currentCategory | async) === category"
           (click)="currentCategory.next(category)"
+          [matTooltip]="category.category"
+          matTooltipPosition="below"
         >
           <mat-icon>{{ category.icon }}</mat-icon>
         </mat-list-item>

@@ -62,16 +62,8 @@ const routes: Routes = [
 
 const route: Route[] = [
   {
-    id: "dashboard",
-    category: RouteCategory.Primary,
-    icon: "dashboard",
-    path: "/dashboard",
-    display: "Dashboard",
-    index: 0
-  },
-  {
     id: "list_all_dahsboards",
-    category: RouteCategory.Primary_Sub,
+    category: RouteCategory.Dashboard_Sub,
     icon: "format_list_numbered",
     path: "/dashboards",
     display: "Custom Dashboards"

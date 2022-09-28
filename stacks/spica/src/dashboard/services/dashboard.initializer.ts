@@ -16,7 +16,7 @@ export class DashboardInitializer {
       dashboards.forEach(dashboard => {
         this.routeService.dispatch(
           new Upsert({
-            category: RouteCategory.Primary,
+            category: RouteCategory.Dashboard,
             id: `dashboard/${dashboard._id}`,
             icon: dashboard.icon,
             path: `/dashboard/${dashboard._id}`,

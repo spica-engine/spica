@@ -17,15 +17,7 @@ const routes: Routes = [
 ];
 
 const route: Route[] = [
-  {
-    id: "activity",
-    category: RouteCategory.Primary,
-    display: "User Activities",
-    icon: "account_box",
-    path: "/activity",
-    data: {action: "activity:index"},
-    index: 2
-  }
+  
 ];
 
 @NgModule({

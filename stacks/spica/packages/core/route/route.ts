@@ -2,6 +2,7 @@ import {InjectionToken} from "@angular/core";
 import {Observable} from "rxjs";
 
 export enum RouteCategory {
+  Dashboard = "Dashboard",
   Primary = "Primary",
   Content = "Buckets",
   Developer = "Developer Area",
@@ -12,7 +13,8 @@ export enum RouteCategory {
   Content_Sub = "All Buckets",
   Developer_Sub = "Function Logs",
   Webhook_Sub = "Webhook Logs",
-  System_Sub = "IA Management"
+  System_Sub = "IA Management",
+  Dashboard_Sub = "Dashboards",
 }
 
 export interface Route {
