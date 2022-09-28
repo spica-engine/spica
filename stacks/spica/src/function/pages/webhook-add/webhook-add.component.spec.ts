@@ -99,7 +99,8 @@ describe("Webhook", () => {
         body: "{{{toJSON this}}}",
         collection: "identity",
         type: "INSERT",
-        status: true
+        status: true,
+        title:"test"
       });
       fixture.detectChanges();
 

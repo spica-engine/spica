@@ -32,39 +32,34 @@
         <h4>
           {{ currentCategory.category }}
           <div *ngIf="currentCategory.children.items" class="subcategory-items">
-            <ng-container
+            <button
               *ngFor="let subCategory of filterArrayByDisplay(currentCategory.children.items,'row')"
+              mat-icon-button
+              [routerLink]="subCategory.path"
+              routerLinkActive="active"
+              canInteract="subCategory.data?.action"
+              [matTooltip]="subCategory.display"
             >
-              <button
-                mat-icon-button
-                [routerLink]="subCategory.path"
-                routerLinkActive="active"
-                canInteract="subCategory.data?.action"
-                [matTooltip]="subCategory.display"
-              >
-                <mat-icon>{{subCategory.icon}}</mat-icon>
-              </button>
-            </ng-container>
+              <mat-icon>{{subCategory.icon}}</mat-icon>
+            </button>
 
             <ng-container
               *ngIf="filterArrayByDisplay(currentCategory.children.items,'menu').length>1"
             >
-              <div>
-                <button mat-icon-button [matMenuTriggerFor]="menu">
-                  <mat-icon>{{currentCategory.children.icon}}</mat-icon>
+              <button mat-icon-button [matMenuTriggerFor]="menu">
+                <mat-icon>{{currentCategory.children.icon}}</mat-icon>
+              </button>
+              <mat-menu #menu="matMenu">
+                <button
+                  mat-menu-item
+                  *ngFor="let subCategory of filterArrayByDisplay(currentCategory.children.items,'menu')"
+                  [routerLink]="subCategory.path"
+                  routerLinkActive="active"
+                  canInteract="subCategory.data.action"
+                >
+                  {{subCategory.display}}
                 </button>
-                <mat-menu #menu="matMenu">
-                  <button
-                    mat-menu-item
-                    *ngFor="let subCategory of filterArrayByDisplay(currentCategory.children.items,'menu')"
-                    [routerLink]="subCategory.path"
-                    routerLinkActive="active"
-                    canInteract="subCategory.data.action"
-                  >
-                    {{subCategory.display}}
-                  </button>
-                </mat-menu>
-              </div>
+              </mat-menu>
             </ng-container>
           </div>
         </h4>

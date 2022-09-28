@@ -1,24 +1,24 @@
-import {BreakpointObserver} from "@angular/cdk/layout";
-import {ANALYZE_FOR_ENTRY_COMPONENTS, Component} from "@angular/core";
-import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
-import {MatIconModule} from "@angular/material/icon";
-import {MatListModule} from "@angular/material/list";
-import {MatSidenavModule} from "@angular/material/sidenav";
-import {MatToolbarModule} from "@angular/material/toolbar";
-import {By} from "@angular/platform-browser";
-import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
-import {RouterTestingModule} from "@angular/router/testing";
-import {StoreModule} from "@ngrx/store";
-import {of} from "rxjs";
-import {RouteCategory, RouteModule} from "../../route";
-import {Retrieve} from "../../route/route.reducer";
-import {RouteService} from "../../route/route.service";
-import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
-import {ToolbarActionDirective} from "../toolbar-action";
-import {HomeLayoutComponent} from "./home.layout";
-import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
-import {MatMenuModule} from "@angular/material/menu";
-import {MatTooltipModule} from "@angular/material/tooltip";
+import { BreakpointObserver } from "@angular/cdk/layout";
+import { ANALYZE_FOR_ENTRY_COMPONENTS, Component } from "@angular/core";
+import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
+import { MatIconModule } from "@angular/material/icon";
+import { MatListModule } from "@angular/material/list";
+import { MatSidenavModule } from "@angular/material/sidenav";
+import { MatToolbarModule } from "@angular/material/toolbar";
+import { By } from "@angular/platform-browser";
+import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import { RouterTestingModule } from "@angular/router/testing";
+import { StoreModule } from "@ngrx/store";
+import { of } from "rxjs";
+import { RouteCategory, RouteModule } from "../../route";
+import { Retrieve } from "../../route/route.reducer";
+import { RouteService } from "../../route/route.service";
+import { LAYOUT_ACTIONS, LAYOUT_INITIALIZER } from "../config";
+import { ToolbarActionDirective } from "../toolbar-action";
+import { HomeLayoutComponent } from "./home.layout";
+import { CanInteractDirectiveTest } from "@spica-client/passport/directives/can-interact.directive";
+import { MatMenuModule } from "@angular/material/menu";
+import { MatTooltipModule } from "@angular/material/tooltip";
 
 describe("Home Layout", () => {
   describe("test for categories, routes", () => {
@@ -62,14 +62,16 @@ describe("Home Layout", () => {
     it("should show categories that include first one is selected as default if theres route", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
-          {category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1"},
-          {category: RouteCategory.System, id: "0", path: "", icon: "", display: "system2"},
-          {category: RouteCategory.Developer, id: "3", path: "", icon: "", display: "developer1"},
-          {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: "developer2"},
-          {category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1"},
-          {category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2"},
-          {category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1"},
-          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"}
+          { category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1" },
+          { category: RouteCategory.System, id: "0", path: "", icon: "", display: "system2" },
+          { category: RouteCategory.Developer, id: "3", path: "", icon: "", display: "developer1" },
+          { category: RouteCategory.Developer, id: "4", path: "", icon: "", display: "developer2" },
+          { category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1" },
+          { category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2" },
+          { category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1" },
+          { category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2" },
+          { category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1" },
+          { category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2" }
         ])
       );
       tick();
@@ -77,21 +79,23 @@ describe("Home Layout", () => {
       const navCategories = fixture.debugElement.nativeElement.querySelectorAll(
         "mat-nav-list:first-of-type > mat-list-item:not(:first-of-type)"
       );
-      expect(navCategories.length).toBe(5);
+      expect(navCategories.length).toBe(6);
       expect(navCategories[0].getAttribute("class")).toContain("active");
     }));
 
     it("should show clicked category as active with child routes", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
-          {category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1"},
-          {category: RouteCategory.System, id: "0", path: "", icon: "", display: "system2"},
-          {category: RouteCategory.Developer, id: "3", path: "", icon: "", display: "developer1"},
-          {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: "developer2"},
-          {category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1"},
-          {category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2"},
-          {category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1"},
-          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"}
+          { category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1" },
+          { category: RouteCategory.System, id: "0", path: "", icon: "", display: "system2" },
+          { category: RouteCategory.Developer, id: "3", path: "", icon: "", display: "developer1" },
+          { category: RouteCategory.Developer, id: "4", path: "", icon: "", display: "developer2" },
+          { category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1" },
+          { category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2" },
+          { category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1" },
+          { category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2" },
+          { category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1" },
+          { category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2" }
         ])
       );
       tick();
@@ -112,30 +116,30 @@ describe("Home Layout", () => {
     it("should show sub menu", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
-          {category: RouteCategory.Content, id: "9", path: "", icon: "", display: "system1"},
-          {category: RouteCategory.Content, id: "0", path: "", icon: "", display: "system2"},
-          {category: RouteCategory.Content_Sub, id: "3", path: "", icon: "", display: "sub1"},
-          {category: RouteCategory.Content_Sub, id: "4", path: "", icon: "", display: "sub2"}
+          { category: RouteCategory.Primary, id: "9", path: "", icon: "", display: "system1",displayType: "menu" },
+          { category: RouteCategory.Primary, id: "0", path: "", icon: "", display: "system2",displayType: "menu" },
+          { category: RouteCategory.Primary_Sub, id: "3", path: "", icon: "", display: "sub1", displayType: "menu" },
+          { category: RouteCategory.Primary_Sub, id: "4", path: "", icon: "", display: "sub2", displayType: "menu"}
         ])
       );
       tick();
       fixture.detectChanges();
-      const matMenu = fixture.debugElement.nativeElement.querySelectorAll("h4 mat-menu");
+      const matMenu = fixture.debugElement.nativeElement.querySelectorAll("h4 .subcategory-items mat-menu");
       expect(matMenu.length).toEqual(1);
     }));
 
     it("should show action button instead of mat menu", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
-          {category: RouteCategory.Content, id: "9", path: "", icon: "", display: "system1"},
-          {category: RouteCategory.Content_Sub, id: "3", path: "", icon: "", display: "sub1"}
+          { category: RouteCategory.Primary, id: "9", path: "", icon: "", display: "system1" },
+          { category: RouteCategory.Primary_Sub, id: "3", path: "", icon: "", display: "sub1" }
         ])
       );
       tick();
       fixture.detectChanges();
-      const matMenu = fixture.debugElement.nativeElement.querySelectorAll("h4 mat-menu");
+      const matMenu = fixture.debugElement.nativeElement.querySelectorAll("h4 .subcategory-items mat-menu");
       expect(matMenu.length).toEqual(0);
-      const actionButton = fixture.debugElement.nativeElement.querySelectorAll("h4 button");
+      const actionButton = fixture.debugElement.nativeElement.querySelectorAll("h4 .subcategory-items button");
       expect(actionButton.length).toEqual(1);
     }));
   });
@@ -161,7 +165,7 @@ describe("Home Layout", () => {
           {
             provide: BreakpointObserver,
             useValue: {
-              observe: jasmine.createSpy("observe").and.returnValue(of({matches: true}))
+              observe: jasmine.createSpy("observe").and.returnValue(of({ matches: true }))
             }
           }
         ]
@@ -186,7 +190,7 @@ describe("Home Layout", () => {
     it("should open sidenav", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
-          {category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1"}
+          { category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1" }
         ])
       );
       const toolbarButton = fixture.debugElement.nativeElement.querySelector(
@@ -220,7 +224,7 @@ describe("Home Layout", () => {
           {
             provide: BreakpointObserver,
             useValue: {
-              observe: jasmine.createSpy("observe").and.returnValue(of({matches: false}))
+              observe: jasmine.createSpy("observe").and.returnValue(of({ matches: false }))
             }
           }
         ]
@@ -247,7 +251,7 @@ describe("Home Layout", () => {
       selector: "dummy-action",
       template: "<button>BUTTON</button>"
     })
-    class DummyAction {}
+    class DummyAction { }
 
     let component: HomeLayoutComponent;
     let fixture: ComponentFixture<HomeLayoutComponent>;
