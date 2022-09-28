@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import {config} from "./config";
 
 export namespace context {
   const ctxPath = path.join(os.homedir(), ".spicactx");
@@ -35,7 +36,20 @@ export namespace context {
 
   export function get(name: string): Context | undefined {
     const cxts = load();
-    return cxts[name];
+    const ctx = cxts[name];
+
+    if (!ctx) {
+      throw new Error(
+        `Could not find the context ${name}\n$ spica context set --name="${name}" --apikey="<APIKEY_HERE>" to create this context.`
+      );
+    }
+
+    return ctx;
+  }
+
+  export async function getCurrent() {
+    const {context: name} = await config.get();
+    return get(name);
   }
 
   export function list(): Array<Context & {name: string}> {

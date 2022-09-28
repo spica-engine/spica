@@ -207,7 +207,6 @@ describe("ApiKey", () => {
     beforeEach(async () => {
       insertedApiKey = (await req.post("/passport/apikey", {
         name: "test",
-        policies: [],
         active: true
       })).body;
     });

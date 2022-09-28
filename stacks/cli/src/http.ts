@@ -27,7 +27,7 @@ export namespace httpService {
         if (!error.response) {
           return Promise.reject(error);
         }
-        return Promise.reject(error.response);
+        return Promise.reject(error.response.data ? error.response.data.message : error.response);
       }
     );
     instance.defaults.headers.common["Authorization"] = authorization;
@@ -35,19 +35,9 @@ export namespace httpService {
     return instance;
   }
 
-  export async function createFromConfig() {
-    const {context: name} = await config.get();
-    if (!name) {
-      throw new Error(
-        `No context has been selected.\n$ spica context switch <name> to switch context.`
-      );
-    }
-    const ctx = context.get(name);
-    if (!ctx) {
-      throw new Error(
-        `Could not find the context ${name}\n$ spica context set --name="${name}" --apikey="<APIKEY_HERE>" to create this context.`
-      );
-    }
+  export async function createFromCurrentCtx() {
+    const ctx = await context.getCurrent();
+
     return create({
       baseUrl: ctx.url,
       authorization: ctx.authorization
