@@ -59,6 +59,18 @@
         </th>
         <td mat-cell *matCellDef="let webhook">{{ webhook._id }}</td>
       </ng-container>
+      <ng-container matColumnDef="title">
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+          mat-resize-header
+          mat-sort-header
+          persist-header-width="Webhooks"
+        >
+          Title
+        </th>
+        <td mat-cell *matCellDef="let webhook">{{ webhook.title }}</td>
+      </ng-container>
       <ng-container matColumnDef="url">
         <th
           mat-header-cell

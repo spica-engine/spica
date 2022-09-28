@@ -32,8 +32,14 @@ describe("Schema Resolver", () => {
     expect(schema).toEqual({
       $id: "http://spica.internal/webhook",
       type: "object",
-      required: ["url", "body", "trigger"],
+      required: ["title", "url", "body", "trigger"],
+      additionalProperties: false,
       properties: {
+        title: {
+          type: "string",
+          title: "Title",
+          description: "Title of the webhook"
+        },
         url: {
           type: "string",
           title: "Url",

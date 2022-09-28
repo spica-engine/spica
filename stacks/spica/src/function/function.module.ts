@@ -45,8 +45,10 @@ import {LogViewComponent} from "./pages/log-view/log-view.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
+import * as fromWebhook from "./reducers/webhook.reducer";
 import {WebhookModule} from "./webhook.module";
 import {MatDialogModule} from "@angular/material/dialog";
+import {WebhookService} from "./services";
 
 @NgModule({
   imports: [
@@ -79,6 +81,7 @@ import {MatDialogModule} from "@angular/material/dialog";
     InputModule,
     MatTabsModule,
     StoreModule.forFeature("function", fromFunction.reducer),
+    StoreModule.forFeature("webhook", fromWebhook.reducer),
     PassportModule.forChild(),
     WebhookModule,
     MatSaveModule,
@@ -111,7 +114,7 @@ export class FunctionModule {
         {
           provide: FunctionInitializer,
           useClass: FunctionInitializer,
-          deps: [FunctionService, RouteService, PassportService]
+          deps: [FunctionService, WebhookService, RouteService, PassportService]
         },
         {
           provide: LAYOUT_INITIALIZER,
