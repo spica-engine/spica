@@ -100,7 +100,7 @@ describe("Webhook", () => {
         collection: "identity",
         type: "INSERT",
         status: true,
-        title:"test"
+        title: "test"
       });
       fixture.detectChanges();
 

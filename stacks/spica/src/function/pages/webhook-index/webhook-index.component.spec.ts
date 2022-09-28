@@ -38,7 +38,7 @@ describe("Webhook Index", () => {
             },
             body: "",
             url: "test_url",
-            title:"test title"
+            title: "test title"
           } as Webhook)
       );
 
@@ -110,7 +110,6 @@ describe("Webhook Index", () => {
     expect(id.nativeElement.textContent).toBe("10");
     expect(url.nativeElement.textContent).toBe("test_url");
     expect(title.nativeElement.textContent).toBe("test title");
-    
   });
 
   it("should delete webhook", fakeAsync(() => {
