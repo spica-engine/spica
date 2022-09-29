@@ -118,8 +118,13 @@ export async function findDocuments<T>(
     .skip(params.skip)
     .limit(params.limit);
 
+  const relationPropertyMap = params.relationPaths || [];
+  const relationPathResolvedPipeline = await seekingPipeline.resolveRelationPath(
+    relationPropertyMap
+  );
+
   // for graphql responses
-  const seekingAggregation = seekingPipeline.project(getProjectFields(params.projectMap)).result();
+  const seekingAggregation = relationPathResolvedPipeline.project(getProjectFields(params.projectMap)).result();
 
   const documents = await collection.aggregate(seekingAggregation).toArray();
 
