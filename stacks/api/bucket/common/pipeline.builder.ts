@@ -11,6 +11,7 @@ import {
   RelationMap
 } from "./relation";
 import {extractFilterPropertyMap, replaceFilterObjectIds} from "@spica-server/bucket/services";
+import {cloneDeep} from "lodash";
 
 export interface iPipelineBuilder {
   attachToPipeline(condition: any, ...attachedObject: object[]): this;
@@ -37,6 +38,8 @@ export interface iPipelineBuilder {
     totalDocumentCount: Promise<number>
   ): Promise<this>;
   result(): object[];
+  project(fields: {[field: string]: 1 | 0}): this;
+  clone(): PipelineBuilder;
 }
 
 export class PipelineBuilder implements iPipelineBuilder {
@@ -50,6 +53,10 @@ export class PipelineBuilder implements iPipelineBuilder {
   constructor(schema: Bucket, factories: CrudFactories<any>) {
     this.schema = schema;
     this.factories = factories;
+  }
+
+  clone(): PipelineBuilder {
+    return cloneDeep(this);
   }
 
   private buildRelationMap(propertyMap: string[][]): Promise<RelationMap[]> {
@@ -148,10 +155,7 @@ export class PipelineBuilder implements iPipelineBuilder {
     return this;
   }
 
-  async resolveRelationPath(
-    relationPaths: string[][],
-    callback?: (relationStage: object[]) => void
-  ): Promise<this> {
+  async resolveRelationPath(relationPaths: string[][]): Promise<this> {
     const relationPropertyMap = relationPaths || [];
     let relationMap = [];
     if (relationPropertyMap.length) {
@@ -161,7 +165,7 @@ export class PipelineBuilder implements iPipelineBuilder {
         this.usedRelationPaths
       );
       const relationStage = getRelationPipeline(updatedRelationMap, this.locale);
-      callback(relationStage);
+      this.attachToPipeline(true, ...relationStage);
     }
     return this;
   }
@@ -216,6 +220,41 @@ export class PipelineBuilder implements iPipelineBuilder {
         {$unwind: {path: "$meta", preserveNullAndEmptyArrays: true}}
       );
     }
+    return this;
+  }
+
+  project(fields: {[field: string]: 1 | 0}) {
+    this.attachToPipeline(Object.keys(fields).length, {$project: fields});
+    return this;
+  }
+
+  async documentCount(countIfNoFilterApplied?: Promise<number>) {
+    let stages = [];
+
+    if (this.isFilterApplied) {
+      stages.push(
+        {$group: {_id: null, documentCount: {$sum: 1}}},
+        {$project: {_id: 0, documentCount: 1}}
+      );
+    } else {
+      stages.push(
+        {$limit: 1},
+        {
+          $addFields: {
+            documentCount: await countIfNoFilterApplied
+          }
+        },
+        {
+          $project: {
+            documentCount: 1,
+            _id: 0
+          }
+        }
+      );
+    }
+
+    this.attachToPipeline(true, ...stages);
+
     return this;
   }
 

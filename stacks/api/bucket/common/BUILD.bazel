@@ -17,5 +17,6 @@ ts_project(
         "//stacks/api/bucket/services",
         "@npm//json-merge-patch",
         "@npm//locale",
+        "@npm//lodash"
     ],
 )

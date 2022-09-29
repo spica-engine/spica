@@ -77,7 +77,6 @@ export async function findDocuments<T>(
 ): Promise<unknown> {
   const collection = factories.collection(schema);
   const pipelineBuilder: iPipelineBuilder = new PipelineBuilder(schema, factories);
-  const seekingPipelineBuilder: iPipelineBuilder = new PipelineBuilder(schema, factories);
 
   let rulePropertyMap;
   let ruleRelationMap: RelationMap[];
@@ -113,50 +112,32 @@ export async function findDocuments<T>(
     .attachToPipeline(!!ruleResetStage, ruleResetStage)
     .filterByUserRequest(params.filter);
 
-  const seekingPipeline: iPipelineBuilder = seekingPipelineBuilder
+  let seekingPipeline = filtersAppliedPipeline.clone();
+  seekingPipeline = seekingPipeline
     .sort(params.sort)
     .skip(params.skip)
     .limit(params.limit);
 
-  const relationPropertyMap = params.relationPaths || [];
-
-  const relationPathResolvedPipeline = await filtersAppliedPipeline.resolveRelationPath(
-    relationPropertyMap,
-    relationStage => {
-      seekingPipeline.attachToPipeline(true, ...relationStage);
-    }
-  );
-
   // for graphql responses
-  seekingPipeline.attachToPipeline(
-    params.projectMap.length,
-    getProjectAggregation(params.projectMap)
-  );
+  const seekingAggregation = seekingPipeline.project(getProjectFields(params.projectMap)).result();
 
-  const seeking = seekingPipeline.result();
-
-  const pipeline = (await relationPathResolvedPipeline.paginate(
-    options.paginate,
-    seeking,
-    collection.estimatedDocumentCount()
-  )).result();
+  const documents = await collection.aggregate(seekingAggregation).toArray();
 
   if (options.paginate) {
-    const result = await collection
-      .aggregate<CrudPagination<T>>(pipeline)
+    const documentCountPipeline = filtersAppliedPipeline.clone();
+    const documentCountAggreggaton = await documentCountPipeline
+      .documentCount(collection.estimatedDocumentCount())
+      .then(r => r.result());
+
+    return collection
+      .aggregate(documentCountAggreggaton)
       .next()
-      .catch(error => {
-        throw new DatabaseException(error.message);
+      .then((r: any) => {
+        return {meta: {total: r ? r.documentCount : 0}, data: documents};
       });
-    return result.data.length ? result : {meta: {total: 0}, data: []};
   }
 
-  return collection
-    .aggregate<T>([...pipeline, ...seeking])
-    .toArray()
-    .catch(error => {
-      throw new DatabaseException(error.message);
-    });
+  return documents;
 }
 
 export async function insertDocument(
@@ -339,12 +320,12 @@ async function executeWriteRule(
   }
 }
 
-function getProjectAggregation(fieldMap: string[][]) {
+function getProjectFields(fieldMap: string[][]) {
   const result = {};
   for (const fields of fieldMap) {
     result[fields.join(".")] = 1;
   }
-  return {$project: result};
+  return result;
 }
 
 function handleWriteErrors(error: any) {
