@@ -7,7 +7,7 @@
       mat-sidenav {
         max-width: 66px;
         min-width: 0;
-        mat-nav-list:nth-child(2) {
+        .routerlist {
           opacity: 0;
         }
       }
@@ -30,7 +30,19 @@
       .subcategory-items {
         display: flex;
       }
-      .mat-nav-list:nth-child(2) {
+      .iconlist {
+        display: flex;
+        flex-direction: column;
+        .sublist {
+          display: flex;
+          height: 100%;
+          align-items: end;
+          > mat-list-item {
+            cursor: pointer;
+          }
+        }
+      }
+      .routerlist {
         min-width: 180px;
         opacity: 1;
         transition: opacity 0.4s ease-in-out;
@@ -60,18 +72,14 @@
           border-top: 1px dashed rgba(255, 255, 255, 0.2);
           border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
         }
-        mat-nav-list:last-child {
+        .routerlist {
           min-height: 100vh;
         }
         mat-nav-list {
-          &:first-of-type {
+          &.iconlist {
             padding: 0px 3px;
             background: rgba(var(--background-background-rgb), 0.9);
-            mat-list-item {
-              margin: 10px 0px;
-              padding: 15px 0px;
-              height: unset;
-
+            > mat-list-item {
               &.active {
                 background: rgba(255, 255, 255, 0.17);
                 border-radius: 5px;
@@ -83,6 +91,39 @@
                   object-fit: fill;
                   transform: scale(1.7);
                   user-select: none;
+                }
+              }
+            }
+            mat-list-item {
+              margin: 10px 0px;
+              padding: 15px 0px;
+              height: unset;
+
+              &.iconlist-below {
+                display: flex;
+                height: 100%;
+                padding: 0;
+                margin: 0;
+                &:hover {
+                  background: unset;
+                }
+                ::ng-deep {
+                  > .mat-list-item-content {
+                    padding: 0;
+                    width: 100%;
+                    mat-list-item {
+                      .mat-list-item-content {
+                        justify-content: center;
+                        padding: 0;
+                      }
+                    }
+                  }
+                }
+                mat-nav-list {
+                  height: 100%;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: flex-end;
                 }
               }
             }
@@ -141,6 +182,26 @@
         ::ng-deep > *:not(span):not(:first-child) {
           margin-right: 5px;
         }
+        .toolbar {
+          display: flex;
+          justify-content: space-between;
+          width: 100%;
+          > div {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            &:last-of-type {
+              ::ng-deep > *:not(:last-child) {
+                margin-right: 5px;
+              }
+            }
+            &:first-of-type {
+              ::ng-deep > *:not(:first-child) {
+                margin-left: 5px;
+              }
+            }
+          }
+        }
       }
       ::ng-deep div.slot mat-toolbar {
         padding-top: 30px;
@@ -173,7 +234,7 @@
     color: white !important;
   }
 
-  mat-nav-list:first-of-type {
+  .iconlist {
     background: linear-gradient(0deg, #271f57, #0e0922) !important;
   }
 

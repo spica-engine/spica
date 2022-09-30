@@ -131,11 +131,19 @@ const route: Route[] = [
   },
   {
     id: "passport.settings",
-    category: RouteCategory.System,
+    category: RouteCategory.System_Sub,
     display: "Settings",
     path: "/passport/settings",
     icon: "settings",
     data: {action: "preference:show", params: {scope: "passport"}}
+  },
+  {
+    id: "activity",
+    category: RouteCategory.System,
+    display: "User Activities",
+    icon: "account_box",
+    path: "/activity",
+    data: {action: "activity:index"}
   }
 ];
 

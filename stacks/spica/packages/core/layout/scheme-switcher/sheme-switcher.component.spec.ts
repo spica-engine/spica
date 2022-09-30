@@ -35,16 +35,16 @@ describe("Scheme Switcher Component", () => {
     it("should be dark theme as default", () => {
       expect(
         fixture.debugElement.nativeElement
-          .querySelector("button")
+          .querySelector(".switcher")
           .getAttribute("ng-reflect-message")
       ).toBe("Switch to light theme.");
-      expect(fixture.debugElement.nativeElement.querySelector("button mat-icon").textContent).toBe(
-        "nights_stay"
-      );
+      expect(
+        fixture.debugElement.nativeElement.querySelector(".switcher mat-icon").textContent
+      ).toBe("nights_stay");
     });
 
     it("should pass the Scheme.Light to setscheme method when button clicked", () => {
-      fixture.debugElement.nativeElement.querySelector("button").click();
+      fixture.debugElement.nativeElement.querySelector(".switcher").click();
       expect(component["schemeObserver"].setScheme).toHaveBeenCalledTimes(1);
       expect(component["schemeObserver"].setScheme).toHaveBeenCalledWith(Scheme.Light);
     });
@@ -80,16 +80,16 @@ describe("Scheme Switcher Component", () => {
     it("should be light theme as default", () => {
       expect(
         fixture.debugElement.nativeElement
-          .querySelector("button")
+          .querySelector(".switcher")
           .getAttribute("ng-reflect-message")
       ).toBe("Switch to dark theme.");
-      expect(fixture.debugElement.nativeElement.querySelector("button mat-icon").textContent).toBe(
-        "wb_sunny"
-      );
+      expect(
+        fixture.debugElement.nativeElement.querySelector(".switcher mat-icon").textContent
+      ).toBe("wb_sunny");
     });
 
     it("should pass the Scheme.Dark to setscheme method when button clicked", () => {
-      fixture.debugElement.nativeElement.querySelector("button").click();
+      fixture.debugElement.nativeElement.querySelector(".switcher").click();
       expect(component["schemeObserver"].setScheme).toHaveBeenCalledTimes(1);
       expect(component["schemeObserver"].setScheme).toHaveBeenCalledWith(Scheme.Dark);
     });

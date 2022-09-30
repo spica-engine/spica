@@ -20,6 +20,7 @@ export class HomeLayoutComponent implements OnInit {
   expanded = true;
   DEFAULT_DISPLAY_TYPE = "row";
   routes$: Observable<Route[]>;
+  isSidebarReady: boolean = false;
   isHandset$: Observable<boolean> = this.breakpointObserver
     .observe([Breakpoints.Medium, Breakpoints.Small, Breakpoints.XSmall])
     .pipe(
@@ -31,6 +32,10 @@ export class HomeLayoutComponent implements OnInit {
     [
       RouteCategory.Primary,
       {icon: "stars", index: 0, children: {name: RouteCategory.Primary_Sub, icon: "list"}}
+    ],
+    [
+      RouteCategory.Dashboard,
+      {icon: "dashboard", index: 0, children: {name: RouteCategory.Dashboard_Sub, icon: "list"}}
     ],
     [
       RouteCategory.Content,
@@ -67,7 +72,9 @@ export class HomeLayoutComponent implements OnInit {
   constructor(
     public routeService: RouteService,
     private breakpointObserver: BreakpointObserver,
-    @Optional() @Inject(LAYOUT_ACTIONS) public components: Type<any>[],
+    @Optional()
+    @Inject(LAYOUT_ACTIONS)
+    public components: {component: Component; position: "left" | "right" | "center"}[],
     @Optional() @Inject(LAYOUT_INITIALIZER) private initializer: Function[]
   ) {
     this.categories$ = this.routeService.routes.pipe(
@@ -75,6 +82,7 @@ export class HomeLayoutComponent implements OnInit {
         const categoryNames = Array.from(this._categories.keys());
         const categories = categoryNames
           .map(categoryName => {
+            this.isSidebarReady = true;
             const category = this._categories.get(categoryName);
             return {
               icon: category.icon,
@@ -120,5 +128,8 @@ export class HomeLayoutComponent implements OnInit {
 
   filterArrayByDisplay(array: [], value: any) {
     return array.filter(item => (item["displayType"] || this.DEFAULT_DISPLAY_TYPE) == value);
+  }
+  filterComponentsByPosition(position: string = "right") {
+    return this.components.filter(component => component.position == position);
   }
 }
