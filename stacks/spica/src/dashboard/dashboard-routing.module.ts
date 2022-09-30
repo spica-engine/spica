@@ -75,15 +75,6 @@ const route: Route[] = [
     display: "Asset Store",
     id: "asset_store",
     index: 3
-  },
-  {
-    category: RouteCategory.Primary,
-    icon: "account_tree",
-    path: "versioncontrol",
-    display: "Version Control",
-    id: "versioncontrol",
-    data: {action: "versioncontrol:update"},
-    index: 4
   }
 ];
 

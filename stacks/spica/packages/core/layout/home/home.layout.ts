@@ -67,6 +67,13 @@ export class HomeLayoutComponent implements OnInit {
   >;
 
   currentCategory = new BehaviorSubject(null);
+  toolbarComponents: {[name: string]: any} = {
+    SchemeSwitcherComponent: null,
+    IdentityBadgeComponent: null,
+    AccessTokenComponent: null,
+    HomeBadgeComponent: null,
+    VersionControlBadgeComponent: null
+  };
 
   constructor(
     public routeService: RouteService,
@@ -112,6 +119,11 @@ export class HomeLayoutComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    if (this.components)
+      this.components.forEach(comp => {
+        this.toolbarComponents[comp.name] = comp;
+      });
+
     if (!this.initializer) {
       return;
     }

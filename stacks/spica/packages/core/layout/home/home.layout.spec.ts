@@ -51,14 +51,6 @@ describe("Home Layout", () => {
       expect(component).toBeTruthy();
     });
 
-    it("should not show categories if theres no route", () => {
-      const navCategories = fixture.debugElement.nativeElement.querySelectorAll(
-        "mat-nav-list:first-of-type > mat-list-item:not(:first-of-type)"
-      );
-
-      expect(navCategories.length).toBe(1);
-    });
-
     it("should show categories that include first one is selected as default if theres route", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
@@ -71,15 +63,17 @@ describe("Home Layout", () => {
           {category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1"},
           {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"},
           {category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1"},
-          {category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2"}
+          {category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2"},
+          {category: RouteCategory.Dashboard, id: "12", path: "", icon: "", display: "dashboard1"},
+          {category: RouteCategory.Dashboard, id: "13", path: "", icon: "", display: "dashboard2"}
         ])
       );
       tick();
       fixture.detectChanges();
       const navCategories = fixture.debugElement.nativeElement.querySelectorAll(
-        "mat-nav-list:first-of-type > mat-list-item:not(:first-of-type)"
+        ".iconlist > mat-list-item:not(:first-of-type)"
       );
-      expect(navCategories.length).toBe(6);
+      expect(navCategories.length).toBe(8);
       expect(navCategories[0].getAttribute("class")).toContain("active");
     }));
 
@@ -95,22 +89,24 @@ describe("Home Layout", () => {
           {category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1"},
           {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"},
           {category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1"},
-          {category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2"}
+          {category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2"},
+          {category: RouteCategory.Dashboard, id: "12", path: "", icon: "", display: "dashboard1"},
+          {category: RouteCategory.Dashboard, id: "13", path: "", icon: "", display: "dashboard2"}
         ])
       );
       tick();
       fixture.detectChanges();
       const contentCategory = fixture.debugElement.nativeElement.querySelectorAll(
-        "mat-nav-list:first-of-type > mat-list-item:not(:first-of-type)"
+        ".iconlist > mat-list-item:not(:first-of-type)"
       )[1];
       contentCategory.click();
       fixture.detectChanges();
       const selectedCategoryRoutes = fixture.debugElement.nativeElement.querySelectorAll(
-        "mat-nav-list:last-of-type > mat-list-item"
+        ".routerlist > mat-list-item"
       );
       expect(selectedCategoryRoutes.length).toEqual(2);
-      expect(selectedCategoryRoutes[0].textContent).toEqual(" content1 ");
-      expect(selectedCategoryRoutes[1].textContent).toEqual(" content2 ");
+      expect(selectedCategoryRoutes[0].textContent).toEqual(" dashboard1 ");
+      expect(selectedCategoryRoutes[1].textContent).toEqual(" dashboard2 ");
     }));
 
     it("should show sub menu", fakeAsync(() => {
@@ -328,14 +324,6 @@ describe("Home Layout", () => {
 
     it("should create component", () => {
       expect(component).toBeTruthy();
-    });
-
-    it("should create dummy action layout", () => {
-      const layout = fixture.debugElement.nativeElement.querySelector("dummy-action");
-      expect(layout).toBeTruthy();
-      const button = fixture.debugElement.nativeElement.querySelector("dummy-action > button");
-      expect(button).toBeTruthy();
-      expect(button.textContent).toBe("BUTTON");
     });
   });
 

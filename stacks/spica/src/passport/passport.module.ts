@@ -30,6 +30,7 @@ import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {provideActivityFactory} from "@spica-client/passport/providers/activity";
 import {AccessTokenComponent} from "./components/access-token/access-token.component";
 import {IdentityBadgeComponent} from "./components/identity-badge/identity-badge.component";
+import {HomeBadgeComponent} from "./components/home-badge/home-badge.component";
 import {StrategyDialogComponent} from "./components/strategy-dialog/strategy-dialog.component";
 import {CanInteractDirective} from "./directives/can-interact.directive";
 import {ApiKeyAddComponent} from "./pages/apikey-add/apikey-add.component";
@@ -62,6 +63,7 @@ import {MatFormFieldModule} from "@angular/material/form-field";
     IdentitySettingsComponent,
     FilterComponent,
     IdentityBadgeComponent,
+    HomeBadgeComponent,
     TabsComponent,
     StrategiesComponent,
     StrategiesAddComponent,
@@ -106,7 +108,7 @@ import {MatFormFieldModule} from "@angular/material/form-field";
     MatClipboardModule
   ],
   exports: [CanInteractDirective],
-  entryComponents: [IdentityBadgeComponent, StrategyDialogComponent]
+  entryComponents: [IdentityBadgeComponent, StrategyDialogComponent, HomeBadgeComponent]
 })
 export class PassportModule {
   static forRoot(): ModuleWithProviders<PassportModule> {
@@ -115,8 +117,10 @@ export class PassportModule {
       providers: [
         {provide: HTTP_INTERCEPTORS, useClass: AuthorizationInterceptor, multi: true},
         {provide: LAYOUT_ACTIONS, useValue: IdentityBadgeComponent, multi: true},
+        {provide: LAYOUT_ACTIONS, useValue: HomeBadgeComponent, multi: true},
         {provide: LAYOUT_ACTIONS, useValue: AccessTokenComponent, multi: true},
         {provide: ROUTE_FILTERS, useExisting: PassportRouteFilter, multi: true},
+
         {provide: ACTIVITY_FACTORY, useValue: provideActivityFactory, multi: true}
       ]
     };

@@ -143,7 +143,7 @@ const route: Route[] = [
     display: "User Activities",
     icon: "account_box",
     path: "/activity",
-    data: {action: "activity:index"},
+    data: {action: "activity:index"}
   }
 ];
 

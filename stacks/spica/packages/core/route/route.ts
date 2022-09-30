@@ -14,7 +14,7 @@ export enum RouteCategory {
   Developer_Sub = "Function Logs",
   Webhook_Sub = "Webhook Logs",
   System_Sub = "IA Management",
-  Dashboard_Sub = "Dashboards",
+  Dashboard_Sub = "Dashboards"
 }
 
 export interface Route {

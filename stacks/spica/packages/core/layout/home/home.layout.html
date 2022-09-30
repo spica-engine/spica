@@ -9,12 +9,11 @@
     [opened]="!(isHandset$ | async)"
   >
     <section class="routes">
-      <mat-nav-list>
+      <mat-nav-list class="iconlist">
         <mat-list-item disableRipple>
           <img src="assets/astro-composer.svg" />
         </mat-list-item>
         <mat-list-item
-         
           disableRipple
           *ngFor="let category of  categories$ | async"
           [class.active]="(currentCategory | async) === category"
@@ -24,11 +23,25 @@
         >
           <mat-icon>{{ category.icon }}</mat-icon>
         </mat-list-item>
+
         <mat-list-item disableRipple *ngIf="!(isHandset$ | async)" (click)="toggle()">
           <mat-icon>{{expanded ? 'chevron_left': 'chevron_right'}}</mat-icon>
         </mat-list-item>
+
+        <mat-list-item disableRipple class="iconlist-below">
+          <mat-nav-list>
+            <mat-list-item
+              matTooltip="Version Control"
+              [routerLink]="['/versioncontrol']"
+              disableRipple
+            >
+              <mat-icon>account_tree</mat-icon>
+            </mat-list-item>
+          </mat-nav-list>
+        </mat-list-item>
       </mat-nav-list>
       <mat-nav-list
+        class="routerlist"
         *ngIf="currentCategory | async as currentCategory"
         [attr.category]="currentCategory.category.toLowerCase()"
       >
@@ -91,9 +104,22 @@
       </button>
       <span></span>
       <toolbar-action></toolbar-action>
-      <ng-container *ngFor="let component of components">
+      <div class="toolbar">
+        <div>
+          <ng-container *ngComponentOutlet="toolbarComponents.AccessTokenComponent"></ng-container>
+        </div>
+        <div>
+          <ng-container *ngComponentOutlet="toolbarComponents.HomeBadgeComponent"> </ng-container>
+          <ng-container *ngComponentOutlet="toolbarComponents.VersionControlBadgeComponent">
+          </ng-container>
+          <ng-container *ngComponentOutlet="toolbarComponents.IdentityBadgeComponent">
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- <ng-container *ngFor="let component of components">
         <ng-container *ngComponentOutlet="component"></ng-container>
-      </ng-container>
+      </ng-container> -->
     </mat-toolbar>
     <div class="slot" slot="content"></div>
   </mat-sidenav-content>
