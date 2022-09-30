@@ -116,9 +116,21 @@ export class PassportModule {
       ngModule: PassportModule,
       providers: [
         {provide: HTTP_INTERCEPTORS, useClass: AuthorizationInterceptor, multi: true},
-        {provide: LAYOUT_ACTIONS, useValue: IdentityBadgeComponent, multi: true},
-        {provide: LAYOUT_ACTIONS, useValue: HomeBadgeComponent, multi: true},
-        {provide: LAYOUT_ACTIONS, useValue: AccessTokenComponent, multi: true},
+        {
+          provide: LAYOUT_ACTIONS,
+          useValue: {component: HomeBadgeComponent, position: "right"},
+          multi: true
+        },
+        {
+          provide: LAYOUT_ACTIONS,
+          useValue: {component: IdentityBadgeComponent, position: "right"},
+          multi: true
+        },
+        {
+          provide: LAYOUT_ACTIONS,
+          useValue: {component: AccessTokenComponent, position: "left"},
+          multi: true
+        },
         {provide: ROUTE_FILTERS, useExisting: PassportRouteFilter, multi: true},
 
         {provide: ACTIVITY_FACTORY, useValue: provideActivityFactory, multi: true}

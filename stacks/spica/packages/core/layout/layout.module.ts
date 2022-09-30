@@ -67,7 +67,6 @@ export class LayoutModule {
         },
         {provide: DEFAULT_LAYOUT, useValue: config.defaultLayout || HomeLayoutComponent},
         {provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true},
-        {provide: LAYOUT_ACTIONS, useValue: SchemeSwitcherComponent, multi: true},
         {provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: {appearance: "outline"}}
       ]
     };
