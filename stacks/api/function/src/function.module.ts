@@ -5,7 +5,6 @@ import {WebhookModule} from "@spica-server/function/webhook";
 import * as path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
-import {Github} from "./services/github";
 import {LogModule, LogService} from "@spica-server/function/src/log";
 import {registerInformers} from "./machinery";
 import {
@@ -15,7 +14,7 @@ import {
   ServicesModule
 } from "@spica-server/function/services";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
-import {Http, RepoStrategies} from "./services/interface";
+import {Http} from "./services/interface";
 import {Axios} from "./services/axios";
 import {registerStatusProvider} from "./status";
 import FunctionSchema = require("./schema/function.json");
@@ -95,15 +94,6 @@ export class FunctionModule {
         {
           provide: Http,
           useClass: Axios
-        },
-        {
-          provide: RepoStrategies,
-          useFactory: http => {
-            const strategies = [];
-            strategies.push(new Github(http));
-            return new RepoStrategies(strategies);
-          },
-          inject: [Http]
         }
       ]
     };
