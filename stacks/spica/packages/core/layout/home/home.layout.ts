@@ -20,9 +20,9 @@ export class HomeLayoutComponent implements OnInit {
   expanded = true;
   DEFAULT_DISPLAY_TYPE = "row";
   routes$: Observable<{
-    [propValue: string]: Route[],
+    [propValue: string]: Route[];
   }>;
-  categoryExpandStatus: { [propValue: string]: boolean } = {};
+  categoryExpandStatus: {[propValue: string]: boolean} = {};
   isSidebarReady: boolean = false;
   isHandset$: Observable<boolean> = this.breakpointObserver
     .observe([Breakpoints.Medium, Breakpoints.Small, Breakpoints.XSmall])
@@ -137,18 +137,22 @@ export class HomeLayoutComponent implements OnInit {
     return this.components.filter(component => component.position == position);
   }
   sortedByCategory(data) {
-    let categoryOrders = localStorage.getItem(this.currentCategory.value.category + "-category-order")
+    let categoryOrders = localStorage.getItem(
+      this.currentCategory.value.category + "-category-order"
+    )
       ? JSON.parse(localStorage.getItem(this.currentCategory.value.category + "-category-order"))
       : [];
 
-    return data.sort((a, b) => categoryOrders.find((category) => category.name == a.key)?.order
-      - categoryOrders.find((category) => category.name == b.key)?.order)
+    return data.sort(
+      (a, b) =>
+        categoryOrders.find(category => category.name == a.key).order -
+        categoryOrders.find(category => category.name == b.key).order
+    );
   }
   groupBy = (xs, key) => {
     return xs.reduce((rv, x) => {
       (rv[x[key]] = rv[x[key]] || []).push(x);
       return rv;
     }, {});
-
   };
 }
