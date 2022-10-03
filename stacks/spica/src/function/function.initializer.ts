@@ -67,7 +67,8 @@ export class FunctionInitializer {
               id: func._id,
               icon: "memory",
               path: `/function/${func._id}`,
-              display: func.name
+              display: func.name,
+              resource_category: func.category
             })
           );
         }

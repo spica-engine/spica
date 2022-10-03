@@ -49,6 +49,7 @@ import * as fromWebhook from "./reducers/webhook.reducer";
 import {WebhookModule} from "./webhook.module";
 import {MatDialogModule} from "@angular/material/dialog";
 import {WebhookService} from "./services";
+import {CategoryModule} from "@spica-client/common/category";
 
 @NgModule({
   imports: [
@@ -88,7 +89,8 @@ import {WebhookService} from "./services";
     MatDatepickerModule,
     ScrollingModule,
     MatClipboardModule,
-    EditorModule
+    EditorModule,
+    CategoryModule
   ],
   declarations: [
     AddComponent,

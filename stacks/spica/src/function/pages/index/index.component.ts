@@ -1,7 +1,10 @@
 import {Component, OnInit} from "@angular/core";
 import {Observable} from "rxjs";
+import {tap} from "rxjs/operators";
+
 import {FunctionService} from "../../services";
 import {Function} from "../../interface";
+import {RouteCategory} from "@spica-client/core/route";
 
 @Component({
   selector: "function-index",
@@ -10,15 +13,28 @@ import {Function} from "../../interface";
 })
 export class IndexComponent implements OnInit {
   public $data: Observable<Function[]>;
+  functions: Function[];
+  categoryStorageKey: string = RouteCategory.Developer;
+
   public displayedColumns = ["_id", "name", "description", "actions"];
 
   constructor(private functionService: FunctionService) {}
 
   ngOnInit() {
-    this.$data = this.functionService.getFunctions();
+    this.$data = this.functionService.getFunctions().pipe(tap(data => (this.functions = data)));
   }
 
   delete(id: string): void {
     this.functionService.delete(id).toPromise();
+  }
+
+  updateIndexes(event) {
+    Promise.all(
+      event.map(item => {
+        const fn = this.functions.find(fn => fn._id == item.entry_id);
+        Object.keys(item.changes).forEach(changeKey => (fn[changeKey] = item.changes[changeKey]));
+        this.functionService.replaceOne(fn).toPromise();
+      })
+    );
   }
 }

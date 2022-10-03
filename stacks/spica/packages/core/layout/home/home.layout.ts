@@ -143,11 +143,11 @@ export class HomeLayoutComponent implements OnInit {
       ? JSON.parse(localStorage.getItem(this.currentCategory.value.category + "-category-order"))
       : [];
 
-    return data.sort(
-      (a, b) =>
-        categoryOrders.find(category => category.name == a.key).order -
-        categoryOrders.find(category => category.name == b.key).order
-    );
+    return data.sort((a, b) => {
+      const firstOrder = categoryOrders.find(category => category.name == a.key) || {order: 100};
+      const secondOrder = categoryOrders.find(category => category.name == b.key) || {order: 100};
+      return firstOrder.order - secondOrder.order;
+    });
   }
   groupBy = (xs, key) => {
     return xs.reduce((rv, x) => {

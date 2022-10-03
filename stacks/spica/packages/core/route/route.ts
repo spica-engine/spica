@@ -5,7 +5,7 @@ export enum RouteCategory {
   Dashboard = "Dashboard",
   Primary = "Primary",
   Content = "Buckets",
-  Developer = "Developer Area",
+  Developer = "Function",
   System = "Access Management",
   Webhook = "Webhook",
 
