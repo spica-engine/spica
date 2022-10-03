@@ -28,6 +28,7 @@ export interface Route {
   index?: number;
   displayType?: string;
   customClass?: string;
+  resource_category?: string;
 }
 
 export interface RouteFilter {

@@ -23,7 +23,8 @@ export class BucketInitializer {
               id: `bucket_${bucket._id}`,
               icon: bucket.icon,
               path: `/bucket/${bucket._id}`,
-              display: bucket.title
+              display: bucket.title,
+              resource_category: bucket.category
             })
           );
         }
@@ -37,7 +38,8 @@ export class BucketInitializer {
           display: "Add New Bucket",
           data: {
             action: "bucket:create"
-          }
+          },
+          customClass: "dashed-item"
         })
       );
     });
