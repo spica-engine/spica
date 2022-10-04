@@ -9,7 +9,8 @@ export interface State extends EntityState<Function> {
 }
 
 export const adapter: EntityAdapter<Function> = createEntityAdapter<Function>({
-  selectId: fn => fn._id
+  selectId: fn => fn._id,
+  sortComparer: (a, b) => a.order - b.order
 });
 
 export const initialState: State = adapter.getInitialState({loaded: false});
