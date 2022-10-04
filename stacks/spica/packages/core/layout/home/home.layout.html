@@ -85,6 +85,7 @@
           routerLinkActive="active"
           [queryParams]="route.queryParams"
           [class]="route.customClass"
+          (click)="setTitle(route.display)"
         >
           <mat-icon>{{ route.icon }}</mat-icon>
           {{ route.display }}

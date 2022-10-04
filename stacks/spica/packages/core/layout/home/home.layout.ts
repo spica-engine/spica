@@ -5,6 +5,7 @@ import {BehaviorSubject, Observable} from "rxjs";
 import {debounceTime, map, shareReplay, switchMap, tap} from "rxjs/operators";
 import {Route, RouteCategory, RouteService} from "../../route";
 import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
+import {Title} from "@angular/platform-browser";
 
 @Component({
   selector: "layout-home",
@@ -68,6 +69,7 @@ export class HomeLayoutComponent implements OnInit {
   >;
 
   currentCategory = new BehaviorSubject(null);
+  currentCategoryName: string;
 
   constructor(
     public routeService: RouteService,
@@ -75,7 +77,8 @@ export class HomeLayoutComponent implements OnInit {
     @Optional()
     @Inject(LAYOUT_ACTIONS)
     public components: {component: Component; position: "left" | "right" | "center"}[],
-    @Optional() @Inject(LAYOUT_INITIALIZER) private initializer: Function[]
+    @Optional() @Inject(LAYOUT_INITIALIZER) private initializer: Function[],
+    private titleService: Title
   ) {
     this.categories$ = this.routeService.routes.pipe(
       map(routes => {
@@ -103,6 +106,7 @@ export class HomeLayoutComponent implements OnInit {
       })
     );
     this.routes$ = this.currentCategory.pipe(
+      tap(currentCategory => (this.currentCategoryName = currentCategory.category)),
       switchMap(currentCategory => {
         if (!this.expanded) {
           this.toggle();
@@ -131,5 +135,8 @@ export class HomeLayoutComponent implements OnInit {
   }
   filterComponentsByPosition(position: string = "right") {
     return this.components.filter(component => component.position == position);
+  }
+  setTitle(title: string) {
+    this.titleService.setTitle(`${this.currentCategoryName} | ${title}`);
   }
 }

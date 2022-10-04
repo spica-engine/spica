@@ -1,4 +1,5 @@
 import {LayoutModule as CdkLayoutModule} from "@angular/cdk/layout";
+import {BrowserModule, Title} from "@angular/platform-browser";
 import {CommonModule} from "@angular/common";
 import {HTTP_INTERCEPTORS} from "@angular/common/http";
 import {ModuleWithProviders, NgModule} from "@angular/core";
@@ -41,9 +42,10 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     CdkLayoutModule,
     RouterModule.forChild(routes),
     MatSnackBarModule,
-    MatMenuModule
+    MatMenuModule,
+    BrowserModule
   ],
-  providers: [SchemeObserver],
+  providers: [SchemeObserver, Title],
   declarations: [
     HomeLayoutComponent,
     LayoutRouterOutlet,
