@@ -17,9 +17,13 @@ import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
 export class HomeLayoutComponent implements OnInit {
   @ViewChild(MatSidenavContainer, {static: true}) sidenav: MatSidenavContainer;
 
+  EMPTY_CATEGORY_KEYWORD: string = "$$spicainternal_empty";
   expanded = true;
   DEFAULT_DISPLAY_TYPE = "row";
-  routes$: Observable<Route[]>;
+  routes$: Observable<{
+    [propValue: string]: Route[];
+  }>;
+  categoryExpandStatus: {[propValue: string]: boolean} = {};
   isSidebarReady: boolean = false;
   isHandset$: Observable<boolean> = this.breakpointObserver
     .observe([Breakpoints.Medium, Breakpoints.Small, Breakpoints.XSmall])
@@ -111,7 +115,8 @@ export class HomeLayoutComponent implements OnInit {
           map(routes => routes.filter(r => r.category == currentCategory.category))
         );
       }),
-      map(routes => routes.sort((a, b) => a.index - b.index))
+      map(routes => routes.sort((a, b) => a.index - b.index)),
+      map(routes => this.groupByResourceCategory(routes))
     );
   }
 
@@ -132,4 +137,32 @@ export class HomeLayoutComponent implements OnInit {
   filterComponentsByPosition(position: string = "right") {
     return this.components.filter(component => component.position == position);
   }
+  sortedByCategory(data) {
+    const storedCategories =
+      localStorage.getItem(this.currentCategory.value.category + "-category-order") || "[]";
+    let categoryOrders = JSON.parse(storedCategories);
+
+    let emptyCategory = categoryOrders.find(item => item.name == this.EMPTY_CATEGORY_KEYWORD);
+    if (!emptyCategory) categoryOrders.push({name: this.EMPTY_CATEGORY_KEYWORD, order: 100});
+    else emptyCategory.order = 100;
+
+    return data.sort((a, b) => {
+      const firstOrder = categoryOrders.find(category => category.name == a.key) || {order: 0};
+      const secondOrder = categoryOrders.find(category => category.name == b.key) || {order: 0};
+      return firstOrder.order - secondOrder.order;
+    });
+  }
+
+  groupByResourceCategory = array => {
+    return array.reduce((previousValue, currentValue) => {
+      let schemaCategory = currentValue["resource_category"];
+      if (!schemaCategory || schemaCategory == "undefined")
+        schemaCategory = this.EMPTY_CATEGORY_KEYWORD;
+
+      previousValue[schemaCategory] = previousValue[schemaCategory] || [];
+      previousValue[schemaCategory].push(currentValue);
+
+      return previousValue;
+    }, {});
+  };
 }
