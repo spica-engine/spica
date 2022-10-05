@@ -37,9 +37,6 @@
         {{ item.name }}
       </div>
       <div class="actions">
-        <button mat-icon-button cdkDragHandle disableRipple class="drag-button">
-          <mat-icon>drag_handle</mat-icon>
-        </button>
         <button
           canInteract="function:show"
           [resource]="item._id"
