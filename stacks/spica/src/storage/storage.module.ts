@@ -1,6 +1,5 @@
 import {CommonModule} from "@angular/common";
-import {ModuleWithProviders} from "@angular/compiler/src/core";
-import {NgModule} from "@angular/core";
+import {ModuleWithProviders, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
@@ -79,7 +78,7 @@ import {StorageRoutingModule} from "./storage-routing.module";
   exports: [PickerDirective]
 })
 export class StorageModule {
-  static forRoot(): ModuleWithProviders {
+  static forRoot(): ModuleWithProviders<NgModule> {
     return {
       ngModule: StorageModule,
       providers: [
@@ -92,7 +91,7 @@ export class StorageModule {
     };
   }
 
-  static forChild(): ModuleWithProviders {
+  static forChild(): ModuleWithProviders<NgModule> {
     return {ngModule: StorageModule, providers: []};
   }
 }

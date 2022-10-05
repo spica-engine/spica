@@ -11,7 +11,6 @@ ts_project(
     ],
     deps = [
         "//stacks/api/function/pkgmanager",
-        "@npm//@types/glob",
         "@npm//@types/node",
         "@npm//glob",
         "@npm//rxjs",

@@ -27,33 +27,32 @@ import {MatMenuModule} from "@angular/material/menu";
 const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
 
 @NgModule({
-  imports: [
-    CommonModule,
-    RouterModule,
-    MatExpansionModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule,
-    MatToolbarModule,
-    MatSidenavModule,
-    MatListModule,
-    MatSlideToggleModule,
-    CdkLayoutModule,
-    RouterModule.forChild(routes),
-    MatSnackBarModule,
-    MatMenuModule
-  ],
-  providers: [SchemeObserver],
-  declarations: [
-    HomeLayoutComponent,
-    LayoutRouterOutlet,
-    ErrorPageComponent,
-    SchemeSwitcherComponent,
-    SnackbarComponent,
-    ToolbarActionDirective
-  ],
-  exports: [LayoutRouterOutlet, RouterModule],
-  entryComponents: [HomeLayoutComponent, SchemeSwitcherComponent, SnackbarComponent]
+    imports: [
+        CommonModule,
+        RouterModule,
+        MatExpansionModule,
+        MatButtonModule,
+        MatIconModule,
+        MatTooltipModule,
+        MatToolbarModule,
+        MatSidenavModule,
+        MatListModule,
+        MatSlideToggleModule,
+        CdkLayoutModule,
+        RouterModule.forChild(routes),
+        MatSnackBarModule,
+        MatMenuModule
+    ],
+    providers: [SchemeObserver],
+    declarations: [
+        HomeLayoutComponent,
+        LayoutRouterOutlet,
+        ErrorPageComponent,
+        SchemeSwitcherComponent,
+        SnackbarComponent,
+        ToolbarActionDirective
+    ],
+    exports: [LayoutRouterOutlet, RouterModule]
 })
 export class LayoutModule {
   static forRoot(config: LayoutConfig = {}): ModuleWithProviders<LayoutModule> {

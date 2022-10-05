@@ -1,4 +1,4 @@
-import {FormControl} from "@angular/forms";
+import {UntypedFormControl} from "@angular/forms";
 import {RequiredTranslate} from "./validators";
 
 describe("Validators", () => {
@@ -16,7 +16,7 @@ describe("Validators", () => {
         en_US: "Test",
         tr_TR: "test"
       };
-      expect(validator.validate(new FormControl("test"))).toBeNull();
+      expect(validator.validate(new UntypedFormControl("test"))).toBeNull();
     });
 
     it("should return error when default language is not filled", () => {
@@ -24,7 +24,7 @@ describe("Validators", () => {
         en_US: "Test",
         tr_TR: ""
       };
-      expect(validator.validate(new FormControl("test"))).toEqual({requiredTranslate: true});
+      expect(validator.validate(new UntypedFormControl("test"))).toEqual({requiredTranslate: true});
     });
 
     it("should return error when current language is default language and control value is empty", () => {
@@ -33,7 +33,7 @@ describe("Validators", () => {
         en_US: "Test",
         tr_TR: ""
       };
-      expect(validator.validate(new FormControl(""))).toEqual({requiredTranslate: true});
+      expect(validator.validate(new UntypedFormControl(""))).toEqual({requiredTranslate: true});
     });
 
     it("should not return error when current language is default language and control value is not empty", () => {
@@ -42,7 +42,7 @@ describe("Validators", () => {
         en_US: "Test",
         tr_TR: ""
       };
-      expect(validator.validate(new FormControl("test"))).toBeNull();
+      expect(validator.validate(new UntypedFormControl("test"))).toBeNull();
     });
   });
 });
