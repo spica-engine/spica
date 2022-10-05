@@ -45,3 +45,6 @@ yarn-error.log
 # Vim
 *.swp
 *.swo
+
+# Angular
+/stacks/spica/.angular/cache

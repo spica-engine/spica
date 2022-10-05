@@ -1,6 +1,5 @@
 {
   "version": 1,
-  "defaultProject": "spica-client",
   "projects": {
     "spica-client": {
       "root": "",
