@@ -14,6 +14,7 @@ import {DragDropModule} from "@angular/cdk/drag-drop";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {MatAwareDialogModule} from "@spica-client/material";
 import {MatCardModule} from "@angular/material/card";
+import {CategoryService} from "./category.service";
 
 @NgModule({
   imports: [
@@ -33,6 +34,7 @@ import {MatCardModule} from "@angular/material/card";
     MatCardModule
   ],
   declarations: [CategoryComponent],
+  providers: [CategoryService],
   exports: [CategoryComponent]
 })
 export class CategoryModule {}

@@ -1,6 +1,7 @@
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {Component, Inject, OnInit, Optional, Type, ViewChild} from "@angular/core";
 import {MatSidenavContainer} from "@angular/material/sidenav";
+import {CategoryService} from "@spica-client/common/category/category.service";
 import {BehaviorSubject, Observable} from "rxjs";
 import {debounceTime, map, shareReplay, switchMap, tap} from "rxjs/operators";
 import {Route, RouteCategory, RouteService} from "../../route";
@@ -17,7 +18,6 @@ import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
 export class HomeLayoutComponent implements OnInit {
   @ViewChild(MatSidenavContainer, {static: true}) sidenav: MatSidenavContainer;
 
-  EMPTY_CATEGORY_KEYWORD: string = "$$spicainternal_empty";
   expanded = true;
   DEFAULT_DISPLAY_TYPE = "row";
   routes$: Observable<{
@@ -79,7 +79,8 @@ export class HomeLayoutComponent implements OnInit {
     @Optional()
     @Inject(LAYOUT_ACTIONS)
     public components: {component: Component; position: "left" | "right" | "center"}[],
-    @Optional() @Inject(LAYOUT_INITIALIZER) private initializer: Function[]
+    @Optional() @Inject(LAYOUT_INITIALIZER) private initializer: Function[],
+    public categoryService: CategoryService
   ) {
     this.categories$ = this.routeService.routes.pipe(
       map(routes => {
@@ -116,7 +117,7 @@ export class HomeLayoutComponent implements OnInit {
         );
       }),
       map(routes => routes.sort((a, b) => a.index - b.index)),
-      map(routes => this.groupByResourceCategory(routes))
+      map(routes => this.categoryService.groupCategoryByKey(routes, "resource_category"))
     );
   }
 
@@ -137,14 +138,21 @@ export class HomeLayoutComponent implements OnInit {
   filterComponentsByPosition(position: string = "right") {
     return this.components.filter(component => component.position == position);
   }
+
   sortedByCategory(data) {
     const storedCategories =
       localStorage.getItem(this.currentCategory.value.category + "-category-order") || "[]";
     let categoryOrders = JSON.parse(storedCategories);
 
-    let emptyCategory = categoryOrders.find(item => item.name == this.EMPTY_CATEGORY_KEYWORD);
-    if (!emptyCategory) categoryOrders.push({name: this.EMPTY_CATEGORY_KEYWORD, order: 100});
-    else emptyCategory.order = 100;
+    let emptyCategory = categoryOrders.find(
+      item => item.name == this.categoryService.EMPTY_CATEGORY_KEYWORD
+    );
+    if (!emptyCategory)
+      categoryOrders.push({
+        name: this.categoryService.EMPTY_CATEGORY_KEYWORD,
+        order: this.categoryService.EMPTY_CATEGORY_NUMBER
+      });
+    else emptyCategory.order = this.categoryService.EMPTY_CATEGORY_NUMBER;
 
     return data.sort((a, b) => {
       const firstOrder = categoryOrders.find(category => category.name == a.key) || {order: 0};
@@ -152,17 +160,4 @@ export class HomeLayoutComponent implements OnInit {
       return firstOrder.order - secondOrder.order;
     });
   }
-
-  groupByResourceCategory = array => {
-    return array.reduce((previousValue, currentValue) => {
-      let schemaCategory = currentValue["resource_category"];
-      if (!schemaCategory || schemaCategory == "undefined")
-        schemaCategory = this.EMPTY_CATEGORY_KEYWORD;
-
-      previousValue[schemaCategory] = previousValue[schemaCategory] || [];
-      previousValue[schemaCategory].push(currentValue);
-
-      return previousValue;
-    }, {});
-  };
 }

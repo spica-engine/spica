@@ -40,40 +40,44 @@
           class="drag-part"
           *ngFor="let category of categories; let i = index"
         >
-          <mat-accordion class="mat-elevation-z0">
+          <mat-accordion class="grouping mat-elevation-z0">
             <mat-expansion-panel>
               <mat-expansion-panel-header>
-                <mat-panel-title>
-                  <span class="category-name"> {{ category.name }}</span>
-                </mat-panel-title>
-                <button
-                  (click)="
-                    $event.stopPropagation();
-                    categoryModalMode = 'edit';
-                    newCategory = category.name;
-                    openCategoryModal(categoryDialog)
-                  "
-                  mat-icon-button
-                >
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button
-                  [matAwareDialog]="{
-                    title: 'Confirmation',
-                    templateOrDescription: deleteCategoryDialog,
-                    answer: '',
-                    noAnswer: true
-                  }"
-                  (confirm)="deleteCategory(category.name)"
-                  mat-icon-button
-                  color="warn"
-                  (click)="$event.stopPropagation()"
-                >
-                  <mat-icon>delete</mat-icon>
-                </button>
-                <button mat-icon-button cdkDragHandle disableRipple class="drag-button">
-                  <mat-icon>drag_handle</mat-icon>
-                </button>
+                <div class="panel-title">
+                  <div>
+                    <button cdkDragHandle mat-icon-button disableRipple class="drag-button">
+                      <mat-icon>drag_indicator</mat-icon>
+                    </button>
+                    <span> {{ category.name }}</span>
+                  </div>
+                  <div>
+                    <button
+                      (click)="
+                        $event.stopPropagation();
+                        categoryModalMode = 'edit';
+                        newCategory = category.name;
+                        openCategoryModal(categoryDialog)
+                      "
+                      mat-icon-button
+                    >
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button
+                      [matAwareDialog]="{
+                        title: 'Confirmation',
+                        templateOrDescription: deleteCategoryDialog,
+                        answer: '',
+                        noAnswer: true
+                      }"
+                      (confirm)="deleteCategory(category.name)"
+                      mat-icon-button
+                      color="warn"
+                      (click)="$event.stopPropagation()"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
               </mat-expansion-panel-header>
               <ng-container
                 *ngTemplateOutlet="
@@ -89,13 +93,17 @@
           </mat-accordion>
         </div>
 
-        <div [class.empty-category]="!categorizedSchemas[EMPTY_CATEGORY_KEYWORD]?.length">
+        <div
+          [class.empty-category]="
+            !categorizedSchemas[categoryService.EMPTY_CATEGORY_KEYWORD]?.length
+          "
+        >
           <ng-container
             *ngTemplateOutlet="
               schemaList;
               context: {
-                items: categorizedSchemas[EMPTY_CATEGORY_KEYWORD],
-                contentId: 'cdk-drop-list-0100'
+                items: categorizedSchemas[categoryService.EMPTY_CATEGORY_KEYWORD],
+                contentId: categoryService.EMPTY_CATEGORY_DROP_ID
               }
             "
           >
@@ -107,12 +115,18 @@
             cdkDropList
             cdkDropListOrientation="vertical"
             (cdkDropListDropped)="drop($event)"
-            id="{{ contentId }}"
+            [id]="contentId"
             [cdkDropListConnectedTo]="dropListIds"
             [cdkDropListData]="items"
           >
-            <div cdkDragLockAxis="y" cdkDrag [id]="item._id" *ngFor="let item of items">
-              <ng-container *ngTemplateOutlet="itemTemplate; context: {item: item}"> </ng-container>
+            <div class="draggable-item" cdkDragLockAxis="y" *ngFor="let item of items">
+              <div (click)="onClickItem.emit(item)" cdkDrag [id]="item._id">
+                <button cdkDragHandle mat-icon-button disableRipple class="drag-button">
+                  <mat-icon>drag_indicator</mat-icon>
+                </button>
+                <ng-container *ngTemplateOutlet="itemTemplate; context: {item: item}">
+                </ng-container>
+              </div>
             </div>
           </div>
         </ng-template>
@@ -122,8 +136,7 @@
 </div>
 <ng-template #deleteCategoryDialog let-answer="answer">
   <p>
-    This action will remove the category and it will also be removed from those who use the
-    category.
+    This action will remove the category and the category of resources will be deleted.
   </p>
   <p>
     Please confirm this action to continue.

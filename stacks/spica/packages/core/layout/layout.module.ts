@@ -23,6 +23,7 @@ import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {ToolbarActionDirective} from "./toolbar-action";
 import {MAT_FORM_FIELD_DEFAULT_OPTIONS} from "@angular/material/form-field";
 import {MatMenuModule} from "@angular/material/menu";
+import {CategoryService} from "@spica-client/common/category/category.service";
 
 const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
 
@@ -43,7 +44,7 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     MatSnackBarModule,
     MatMenuModule
   ],
-  providers: [SchemeObserver],
+  providers: [SchemeObserver, CategoryService],
   declarations: [
     HomeLayoutComponent,
     LayoutRouterOutlet,

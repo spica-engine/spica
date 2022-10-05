@@ -2,6 +2,12 @@
   ::ng-deep {
     category {
       .drag-container {
+        .schema-card {
+          transition: all 0.2s ease;
+          &.selected {
+            background: var(--background-hover) !important;
+          }
+        }
         mat-card {
           background: transparent !important;
           padding: 0;

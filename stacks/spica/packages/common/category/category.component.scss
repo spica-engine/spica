@@ -27,34 +27,11 @@
     div.actions {
       align-self: flex-end;
       margin-top: 50px;
-      .drag-button {
-        cursor: move !important;
-      }
     }
   }
   mat-card {
     width: 100%;
     box-shadow: unset;
-  }
-
-  mat-accordion {
-    mat-expansion-panel-header {
-      padding: 8px;
-      padding-right: 16px;
-    }
-    mat-panel-title {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      .category-name {
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        width: 0px;
-        min-width: 80%;
-        margin-left: 4px;
-      }
-    }
   }
 
   .drag-list {
@@ -93,12 +70,7 @@
     background: transparent !important;
     min-height: 20px;
 
-    div.actions {
-      .drag-button {
-        cursor: move !important;
-      }
-    }
-    > .cdk-drag {
+    > .draggable-item {
       &:last-of-type {
         ::ng-deep {
           .schema-card {
@@ -117,6 +89,32 @@
   }
 }
 ::ng-deep {
+  .grouping {
+    mat-expansion-panel-header {
+      padding: 8px;
+      padding-right: 16px;
+      .panel-title {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        > div {
+          align-items: center;
+          display: flex;
+          .drag-button {
+            position: relative;
+            transform: unset;
+            margin-left: -15px;
+          }
+        }
+      }
+    }
+    .mat-expansion-panel-body {
+      padding: unset;
+      padding-left: 24px;
+      padding-bottom: 16px;
+    }
+  }
   .schema-card {
     user-select: none;
     display: flex;
@@ -135,6 +133,8 @@
       width: 200px;
       margin-bottom: 5px;
       display: flex;
+      padding-left: 22px;
+      cursor: pointer;
 
       &:focus {
         outline: none;
@@ -183,16 +183,8 @@
   box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14),
     0 3px 14px 2px rgba(0, 0, 0, 0.12);
   color: var(--primary-text);
-  padding-left: 5px;
-
-  mat-expansion-panel-header {
-    padding-left: 10px;
-  }
-  mat-panel-title {
-    padding-left: 10px;
-  }
-  .category-name {
-    transform: translate(-10px, 10px);
+  .drag-button {
+    z-index: 0;
   }
 }
 .drag-part {
@@ -206,4 +198,18 @@
 .empty-category {
   min-height: 50px;
   position: relative;
+}
+.cdk-drag {
+  position: relative;
+}
+.drag-button {
+  position: absolute;
+  transform: translate(-10px, 3px);
+  opacity: 0.6;
+  cursor: move;
+  z-index: 2;
+  mat-icon {
+    font-size: 1.5rem;
+    font-style: normal;
+  }
 }

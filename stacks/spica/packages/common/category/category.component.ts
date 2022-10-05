@@ -9,7 +9,7 @@ import {
   TemplateRef
 } from "@angular/core";
 import {MatDialog, MatDialogRef} from "@angular/material/dialog";
-import {Router} from "@angular/router";
+import {CategoryService} from "./category.service";
 
 export interface Schema {
   category?: string;
@@ -22,7 +22,7 @@ export interface Schema {
   styleUrls: ["./category.component.scss"]
 })
 export class CategoryComponent implements OnInit {
-  constructor(private dialog: MatDialog, private router: Router) {}
+  constructor(private dialog: MatDialog, public categoryService: CategoryService) {}
 
   @Input() schemas: Schema[];
   @Input() categoryStorageKey: string;
@@ -32,14 +32,13 @@ export class CategoryComponent implements OnInit {
   categories: {name?: string; order?: number}[] = [];
 
   @Output() onChangedOrder = new EventEmitter();
-  @Output() onDiscardCategory = new EventEmitter();
+  @Output() onClickItem = new EventEmitter();
 
   categoryModalRef: MatDialogRef<any>;
   categoryModalMode: string;
   newCategory;
   dropListIds: string[];
   categorizedSchemas: {};
-  EMPTY_CATEGORY_KEYWORD: string = "$$spicainternal_empty";
 
   ngOnInit(): void {
     //sort from local storage
@@ -52,21 +51,24 @@ export class CategoryComponent implements OnInit {
   }
 
   setSchemaByCategory(data) {
-    this.categorizedSchemas = this.groupByCategory(data);
+    this.categorizedSchemas = this.categoryService.groupCategoryByKey(data, "category");
 
     //create a drop list for each category
     this.dropListIds = Object.keys(this.categorizedSchemas).map((schemaKey, index) => {
-      if (schemaKey == this.EMPTY_CATEGORY_KEYWORD || !schemaKey) return "cdk-drop-list-0100";
+      if (schemaKey == this.categoryService.EMPTY_CATEGORY_KEYWORD || !schemaKey) {
+        return this.categoryService.EMPTY_CATEGORY_DROP_ID;
+      }
       return "cdk-drop-list-0" + (index + 1);
     });
 
     //For those who don't have a category.
-    if (!this.categorizedSchemas[this.EMPTY_CATEGORY_KEYWORD]) {
-      this.categorizedSchemas[this.EMPTY_CATEGORY_KEYWORD] = [];
-      this.dropListIds.push("cdk-drop-list-0100");
+    if (!this.categorizedSchemas[this.categoryService.EMPTY_CATEGORY_KEYWORD]) {
+      this.categorizedSchemas[this.categoryService.EMPTY_CATEGORY_KEYWORD] = [];
+      this.dropListIds.push(this.categoryService.EMPTY_CATEGORY_DROP_ID);
     }
-    if (!localStorage.getItem(this.categoryStorageKey + "-category-order"))
+    if (!localStorage.getItem(this.categoryStorageKey + "-category-order")) {
       this.updateCategoryOrdersFromStorage();
+    }
   }
 
   categoryAction() {
@@ -130,8 +132,8 @@ export class CategoryComponent implements OnInit {
     });
 
     //discard from category and add to the empty category
-    this.categorizedSchemas[this.EMPTY_CATEGORY_KEYWORD] = [
-      ...this.categorizedSchemas[this.EMPTY_CATEGORY_KEYWORD],
+    this.categorizedSchemas[this.categoryService.EMPTY_CATEGORY_KEYWORD] = [
+      ...this.categorizedSchemas[this.categoryService.EMPTY_CATEGORY_KEYWORD],
       ...this.categorizedSchemas[deletedCategory]
     ];
 
@@ -175,8 +177,11 @@ export class CategoryComponent implements OnInit {
       schemaArray = [...schemaArray, ...this.categorizedSchemas[category.name]];
     });
 
-    if (this.categorizedSchemas[this.EMPTY_CATEGORY_KEYWORD]) {
-      schemaArray = [...schemaArray, ...this.categorizedSchemas[this.EMPTY_CATEGORY_KEYWORD]];
+    if (this.categorizedSchemas[this.categoryService.EMPTY_CATEGORY_KEYWORD]) {
+      schemaArray = [
+        ...schemaArray,
+        ...this.categorizedSchemas[this.categoryService.EMPTY_CATEGORY_KEYWORD]
+      ];
     }
 
     //calculating entry counts of before dropped element
@@ -231,20 +236,6 @@ export class CategoryComponent implements OnInit {
       )
     );
   }
-
-  groupByCategory = array => {
-    return array.reduce((previousValue, currentValue) => {
-      let schemaCategory = currentValue["category"];
-
-      if (!schemaCategory || schemaCategory == "undefined")
-        schemaCategory = this.EMPTY_CATEGORY_KEYWORD;
-
-      previousValue[schemaCategory] = previousValue[schemaCategory] || [];
-      previousValue[schemaCategory].push(currentValue);
-
-      return previousValue;
-    }, {});
-  };
 
   setCategoryOrderFromStorage(data) {
     const storedCategories =

@@ -80,7 +80,7 @@
           </div>
         </h4>
         <ng-container *ngFor="let routes of sortedByCategory( (routes$ | async) |keyvalue)">
-          <ng-container *ngIf="routes.key!=EMPTY_CATEGORY_KEYWORD">
+          <ng-container *ngIf="routes.key!=categoryService.EMPTY_CATEGORY_KEYWORD">
             <mat-accordion>
               <mat-expansion-panel
                 (closed)="categoryExpandStatus[routes.key]=false"
@@ -103,7 +103,7 @@
               </mat-expansion-panel>
             </mat-accordion>
           </ng-container>
-          <ng-container *ngIf="routes.key==EMPTY_CATEGORY_KEYWORD">
+          <ng-container *ngIf="routes.key==categoryService.EMPTY_CATEGORY_KEYWORD">
             <ng-container
               *ngTemplateOutlet="
             routeItemList;

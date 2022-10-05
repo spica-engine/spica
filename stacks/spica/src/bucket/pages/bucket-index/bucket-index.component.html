@@ -1,6 +1,7 @@
 <category
   *ngIf="buckets"
   (onChangedOrder)="updateIndexes($event)"
+  (onClickItem)="test($event); selectedItem = $event._id"
   [schemas]="buckets"
   [itemTemplate]="itemTmpl"
   [categoryStorageKey]="categoryStorageKey"
@@ -20,7 +21,7 @@
 
 <ng-template #itemTmpl let-item="item">
   <div canInteract="bucket:show" [resource]="item._id">
-    <div class="schema-card drag-box mat-elevation-1">
+    <div [class.selected]="selectedItem == item._id" class="schema-card drag-box mat-elevation-1">
       <div class="schema-title" [routerLink]="['../' + item._id]">
         <div>
           <mat-icon>{{ item.icon }}</mat-icon>
@@ -29,9 +30,6 @@
         <small>ID: {{ item._id }}</small>
       </div>
       <div class="actions">
-        <button mat-icon-button cdkDragHandle disableRipple class="drag-button">
-          <mat-icon>drag_handle</mat-icon>
-        </button>
         <button
           canInteract="bucket:delete"
           [resource]="item._id"
