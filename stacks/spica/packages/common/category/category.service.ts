@@ -8,7 +8,8 @@ export class CategoryService {
   public EMPTY_CATEGORY_NUMBER = Number.MAX_SAFE_INTEGER;
   public EMPTY_CATEGORY_DROP_ID: string = "cdk-drop-list-0" + this.EMPTY_CATEGORY_NUMBER;
   constructor() {}
-  groupCategoryByKey = (array, key) => {
+
+  groupCategoryByKey(array, key) {
     return array.reduce((previousValue, currentValue) => {
       let schemaCategory = currentValue[key];
 
@@ -21,5 +22,5 @@ export class CategoryService {
 
       return previousValue;
     }, {});
-  };
+  }
 }

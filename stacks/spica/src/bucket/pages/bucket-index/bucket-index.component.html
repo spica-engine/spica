@@ -1,7 +1,7 @@
 <category
   *ngIf="buckets"
   (onChangedOrder)="updateIndexes($event)"
-  (onClickItem)="test($event); selectedItem = $event._id"
+  (onClickItem)="selectedItem = $event._id"
   [schemas]="buckets"
   [itemTemplate]="itemTmpl"
   [categoryStorageKey]="categoryStorageKey"

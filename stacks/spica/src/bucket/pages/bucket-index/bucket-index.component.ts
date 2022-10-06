@@ -181,7 +181,4 @@ export class BucketIndexComponent implements OnDestroy, OnInit {
   updateIndexes(event) {
     Promise.all(event.map(item => this.bs.patchBucket(item.entry_id, item.changes).toPromise()));
   }
-  test(event) {
-    console.log("event :", event);
-  }
 }
