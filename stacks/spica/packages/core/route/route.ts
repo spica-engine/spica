@@ -4,7 +4,7 @@ import {Observable} from "rxjs";
 export enum RouteCategory {
   Dashboard = "Dashboard",
   Primary = "Primary",
-  Content = "Buckets",
+  Content = "Bucket",
   Developer = "Developer Area",
   System = "Access Management",
   Webhook = "Webhook",
