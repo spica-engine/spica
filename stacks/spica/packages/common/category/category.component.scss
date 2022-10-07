@@ -111,8 +111,11 @@
     }
     .mat-expansion-panel-body {
       padding: unset;
-      padding-left: 24px;
+      padding-left: 0;
       padding-bottom: 16px;
+      .draggable-item {
+        padding-left: 24px;
+      }
     }
   }
   .schema-card {
