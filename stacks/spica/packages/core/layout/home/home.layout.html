@@ -120,6 +120,7 @@
             routerLinkActive="active"
             [queryParams]="route.queryParams"
             [class]="route.customClass"
+            (click)="setTitle(route.display)"
             *ngFor="let route of items"
           >
             <mat-icon>{{ route.icon }}</mat-icon>

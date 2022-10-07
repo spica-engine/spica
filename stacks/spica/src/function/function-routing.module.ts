@@ -51,7 +51,7 @@ const route: Route[] = [
     category: RouteCategory.Webhook_Sub,
     icon: "format_list_numbered",
     path: "/webhook",
-    display: "Webhooks",
+    display: "List",
     data: {action: "webhook:index"}
   },
   {
@@ -59,7 +59,7 @@ const route: Route[] = [
     category: RouteCategory.Webhook_Sub,
     icon: "pest_control",
     path: "/webhook/logs",
-    display: "Webhook Logs",
+    display: "Logs",
     data: {action: "webhook:logs:index"}
   },
   {
@@ -67,7 +67,7 @@ const route: Route[] = [
     id: `list_all_functions`,
     icon: "format_list_numbered",
     path: `/function`,
-    display: "Functions",
+    display: "List",
     data: {action: "function:index"}
   },
   {
@@ -75,7 +75,7 @@ const route: Route[] = [
     id: `list_all_logs`,
     icon: "pest_control",
     path: "/function/logs",
-    display: "Function Logs",
+    display: "Logs",
     queryParams: {
       begin: new Date(new Date().setHours(0, 0, 0, 0)),
       end: new Date(new Date().setHours(23, 59, 59, 999)),

@@ -66,7 +66,7 @@ const route: Route[] = [
     category: RouteCategory.Dashboard_Sub,
     icon: "format_list_numbered",
     path: "/dashboards",
-    display: "Custom Dashboards"
+    display: "List"
   },
   {
     category: RouteCategory.Primary,
