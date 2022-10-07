@@ -46,7 +46,7 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     MatMenuModule,
     BrowserModule
   ],
-  providers: [SchemeObserver, CategoryService,Title],
+  providers: [SchemeObserver, CategoryService, Title],
   declarations: [
     HomeLayoutComponent,
     LayoutRouterOutlet,
