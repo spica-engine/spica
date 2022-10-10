@@ -1,4 +1,4 @@
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {Injectable, Inject} from "@angular/core";
 import {select, Store} from "@ngrx/store";
 import {Observable} from "rxjs";
@@ -135,6 +135,14 @@ export class FunctionService {
       .pipe(
         tap(fn => this.store.dispatch(new UpdateFunction({function: {id: fn._id, changes: fn}})))
       );
+  }
+
+  updateOne(id: string, update: {[key: string]: any}) {
+    return this.http
+      .patch(`api:/function/${id}`, update, {
+        headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
+      })
+      .pipe(tap(fn => this.store.dispatch(new UpdateFunction({function: {id: id, changes: fn}}))));
   }
 
   delete(id: string): Observable<any> {

@@ -12,12 +12,14 @@ import {
   InternalServerErrorException,
   NotFoundException,
   Param,
+  Patch,
   Post,
   Put,
   Query,
   Res,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  Headers
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {ARRAY, BOOLEAN, DEFAULT} from "@spica-server/core";
@@ -36,6 +38,7 @@ import {ChangeKind, hasContextChange} from "./change";
 import {changesFromTriggers, createTargetChanges} from "./change";
 import {LogService} from "@spica-server/function/src/log/src/log.service";
 import {generate} from "./schema/enqueuer.resolver";
+import {applyPatch} from "@spica-server/core/patch";
 
 /**
  * @name Function
@@ -149,6 +152,54 @@ export class FunctionController {
     this.engine.categorizeChanges(changes);
 
     return fn;
+  }
+
+  /**
+   * Updates the schema partially. The provided body has to be a `json merge patch`.
+   * See: https://tools.ietf.org/html/rfc7386
+   * @param id Identifier of the schema.
+   * @accepts application/merge-patch+json
+   * @body ```json
+   * {
+   *    "name": "Update only the name but keep the rest as is."
+   * }
+   * ```
+   */
+  @UseInterceptors()
+  @Patch(":id")
+  @UseGuards(AuthGuard(), ActionGuard("function:update"))
+  async updateOne(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Headers("content-type") contentType: string,
+    @Body(
+      Schema.validate({
+        type: "object",
+        properties: {
+          category: {
+            type: ["string", "null"]
+          },
+          order: {
+            type: ["number", "null"]
+          }
+        },
+        additionalProperties: false
+      })
+    )
+    patch: object
+  ) {
+    if (contentType != "application/merge-patch+json") {
+      throw new BadRequestException(`Content type '${contentType}' is not supported.`);
+    }
+
+    const previousFn = await this.fs.findOne({_id: id});
+    if (!previousFn) {
+      throw new NotFoundException(`Function with id ${id} does not exist.`);
+    }
+
+    const patchedFn = applyPatch(previousFn, patch);
+    delete patchedFn._id
+
+    return this.fs.findOneAndReplace({_id: id}, patchedFn, {returnOriginal: false});
   }
 
   /**

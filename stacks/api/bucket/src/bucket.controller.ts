@@ -228,16 +228,14 @@ export class BucketController {
     }
 
     const previousBucket = await this.bs.findOne({_id: id});
-    if(previousBucket){
+    if(!previousBucket){
       throw new NotFoundException(`Bucket with id ${id} does not exist.`)
     }
 
     const patchedBucket = applyPatch(previousBucket, patch);
-    patchedBucket.properties = previousBucket.properties;
+    delete patchedBucket._id
 
-    const updateQuery = getUpdateQueryForPatch(patch, patchedBucket);
-
-    return this.bs.findOneAndUpdate({_id: id}, updateQuery, {returnOriginal: false});
+    return this.bs.findOneAndReplace({_id: id}, patchedBucket, {returnOriginal: false});
   }
 
   validateBucket(schemaId: string, bucket: any): Promise<void> {

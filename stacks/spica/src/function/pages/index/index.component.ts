@@ -29,12 +29,6 @@ export class IndexComponent implements OnInit {
   }
 
   updateIndexes(event) {
-    Promise.all(
-      event.map(item => {
-        const fn = this.functions.find(fn => fn._id == item.entry_id);
-        Object.keys(item.changes).forEach(changeKey => (fn[changeKey] = item.changes[changeKey]));
-        this.functionService.replaceOne(fn).toPromise();
-      })
-    );
+    event.forEach(e => this.functionService.updateOne(e.entry_id, e.changes).toPromise());
   }
 }
