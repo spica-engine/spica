@@ -81,4 +81,17 @@
       }
     }
   }
+  .schema-card {
+    > div {
+      flex: 1;
+      width: 100%;
+      text-align: center;
+      &:first-of-type {
+        text-align: start;
+      }
+      &:last-of-type {
+       justify-content: flex-end;
+      }
+    }
+  }
 }
