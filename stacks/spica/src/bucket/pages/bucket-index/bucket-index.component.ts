@@ -10,8 +10,9 @@ import {
   CdkDragMove,
   CdkDrag
 } from "@angular/cdk/drag-drop";
-import {takeUntil} from "rxjs/operators";
+import {filter, takeUntil} from "rxjs/operators";
 import {ActivatedRoute, Router} from "@angular/router";
+import {RouteCategory} from "@spica-client/core/route";
 
 @Component({
   selector: "bucket-index",
@@ -27,7 +28,9 @@ export class BucketIndexComponent implements OnDestroy, OnInit {
   public sourceIndex: number;
   public dragIndex: number;
   public activeContainer;
-  buckets = [];
+  categoryStorageKey: string = RouteCategory.Content;
+  buckets;
+  selectedItem: Bucket;
   private dispose = new Subject();
   @Input() sideCar = false;
 
@@ -39,7 +42,12 @@ export class BucketIndexComponent implements OnDestroy, OnInit {
   ) {
     this.target = null;
     this.source = null;
-    this.bs.getBuckets().subscribe(data => (this.buckets = data));
+    this.bs
+      .getBuckets()
+      .pipe(filter((data: any) => data && data.length))
+      .subscribe(data => {
+        this.buckets = data;
+      });
   }
 
   ngOnInit() {
@@ -49,13 +57,6 @@ export class BucketIndexComponent implements OnDestroy, OnInit {
         this.router.navigate(["buckets", target]);
       }
     });
-  }
-
-  ngAfterViewInit() {
-    let phElement = this.placeholder.element.nativeElement;
-
-    phElement.style.display = "none";
-    phElement.parentElement.removeChild(phElement);
   }
 
   dragMoved(e: CdkDragMove) {
@@ -176,5 +177,8 @@ export class BucketIndexComponent implements OnDestroy, OnInit {
   private __isInsideDropListClientRect(dropList: CdkDropList, x: number, y: number) {
     const {top, bottom, left, right} = dropList.element.nativeElement.getBoundingClientRect();
     return y >= top && y <= bottom && x >= left && x <= right;
+  }
+  updateIndexes(event) {
+    Promise.all(event.map(item => this.bs.patchBucket(item.entry_id, item.changes).toPromise()));
   }
 }
