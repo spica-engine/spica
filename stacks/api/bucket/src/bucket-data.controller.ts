@@ -51,7 +51,6 @@ import {
   patchDocument,
   replaceDocument,
   authIdToString,
-  applyPatch
 } from "@spica-server/bucket/common";
 import {expressionFilterParser} from "./filter";
 import {
@@ -60,6 +59,7 @@ import {
   getDependents,
   createBucketDataActivity
 } from "@spica-server/bucket/common";
+import { applyPatch } from "@spica-server/core/patch";
 
 /**
  * All APIs related to bucket documents.

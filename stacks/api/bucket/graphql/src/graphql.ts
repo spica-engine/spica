@@ -31,8 +31,6 @@ import {
   insertDocument,
   patchDocument,
   replaceDocument,
-  applyPatch,
-  deepCopy,
   clearRelations,
   getDependents
 } from "@spica-server/bucket/common";
@@ -48,6 +46,7 @@ import {
   SchemaWarning,
   validateBuckets
 } from "./schema";
+import { applyPatch, deepCopy } from "@spica-server/core/patch";
 
 interface FindResponse {
   meta: {total: number};
