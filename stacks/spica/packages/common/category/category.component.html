@@ -19,7 +19,12 @@
   <h3>{{ categoryModalMode == "add" ? "Add New" : "Edit" }} Category</h3>
   <mat-divider></mat-divider>
   <mat-form-field>
-    <input (keydown.enter)="newCategory ? categoryAction():''" matInput placeholder="Enter name..." [(ngModel)]="newCategory" />
+    <input
+      (keydown.enter)="newCategory ? categoryAction() : ''"
+      matInput
+      placeholder="Enter name..."
+      [(ngModel)]="newCategory"
+    />
   </mat-form-field>
   <div class="actions">
     <button mat-button [disabled]="!newCategory" (click)="categoryAction()">
