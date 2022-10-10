@@ -1,4 +1,5 @@
 import {LayoutModule as CdkLayoutModule} from "@angular/cdk/layout";
+import {BrowserModule, Title} from "@angular/platform-browser";
 import {CommonModule} from "@angular/common";
 import {HTTP_INTERCEPTORS} from "@angular/common/http";
 import {ModuleWithProviders, NgModule} from "@angular/core";
@@ -23,6 +24,7 @@ import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {ToolbarActionDirective} from "./toolbar-action";
 import {MAT_FORM_FIELD_DEFAULT_OPTIONS} from "@angular/material/form-field";
 import {MatMenuModule} from "@angular/material/menu";
+import {CategoryService} from "@spica-client/common/category/category.service";
 
 const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
 
@@ -41,9 +43,10 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     CdkLayoutModule,
     RouterModule.forChild(routes),
     MatSnackBarModule,
-    MatMenuModule
+    MatMenuModule,
+    BrowserModule
   ],
-  providers: [SchemeObserver],
+  providers: [SchemeObserver, CategoryService, Title],
   declarations: [
     HomeLayoutComponent,
     LayoutRouterOutlet,

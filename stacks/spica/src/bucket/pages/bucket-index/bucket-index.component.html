@@ -1,76 +1,57 @@
-<div>
-  <mat-toolbar>
-    <span>
-      <h4 class="mat-h4">
-        <mat-icon>view_day</mat-icon>
-        <span>Buckets</span>
-      </h4>
-    </span>
-    <div class="actions">
-      <button canInteract="bucket:create" mat-button [routerLink]="['../add']">
-        <mat-icon>add</mat-icon>
-        Add New Bucket
-      </button>
-    </div>
-  </mat-toolbar>
+<category
+  *ngIf="buckets"
+  (onChangedOrder)="updateIndexes($event)"
+  (onClickItem)="selectedItem = $event._id"
+  [schemas]="buckets"
+  [itemTemplate]="itemTmpl"
+  [categoryStorageKey]="categoryStorageKey"
+>
+  <ng-container schemaHeader>
+    <mat-icon>view_day</mat-icon>
+    <span>Buckets</span>
+  </ng-container>
 
-  <div class="drag-container" cdkDropListGroup>
-    <div
-      cdkDropList
-      [cdkDropListEnterPredicate]="dropListEnterPredicate"
-      (cdkDropListDropped)="dropListDropped()"
-    ></div>
-    <div
-      cdkDropList
-      *ngFor="let bucket of buckets"
-      [cdkDropListEnterPredicate]="dropListEnterPredicate"
-      (cdkDropListDropped)="dropListDropped()"
-    >
-      <div
-        class="bucket-card drag-box mat-elevation-1"
-        canInteract="bucket:show"
-        [resource]="bucket._id"
-        cdkDrag
-        (cdkDragMoved)="dragMoved($event)"
-      >
-        <div
-          class="bucket-title"
-          routerLinkActive="active-bucket"
-          [routerLink]="['../' + bucket._id]"
+  <ng-container schemaHeaderActions>
+    <button canInteract="bucket:create" mat-button [routerLink]="['../add']">
+      <mat-icon>add</mat-icon>
+      Add Bucket
+    </button>
+  </ng-container>
+</category>
+
+<ng-template #itemTmpl let-item="item">
+  <div canInteract="bucket:show" [resource]="item._id">
+    <div [class.selected]="selectedItem == item._id" class="schema-card drag-box mat-elevation-1">
+      <div class="schema-title" [routerLink]="['../' + item._id]">
+        <div>
+          <mat-icon>{{ item.icon }}</mat-icon>
+          <span>{{ item.title }}</span>
+        </div>
+        <small>ID: {{ item._id }}</small>
+      </div>
+      <div class="actions">
+        <button
+          canInteract="bucket:delete"
+          [resource]="item._id"
+          mat-icon-button
+          color="warn"
+          [matAwareDialog]="{
+            title: 'Confirmation',
+            templateOrDescription: dialogTemplate,
+            answer: item.title
+          }"
+          (confirm)="delete(item)"
         >
-          <div>
-            <mat-icon>{{ bucket.icon }}</mat-icon>
-            <span>{{ bucket.title }}</span>
-          </div>
-          <small>ID: {{ bucket._id }}</small>
-        </div>
-        <div class="actions">
-          <button mat-icon-button cdkDragHandle disableRipple class="drag-button">
-            <mat-icon>drag_handle</mat-icon>
-          </button>
-          <button
-            canInteract="bucket:delete"
-            [resource]="bucket._id"
-            mat-icon-button
-            color="warn"
-            [matAwareDialog]="{
-              title: 'Confirmation',
-              templateOrDescription: dialogTemplate,
-              answer: bucket.title
-            }"
-            (confirm)="delete(bucket)"
-          >
-            <mat-icon>delete</mat-icon>
-          </button>
-        </div>
+          <mat-icon>delete</mat-icon>
+        </button>
       </div>
     </div>
   </div>
+</ng-template>
 
-  <ng-template #dialogTemplate let-answer="answer">
-    <p>This action will <b>permanently</b> delete this bucket and break all relations.</p>
-    <p>
-      Please type in <code>{{ answer }}</code> to confirm.
-    </p>
-  </ng-template>
-</div>
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action will <b>permanently</b> delete this bucket and break all relations.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>

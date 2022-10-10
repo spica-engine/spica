@@ -20,10 +20,14 @@ import {
 import {activity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/services";
-import {Schema} from "@spica-server/core/schema";
+import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {createBucketActivity} from "@spica-server/bucket/common";
+import {
+  applyPatch,
+  createBucketActivity,
+  getUpdateQueryForPatch
+} from "@spica-server/bucket/common";
 import * as expression from "@spica-server/bucket/expression";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket/cache";
 import {clearRelationsOnDrop, updateDocumentsOnChange} from "./changes";
@@ -36,6 +40,7 @@ export class BucketController {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
+    private validator: Validator,
     @Optional() private history: HistoryService,
     @Optional() private bucketCacheService: BucketCacheService
   ) {}
@@ -202,13 +207,40 @@ export class BucketController {
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Headers("content-type") contentType: string,
-    @Body() changes: object
+    @Body(
+      Schema.validate({
+        type: "object",
+        properties: {
+          category: {
+            type: ["string", "null"]
+          },
+          order: {
+            type: ["number", "null"]
+          }
+        },
+        additionalProperties: false
+      })
+    )
+    patch: object
   ) {
     if (contentType != "application/merge-patch+json") {
       throw new BadRequestException(`Content type '${contentType}' is not supported.`);
     }
 
-    return this.bs.findOneAndUpdate({_id: id}, {$set: changes}, {returnOriginal: false});
+    const previousBucket = await this.bs.findOne({_id: id});
+
+    const patchedBucket = applyPatch(previousBucket, patch);
+    patchedBucket.properties = previousBucket.properties;
+
+    const updateQuery = getUpdateQueryForPatch(patch, patchedBucket);
+
+    return this.bs.findOneAndUpdate({_id: id}, updateQuery, {returnOriginal: false});
+  }
+
+  validateBucket(schemaId: string, bucket: any): Promise<void> {
+    const validatorMixin = Schema.validate(schemaId);
+    const pipe: any = new validatorMixin(this.validator);
+    return pipe.transform(bucket);
   }
 
   @Delete("cache")
