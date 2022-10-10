@@ -197,7 +197,7 @@ export class FunctionController {
     }
 
     const patchedFn = applyPatch(previousFn, patch);
-    delete patchedFn._id
+    delete patchedFn._id;
 
     return this.fs.findOneAndReplace({_id: id}, patchedFn, {returnOriginal: false});
   }

@@ -14,8 +14,8 @@ ts_project(
     ]),
     deps = [
         "//packages/core",
-        "//packages/core/patch",
         "//packages/core/differ",
+        "//packages/core/patch",
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/activity/services",
