@@ -46,34 +46,33 @@ jasmine_node_test(
     srcs = [":test_lib_integration"],
 )
 
-# https://dreamharvesters.atlassian.net/browse/SP-830
-# ts_project(
-#     name = "test_lib_e2e",
-#     testonly = True,
-#     srcs = [
-#         "e2e.spec.ts",
-#     ],
-#     deps = [
-#         "//packages/core",
-#         "//packages/core/schema",
-#         "//packages/core/testing",
-#         "//packages/core/websocket",
-#         "//packages/database/testing",
-#         "//stacks/api/bucket",
-#         "//stacks/api/function",
-#         "//stacks/api/passport/testing",
-#         "//stacks/api/preference/testing",
-#         "//stacks/api/versioncontrol",
-#         "@npm//@nestjs/common",
-#         "@npm//@nestjs/testing",
-#         "@npm//@types/jasmine",
-#     ],
-# )
+ts_project(
+    name = "test_lib_e2e",
+    testonly = True,
+    srcs = [
+        "e2e.spec.ts",
+    ],
+    deps = [
+        "//packages/core",
+        "//packages/core/schema",
+        "//packages/core/testing",
+        "//packages/core/websocket",
+        "//packages/database/testing",
+        "//stacks/api/bucket",
+        "//stacks/api/function",
+        "//stacks/api/passport/testing",
+        "//stacks/api/preference/testing",
+        "//stacks/api/versioncontrol",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
 
-# jasmine_node_test(
-#     name = "test_e2e",
-#     srcs = [":test_lib_e2e"],
-#     tags = [
-#         "e2e",
-#     ],
-# )
+jasmine_node_test(
+    name = "test_e2e",
+    srcs = [":test_lib_e2e"],
+    tags = [
+        "e2e",
+    ],
+)
