@@ -1,0 +1,15 @@
+package(default_visibility = ["//visibility:public"])
+
+load("//tools/ts_project:index.bzl", "ts_project")
+
+ts_project(
+    name = "patch",
+    package_name = "@spica-server/core/patch",
+    srcs = glob([
+        "src/*.ts",
+        "index.ts",
+    ]),
+    deps = [
+        "@npm//json-merge-patch",
+    ],
+)

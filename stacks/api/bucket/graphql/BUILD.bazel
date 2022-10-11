@@ -9,6 +9,7 @@ ts_project(
         "src/*.ts",
     ]) + ["index.ts"],
     deps = [
+        "//packages/core/patch",
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/activity/services",

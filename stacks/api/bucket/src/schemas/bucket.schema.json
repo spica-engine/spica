@@ -233,6 +233,10 @@
       "type": "boolean",
       "description": "Data of this bucket will not be editable on bucket-data page"
     },
+    "category": {
+      "type": "string",
+      "description": "Category name of this bucket"
+    },
     "documentSettings": {
       "type": "object",
       "properties": {
