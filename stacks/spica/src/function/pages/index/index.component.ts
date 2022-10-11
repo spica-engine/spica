@@ -13,7 +13,6 @@ import {RouteCategory} from "@spica-client/core/route";
 })
 export class IndexComponent implements OnInit {
   public $data: Observable<Function[]>;
-  functions: Function[];
   categoryStorageKey: string = RouteCategory.Developer;
 
   public displayedColumns = ["_id", "name", "description", "actions"];
@@ -21,7 +20,7 @@ export class IndexComponent implements OnInit {
   constructor(private functionService: FunctionService) {}
 
   ngOnInit() {
-    this.$data = this.functionService.getFunctions().pipe(tap(data => (this.functions = data)));
+    this.$data = this.functionService.getFunctions();
   }
 
   delete(id: string): void {
