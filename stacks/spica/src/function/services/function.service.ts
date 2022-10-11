@@ -142,7 +142,9 @@ export class FunctionService {
       .patch(`api:/function/${id}`, update, {
         headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
       })
-      .pipe(tap(fn => this.store.dispatch(new UpdateFunction({function: {id: id, changes: fn}}))));
+      .pipe(
+        tap(_ => this.store.dispatch(new UpdateFunction({function: {id: id, changes: update}})))
+      );
   }
 
   delete(id: string): Observable<any> {
