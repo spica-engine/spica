@@ -10,24 +10,19 @@ export class Git implements VersionManager {
     name: string;
     exec: Function;
   }[] = [
-    { //
+    {
       name: "add",
       exec: ops => this.add(ops)
     },
-    { //
+    {
       name: "commit",
       exec: ops => this.commit(ops)
     },
-    //
     {name: "reset", exec: ops => this.reset(ops)},
-    // 
     {name: "tag", exec: ops => this.tag(ops)},
-    //
     {name: "stash", exec: ops => this.stash(ops)},
 
-    //
     {name: "checkout", exec: ops => this.checkout(ops)},
-    //
     {name: "branch", exec: ops => this.branch(ops)},
 
     {name: "fetch", exec: ops => this.fetch(ops)},

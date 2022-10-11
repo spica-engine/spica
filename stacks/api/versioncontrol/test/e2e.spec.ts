@@ -379,16 +379,5 @@ describe("Versioning e2e", () => {
         ]);
       });
     });
-
-    describe("clean", () => {
-      it("should diff change", async () => {
-        await insertBucket(getEmptyBucket());
-        await commit("first commit");
-
-        const res = await req.post("/versioncontrol/commands/diff", {args: []});
-        console.log(res);
-      });
-    });
-
   });
 });
