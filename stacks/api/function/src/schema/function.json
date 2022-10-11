@@ -39,6 +39,14 @@
       "enum": ["typescript", "javascript"],
       "description": "Language of the function"
     },
+    "order": {
+      "type": "number",
+      "description": "Order of the function"
+    },
+    "category": {
+      "type": "string",
+      "description": "Category name of the function"
+    },
     "triggers": true
   }
 }

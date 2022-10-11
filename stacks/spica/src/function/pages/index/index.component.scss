@@ -52,4 +52,46 @@
     flex: 1;
     justify-content: flex-end;
   }
+  .list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 56px;
+    font-size: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+    margin-bottom: 5px;
+    > div {
+      flex: 1;
+      text-align: center;
+      color: var(--foreground-secondary-text);
+      &:last-of-type {
+        text-align: end;
+      }
+      &:first-of-type {
+        text-align: left;
+      }
+    }
+  }
+  category {
+    ::ng-deep {
+      .drag-container {
+        mat-card {
+          padding: 16px 36px;
+        }
+      }
+    }
+  }
+  .schema-card {
+    > div {
+      flex: 1;
+      width: 100%;
+      text-align: center;
+      &:first-of-type {
+        text-align: start;
+      }
+      &:last-of-type {
+        justify-content: flex-end;
+      }
+    }
+  }
 }

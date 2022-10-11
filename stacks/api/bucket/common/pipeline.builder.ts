@@ -3,7 +3,7 @@ import {ObjectId} from "@spica-server/database";
 import {Bucket} from "@spica-server/bucket/services";
 import {CrudFactories} from "./crud";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
-import {deepCopy} from "./patch";
+import {deepCopy} from "@spica-server/core/patch";
 import {
   compareAndUpdateRelations,
   createRelationMap,

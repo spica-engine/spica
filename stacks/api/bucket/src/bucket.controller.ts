@@ -9,6 +9,7 @@ import {
   HttpException,
   HttpStatus,
   InternalServerErrorException,
+  NotFoundException,
   Optional,
   Param,
   Patch,
@@ -23,14 +24,11 @@ import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/ser
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {
-  applyPatch,
-  createBucketActivity,
-  getUpdateQueryForPatch
-} from "@spica-server/bucket/common";
+import {createBucketActivity} from "@spica-server/bucket/common";
 import * as expression from "@spica-server/bucket/expression";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket/cache";
 import {clearRelationsOnDrop, updateDocumentsOnChange} from "./changes";
+import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core/patch";
 /**
  * All APIs related to bucket schemas.
  * @name bucket
@@ -228,13 +226,14 @@ export class BucketController {
     }
 
     const previousBucket = await this.bs.findOne({_id: id});
+    if (!previousBucket) {
+      throw new NotFoundException(`Bucket with id ${id} does not exist.`);
+    }
 
     const patchedBucket = applyPatch(previousBucket, patch);
-    patchedBucket.properties = previousBucket.properties;
+    delete patchedBucket._id;
 
-    const updateQuery = getUpdateQueryForPatch(patch, patchedBucket);
-
-    return this.bs.findOneAndUpdate({_id: id}, updateQuery, {returnOriginal: false});
+    return this.bs.findOneAndReplace({_id: id}, patchedBucket, {returnOriginal: false});
   }
 
   validateBucket(schemaId: string, bucket: any): Promise<void> {

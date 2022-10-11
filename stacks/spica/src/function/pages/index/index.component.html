@@ -1,80 +1,79 @@
-<mat-toolbar>
-  <h4 class="mat-h4">
-    <mat-icon>memory</mat-icon>
-    <span>Functions</span>
-  </h4>
-  <button canInteract="function:create" mat-button routerLink="add">
-    <mat-icon>add</mat-icon>
-    Add New
-  </button>
-</mat-toolbar>
-<mat-card class="mat-elevation-z25">
-  <mat-card-content>
-    <mat-table [dataSource]="$data">
-      <ng-container matColumnDef="_id">
-        <mat-header-cell *matHeaderCellDef> Id </mat-header-cell>
-        <mat-cell *matCellDef="let function">{{ function._id }}</mat-cell>
-      </ng-container>
+<ng-container *ngIf="$data | async">
+  <category
+    [categoryStorageKey]="categoryStorageKey"
+    (onChangedOrder)="updateIndexes($event)"
+    [schemas]="$data | async"
+    [itemTemplate]="itemTmpl"
+  >
+    <ng-container schemaHeader>
+      <mat-icon>memory</mat-icon>
+      <span>Functions</span>
+    </ng-container>
 
-      <ng-container matColumnDef="name">
-        <mat-header-cell class="name" *matHeaderCellDef> Name </mat-header-cell>
-        <mat-cell class="name" *matCellDef="let function">{{ function.name }}</mat-cell>
-      </ng-container>
+    <ng-container schemaHeaderActions>
+      <button canInteract="function:create" mat-button routerLink="add">
+        <mat-icon>add</mat-icon>
+        Add Function
+      </button>
+    </ng-container>
 
-      <ng-container matColumnDef="description">
-        <mat-header-cell *matHeaderCellDef>
-          Description
-        </mat-header-cell>
-        <mat-cell *matCellDef="let function">
-          {{ function.description }}
-        </mat-cell>
-      </ng-container>
+    <ng-container schemaExtraContent>
+      <div class="list-header">
+        <div>ID</div>
+        <div>Name</div>
+        <div>Actions</div>
+      </div>
+    </ng-container>
+  </category>
+</ng-container>
 
-      <ng-container matColumnDef="actions">
-        <mat-header-cell class="action" *matHeaderCellDef>Actions</mat-header-cell>
-        <mat-cell class="action" *matCellDef="let function">
-          <button
-            canInteract="function:show"
-            [resource]="function._id"
-            mat-icon-button
-            [routerLink]="function._id"
-            matTooltip="Edit"
-          >
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button
-            mat-icon-button
-            canInteract="function:logs:index"
-            [routerLink]="['logs']"
-            [queryParams]="{function: function._id}"
-            matTooltip="Logs"
-          >
-            <mat-icon>bug_report</mat-icon>
-          </button>
-          <button
-            canInteract="function:delete"
-            [resource]="function._id"
-            mat-icon-button
-            color="warn"
-            matTooltip="Delete"
-            [matAwareDialog]="{
-              title: 'Confirmation',
-              templateOrDescription: dialogTemplate,
-              answer: function.name
-            }"
-            (confirm)="delete(function._id)"
-          >
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-cell>
-      </ng-container>
-
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
-    </mat-table>
-  </mat-card-content>
-</mat-card>
-
+<ng-template #itemTmpl let-item="item">
+  <div>
+    <div class="schema-card drag-box mat-elevation-1">
+      <div>
+        {{ item._id }}
+      </div>
+      <div>
+        {{ item.name }}
+      </div>
+      <div class="actions">
+        <button
+          canInteract="function:show"
+          [resource]="item._id"
+          mat-icon-button
+          [routerLink]="item._id"
+          matTooltip="Edit"
+        >
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          canInteract="function:logs:index"
+          [routerLink]="['logs']"
+          [queryParams]="{function: item._id}"
+          matTooltip="Logs"
+        >
+          <mat-icon>bug_report</mat-icon>
+        </button>
+        <button
+          canInteract="function:delete"
+          [resource]="item._id"
+          mat-icon-button
+          color="warn"
+          matTooltip="Delete"
+          [matAwareDialog]="{
+            title: 'Confirmation',
+            templateOrDescription: dialogTemplate,
+            answer: item.name
+          }"
+          (confirm)="delete(item._id)"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-template>
 <ng-template #dialogTemplate let-answer="answer">
   <p>This action will <b>permanently</b> delete this function.</p>
   <p>

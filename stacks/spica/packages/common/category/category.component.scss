@@ -130,15 +130,17 @@
     flex-direction: row;
     padding: 3px 7px;
     border-bottom: 1px solid var(--foreground-dividers);
+    font-weight: 400;
+    > div:first-of-type {
+      transform: translateX(22px);
+    }
     .schema-title {
       transition: margin 500ms;
       flex-direction: column;
       width: 200px;
       margin-bottom: 5px;
       display: flex;
-      padding-left: 22px;
       cursor: pointer;
-
       &:focus {
         outline: none;
       }
