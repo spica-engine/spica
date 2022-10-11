@@ -10,6 +10,7 @@ ts_project(
         "index.ts",
     ]),
     deps = [
+        "//packages/core/patch",
         "//packages/core/schema",
         "//packages/database",
         "//packages/database/realtime",

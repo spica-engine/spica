@@ -93,11 +93,21 @@ const route: Route[] = [
   {
     id: "bucket",
     category: RouteCategory.Content_Sub,
-    icon: "view_day",
+    icon: "format_list_numbered",
     path: "/buckets",
-    display: "Buckets",
+    display: "List",
     data: {
       action: "bucket:index"
+    }
+  },
+  {
+    id: "bucket-settings",
+    category: RouteCategory.Content_Sub,
+    icon: "settings",
+    path: "/buckets/settings",
+    display: "Settings",
+    data: {
+      action: "preference:show"
     }
   }
 ];

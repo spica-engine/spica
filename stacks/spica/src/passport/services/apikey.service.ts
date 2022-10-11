@@ -23,10 +23,12 @@ export class ApiKeyService {
   }
 
   insertOne(apiKey: ApiKey): Observable<ApiKey> {
+    delete apiKey.policies;
     return this.http.post<ApiKey>(`api:/passport/apikey`, apiKey);
   }
 
   replaceOne(apiKey: ApiKey): Observable<ApiKey> {
+    delete apiKey.policies;
     return this.http.put<ApiKey>(`api:/passport/apikey/${apiKey._id}`, apiKey);
   }
 

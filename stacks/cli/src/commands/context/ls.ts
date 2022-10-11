@@ -4,7 +4,10 @@ import {context} from "../../context";
 import {config} from "../../config";
 
 async function listContexts() {
-  const currentContext = await config.get();
+  const currentContext = await config.get().catch(e => {
+    console.warn(e.message);
+    return {context: undefined};
+  });
   const contexts = context.list().map(ctx => {
     let authorization = new Array(ctx.authorization.length)
       .fill("*")

@@ -200,9 +200,12 @@ export function getAll(
 export async function insert(identity: IdentityCreate): Promise<IdentityGet> {
   checkInitialized(authorization);
 
+  const desiredPolicies = identity.policies;
+  delete identity.policies;
+
   const insertedIdentity = await service.post<IdentityGet>(identitySegment, identity);
 
-  return policy.attach(insertedIdentity._id, identity.policies).then(policies => {
+  return policy.attach(insertedIdentity._id, desiredPolicies).then(policies => {
     insertedIdentity.policies = policies;
     return insertedIdentity;
   });
@@ -215,9 +218,12 @@ export async function update(id: string, identity: IdentityUpdate): Promise<Iden
 
   await policy.detach(id, existingIdentity.policies || []);
 
+  const desiredPolicies = identity.policies;
+  delete identity.policies;
+
   const updatedIdentity = await service.put<IdentityGet>(`${identitySegment}/${id}`, identity);
 
-  return policy.attach(id, identity.policies || []).then(policies => {
+  return policy.attach(id, desiredPolicies || []).then(policies => {
     updatedIdentity.policies = policies;
     return updatedIdentity;
   });

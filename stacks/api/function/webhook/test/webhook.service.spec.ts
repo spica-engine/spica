@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
-import {ChangeKind, WebhookService} from "@spica-server/function/webhook";
+import {ChangeKind, Webhook, WebhookService} from "@spica-server/function/webhook";
 import {bufferCount, bufferTime, take} from "rxjs/operators";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
@@ -8,28 +8,35 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 describe("Webhook Service", () => {
   let service: WebhookService;
   let module: TestingModule;
+  let webhook: Webhook;
+
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.replicaSet()],
       providers: [WebhookService]
     }).compile();
     service = module.get(WebhookService);
-  });
 
-  afterEach(async () => await module.close());
-
-  it("should report send target which is not active", async done => {
-    await service.insertOne({
+    webhook = {
+      title: "wh1",
       url: "http://spica.internal/test",
       body: "",
       trigger: {
+        active: true,
         name: "database",
         options: {
           collection: "test",
           type: "INSERT"
         }
       }
-    });
+    };
+  });
+
+  afterEach(async () => await module.close());
+
+  it("should report send target which is not active", async done => {
+    webhook.trigger.active = false;
+    await service.insertOne(webhook);
 
     service
       .targets()
@@ -41,18 +48,7 @@ describe("Webhook Service", () => {
   });
 
   it("should report target which is active", async done => {
-    const hook = await service.insertOne({
-      url: "http://spica.internal/test",
-      body: "",
-      trigger: {
-        name: "database",
-        active: true,
-        options: {
-          collection: "test",
-          type: "INSERT"
-        }
-      }
-    });
+    const hook = await service.insertOne(webhook);
 
     service
       .targets()
@@ -62,6 +58,7 @@ describe("Webhook Service", () => {
           kind: ChangeKind.Added,
           target: hook._id.toHexString(),
           webhook: {
+            title: hook.title,
             url: hook.url,
             body: hook.body,
             trigger: hook.trigger
@@ -80,6 +77,7 @@ describe("Webhook Service", () => {
           kind: ChangeKind.Added,
           target: hook._id.toHexString(),
           webhook: {
+            title: hook.title,
             url: hook.url,
             body: hook.body,
             trigger: hook.trigger
@@ -88,33 +86,11 @@ describe("Webhook Service", () => {
         done();
       });
     await stream.wait();
-    const hook = await service.insertOne({
-      url: "http://spica.internal/test",
-      body: "",
-      trigger: {
-        name: "database",
-        active: true,
-        options: {
-          collection: "test",
-          type: "INSERT"
-        }
-      }
-    });
+    const hook = await service.insertOne(webhook);
   });
 
   it("should report removed hook", async done => {
-    const hook = await service.insertOne({
-      url: "http://spica.internal/test",
-      body: "",
-      trigger: {
-        name: "database",
-        active: true,
-        options: {
-          collection: "test",
-          type: "INSERT"
-        }
-      }
-    });
+    const hook = await service.insertOne(webhook);
     service
       .targets()
       .pipe(
@@ -127,6 +103,7 @@ describe("Webhook Service", () => {
             kind: ChangeKind.Added,
             target: hook._id.toHexString(),
             webhook: {
+              title: hook.title,
               url: hook.url,
               body: hook.body,
               trigger: hook.trigger
@@ -144,18 +121,7 @@ describe("Webhook Service", () => {
   });
 
   it("should report hook as removed when deactivated", async done => {
-    const hook = await service.insertOne({
-      url: "http://spica.internal/test",
-      body: "",
-      trigger: {
-        name: "database",
-        active: true,
-        options: {
-          collection: "test",
-          type: "INSERT"
-        }
-      }
-    });
+    const hook = await service.insertOne(webhook);
     service
       .targets()
       .pipe(
@@ -168,6 +134,7 @@ describe("Webhook Service", () => {
             kind: ChangeKind.Added,
             target: hook._id.toHexString(),
             webhook: {
+              title: hook.title,
               url: hook.url,
               body: hook.body,
               trigger: hook.trigger

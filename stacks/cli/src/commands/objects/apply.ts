@@ -21,7 +21,7 @@ async function apply({options}: ActionParameters) {
   const rawDocument = fs.readFileSync(filename).toString();
   const documents = YAML.parseAllDocuments(rawDocument);
 
-  const machineryClient = await httpService.createFromConfig();
+  const machineryClient = await httpService.createFromCurrentCtx();
 
   for (const document of documents) {
     const {apiVersion, kind, metadata, spec} = document.toJSON();

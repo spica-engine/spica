@@ -5,6 +5,14 @@
   "title": "Authentication Factor Schema",
   "required": ["type", "config"],
   "properties": {
+    "title":{
+      "type":"string",
+      "title":"Title of the factor"
+    },
+    "description":{
+      "type":"string",
+      "title":"Description of the factor"
+    },
     "type": {
       "type": "string",
       "title": "Type of the factor"

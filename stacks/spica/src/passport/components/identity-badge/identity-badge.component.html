@@ -6,6 +6,11 @@
 >
   <mat-icon>person</mat-icon>
   <mat-menu #identityMenu="matMenu" class="mat-elevation-z25">
+    <div mat-menu-item>
+      <ng-container *ngComponentOutlet="schemeSwitcherComponent"> </ng-container>
+    </div>
+    <mat-divider></mat-divider>
+
     <button mat-menu-item [routerLink]="['passport', 'identity', identity._id, 'edit']">
       Profile
     </button>

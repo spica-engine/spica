@@ -138,18 +138,14 @@
 <div class="action-buttons">
   <button
     mat-button
-    [disabled]="
-      !data.currentAction.resource.include.length && !data.currentAction.resource.exclude.length
-    "
+    [disabled]="includeForm.invalid || excludeForm.invalid"
     (click)="copyResources()"
   >
     Copy Resources To All Actions
   </button>
   <button
     mat-button
-    [disabled]="
-      !data.currentAction.resource.include.length && !data.currentAction.resource.exclude.length
-    "
+    [disabled]="includeForm.invalid || excludeForm.invalid"
     (click)="dialogRef.close()"
   >
     Save

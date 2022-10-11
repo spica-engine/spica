@@ -289,12 +289,18 @@ describe("Storage Acceptance", () => {
           data: [row]
         }
       } = await req.get("/storage", {sort: JSON.stringify({_id: -1})});
+
       row.content.data = new BSON.Binary(Buffer.from("new data"));
-      await req.put(`/storage/${row._id}`, BSON.serialize(row), {
+
+      const id = row._id;
+      delete row._id;
+      delete row.url;
+
+      await req.put(`/storage/${id}`, BSON.serialize(row), {
         "Content-Type": "application/bson"
       });
 
-      const {body} = await req.get(`/storage/${row._id}/view`);
+      const {body} = await req.get(`/storage/${id}/view`);
 
       expect(body).toBe("new data");
     });
@@ -528,12 +534,21 @@ describe("Storage Acceptance", () => {
         },
         headers: {["etag"]: prevETag}
       } = await req.get("/storage", {sort: JSON.stringify({_id: -1})});
+
       row.content.data = Buffer.from("new data").toString("base64");
-      await req.put(`/storage/${row._id}`, row);
+
+      const id = row._id;
+      delete row._id;
+
+      delete row.url;
+
+      await req.put(`/storage/${id}`, row);
+
       const {
         body,
         headers: {["etag"]: ETag}
-      } = await req.get(`/storage/${row._id}/view`);
+      } = await req.get(`/storage/${id}/view`);
+
       expect(body).toBe("new data");
       expect(prevETag).not.toBe(ETag);
     });

@@ -1,5 +1,4 @@
 export * from "./crud";
-export * from "./patch";
 export * from "./pipeline.builder";
 export * from "./relation";
 export * from "./exception";

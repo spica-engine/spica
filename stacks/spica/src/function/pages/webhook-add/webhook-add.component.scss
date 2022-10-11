@@ -25,7 +25,8 @@
       mat-list-item {
         margin-top: 10px;
         height: auto !important;
-        &:nth-child(1) {
+        &:nth-child(1),
+        &:nth-child(2) {
           margin-top: 0px;
           padding-top: 0px !important;
           ::ng-deep .mat-list-item-content {

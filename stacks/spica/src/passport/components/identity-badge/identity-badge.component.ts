@@ -1,7 +1,8 @@
 import {Component} from "@angular/core";
 import {Router} from "@angular/router";
 import {Scheme, SchemeObserver} from "@spica-client/core/layout";
-import {Observable} from "rxjs";
+import {SchemeSwitcherComponent} from "@spica-client/core/layout/scheme-switcher/scheme-switcher.component";
+import {from, Observable} from "rxjs";
 import {startWith} from "rxjs/operators";
 import {Identity} from "../../interfaces/identity";
 import {PassportService} from "../../services/passport.service";
@@ -15,6 +16,7 @@ export class IdentityBadgeComponent {
   identity: Identity;
 
   dark$: Observable<boolean>;
+  schemeSwitcherComponent = SchemeSwitcherComponent;
 
   constructor(
     private passportService: PassportService,

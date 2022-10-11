@@ -6,7 +6,7 @@ import {
 } from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
 import {buildI18nAggregation, Locale} from "./locale";
-import {deepCopy} from "./patch";
+import {deepCopy} from "@spica-server/core/patch";
 
 export function findRelations(
   schema: any,

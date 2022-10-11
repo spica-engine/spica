@@ -1,7 +1,7 @@
 import {Schema, Validator} from "@spica-server/core/schema";
 
 describe("schema pipe", () => {
-  it("should remove additional with ref", async () => {
+  it("should reject with ref", async () => {
     const validatorMixin = Schema.validate("test");
     const pipe = new validatorMixin(
       new Validator({
@@ -21,9 +21,9 @@ describe("schema pipe", () => {
     );
     const data: object = {evil: "hahah"};
 
-    await pipe.transform(data, undefined);
-
-    expect(data).toEqual({});
+    await expectAsync(pipe.transform(data, undefined)).toBeRejectedWith(
+      new Error("should NOT have additional properties 'evil'")
+    );
   });
 
   describe("validation with schema", () => {

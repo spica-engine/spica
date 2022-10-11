@@ -51,7 +51,6 @@ import {
   patchDocument,
   replaceDocument,
   authIdToString,
-  applyPatch,
   AUTH_RESOLVER,
   IAuthResolver
 } from "@spica-server/bucket/common";
@@ -62,6 +61,7 @@ import {
   getDependents,
   createBucketDataActivity
 } from "@spica-server/bucket/common";
+import {applyPatch} from "@spica-server/core/patch";
 
 /**
  * All APIs related to bucket documents.

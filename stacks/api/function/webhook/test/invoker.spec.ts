@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database/testing";
-import {WebhookService, WEBHOOK_OPTIONS} from "@spica-server/function/webhook";
+import {Webhook, WebhookService, WEBHOOK_OPTIONS} from "@spica-server/function/webhook";
 import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
 import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
 import * as __fetch__ from "node-fetch";
@@ -27,6 +27,8 @@ describe("Webhook Invoker", () => {
     statusText: "Not Found",
     text: () => Promise.resolve("res_body")
   } as any;
+
+  let webhook: Webhook;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -55,14 +57,11 @@ describe("Webhook Invoker", () => {
     fetchSpy = spyOn(__fetch__, "default").and.returnValue(Promise.resolve(mockHttpResponse));
 
     await new Promise(resolve => setTimeout(() => resolve(), 2000));
-  }, 20000);
 
-  afterEach(async () => await module.close());
-
-  it("should subscribe and open a change stream against the collection", async () => {
-    const {_id, ...hook} = await service.insertOne({
+    webhook = {
+      title: "wh1",
       url: "http://spica.internal",
-      body: "",
+      body: "{{{toJSON this}}}",
       trigger: {
         name: "database",
         active: true,
@@ -71,7 +70,13 @@ describe("Webhook Invoker", () => {
           type: "INSERT"
         }
       }
-    });
+    };
+  }, 20000);
+
+  afterEach(async () => await module.close());
+
+  it("should subscribe and open a change stream against the collection", async () => {
+    const {_id, ...hook} = await service.insertOne(webhook);
     await stream.change.wait();
     const subsequentStream = await stream.wait();
     expect(subscribeSpy).toHaveBeenCalledTimes(1);
@@ -86,18 +91,7 @@ describe("Webhook Invoker", () => {
   });
 
   it("should unsubscribe after the webhook has deleted", async () => {
-    const hook = await service.insertOne({
-      url: "http://spica.internal",
-      body: "",
-      trigger: {
-        name: "database",
-        active: true,
-        options: {
-          collection: "stream_coll",
-          type: "INSERT"
-        }
-      }
-    });
+    const hook = await service.insertOne(webhook);
     await stream.change.wait();
     await service.deleteOne({_id: hook._id});
     await stream.change.wait();
@@ -106,18 +100,7 @@ describe("Webhook Invoker", () => {
   });
 
   it("should unsubscribe after the webhook has disabled", async () => {
-    const hook = await service.insertOne({
-      url: "http://spica.internal",
-      body: FULL_CHANGE_TEMPLATE,
-      trigger: {
-        name: "database",
-        active: true,
-        options: {
-          collection: "stream_coll",
-          type: "INSERT"
-        }
-      }
-    });
+    const hook = await service.insertOne(webhook);
     await stream.change.wait();
     await service.updateOne({_id: hook._id}, {$unset: {"trigger.active": ""}});
     await stream.change.wait();
@@ -126,18 +109,7 @@ describe("Webhook Invoker", () => {
   });
 
   it("should report changes from the database", async () => {
-    await service.insertOne({
-      url: "http://spica.internal",
-      body: FULL_CHANGE_TEMPLATE,
-      trigger: {
-        name: "database",
-        active: true,
-        options: {
-          collection: "stream_coll",
-          type: "INSERT"
-        }
-      }
-    });
+    await service.insertOne(webhook);
     await stream.change.wait();
     stream.change.next();
     const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
@@ -158,18 +130,8 @@ describe("Webhook Invoker", () => {
   });
 
   it("should report changes from the database with mapping", async () => {
-    await service.insertOne({
-      url: "http://spica.internal",
-      body: "{{{toJSON document}}}",
-      trigger: {
-        name: "database",
-        active: true,
-        options: {
-          collection: "stream_coll",
-          type: "INSERT"
-        }
-      }
-    });
+    webhook.body = "{{{toJSON document}}}";
+    await service.insertOne(webhook);
     await stream.change.wait();
     stream.change.next();
     const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
@@ -187,18 +149,7 @@ describe("Webhook Invoker", () => {
 
   it("should insert a log when hook has been invoked", async () => {
     const insertLog = spyOn(invoker["logService"], "insertOne");
-    const hook = await service.insertOne({
-      url: "http://spica.internal",
-      body: FULL_CHANGE_TEMPLATE,
-      trigger: {
-        name: "database",
-        active: true,
-        options: {
-          collection: "stream_coll",
-          type: "INSERT"
-        }
-      }
-    });
+    const hook = await service.insertOne(webhook);
     await stream.change.wait();
     stream.change.next();
     const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
@@ -237,19 +188,9 @@ describe("Webhook Invoker", () => {
   });
 
   it("should insert log when webhook body compilation failed", async () => {
+    webhook.body = "{{{document.title}}}";
     const insertLog = spyOn(invoker["logService"], "insertOne");
-    const hook = await service.insertOne({
-      url: "http://spica.internal",
-      body: "{{{document.title}}}",
-      trigger: {
-        name: "database",
-        active: true,
-        options: {
-          collection: "stream_coll",
-          type: "INSERT"
-        }
-      }
-    });
+    const hook = await service.insertOne(webhook);
     await stream.change.wait();
     stream.change.next();
     const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});

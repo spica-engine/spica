@@ -2,6 +2,7 @@ import {ObjectId} from "@spica-server/database";
 
 export interface Webhook {
   _id?: ObjectId;
+  title: string;
   url: string;
   body: string;
   trigger: Trigger;

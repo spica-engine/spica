@@ -21,7 +21,6 @@ import {Function} from "@spica-server/interface/function";
 import {ChangeKind, TargetChange} from "./change";
 import {SCHEMA, SchemaWithName} from "./schema/schema";
 import {createTargetChanges} from "./change";
-import {RepoStrategies} from "./services/interface";
 
 import HttpSchema = require("./schema/http.json");
 import ScheduleSchema = require("./schema/schedule.json");
@@ -45,7 +44,6 @@ export class FunctionEngine implements OnModuleDestroy {
     private fs: FunctionService,
     private db: DatabaseService,
     private scheduler: Scheduler,
-    private repos: RepoStrategies,
     private commander: ClassCommander,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
@@ -105,71 +103,6 @@ export class FunctionEngine implements OnModuleDestroy {
   removePackage(fn: Function, name: string): Promise<void> {
     const functionRoot = path.join(this.options.root, fn._id.toString());
     return this.getDefaultPackageManager().uninstall(functionRoot, name);
-  }
-
-  private async extractCommitFiles() {
-    const fns = await this.fs.find({});
-
-    const files: {name: string; content: string}[] = [];
-
-    for (const fn of fns) {
-      const extension = fn.language == "typescript" ? ".ts" : ".js";
-
-      const indexPath = path.join(this.options.root, fn._id.toString(), `index${extension}`);
-      const indexName = `${fn._id}/index${extension}`;
-      const indexContent = await fs.promises.readFile(indexPath, {encoding: "utf8"});
-
-      files.push({name: indexName, content: indexContent});
-
-      const packageJsonPath = path.join(this.options.root, fn._id.toString(), "package.json");
-      const packageJsonName = `${fn._id}/package.json`;
-      const packageJsonContent = await fs.promises.readFile(packageJsonPath, {encoding: "utf8"});
-
-      files.push({name: packageJsonName, content: packageJsonContent});
-    }
-
-    return files;
-  }
-
-  async createRepo(strategy: string, repo: string, token: string) {
-    await this.repos.find(strategy).createRepo(repo, token);
-
-    return this.pushCommit(strategy, repo, "main", "Initial commit from spica");
-  }
-
-  async pushCommit(strategy: string, repo: string, branch: string, message: string) {
-    const files = await this.extractCommitFiles();
-
-    return this.repos.find(strategy).pushCommit(files, repo, branch, message);
-  }
-
-  async pullCommit(strategy: string, repo: string, branch: string, token: string) {
-    const changes = await this.repos.find(strategy).pullCommit(repo, branch, token);
-    let updates = 0;
-    for (const change of changes) {
-      const functionRoot = path.join(this.options.root, change.function);
-
-      const results = await Promise.all(
-        change.files.map(file =>
-          fs.promises
-            .writeFile(path.join(functionRoot, file.name), file.content)
-            .then(() => true)
-            .catch(e => {
-              // @TODO: update this line after we decide to pull and push functions with metadata
-              if (e.code == "ENOENT") {
-                return false;
-              }
-
-              throw Error(e);
-            })
-        )
-      );
-
-      if (results.every(r => r == true)) {
-        updates++;
-      }
-    }
-    return updates;
   }
 
   async createFunction(fn: Function) {

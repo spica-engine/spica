@@ -9,47 +9,66 @@
     [opened]="!(isHandset$ | async)"
   >
     <section class="routes">
-      <mat-nav-list>
+      <mat-nav-list class="iconlist">
         <mat-list-item disableRipple>
           <img src="assets/astro-composer.svg" />
         </mat-list-item>
         <mat-list-item
           disableRipple
-          *ngFor="let category of  categories$ | async"
+          *ngFor="let category of  categories$ | async;"
           [class.active]="(currentCategory | async) === category"
           (click)="currentCategory.next(category)"
+          [matTooltip]="category.category"
+          matTooltipPosition="below"
         >
           <mat-icon>{{ category.icon }}</mat-icon>
         </mat-list-item>
+
         <mat-list-item disableRipple *ngIf="!(isHandset$ | async)" (click)="toggle()">
-          <mat-icon>{{expanded ? 'chevron_left': 'chevron_right'}}</mat-icon>
+          <mat-icon *ngIf="isSidebarReady">{{expanded ? 'chevron_left': 'chevron_right'}}</mat-icon>
+        </mat-list-item>
+
+        <mat-list-item disableRipple class="iconlist-below">
+          <mat-nav-list *ngIf="isSidebarReady">
+            <mat-list-item
+              matTooltip="Version Control"
+              [routerLink]="['/versioncontrol']"
+              disableRipple
+            >
+              <mat-icon>account_tree</mat-icon>
+            </mat-list-item>
+          </mat-nav-list>
         </mat-list-item>
       </mat-nav-list>
       <mat-nav-list
+        class="routerlist"
         *ngIf="currentCategory | async as currentCategory"
         [attr.category]="currentCategory.category.toLowerCase()"
       >
         <h4>
           {{ currentCategory.category }}
-          <div *ngIf="currentCategory.children.items">
+          <div *ngIf="currentCategory.children.items" class="subcategory-items">
             <button
+              *ngFor="let subCategory of filterArrayByDisplay(currentCategory.children.items,'row')"
               mat-icon-button
-              *ngIf="currentCategory.children.items.length == 1"
-              [routerLink]="currentCategory.children.items[0].path"
+              [routerLink]="subCategory.path"
               routerLinkActive="active"
-              canInteract="currentCategory.children.items[0].data?.action"
-              [matTooltip]="currentCategory.children.items[0].display"
+              canInteract="subCategory.data?.action"
+              [matTooltip]="subCategory.display"
             >
-              <mat-icon>{{currentCategory.children.icon}}</mat-icon>
+              <mat-icon>{{subCategory.icon}}</mat-icon>
             </button>
-            <div *ngIf="currentCategory.children.items.length > 1">
+
+            <ng-container
+              *ngIf="filterArrayByDisplay(currentCategory.children.items,'menu').length>1"
+            >
               <button mat-icon-button [matMenuTriggerFor]="menu">
                 <mat-icon>{{currentCategory.children.icon}}</mat-icon>
               </button>
               <mat-menu #menu="matMenu">
                 <button
                   mat-menu-item
-                  *ngFor="let subCategory of currentCategory.children.items"
+                  *ngFor="let subCategory of filterArrayByDisplay(currentCategory.children.items,'menu')"
                   [routerLink]="subCategory.path"
                   routerLinkActive="active"
                   canInteract="subCategory.data.action"
@@ -57,18 +76,57 @@
                   {{subCategory.display}}
                 </button>
               </mat-menu>
-            </div>
+            </ng-container>
           </div>
         </h4>
-        <mat-list-item
-          *ngFor="let route of routes$ | async"
-          [routerLink]="route.path"
-          routerLinkActive="active"
-          [queryParams]="route.queryParams"
-        >
-          <mat-icon>{{ route.icon }}</mat-icon>
-          {{ route.display }}
-        </mat-list-item>
+        <ng-container *ngFor="let routes of sortedByCategory( (routes$ | async) |keyvalue)">
+          <ng-container *ngIf="routes.key!=categoryService.EMPTY_CATEGORY_KEYWORD">
+            <mat-accordion>
+              <mat-expansion-panel
+                (closed)="categoryExpandStatus[routes.key]=false"
+                (opened)="categoryExpandStatus[routes.key] = true"
+                [expanded]="categoryExpandStatus[routes.key]||false"
+                class="mat-elevation-z0"
+              >
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <span class="route-title"> {{ routes.key}}</span>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <ng-container
+                  *ngTemplateOutlet="
+                routeItemList;
+                context: {items: routes.value}
+              "
+                >
+                </ng-container>
+              </mat-expansion-panel>
+            </mat-accordion>
+          </ng-container>
+          <ng-container *ngIf="routes.key==categoryService.EMPTY_CATEGORY_KEYWORD">
+            <ng-container
+              *ngTemplateOutlet="
+            routeItemList;
+            context: {items: routes.value}
+          "
+            >
+            </ng-container>
+          </ng-container>
+        </ng-container>
+
+        <ng-template #routeItemList let-items="items">
+          <mat-list-item
+            [routerLink]="route.path"
+            routerLinkActive="active"
+            [queryParams]="route.queryParams"
+            [class]="route.customClass"
+            (click)="setTitle(route.display)"
+            *ngFor="let route of items"
+          >
+            <mat-icon>{{ route.icon }}</mat-icon>
+            {{ route.display }}
+          </mat-list-item>
+        </ng-template>
       </mat-nav-list>
     </section>
   </mat-sidenav>
@@ -84,9 +142,26 @@
       </button>
       <span></span>
       <toolbar-action></toolbar-action>
-      <ng-container *ngFor="let component of components">
-        <ng-container *ngComponentOutlet="component"></ng-container>
-      </ng-container>
+      <div class="toolbar" *ngIf="components">
+        <div>
+          <ng-container
+            [ngTemplateOutlet]="drawComponents"
+            [ngTemplateOutletContext]="{components:filterComponentsByPosition('left')}"
+          ></ng-container>
+        </div>
+        <div>
+          <ng-container
+            [ngTemplateOutlet]="drawComponents"
+            [ngTemplateOutletContext]="{components:filterComponentsByPosition('right')}"
+          ></ng-container>
+        </div>
+
+        <ng-template #drawComponents let-components="components">
+          <ng-container *ngFor="let item of components">
+            <ng-container *ngComponentOutlet="item.component"></ng-container>
+          </ng-container>
+        </ng-template>
+      </div>
     </mat-toolbar>
     <div class="slot" slot="content"></div>
   </mat-sidenav-content>

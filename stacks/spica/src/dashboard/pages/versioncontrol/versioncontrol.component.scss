@@ -55,11 +55,13 @@
       gap: 10px;
 
       div.cli {
-        flex: 1;
+        width: 50%;
+        max-width: 50%;
       }
 
       div.response {
-        flex: 1;
+        width: 50%;
+        max-width: 50%;
       }
     }
   }

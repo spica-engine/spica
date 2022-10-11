@@ -6,7 +6,7 @@ import {httpService} from "../../http";
 import {formatFailureStatus, isFailureStatus} from "../../status";
 
 async function _delete({options}: ActionParameters) {
-  const machineryClient = await httpService.createFromConfig();
+  const machineryClient = await httpService.createFromCurrentCtx();
 
   const filename = path.normalize(options.filename as string);
   const documents = YAML.parseAllDocuments(fs.readFileSync(filename).toString());

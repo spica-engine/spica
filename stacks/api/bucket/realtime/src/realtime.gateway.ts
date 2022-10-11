@@ -11,12 +11,10 @@ import {
   insertDocument,
   insertActivity,
   replaceDocument,
-  applyPatch,
   patchDocument,
   deleteDocument,
   clearRelations,
   getDependents,
-  deepCopy,
   authIdToString,
   AUTH_RESOLVER,
   IAuthResolver
@@ -33,6 +31,7 @@ import {
   BucketDocument,
   replaceFilterObjectIds
 } from "@spica-server/bucket/services";
+import {applyPatch, deepCopy} from "@spica-server/core/patch";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
 import {FindOptions, RealtimeDatabaseService} from "@spica-server/database/realtime";

@@ -1,10 +1,10 @@
-<button
-  *ngIf="scheme$ | async; let scheme"
-  mat-icon-button
-  [class.mat-flat-button]="scheme == Scheme.Dark"
-  [matTooltip]="'Switch to ' + (scheme == Scheme.Dark ? 'light' : 'dark') + ' theme.'"
-  (click)="changeScheme()"
-  disableRipple
->
-  <mat-icon>{{ scheme == Scheme.Dark ? "nights_stay" : "wb_sunny" }}</mat-icon>
-</button>
+<div *ngIf="scheme$ | async; let scheme" [class]="scheme == Scheme.Dark ? 'Dark' : 'Light'">
+  <div>{{ scheme == Scheme.Dark ? "Dark" : "Light" }}</div>
+  <div
+    (click)="changeScheme(); $event.stopPropagation()"
+    [matTooltip]="'Switch to ' + (scheme == Scheme.Dark ? 'light' : 'dark') + ' theme.'"
+    class="switcher"
+  >
+    <mat-icon>{{ scheme == Scheme.Dark ? "nights_stay" : "wb_sunny" }}</mat-icon>
+  </div>
+</div>

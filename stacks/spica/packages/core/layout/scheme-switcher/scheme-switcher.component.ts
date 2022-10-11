@@ -5,6 +5,7 @@ import {Scheme, SchemeObserver} from "../scheme.observer";
 
 @Component({
   selector: "scheme-switcher",
+  styleUrls: ["./scheme-switcher.component.scss"],
   templateUrl: "./scheme-switcher.component.html"
 })
 export class SchemeSwitcherComponent {

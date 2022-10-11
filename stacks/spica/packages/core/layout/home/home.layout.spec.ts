@@ -51,14 +51,6 @@ describe("Home Layout", () => {
       expect(component).toBeTruthy();
     });
 
-    it("should not show categories if theres no route", () => {
-      const navCategories = fixture.debugElement.nativeElement.querySelectorAll(
-        "mat-nav-list:first-of-type > mat-list-item:not(:first-of-type)"
-      );
-
-      expect(navCategories.length).toBe(1);
-    });
-
     it("should show categories that include first one is selected as default if theres route", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
@@ -69,15 +61,19 @@ describe("Home Layout", () => {
           {category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1"},
           {category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2"},
           {category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1"},
-          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"}
+          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"},
+          {category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1"},
+          {category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2"},
+          {category: RouteCategory.Dashboard, id: "12", path: "", icon: "", display: "dashboard1"},
+          {category: RouteCategory.Dashboard, id: "13", path: "", icon: "", display: "dashboard2"}
         ])
       );
       tick();
       fixture.detectChanges();
       const navCategories = fixture.debugElement.nativeElement.querySelectorAll(
-        "mat-nav-list:first-of-type > mat-list-item:not(:first-of-type)"
+        ".iconlist > mat-list-item:not(:first-of-type)"
       );
-      expect(navCategories.length).toBe(5);
+      expect(navCategories.length).toBe(8);
       expect(navCategories[0].getAttribute("class")).toContain("active");
     }));
 
@@ -91,51 +87,89 @@ describe("Home Layout", () => {
           {category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1"},
           {category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2"},
           {category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1"},
-          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"}
+          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"},
+          {category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1"},
+          {category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2"},
+          {category: RouteCategory.Dashboard, id: "12", path: "", icon: "", display: "dashboard1"},
+          {category: RouteCategory.Dashboard, id: "13", path: "", icon: "", display: "dashboard2"}
         ])
       );
       tick();
       fixture.detectChanges();
       const contentCategory = fixture.debugElement.nativeElement.querySelectorAll(
-        "mat-nav-list:first-of-type > mat-list-item:not(:first-of-type)"
+        ".iconlist > mat-list-item:not(:first-of-type)"
       )[1];
       contentCategory.click();
       fixture.detectChanges();
       const selectedCategoryRoutes = fixture.debugElement.nativeElement.querySelectorAll(
-        "mat-nav-list:last-of-type > mat-list-item"
+        ".routerlist > mat-list-item"
       );
       expect(selectedCategoryRoutes.length).toEqual(2);
-      expect(selectedCategoryRoutes[0].textContent).toEqual(" content1 ");
-      expect(selectedCategoryRoutes[1].textContent).toEqual(" content2 ");
+      expect(selectedCategoryRoutes[0].textContent).toEqual(" dashboard1 ");
+      expect(selectedCategoryRoutes[1].textContent).toEqual(" dashboard2 ");
     }));
 
     it("should show sub menu", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
-          {category: RouteCategory.Content, id: "9", path: "", icon: "", display: "system1"},
-          {category: RouteCategory.Content, id: "0", path: "", icon: "", display: "system2"},
-          {category: RouteCategory.Content_Sub, id: "3", path: "", icon: "", display: "sub1"},
-          {category: RouteCategory.Content_Sub, id: "4", path: "", icon: "", display: "sub2"}
+          {
+            category: RouteCategory.Primary,
+            id: "9",
+            path: "",
+            icon: "",
+            display: "system1",
+            displayType: "menu"
+          },
+          {
+            category: RouteCategory.Primary,
+            id: "0",
+            path: "",
+            icon: "",
+            display: "system2",
+            displayType: "menu"
+          },
+          {
+            category: RouteCategory.Primary_Sub,
+            id: "3",
+            path: "",
+            icon: "",
+            display: "sub1",
+            displayType: "menu"
+          },
+          {
+            category: RouteCategory.Primary_Sub,
+            id: "4",
+            path: "",
+            icon: "",
+            display: "sub2",
+            displayType: "menu"
+          }
         ])
       );
       tick();
       fixture.detectChanges();
-      const matMenu = fixture.debugElement.nativeElement.querySelectorAll("h4 mat-menu");
+      const matMenu = fixture.debugElement.nativeElement.querySelectorAll(
+        "h4 .subcategory-items mat-menu"
+      );
       expect(matMenu.length).toEqual(1);
     }));
 
     it("should show action button instead of mat menu", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
-          {category: RouteCategory.Content, id: "9", path: "", icon: "", display: "system1"},
-          {category: RouteCategory.Content_Sub, id: "3", path: "", icon: "", display: "sub1"}
+          {category: RouteCategory.Primary, id: "9", path: "", icon: "", display: "system1"},
+          {category: RouteCategory.Primary_Sub, id: "3", path: "", icon: "", display: "sub1"}
         ])
       );
       tick();
       fixture.detectChanges();
-      const matMenu = fixture.debugElement.nativeElement.querySelectorAll("h4 mat-menu");
+      const matMenu = fixture.debugElement.nativeElement.querySelectorAll(
+        "h4 .subcategory-items mat-menu"
+      );
       expect(matMenu.length).toEqual(0);
-      const actionButton = fixture.debugElement.nativeElement.querySelectorAll("h4 button");
+      const actionButton = fixture.debugElement.nativeElement.querySelectorAll(
+        "h4 .subcategory-items button"
+      );
       expect(actionButton.length).toEqual(1);
     }));
   });
@@ -290,14 +324,6 @@ describe("Home Layout", () => {
 
     it("should create component", () => {
       expect(component).toBeTruthy();
-    });
-
-    it("should create dummy action layout", () => {
-      const layout = fixture.debugElement.nativeElement.querySelector("dummy-action");
-      expect(layout).toBeTruthy();
-      const button = fixture.debugElement.nativeElement.querySelector("dummy-action > button");
-      expect(button).toBeTruthy();
-      expect(button.textContent).toBe("BUTTON");
     });
   });
 

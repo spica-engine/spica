@@ -8,58 +8,7 @@
     <h4 class="code-actions">
       <mat-icon>code</mat-icon> Code
 
-      <div>
-        <button
-          mat-button
-          canInteract="function:integrations"
-          [disabled]="repoPending"
-          *ngIf="!integratedUser"
-          (click)="initGithub()"
-        >
-          <mat-spinner *ngIf="repoPending" diameter="20" color="accent"></mat-spinner>
-          <mat-icon *ngIf="!repoPending">
-            link
-          </mat-icon>
-          Connect Github
-        </button>
-        <ng-container *ngIf="integratedUser">
-          <button
-            class="repo-branch"
-            [disabled]="repoPending"
-            mat-button
-            (click)="openRepoBranchDialog()"
-          >
-            <mat-spinner *ngIf="repoPending" diameter="20" color="accent"></mat-spinner>
-            <mat-icon *ngIf="!repoPending">
-              book
-            </mat-icon>
-            {{
-              selectedRepoBranch && selectedRepoBranch.repo && selectedRepoBranch.branch
-                ? selectedRepoBranch.repo + "-" + selectedRepoBranch.branch
-                : "Select repo and branch"
-            }}
-          </button>
-          <button
-            *ngIf="!repoPending"
-            class="disconnect"
-            matTooltip="Disconnect Account"
-            mat-icon-button
-            color="warn"
-            (click)="disconnectGithub()"
-          >
-            <mat-icon>link_off</mat-icon>
-          </button>
-        </ng-container>
-        <span
-          *ngIf="repoResponse"
-          [style.color]="repoResponse.succeeded ? 'green' : 'red'"
-          class="repo-response"
-        >
-          {{ repoResponse.message }}
-        </span>
-      </div>
-
-      <span class="seperator"></span>
+      <span class="separator"></span>
 
       <div class="actions">
         <button
@@ -387,20 +336,21 @@
                 <button
                   type="button"
                   mat-icon-button
-                  matTooltip="Remove this package"
-                  (click)="deleteDependency(dependency.name)"
-                  [disabled]="dependencyInstallPending"
-                >
-                  <mat-icon>delete</mat-icon>
-                </button>
-                <button
-                  type="button"
-                  mat-icon-button
                   matTooltip="Update to latest version"
                   (click)="addDependency(dependency.name + '@latest')"
                   [disabled]="dependencyInstallPending"
                 >
                   <mat-icon>refresh</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Remove this package"
+                  color="warn"
+                  (click)="deleteDependency(dependency.name)"
+                  [disabled]="dependencyInstallPending"
+                >
+                  <mat-icon>delete</mat-icon>
                 </button>
               </div>
             </mat-list-item>
@@ -440,23 +390,58 @@
             [ngModelGroup]="index"
             class="environment"
           >
-            <mat-form-field>
-              <mat-label>Key</mat-label>
-              <input matInput placeholder="Key" [(ngModel)]="env.key" name="key" />
-            </mat-form-field>
-            <mat-form-field>
-              <mat-label>Value</mat-label>
-              <textarea
-                matInput
-                placeholder="Value"
-                [(ngModel)]="env.value"
-                name="value"
-                rows="1"
-              ></textarea>
-            </mat-form-field>
-            <button type="button" mat-icon-button color="warn" (click)="removeVariable(index)">
-              <mat-icon>delete</mat-icon>
-            </button>
+            <span class="left">
+              <div class="env-display" *ngIf="!envsEditMode[index]">
+                <span>{{ env.key }}</span
+                >=<span>{{ env.value }}</span>
+              </div>
+              <form #envForm="ngForm">
+                <ng-container *ngIf="envsEditMode[index]">
+                  <mat-form-field>
+                    <mat-label>Key</mat-label>
+                    <input
+                      (keyup.enter)="switchEnvEditMode(index)"
+                      matInput
+                      placeholder="Key"
+                      [(ngModel)]="env.key"
+                      name="key"
+                      required
+                    />
+                  </mat-form-field>
+                  <mat-form-field>
+                    <mat-label>Value</mat-label>
+                    <textarea
+                      (keyup.enter)="switchEnvEditMode(index)"
+                      matInput
+                      placeholder="Value"
+                      [(ngModel)]="env.value"
+                      name="value"
+                      rows="1"
+                      required
+                    ></textarea>
+                  </mat-form-field>
+                </ng-container>
+              </form>
+            </span>
+            <span class="right">
+              <ng-container *ngIf="!envsEditMode[index]">
+                <button mat-icon-button (click)="switchEnvEditMode(index)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="deleteEnvironment(index)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </ng-container>
+              <ng-container *ngIf="envsEditMode[index]">
+                <button
+                  [disabled]="envForm.invalid"
+                  mat-icon-button
+                  (click)="switchEnvEditMode(index)"
+                >
+                  <mat-icon>done</mat-icon>
+                </button>
+              </ng-container>
+            </span>
           </mat-list-item>
 
           <button type="button" mat-button class="new-trigger" (click)="addVariable()">

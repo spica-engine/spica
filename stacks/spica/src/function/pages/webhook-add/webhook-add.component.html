@@ -1,6 +1,6 @@
 <mat-toolbar>
   <h4 class="mat-h4">
-    <mat-icon>http</mat-icon>
+    <mat-icon>webhook</mat-icon>
     <span>{{ webhook._id ? "Edit Webhook" : "New Webhook" }}</span>
   </h4>
 </mat-toolbar>
@@ -8,6 +8,14 @@
   <mat-card-content>
     <form #form="ngForm">
       <mat-list>
+        <mat-list-item>
+          <mat-form-field>
+            <input [(ngModel)]="webhook.title" matInput name="title" placeholder="Title" required />
+            <mat-hint>
+              Give your webhook a title.
+            </mat-hint>
+          </mat-form-field>
+        </mat-list-item>
         <mat-list-item>
           <mat-form-field url>
             <input

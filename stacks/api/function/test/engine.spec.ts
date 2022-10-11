@@ -55,7 +55,6 @@ describe("Engine", () => {
       new FunctionService(database, {} as any),
       database,
       scheduler,
-      {} as any,
       cmd,
       {
         root: "test_root",

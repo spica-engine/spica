@@ -172,13 +172,16 @@
         "
         ngModel
         required
-        pattern="^[a-z_0-9]*$"
+        pattern="^(?!(_id)$)([a-z_0-9]*)+$"
       />
       <mat-error *ngIf="pnm?.errors?.required">
         Property name is required.
       </mat-error>
       <mat-error *ngIf="pnm?.errors?.pattern">
-        Property name can not include any non-word characters or uppercase letters.
+        Property name should meet the following requirements<br />
+        - Can not be '_id'.<br />
+        - Can not include non-word character.<br />
+        - Can not include uppercase letter.<br />
       </mat-error>
       <mat-error *ngIf="pnm?.errors?.propertyExists">
         Property name already exists.

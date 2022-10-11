@@ -18,6 +18,9 @@
 		"attributes":{
 			"type":"object",
 			"title": "Custom attributes of the identity"
+		},
+		"authFactor": {
+			"$ref": "http://spica.internal/passport/authfactor"
 		}
 	},
 	"additionalProperties": false

@@ -6,6 +6,7 @@ import {startWith} from "rxjs/operators";
 
 @Component({
   selector: "passport-access-token",
+  styleUrls: ["./access-token.component.scss"],
   templateUrl: "./access-token.component.html"
 })
 export class AccessTokenComponent {

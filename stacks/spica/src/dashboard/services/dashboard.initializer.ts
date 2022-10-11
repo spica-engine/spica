@@ -13,10 +13,11 @@ export class DashboardInitializer {
   ) {
     ds.findAll().subscribe(dashboards => {
       this.routeService.dispatch(new CherryPickAndRemove(e => e.id.startsWith("dashboard/")));
+      this.routeService.dispatch(new RemoveCategory(RouteCategory.Dashboard));
       dashboards.forEach(dashboard => {
         this.routeService.dispatch(
           new Upsert({
-            category: RouteCategory.Primary,
+            category: RouteCategory.Dashboard,
             id: `dashboard/${dashboard._id}`,
             icon: dashboard.icon,
             path: `/dashboard/${dashboard._id}`,
@@ -24,6 +25,16 @@ export class DashboardInitializer {
           })
         );
       });
+      this.routeService.dispatch(
+        new Upsert({
+          id: "add-dashboard",
+          category: RouteCategory.Dashboard,
+          icon: "add",
+          path: "/dashboards/add",
+          display: "Add New Dashboard",
+          customClass: "dashed-item"
+        })
+      );
     });
   }
 
