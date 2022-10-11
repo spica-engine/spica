@@ -25,26 +25,6 @@ jasmine_node_test(
 )
 
 ts_project(
-    name = "patch_test_lib",
-    testonly = True,
-    srcs = [
-        "patch.spec.ts",
-    ],
-    deps = [
-        "//stacks/api/bucket/common",
-        "//stacks/api/bucket/history",
-        "@npm//@types/jasmine",
-    ],
-)
-
-jasmine_node_test(
-    name = "patch_test",
-    deps = [
-        "patch_test_lib",
-    ],
-)
-
-ts_project(
     name = "locale_test_lib",
     testonly = True,
     srcs = [
