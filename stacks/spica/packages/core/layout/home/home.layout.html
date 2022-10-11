@@ -79,17 +79,54 @@
             </ng-container>
           </div>
         </h4>
-        <mat-list-item
-          *ngFor="let route of routes$ | async"
-          [routerLink]="route.path"
-          routerLinkActive="active"
-          [queryParams]="route.queryParams"
-          [class]="route.customClass"
-          (click)="setTitle(route.display)"
-        >
-          <mat-icon>{{ route.icon }}</mat-icon>
-          {{ route.display }}
-        </mat-list-item>
+        <ng-container *ngFor="let routes of sortedByCategory( (routes$ | async) |keyvalue)">
+          <ng-container *ngIf="routes.key!=categoryService.EMPTY_CATEGORY_KEYWORD">
+            <mat-accordion>
+              <mat-expansion-panel
+                (closed)="categoryExpandStatus[routes.key]=false"
+                (opened)="categoryExpandStatus[routes.key] = true"
+                [expanded]="categoryExpandStatus[routes.key]||false"
+                class="mat-elevation-z0"
+              >
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <span class="route-title"> {{ routes.key}}</span>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <ng-container
+                  *ngTemplateOutlet="
+                routeItemList;
+                context: {items: routes.value}
+              "
+                >
+                </ng-container>
+              </mat-expansion-panel>
+            </mat-accordion>
+          </ng-container>
+          <ng-container *ngIf="routes.key==categoryService.EMPTY_CATEGORY_KEYWORD">
+            <ng-container
+              *ngTemplateOutlet="
+            routeItemList;
+            context: {items: routes.value}
+          "
+            >
+            </ng-container>
+          </ng-container>
+        </ng-container>
+
+        <ng-template #routeItemList let-items="items">
+          <mat-list-item
+            [routerLink]="route.path"
+            routerLinkActive="active"
+            [queryParams]="route.queryParams"
+            [class]="route.customClass"
+            (click)="setTitle(route.display)"
+            *ngFor="let route of items"
+          >
+            <mat-icon>{{ route.icon }}</mat-icon>
+            {{ route.display }}
+          </mat-list-item>
+        </ng-template>
       </mat-nav-list>
     </section>
   </mat-sidenav>

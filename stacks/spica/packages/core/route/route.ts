@@ -4,8 +4,8 @@ import {Observable} from "rxjs";
 export enum RouteCategory {
   Dashboard = "Dashboard",
   Primary = "Primary",
+  Developer = "Function",
   Content = "Bucket",
-  Developer = "Developer Area",
   System = "Access Management",
   Webhook = "Webhook",
 
@@ -28,6 +28,7 @@ export interface Route {
   index?: number;
   displayType?: string;
   customClass?: string;
+  resource_category?: string;
 }
 
 export interface RouteFilter {

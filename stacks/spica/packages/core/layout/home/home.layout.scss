@@ -62,12 +62,6 @@
             border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
           }
         }
-        [category="buckets"] {
-          mat-list-item:last-of-type {
-            border-top: 1px dashed rgba(255, 255, 255, 0.2);
-            border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
-          }
-        }
         .dashed-item {
           border-top: 1px dashed rgba(255, 255, 255, 0.2);
           border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
@@ -160,6 +154,40 @@
                 border-top: 1px dashed rgba(255, 255, 255, 0.3);
                 border-bottom: 1px dashed rgba(255, 255, 255, 0.3);
               }
+            }
+          }
+        }
+        mat-accordion {
+          mat-expansion-panel {
+            margin: 0 2px;
+            background: transparent;
+            box-shadow: 0px 10px 10px -3px rgb(0 0 0 / 10%);
+          }
+          ::ng-deep {
+            mat-expansion-panel-header {
+              padding-left: 6px;
+              mat-panel-title {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                color: white;
+                .route-title {
+                  overflow: hidden;
+                  white-space: nowrap;
+                  text-overflow: ellipsis;
+                  width: 0px;
+                  min-width: 80%;
+                  margin-left: 4px;
+                }
+              }
+              .mat-expansion-indicator {
+                &::after {
+                  color: white;
+                }
+              }
+            }
+            .mat-expansion-panel-body {
+              padding: 0 6px 10px;
             }
           }
         }

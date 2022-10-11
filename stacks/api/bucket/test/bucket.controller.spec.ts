@@ -177,27 +177,55 @@ describe("BucketController", () => {
       expect(buckets[0]).toEqual(updatedBucket);
     });
 
-    it("should update bucket indexes", async () => {
+    it("should update patch buckets", async () => {
       const {body: firstBucket} = await req.post("/bucket", {...bucket, title: "First Bucket"});
       const {body: secondBucket} = await req.post("/bucket", {...bucket2, title: "Second Bucket"});
 
       await req.patch(
         `/bucket/${firstBucket._id}`,
-        {order: 2},
+        {order: 2, category: "cat1"},
         {
           "content-type": "application/merge-patch+json"
         }
       );
       await req.patch(
         `/bucket/${secondBucket._id}`,
-        {order: 1},
+        {order: 1, category: "cat2"},
         {
           "content-type": "application/merge-patch+json"
         }
       );
 
       const {body: buckets} = await req.get("/bucket");
-      expect(buckets.map(bucket => bucket.title)).toEqual(["Second Bucket", "First Bucket"]);
+      expect(
+        buckets.map(bucket => {
+          return {title: bucket.title, category: bucket.category, order: bucket.order};
+        })
+      ).toEqual([
+        {
+          title: "Second Bucket",
+          category: "cat2",
+          order: 1
+        },
+        {
+          title: "First Bucket",
+          category: "cat1",
+          order: 2
+        }
+      ]);
+
+      await req.patch(
+        `/bucket/${secondBucket._id}`,
+        {order: null, category: null},
+        {
+          "content-type": "application/merge-patch+json"
+        }
+      );
+
+      const patchedBucket = await req.get(`/bucket/${secondBucket._id}`).then(r => r.body);
+
+      expect(patchedBucket.order).toBeUndefined();
+      expect(patchedBucket.category).toBeUndefined();
     });
   });
 
