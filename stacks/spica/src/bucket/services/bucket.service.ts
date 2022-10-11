@@ -63,9 +63,7 @@ export class BucketService {
       .patch<Bucket>(`api:/bucket/${id}`, changes, {
         headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
       })
-      .pipe(
-        tap(updatedDocument => this.store.dispatch(new fromBucket.Update(id, updatedDocument)))
-      );
+      .pipe(tap(_ => this.store.dispatch(new fromBucket.Update(id, changes))));
   }
 
   patchIndexes(buckets: Bucket[]): Promise<Bucket[]> {

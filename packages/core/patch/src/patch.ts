@@ -1,19 +1,15 @@
-import {BucketDocument} from "@spica-server/bucket/services";
 import JsonMergePatch = require("json-merge-patch");
 
-export function applyPatch(previousDocument: BucketDocument, patchQuery: object) {
+export function applyPatch(previousDocument: object, patchQuery: object) {
   const document = deepCopy(previousDocument);
   return JsonMergePatch.apply(document, patchQuery);
 }
 
-export function getUpdateQueryForPatch(
-  query: Partial<BucketDocument>,
-  patchedDocument: BucketDocument
-) {
+export function getUpdateQueryForPatch(query: Partial<object>, patchedDocument: object) {
   const unset = {};
   const set = {};
 
-  const visit = (partialPatch: any, base: string, patchedDocument: BucketDocument) => {
+  const visit = (partialPatch: any, base: string, patchedDocument: object) => {
     for (const name in partialPatch) {
       const target = base ? `${base}.${name}` : name;
       const key = name;
@@ -29,7 +25,7 @@ export function getUpdateQueryForPatch(
           type == "number" ||
           type == "bigint" ||
           Array.isArray(patchValue)) &&
-        // if patched document does not include this patch query field, it means this field is non existing bucket schema field
+        // if patched document does not include this patch query field, it means this field is non existing schema field
         Object.keys(patchedDocument).includes(key)
       ) {
         // patch query does not include some special types like date-string, but patched document does
@@ -59,6 +55,6 @@ export function getUpdateQueryForPatch(
   return result;
 }
 
-export function deepCopy(value: unknown) {
+export function deepCopy(value: object) {
   return JSON.parse(JSON.stringify(value));
 }
