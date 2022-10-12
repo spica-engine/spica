@@ -8,6 +8,7 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {CardComponent} from "./card.component";
 import {FormsModule} from "@angular/forms";
 import {PassportService} from "@spica-client/passport";
+import {HttpClientTestingModule, HttpTestingController} from "@angular/common/http/testing";
 
 // @TODO: put here better tests after found a way to check the request which created by html form (queryParams, body etc.)
 describe("CardComponent", () => {
@@ -15,6 +16,8 @@ describe("CardComponent", () => {
   let fixture: ComponentFixture<CardComponent>;
 
   let dashboardComponent;
+
+  let httpTestingController: HttpTestingController;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -25,7 +28,8 @@ describe("CardComponent", () => {
         MatButtonModule,
         InputModule.withPlacers([]),
         FormsModule,
-        NoopAnimationsModule
+        NoopAnimationsModule,
+        HttpClientTestingModule
       ],
       providers: [
         {
@@ -38,6 +42,8 @@ describe("CardComponent", () => {
         }
       ]
     }).compileComponents();
+
+    httpTestingController = TestBed.get(HttpTestingController);
 
     dashboardComponent = {
       title: "Title of this dashboard component",
@@ -54,6 +60,12 @@ describe("CardComponent", () => {
           type: "string",
           value: "Bestseller car of this year has been announced..",
           title: "Message"
+        },
+        {
+          key: "year",
+          type: "number",
+          value: 2000,
+          title: "Year of this new"
         }
       ],
       button: {
@@ -108,5 +120,26 @@ describe("CardComponent", () => {
     fixture.detectChanges();
 
     expect(submitSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("should send post request with json body", () => {
+    dashboardComponent.button.method = "post";
+    dashboardComponent.button.enctype = "application/json";
+
+    fixture.detectChanges();
+
+    fixture.debugElement.nativeElement.querySelector("mat-card-actions > button").click();
+
+    fixture.detectChanges();
+
+    const testreq = httpTestingController.expectOne("dummy_url");
+    expect(testreq.request.method).toEqual("POST");
+    expect(testreq.request.headers.get("Authorization")).toEqual("access_token");
+    expect(testreq.request.body).toEqual({
+      topic: "Cars",
+      message: "Bestseller car of this year has been announced..",
+      // it should be sent as number
+      year: 2000
+    });
   });
 });

@@ -35,8 +35,11 @@ export class DashboardService {
   }
 
   update(dashboard: Dashboard) {
+    const id = dashboard._id;
+    delete dashboard._id;
+
     return this.http
-      .put<Dashboard>(`api:/dashboard/${dashboard._id}`, dashboard)
+      .put<Dashboard>(`api:/dashboard/${id}`, dashboard)
       .pipe(
         tap(updatedDashboard =>
           this.store.dispatch(new fromDashboard.Update(dashboard._id, updatedDashboard))
