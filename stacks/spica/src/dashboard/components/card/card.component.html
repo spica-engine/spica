@@ -54,7 +54,11 @@
       <input type="hidden" name="authorization" [value]="token" />
     </mat-card-content>
     <mat-card-actions>
-      <button [color]="componentData.button.color" mat-flat-button (click)="form.submit()">
+      <button
+        [color]="componentData.button.color"
+        mat-flat-button
+        (click)="submit(form, componentData.inputs, componentData.button)"
+      >
         {{ componentData.button.title }}
       </button>
     </mat-card-actions>
