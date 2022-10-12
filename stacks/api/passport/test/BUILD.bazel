@@ -5,10 +5,10 @@ package(default_visibility = ["//visibility:public"])
 load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
 ts_project(
-    name = "sso_e2e_test_lib",
+    name = "e2e_test_lib",
     testonly = True,
     srcs = [
-        "sso.e2e.spec.ts",
+        "e2e.spec.ts",
     ],
     deps = [
         "//packages/core/schema",
@@ -24,14 +24,17 @@ ts_project(
         "@npm//@nestjs/jwt",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
+        "@npm//jsqr",
+        "@npm//pngjs",
         "@npm//samlp",
+        "@npm//speakeasy",
         "@npm//xpath",
     ],
 )
 
 jasmine_node_test(
-    name = "sso_e2e_test",
+    name = "e2e_test",
     deps = [
-        ":sso_e2e_test_lib",
+        ":e2e_test_lib",
     ],
 )
