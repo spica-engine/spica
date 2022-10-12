@@ -26,6 +26,19 @@
           },
           "required": ["login_url", "certificate"],
           "additionalProperties": false
+        },
+        "sp": {
+          "type": "object",
+          "properties": {
+            "certificate": {
+              "type": "string",
+              "title": "Certificate of the service provider that encrypted in SHA-1 signature algorithm"
+            },
+            "private_key": {
+              "type": "string",
+              "title": "Private key of service provider"
+            }
+          }
         }
       },
       "required": ["ip"],

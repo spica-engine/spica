@@ -86,12 +86,14 @@ export class StrategyController {
       throw new BadRequestException(error);
     }
 
-    let insertedStrategy = await this.strategy.findOneAndReplace({_id: id}, strategy);
+    let updatedStrategy = await this.strategy.findOneAndReplace({_id: id}, strategy, {
+      returnOriginal: false
+    });
 
     if (service.afterInsert) {
-      insertedStrategy = await service.afterInsert(insertedStrategy);
+      updatedStrategy = await service.afterInsert(updatedStrategy);
     }
 
-    return insertedStrategy;
+    return updatedStrategy;
   }
 }

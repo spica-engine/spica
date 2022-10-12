@@ -177,6 +177,8 @@ describe("SSO E2E Test", () => {
     let req: Request;
     let app: INestApplication;
 
+    let token: string;
+
     beforeEach(async () => {
       const module = await Test.createTestingModule({
         controllers: [SAMLController],
@@ -218,12 +220,12 @@ describe("SSO E2E Test", () => {
       await new Promise((resolve, _) => setTimeout(resolve, 3000));
 
       // STRATEGY INSERT
-      const {
-        body: {token}
-      } = await req.post("/passport/identify", {
-        identifier: "spica",
-        password: "spica"
-      });
+      token = await req
+        .post("/passport/identify", {
+          identifier: "spica",
+          password: "spica"
+        })
+        .then(r => r.body.token);
       const strategy = {
         type: "saml",
         name: "strategy1",
@@ -239,7 +241,7 @@ describe("SSO E2E Test", () => {
       await req.post("/passport/strategy", strategy, {Authorization: `IDENTITY ${token}`});
     }, 20_000);
 
-    it("should list strategies", async () => {
+    it("should list strategies with public properties", async () => {
       const {body: strategies} = await req.get("/passport/strategies");
       expect(strategies).toEqual([
         {
@@ -250,6 +252,59 @@ describe("SSO E2E Test", () => {
           icon: "login"
         }
       ]);
+    });
+
+    it("should list strategies with private properties", async () => {
+      const {body: strategies} = await req.get(
+        "/passport/strategy",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`
+        }
+      );
+
+      const sp = strategies[0].options.sp;
+      delete strategies[0].options.sp;
+
+      expect(strategies).toEqual([
+        {
+          _id: "__objectid__",
+          type: "saml",
+          name: "strategy1",
+          title: "strategy1",
+          icon: "login",
+          options: {
+            ip: {
+              login_url: "/idp/login",
+              logout_url: "/idp/logout",
+              certificate: CERTIFICATE
+            }
+          }
+        }
+      ]);
+      expect(sp.certificate).toBeDefined();
+      expect(sp.private_key).toBeDefined();
+    });
+
+    it("should update strategy", async () => {
+      const {body: strategies} = await req.get(
+        "/passport/strategy",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`
+        }
+      );
+
+      const id = strategies[0]._id;
+      delete strategies[0]._id;
+
+      strategies[0].title = "new strategy title";
+
+      const {body: updatedStrategy} = await req.put(`/passport/strategy/${id}`, strategies[0], {
+        Authorization: `IDENTITY ${token}`
+      });
+
+      expect(updatedStrategy).toEqual({...strategies[0], _id: id});
     });
 
     it("should get strategy login url", async () => {
