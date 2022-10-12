@@ -385,8 +385,8 @@ describe("FilterComponent", () => {
       fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
       fixture.detectChanges();
 
-      expect(fixture.debugElement.query(By.css("p.mat-error")).nativeElement.textContent).toEqual(
-        "SyntaxError: Unexpected end of JSON input"
+      expect(fixture.debugElement.query(By.css("p.mat-error")).nativeElement.textContent).toContain(
+        "SyntaxError"
       );
 
       expect(fixture.componentInstance.filter).toEqual(undefined);
