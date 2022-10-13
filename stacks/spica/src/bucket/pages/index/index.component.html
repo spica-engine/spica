@@ -265,37 +265,38 @@
               mat-cell
               *matCellDef="let row"
               [ngClass]="{editable: nonEditableTypes.indexOf(property.value.type) == -1}"
-              canInteract="bucket:data:update"
               [resource]="schema._id + '/' + row._id"
               (click)="enableEditMode(row._id, property)"
             >
-              <span
-                *ngIf="editingCellId != getEditingCellId(row._id, property.key)"
-                class="cell"
-                [innerHTML]="buildTemplate(row[property.key], property.value, property.key)"
-              ></span>
-              <span
-                [attr.id]="row._id + '_' + property.key"
-                #model="ngModel"
-                *ngIf="editingCellId == getEditingCellId(row._id, property.key)"
-                class="input-placer"
-                [inputPlacer]="property.value"
-                [minimal]="true"
-                [(ngModel)]="row[property.key]"
-                (keydown.enter)="
-                  patchBucketData(schema._id, row._id, property.key, row[property.key]);
-                  editingCellId = ''
-                "
-                (keydown.esc)="
-                  revertEditModeChanges(row._id, property.key, model); editingCellId = ''
-                "
-                (keydown.tab)="
-                  patchBucketData(schema._id, row._id, property.key, row[property.key]);
-                  editingCellId = '';
-                  editNext(row._id, property.key)
-                "
-              >
-              </span>
+              <div canInteract="bucket:data:update">
+                <span
+                  *ngIf="editingCellId != getEditingCellId(row._id, property.key)"
+                  class="cell"
+                  [innerHTML]="buildTemplate(row[property.key], property.value, property.key)"
+                ></span>
+                <span
+                  [attr.id]="row._id + '_' + property.key"
+                  #model="ngModel"
+                  *ngIf="editingCellId == getEditingCellId(row._id, property.key)"
+                  class="input-placer"
+                  [inputPlacer]="property.value"
+                  [minimal]="true"
+                  [(ngModel)]="row[property.key]"
+                  (keydown.enter)="
+                    patchBucketData(schema._id, row._id, property.key, row[property.key]);
+                    editingCellId = ''
+                  "
+                  (keydown.esc)="
+                    revertEditModeChanges(row._id, property.key, model); editingCellId = ''
+                  "
+                  (keydown.tab)="
+                    patchBucketData(schema._id, row._id, property.key, row[property.key]);
+                    editingCellId = '';
+                    editNext(row._id, property.key)
+                  "
+                >
+                </span>
+              </div>
             </td>
           </ng-container>
         </ng-container>

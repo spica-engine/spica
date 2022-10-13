@@ -75,7 +75,7 @@ describe("LogViewComponent", () => {
               ]);
             },
             clearLogs: () => {
-              return of(undefined);
+              return of(true);
             },
             checkRealtimeLogConnectivity: () => {
               return of(true);
@@ -132,7 +132,7 @@ describe("LogViewComponent", () => {
   });
 
   it("should clear logs", () => {
-    let clearSpy = spyOn(fixture.componentInstance["fs"], "clearLogs");
+    let clearSpy = spyOn(fixture.componentInstance["fs"], "clearLogs").and.callThrough();
     fixture.componentInstance.clearLogs();
     expect(clearSpy).toHaveBeenCalledTimes(1);
     expect(clearSpy).toHaveBeenCalledWith("fn_id");
