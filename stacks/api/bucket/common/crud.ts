@@ -20,6 +20,8 @@ import {
   DatabaseException,
   ForbiddenException
 } from "./exception";
+import {IAuthResolver} from "./interface";
+import {categorizePropertyMap} from "./helpers";
 
 interface CrudOptions<Paginate> {
   schedule?: boolean;
@@ -44,6 +46,7 @@ export interface CrudFactories<T> {
   collection: (schema: Bucket) => BaseCollection<T>;
   preference: () => Promise<BucketPreferences>;
   schema: (id: string | ObjectId) => Promise<Bucket>;
+  authResolver: IAuthResolver;
 }
 
 export interface CrudPagination<T> {
@@ -169,6 +172,7 @@ export async function insertDocument(
     collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
     deleteOne: (documentId: ObjectId) => Promise<void>;
+    authResolver: IAuthResolver;
   }
 ) {
   const collection = factories.collection(schema);
@@ -179,7 +183,8 @@ export async function insertDocument(
     // unlike others, we have to run this pipeline against buckets in case the target
     // collection is empty.
     collection.collection("buckets"),
-    params.req.user
+    params.req.user,
+    factories.authResolver
   );
 
   if (
@@ -208,6 +213,7 @@ export async function replaceDocument(
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
+    authResolver: IAuthResolver;
   },
   options: {
     returnOriginal: boolean;
@@ -215,7 +221,14 @@ export async function replaceDocument(
 ) {
   const collection = factories.collection(schema);
 
-  await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
+  await executeWriteRule(
+    schema,
+    factories.schema,
+    document,
+    collection,
+    params.req.user,
+    factories.authResolver
+  );
 
   const documentId = document._id;
   delete document._id;
@@ -237,6 +250,7 @@ export async function patchDocument(
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
+    authResolver: IAuthResolver;
   },
   options: {
     returnOriginal: boolean;
@@ -244,7 +258,14 @@ export async function patchDocument(
 ) {
   const collection = factories.collection(schema);
 
-  await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
+  await executeWriteRule(
+    schema,
+    factories.schema,
+    document,
+    collection,
+    params.req.user,
+    factories.authResolver
+  );
 
   delete patch._id;
 
@@ -266,6 +287,7 @@ export async function deleteDocument(
   factories: {
     collection: (schema: Bucket) => BaseCollection<BucketDocument>;
     schema: (schema: string | ObjectId) => Promise<Bucket>;
+    authResolver: IAuthResolver;
   }
 ) {
   const collection = factories.collection(schema);
@@ -276,7 +298,14 @@ export async function deleteDocument(
     return;
   }
 
-  await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
+  await executeWriteRule(
+    schema,
+    factories.schema,
+    document,
+    collection,
+    params.req.user,
+    factories.authResolver
+  );
 
   const deletedCount = await collection.deleteOne({_id: document._id});
 
@@ -290,30 +319,41 @@ async function executeWriteRule(
   resolve: (id: string) => Promise<Bucket>,
   document: BucketDocument,
   collection: BaseCollection<unknown>,
-  auth: object
+  auth: object,
+  authResolver: IAuthResolver
 ) {
-  let paths;
+  let propertyMap = [];
 
   try {
-    paths = expression.extractPropertyMap(schema.acl.write).map(path => path.split("."));
+    propertyMap = expression.extractPropertyMap(schema.acl.write);
   } catch (error) {
     throw new ACLSyntaxException(error.message);
   }
 
-  const relationMap = await createRelationMap({
+  const {authPropertyMap, documentPropertyMap} = categorizePropertyMap(propertyMap);
+
+  const authRelationMap = await createRelationMap({
+    paths: authPropertyMap,
+    properties: authResolver.getProperties(),
+    resolve: resolve
+  });
+  const authRelationStage = getRelationPipeline(authRelationMap, undefined);
+  auth = await authResolver.resolveRelations(auth, authRelationStage);
+
+  const documentRelationMap = await createRelationMap({
     properties: schema.properties,
-    paths,
+    paths: documentPropertyMap,
     resolve
   });
 
-  const relationStage = getRelationPipeline(relationMap, undefined);
+  const documentRelationStage = getRelationPipeline(documentRelationMap, undefined);
 
   const aggregation = [
     {$limit: 1},
     {
       $replaceWith: {$literal: document}
     },
-    ...relationStage
+    ...documentRelationStage
   ];
 
   const fullDocument = await collection

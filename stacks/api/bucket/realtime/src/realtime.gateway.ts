@@ -1,4 +1,4 @@
-import {Optional} from "@nestjs/common";
+import {Inject, Optional} from "@nestjs/common";
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -15,7 +15,9 @@ import {
   deleteDocument,
   clearRelations,
   getDependents,
-  authIdToString
+  authIdToString,
+  AUTH_RESOLVER,
+  IAuthResolver
 } from "@spica-server/bucket/common";
 import * as expression from "@spica-server/bucket/expression";
 import {aggregate} from "@spica-server/bucket/expression";
@@ -50,6 +52,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private bucketService: BucketService,
     private bucketDataService: BucketDataService,
     private validator: Validator,
+    @Inject(AUTH_RESOLVER) private authResolver: IAuthResolver,
     @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService,
     @Optional() private hookEmitter: ChangeEmitter,
@@ -148,7 +151,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         {
           collection: schema => this.bucketDataService.children(schema),
           schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)}),
-          deleteOne: id => this.delete(client, {_id: id})
+          deleteOne: id => this.delete(client, {_id: id}),
+          authResolver: this.authResolver
         }
       );
     } catch (error) {
@@ -215,7 +219,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         {req: client.upgradeReq},
         {
           collection: schema => this.bucketDataService.children(schema),
-          schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)})
+          schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)}),
+          authResolver: this.authResolver
         }
       );
     } catch (error) {
@@ -314,7 +319,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         {req: client.upgradeReq},
         {
           collection: schema => this.bucketDataService.children(schema),
-          schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)})
+          schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)}),
+          authResolver: this.authResolver
         },
         {returnOriginal: false}
       );
@@ -387,7 +393,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         {req: client.upgradeReq},
         {
           collection: schema => this.bucketDataService.children(schema),
-          schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)})
+          schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)}),
+          authResolver: this.authResolver
         }
       );
     } catch (error) {

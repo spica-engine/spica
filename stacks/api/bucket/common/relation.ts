@@ -86,15 +86,12 @@ export async function createRelationMap(options: RelationMapOptions): Promise<Re
   const visit = async (
     properties: object,
     paths: string[][],
-    depth: number
+    depth: number,
+    prefix?: string
   ): Promise<RelationMap[]> => {
     const maps: RelationMap[] = [];
 
     for (const [propertyKey, propertySpec] of Object.entries(properties)) {
-      if (propertySpec.type != "relation") {
-        continue;
-      }
-
       const matchingPaths = paths.filter(
         segments =>
           segments[depth] == propertyKey &&
@@ -106,12 +103,30 @@ export async function createRelationMap(options: RelationMapOptions): Promise<Re
         continue;
       }
 
+      if (propertySpec.type == "object") {
+        prefix = prefix ? prefix + "." + propertyKey : propertyKey;
+        const objectRelations = await visit(
+          propertySpec.properties,
+          matchingPaths,
+          depth + 1,
+          prefix
+        );
+        maps.push(...objectRelations);
+        continue;
+      }
+
+      if (propertySpec.type != "relation") {
+        continue;
+      }
+
       const schema = await options.resolve(propertySpec.bucketId);
 
       const children = await visit(schema.properties, matchingPaths, depth + 1);
 
+      const path = prefix ? prefix + "." + propertyKey : propertyKey;
+
       maps.push({
-        path: propertyKey,
+        path,
         target: propertySpec.bucketId,
         type: propertySpec.relationType,
         children: children.length ? children : undefined

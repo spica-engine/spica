@@ -991,7 +991,7 @@ describe("BucketDataController", () => {
               ...statisticsBucket,
               acl: {
                 write: "true==true",
-                read: `user._id=='${user._id}'`
+                read: `document.user._id=='${user._id}'`
               }
             });
 

@@ -11,6 +11,7 @@ import {
   RelationMap
 } from "./relation";
 import {extractFilterPropertyMap, replaceFilterObjectIds} from "@spica-server/bucket/services";
+import {categorizePropertyMap} from "./helpers";
 
 export interface iPipelineBuilder {
   attachToPipeline(condition: any, ...attachedObject: object[]): this;
@@ -22,7 +23,7 @@ export interface iPipelineBuilder {
     language: string,
     callback?: (locale: Locale) => void
   ): Promise<this>;
-  rules(userId: string, callback?: (arg0: string[][], arg1: RelationMap[]) => void): Promise<this>;
+  rules(user: any, callback?: (arg0: string[][], arg1: RelationMap[]) => void): Promise<this>;
   filterByUserRequest(filterByUserRequest: string | object): Promise<this>;
   resolveRelationPath(
     relationPaths: string[][],
@@ -102,23 +103,30 @@ export class PipelineBuilder implements iPipelineBuilder {
   }
 
   async rules(
-    userId: string,
+    user: any,
     callback?: (arg0: string[][], arg1: RelationMap[]) => void
   ): Promise<this> {
     this.isRuleFilteringDocuments = !this.areRulesSame(this.schema.acl.read, this.defaultRule);
 
-    const rulePropertyMap = expression
-      .extractPropertyMap(this.schema.acl.read)
-      .map(path => path.split("."));
+    const propertyMap = expression.extractPropertyMap(this.schema.acl.read);
+    const {documentPropertyMap, authPropertyMap} = categorizePropertyMap(propertyMap);
 
-    const ruleRelationMap = await this.buildRelationMap(rulePropertyMap);
-    const ruleRelationStage = getRelationPipeline(ruleRelationMap, this.locale);
-    const ruleExpression = expression.aggregate(this.schema.acl.read, {auth: userId});
+    const authRelationMap = await createRelationMap({
+      paths: authPropertyMap,
+      properties: this.factories.authResolver.getProperties(),
+      resolve: this.factories.schema
+    });
+    const authRelationStage = getRelationPipeline(authRelationMap, undefined);
+    user = await this.factories.authResolver.resolveRelations(user, authRelationStage);
 
-    this.attachToPipeline(true, ...ruleRelationStage);
+    const documentRelationMap = await this.buildRelationMap(documentPropertyMap);
+    const documentRelationStage = getRelationPipeline(documentRelationMap, this.locale);
+    const ruleExpression = expression.aggregate(this.schema.acl.read, {auth: user});
+
+    this.attachToPipeline(true, ...documentRelationStage);
     this.attachToPipeline(true, {$match: ruleExpression});
 
-    callback(rulePropertyMap, ruleRelationMap);
+    callback(documentPropertyMap, documentRelationMap);
     return this;
   }
 
@@ -138,9 +146,7 @@ export class PipelineBuilder implements iPipelineBuilder {
         filterPropertyMap = extractFilterPropertyMap(filterByUserRequest);
         filterExpression = filterByUserRequest;
       } else if (typeof filterByUserRequest == "string") {
-        filterPropertyMap = expression
-          .extractPropertyMap(filterByUserRequest)
-          .map(path => path.split("."));
+        filterPropertyMap = expression.extractPropertyMap(filterByUserRequest);
         filterExpression = expression.aggregate(filterByUserRequest, {});
       }
 

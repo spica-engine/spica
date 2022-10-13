@@ -21,7 +21,6 @@ export class IdentitySettingsComponent implements OnInit {
   selectedInput: string;
 
   forbiddenTypes = [
-    "relation",
     "date",
     "storage",
     "location",

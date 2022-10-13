@@ -13,6 +13,8 @@ import {registerStatusProvider} from "./status";
 import IdentitySchema = require("./schemas/identity.json");
 import IdentityCreateSchema = require("./schemas/identity-create.json");
 import AuthFactorSchema = require("./schemas/authfactor.json");
+import {AuthResolver} from "./relation";
+import {AUTH_RESOLVER} from "@spica-server/bucket/common";
 
 @Global()
 @Module({})
@@ -39,7 +41,8 @@ export class IdentityModule {
         IdentityService,
         IdentityStrategy,
         IDENTITY_SETTINGS_FINALIZER,
-        IDENTITY_POLICY_FINALIZER
+        IDENTITY_POLICY_FINALIZER,
+        AUTH_RESOLVER
       ],
       imports: [
         JwtModule.register({
@@ -51,7 +54,13 @@ export class IdentityModule {
         }),
         SchemaModule.forChild({
           schemas: [IdentitySchema, IdentityCreateSchema, AuthFactorSchema],
-          customFields: ["options"]
+          customFields: [
+            "options",
+            // relation
+            "bucketId",
+            "relationType"
+            // "dependent"
+          ]
         })
       ],
       providers: [
@@ -80,6 +89,11 @@ export class IdentityModule {
           provide: POLICY_PROVIDER,
           useFactory: PolicyProviderFactory,
           inject: [PolicyService]
+        },
+        {
+          provide: AUTH_RESOLVER,
+          useFactory: (i, p) => new AuthResolver(i, p),
+          inject: [IdentityService, PreferenceService]
         }
       ]
     };
