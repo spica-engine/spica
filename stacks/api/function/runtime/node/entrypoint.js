@@ -198,6 +198,7 @@ async function _process(ev, queue) {
     module = module.default; // Do not ask me why
   }
 
+  registerLogger();
   try {
     // Call the function
     if (!(ev.target.handler in module)) {
@@ -224,6 +225,7 @@ async function _process(ev, queue) {
 
     console.error(e);
   }
+  unregisterLogger();
 }
 
 function exitAbnormally(reason) {
@@ -231,4 +233,30 @@ function exitAbnormally(reason) {
     console.error(reason);
   }
   process.exit(126);
+}
+
+const actualConsoleMethods = [];
+
+function registerLogger() {
+  const methods = ["debug", "log", "info", "warn", "error"];
+
+  for (const method of methods) {
+    const actual = console[method];
+    actualConsoleMethods.push({name: method, implementation: actual});
+
+    console[method] = (...params) => {
+      params[0] = JSON.stringify({
+        msg: params[0],
+        channel: method
+      });
+
+      return actual.bind(console)(...params);
+    };
+  }
+}
+
+function unregisterLogger() {
+  for (const method of actualConsoleMethods) {
+    console[method.name] = method.implementation;
+  }
 }

@@ -13,14 +13,23 @@ export class DatabaseOutput extends StandartStream {
     const createTransform = (channel: "stderr" | "stdout") => {
       return new Transform({
         transform: (data, _, callback) => {
+          let msg: any = Buffer.from(data).toString();
+
+          try {
+            const parsedData = JSON.parse(msg);
+            channel = parsedData.channel;
+            msg = parsedData.msg;
+          } catch (e) {
+            console.log(msg);
+            console.log(e);
+          }
+
           this.collection
             .insertOne({
               function: options.functionId,
               event_id: options.eventId,
               channel,
-              content: Buffer.from(data)
-                .toString()
-                .trim(),
+              content: msg,
               created_at: new Date()
             })
             .then(() => callback(undefined, data))
