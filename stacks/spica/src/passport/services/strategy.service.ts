@@ -15,6 +15,7 @@ export class StrategyService {
   }
 
   updateStrategy(id: string, strategy: Strategy) {
+    delete strategy._id;
     return this.http.put<Strategy>(`api:/passport/strategy/${id}`, strategy);
   }
 
