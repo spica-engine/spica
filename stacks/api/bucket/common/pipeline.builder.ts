@@ -47,6 +47,9 @@ export class PipelineBuilder implements iPipelineBuilder {
   private usedRelationPaths: string[] = [];
   private locale: Locale;
 
+  private defaultRule = "true==true";
+  private isRuleFilteringDocuments: boolean;
+
   constructor(schema: Bucket, factories: CrudFactories<any>) {
     this.schema = schema;
     this.factories = factories;
@@ -92,10 +95,18 @@ export class PipelineBuilder implements iPipelineBuilder {
     }
     return this;
   }
+
+  private areRulesSame(rule1: string, rule2: string) {
+    const removeSpaceAndNewlines = (str: string) => str.replace(/[ |\n]/g, "");
+    return removeSpaceAndNewlines(rule1) == removeSpaceAndNewlines(rule2);
+  }
+
   async rules(
     userId: string,
     callback?: (arg0: string[][], arg1: RelationMap[]) => void
   ): Promise<this> {
+    this.isRuleFilteringDocuments = !this.areRulesSame(this.schema.acl.read, this.defaultRule);
+
     const rulePropertyMap = expression
       .extractPropertyMap(this.schema.acl.read)
       .map(path => path.split("."));
@@ -204,7 +215,7 @@ export class PipelineBuilder implements iPipelineBuilder {
         }
       ];
 
-      meta = this.isFilterApplied ? filteredsLength : totalLength;
+      meta = this.isFilterApplied || this.isRuleFilteringDocuments ? filteredsLength : totalLength;
 
       this.pipeline.push(
         {
