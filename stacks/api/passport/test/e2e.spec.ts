@@ -257,7 +257,7 @@ describe("E2E Tests", () => {
         await req.post("/passport/strategy", strategy, {Authorization: `IDENTITY ${token}`});
       }, 20_000);
 
-      it("should list strategies", async () => {
+      it("should list strategies with public properties", async () => {
         const {body: strategies} = await req.get("/passport/strategies");
         expect(strategies).toEqual([
           {
@@ -268,6 +268,59 @@ describe("E2E Tests", () => {
             icon: "login"
           }
         ]);
+      });
+
+      it("should list strategies with private properties", async () => {
+        const {body: strategies} = await req.get(
+          "/passport/strategy",
+          {},
+          {
+            Authorization: `IDENTITY ${token}`
+          }
+        );
+
+        const sp = strategies[0].options.sp;
+        delete strategies[0].options.sp;
+
+        expect(strategies).toEqual([
+          {
+            _id: "__objectid__",
+            type: "saml",
+            name: "strategy1",
+            title: "strategy1",
+            icon: "login",
+            options: {
+              ip: {
+                login_url: "/idp/login",
+                logout_url: "/idp/logout",
+                certificate: CERTIFICATE
+              }
+            }
+          }
+        ]);
+        expect(sp.certificate).toBeDefined();
+        expect(sp.private_key).toBeDefined();
+      });
+
+      it("should update strategy", async () => {
+        const {body: strategies} = await req.get(
+          "/passport/strategy",
+          {},
+          {
+            Authorization: `IDENTITY ${token}`
+          }
+        );
+
+        const id = strategies[0]._id;
+        delete strategies[0]._id;
+
+        strategies[0].title = "new strategy title";
+
+        const {body: updatedStrategy} = await req.put(`/passport/strategy/${id}`, strategies[0], {
+          Authorization: `IDENTITY ${token}`
+        });
+
+        expect(updatedStrategy).toEqual({...strategies[0], _id: id});
       });
 
       it("should get strategy login url", async () => {
