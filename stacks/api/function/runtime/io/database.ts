@@ -19,10 +19,7 @@ export class DatabaseOutput extends StandartStream {
             const parsedData = JSON.parse(msg);
             channel = parsedData.channel;
             msg = parsedData.msg;
-          } catch (e) {
-            console.log(msg);
-            console.log(e);
-          }
+          } catch (e) {}
 
           this.collection
             .insertOne({

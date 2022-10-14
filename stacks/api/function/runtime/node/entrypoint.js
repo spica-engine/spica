@@ -229,6 +229,7 @@ async function _process(ev, queue) {
 }
 
 function exitAbnormally(reason) {
+  unregisterLogger();
   if (reason) {
     console.error(reason);
   }
@@ -237,7 +238,17 @@ function exitAbnormally(reason) {
 
 const actualConsoleMethods = [];
 
+function registerConsoleWarn() {
+  const actual = console.warn;
+
+  console.warn = (...args) => {
+    console.log("HELLO",args);
+    return actual.bind(console)(...args);
+  };
+}
+
 function registerLogger() {
+  return registerConsoleWarn();
   const methods = ["debug", "log", "info", "warn", "error"];
 
   for (const method of methods) {
@@ -245,10 +256,7 @@ function registerLogger() {
     actualConsoleMethods.push({name: method, implementation: actual});
 
     console[method] = (...params) => {
-      params[0] = JSON.stringify({
-        msg: params[0],
-        channel: method
-      });
+      process.send(method, params[0]);
 
       return actual.bind(console)(...params);
     };

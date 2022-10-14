@@ -13,14 +13,11 @@ class NodeWorker extends Worker {
 
   constructor(options: SpawnOptions) {
     super();
-    this._process = child_process.spawn(
-      `node`,
-      [
-        "--es-module-specifier-resolution=node",
-        path.join(__dirname, "runtime", "entrypoint", "bootstrap")
-      ],
+    this._process = child_process.fork(
+      path.join(__dirname, "runtime", "entrypoint", "bootstrap"),
       {
-        stdio: ["ignore", "pipe", "pipe"],
+        execArgv: ["--es-module-specifier-resolution=node"],
+        stdio: ["ignore", "pipe", "pipe", "ipc"],
         env: {
           PATH: process.env.PATH,
           HOME: process.env.HOME,
@@ -31,6 +28,23 @@ class NodeWorker extends Worker {
           ...options.env
         }
       }
+      // `node`,
+      // [
+      //   "--es-module-specifier-resolution=node",
+      //   path.join(__dirname, "runtime", "entrypoint", "bootstrap")
+      // ],
+      // {
+      //   stdio: ["ignore", "pipe", "pipe"],
+      //   env: {
+      //     PATH: process.env.PATH,
+      //     HOME: process.env.HOME,
+      //     FUNCTION_GRPC_ADDRESS: process.env.FUNCTION_GRPC_ADDRESS,
+      //     ENTRYPOINT: "index",
+      //     RUNTIME: "node",
+      //     WORKER_ID: options.id,
+      //     ...options.env
+      //   }
+      // }
     );
     this._process.once("exit", () => (this._quit = true));
     Object.assign(this, this._process);
@@ -42,6 +56,15 @@ class NodeWorker extends Worker {
 
     this._process.stdout.pipe(stdout);
     this._process.stderr.pipe(stderr);
+
+    this._process.on("message", console.log);
+
+    this._process.on("debug", console.log);
+    this._process.on("log", console.log);
+
+    this._process.on("info", console.log);
+    this._process.on("warn", console.log);
+    this._process.on("error", console.log);
   }
 
   kill() {
