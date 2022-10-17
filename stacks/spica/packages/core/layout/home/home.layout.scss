@@ -89,9 +89,13 @@
               }
             }
             mat-list-item {
-              margin: 10px 0px;
+              margin: 3px 0px;
               padding: 15px 0px;
               height: unset;
+
+              &:first-of-type {
+                margin: 15px 0;
+              }
 
               &.iconlist-below {
                 display: flex;
