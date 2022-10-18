@@ -16,7 +16,7 @@ async function _delete({options}: ActionParameters) {
   for (const document of documents) {
     const {apiVersion, kind, metadata} = document.toJSON();
 
-    const resourceList = await machineryClient.get<any>(`/apis/${apiVersion}`);
+    const resourceList = await machineryClient.get<any>(`/apis-info/${apiVersion}`);
 
     if (isFailureStatus(resourceList)) {
       return console.error(formatFailureStatus(resourceList));
@@ -52,7 +52,7 @@ async function _delete({options}: ActionParameters) {
 
 export default function({createCommand}: CreateCommandParameters): Command {
   return createCommand("Delete object(s) from the API.")
-    .option("-f, --filename", "that contains the configuration to apply", {
+    .option("-f, --filename", "that contains the configuration to delete", {
       required: true,
       validator: CaporalValidator.STRING
     })

@@ -25,8 +25,9 @@ async function apply({options}: ActionParameters) {
 
   for (const document of documents) {
     const {apiVersion, kind, metadata, spec} = document.toJSON();
+    metadata.package = options.package;
 
-    const resourceList = await machineryClient.get<any>(`/apis/${apiVersion}`);
+    const resourceList = await machineryClient.get<any>(`/apis-info/${apiVersion}`);
 
     if (isFailureStatus(resourceList)) {
       return console.error(formatFailureStatus(resourceList));
@@ -89,6 +90,10 @@ async function apply({options}: ActionParameters) {
 export default function({createCommand}: CreateCommandParameters): Command {
   return createCommand("Put objects to the API.")
     .option("-f, --filename", "that contains the configuration to apply", {
+      required: true,
+      validator: CaporalValidator.STRING
+    })
+    .option("-p, --package", "package name of the objects", {
       required: true,
       validator: CaporalValidator.STRING
     })

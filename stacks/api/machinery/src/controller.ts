@@ -11,6 +11,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   UseFilters,
   UseGuards,
   UseInterceptors
@@ -28,7 +29,7 @@ import {
   GroupVersionResource,
   schemes
 } from "./scheme";
-import {alreadyExists, isStatusKind, notFound, status, StatusMetadata} from "./status";
+import {alreadyExists, badRequest, isStatusKind, notFound, status, StatusMetadata} from "./status";
 import {store, __setDb} from "./store";
 import {acceptsTable, table} from "./table";
 import {validate} from "./validation";
@@ -77,7 +78,7 @@ export class StatusFilter implements ExceptionFilter {
 }
 
 @UseFilters(new StatusFilter())
-@Controller("apis")
+@Controller("apis-info")
 export class ApiMachineryController {
   // healthz
   // version
@@ -175,9 +176,33 @@ export class ApiMachineryController {
 }
 
 @UseFilters(new StatusFilter())
-@Controller("apis/:group/:version/:resource")
+@Controller("apis")
 export class ApiMachineryObjectController {
   @Get()
+  @UseGuards(AuthGuard(), ActionGuard("apis:index", "apis"))
+  async listPackages(@Query("package") packageName: string) {
+    const filter = {"metadata.uid": {$exists: true}};
+    if (packageName) {
+      filter["metadata.package"] = packageName;
+    }
+    return store().find(filter);
+  }
+
+  @Delete()
+  @UseGuards(AuthGuard(), ActionGuard("apis:index", "apis"))
+  async listByPackage(@Query("package") packageName: string) {
+    if (!packageName) {
+      throw badRequest({
+        reason: "BadRequest",
+        message: "Query 'package' was not provided.",
+        details: []
+      });
+    }
+
+    return store().deleteByFilter({"metadata.package": packageName});
+  }
+
+  @Get("/:group/:version/:resource")
   @UseGuards(AuthGuard(), ActionGuard("apis:index", "apis"))
   async list(
     @Headers("accept") accepts: string,
@@ -208,7 +233,7 @@ export class ApiMachineryObjectController {
     return Array.from(objects);
   }
 
-  @Get(":name")
+  @Get("/:group/:version/:resource/:name")
   @UseGuards(AuthGuard(), ActionGuard("apis:index", "apis"))
   get(
     @Param("group") groupName: string,
@@ -235,7 +260,7 @@ export class ApiMachineryObjectController {
     return objects.get(objectName);
   }
 
-  @Post()
+  @Post("/:group/:version/:resource")
   @UseGuards(AuthGuard(), ActionGuard("apis:create", "apis"))
   async add(
     @Param("group") groupName: string,
@@ -275,10 +300,6 @@ export class ApiMachineryObjectController {
       object.metadata.creationTimestamp = new Date().toISOString();
     }
 
-    if (!object.metadata.creationTimestamp) {
-      object.metadata.namespace = "default";
-    }
-
     await validate({scheme, versionName, object});
 
     if (scheme.prepareForCreate) {
@@ -290,7 +311,7 @@ export class ApiMachineryObjectController {
     inform({type: "add", obj: object, groupResource: groupVersionResource});
   }
 
-  @Put(":name")
+  @Put("/:group/:version/:resource/:name")
   @UseGuards(AuthGuard(), ActionGuard("apis:update", "apis"))
   async replace(
     @Param("group") groupName: string,
@@ -340,7 +361,7 @@ export class ApiMachineryObjectController {
     inform({type: "update", oldObj, newObj, groupResource: groupVersionResource});
   }
 
-  @Delete(":name")
+  @Delete("/:group/:version/:resource/:name")
   @UseGuards(AuthGuard(), ActionGuard("apis:delete", "apis"))
   async delete(
     @Param("group") groupName: string,
@@ -384,7 +405,7 @@ export class ApiMachineryObjectController {
   }
 
   @UseInterceptors(PatchBodyParser())
-  @Patch(":name")
+  @Patch("/:group/:version/:resource/:name")
   patch(
     @Param("group") group: string,
     @Param("version") versionName: string,

@@ -1,4 +1,4 @@
-import {DatabaseService, BaseCollection} from "@spica-server/database";
+import {DatabaseService, BaseCollection, FilterQuery} from "@spica-server/database";
 import {Resource} from "./definition";
 import {GroupResource} from "./scheme";
 
@@ -17,7 +17,7 @@ type DeepPartial<T> = {
   [P in keyof T]?: DeepPartial<T[P]>;
 };
 
-export function store<SpecType = unknown, StatusType = unknown>(groupResource: GroupResource) {
+export function store<SpecType = unknown, StatusType = unknown>(groupResource?: GroupResource) {
   return new Store<SpecType, StatusType>(groupResource);
 }
 
@@ -25,8 +25,14 @@ class Store<SpecType = unknown, StatusType = unknown> {
   private store = new ObjectStore(db);
   private groupKey: string;
 
-  constructor(groupResource: GroupResource) {
-    this.groupKey = `${groupResource.group}ɵ${groupResource.resource}`;
+  constructor(groupResource?: GroupResource) {
+    if (groupResource) {
+      this.groupKey = `${groupResource.group}ɵ${groupResource.resource}`;
+    }
+  }
+
+  async find(filter: FilterQuery<Resource<SpecType, StatusType>>) {
+    return this.store.find(filter);
   }
 
   async get(name: string): Promise<Resource<SpecType, StatusType>> {
@@ -86,6 +92,10 @@ class Store<SpecType = unknown, StatusType = unknown> {
     }
 
     await this.store.updateOne({_id: `${this.groupKey}ɵ${name}`}, result);
+  }
+
+  async deleteByFilter(filter: any) {
+    return this.store.deleteMany(filter);
   }
 
   async delete(name: string) {

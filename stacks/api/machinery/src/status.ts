@@ -27,7 +27,7 @@ export interface StatusMetadata {
 }
 
 export interface StatusDetails {
-  [key: string]: unknown;
+  [key: string]: any;
 }
 
 export function status({metadata, code, message, reason, status, details}: Status) {

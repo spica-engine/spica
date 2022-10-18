@@ -8,7 +8,7 @@ export interface TypeMeta {
 export interface ObjectMeta {
   metadata: {
     name: string;
-    namespace?: string;
+    package: string;
     creationTimestamp?: string;
     deletionTimestamp?: string;
     uid?: string;

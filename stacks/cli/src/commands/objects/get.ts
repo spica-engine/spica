@@ -6,13 +6,13 @@ import {formatFailureStatus, isFailureStatus} from "../../status";
 
 async function get({args}: ActionParameters) {
   const machineryClient = await httpService.createFromCurrentCtx();
-  const groupList = await machineryClient.get<any>("/apis");
+  const groupList = await machineryClient.get<any>("/apis-info");
   const kind = args.kind as string;
 
   for (const group of groupList.groups) {
     // TODO: get this from the API
     const preferredVersion = group.versions[0];
-    const resourceList = await machineryClient.get<any>(`/apis/${group.name}/${preferredVersion}`);
+    const resourceList = await machineryClient.get<any>(`/apis-info/${group.name}/${preferredVersion}`);
 
     for (const resource of resourceList.resources) {
       if (
