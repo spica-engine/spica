@@ -42,10 +42,7 @@ export class HomeLayoutComponent implements OnInit {
       RouteCategory.Dashboard,
       {icon: "dashboard", index: 1, children: {name: RouteCategory.Dashboard_Sub, icon: "list"}}
     ],
-    [
-      RouteCategory.Asset,
-      {icon: "extension", index: 2, children: {name: RouteCategory.Asset_Sub, icon: "list"}}
-    ],
+    [RouteCategory.Asset, {icon: "extension", index: 2, children: {}}],
     [
       RouteCategory.Content,
       {

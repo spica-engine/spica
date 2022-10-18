@@ -20,9 +20,9 @@ export class AssetInitializer {
         this.routeService.dispatch(
           new Upsert({
             category: RouteCategory.Asset,
-            id: `assets/${packageName}`,
+            id: `asset/${packageName}`,
             icon: "extension",
-            path: `assets/${packageName}`,
+            path: `asset/${packageName}`,
             display: titleCase(packageName)
           })
         )

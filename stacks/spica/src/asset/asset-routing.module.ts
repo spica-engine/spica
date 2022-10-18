@@ -7,7 +7,7 @@ import {IndexComponent} from "./pages/index/index.component";
 
 const routes: Routes = [
   {
-    path: "assets",
+    path: "asset",
     children: [
       {
         path: "",
@@ -25,16 +25,7 @@ const routes: Routes = [
   }
 ];
 
-const route: Route[] = [
-  {
-    category: RouteCategory.Asset_Sub,
-    icon: "format_list_numbered",
-    path: "/assets",
-    display: "List",
-    id: "asset_store_list",
-    index: 0
-  }
-];
+const route: Route[] = [];
 
 @NgModule({
   imports: [RouterModule.forChild(routes), RouteModule.forChild(route)],

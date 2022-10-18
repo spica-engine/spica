@@ -24,6 +24,7 @@ export namespace httpService {
         return response.data;
       },
       error => {
+        console.log(error.response);
         if (!error.response) {
           return Promise.reject(error);
         }

@@ -9,18 +9,37 @@
   </h4>
 </mat-toolbar>
 
-<mat-card>
+<mat-card class="mat-elevation-z25">
   <mat-card-content>
-    <mat-expansion-panel *ngFor="let asset of assets$ | async">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          {{ asset.metadata.name }}
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-      <pre>
-          {{ asset | json }}
-        </pre
-      >
-    </mat-expansion-panel>
+    <table mat-table [dataSource]="assets$">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>
+          Name
+        </th>
+        <td mat-cell *matCellDef="let asset">{{ asset.metadata.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="resource">
+        <th mat-header-cell *matHeaderCellDef>
+          Resource
+        </th>
+        <td mat-cell *matCellDef="let asset">
+          <a class="resource" [href]="getUrl(asset)" target="_blank">
+            {{ asset.metadata.uid }}
+            <mat-icon>
+              open_in_new
+            </mat-icon>
+          </a>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="created_at">
+        <th mat-header-cell *matHeaderCellDef>
+          Created At
+        </th>
+        <td mat-cell *matCellDef="let asset">{{ asset.metadata.creationTimestamp }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedProperties"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedProperties"></tr>
+    </table>
   </mat-card-content>
 </mat-card>

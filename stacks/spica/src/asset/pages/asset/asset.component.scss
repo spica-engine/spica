@@ -12,5 +12,19 @@
   mat-card {
     margin-top: -85px !important;
     margin: 30px;
+
+    table {
+      min-width: 100%;
+      width: max-content;
+      
+      td > a.resource {
+        font-weight: bold;
+        color: var(--foreground-text);
+        text-decoration: none;
+        mat-icon {
+          font-size: 18px;
+        }
+      }
+    }
   }
 }

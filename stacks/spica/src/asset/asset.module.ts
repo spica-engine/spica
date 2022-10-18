@@ -12,6 +12,7 @@ import {MatCardModule} from "@angular/material/card";
 import {MatIconModule} from "@angular/material/icon";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatExpansionModule} from "@angular/material/expansion";
+import {MatTableModule} from '@angular/material/table';
 
 @NgModule({
   imports: [
@@ -20,7 +21,8 @@ import {MatExpansionModule} from "@angular/material/expansion";
     MatCardModule,
     MatIconModule,
     MatToolbarModule,
-    MatExpansionModule
+    MatExpansionModule,
+    MatTableModule
   ],
   declarations: [AddComponent, IndexComponent, AssetComponent],
   providers: [
