@@ -1,0 +1,26 @@
+<mat-toolbar>
+  <h4 class="mat-h4">
+    <mat-icon>
+      extension
+    </mat-icon>
+    <span>
+      {{ packageName | titlecase }}
+    </span>
+  </h4>
+</mat-toolbar>
+
+<mat-card>
+  <mat-card-content>
+    <mat-expansion-panel *ngFor="let asset of assets$ | async">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          {{ asset.metadata.name }}
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <pre>
+          {{ asset | json }}
+        </pre
+      >
+    </mat-expansion-panel>
+  </mat-card-content>
+</mat-card>

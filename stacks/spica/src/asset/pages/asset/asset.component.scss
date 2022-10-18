@@ -1,0 +1,16 @@
+:host {
+  mat-toolbar {
+    min-height: 250px;
+    padding: 0 30px;
+    align-items: flex-start;
+    h4 > * {
+      vertical-align: middle;
+      margin-left: 5px;
+    }
+  }
+
+  mat-card {
+    margin-top: -85px !important;
+    margin: 30px;
+  }
+}

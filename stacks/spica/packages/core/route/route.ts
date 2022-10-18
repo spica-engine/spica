@@ -8,13 +8,15 @@ export enum RouteCategory {
   Content = "Bucket",
   System = "Access Management",
   Webhook = "Webhook",
+  Asset = "Assets",
 
   Primary_Sub = "Settings",
   Content_Sub = "All Buckets",
   Developer_Sub = "Function Logs",
   Webhook_Sub = "Webhook Logs",
   System_Sub = "IA Management",
-  Dashboard_Sub = "Dashboards"
+  Dashboard_Sub = "Dashboards",
+  Asset_Sub = "All Assets"
 }
 
 export interface Route {
