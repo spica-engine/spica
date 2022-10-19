@@ -10,6 +10,7 @@ ts_project(
         "index.ts",
     ]),
     deps = [
+        "//packages/core/representative",
         "//packages/core/differ",
         "//stacks/api/passport/guard",
         "@npm//@nestjs/common",

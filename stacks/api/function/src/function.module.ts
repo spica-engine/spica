@@ -18,12 +18,9 @@ import {Http} from "./services/interface";
 import {Axios} from "./services/axios";
 import {registerStatusProvider} from "./status";
 import FunctionSchema = require("./schema/function.json");
-import {
-  RegisterSyncProvider,
-  REGISTER_SYNC_PROVIDER,
-  RepresentativeManager
-} from "@spica-server/versioncontrol";
+import {RegisterSyncProvider, REGISTER_SYNC_PROVIDER} from "@spica-server/versioncontrol";
 import {getSyncProviders} from "./versioncontrol";
+import {RepresentativeManager} from "@spica-server/core/representative";
 
 @Module({})
 export class FunctionModule {

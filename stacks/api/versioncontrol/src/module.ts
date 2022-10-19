@@ -6,7 +6,7 @@ import {
   VersionManager,
   VersionControlOptions
 } from "./interface";
-import {RepresentativeManager} from "./representative";
+import {RepresentativeManager} from "@spica-server/core/representative";
 import {Synchronizer} from "./synchronizer";
 import {Git} from "./versionmanager";
 
@@ -30,7 +30,11 @@ export class VersionControlModule {
             return dir;
           }
         },
-        RepresentativeManager,
+        {
+          provide: RepresentativeManager,
+          useFactory: cwd => new RepresentativeManager(cwd),
+          inject: [WORKING_DIR]
+        },
         Synchronizer,
         {provide: VersionManager, useFactory: cwd => new Git(cwd), inject: [WORKING_DIR]},
         {

@@ -1,0 +1,17 @@
+package(default_visibility = ["//visibility:public"])
+
+load("//tools/ts_project:index.bzl", "ts_project")
+
+ts_project(
+    name = "representative",
+    package_name = "@spica-server/core/representative",
+    srcs = glob([
+        "src/*.ts",
+        "index.ts",
+    ]),
+    deps = [
+        "@npm//yaml",
+        "@npm//dotenv",
+        "@npm//@types/node",
+    ],
+)

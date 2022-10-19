@@ -1,13 +1,10 @@
 import {Global, Inject, Module, Optional} from "@nestjs/common";
 import {DatabaseModule} from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference/services";
-import {
-  RepresentativeManager,
-  REGISTER_SYNC_PROVIDER,
-  RegisterSyncProvider
-} from "@spica-server/versioncontrol";
+import {REGISTER_SYNC_PROVIDER, RegisterSyncProvider} from "@spica-server/versioncontrol";
 import {PreferenceController} from "./preference.controller";
 import {getSyncProvider} from "./versioncontrol/schema";
+import {RepresentativeManager} from "@spica-server/core/representative";
 
 @Global()
 @Module({})

@@ -23,9 +23,9 @@ import BucketsSchema = require("./schemas/buckets.schema.json");
 import {
   RegisterSyncProvider,
   REGISTER_SYNC_PROVIDER,
-  RepresentativeManager
 } from "@spica-server/versioncontrol";
 import {getSyncProvider} from "./versioncontrol/schema";
+import {RepresentativeManager} from "@spica-server/core/representative";
 
 @Module({})
 export class BucketModule {
