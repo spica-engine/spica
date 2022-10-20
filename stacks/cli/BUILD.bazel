@@ -35,6 +35,7 @@ ts_project(
         "@npm_cli//semver",
         "@npm_cli//typescript",
         "@npm_cli//yaml",
+        "@npm_cli//dotenv",
     ],
 )
 

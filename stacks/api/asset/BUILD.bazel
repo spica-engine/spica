@@ -1,0 +1,17 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
+package(default_visibility = ["//visibility:public"])
+
+ts_project(
+    name = "asset",
+    package_name = "@spica-server/asset",
+    srcs = glob([
+        "**/*.ts",
+        "index.ts"
+    ]),
+    deps = [
+        "//packages/database",
+        "@npm//@nestjs/common",
+        "@npm//@types/node",
+    ],
+)

@@ -17,6 +17,7 @@ import {StatusModule} from "@spica-server/status";
 import {StorageModule} from "@spica-server/storage";
 import {VersionControlModule} from "@spica-server/versioncontrol";
 import {ReplicationModule} from "@spica-server/replication";
+import {AssetModule} from "@spica-server/asset";
 import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
@@ -399,6 +400,7 @@ const modules = [
   DashboardModule.forRoot(),
   PreferenceModule.forRoot(),
   ApiMachineryModule,
+  AssetModule,
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
