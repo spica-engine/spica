@@ -19,14 +19,20 @@ export interface Configuration {
   type: string;
   key: string;
   value: any;
-  
+
   configured: boolean;
 }
 
-export interface Resource {
+export interface Resource<C = object> {
   _id: ObjectId;
   module: string;
-  contents: {
-    [key: string]: object;
-  };
+  contents: C;
+}
+
+export type Validator = (resource: Resource) => Promise<void>;
+
+export interface Operator {
+  insert(resource: Resource): Promise<any>;
+  update(previous: Resource, current: Resource): Promise<any>;
+  delete(resource: Resource): Promise<any>;
 }

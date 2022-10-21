@@ -26,6 +26,7 @@ import {
   RepresentativeManager
 } from "@spica-server/versioncontrol";
 import {getSyncProvider} from "./versioncontrol/schema";
+import {registerAssetHandlers} from "./asset";
 
 @Module({})
 export class BucketModule {
@@ -111,6 +112,7 @@ export class BucketModule {
     preference: PreferenceService,
     bs: BucketService,
     bds: BucketDataService,
+    validator: Validator,
     @Optional() private history: HistoryService,
     @Optional() private repManager: RepresentativeManager,
     @Optional() @Inject(REGISTER_SYNC_PROVIDER) registerSync: RegisterSyncProvider
@@ -133,6 +135,7 @@ export class BucketModule {
 
     registerInformers(bs);
     registerStatusProvider(bs, bds);
+    registerAssetHandlers(bs, bds,history,validator);
   }
 }
 
