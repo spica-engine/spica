@@ -11,8 +11,9 @@ import {
 } from "@nestjs/common";
 import {AssetService} from "./service";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
-import {Asset} from "./interface";
+import {Asset, Configuration, Resource} from "./interface";
 import {operators, validators} from "./registration";
+import {compareResourceGroups} from "@spica-server/core/differ";
 
 @Controller("asset")
 export class AssetController {
@@ -20,11 +21,15 @@ export class AssetController {
 
   @Get()
   // @UseGuards(AuthGuard(), ActionGuard("asset:index", "asset"))
-  async find(@Query("name") name: string) {
+  async find(@Query("name") name: string, @Query("status") status: string) {
     const filter: any = {};
 
     if (name) {
       filter.name = name;
+    }
+
+    if (status) {
+      filter.status = status;
     }
 
     return this.service.find(filter);
@@ -41,77 +46,131 @@ export class AssetController {
   async insert(@Body() asset: Asset) {
     const existingAssets = await this.service.find({name: asset.name});
     if (existingAssets.length) {
-      throw new BadRequestException("Asset is already exists.");
+      throw new BadRequestException("Asset already exists.");
     }
 
-    const validations = [];
-    for (let resource of asset.resources) {
-      const validator = validators.get(resource.module);
-
-      if (!validator) {
-        throw new BadRequestException(
-          `Module named ${resource.module} has no validator to validate schema.`
-        );
-      }
-
-      validations.push(validator(resource));
-    }
-    await Promise.all(validations);
-
-    const operations = [];
-    for (let resource of asset.resources) {
-      const operator = operators.get(resource.module);
-
-      if (!operator) {
-        throw new BadRequestException(
-          `Module named ${resource.module} has no operator to perform insert operation.`
-        );
-      }
-
-      operations.push(operator.insert(resource));
-    }
-
-    await Promise.all(operations);
-
-    asset.status = "ready";
+    asset.status = "downloaded";
     return this.service.insertOne(asset);
   }
 
-  @Put(":id")
-  // @UseGuards(AuthGuard(), ActionGuard("asset:index", "asset"))
-  async update(@Param("id", OBJECT_ID) id: ObjectId, @Body() asset: Asset) {
-    // check if asset is exist, throw error if it does not
-    // validate resources
-    // if it is passed, insert assets to the asset collection directly, skip the module insertions until configuration is completed
-    // else pass it to the module handlers, they will decide which asset will be deleted, inserted, updated etc.
+  // PUT
+  // i don't think there should be put endpoint for updating assets
+  // updating asset means updating asset resources, but first downloading asset, then installing asset with configuration is a better asset update flow
+  // post request to asset will detect
+
+  // POST /id
+  // should accept configuration file
+  // should update if there is any asset that was installed and has same name
+  // should insert if there is no asset that was installed and has same name
+
+  // DELETE /id
+  // there might be an option like "soft" and "hard", delete action will be performed based on this parameter
+
+  @Post(":id")
+  async install(@Param("id") id: ObjectId, @Body() configs: Configuration[]) {
+    let asset = await this.service.findOne({_id: id});
+
+    if (!asset || asset.status == "installed") {
+      throw new BadRequestException("Asset does not exist or already installed");
+    }
+
+    asset = this.putConfiguration(asset, configs);
+
+    const validations = asset.resources.map(resource => {
+      const validator = validators.get(resource.module);
+      return validator(resource);
+    });
+    await Promise.all(validations);
+
+    const installedAsset = await this.service.findOne({_id: {$ne: asset._id}, name: asset.name});
+    const {insertions, updations, deletions} = compareResourceGroups<Resource>(
+      installedAsset ? installedAsset.resources : [],
+      asset.resources
+    );
+
+    const inserts = insertions.map(resource => {
+      const operator = operators.get(resource.module);
+      operator.insert(resource);
+    });
+    await Promise.all(inserts);
+
+    const updates = updations.map(resource => {
+      const operator = operators.get(resource.module);
+      operator.update(resource);
+    });
+    await Promise.all(updates);
+
+    const deletes = deletions.map(resource => {
+      const operator = operators.get(resource.module);
+      operator.insert(resource);
+    });
+    await Promise.all(deletes);
+
+    asset.status = "installed";
+    return this.service.findOneAndReplace({_id: asset._id}, asset);
   }
 
   @Delete(":id")
   // @UseGuards(AuthGuard(), ActionGuard("asset:index", "asset"))
-  async delete(@Param("id", OBJECT_ID) id: ObjectId) {
-    // just delete the asset and it's resources.
-
+  async delete(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Query("type") type: "soft" | "hard" = "soft"
+  ) {
     const asset = await this.service.findOne({_id: id});
 
-    const operations = [];
-    for (let resource of asset.resources) {
+    const deletions = asset.resources.map(resource => {
       const operator = operators.get(resource.module);
+      return operator.delete(resource);
+    });
+    await Promise.all(deletions);
 
-      if (!operator) {
-        throw new BadRequestException(
-          `Module named ${resource.module} has no operator to perform delete operation.`
-        );
-      }
-
-      operations.push(operator.delete(resource));
+    if (type == "soft") {
+      return this.service.findOneAndUpdate({_id: id}, {$set: {status: "downloaded"}});
     }
 
-    await Promise.all(operations);
+    if (type == "hard") {
+      return this.service.findOneAndDelete({_id: id});
+    }
 
-    return this.service.deleteOne({_id: id});
+    throw new BadRequestException(`Unknown delete type '${type}'`);
   }
 
-  needsConfiguration(asset: Asset) {
-    return asset.configurations.some(c => !c.configured);
+  putConfiguration(asset: Asset, configs: Configuration[]) {
+    for (let config of configs) {
+      asset.resources = asset.resources.map(resource => {
+        if (resource.module != config.module) {
+          return resource;
+        }
+
+        if (resource._id.toString() != config.resource_id) {
+          return resource;
+        }
+
+        const val = resource.contents[config.submodule];
+        const path = config.path;
+        const replace = config.value;
+
+        resource.contents[config.submodule] = this.replaceValue(val, path, replace);
+
+        return resource;
+      });
+    }
+
+    return asset;
+  }
+
+  replaceValue(val: object, path: string, replace: unknown) {
+    const segments = path.split(".");
+
+    const target = segments[0];
+
+    if (segments.length == 1) {
+      val[target] = replace;
+      return val;
+    }
+
+    val = this.replaceValue(val[target], segments.slice(1).join("."), replace);
+
+    return val;
   }
 }

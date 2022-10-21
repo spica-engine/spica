@@ -113,9 +113,9 @@ export class Patch {
   length2: number;
 }
 
-export function compareResourceGroups(
-  sources: any[],
-  targets: any[],
+export function compareResourceGroups<T>(
+  sources: T[],
+  targets: T[],
   comparisonOptions: {
     uniqueField: string;
     ignoredFields: string[];

@@ -1,26 +1,23 @@
 import {ObjectId} from "@spica-server/database";
 
 export interface Asset {
+  _id?:ObjectId;
   name: string;
   description: string;
   resources: Resource[];
   status: Status;
-  configurations: Configuration[];
+  config: Configuration[];
+  failure_messages?: string[];
 }
 
-export type Status = "ready" | "pending_configuration";
+export type Status = "downloaded" | "installed" | "failed";
 
 export interface Configuration {
-  name: string;
-
   module: string;
-  file: string;
-
-  type: string;
-  key: string;
-  value: any;
-
-  configured: boolean;
+  resource_id: string;
+  submodule: string;
+  path: string;
+  value: unknown;
 }
 
 export interface Resource<C = object> {
@@ -33,6 +30,6 @@ export type Validator = (resource: Resource) => Promise<void>;
 
 export interface Operator {
   insert(resource: Resource): Promise<any>;
-  update(previous: Resource, current: Resource): Promise<any>;
+  update(resource:Resource): Promise<any>;
   delete(resource: Resource): Promise<any>;
 }
