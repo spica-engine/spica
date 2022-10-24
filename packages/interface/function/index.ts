@@ -25,3 +25,6 @@ export interface Environment {
 export interface Dependency {
   [key: string]: string;
 }
+
+
+export type FunctionWithDependencies = Function & {dependencies: Dependency};

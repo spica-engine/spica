@@ -28,11 +28,13 @@ export async function replace(
 ) {
   ruleValidation(bucket);
 
-  bucket._id = new ObjectId(bucket._id);
+  // check whether we need to delete bucket id
+  const _id = new ObjectId(bucket._id);
+  delete bucket._id;
 
-  const previousSchema = await bs.findOne({_id: bucket._id});
+  const previousSchema = await bs.findOne({_id});
 
-  const currentSchema = await bs.findOneAndReplace({_id: bucket._id}, bucket, {
+  const currentSchema = await bs.findOneAndReplace({_id}, bucket, {
     returnOriginal: false
   });
 
