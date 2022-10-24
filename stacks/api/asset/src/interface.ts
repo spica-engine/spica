@@ -6,7 +6,7 @@ export interface Asset {
   description: string;
   resources: Resource[];
   status: Status;
-  config: Configuration[];
+  configs: Configuration[];
   failure_messages?: string[];
 }
 
@@ -16,7 +16,7 @@ export interface Configuration {
   module: string;
   resource_id: string;
   submodule: string;
-  path: string;
+  property: string;
   value: unknown;
 }
 

@@ -1,0 +1,25 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
+package(default_visibility = ["//visibility:public"])
+
+load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
+
+ts_project(
+    name = "asset_unit_test_lib",
+    testonly = True,
+    srcs = [
+        "helpers.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/asset",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+    ],
+)
+
+jasmine_node_test(
+    name = "asset_unit_test",
+    deps = [
+        ":asset_unit_test_lib",
+    ],
+)

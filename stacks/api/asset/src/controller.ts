@@ -14,6 +14,7 @@ import {OBJECT_ID, ObjectId} from "@spica-server/database";
 import {Asset, Configuration, Resource} from "./interface";
 import {operators, validators} from "./registration";
 import {compareResourceGroups} from "@spica-server/core/differ";
+import {putConfiguration} from "./helpers";
 
 @Controller("asset")
 export class AssetController {
@@ -74,7 +75,7 @@ export class AssetController {
       throw new BadRequestException("Asset does not exist or already installed");
     }
 
-    asset = this.putConfiguration(asset, configs);
+    asset = putConfiguration(asset, configs);
 
     const validations = asset.resources.map(resource => {
       const validator = validators.get(resource.module);
@@ -133,44 +134,5 @@ export class AssetController {
     }
 
     throw new BadRequestException(`Unknown delete type '${type}'`);
-  }
-
-  putConfiguration(asset: Asset, configs: Configuration[]) {
-    for (let config of configs) {
-      asset.resources = asset.resources.map(resource => {
-        if (resource.module != config.module) {
-          return resource;
-        }
-
-        if (resource._id.toString() != config.resource_id) {
-          return resource;
-        }
-
-        const val = resource.contents[config.submodule];
-        const path = config.path;
-        const replace = config.value;
-
-        resource.contents[config.submodule] = this.replaceValue(val, path, replace);
-
-        return resource;
-      });
-    }
-
-    return asset;
-  }
-
-  replaceValue(val: object, path: string, replace: unknown) {
-    const segments = path.split(".");
-
-    const target = segments[0];
-
-    if (segments.length == 1) {
-      val[target] = replace;
-      return val;
-    }
-
-    val = this.replaceValue(val[target], segments.slice(1).join("."), replace);
-
-    return val;
   }
 }
