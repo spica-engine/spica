@@ -5,7 +5,7 @@ import {FunctionEngine} from "../engine";
 import * as CRUD from "../crud";
 
 export function indexSyncProviders(
-  service: FunctionService,
+  fs: FunctionService,
   manager: IRepresentativeManager,
   engine: FunctionEngine
 ): SyncProvider {
@@ -13,7 +13,7 @@ export function indexSyncProviders(
   const module = "function";
 
   const getAll = async () => {
-    const fns = await service.find();
+    const fns = await fs.find();
     const promises = [];
 
     const indexes = [];
@@ -28,7 +28,7 @@ export function indexSyncProviders(
     return Promise.all(promises).then(() => indexes);
   };
 
-  const insert = fn => CRUD.index.write(this.fs, this.engine, fn._id, fn.index);
+  const insert = fn => CRUD.index.write(fs, engine, fn._id, fn.index);
 
   // we can not remove index because it can break the function
   const rm = () => Promise.resolve();

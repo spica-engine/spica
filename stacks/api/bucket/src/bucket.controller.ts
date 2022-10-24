@@ -133,7 +133,7 @@ export class BucketController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
-    return CRUD.replace(this.bs, this.bds, this.history, bucket).catch(error => {
+    return CRUD.replace(this.bs, this.bds, this.history, {...bucket, _id: id}).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
   }
