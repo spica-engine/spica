@@ -3,7 +3,7 @@ import {Operator, Validator} from "./interface";
 export const validators = new Map<string, Validator>();
 export const operators = new Map<string, Operator>();
 
-export namespace register {
+export namespace registrar {
   export function validator(_module: string, validator: Validator) {
     validators.set(_module, validator);
   }

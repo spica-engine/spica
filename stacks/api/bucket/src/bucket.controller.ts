@@ -27,7 +27,7 @@ import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/gua
 import {createBucketActivity} from "@spica-server/bucket/common";
 import * as expression from "@spica-server/bucket/expression";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket/cache";
-import {clearRelationsOnDrop, updateDocumentsOnChange} from "./changes";
+import * as CRUD from "./crud";
 import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core/patch";
 /**
  * All APIs related to bucket schemas.
@@ -98,41 +98,9 @@ export class BucketController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:create"))
   async add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
-    this.ruleValidation(bucket);
-
-    const insertedBucket = await this.bs.insertOne(bucket).catch(error => {
+    return CRUD.insert(this.bs, bucket).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
-    this.bs.emitSchemaChanges();
-
-    return insertedBucket;
-  }
-
-  ruleValidation(schema: Bucket) {
-    try {
-      expression.extractPropertyMap(schema.acl.read);
-      expression.aggregate(schema.acl.read, {
-        auth: {
-          identifier: "",
-          policies: []
-        },
-        document: {}
-      });
-    } catch (error) {
-      throw new BadRequestException("Error occurred while parsing read rule\n" + error.message);
-    }
-
-    try {
-      expression.run(schema.acl.write, {
-        auth: {
-          identifier: "",
-          policies: []
-        },
-        document: {}
-      });
-    } catch (error) {
-      throw new BadRequestException("Error occurred while parsing write rule\n" + error.message);
-    }
   }
 
   /**
@@ -165,28 +133,9 @@ export class BucketController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
-    this.ruleValidation(bucket);
-
-    const previousSchema = await this.bs.findOne({_id: id});
-    let currentSchema;
-
-    try {
-      currentSchema = await this.bs.findOneAndReplace({_id: id}, bucket, {
-        returnOriginal: false
-      });
-    } catch (error) {
-      throw new InternalServerErrorException(error.message);
-    }
-
-    await updateDocumentsOnChange(this.bds, previousSchema, currentSchema);
-
-    this.bs.emitSchemaChanges();
-
-    if (this.history) {
-      await this.history.updateHistories(previousSchema, currentSchema);
-    }
-
-    return currentSchema;
+    return CRUD.replace(this.bs, this.bds, this.history, bucket).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
+    });
   }
 
   /**
@@ -236,12 +185,6 @@ export class BucketController {
     return this.bs.findOneAndReplace({_id: id}, patchedBucket, {returnOriginal: false});
   }
 
-  validateBucket(schemaId: string, bucket: any): Promise<void> {
-    const validatorMixin = Schema.validate(schemaId);
-    const pipe: any = new validatorMixin(this.validator);
-    return pipe.transform(bucket);
-  }
-
   @Delete("cache")
   @HttpCode(HttpStatus.NO_CONTENT)
   clearCache() {
@@ -259,16 +202,6 @@ export class BucketController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const schema = await this.bs.drop(id);
-    if (schema) {
-      const promises = [];
-      promises.push(clearRelationsOnDrop(this.bs, this.bds, id));
-      if (this.history) {
-        promises.push(this.history.deleteMany({bucket_id: id}));
-      }
-      await Promise.all(promises);
-      this.bs.emitSchemaChanges();
-    }
-    return;
+    return CRUD.remove(this.bs, this.bds, this.history, id);
   }
 }

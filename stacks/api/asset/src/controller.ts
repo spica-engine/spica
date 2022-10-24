@@ -45,11 +45,6 @@ export class AssetController {
   @Post()
   // @UseGuards(AuthGuard(), ActionGuard("asset:index", "asset"))
   async insert(@Body() asset: Asset) {
-    const existingAssets = await this.service.find({name: asset.name});
-    if (existingAssets.length) {
-      throw new BadRequestException("Asset already exists.");
-    }
-
     asset.status = "downloaded";
     return this.service.insertOne(asset);
   }

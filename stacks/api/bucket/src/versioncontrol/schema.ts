@@ -2,7 +2,7 @@ import {HistoryService} from "@spica-server/bucket/history";
 import {BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
 import {IRepresentativeManager, SyncProvider} from "@spica-server/versioncontrol";
-import {clearRelationsOnDrop, updateDocumentsOnChange} from "../changes";
+import * as CRUD from "../crud";
 
 export const getSyncProvider = (
   bs: BucketService,
@@ -21,49 +21,11 @@ export const getSyncProvider = (
     );
   };
 
-  const insert = async bucket => {
-    await bs.insertOne({...bucket, _id: new ObjectId(bucket._id)});
-    bs.emitSchemaChanges();
-    return bucket;
-  };
+  const insert = bucket => CRUD.insert(bs, bucket);
 
-  const update = async bucket => {
-    const _id = new ObjectId(bucket._id);
-    delete bucket._id;
+  const update = bucket => CRUD.replace(bs, bds, history, bucket);
 
-    const previousSchema = await bs.findOne({_id});
-
-    const currentSchema = await bs.findOneAndReplace({_id}, bucket, {
-      returnOriginal: false
-    });
-
-    await updateDocumentsOnChange(bds, previousSchema, currentSchema);
-
-    bs.emitSchemaChanges();
-
-    if (history) {
-      await history.updateHistories(previousSchema, currentSchema);
-    }
-
-    return currentSchema;
-  };
-
-  const remove = async bucket => {
-    const schema = await bs.drop(bucket._id);
-
-    if (schema) {
-      const promises = [];
-
-      promises.push(clearRelationsOnDrop(bs, bds, schema._id));
-      if (history) {
-        promises.push(history.deleteMany({bucket_id: schema._id}));
-      }
-
-      await Promise.all(promises);
-
-      bs.emitSchemaChanges();
-    }
-  };
+  const remove = bucket => CRUD.remove(bs, bds, history, bucket._id);
 
   const document = {
     getAll,
