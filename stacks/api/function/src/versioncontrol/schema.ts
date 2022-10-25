@@ -42,9 +42,7 @@ export function schemaSyncProviders(
     const resourceNameValidator = str => ObjectId.isValid(str);
     let files = await manager.read(module, resourceNameValidator, ["schema.yaml", "env.env"]);
 
-    files = putActualEnvs(files);
-
-    return files.map(file => file.contents.schema);
+    return files.map(file => CRUD.environment.apply(file.contents.schema, file.contents.env));
   };
 
   const write = fn => {
@@ -76,23 +74,4 @@ export function schemaSyncProviders(
     representative,
     parents: 0
   };
-}
-
-export function putActualEnvs(files) {
-  for (const file of files) {
-    const placeholders = file.contents.schema.env || {};
-    const actualEnvs = file.contents.env || {};
-
-    for (const [key, value] of Object.entries<string>(placeholders)) {
-      const match = /{(.*?)}/gm.exec(value);
-
-      let replacedValue = value;
-      if (match && match.length && Object.keys(actualEnvs).includes(match[1])) {
-        replacedValue = file.contents.env[match[1]];
-      }
-
-      file.contents.schema.env[key] = replacedValue;
-    }
-  }
-  return files;
 }

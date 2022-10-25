@@ -5,6 +5,7 @@ import {LogService} from "@spica-server/function/src/log";
 import {dependecySyncProviders} from "./dependency";
 import {indexSyncProviders} from "./fnindex";
 import {schemaSyncProviders} from "./schema";
+import {Dependency} from "@spica-server/interface/function";
 
 export const getSyncProviders = (
   service: FunctionService,
@@ -18,3 +19,5 @@ export const getSyncProviders = (
 
   return [schema, index, dependency];
 };
+
+

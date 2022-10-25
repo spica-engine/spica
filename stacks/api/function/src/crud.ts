@@ -1,5 +1,10 @@
 import {FunctionService} from "@spica-server/function/services";
-import {Dependency, Function, FunctionWithDependencies} from "@spica-server/interface/function";
+import {
+  Dependency,
+  Function,
+  FunctionRepresentative,
+  FunctionWithDependencies
+} from "@spica-server/interface/function";
 import {ChangeKind, changesFromTriggers, createTargetChanges, hasContextChange} from "./change";
 import {ObjectId} from "@spica-server/database";
 import {FunctionEngine} from "./engine";
@@ -106,5 +111,24 @@ export namespace dependencies {
   export async function uninstall(engine: FunctionEngine, fn: Function) {
     const deps = await engine.getPackages(fn);
     await Promise.all(deps.map(dep => engine.removePackage(fn, dep.name)));
+  }
+}
+
+export namespace environment {
+  export function apply(fn: Function, env: object) {
+    const placeholders = fn.env || {};
+    const actualEnvs = env || {};
+
+    for (const [key, value] of Object.entries<string>(placeholders)) {
+      const match = /{(.*?)}/gm.exec(value);
+
+      let replacedValue = value;
+      if (match && match.length && Object.keys(actualEnvs).includes(match[1])) {
+        replacedValue = fn.env[match[1]];
+      }
+
+      fn.env[key] = replacedValue;
+    }
+    return fn;
   }
 }

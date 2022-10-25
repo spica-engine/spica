@@ -135,7 +135,7 @@ export class BucketModule {
 
     registerInformers(bs);
     registerStatusProvider(bs, bds);
-    registerAssetHandlers(bs, bds,history,validator);
+    registerAssetHandlers(bs, bds, history, validator);
   }
 }
 

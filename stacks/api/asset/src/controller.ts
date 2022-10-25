@@ -19,6 +19,15 @@ import {compareResourceGroups} from "@spica-server/core/differ";
 import {putConfiguration} from "./helpers";
 import {ARRAY, BOOLEAN, DEFAULT} from "@spica-server/core";
 
+/**
+ * Authorization, Authentication
+ * Schema validation
+ * Deprecation of old endpoints
+ * Migration of policies
+ * Updates on CLI
+ */
+
+
 @Controller("asset")
 export class AssetController {
   constructor(private service: AssetService) {}
