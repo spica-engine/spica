@@ -18,6 +18,7 @@ import {operators, validators} from "./registration";
 import {compareResourceGroups} from "@spica-server/core/differ";
 import {putConfiguration} from "./helpers";
 import {ARRAY, BOOLEAN, DEFAULT} from "@spica-server/core";
+import {Schema} from "@spica-server/core/schema";
 
 /**
  * Authorization, Authentication
@@ -61,7 +62,7 @@ export class AssetController {
 
   @Post()
   // @UseGuards(AuthGuard(), ActionGuard("asset:index", "asset"))
-  async insert(@Body() asset: Asset) {
+  async insert(@Body(Schema.validate("http://spica.internal/asset")) asset: Asset) {
     asset.status = "downloaded";
     return this.service.insertOne(asset);
   }
@@ -82,7 +83,8 @@ export class AssetController {
   @Post(":id")
   async install(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(DEFAULT([]), ARRAY(c => c)) configs: Configuration[],
+    @Body(Schema.validate("http://spica.internal/asset"), DEFAULT([]), ARRAY(c => c))
+    configs: Configuration[],
     @Query("preview", BOOLEAN) preview: boolean
   ) {
     let asset = await this.service.findOne({_id: id});

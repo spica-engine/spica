@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/asset/config",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["module", "resource_id", "submodule", "property", "value"],
+    "properties": {
+      "module": {
+        "type": "string",
+        "description": "Module of the config"
+      },
+      "resource_id": {
+        "type": "string",
+        "description": "Resource id of the config"
+      },
+      "submodule": {
+        "type": "string",
+        "description": "Submodule of the config, for example schema module of A module, package module of B module etc."
+      },
+      "property": {
+        "type": "string",
+        "description": "Property of the configuration. Use dot(.) for nested properties"
+      },
+      "value": {
+        "type": "string",
+        "description": "Value of the configuration that will be put"
+      }
+    }
+  },
+  "additionalProperties": false
+}
