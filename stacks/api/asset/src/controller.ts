@@ -4,9 +4,11 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
   Param,
   Post,
-  Put,
   Query
 } from "@nestjs/common";
 import {AssetService} from "./service";
@@ -15,6 +17,7 @@ import {Asset, Configuration, Resource} from "./interface";
 import {operators, validators} from "./registration";
 import {compareResourceGroups} from "@spica-server/core/differ";
 import {putConfiguration} from "./helpers";
+import {ARRAY, BOOLEAN, DEFAULT} from "@spica-server/core";
 
 @Controller("asset")
 export class AssetController {
@@ -39,7 +42,12 @@ export class AssetController {
   @Get(":id")
   // @UseGuards(AuthGuard(), ActionGuard("asset:index", "asset"))
   async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.service.findOne({_id: id});
+    return this.service.findOne({_id: id}).then(r => {
+      if (!r) {
+        throw new NotFoundException();
+      }
+      return r;
+    });
   }
 
   @Post()
@@ -63,62 +71,86 @@ export class AssetController {
   // there might be an option like "soft" and "hard", delete action will be performed based on this parameter
 
   @Post(":id")
-  async install(@Param("id") id: ObjectId, @Body() configs: Configuration[]) {
+  async install(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body(DEFAULT([]), ARRAY(c => c)) configs: Configuration[],
+    @Query("preview", BOOLEAN) preview: boolean
+  ) {
     let asset = await this.service.findOne({_id: id});
+    if (!asset) {
+      throw new NotFoundException();
+    }
 
-    if (!asset || asset.status == "installed") {
-      throw new BadRequestException("Asset does not exist or already installed");
+    if (asset.status == "installed") {
+      throw new BadRequestException("Asset is already installed.");
     }
 
     asset = putConfiguration(asset, configs);
 
-    const validations = asset.resources.map(resource => {
-      const validator = validators.get(resource.module);
-      return validator(resource);
-    });
-    await Promise.all(validations);
+    await this.validateResources(asset.resources).catch(e => this.onInstallationFailed(id, e));
 
-    const installedAsset = await this.service.findOne({_id: {$ne: asset._id}, name: asset.name});
+    const installedAsset = await this.service.findOne({
+      _id: {$ne: id},
+      name: asset.name,
+      status: "installed"
+    });
     const {insertions, updations, deletions} = compareResourceGroups<Resource>(
       installedAsset ? installedAsset.resources : [],
       asset.resources
     );
 
-    const inserts = insertions.map(resource => {
-      const operator = operators.get(resource.module);
-      operator.insert(resource);
-    });
-    await Promise.all(inserts);
+    if (preview) {
+      return {insertions, updations, deletions};
+    }
 
-    const updates = updations.map(resource => {
-      const operator = operators.get(resource.module);
-      operator.update(resource);
-    });
-    await Promise.all(updates);
+    await this.operate(insertions, "insert").catch(e => this.onInstallationFailed(id, e));
+    await this.operate(updations, "update").catch(e => this.onInstallationFailed(id, e));
+    await this.operate(deletions, "delete").catch(e => this.onInstallationFailed(id, e));
 
-    const deletes = deletions.map(resource => {
-      const operator = operators.get(resource.module);
-      operator.insert(resource);
-    });
-    await Promise.all(deletes);
+    if (installedAsset) {
+      this.service.findOneAndUpdate({_id: installedAsset._id}, {$set: {status: "downloaded"}});
+    }
 
     asset.status = "installed";
-    return this.service.findOneAndReplace({_id: asset._id}, asset);
+    return this.service.findOneAndReplace({_id: asset._id}, asset, {returnOriginal: false});
+  }
+
+  async validateResources(resources: Resource[]) {
+    const validations = resources.map(resource => {
+      const validator = validators.get(resource.module);
+      if (!validator) {
+        return Promise.reject(
+          `Validation has been failed: Unknown module named '${resource.module}'.`
+        );
+      }
+      return validator(resource);
+    });
+    await Promise.all(validations);
+  }
+
+  async onInstallationFailed(_id: ObjectId, e: string) {
+    this.service.findOneAndUpdate(
+      {_id},
+      {
+        $set: {
+          status: "failed",
+          failure_message: e
+        }
+      }
+    );
+    throw new BadRequestException(e);
   }
 
   @Delete(":id")
   // @UseGuards(AuthGuard(), ActionGuard("asset:index", "asset"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Query("type") type: "soft" | "hard" = "soft"
   ) {
     const asset = await this.service.findOne({_id: id});
 
-    const deletions = asset.resources.map(resource => {
-      const operator = operators.get(resource.module);
-      return operator.delete(resource);
-    });
-    await Promise.all(deletions);
+    await this.operate(asset.resources, "delete").catch(e => this.onInstallationFailed(id, e));
 
     if (type == "soft") {
       return this.service.findOneAndUpdate({_id: id}, {$set: {status: "downloaded"}});
@@ -129,5 +161,18 @@ export class AssetController {
     }
 
     throw new BadRequestException(`Unknown delete type '${type}'`);
+  }
+
+  operate(resources: Resource[], action: "insert" | "update" | "delete") {
+    const operations = resources.map(resource => {
+      const operator = operators.get(resource.module);
+      if (!operator) {
+        throw new BadRequestException(
+          `Operation ${action} has been failed: Unknown module named '${resource.module}'.`
+        );
+      }
+      return operator[action](resource);
+    });
+    return Promise.all(operations);
   }
 }

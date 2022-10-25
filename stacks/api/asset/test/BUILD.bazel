@@ -23,3 +23,31 @@ jasmine_node_test(
         ":asset_unit_test_lib",
     ],
 )
+
+ts_project(
+    name = "asset_e2e_test_lib",
+    testonly = True,
+    srcs = [
+        "e2e.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/bucket",
+        "//stacks/api/passport/testing",
+        "//packages/core/testing",
+        # "//packages/core/schema",
+        "//packages/database/testing",
+        "//stacks/api/replication/testing",
+        "//stacks/api/preference/testing",
+        "//stacks/api/asset",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+        "@npm//@nestjs/testing"
+    ],
+)
+
+jasmine_node_test(
+    name = "asset_e2e_test",
+    deps = [
+        ":asset_e2e_test_lib",
+    ],
+)

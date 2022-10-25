@@ -7,9 +7,10 @@ export interface Asset {
   resources: Resource[];
   status: Status;
   configs: Configuration[];
-  failure_messages?: string[];
+  failure_message?: string;
 }
 
+// use enum instead
 export type Status = "downloaded" | "installed" | "failed";
 
 export interface Configuration {
