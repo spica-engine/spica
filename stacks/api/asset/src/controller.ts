@@ -21,9 +21,9 @@ import {ARRAY, BOOLEAN, DEFAULT} from "@spica-server/core";
 
 /**
  * Authorization, Authentication
+ * Migration of policies
  * Schema validation
  * Deprecation of old endpoints
- * Migration of policies
  * Updates on CLI
  */
 

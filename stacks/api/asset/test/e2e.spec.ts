@@ -1,4 +1,4 @@
-import {INestApplication} from "@nestjs/common";
+import {INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
@@ -7,66 +7,73 @@ import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {ReplicationTestingModule} from "@spica-server/replication/testing";
 import {Asset, AssetModule} from "@spica-server/asset";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import {FunctionModule} from "@spica-server/function";
+import * as os from "os";
+
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:45678";
 
 describe("E2E Tests", () => {
   let req: Request;
   let app: INestApplication;
 
-  describe("Core", () => {
-    beforeEach(async () => {
-      const module = await Test.createTestingModule({
-        imports: [
-          CoreTestingModule,
-          DatabaseTestingModule.replicaSet(),
-          PreferenceTestingModule,
-          PassportTestingModule.initialize(),
-          // SchemaModule.forRoot({formats: [OBJECT_ID]}),
-          BucketModule.forRoot({
-            hooks: false,
-            history: false,
-            realtime: false,
-            cache: false,
-            graphql: false
-          }),
-          AssetModule,
-          ReplicationTestingModule.create()
-          // FunctionModule.forRoot({
-          //   path: os.tmpdir(),
-          //   databaseName: undefined,
-          //   databaseReplicaSet: undefined,
-          //   databaseUri: undefined,
-          //   apiUrl: undefined,
-          //   timeout: 20,
-          //   corsOptions: {
-          //     allowCredentials: true,
-          //     allowedHeaders: ["*"],
-          //     allowedMethods: ["*"],
-          //     allowedOrigins: ["*"]
-          //   },
-          //   logExpireAfterSeconds: 60,
-          //   entryLimit: 20,
-          //   maxConcurrency: 1,
-          //   debug: false,
-          //   realtimeLogs: false
-          // }),
-          // VersionControlModule.forRoot({persistentPath: os.tmpdir()})
-        ]
-      }).compile();
+  const moduleMeta: ModuleMetadata = {
+    imports: [
+      CoreTestingModule,
+      DatabaseTestingModule.replicaSet(),
+      PreferenceTestingModule,
+      PassportTestingModule.initialize(),
+      // SchemaModule.forRoot({formats: [OBJECT_ID]}),
+      BucketModule.forRoot({
+        hooks: false,
+        history: false,
+        realtime: false,
+        cache: false,
+        graphql: false
+      }),
+      AssetModule,
+      ReplicationTestingModule.create(),
+      FunctionModule.forRoot({
+        path: os.tmpdir(),
+        databaseName: undefined,
+        databaseReplicaSet: undefined,
+        databaseUri: undefined,
+        apiUrl: undefined,
+        timeout: 20,
+        corsOptions: {
+          allowCredentials: true,
+          allowedHeaders: ["*"],
+          allowedMethods: ["*"],
+          allowedOrigins: ["*"]
+        },
+        logExpireAfterSeconds: 60,
+        entryLimit: 20,
+        maxConcurrency: 1,
+        debug: false,
+        realtimeLogs: false
+      })
+    ]
+  };
 
-      app = module.createNestApplication();
-      req = module.get(Request);
+  beforeEach(async () => {
+    const module = await Test.createTestingModule(moduleMeta).compile();
 
-      await app.listen(req.socket);
+    app = module.createNestApplication();
+    req = module.get(Request);
 
-      jasmine.addCustomEqualityTester((actual, expected) => {
-        if (expected == "__skip__" && typeof actual == typeof expected) {
-          return true;
-        }
-      });
+    await app.listen(req.socket);
+
+    jasmine.addCustomEqualityTester((actual, expected) => {
+      if (expected == "__skip__" && typeof actual == typeof expected) {
+        return true;
+      }
     });
+  });
 
+  afterEach(async () => {
+    await app.close();
+  });
+
+  describe("Core", () => {
     describe("get", () => {
       let downloaded, installed, failed;
 
@@ -424,6 +431,53 @@ describe("E2E Tests", () => {
         res = await req.get(`asset/${asset._id}`);
         expect(res.statusCode).toEqual(404);
         expect(res.body.message).toEqual("Not Found");
+      });
+    });
+  });
+
+  xdescribe("Bucket", () => {
+    let bucket1;
+    const bucket1Id = new ObjectId();
+
+    beforeEach(() => {
+      bucket1 = {
+        _id: bucket1Id,
+        module: "bucket",
+        title: "bucket1",
+        properties: {
+          name: {
+            type: "string"
+          }
+        }
+      };
+    });
+
+    describe("install", () => {
+      it("should install bucket asset", async () => {
+        let asset: any = {
+          name: "bucket asset",
+          description: "description",
+          configs: [],
+          resources: [bucket1]
+        };
+
+        asset = await req.post("asset", asset).then(r => r.body);
+        await req
+          .post(`asset/${asset._id}`)
+          .then(console.log)
+          .catch(console.log);
+
+        const buckets = await req.get("bucket").then(r => r.body);
+        expect(buckets).toEqual({
+          _id: bucket1Id,
+          module: "bucket",
+          title: "bucket1",
+          properties: {
+            name: {
+              type: "string"
+            }
+          }
+        });
       });
     });
   });
