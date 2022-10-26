@@ -17,7 +17,7 @@ import {Asset, Configuration, Resource} from "./interface";
 import {operators, validators} from "./registration";
 import {compareResourceGroups} from "@spica-server/core/differ";
 import {putConfiguration} from "./helpers";
-import {ARRAY, BOOLEAN, DEFAULT} from "@spica-server/core";
+import {ARRAY, BOOLEAN, DEFAULT, OR} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 
 /**
@@ -27,7 +27,6 @@ import {Schema} from "@spica-server/core/schema";
  * Deprecation of old endpoints
  * Updates on CLI
  */
-
 
 @Controller("asset")
 export class AssetController {
@@ -83,8 +82,19 @@ export class AssetController {
   @Post(":id")
   async install(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/asset"), DEFAULT([]), ARRAY(c => c))
-    configs: Configuration[],
+    @Body(
+      Schema.validate({
+        type: "object",
+        required: ["configs"],
+        properties: {
+          configs: {
+            $ref: "http://spica.internal/asset/configs"
+          }
+        },
+        additionalProperties: false
+      })
+    )
+    {configs}: {configs: Configuration[]},
     @Query("preview", BOOLEAN) preview: boolean
   ) {
     let asset = await this.service.findOne({_id: id});

@@ -30,11 +30,12 @@
             "type": "object",
             "description": "Contents of the resource. Key is represents content name while value represents content definition"
           }
-        }
+        },
+        "additionalProperties": false
       }
     },
     "configs": {
-      "$id": "http://spica.internal/asset/config"
+      "$ref": "http://spica.internal/asset/configs"
     }
   },
   "additionalProperties": false

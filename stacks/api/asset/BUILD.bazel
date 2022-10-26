@@ -6,7 +6,7 @@ ts_project(
     name = "asset",
     package_name = "@spica-server/asset",
     srcs = glob([
-        "schema/asset.json",
+        "schema/*.json",
         "**/*.ts",
         "index.ts"
     ]),
