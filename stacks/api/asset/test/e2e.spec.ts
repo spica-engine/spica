@@ -15,6 +15,26 @@ import * as os from "os";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:45678";
 
 describe("E2E Tests", () => {
+  function downloadAsset(asset) {
+    return req.post("asset", asset).then(r => r.body);
+  }
+
+  function previewAssetInstallation(id, configs = []) {
+    return req.post(`asset/${id}`, {configs}, {}, {preview: true}).then(r => r.body);
+  }
+
+  function installAsset(id, configs = []) {
+    return req.post(`asset/${id}`, {configs}).then(r => r.body);
+  }
+
+  function getAsset(id) {
+    return req.get(`asset/${id}`).then(r => r.body);
+  }
+
+  function getAssets() {
+    return req.get("asset").then(r => r.body);
+  }
+
   let req: Request;
   let app: INestApplication;
 
@@ -105,19 +125,13 @@ describe("E2E Tests", () => {
           configs: []
         };
 
-        downloaded = await req.post("asset", downloaded).then(r => r.body);
+        downloaded = await downloadAsset(downloaded);
 
-        installed = await req.post("asset", installed).then(r => r.body);
-        installed = await req.post(`asset/${installed._id}`, {configs: []}).then(r => {
-          // console.log(r);
-          return r.body;
-        });
+        installed = await downloadAsset(installed);
+        installed = await installAsset(installed._id);
 
-        failed = await req.post("asset", failed).then(r => r.body);
-        await req.post(`asset/${failed._id}`, {configs: []}).then(r => {
-          // console.log(r);
-          return r.body;
-        });
+        failed = await downloadAsset(failed);
+        await installAsset(failed._id);
       });
 
       it("should get asset1", async () => {
@@ -183,14 +197,18 @@ describe("E2E Tests", () => {
     });
 
     describe("download", () => {
-      it("should download the asset", async () => {
-        const asset = {
+      let asset;
+
+      beforeEach(() => {
+        asset = {
           name: "asset1",
           description: "desc1",
           resources: [],
           configs: []
         };
+      });
 
+      it("should download the asset", async () => {
         const res = await req.post("asset", asset);
 
         expect(res.statusCode).toEqual(201);
@@ -205,26 +223,14 @@ describe("E2E Tests", () => {
       });
 
       it("should throw error for additional properties", async () => {
-        const asset = {
-          name: "asset1",
-          description: "desc1",
-          resources: [],
-          configs: [],
-          reject: "me"
-        };
-
-        const res = await req.post("asset", asset);
+        const res = await req.post("asset", {...asset, reject: "me"});
 
         expect(res.statusCode).toEqual(400);
         expect(res.body.message).toEqual("should NOT have additional properties 'reject'");
       });
 
       it("should throw error for missing required properties", async () => {
-        const asset = {
-          description: "desc1",
-          resources: [],
-          configs: []
-        };
+        delete asset.name;
 
         const res = await req.post("asset", asset);
 
@@ -233,12 +239,7 @@ describe("E2E Tests", () => {
       });
 
       it("should throw error for wrong typed properties", async () => {
-        const asset = {
-          name: "asset",
-          description: 1000,
-          resources: [],
-          configs: []
-        };
+        asset.description = 1000;
 
         const res = await req.post("asset", asset);
 
@@ -248,15 +249,20 @@ describe("E2E Tests", () => {
     });
 
     describe("install", () => {
-      it("should install the asset", async () => {
-        let asset: any = {
+      let asset;
+
+      beforeEach(async () => {
+        asset = {
           name: "asset1",
           description: "desc1",
           resources: [],
           configs: []
         };
 
-        asset = await req.post("asset", asset).then(r => r.body);
+        asset = await downloadAsset(asset);
+      });
+
+      it("should install the asset", async () => {
         const res = await req.post(`asset/${asset._id}`, {configs: []});
 
         expect(res.statusCode).toEqual(201);
@@ -271,15 +277,7 @@ describe("E2E Tests", () => {
       });
 
       it("should preview asset installation", async () => {
-        let asset: any = {
-          name: "asset1",
-          description: "desc1",
-          resources: [],
-          configs: []
-        };
-
-        asset = await req.post("asset", asset).then(r => r.body);
-        let res = await req.post(`asset/${asset._id}`, {configs: []}, {}, {preview: true});
+        const res = await req.post(`asset/${asset._id}`, {configs: []}, {}, {preview: true});
 
         expect(res.statusCode).toEqual(201);
         expect(res.body).toEqual({
@@ -288,8 +286,8 @@ describe("E2E Tests", () => {
           deletions: []
         });
 
-        res = await req.get(`asset/${asset._id}`);
-        expect(res.body).toEqual({
+        asset = await getAsset(asset._id);
+        expect(asset).toEqual({
           _id: "__skip__",
           name: "asset1",
           description: "desc1",
@@ -301,36 +299,30 @@ describe("E2E Tests", () => {
       });
 
       it("asset update asset from v1 to v2", async () => {
-        let assetv1: any = {
-          name: "asset",
-          description: "v1",
-          configs: [],
-          resources: []
-        };
-
-        let assetv2: any = {
-          ...assetv1,
+        let assetv2 = {
+          ...asset,
           description: "v2"
         };
+        delete assetv2._id;
+        delete assetv2.status;
 
-        assetv1 = await req.post(`asset`, assetv1).then(r => r.body);
-        await req.post(`asset/${assetv1._id}`, {configs: []});
+        assetv2 = await downloadAsset(assetv2);
 
-        assetv2 = await req.post(`asset`, assetv2).then(r => r.body);
+        await installAsset(asset._id);
 
-        let assets = await req.get("asset").then(r => r.body);
+        let assets = await getAssets();
         expect(assets).toEqual([
           {
-            _id: "__skip__",
-            name: "asset",
-            description: "v1",
+            _id: asset._id,
+            name: "asset1",
+            description: "desc1",
             configs: [],
             resources: [],
             status: "installed"
           },
           {
-            _id: "__skip__",
-            name: "asset",
+            _id: assetv2._id,
+            name: "asset1",
             description: "v2",
             configs: [],
             resources: [],
@@ -338,20 +330,21 @@ describe("E2E Tests", () => {
           }
         ]);
 
-        await req.post(`asset/${assetv2._id}`, {configs: []});
-        assets = await req.get("asset").then(r => r.body);
+        await installAsset(assetv2._id);
+
+        assets = await getAssets();
         expect(assets).toEqual([
           {
-            _id: "__skip__",
-            name: "asset",
-            description: "v1",
+            _id: asset._id,
+            name: "asset1",
+            description: "desc1",
             configs: [],
             resources: [],
             status: "downloaded"
           },
           {
-            _id: "__skip__",
-            name: "asset",
+            _id: assetv2._id,
+            name: "asset1",
             description: "v2",
             configs: [],
             resources: [],
@@ -360,90 +353,83 @@ describe("E2E Tests", () => {
         ]);
       });
 
-      it("should throw error if asset does not exist", async () => {
-        const res = await req.post(`asset/000000000000000000000000`, {configs: []});
-        expect(res.statusCode).toEqual(404);
-        expect(res.body.message).toEqual("Not Found");
-      });
+      describe("errors", () => {
+        it("should throw error if asset does not exist", async () => {
+          const res = await req.post(`asset/000000000000000000000000`, {configs: []});
+          expect(res.statusCode).toEqual(404);
+          expect(res.body.message).toEqual("Not Found");
+        });
 
-      it("should throw error if asset is already installed", async () => {
-        let asset: any = {
-          name: "asset",
-          description: "description",
-          configs: [],
-          resources: []
-        };
+        it("should throw error if asset is already installed", async () => {
+          await installAsset(asset._id);
 
-        asset = await req.post("asset", asset).then(r => r.body);
-        await req.post(`asset/${asset._id}`, {configs: []});
+          const res = await req.post(`asset/${asset._id}`, {configs: []});
 
-        const res = await req.post(`asset/${asset._id}`, {configs: []});
+          expect(res.statusCode).toEqual(400);
+          expect(res.body.message).toEqual("Asset is already installed.");
+        });
 
-        expect(res.statusCode).toEqual(400);
-        expect(res.body.message).toEqual("Asset is already installed.");
-      });
+        it("should throw error if validation failed while installing asset", async () => {
+          asset = {
+            ...asset,
+            resources: [
+              {
+                module: "non_exist_module"
+              }
+            ]
+          };
 
-      it("should throw error if validation failed while installing asset", async () => {
-        let asset: any = {
-          name: "asset",
-          description: "description",
-          resources: [
-            {
-              module: "non_exist_module"
-            }
-          ],
-          configs: []
-        };
+          delete asset._id;
+          delete asset.status;
 
-        asset = await req.post("asset", asset).then(r => r.body);
-        const res = await req.post(`asset/${asset._id}`, {configs: []});
+          asset = await downloadAsset(asset);
+          const res = await req.post(`asset/${asset._id}`, {configs: []});
 
-        expect(res.statusCode).toEqual(400);
-        expect(res.body.message).toEqual(
-          "Validation has been failed: Unknown module named 'non_exist_module'."
-        );
+          expect(res.statusCode).toEqual(400);
+          expect(res.body.message).toEqual(
+            "Validation has been failed: Unknown module named 'non_exist_module'."
+          );
 
-        const existing = await req.get(`asset/${asset._id}`).then(r => r.body);
-        expect(existing).toEqual({
-          _id: "__skip__",
-          name: "asset",
-          description: "description",
-          resources: [
-            {
-              module: "non_exist_module"
-            }
-          ],
-          configs: [],
-          status: "failed",
-          failure_message: "Validation has been failed: Unknown module named 'non_exist_module'."
+          const existing = await getAsset(asset._id);
+          expect(existing).toEqual({
+            _id: asset._id,
+            name: "asset1",
+            description: "desc1",
+            resources: [
+              {
+                module: "non_exist_module"
+              }
+            ],
+            configs: [],
+            status: "failed",
+            failure_message: "Validation has been failed: Unknown module named 'non_exist_module'."
+          });
         });
       });
     });
 
     describe("delete", () => {
-      it("should soft delete the asset as default", async () => {
-        let asset: any = {
+      let asset;
+
+      beforeEach(async () => {
+        asset = {
           name: "asset",
           description: "desc",
           resources: [],
           configs: []
         };
 
-        asset = await req.post("asset", asset).then(r => r.body);
-        let res = await req.post(`asset/${asset._id}`, {configs: []});
+        asset = await downloadAsset(asset);
+        await installAsset(asset._id);
+      });
 
-        // ensure that asset is installed
-        expect(res.body).toEqual({
-          ...asset,
-          status: "installed"
-        });
-
-        res = await req.delete(`asset/${asset._id}`);
+      it("should soft delete the asset as default", async () => {
+        const res = await req.delete(`asset/${asset._id}`);
         expect(res.statusCode).toEqual(204);
         expect(res.body).toEqual(undefined);
 
-        res = await req.get(`asset/${asset._id}`);
-        expect(res.body).toEqual({
+        asset = await getAsset(asset._id);
+        expect(asset).toEqual({
           _id: "__skip__",
           name: "asset",
           description: "desc",
@@ -454,23 +440,7 @@ describe("E2E Tests", () => {
       });
 
       it("should hard delete the asset", async () => {
-        let asset: any = {
-          name: "asset",
-          description: "desc",
-          resources: [],
-          configs: []
-        };
-
-        asset = await req.post("asset", asset).then(r => r.body);
-        let res = await req.post(`asset/${asset._id}`, {configs: []});
-
-        // ensure that asset is installed
-        expect(res.body).toEqual({
-          ...asset,
-          status: "installed"
-        });
-
-        res = await req.request({
+        let res = await req.request({
           path: `asset/${asset._id}`,
           method: "DELETE",
           query: {type: "hard"}
@@ -486,22 +456,6 @@ describe("E2E Tests", () => {
   });
 
   describe("Bucket", () => {
-    function downloadAsset(asset) {
-      return req.post("asset", asset).then(r => r.body);
-    }
-
-    function previewAssetInstallation(id, configs = []) {
-      return req.post(`asset/${id}`, {configs}, {}, {preview: true}).then(r => r.body);
-    }
-
-    function installAsset(id, configs = []) {
-      return req.post(`asset/${id}`, {configs}).then(r => r.body);
-    }
-
-    function getAsset(id) {
-      return req.get(`asset/${id}`).then(r => r.body);
-    }
-
     function getBuckets() {
       return req.get("bucket").then(r => r.body);
     }
