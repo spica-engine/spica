@@ -116,8 +116,8 @@ export class AssetController {
       status: "installed"
     });
     const {insertions, updations, deletions} = compareResourceGroups<Resource>(
+      asset.resources,
       installedAsset ? installedAsset.resources : [],
-      asset.resources
     );
 
     if (preview) {

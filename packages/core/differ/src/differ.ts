@@ -114,8 +114,8 @@ export class Patch {
 }
 
 export function compareResourceGroups<T>(
-  sources: T[],
-  targets: T[],
+  desired: T[],
+  actual: T[],
   comparisonOptions: {
     uniqueField: string;
     ignoredFields: string[];
@@ -126,8 +126,8 @@ export function compareResourceGroups<T>(
 ) {
   const {ignoredFields, uniqueField} = comparisonOptions;
 
-  const existings = targets.filter(target =>
-    sources.some(source => source[uniqueField] == target[uniqueField])
+  const existings = actual.filter(target =>
+    desired.some(source => source[uniqueField] == target[uniqueField])
   );
 
   const existingIds = existings.map(existing => existing[uniqueField]);
@@ -135,7 +135,7 @@ export function compareResourceGroups<T>(
   const updations = () => {
     const updations = [];
     for (const existing of existings) {
-      const source = sources.find(source => source[uniqueField] == existing[uniqueField]);
+      const source = desired.find(source => source[uniqueField] == existing[uniqueField]);
 
       const copySource = JSON.parse(JSON.stringify(source));
 
@@ -154,9 +154,9 @@ export function compareResourceGroups<T>(
     return updations;
   };
 
-  const insertions = () => sources.filter(source => existingIds.indexOf(source[uniqueField]) == -1);
+  const insertions = () => desired.filter(source => existingIds.indexOf(source[uniqueField]) == -1);
 
-  const deletions = () => targets.filter(target => existingIds.indexOf(target[uniqueField]) == -1);
+  const deletions = () => actual.filter(target => existingIds.indexOf(target[uniqueField]) == -1);
 
   return {
     insertions: insertions(),

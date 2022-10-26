@@ -14,7 +14,7 @@ export function registerAssetHandlers(
 ) {
   const validator = (resource: Resource<BucketAsset>) => {
     const bucket = resource.contents.schema;
-    return validateBucket(bucket._id.toString(), bucket, schemaValidator);
+    return validateBucket(bucket, schemaValidator);
   };
 
   registrar.validator(_module, validator);
@@ -31,8 +31,9 @@ export function registerAssetHandlers(
   registrar.operator(_module, operator);
 }
 
-function validateBucket(schemaId: string, bucket: any, validator: Validator): Promise<void> {
-  const validatorMixin = Schema.validate(schemaId);
+function validateBucket(bucket: any, validator: Validator): Promise<void> {
+  const validatorMixin = Schema.validate("http://spica.internal/bucket/schema");
+  
   const pipe: any = new validatorMixin(validator);
   return pipe.transform(bucket);
 }

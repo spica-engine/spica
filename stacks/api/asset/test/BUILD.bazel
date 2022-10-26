@@ -34,7 +34,7 @@ ts_project(
         "//stacks/api/bucket",
         "//stacks/api/passport/testing",
         "//packages/core/testing",
-        # "//packages/core/schema",
+        "//packages/core/schema",
         "//packages/database/testing",
         "//stacks/api/replication/testing",
         "//stacks/api/preference/testing",
