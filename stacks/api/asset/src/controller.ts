@@ -21,6 +21,7 @@ import {ARRAY, BOOLEAN, DEFAULT, OR} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 
 /**
+ * Mongodb transactions
  * Authorization, Authentication
  * Migration of policies
  * Schema validation
