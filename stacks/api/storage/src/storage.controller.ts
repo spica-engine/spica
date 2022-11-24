@@ -99,7 +99,7 @@ export class StorageController {
       throw new NotFoundException("Could not find the object.");
     }
 
-    object.url = await this.storage.getUrl(id.toHexString());
+    object.url = this.storage.getUrl(id.toHexString());
 
     delete object.content.data;
     return object;
@@ -133,7 +133,7 @@ export class StorageController {
     object = await this.storage.update(id, object).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
-    object.url = await this.storage.getUrl(id.toHexString());
+    object.url = this.storage.getUrl(id.toHexString());
     return object;
   }
 
@@ -189,7 +189,7 @@ export class StorageController {
     });
 
     for (const object of objects) {
-      object.url = await this.storage.getUrl(object._id.toString());
+      object.url = this.storage.getUrl(object._id.toString());
     }
     return objects;
   }

@@ -46,9 +46,4 @@ export class AWSS3 implements Strategy {
       });
     });
   }
-
-  url(id: string): string | Promise<string> {
-    // @TODO: find a way to get object location instead of this
-    return `https://${this.bucketName}.s3.${AWS.config.region}.amazonaws.com/${id}`;
-  }
 }

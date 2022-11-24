@@ -25,15 +25,4 @@ export class GCloud implements Strategy {
   delete(id: string) {
     this.bucket.file(id).delete();
   }
-
-  url(id: string) {
-    return this.bucket
-      .file(id)
-      .getMetadata()
-      .then(([res]) => {
-        const url = new URL(res.mediaLink);
-        url.searchParams.delete("generation");
-        return url.toString();
-      });
-  }
 }

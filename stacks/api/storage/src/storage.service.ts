@@ -99,7 +99,7 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
       .next()
       .then(async result => {
         for (const object of result.data) {
-          object.url = await this.service.url(object._id.toString());
+          object.url = this.getUrl(object._id.toString());
         }
         return result;
       });
@@ -160,8 +160,8 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
     return insertedObjects;
   }
 
-  async getUrl(id: string) {
-    return this.service.url(id);
+  getUrl(id: string) {
+    return `${this.storageOptions.defaultPublicUrl}/storage/${id}/view`;
   }
 }
 

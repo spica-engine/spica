@@ -24,10 +24,6 @@ export class Default implements Strategy {
     return fs.promises.unlink(objectPath);
   }
 
-  url(id: string) {
-    return `${this.publicUrl}/storage/${id}/view`;
-  }
-
   private buildPath(id: string) {
     return `${this.path}/${id}.storageobj`;
   }
