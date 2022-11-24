@@ -42,11 +42,16 @@ export class BaseUrlInterceptor implements HttpInterceptor {
         console.warn(
           `BaseUrlInterceptor: The base url '${base}' could not found in any base collection. (Url: ${request.url})`
         );
-        return next.handle(
-          request.clone({
-            headers: request.headers.append("X-Not-Api", "true")
-          })
-        );
+
+        if (!request.url.startsWith(this.baseCollection.api)) {
+          return next.handle(
+            request.clone({
+              headers: request.headers.append("X-Not-Api", "true")
+            })
+          );
+        }
+
+        return next.handle(request);
       }
       const url = this.baseCollection[base] + request.url.replace(regExp, "");
       return next.handle(request.clone({url: url}));

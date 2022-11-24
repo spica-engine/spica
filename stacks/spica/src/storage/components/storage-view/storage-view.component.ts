@@ -9,6 +9,7 @@ import {
   SimpleChanges
 } from "@angular/core";
 import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
+import {StorageService} from "@spica-client/storage/storage.service";
 import {Observable} from "rxjs";
 import {distinctUntilChanged, filter, map, switchMap, takeWhile, tap} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
@@ -32,47 +33,56 @@ export class StorageViewComponent implements OnChanges {
     private http: HttpClient,
     private cd: ChangeDetectorRef,
     private sanitizer: DomSanitizer,
-    private element: ElementRef<Element>
+    private element: ElementRef<Element>,
+    private storage: StorageService
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.blob && changes.blob.currentValue) {
       this.error = undefined;
-      if (typeof this.blob == "string") {
-        this.ready = false;
-        const url = this.blob;
-        this.observe()
-          .pipe(
-            switchMap(() => this.http.get(url, {responseType: "blob"})),
-            tap(r => (this.contentType = r.type)),
-            takeWhile(r => this.displayableTypes.test(r.type))
-          )
-          .subscribe({
-            next: r => {
-              this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(r));
-              this.ready = true;
-              this.cd.markForCheck();
-            },
-            error: event => {
-              this.ready = true;
-              this.error = event.error.type;
-              this.cd.markForCheck();
-            },
-            complete: () => {
-              this.ready = !this.displayableTypes.test(this.contentType);
-              this.cd.markForCheck();
-            }
-          });
-      } else if (this.blob instanceof Blob) {
-        this.contentType = this.blob.type;
-        this.ready = !this.displayableTypes.test(this.contentType);
-        this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(this.blob));
+      if (this.blob instanceof Blob) {
+        this.onDownloaded(this.blob);
+      } else if (typeof this.blob == "string") {
+        this.download(this.blob);
       } else {
+        // set content type before download process completion,
+        // otherwise 'object cannot be viewed' title will appear until the download is completed
         this.contentType = this.blob.content.type;
-        this.ready = !this.displayableTypes.test(this.contentType);
-        this.content = this.blob.url;
+        this.download(this.blob.url);
       }
     }
+  }
+
+  onDownloaded(blob: Blob) {
+    this.contentType = blob.type;
+    this.ready = !this.displayableTypes.test(this.contentType);
+    this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(blob));
+  }
+
+  download(url) {
+    this.ready = false;
+    this.observe()
+      .pipe(
+        switchMap(() => this.storage.download(url, false)),
+        tap(r => (this.contentType = r.type)),
+        takeWhile(r => this.displayableTypes.test(r.type))
+      )
+      .subscribe({
+        next: r => {
+          this.onDownloaded(r);
+          this.ready = true;
+          this.cd.markForCheck();
+        },
+        error: event => {
+          this.ready = true;
+          this.error = event.error.type;
+          this.cd.markForCheck();
+        },
+        complete: () => {
+          this.ready = !this.displayableTypes.test(this.contentType);
+          this.cd.markForCheck();
+        }
+      });
   }
 
   viewError(event: MediaError) {
