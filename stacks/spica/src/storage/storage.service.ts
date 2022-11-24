@@ -1,5 +1,6 @@
 import {HttpClient, HttpEvent, HttpHeaders, HttpParams, HttpRequest} from "@angular/common/http";
 import {Injectable} from "@angular/core";
+import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
 import {IndexResult, fileToBuffer} from "@spica-client/core";
 import * as BSON from "bson";
 import {Buffer} from "buffer";
@@ -14,7 +15,7 @@ window["Buffer"] = Buffer;
 @Injectable({providedIn: "root"})
 export class StorageService {
   private lastUpdates: LastUpdateCache;
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private sanitizer: DomSanitizer) {
     this.lastUpdates = new LastUpdateCache();
   }
 
@@ -136,5 +137,21 @@ export class StorageService {
 
   private deepCopy(value: unknown) {
     return JSON.parse(JSON.stringify(value));
+  }
+
+  download(url: string, prepareForDisplay?: true): Promise<SafeUrl>;
+  download(url: string, prepareForDisplay?: false): Promise<Blob>;
+  download(url: string, prepareForDisplay?: boolean): Promise<Blob | SafeUrl>;
+  download(url: string, prepareForDisplay = true) {
+    return this.http
+      .get(url, {responseType: "blob"})
+      .toPromise()
+      .then(blob => {
+        if (!prepareForDisplay) {
+          return blob;
+        }
+        // try to use sanitize method for possible xss attacks
+        return this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(blob));
+      });
   }
 }

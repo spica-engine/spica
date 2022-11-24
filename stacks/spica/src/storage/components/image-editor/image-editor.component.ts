@@ -7,7 +7,7 @@ import {Observable, of, BehaviorSubject} from "rxjs";
 import {SavingState} from "@spica-client/material";
 import {tap, take} from "rxjs/operators";
 import {HttpClient} from "@angular/common/http";
-import { DomSanitizer } from "@angular/platform-browser";
+import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
 
 @Component({
   selector: "storage-image-editor",
@@ -18,7 +18,7 @@ export class ImageEditorComponent implements OnInit {
   @ViewChild("cropperComponent") public cropperComponent: CropperComponent;
   @ViewChild("canvas", {static: true}) canvas: ElementRef;
 
-  blob;
+  content: SafeUrl;
 
   public cropperOptions: Cropper.Options = {
     movable: true,
@@ -62,8 +62,8 @@ export class ImageEditorComponent implements OnInit {
       .pipe(tap(() => this.$save.next(SavingState.Pristine)))
       .toPromise()
       .then(storage => (this.storage = storage))
-      .then(storage => this.http.get(storage.url, {responseType: "blob"}).toPromise())
-      .then(blob => (this.blob = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(blob))));
+      .then(storage => this.storageService.download(storage.url))
+      .then(content => (this.content = content));
   }
 
   cropperReady() {

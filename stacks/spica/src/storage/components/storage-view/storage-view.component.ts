@@ -9,6 +9,7 @@ import {
   SimpleChanges
 } from "@angular/core";
 import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
+import {StorageService} from "@spica-client/storage/storage.service";
 import {Observable} from "rxjs";
 import {distinctUntilChanged, filter, map, switchMap, takeWhile, tap} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
@@ -32,35 +33,43 @@ export class StorageViewComponent implements OnChanges {
     private http: HttpClient,
     private cd: ChangeDetectorRef,
     private sanitizer: DomSanitizer,
-    private element: ElementRef<Element>
+    private element: ElementRef<Element>,
+    private storage: StorageService
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.blob && changes.blob.currentValue) {
       this.error = undefined;
-      if (typeof this.blob == "string") {
+      if (this.blob instanceof Blob) {
+        this.onDownloaded(this.blob);
+      } else if (typeof this.blob == "string") {
         this.download(this.blob);
-      } else if (this.blob instanceof Blob) {
-        this.contentType = this.blob.type;
-        this.ready = !this.displayableTypes.test(this.contentType);
-        this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(this.blob));
       } else {
+        // set content type before download process completion,
+        // otherwise 'object cannot be viewed' title will appear until the download is completed
+        this.contentType = this.blob.content.type;
         this.download(this.blob.url);
       }
     }
+  }
+
+  onDownloaded(blob: Blob) {
+    this.contentType = blob.type;
+    this.ready = !this.displayableTypes.test(this.contentType);
+    this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(blob));
   }
 
   download(url) {
     this.ready = false;
     this.observe()
       .pipe(
-        switchMap(() => this.http.get(url, {responseType: "blob"})),
+        switchMap(() => this.storage.download(url,false)),
         tap(r => (this.contentType = r.type)),
         takeWhile(r => this.displayableTypes.test(r.type))
       )
       .subscribe({
         next: r => {
-          this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(r));
+          this.onDownloaded(r);
           this.ready = true;
           this.cd.markForCheck();
         },

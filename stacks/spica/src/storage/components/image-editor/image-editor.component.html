@@ -43,7 +43,7 @@
       (zoom)="zoomManual()"
       class="cropperCanvas"
       [cropperOptions]="cropperOptions"
-      [imageUrl]="blob"
+      [imageUrl]="content"
     ></angular-cropper>
   </mat-card-content>
   <canvas [hidden]="true" #canvas></canvas>
