@@ -63,7 +63,7 @@ export class StorageViewComponent implements OnChanges {
     this.ready = false;
     this.observe()
       .pipe(
-        switchMap(() => this.storage.download(url,false)),
+        switchMap(() => this.storage.download(url, false)),
         tap(r => (this.contentType = r.type)),
         takeWhile(r => this.displayableTypes.test(r.type))
       )
