@@ -39,40 +39,41 @@ export class StorageViewComponent implements OnChanges {
     if (changes.blob && changes.blob.currentValue) {
       this.error = undefined;
       if (typeof this.blob == "string") {
-        this.ready = false;
-        const url = this.blob;
-        this.observe()
-          .pipe(
-            switchMap(() => this.http.get(url, {responseType: "blob"})),
-            tap(r => (this.contentType = r.type)),
-            takeWhile(r => this.displayableTypes.test(r.type))
-          )
-          .subscribe({
-            next: r => {
-              this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(r));
-              this.ready = true;
-              this.cd.markForCheck();
-            },
-            error: event => {
-              this.ready = true;
-              this.error = event.error.type;
-              this.cd.markForCheck();
-            },
-            complete: () => {
-              this.ready = !this.displayableTypes.test(this.contentType);
-              this.cd.markForCheck();
-            }
-          });
+        this.download(this.blob);
       } else if (this.blob instanceof Blob) {
         this.contentType = this.blob.type;
         this.ready = !this.displayableTypes.test(this.contentType);
         this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(this.blob));
       } else {
-        this.contentType = this.blob.content.type;
-        this.ready = !this.displayableTypes.test(this.contentType);
-        this.content = this.blob.url;
+        this.download(this.blob.url);
       }
     }
+  }
+
+  download(url) {
+    this.ready = false;
+    this.observe()
+      .pipe(
+        switchMap(() => this.http.get(url, {responseType: "blob"})),
+        tap(r => (this.contentType = r.type)),
+        takeWhile(r => this.displayableTypes.test(r.type))
+      )
+      .subscribe({
+        next: r => {
+          this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(r));
+          this.ready = true;
+          this.cd.markForCheck();
+        },
+        error: event => {
+          this.ready = true;
+          this.error = event.error.type;
+          this.cd.markForCheck();
+        },
+        complete: () => {
+          this.ready = !this.displayableTypes.test(this.contentType);
+          this.cd.markForCheck();
+        }
+      });
   }
 
   viewError(event: MediaError) {

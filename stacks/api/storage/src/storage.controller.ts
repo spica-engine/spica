@@ -66,6 +66,7 @@ export class StorageController {
    * @param ifNoneMatch When present and matches objects checksum, status code will be 304.
    */
   @Get(":id/view")
+  @UseGuards(AuthGuard(), ActionGuard("storage:show", "storage/:id"))
   async view(
     @Res() res,
     @Param("id", OBJECT_ID) id: ObjectId,
@@ -90,6 +91,7 @@ export class StorageController {
    * @param id Identifier of the object
    */
   @Get(":id")
+  @UseGuards(AuthGuard(), ActionGuard("storage:show"))
   async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     const object = await this.storage.get(id);
 
