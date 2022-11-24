@@ -272,7 +272,7 @@
                 <span
                   *ngIf="editingCellId != getEditingCellId(row._id, property.key)"
                   class="cell"
-                  [innerHTML]="getTemplate(row[property.key], property.value, property.key)"
+                  [innerHTML]="buildTemplate(row[property.key], property.value, property.key)"
                 ></span>
                 <span
                   [attr.id]="row._id + '_' + property.key"

@@ -33,7 +33,7 @@ import {NgModel} from "@angular/forms";
 import {Scheme, SchemeObserver} from "@spica-client/core";
 import {guides} from "./guides";
 import {FilterComponent} from "@spica-client/bucket/components/filter/filter.component";
-import {HttpClient} from "@angular/common/http";
+import {StorageService} from "@spica-client/storage";
 
 @Component({
   selector: "bucket-data-index",
@@ -112,13 +112,13 @@ export class IndexComponent implements OnInit, OnDestroy {
   private postRenderingQueue: Array<any> = [];
 
   constructor(
-    private http: HttpClient,
     private bs: BucketService,
     private bds: BucketDataService,
     private route: ActivatedRoute,
     private router: Router,
     private sanitizer: DomSanitizer,
     private scheme: SchemeObserver,
+    private storage: StorageService,
     @Inject(BUCKET_OPTIONS) private options: BucketOptions
   ) {
     this.scheme
@@ -464,7 +464,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     }
   }
 
-  getTemplate(value, property, name) {
+  buildTemplate(value, property, name) {
     const key = `${name}_${typeof value == "object" ? JSON.stringify(value) : value}`;
 
     if (this.templateMap.has(key)) {
@@ -544,21 +544,17 @@ export class IndexComponent implements OnInit, OnDestroy {
 
         const url = value + "?timestamp=" + new Date().getTime();
 
-        this.http
-          .get(url, {responseType: "blob"})
-          .toPromise()
-          .then(r => {
-            const src = URL.createObjectURL(r);
-            props = {
-              src,
-              alt: value,
-              onerror: this.onImageError
-            };
+        this.storage.download(url, false).then(r => {
+          props = {
+            src: URL.createObjectURL(r),
+            alt: value,
+            onerror: this.onImageError
+          };
 
-            result = this.buildHtml({name: "img", style, props, noEndTag: true});
+          result = this.buildHtml({name: "img", style, props, noEndTag: true});
 
-            this.templateMap.set(key, result);
-          });
+          this.templateMap.set(key, result);
+        });
 
         break;
 
@@ -689,7 +685,6 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   refreshOnImageErrorStyle(isDark: boolean) {
-    return;
     const src = "assets/image_not_supported.svg";
 
     const width = "30px";

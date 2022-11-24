@@ -1,5 +1,5 @@
 import {HttpClient, HttpEvent, HttpHeaders, HttpParams, HttpRequest} from "@angular/common/http";
-import {Injectable} from "@angular/core";
+import {Injectable, SecurityContext} from "@angular/core";
 import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
 import {IndexResult, fileToBuffer} from "@spica-client/core";
 import * as BSON from "bson";
@@ -141,7 +141,7 @@ export class StorageService {
 
   download(url: string, prepareForDisplay?: true): Promise<SafeUrl>;
   download(url: string, prepareForDisplay?: false): Promise<Blob>;
-  download(url: string, prepareForDisplay?: boolean): Promise<Blob | SafeUrl>;
+  download(url: string, prepareForDisplay?: boolean): Promise<Blob | SafeUrl>;
   download(url: string, prepareForDisplay = true) {
     return this.http
       .get(url, {responseType: "blob"})
@@ -150,7 +150,7 @@ export class StorageService {
         if (!prepareForDisplay) {
           return blob;
         }
-        // try to use sanitize method for possible xss attacks
+        // return this.sanitizer.sanitize(SecurityContext.RESOURCE_URL, URL.createObjectURL(blob));
         return this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(blob));
       });
   }
