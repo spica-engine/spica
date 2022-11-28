@@ -103,7 +103,9 @@ export namespace dependencies {
       return `${name}@${(version as string).slice(1)}`;
     });
 
-    await engine.addPackage(fn, newDeps).toPromise();
+    if (newDeps.length) {
+      await engine.addPackage(fn, newDeps).toPromise();
+    }
 
     return fn;
   }

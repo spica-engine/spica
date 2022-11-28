@@ -649,8 +649,17 @@ describe("E2E Tests", () => {
         timeout: 120,
         language: "javascript",
         triggers: {
-          
-        }
+          test: {
+            type: "http",
+            active: false,
+            options: {
+              method: "Get",
+              path: "/",
+              preflight: true
+            }
+          }
+        },
+        memoryLimit: 100
       };
 
       fnv1Resource = {
@@ -661,7 +670,10 @@ describe("E2E Tests", () => {
           env: {
             test: "987"
           },
-          index: "console.log('Hi')"
+          index: "console.log('Hi')",
+          package: {
+            dependencies: {}
+          }
         }
       };
 
@@ -669,7 +681,14 @@ describe("E2E Tests", () => {
 
       fnv2Resource = {
         ...fnv1Resource,
-        contents: {schema: fnv2, env: {asd: "qwe"}, index: "console.log('Hi v2')"}
+        contents: {
+          schema: fnv2,
+          env: {asd: "qwe"},
+          index: "console.log('Hi v2')",
+          package: {
+            dependencies: {}
+          }
+        }
       };
     });
 
@@ -710,78 +729,77 @@ describe("E2E Tests", () => {
       });
     });
 
-    // describe("updations", () => {
-    //   beforeEach(async () => {
-    //     await installAsset(assetv1._id);
-    //     assetv2 = await downloadAsset(assetv2);
-    //   });
+    describe("updations", () => {
+      beforeEach(async () => {
+        await installAsset(assetv1._id);
+        assetv2 = await downloadAsset(assetv2);
+      });
 
-    //   it("should preview bucket asset installation", async () => {
-    //     const preview = await previewAssetInstallation(assetv2._id);
-    //     expect(preview).toEqual({insertions: [], updations: [bucketv2Resource], deletions: []});
+      it("should preview function asset installation", async () => {
+        const preview = await previewAssetInstallation(assetv2._id);
+        expect(preview).toEqual({insertions: [], updations: [fnv2Resource], deletions: []});
 
-    //     assetv1 = await getAsset(assetv1._id);
-    //     expect(assetv1.status).toEqual("installed");
+        assetv1 = await getAsset(assetv1._id);
+        expect(assetv1.status).toEqual("installed");
 
-    //     assetv2 = await getAsset(assetv2._id);
-    //     expect(assetv2.status).toEqual("downloaded");
+        assetv2 = await getAsset(assetv2._id);
+        expect(assetv2.status).toEqual("downloaded");
 
-    //     const fns = await getBuckets();
-    //     expect(fns).toEqual([bucketv1]);
-    //   });
+        const fns = await getFns();
+        expect(fns).toEqual([fnv1]);
+      });
 
-    //   it("should install bucket asset", async () => {
-    //     await installAsset(assetv2._id);
+      it("should install function asset", async () => {
+        await installAsset(assetv2._id);
 
-    //     assetv1 = await getAsset(assetv1._id);
-    //     expect(assetv1.status).toEqual("downloaded");
+        assetv1 = await getAsset(assetv1._id);
+        expect(assetv1.status).toEqual("downloaded");
 
-    //     assetv2 = await getAsset(assetv2._id);
-    //     expect(assetv2.status).toEqual("installed");
+        assetv2 = await getAsset(assetv2._id);
+        expect(assetv2.status).toEqual("installed");
 
-    //     const fns = await getBuckets();
-    //     expect(fns).toEqual([bucketv2]);
-    //   });
-    // });
+        const fns = await getFns();
+        expect(fns).toEqual([fnv2]);
+      });
+    });
 
-    // describe("deletions", () => {
-    //   beforeEach(async () => {
-    //     await installAsset(assetv1._id);
+    describe("deletions", () => {
+      beforeEach(async () => {
+        await installAsset(assetv1._id);
 
-    //     assetv2 = {...assetv1, resources: []};
-    //     delete assetv2._id;
-    //     delete assetv2.status;
+        assetv2 = {...assetv1, resources: []};
+        delete assetv2._id;
+        delete assetv2.status;
 
-    //     assetv2 = await downloadAsset(assetv2);
-    //   });
+        assetv2 = await downloadAsset(assetv2);
+      });
 
-    //   it("should preview bucket asset installation", async () => {
-    //     const preview = await previewAssetInstallation(assetv2._id);
-    //     expect(preview).toEqual({insertions: [], updations: [], deletions: [fnv1Resource]});
+      it("should preview function asset installation", async () => {
+        const preview = await previewAssetInstallation(assetv2._id);
+        expect(preview).toEqual({insertions: [], updations: [], deletions: [fnv1Resource]});
 
-    //     assetv1 = await getAsset(assetv1._id);
-    //     expect(assetv1.status).toEqual("installed");
+        assetv1 = await getAsset(assetv1._id);
+        expect(assetv1.status).toEqual("installed");
 
-    //     assetv2 = await getAsset(assetv2._id);
-    //     expect(assetv2.status).toEqual("downloaded");
+        assetv2 = await getAsset(assetv2._id);
+        expect(assetv2.status).toEqual("downloaded");
 
-    //     const fns = await getBuckets();
-    //     expect(fns).toEqual([bucketv1]);
-    //   });
+        const fns = await getFns();
+        expect(fns).toEqual([fnv1]);
+      });
 
-    //   it("should install bucket asset", async () => {
-    //     await installAsset(assetv2._id);
+      it("should install function asset", async () => {
+        await installAsset(assetv2._id);
 
-    //     assetv1 = await getAsset(assetv1._id);
-    //     expect(assetv1.status).toEqual("downloaded");
+        assetv1 = await getAsset(assetv1._id);
+        expect(assetv1.status).toEqual("downloaded");
 
-    //     assetv2 = await getAsset(assetv2._id);
-    //     expect(assetv2.status).toEqual("installed");
+        assetv2 = await getAsset(assetv2._id);
+        expect(assetv2.status).toEqual("installed");
 
-    //     const fns = await getBuckets();
-    //     expect(fns).toEqual([]);
-    //   });
-    // });
-
+        const fns = await getFns();
+        expect(fns).toEqual([]);
+      });
+    });
   });
 });

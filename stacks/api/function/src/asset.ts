@@ -34,8 +34,8 @@ export function registerAssetHandlers(
 
       await CRUD.index.write(fs, engine, fn._id, resource.contents.index);
 
-      fn.dependencies = resource.contents.package.dependencies;
-      await CRUD.dependencies.reinstall(engine, fn);
+      const fnWithDeps = {dependencies: resource.contents.package.dependencies, ...fn};
+      await CRUD.dependencies.reinstall(engine, fnWithDeps);
     },
 
     update: async (resource: Resource<FunctionContents>) => {
