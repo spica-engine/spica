@@ -1,4 +1,4 @@
-import {INestApplication, ModuleMetadata} from "@nestjs/common";
+import {DynamicModule, INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
@@ -11,8 +11,16 @@ import {FunctionModule} from "@spica-server/function";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import * as os from "os";
+import {PassportModule} from "@spica-server/passport";
+import {IdentityModule} from "@spica-server/passport/identity";
+import {PolicyModule} from "@spica-server/passport/policy";
+import {PreferenceModule} from "@spica-server/preference";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:45678";
+const EXPIRES_IN = 60 * 60 * 24;
+const MAX_EXPIRES_IN = EXPIRES_IN * 2;
+
+const PUBLIC_URL = "http://insteadof";
 
 describe("E2E Tests", () => {
   function downloadAsset(asset) {
@@ -42,8 +50,26 @@ describe("E2E Tests", () => {
     imports: [
       CoreTestingModule,
       DatabaseTestingModule.replicaSet(),
-      PreferenceTestingModule,
-      PassportTestingModule.initialize(),
+      PreferenceModule.forRoot(),
+      PassportModule.forRoot({
+        expiresIn: EXPIRES_IN,
+        issuer: "spica",
+        maxExpiresIn: MAX_EXPIRES_IN,
+        publicUrl: PUBLIC_URL,
+        samlCertificateTTL: EXPIRES_IN,
+        secretOrKey: "spica",
+        defaultStrategy: "IDENTITY",
+        defaultIdentityIdentifier: "spica",
+        defaultIdentityPassword: "spica",
+        audience: "spica",
+        defaultIdentityPolicies: [
+          "PassportFullAccess",
+          "FunctionFullAccess",
+          "BucketFullAccess",
+          "PreferenceFullAccess"
+        ]
+      }),
+      PolicyModule.forRoot(),
       SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
       BucketModule.forRoot({
         hooks: false,
@@ -83,6 +109,13 @@ describe("E2E Tests", () => {
     req = module.get(Request);
 
     await app.listen(req.socket);
+
+    await new Promise((resolve, _) => setTimeout(resolve, 3000));
+
+    const token = await req
+      .post("/passport/identify", {identifier: "spica", password: "spica"})
+      .then(r => r.body.token);
+    req.setDefaultHeaders({Authorization: `IDENTITY ${token}`});
 
     jasmine.addCustomEqualityTester((actual, expected) => {
       if (expected == "__skip__" && typeof actual == typeof expected) {
@@ -799,6 +832,195 @@ describe("E2E Tests", () => {
 
         const fns = await getFns();
         expect(fns).toEqual([]);
+      });
+    });
+  });
+
+  describe("identity-settings", () => {
+    function getIdentitySettings() {
+      return req.get("preference/passport").then(r => r.body);
+    }
+
+    let identitySettingsV1Resource;
+    let identitySettingsV1;
+
+    let identitySettingsV2Resource;
+    let identitySettingsV2;
+
+    let assetv1;
+    let assetv2;
+
+    beforeEach(async () => {
+      identitySettingsV1 = {
+        attributes: {
+          name: {
+            type: "string"
+          }
+        }
+      };
+
+      identitySettingsV1Resource = {
+        module: "identity-settings",
+        contents: {
+          schema: identitySettingsV1
+        }
+      };
+
+      identitySettingsV2 = {
+        attributes: {
+          age: {
+            type: "number"
+          }
+        }
+      };
+
+      identitySettingsV2Resource = {
+        ...identitySettingsV1Resource,
+        contents: {
+          schema: identitySettingsV2
+        }
+      };
+    });
+
+    beforeEach(async () => {
+      assetv1 = {
+        name: "identity settings asset",
+        description: "description",
+        configs: [],
+        resources: [identitySettingsV1Resource]
+      };
+
+      assetv2 = {...assetv1, resources: [identitySettingsV2Resource]};
+
+      assetv1 = await downloadAsset(assetv1);
+    });
+
+    describe("insertions", () => {
+      it("should preview identity settings asset installation", async () => {
+        const preview = await previewAssetInstallation(assetv1._id);
+
+        expect(preview).toEqual({
+          insertions: [identitySettingsV1Resource],
+          updations: [],
+          deletions: []
+        });
+
+        assetv1 = await getAsset(assetv1._id);
+        expect(assetv1.status).toEqual("downloaded");
+
+        const identitySettings = await getIdentitySettings();
+        expect(identitySettings).toEqual({
+          scope: "passport",
+          identity: {attributes: {type:"object"}}
+        });
+      });
+
+      it("should install identity settings asset", async () => {
+        await installAsset(assetv1._id);
+
+        const identitySettings = await getIdentitySettings();
+        expect(identitySettings).toEqual({
+          _id: "__skip__",
+          scope: "passport",
+          identity: identitySettingsV1
+        });
+      });
+    });
+
+    describe("updations", () => {
+      beforeEach(async () => {
+        await installAsset(assetv1._id);
+        assetv2 = await downloadAsset(assetv2);
+      });
+
+      it("should preview identity settings asset installation", async () => {
+        const preview = await previewAssetInstallation(assetv2._id);
+        expect(preview).toEqual({
+          insertions: [],
+          updations: [identitySettingsV2Resource],
+          deletions: []
+        });
+
+        assetv1 = await getAsset(assetv1._id);
+        expect(assetv1.status).toEqual("installed");
+
+        assetv2 = await getAsset(assetv2._id);
+        expect(assetv2.status).toEqual("downloaded");
+
+        const identitySettings = await getIdentitySettings();
+        expect(identitySettings).toEqual({
+          _id: "__skip__",
+          scope: "passport",
+          identity: identitySettingsV1
+        });
+      });
+
+      it("should install identity settings asset", async () => {
+        await installAsset(assetv2._id);
+
+        assetv1 = await getAsset(assetv1._id);
+        expect(assetv1.status).toEqual("downloaded");
+
+        assetv2 = await getAsset(assetv2._id);
+        expect(assetv2.status).toEqual("installed");
+
+        const identitySettings = await getIdentitySettings();
+        expect(identitySettings).toEqual({
+          _id: "__skip__",
+          scope: "passport",
+          identity: identitySettingsV2
+        });
+      });
+    });
+
+    describe("deletions", () => {
+      beforeEach(async () => {
+        await installAsset(assetv1._id);
+
+        assetv2 = {...assetv1, resources: []};
+        delete assetv2._id;
+        delete assetv2.status;
+
+        assetv2 = await downloadAsset(assetv2);
+      });
+
+      it("should preview identity settings asset installation", async () => {
+        const preview = await previewAssetInstallation(assetv2._id);
+        expect(preview).toEqual({
+          insertions: [],
+          updations: [],
+          deletions: [identitySettingsV1Resource]
+        });
+
+        assetv1 = await getAsset(assetv1._id);
+        expect(assetv1.status).toEqual("installed");
+
+        assetv2 = await getAsset(assetv2._id);
+        expect(assetv2.status).toEqual("downloaded");
+
+        const identitySettings = await getIdentitySettings();
+        expect(identitySettings).toEqual({
+          _id: "__skip__",
+          scope: "passport",
+          identity: identitySettingsV1
+        });
+      });
+
+      it("should install identity settings asset", async () => {
+        await installAsset(assetv2._id);
+
+        assetv1 = await getAsset(assetv1._id);
+        expect(assetv1.status).toEqual("downloaded");
+
+        assetv2 = await getAsset(assetv2._id);
+        expect(assetv2.status).toEqual("installed");
+
+        const identitySettings = await getIdentitySettings();
+        expect(identitySettings).toEqual({
+          _id: "__skip__",
+          scope: "passport",
+          identity: {attributes: {}}
+        });
       });
     });
   });

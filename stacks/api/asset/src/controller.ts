@@ -17,16 +17,16 @@ import {Asset, Configuration, Resource} from "./interface";
 import {operators, validators} from "./registration";
 import {compareResourceGroups} from "@spica-server/core/differ";
 import {putConfiguration} from "./helpers";
-import {ARRAY, BOOLEAN, DEFAULT, OR} from "@spica-server/core";
+import {BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 
 /**
  * Mongodb transactions
  * Authorization, Authentication
  * Migration of policies
- * Schema validation
  * Deprecation of old endpoints
  * Updates on CLI
+ * Updates on asset store
  */
 
 @Controller("asset")
@@ -118,7 +118,7 @@ export class AssetController {
     });
     const {insertions, updations, deletions} = compareResourceGroups<Resource>(
       asset.resources,
-      installedAsset ? installedAsset.resources : [],
+      installedAsset ? installedAsset.resources : []
     );
 
     if (preview) {

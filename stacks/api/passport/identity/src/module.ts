@@ -15,13 +15,16 @@ import IdentityCreateSchema = require("./schemas/identity-create.json");
 import AuthFactorSchema = require("./schemas/authfactor.json");
 import {AuthResolver} from "./relation";
 import {AUTH_RESOLVER} from "@spica-server/bucket/common";
+import {registerAssetHandlers} from "./asset";
 
 @Global()
 @Module({})
 export class IdentityModule {
   constructor(
     @Inject(IDENTITY_OPTIONS) options: IdentityOptions,
-    private identityService: IdentityService
+    private identityService: IdentityService,
+    private prefService: PreferenceService,
+    private validator: Validator
   ) {
     if (options.defaultIdentityIdentifier) {
       identityService.default({
@@ -31,6 +34,7 @@ export class IdentityModule {
       });
     }
     registerStatusProvider(identityService);
+    registerAssetHandlers(prefService, validator);
   }
 
   static forRoot(options: IdentityOptions): DynamicModule {

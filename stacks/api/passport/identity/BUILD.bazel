@@ -22,6 +22,7 @@ ts_project(
         "//stacks/api/passport/policy",
         "//stacks/api/preference/services",
         "//stacks/api/status",
+        "//stacks/api/asset",
         "@npm//@nestjs/common",
         "@npm//@nestjs/jwt",
         "@npm//@nestjs/passport",
