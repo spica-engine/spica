@@ -2,7 +2,12 @@ import {registrar, Resource} from "@spica-server/asset";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {PreferenceService} from "@spica-server/preference/services";
 
-const _module = "identity-settings";
+/**
+ * Preference has 2 sub modules named bucket(not yet) and identity
+ * So we should also check the _id of the resource since it explains that preference for identity or bucket
+ * It's a bit different than the other modules
+ */
+const _module = "preference";
 
 interface IdentitySettingsContents {
   schema: IdentitySchema;
@@ -14,15 +19,28 @@ interface IdentitySchema {
   };
 }
 
+function isIdentityPreference(r: Resource<IdentitySettingsContents>) {
+  return r._id == "identity";
+}
+
 export function registerAssetHandlers(prefService: PreferenceService, schemaValidator: Validator) {
   const validator = (resource: Resource<IdentitySettingsContents>) => {
     const schema = resource.contents.schema;
+
+    if (!isIdentityPreference(resource)) {
+      return schema;
+    }
+
     return validateFn(schema, schemaValidator);
   };
 
   registrar.validator(_module, validator);
 
   const upsert = (resource: Resource<IdentitySettingsContents>) => {
+    if (!isIdentityPreference(resource)) {
+      return;
+    }
+
     return prefService.updateOne(
       {scope: "passport"},
       {$set: {identity: resource.contents.schema}},
@@ -30,7 +48,10 @@ export function registerAssetHandlers(prefService: PreferenceService, schemaVali
     );
   };
 
-  const remove = _ => {
+  const remove = resource => {
+    if (!isIdentityPreference(resource)) {
+      return;
+    }
     return prefService.updateOne({scope: "passport"}, {$set: {identity: {attributes: {}}}});
   };
 

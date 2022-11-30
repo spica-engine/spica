@@ -11,8 +11,8 @@ async function apply({options}: ActionParameters) {
   const moduleAndFiles = new Map<string, string[]>();
 
   moduleAndFiles.set("bucket", ["schema.yaml"]);
-  // moduleAndFiles.set("function", ["schema.yaml", "package.json", "env.env", "index.ts"]);
-  // moduleAndFiles.set("preference", ["schema.yaml"]);
+  moduleAndFiles.set("function", ["schema.yaml", "package.json", "env.env", "index.ts"]);
+  moduleAndFiles.set("preference", ["schema.yaml"]);
 
   const resourceNameValidator = _ => true;
 

@@ -1,7 +1,7 @@
 import {ObjectId} from "@spica-server/database";
 
 export interface Asset {
-  _id?:ObjectId;
+  _id?: ObjectId;
   name: string;
   description: string;
   resources: Resource[];
@@ -22,7 +22,7 @@ export interface Configuration {
 }
 
 export interface Resource<C = object> {
-  _id: ObjectId;
+  _id: ObjectId | string;
   module: string;
   contents: C;
 }
@@ -31,6 +31,6 @@ export type Validator = (resource: Resource) => Promise<void>;
 
 export interface Operator {
   insert(resource: Resource): Promise<any>;
-  update(resource:Resource): Promise<any>;
+  update(resource: Resource): Promise<any>;
   delete(resource: Resource): Promise<any>;
 }

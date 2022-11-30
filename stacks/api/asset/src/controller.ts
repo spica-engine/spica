@@ -6,6 +6,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  InternalServerErrorException,
   NotFoundException,
   Param,
   Post,
@@ -112,7 +113,9 @@ export class AssetController {
 
     asset = putConfiguration(asset, configs);
 
-    await this.validateResources(asset.resources).catch(e => this.onInstallationFailed(id, e));
+    // validation seems not possible because some resources should dependent to the others
+    // for example buckets of the function bucket triggers must be exist before function installation.
+    // await this.validateResources(asset.resources).catch(e => this.onInstallationFailed(id, e));
 
     const installedAsset = await this.service.findOne({
       _id: {$ne: id},
@@ -128,9 +131,11 @@ export class AssetController {
       return {insertions, updations, deletions};
     }
 
-    await this.operate(insertions, "insert").catch(e => this.onInstallationFailed(id, e));
-    await this.operate(updations, "update").catch(e => this.onInstallationFailed(id, e));
-    await this.operate(deletions, "delete").catch(e => this.onInstallationFailed(id, e));
+    await this.operate(asset._id, insertions, "insert").catch(e =>
+      this.onInstallationFailed(id, e)
+    );
+    await this.operate(asset._id, updations, "update").catch(e => this.onInstallationFailed(id, e));
+    await this.operate(asset._id, deletions, "delete").catch(e => this.onInstallationFailed(id, e));
 
     if (installedAsset) {
       this.service.findOneAndUpdate({_id: installedAsset._id}, {$set: {status: "downloaded"}});
@@ -142,18 +147,19 @@ export class AssetController {
 
   async validateResources(resources: Resource[]) {
     const validations = resources.map(resource => {
-      const validator = validators.get(resource.module);
-      if (!validator) {
+      const relatedValidators = validators.get(resource.module);
+      if (!relatedValidators || !relatedValidators.length) {
         return Promise.reject(
           `Validation has been failed: Unknown module named '${resource.module}'.`
         );
       }
-      return validator(resource);
+      return relatedValidators.map(validator => validator(resource));
     });
     await Promise.all(validations);
   }
 
-  async onInstallationFailed(_id: ObjectId, e: string) {
+  onInstallationFailed(_id: ObjectId, e: string) {
+    e = e.toString();
     this.service.findOneAndUpdate(
       {_id},
       {
@@ -163,7 +169,7 @@ export class AssetController {
         }
       }
     );
-    throw new BadRequestException(e);
+    throw new InternalServerErrorException(e);
   }
 
   @Delete(":id")
@@ -175,7 +181,11 @@ export class AssetController {
   ) {
     const asset = await this.service.findOne({_id: id});
 
-    await this.operate(asset.resources, "delete").catch(e => this.onInstallationFailed(id, e));
+    if (asset.status == "installed") {
+      await this.operate(asset._id, asset.resources, "delete").catch(e =>
+        this.onInstallationFailed(id, e)
+      );
+    }
 
     if (type == "soft") {
       return this.service.findOneAndUpdate({_id: id}, {$set: {status: "downloaded"}});
@@ -188,16 +198,16 @@ export class AssetController {
     throw new BadRequestException(`Unknown delete type '${type}'`);
   }
 
-  operate(resources: Resource[], action: "insert" | "update" | "delete") {
+  async operate(assetId: ObjectId, resources: Resource[], action: "insert" | "update" | "delete") {
     const operations = resources.map(resource => {
-      const operator = operators.get(resource.module);
-      if (!operator) {
+      const relatedOperators = operators.get(resource.module);
+      if (!relatedOperators || !relatedOperators.length) {
         throw new BadRequestException(
           `Operation ${action} has been failed: Unknown module named '${resource.module}'.`
         );
       }
-      return operator[action](resource);
+      return Promise.all(relatedOperators.map(operator => operator[action](resource)));
     });
-    return Promise.all(operations);
+    await Promise.all(operations);
   }
 }
