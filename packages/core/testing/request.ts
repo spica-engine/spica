@@ -7,7 +7,7 @@ export class Request {
   reject: boolean = false;
   debug: boolean = false;
 
-  headers: Headers;
+  headers: Headers = {};
 
   setDefaultHeaders(headers: Headers) {
     this.headers = headers;
@@ -41,7 +41,7 @@ export class Request {
 
   request<T>(options: RequestOptions): Promise<Response<T>> {
     const req: any = {
-      headers: options.headers || this.headers,
+      headers: options.headers ? {...this.headers, ...options.headers} : this.headers,
       method: options.method,
       socketPath: this.socket,
       pathname: options.path,

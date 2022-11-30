@@ -9,7 +9,8 @@ import {
   NotFoundException,
   Param,
   Post,
-  Query
+  Query,
+  UseGuards
 } from "@nestjs/common";
 import {AssetService} from "./service";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
@@ -19,9 +20,10 @@ import {compareResourceGroups} from "@spica-server/core/differ";
 import {putConfiguration} from "./helpers";
 import {BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
+import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 
 /**
- * Mongodb transactions
+ * Mongodb transactions(need to be implemented in tricky way because our db classes does not support it)
  * Authorization, Authentication
  * Migration of policies
  * Deprecation of old endpoints
@@ -34,7 +36,7 @@ export class AssetController {
   constructor(private service: AssetService) {}
 
   @Get()
-  // @UseGuards(AuthGuard(), ActionGuard("asset:index", "asset"))
+  @UseGuards(AuthGuard(), ActionGuard("asset:index"))
   async find(@Query("name") name: string, @Query("status") status: string) {
     const filter: any = {};
 
@@ -50,7 +52,7 @@ export class AssetController {
   }
 
   @Get(":id")
-  // @UseGuards(AuthGuard(), ActionGuard("asset:index", "asset"))
+  @UseGuards(AuthGuard(), ActionGuard("asset:show", "asset"))
   async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.service.findOne({_id: id}).then(r => {
       if (!r) {
@@ -61,7 +63,7 @@ export class AssetController {
   }
 
   @Post()
-  // @UseGuards(AuthGuard(), ActionGuard("asset:index", "asset"))
+  @UseGuards(AuthGuard(), ActionGuard("asset:download"))
   async insert(@Body(Schema.validate("http://spica.internal/asset")) asset: Asset) {
     asset.status = "downloaded";
     return this.service.insertOne(asset);
@@ -81,6 +83,7 @@ export class AssetController {
   // there might be an option like "soft" and "hard", delete action will be performed based on this parameter
 
   @Post(":id")
+  @UseGuards(AuthGuard(), ActionGuard("asset:install", "asset"))
   async install(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(
@@ -164,7 +167,7 @@ export class AssetController {
   }
 
   @Delete(":id")
-  // @UseGuards(AuthGuard(), ActionGuard("asset:index", "asset"))
+  @UseGuards(AuthGuard(), ActionGuard("asset:delete", "asset"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
     @Param("id", OBJECT_ID) id: ObjectId,

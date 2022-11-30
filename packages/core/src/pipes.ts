@@ -56,7 +56,6 @@ export function EXPRESSION(parse: (value: string) => any): PipeTransform<string,
 export function DEFAULT<T = unknown>(defaultValue: T | (() => T)): PipeTransform<any, T> {
   return {
     transform: value => {
-      console.log("JI",value)
       return typeof value == "undefined"
         ? typeof defaultValue == "function"
           ? (defaultValue as Function)()

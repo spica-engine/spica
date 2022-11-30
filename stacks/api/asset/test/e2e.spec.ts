@@ -12,7 +12,6 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import * as os from "os";
 import {PassportModule} from "@spica-server/passport";
-import {IdentityModule} from "@spica-server/passport/identity";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {PreferenceModule} from "@spica-server/preference";
 
@@ -66,7 +65,8 @@ describe("E2E Tests", () => {
           "PassportFullAccess",
           "FunctionFullAccess",
           "BucketFullAccess",
-          "PreferenceFullAccess"
+          "PreferenceFullAccess",
+          "AssetFullAccess"
         ]
       }),
       PolicyModule.forRoot(),
@@ -122,7 +122,7 @@ describe("E2E Tests", () => {
         return true;
       }
     });
-  });
+  }, 10_000);
 
   afterEach(async () => {
     await app.close();
@@ -911,7 +911,7 @@ describe("E2E Tests", () => {
         const identitySettings = await getIdentitySettings();
         expect(identitySettings).toEqual({
           scope: "passport",
-          identity: {attributes: {type:"object"}}
+          identity: {attributes: {type: "object"}}
         });
       });
 
