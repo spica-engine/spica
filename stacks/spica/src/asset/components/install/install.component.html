@@ -1,19 +1,17 @@
 <ng-container *ngIf="step == 0">
   <h3>Configure the asset</h3>
   <mat-divider></mat-divider>
-  <mat-list>
-    <mat-list-item class="configuration" *ngFor="let config of data.asset.configs">
-      <span
-        class="inputplacer"
-        [inputPlacer]="config"
-        [(ngModel)]="config.value"
-        [name]="config.module + config.subresource_id + config.property"
-      ></span>
-    </mat-list-item>
+  <div class="configs" *ngFor="let config of data.asset.configs">
+    <span
+      class="inputplacer"
+      [inputPlacer]="config"
+      [(ngModel)]="config.value"
+      [name]="config.module + config.subresource_id + config.property"
+    ></span>
     <ng-container *ngIf="!data.asset.configs.length">
       No configuration required.
     </ng-container>
-  </mat-list>
+  </div>
   <div class="bottom-actions">
     <button mat-button (click)="preview()">
       Preview
@@ -23,12 +21,50 @@
 <ng-container *ngIf="step == 1">
   <h3>Preview the asset</h3>
   <mat-divider></mat-divider>
-  <h4>Insertions</h4>
-  <mat-list>
-    <mat-list-item *ngFor="let propertyKv of installationPreview | keyvalue">
-    </mat-list-item>
-  </mat-list>
-  
+
+  <div *ngFor="let propertyKv of installationPreview | keyvalue">
+    <mat-list>
+      <h4>{{ propertyKv.key | titlecase }}</h4>
+      <mat-list-item>
+        <span
+          ><b>{{ propertyKv.value.insertions.length }}</b> resources will be created.</span
+        >
+        <button
+          *ngIf="propertyKv.value.insertions.length"
+          mat-icon-button
+          (click)="displayPreview(propertyKv.value.insertions)"
+        >
+          <mat-icon>open_in_new</mat-icon>
+        </button>
+      </mat-list-item>
+      <mat-list-item>
+        <span
+          ><b>{{ propertyKv.value.updations.length }}</b> resources will be updated.</span
+        >
+        <button
+          *ngIf="propertyKv.value.updations.length"
+          mat-icon-button
+          (click)="displayPreview(propertyKv.value.updations)"
+        >
+          <mat-icon>open_in_new</mat-icon>
+        </button>
+      </mat-list-item>
+      <mat-list-item>
+        <span
+          ><b>{{ propertyKv.value.deletions.length }}</b> resources will be deleted.</span
+        >
+        <button
+          *ngIf="propertyKv.value.deletions.length"
+          mat-icon-button
+          (click)="displayPreview(propertyKv.value.deletions)"
+        >
+          <mat-icon>open_in_new</mat-icon>
+        </button>
+      </mat-list-item>
+    </mat-list>
+    <mat-divider></mat-divider>
+  </div>
+
   <div class="bottom-actions">
     <button mat-button (click)="configure()">
       Back

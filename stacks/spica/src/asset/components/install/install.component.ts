@@ -28,35 +28,8 @@ export class AssetInstallDialog {
       .install(this.data.asset._id, this.data.asset.configs, true)
       .toPromise()
       .then((r: any) => {
-        r.installations.forEach(i => {
-          this.installationPreview[i.module] = this.installationPreview[i.module] || {
-            insertions: [],
-            updations: [],
-            deletions: []
-          };
-
-          this.installationPreview[i.module].insertions.push(i);
-        });
-
-        r.updations.forEach(i => {
-          this.installationPreview[i.module] = this.installationPreview[i.module] || {
-            insertions: [],
-            updations: [],
-            deletions: []
-          };
-
-          this.installationPreview[i.module].updations.push(i);
-        });
-
-        r.deletions.forEach(i => {
-          this.installationPreview[i.module] = this.installationPreview[i.module] || {
-            insertions: [],
-            updations: [],
-            deletions: []
-          };
-
-          this.installationPreview[i.module].deletions.push(i);
-        });
+        console.log(r);
+        this.formatInstallationPreview(r);
       });
   }
 
@@ -67,5 +40,45 @@ export class AssetInstallDialog {
 
   install() {
     console.log("NOT IMPLEMENTED YET!");
+  }
+
+  formatInstallationPreview(r) {
+    r.insertions.forEach(i => {
+      this.installationPreview[i.module] = this.installationPreview[i.module] || {
+        insertions: [],
+        updations: [],
+        deletions: []
+      };
+
+      this.installationPreview[i.module].insertions.push(i);
+    });
+
+    r.updations.forEach(i => {
+      this.installationPreview[i.module] = this.installationPreview[i.module] || {
+        insertions: [],
+        updations: [],
+        deletions: []
+      };
+
+      this.installationPreview[i.module].updations.push(i);
+    });
+
+    r.deletions.forEach(i => {
+      this.installationPreview[i.module] = this.installationPreview[i.module] || {
+        insertions: [],
+        updations: [],
+        deletions: []
+      };
+
+      this.installationPreview[i.module].deletions.push(i);
+    });
+  }
+
+  displayPreview(actions: any[]) {
+    const data = JSON.stringify(actions, null, 2);
+    const x = window.open();
+    x.document.open();
+    x.document.write("<html><body><pre>" + data + "</pre></body></html>");
+    x.document.close();
   }
 }
