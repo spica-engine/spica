@@ -35,7 +35,8 @@ import * as fromAsset from "./state/asset.reducer";
 import {AssetService} from "./services/asset.service";
 import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {AssetInitializer} from "./services/asset.initializer";
-import { AssetInstallDialog } from "./components/install/install.component";
+import {AssetInstallDialog} from "./components/install/install.component";
+import {EditComponent} from "./pages/edit/edit.component";
 
 @NgModule({
   imports: [
@@ -74,7 +75,7 @@ import { AssetInstallDialog } from "./components/install/install.component";
     // MatExpansionModule,
     AssetRoutingModule
   ],
-  declarations: [IndexComponent,AssetInstallDialog],
+  declarations: [IndexComponent, AssetInstallDialog, EditComponent],
   providers: [
     AssetService,
     {
