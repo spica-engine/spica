@@ -48,7 +48,7 @@ const routes: Routes = [
       }
     ]
   },
-  {path: "assets", component: AssetStoreComponent},
+  // {path: "assets", component: AssetStoreComponent},
   {
     path: "versioncontrol",
     component: VersionControlComponent,

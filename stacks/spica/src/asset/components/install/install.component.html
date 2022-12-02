@@ -1,0 +1,40 @@
+<ng-container *ngIf="step == 0">
+  <h3>Configure the asset</h3>
+  <mat-divider></mat-divider>
+  <mat-list>
+    <mat-list-item class="configuration" *ngFor="let config of data.asset.configs">
+      <span
+        class="inputplacer"
+        [inputPlacer]="config"
+        [(ngModel)]="config.value"
+        [name]="config.module + config.subresource_id + config.property"
+      ></span>
+    </mat-list-item>
+    <ng-container *ngIf="!data.asset.configs.length">
+      No configuration required.
+    </ng-container>
+  </mat-list>
+  <div class="bottom-actions">
+    <button mat-button (click)="preview()">
+      Preview
+    </button>
+  </div>
+</ng-container>
+<ng-container *ngIf="step == 1">
+  <h3>Preview the asset</h3>
+  <mat-divider></mat-divider>
+  <h4>Insertions</h4>
+  <mat-list>
+    <mat-list-item *ngFor="let propertyKv of installationPreview | keyvalue">
+    </mat-list-item>
+  </mat-list>
+  
+  <div class="bottom-actions">
+    <button mat-button (click)="configure()">
+      Back
+    </button>
+    <button mat-button (click)="install()">
+      Install
+    </button>
+  </div>
+</ng-container>

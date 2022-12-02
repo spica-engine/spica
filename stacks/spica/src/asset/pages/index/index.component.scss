@@ -1,0 +1,55 @@
+:host  {
+    mat-toolbar {
+      min-height: 250px;
+      padding: 0 30px;
+      align-items: flex-start;
+      flex-direction: column;
+  
+      h4 {
+        mat-icon,
+        span {
+          vertical-align: middle;
+          margin-left: 5px;
+        }
+      }
+  
+      button:last-of-type {
+        align-self: flex-end;
+        margin-top: 60px;
+      }
+    }
+    mat-card {
+      margin: 30px;
+      margin-top: -85px;
+      overflow: hidden;
+    }
+  
+    mat-header-cell:first-of-type,
+    mat-cell:first-of-type {
+      word-break: break-all;
+      flex: 1.5;
+      justify-content: flex-start;
+    }
+  
+    mat-header-cell:nth-child(2),
+    mat-cell:nth-child(2) {
+      word-break: break-word;
+      flex: 2;
+      justify-content: center;
+    }
+  
+    mat-header-cell:nth-child(3),
+    mat-cell:nth-child(3) {
+      word-break: break-word;
+      flex: 3;
+      justify-content: center;
+    }
+  
+    mat-header-cell:last-of-type,
+    mat-cell:last-of-type {
+      min-width: 150px;
+      flex: 1;
+      justify-content: flex-end;
+    }
+  }
+  

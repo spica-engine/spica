@@ -1,7 +1,5 @@
-import {ObjectId} from "@spica-server/database";
-
 export interface Asset {
-  _id?: ObjectId;
+  _id?: string;
   name: string;
   description: string;
   resources: Resource[];
@@ -10,29 +8,18 @@ export interface Asset {
   failure_message?: string;
 }
 
-// use enum instead
 export type Status = "downloaded" | "installed" | "failed";
 
 export interface Configuration {
-  title: string;
   module: string;
   resource_id: string;
   submodule: string;
   property: string;
   value: unknown;
-  type: string;
 }
 
 export interface Resource<C = object> {
-  _id: ObjectId | string;
+  _id: string;
   module: string;
   contents: C;
-}
-
-export type Validator = (resource: Resource) => Promise<void>;
-
-export interface Operator {
-  insert(resource: Resource): Promise<any>;
-  update(resource: Resource): Promise<any>;
-  delete(resource: Resource): Promise<any>;
 }
