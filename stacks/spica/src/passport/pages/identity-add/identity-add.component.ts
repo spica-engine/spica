@@ -30,7 +30,7 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
   selectedAuthFactor;
   authFactorChallenge;
   verificationResponse;
-
+  viewState: string = "meta";
   public error: string;
   public preferences: PassportPreference;
   private onDestroy: Subject<void> = new Subject<void>();
