@@ -126,7 +126,7 @@ export namespace environment {
 
       let replacedValue = value;
       if (match && match.length && Object.keys(actualEnvs).includes(match[1])) {
-        replacedValue = fn.env[match[1]];
+        replacedValue = actualEnvs[match[1]];
       }
 
       fn.env[key] = replacedValue;

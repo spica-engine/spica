@@ -4,6 +4,7 @@ import {Asset} from "@spica-client/asset/interfaces";
 import {Observable} from "rxjs";
 import {MatDialog} from "@angular/material/dialog";
 import {AssetInstallDialog} from "@spica-client/asset/components/install/install.component";
+import {filter, switchMap, tap} from "rxjs/operators";
 
 @Component({
   selector: "asset-index",
@@ -17,21 +18,40 @@ export class IndexComponent implements OnInit {
 
   constructor(private assetService: AssetService, private dialog: MatDialog) {}
 
+  isPending = false;
+
   ngOnInit(): void {
     this.assets$ = this.assetService.find();
   }
 
   onInstall(asset: Asset) {
-    this.dialog.open(AssetInstallDialog, {
+    const dialogRef = this.dialog.open(AssetInstallDialog, {
       width: "400px",
       maxHeight: "800px",
       data: {
         asset
       }
     });
+
+    dialogRef
+      .afterClosed()
+      .pipe(
+        filter(asset => !!asset),
+        tap(() => (this.isPending = true)),
+        switchMap(asset =>
+          this.assetService
+            .install(asset._id, asset.configs, false)
+        )
+      )
+      .toPromise()
+      .finally(() => (this.isPending = false));
   }
 
   onDelete(asset: Asset, type: "hard" | "soft") {
-    // return this.assetService.remove(asset._id);
+    this.isPending = true
+    return this.assetService
+      .remove(asset._id, type)
+      .toPromise()
+      .finally(() => (this.isPending = false));
   }
 }

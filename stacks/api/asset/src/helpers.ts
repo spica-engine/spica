@@ -17,7 +17,7 @@ export function putConfiguration(asset: Asset, configs: Configuration[]) {
       const property = config.property;
       const replace = config.value;
 
-      resource.contents[config.submodule] = this.replaceValue(val, property, replace);
+      resource.contents[config.submodule] = replaceValue(val, property, replace);
 
       return resource;
     });
@@ -38,7 +38,7 @@ export function replaceValue(val: object, property: string, replace: unknown) {
   }
 
   property = segments.slice(1).join(".");
-  val[target] = this.replaceValue(val[target], property, replace);
+  val[target] = replaceValue(val[target], property, replace);
 
   return val;
 }

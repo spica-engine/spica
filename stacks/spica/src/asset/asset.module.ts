@@ -37,14 +37,18 @@ import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {AssetInitializer} from "./services/asset.initializer";
 import {AssetInstallDialog} from "./components/install/install.component";
 import {EditComponent} from "./pages/edit/edit.component";
+import {MatTreeModule} from '@angular/material/tree';
+
+
 
 @NgModule({
   imports: [
     // SpicaCommon,
+    MatTreeModule,
     CommonModule,
     MatCardModule,
     MatListModule,
-    // MatMenuModule,
+    MatMenuModule,
     DashboardRoutingModule,
     MatToolbarModule,
     MatIconModule,

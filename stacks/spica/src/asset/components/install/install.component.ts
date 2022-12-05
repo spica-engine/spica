@@ -1,7 +1,7 @@
 import {Component, Inject} from "@angular/core";
-import {MAT_DIALOG_DATA} from "@angular/material/dialog";
+import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
-import {Asset} from "@spica-client/asset/interfaces";
+import {Asset, Resource} from "@spica-client/asset/interfaces";
 import {AssetService} from "@spica-client/asset/services/asset.service";
 
 @Component({
@@ -20,16 +20,15 @@ export class AssetInstallDialog {
     };
   } = {};
 
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any, private assetService: AssetService) {}
+  constructor(@Inject(MAT_DIALOG_DATA) public data: any, private assetService: AssetService,public dialogRef: MatDialogRef<any>) {}
 
   preview() {
     this.step = 1;
     return this.assetService
       .install(this.data.asset._id, this.data.asset.configs, true)
       .toPromise()
-      .then((r: any) => {
-        console.log(r);
-        this.formatInstallationPreview(r);
+      .then((preview: any) => {
+        this.formatInstallationPreview(preview);
       });
   }
 
@@ -38,40 +37,35 @@ export class AssetInstallDialog {
     this.installationPreview = {};
   }
 
-  install() {
-    console.log("NOT IMPLEMENTED YET!");
+  install(asset:Asset) {
+    return this.dialogRef.close(asset)
   }
 
-  formatInstallationPreview(r) {
-    r.insertions.forEach(i => {
-      this.installationPreview[i.module] = this.installationPreview[i.module] || {
-        insertions: [],
-        updations: [],
-        deletions: []
-      };
+  getEmptyPreview() {
+    return {
+      insertions: [],
+      updations: [],
+      deletions: []
+    };
+  }
 
-      this.installationPreview[i.module].insertions.push(i);
-    });
+  formatInstallationPreview(preview: {
+    insertions: Resource[];
+    updations: Resource[];
+    deletions: Resource[];
+  }) {
+    const pushToPreview = (
+      resource: Resource,
+      action: "insertions" | "updations" | "deletions"
+    ) => {
+      this.installationPreview[resource.module] =
+        this.installationPreview[resource.module] || this.getEmptyPreview();
+      this.installationPreview[resource.module][action].push(resource);
+    };
 
-    r.updations.forEach(i => {
-      this.installationPreview[i.module] = this.installationPreview[i.module] || {
-        insertions: [],
-        updations: [],
-        deletions: []
-      };
-
-      this.installationPreview[i.module].updations.push(i);
-    });
-
-    r.deletions.forEach(i => {
-      this.installationPreview[i.module] = this.installationPreview[i.module] || {
-        insertions: [],
-        updations: [],
-        deletions: []
-      };
-
-      this.installationPreview[i.module].deletions.push(i);
-    });
+    preview.insertions.forEach(resource => pushToPreview(resource, "insertions"));
+    preview.updations.forEach(resource => pushToPreview(resource, "updations"));
+    preview.deletions.forEach(resource => pushToPreview(resource, "deletions"));
   }
 
   displayPreview(actions: any[]) {

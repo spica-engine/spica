@@ -30,6 +30,7 @@
         <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
         <mat-cell *matCellDef="let asset">
           <button
+            *ngIf="!isPending"
             mat-icon-button
             canInteract="asset:install"
             [resource]="asset._id"
@@ -37,6 +38,7 @@
           >
             <mat-icon>{{ asset.status == "downloaded" ? "play_arrow" : "stop_circle" }}</mat-icon>
           </button>
+          <mat-spinner color="accent" diameter="20" *ngIf="isPending"></mat-spinner>
           <button
             mat-icon-button
             canInteract="asset:delete"
@@ -48,6 +50,7 @@
             }"
             color="warn"
             (confirm)="onDelete(asset._id, 'hard')"
+            [disabled]="isPending"
           >
             <mat-icon mat-icon-button>delete</mat-icon>
           </button>
