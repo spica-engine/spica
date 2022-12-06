@@ -28,7 +28,7 @@ import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular
 import {StoreModule} from "@ngrx/store";
 import {InputModule} from "@spica-client/common";
 import {DashboardRoutingModule} from "@spica-client/dashboard/dashboard-routing.module";
-import {MatClipboardModule, MatAwareDialogModule} from "@spica-client/material";
+import {MatClipboardModule, MatAwareDialogModule, MatSaveModule} from "@spica-client/material";
 import {PassportModule, PassportService} from "@spica-client/passport";
 import {ChartsModule} from "ng2-charts";
 import * as fromAsset from "./state/asset.reducer";
@@ -37,9 +37,7 @@ import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {AssetInitializer} from "./services/asset.initializer";
 import {AssetInstallDialog} from "./components/install/install.component";
 import {EditComponent} from "./pages/edit/edit.component";
-import {MatTreeModule} from '@angular/material/tree';
-
-
+import {MatTreeModule} from "@angular/material/tree";
 
 @NgModule({
   imports: [
@@ -77,7 +75,9 @@ import {MatTreeModule} from '@angular/material/tree';
     // MatProgressBarModule,
     MatDividerModule,
     // MatExpansionModule,
-    AssetRoutingModule
+    AssetRoutingModule,
+    MatAwareDialogModule,
+    MatSaveModule
   ],
   declarations: [IndexComponent, AssetInstallDialog, EditComponent],
   providers: [

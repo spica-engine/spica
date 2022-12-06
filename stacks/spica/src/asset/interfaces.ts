@@ -23,3 +23,17 @@ export interface Resource<C = object> {
   module: string;
   contents: C;
 }
+
+export interface InstallationPreview {
+  insertions: Resource[];
+  updations: Resource[];
+  deletions: Resource[];
+}
+
+export interface InstallationPreviewByModules {
+  [module: string]: {
+    insertions: Resource[];
+    updations: Resource[];
+    deletions: Resource[];
+  };
+}

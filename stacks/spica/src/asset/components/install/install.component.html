@@ -25,38 +25,36 @@
   <div *ngFor="let propertyKv of installationPreview | keyvalue">
     <mat-list>
       <h4>{{ propertyKv.key | titlecase }}</h4>
-      <mat-list-item>
+      <mat-list-item *ngIf="propertyKv.value.insertions.length; let insertionsLength">
         <span
-          ><b>{{ propertyKv.value.insertions.length }}</b> resources will be created.</span
+          ><b>{{ insertionsLength }}</b> resources will be created.</span
         >
         <button
-          *ngIf="propertyKv.value.insertions.length"
           mat-icon-button
-          (click)="displayPreview(propertyKv.value.insertions)"
+          (click)="show(propertyKv.value.insertions)"
         >
           <mat-icon>open_in_new</mat-icon>
         </button>
       </mat-list-item>
-      <mat-list-item>
+      <mat-list-item *ngIf="propertyKv.value.updations.length; let updationsLength">
         <span
-          ><b>{{ propertyKv.value.updations.length }}</b> resources will be updated.</span
+          ><b>{{ updationsLength }}</b> resources will be updated.</span
         >
         <button
-          *ngIf="propertyKv.value.updations.length"
           mat-icon-button
-          (click)="displayPreview(propertyKv.value.updations)"
+          (click)="show(propertyKv.value.updations)"
         >
           <mat-icon>open_in_new</mat-icon>
         </button>
       </mat-list-item>
-      <mat-list-item>
+      <mat-list-item *ngIf="propertyKv.value.deletions.length; let deletionsLength">
         <span
-          ><b>{{ propertyKv.value.deletions.length }}</b> resources will be deleted.</span
+          ><b>{{ deletionsLength }}</b> resources will be deleted.</span
         >
         <button
           *ngIf="propertyKv.value.deletions.length"
           mat-icon-button
-          (click)="displayPreview(propertyKv.value.deletions)"
+          (click)="show(propertyKv.value.deletions)"
         >
           <mat-icon>open_in_new</mat-icon>
         </button>

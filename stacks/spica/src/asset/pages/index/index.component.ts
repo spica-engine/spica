@@ -37,21 +37,26 @@ export class IndexComponent implements OnInit {
       .afterClosed()
       .pipe(
         filter(asset => !!asset),
-        tap(() => (this.isPending = true)),
-        switchMap(asset =>
-          this.assetService
-            .install(asset._id, asset.configs, false)
-        )
+        tap(() => this.showSpinner()),
+        switchMap(asset => this.assetService.install(asset._id, asset.configs, false))
       )
       .toPromise()
-      .finally(() => (this.isPending = false));
+      .finally(() => this.hideSpinner());
   }
 
   onDelete(asset: Asset, type: "hard" | "soft") {
-    this.isPending = true
+    this.showSpinner();
     return this.assetService
       .remove(asset._id, type)
       .toPromise()
-      .finally(() => (this.isPending = false));
+      .finally(() => this.hideSpinner());
+  }
+
+  showSpinner() {
+    this.isPending = true;
+  }
+
+  hideSpinner() {
+    this.isPending = false;
   }
 }

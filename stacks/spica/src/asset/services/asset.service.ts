@@ -2,8 +2,8 @@ import {HttpClient, HttpParams} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {Store} from "@ngrx/store";
 import {of} from "rxjs";
-import {switchMap, tap} from "rxjs/operators";
-import {Asset, Configuration, Status} from "../interfaces";
+import {filter, switchMap, tap} from "rxjs/operators";
+import {Asset, Configuration, InstallationPreview, Status} from "../interfaces";
 import * as fromAsset from "../state/asset.reducer";
 
 @Injectable()
@@ -18,10 +18,12 @@ export class AssetService {
     return this.store.select(fromAsset.selectEntity(id));
   }
 
-  install(id: string, configs: Configuration[], preview = false) {
+  install(id: string, configs: Configuration[], preview: boolean) {
     return this.http
-      .post(`api:/asset/${id}`, {configs}, {params: {preview: preview.toString()}})
-      .pipe(tap(updatedAsset => this.store.dispatch(new fromAsset.Update(id, updatedAsset))));
+      .post<any>(`api:/asset/${id}`, {configs}, {params: {preview: preview.toString()}})
+      .pipe(
+        tap(updatedAsset => !preview && this.store.dispatch(new fromAsset.Update(id, updatedAsset)))
+      );
   }
 
   remove(id: string, type: "hard" | "soft" = "soft") {

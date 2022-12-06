@@ -1,12 +1,13 @@
 import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute} from "@angular/router";
-import {Asset} from "@spica-client/asset/interfaces";
+import {Asset, InstallationPreviewByModules, Resource} from "@spica-client/asset/interfaces";
 import {AssetService} from "@spica-client/asset/services/asset.service";
-import {Observable, of} from "rxjs";
-import {filter, switchMap, tap} from "rxjs/operators";
-import {ICONS} from "@spica-client/material";
+import {merge, Observable, of} from "rxjs";
+import {catchError, endWith, filter, ignoreElements, switchMap, tap} from "rxjs/operators";
+import {ICONS, SavingState} from "@spica-client/material";
 import {NestedTreeControl} from "@angular/cdk/tree";
 import {MatTreeNestedDataSource} from "@angular/material/tree";
+import {displayPreview, separatePreviewResourcesByModule} from "@spica-client/asset/helpers";
 
 interface AssetNode {
   name: string;
@@ -19,9 +20,14 @@ interface AssetNode {
   styleUrls: ["./edit.component.scss"]
 })
 export class EditComponent {
+  $save: Observable<SavingState>;
+
+  preview: InstallationPreviewByModules = {};
+
   constructor(private route: ActivatedRoute, private assetService: AssetService) {
     this.route.params
       .pipe(
+        tap(() => (this.$save = of(SavingState.Pristine))),
         switchMap(params => this.assetService.findById(params.id)),
         filter(asset => !!asset)
       )
@@ -31,7 +37,7 @@ export class EditComponent {
       });
   }
 
-  asset;
+  asset: Asset;
 
   treeControl = new NestedTreeControl<AssetNode>(node => node.children);
   dataSource = new MatTreeNestedDataSource<AssetNode>();
@@ -41,7 +47,25 @@ export class EditComponent {
   visibleIcons: Array<any> = this.icons.slice(0, this.iconPageSize);
 
   save() {
-    
+    this.$save = merge(
+      of(SavingState.Saving),
+      this.assetService.install(this.asset._id, this.asset.configs, false).pipe(
+        ignoreElements(),
+        endWith(SavingState.Saved),
+        catchError(() => of(SavingState.Failed))
+      )
+    );
+  }
+
+  setInstallationPreview() {
+    this.assetService
+      .install(this.asset._id, this.asset.configs, true)
+      .toPromise()
+      .then(r => (this.preview = separatePreviewResourcesByModule(r)));
+  }
+
+  show(resources: Resource[]) {
+    displayPreview(resources);
   }
 
   // categorizeResourcesByModule(resources) {

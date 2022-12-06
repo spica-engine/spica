@@ -107,9 +107,10 @@ export class AssetController {
       throw new NotFoundException();
     }
 
-    if (asset.status == "installed") {
-      throw new BadRequestException("Asset is already installed.");
-    }
+    // we will update asset already installed with new configuration, so this check should be removed
+    // if (asset.status == "installed") {
+    //   throw new BadRequestException("Asset is already installed.");
+    // }
 
     asset = putConfiguration(asset, configs);
 
@@ -118,7 +119,6 @@ export class AssetController {
     // await this.validateResources(asset.resources).catch(e => this.onInstallationFailed(id, e));
 
     const installedAsset = await this.service.findOne({
-      _id: {$ne: id},
       name: asset.name,
       status: "installed"
     });

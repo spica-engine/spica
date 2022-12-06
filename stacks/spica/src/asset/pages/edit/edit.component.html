@@ -69,32 +69,34 @@
           </mat-list-item>
           <mat-list-item>
             <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="example-tree">
-                <!-- This is the tree node template for leaf nodes -->
-                <!-- There is inline padding applied to this node using styles.
+              <!-- This is the tree node template for leaf nodes -->
+              <!-- There is inline padding applied to this node using styles.
                   This padding value depends on the mat-icon-button width. -->
-                <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
-                    {{node.name | titlecase}}
-                    <button mat-icon-button><mat-icon>info</mat-icon></button>
-                </mat-tree-node>
-                <!-- This is the tree node template for expandable nodes -->
-                <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
-                    <div class="mat-tree-node">
-                      <button mat-icon-button matTreeNodeToggle
-                              [attr.aria-label]="'Toggle ' + node.name">
-                        <mat-icon class="mat-icon-rtl-mirror">
-                          {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
-                        </mat-icon>
-                      </button>
-                      {{node.name | titlecase}}
-                    </div>
-                    <!-- There is inline padding applied to this div using styles.
+              <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
+                {{ node.name | titlecase }}
+                <button mat-icon-button><mat-icon>info</mat-icon></button>
+              </mat-tree-node>
+              <!-- This is the tree node template for expandable nodes -->
+              <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
+                <div class="mat-tree-node">
+                  <button
+                    mat-icon-button
+                    matTreeNodeToggle
+                    [attr.aria-label]="'Toggle ' + node.name"
+                  >
+                    <mat-icon class="mat-icon-rtl-mirror">
+                      {{ treeControl.isExpanded(node) ? "expand_more" : "chevron_right" }}
+                    </mat-icon>
+                  </button>
+                  {{ node.name | titlecase }}
+                </div>
+                <!-- There is inline padding applied to this div using styles.
                         This padding value depends on the mat-icon-button width.  -->
-                    <div [class.example-tree-invisible]="!treeControl.isExpanded(node)"
-                        role="group">
-                      <ng-container matTreeNodeOutlet></ng-container>
-                  </div>
-                </mat-nested-tree-node>
-              </mat-tree>
+                <div [class.example-tree-invisible]="!treeControl.isExpanded(node)" role="group">
+                  <ng-container matTreeNodeOutlet></ng-container>
+                </div>
+              </mat-nested-tree-node>
+            </mat-tree>
           </mat-list-item>
           <mat-list-item>
             <h4>Configurations</h4>
@@ -118,11 +120,47 @@
         [resource]="asset._id"
         mat-button
         [disabled]="form.invalid"
-        (click)="save()"
+        (click)="setInstallationPreview()"
+        (confirm)="save()"
+        *matSave="$save | async; let state"
+        [ngSwitch]="state"
+        [matAwareDialog]="{
+          title: 'Confirmation',
+          templateOrDescription: dialogTemplate,
+          answer: 'continue'
+        }"
       >
-        <mat-icon>save</mat-icon>
-        Save
+        <mat-icon *ngSwitchDefault>save</mat-icon>
+        <mat-progress-spinner
+          *ngSwitchCase="'saving'"
+          [diameter]="18"
+          color="primary"
+          mode="indeterminate"
+        ></mat-progress-spinner>
+        <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
+        <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
+        <span>{{ (!state ? "save" : state) | titlecase }}</span>
       </button>
     </mat-card-actions>
   </mat-card>
 </ng-container>
+
+<ng-template #dialogTemplate let-answer="answer">
+  <div *ngFor="let propertyKv of preview | keyvalue">
+    <h4>{{ propertyKv.key | titlecase }} module</h4>
+    <ul>
+      <li *ngIf="propertyKv.value.insertions.length; let insertionsLength">
+        Inserting <a (click)="show(propertyKv.value.insertions)">{{ insertionsLength }}</a> resources
+      </li>
+      <li *ngIf="propertyKv.value.updations.length; let updationsLength">
+        Updating <a (click)="show(propertyKv.value.updations)">{{ updationsLength }}</a> resources
+      </li>
+      <li *ngIf="propertyKv.value.deletions.length; let deletionsLength">
+        Deleting <a (click)="show(propertyKv.value.deletions)">{{ deletionsLength }}</a> resources
+      </li>
+    </ul>
+  </div>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>
