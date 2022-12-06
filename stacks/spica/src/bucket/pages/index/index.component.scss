@@ -177,6 +177,14 @@
             text-align: right;
           }
         }
+        th {
+          mat-icon {
+            width: 16px;
+            height: 16px;
+            font-size: 16px;
+            margin-right: 8px;
+          }
+        }
 
         td.mat-cell {
           overflow: hidden;

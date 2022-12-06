@@ -33,6 +33,7 @@ import {NgModel} from "@angular/forms";
 import {Scheme, SchemeObserver} from "@spica-client/core";
 import {guides} from "./guides";
 import {FilterComponent} from "@spica-client/bucket/components/filter/filter.component";
+import {InputPlacerWithMetaPlacer, InputResolver} from "@spica-client/common";
 
 @Component({
   selector: "bucket-data-index",
@@ -109,6 +110,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   displayTranslateButton = false;
 
   private postRenderingQueue: Array<any> = [];
+  systemFields: InputPlacerWithMetaPlacer[] = [];
 
   constructor(
     private bs: BucketService,
@@ -117,6 +119,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     private router: Router,
     private sanitizer: DomSanitizer,
     private scheme: SchemeObserver,
+    private _inputResolver: InputResolver,
     @Inject(BUCKET_OPTIONS) private options: BucketOptions
   ) {
     this.scheme
@@ -170,6 +173,11 @@ export class IndexComponent implements OnInit, OnDestroy {
           localStorage.getItem(`${this.bucketId}-displayedProperties`)
         );
 
+        this.systemFields = [];
+        this._inputResolver
+          .entries()
+          .map(e => this.systemFields.push(this._inputResolver.resolve(e)));
+
         //eliminate the properties which are not included by schema
         this.displayedProperties = cachedDisplayedProperties
           ? cachedDisplayedProperties.filter(dispProps =>
@@ -186,6 +194,9 @@ export class IndexComponent implements OnInit, OnDestroy {
       }),
       tap(schema => {
         Object.keys(schema.properties).map(key => {
+          schema.properties[key]["icon"] = this.systemFields.find(
+            item => item.type == schema.properties[key].type
+          ).icon;
           if (schema.properties[key].type == "relation") {
             this.bs
               .getBucket(schema.properties[key]["bucketId"])
