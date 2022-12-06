@@ -2,6 +2,16 @@
   --opacity: 0.5;
 }
 
+::ng-deep {
+  .preview-object {
+    position: relative !important;
+    .mat-dialog-container {
+      height: unset;
+      padding: unset;
+    }
+  }
+}
+
 :host {
   --opacity: 1;
   display: inline-block;
