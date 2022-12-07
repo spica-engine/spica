@@ -19,7 +19,11 @@
         >
           <mat-icon>filter_list</mat-icon>
           Filter
-          <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
+          <mat-menu
+            class="bucket-filter-menu"
+            #filterMenu="matMenu"
+            (click)="$event.stopPropagation()"
+          >
             <bucket-filter
               (keydown.tab)="$event.stopPropagation()"
               #filterer
