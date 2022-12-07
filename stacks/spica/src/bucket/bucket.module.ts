@@ -68,7 +68,7 @@ import {HighlightModule, HIGHLIGHT_OPTIONS} from "ngx-highlightjs";
 import {CategoryModule} from "@spica-client/common/category";
 import {BucketOptions, BUCKET_OPTIONS} from "./interfaces/bucket";
 import {IGNORE_HTTP_ERRORS} from "@spica-client/core/layout/config";
-
+import {ResizeColumnDirective} from "./pages/index/resize-column.directive";
 @NgModule({
   imports: [
     InputModule.withPlacers([
@@ -161,7 +161,8 @@ import {IGNORE_HTTP_ERRORS} from "@spica-client/core/layout/config";
     PropertyLanguageComponent,
     CelLanguageDirective,
     JsonLanguageDirective,
-    PropertyLanguageComponent
+    PropertyLanguageComponent,
+    ResizeColumnDirective
   ]
 })
 export class BucketModule {
