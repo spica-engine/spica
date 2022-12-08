@@ -27,7 +27,7 @@
         "description": "Property target of the configuration will affect. Use dot(.) for nested properties"
       },
       "value": {
-        "type": "string",
+        "type": ["number", "string", "boolean", "object", "array"],
         "description": "Value of the configuration that will be replaced with the value of matched property."
       },
       "type": {
