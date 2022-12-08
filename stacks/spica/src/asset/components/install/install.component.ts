@@ -42,8 +42,4 @@ export class AssetInstallDialog {
   install(asset: Asset) {
     return this.dialogRef.close(asset);
   }
-
-  show(resources:Resource[]) {
-    displayPreview(resources);
-  }
 }

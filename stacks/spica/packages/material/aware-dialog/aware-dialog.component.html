@@ -11,7 +11,7 @@
     </ng-template>
   </ng-container>
   <ng-container *ngIf="!isTemplate">{{ options.templateOrDescription }}</ng-container>
-  <mat-form-field [style.visibility]="options.noAnswer ? 'hidden' : 'visible'">
+  <mat-form-field [style.display]="options.noAnswer ? 'none' : 'visible'">
     <input
       matInput
       [placeholder]="options.answerHint || 'Answer'"

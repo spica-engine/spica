@@ -27,8 +27,8 @@ import {StoreModule} from "@ngrx/store";
 import {InputModule} from "@spica-client/common";
 import {EditorModule} from "@spica-client/common/code-editor";
 import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
-import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
-import {provideActivityFactory} from "@spica-client/function/providers/activity";
+import {BUILDLINK_FACTORY} from "@spica-client/core/factories/factory";
+import {provideActivityFactory, provideAssetFactory} from "@spica-client/function/providers";
 import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
 import {PassportService} from "@spica-client/passport";
 import {PassportModule} from "../passport/passport.module";
@@ -125,8 +125,13 @@ export class FunctionModule {
           deps: [FunctionInitializer]
         },
         {
-          provide: ACTIVITY_FACTORY,
-          useValue: provideActivityFactory,
+          provide: BUILDLINK_FACTORY,
+          useValue: {caller: "activity", factory: provideActivityFactory},
+          multi: true
+        },
+        {
+          provide: BUILDLINK_FACTORY,
+          useValue: {caller: "asset", factory: provideAssetFactory},
           multi: true
         }
       ]

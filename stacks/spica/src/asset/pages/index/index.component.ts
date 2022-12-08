@@ -5,6 +5,7 @@ import {Observable} from "rxjs";
 import {MatDialog} from "@angular/material/dialog";
 import {AssetInstallDialog} from "@spica-client/asset/components/install/install.component";
 import {filter, switchMap, tap} from "rxjs/operators";
+import {MatAwareDialogComponent} from "@spica-client/material";
 
 @Component({
   selector: "asset-index",
@@ -44,12 +45,21 @@ export class IndexComponent implements OnInit {
       .finally(() => this.hideSpinner());
   }
 
-  onDelete(asset: Asset, type: "hard" | "soft") {
-    this.showSpinner();
-    return this.assetService
-      .remove(asset._id, type)
-      .toPromise()
-      .finally(() => this.hideSpinner());
+  onDelete(asset: Asset, type: "hard" | "soft", dialogConfig) {
+    const dialogRef = this.dialog.open(MatAwareDialogComponent, {
+      data: dialogConfig
+    });
+
+    dialogRef
+      .afterClosed()
+      .pipe(filter(r => !!r))
+      .subscribe(() => {
+        this.showSpinner();
+        this.assetService
+          .remove(asset._id, type)
+          .toPromise()
+          .finally(() => this.hideSpinner());
+      });
   }
 
   showSpinner() {

@@ -32,11 +32,11 @@ import {MatTooltipModule} from "@angular/material/tooltip";
 import {LeafletModule} from "@asymmetrik/ngx-leaflet";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular-datetime-picker";
 import {StoreModule} from "@ngrx/store";
-import {provideActivityFactory} from "@spica-client/bucket/providers/activity";
+import {provideActivityFactory, provideAssetFactory} from "@spica-client/bucket/providers";
 import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
 import {EditorModule} from "@spica-client/common/code-editor";
 import {LAYOUT_INITIALIZER, PreferencesModule, RouteService} from "@spica-client/core";
-import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
+import {BUILDLINK_FACTORY} from "@spica-client/core/factories/factory";
 import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
 import {MatResizeHeaderModule} from "@spica-client/material/resize";
 import {PassportModule, PassportService} from "../passport";
@@ -184,8 +184,13 @@ export class BucketModule {
           deps: [BucketInitializer]
         },
         {
-          provide: ACTIVITY_FACTORY,
-          useValue: provideActivityFactory,
+          provide: BUILDLINK_FACTORY,
+          useValue: {caller: "activity", factory: provideActivityFactory},
+          multi: true
+        },
+        {
+          provide: BUILDLINK_FACTORY,
+          useValue: {caller: "asset", factory: provideAssetFactory},
           multi: true
         },
         {

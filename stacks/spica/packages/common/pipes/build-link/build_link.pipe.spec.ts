@@ -6,7 +6,7 @@ import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
 
 @Component({
   template: `
-    <a>{{ activity | buildLink }}</a>
+    <a>{{ activity | buildLink: "activity" }}</a>
   `
 })
 class BuildLinkTestComponent {
@@ -63,7 +63,7 @@ describe("BuildLinkPipe", () => {
   it("should return url from function factory", () => {
     fixture.detectChanges();
     expect(fixture.debugElement.query(By.css("a")).nativeElement.textContent).toEqual(
-      "../function/test_doc_id"
+      "function/test_doc_id"
     );
   });
 
@@ -71,7 +71,7 @@ describe("BuildLinkPipe", () => {
     fixture.componentInstance.activity.resource.name = "bucket";
     fixture.detectChanges();
     expect(fixture.debugElement.query(By.css("a")).nativeElement.textContent).toEqual(
-      "../bucket/test_doc_id"
+      "bucket/test_doc_id"
     );
   });
   it("shouldn't return url if there is no provider for module", () => {

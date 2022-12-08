@@ -25,9 +25,9 @@ import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
 import {LAYOUT_ACTIONS, ROUTE_FILTERS} from "@spica-client/core";
-import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
+import {BUILDLINK_FACTORY} from "@spica-client/core/factories/factory";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
-import {provideActivityFactory} from "@spica-client/passport/providers/activity";
+import {provideActivityFactory, provideAssetFactory} from "@spica-client/passport/providers";
 import {AccessTokenComponent} from "./components/access-token/access-token.component";
 import {IdentityBadgeComponent} from "./components/identity-badge/identity-badge.component";
 import {HomeBadgeComponent} from "./components/home-badge/home-badge.component";
@@ -132,8 +132,16 @@ export class PassportModule {
           multi: true
         },
         {provide: ROUTE_FILTERS, useExisting: PassportRouteFilter, multi: true},
-
-        {provide: ACTIVITY_FACTORY, useValue: provideActivityFactory, multi: true}
+        {
+          provide: BUILDLINK_FACTORY,
+          useValue: {caller: "activity", factory: provideActivityFactory},
+          multi: true
+        },
+        {
+          provide: BUILDLINK_FACTORY,
+          useValue: {caller: "asset", factory: provideAssetFactory},
+          multi: true
+        }
       ]
     };
   }

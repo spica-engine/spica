@@ -34,7 +34,15 @@
             mat-icon-button
             canInteract="asset:install"
             [resource]="asset._id"
-            (click)="asset.status == 'downloaded' ? onInstall(asset) : onDelete(asset, 'soft')"
+            (click)="
+              asset.status == 'downloaded'
+                ? onInstall(asset)
+                : onDelete(asset, 'soft', {
+                    title: 'Confirmation',
+                    templateOrDescription: assetSoftDeleteTemplate,
+                    answer: asset.name
+                  })
+            "
           >
             <mat-icon>{{ asset.status == "downloaded" ? "play_arrow" : "stop_circle" }}</mat-icon>
           </button>
@@ -43,13 +51,14 @@
             mat-icon-button
             canInteract="asset:delete"
             [resource]="asset._id"
-            [matAwareDialog]="{
-              title: 'Confirmation',
-              templateOrDescription: dialogTemplate,
-              answer: asset.name
-            }"
             color="warn"
-            (confirm)="onDelete(asset._id, 'hard')"
+            (click)="
+              onDelete(asset._id, 'hard', {
+                title: 'Confirmation',
+                templateOrDescription: assetHardDeleteTemplate,
+                answer: asset.name
+              })
+            "
             [disabled]="isPending"
           >
             <mat-icon mat-icon-button>delete</mat-icon>
@@ -63,8 +72,15 @@
   </mat-card-content>
 </mat-card>
 
-<ng-template #dialogTemplate let-answer="answer">
-  <p>This action will <b>permanently</b> delete this asset.</p>
+<ng-template #assetHardDeleteTemplate let-answer="answer">
+  <p>This action will <b>permanently</b> delete the asset and it's resources.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>
+
+<ng-template #assetSoftDeleteTemplate let-answer="answer">
+  <p>This action will <b>permanently</b> delete asset resources but not itself.</p>
   <p>
     Please type in <code>{{ answer }}</code> to confirm.
   </p>

@@ -9,13 +9,14 @@ import {NestedTreeControl} from "@angular/cdk/tree";
 import {MatTreeNestedDataSource} from "@angular/material/tree";
 import {displayPreview, separatePreviewResourcesByModule} from "@spica-client/asset/helpers";
 
-interface AssetNode {
+interface AssetResourceNode {
   name: string;
-  children?: AssetNode[];
+  children?: AssetResourceNode[];
+  resource?: Resource;
 }
 
 @Component({
-  selector: "app-edit",
+  selector: "asset-edit",
   templateUrl: "./edit.component.html",
   styleUrls: ["./edit.component.scss"]
 })
@@ -39,8 +40,8 @@ export class EditComponent {
 
   asset: Asset;
 
-  treeControl = new NestedTreeControl<AssetNode>(node => node.children);
-  dataSource = new MatTreeNestedDataSource<AssetNode>();
+  treeControl = new NestedTreeControl<AssetResourceNode>(node => node.children);
+  dataSource = new MatTreeNestedDataSource<AssetResourceNode>();
 
   icons: Array<string> = ICONS;
   readonly iconPageSize = 24;
@@ -64,9 +65,6 @@ export class EditComponent {
       .then(r => (this.preview = separatePreviewResourcesByModule(r)));
   }
 
-  show(resources: Resource[]) {
-    displayPreview(resources);
-  }
 
   // categorizeResourcesByModule(resources) {
   //   const categorizedResources = {};
@@ -84,7 +82,7 @@ export class EditComponent {
   }
 
   categorizeResourcesByModule(resources) {
-    const categorizedResources: AssetNode[] = [];
+    const categorizedResources: AssetResourceNode[] = [];
 
     for (const resource of resources) {
       let indexOfCategory = categorizedResources.findIndex(c => c.name == resource.module);
@@ -96,14 +94,13 @@ export class EditComponent {
 
       categorizedResources[indexOfCategory].children.push({
         name: this.buildResourceName(resource),
-        children: []
+        children: [],
+        resource: resource
       });
     }
-
-    console.log(categorizedResources);
 
     return categorizedResources;
   }
 
-  hasChild = (_: number, node: AssetNode) => !!node.children && node.children.length > 0;
+  hasChild = (_: number, node: AssetResourceNode) => !!node.children && node.children.length > 0;
 }

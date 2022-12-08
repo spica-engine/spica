@@ -69,14 +69,14 @@
           </mat-list-item>
           <mat-list-item>
             <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="example-tree">
-              <!-- This is the tree node template for leaf nodes -->
-              <!-- There is inline padding applied to this node using styles.
-                  This padding value depends on the mat-icon-button width. -->
               <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
-                {{ node.name | titlecase }}
-                <button mat-icon-button><mat-icon>info</mat-icon></button>
+                <a
+                  target="_blank"
+                  class="resource-url"
+                  [routerLink]="'../../' + (node.resource | buildLink: 'asset')"
+                  >{{ node.name | titlecase }} <mat-icon>open_in_new</mat-icon>
+                </a>
               </mat-tree-node>
-              <!-- This is the tree node template for expandable nodes -->
               <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
                 <div class="mat-tree-node">
                   <button
@@ -90,8 +90,6 @@
                   </button>
                   {{ node.name | titlecase }}
                 </div>
-                <!-- There is inline padding applied to this div using styles.
-                        This padding value depends on the mat-icon-button width.  -->
                 <div [class.example-tree-invisible]="!treeControl.isExpanded(node)" role="group">
                   <ng-container matTreeNodeOutlet></ng-container>
                 </div>
@@ -125,9 +123,9 @@
         *matSave="$save | async; let state"
         [ngSwitch]="state"
         [matAwareDialog]="{
-          title: 'Confirmation',
+          title: 'Confirm changes to continue',
           templateOrDescription: dialogTemplate,
-          answer: 'continue'
+          noAnswer: true
         }"
       >
         <mat-icon *ngSwitchDefault>save</mat-icon>
@@ -145,22 +143,6 @@
   </mat-card>
 </ng-container>
 
-<ng-template #dialogTemplate let-answer="answer">
-  <div *ngFor="let propertyKv of preview | keyvalue">
-    <h4>{{ propertyKv.key | titlecase }} module</h4>
-    <ul>
-      <li *ngIf="propertyKv.value.insertions.length; let insertionsLength">
-        Inserting <a (click)="show(propertyKv.value.insertions)">{{ insertionsLength }}</a> resources
-      </li>
-      <li *ngIf="propertyKv.value.updations.length; let updationsLength">
-        Updating <a (click)="show(propertyKv.value.updations)">{{ updationsLength }}</a> resources
-      </li>
-      <li *ngIf="propertyKv.value.deletions.length; let deletionsLength">
-        Deleting <a (click)="show(propertyKv.value.deletions)">{{ deletionsLength }}</a> resources
-      </li>
-    </ul>
-  </div>
-  <p>
-    Please type in <code>{{ answer }}</code> to confirm.
-  </p>
+<ng-template #dialogTemplate>
+  <asset-preview [preview]="preview"></asset-preview>
 </ng-template>
