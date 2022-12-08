@@ -1,4 +1,5 @@
-import {registrar, Resource} from "@spica-server/asset";
+import {registrar} from "@spica-server/asset";
+import {Resource} from "@spica-server/interface/asset"
 import {Schema, Validator} from "@spica-server/core/schema";
 import {Function, FunctionContents} from "@spica-server/interface/function";
 import {generate} from "./schema/enqueuer.resolver";

@@ -14,6 +14,7 @@ ts_project(
         "//stacks/api/passport/guard",
         "//packages/core/schema",
         "//packages/core",
+        "//packages/interface/asset",
         "//packages/core/differ",
         "//packages/database",
         "@npm//@nestjs/common",

@@ -53,7 +53,7 @@
             [resource]="asset._id"
             color="warn"
             (click)="
-              onDelete(asset._id, 'hard', {
+              onDelete(asset, 'hard', {
                 title: 'Confirmation',
                 templateOrDescription: assetHardDeleteTemplate,
                 answer: asset.name

@@ -1,4 +1,4 @@
-import {Operator, Validator} from "./interface";
+import {Operator, Validator} from "@spica-server/interface/asset";
 
 export const validators = new Map<string, Validator[]>();
 export const operators = new Map<string, Operator[]>();

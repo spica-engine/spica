@@ -1,4 +1,5 @@
-import {Resource, registrar} from "@spica-server/asset";
+import {registrar} from "@spica-server/asset";
+import {Resource} from "@spica-server/interface/asset"
 import {HistoryService} from "@spica-server/bucket/history";
 import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {Schema, Validator} from "@spica-server/core/schema";

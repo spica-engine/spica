@@ -1,13 +1,14 @@
 import {Action, ActionParameters, Command, CreateCommandParameters} from "@caporal/core";
 import {httpService} from "../../http";
 import {RepresentativeManager} from "../../representative";
+import {Resource} from "@spica-server/interface/asset";
 import * as path from "path";
 import * as fs from "fs";
 import * as YAML from "yaml";
 
 async function apply({options}: ActionParameters) {
-  const cwd = process.cwd();
-  const repManager = new RepresentativeManager(cwd);
+  const folderPath = (options.path as string) || process.cwd();
+  const repManager = new RepresentativeManager(folderPath);
   const moduleAndFiles = new Map<string, string[]>();
 
   moduleAndFiles.set("bucket", ["schema.yaml"]);
@@ -19,7 +20,7 @@ async function apply({options}: ActionParameters) {
   const resources = [];
 
   for (let [_module, fileNames] of moduleAndFiles.entries()) {
-    let resource = await repManager.read(_module, resourceNameValidator, fileNames);
+    let resource: Resource[] = await repManager.read(_module, resourceNameValidator, fileNames);
     resource = resource.map(r => {
       r.module = _module;
       return r;
@@ -27,7 +28,7 @@ async function apply({options}: ActionParameters) {
     resources.push(...resource);
   }
 
-  const filename = path.relative(process.cwd(), "asset.yaml");
+  const filename = path.relative(folderPath, "asset.yaml");
   const rawDocument = fs.readFileSync(filename).toString();
   const assetMeta = YAML.parseDocument(rawDocument);
 
@@ -44,5 +45,10 @@ async function apply({options}: ActionParameters) {
 }
 
 export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand("Put objects to the API.").action((apply as unknown) as Action);
+  return createCommand("Put objects to the API.")
+    .option(
+      "--path <path>",
+      "Path of the folder that container asset.yaml file and resources of it. Current working directory is the default value."
+    )
+    .action((apply as unknown) as Action);
 }

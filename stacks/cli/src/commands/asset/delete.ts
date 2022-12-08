@@ -6,8 +6,8 @@ import * as fs from "fs";
 import * as YAML from "yaml";
 
 async function _delete({options}: ActionParameters) {
-  const filename = path.relative(process.cwd(), "asset.yaml");
-  const rawDocument = fs.readFileSync(filename).toString();
+  const folderPath = (options.path as string) || process.cwd();
+  const rawDocument = fs.readFileSync(folderPath).toString();
   const assetMeta = YAML.parseDocument(rawDocument).toJSON();
 
   const machineryClient = await httpService.createFromCurrentCtx();
@@ -30,5 +30,10 @@ async function _delete({options}: ActionParameters) {
 }
 
 export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand("Delete objects of the API.").action((_delete as unknown) as Action);
+  return createCommand("Delete objects of the API.")
+    .option(
+      "--path <path>",
+      "Path of the folder that container asset.yaml file and resources of it. Current working directory is the default value."
+    )
+    .action((_delete as unknown) as Action);
 }
