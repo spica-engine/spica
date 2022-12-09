@@ -1,6 +1,8 @@
 import {InjectionToken} from "@angular/core";
 import {Observable} from "rxjs";
 
+import {ComponentType} from "@angular/cdk/overlay";
+
 export enum RouteCategory {
   Dashboard = "Dashboard",
   Primary = "Primary",
@@ -21,7 +23,7 @@ export interface Route {
   id: string;
   icon: string;
   display: string;
-  path: string;
+  path: string | ComponentType<any>; // If path is component, can open component in modal
   category: RouteCategory;
   data?: {[key: string]: any};
   queryParams?: {[key: string]: any};

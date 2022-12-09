@@ -7,6 +7,7 @@ import {debounceTime, map, shareReplay, switchMap, tap} from "rxjs/operators";
 import {Route, RouteCategory, RouteService} from "../../route";
 import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
 import {Title} from "@angular/platform-browser";
+import {MatDialog} from "@angular/material/dialog";
 
 @Component({
   selector: "layout-home",
@@ -83,7 +84,8 @@ export class HomeLayoutComponent implements OnInit {
     public components: {component: Component; position: "left" | "right" | "center"}[],
     @Optional() @Inject(LAYOUT_INITIALIZER) private initializer: Function[],
     public categoryService: CategoryService,
-    private titleService: Title
+    private titleService: Title,
+    private _dialog: MatDialog
   ) {
     this.categories$ = this.routeService.routes.pipe(
       map(routes => {
@@ -166,5 +168,14 @@ export class HomeLayoutComponent implements OnInit {
   }
   setTitle(title: string) {
     this.titleService.setTitle(`${this.currentCategoryName} | ${title}`);
+  }
+
+  openModalFromSidenav(component) {
+    this._dialog.open(component, {
+      autoFocus: false
+    });
+  }
+  checkPathIsLink(path) {
+    return typeof path == "string";
   }
 }

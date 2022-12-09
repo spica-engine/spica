@@ -116,7 +116,8 @@
 
         <ng-template #routeItemList let-items="items">
           <mat-list-item
-            [routerLink]="route.path"
+            (click)="!checkPathIsLink(route.path) && openModalFromSidenav(route.path) "
+            [routerLink]="checkPathIsLink(route.path)  && route.path"
             routerLinkActive="active"
             [queryParams]="route.queryParams"
             [class]="route.customClass"
