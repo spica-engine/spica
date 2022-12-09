@@ -53,6 +53,7 @@ import {RichTextEditorComponent} from "./components/richtext/richtext";
 import {AddFieldModalComponent} from "./pages/add-field-modal/add-field-modal.component";
 import {AddComponent} from "./pages/add/add.component";
 import {BucketAddComponent} from "./pages/bucket-add/bucket-add.component";
+import {AddBucketComponent} from "./pages/add-bucket/add-bucket.component";
 import {BucketIndexComponent} from "./pages/bucket-index/bucket-index.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {SettingsComponent} from "./pages/settings/settings.component";
@@ -149,6 +150,7 @@ import {IGNORE_HTTP_ERRORS} from "@spica-client/core/layout/config";
     AddComponent,
     BucketIndexComponent,
     BucketAddComponent,
+    AddBucketComponent,
     WelcomeComponent,
     RichTextEditorComponent,
     RelationComponent,

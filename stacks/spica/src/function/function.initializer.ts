@@ -20,9 +20,7 @@ export class FunctionInitializer {
     private passport: PassportService
   ) {
     webhookService.getWebhooks().subscribe(webhooks => {
-      this.routeService.dispatch(
-        new CherryPickAndRemove(e => e.icon == "webhook" && /\/webhook\//.test(e.path))
-      );
+      this.routeService.dispatch(new CherryPickAndRemove(e => e.category == RouteCategory.Webhook));
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Webhook));
 
       for (const webhook of webhooks) {
@@ -51,7 +49,7 @@ export class FunctionInitializer {
 
     functionService.getFunctions().subscribe(async funcs => {
       this.routeService.dispatch(
-        new CherryPickAndRemove(e => e.icon == "memory" && /\/function\//.test(e.path))
+        new CherryPickAndRemove(e => e.category == RouteCategory.Developer)
       );
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Developer));
 

@@ -1,0 +1,21 @@
+:host {
+  align-items: flex-start;
+  flex-direction: column;
+  form {
+    min-width: 340px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    mat-form-field {
+      width: 100%;
+      ::ng-deep {
+        .mat-form-field-prefix {
+          top: 0.35rem;
+        }
+      }
+    }
+    > button {
+      margin-top: 10px;
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import {Injectable} from "@angular/core";
 import {RemoveCategory, RouteCategory, RouteService, Upsert} from "@spica-client/core";
 import {PassportService} from "../../passport";
+import {AddBucketComponent} from "../pages/add-bucket/add-bucket.component";
 import {BucketService} from "./bucket.service";
 
 @Injectable()
@@ -34,7 +35,7 @@ export class BucketInitializer {
           id: "add-bucket",
           category: RouteCategory.Content,
           icon: "add",
-          path: "/buckets/add",
+          path: AddBucketComponent,
           display: "Add New Bucket",
           data: {
             action: "bucket:create"
