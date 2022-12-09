@@ -8,7 +8,6 @@ import {AddComponent} from "./pages/add/add.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {DashboardIndexGuard} from "./dashboard.guard";
-import {AssetStoreComponent} from "./pages/asset-store/asset-store.component";
 import {VersionControlComponent} from "./pages/versioncontrol/versioncontrol.component";
 
 const routes: Routes = [
@@ -48,7 +47,6 @@ const routes: Routes = [
       }
     ]
   },
-  // {path: "assets", component: AssetStoreComponent},
   {
     path: "versioncontrol",
     component: VersionControlComponent,

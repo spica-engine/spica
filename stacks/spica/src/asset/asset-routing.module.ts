@@ -4,16 +4,18 @@ import {Route, RouteCategory, RouteModule} from "@spica-client/core";
 import {IdentityGuard, PolicyGuard} from "../passport";
 import {EditComponent} from "./pages/edit/edit.component";
 import {IndexComponent} from "./pages/index/index.component";
+import {AssetStoreComponent} from "./pages/asset-store/asset-store.component";
 
 const routes: Routes = [
+  {path: "assetstore", component: AssetStoreComponent},
   {
-    path: "asset",
+    path: "assets",
     canActivate: [IdentityGuard, PolicyGuard],
     component: IndexComponent,
     data: {service: "asset", action: "index"}
   },
   {
-    path: "asset/:id",
+    path: "assets/:id",
     component: EditComponent,
     data: {
       action: "show"
@@ -26,7 +28,7 @@ const route: Route[] = [
     id: "list_assets",
     category: RouteCategory.Asset_Sub,
     icon: "format_list_numbered",
-    path: "/asset",
+    path: "/assets",
     display: "List"
   }
 ];

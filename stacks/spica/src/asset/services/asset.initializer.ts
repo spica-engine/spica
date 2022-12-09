@@ -17,9 +17,9 @@ export class AssetInitializer {
         this.routeService.dispatch(
           new Upsert({
             category: RouteCategory.Asset,
-            id: `asset/${asset._id}`,
+            id: `assets/${asset._id}`,
             icon: "check",
-            path: `/asset/${asset._id}`,
+            path: `/assets/${asset._id}`,
             display: asset.name
           })
         );
@@ -30,7 +30,7 @@ export class AssetInitializer {
           id: "add-asset",
           category: RouteCategory.Asset,
           icon: "add",
-          path: `/asset`,
+          path: `/assetstore`,
           display: "Add Asset"
         })
       );
