@@ -1,13 +1,17 @@
-import {Module} from "@nestjs/common";
+import {Global, Module} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
 import {AssetController} from "./controller";
 import {AssetService} from "./service";
-import AssetSchema = require("../schema/asset.json");
-import ConfigsSchema = require("../schema/configs.json");
+
 import {AssetOptions, ASSET_REP_MANAGER, ASSET_WORKING_DIRECTORY} from "./interface";
-import {RepresentativeManager} from "@spica-server/representative";
 import * as fs from "fs";
 
+import AssetSchema = require("../schema/asset.json");
+import ConfigsSchema = require("../schema/configs.json");
+import ExportSchema = require("../schema/export.json");
+import {AssetRepManager} from "./representative";
+
+@Global()
 @Module({})
 export class AssetModule {
   static forRoot(options: AssetOptions) {
@@ -15,7 +19,7 @@ export class AssetModule {
       module: AssetModule,
       imports: [
         SchemaModule.forChild({
-          schemas: [AssetSchema, ConfigsSchema]
+          schemas: [AssetSchema, ConfigsSchema, ExportSchema]
         })
       ],
       controllers: [AssetController],
@@ -24,16 +28,16 @@ export class AssetModule {
         {
           provide: ASSET_WORKING_DIRECTORY,
           useFactory: () => {
-            const dir = `${options.persistentPath}/assets`;
+            const dir = `${options.persistentPath}/asset`;
             if (!fs.existsSync(dir)) {
-              fs.mkdirSync(dir);
+              fs.mkdirSync(dir, {recursive: true});
             }
             return dir;
           }
         },
         {
           provide: ASSET_REP_MANAGER,
-          useFactory: dir => new RepresentativeManager(dir),
+          useFactory: dir => new AssetRepManager(dir),
           inject: [ASSET_WORKING_DIRECTORY]
         }
       ],

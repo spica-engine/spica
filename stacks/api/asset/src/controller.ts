@@ -6,22 +6,27 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   InternalServerErrorException,
   NotFoundException,
   Param,
   Post,
   Query,
+  Res,
   UseGuards
 } from "@nestjs/common";
 import {AssetService} from "./service";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
-import {Asset, Configuration, Resource} from "@spica-server/interface/asset";
-import {operators, validators} from "./registration";
+import {Asset, Configuration, ExportMeta, Resource} from "@spica-server/interface/asset";
+import {exporters, operators, validators} from "./registration";
 import {compareResourceGroups} from "@spica-server/core/differ";
 import {putConfiguration} from "./helpers";
 import {BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
+import {ASSET_REP_MANAGER} from "./interface";
+import {AssetRepManager} from "./representative";
+import {createReadStream} from "fs";
 
 /**
  * Mongodb transactions(need to be implemented in tricky way because our db classes does not support it)
@@ -34,7 +39,10 @@ import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 
 @Controller("asset")
 export class AssetController {
-  constructor(private service: AssetService) {}
+  constructor(
+    private service: AssetService,
+    @Inject(ASSET_REP_MANAGER) private repManager: AssetRepManager
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("asset:index"))
@@ -82,6 +90,41 @@ export class AssetController {
 
   // DELETE /id
   // there might be an option like "soft" and "hard", delete action will be performed based on this parameter
+
+  @Post("export")
+  @UseGuards(AuthGuard(), ActionGuard("asset:export", "asset"))
+  async export(
+    @Body(Schema.validate("http://spica.internal/asset/export")) exportMeta: ExportMeta,
+    @Res() res
+  ) {
+    await this.repManager.rm();
+
+    for (const resource of exportMeta.resources) {
+      const relatedExporters = exporters.get(resource.module);
+      if (!relatedExporters || !relatedExporters.length) {
+        return res.status(400).json({message: `Module ${resource.module} does not exist.`});
+      }
+
+      const exports = relatedExporters.map(exporter =>
+        Promise.all(
+          resource.ids.map(id =>
+            exporter(id).catch(e => {
+              return res
+                .status(400)
+                .json({message: `Failed to export asset for ${resource.module} module.\n${e}`});
+            })
+          )
+        )
+      );
+      await Promise.all(exports);
+    }
+
+    await this.repManager.putAssetMeta(exportMeta);
+
+    const output = await this.repManager.zipAssets();
+    const file = createReadStream(output);
+    file.pipe(res);
+  }
 
   @Post(":id")
   @UseGuards(AuthGuard(), ActionGuard("asset:install", "asset"))
@@ -181,7 +224,7 @@ export class AssetController {
   ) {
     const asset = await this.service.findOne({_id: id});
 
-    if (asset.status == "installed") {
+    if (asset.status != "downloaded") {
       await this.operate(asset._id, asset.resources, "delete").catch(e =>
         this.onInstallationFailed(id, e)
       );
@@ -196,12 +239,6 @@ export class AssetController {
     }
 
     throw new BadRequestException(`Unknown delete type '${type}'`);
-  }
-
-  @Post()
-  @UseGuards(AuthGuard(), ActionGuard("asset:export", "asset"))
-  async export(){
-    
   }
 
   async operate(assetId: ObjectId, resources: Resource[], action: "insert" | "update" | "delete") {

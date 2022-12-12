@@ -78,8 +78,8 @@ export function registerAssetHandlers(
     }
 
     promises.push(
-      manager.write(_module, fn._id, "schema", fn, "yaml"),
-      manager.write(_module, fn._id, "env", env, "env")
+      manager.write(_module, _id, "schema", fn, "yaml"),
+      manager.write(_module, _id, "env", env, "env")
     );
 
     // dependencies

@@ -17,6 +17,10 @@ export default {
     {
       action: "asset:delete",
       module: "asset"
+    },
+    {
+      action: "asset:export",
+      module: "asset"
     }
   ]
 };

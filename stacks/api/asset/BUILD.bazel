@@ -20,5 +20,7 @@ ts_project(
         "//packages/database",
         "@npm//@nestjs/common",
         "@npm//@types/node",
+        "@npm//archiver",
+        "@npm//@types/archiver",
     ],
 )

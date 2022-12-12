@@ -35,3 +35,13 @@ export interface Operator {
 }
 
 export type Exporter = (_id: string) => Promise<void>;
+
+export interface ExportMeta {
+  name: string;
+  description: string;
+  resources: {
+    module: string;
+    ids: string[];
+  }[];
+  configs: Configuration[];
+}

@@ -10,7 +10,7 @@ export class RepresentativeManager implements IRepresentativeManager {
   private serializer = new Map<string, (val: any) => string>();
   private parsers = new Map<string, (val: string) => any>();
 
-  constructor(private cwd: string) {
+  constructor(protected cwd: string) {
     // JSON
     this.serializer.set("json", val => JSON.stringify(val));
     this.parsers.set("json", val => JSON.parse(val));

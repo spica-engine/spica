@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/asset/export",
+  "type": "object",
+  "required": ["name", "description", "configs", "resources"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the asset"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the asset"
+    },
+    "resources": {
+      "type": "array",
+      "description": "Resources of the asset",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Id of the resource"
+            }
+          },
+          "module": {
+            "type": "string",
+            "description": "Module of the resource"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "configs": {
+      "$ref": "http://spica.internal/asset/configs"
+    }
+  },
+  "additionalProperties": false
+}

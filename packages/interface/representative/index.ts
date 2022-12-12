@@ -13,7 +13,7 @@ export interface IRepresentativeManager {
       fileNameFilter: string[]
     ): Promise<{_id: string; contents: {[key: string]: any}}[]>;
   
-    rm(module: string, id: string): Promise<void>;
+    rm(module?: string, id?: string): Promise<void>;
   }
   
   
