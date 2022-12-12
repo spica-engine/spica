@@ -198,6 +198,12 @@ export class AssetController {
     throw new BadRequestException(`Unknown delete type '${type}'`);
   }
 
+  @Post()
+  @UseGuards(AuthGuard(), ActionGuard("asset:export", "asset"))
+  async export(){
+    
+  }
+
   async operate(assetId: ObjectId, resources: Resource[], action: "insert" | "update" | "delete") {
     const operations = resources.map(resource => {
       const relatedOperators = operators.get(resource.module);

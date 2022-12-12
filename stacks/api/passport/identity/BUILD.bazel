@@ -11,6 +11,7 @@ ts_project(
         "src/schemas/*.json",
     ]),
     deps = [
+        "//packages/interface/representative",
         "//packages/core",
         "//packages/core/differ",
         "//packages/core/schema",

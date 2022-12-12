@@ -11,6 +11,7 @@ ts_project(
         "index.ts"
     ]),
     deps = [
+        "//packages/representative",
         "//stacks/api/passport/guard",
         "//packages/core/schema",
         "//packages/core",

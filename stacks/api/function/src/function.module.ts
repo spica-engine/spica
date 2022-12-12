@@ -26,6 +26,7 @@ import {
 import {getSyncProviders} from "./versioncontrol";
 import {registerAssetHandlers} from "./asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
 
 @Module({})
 export class FunctionModule {
@@ -33,20 +34,21 @@ export class FunctionModule {
     fs: FunctionService,
     fe: FunctionEngine,
     scheduler: Scheduler,
-    @Optional() @Inject(VC_REP_MANAGER) private repManager: IRepresentativeManager,
+    @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
     @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
+    @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
     logs: LogService,
     validator: Validator
   ) {
     if (registerSync) {
-      getSyncProviders(fs, this.repManager, fe, logs).forEach(provider => registerSync(provider));
+      getSyncProviders(fs, this.vcRepManager, fe, logs).forEach(provider => registerSync(provider));
     }
 
     registerInformers(fs, fe);
 
     registerStatusProvider(fs, scheduler);
 
-    registerAssetHandlers(fs, fe, logs, validator);
+    registerAssetHandlers(fs, fe, logs, validator, assetRepManager);
   }
 
   static forRoot(options: SchedulingOptions & FunctionOptions): DynamicModule {

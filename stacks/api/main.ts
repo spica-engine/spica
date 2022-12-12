@@ -400,7 +400,7 @@ const modules = [
   DashboardModule.forRoot(),
   PreferenceModule.forRoot(),
   ApiMachineryModule,
-  AssetModule,
+  AssetModule.forRoot({persistentPath: args["persistent-path"]}),
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],

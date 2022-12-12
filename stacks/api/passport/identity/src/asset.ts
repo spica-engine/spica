@@ -1,7 +1,8 @@
 import {registrar} from "@spica-server/asset";
-import {Resource} from "@spica-server/interface/asset"
+import {Resource} from "@spica-server/interface/asset";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {PreferenceService} from "@spica-server/preference/services";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 
 /**
  * Preference has 2 sub modules named bucket(not yet) and identity
@@ -20,11 +21,17 @@ interface IdentitySchema {
   };
 }
 
-function isIdentityPreference(r: Resource<IdentitySettingsContents>) {
-  return r._id == "identity";
+function isIdentityPreference(resourceOrId: Resource<IdentitySettingsContents> | string) {
+  return typeof resourceOrId == "string"
+    ? resourceOrId == "identity"
+    : resourceOrId._id == "identity";
 }
 
-export function registerAssetHandlers(prefService: PreferenceService, schemaValidator: Validator) {
+export function registerAssetHandlers(
+  prefService: PreferenceService,
+  schemaValidator: Validator,
+  manager: IRepresentativeManager
+) {
   const validator = (resource: Resource<IdentitySettingsContents>) => {
     const schema = resource.contents.schema;
 
@@ -63,6 +70,20 @@ export function registerAssetHandlers(prefService: PreferenceService, schemaVali
   };
 
   registrar.operator(_module, operator);
+
+  const exporter = async (_id: string) => {
+    if (!isIdentityPreference(_id)) {
+      return;
+    }
+
+    const schema = prefService.get("passport").then(s => {
+      return s.identity;
+    });
+
+    return manager.write(_module, "identity", "schema", schema, "yaml");
+  };
+
+  registrar.exporter(_module, exporter);
 }
 
 function validateFn(schema: IdentitySchema, validator: Validator) {

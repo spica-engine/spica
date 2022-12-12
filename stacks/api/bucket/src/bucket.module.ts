@@ -28,6 +28,7 @@ import {
 import {getSyncProvider} from "./versioncontrol/schema";
 import {registerAssetHandlers} from "./asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
+import { ASSET_REP_MANAGER } from "@spica-server/asset/src/interface";
 
 @Module({})
 export class BucketModule {
@@ -115,11 +116,13 @@ export class BucketModule {
     bds: BucketDataService,
     validator: Validator,
     @Optional() private history: HistoryService,
-    @Optional() @Inject(VC_REP_MANAGER) private repManager: IRepresentativeManager,
-    @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider
+    @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
+    @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
+    @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
+
   ) {
     if (registerSync) {
-      const provider = getSyncProvider(bs, bds, this.history, this.repManager);
+      const provider = getSyncProvider(bs, bds, this.history, this.vcRepManager);
       registerSync(provider);
     }
 
@@ -136,7 +139,7 @@ export class BucketModule {
 
     registerInformers(bs);
     registerStatusProvider(bs, bds);
-    registerAssetHandlers(bs, bds, history, validator);
+    registerAssetHandlers(bs, bds, history, validator,assetRepManager);
   }
 }
 
