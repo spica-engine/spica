@@ -168,12 +168,15 @@
             top: 10px;
           }
         }
-        th.add-new-property{
-          cursor: pointer;
+        th.add-new-property {
           text-align: center;
           padding: 0 !important;
-          mat-icon{
+          width: 100px !important;
+          min-width: 100px !important;
+          mat-icon {
             font-size: 1.5rem;
+            width: calc(100% - 20px);
+            cursor: pointer !important;
           }
         }
         tr {

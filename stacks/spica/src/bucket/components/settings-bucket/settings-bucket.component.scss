@@ -9,6 +9,17 @@
           justify-content: space-between;
         }
       }
+      .clear-history-button {
+        text-align: center;
+        padding: 15px 0;
+        display: block;
+        button {
+          mat-progress-spinner {
+            display: inline-block;
+            margin-right: 5px;
+          }
+        }
+      }
       .limitations-details {
         > div {
           margin-top: 10px;
@@ -106,4 +117,3 @@
     }
   }
 }
-

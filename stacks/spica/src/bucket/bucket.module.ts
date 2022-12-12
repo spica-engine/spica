@@ -165,8 +165,7 @@ import { SettingsBucketComponent } from "./components/settings-bucket/settings-b
     CelLanguageDirective,
     JsonLanguageDirective,
     PropertyLanguageComponent,
-    SettingsBucketComponent
-  ]
+    SettingsBucketComponent  ]
 })
 export class BucketModule {
   public static forRoot(options: BucketOptions): ModuleWithProviders<BucketModule> {

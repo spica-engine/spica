@@ -1,4 +1,4 @@
-import {animate, style, transition, trigger} from "@angular/animations";
+import { animate, style, transition, trigger } from "@angular/animations";
 import {
   Component,
   ElementRef,
@@ -8,10 +8,10 @@ import {
   SecurityContext,
   ViewChild
 } from "@angular/core";
-import {MatPaginator, PageEvent} from "@angular/material/paginator";
-import {Sort} from "@angular/material/sort";
-import {ActivatedRoute, Router} from "@angular/router";
-import {merge, Observable, Subject} from "rxjs";
+import { MatPaginator, PageEvent } from "@angular/material/paginator";
+import { Sort } from "@angular/material/sort";
+import { ActivatedRoute, Router } from "@angular/router";
+import { merge, Observable, Subject } from "rxjs";
 import {
   flatMap,
   map,
@@ -23,16 +23,18 @@ import {
   takeUntil,
   debounceTime
 } from "rxjs/operators";
-import {Bucket, BucketOptions, BUCKET_OPTIONS} from "../../interfaces/bucket";
-import {BucketData, BucketEntry} from "../../interfaces/bucket-entry";
-import {BucketSettings} from "../../interfaces/bucket-settings";
-import {BucketDataService} from "../../services/bucket-data.service";
-import {BucketService} from "../../services/bucket.service";
-import {DomSanitizer} from "@angular/platform-browser";
-import {NgModel} from "@angular/forms";
-import {Scheme, SchemeObserver} from "@spica-client/core";
-import {guides} from "./guides";
-import {FilterComponent} from "@spica-client/bucket/components/filter/filter.component";
+import { Bucket, BucketOptions, BUCKET_OPTIONS } from "../../interfaces/bucket";
+import { BucketData, BucketEntry } from "../../interfaces/bucket-entry";
+import { BucketSettings } from "../../interfaces/bucket-settings";
+import { BucketDataService } from "../../services/bucket-data.service";
+import { BucketService } from "../../services/bucket.service";
+import { DomSanitizer } from "@angular/platform-browser";
+import { NgModel } from "@angular/forms";
+import { Scheme, SchemeObserver } from "@spica-client/core";
+import { guides } from "./guides";
+import { FilterComponent } from "@spica-client/bucket/components/filter/filter.component";
+import { MatDialog } from "@angular/material/dialog";
+import { AddFieldModalComponent } from "../add-field-modal/add-field-modal.component";
 
 @Component({
   selector: "bucket-data-index",
@@ -40,13 +42,13 @@ import {FilterComponent} from "@spica-client/bucket/components/filter/filter.com
   styleUrls: ["./index.component.scss"],
   animations: [
     trigger("smooth", [
-      transition(":enter", [style({opacity: 0}), animate("0.5s ease-out", style({opacity: 1}))]),
-      transition(":leave", [style({opacity: 1}), animate("0.5s ease-in", style({opacity: 0}))])
+      transition(":enter", [style({ opacity: 0 }), animate("0.5s ease-out", style({ opacity: 1 }))]),
+      transition(":leave", [style({ opacity: 1 }), animate("0.5s ease-in", style({ opacity: 0 }))])
     ])
   ]
 })
 export class IndexComponent implements OnInit, OnDestroy {
-  @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
+  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
 
   onImageError;
 
@@ -58,6 +60,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   bucketId: string;
   schema$: Observable<Bucket>;
+  schema: Bucket;
   data$: Observable<BucketData>;
   refresh = new Subject();
   loaded: boolean;
@@ -65,8 +68,8 @@ export class IndexComponent implements OnInit, OnDestroy {
   search$ = new Subject<string>();
   searchValue = "";
 
-  filter: {[key: string]: any} = {};
-  sort: {[key: string]: number} = {};
+  filter: { [key: string]: any } = {};
+  sort: { [key: string]: number } = {};
 
   readOnly: boolean = true;
 
@@ -76,7 +79,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     "$$spicainternal_id",
     "$$spicainternal_actions"
   ];
-  properties: Array<{name: string; title: string}> = [];
+  properties: Array<{ name: string; title: string }> = [];
 
   $preferences: Observable<BucketSettings>;
   language: string;
@@ -85,7 +88,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   guide: boolean = false;
   guideSDK: string = "js";
-  guideResponse: {[key: string]: string};
+  guideResponse: { [key: string]: string };
   guideObjects: object;
 
   readonly defaultPaginatorOptions = {
@@ -116,6 +119,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     private router: Router,
     private sanitizer: DomSanitizer,
     private scheme: SchemeObserver,
+    private dialog: MatDialog,
     @Inject(BUCKET_OPTIONS) private options: BucketOptions
   ) {
     this.scheme
@@ -144,16 +148,17 @@ export class IndexComponent implements OnInit, OnDestroy {
       }),
       flatMap(() => this.bs.getBucket(this.bucketId)),
       tap(schema => {
+        this.schema = schema
         this.guideResponse = {};
         this.readOnly = schema.readOnly;
         this.properties = [
-          {name: "$$spicainternal_id", title: "_id"},
+          { name: "$$spicainternal_id", title: "_id" },
           ...Object.entries(schema.properties).map(([name, value]) => ({
             name,
             title: value.title
           })),
-          {name: "$$spicainternal_new_property", title: "New property"},
-          {name: "$$spicainternal_actions", title: "Actions"}
+          { name: "$$spicainternal_new_property", title: "New property" },
+          { name: "$$spicainternal_actions", title: "Actions" }
         ];
 
         this.editableProps = Object.entries(schema.properties).filter(
@@ -161,7 +166,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         );
 
         if (!schema.readOnly) {
-          this.properties.unshift({name: "$$spicainternal_select", title: "Select"});
+          this.properties.unshift({ name: "$$spicainternal_select", title: "Select" });
         }
 
         const cachedDisplayedProperties = JSON.parse(
@@ -171,15 +176,15 @@ export class IndexComponent implements OnInit, OnDestroy {
         //eliminate the properties which are not included by schema
         this.displayedProperties = cachedDisplayedProperties
           ? cachedDisplayedProperties.filter(dispProps =>
-              Object.keys(schema.properties)
-                .concat([
-                  "$$spicainternal_id",
-                  "$$spicainternal_new_property",
-                  "$$spicainternal_actions",
-                  "$$spicainternal_select"
-                ])
-                .some(schemaProps => schemaProps == dispProps)
-            )
+            Object.keys(schema.properties)
+              .concat([
+                "$$spicainternal_id",
+                "$$spicainternal_new_property",
+                "$$spicainternal_actions",
+                "$$spicainternal_select"
+              ])
+              .some(schemaProps => schemaProps == dispProps)
+          )
           : this.properties.map(p => p.name)
       }),
       tap(schema => {
@@ -228,7 +233,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         return this.bds.find(this.bucketId, {
           language: this.language,
           filter: this.filter && Object.keys(this.filter).length > 0 && this.filter,
-          sort: Object.keys(this.sort).length > 0 ? this.sort : {_id: -1},
+          sort: Object.keys(this.sort).length > 0 ? this.sort : { _id: -1 },
           limit: this.paginator.pageSize || 10,
           skip: this.paginator.pageSize * this.paginator.pageIndex,
         });
@@ -407,7 +412,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   patchBucketData(bucketid: string, documentid: string, key: string, value: any) {
-    const patch = {[key]: value == undefined ? null : value};
+    const patch = { [key]: value == undefined ? null : value };
 
     return this.bds
       .patchOne(bucketid, documentid, patch)
@@ -432,7 +437,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   guideRequest(url: string, key: string) {
     if (!this.guideResponse[key]) {
       this.bs
-        .guideRequest(url, key == "getDataWithLang" ? {headers: {"Accept-Language": "tr-TR"}} : {})
+        .guideRequest(url, key == "getDataWithLang" ? { headers: { "Accept-Language": "tr-TR" } } : {})
         .pipe(take(1))
         .subscribe(returnedData => {
           this.guideResponse[key] = returnedData;
@@ -524,7 +529,7 @@ export class IndexComponent implements OnInit, OnDestroy {
             onerror: this.onImageError
           };
 
-          result = this.buildHtml({name: "img", style, props, noEndTag: true});
+          result = this.buildHtml({ name: "img", style, props, noEndTag: true });
         }
 
         break;
@@ -581,11 +586,10 @@ export class IndexComponent implements OnInit, OnDestroy {
 
     const html = options.noEndTag
       ? `<${options.name} style='${style}' ${props}>`
-      : `<${options.name} style='${style}' ${props}>${
-          this.isValidValue(options.value)
-            ? this.sanitizer.sanitize(SecurityContext.HTML, options.value)
-            : ""
-        }</${options.name}>`;
+      : `<${options.name} style='${style}' ${props}>${this.isValidValue(options.value)
+        ? this.sanitizer.sanitize(SecurityContext.HTML, options.value)
+        : ""
+      }</${options.name}>`;
 
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
@@ -633,7 +637,7 @@ export class IndexComponent implements OnInit, OnDestroy {
       nextField = this.editableProps[0];
     }
     this.addPostRenderingQueue(() =>
-      this.enableEditMode(nextDataId, {key: nextField[0], value: nextField[1]})
+      this.enableEditMode(nextDataId, { key: nextField[0], value: nextField[1] })
     );
   }
 
@@ -684,7 +688,28 @@ export class IndexComponent implements OnInit, OnDestroy {
     }
     this.postRenderingQueue = [];
   }
-  addNewProperty(){
 
+  async addNewProperty(propertyKey: string = null) {
+    const tempSchema = JSON.parse(JSON.stringify(this.schema))
+
+    const dialogRef = this.dialog.open(AddFieldModalComponent, {
+      width: "800px",
+      maxHeight: "90vh",
+      data: {
+        parentSchema: this.schema,
+        propertyKey: propertyKey
+      }
+    });
+    dialogRef.afterClosed().toPromise().finally(() => {
+      const newFields = Object.keys(this.schema.properties).filter((item) => !Object.keys(tempSchema.properties).find((prop) => prop == item));
+
+      this.displayedProperties.splice(this.displayedProperties.length - 2, 0, ...newFields);
+
+      localStorage.setItem(
+        `${this.bucketId}-displayedProperties`,
+        JSON.stringify(this.displayedProperties)
+      );
+    })
   }
+
 }

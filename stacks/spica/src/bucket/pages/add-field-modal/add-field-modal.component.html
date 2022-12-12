@@ -135,14 +135,30 @@
         </mat-checkbox>
       </div>
     </div>
+
     <button
-      mat-button
       *ngIf="parentSchema.properties[propertyKey]"
-      [disabled]="pnm.invalid || dm.invalid"
+      class="save-button"
+      mat-button
+      canInteract="bucket:update"
+      [resource]="parentSchema._id"
+      [disabled]="!!savingState || pnm.invalid || dm.invalid"
       (click)="save()"
+      [ngSwitch]="savingState"
     >
-      Save
+      <mat-icon *ngSwitchDefault>save</mat-icon>
+      <mat-progress-spinner
+        *ngSwitchCase="'saving'"
+        [diameter]="18"
+        color="primary"
+        mode="indeterminate"
+      >
+      </mat-progress-spinner>
+      <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
+      <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
+      <span>{{ (!savingState ? "save" : savingState) | titlecase }}</span>
     </button>
+
     <button
       mat-button
       *ngIf="parentSchema.properties[propertyKey]"

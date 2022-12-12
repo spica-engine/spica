@@ -194,7 +194,10 @@
             {{ row._id }}
           </td>
         </ng-container>
-        <ng-container matColumnDef="$$spicainternal_new_property" *ngIf="schema$ | async; let schema">
+        <ng-container
+          matColumnDef="$$spicainternal_new_property"
+          *ngIf="schema$ | async; let schema"
+        >
           <th
             mat-header-cell
             *matHeaderCellDef
@@ -206,9 +209,7 @@
           >
             <mat-icon>add</mat-icon>
           </th>
-          <td mat-cell *matCellDef="let row">
-
-          </td>
+          <td mat-cell *matCellDef="let row"></td>
         </ng-container>
         <ng-container
           matColumnDef="$$spicainternal_actions"
@@ -268,7 +269,7 @@
               *matCellDef="let row"
               [ngClass]="{editable: nonEditableTypes.indexOf(property.value.type) == -1}"
               [resource]="schema._id + '/' + row._id"
-              (click)="enableEditMode(row._id, property)"
+              (click)="!schema.readOnly && enableEditMode(row._id, property)"
             >
               <div canInteract="bucket:data:update">
                 <span

@@ -18,7 +18,9 @@ export class SettingsBucketComponent implements OnInit {
 
   @Input() schema: Bucket;
   isHistoryEndpointEnabled$: Observable<boolean>;
+  $remove: Observable<SavingState>;
   savingState: SavingState;
+  removeState: SavingState;
   dialogRef: MatDialogRef<any>
   propertyPositionMap: { [k: string]: any[] } = {};
 
@@ -38,7 +40,8 @@ export class SettingsBucketComponent implements OnInit {
         mapTo(true),
         catchError(() => of(false))
       );
-    this.savingState = SavingState.Pristine
+    this.savingState = SavingState.Pristine;
+    this.removeState = SavingState.Pristine
   }
 
   onDocumentSettingsChange() {
@@ -53,7 +56,8 @@ export class SettingsBucketComponent implements OnInit {
   }
 
   openModal(content) {
-    this.savingState = SavingState.Pristine
+    this.savingState = SavingState.Pristine;
+    this.removeState = SavingState.Pristine
     this.dialogRef = this.dialog.open(content)
   }
 
@@ -63,6 +67,14 @@ export class SettingsBucketComponent implements OnInit {
       .toPromise()
       .then(() => { this.savingState = SavingState.Saved; this.dialogRef.close() })
       .catch(() => this.savingState = SavingState.Failed)
+  }
+  clearHistories() {
+    this.removeState = SavingState.Saving;
+
+    this.historyService.clearHistories(this.schema._id)
+      .toPromise()
+      .then(() => this.removeState = SavingState.Saved)
+      .catch(() => this.removeState = SavingState.Failed)
   }
 
   updatePositionProperties() {

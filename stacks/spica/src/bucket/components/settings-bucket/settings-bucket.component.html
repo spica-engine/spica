@@ -11,6 +11,7 @@
   Options
 </button>
 <mat-menu
+  (closed)="saveBucket()"
   class="bucket-settings-menu-toggles"
   (click)="$event.stopPropagation()"
   #bucketOptionsMenu="matMenu"
@@ -37,7 +38,7 @@
         </button>
       </div>
     </div>
-<mat-divider></mat-divider>
+    <mat-divider></mat-divider>
     <div mat-menu-item (click)="$event.stopPropagation()">
       <div class="history">
         <mat-slide-toggle
@@ -63,6 +64,37 @@
           <mat-icon>info</mat-icon>
         </button>
       </div>
+    </div>
+    <div (click)="$event.stopPropagation()" class="clear-history-button" *ngIf="schema.history">
+      <button
+        (click)="clearHistories()"
+        mat-raised-button
+        color="warn"
+        *matSave="removeState"
+        [disabled]="!!removeState"
+        [ngSwitch]="removeState"
+      >
+        <ng-container *ngSwitchDefault>
+          <mat-icon>delete</mat-icon>
+          <span>Remove History</span>
+        </ng-container>
+        <ng-container *ngSwitchCase="'saving'">
+          <mat-progress-spinner
+            [diameter]="18"
+            color="primary"
+            mode="indeterminate"
+          ></mat-progress-spinner>
+          <span>Removing..</span>
+        </ng-container>
+        <ng-container *ngSwitchCase="'saved'">
+          <mat-icon>done</mat-icon>
+          <span>Removed</span>
+        </ng-container>
+        <ng-container *ngSwitchCase="'failed'">
+          <mat-icon>clear</mat-icon>
+          <span>Failed</span>
+        </ng-container>
+      </button>
     </div>
     <mat-divider></mat-divider>
     <div mat-menu-item (click)="$event.stopPropagation()">
