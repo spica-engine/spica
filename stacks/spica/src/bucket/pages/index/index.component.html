@@ -137,15 +137,16 @@
             </ng-template>
           </mat-menu>
         </button>
-
-        <button
-          mat-button
-          [matTooltip]="(showScheduled ? 'Hide' : 'Show') + ' scheduled documents'"
-          [color]="showScheduled ? 'accent' : 'secondary'"
-          (click)="toggleScheduled()"
-        >
-          <mat-icon>schedule</mat-icon>
-          Schedule
+        <button mat-button [matMenuTriggerFor]="bucketSettingsMenu">
+          <mat-icon>more_vert</mat-icon>
+          More
+          <mat-menu
+            class="bucket-settings-menu"
+            #bucketSettingsMenu="matMenu"
+            (click)="$event.stopPropagation()"
+          >
+            <settings-bucket [schema]="schema"></settings-bucket>
+          </mat-menu>
         </button>
 
         <button
@@ -193,19 +194,20 @@
             {{ row._id }}
           </td>
         </ng-container>
-        <ng-container matColumnDef="$$spicainternal_schedule" *ngIf="schema$ | async; let schema">
+        <ng-container matColumnDef="$$spicainternal_new_property" *ngIf="schema$ | async; let schema">
           <th
             mat-header-cell
             *matHeaderCellDef
-            mat-sort-header
             mat-resize-header
             [overrideMinWidth]="true"
             [persist-header-width]="schema._id"
+            (click)="addNewProperty()"
+            class="add-new-property"
           >
-            Scheduled
+            <mat-icon>add</mat-icon>
           </th>
           <td mat-cell *matCellDef="let row">
-            {{ row._schedule | date: "MMM d, y, h:mm:ss a" }}
+
           </td>
         </ng-container>
         <ng-container

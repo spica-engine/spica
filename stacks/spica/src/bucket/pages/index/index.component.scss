@@ -168,6 +168,14 @@
             top: 10px;
           }
         }
+        th.add-new-property{
+          cursor: pointer;
+          text-align: center;
+          padding: 0 !important;
+          mat-icon{
+            font-size: 1.5rem;
+          }
+        }
         tr {
           height: 40px !important;
           > th:last-of-type {

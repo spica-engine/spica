@@ -1,7 +1,7 @@
 import {Injectable} from "@angular/core";
 import {RemoveCategory, RouteCategory, RouteService, Upsert} from "@spica-client/core";
 import {PassportService} from "../../passport";
-import {AddBucketComponent} from "../pages/add-bucket/add-bucket.component";
+import {AddBucketComponent} from "../components/add-bucket/add-bucket.component";
 import {BucketService} from "./bucket.service";
 
 @Injectable()

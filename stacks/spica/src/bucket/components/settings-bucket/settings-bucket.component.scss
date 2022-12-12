@@ -1,0 +1,109 @@
+::ng-deep {
+  .bucket-settings-menu-toggles {
+    .toggles {
+      min-width: 245px;
+      > div {
+        > div {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+      }
+      .limitations-details {
+        > div {
+          margin-top: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 16px;
+          flex-direction: column;
+        }
+
+        mat-form-field:nth-of-type(1) {
+          flex: 1;
+        }
+        mat-form-field:nth-of-type(2) {
+          flex: 2;
+          margin-left: 10px;
+        }
+      }
+    }
+  }
+  .bucket-settings-menu-modal {
+    padding: 0;
+    min-width: 40vw;
+    mat-card-title {
+      display: flex;
+      mat-icon {
+        margin-right: 10px;
+      }
+    }
+    mat-card-content {
+      margin-top: 20px;
+    }
+    .code-editors {
+      display: flex;
+      gap: 10px;
+      div {
+        flex: 1;
+        a {
+          text-decoration: none !important;
+          color: unset !important;
+        }
+        b {
+          line-height: 2.5rem;
+          font-weight: 400;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          mat-icon {
+            margin-right: 10px;
+          }
+        }
+        &:last-of-type {
+          b {
+            justify-content: flex-end;
+            mat-icon {
+              margin-left: 10px;
+              margin-right: 0px;
+            }
+          }
+        }
+        code-editor {
+          border-radius: 3px;
+        }
+      }
+    }
+    mat-grid-list {
+      mat-grid-tile {
+        overflow: auto;
+        .mat-figure {
+          flex-flow: column;
+          justify-content: unset;
+          padding: 5px;
+          background: rgba(var(--background-app-bar-rgb), 0.5);
+          mat-card {
+            width: 100%;
+            padding: 12px;
+            border-radius: unset;
+            border-bottom: 1px solid rgba(var(--background-app-bar-rgb), 0.5);
+            > * {
+              vertical-align: middle;
+            }
+          }
+          > span {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            z-index: 0;
+            transform: translate(-50%, -50%);
+            font-size: 26px;
+            font-weight: 400;
+            color: var(--foreground-disabled-text);
+          }
+        }
+      }
+    }
+  }
+}
+

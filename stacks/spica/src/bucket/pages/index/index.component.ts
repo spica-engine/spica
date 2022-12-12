@@ -68,7 +68,6 @@ export class IndexComponent implements OnInit, OnDestroy {
   filter: {[key: string]: any} = {};
   sort: {[key: string]: number} = {};
 
-  showScheduled: boolean = false;
   readOnly: boolean = true;
 
   displayedProperties: Array<string> = [];
@@ -134,7 +133,6 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.schema$ = this.route.params.pipe(
       tap(params => {
         this.bucketId = params.id;
-        this.showScheduled = false;
 
         this.searchValue = "";
 
@@ -154,7 +152,7 @@ export class IndexComponent implements OnInit, OnDestroy {
             name,
             title: value.title
           })),
-          {name: "$$spicainternal_schedule", title: "Scheduled"},
+          {name: "$$spicainternal_new_property", title: "New property"},
           {name: "$$spicainternal_actions", title: "Actions"}
         ];
 
@@ -176,13 +174,13 @@ export class IndexComponent implements OnInit, OnDestroy {
               Object.keys(schema.properties)
                 .concat([
                   "$$spicainternal_id",
-                  "$$spicainternal_schedule",
+                  "$$spicainternal_new_property",
                   "$$spicainternal_actions",
                   "$$spicainternal_select"
                 ])
                 .some(schemaProps => schemaProps == dispProps)
             )
-          : this.properties.map(p => p.name).filter(p => p != "$$spicainternal_schedule");
+          : this.properties.map(p => p.name)
       }),
       tap(schema => {
         Object.keys(schema.properties).map(key => {
@@ -233,7 +231,6 @@ export class IndexComponent implements OnInit, OnDestroy {
           sort: Object.keys(this.sort).length > 0 ? this.sort : {_id: -1},
           limit: this.paginator.pageSize || 10,
           skip: this.paginator.pageSize * this.paginator.pageIndex,
-          schedule: this.showScheduled
         });
       }),
       map(response => {
@@ -324,7 +321,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         "$$spicainternal_select",
         "$$spicainternal_id",
         ...Object.keys(schema.properties),
-        "$$spicainternal_schedule",
+        "$$spicainternal_new_property",
         "$$spicainternal_actions"
       ];
     } else {
@@ -351,23 +348,6 @@ export class IndexComponent implements OnInit, OnDestroy {
       `${this.bucketId}-displayedProperties`,
       JSON.stringify(this.displayedProperties)
     );
-  }
-
-  toggleScheduled() {
-    this.showScheduled = !this.showScheduled;
-    let displayScheduleIndex = this.displayedProperties.indexOf("$$spicainternal_schedule");
-    if (displayScheduleIndex > -1 && !this.showScheduled) {
-      this.displayedProperties.splice(displayScheduleIndex, 1);
-    }
-    if (displayScheduleIndex == -1 && this.showScheduled) {
-      let lastIndex = this.displayedProperties.lastIndexOf("$$spicainternal_actions");
-      this.displayedProperties.splice(lastIndex, 0, "$$spicainternal_schedule");
-    }
-    localStorage.setItem(
-      `${this.bucketId}-displayedProperties`,
-      JSON.stringify(this.displayedProperties)
-    );
-    this.refresh.next();
   }
 
   onSortChange(sort: Sort) {
@@ -703,5 +683,8 @@ export class IndexComponent implements OnInit, OnDestroy {
       this.postRenderingQueue[postRenderingIndex]();
     }
     this.postRenderingQueue = [];
+  }
+  addNewProperty(){
+
   }
 }

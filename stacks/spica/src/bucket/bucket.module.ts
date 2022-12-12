@@ -53,7 +53,7 @@ import {RichTextEditorComponent} from "./components/richtext/richtext";
 import {AddFieldModalComponent} from "./pages/add-field-modal/add-field-modal.component";
 import {AddComponent} from "./pages/add/add.component";
 import {BucketAddComponent} from "./pages/bucket-add/bucket-add.component";
-import {AddBucketComponent} from "./pages/add-bucket/add-bucket.component";
+import {AddBucketComponent} from "./components/add-bucket/add-bucket.component";
 import {BucketIndexComponent} from "./pages/bucket-index/bucket-index.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {SettingsComponent} from "./pages/settings/settings.component";
@@ -69,6 +69,7 @@ import {HighlightModule, HIGHLIGHT_OPTIONS} from "ngx-highlightjs";
 import {CategoryModule} from "@spica-client/common/category";
 import {BucketOptions, BUCKET_OPTIONS} from "./interfaces/bucket";
 import {IGNORE_HTTP_ERRORS} from "@spica-client/core/layout/config";
+import { SettingsBucketComponent } from "./components/settings-bucket/settings-bucket.component";
 
 @NgModule({
   imports: [
@@ -163,7 +164,8 @@ import {IGNORE_HTTP_ERRORS} from "@spica-client/core/layout/config";
     PropertyLanguageComponent,
     CelLanguageDirective,
     JsonLanguageDirective,
-    PropertyLanguageComponent
+    PropertyLanguageComponent,
+    SettingsBucketComponent
   ]
 })
 export class BucketModule {
