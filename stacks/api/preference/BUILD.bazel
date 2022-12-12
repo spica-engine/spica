@@ -10,6 +10,7 @@ ts_project(
         "index.ts",
     ]),
     deps = [
+        "//packages/interface/representative",
         "//packages/database",
         "//stacks/api/activity/services",
         "//stacks/api/passport",

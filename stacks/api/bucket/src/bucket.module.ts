@@ -22,11 +22,12 @@ import BucketSchema = require("./schemas/bucket.schema.json");
 import BucketsSchema = require("./schemas/buckets.schema.json");
 import {
   RegisterSyncProvider,
-  REGISTER_SYNC_PROVIDER,
-  RepresentativeManager
+  REGISTER_VC_SYNC_PROVIDER,
+  VC_REP_MANAGER
 } from "@spica-server/versioncontrol";
 import {getSyncProvider} from "./versioncontrol/schema";
 import {registerAssetHandlers} from "./asset";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 
 @Module({})
 export class BucketModule {
@@ -114,8 +115,8 @@ export class BucketModule {
     bds: BucketDataService,
     validator: Validator,
     @Optional() private history: HistoryService,
-    @Optional() private repManager: RepresentativeManager,
-    @Optional() @Inject(REGISTER_SYNC_PROVIDER) registerSync: RegisterSyncProvider
+    @Optional() @Inject(VC_REP_MANAGER) private repManager: IRepresentativeManager,
+    @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider
   ) {
     if (registerSync) {
       const provider = getSyncProvider(bs, bds, this.history, this.repManager);

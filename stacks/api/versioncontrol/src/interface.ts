@@ -1,5 +1,17 @@
-export const REGISTER_SYNC_PROVIDER = Symbol.for("REGISTER_SYNC_PROVIDER");
-export const WORKING_DIR = Symbol.for("WORKING_DIR");
+export interface VersionControlOptions {
+  persistentPath: string;
+}
+
+export abstract class VersionManager {
+  abstract availables(): string[];
+  abstract exec(cmd: string, options: {args?: string[]}): Promise<any>;
+}
+
+export const VERSIONCONTROL_WORKING_DIRECTORY = Symbol.for("VERSIONCONTROL_WORKING_DIRECTORY");
+
+export const REGISTER_VC_SYNC_PROVIDER = Symbol.for("REGISTER_VC_SYNC_PROVIDER");
+
+export const VC_REP_MANAGER = Symbol.for("VC_REP_MANAGER");
 
 export type RegisterSyncProvider = (provider: SyncProvider) => void;
 
@@ -35,29 +47,6 @@ export interface SyncProvider {
   parents: number;
 }
 
-export interface IRepresentativeManager {
-  write(
-    module: string,
-    id: string,
-    fileName: string,
-    content: any,
-    extension: string
-  ): Promise<void>;
-
-  read(
-    module: string,
-    resNameValidator: (name: string) => boolean,
-    fileNameFilter: string[]
-  ): Promise<{_id: string; contents: {[key: string]: any}}[]>;
-
-  rm(module: string, id: string): Promise<void>;
-}
-
-export abstract class VersionManager {
-  abstract availables(): string[];
-  abstract exec(cmd: string, options: {args?: string[]}): Promise<any>;
-}
-
 export interface SyncLog {
   resources: {
     module: string;
@@ -66,8 +55,4 @@ export interface SyncLog {
     deletions: any[];
   }[];
   date: string;
-}
-
-export interface VersionControlOptions {
-  persistentPath: string;
 }

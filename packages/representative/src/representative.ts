@@ -1,16 +1,16 @@
-import {Inject, Injectable} from "@nestjs/common";
+import {Inject, Injectable, Scope} from "@nestjs/common";
 import * as fs from "fs";
 import * as path from "path";
 import * as YAML from "yaml";
 import * as dotenv from "dotenv";
-import {IRepresentativeManager, WORKING_DIR} from "./interface";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 
 @Injectable()
 export class RepresentativeManager implements IRepresentativeManager {
   private serializer = new Map<string, (val: any) => string>();
   private parsers = new Map<string, (val: string) => any>();
 
-  constructor(@Inject(WORKING_DIR) private cwd: string) {
+  constructor(private cwd: string) {
     // JSON
     this.serializer.set("json", val => JSON.stringify(val));
     this.parsers.set("json", val => JSON.parse(val));

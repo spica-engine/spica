@@ -13,6 +13,7 @@ ts_project(
         "index.ts",
     ]),
     deps = [
+        "//packages/interface/representative",
         "//packages/core",
         "//packages/core/differ",
         "//packages/core/patch",

@@ -1,9 +1,10 @@
 import {ObjectId} from "@spica-server/database";
 import {FunctionService} from "@spica-server/function/services";
-import {IRepresentativeManager, SyncProvider} from "@spica-server/versioncontrol";
+import {SyncProvider} from "@spica-server/versioncontrol";
 import {FunctionEngine} from "../engine";
 import {LogService} from "@spica-server/function/src/log/src/log.service";
 import * as CRUD from "../crud";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 
 export function schemaSyncProviders(
   fs: FunctionService,

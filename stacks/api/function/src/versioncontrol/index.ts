@@ -1,11 +1,12 @@
 import {FunctionService} from "@spica-server/function/services";
-import {IRepresentativeManager, SyncProvider} from "@spica-server/versioncontrol";
+import {SyncProvider} from "@spica-server/versioncontrol";
 import {FunctionEngine} from "../engine";
 import {LogService} from "@spica-server/function/src/log";
 import {dependecySyncProviders} from "./dependency";
 import {indexSyncProviders} from "./fnindex";
 import {schemaSyncProviders} from "./schema";
 import {Dependency} from "@spica-server/interface/function";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 
 export const getSyncProviders = (
   service: FunctionService,
@@ -19,5 +20,3 @@ export const getSyncProviders = (
 
   return [schema, index, dependency];
 };
-
-

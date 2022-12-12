@@ -20,11 +20,12 @@ import {registerStatusProvider} from "./status";
 import FunctionSchema = require("./schema/function.json");
 import {
   RegisterSyncProvider,
-  REGISTER_SYNC_PROVIDER,
-  RepresentativeManager
+  REGISTER_VC_SYNC_PROVIDER,
+  VC_REP_MANAGER
 } from "@spica-server/versioncontrol";
 import {getSyncProviders} from "./versioncontrol";
 import {registerAssetHandlers} from "./asset";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 
 @Module({})
 export class FunctionModule {
@@ -32,8 +33,8 @@ export class FunctionModule {
     fs: FunctionService,
     fe: FunctionEngine,
     scheduler: Scheduler,
-    @Optional() private repManager: RepresentativeManager,
-    @Optional() @Inject(REGISTER_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
+    @Optional() @Inject(VC_REP_MANAGER) private repManager: IRepresentativeManager,
+    @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
     logs: LogService,
     validator: Validator
   ) {
