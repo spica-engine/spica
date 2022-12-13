@@ -44,10 +44,13 @@ export interface ExportMeta {
   name: string;
   description: string;
   configs: Configuration[];
-  resources: ExportResource[];
+  resources: ExportResource;
 }
 
 export interface ExportResource {
-  module: string;
-  ids: string[];
+  [module: string]: string[];
+}
+
+export interface CurrentResources {
+  [module: string]: {title: string; _id: string}[];
 }

@@ -39,9 +39,8 @@ export type Exporter = (_id: string) => Promise<void>;
 export interface ExportMeta {
   name: string;
   description: string;
-  resources: {
-    module: string;
-    ids: string[];
-  }[];
+  resources: {[_module: string]: string[]};
   configs: Configuration[];
 }
+
+export type ResourceLister = () => Promise<{_id: string; title: string}[]>;

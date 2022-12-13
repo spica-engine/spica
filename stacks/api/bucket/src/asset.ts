@@ -47,6 +47,17 @@ export function registerAssetHandlers(
   };
 
   registrar.exporter(_module, exporter);
+
+  registrar.resourceLister(_module, () =>
+    bs.find().then(buckets => {
+      return buckets.map(b => {
+        return {
+          _id: b._id.toHexString(),
+          title: b.title
+        };
+      });
+    })
+  );
 }
 
 function validateBucket(bucket: any, validator: Validator): Promise<void> {

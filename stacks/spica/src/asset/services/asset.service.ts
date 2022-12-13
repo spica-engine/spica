@@ -3,7 +3,7 @@ import {Injectable} from "@angular/core";
 import {Store} from "@ngrx/store";
 import {of} from "rxjs";
 import {filter, switchMap, tap} from "rxjs/operators";
-import {Asset, Configuration, ExportMeta, InstallationPreview, Status} from "../interfaces";
+import {Asset, Configuration, CurrentResources, ExportMeta, InstallationPreview, Status} from "../interfaces";
 import * as fromAsset from "../state/asset.reducer";
 
 @Injectable()
@@ -42,6 +42,10 @@ export class AssetService {
 
   export(meta: ExportMeta) {
     return this.http.post("api:/asset/export", meta, {responseType: "blob"});
+  }
+
+  listResources() {
+    return this.http.get<CurrentResources>("api:/asset/resource");
   }
 
   retrieve() {

@@ -13,24 +13,10 @@
       "description": "Description of the asset"
     },
     "resources": {
-      "type": "array",
+      "type": "object",
       "description": "Resources of the asset",
-      "items": {
-        "type": "object",
-        "properties": {
-          "ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "description": "Id of the resource"
-            }
-          },
-          "module": {
-            "type": "string",
-            "description": "Module of the resource"
-          }
-        },
-        "additionalProperties": false
+      "patternProperties": {
+        "": {"type": "array", "items": {"type": "string"}}
       }
     },
     "configs": {

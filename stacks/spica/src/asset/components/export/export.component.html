@@ -16,12 +16,12 @@
   </div>
   <div class="meta">
     <h4>Resources</h4>
-    <mat-form-field *ngFor="let resource of exportMeta.resources; trackBy: _trackBy3">
-      <mat-label>{{ resource.module | titlecase }}</mat-label>
-      <mat-select [(ngModel)]="resource.ids" multiple>
+    <mat-form-field *ngFor="let resourceKv of resources | keyvalue; trackBy: _trackBy3">
+      <mat-label>{{ resourceKv.key | titlecase }}</mat-label>
+      <mat-select [(ngModel)]="exportMeta.resources[resourceKv.key]" multiple>
         <mat-option
-          *ngFor="let option of exportResources[resource.module]; trackBy: _trackBy4"
-          [value]="option.id"
+          *ngFor="let option of resourceKv.value; trackBy: _trackBy4"
+          [value]="option._id"
           >{{ option.title }}</mat-option
         >
       </mat-select>

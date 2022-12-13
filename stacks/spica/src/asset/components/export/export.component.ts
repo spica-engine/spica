@@ -2,10 +2,9 @@ import {Component, OnInit} from "@angular/core";
 import {
   getConfigSchema,
   getEmptyConfig,
-  getEmptyExportResources,
-  getExportResourceSchema,
+  getExportResourceSchema
 } from "@spica-client/asset/helpers";
-import {ExportMeta} from "@spica-client/asset/interfaces";
+import {CurrentResources, ExportMeta} from "@spica-client/asset/interfaces";
 import {AssetService} from "@spica-client/asset/services/asset.service";
 
 @Component({
@@ -16,26 +15,42 @@ import {AssetService} from "@spica-client/asset/services/asset.service";
 export class ExportComponent implements OnInit {
   configSchema = getConfigSchema();
   exportResources = getExportResourceSchema();
+  resources: CurrentResources = {};
 
   exportMeta: ExportMeta = {
     name: undefined,
     description: undefined,
-    resources: getEmptyExportResources(),
+    resources: {},
     configs: []
   };
 
-  constructor(private assetService: AssetService) {}
+  constructor(private assetService: AssetService) {
+    this.assetService
+      .listResources()
+      .toPromise()
+      .then(resources => {
+        console.log(resources);
+        this.resources = resources;
+        this.exportMeta.resources = Object.keys(this.resources).reduce((acc, curr) => {
+          acc[curr] = [];
+          return acc;
+        }, {});
+      });
+  }
 
   ngOnInit(): void {}
 
   export() {
-    this.assetService.export(this.exportMeta).toPromise().then(r => {
-      const blob = new Blob([r],{type:r.type})
-      const downloadUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.click();
-    })
+    this.assetService
+      .export(this.exportMeta)
+      .toPromise()
+      .then(r => {
+        const blob = new Blob([r], {type: r.type});
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.click();
+      });
   }
 
   addConfig() {

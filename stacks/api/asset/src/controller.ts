@@ -18,7 +18,7 @@ import {
 import {AssetService} from "./service";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
 import {Asset, Configuration, ExportMeta, Resource} from "@spica-server/interface/asset";
-import {exporters, operators, validators} from "./registration";
+import {exporters, listers, operators, registrar, validators} from "./registration";
 import {compareResourceGroups} from "@spica-server/core/differ";
 import {putConfiguration} from "./helpers";
 import {BOOLEAN} from "@spica-server/core";
@@ -44,11 +44,50 @@ export class AssetController {
     @Inject(ASSET_REP_MANAGER) private repManager: AssetRepManager
   ) {}
 
-  @Get("information")
+  @Get("resource")
   @UseGuards(AuthGuard())
   async information() {
-    
+    const schemas = {};
+
+    for (let [_module, _listers] of listers.entries()) {
+      const _resources = [];
+      for (let lister of _listers) {
+        const moduleResources = await lister();
+        _resources.push(...moduleResources);
+      }
+      schemas[_module] = _resources;
+    }
+
+    return schemas;
   }
+
+  // @Get("config/:module")
+  // @UseGuards(AuthGuard())
+  // async information(@Query("module") module: string) {
+  //   const baseSchema = {
+  //     title: {
+  //       type: "string",
+  //       title: "Title",
+  //       description:
+  //         "It will be displayed on the configuration step while others installing this asset."
+  //     },
+  //     module: {
+  //       type: "string",
+  //       title: "Module",
+  //       description: "Select one of these modules",
+  //       enum: [registrar.getModules()]
+  //     }
+  //   };
+
+  //   if (!module) {
+  //     return baseSchema;
+  //   }
+  //   return {
+  //     ...baseSchema,...{
+
+  //     }
+  //   };
+  // }
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("asset:index"))
@@ -84,41 +123,28 @@ export class AssetController {
     return this.service.insertOne(asset);
   }
 
-  // PUT
-  // i don't think there should be put endpoint for updating assets
-  // updating asset means updating asset resources, but first downloading asset, then installing asset with configuration is a better asset update flow
-  // post request to asset will detect
-
-  // POST /id
-  // should accept configuration file
-  // should update if there is any asset that was installed and has same name
-  // should insert if there is no asset that was installed and has same name
-
-  // DELETE /id
-  // there might be an option like "soft" and "hard", delete action will be performed based on this parameter
-
   @Post("export")
   @UseGuards(AuthGuard(), ActionGuard("asset:export", "asset"))
   async export(
     @Body(Schema.validate("http://spica.internal/asset/export")) exportMeta: ExportMeta,
     //@ts-ignore
-    @Res({ passthrough: true }) res
+    @Res({passthrough: true}) res
   ) {
     await this.repManager.rm();
 
-    for (const resource of exportMeta.resources) {
-      const relatedExporters = exporters.get(resource.module);
+    for (const [module, resources] of Object.entries(exportMeta.resources)) {
+      const relatedExporters = exporters.get(module);
       if (!relatedExporters || !relatedExporters.length) {
-        return res.status(400).json({message: `Module ${resource.module} does not exist.`});
+        return res.status(400).json({message: `Module ${module} does not exist.`});
       }
 
       const exports = relatedExporters.map(exporter =>
         Promise.all(
-          resource.ids.map(id =>
+          resources.map(id =>
             exporter(id).catch(e => {
               return res
                 .status(400)
-                .json({message: `Failed to export asset for ${resource.module} module.\n${e}`});
+                .json({message: `Failed to export asset for ${module} module.\n${e}`});
             })
           )
         )
@@ -132,8 +158,8 @@ export class AssetController {
     const file = createReadStream(output);
 
     res.set({
-      'Content-Type': 'application/zip',
-      'Content-Disposition': 'attachment; filename="asset.zip"',
+      "Content-Type": "application/zip",
+      "Content-Disposition": 'attachment; filename="asset.zip"'
     });
 
     file.pipe(res);
