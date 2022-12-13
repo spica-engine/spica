@@ -16,6 +16,8 @@ export interface Configuration {
   submodule: string;
   property: string;
   value: unknown;
+  type: string;
+  title: string;
 }
 
 export interface Resource<C = object> {
@@ -36,4 +38,16 @@ export interface InstallationPreviewByModules {
     updations: Resource[];
     deletions: Resource[];
   };
+}
+
+export interface ExportMeta {
+  name: string;
+  description: string;
+  configs: Configuration[];
+  resources: ExportResource[];
+}
+
+export interface ExportResource {
+  module: string;
+  ids: string[];
 }

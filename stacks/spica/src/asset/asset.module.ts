@@ -41,6 +41,8 @@ import {MatTreeModule} from "@angular/material/tree";
 import {CommonModule as SpicaCommon} from "@spica/client/packages/common";
 import {PreviewComponent} from "./components/preview/preview.component";
 import {AssetStoreComponent} from "./pages/asset-store/asset-store.component";
+import {ExportComponent} from "./components/export/export.component";
+import {MatDialogModule} from "@angular/material/dialog";
 
 @NgModule({
   imports: [
@@ -80,14 +82,17 @@ import {AssetStoreComponent} from "./pages/asset-store/asset-store.component";
     // MatExpansionModule,
     AssetRoutingModule,
     MatAwareDialogModule,
-    MatSaveModule
+    MatSaveModule,
+    MatDialogModule,
+    MatSelectModule
   ],
   declarations: [
     IndexComponent,
     AssetInstallDialog,
     EditComponent,
     PreviewComponent,
-    AssetStoreComponent
+    AssetStoreComponent,
+    ExportComponent
   ],
   providers: [
     AssetService,

@@ -1,0 +1,49 @@
+<mat-dialog-content>
+  <h3>Export the asset</h3>
+  <mat-divider></mat-divider>
+  <div class="meta">
+    <h4>Meta</h4>
+    <mat-form-field>
+      <mat-label>Name</mat-label>
+      <input matInput [(ngModel)]="exportMeta.name" />
+      <mat-hint>Give a unique name to this asset</mat-hint>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Description</mat-label>
+      <input matInput [(ngModel)]="exportMeta.description" />
+      <mat-hint>Describe your asset</mat-hint>
+    </mat-form-field>
+  </div>
+  <div class="meta">
+    <h4>Resources</h4>
+    <mat-form-field *ngFor="let resource of exportMeta.resources; trackBy: _trackBy3">
+      <mat-label>{{ resource.module | titlecase }}</mat-label>
+      <mat-select [(ngModel)]="resource.ids" multiple>
+        <mat-option
+          *ngFor="let option of exportResources[resource.module]; trackBy: _trackBy4"
+          [value]="option.id"
+          >{{ option.title }}</mat-option
+        >
+      </mat-select>
+    </mat-form-field>
+  </div>
+  <h4>Configurations</h4>
+  <div class="config" *ngFor="let config of exportMeta.configs; let i = index; trackBy: _trackBy">
+    <button class="remove-config" (click)="removeConfig(i)" mat-icon-button color="warn">
+      <mat-icon>clear</mat-icon>
+    </button>
+    <div
+      [inputPlacer]="configSchema[configKv.key]"
+      [(ngModel)]="config[configKv.key]"
+      *ngFor="let configKv of config | keyvalue; let j = index; trackBy: _trackBy2"
+    ></div>
+    <mat-divider *ngIf="exportMeta.configs.length > 1"></mat-divider>
+  </div>
+  <button class="add-config" mat-button (click)="addConfig()">+ Add New</button>
+
+  <div class="bottom-actions">
+    <button mat-button (click)="export()">
+      Export
+    </button>
+  </div>
+</mat-dialog-content>

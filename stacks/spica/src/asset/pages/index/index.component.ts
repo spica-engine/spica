@@ -6,6 +6,7 @@ import {MatDialog} from "@angular/material/dialog";
 import {AssetInstallDialog} from "@spica-client/asset/components/install/install.component";
 import {filter, switchMap, tap} from "rxjs/operators";
 import {MatAwareDialogComponent} from "@spica-client/material";
+import {ExportComponent} from "@spica-client/asset/components/export/export.component";
 
 @Component({
   selector: "asset-index",
@@ -68,5 +69,9 @@ export class IndexComponent implements OnInit {
 
   hideSpinner() {
     this.isPending = false;
+  }
+
+  export() {
+    const dialogRef = this.dialog.open(ExportComponent, {width: "80vh"});
   }
 }

@@ -1,0 +1,42 @@
+:host {
+  overflow-x: scroll;
+  div.meta  {
+    > * {
+      width: 100%;
+    }
+  }
+
+  div.config{
+    position: relative;
+    button.remove-config{
+      position: absolute;
+      top: -30px;
+      right: -25px;
+    }
+
+    &:first-of-type {
+      margin-top: 10px;
+    }
+  }
+  ::ng-deep {
+    span.inputplacer,
+    .input-placer-input {
+      width: 100% !important;
+    }
+  }
+
+  button.add-config {
+    width: 100%;
+    padding: 5px;
+    border: 1px dashed rgba(0, 0, 0, 0.08);
+    margin-top: 15px;
+  }
+
+  div.bottom-actions {
+    width: 100%;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+}

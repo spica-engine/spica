@@ -4,11 +4,11 @@
   "type": "array",
   "items": {
     "type": "object",
-    "required": ["module", "resource_id", "submodule", "property", "value"],
+    "required": ["title", "module", "resource_id", "submodule", "property", "value"],
     "properties": {
       "title": {
         "type": "string",
-        "description": "Title of the configuration"
+        "description": "Title of the configuration that will be displayed on the top of this configuration while others configuring it before install."
       },
       "module": {
         "type": "string",
@@ -32,7 +32,8 @@
       },
       "type": {
         "type": "string",
-        "description": "Type of the value"
+        "description": "Type of the value",
+        "enum": ["number", "string", "boolean", "object", "array"]
       }
     },
     "additionalProperties": false

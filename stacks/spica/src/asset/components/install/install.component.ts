@@ -1,13 +1,7 @@
 import {Component, Inject} from "@angular/core";
 import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
-import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
-import {
-  Asset,
-  InstallationPreview,
-  InstallationPreviewByModules,
-  Resource
-} from "@spica-client/asset/interfaces";
-import {displayPreview, separatePreviewResourcesByModule} from "@spica-client/asset/helpers";
+import {Asset, InstallationPreviewByModules} from "@spica-client/asset/interfaces";
+import {separatePreviewResourcesByModule} from "@spica-client/asset/helpers";
 import {AssetService} from "@spica-client/asset/services/asset.service";
 
 @Component({

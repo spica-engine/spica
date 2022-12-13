@@ -44,6 +44,12 @@ export class AssetController {
     @Inject(ASSET_REP_MANAGER) private repManager: AssetRepManager
   ) {}
 
+  @Get("information")
+  @UseGuards(AuthGuard())
+  async information() {
+    
+  }
+
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("asset:index"))
   async find(@Query("name") name: string, @Query("status") status: string) {
@@ -95,7 +101,8 @@ export class AssetController {
   @UseGuards(AuthGuard(), ActionGuard("asset:export", "asset"))
   async export(
     @Body(Schema.validate("http://spica.internal/asset/export")) exportMeta: ExportMeta,
-    @Res() res
+    //@ts-ignore
+    @Res({ passthrough: true }) res
   ) {
     await this.repManager.rm();
 
@@ -123,6 +130,12 @@ export class AssetController {
 
     const output = await this.repManager.zipAssets();
     const file = createReadStream(output);
+
+    res.set({
+      'Content-Type': 'application/zip',
+      'Content-Disposition': 'attachment; filename="asset.zip"',
+    });
+
     file.pipe(res);
   }
 

@@ -3,7 +3,7 @@ import {Injectable} from "@angular/core";
 import {Store} from "@ngrx/store";
 import {of} from "rxjs";
 import {filter, switchMap, tap} from "rxjs/operators";
-import {Asset, Configuration, InstallationPreview, Status} from "../interfaces";
+import {Asset, Configuration, ExportMeta, InstallationPreview, Status} from "../interfaces";
 import * as fromAsset from "../state/asset.reducer";
 
 @Injectable()
@@ -34,10 +34,14 @@ export class AssetService {
             .get(`api:/asset/${id}`)
             .pipe(tap(asset => this.store.dispatch(new fromAsset.Update(id, asset))));
         } else {
-          return of().pipe(tap(() => this.store.dispatch(new fromAsset.Remove(id))));
+          return of(this.store.dispatch(new fromAsset.Remove(id)));
         }
       })
     );
+  }
+
+  export(meta: ExportMeta) {
+    return this.http.post("api:/asset/export", meta, {responseType: "blob"});
   }
 
   retrieve() {

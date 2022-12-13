@@ -1,17 +1,11 @@
 :host {
-  div.configs:first-of-type{
+  div.configs:first-of-type {
     margin-top: 10px;
   }
   ::ng-deep {
     span.inputplacer,
     .input-placer-input {
       width: 100% !important;
-    }
-    div.mat-list-item-content {
-      padding: 0px !important;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
     }
   }
 
