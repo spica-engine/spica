@@ -21,7 +21,8 @@ export class ExportComponent implements OnInit {
     name: undefined,
     description: undefined,
     resources: {},
-    configs: []
+    configs: [],
+    url: undefined
   };
 
   constructor(private assetService: AssetService) {

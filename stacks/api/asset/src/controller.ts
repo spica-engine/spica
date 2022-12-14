@@ -91,11 +91,11 @@ export class AssetController {
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("asset:index"))
-  async find(@Query("name") name: string, @Query("status") status: string) {
+  async find(@Query("url") url: string, @Query("status") status: string) {
     const filter: any = {};
 
-    if (name) {
-      filter.name = name;
+    if (url) {
+      filter.url = url;
     }
 
     if (status) {
@@ -201,7 +201,7 @@ export class AssetController {
     // await this.validateResources(asset.resources).catch(e => this.onInstallationFailed(id, e));
 
     const installedAsset = await this.service.findOne({
-      name: asset.name,
+      url: asset.url,
       status: "installed"
     });
     const {insertions, updations, deletions} = compareResourceGroups<Resource>(

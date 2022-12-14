@@ -3,7 +3,14 @@ import {Injectable} from "@angular/core";
 import {Store} from "@ngrx/store";
 import {of} from "rxjs";
 import {filter, switchMap, tap} from "rxjs/operators";
-import {Asset, Configuration, CurrentResources, ExportMeta, InstallationPreview, Status} from "../interfaces";
+import {
+  Asset,
+  Configuration,
+  CurrentResources,
+  ExportMeta,
+  InstallationPreview,
+  Status
+} from "../interfaces";
 import * as fromAsset from "../state/asset.reducer";
 
 @Injectable()
@@ -21,9 +28,7 @@ export class AssetService {
   install(id: string, configs: Configuration[], preview: boolean) {
     return this.http
       .post<any>(`api:/asset/${id}`, {configs}, {params: {preview: preview.toString()}})
-      .pipe(
-        tap(updatedAsset => !preview && this.store.dispatch(new fromAsset.Update(id, updatedAsset)))
-      );
+      .pipe(tap(() => !preview && this.retrieve()));
   }
 
   remove(id: string, type: "hard" | "soft" = "soft") {

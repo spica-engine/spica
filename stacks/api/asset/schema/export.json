@@ -21,6 +21,10 @@
     },
     "configs": {
       "$ref": "http://spica.internal/asset/configs"
+    },
+    "url": {
+      "type": "string",
+      "description": "Url of the asset which was downloaded from."
     }
   },
   "additionalProperties": false

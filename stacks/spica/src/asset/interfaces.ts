@@ -6,6 +6,7 @@ export interface Asset {
   status: Status;
   configs: Configuration[];
   failure_message?: string;
+  url: string;
 }
 
 export type Status = "downloaded" | "installed" | "failed";
@@ -45,6 +46,7 @@ export interface ExportMeta {
   description: string;
   configs: Configuration[];
   resources: ExportResource;
+  url:string;
 }
 
 export interface ExportResource {
