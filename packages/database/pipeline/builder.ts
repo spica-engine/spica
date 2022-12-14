@@ -23,8 +23,8 @@ export class PipelineBuilder implements IPipelineBuilder {
   }
 
   filterByUserRequest(filter: object) {
-    const isFilterProvided = (this.isFilterApplied = !!Object.keys(filter).length);
-    this.attachToPipeline(isFilterProvided, {$match: filter});
+    this.isFilterApplied = filter && !!Object.keys(filter).length;
+    this.attachToPipeline(this.isFilterApplied, {$match: filter});
     return Promise.resolve(this);
   }
 

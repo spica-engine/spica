@@ -1,12 +1,7 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {
-  BaseCollection,
-  Collection,
-  DatabaseService,
-  FilterQuery,
-  ObjectId
-} from "@spica-server/database";
-import {StorageObject} from "./body";
+import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
+import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {StorageObject, StorageObjectContent} from "./body";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {Strategy} from "./strategy/strategy";
 
@@ -59,51 +54,111 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
     }
   }
 
-  getAll(
-    policyAgg: object[],
+  test() {
+    this.getAll({}, undefined, false, 10, 10, {});
+  }
+
+  async getAll<P extends boolean>(
+    resourceFilter: object,
+    filter: object,
+    paginate: P,
+    limit: number,
+    skip: number,
+    sort?: any
+  ): Promise<P extends true ? PaginatedStorageResponse : StorageResponse[]>;
+  async getAll<P extends boolean>(
+    resourceFilter: object,
+    filter: object,
+    paginate: P,
     limit: number,
     skip: number = 0,
     sort?: any
-  ): Promise<StorageResponse> {
-    const dataPipeline: object[] = [];
+  ): Promise<PaginatedStorageResponse | StorageResponse[]> {
+    let pipelineBuilder = await new PipelineBuilder()
+      .filterResources(resourceFilter)
+      .filterByUserRequest(filter);
 
-    if (sort) {
-      dataPipeline.push({$sort: sort});
+    const seeking = new PipelineBuilder()
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .result();
+
+    const pipeline = (await pipelineBuilder.paginate(
+      paginate,
+      seeking,
+      this.estimatedDocumentCount()
+    )).result();
+
+    if (paginate) {
+      return this._coll
+        .aggregate<PaginatedStorageResponse>(pipeline)
+        .next()
+        .then(async r => {
+          r.data = await this.putUrls(r.data);
+          return r;
+        });
     }
-
-    // sub-pipeline in $facet stage cannot be empty
-    dataPipeline.push({$skip: skip});
-
-    if (limit) {
-      dataPipeline.push({$limit: limit});
-    }
-
-    const aggregation = [
-      ...policyAgg,
-      {
-        $facet: {
-          meta: [{$count: "total"}],
-          data: dataPipeline
-        }
-      },
-      {
-        $project: {
-          meta: {$ifNull: [{$arrayElemAt: ["$meta", 0]}, {total: 0}]},
-          data: "$data"
-        }
-      }
-    ];
 
     return this._coll
-      .aggregate<StorageResponse>(aggregation)
-      .next()
-      .then(async result => {
-        for (const object of result.data) {
-          object.url = await this.service.url(object._id.toString());
-        }
-        return result;
-      });
+      .aggregate<StorageResponse>([...pipeline, ...seeking])
+      .toArray()
+      .then(r => this.putUrls(r));
   }
+
+  private async putUrls(objects: StorageResponse[]) {
+    for (const object of objects) {
+      object.url = await this.service.url(object._id.toString());
+    }
+    return objects;
+  }
+
+  // getAll(
+  //   policyAgg: object[],
+  //   filter:object,
+  //   limit: number,
+  //   skip: number = 0,
+  //   sort?: any
+  // ): Promise<StorageResponse> {
+  //   const dataPipeline: object[] = [];
+
+  //   if (sort) {
+  //     dataPipeline.push({$sort: sort});
+  //   }
+
+  //   // sub-pipeline in $facet stage cannot be empty
+  //   dataPipeline.push({$skip: skip});
+
+  //   if (limit) {
+  //     dataPipeline.push({$limit: limit});
+  //   }
+
+  //   const aggregation = [
+  //     ...policyAgg,
+  //     {
+  //       $facet: {
+  //         meta: [{$count: "total"}],
+  //         data: dataPipeline
+  //       }
+  //     },
+  //     {
+  //       $project: {
+  //         meta: {$ifNull: [{$arrayElemAt: ["$meta", 0]}, {total: 0}]},
+  //         data: "$data"
+  //       }
+  //     }
+  //   ];
+
+  //   return this._coll
+  //     .aggregate<StorageResponse>(aggregation)
+  //     .next()
+  //     .then(async result => {
+  //       for (const object of result.data) {
+  //         object.url = await this.service.url(object._id.toString());
+  //       }
+  //       return result;
+  //     });
+  // }
 
   async get(id: ObjectId): Promise<StorageObject> {
     const object = await this._coll.findOne({_id: new ObjectId(id)});
@@ -165,9 +220,13 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
   }
 }
 
-export interface StorageResponse {
+export type StorageResponse = Omit<StorageObject, "content"> & {
+  content: Omit<StorageObjectContent, "data">;
+};
+
+export interface PaginatedStorageResponse {
   meta: {
     count: number;
   };
-  data: Array<StorageObject>;
+  data: StorageResponse[];
 }

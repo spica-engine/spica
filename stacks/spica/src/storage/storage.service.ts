@@ -30,6 +30,9 @@ export class StorageService {
       params = params.append("sort", JSON.stringify(sort));
     }
 
+    // we will change this later on
+    params = params.append("paginate", "true");
+
     return this.http.get<IndexResult<Storage>>("api:/storage", {params}).pipe(
       map(objects => {
         for (let object of objects.data) {
