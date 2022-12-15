@@ -174,4 +174,9 @@ export class IndexComponent implements OnInit {
       .toPromise()
       .then(() => this.refresh.next());
   }
+
+  addFolder(name: string) {
+    const folder = new File([], name);
+    this.storage.insertMany([folder] as any).toPromise();
+  }
 }

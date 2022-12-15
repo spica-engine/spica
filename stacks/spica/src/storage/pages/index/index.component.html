@@ -112,6 +112,21 @@
         [value]="progress"
       ></mat-progress-spinner>
     </button>
+    <button
+      mat-button
+      canInteract="storage:create"
+      [disabled]="progress"
+      (click)="!progress ? addFolder('test/') : undefined"
+    >
+      <mat-icon *ngIf="!progress">add</mat-icon>
+      Add New Folder
+      <mat-progress-spinner
+        color="accent"
+        *ngIf="progress"
+        [diameter]="18"
+        [value]="progress"
+      ></mat-progress-spinner>
+    </button>
   </div>
 </mat-toolbar>
 
