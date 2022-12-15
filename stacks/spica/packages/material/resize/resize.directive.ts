@@ -7,15 +7,15 @@ import {
   Input,
   Optional,
   Output,
-  AfterViewInit
+  AfterViewInit,
+  Renderer2
 } from "@angular/core";
-import {MatSortHeader} from "@angular/material/sort";
+import { MatSortHeader } from "@angular/material/sort";
 
 @Directive({
   selector: "[mat-resize-header]",
   exportAs: "matResizeHeader",
   host: {
-    "[style.padding-right.px]": "size",
     "[style.width.px]": "_width",
     "[style.min-width.px]": "overrideMinWidth ? _width : initial",
     "[style.cursor]": "_cursor",
@@ -40,6 +40,9 @@ export class MatResizeHeader implements AfterViewInit {
 
   _cursor: string;
 
+  private elemRow: HTMLElement;
+  private elemRowClass: string = "$$spica__interval-resizing-head"
+
   private _startX: number;
   private _startWidth: number;
 
@@ -53,12 +56,14 @@ export class MatResizeHeader implements AfterViewInit {
 
   constructor(
     private elem: ElementRef<HTMLTableColElement>,
-    @Optional() @Host() private matSort: MatSortHeader
-  ) {}
+    @Optional() @Host() private matSort: MatSortHeader,
+    private renderer: Renderer2
+  ) { }
 
   ngAfterViewInit() {
     setTimeout(() => {
       this._width = parseInt(window.getComputedStyle(this.elem.nativeElement).width);
+      this.elemRow = this.renderer.parentNode(this.elem.nativeElement);
     });
   }
 
@@ -74,6 +79,7 @@ export class MatResizeHeader implements AfterViewInit {
   @HostListener("mouseup")
   @HostListener("window:mouseup")
   mouseUp() {
+    this.removeIntervalRowClass()
     if (this._startWidth != this._width) {
       this.resizeend.emit(this._width);
     }
@@ -83,6 +89,7 @@ export class MatResizeHeader implements AfterViewInit {
   @HostListener("mousemove", ["$event"])
   mouseMove(event: MouseEvent) {
     const isInMovementRect = this.getIsInMovementRect(event.pageX);
+
     if (isInMovementRect) {
       this._cursor = "col-resize";
       this.setMatSortDisabled(true);
@@ -91,13 +98,43 @@ export class MatResizeHeader implements AfterViewInit {
       this.setMatSortDisabled(false);
     }
     if (this._isDragging) {
-      const diff = event.pageX - this._startX;
-      if (diff != 0) {
-        this._width = this._startWidth + diff;
-        this.resize.emit(this._width);
-      }
+      if (!this.hasIntervalClass())
+        this.addIntervalRowClass()
+      this.setCellWidth(event)
     }
   }
+
+  setCellWidth(event) {
+    const diff = event.pageX - this._startX;
+    if (diff != 0) {
+      this._width = this._startWidth + diff;
+      this.resize.emit(this._width);
+    }
+  }
+  removeIntervalRowClass() {
+    this.renderer.removeClass(this.elemRow, this.elemRowClass);
+  }
+
+  addIntervalRowClass() {
+    this.renderer.listen(
+      'document',
+      'mousemove',
+      (event) => {
+        if (this.hasIntervalClass()) this.setCellWidth(event)
+      }
+    );
+    this.renderer.listen(
+      'document',
+      'mouseup',
+      () => {
+        if (this.hasIntervalClass()) this.removeIntervalRowClass()
+      }
+    );
+    this.renderer.addClass(this.elemRow, this.elemRowClass);
+  }
+
+
+  hasIntervalClass = () => this.elemRow.classList.contains(this.elemRowClass)
 
   getIsInMovementRect(x: number) {
     return this._rect.left + this._rect.width - x < this.size;
