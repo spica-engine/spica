@@ -16,6 +16,7 @@ import {MatSortHeader} from "@angular/material/sort";
   selector: "[mat-resize-header]",
   exportAs: "matResizeHeader",
   host: {
+    // "[style.padding-right.px]": "100",
     "[style.width.px]": "_width",
     "[style.min-width.px]": "overrideMinWidth ? _width : initial",
     "[style.cursor]": "_cursor",

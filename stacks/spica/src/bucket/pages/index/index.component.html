@@ -198,7 +198,7 @@
             mat-header-cell
             *matHeaderCellDef
             mat-sort-header
-            [resizeColumn]="true"
+            mat-resize-header
             [overrideMinWidth]="true"
             [persist-header-width]="schema._id"
           >
@@ -256,7 +256,7 @@
               *matHeaderCellDef
               mat-sort-header
               [persist-header-width]="schema._id"
-              [resizeColumn]="true"
+              mat-resize-header
               [overrideMinWidth]="true"
             >
               {{ property.value.title }}

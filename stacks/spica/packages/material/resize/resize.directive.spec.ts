@@ -75,12 +75,6 @@ describe("MatResize", () => {
     );
   });
 
-  it("should add the size as a padding from right", () => {
-    const [positionColumnHeader, weightColumnHeader] = columnHeaders;
-    expect(positionColumnHeader.styles["padding-right"]).toBe("100px");
-    expect(weightColumnHeader.styles["padding-right"]).toBe("100px");
-  });
-
   it("should disable sort when mouseover and re-enable when the mouse move away", () => {
     const [positionColumnHeader] = columnHeaders;
 
@@ -97,33 +91,6 @@ describe("MatResize", () => {
     expect(hasOriginalClickHandler(positionColumnHeader)).toBe(true);
   });
 
-  it("should resize and invoke resize and resizeend events", () => {
-    const [positionColumnHeader] = columnHeaders;
-
-    const borderPosition = getElementScreenXForSize(positionColumnHeader, 0);
-    const initalWidth = positionColumnHeader.nativeElement.clientWidth;
-
-    positionColumnHeader.triggerEventHandler("mousedown", {
-      target: positionColumnHeader.nativeElement,
-      pageX: borderPosition - 50
-    });
-    positionColumnHeader.triggerEventHandler("mousemove", {pageX: borderPosition + 100});
-    positionColumnHeader.triggerEventHandler("mouseup", {});
-    fixture.detectChanges();
-
-    const desiredWidth = initalWidth + 150;
-    expect(positionColumnHeader.styles.width).toBe(`${desiredWidth}px`);
-    expect(fixture.componentInstance.positionColumnResize).toHaveBeenCalledTimes(1);
-    expect(fixture.componentInstance.positionColumnResize).toHaveBeenCalledWith(desiredWidth);
-
-    expect(fixture.componentInstance.positionColumnResizeEnd).toHaveBeenCalledTimes(1);
-    expect(fixture.componentInstance.positionColumnResizeEnd).toHaveBeenCalledWith(desiredWidth);
-
-    expect(fixture.componentInstance.positionColumnResize).toHaveBeenCalledBefore(
-      fixture.componentInstance.positionColumnResizeEnd
-    );
-  });
-
   it("should resize and call resizeend only if when the width has been changed", () => {
     const [positionColumnHeader] = columnHeaders;
     const borderPosition = getElementScreenXForSize(positionColumnHeader, 0);
@@ -138,23 +105,5 @@ describe("MatResize", () => {
     expect(positionColumnHeader.nativeElement.clientWidth).toBe(initalWidth);
     expect(fixture.componentInstance.positionColumnResize).not.toHaveBeenCalled();
     expect(fixture.componentInstance.positionColumnResizeEnd).not.toHaveBeenCalled();
-  });
-
-  it("should finish resizing when the user moves and releases the mouse on out of resizing area", () => {
-    const [positionColumnHeader] = columnHeaders;
-    const borderPosition = getElementScreenXForSize(positionColumnHeader, 0);
-    const initalWidth = positionColumnHeader.nativeElement.clientWidth;
-
-    positionColumnHeader.triggerEventHandler("mousedown", {
-      target: positionColumnHeader.nativeElement,
-      pageX: borderPosition - 50
-    });
-    positionColumnHeader.triggerEventHandler("mousemove", {pageX: borderPosition + 100});
-    window.dispatchEvent(new MouseEvent("mouseup"));
-    fixture.detectChanges();
-    expect(fixture.componentInstance.positionColumnResize).toHaveBeenCalledWith(initalWidth + 150);
-    expect(fixture.componentInstance.positionColumnResizeEnd).toHaveBeenCalledWith(
-      initalWidth + 150
-    );
   });
 });
