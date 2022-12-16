@@ -177,25 +177,29 @@ describe("Identity Add Component", () => {
       expect(prop2.name).toBe("prop2");
       expect(prop2.disabled).toBe(false);
       expect(prop2.value).toBe("attribute2");
-
-      expect(
-        fixture.debugElement.query(
-          By.css("div.policies mat-list mat-list-item:first-of-type label")
-        ).nativeElement.textContent
-      ).toBe("bucket");
-
-      expect(
-        fixture.debugElement.query(
-          By.css("div.policies mat-list:nth-of-type(2) mat-list-item:first-of-type label")
-        ).nativeElement.textContent
-      ).toBe("function");
-
       expect(
         fixture.debugElement.query(By.css("form input:first-of-type")).injector.get(NgModel).value
       ).toBe("identifier");
       expect(fixture.debugElement.query(By.css("form button")).nativeElement.textContent).toBe(
         " Change Password "
       );
+
+      const button = fixture.debugElement.nativeElement.querySelector(
+        "div.actions button:nth-of-type(2)"
+      );
+      button.click();
+      fixture.detectChanges();
+
+      expect(
+        fixture.debugElement.query(
+          By.css("div.policies mat-list mat-list-item:first-of-type label")
+        ).nativeElement.textContent
+      ).toBe("bucket");
+      expect(
+        fixture.debugElement.query(
+          By.css("div.policies mat-list:nth-of-type(2) mat-list-item:first-of-type label")
+        ).nativeElement.textContent
+      ).toBe("function");
     });
   });
 
@@ -208,6 +212,12 @@ describe("Identity Add Component", () => {
         })
       );
 
+      const button = fixture.debugElement.nativeElement.querySelector(
+        "div.actions button:nth-of-type(2)"
+      );
+      button.click();
+      tick();
+      fixture.detectChanges();
       fixture.debugElement
         .query(By.css("div.policies mat-list:nth-of-type(2) mat-list-item:first-of-type button"))
         .nativeElement.click();
@@ -232,6 +242,13 @@ describe("Identity Add Component", () => {
       const detachSpy = spyOn(policyService, "detachPolicy").and.returnValue(
         of({...fixture.componentInstance.identity, policies: []})
       );
+
+      const button = fixture.debugElement.nativeElement.querySelector(
+        "div.actions button:nth-of-type(2)"
+      );
+      button.click();
+      tick();
+      fixture.detectChanges();
 
       fixture.debugElement
         .query(By.css("div.policies mat-list:first-of-type mat-list-item:first-of-type button"))
