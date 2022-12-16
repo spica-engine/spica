@@ -248,7 +248,7 @@
 
         <ng-container *ngIf="schema$ | async; let schema">
           <ng-container
-            *ngFor="let property of schema.properties | keyvalue"
+            *ngFor="let property of deepCopySchema.properties | keyvalue"
             [matColumnDef]="property.key"
           >
             <th
@@ -259,7 +259,7 @@
               mat-resize-header
               [overrideMinWidth]="true"
             >
-              <mat-icon class="type-icon">{{ property.value.icon }}</mat-icon
+              <mat-icon class="type-icon"> {{ property.value.icon }}</mat-icon
               >{{ property.value.title }}
             </th>
             <td

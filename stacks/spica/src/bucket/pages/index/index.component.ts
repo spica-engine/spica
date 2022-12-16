@@ -30,7 +30,7 @@ import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {DomSanitizer} from "@angular/platform-browser";
 import {NgModel} from "@angular/forms";
-import {Scheme, SchemeObserver} from "@spica-client/core";
+import {deepCopy, Scheme, SchemeObserver} from "@spica-client/core";
 import {guides} from "./guides";
 import {FilterComponent} from "@spica-client/bucket/components/filter/filter.component";
 import {InputPlacerWithMetaPlacer, InputResolver} from "@spica-client/common";
@@ -59,6 +59,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   bucketId: string;
   schema$: Observable<Bucket>;
+  deepCopySchema: Bucket;
   data$: Observable<BucketData>;
   refresh = new Subject();
   loaded: boolean;
@@ -149,11 +150,12 @@ export class IndexComponent implements OnInit, OnDestroy {
       }),
       flatMap(() => this.bs.getBucket(this.bucketId)),
       tap(schema => {
+        this.deepCopySchema = deepCopy<Bucket>(schema);
         this.guideResponse = {};
-        this.readOnly = schema.readOnly;
+        this.readOnly = this.deepCopySchema.readOnly;
         this.properties = [
           {name: "$$spicainternal_id", title: "_id"},
-          ...Object.entries(schema.properties).map(([name, value]) => ({
+          ...Object.entries(this.deepCopySchema.properties).map(([name, value]) => ({
             name,
             title: value.title
           })),
@@ -161,11 +163,11 @@ export class IndexComponent implements OnInit, OnDestroy {
           {name: "$$spicainternal_actions", title: "Actions"}
         ];
 
-        this.editableProps = Object.entries(schema.properties).filter(
+        this.editableProps = Object.entries(this.deepCopySchema.properties).filter(
           ([k, v]) => !this.nonEditableTypes.includes(v.type)
         );
 
-        if (!schema.readOnly) {
+        if (!this.deepCopySchema.readOnly) {
           this.properties.unshift({name: "$$spicainternal_select", title: "Select"});
         }
 
@@ -181,7 +183,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         //eliminate the properties which are not included by schema
         this.displayedProperties = cachedDisplayedProperties
           ? cachedDisplayedProperties.filter(dispProps =>
-              Object.keys(schema.properties)
+              Object.keys(this.deepCopySchema.properties)
                 .concat([
                   "$$spicainternal_id",
                   "$$spicainternal_schedule",
@@ -192,31 +194,37 @@ export class IndexComponent implements OnInit, OnDestroy {
             )
           : this.properties.map(p => p.name).filter(p => p != "$$spicainternal_schedule");
       }),
-      tap(schema => {
-        Object.keys(schema.properties).map(key => {
-          schema.properties[key]["icon"] = this.systemFields.find(
-            item => item.type == schema.properties[key].type
+      tap(() => {
+        Object.keys(this.deepCopySchema.properties).map(key => {
+          this.deepCopySchema.properties[key]["icon"] = this.systemFields.find(
+            item => item.type == this.deepCopySchema.properties[key].type
           ).icon;
-          if (schema.properties[key].type == "relation") {
+
+          if (this.deepCopySchema.properties[key].type == "relation") {
             this.bs
-              .getBucket(schema.properties[key]["bucketId"])
+              .getBucket(this.deepCopySchema.properties[key]["bucketId"])
               .pipe(take(1))
-              .subscribe(bucket => (schema.properties[key]["primary"] = bucket.primary));
+              .subscribe(
+                bucket => (this.deepCopySchema.properties[key]["primary"] = bucket.primary)
+              );
           }
         });
       }),
-      tap(schema => {
+      tap(() => {
         this.search$
           .pipe(
             takeUntil(this.dispose),
             debounceTime(1000)
           )
           .subscribe(_ => {
-            const filter = this.bucketFilter.getTextSearchFilter(this.searchValue, schema);
+            const filter = this.bucketFilter.getTextSearchFilter(
+              this.searchValue,
+              this.deepCopySchema
+            );
             return this.onFilterChange(filter);
           });
       }),
-      tap(schema => (this.displayTranslateButton = this.hasTranslatableProp(schema))),
+      tap(() => (this.displayTranslateButton = this.hasTranslatableProp(this.deepCopySchema))),
       publishReplay(),
       refCount()
     );
