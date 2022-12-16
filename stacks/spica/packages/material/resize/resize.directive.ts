@@ -16,7 +16,7 @@ import {MatSortHeader} from "@angular/material/sort";
   selector: "[mat-resize-header]",
   exportAs: "matResizeHeader",
   host: {
-    // "[style.padding-right.px]": "100",
+    "[style.padding-right.px]": "100",
     "[style.width.px]": "_width",
     "[style.min-width.px]": "overrideMinWidth ? _width : initial",
     "[style.cursor]": "_cursor",
@@ -43,6 +43,8 @@ export class MatResizeHeader implements AfterViewInit {
 
   private elemRow: HTMLElement;
   private elemRowClass: string = "$$spica__interval-resizing-head";
+  private documentMouseMoveListener: () => void;
+  private documentMouseUpListener: () => void;
 
   private _startX: number;
   private _startWidth: number;
@@ -112,15 +114,18 @@ export class MatResizeHeader implements AfterViewInit {
     }
   }
   removeIntervalRowClass() {
+    this.documentMouseMoveListener && this.documentMouseMoveListener(); // remove listener
+    this.documentMouseUpListener && this.documentMouseUpListener();
     this.renderer.removeClass(this.elemRow, this.elemRowClass);
   }
 
   addIntervalRowClass() {
-    this.renderer.listen("document", "mousemove", event => {
+    this.documentMouseMoveListener = this.renderer.listen("document", "mousemove", event => {
       if (this.hasIntervalClass()) this.setCellWidth(event);
     });
-    this.renderer.listen("document", "mouseup", () => {
-      if (this.hasIntervalClass()) this.removeIntervalRowClass();
+
+    this.documentMouseUpListener = this.renderer.listen("document", "mouseup", () => {
+      this.removeIntervalRowClass();
     });
     this.renderer.addClass(this.elemRow, this.elemRowClass);
   }
