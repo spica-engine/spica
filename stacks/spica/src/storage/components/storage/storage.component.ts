@@ -86,7 +86,6 @@ export class StorageComponent implements ControlValueAccessor {
     if (!obj) {
       return;
     }
-    console.log("obj :", obj);
 
     this.blob = obj;
     this.value = obj.url;
