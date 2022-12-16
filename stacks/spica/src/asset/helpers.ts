@@ -1,5 +1,5 @@
 import {
-  Configuration,
+  Config,
   InstallationPreview,
   InstallationPreviewByModules,
   Resource

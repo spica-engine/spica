@@ -36,7 +36,7 @@
     },
     "url": {
       "type": "string",
-      "description": "Url of the asset which was downloaded from."
+      "description": "Download url of the asset."
     },
     "configs": {
       "$ref": "http://spica.internal/asset/configs"

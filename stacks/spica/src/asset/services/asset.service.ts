@@ -5,7 +5,7 @@ import {of} from "rxjs";
 import {filter, switchMap, tap} from "rxjs/operators";
 import {
   Asset,
-  Configuration,
+  Config,
   CurrentResources,
   ExportMeta,
   InstallationPreview,
@@ -25,7 +25,7 @@ export class AssetService {
     return this.store.select(fromAsset.selectEntity(id));
   }
 
-  install(id: string, configs: Configuration[], preview: boolean) {
+  install(id: string, configs: Config[], preview: boolean) {
     return this.http
       .post<any>(`api:/asset/${id}`, {configs}, {params: {preview: preview.toString()}})
       .pipe(tap(() => !preview && this.retrieve()));

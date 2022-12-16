@@ -1,6 +1,6 @@
-import {Asset, Configuration} from "@spica-server/interface/asset";
+import {Asset, Config} from "@spica-server/interface/asset";
 
-export function putConfiguration(asset: Asset, configs: Configuration[]) {
+export function putConfiguration(asset: Asset, configs: Config[]) {
   configs = eliminateNonConfigurables(asset.configs, configs);
 
   for (let config of configs) {
@@ -44,9 +44,9 @@ export function replaceValue(val: object, property: string, replace: unknown) {
 }
 
 export function eliminateNonConfigurables(
-  actual: Configuration[],
-  desired: Configuration[]
-): Configuration[] {
+  actual: Config[],
+  desired: Config[]
+): Config[] {
   return desired.filter(d => {
     const isMatch = actual.some(
       a =>

@@ -12,12 +12,13 @@ import {
   Param,
   Post,
   Query,
+  Req,
   Res,
   UseGuards
 } from "@nestjs/common";
 import {AssetService} from "./service";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
-import {Asset, Configuration, ExportMeta, Resource} from "@spica-server/interface/asset";
+import {Asset, Config, ExportMeta, Resource} from "@spica-server/interface/asset";
 import {exporters, listers, operators, registrar, validators} from "./registration";
 import {compareResourceGroups} from "@spica-server/core/differ";
 import {putConfiguration} from "./helpers";
@@ -168,20 +169,10 @@ export class AssetController {
   @Post(":id")
   @UseGuards(AuthGuard(), ActionGuard("asset:install", "asset"))
   async install(
+    @Req() req,
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(
-      Schema.validate({
-        type: "object",
-        required: ["configs"],
-        properties: {
-          configs: {
-            $ref: "http://spica.internal/asset/configs"
-          }
-        },
-        additionalProperties: false
-      })
-    )
-    {configs}: {configs: Configuration[]},
+    @Body(Schema.validate(req => req.params.id))
+    {configs}: {configs: Config[]},
     @Query("preview", BOOLEAN) preview: boolean
   ) {
     let asset = await this.service.findOne({_id: id});

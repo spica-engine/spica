@@ -4,20 +4,20 @@ export interface Asset {
   description: string;
   resources: Resource[];
   status: Status;
-  configs: Configuration[];
+  configs: Config[];
   failure_message?: string;
   url:string;
 }
 
 export type Status = "downloaded" | "installed" | "failed";
 
-export interface Configuration {
+export interface Config {
   title: string;
   module: string;
   resource_id: string;
   submodule: string;
   property: string;
-  value: unknown;
+  value?: unknown;
   type: string;
 }
 
@@ -41,7 +41,7 @@ export interface ExportMeta {
   name: string;
   description: string;
   resources: {[_module: string]: string[]};
-  configs: Configuration[];
+  configs: Config[];
 }
 
 export type ResourceLister = () => Promise<{_id: string; title: string}[]>;

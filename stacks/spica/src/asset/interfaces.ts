@@ -4,14 +4,14 @@ export interface Asset {
   description: string;
   resources: Resource[];
   status: Status;
-  configs: Configuration[];
+  configs: Config[];
   failure_message?: string;
   url: string;
 }
 
 export type Status = "downloaded" | "installed" | "failed";
 
-export interface Configuration {
+export interface Config {
   module: string;
   resource_id: string;
   submodule: string;
@@ -44,7 +44,7 @@ export interface InstallationPreviewByModules {
 export interface ExportMeta {
   name: string;
   description: string;
-  configs: Configuration[];
+  configs: Config[];
   resources: ExportResource;
   url:string;
 }

@@ -19,7 +19,7 @@ export class ApiKeyModule {
       module: ApiKeyModule,
       imports: [
         SchemaModule.forChild({
-          schemas: [ApiKeySchema]
+          schemas: [ApiKeySchema],
         })
       ],
       exports: [APIKEY_POLICY_FINALIZER],
