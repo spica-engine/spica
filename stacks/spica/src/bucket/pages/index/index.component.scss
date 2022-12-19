@@ -167,6 +167,11 @@
             right: 2px;
             top: 10px;
           }
+          button {
+            position: absolute;
+            left: calc(100% + 50px);
+            top: -16px;
+          }
         }
         th.add-new-property {
           text-align: center;

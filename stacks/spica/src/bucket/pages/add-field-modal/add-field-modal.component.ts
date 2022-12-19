@@ -89,10 +89,8 @@ export class AddFieldModalComponent implements OnInit {
     this.savingState = SavingState.Saving
     this.bs.replaceOne(this.parentSchema)
       .toPromise()
-      .then(() => { this.savingState = SavingState.Saved; this.dialogRef.close() })
+      .then(() => { this.savingState = SavingState.Saved; this.dialogRef.close(true) })
       .catch(() => this.savingState = SavingState.Failed)
-
-    this.dialogRef.close();
   }
 
   toggleRequired(key: string, required: boolean) {

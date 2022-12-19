@@ -70,6 +70,7 @@ import {CategoryModule} from "@spica-client/common/category";
 import {BucketOptions, BUCKET_OPTIONS} from "./interfaces/bucket";
 import {IGNORE_HTTP_ERRORS} from "@spica-client/core/layout/config";
 import { SettingsBucketComponent } from "./components/settings-bucket/settings-bucket.component";
+import { PropertyMenuComponent } from "./components/property-menu/property-menu.component";
 
 @NgModule({
   imports: [
@@ -165,7 +166,8 @@ import { SettingsBucketComponent } from "./components/settings-bucket/settings-b
     CelLanguageDirective,
     JsonLanguageDirective,
     PropertyLanguageComponent,
-    SettingsBucketComponent  ]
+    SettingsBucketComponent,
+    PropertyMenuComponent  ]
 })
 export class BucketModule {
   public static forRoot(options: BucketOptions): ModuleWithProviders<BucketModule> {

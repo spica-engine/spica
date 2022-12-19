@@ -173,6 +173,7 @@ export class IndexComponent implements OnInit, OnDestroy {
           localStorage.getItem(`${this.bucketId}-displayedProperties`)
         );
 
+
         //eliminate the properties which are not included by schema
         this.displayedProperties = cachedDisplayedProperties
           ? cachedDisplayedProperties.filter(dispProps =>
@@ -186,6 +187,8 @@ export class IndexComponent implements OnInit, OnDestroy {
               .some(schemaProps => schemaProps == dispProps)
           )
           : this.properties.map(p => p.name)
+
+        if (!cachedDisplayedProperties) this.toggleDisplayAll(true,schema)
       }),
       tap(schema => {
         Object.keys(schema.properties).map(key => {
@@ -689,27 +692,33 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.postRenderingQueue = [];
   }
 
-  async addNewProperty(propertyKey: string = null) {
-    const tempSchema = JSON.parse(JSON.stringify(this.schema))
+  async addNewProperty() {
 
+    const tempSchema = JSON.parse(JSON.stringify(this.schema))
     const dialogRef = this.dialog.open(AddFieldModalComponent, {
       width: "800px",
       maxHeight: "90vh",
       data: {
         parentSchema: this.schema,
-        propertyKey: propertyKey
+        propertyKey: null
       }
     });
-    dialogRef.afterClosed().toPromise().finally(() => {
-      const newFields = Object.keys(this.schema.properties).filter((item) => !Object.keys(tempSchema.properties).find((prop) => prop == item));
+    dialogRef.afterClosed().toPromise().then((res) => {
+      if (!res) return
 
-      this.displayedProperties.splice(this.displayedProperties.length - 2, 0, ...newFields);
+      const newFields = Object.keys(this.schema.properties)
+        .filter((item) => !Object.keys(tempSchema.properties).find((prop) => prop == item));
 
-      localStorage.setItem(
-        `${this.bucketId}-displayedProperties`,
-        JSON.stringify(this.displayedProperties)
-      );
+      if (newFields.length > 0) {
+        this.displayedProperties.splice(this.displayedProperties.length - 2, 0, ...newFields);
+
+        localStorage.setItem(
+          `${this.bucketId}-displayedProperties`,
+          JSON.stringify(this.displayedProperties)
+        );
+      }
     })
   }
+
 
 }

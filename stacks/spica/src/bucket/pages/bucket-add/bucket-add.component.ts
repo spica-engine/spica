@@ -1,12 +1,12 @@
-import {animate, style, transition, trigger} from "@angular/animations";
-import {CdkDragDrop, moveItemInArray} from "@angular/cdk/drag-drop";
-import {Component, HostListener, OnDestroy, OnInit} from "@angular/core";
-import {MatCheckboxChange} from "@angular/material/checkbox";
-import {ActivatedRoute, Router} from "@angular/router";
-import {InputResolver} from "@spica-client/common";
-import {deepCopy} from "@spica-client/core";
-import {ICONS, SavingState} from "@spica-client/material";
-import {Subject, Observable, merge, of} from "rxjs";
+import { animate, style, transition, trigger } from "@angular/animations";
+import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
+import { Component, HostListener, OnDestroy, OnInit } from "@angular/core";
+import { MatCheckboxChange } from "@angular/material/checkbox";
+import { ActivatedRoute, Router } from "@angular/router";
+import { InputResolver } from "@spica-client/common";
+import { deepCopy } from "@spica-client/core";
+import { ICONS, SavingState } from "@spica-client/material";
+import { Subject, Observable, merge, of } from "rxjs";
 import {
   filter,
   flatMap,
@@ -20,12 +20,12 @@ import {
   mapTo,
   take
 } from "rxjs/operators";
-import {Bucket, emptyBucket, LimitExceedBehaviour} from "../../interfaces/bucket";
-import {PredefinedDefault} from "../../interfaces/predefined-default";
-import {BucketService} from "../../services/bucket.service";
-import {BucketHistoryService} from "@spica-client/bucket/services/bucket-history.service";
-import {MatDialog} from "@angular/material/dialog";
-import {AddFieldModalComponent} from "../add-field-modal/add-field-modal.component";
+import { Bucket, emptyBucket, LimitExceedBehaviour } from "../../interfaces/bucket";
+import { PredefinedDefault } from "../../interfaces/predefined-default";
+import { BucketService } from "../../services/bucket.service";
+import { BucketHistoryService } from "@spica-client/bucket/services/bucket-history.service";
+import { MatDialog } from "@angular/material/dialog";
+import { AddFieldModalComponent } from "../add-field-modal/add-field-modal.component";
 
 @Component({
   selector: "bucket-add",
@@ -33,8 +33,8 @@ import {AddFieldModalComponent} from "../add-field-modal/add-field-modal.compone
   styleUrls: ["./bucket-add.component.scss"],
   animations: [
     trigger("smooth", [
-      transition(":enter", [style({opacity: 0}), animate("0.3s ease-out", style({opacity: 1}))]),
-      transition(":leave", [style({opacity: 1}), animate("0.3s ease-in", style({opacity: 0}))])
+      transition(":enter", [style({ opacity: 0 }), animate("0.3s ease-out", style({ opacity: 1 }))]),
+      transition(":leave", [style({ opacity: 1 }), animate("0.3s ease-in", style({ opacity: 0 }))])
     ])
   ]
 })
@@ -57,7 +57,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   isHistoryEndpointEnabled$: Observable<boolean>;
 
-  propertyPositionMap: {[k: string]: any[]} = {};
+  propertyPositionMap: { [k: string]: any[] } = {};
 
   private onDestroy: Subject<void> = new Subject<void>();
 
@@ -106,25 +106,31 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   }
 
   cardDrop(event: CdkDragDrop<Bucket[]>) {
+    console.log("properties1 :", JSON.parse(JSON.stringify(this.bucket.properties)))
     const properties = Object.entries(this.bucket.properties);
-
+    console.log("properties 2:", JSON.parse(JSON.stringify(properties)))
     moveItemInArray(properties, event.previousIndex, event.currentIndex);
-
+    console.log("properties3 :", JSON.parse(JSON.stringify(properties)))
+    console.log(properties.reduce((accumulator, [key, value], index) => {
+      accumulator[key] = value;
+      return accumulator;
+    }, {}))
     this.bucket.properties = properties.reduce((accumulator, [key, value], index) => {
       accumulator[key] = value;
       return accumulator;
     }, {});
+    console.log("properties4 :", JSON.parse(JSON.stringify(this.bucket.properties)))
   }
 
   updatePositionProperties() {
     this.propertyPositionMap = Object.entries(this.bucket.properties).reduce(
       (accumulator, [key, value]) => {
         value.options.position = value.options.position || "bottom";
-        accumulator[value.options.position].push({key, value});
+        accumulator[value.options.position].push({ key, value });
 
         return accumulator;
       },
-      {left: [], right: [], bottom: []}
+      { left: [], right: [], bottom: [] }
     );
   }
 
@@ -216,7 +222,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     }
   }
 
-  setIcons(event = {pageIndex: 0, pageSize: this.iconPageSize}) {
+  setIcons(event = { pageIndex: 0, pageSize: this.iconPageSize }) {
     this.icons = ICONS.filter(icon => icon.includes(this.searchIconText.toLowerCase()));
 
     this.visibleIcons = this.icons.slice(

@@ -206,6 +206,7 @@
             [persist-header-width]="schema._id"
             (click)="addNewProperty()"
             class="add-new-property"
+            canInteract="bucket:update"
           >
             <mat-icon>add</mat-icon>
           </th>
@@ -263,6 +264,16 @@
               [overrideMinWidth]="true"
             >
               {{ property.value.title }}
+              <button mat-icon-button [matMenuTriggerFor]="editPropertyMenu">
+                <mat-icon>arrow_drop_down</mat-icon>
+              </button>
+              <mat-menu class="edit-property-menu" #editPropertyMenu="matMenu">
+                <app-property-menu
+                  [schema]="schema"
+                  [displayedProperties]="displayedProperties"
+                  [property]="property"
+                ></app-property-menu>
+              </mat-menu>
             </th>
             <td
               mat-cell
