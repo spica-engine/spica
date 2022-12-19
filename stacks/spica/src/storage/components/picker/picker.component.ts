@@ -31,9 +31,11 @@ export class PickerComponent implements OnInit {
     this.storages$ = merge(this._paginator.page, of(null), this.refresh).pipe(
       switchMap(() =>
         this.storage.getAll(
+          undefined,
           this._paginator.pageSize || this._pageSize,
           this._paginator.pageSize * this._paginator.pageIndex,
-          this.sorter
+          this.sorter,
+          true
         )
       ),
       map(storage => {

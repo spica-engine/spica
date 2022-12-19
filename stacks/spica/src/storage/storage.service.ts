@@ -18,7 +18,20 @@ export class StorageService {
     this.lastUpdates = new LastUpdateCache();
   }
 
-  getAll(limit?: number, skip?: number, sort?): Observable<IndexResult<Storage>> {
+  getAll<P extends boolean = false>(
+    filter?:object,
+    limit?: number,
+    skip?: number,
+    sort?,
+    paginate?: P
+  ): Observable<P extends true ? IndexResult<Storage> : Storage[]>;
+  getAll(
+    filter?:object,
+    limit?: number,
+    skip?: number,
+    sort?,
+    paginate = false
+  ): Observable<Storage[] | IndexResult<Storage>> {
     let params = new HttpParams();
     if (limit) {
       params = params.append("limit", limit.toString());
@@ -30,12 +43,16 @@ export class StorageService {
       params = params.append("sort", JSON.stringify(sort));
     }
 
-    // we will change this later on
-    params = params.append("paginate", "true");
+    if(filter){
+      params = params.append("filter", JSON.stringify(filter));
+    }
 
-    return this.http.get<IndexResult<Storage>>("api:/storage", {params}).pipe(
+    // we will change this later on
+    params = params.append("paginate", JSON.stringify(paginate));
+
+    return this.http.get<Storage[] | IndexResult<Storage>>("api:/storage", {params}).pipe(
       map(objects => {
-        for (let object of objects.data) {
+        for (let object of Array.isArray(objects) ? objects : objects.data) {
           object = this.prepareToDisplay(object);
         }
         return objects;

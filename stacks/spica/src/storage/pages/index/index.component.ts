@@ -1,13 +1,22 @@
 import {BreakpointObserver, Breakpoints, BreakpointState} from "@angular/cdk/layout";
 import {HttpEventType} from "@angular/common/http";
-import {Component, OnInit, ViewChild} from "@angular/core";
+import {Component, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
-import {merge, Observable, BehaviorSubject, Subject, of} from "rxjs";
+import {
+  merge,
+  Observable,
+  BehaviorSubject,
+  Subject,
+  of,
+  combineLatest,
+  Subscription,
+  generate
+} from "rxjs";
 import {map, switchMap, tap} from "rxjs/operators";
 import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
 import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
-import {Storage} from "../../interfaces/storage";
+import {Storage, StorageTree} from "../../interfaces/storage";
 import {StorageService} from "../../storage.service";
 
 @Component({
@@ -15,15 +24,17 @@ import {StorageService} from "../../storage.service";
   templateUrl: "./index.component.html",
   styleUrls: ["./index.component.scss"]
 })
-export class IndexComponent implements OnInit {
+export class IndexComponent implements OnInit, OnDestroy {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
-  storages$: Observable<Storage[]>;
+  subscription: Subscription;
+
+  storages: StorageTree[] = [];
   progress: number;
 
   updates: Map<string, number> = new Map<string, number>();
 
-  refresh: Subject<string> = new Subject();
+  refresh: Subject<string> = new BehaviorSubject("");
   sorter: any = {_id: -1};
   cols: number = 5;
 
@@ -36,6 +47,12 @@ export class IndexComponent implements OnInit {
   selectedStorageIds = [];
 
   selectionActive = false;
+
+  selectedStorage: StorageTree;
+
+  //prettier-ignore
+  baseFilter = {name:{$regex:'/^\/[^\/]+\/$|^[^\/]+\/$|^[^\/]+$'}}
+  filter$ = new BehaviorSubject(this.baseFilter);
 
   constructor(
     private storage: StorageService,
@@ -66,25 +83,23 @@ export class IndexComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.storages$ = merge(this.paginator.page, of(null), this.refresh).pipe(
-      tap(() => this.loading$.next(true)),
-      switchMap(() =>
-        this.storage.getAll(
-          this.paginator.pageSize || this.cols * 3,
-          this.paginator.pageSize * this.paginator.pageIndex,
-          this.sorter
-        )
-      ),
-      map(storages => {
-        this.paginator.length = 0;
-        if (storages.meta && storages.meta.total) {
-          this.paginator.length = storages.meta.total;
-        }
-        this.isEmpty = !storages.meta.total;
-        return storages.data;
-      }),
-      tap(() => this.loading$.next(false))
-    );
+    this.subscription = combineLatest([this.refresh, this.filter$])
+      .pipe(
+        tap(() => this.loading$.next(true)),
+        switchMap(([_, filter]) => this.storage.getAll(filter, undefined, undefined, this.sorter)),
+        map(storages => (this.storages = this.mapObjectsToTree(storages))),
+        tap(() => {
+          if (this.selectedStorage) {
+            this.setSelecteds(this.getFullName(this.selectedStorage), this.storages);
+          }
+        }),
+        tap(() => this.loading$.next(false))
+      )
+      .subscribe(storages => (this.storages = storages));
+  }
+
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
   }
 
   uploadStorageMany(file: FileList): void {
@@ -178,5 +193,133 @@ export class IndexComponent implements OnInit {
   addFolder(name: string) {
     const folder = new File([], name);
     this.storage.insertMany([folder] as any).toPromise();
+  }
+
+  mapObjectsToTree(objects: (StorageTree | Storage)[]) {
+    let result: StorageTree[] = [];
+
+    const mapPath = (obj: Storage, compare: StorageTree[], parent: StorageTree, depth: number) => {
+      const parts = obj.name.split("/").filter(p => p != "");
+      const root = parts[0];
+
+      const doesNotExist = !compare.some(c => c.name == root);
+      if (doesNotExist) {
+        compare.push({
+          name: root,
+          children: [],
+          parent,
+          depth,
+          isDirectory: false,
+          isSelected: false
+        });
+      }
+
+      const newParent = compare.find(c => c.name == root);
+      const newCompare = newParent.children;
+      const newObj = {
+        name: parts.slice(1, parts.length).join("/"),
+        content: obj.content
+      };
+
+      depth++;
+
+      newParent.isDirectory = this.isDirectory(obj);
+
+      const hasChild = newObj.name != "";
+      if (hasChild) {
+        mapPath(newObj, newCompare, newParent, depth);
+      } else {
+        newParent.content = obj.content;
+      }
+      newParent.children = newParent.children.sort((a, b) => a.name.localeCompare(b.name));
+    };
+
+    for (let object of objects) {
+      mapPath(object, result, undefined, 1);
+    }
+
+    return result;
+  }
+
+  // onStorageSelect(selected: StorageTree) {
+  //   console.log(selected);
+  //   if (this.isDirectory(selected)) {
+  //     const fullName = this.getFullName(selected);
+  //     this.resetNeighborsChildren(fullName)
+  //   }
+  // }
+
+  // getFullName(storage: StorageTree, suffix?: string) {
+  //   const newName = suffix ? `${storage.name}/${suffix}` : storage.name;
+  //   if (storage.parent) {
+  //     this.getFullName(storage.parent, newName);
+  //   } else {
+  //     return newName;
+  //   }
+  // }
+
+  // resetNeighborsChildren(fullName:string){
+  //   const find = (name,storages) => {return }
+  // }
+
+  onStorageSelect(storage: StorageTree) {
+    this.selectedStorage = storage;
+
+    const fullName = this.getFullName(storage);
+    this.setSelecteds(fullName, this.storages);
+
+    const filter = this.generateFilterByFullName(fullName);
+    this.filter$.next(filter as any);
+  }
+
+  setSelecteds(fullName: string, tree: StorageTree[]) {
+    tree.forEach(t => (t.isSelected = false));
+    const parts = fullName.split("/").filter(n => n != "");
+    const name = parts[0];
+
+    const targetNode = tree.find(t => t.name == name);
+    targetNode.isSelected = true;
+
+    if (parts.length > 1) {
+      this.setSelecteds(parts.slice(1, parts.length).join("/"), targetNode.children);
+    }
+
+    return;
+  }
+
+  isDirectory(storage: StorageTree | Storage) {
+    return storage.content.size == 0 && storage.content.type == "";
+  }
+
+  generateFilterByFullName(fullName: string) {
+    const parts = fullName.split("/").filter(n => n != "");
+
+    const generateFilterByName = name => {
+      return {name: {$regex: `^${name}\/[^\/]+\/?$`}};
+    };
+
+    const filters = [this.baseFilter];
+
+    let endIndex = 1;
+    while (true) {
+      const name = parts.slice(0, endIndex).join("/");
+      const filter = generateFilterByName(name);
+      filters.push(filter);
+      endIndex++;
+      if (endIndex > parts.length) {
+        break;
+      }
+    }
+
+    return {$or: filters};
+  }
+
+  getFullName(storage: StorageTree, suffix?: string) {
+    const newName = suffix ? `${storage.name}/${suffix}` : storage.name;
+    if (storage.parent) {
+      return this.getFullName(storage.parent, newName);
+    } else {
+      return newName;
+    }
   }
 }

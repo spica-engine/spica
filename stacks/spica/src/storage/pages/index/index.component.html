@@ -130,14 +130,37 @@
   </div>
 </mat-toolbar>
 
-<mat-progress-spinner
-  [style.visibility]="(loading$ | async) ? 'visible' : 'hidden'"
+<mat-card>
+  <ng-container *ngTemplateOutlet="column; context: {files: storages}"></ng-container>
+  <mat-progress-spinner
+  [style.display]="(loading$ | async) ? 'inline' : 'none'"
   class="content-spinner"
   color="accent"
   [diameter]="40"
   mode="indeterminate"
 ></mat-progress-spinner>
-<mat-grid-list [cols]="cols" rowHeight="1:1" gutterSize="10px">
+</mat-card>
+
+<ng-template #column let-files="files">
+  <div class="column">
+    <div
+      (click)="onStorageSelect(file)"
+      class="line"
+      [class.selected]="!!file.isSelected"
+      *ngFor="let file of files"
+    >
+      <mat-icon>{{ file.isDirectory ? "folder" : "description" }}</mat-icon>
+      <span>{{ file.name }}</span>
+    </div>
+  </div>
+  <ng-container *ngFor="let file of files">
+    <ng-container *ngIf="file.children.length > 0">
+      <ng-container *ngTemplateOutlet="column; context: {files: file.children}"></ng-container>
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<!-- <mat-grid-list [cols]="cols" rowHeight="1:1" gutterSize="10px">
   <mat-grid-tile
     [style.visibility]="(loading$ | async) ? 'hidden' : 'visible'"
     *ngFor="let storage of storages$ | async; let i = index"
@@ -236,7 +259,7 @@
   [style.visibility]="isEmpty ? 'hidden' : 'visible'"
   [pageSize]="cols * 3"
   [pageSizeOptions]="[cols * 3, cols * 6, cols * 9]"
-></mat-paginator>
+></mat-paginator> -->
 
 <ng-template #deleteDialogTemplate let-answer="answer">
   <p>This action will <b>permanently</b> delete this object and break all associations.</p>

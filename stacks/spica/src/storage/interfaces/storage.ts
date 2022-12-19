@@ -7,3 +7,11 @@ export interface Storage {
     size?: number;
   };
 }
+
+export type StorageTree = Storage & {
+  parent: StorageTree;
+  children: StorageTree[];
+  depth: number;
+  isDirectory: boolean;
+  isSelected: boolean;
+};
