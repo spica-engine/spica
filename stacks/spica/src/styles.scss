@@ -24,7 +24,7 @@ $app-dark-theme: mat-dark-theme($primary-for-dark, $accent);
 }
 
 html {
-  font-size: 14px;
+  font-size: 13px;
 }
 body {
   margin: 0;
@@ -175,4 +175,11 @@ mat-table.striped mat-row:nth-child(even) {
       }
     }
   }
+}
+
+.mat-icon{
+  width: 20px !important;
+  height: 20px !important;
+  font-size: 20px;
+  line-height: 1 !important;
 }

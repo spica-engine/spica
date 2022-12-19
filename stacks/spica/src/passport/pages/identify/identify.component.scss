@@ -14,7 +14,6 @@
   mat-card {
     width: 357px;
     mat-card-content {
-      margin-top: 26px;
       mat-form-field {
         width: 100%;
         ::ng-deep .mat-form-field-prefix {
@@ -34,12 +33,4 @@
     }
   }
 
-  button.back {
-    position: absolute;
-    left: 0;
-    top: 0;
-    mat-icon {
-      font-size: 20px;
-    }
-  }
 }

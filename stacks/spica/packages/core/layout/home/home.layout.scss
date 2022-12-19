@@ -30,18 +30,6 @@
       .subcategory-items {
         display: flex;
       }
-      .iconlist {
-        display: flex;
-        flex-direction: column;
-        .sublist {
-          display: flex;
-          height: 100%;
-          align-items: end;
-          > mat-list-item {
-            cursor: pointer;
-          }
-        }
-      }
       .routerlist {
         min-width: 180px;
         opacity: 1;
@@ -70,55 +58,40 @@
           min-height: 100vh;
         }
         mat-nav-list {
+
           &.iconlist {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             padding: 0px 3px;
             background: rgba(var(--background-background-rgb), 0.9);
-            > mat-list-item {
+            mat-list-item {
+              ::ng-deep .mat-list-item-content{
+                justify-content: center;
+              }
+            }
+            .sublist > mat-list-item {
+              transition: all 0.3s ease-out;
               &.active {
                 background: rgba(255, 255, 255, 0.17);
                 border-radius: 5px;
               }
-              &:first-of-type {
-                pointer-events: none;
-                img {
-                  width: 26px;
-                  object-fit: fill;
-                  transform: scale(1.7);
-                  user-select: none;
-                }
+            }
+            > mat-list-item:first-of-type {
+              pointer-events: none;
+              img {
+                width: 26px;
+                object-fit: fill;
+                transform: scale(1.7);
+                user-select: none;
               }
             }
             mat-list-item {
               margin: 10px 0px;
-              padding: 15px 0px;
-              height: unset;
+              height: 58px;
 
               &.iconlist-below {
-                display: flex;
-                height: 100%;
-                padding: 0;
-                margin: 0;
-                &:hover {
-                  background: unset;
-                }
-                ::ng-deep {
-                  > .mat-list-item-content {
-                    padding: 0;
-                    width: 100%;
-                    mat-list-item {
-                      .mat-list-item-content {
-                        justify-content: center;
-                        padding: 0;
-                      }
-                    }
-                  }
-                }
-                mat-nav-list {
-                  height: 100%;
-                  display: flex;
-                  flex-direction: column;
-                  justify-content: flex-end;
-                }
+                margin: 0px;
               }
             }
           }
@@ -140,13 +113,6 @@
               }
             }
             mat-list-item {
-              ::ng-deep .mat-list-item-content {
-                padding: 8px;
-              }
-              height: auto;
-              mat-icon {
-                margin-right: 5px;
-              }
               &.active {
                 background: rgba(255, 255, 255, 0.2);
               }

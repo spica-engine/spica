@@ -13,32 +13,37 @@
         <mat-list-item disableRipple>
           <img src="assets/astro-composer.svg" />
         </mat-list-item>
-        <mat-list-item
-          disableRipple
-          *ngFor="let category of  categories$ | async;"
-          [class.active]="(currentCategory | async) === category"
-          (click)="currentCategory.next(category)"
-          [matTooltip]="category.category"
-          matTooltipPosition="below"
-        >
-          <mat-icon>{{ category.icon }}</mat-icon>
-        </mat-list-item>
 
-        <mat-list-item disableRipple *ngIf="!(isHandset$ | async)" (click)="toggle()">
-          <mat-icon *ngIf="isSidebarReady">{{expanded ? 'chevron_left': 'chevron_right'}}</mat-icon>
-        </mat-list-item>
+        <div class="sublist">
+          <mat-list-item
+            disableRipple
+            *ngFor="let category of  categories$ | async;"
+            [class.active]="(currentCategory | async) === category"
+            (click)="currentCategory.next(category)"
+            [matTooltip]="category.category"
+            matTooltipPosition="below"
+          >
+            <mat-icon>{{ category.icon }}</mat-icon>
+          </mat-list-item>
 
-        <mat-list-item disableRipple class="iconlist-below">
-          <mat-nav-list *ngIf="isSidebarReady">
-            <mat-list-item
-              matTooltip="Version Control"
-              [routerLink]="['/versioncontrol']"
-              disableRipple
+          <mat-list-item disableRipple *ngIf="!(isHandset$ | async)" (click)="toggle()">
+            <mat-icon *ngIf="isSidebarReady"
+              >{{expanded ? 'chevron_left': 'chevron_right'}}</mat-icon
             >
-              <mat-icon>account_tree</mat-icon>
-            </mat-list-item>
-          </mat-nav-list>
-        </mat-list-item>
+          </mat-list-item>
+        </div>
+
+        <div>
+          <mat-list-item
+            matTooltip="Version Control"
+            [routerLink]="['/versioncontrol']"
+            disableRipple
+            class="iconlist-below"
+            *ngIf="isSidebarReady"
+          >
+            <mat-icon>account_tree</mat-icon>
+          </mat-list-item>
+        </div>
       </mat-nav-list>
       <mat-nav-list
         class="routerlist"
