@@ -259,8 +259,8 @@
               mat-resize-header
               [overrideMinWidth]="true"
             >
-              <mat-icon class="type-icon"> {{ property.value.icon }}</mat-icon
-              >{{ property.value.title }}
+              <mat-icon>{{ _inputResolver.resolve(property.value.type).icon }}</mat-icon>
+              {{ property.value.title }}
             </th>
             <td
               mat-cell

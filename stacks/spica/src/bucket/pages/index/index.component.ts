@@ -194,13 +194,9 @@ export class IndexComponent implements OnInit, OnDestroy {
             )
           : this.properties.map(p => p.name).filter(p => p != "$$spicainternal_schedule");
       }),
-      tap(() => {
-        Object.keys(this.deepCopySchema.properties).map(key => {
-          this.deepCopySchema.properties[key]["icon"] = this.systemFields.find(
-            item => item.type == this.deepCopySchema.properties[key].type
-          ).icon;
-
-          if (this.deepCopySchema.properties[key].type == "relation") {
+      tap(schema => {
+        Object.keys(schema.properties).map(key => {
+          if (schema.properties[key].type == "relation") {
             this.bs
               .getBucket(this.deepCopySchema.properties[key]["bucketId"])
               .pipe(take(1))
