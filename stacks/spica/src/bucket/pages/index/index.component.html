@@ -248,7 +248,7 @@
 
         <ng-container *ngIf="schema$ | async; let schema">
           <ng-container
-            *ngFor="let property of deepCopySchema.properties | keyvalue"
+            *ngFor="let property of schema.properties | keyvalue"
             [matColumnDef]="property.key"
           >
             <th
