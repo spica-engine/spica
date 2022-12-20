@@ -116,7 +116,7 @@
       mat-button
       canInteract="storage:create"
       [disabled]="progress"
-      (click)="!progress ? addFolder('test/') : undefined"
+      (click)="!progress ? addFolder('test/test2/') : undefined"
     >
       <mat-icon *ngIf="!progress">add</mat-icon>
       Add New Folder
@@ -131,14 +131,36 @@
 </mat-toolbar>
 
 <mat-card>
-  <ng-container *ngTemplateOutlet="column; context: {files: storages}"></ng-container>
-  <mat-progress-spinner
-  [style.display]="(loading$ | async) ? 'inline' : 'none'"
-  class="content-spinner"
-  color="accent"
-  [diameter]="40"
-  mode="indeterminate"
-></mat-progress-spinner>
+  <div class="directory-view">
+    <ng-container *ngTemplateOutlet="column; context: {files: storages}"></ng-container>
+    <mat-progress-spinner
+      [style.display]="(loading$ | async) ? 'inline' : 'none'"
+      class="content-spinner"
+      color="accent"
+      [diameter]="40"
+      mode="indeterminate"
+    ></mat-progress-spinner>
+  </div>
+  <div *ngIf="selectedStorage && !selectedStorage.isDirectory" class="object-details">
+    <div class="meta">
+      <div class="close">
+        <button mat-icon-button (click)="onDetailsClosed()"><mat-icon>clear</mat-icon></button>
+      </div>
+      <storage-view [blob]="selectedStorage.url"></storage-view>
+      <h4>{{ selectedStorage.name }}</h4>
+      <p>
+        {{ selectedStorage.content.type }} -
+        {{ selectedStorage.content.size / 1000 | number: "1.0-0" }} KB
+      </p>
+      <p>{{ objectIdToDate(selectedStorage._id) | date: "medium" }}</p>
+    </div>
+    <div class="action-buttons">
+      <button mat-stroked-button><mat-icon>content_paste</mat-icon>Copy</button>
+      <button mat-stroked-button><mat-icon>edit</mat-icon>Edit</button>
+      <button mat-stroked-button><mat-icon>sync_alt</mat-icon>Replace</button>
+      <button mat-stroked-button><mat-icon color="danger">delete</mat-icon>Delete</button>
+    </div>
+  </div>
 </mat-card>
 
 <ng-template #column let-files="files">

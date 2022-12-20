@@ -214,24 +214,26 @@ export class IndexComponent implements OnInit, OnDestroy {
         });
       }
 
-      const newParent = compare.find(c => c.name == root);
-      const newCompare = newParent.children;
-      const newObj = {
-        name: parts.slice(1, parts.length).join("/"),
-        content: obj.content
-      };
-
       depth++;
 
-      newParent.isDirectory = this.isDirectory(obj);
+      const currentNode = compare.find(c => c.name == root);
+      const newObj: any = {
+        name: parts.slice(1, parts.length).join("/")
+      };
 
       const hasChild = newObj.name != "";
       if (hasChild) {
-        mapPath(newObj, newCompare, newParent, depth);
+        newObj.content = obj.content;
+        newObj.url = obj.url;
+        newObj._id = obj._id;
+        newObj.isDirectory = this.isDirectory(obj);
+        mapPath(newObj, currentNode.children, currentNode, depth);
       } else {
-        newParent.content = obj.content;
+        currentNode.content = obj.content;
+        currentNode.url = obj.url;
+        currentNode._id = obj._id;
+        currentNode.isDirectory = this.isDirectory(obj);
       }
-      newParent.children = newParent.children.sort((a, b) => a.name.localeCompare(b.name));
     };
 
     for (let object of objects) {
@@ -241,28 +243,8 @@ export class IndexComponent implements OnInit, OnDestroy {
     return result;
   }
 
-  // onStorageSelect(selected: StorageTree) {
-  //   console.log(selected);
-  //   if (this.isDirectory(selected)) {
-  //     const fullName = this.getFullName(selected);
-  //     this.resetNeighborsChildren(fullName)
-  //   }
-  // }
-
-  // getFullName(storage: StorageTree, suffix?: string) {
-  //   const newName = suffix ? `${storage.name}/${suffix}` : storage.name;
-  //   if (storage.parent) {
-  //     this.getFullName(storage.parent, newName);
-  //   } else {
-  //     return newName;
-  //   }
-  // }
-
-  // resetNeighborsChildren(fullName:string){
-  //   const find = (name,storages) => {return }
-  // }
-
   onStorageSelect(storage: StorageTree) {
+    console.log(storage);
     this.selectedStorage = storage;
 
     const fullName = this.getFullName(storage);
@@ -272,19 +254,51 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.filter$.next(filter as any);
   }
 
-  setSelecteds(fullName: string, tree: StorageTree[]) {
-    tree.forEach(t => (t.isSelected = false));
-    const parts = fullName.split("/").filter(n => n != "");
-    const name = parts[0];
+  onDetailsClosed() {
+    const fullName = this.getFullName(this.selectedStorage);
 
-    const targetNode = tree.find(t => t.name == name);
-    targetNode.isSelected = true;
+    const parentNameParts = fullName.split("/").filter(n => n != "");
+    parentNameParts.pop();
 
-    if (parts.length > 1) {
-      this.setSelecteds(parts.slice(1, parts.length).join("/"), targetNode.children);
+    if (!parentNameParts.length) {
+      this.clearSelecteds();
+    } else {
+      const parentFullName = parentNameParts.join("/");
+      this.setSelecteds(parentFullName, this.storages);
     }
 
-    return;
+    this.selectedStorage = undefined;
+  }
+
+  clearSelecteds() {
+    const clear = (nodes: StorageTree[]) => {
+      nodes.forEach(n => {
+        n.isSelected = false;
+        if (n.children && n.children.length) {
+          clear(n.children);
+        }
+      });
+    };
+
+    clear(this.storages);
+  }
+
+  setSelecteds(_fullName: string, _tree: StorageTree[]) {
+    this.clearSelecteds();
+
+    const setSelected = (fullName: string, tree: StorageTree[]) => {
+      const parts = fullName.split("/").filter(n => n != "");
+      const name = parts[0];
+
+      const targetNode = tree.find(t => t.name == name);
+      targetNode.isSelected = true;
+
+      if (parts.length > 1) {
+        setSelected(parts.slice(1, parts.length).join("/"), targetNode.children);
+      }
+    };
+
+    setSelected(_fullName, _tree);
   }
 
   isDirectory(storage: StorageTree | Storage) {
@@ -321,5 +335,10 @@ export class IndexComponent implements OnInit, OnDestroy {
     } else {
       return newName;
     }
+  }
+
+  objectIdToDate(objectId) {
+    console.log(objectId);
+    return new Date(parseInt(objectId.substring(0, 8), 16) * 1000);
   }
 }
