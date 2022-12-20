@@ -10,6 +10,22 @@
   <mat-icon>gavel</mat-icon>
   Options
 </button>
+<button
+  [resource]="schema._id"
+  canInteract="bucket:delete"
+  class="delete-bucket-button"
+  mat-menu-item
+  disableRipple
+  [matAwareDialog]="{
+    title: 'Confirmation',
+    templateOrDescription: dialogTemplate,
+    answer: schema.title
+  }"
+  (confirm)="delete(schema)"
+>
+  <mat-icon color="warn">delete</mat-icon>
+  Delete Bucket
+</button>
 <mat-menu
   (closed)="saveBucket()"
   class="bucket-settings-menu-toggles"
@@ -20,6 +36,8 @@
     <div mat-menu-item (click)="$event.stopPropagation()">
       <div class="read-only">
         <mat-slide-toggle
+          [resource]="schema._id"
+          canInteract="bucket:update"
           disableRipple
           matInput
           name="readOnly"
@@ -42,6 +60,8 @@
     <div mat-menu-item (click)="$event.stopPropagation()">
       <div class="history">
         <mat-slide-toggle
+          [resource]="schema._id"
+          canInteract="bucket:update"
           disableRipple
           [disabled]="!(isHistoryEndpointEnabled$ | async)"
           name="history"
@@ -67,6 +87,8 @@
     </div>
     <div (click)="$event.stopPropagation()" class="clear-history-button" *ngIf="schema.history">
       <button
+        [resource]="schema._id"
+        canInteract="bucket:update"
         (click)="clearHistories()"
         mat-raised-button
         color="warn"
@@ -334,4 +356,11 @@
       </button>
     </mat-card-actions>
   </mat-card>
+</ng-template>
+
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action will <b>permanently</b> delete this bucket and break all relations.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
 </ng-template>

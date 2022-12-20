@@ -1,13 +1,14 @@
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { Component, Input, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Bucket, LimitExceedBehaviour } from '@spica-client/bucket/interfaces/bucket';
 import { BucketHistoryService } from '@spica-client/bucket/services/bucket-history.service';
 import { BucketService } from '@spica-client/bucket/services/bucket.service';
 import { InputResolver } from '@spica-client/common';
 import { SavingState } from '@spica-client/material';
 import { Observable, of } from 'rxjs';
-import { catchError, mapTo } from 'rxjs/operators';
+import { catchError, filter, mapTo } from 'rxjs/operators';
 
 @Component({
   selector: 'settings-bucket',
@@ -23,14 +24,25 @@ export class SettingsBucketComponent implements OnInit {
   removeState: SavingState;
   dialogRef: MatDialogRef<any>
   propertyPositionMap: { [k: string]: any[] } = {};
-
+  buckets: Bucket[];
 
   constructor(
     private historyService: BucketHistoryService,
     private dialog: MatDialog,
     private bs: BucketService,
     public _inputResolver: InputResolver,
-  ) { }
+    private activatedRoute: ActivatedRoute,
+    private router: Router
+  ) {
+
+    this.bs
+      .getBuckets()
+      .pipe(filter((data: any) => data && data.length))
+      .subscribe(data => {
+        this.buckets = data;
+      });
+
+  }
 
   ngOnInit() {
     this.updatePositionProperties();
@@ -91,6 +103,30 @@ export class SettingsBucketComponent implements OnInit {
   setPosition(event: CdkDragDrop<any[]>, position?: string) {
     event.previousContainer.data[event.previousIndex].value.options.position = position;
     this.updatePositionProperties();
+  }
+
+  delete(bucket: Bucket) {
+    const index = this.buckets.findIndex(b => b._id == bucket._id);
+
+    const lastSegment = this.activatedRoute.snapshot.url[
+      this.activatedRoute.snapshot.url.length - 1
+    ].toString();
+
+    let target = lastSegment;
+
+    if (lastSegment == bucket._id) {
+      if (this.buckets.length > 1) {
+        const nextIndex = index == 0 ? index + 1 : index - 1;
+        target = this.buckets[nextIndex]._id;
+      } else {
+        target = "welcome";
+      }
+    }
+
+    this.bs
+      .delete(bucket._id)
+      .toPromise()
+      .then(() => this.router.navigate(["bucket", target]));
   }
 
 }
