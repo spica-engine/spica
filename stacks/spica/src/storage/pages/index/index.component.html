@@ -116,7 +116,7 @@
       mat-button
       canInteract="storage:create"
       [disabled]="progress"
-      (click)="!progress ? addFolder('test/test2/') : undefined"
+      (click)="!progress ? addFolder() : undefined"
     >
       <mat-icon *ngIf="!progress">add</mat-icon>
       Add New Folder

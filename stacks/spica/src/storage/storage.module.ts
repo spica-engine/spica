@@ -9,7 +9,7 @@ import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatGridListModule} from "@angular/material/grid-list";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
-import { MatListModule } from "@angular/material/list";
+import {MatListModule} from "@angular/material/list";
 import {MatMenuModule} from "@angular/material/menu";
 import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatProgressBarModule} from "@angular/material/progress-bar";
@@ -32,6 +32,7 @@ import {StorageViewComponent} from "./components/storage-view/storage-view.compo
 import {StorageComponent} from "./components/storage/storage.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {StorageRoutingModule} from "./storage-routing.module";
+import {AddFolderDialogComponent} from "./components/add-folder-dialog/add-folder-dialog.component";
 
 @NgModule({
   imports: [
@@ -76,7 +77,8 @@ import {StorageRoutingModule} from "./storage-routing.module";
     PickerDirective,
     StorageComponent,
     StorageViewComponent,
-    ImageEditorComponent
+    ImageEditorComponent,
+    AddFolderDialogComponent
   ],
   exports: [PickerDirective]
 })

@@ -3,6 +3,7 @@ import {HttpEventType} from "@angular/common/http";
 import {Component, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
+import {AddFolderDialogComponent} from "@spica-client/storage/components/add-folder-dialog/add-folder-dialog.component";
 import {
   merge,
   Observable,
@@ -88,7 +89,9 @@ export class IndexComponent implements OnInit, OnDestroy {
         tap(() => this.loading$.next(true)),
         switchMap(([_, filter]) => this.storage.getAll(filter, undefined, undefined, this.sorter)),
         map(storages => (this.storages = this.mapObjectsToTree(storages))),
+        tap(console.log),
         tap(() => this.setSelecteds(this.getFullName(this.selectedStorage), this.storages)),
+        tap(() => console.log(this.selectedStorage)),
         tap(() => this.loading$.next(false))
       )
       .subscribe(storages => (this.storages = storages));
@@ -186,9 +189,12 @@ export class IndexComponent implements OnInit, OnDestroy {
       .then(() => this.refresh.next());
   }
 
-  addFolder(name: string) {
+  saveFolder(name: string) {
     const folder = new File([], name);
-    this.storage.insertMany([folder] as any).toPromise();
+    this.storage
+      .insertMany([folder] as any)
+      .toPromise()
+      .then(() => this.refresh.next());
   }
 
   mapObjectsToTree(objects: (StorageTree | Storage)[]) {
@@ -243,8 +249,6 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.selectedStorage = storage;
 
     const fullName = this.getFullName(storage);
-    this.setSelecteds(fullName, this.storages);
-
     const filter = this.generateFilterByFullName(fullName);
     this.filter$.next(filter as any);
   }
@@ -294,9 +298,10 @@ export class IndexComponent implements OnInit, OnDestroy {
 
       if (parts.length > 1) {
         setSelected(parts.slice(1, parts.length).join("/"), targetNode.children);
+      } else {
+        this.selectedStorage = targetNode;
       }
     };
-
     setSelected(_fullName, _tree);
   }
 
@@ -354,5 +359,36 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   objectIdToDate(objectId) {
     return new Date(parseInt(objectId.substring(0, 8), 16) * 1000);
+  }
+
+  addFolder() {
+    const target = this.selectedStorage.isDirectory
+      ? this.selectedStorage
+      : this.selectedStorage.parent;
+
+      console.log(target);
+
+    const existingNames = target.children.reduce((existings, storage) => {
+      existings.push(storage.name);
+      return existings;
+    }, []);
+
+    const dialogRef = this.dialog.open(AddFolderDialogComponent, {
+      width: "500px",
+      maxHeight: "90vh",
+      data: {
+        existingNames
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(name => {
+      if (!name) {
+        return;
+      }
+
+      const fullName = this.getFullName(target);
+
+      this.saveFolder(fullName ? `${fullName}/${name}/` : `${name}/`);
+    });
   }
 }
