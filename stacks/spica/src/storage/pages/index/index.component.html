@@ -116,7 +116,7 @@
       mat-button
       canInteract="storage:create"
       [disabled]="progress"
-      (click)="!progress ? addFolder() : undefined"
+      (click)="!progress ? addFolder(selectedStorage) : undefined"
     >
       <mat-icon *ngIf="!progress">create_new_folder</mat-icon>
       Create New Folder
@@ -132,19 +132,25 @@
 
 <mat-card>
   <div class="directory-view">
-    <ng-container *ngTemplateOutlet="column; context: {files: storages}"></ng-container>
-    <mat-progress-spinner
-      [style.display]="(loading$ | async) ? 'inline' : 'none'"
-      class="content-spinner"
-      color="accent"
-      [diameter]="40"
-      mode="indeterminate"
-    ></mat-progress-spinner>
+    <ng-container *ngIf="storages.length">
+      <ng-container
+        *ngTemplateOutlet="column; context: {files: storages[0].children}"
+      ></ng-container>
+      <mat-progress-spinner
+        [style.display]="(loading$ | async) ? 'inline' : 'none'"
+        class="content-spinner"
+        color="accent"
+        [diameter]="40"
+        mode="indeterminate"
+      ></mat-progress-spinner>
+    </ng-container>
   </div>
   <div *ngIf="selectedStorage && !selectedStorage.isDirectory" class="object-details">
     <div class="meta">
       <div class="close">
-        <button mat-icon-button (click)="onDetailsClosed(selectedStorage)"><mat-icon>clear</mat-icon></button>
+        <button mat-icon-button (click)="onDetailsClosed(selectedStorage)">
+          <mat-icon>clear</mat-icon>
+        </button>
       </div>
       <storage-view [blob]="selectedStorage.url"></storage-view>
       <h4>{{ selectedStorage.name }}</h4>

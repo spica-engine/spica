@@ -33,6 +33,10 @@ import {StorageComponent} from "./components/storage/storage.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {StorageRoutingModule} from "./storage-routing.module";
 import {AddFolderDialogComponent} from "./components/add-folder-dialog/add-folder-dialog.component";
+import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
+import {StorageService} from "./storage.service";
+import {StorageInitializer} from "./storage.initializer";
+import {PassportService} from "@spica-client/passport";
 
 @NgModule({
   imports: [
@@ -91,6 +95,17 @@ export class StorageModule {
           provide: ACTIVITY_FACTORY,
           useValue: provideActivityFactory,
           multi: true
+        },
+        {
+          provide: StorageInitializer,
+          useClass: StorageInitializer,
+          deps: [StorageService, RouteService, PassportService]
+        },
+        {
+          provide: LAYOUT_INITIALIZER,
+          useFactory: provideStorageLoader,
+          multi: true,
+          deps: [StorageInitializer]
         }
       ]
     };
@@ -99,4 +114,8 @@ export class StorageModule {
   static forChild(): ModuleWithProviders {
     return {ngModule: StorageModule, providers: []};
   }
+}
+
+export function provideStorageLoader(l: StorageInitializer) {
+  return l.appInitializer.bind(l);
 }
