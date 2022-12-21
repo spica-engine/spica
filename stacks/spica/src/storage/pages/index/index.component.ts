@@ -48,7 +48,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   selectionActive = false;
 
-  selectedStorage: StorageTree;
+  selectedStorage: StorageTree = this.getRootStorages();
 
   //prettier-ignore
   baseFilter = {name:{$regex:'/^\/[^\/]+\/$|^[^\/]+\/$|^[^\/]+$'}}
@@ -88,11 +88,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         tap(() => this.loading$.next(true)),
         switchMap(([_, filter]) => this.storage.getAll(filter, undefined, undefined, this.sorter)),
         map(storages => (this.storages = this.mapObjectsToTree(storages))),
-        tap(() => {
-          if (this.selectedStorage) {
-            this.setSelecteds(this.getFullName(this.selectedStorage), this.storages);
-          }
-        }),
+        tap(() => this.setSelecteds(this.getFullName(this.selectedStorage), this.storages)),
         tap(() => this.loading$.next(false))
       )
       .subscribe(storages => (this.storages = storages));
@@ -244,7 +240,6 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   onStorageSelect(storage: StorageTree) {
-    console.log(storage);
     this.selectedStorage = storage;
 
     const fullName = this.getFullName(storage);
@@ -254,8 +249,8 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.filter$.next(filter as any);
   }
 
-  onDetailsClosed() {
-    const fullName = this.getFullName(this.selectedStorage);
+  onDetailsClosed(storage: StorageTree) {
+    const fullName = this.getFullName(storage);
 
     const parentNameParts = fullName.split("/").filter(n => n != "");
     parentNameParts.pop();
@@ -291,6 +286,10 @@ export class IndexComponent implements OnInit, OnDestroy {
       const name = parts[0];
 
       const targetNode = tree.find(t => t.name == name);
+      if (!targetNode) {
+        return;
+      }
+
       targetNode.isSelected = true;
 
       if (parts.length > 1) {
@@ -337,8 +336,23 @@ export class IndexComponent implements OnInit, OnDestroy {
     }
   }
 
+  onColumnClicked(storage: StorageTree) {
+    const target = storage.parent || this.getRootStorages();
+    this.onStorageSelect(target);
+  }
+
+  getRootStorages() {
+    return {
+      name: "",
+      parent: undefined,
+      children: this.storages,
+      depth: 0,
+      isDirectory: true,
+      isSelected: true
+    } as StorageTree;
+  }
+
   objectIdToDate(objectId) {
-    console.log(objectId);
     return new Date(parseInt(objectId.substring(0, 8), 16) * 1000);
   }
 }
