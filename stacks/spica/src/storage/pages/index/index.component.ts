@@ -9,7 +9,7 @@ import {BehaviorSubject, Subject, combineLatest, Subscription} from "rxjs";
 import {filter, map, switchMap, tap} from "rxjs/operators";
 import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
 import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
-import {Storage, StorageTree} from "../../interfaces/storage";
+import {Storage, StorageNode} from "../../interfaces/storage";
 import {StorageService} from "../../storage.service";
 
 @Component({
@@ -22,7 +22,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   subscriptions: Subscription[] = [];
 
-  storages: StorageTree[] = [];
+  storages: StorageNode[] = [];
   progress: number;
 
   updates: Map<string, number> = new Map<string, number>();
@@ -41,7 +41,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   selectionActive = false;
 
-  selectedStorage: StorageTree;
+  selectedStorage: StorageNode;
 
   root: string;
 
@@ -83,7 +83,7 @@ export class IndexComponent implements OnInit, OnDestroy {
       .pipe(
         tap(() => this.loading$.next(true)),
         switchMap(([_, filter]) => this.storage.getAll(filter, undefined, undefined, this.sorter)),
-        map(storages => (this.storages = this.mapObjectsToTree(storages))),
+        map(storages => (this.storages = this.mapObjectsToNodes(storages))),
         tap(() => {
           this.selectedStorage = this.selectedStorage || this.storages[0];
           this.setSelecteds(this.getFullName(this.selectedStorage), this.storages);
@@ -113,14 +113,17 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
-  uploadStorageMany(file: FileList): void {
+  getCurrentDir() {
     const parent = this.selectedStorage.isDirectory
       ? this.selectedStorage
       : this.selectedStorage.parent;
 
-    const prefix = this.getFullName(parent);
+    return this.getFullName(parent);
+  }
 
+  uploadStorageMany(file: FileList): void {
     if (file.length) {
+      const prefix = this.getCurrentDir();
       this.storage.insertMany(file, prefix).subscribe(
         event => {
           if (event.type === HttpEventType.UploadProgress) {
@@ -138,10 +141,14 @@ export class IndexComponent implements OnInit, OnDestroy {
     }
   }
 
-  updateStorage(storage: Storage, file: File) {
+  updateStorage(node: StorageNode, file: File) {
     if (file) {
+      const parentFullName = this.getFullName(node.parent);
+      const storage = this.mapNodesToObjects([node])[0];
+      storage.name = `${parentFullName}/${file.name}`;
+
       this.updates.set(storage._id, 0);
-      storage.name = file.name;
+
       this.storage.updateOne(storage, file).subscribe(
         event => {
           if (event.type === HttpEventType.UploadProgress) {
@@ -171,7 +178,10 @@ export class IndexComponent implements OnInit, OnDestroy {
       .delete(id)
       .toPromise()
       .catch()
-      .then(() => this.refresh.next());
+      .then(() => {
+        this.selectedStorage = undefined;
+        this.refresh.next();
+      });
   }
 
   deleteMany() {
@@ -215,10 +225,23 @@ export class IndexComponent implements OnInit, OnDestroy {
       .then(() => this.refresh.next());
   }
 
-  mapObjectsToTree(objects: (StorageTree | Storage)[]) {
-    let result: StorageTree[] = [];
+  mapNodesToObjects(nodes: StorageNode[]) {
+    nodes.forEach(node => {
+      node.name = this.getFullName(node);
+      delete node.parent;
+      delete node.children;
+      delete node.depth;
+      delete node.isDirectory;
+      delete node.isSelected;
+    });
 
-    const mapPath = (obj: Storage, compare: StorageTree[], parent: StorageTree, depth: number) => {
+    return nodes;
+  }
+
+  mapObjectsToNodes(objects: (StorageNode | Storage)[]) {
+    let result: StorageNode[] = [];
+
+    const mapPath = (obj: Storage, compare: StorageNode[], parent: StorageNode, depth: number) => {
       const parts = obj.name.split("/").filter(p => p != "");
       const root = parts[0];
 
@@ -263,7 +286,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     return result;
   }
 
-  onStorageSelect(storage: StorageTree) {
+  onStorageSelect(storage: StorageNode) {
     this.selectedStorage = storage;
 
     const fullName = this.getFullName(storage);
@@ -276,7 +299,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.filter$.next(filter);
   }
 
-  onDetailsClosed(storage: StorageTree) {
+  onDetailsClosed(storage: StorageNode) {
     const fullName = this.getFullName(storage);
 
     const parentNameParts = fullName.split("/").filter(n => n != "");
@@ -293,7 +316,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   clearSelecteds() {
-    const clear = (nodes: StorageTree[]) => {
+    const clear = (nodes: StorageNode[]) => {
       nodes.forEach(n => {
         n.isSelected = false;
         if (n.children && n.children.length) {
@@ -305,14 +328,14 @@ export class IndexComponent implements OnInit, OnDestroy {
     clear(this.storages);
   }
 
-  setSelecteds(_fullName: string, _tree: StorageTree[]) {
+  setSelecteds(_fullName: string, _nodes: StorageNode[]) {
     this.clearSelecteds();
 
-    const setSelected = (fullName: string, tree: StorageTree[]) => {
+    const setSelected = (fullName: string, nodes: StorageNode[]) => {
       const parts = fullName.split("/").filter(n => n != "");
       const name = parts[0];
 
-      const targetNode = tree.find(t => t.name == name);
+      const targetNode = nodes.find(t => t.name == name);
       if (!targetNode) {
         return;
       }
@@ -325,10 +348,10 @@ export class IndexComponent implements OnInit, OnDestroy {
         this.selectedStorage = targetNode;
       }
     };
-    setSelected(_fullName, _tree);
+    setSelected(_fullName, _nodes);
   }
 
-  isDirectory(storage: StorageTree | Storage) {
+  isDirectory(storage: StorageNode | Storage) {
     return storage.content.size == 0 && storage.content.type == "";
   }
 
@@ -355,7 +378,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     return {$or: filters};
   }
 
-  getFullName(storage: StorageTree, suffix?: string) {
+  getFullName(storage: StorageNode, suffix?: string) {
     const newName = suffix ? `${storage.name}/${suffix}` : storage.name;
     if (storage.parent) {
       return this.getFullName(storage.parent, newName);
@@ -364,7 +387,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     }
   }
 
-  onColumnClicked(storage: StorageTree) {
+  onColumnClicked(storage: StorageNode) {
     this.onStorageSelect(storage.parent);
   }
 
@@ -387,7 +410,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     return new Date(parseInt(objectId.substring(0, 8), 16) * 1000);
   }
 
-  addFolder(storage: StorageTree) {
+  addFolder(storage: StorageNode) {
     const target = storage.isDirectory ? storage : storage.parent;
 
     const existingNames = target.children.reduce((existings, storage) => {

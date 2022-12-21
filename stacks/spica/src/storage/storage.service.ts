@@ -7,7 +7,7 @@ import {from, Observable} from "rxjs";
 import {flatMap, map} from "rxjs/operators";
 import {LastUpdateCache} from "./cache";
 
-import {Storage} from "./interfaces/storage";
+import {Storage, StorageNode} from "./interfaces/storage";
 
 window["Buffer"] = Buffer;
 

@@ -8,9 +8,9 @@ export interface Storage {
   };
 }
 
-export type StorageTree = Storage & {
-  parent: StorageTree;
-  children: StorageTree[];
+export type StorageNode = Storage & {
+  parent: StorageNode;
+  children: StorageNode[];
   depth: number;
   isDirectory: boolean;
   isSelected: boolean;

@@ -161,10 +161,52 @@
       <p>{{ objectIdToDate(selectedStorage._id) | date: "medium" }}</p>
     </div>
     <div class="action-buttons">
-      <button mat-stroked-button><mat-icon>content_paste</mat-icon>Copy</button>
-      <button mat-stroked-button><mat-icon>edit</mat-icon>Edit</button>
-      <button mat-stroked-button><mat-icon>sync_alt</mat-icon>Replace</button>
-      <button mat-stroked-button><mat-icon color="danger">delete</mat-icon>Delete</button>
+      <button mat-stroked-button [matClipboard]="selectedStorage.url">
+        <mat-icon>file_copy</mat-icon>
+        Copy
+      </button>
+      <button
+        canInteract="storage:update"
+        [resource]="selectedStorage._id"
+        *ngIf="selectedStorage.content?.type?.startsWith('image/')"
+        mat-stroked-button
+        (click)="openEdit(selectedStorage)"
+      >
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+      <button
+        canInteract="storage:update"
+        [resource]="selectedStorage._id"
+        mat-stroked-button
+        (click)="fileSelector?.click()"
+      >
+        <input
+          class="file-selector"
+          type="file"
+          #fileSelector
+          #fileModel="ngModel"
+          [ngModel]="undefined"
+          (ngModelChange)="updateStorage(selectedStorage, fileSelector.files[0])"
+        />
+        <mat-icon>sync_alt</mat-icon>
+        Replace
+      </button>
+      <button
+        canInteract="storage:delete"
+        [resource]="selectedStorage._id"
+        mat-stroked-button
+        color="warn"
+        [matAwareDialog]="{
+          title: 'Confirmation',
+          templateOrDescription: deleteDialogTemplate,
+          answer: 'agree'
+        }"
+        (confirm)="delete(selectedStorage._id)"
+      >
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
     </div>
   </div>
 </mat-card>
@@ -182,7 +224,7 @@
     </div>
   </div>
   <ng-container *ngFor="let file of files">
-    <ng-container *ngIf="file.children.length > 0">
+    <ng-container *ngIf="file.children && file.children.length > 0">
       <ng-container *ngTemplateOutlet="column; context: {files: file.children}"></ng-container>
     </ng-container>
   </ng-container>
