@@ -19,14 +19,14 @@ export class StorageService {
   }
 
   getAll<P extends boolean = false>(
-    filter?:object,
+    filter?: object,
     limit?: number,
     skip?: number,
     sort?,
     paginate?: P
   ): Observable<P extends true ? IndexResult<Storage> : Storage[]>;
   getAll(
-    filter?:object,
+    filter?: object,
     limit?: number,
     skip?: number,
     sort?,
@@ -43,7 +43,7 @@ export class StorageService {
       params = params.append("sort", JSON.stringify(sort));
     }
 
-    if(filter){
+    if (filter) {
       params = params.append("filter", JSON.stringify(filter));
     }
 
@@ -99,13 +99,13 @@ export class StorageService {
     );
   }
 
-  insertMany(fileList: FileList): Observable<HttpEvent<Storage>> {
+  insertMany(fileList: FileList, prefix?: string): Observable<HttpEvent<Storage>> {
     const files = Array.from(fileList);
     return from(Promise.all(files.map(f => fileToBuffer(f)))).pipe(
       flatMap(content => {
         const contents = {
           content: content.map((c, i) => ({
-            name: files[i].name,
+            name: prefix ? `${prefix}/${files[i].name}` : files[i].name,
             content: {
               data: new BSON.Binary(c),
               type: files[i].type

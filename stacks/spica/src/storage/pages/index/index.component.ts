@@ -102,8 +102,14 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   uploadStorageMany(file: FileList): void {
+    const parent = this.selectedStorage.isDirectory
+      ? this.selectedStorage
+      : this.selectedStorage.parent;
+
+    const prefix = this.getFullName(parent);
+
     if (file.length) {
-      this.storage.insertMany(file).subscribe(
+      this.storage.insertMany(file, prefix).subscribe(
         event => {
           if (event.type === HttpEventType.UploadProgress) {
             this.progress = Math.round((100 * event.loaded) / event.total);
@@ -366,7 +372,7 @@ export class IndexComponent implements OnInit, OnDestroy {
       ? this.selectedStorage
       : this.selectedStorage.parent;
 
-      console.log(target);
+    console.log(target);
 
     const existingNames = target.children.reduce((existings, storage) => {
       existings.push(storage.name);

@@ -103,8 +103,8 @@
         [ngModel]="undefined"
         (ngModelChange)="uploadStorageMany(fileSelector.files)"
       />
-      <mat-icon *ngIf="!progress">add</mat-icon>
-      Add New
+      <mat-icon *ngIf="!progress">upload</mat-icon>
+      Upload Files
       <mat-progress-spinner
         color="accent"
         *ngIf="progress"
@@ -118,8 +118,8 @@
       [disabled]="progress"
       (click)="!progress ? addFolder() : undefined"
     >
-      <mat-icon *ngIf="!progress">add</mat-icon>
-      Add New Folder
+      <mat-icon *ngIf="!progress">create_new_folder</mat-icon>
+      Create New Folder
       <mat-progress-spinner
         color="accent"
         *ngIf="progress"
