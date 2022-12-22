@@ -3,7 +3,7 @@ import { NgModel } from "@angular/forms";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 
 @Component({
-  selector: "app-add-folder-dialog",
+  selector: "add-folder-dialog",
   templateUrl: "./add-folder-dialog.component.html",
   styleUrls: ["./add-folder-dialog.component.scss"]
 })

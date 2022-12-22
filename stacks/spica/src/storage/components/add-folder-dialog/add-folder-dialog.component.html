@@ -1,5 +1,5 @@
 <div>
-  <h3>Create A Folder</h3>
+  <h3>Create A {{ (data.type ? data.type : "folder") | titlecase }}</h3>
   <mat-divider></mat-divider>
   <mat-form-field>
     <mat-label>Name</mat-label>
@@ -11,9 +11,14 @@
       [(ngModel)]="name"
       (ngModelChange)="updateExistsState(nameModel, $event)"
       #nameModel="ngModel"
+      (keyup.enter)="!nameModel.invalid && dialogRef.close(name)"
+      pattern="^[^\/\ \.]+$"
     />
     <mat-error *ngIf="nameModel?.errors?.nameExists">
       This name already exists.
+    </mat-error>
+    <mat-error *ngIf="nameModel?.errors?.pattern">
+      Name must not include slash, space or dot characters.
     </mat-error>
   </mat-form-field>
   <button mat-button [disabled]="nameModel.invalid" (click)="dialogRef.close(name)">

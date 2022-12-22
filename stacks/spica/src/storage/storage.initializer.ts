@@ -2,6 +2,7 @@ import {Injectable} from "@angular/core";
 import {StorageService} from "./storage.service";
 import {RemoveCategory, RouteCategory, RouteService, Upsert} from "@spica-client/core";
 import {PassportService} from "@spica-client/passport";
+import {listDirectoriesRegex} from "./helpers";
 
 @Injectable()
 export class StorageInitializer {
@@ -11,9 +12,7 @@ export class StorageInitializer {
     private passport: PassportService
   ) {
     //prettier-ignore
-    const listRootFoldersRegex = "/^\/[^\/]+\/$|^[^\/]+\/$"
-    this.service.getAll({name: {$regex: listRootFoldersRegex}}).subscribe(storages => {
-      console.log(storages);
+    this.service.getAll({name: {$regex: listDirectoriesRegex}}).subscribe(storages => {
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Storage));
       for (const storage of storages) {
         this.routeService.dispatch(
@@ -33,7 +32,7 @@ export class StorageInitializer {
           category: RouteCategory.Storage,
           icon: "add",
           path: "/storage/add",
-          display: "Add New Folder",
+          display: "Add New Directory",
           data: {
             action: "storage:create"
           }

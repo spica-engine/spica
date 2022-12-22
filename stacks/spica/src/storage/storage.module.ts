@@ -37,7 +37,8 @@ import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {StorageService} from "./storage.service";
 import {StorageInitializer} from "./storage.initializer";
 import {PassportService} from "@spica-client/passport";
-import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatCheckboxModule} from "@angular/material/checkbox";
+import {AddDirectoryComponent} from "./pages/add-directory/add-directory.component";
 
 @NgModule({
   imports: [
@@ -84,7 +85,8 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
     StorageComponent,
     StorageViewComponent,
     ImageEditorComponent,
-    AddFolderDialogComponent
+    AddFolderDialogComponent,
+    AddDirectoryComponent
   ],
   exports: [PickerDirective]
 })

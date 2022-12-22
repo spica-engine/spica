@@ -8,7 +8,7 @@
       Upload any kind of document into public storage.
     </p>
   </div>
-  <div class="actions">
+  <div *ngIf="root" class="actions">
     <ng-container *ngIf="selectionActive">
       <button mat-button (click)="disableSelectMode()">
         <mat-icon>cancel</mat-icon>
@@ -123,10 +123,25 @@
         [value]="progress"
       ></mat-progress-spinner>
     </button>
+    <button
+      mat-button
+      canInteract="storage:delete"
+      [disabled]="progress"
+      color="warn"
+      [matAwareDialog]="{
+        title: 'Confirmation',
+        templateOrDescription: deleteDirDialogTemplate,
+        answer: root
+      }"
+      (confirm)="deleteMany([storages[0]._id])"
+    >
+      <mat-icon>delete</mat-icon>
+      Delete This Directory
+    </button>
   </div>
 </mat-toolbar>
 
-<mat-card>
+<mat-card *ngIf="root">
   <div class="directory-view">
     <ng-container *ngIf="storages.length">
       <ng-container
@@ -334,6 +349,16 @@
   [pageSize]="cols * 3"
   [pageSizeOptions]="[cols * 3, cols * 6, cols * 9]"
 ></mat-paginator> -->
+
+<ng-template #deleteDirDialogTemplate let-answer="answer">
+  <p>
+    This action will <b>permanently</b> delete <code>{{ answer }}</code> directory and it's
+    subresources.
+  </p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>
 
 <ng-template #deleteDialogTemplate let-answer="answer">
   <p>This action will <b>permanently</b> delete this object and break all associations.</p>

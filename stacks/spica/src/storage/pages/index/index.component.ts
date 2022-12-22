@@ -3,8 +3,9 @@ import {HttpEventType} from "@angular/common/http";
 import {Component, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import {AddFolderDialogComponent} from "@spica-client/storage/components/add-folder-dialog/add-folder-dialog.component";
+import {listDirectoriesRegex} from "@spica-client/storage/helpers";
 import {BehaviorSubject, Subject, combineLatest, Subscription, of} from "rxjs";
 import {filter, map, switchMap, tap} from "rxjs/operators";
 import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
@@ -46,15 +47,14 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   root: string;
 
-  //prettier-ignore
-  // baseFilter:any = {name:{$regex:'/^\/[^\/]+\/$|^[^\/]+\/$|^[^\/]+$'}}
-  filter$ = new Subject<any>();
+  filter$ = new Subject<object>();
 
   constructor(
     private storage: StorageService,
     public breakpointObserver: BreakpointObserver,
     public dialog: MatDialog,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router
   ) {
     this.breakpointObserver
       .observe([
@@ -88,7 +88,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         map(storages => (this.storages = this.mapObjectsToNodes(storages))),
         tap(() => {
           this.currentStorage = this.currentStorage || this.storages[0];
-          this.setSelecteds(this.getFullName(this.currentStorage), this.storages);
+          this.setHighlighteds(this.getFullName(this.currentStorage), this.storages);
         }),
         tap(() => this.loading$.next(false))
       )
@@ -96,6 +96,13 @@ export class IndexComponent implements OnInit, OnDestroy {
 
     const routeSubs = this.route.params
       .pipe(
+        tap(params => {
+          if (!params.name) {
+            this.root = undefined;
+            this.addDirectory();
+            return;
+          }
+        }),
         filter(params => params.name),
         map(params => params.name)
       )
@@ -115,7 +122,11 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
-  getCurrentDir() {
+  getCurrentFolder() {
+    return this.currentStorage.isDirectory ? this.currentStorage : this.currentStorage.parent;
+  }
+
+  getCurrentDirName() {
     const target = this.currentStorage.isDirectory
       ? this.currentStorage
       : this.currentStorage.parent;
@@ -125,7 +136,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   uploadStorageMany(file: FileList): void {
     if (file.length) {
-      const prefix = this.getCurrentDir();
+      const prefix = this.getCurrentDirName();
       this.storage.insertMany(file, prefix).subscribe(
         event => {
           if (event.type === HttpEventType.UploadProgress) {
@@ -224,7 +235,13 @@ export class IndexComponent implements OnInit, OnDestroy {
     const promises = ids.map(id => {
       const node = this.findNodeById(id);
       const fullName = this.getFullName(node);
-      const filter = {name: {$regex: `^${fullName}`}};
+
+      let regex = `^${fullName}`;
+      if (node.isDirectory) {
+        regex += "/";
+      }
+
+      const filter = {name: {$regex: regex}};
       return this.storage
         .getAll(filter)
         .toPromise()
@@ -270,7 +287,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   saveFolder(name: string) {
     const folder = new File([], name);
-    this.storage
+    return this.storage
       .insertMany([folder] as any)
       .toPromise()
       .then(() => this.refresh.next());
@@ -343,7 +360,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     const fullName = this.getFullName(storage);
 
     if (!storage.isDirectory) {
-      return this.setSelecteds(fullName, this.storages);
+      return this.setHighlighteds(fullName, this.storages);
     }
 
     const filter = this.buildFilterByFullName(fullName);
@@ -357,16 +374,16 @@ export class IndexComponent implements OnInit, OnDestroy {
     parentNameParts.pop();
 
     if (!parentNameParts.length) {
-      this.clearSelecteds();
+      this.clearHighlighteds();
     } else {
       const parentFullName = parentNameParts.join("/");
-      this.setSelecteds(parentFullName, this.storages);
+      this.setHighlighteds(parentFullName, this.storages);
     }
 
     this.currentStorage = storage.parent;
   }
 
-  clearSelecteds() {
+  clearHighlighteds() {
     const clear = (nodes: StorageNode[]) => {
       nodes.forEach(n => {
         n.isHighlighted = false;
@@ -379,10 +396,10 @@ export class IndexComponent implements OnInit, OnDestroy {
     clear(this.storages);
   }
 
-  setSelecteds(_fullName: string, _nodes: StorageNode[]) {
-    this.clearSelecteds();
+  setHighlighteds(_fullName: string, _nodes: StorageNode[]) {
+    this.clearHighlighteds();
 
-    const setSelected = (fullName: string, nodes: StorageNode[]) => {
+    const setHighlighted = (fullName: string, nodes: StorageNode[]) => {
       const parts = fullName.split("/").filter(n => n != "");
       const name = parts[0];
 
@@ -394,12 +411,12 @@ export class IndexComponent implements OnInit, OnDestroy {
       targetNode.isHighlighted = true;
 
       if (parts.length > 1) {
-        setSelected(parts.slice(1, parts.length).join("/"), targetNode.children);
+        setHighlighted(parts.slice(1, parts.length).join("/"), targetNode.children);
       } else {
         this.currentStorage = targetNode;
       }
     };
-    setSelected(_fullName, _nodes);
+    setHighlighted(_fullName, _nodes);
   }
 
   isDirectory(storage: StorageNode | Storage) {
@@ -442,53 +459,58 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.onStorageHighlighted(storage.parent);
   }
 
-  // getRootStorages() {
-  //   return {
-  //     name: this.root,
-  //     parent: undefined,
-  //     children: this.storages,
-  //     depth: 0,
-  //     isDirectory: true,
-  //     isSelected: true,
-  //     content: {
-  //       type: "",
-  //       size: 0
-  //     }
-  //   } as StorageTree;
-  // }
-
   objectIdToDate(objectId) {
     return new Date(parseInt(objectId.substring(0, 8), 16) * 1000);
+  }
+
+  addDirectory() {
+    return this.storage
+      .getAll({name: {$regex: listDirectoriesRegex}})
+      .toPromise()
+      .then(objects => {
+        const existingNames = objects.map(o => o.name);
+        return this.openAddFolderDialog("directory", existingNames, name => {
+          this.saveFolder(`${name}/`).then(() => this.router.navigate(["storage", name]));
+        });
+      });
+  }
+
+  openAddFolderDialog(
+    type: "folder" | "directory",
+    existingNames: string[],
+    afterClosed: (name) => void
+  ) {
+    const dialogRef = this.dialog.open(AddFolderDialogComponent, {
+      width: "500px",
+      data: {
+        existingNames,
+        type
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(name => {
+      if (!name) {
+        return;
+      }
+      afterClosed(name);
+    });
   }
 
   addFolder(storage: StorageNode) {
     const target = storage.isDirectory ? storage : storage.parent;
 
-    const existingNames = target.children.reduce((existings, storage) => {
-      existings.push(storage.name);
-      return existings;
-    }, []);
+    const existingNames = target.children.map(storage => storage.name);
 
-    const dialogRef = this.dialog.open(AddFolderDialogComponent, {
-      width: "500px",
-      maxHeight: "90vh",
-      data: {
-        existingNames
-      }
-    });
-
-    return dialogRef.afterClosed().subscribe(name => {
-      if (!name) {
-        return;
-      }
-
-      const fullName = this.getFullName(target);
-
-      return this.saveFolder(fullName ? `${fullName}/${name}/` : `${name}/`);
+    this.openAddFolderDialog("folder", existingNames, name => {
+      const prefix = this.getFullName(target);
+      return this.saveFolder(prefix ? `${prefix}/${name}/` : `${name}/`);
     });
   }
 
   enableSelectMode() {
+    this.currentStorage = this.currentStorage.isDirectory
+      ? this.currentStorage
+      : this.currentStorage.parent;
     this.selectionActive = true;
     // const target = this.currentStorage.isDirectory
     //   ? this.currentStorage.children
