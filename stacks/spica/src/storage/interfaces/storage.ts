@@ -13,5 +13,5 @@ export type StorageNode = Storage & {
   children: StorageNode[];
   depth: number;
   isDirectory: boolean;
-  isSelected: boolean;
+  isHighlighted: boolean;
 };

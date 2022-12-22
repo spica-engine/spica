@@ -5,7 +5,7 @@ import {MatDialog} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
 import {ActivatedRoute} from "@angular/router";
 import {AddFolderDialogComponent} from "@spica-client/storage/components/add-folder-dialog/add-folder-dialog.component";
-import {BehaviorSubject, Subject, combineLatest, Subscription} from "rxjs";
+import {BehaviorSubject, Subject, combineLatest, Subscription, of} from "rxjs";
 import {filter, map, switchMap, tap} from "rxjs/operators";
 import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
 import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
@@ -38,10 +38,11 @@ export class IndexComponent implements OnInit, OnDestroy {
   isEmpty = true;
 
   selectedStorageIds = [];
+  selectableStorageIds = [];
 
   selectionActive = false;
 
-  selectedStorage: StorageNode;
+  currentStorage: StorageNode;
 
   root: string;
 
@@ -74,8 +75,9 @@ export class IndexComponent implements OnInit, OnDestroy {
       });
   }
 
-  selectAll(storages: Storage[]) {
-    this.selectedStorageIds = storages.map(storage => storage._id);
+  selectAll(storage: StorageNode) {
+    const target = storage.isDirectory ? storage : storage.parent;
+    this.selectedStorageIds = target.children.map(storage => storage._id);
   }
 
   ngOnInit(): void {
@@ -85,8 +87,8 @@ export class IndexComponent implements OnInit, OnDestroy {
         switchMap(([_, filter]) => this.storage.getAll(filter, undefined, undefined, this.sorter)),
         map(storages => (this.storages = this.mapObjectsToNodes(storages))),
         tap(() => {
-          this.selectedStorage = this.selectedStorage || this.storages[0];
-          this.setSelecteds(this.getFullName(this.selectedStorage), this.storages);
+          this.currentStorage = this.currentStorage || this.storages[0];
+          this.setSelecteds(this.getFullName(this.currentStorage), this.storages);
         }),
         tap(() => this.loading$.next(false))
       )
@@ -98,7 +100,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         map(params => params.name)
       )
       .subscribe(name => {
-        this.selectedStorage = undefined;
+        this.currentStorage = undefined;
 
         this.root = name;
 
@@ -114,11 +116,11 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   getCurrentDir() {
-    const parent = this.selectedStorage.isDirectory
-      ? this.selectedStorage
-      : this.selectedStorage.parent;
+    const target = this.currentStorage.isDirectory
+      ? this.currentStorage
+      : this.currentStorage.parent;
 
-    return this.getFullName(parent);
+    return this.getFullName(target);
   }
 
   uploadStorageMany(file: FileList): void {
@@ -173,20 +175,69 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.refresh.next();
   }
 
-  delete(id: string): void {
-    this.storage
+  findNodeById(_id: string) {
+    let targetNode;
+
+    const find = (node: StorageNode) => {
+      if (node._id == _id) {
+        targetNode = node;
+        return;
+      }
+
+      if (node.children) {
+        node.children.forEach(n => find(n));
+      }
+    };
+
+    this.storages.forEach(s => find(s));
+
+    return targetNode;
+  }
+
+  // getIdsWillBeDeleted(id: string) {
+  //   let idsPromise: Promise<string[]> = of([id]).toPromise();
+  //   const node = this.findNodeById(id);
+
+  //   if (node.isDirectory) {
+  //     const fullName = this.getFullName(node);
+  //     idsPromise = this.storage
+  //       .getAll({name: {$regex: `^${fullName}`}})
+  //       .toPromise()
+  //       .then(objects => objects.map(o => o._id));
+  //   }
+
+  //   return idsPromise;
+  // }
+
+  delete(id: string) {
+    return this.storage
       .delete(id)
       .toPromise()
-      .catch()
       .then(() => {
-        this.selectedStorage = undefined;
+        this.currentStorage = this.currentStorage.parent;
         this.refresh.next();
       });
   }
 
-  deleteMany() {
-    const promises = this.selectedStorageIds.map(id => this.storage.delete(id).toPromise());
-    return Promise.all(promises).then(() => this.refresh.next());
+  listObjectsUnderIds(ids: string[]) {
+    const storages = [];
+    const promises = ids.map(id => {
+      const node = this.findNodeById(id);
+      const fullName = this.getFullName(node);
+      const filter = {name: {$regex: `^${fullName}`}};
+      return this.storage
+        .getAll(filter)
+        .toPromise()
+        .then(r => storages.push(...r));
+    });
+
+    return Promise.all(promises).then(() => storages);
+  }
+
+  deleteMany(ids: string[]) {
+    return this.listObjectsUnderIds(ids)
+      .then(objects => Promise.all(objects.map(o => this.storage.delete(o._id).toPromise())))
+      .then(() => this.refresh.next());
   }
 
   sortStorage(value) {
@@ -232,7 +283,7 @@ export class IndexComponent implements OnInit, OnDestroy {
       delete node.children;
       delete node.depth;
       delete node.isDirectory;
-      delete node.isSelected;
+      delete node.isHighlighted;
     });
 
     return nodes;
@@ -253,7 +304,7 @@ export class IndexComponent implements OnInit, OnDestroy {
           parent,
           depth,
           isDirectory: false,
-          isSelected: false
+          isHighlighted: false
         });
       }
 
@@ -286,8 +337,8 @@ export class IndexComponent implements OnInit, OnDestroy {
     return result;
   }
 
-  onStorageSelect(storage: StorageNode) {
-    this.selectedStorage = storage;
+  onStorageHighlighted(storage: StorageNode) {
+    this.currentStorage = storage;
 
     const fullName = this.getFullName(storage);
 
@@ -312,13 +363,13 @@ export class IndexComponent implements OnInit, OnDestroy {
       this.setSelecteds(parentFullName, this.storages);
     }
 
-    this.selectedStorage = undefined;
+    this.currentStorage = storage.parent;
   }
 
   clearSelecteds() {
     const clear = (nodes: StorageNode[]) => {
       nodes.forEach(n => {
-        n.isSelected = false;
+        n.isHighlighted = false;
         if (n.children && n.children.length) {
           clear(n.children);
         }
@@ -340,12 +391,12 @@ export class IndexComponent implements OnInit, OnDestroy {
         return;
       }
 
-      targetNode.isSelected = true;
+      targetNode.isHighlighted = true;
 
       if (parts.length > 1) {
         setSelected(parts.slice(1, parts.length).join("/"), targetNode.children);
       } else {
-        this.selectedStorage = targetNode;
+        this.currentStorage = targetNode;
       }
     };
     setSelected(_fullName, _nodes);
@@ -388,7 +439,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   onColumnClicked(storage: StorageNode) {
-    this.onStorageSelect(storage.parent);
+    this.onStorageHighlighted(storage.parent);
   }
 
   // getRootStorages() {
@@ -435,5 +486,43 @@ export class IndexComponent implements OnInit, OnDestroy {
 
       return this.saveFolder(fullName ? `${fullName}/${name}/` : `${name}/`);
     });
+  }
+
+  enableSelectMode() {
+    this.selectionActive = true;
+    // const target = this.currentStorage.isDirectory
+    //   ? this.currentStorage.children
+    //   : this.currentStorage.parent.children;
+    // this.selectableStorageIds = target.map(c => c._id);
+    this.selectedStorageIds = [];
+  }
+
+  disableSelectMode() {
+    this.selectionActive = false;
+    // this.selectableStorageIds = [];
+    this.selectedStorageIds = [];
+  }
+
+  onSelect(storage: StorageNode) {
+    // if (this.selectableStorageIds.indexOf(storage._id) == -1) {
+    //   return;
+    // }
+
+    const updateSelecteds = (selecteds: string[], storage: StorageNode, action: "push" | "pop") => {
+      const isExist = selecteds.includes(storage._id);
+
+      if (action == "push" && !isExist) {
+        selecteds.push(storage._id);
+      } else if (action == "pop" && isExist) {
+        selecteds.splice(selecteds.indexOf(storage._id), 1);
+      }
+
+      if (storage.children) {
+        storage.children.forEach(c => updateSelecteds(selecteds, c, action));
+      }
+    };
+
+    const action = this.selectedStorageIds.indexOf(storage._id) != -1 ? "pop" : "push";
+    updateSelecteds(this.selectedStorageIds, storage, action);
   }
 }

@@ -73,14 +73,20 @@
       display: flex;
       overflow: auto;
       .column {
-        width: 200px;
-        min-width: 200px;
+        width: 300px;
+        min-width: 300px;
         border-right: 1px solid rgba(0, 0, 0, 0.1);
+
         > .line {
           cursor: pointer;
           padding: 8px;
           display: flex;
           align-items: center;
+
+          mat-checkbox{
+            width: 24px;
+            height: 24px;
+          }
 
           &:hover {
             background-color: rgba(0, 0, 0, 0.1);
@@ -103,12 +109,18 @@
       flex-direction: column;
       justify-content: space-between;
 
-      .close > button{
+      .close > button {
         float: right;
       }
 
       .meta {
-        p,h1,h2,h3,h4,h5,h6{
+        p,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
           text-align: center;
         }
         storage-view {
@@ -130,8 +142,8 @@
     }
   }
 
-  .selected {
-    background: rgba(0, 0, 0, 0.1);
+  .highlight {
+    background-color: rgba(0, 0, 0, 0.1);
   }
 
   // mat-grid-list {

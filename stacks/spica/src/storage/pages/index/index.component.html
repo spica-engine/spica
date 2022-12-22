@@ -10,15 +10,15 @@
   </div>
   <div class="actions">
     <ng-container *ngIf="selectionActive">
-      <button mat-button (click)="selectionActive = false; selectedStorageIds = []">
+      <button mat-button (click)="disableSelectMode()">
         <mat-icon>cancel</mat-icon>
         Cancel
       </button>
-      <ng-container *ngIf="storages$ | async; let storages">
+      <ng-container *ngIf="storages.length">
         <button
           *ngIf="storages.length > selectedStorageIds.length"
           mat-button
-          (click)="selectAll(storages)"
+          (click)="selectAll(currentStorage)"
         >
           <mat-icon>select_all</mat-icon>
           Select All
@@ -33,22 +33,18 @@
           templateOrDescription: multipleDeleteDialogTemplate,
           answer: 'agree'
         }"
-        (confirm)="deleteMany(); selectionActive = false; selectedStorageIds = []"
+        (confirm)="deleteMany(selectedStorageIds); disableSelectMode()"
       >
         <mat-icon>delete</mat-icon>
         Delete
       </button>
     </ng-container>
 
-    <button *ngIf="!selectionActive && !isEmpty" mat-button (click)="selectionActive = true">
+    <button *ngIf="!selectionActive" mat-button (click)="enableSelectMode()">
       <mat-icon>check_box_outline_blank</mat-icon>
       Select
     </button>
-    <button
-      [style.visibility]="isEmpty ? 'hidden' : 'visible'"
-      mat-button
-      [matMenuTriggerFor]="menu"
-    >
+    <button mat-button [matMenuTriggerFor]="menu">
       <mat-icon>sort</mat-icon>
       Sort
       <mat-menu #menu="matMenu" class="storage-filter-menu">
@@ -116,7 +112,7 @@
       mat-button
       canInteract="storage:create"
       [disabled]="progress"
-      (click)="!progress ? addFolder(selectedStorage) : undefined"
+      (click)="!progress ? addFolder(currentStorage) : undefined"
     >
       <mat-icon *ngIf="!progress">create_new_folder</mat-icon>
       Create New Folder
@@ -145,39 +141,39 @@
       ></mat-progress-spinner>
     </ng-container>
   </div>
-  <div *ngIf="selectedStorage && !selectedStorage.isDirectory" class="object-details">
+  <div *ngIf="currentStorage && !currentStorage.isDirectory" class="object-details">
     <div class="meta">
       <div class="close">
-        <button mat-icon-button (click)="onDetailsClosed(selectedStorage)">
+        <button mat-icon-button (click)="onDetailsClosed(currentStorage)">
           <mat-icon>clear</mat-icon>
         </button>
       </div>
-      <storage-view [blob]="selectedStorage.url"></storage-view>
-      <h4>{{ selectedStorage.name }}</h4>
+      <storage-view [blob]="currentStorage.url"></storage-view>
+      <h4>{{ currentStorage.name }}</h4>
       <p>
-        {{ selectedStorage.content.type }} -
-        {{ selectedStorage.content.size / 1000 | number: "1.0-0" }} KB
+        {{ currentStorage.content.type }} -
+        {{ currentStorage.content.size / 1000 | number: "1.0-0" }} KB
       </p>
-      <p>{{ objectIdToDate(selectedStorage._id) | date: "medium" }}</p>
+      <p>{{ objectIdToDate(currentStorage._id) | date: "medium" }}</p>
     </div>
     <div class="action-buttons">
-      <button mat-stroked-button [matClipboard]="selectedStorage.url">
+      <button mat-stroked-button [matClipboard]="currentStorage.url">
         <mat-icon>file_copy</mat-icon>
         Copy
       </button>
       <button
         canInteract="storage:update"
-        [resource]="selectedStorage._id"
-        *ngIf="selectedStorage.content?.type?.startsWith('image/')"
+        [resource]="currentStorage._id"
+        *ngIf="currentStorage.content?.type?.startsWith('image/')"
         mat-stroked-button
-        (click)="openEdit(selectedStorage)"
+        (click)="openEdit(currentStorage)"
       >
         <mat-icon>edit</mat-icon>
         Edit
       </button>
       <button
         canInteract="storage:update"
-        [resource]="selectedStorage._id"
+        [resource]="currentStorage._id"
         mat-stroked-button
         (click)="fileSelector?.click()"
       >
@@ -187,14 +183,14 @@
           #fileSelector
           #fileModel="ngModel"
           [ngModel]="undefined"
-          (ngModelChange)="updateStorage(selectedStorage, fileSelector.files[0])"
+          (ngModelChange)="updateStorage(currentStorage, fileSelector.files[0])"
         />
         <mat-icon>sync_alt</mat-icon>
         Replace
       </button>
       <button
         canInteract="storage:delete"
-        [resource]="selectedStorage._id"
+        [resource]="currentStorage._id"
         mat-stroked-button
         color="warn"
         [matAwareDialog]="{
@@ -202,7 +198,7 @@
           templateOrDescription: deleteDialogTemplate,
           answer: 'agree'
         }"
-        (confirm)="delete(selectedStorage._id)"
+        (confirm)="delete(currentStorage._id)"
       >
         <mat-icon>delete</mat-icon>
         Delete
@@ -212,14 +208,22 @@
 </mat-card>
 
 <ng-template #column let-files="files">
-  <div class="column" (click)="onColumnClicked(files[0])">
+  <div class="column" (click)="!selectionActive ? onColumnClicked(files[0]) : undefined">
     <div
-      (click)="$event.stopPropagation(); onStorageSelect(file)"
+      (click)="$event.stopPropagation(); !selectionActive ? onStorageHighlighted(file) : undefined"
       class="line"
-      [class.selected]="file.isSelected"
+      [class.highlight]="file.isHighlighted"
       *ngFor="let file of files"
     >
-      <mat-icon>{{ file.isDirectory ? "folder" : "description" }}</mat-icon>
+      <mat-checkbox
+        *ngIf="selectionActive"
+        [checked]="selectedStorageIds.indexOf(file._id) != -1"
+        [disabled]="selectedStorageIds.indexOf(file.parent._id) != -1"
+        (change)="onSelect(file)"
+      ></mat-checkbox>
+      <mat-icon *ngIf="!selectionActive">{{
+        file.isDirectory ? "folder" : "description"
+      }}</mat-icon>
       <span>{{ file.name }}</span>
     </div>
   </div>
@@ -340,8 +344,8 @@
 
 <ng-template #multipleDeleteDialogTemplate let-answer="answer">
   <p>
-    This action will <b>permanently</b> delete these
-    <code>{{ selectedStorageIds.length }}</code> objects and break all associations.
+    This action will <b>permanently</b> delete the selected objects, it's subresources and break all
+    associations.
   </p>
   <p>
     Please type in <code>{{ answer }}</code> to confirm.

@@ -37,6 +37,7 @@ import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {StorageService} from "./storage.service";
 import {StorageInitializer} from "./storage.initializer";
 import {PassportService} from "@spica-client/passport";
+import {MatCheckboxModule} from '@angular/material/checkbox';
 
 @NgModule({
   imports: [
@@ -64,6 +65,7 @@ import {PassportService} from "@spica-client/passport";
     MatMenuModule,
     MatSaveModule,
     MatListModule,
+    MatCheckboxModule,
     InputModule.withPlacers([
       {
         origin: "string",
