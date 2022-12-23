@@ -4,8 +4,8 @@ import {Component, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
 import {ActivatedRoute, Router} from "@angular/router";
-import {AddFolderDialogComponent} from "@spica-client/storage/components/add-folder-dialog/add-folder-dialog.component";
-import {listDirectoriesRegex} from "@spica-client/storage/helpers";
+import {AddDirectoryDialog} from "@spica-client/storage/components/add-directory-dialog/add-directory-dialog.component";
+import {getFullName, isDirectory, listDirectoriesRegex} from "@spica-client/storage/helpers";
 import {BehaviorSubject, Subject, combineLatest, Subscription, of} from "rxjs";
 import {filter, map, switchMap, tap} from "rxjs/operators";
 import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
@@ -88,7 +88,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         map(storages => (this.storages = this.mapObjectsToNodes(storages))),
         tap(() => {
           this.currentStorage = this.currentStorage || this.storages[0];
-          this.setHighlighteds(this.getFullName(this.currentStorage), this.storages);
+          this.setHighlighteds(getFullName(this.currentStorage), this.storages);
         }),
         tap(() => this.loading$.next(false))
       )
@@ -99,7 +99,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         tap(params => {
           if (!params.name) {
             this.root = undefined;
-            this.addDirectory();
+            this.addRootDir();
             return;
           }
         }),
@@ -131,7 +131,7 @@ export class IndexComponent implements OnInit, OnDestroy {
       ? this.currentStorage
       : this.currentStorage.parent;
 
-    return this.getFullName(target);
+    return getFullName(target);
   }
 
   uploadStorageMany(file: FileList): void {
@@ -156,7 +156,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   updateStorage(node: StorageNode, file: File) {
     if (file) {
-      const parentFullName = this.getFullName(node.parent);
+      const parentFullName = getFullName(node.parent);
       const storage = this.mapNodesToObjects([node])[0];
       storage.name = `${parentFullName}/${file.name}`;
 
@@ -205,21 +205,6 @@ export class IndexComponent implements OnInit, OnDestroy {
     return targetNode;
   }
 
-  // getIdsWillBeDeleted(id: string) {
-  //   let idsPromise: Promise<string[]> = of([id]).toPromise();
-  //   const node = this.findNodeById(id);
-
-  //   if (node.isDirectory) {
-  //     const fullName = this.getFullName(node);
-  //     idsPromise = this.storage
-  //       .getAll({name: {$regex: `^${fullName}`}})
-  //       .toPromise()
-  //       .then(objects => objects.map(o => o._id));
-  //   }
-
-  //   return idsPromise;
-  // }
-
   delete(id: string) {
     return this.storage
       .delete(id)
@@ -234,7 +219,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     const storages = [];
     const promises = ids.map(id => {
       const node = this.findNodeById(id);
-      const fullName = this.getFullName(node);
+      const fullName = getFullName(node);
 
       let regex = `^${fullName}`;
       if (node.isDirectory) {
@@ -295,7 +280,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   mapNodesToObjects(nodes: StorageNode[]) {
     nodes.forEach(node => {
-      node.name = this.getFullName(node);
+      node.name = getFullName(node);
       delete node.parent;
       delete node.children;
       delete node.depth;
@@ -337,13 +322,13 @@ export class IndexComponent implements OnInit, OnDestroy {
         newObj.content = obj.content;
         newObj.url = obj.url;
         newObj._id = obj._id;
-        newObj.isDirectory = this.isDirectory(obj);
+        newObj.isSubDirectory = isDirectory(obj);
         mapPath(newObj, currentNode.children, currentNode, depth);
       } else {
         currentNode.content = obj.content;
         currentNode.url = obj.url;
         currentNode._id = obj._id;
-        currentNode.isDirectory = this.isDirectory(obj);
+        currentNode.isDirectory = isDirectory(obj);
       }
     };
 
@@ -357,7 +342,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   onStorageHighlighted(storage: StorageNode) {
     this.currentStorage = storage;
 
-    const fullName = this.getFullName(storage);
+    const fullName = getFullName(storage);
 
     if (!storage.isDirectory) {
       return this.setHighlighteds(fullName, this.storages);
@@ -368,7 +353,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   onDetailsClosed(storage: StorageNode) {
-    const fullName = this.getFullName(storage);
+    const fullName = getFullName(storage);
 
     const parentNameParts = fullName.split("/").filter(n => n != "");
     parentNameParts.pop();
@@ -419,10 +404,6 @@ export class IndexComponent implements OnInit, OnDestroy {
     setHighlighted(_fullName, _nodes);
   }
 
-  isDirectory(storage: StorageNode | Storage) {
-    return storage.content.size == 0 && storage.content.type == "";
-  }
-
   getFilter(name: string) {
     return {name: {$regex: `^${name}/$|^${name}\/[^\/]+\/?$`}};
   }
@@ -446,15 +427,6 @@ export class IndexComponent implements OnInit, OnDestroy {
     return {$or: filters};
   }
 
-  getFullName(storage: StorageNode, suffix?: string) {
-    const newName = suffix ? `${storage.name}/${suffix}` : storage.name;
-    if (storage.parent) {
-      return this.getFullName(storage.parent, newName);
-    } else {
-      return newName;
-    }
-  }
-
   onColumnClicked(storage: StorageNode) {
     this.onStorageHighlighted(storage.parent);
   }
@@ -463,24 +435,24 @@ export class IndexComponent implements OnInit, OnDestroy {
     return new Date(parseInt(objectId.substring(0, 8), 16) * 1000);
   }
 
-  addDirectory() {
+  addRootDir() {
     return this.storage
       .getAll({name: {$regex: listDirectoriesRegex}})
       .toPromise()
       .then(objects => {
         const existingNames = objects.map(o => o.name);
-        return this.openAddFolderDialog("directory", existingNames, name => {
+        return this.openAddDirDialog("root_directory", existingNames, name => {
           this.saveFolder(`${name}/`).then(() => this.router.navigate(["storage", name]));
         });
       });
   }
 
-  openAddFolderDialog(
-    type: "folder" | "directory",
+  openAddDirDialog(
+    type: "root_directory" | "sub_directory",
     existingNames: string[],
     afterClosed: (name) => void
   ) {
-    const dialogRef = this.dialog.open(AddFolderDialogComponent, {
+    const dialogRef = this.dialog.open(AddDirectoryDialog, {
       width: "500px",
       data: {
         existingNames,
@@ -496,13 +468,13 @@ export class IndexComponent implements OnInit, OnDestroy {
     });
   }
 
-  addFolder(storage: StorageNode) {
+  addSubDir(storage: StorageNode) {
     const target = storage.isDirectory ? storage : storage.parent;
 
     const existingNames = target.children.map(storage => storage.name);
 
-    this.openAddFolderDialog("folder", existingNames, name => {
-      const prefix = this.getFullName(target);
+    this.openAddDirDialog("sub_directory", existingNames, name => {
+      const prefix = getFullName(target);
       return this.saveFolder(prefix ? `${prefix}/${name}/` : `${name}/`);
     });
   }
@@ -512,24 +484,15 @@ export class IndexComponent implements OnInit, OnDestroy {
       ? this.currentStorage
       : this.currentStorage.parent;
     this.selectionActive = true;
-    // const target = this.currentStorage.isDirectory
-    //   ? this.currentStorage.children
-    //   : this.currentStorage.parent.children;
-    // this.selectableStorageIds = target.map(c => c._id);
     this.selectedStorageIds = [];
   }
 
   disableSelectMode() {
     this.selectionActive = false;
-    // this.selectableStorageIds = [];
     this.selectedStorageIds = [];
   }
 
   onSelect(storage: StorageNode) {
-    // if (this.selectableStorageIds.indexOf(storage._id) == -1) {
-    //   return;
-    // }
-
     const updateSelecteds = (selecteds: string[], storage: StorageNode, action: "push" | "pop") => {
       const isExist = selecteds.includes(storage._id);
 

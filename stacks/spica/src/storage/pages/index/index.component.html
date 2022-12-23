@@ -112,10 +112,10 @@
       mat-button
       canInteract="storage:create"
       [disabled]="progress"
-      (click)="!progress ? addFolder(currentStorage) : undefined"
+      (click)="!progress ? addSubDir(currentStorage) : undefined"
     >
       <mat-icon *ngIf="!progress">create_new_folder</mat-icon>
-      Create New Folder
+      Create New Directory
       <mat-progress-spinner
         color="accent"
         *ngIf="progress"
@@ -248,107 +248,6 @@
     </ng-container>
   </ng-container>
 </ng-template>
-
-<!-- <mat-grid-list [cols]="cols" rowHeight="1:1" gutterSize="10px">
-  <mat-grid-tile
-    [style.visibility]="(loading$ | async) ? 'hidden' : 'visible'"
-    *ngFor="let storage of storages$ | async; let i = index"
-  >
-    <div *ngIf="updates.has(storage._id)" class="loading">
-      <mat-progress-spinner
-        color="accent"
-        [diameter]="50"
-        [value]="updates.get(storage._id)"
-      ></mat-progress-spinner>
-    </div>
-    <mat-card
-      [class.unselected]="selectionActive && selectedStorageIds.indexOf(storage._id) == -1"
-      class="mat-elevation-z25"
-      (click)="
-        selectionActive &&
-          (selectedStorageIds.indexOf(storage._id) != -1
-            ? selectedStorageIds.splice(selectedStorageIds.indexOf(storage._id), 1)
-            : selectedStorageIds.push(storage._id))
-      "
-      [class.updating]="updates.has(storage._id)"
-    >
-      <mat-card-content
-        [style.pointer-events]="selectionActive || updates.has(storage._id) ? 'none' : 'initial'"
-      >
-        <storage-view
-          mat-card-image
-          matTooltip="View this object"
-          [blob]="storage"
-          (click)="openPreview(storage)"
-        >
-        </storage-view>
-      </mat-card-content>
-      <mat-card-actions
-        [style.pointer-events]="selectionActive || updates.has(storage._id) ? 'none' : 'initial'"
-      >
-        <mat-label [matTooltip]="'Mime type: ' + storage?.content?.type">{{
-          storage.name
-        }}</mat-label>
-        <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Actions">
-          <mat-icon>more_vert</mat-icon>
-          <mat-menu class="actions-menu" #menu="matMenu" yPosition="above">
-            <button mat-menu-item [matClipboard]="storage.url">
-              <mat-icon>file_copy</mat-icon>
-              Copy
-            </button>
-            <button
-              canInteract="storage:update"
-              [resource]="storage._id"
-              *ngIf="storage.content?.type?.startsWith('image/')"
-              mat-menu-item
-              (click)="openEdit(storage)"
-            >
-              <mat-icon>edit</mat-icon>
-              Edit
-            </button>
-            <button
-              canInteract="storage:update"
-              [resource]="storage._id"
-              mat-menu-item
-              (click)="fileSelector?.click()"
-            >
-              <input
-                class="file-selector"
-                type="file"
-                #fileSelector
-                #fileModel="ngModel"
-                [ngModel]="undefined"
-                (ngModelChange)="updateStorage(storage, fileSelector.files[0])"
-              />
-              <mat-icon>sync_alt</mat-icon>
-              Replace
-            </button>
-            <button
-              canInteract="storage:delete"
-              [resource]="storage._id"
-              mat-menu-item
-              color="warn"
-              [matAwareDialog]="{
-                title: 'Confirmation',
-                templateOrDescription: deleteDialogTemplate,
-                answer: 'agree'
-              }"
-              (confirm)="delete(storage._id)"
-            >
-              <mat-icon>delete</mat-icon>
-              Delete
-            </button>
-          </mat-menu>
-        </button>
-      </mat-card-actions>
-    </mat-card>
-  </mat-grid-tile>
-</mat-grid-list>
-<mat-paginator
-  [style.visibility]="isEmpty ? 'hidden' : 'visible'"
-  [pageSize]="cols * 3"
-  [pageSizeOptions]="[cols * 3, cols * 6, cols * 9]"
-></mat-paginator> -->
 
 <ng-template #deleteDirDialogTemplate let-answer="answer">
   <p>

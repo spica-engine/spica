@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AddDirectoryComponent } from './add-directory.component';
+import { AddDirectoryDialog } from './add-directory-dialog.component';
 
-describe('AddDirectoryComponent', () => {
-  let component: AddDirectoryComponent;
-  let fixture: ComponentFixture<AddDirectoryComponent>;
+describe('AddDirectoryDialogComponent', () => {
+  let component: AddDirectoryDialog;
+  let fixture: ComponentFixture<AddDirectoryDialog>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ AddDirectoryComponent ]
+      declarations: [ AddDirectoryDialog ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(AddDirectoryComponent);
+    fixture = TestBed.createComponent(AddDirectoryDialog);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

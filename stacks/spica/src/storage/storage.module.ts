@@ -32,13 +32,12 @@ import {StorageViewComponent} from "./components/storage-view/storage-view.compo
 import {StorageComponent} from "./components/storage/storage.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {StorageRoutingModule} from "./storage-routing.module";
-import {AddFolderDialogComponent} from "./components/add-folder-dialog/add-folder-dialog.component";
+import {AddDirectoryDialog} from "./components/add-directory-dialog/add-directory-dialog.component";
 import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {StorageService} from "./storage.service";
 import {StorageInitializer} from "./storage.initializer";
 import {PassportService} from "@spica-client/passport";
 import {MatCheckboxModule} from "@angular/material/checkbox";
-import {AddDirectoryComponent} from "./pages/add-directory/add-directory.component";
 
 @NgModule({
   imports: [
@@ -85,8 +84,7 @@ import {AddDirectoryComponent} from "./pages/add-directory/add-directory.compone
     StorageComponent,
     StorageViewComponent,
     ImageEditorComponent,
-    AddFolderDialogComponent,
-    AddDirectoryComponent
+    AddDirectoryDialog
   ],
   exports: [PickerDirective]
 })

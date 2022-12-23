@@ -3,15 +3,15 @@ import { NgModel } from "@angular/forms";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 
 @Component({
-  selector: "add-folder-dialog",
-  templateUrl: "./add-folder-dialog.component.html",
-  styleUrls: ["./add-folder-dialog.component.scss"]
+  selector: "add-directory-dialog",
+  templateUrl: "./add-directory-dialog.component.html",
+  styleUrls: ["./add-directory-dialog.component.scss"]
 })
-export class AddFolderDialogComponent implements OnInit {
+export class AddDirectoryDialog implements OnInit {
   name: string;
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
-    public dialogRef: MatDialogRef<AddFolderDialogComponent>
+    public dialogRef: MatDialogRef<AddDirectoryDialog>
   ) {}
 
   ngOnInit(): void {}

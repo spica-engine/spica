@@ -1,5 +1,5 @@
 <div>
-  <h3>Create A {{ (data.type ? data.type : "folder") | titlecase }}</h3>
+  <h3>Create A {{ (data.type ? data.type : "folder").replace("_", " ") | titlecase }}</h3>
   <mat-divider></mat-divider>
   <mat-form-field>
     <mat-label>Name</mat-label>
