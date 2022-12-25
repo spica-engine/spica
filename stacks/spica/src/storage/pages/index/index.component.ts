@@ -45,8 +45,6 @@ export class IndexComponent implements OnInit, OnDestroy {
   isEmpty = true;
 
   selectedStorageIds = [];
-  selectableStorageIds = [];
-
   selectionActive = false;
 
   currentStorage: StorageNode;
@@ -54,6 +52,8 @@ export class IndexComponent implements OnInit, OnDestroy {
   root: string;
 
   filter$ = new Subject<object>();
+
+  renamingStorage: StorageNode;
 
   constructor(
     private storage: StorageService,
@@ -519,5 +519,23 @@ export class IndexComponent implements OnInit, OnDestroy {
 
     const action = this.selectedStorageIds.indexOf(storage._id) != -1 ? "pop" : "push";
     updateSelecteds(this.selectedStorageIds, storage, action);
+  }
+
+  onRenameClicked(storage: StorageNode, element) {
+    this.renamingStorage = storage;
+    setTimeout(() => element.focus(), 0);
+  }
+
+  onRenameCancelled() {
+    this.renamingStorage = undefined;
+  }
+
+  updateStorageName(name: string) {
+    if (!this.renamingStorage) {
+      return;
+    }
+
+    console.log("UPDATING..");
+    this.refresh.next();
   }
 }

@@ -82,21 +82,27 @@
           padding: 8px;
           display: flex;
           align-items: center;
+          justify-content: space-between;
 
-          mat-checkbox{
-            width: 24px;
-            height: 24px;
+          > .content {
+            display: flex;
+            align-items: center;
+
+            mat-checkbox {
+              width: 24px;
+              height: 24px;
+            }
+
+            > span {
+              padding: 4px;
+              text-overflow: ellipsis;
+              overflow: hidden;
+              white-space: nowrap;
+            }
           }
 
           &:hover {
             background-color: rgba(0, 0, 0, 0.1);
-          }
-
-          > span {
-            margin-left: 5px;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            white-space: nowrap;
           }
         }
       }

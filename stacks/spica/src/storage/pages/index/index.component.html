@@ -230,16 +230,33 @@
       [class.highlight]="file.isHighlighted"
       *ngFor="let file of files"
     >
-      <mat-checkbox
-        *ngIf="selectionActive"
-        [checked]="selectedStorageIds.indexOf(file._id) != -1"
-        [disabled]="selectedStorageIds.indexOf(file.parent._id) != -1"
-        (change)="onSelect(file)"
-      ></mat-checkbox>
-      <mat-icon *ngIf="!selectionActive">{{
-        file.isDirectory ? "folder" : "description"
-      }}</mat-icon>
-      <span>{{ file.name }}</span>
+      <div class="content">
+        <mat-checkbox
+          *ngIf="selectionActive"
+          [checked]="selectedStorageIds.indexOf(file._id) != -1"
+          [disabled]="selectedStorageIds.indexOf(file.parent._id) != -1"
+          (change)="onSelect(file)"
+        ></mat-checkbox>
+        <mat-icon *ngIf="!selectionActive">{{
+          file.isDirectory ? "folder" : "description"
+        }}</mat-icon>
+        <span
+          #nameSpan
+          [attr.contenteditable]="renamingStorage && renamingStorage._id == file._id"
+          (keyup.enter)="updateStorageName()"
+          (keyup.esc)="onRenameCancelled()"
+          (focusout)="onRenameCancelled()"
+          >{{ file.name }}</span
+        >
+      </div>
+      <div class="more">
+        <button mat-icon-button (click)="$event.stopPropagation()" [matMenuTriggerFor]="moreMenu">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #moreMenu="matMenu">
+          <button mat-menu-item (click)="onRenameClicked(file, nameSpan)">Rename</button>
+        </mat-menu>
+      </div>
     </div>
   </div>
   <ng-container *ngFor="let file of files">
