@@ -5,9 +5,10 @@ import * as BSON from "bson";
 import {Buffer} from "buffer";
 import {from, Observable} from "rxjs";
 import {flatMap, map} from "rxjs/operators";
-import {LastUpdateCache} from "./cache";
+import {LastUpdateCache} from "../cache";
+import {findNodeById, getFullName} from "../helpers";
 
-import {Storage, StorageNode} from "./interfaces/storage";
+import {Storage, StorageNode} from "../interfaces/storage";
 
 window["Buffer"] = Buffer;
 
@@ -156,5 +157,9 @@ export class StorageService {
 
   private deepCopy(value: unknown) {
     return JSON.parse(JSON.stringify(value));
+  }
+
+  listSubResources(name: string) {
+    return this.getAll({name: {$regex: `^${name}/`}}).toPromise();
   }
 }

@@ -5,13 +5,19 @@ import {MatDialog} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
 import {ActivatedRoute, Router} from "@angular/router";
 import {AddDirectoryDialog} from "@spica-client/storage/components/add-directory-dialog/add-directory-dialog.component";
-import {getFullName, isDirectory, listDirectoriesRegex} from "@spica-client/storage/helpers";
+import {
+  findNodeById,
+  getFullName,
+  isDirectory,
+  listDirectoriesRegex
+} from "@spica-client/storage/helpers";
+import {RootDirService} from "@spica-client/storage/services/root.dir.service";
 import {BehaviorSubject, Subject, combineLatest, Subscription, of} from "rxjs";
 import {filter, map, switchMap, tap} from "rxjs/operators";
 import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
 import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
 import {Storage, StorageNode} from "../../interfaces/storage";
-import {StorageService} from "../../storage.service";
+import {StorageService} from "../../services/storage.service";
 
 @Component({
   selector: "storage-index",
@@ -51,6 +57,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   constructor(
     private storage: StorageService,
+    private rootDirService: RootDirService,
     public breakpointObserver: BreakpointObserver,
     public dialog: MatDialog,
     private route: ActivatedRoute,
@@ -186,25 +193,6 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.refresh.next();
   }
 
-  findNodeById(_id: string) {
-    let targetNode;
-
-    const find = (node: StorageNode) => {
-      if (node._id == _id) {
-        targetNode = node;
-        return;
-      }
-
-      if (node.children) {
-        node.children.forEach(n => find(n));
-      }
-    };
-
-    this.storages.forEach(s => find(s));
-
-    return targetNode;
-  }
-
   delete(id: string) {
     return this.storage
       .delete(id)
@@ -215,32 +203,51 @@ export class IndexComponent implements OnInit, OnDestroy {
       });
   }
 
-  listObjectsUnderIds(ids: string[]) {
-    const storages = [];
-    const promises = ids.map(id => {
-      const node = this.findNodeById(id);
-      const fullName = getFullName(node);
+  deleteDir() {
+    return this.rootDirService.delete(this.root).then(() => this.refresh.next());
+  }
 
-      let regex = `^${fullName}`;
-      if (node.isDirectory) {
-        regex += "/";
+  async deleteMany(ids: string[]) {
+    const findShallowestDeletedStorage = (storage: StorageNode, _ids: string[]) => {
+      const hasSelectedParent = storage.parent && _ids.includes(storage.parent._id);
+      return hasSelectedParent ? findShallowestDeletedStorage(storage.parent, _ids) : storage;
+    };
+
+    const idsWillBeDeleted = new Set<string>();
+
+    const idsPromises = [];
+
+    for (const id of ids) {
+      const storage = findNodeById(id, this.storages);
+      const shallowestDeletedStorage = findShallowestDeletedStorage(storage, ids);
+      if (shallowestDeletedStorage.isDirectory) {
+        const fullName = getFullName(shallowestDeletedStorage);
+        idsPromises.push(
+          this.storage
+            .listSubResources(fullName)
+            .then(storages => storages.forEach(s => idsWillBeDeleted.add(s._id)))
+        );
+      } else {
+        idsWillBeDeleted.add(storage._id);
       }
+    }
 
-      const filter = {name: {$regex: regex}};
-      return this.storage
-        .getAll(filter)
-        .toPromise()
-        .then(r => storages.push(...r));
-    });
-
-    return Promise.all(promises).then(() => storages);
+    await Promise.all(idsPromises);
+    await Promise.all(Array.from(idsWillBeDeleted).map(id => this.storage.delete(id).toPromise()));
+    this.refresh.next();
   }
 
-  deleteMany(ids: string[]) {
-    return this.listObjectsUnderIds(ids)
-      .then(objects => Promise.all(objects.map(o => this.storage.delete(o._id).toPromise())))
-      .then(() => this.refresh.next());
-  }
+  // deleteMany(ids: string[]) {
+  //   const storages = [];
+  //   for(const id of ids){
+  //     this.storage.getAll()
+  //   }
+
+  //   return this.storage
+  //     .listObjectsUnderIds(ids, this.storages)
+  //     .then(objects => Promise.all(objects.map(o => this.storage.delete(o._id).toPromise())))
+  //     .then(() => this.refresh.next());
+  // }
 
   sortStorage(value) {
     value.direction = value.direction === "asc" ? 1 : -1;
@@ -270,10 +277,10 @@ export class IndexComponent implements OnInit, OnDestroy {
       .then(() => this.refresh.next());
   }
 
-  saveFolder(name: string) {
-    const folder = new File([], name);
+  addDirectory(name: string) {
+    const dir = new File([], name);
     return this.storage
-      .insertMany([folder] as any)
+      .insertMany([dir] as any)
       .toPromise()
       .then(() => this.refresh.next());
   }
@@ -442,7 +449,10 @@ export class IndexComponent implements OnInit, OnDestroy {
       .then(objects => {
         const existingNames = objects.map(o => o.name);
         return this.openAddDirDialog("root_directory", existingNames, name => {
-          this.saveFolder(`${name}/`).then(() => this.router.navigate(["storage", name]));
+          this.rootDirService
+            .add(`${name}/`)
+            .toPromise()
+            .then(() => this.router.navigate(["storage", name]));
         });
       });
   }
@@ -475,7 +485,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
     this.openAddDirDialog("sub_directory", existingNames, name => {
       const prefix = getFullName(target);
-      return this.saveFolder(prefix ? `${prefix}/${name}/` : `${name}/`);
+      return this.addDirectory(prefix ? `${prefix}/${name}/` : `${name}/`);
     });
   }
 

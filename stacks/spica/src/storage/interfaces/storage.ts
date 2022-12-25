@@ -1,4 +1,4 @@
-export interface Storage {
+export interface Storage{
   _id?: string;
   name: string;
   url?: string;

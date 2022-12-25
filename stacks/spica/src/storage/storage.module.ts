@@ -34,10 +34,11 @@ import {IndexComponent} from "./pages/index/index.component";
 import {StorageRoutingModule} from "./storage-routing.module";
 import {AddDirectoryDialog} from "./components/add-directory-dialog/add-directory-dialog.component";
 import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
-import {StorageService} from "./storage.service";
+import {StorageService} from "./services/storage.service";
 import {StorageInitializer} from "./storage.initializer";
 import {PassportService} from "@spica-client/passport";
 import {MatCheckboxModule} from "@angular/material/checkbox";
+import {RootDirService} from "./services/root.dir.service";
 
 @NgModule({
   imports: [
@@ -94,20 +95,20 @@ export class StorageModule {
       ngModule: StorageModule,
       providers: [
         {
-          provide: ACTIVITY_FACTORY,
-          useValue: provideActivityFactory,
-          multi: true
-        },
-        {
           provide: StorageInitializer,
           useClass: StorageInitializer,
-          deps: [StorageService, RouteService, PassportService]
+          deps: [RootDirService, RouteService, PassportService]
         },
         {
           provide: LAYOUT_INITIALIZER,
           useFactory: provideStorageLoader,
           multi: true,
           deps: [StorageInitializer]
+        },
+        {
+          provide: ACTIVITY_FACTORY,
+          useValue: provideActivityFactory,
+          multi: true
         }
       ]
     };

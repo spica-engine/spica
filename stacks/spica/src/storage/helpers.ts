@@ -34,3 +34,22 @@ export function getFullName(storage: StorageNode, suffix?: string) {
 export function isDirectory(storage: StorageNode | Storage) {
   return storage.content.size == 0 && storage.content.type == "";
 }
+
+export function findNodeById(_id: string, storages: StorageNode[]) {
+  let targetNode:StorageNode;
+
+  const find = (node: StorageNode) => {
+    if (node._id == _id) {
+      targetNode = node;
+      return;
+    }
+
+    if (node.children) {
+      node.children.forEach(n => find(n));
+    }
+  };
+
+  storages.forEach(s => find(s));
+
+  return targetNode;
+}

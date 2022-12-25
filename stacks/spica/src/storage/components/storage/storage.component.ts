@@ -6,7 +6,7 @@ import {INPUT_SCHEMA, InternalPropertySchema} from "@spica-client/common";
 import {Observable} from "rxjs";
 import {map, share} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
-import {StorageService} from "../../storage.service";
+import {StorageService} from "../../services/storage.service";
 import {StorageDialogOverviewDialog} from "../storage-dialog-overview/storage-dialog-overview";
 
 @Component({
