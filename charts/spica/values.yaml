@@ -29,7 +29,7 @@ application:
     webResources: {}
     args: []
     diskAccessMode: ReadWriteOnce
-
+    serviceAccountName: default
 ingress:
     host: 
     tls: []
