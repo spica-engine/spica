@@ -78,6 +78,7 @@
         border-right: 1px solid rgba(0, 0, 0, 0.1);
 
         > .line {
+          height: 40px;
           cursor: pointer;
           padding: 8px;
           display: flex;
@@ -101,8 +102,15 @@
             }
           }
 
-          &:hover {
+          .more{
+            visibility: hidden;
+          }
+
+          &:hover{
             background-color: rgba(0, 0, 0, 0.1);
+            .more{
+              visibility: unset;
+            }
           }
         }
       }

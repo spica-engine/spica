@@ -530,12 +530,31 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.renamingStorage = undefined;
   }
 
-  updateStorageName(name: string) {
+  async updateStorageName(newName: string, storage: StorageNode) {
     if (!this.renamingStorage) {
       return;
     }
 
-    console.log("UPDATING..");
-    this.refresh.next();
+    const oldFullName = getFullName(storage);
+    storage.name = newName;
+    const newFullName = getFullName(storage);
+
+    let subStorages: Storage[] = [];
+    if (!storage.isDirectory) {
+      subStorages = [{_id: storage._id, name: oldFullName}];
+    } else {
+      subStorages = await this.storage.listSubResources(oldFullName);
+    }
+    const updates = subStorages
+      .map(s => {
+        s.name = s.name.replace(oldFullName, newFullName);
+        return s;
+      })
+      .map(s => this.storage.updateName(s._id, s.name).toPromise());
+
+    return Promise.all(updates).then(() => {
+      this.onRenameCancelled();
+      this.refresh.next();
+    });
   }
 }

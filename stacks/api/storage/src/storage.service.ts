@@ -177,6 +177,17 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
     await this.service.delete(id.toHexString());
   }
 
+  async updateMeta(_id: ObjectId, name: string) {
+    const existing = await this._coll.findOne({_id});
+    if (!existing) {
+      throw new Error(`Storage object ${_id} could not be found`);
+    }
+
+    return this._coll
+      .findOneAndUpdate({_id}, {$set: {name}}, {returnOriginal: false})
+      .then(r => r.value);
+  }
+
   async update(_id: ObjectId, object: StorageObject): Promise<StorageObject> {
     const existing = await this._coll.findOne({_id});
     if (!existing) {

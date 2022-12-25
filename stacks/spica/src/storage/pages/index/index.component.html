@@ -243,13 +243,13 @@
         <span
           #nameSpan
           [attr.contenteditable]="renamingStorage && renamingStorage._id == file._id"
-          (keyup.enter)="updateStorageName()"
+          (keyup.enter)="updateStorageName(nameSpan.textContent, file)"
           (keyup.esc)="onRenameCancelled()"
           (focusout)="onRenameCancelled()"
           >{{ file.name }}</span
         >
       </div>
-      <div class="more">
+      <div *ngIf="!selectionActive" class="more">
         <button mat-icon-button (click)="$event.stopPropagation()" [matMenuTriggerFor]="moreMenu">
           <mat-icon>more_vert</mat-icon>
         </button>

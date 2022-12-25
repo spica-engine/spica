@@ -105,6 +105,27 @@ export class StorageController {
     return object;
   }
 
+  @UseInterceptors(activity(createStorageActivity))
+  @Put(":id/meta")
+  @UseGuards(AuthGuard(), ActionGuard("storage:update","storage/:id"))
+  updateMeta(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body(
+      Schema.validate({
+        type: "object",
+        properties: {
+          name: {
+            type: "string"
+          }
+        },
+        additionalProperties: false
+      })
+    )
+    {name}
+  ) {
+    return this.storage.updateMeta(id, name);
+  }
+
   /**
    * Updates the object and content of the object.
    * @param id Identifier of the object

@@ -162,4 +162,8 @@ export class StorageService {
   listSubResources(name: string) {
     return this.getAll({name: {$regex: `^${name}/`}}).toPromise();
   }
+
+  updateName(_id: string, name: string) {
+    return this.http.put(`api:/storage/${_id}/meta`, {name});
+  }
 }
