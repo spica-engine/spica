@@ -21,7 +21,7 @@ export class RootDirService {
     if (!this.observable) {
       this.observable = new Observable<Storage[]>(subscriber => {
         this.subscriber = subscriber;
-        subscriber.next(this.storages);
+        this.retrieve();
       });
     }
 

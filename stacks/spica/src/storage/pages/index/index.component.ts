@@ -352,8 +352,8 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   addRootDir() {
-    return this.storageService
-      .getAll({filter: {name: {$regex: listRootDirsRegex}}})
+    return this.rootDirService
+      .findAll()
       .toPromise()
       .then(objects => {
         const existingNames = objects.map(o => {
