@@ -82,11 +82,6 @@ export class IndexComponent implements OnInit, OnDestroy {
       });
   }
 
-  selectAll(node: StorageNode) {
-    const target = node.isDirectory ? node : node.parent;
-    this.selectedStorageIds = target.children.map(c => c._id);
-  }
-
   ngOnInit(): void {
     const storagesSubs = combineLatest([this.refresh, this.filter$])
       .pipe(

@@ -14,16 +14,6 @@
         <mat-icon>cancel</mat-icon>
         Cancel
       </button>
-      <ng-container *ngIf="nodes.length">
-        <button
-          *ngIf="nodes.length > selectedStorageIds.length"
-          mat-button
-          (click)="selectAll(currentNode)"
-        >
-          <mat-icon>select_all</mat-icon>
-          Select All
-        </button>
-      </ng-container>
       <button
         *ngIf="selectedStorageIds.length"
         mat-button
@@ -217,7 +207,7 @@
 <ng-template #column let-nodes="nodes">
   <div class="column" (click)="!selectionActive ? onColumnClicked(nodes[0]) : undefined">
     <div
-      (click)="$event.stopPropagation(); !selectionActive ? onNodeHighlighted(node) : undefined"
+      (click)="$event.stopPropagation(); !selectionActive ? onNodeHighlighted(node) : onSelect(node)"
       class="line"
       [class.highlight]="node.isHighlighted"
       *ngFor="let node of nodes"
@@ -228,6 +218,7 @@
           [checked]="selectedStorageIds.indexOf(node._id) != -1"
           [disabled]="selectedStorageIds.indexOf(node.parent._id) != -1"
           (change)="onSelect(node)"
+          (click)="$event.stopPropagation()"
         ></mat-checkbox>
         <mat-icon *ngIf="!selectionActive">{{
           node.isDirectory ? "folder" : "description"
@@ -247,7 +238,7 @@
         </button>
         <mat-menu #moreMenu="matMenu">
           <button mat-menu-item (click)="onRenameClicked(node, nameSpan)">Rename</button>
-          <button mat-menu-item (click)="enableSelectMode(); selectedStorageIds.push(node._id)">
+          <button mat-menu-item (click)="enableSelectMode(); onSelect(node)">
             Select
           </button>
         </mat-menu>
