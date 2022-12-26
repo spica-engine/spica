@@ -132,9 +132,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   getCurrentDirName() {
-    const target = this.currentNode.isDirectory
-      ? this.currentNode
-      : this.currentNode.parent;
+    const target = this.currentNode.isDirectory ? this.currentNode : this.currentNode.parent;
 
     return getFullName(target);
   }
@@ -231,7 +229,9 @@ export class IndexComponent implements OnInit, OnDestroy {
     }
 
     await Promise.all(idsPromises);
-    await Promise.all(Array.from(idsWillBeDeleted).map(id => this.storageService.delete(id).toPromise()));
+    await Promise.all(
+      Array.from(idsWillBeDeleted).map(id => this.storageService.delete(id).toPromise())
+    );
     this.refresh.next();
   }
 
@@ -363,7 +363,9 @@ export class IndexComponent implements OnInit, OnDestroy {
       .getAll({filter: {name: {$regex: listRootDirsRegex}}})
       .toPromise()
       .then(objects => {
-        const existingNames = objects.map(o => o.name);
+        const existingNames = objects.map(o => {
+          return o.name.replace("/", "");
+        });
         return this.openAddDirDialog("root_directory", existingNames, name => {
           this.rootDirService
             .add(`${name}/`)
@@ -406,9 +408,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   enableSelectMode() {
-    this.currentNode = this.currentNode.isDirectory
-      ? this.currentNode
-      : this.currentNode.parent;
+    this.currentNode = this.currentNode.isDirectory ? this.currentNode : this.currentNode.parent;
     this.selectionActive = true;
     this.selectedStorageIds = [];
   }

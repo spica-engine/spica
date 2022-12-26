@@ -12,7 +12,7 @@
       (ngModelChange)="updateExistsState(nameModel, $event)"
       #nameModel="ngModel"
       (keyup.enter)="!nameModel.invalid && dialogRef.close(name)"
-      pattern="^[^\/\ \.]+$"
+      pattern="^[^\/\ \.]+"
     />
     <mat-error *ngIf="nameModel?.errors?.nameExists">
       This name already exists.
