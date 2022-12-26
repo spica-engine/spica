@@ -1,7 +1,7 @@
 import {Injectable} from "@angular/core";
 import {StorageService} from "./storage.service";
 import {tap} from "rxjs/operators";
-import {listDirectoriesRegex} from "../helpers";
+import {listRootDirsRegex} from "../helpers";
 import {Observable, Subscriber} from "rxjs";
 import {Storage} from "../interfaces/storage";
 import {HttpEventType} from "@angular/common/http";
@@ -46,7 +46,7 @@ export class RootDirService {
     const regex = `^${name}/`;
     const filter = {name: {$regex: regex}};
 
-    const storages = await this.storageService.getAll(filter).toPromise();
+    const storages = await this.storageService.getAll({filter}).toPromise();
     const promises = storages.map(s => this.storageService.delete(s._id).toPromise());
 
     return Promise.all(promises).then(() => this.retrieve());
@@ -54,7 +54,7 @@ export class RootDirService {
 
   retrieve() {
     return this.storageService
-      .getAll({name: {$regex: listDirectoriesRegex}})
+      .getAll({filter: {name: {$regex: listRootDirsRegex}}})
       .pipe(
         tap(dirs => (this.storages = dirs)),
         tap(() => this.subscriber.next(this.storages))

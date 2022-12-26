@@ -19,7 +19,7 @@ export class StorageInitializer {
             id: storage._id,
             icon: "folder",
             path: `/storage/${storage.name}`,
-            display: storage.name
+            display: storage.name.replace("/", "")
           })
         );
       }

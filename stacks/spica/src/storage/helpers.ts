@@ -1,6 +1,6 @@
 import {StorageNode, Storage} from "./interfaces/storage";
 
-export const listDirectoriesRegex = "^/[^/]+/$|^[^/]+/$";
+export const listRootDirsRegex = "^/[^/]+/$|^[^/]+/$";
 
 const storageNodeKeys = ["parent", "children", "depth", "isDirectory", "isHighlighted"];
 export const isStorageNode = (storage: Storage | StorageNode): storage is StorageNode => {
@@ -22,10 +22,10 @@ export const isRootDir = (storageOrNode: Storage | StorageNode) => {
   }
 };
 
-export function getFullName(storage: StorageNode, suffix?: string) {
-  const newName = suffix ? `${storage.name}/${suffix}` : storage.name;
-  if (storage.parent) {
-    return getFullName(storage.parent, newName);
+export function getFullName(node: StorageNode, suffix?: string) {
+  const newName = suffix ? `${node.name}/${suffix}` : node.name;
+  if (node.parent) {
+    return getFullName(node.parent, newName);
   } else {
     return newName;
   }
@@ -35,8 +35,8 @@ export function isDirectory(storage: StorageNode | Storage) {
   return storage.content.size == 0 && storage.content.type == "";
 }
 
-export function findNodeById(_id: string, storages: StorageNode[]) {
-  let targetNode:StorageNode;
+export function findNodeById(_id: string, nodes: StorageNode[]) {
+  let targetNode: StorageNode;
 
   const find = (node: StorageNode) => {
     if (node._id == _id) {
@@ -49,7 +49,65 @@ export function findNodeById(_id: string, storages: StorageNode[]) {
     }
   };
 
-  storages.forEach(s => find(s));
+  nodes.forEach(s => find(s));
 
   return targetNode;
+}
+
+export function mapNodesToObjects(nodes: StorageNode[]) {
+  nodes.forEach(node => {
+    node.name = getFullName(node);
+    storageNodeKeys.forEach(key => delete node[key]);
+  });
+
+  return nodes;
+}
+
+export function mapObjectsToNodes(objects: (StorageNode | Storage)[]) {
+  let result: StorageNode[] = [];
+
+  const mapPath = (obj: Storage, compare: StorageNode[], parent: StorageNode, depth: number) => {
+    const parts = obj.name.split("/").filter(p => p != "");
+    const root = parts[0];
+
+    const doesNotExist = !compare.some(c => c.name == root);
+    if (doesNotExist) {
+      compare.push({
+        name: root,
+        children: [],
+        parent,
+        depth,
+        isDirectory: false,
+        isHighlighted: false
+      });
+    }
+
+    depth++;
+
+    const currentNode = compare.find(c => c.name == root);
+    const newObj: any = {
+      name: parts.slice(1, parts.length).join("/")
+    };
+
+    const hasChild = newObj.name != "";
+
+    if (hasChild) {
+      newObj.content = obj.content;
+      newObj.url = obj.url;
+      newObj._id = obj._id;
+      newObj.isDirectory = isDirectory(obj);
+      mapPath(newObj, currentNode.children, currentNode, depth);
+    } else {
+      currentNode.content = obj.content;
+      currentNode.url = obj.url;
+      currentNode._id = obj._id;
+      currentNode.isDirectory = isDirectory(obj);
+    }
+  };
+
+  for (let object of objects) {
+    mapPath(object, result, undefined, 1);
+  }
+
+  return result;
 }

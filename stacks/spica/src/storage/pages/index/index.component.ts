@@ -9,7 +9,9 @@ import {
   findNodeById,
   getFullName,
   isDirectory,
-  listDirectoriesRegex
+  listRootDirsRegex,
+  mapNodesToObjects,
+  mapObjectsToNodes
 } from "@spica-client/storage/helpers";
 import {RootDirService} from "@spica-client/storage/services/root.dir.service";
 import {BehaviorSubject, Subject, combineLatest, Subscription, of} from "rxjs";
@@ -29,7 +31,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   subscriptions: Subscription[] = [];
 
-  storages: StorageNode[] = [];
+  nodes: StorageNode[] = [];
   progress: number;
 
   updates: Map<string, number> = new Map<string, number>();
@@ -47,16 +49,16 @@ export class IndexComponent implements OnInit, OnDestroy {
   selectedStorageIds = [];
   selectionActive = false;
 
-  currentStorage: StorageNode;
+  currentNode: StorageNode;
 
   root: string;
 
   filter$ = new Subject<object>();
 
-  renamingStorage: StorageNode;
+  renamingNode: StorageNode;
 
   constructor(
-    private storage: StorageService,
+    private storageService: StorageService,
     private rootDirService: RootDirService,
     public breakpointObserver: BreakpointObserver,
     public dialog: MatDialog,
@@ -82,20 +84,20 @@ export class IndexComponent implements OnInit, OnDestroy {
       });
   }
 
-  selectAll(storage: StorageNode) {
-    const target = storage.isDirectory ? storage : storage.parent;
-    this.selectedStorageIds = target.children.map(storage => storage._id);
+  selectAll(node: StorageNode) {
+    const target = node.isDirectory ? node : node.parent;
+    this.selectedStorageIds = target.children.map(c => c._id);
   }
 
   ngOnInit(): void {
     const storagesSubs = combineLatest([this.refresh, this.filter$])
       .pipe(
         tap(() => this.loading$.next(true)),
-        switchMap(([_, filter]) => this.storage.getAll(filter, undefined, undefined, this.sorter)),
-        map(storages => (this.storages = this.mapObjectsToNodes(storages))),
+        switchMap(([_, filter]) => this.storageService.getAll({filter, sort: this.sorter})),
+        map(storages => (this.nodes = mapObjectsToNodes(storages))),
         tap(() => {
-          this.currentStorage = this.currentStorage || this.storages[0];
-          this.setHighlighteds(getFullName(this.currentStorage), this.storages);
+          this.currentNode = this.currentNode || this.nodes[0];
+          this.setHighlighteds(getFullName(this.currentNode), this.nodes);
         }),
         tap(() => this.loading$.next(false))
       )
@@ -114,11 +116,11 @@ export class IndexComponent implements OnInit, OnDestroy {
         map(params => params.name)
       )
       .subscribe(name => {
-        this.currentStorage = undefined;
+        this.currentNode = undefined;
 
         this.root = name;
 
-        const filter = this.buildFilterByFullName(this.root);
+        const filter = this.buildFilterForDir(this.root);
         this.filter$.next(filter);
       });
 
@@ -129,14 +131,10 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
-  getCurrentFolder() {
-    return this.currentStorage.isDirectory ? this.currentStorage : this.currentStorage.parent;
-  }
-
   getCurrentDirName() {
-    const target = this.currentStorage.isDirectory
-      ? this.currentStorage
-      : this.currentStorage.parent;
+    const target = this.currentNode.isDirectory
+      ? this.currentNode
+      : this.currentNode.parent;
 
     return getFullName(target);
   }
@@ -144,7 +142,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   uploadStorageMany(file: FileList): void {
     if (file.length) {
       const prefix = this.getCurrentDirName();
-      this.storage.insertMany(file, prefix).subscribe(
+      this.storageService.insertMany(file, prefix).subscribe(
         event => {
           if (event.type === HttpEventType.UploadProgress) {
             this.progress = Math.round((100 * event.loaded) / event.total);
@@ -163,13 +161,13 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   updateStorage(node: StorageNode, file: File) {
     if (file) {
-      const parentFullName = getFullName(node.parent);
-      const storage = this.mapNodesToObjects([node])[0];
-      storage.name = `${parentFullName}/${file.name}`;
+      const prefix = this.getCurrentDirName();
+      const storage = mapNodesToObjects([node])[0];
+      storage.name = `${prefix}/${file.name}`;
 
       this.updates.set(storage._id, 0);
 
-      this.storage.updateOne(storage, file).subscribe(
+      this.storageService.updateOne(storage, file).subscribe(
         event => {
           if (event.type === HttpEventType.UploadProgress) {
             const progress = Math.round((100 * event.loaded) / event.total);
@@ -194,23 +192,23 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   delete(id: string) {
-    return this.storage
+    return this.storageService
       .delete(id)
       .toPromise()
       .then(() => {
-        this.currentStorage = this.currentStorage.parent;
+        this.currentNode = this.currentNode.parent;
         this.refresh.next();
       });
   }
 
-  deleteDir() {
+  deleteRootDir() {
     return this.rootDirService.delete(this.root).then(() => this.refresh.next());
   }
 
   async deleteMany(ids: string[]) {
-    const findShallowestDeletedStorage = (storage: StorageNode, _ids: string[]) => {
-      const hasSelectedParent = storage.parent && _ids.includes(storage.parent._id);
-      return hasSelectedParent ? findShallowestDeletedStorage(storage.parent, _ids) : storage;
+    const findShallowestDeletedStorage = (node: StorageNode, _ids: string[]) => {
+      const hasSelectedParent = node.parent && _ids.includes(node.parent._id);
+      return hasSelectedParent ? findShallowestDeletedStorage(node.parent, _ids) : node;
     };
 
     const idsWillBeDeleted = new Set<string>();
@@ -218,50 +216,29 @@ export class IndexComponent implements OnInit, OnDestroy {
     const idsPromises = [];
 
     for (const id of ids) {
-      const storage = findNodeById(id, this.storages);
-      const shallowestDeletedStorage = findShallowestDeletedStorage(storage, ids);
-      if (shallowestDeletedStorage.isDirectory) {
-        const fullName = getFullName(shallowestDeletedStorage);
+      const node = findNodeById(id, this.nodes);
+      const shallowestDeletedNode = findShallowestDeletedStorage(node, ids);
+      if (shallowestDeletedNode.isDirectory) {
+        const fullName = getFullName(shallowestDeletedNode);
         idsPromises.push(
-          this.storage
+          this.storageService
             .listSubResources(fullName)
             .then(storages => storages.forEach(s => idsWillBeDeleted.add(s._id)))
         );
       } else {
-        idsWillBeDeleted.add(storage._id);
+        idsWillBeDeleted.add(node._id);
       }
     }
 
     await Promise.all(idsPromises);
-    await Promise.all(Array.from(idsWillBeDeleted).map(id => this.storage.delete(id).toPromise()));
+    await Promise.all(Array.from(idsWillBeDeleted).map(id => this.storageService.delete(id).toPromise()));
     this.refresh.next();
   }
-
-  // deleteMany(ids: string[]) {
-  //   const storages = [];
-  //   for(const id of ids){
-  //     this.storage.getAll()
-  //   }
-
-  //   return this.storage
-  //     .listObjectsUnderIds(ids, this.storages)
-  //     .then(objects => Promise.all(objects.map(o => this.storage.delete(o._id).toPromise())))
-  //     .then(() => this.refresh.next());
-  // }
 
   sortStorage(value) {
     value.direction = value.direction === "asc" ? 1 : -1;
     this.sorter = {[value.name]: value.direction};
     this.refresh.next();
-  }
-
-  openPreview(storage: Storage): void {
-    this.dialog.open(StorageDialogOverviewDialog, {
-      maxWidth: "80%",
-      maxHeight: "80%",
-      panelClass: "preview-object",
-      data: storage
-    });
   }
 
   openEdit(storage: Storage): void {
@@ -279,88 +256,27 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   addDirectory(name: string) {
     const dir = new File([], name);
-    return this.storage
+    return this.storageService
       .insertMany([dir] as any)
       .toPromise()
       .then(() => this.refresh.next());
   }
 
-  mapNodesToObjects(nodes: StorageNode[]) {
-    nodes.forEach(node => {
-      node.name = getFullName(node);
-      delete node.parent;
-      delete node.children;
-      delete node.depth;
-      delete node.isDirectory;
-      delete node.isHighlighted;
-    });
+  onNodeHighlighted(node: StorageNode) {
+    this.currentNode = node;
 
-    return nodes;
-  }
+    const fullName = getFullName(node);
 
-  mapObjectsToNodes(objects: (StorageNode | Storage)[]) {
-    let result: StorageNode[] = [];
-
-    const mapPath = (obj: Storage, compare: StorageNode[], parent: StorageNode, depth: number) => {
-      const parts = obj.name.split("/").filter(p => p != "");
-      const root = parts[0];
-
-      const doesNotExist = !compare.some(c => c.name == root);
-      if (doesNotExist) {
-        compare.push({
-          name: root,
-          children: [],
-          parent,
-          depth,
-          isDirectory: false,
-          isHighlighted: false
-        });
-      }
-
-      depth++;
-
-      const currentNode = compare.find(c => c.name == root);
-      const newObj: any = {
-        name: parts.slice(1, parts.length).join("/")
-      };
-
-      const hasChild = newObj.name != "";
-      if (hasChild) {
-        newObj.content = obj.content;
-        newObj.url = obj.url;
-        newObj._id = obj._id;
-        newObj.isSubDirectory = isDirectory(obj);
-        mapPath(newObj, currentNode.children, currentNode, depth);
-      } else {
-        currentNode.content = obj.content;
-        currentNode.url = obj.url;
-        currentNode._id = obj._id;
-        currentNode.isDirectory = isDirectory(obj);
-      }
-    };
-
-    for (let object of objects) {
-      mapPath(object, result, undefined, 1);
+    if (!node.isDirectory) {
+      return this.setHighlighteds(fullName, this.nodes);
     }
 
-    return result;
-  }
-
-  onStorageHighlighted(storage: StorageNode) {
-    this.currentStorage = storage;
-
-    const fullName = getFullName(storage);
-
-    if (!storage.isDirectory) {
-      return this.setHighlighteds(fullName, this.storages);
-    }
-
-    const filter = this.buildFilterByFullName(fullName);
+    const filter = this.buildFilterForDir(fullName);
     this.filter$.next(filter);
   }
 
-  onDetailsClosed(storage: StorageNode) {
-    const fullName = getFullName(storage);
+  onDetailsClosed(node: StorageNode) {
+    const fullName = getFullName(node);
 
     const parentNameParts = fullName.split("/").filter(n => n != "");
     parentNameParts.pop();
@@ -369,10 +285,10 @@ export class IndexComponent implements OnInit, OnDestroy {
       this.clearHighlighteds();
     } else {
       const parentFullName = parentNameParts.join("/");
-      this.setHighlighteds(parentFullName, this.storages);
+      this.setHighlighteds(parentFullName, this.nodes);
     }
 
-    this.currentStorage = storage.parent;
+    this.currentNode = node.parent;
   }
 
   clearHighlighteds() {
@@ -385,17 +301,17 @@ export class IndexComponent implements OnInit, OnDestroy {
       });
     };
 
-    clear(this.storages);
+    clear(this.nodes);
   }
 
-  setHighlighteds(_fullName: string, _nodes: StorageNode[]) {
+  setHighlighteds(fullName: string, nodes: StorageNode[]) {
     this.clearHighlighteds();
 
-    const setHighlighted = (fullName: string, nodes: StorageNode[]) => {
-      const parts = fullName.split("/").filter(n => n != "");
+    const setHighlighted = (_fullName: string, _nodes: StorageNode[]) => {
+      const parts = _fullName.split("/").filter(n => n != "");
       const name = parts[0];
 
-      const targetNode = nodes.find(t => t.name == name);
+      const targetNode = _nodes.find(t => t.name == name);
       if (!targetNode) {
         return;
       }
@@ -405,17 +321,17 @@ export class IndexComponent implements OnInit, OnDestroy {
       if (parts.length > 1) {
         setHighlighted(parts.slice(1, parts.length).join("/"), targetNode.children);
       } else {
-        this.currentStorage = targetNode;
+        this.currentNode = targetNode;
       }
     };
-    setHighlighted(_fullName, _nodes);
+    setHighlighted(fullName, nodes);
   }
 
-  getFilter(name: string) {
+  getDirFilter(name: string) {
     return {name: {$regex: `^${name}/$|^${name}\/[^\/]+\/?$`}};
   }
 
-  buildFilterByFullName(fullName: string) {
+  buildFilterForDir(fullName: string) {
     const parts = fullName.split("/").filter(n => n != "");
 
     const filters = [];
@@ -423,7 +339,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     let endIndex = 1;
     while (true) {
       const name = parts.slice(0, endIndex).join("/");
-      const filter = this.getFilter(name);
+      const filter = this.getDirFilter(name);
       filters.push(filter);
       endIndex++;
       if (endIndex > parts.length) {
@@ -434,8 +350,8 @@ export class IndexComponent implements OnInit, OnDestroy {
     return {$or: filters};
   }
 
-  onColumnClicked(storage: StorageNode) {
-    this.onStorageHighlighted(storage.parent);
+  onColumnClicked(node: StorageNode) {
+    this.onNodeHighlighted(node.parent);
   }
 
   objectIdToDate(objectId) {
@@ -443,8 +359,8 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   addRootDir() {
-    return this.storage
-      .getAll({name: {$regex: listDirectoriesRegex}})
+    return this.storageService
+      .getAll({filter: {name: {$regex: listRootDirsRegex}}})
       .toPromise()
       .then(objects => {
         const existingNames = objects.map(o => o.name);
@@ -478,10 +394,10 @@ export class IndexComponent implements OnInit, OnDestroy {
     });
   }
 
-  addSubDir(storage: StorageNode) {
-    const target = storage.isDirectory ? storage : storage.parent;
+  addSubDir(node: StorageNode) {
+    const target = node.isDirectory ? node : node.parent;
 
-    const existingNames = target.children.map(storage => storage.name);
+    const existingNames = target.children.map(c => c.name);
 
     this.openAddDirDialog("sub_directory", existingNames, name => {
       const prefix = getFullName(target);
@@ -490,9 +406,9 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   enableSelectMode() {
-    this.currentStorage = this.currentStorage.isDirectory
-      ? this.currentStorage
-      : this.currentStorage.parent;
+    this.currentNode = this.currentNode.isDirectory
+      ? this.currentNode
+      : this.currentNode.parent;
     this.selectionActive = true;
     this.selectedStorageIds = [];
   }
@@ -502,55 +418,55 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.selectedStorageIds = [];
   }
 
-  onSelect(storage: StorageNode) {
-    const updateSelecteds = (selecteds: string[], storage: StorageNode, action: "push" | "pop") => {
-      const isExist = selecteds.includes(storage._id);
+  onSelect(node: StorageNode) {
+    const updateSelecteds = (selecteds: string[], _node: StorageNode, action: "push" | "pop") => {
+      const isExist = selecteds.includes(_node._id);
 
       if (action == "push" && !isExist) {
-        selecteds.push(storage._id);
+        selecteds.push(_node._id);
       } else if (action == "pop" && isExist) {
-        selecteds.splice(selecteds.indexOf(storage._id), 1);
+        selecteds.splice(selecteds.indexOf(_node._id), 1);
       }
 
-      if (storage.children) {
-        storage.children.forEach(c => updateSelecteds(selecteds, c, action));
+      if (_node.children) {
+        _node.children.forEach(c => updateSelecteds(selecteds, c, action));
       }
     };
 
-    const action = this.selectedStorageIds.indexOf(storage._id) != -1 ? "pop" : "push";
-    updateSelecteds(this.selectedStorageIds, storage, action);
+    const action = this.selectedStorageIds.indexOf(node._id) != -1 ? "pop" : "push";
+    updateSelecteds(this.selectedStorageIds, node, action);
   }
 
-  onRenameClicked(storage: StorageNode, element) {
-    this.renamingStorage = storage;
+  onRenameClicked(node: StorageNode, element) {
+    this.renamingNode = node;
     setTimeout(() => element.focus(), 0);
   }
 
   onRenameCancelled() {
-    this.renamingStorage = undefined;
+    this.renamingNode = undefined;
   }
 
-  async updateStorageName(newName: string, storage: StorageNode) {
-    if (!this.renamingStorage) {
+  async updateStorageName(newName: string, node: StorageNode) {
+    if (!this.renamingNode) {
       return;
     }
 
-    const oldFullName = getFullName(storage);
-    storage.name = newName;
-    const newFullName = getFullName(storage);
+    const oldFullName = getFullName(node);
+    node.name = newName;
+    const newFullName = getFullName(node);
 
     let subStorages: Storage[] = [];
-    if (!storage.isDirectory) {
-      subStorages = [{_id: storage._id, name: oldFullName}];
+    if (!node.isDirectory) {
+      subStorages = [{_id: node._id, name: oldFullName}];
     } else {
-      subStorages = await this.storage.listSubResources(oldFullName);
+      subStorages = await this.storageService.listSubResources(oldFullName);
     }
     const updates = subStorages
       .map(s => {
         s.name = s.name.replace(oldFullName, newFullName);
         return s;
       })
-      .map(s => this.storage.updateName(s._id, s.name).toPromise());
+      .map(s => this.storageService.updateName(s._id, s.name).toPromise());
 
     return Promise.all(updates).then(() => {
       this.onRenameCancelled();

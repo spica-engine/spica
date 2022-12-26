@@ -19,21 +19,26 @@ export class StorageService {
     this.lastUpdates = new LastUpdateCache();
   }
 
-  getAll<P extends boolean = false>(
-    filter?: object,
-    limit?: number,
-    skip?: number,
-    sort?,
-    paginate?: P
-  ): Observable<P extends true ? IndexResult<Storage> : Storage[]>;
+  getAll<P extends boolean = false>(options?: {
+    filter?: object;
+    limit?: number;
+    skip?: number;
+    sort?;
+    paginate?: P;
+  }): Observable<P extends true ? IndexResult<Storage> : Storage[]>;
   getAll(
-    filter?: object,
-    limit?: number,
-    skip?: number,
-    sort?,
-    paginate = false
+    options: {
+      filter?: object;
+      limit?: number;
+      skip?: number;
+      sort?: object;
+      paginate?: boolean;
+    } = {}
   ): Observable<Storage[] | IndexResult<Storage>> {
     let params = new HttpParams();
+
+    const {limit, skip, sort, filter, paginate} = options;
+
     if (limit) {
       params = params.append("limit", limit.toString());
     }
@@ -48,8 +53,7 @@ export class StorageService {
       params = params.append("filter", JSON.stringify(filter));
     }
 
-    // we will change this later on
-    params = params.append("paginate", JSON.stringify(paginate));
+    params = params.append("paginate", JSON.stringify(paginate || false));
 
     return this.http.get<Storage[] | IndexResult<Storage>>("api:/storage", {params}).pipe(
       map(objects => {
@@ -160,7 +164,7 @@ export class StorageService {
   }
 
   listSubResources(name: string) {
-    return this.getAll({name: {$regex: `^${name}/`}}).toPromise();
+    return this.getAll({filter: {name: {$regex: `^${name}/`}}}).toPromise();
   }
 
   updateName(_id: string, name: string) {

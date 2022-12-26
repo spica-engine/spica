@@ -14,11 +14,11 @@
         <mat-icon>cancel</mat-icon>
         Cancel
       </button>
-      <ng-container *ngIf="storages.length">
+      <ng-container *ngIf="nodes.length">
         <button
-          *ngIf="storages.length > selectedStorageIds.length"
+          *ngIf="nodes.length > selectedStorageIds.length"
           mat-button
-          (click)="selectAll(currentStorage)"
+          (click)="selectAll(currentNode)"
         >
           <mat-icon>select_all</mat-icon>
           Select All
@@ -112,7 +112,7 @@
       mat-button
       canInteract="storage:create"
       [disabled]="progress"
-      (click)="!progress ? addSubDir(currentStorage) : undefined"
+      (click)="!progress ? addSubDir(currentNode) : undefined"
     >
       <mat-icon *ngIf="!progress">create_new_folder</mat-icon>
       Create New Directory
@@ -133,7 +133,7 @@
         templateOrDescription: deleteDirDialogTemplate,
         answer: root
       }"
-      (confirm)="deleteDir()"
+      (confirm)="deleteRootDir()"
     >
       <mat-icon>delete</mat-icon>
       Delete This Directory
@@ -143,9 +143,9 @@
 
 <mat-card *ngIf="root">
   <div class="directory-view">
-    <ng-container *ngIf="storages.length">
+    <ng-container *ngIf="nodes.length">
       <ng-container
-        *ngTemplateOutlet="column; context: {files: storages[0].children}"
+        *ngTemplateOutlet="column; context: {nodes: nodes[0].children}"
       ></ng-container>
       <mat-progress-spinner
         [style.display]="(loading$ | async) ? 'inline' : 'none'"
@@ -156,39 +156,39 @@
       ></mat-progress-spinner>
     </ng-container>
   </div>
-  <div *ngIf="currentStorage && !currentStorage.isDirectory" class="object-details">
+  <div *ngIf="currentNode && !currentNode.isDirectory" class="object-details">
     <div class="meta">
       <div class="close">
-        <button mat-icon-button (click)="onDetailsClosed(currentStorage)">
+        <button mat-icon-button (click)="onDetailsClosed(currentNode)">
           <mat-icon>clear</mat-icon>
         </button>
       </div>
-      <storage-view [blob]="currentStorage.url"></storage-view>
-      <h4>{{ currentStorage.name }}</h4>
+      <storage-view [blob]="currentNode.url"></storage-view>
+      <h4>{{ currentNode.name }}</h4>
       <p>
-        {{ currentStorage.content.type }} -
-        {{ currentStorage.content.size / 1000 | number: "1.0-0" }} KB
+        {{ currentNode.content.type }} -
+        {{ currentNode.content.size / 1000 | number: "1.0-0" }} KB
       </p>
-      <p>{{ objectIdToDate(currentStorage._id) | date: "medium" }}</p>
+      <p>{{ objectIdToDate(currentNode._id) | date: "medium" }}</p>
     </div>
     <div class="action-buttons">
-      <button mat-stroked-button [matClipboard]="currentStorage.url">
+      <button mat-stroked-button [matClipboard]="currentNode.url">
         <mat-icon>file_copy</mat-icon>
         Copy
       </button>
       <button
         canInteract="storage:update"
-        [resource]="currentStorage._id"
-        *ngIf="currentStorage.content?.type?.startsWith('image/')"
+        [resource]="currentNode._id"
+        *ngIf="currentNode.content?.type?.startsWith('image/')"
         mat-stroked-button
-        (click)="openEdit(currentStorage)"
+        (click)="openEdit(currentNode)"
       >
         <mat-icon>edit</mat-icon>
         Edit
       </button>
       <button
         canInteract="storage:update"
-        [resource]="currentStorage._id"
+        [resource]="currentNode._id"
         mat-stroked-button
         (click)="fileSelector?.click()"
       >
@@ -198,14 +198,14 @@
           #fileSelector
           #fileModel="ngModel"
           [ngModel]="undefined"
-          (ngModelChange)="updateStorage(currentStorage, fileSelector.files[0])"
+          (ngModelChange)="updateStorage(currentNode, fileSelector.files[0])"
         />
         <mat-icon>sync_alt</mat-icon>
         Replace
       </button>
       <button
         canInteract="storage:delete"
-        [resource]="currentStorage._id"
+        [resource]="currentNode._id"
         mat-stroked-button
         color="warn"
         [matAwareDialog]="{
@@ -213,7 +213,7 @@
           templateOrDescription: deleteDialogTemplate,
           answer: 'agree'
         }"
-        (confirm)="delete(currentStorage._id)"
+        (confirm)="delete(currentNode._id)"
       >
         <mat-icon>delete</mat-icon>
         Delete
@@ -222,31 +222,31 @@
   </div>
 </mat-card>
 
-<ng-template #column let-files="files">
-  <div class="column" (click)="!selectionActive ? onColumnClicked(files[0]) : undefined">
+<ng-template #column let-nodes="nodes">
+  <div class="column" (click)="!selectionActive ? onColumnClicked(nodes[0]) : undefined">
     <div
-      (click)="$event.stopPropagation(); !selectionActive ? onStorageHighlighted(file) : undefined"
+      (click)="$event.stopPropagation(); !selectionActive ? onNodeHighlighted(node) : undefined"
       class="line"
-      [class.highlight]="file.isHighlighted"
-      *ngFor="let file of files"
+      [class.highlight]="node.isHighlighted"
+      *ngFor="let node of nodes"
     >
       <div class="content">
         <mat-checkbox
           *ngIf="selectionActive"
-          [checked]="selectedStorageIds.indexOf(file._id) != -1"
-          [disabled]="selectedStorageIds.indexOf(file.parent._id) != -1"
-          (change)="onSelect(file)"
+          [checked]="selectedStorageIds.indexOf(node._id) != -1"
+          [disabled]="selectedStorageIds.indexOf(node.parent._id) != -1"
+          (change)="onSelect(node)"
         ></mat-checkbox>
         <mat-icon *ngIf="!selectionActive">{{
-          file.isDirectory ? "folder" : "description"
+          node.isDirectory ? "folder" : "description"
         }}</mat-icon>
         <span
           #nameSpan
-          [attr.contenteditable]="renamingStorage && renamingStorage._id == file._id"
-          (keyup.enter)="updateStorageName(nameSpan.textContent, file)"
+          [attr.contenteditable]="renamingNode && renamingNode._id == node._id"
+          (keyup.enter)="updateStorageName(nameSpan.textContent, node)"
           (keyup.esc)="onRenameCancelled()"
           (focusout)="onRenameCancelled()"
-          >{{ file.name }}</span
+          >{{ node.name }}</span
         >
       </div>
       <div *ngIf="!selectionActive" class="more">
@@ -254,14 +254,14 @@
           <mat-icon>more_vert</mat-icon>
         </button>
         <mat-menu #moreMenu="matMenu">
-          <button mat-menu-item (click)="onRenameClicked(file, nameSpan)">Rename</button>
+          <button mat-menu-item (click)="onRenameClicked(node, nameSpan)">Rename</button>
         </mat-menu>
       </div>
     </div>
   </div>
-  <ng-container *ngFor="let file of files">
-    <ng-container *ngIf="file.children && file.children.length > 0">
-      <ng-container *ngTemplateOutlet="column; context: {files: file.children}"></ng-container>
+  <ng-container *ngFor="let node of nodes">
+    <ng-container *ngIf="node.children && node.children.length > 0">
+      <ng-container *ngTemplateOutlet="column; context: {nodes: node.children}"></ng-container>
     </ng-container>
   </ng-container>
 </ng-template>

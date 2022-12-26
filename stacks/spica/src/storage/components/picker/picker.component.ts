@@ -30,13 +30,12 @@ export class PickerComponent implements OnInit {
   ngOnInit(): void {
     this.storages$ = merge(this._paginator.page, of(null), this.refresh).pipe(
       switchMap(() =>
-        this.storage.getAll(
-          undefined,
-          this._paginator.pageSize || this._pageSize,
-          this._paginator.pageSize * this._paginator.pageIndex,
-          this.sorter,
-          true
-        )
+        this.storage.getAll({
+          limit: this._paginator.pageSize || this._pageSize,
+          skip: this._paginator.pageSize * this._paginator.pageIndex,
+          sort: this.sorter,
+          paginate: true
+        })
       ),
       map(storage => {
         this._paginator.length = storage.meta.total;
