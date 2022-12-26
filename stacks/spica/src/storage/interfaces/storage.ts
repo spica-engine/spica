@@ -9,9 +9,9 @@ export interface Storage{
 }
 
 export type StorageNode = Storage & {
+  index?:number;
   parent: StorageNode;
   children: StorageNode[];
-  depth: number;
   isDirectory: boolean;
   isHighlighted: boolean;
 };

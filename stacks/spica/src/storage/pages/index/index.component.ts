@@ -8,16 +8,14 @@ import {AddDirectoryDialog} from "@spica-client/storage/components/add-directory
 import {
   findNodeById,
   getFullName,
-  isDirectory,
   listRootDirsRegex,
   mapNodesToObjects,
   mapObjectsToNodes
 } from "@spica-client/storage/helpers";
 import {RootDirService} from "@spica-client/storage/services/root.dir.service";
-import {BehaviorSubject, Subject, combineLatest, Subscription, of} from "rxjs";
+import {BehaviorSubject, Subject, combineLatest, Subscription} from "rxjs";
 import {filter, map, switchMap, tap} from "rxjs/operators";
 import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
-import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
 import {Storage, StorageNode} from "../../interfaces/storage";
 import {StorageService} from "../../services/storage.service";
 

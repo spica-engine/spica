@@ -66,7 +66,7 @@ export function mapNodesToObjects(nodes: StorageNode[]) {
 export function mapObjectsToNodes(objects: (StorageNode | Storage)[]) {
   let result: StorageNode[] = [];
 
-  const mapPath = (obj: Storage, compare: StorageNode[], parent: StorageNode, depth: number) => {
+  const mapPath = (obj: Storage, compare: StorageNode[], parent: StorageNode, index: number) => {
     const parts = obj.name.split("/").filter(p => p != "");
     const root = parts[0];
 
@@ -76,13 +76,10 @@ export function mapObjectsToNodes(objects: (StorageNode | Storage)[]) {
         name: root,
         children: [],
         parent,
-        depth,
         isDirectory: false,
         isHighlighted: false
       });
     }
-
-    depth++;
 
     const currentNode = compare.find(c => c.name == root);
     const newObj: any = {
@@ -96,17 +93,19 @@ export function mapObjectsToNodes(objects: (StorageNode | Storage)[]) {
       newObj.url = obj.url;
       newObj._id = obj._id;
       newObj.isDirectory = isDirectory(obj);
-      mapPath(newObj, currentNode.children, currentNode, depth);
+      mapPath(newObj, currentNode.children, currentNode, index);
     } else {
       currentNode.content = obj.content;
       currentNode.url = obj.url;
       currentNode._id = obj._id;
       currentNode.isDirectory = isDirectory(obj);
+      currentNode.index = index;
+      currentNode.children.sort((a, b) => a.index - b.index);
     }
   };
 
-  for (let object of objects) {
-    mapPath(object, result, undefined, 1);
+  for (let [i, object] of objects.entries()) {
+    mapPath(object, result, undefined, i);
   }
 
   return result;
