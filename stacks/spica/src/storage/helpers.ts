@@ -1,8 +1,22 @@
 import {StorageNode, Storage} from "./interfaces/storage";
 
-export const listRootDirsRegex = "^/[^/]+/$|^[^/]+/$";
+function regexFilterGenerator($regex: string) {
+  return {
+    name: {$regex}
+  };
+}
 
-const storageNodeKeys = ["parent", "children", "depth", "isDirectory", "isHighlighted"];
+export namespace Filters {
+  // prettier-ignore
+  export const ListRootDirs = regexFilterGenerator("^\/[^\/]+\/$|^[^\/]+\/$");
+  // prettier-ignore
+  export const ListOnlyObjects = regexFilterGenerator("^.*[^\/]$");
+  export const ListUnderDirFirstDepth = dir =>
+    regexFilterGenerator(`^${dir}\/$|^${dir}\/[^\/]+\/?$`);
+  export const listUnderDirAll = dir => regexFilterGenerator(`^${dir}\/`);
+}
+
+const storageNodeKeys = ["parent", "children", "depth", "isDirectory", "isHighlighted", "index"];
 export const isStorageNode = (storage: Storage | StorageNode): storage is StorageNode => {
   return Object.keys(storage).some(s => storageNodeKeys.includes(s));
 };

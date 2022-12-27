@@ -1,6 +1,7 @@
 import {Component, OnInit, ViewChild} from "@angular/core";
 import {MatDialogRef} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
+import {Filters} from "@spica-client/storage/helpers";
 import {merge, Observable, of, Subject} from "rxjs";
 import {map, switchMap} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
@@ -31,6 +32,7 @@ export class PickerComponent implements OnInit {
     this.storages$ = merge(this._paginator.page, of(null), this.refresh).pipe(
       switchMap(() =>
         this.storage.getAll({
+          filter: Filters.ListOnlyObjects,
           limit: this._paginator.pageSize || this._pageSize,
           skip: this._paginator.pageSize * this._paginator.pageIndex,
           sort: this.sorter,

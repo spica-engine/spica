@@ -6,9 +6,9 @@ import {MatPaginator} from "@angular/material/paginator";
 import {ActivatedRoute, Router} from "@angular/router";
 import {AddDirectoryDialog} from "@spica-client/storage/components/add-directory-dialog/add-directory-dialog.component";
 import {
+  Filters,
   findNodeById,
   getFullName,
-  listRootDirsRegex,
   mapNodesToObjects,
   mapObjectsToNodes
 } from "@spica-client/storage/helpers";
@@ -320,10 +320,6 @@ export class IndexComponent implements OnInit, OnDestroy {
     setHighlighted(fullName, nodes);
   }
 
-  getDirFilter(name: string) {
-    return {name: {$regex: `^${name}/$|^${name}\/[^\/]+\/?$`}};
-  }
-
   buildFilterForDir(fullName: string) {
     const parts = fullName.split("/").filter(n => n != "");
 
@@ -332,7 +328,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     let endIndex = 1;
     while (true) {
       const name = parts.slice(0, endIndex).join("/");
-      const filter = this.getDirFilter(name);
+      const filter = Filters.ListUnderDirFirstDepth(name);
       filters.push(filter);
       endIndex++;
       if (endIndex > parts.length) {
@@ -352,20 +348,17 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   addRootDir() {
-    return this.rootDirService
-      .findAll()
-      .toPromise()
-      .then(objects => {
-        const existingNames = objects.map(o => {
-          return o.name.replace("/", "");
-        });
-        return this.openAddDirDialog("root_directory", existingNames, name => {
-          this.rootDirService
-            .add(`${name}/`)
-            .toPromise()
-            .then(() => this.router.navigate(["storage", name]));
-        });
+    return this.rootDirService.findAll().then(objects => {
+      const existingNames = objects.map(o => {
+        return o.name.replace("/", "");
       });
+      return this.openAddDirDialog("root_directory", existingNames, name => {
+        this.rootDirService
+          .add(`${name}/`)
+          .toPromise()
+          .then(() => this.router.navigate(["storage", name]));
+      });
+    });
   }
 
   openAddDirDialog(

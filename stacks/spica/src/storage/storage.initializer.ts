@@ -10,7 +10,7 @@ export class StorageInitializer {
     private routeService: RouteService,
     private passport: PassportService
   ) {
-    rootDirService.findAll().subscribe(storages => {
+    rootDirService.watch().subscribe(storages => {
       routeService.dispatch(new RemoveCategory(RouteCategory.Storage));
       for (const storage of storages) {
         this.routeService.dispatch(
@@ -42,7 +42,7 @@ export class StorageInitializer {
   async appInitializer() {
     const allowed = await this.passport.checkAllowed("storage:index", "*").toPromise();
     if (this.passport.identified && allowed) {
-      this.rootDirService.retrieve();
+      this.rootDirService.findAll();
     } else {
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Storage));
     }

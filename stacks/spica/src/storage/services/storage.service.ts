@@ -6,9 +6,9 @@ import {Buffer} from "buffer";
 import {from, Observable} from "rxjs";
 import {flatMap, map} from "rxjs/operators";
 import {LastUpdateCache} from "../cache";
-import {findNodeById, getFullName} from "../helpers";
+import {Filters} from "../helpers";
 
-import {Storage, StorageNode} from "../interfaces/storage";
+import {Storage} from "../interfaces/storage";
 
 window["Buffer"] = Buffer;
 
@@ -164,7 +164,7 @@ export class StorageService {
   }
 
   listSubResources(name: string) {
-    return this.getAll({filter: {name: {$regex: `^${name}/`}}}).toPromise();
+    return this.getAll({filter: Filters.listUnderDirAll(name)}).toPromise();
   }
 
   updateName(_id: string, name: string) {

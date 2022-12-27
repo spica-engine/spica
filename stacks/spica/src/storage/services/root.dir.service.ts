@@ -1,7 +1,6 @@
 import {Injectable} from "@angular/core";
 import {StorageService} from "./storage.service";
-import {tap} from "rxjs/operators";
-import {listRootDirsRegex} from "../helpers";
+import {Filters} from "../helpers";
 import {Observable, Subscriber} from "rxjs";
 import {Storage} from "../interfaces/storage";
 import {HttpEventType} from "@angular/common/http";
@@ -12,20 +11,25 @@ import {HttpEventType} from "@angular/common/http";
 export class RootDirService {
   storages: Storage[] = [];
 
-  subscriber: Subscriber<Storage[]>;
-  observable: Observable<Storage[]>;
+  subscribers: Subscriber<Storage[]>[] = [];
 
   constructor(private storageService: StorageService) {}
 
-  findAll() {
-    if (!this.observable) {
-      this.observable = new Observable<Storage[]>(subscriber => {
-        this.subscriber = subscriber;
-        this.retrieve();
+  watch() {
+    return new Observable<Storage[]>(subscriber => {
+      this.subscribers.push(subscriber);
+      this.findAll().then(storages => {
+        this.storages = storages;
+        subscriber.next(this.storages);
       });
-    }
+    });
+  }
 
-    return this.observable;
+  private onChange() {
+    this.findAll().then(storages => {
+      this.storages = storages;
+      this.subscribers.forEach(s => s.next(this.storages));
+    });
   }
 
   add(name: string) {
@@ -33,9 +37,9 @@ export class RootDirService {
     const dir = new File([], name);
 
     return new Observable(subscriber => {
-      this.storageService.insertMany([dir] as any).subscribe(async r => {
+      this.storageService.insertMany([dir] as any).subscribe(r => {
         if (r.type == HttpEventType.Response) {
-          await this.retrieve();
+          this.onChange();
           subscriber.complete();
         }
       });
@@ -49,16 +53,10 @@ export class RootDirService {
     const storages = await this.storageService.getAll({filter}).toPromise();
     const promises = storages.map(s => this.storageService.delete(s._id).toPromise());
 
-    return Promise.all(promises).then(() => this.retrieve());
+    return Promise.all(promises).then(() => this.onChange());
   }
 
-  retrieve() {
-    return this.storageService
-      .getAll({filter: {name: {$regex: listRootDirsRegex}}})
-      .pipe(
-        tap(dirs => (this.storages = dirs)),
-        tap(() => this.subscriber.next(this.storages))
-      )
-      .toPromise();
+  findAll() {
+    return this.storageService.getAll({filter: Filters.ListRootDirs}).toPromise();
   }
 }
