@@ -213,7 +213,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         const fullName = getFullName(shallowestDeletedNode);
         idsPromises.push(
           this.storageService
-            .listSubResources(fullName,true)
+            .listSubResources(fullName, true)
             .then(storages => storages.forEach(s => idsWillBeDeleted.add(s._id)))
         );
       } else {
@@ -437,21 +437,14 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.renamingNode = undefined;
   }
 
-  async updateStorageName(newName: string, node: StorageNode) {
-    if (!this.renamingNode) {
-      return;
-    }
-
-    const oldFullName = getFullName(node);
-    node.name = newName;
-    const newFullName = getFullName(node);
-
+  async updateStorageName(node: StorageNode, oldFullName: string, newFullName: string) {
     let subStorages: Storage[] = [];
     if (!node.isDirectory) {
       subStorages = [{_id: node._id, name: oldFullName}];
     } else {
-      subStorages = await this.storageService.listSubResources(oldFullName,true);
+      subStorages = await this.storageService.listSubResources(oldFullName, true);
     }
+
     const updates = subStorages
       .map(s => {
         s.name = s.name.replace(oldFullName, newFullName);
@@ -459,9 +452,40 @@ export class IndexComponent implements OnInit, OnDestroy {
       })
       .map(s => this.storageService.updateName(s._id, s.name).toPromise());
 
-    return Promise.all(updates).then(() => {
+    return Promise.all(updates);
+  }
+
+  onRenameCompleted(newName: string, node: StorageNode) {
+    if (!this.renamingNode) {
+      return;
+    }
+
+    const oldFullName = getFullName(node);
+
+    node.name = newName;
+    const newFullName = getFullName(node);
+
+    return this.updateStorageName(node, oldFullName, newFullName).then(() => {
       this.onRenameCancelled();
       this.refresh.next();
     });
+  }
+
+  onDropped(event) {
+    const oldParent = event.previousContainer.data[0].parent;
+    const newParent = event.container.data[0].parent;
+    if (oldParent == newParent) {
+      return;
+    }
+
+    const node = event.previousContainer.data[event.previousIndex];
+
+    const oldPrefix = getFullName(oldParent);
+    const newPrefix = getFullName(newParent);
+
+    const oldFullName = getFullName(node);
+    const newFullName = oldFullName.replace(oldPrefix, newPrefix);
+
+    return this.updateStorageName(node, oldFullName, newFullName).then(() => this.refresh.next());
   }
 }

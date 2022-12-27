@@ -204,13 +204,24 @@
     </div>
   </div>
 </mat-card>
-<ng-template #column let-nodes="nodes">
-  <div class="column" (click)="!selectionActive ? onColumnClicked(nodes[0]) : undefined">
+<ng-template #column let-nodes="nodes" cdkDropListGroup>
+  <div
+    class="column"
+    [cdkDropListData]="nodes"
+    (cdkDropListDropped)="onDropped($event)"
+    cdkDropList
+    (click)="!selectionActive ? onColumnClicked(nodes[0]) : undefined"
+  >
     <div
-      (click)="$event.stopPropagation(); !selectionActive ? onNodeHighlighted(node) : onSelect(node)"
+      (click)="
+        $event.stopPropagation(); !selectionActive ? onNodeHighlighted(node) : onSelect(node)
+      "
       class="line"
       [class.highlight]="node.isHighlighted"
       *ngFor="let node of nodes"
+      cdkDrag
+      [cdkDropListData]="node"
+      [cdkDragDisabled]="node.isHighlighted"
     >
       <div class="content">
         <mat-checkbox
@@ -226,7 +237,7 @@
         <span
           #nameSpan
           [attr.contenteditable]="renamingNode && renamingNode._id == node._id"
-          (keyup.enter)="updateStorageName(nameSpan.textContent, node)"
+          (keyup.enter)="onRenameCompleted(nameSpan.textContent, node)"
           (keyup.esc)="onRenameCancelled()"
           (focusout)="onRenameCancelled()"
           >{{ node.name }}</span
