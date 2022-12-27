@@ -24,10 +24,10 @@ import {StorageService} from "../../services/storage.service";
 import {RootDirService} from "../../services/root.dir.service";
 import {IndexComponent} from "./index.component";
 import {Storage, StorageNode} from "../../interfaces/storage";
-import {listRootDirsRegex} from "../../helpers";
 import {ActivatedRoute} from "@angular/router";
+import { Filters } from "../../helpers";
 
-fdescribe("Storage/IndexComponent", () => {
+describe("Storage/IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
   let storageService: jasmine.SpyObj<Partial<StorageService>>;
   let rootDirService: jasmine.SpyObj<Partial<RootDirService>>;
@@ -102,7 +102,7 @@ fdescribe("Storage/IndexComponent", () => {
     rootDirService = {
       findAll: jasmine
         .createSpy("findAll")
-        .and.returnValue(of(storageObjects.filter(s => listRootDirsRegex.match(s.name))))
+        .and.returnValue(of(storageObjects.filter(s => Filters.ListRootDirs.name.$regex.match(s.name))))
     };
     TestBed.configureTestingModule({
       imports: [

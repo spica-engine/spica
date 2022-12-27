@@ -73,7 +73,7 @@ describe("Home Layout", () => {
       const navCategories = fixture.debugElement.nativeElement.querySelectorAll(
         ".iconlist > mat-list-item:not(:first-of-type)"
       );
-      expect(navCategories.length).toBe(8);
+      expect(navCategories.length).toBe(9);
       expect(navCategories[0].getAttribute("class")).toContain("active");
     }));
 
