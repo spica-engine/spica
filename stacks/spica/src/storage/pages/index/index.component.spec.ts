@@ -338,7 +338,7 @@ describe("Storage/IndexComponent", () => {
       fixture.detectChanges();
 
       expect(insertManySpy).toHaveBeenCalledTimes(1);
-      expect(insertManySpy).toHaveBeenCalledWith(files, "files/docs");
+      expect(insertManySpy).toHaveBeenCalledWith(files, "files/docs/");
     }));
 
     describe("collapse folder", () => {
@@ -377,7 +377,7 @@ describe("Storage/IndexComponent", () => {
         fixture.detectChanges();
 
         expect(insertManySpy).toHaveBeenCalledTimes(1);
-        expect(insertManySpy).toHaveBeenCalledWith(files, "files");
+        expect(insertManySpy).toHaveBeenCalledWith(files, "files/");
       }));
     });
   });
@@ -400,7 +400,7 @@ describe("Storage/IndexComponent", () => {
     ).toBe(true);
 
     expect(insertSpy).toHaveBeenCalledTimes(1);
-    expect(insertSpy).toHaveBeenCalledWith({length: 1} as any, "files");
+    expect(insertSpy).toHaveBeenCalledWith({length: 1} as any, "files/");
   });
 
   it("should complete upload progress", () => {
@@ -418,7 +418,7 @@ describe("Storage/IndexComponent", () => {
     ).toBe(false);
 
     expect(insertSpy).toHaveBeenCalledTimes(1);
-    expect(insertSpy).toHaveBeenCalledWith({length: 1} as any, "files");
+    expect(insertSpy).toHaveBeenCalledWith({length: 1} as any, "files/");
 
     expect(refreshSpy).toHaveBeenCalledTimes(1);
     expect(fixture.componentInstance.progress).toBe(undefined as any);
@@ -453,7 +453,7 @@ describe("Storage/IndexComponent", () => {
     fixture.detectChanges();
 
     expect(storageService.listSubResources).toHaveBeenCalledTimes(1);
-    expect(storageService.listSubResources).toHaveBeenCalledWith("files/docs",true);
+    expect(storageService.listSubResources).toHaveBeenCalledWith("files/docs/",true);
 
     expect(deleleteSpy).toHaveBeenCalledTimes(2);
     expect(deleleteSpy.calls.allArgs()).toEqual([["3"], ["4"]]);
@@ -471,7 +471,7 @@ describe("Storage/IndexComponent", () => {
     fixture.detectChanges();
 
     expect(insertManySpy).toHaveBeenCalledTimes(1);
-    expect(insertManySpy).toHaveBeenCalledWith(files, "files");
+    expect(insertManySpy).toHaveBeenCalledWith(files, "files/");
   }));
 
   it("should display image", fakeAsync(() => {
