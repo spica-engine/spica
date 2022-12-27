@@ -453,7 +453,7 @@ describe("Storage/IndexComponent", () => {
     fixture.detectChanges();
 
     expect(storageService.listSubResources).toHaveBeenCalledTimes(1);
-    expect(storageService.listSubResources).toHaveBeenCalledWith("files/docs");
+    expect(storageService.listSubResources).toHaveBeenCalledWith("files/docs",true);
 
     expect(deleleteSpy).toHaveBeenCalledTimes(2);
     expect(deleleteSpy.calls.allArgs()).toEqual([["3"], ["4"]]);

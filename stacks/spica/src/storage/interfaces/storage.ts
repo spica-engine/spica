@@ -10,7 +10,7 @@ export interface Storage{
 
 export type StorageNode = Storage & {
   index?:number;
-  parent: StorageNode;
+  parent: StorageNode|undefined;
   children: StorageNode[];
   isDirectory: boolean;
   isHighlighted: boolean;

@@ -154,7 +154,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     if (file) {
       const prefix = this.getCurrentDirName();
       const storage = mapNodesToObjects([node])[0];
-      storage.name = `${prefix}/${file.name}`;
+      storage.name = `${prefix}${file.name}`;
 
       this.updates.set(storage._id, 0);
 
@@ -213,7 +213,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         const fullName = getFullName(shallowestDeletedNode);
         idsPromises.push(
           this.storageService
-            .listSubResources(fullName)
+            .listSubResources(fullName,true)
             .then(storages => storages.forEach(s => idsWillBeDeleted.add(s._id)))
         );
       } else {
@@ -327,9 +327,14 @@ export class IndexComponent implements OnInit, OnDestroy {
 
     let endIndex = 1;
     while (true) {
-      const name = parts.slice(0, endIndex).join("/");
-      const filter = Filters.ListUnderDirFirstDepth(name);
+      let name = parts.slice(0, endIndex).join("/");
+      name += "/";
+
+      // root directory should return itself to keep consistency but sub directories don't have to
+      const filter = Filters.ListFirstSubs(name, endIndex == 1);
+
       filters.push(filter);
+
       endIndex++;
       if (endIndex > parts.length) {
         break;
@@ -389,7 +394,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
     this.openAddDirDialog("sub_directory", existingNames, name => {
       const prefix = getFullName(target);
-      return this.addDirectory(prefix ? `${prefix}/${name}/` : `${name}/`);
+      return this.addDirectory(prefix ? `${prefix}${name}/` : `${name}/`);
     });
   }
 
@@ -445,7 +450,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     if (!node.isDirectory) {
       subStorages = [{_id: node._id, name: oldFullName}];
     } else {
-      subStorages = await this.storageService.listSubResources(oldFullName);
+      subStorages = await this.storageService.listSubResources(oldFullName,true);
     }
     const updates = subStorages
       .map(s => {

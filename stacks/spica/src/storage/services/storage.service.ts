@@ -110,7 +110,7 @@ export class StorageService {
       flatMap(content => {
         const contents = {
           content: content.map((c, i) => ({
-            name: prefix ? `${prefix}/${files[i].name}` : files[i].name,
+            name: prefix ? `${prefix}${files[i].name}` : files[i].name,
             content: {
               data: new BSON.Binary(c),
               type: files[i].type
@@ -163,8 +163,8 @@ export class StorageService {
     return JSON.parse(JSON.stringify(value));
   }
 
-  listSubResources(name: string) {
-    return this.getAll({filter: Filters.listUnderDirAll(name)}).toPromise();
+  listSubResources(name: string, itself: boolean) {
+    return this.getAll({filter: Filters.ListAllSubs(name, itself)}).toPromise();
   }
 
   updateName(_id: string, name: string) {

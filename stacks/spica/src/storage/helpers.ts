@@ -8,41 +8,40 @@ function regexFilterGenerator($regex: string) {
 
 export namespace Filters {
   // prettier-ignore
-  export const ListRootDirs = regexFilterGenerator("^\/[^\/]+\/$|^[^\/]+\/$");
+  export const ListRootDirs = regexFilterGenerator("^[^\/]+\/$");
   // prettier-ignore
   export const ListOnlyObjects = regexFilterGenerator("^.*[^\/]$");
-  export const ListUnderDirFirstDepth = dir =>
-    regexFilterGenerator(`^${dir}\/$|^${dir}\/[^\/]+\/?$`);
-  export const listUnderDirAll = dir => regexFilterGenerator(`^${dir}\/`);
+  export const Match = name => regexFilterGenerator(`^${name}$`);
+  export const ListFirstSubs = (dir, itself = false) => {
+    let regex = `^${dir}[^\/]+\/?$`;
+
+    if (itself) {
+      regex = `${regex}|^${dir}$`;
+    }
+
+    return regexFilterGenerator(regex);
+  };
+  export const ListAllSubs = (dir, itself = false) => {
+    let regex = `^${dir}.+`;
+
+    if (itself) {
+      regex = `${regex}|^${dir}$`;
+    }
+
+    return regexFilterGenerator(regex);
+  };
 }
 
 const storageNodeKeys = ["parent", "children", "depth", "isDirectory", "isHighlighted", "index"];
-export const isStorageNode = (storage: Storage | StorageNode): storage is StorageNode => {
-  return Object.keys(storage).some(s => storageNodeKeys.includes(s));
-};
-
-export const isRootDir = (storageOrNode: Storage | StorageNode) => {
-  if (!isDirectory(storageOrNode)) {
-    return false;
-  }
-
-  if (isStorageNode(storageOrNode)) {
-    return !storageOrNode.parent;
-  } else {
-    return (
-      storageOrNode.name.endsWith("/") &&
-      storageOrNode.name.split("/").filter(p => p != "").length == 1
-    );
-  }
-};
 
 export function getFullName(node: StorageNode, suffix?: string) {
-  const newName = suffix ? `${node.name}/${suffix}` : node.name;
-  if (node.parent) {
-    return getFullName(node.parent, newName);
-  } else {
-    return newName;
-  }
+  const newName = suffix
+    ? `${node.name}/${suffix}`
+    : node.isDirectory
+    ? `${node.name}/`
+    : node.name;
+
+  return node.parent ? getFullName(node.parent, newName) : newName;
 }
 
 export function isDirectory(storage: StorageNode | Storage) {
@@ -68,13 +67,22 @@ export function findNodeById(_id: string, nodes: StorageNode[]) {
   return targetNode;
 }
 
-export function mapNodesToObjects(nodes: StorageNode[]) {
-  nodes.forEach(node => {
+export function mapNodesToObjects(nodes: StorageNode[]): Storage[] {
+  const objects = [];
+
+  const mapNodeToObject = (node: StorageNode) => {
+    if (node.children) {
+      node.children.forEach(mapNodeToObject);
+    }
+
     node.name = getFullName(node);
     storageNodeKeys.forEach(key => delete node[key]);
-  });
+    objects.push(node);
+  };
 
-  return nodes;
+  nodes.forEach(mapNodeToObject);
+
+  return objects;
 }
 
 export function mapObjectsToNodes(objects: (StorageNode | Storage)[]) {
