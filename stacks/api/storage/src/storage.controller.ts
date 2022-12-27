@@ -107,8 +107,8 @@ export class StorageController {
 
   @UseInterceptors(activity(createStorageActivity))
   @Put(":id/meta")
-  @UseGuards(AuthGuard(), ActionGuard("storage:update","storage/:id"))
-  updateMeta(
+  @UseGuards(AuthGuard(), ActionGuard("storage:update", "storage/:id"))
+  async updateMeta(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(
       Schema.validate({
@@ -123,7 +123,9 @@ export class StorageController {
     )
     {name}
   ) {
-    return this.storage.updateMeta(id, name);
+    const object = await this.storage.updateMeta(id, name);
+    object.url = await this.storage.getUrl(id.toHexString());
+    return object;
   }
 
   /**

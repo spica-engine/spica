@@ -1,4 +1,4 @@
-import {INestApplication} from "@nestjs/common";
+import {INestApplication, NestApplicationOptions} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
@@ -42,7 +42,7 @@ describe("Storage Acceptance", () => {
     });
   }
 
-  beforeEach(async () => {
+  async function initModule(options: NestApplicationOptions) {
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
@@ -56,9 +56,7 @@ describe("Storage Acceptance", () => {
         })
       ]
     }).compile();
-    app = module.createNestApplication(undefined, {
-      bodyParser: false
-    });
+    app = module.createNestApplication(undefined, options);
     req = module.get(Request);
     await app.listen(req.socket);
 
@@ -73,6 +71,10 @@ describe("Storage Acceptance", () => {
       }
       return undefined;
     });
+  }
+
+  beforeEach(async () => {
+    await initModule({bodyParser: false});
   });
 
   describe("paginate", () => {
@@ -352,6 +354,33 @@ describe("Storage Acceptance", () => {
       const {body} = await req.get(`/storage/${id}/view`);
 
       expect(body).toBe("new data");
+    });
+
+    describe("put meta", () => {
+      beforeEach(async () => {
+        await initModule({});
+      });
+
+      it("should update storage object name", async () => {
+        const {
+          body: [first]
+        } = await req.get("/storage", {
+          filter: JSON.stringify({name: "first.txt"})
+        });
+
+        let res = await req.put(`/storage/${first._id}/meta`, {name: "updated_first.txt"});
+        expect(res.statusCode).toEqual(200);
+        expect(res.statusText).toEqual("OK");
+        expect(res.body).toEqual({
+          _id: "__skip__",
+          name: "updated_first.txt",
+          url: `http://insteadof/storage/${first._id}/view`,
+          content: {
+            type: `text/plain`,
+            size: 5
+          }
+        });
+      });
     });
 
     it("should throw an error if updated data is empty", async () => {
