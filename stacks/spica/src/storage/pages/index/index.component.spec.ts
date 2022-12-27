@@ -94,7 +94,10 @@ fdescribe("Storage/IndexComponent", () => {
         return of(result);
       }),
       insertMany: (() => {}) as any,
-      delete: (() => {}) as any
+      delete: (() => {}) as any,
+      listSubResources: jasmine.createSpy("listSubResources").and.callFake(fullname => {
+        return of(storageObjects.filter(o => o.name.startsWith(fullname))).toPromise();
+      })
     };
     rootDirService = {
       findAll: jasmine
@@ -323,6 +326,21 @@ fdescribe("Storage/IndexComponent", () => {
       ]);
     });
 
+    it("should upload file to the docs folder", fakeAsync(() => {
+      const insertManySpy = spyOn(
+        fixture.componentInstance["storageService"],
+        "insertMany"
+      ).and.returnValue(of());
+
+      const files: any = [new File([], "myfile.png")];
+      fixture.componentInstance.uploadStorageMany(files);
+      tick();
+      fixture.detectChanges();
+
+      expect(insertManySpy).toHaveBeenCalledTimes(1);
+      expect(insertManySpy).toHaveBeenCalledWith(files, "files/docs");
+    }));
+
     describe("collapse folder", () => {
       beforeEach(fakeAsync(() => {
         const firstColumn = fixture.debugElement.query(By.css(".column:nth-of-type(1)"))
@@ -346,6 +364,21 @@ fdescribe("Storage/IndexComponent", () => {
         expect(firstColumnLines[0]).toContain("test.png");
         expect(firstColumnLines[1]).toContain("docs");
       });
+
+      it("should upload to the files directory", fakeAsync(() => {
+        const insertManySpy = spyOn(
+          fixture.componentInstance["storageService"],
+          "insertMany"
+        ).and.returnValue(of());
+
+        const files: any = [new File([], "myfile.png")];
+        fixture.componentInstance.uploadStorageMany(files);
+        tick();
+        fixture.detectChanges();
+
+        expect(insertManySpy).toHaveBeenCalledTimes(1);
+        expect(insertManySpy).toHaveBeenCalledWith(files, "files");
+      }));
     });
   });
 
@@ -407,6 +440,38 @@ fdescribe("Storage/IndexComponent", () => {
     expect(deleleteSpy).toHaveBeenCalledWith("1");
 
     expect(refreshSpy).toHaveBeenCalledTimes(1);
+  }));
+
+  it("should delete docs directory and its subresources", fakeAsync(() => {
+    const deleleteSpy = spyOn(
+      fixture.componentInstance["storageService"],
+      "delete"
+    ).and.returnValue(of());
+
+    fixture.componentInstance.deleteMany(["3"]);
+    tick(500);
+    fixture.detectChanges();
+
+    expect(storageService.listSubResources).toHaveBeenCalledTimes(1);
+    expect(storageService.listSubResources).toHaveBeenCalledWith("files/docs");
+
+    expect(deleleteSpy).toHaveBeenCalledTimes(2);
+    expect(deleleteSpy.calls.allArgs()).toEqual([["3"], ["4"]]);
+  }));
+
+  it("should insert files to the current directory", fakeAsync(() => {
+    const insertManySpy = spyOn(
+      fixture.componentInstance["storageService"],
+      "insertMany"
+    ).and.returnValue(of());
+
+    const files: any = [new File([], "myfile.png")];
+    fixture.componentInstance.uploadStorageMany(files);
+    tick();
+    fixture.detectChanges();
+
+    expect(insertManySpy).toHaveBeenCalledTimes(1);
+    expect(insertManySpy).toHaveBeenCalledWith(files, "files");
   }));
 
   it("should display image", fakeAsync(() => {

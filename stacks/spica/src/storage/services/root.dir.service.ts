@@ -6,8 +6,8 @@ import {Observable, Subscriber} from "rxjs";
 import {Storage} from "../interfaces/storage";
 import {HttpEventType} from "@angular/common/http";
 
-// somehow, our reducer that use ngrx to store resources didn't work for this module.
-// I had to implement this custom way, but we should consider using ngrx store just like other modules use.
+// somehow, our reducer that uses ngrx to store resources didn't work for this module.
+// I had to implement this way, but we should consider using ngrx store just like other modules use.
 @Injectable({providedIn: "root"})
 export class RootDirService {
   storages: Storage[] = [];
