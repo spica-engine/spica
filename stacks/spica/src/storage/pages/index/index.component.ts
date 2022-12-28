@@ -1,3 +1,4 @@
+import {moveItemInArray, transferArrayItem} from "@angular/cdk/drag-drop";
 import {BreakpointObserver, Breakpoints, BreakpointState} from "@angular/cdk/layout";
 import {HttpEventType} from "@angular/common/http";
 import {Component, OnDestroy, OnInit, ViewChild} from "@angular/core";
@@ -473,7 +474,10 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   onDropped(event) {
     const oldParent = event.previousContainer.data[0].parent;
-    const newParent = event.container.data[0].parent;
+    const newParent = event.container.data.length
+      ? event.container.data[0].parent
+      : this.currentNode;
+
     if (oldParent == newParent) {
       return;
     }
@@ -489,6 +493,21 @@ export class IndexComponent implements OnInit, OnDestroy {
     const oldFullName = getFullName(node);
     const newFullName = oldFullName.replace(oldPrefix, newPrefix);
 
+    this.updateDDLists(event);
+
     return this.updateStorageName(node, oldFullName, newFullName).then(() => this.refresh.next());
+  }
+
+  updateDDLists(event) {
+    if (event.previousContainer === event.container) {
+      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+    } else {
+      transferArrayItem(
+        event.previousContainer.data,
+        event.container.data,
+        event.previousIndex,
+        event.currentIndex
+      );
+    }
   }
 }
