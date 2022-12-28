@@ -479,6 +479,9 @@ export class IndexComponent implements OnInit, OnDestroy {
     }
 
     const node = event.previousContainer.data[event.previousIndex];
+    if (newParent.children.some(c => c.name == node.name)) {
+      return;
+    }
 
     const oldPrefix = getFullName(oldParent);
     const newPrefix = getFullName(newParent);

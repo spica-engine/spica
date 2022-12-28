@@ -207,9 +207,9 @@
 <ng-template #column let-nodes="nodes" cdkDropListGroup>
   <div
     class="column"
+    cdkDropList
     [cdkDropListData]="nodes"
     (cdkDropListDropped)="onDropped($event)"
-    cdkDropList
     (click)="!selectionActive ? onColumnClicked(nodes[0]) : undefined"
   >
     <div
@@ -220,7 +220,6 @@
       [class.highlight]="node.isHighlighted"
       *ngFor="let node of nodes"
       cdkDrag
-      [cdkDropListData]="node"
       [cdkDragDisabled]="node.isHighlighted"
     >
       <div class="content">
