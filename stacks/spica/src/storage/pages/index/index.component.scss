@@ -128,31 +128,6 @@
   }
 }
 
-// // we aren't supposed to duplicate this style
-// .cdk-drag-preview {
-//   height: 40px;
-//   padding: 8px;
-//   display: flex;
-//   align-items: center;
-//   justify-content: space-between;
-
-//   background-color: rgba(0, 0, 0, 0.1);
-
-//   color: var(--primary-text);
-
-//   > .content {
-//     display: flex;
-//     align-items: center;
-
-//     > span {
-//       padding: 4px;
-//       text-overflow: ellipsis;
-//       overflow: hidden;
-//       white-space: nowrap;
-//     }
-//   }
-// }
-
 ::ng-deep {
   .line,
   .line.cdk-drag-preview {
