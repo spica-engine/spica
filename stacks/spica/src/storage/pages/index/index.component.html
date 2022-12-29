@@ -211,7 +211,7 @@
     [cdkDropListData]="nodes"
     (cdkDropListDropped)="onDropped($event)"
     [cdkDropListSortingDisabled]="false"
-    (click)="!selectionActive ? onColumnClicked(nodes[0]) : undefined"
+    (click)="!selectionActive ? onColumnClicked(nodes) : undefined"
   >
     <div
       (click)="
@@ -222,8 +222,7 @@
       *ngFor="let node of nodes"
       cdkDrag
       [cdkDragData]="node"
-      [cdkDragDisabled]="selectionActive || node.isHighlighted"
-      (drop)="onDrop(node)"
+      [cdkDragDisabled]="selectionActive"
     >
       <div class="content">
         <mat-checkbox
@@ -259,9 +258,7 @@
     </div>
   </div>
   <ng-container *ngFor="let node of nodes">
-    <ng-container
-      *ngIf="node.isHighlighted && node.isDirectory && node.children"
-    >
+    <ng-container *ngIf="node.isHighlighted && node.isDirectory && node.children">
       <ng-container *ngTemplateOutlet="column; context: {nodes: node.children}"></ng-container>
     </ng-container>
   </ng-container>

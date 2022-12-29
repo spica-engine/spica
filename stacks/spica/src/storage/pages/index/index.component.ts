@@ -1,4 +1,4 @@
-import {moveItemInArray, transferArrayItem} from "@angular/cdk/drag-drop";
+import {CdkDrag, CdkDragDrop, moveItemInArray, transferArrayItem} from "@angular/cdk/drag-drop";
 import {BreakpointObserver, Breakpoints, BreakpointState} from "@angular/cdk/layout";
 import {HttpEventType} from "@angular/common/http";
 import {Component, OnDestroy, OnInit, ViewChild} from "@angular/core";
@@ -345,8 +345,10 @@ export class IndexComponent implements OnInit, OnDestroy {
     return {$or: filters};
   }
 
-  onColumnClicked(node: StorageNode) {
-    this.onNodeHighlighted(node.parent);
+  onColumnClicked(nodes: StorageNode[]) {
+    if (nodes.length) {
+      this.onNodeHighlighted(nodes[0].parent);
+    }
   }
 
   objectIdToDate(objectId) {
@@ -472,7 +474,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     });
   }
 
-  onDropped(event) {
+  onDropped(event: CdkDragDrop<StorageNode[]>) {
     const oldParent = event.previousContainer.data[0].parent;
     const newParent = event.container.data.length
       ? event.container.data[0].parent
@@ -487,6 +489,11 @@ export class IndexComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const isDroppedToChildDir = this.isDirDroppedChildDir(node, newParent);
+    if (isDroppedToChildDir) {
+      return;
+    }
+
     const oldPrefix = getFullName(oldParent);
     const newPrefix = getFullName(newParent);
 
@@ -498,7 +505,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     return this.updateStorageName(node, oldFullName, newFullName).then(() => this.refresh.next());
   }
 
-  updateDDLists(event) {
+  updateDDLists(event: CdkDragDrop<StorageNode[]>) {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
@@ -509,5 +516,24 @@ export class IndexComponent implements OnInit, OnDestroy {
         event.currentIndex
       );
     }
+  }
+
+  isDirDroppedChildDir(node: StorageNode, newParent: StorageNode) {
+    let isDroppedChildDir = false;
+    if (!node.isDirectory) {
+      return isDroppedChildDir;
+    }
+
+    const checkAreTheySame = (_node: StorageNode, targetId: string) => {
+      if (_node._id == targetId) {
+        isDroppedChildDir = true;
+      } else if (_node.children) {
+        _node.children.forEach(child => checkAreTheySame(child, targetId));
+      }
+    };
+
+    checkAreTheySame(node, newParent._id);
+
+    return isDroppedChildDir;
   }
 }
