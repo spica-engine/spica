@@ -1,28 +1,31 @@
 <ng-container *ngIf="step == 0">
   <h3>Configure the asset</h3>
   <mat-divider></mat-divider>
-  <div class="configs" *ngFor="let config of data.asset.configs">
-    <span
-      class="inputplacer"
-      [inputPlacer]="config"
-      [(ngModel)]="config.value"
-      [name]="config.module + config.subresource_id + config.property"
-    ></span>
-    <ng-container *ngIf="!data.asset.configs.length">
-      No configuration required.
-    </ng-container>
-  </div>
-  <div class="bottom-actions">
-    <button mat-button (click)="preview()">
-      Preview
-    </button>
-  </div>
+  <form #configForm="ngForm">
+    <div class="configs" *ngFor="let config of data.asset.configs">
+      <span
+        class="inputplacer"
+        [inputPlacer]="config"
+        [(ngModel)]="config.value"
+        [name]="config.module + config.subresource_id + config.property"
+        required
+      ></span>
+      <ng-container *ngIf="!data.asset.configs.length">
+        No configuration required.
+      </ng-container>
+    </div>
+    <div class="bottom-actions">
+      <button [disabled]="configForm.invalid" mat-button (click)="preview()">
+        Preview
+      </button>
+    </div>
+  </form>
 </ng-container>
 <ng-container *ngIf="step == 1">
   <h3>Preview the asset</h3>
   <mat-divider></mat-divider>
 
-  <asset-preview [preview]="installationPreview" ></asset-preview>
+  <asset-preview [preview]="installationPreview"></asset-preview>
 
   <div class="bottom-actions">
     <button mat-button (click)="configure()">
