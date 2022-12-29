@@ -113,53 +113,6 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
     return objects;
   }
 
-  // getAll(
-  //   policyAgg: object[],
-  //   filter:object,
-  //   limit: number,
-  //   skip: number = 0,
-  //   sort?: any
-  // ): Promise<StorageResponse> {
-  //   const dataPipeline: object[] = [];
-
-  //   if (sort) {
-  //     dataPipeline.push({$sort: sort});
-  //   }
-
-  //   // sub-pipeline in $facet stage cannot be empty
-  //   dataPipeline.push({$skip: skip});
-
-  //   if (limit) {
-  //     dataPipeline.push({$limit: limit});
-  //   }
-
-  //   const aggregation = [
-  //     ...policyAgg,
-  //     {
-  //       $facet: {
-  //         meta: [{$count: "total"}],
-  //         data: dataPipeline
-  //       }
-  //     },
-  //     {
-  //       $project: {
-  //         meta: {$ifNull: [{$arrayElemAt: ["$meta", 0]}, {total: 0}]},
-  //         data: "$data"
-  //       }
-  //     }
-  //   ];
-
-  //   return this._coll
-  //     .aggregate<StorageResponse>(aggregation)
-  //     .next()
-  //     .then(async result => {
-  //       for (const object of result.data) {
-  //         object.url = await this.service.url(object._id.toString());
-  //       }
-  //       return result;
-  //     });
-  // }
-
   async get(id: ObjectId): Promise<StorageObject> {
     const object = await this._coll.findOne({_id: new ObjectId(id)});
     if (!object) return null;
