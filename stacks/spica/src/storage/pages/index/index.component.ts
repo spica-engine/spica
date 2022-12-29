@@ -489,9 +489,11 @@ export class IndexComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const isDroppedToChildDir = this.isDirDroppedChildDir(node, newParent);
-    if (isDroppedToChildDir) {
-      return;
+    if (node.isDirectory) {
+      const isDroppedToChildDir = findNodeById(newParent._id, [node]);
+      if (isDroppedToChildDir) {
+        return;
+      }
     }
 
     const oldPrefix = getFullName(oldParent);
@@ -516,24 +518,5 @@ export class IndexComponent implements OnInit, OnDestroy {
         event.currentIndex
       );
     }
-  }
-
-  isDirDroppedChildDir(node: StorageNode, newParent: StorageNode) {
-    let isDroppedChildDir = false;
-    if (!node.isDirectory) {
-      return isDroppedChildDir;
-    }
-
-    const checkAreTheySame = (_node: StorageNode, targetId: string) => {
-      if (_node._id == targetId) {
-        isDroppedChildDir = true;
-      } else if (_node.children) {
-        _node.children.forEach(child => checkAreTheySame(child, targetId));
-      }
-    };
-
-    checkAreTheySame(node, newParent._id);
-
-    return isDroppedChildDir;
   }
 }
