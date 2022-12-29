@@ -459,7 +459,8 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   onRenameCompleted(newName: string, node: StorageNode) {
-    if (!this.renamingNode) {
+    if (!this.renamingNode || node.parent.children.some(c => c.name == newName)) {
+      this.onRenameCancelled();
       return;
     }
 

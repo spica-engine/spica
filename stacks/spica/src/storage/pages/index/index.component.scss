@@ -74,45 +74,7 @@
       overflow: auto;
       .column {
         width: 300px;
-        min-width: 300px;
         border-right: 1px solid rgba(0, 0, 0, 0.1);
-
-        > .line {
-          height: 40px;
-          cursor: pointer;
-          padding: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-
-          > .content {
-            display: flex;
-            align-items: center;
-
-            mat-checkbox {
-              width: 24px;
-              height: 24px;
-            }
-
-            > span {
-              padding: 4px;
-              text-overflow: ellipsis;
-              overflow: hidden;
-              white-space: nowrap;
-            }
-          }
-
-          .more {
-            visibility: hidden;
-          }
-
-          &:hover {
-            background-color: rgba(0, 0, 0, 0.1);
-            .more {
-              visibility: unset;
-            }
-          }
-        }
       }
     }
 
@@ -136,8 +98,13 @@
         h5,
         h6 {
           text-align: center;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          white-space: nowrap;
+          width: 500px;
         }
         storage-view {
+          cursor: unset;
           ::ng-deep > *:first-child {
             object-fit: contain;
             max-height: unset;
@@ -187,6 +154,7 @@
 // }
 
 ::ng-deep {
+  .line,
   .line.cdk-drag-preview {
     height: 40px;
     cursor: pointer;
@@ -208,6 +176,7 @@
 
       span {
         padding: 4px;
+        max-width: 220px;
         text-overflow: ellipsis;
         overflow: hidden;
         white-space: nowrap;
@@ -226,18 +195,15 @@
     }
   }
 
-
   .line.cdk-drag-placeholder {
     opacity: 0;
   }
-  
+
   .line.cdk-drag-animating {
     transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
   }
-  
+
   .column.cdk-drop-list-dragging .line:not(.cdk-drag-placeholder) {
     transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
   }
-
-
 }
