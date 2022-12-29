@@ -93,7 +93,7 @@ export class AssetInstallSchemaResolver {
 }
 
 export function provideAssetInstallSchemaResolver(service: AssetService, validator: Validator) {
-  const resolver = new AssetInstallSchemaResolver(service);
-  validator.registerUriResolver(uri => resolver.resolve(uri));
-  return resolver;
+  // const resolver = new AssetInstallSchemaResolver(service);
+  // validator.registerUriResolver(uri => resolver.resolve(uri));
+  // return resolver;
 }

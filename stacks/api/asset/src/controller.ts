@@ -171,7 +171,18 @@ export class AssetController {
   async install(
     @Req() req,
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate(req => req.params.id))
+    @Body(
+      Schema.validate({
+        type: "object",
+        required: ["configs"],
+        properties: {
+          configs: {
+            $ref: "http://spica.internal/asset/configs"
+          }
+        },
+        additionalProperties: false
+      })
+    )
     {configs}: {configs: Config[]},
     @Query("preview", BOOLEAN) preview: boolean
   ) {
