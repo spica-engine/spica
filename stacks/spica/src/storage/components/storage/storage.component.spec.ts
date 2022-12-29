@@ -2,12 +2,14 @@ import {HttpEventType, HttpResponse} from "@angular/common/http";
 import {HttpClientTestingModule, HttpTestingController} from "@angular/common/http/testing";
 import {Component, Directive, EventEmitter, Input, Output} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
+import {MatDialogModule} from "@angular/material/dialog";
 import {MatIconModule} from "@angular/material/icon";
 import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatProgressSpinner, MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {By} from "@angular/platform-browser";
 import {INPUT_SCHEMA} from "@spica-client/common";
+import {StorageDialogOverviewDialog} from "../storage-dialog-overview/storage-dialog-overview";
 import {StorageComponent} from "./storage.component";
 
 @Directive({
@@ -37,9 +39,15 @@ describe("StorageComponent", () => {
         MatProgressSpinnerModule,
         MatProgressBarModule,
         MatTooltipModule,
-        MatIconModule
+        MatIconModule,
+        MatDialogModule
       ],
-      declarations: [StorageComponent, PickerDirective, StorageViewCmp],
+      declarations: [
+        StorageComponent,
+        PickerDirective,
+        StorageViewCmp,
+        StorageDialogOverviewDialog
+      ],
       providers: [
         {
           provide: INPUT_SCHEMA,
@@ -93,7 +101,7 @@ describe("StorageComponent", () => {
 
     it("should not show clear button when empty", () => {
       expect(
-        fixture.debugElement.query(By.css("section span:last-of-type button"))
+        fixture.debugElement.query(By.css("section span:last-of-type button:last-of-type"))
       ).not.toBeTruthy();
     });
 
@@ -102,7 +110,9 @@ describe("StorageComponent", () => {
       fixture.componentInstance.blob = null;
       fixture.detectChanges();
 
-      fixture.debugElement.query(By.css("section span:last-of-type button")).nativeElement.click();
+      fixture.debugElement
+        .query(By.css("section span:last-of-type button:last-of-type"))
+        .nativeElement.click();
       expect(fixture.componentInstance.value).toBeUndefined();
       expect(fixture.componentInstance.blob).toBeUndefined();
     });
@@ -139,7 +149,7 @@ describe("StorageComponent", () => {
       expect(
         fixture.debugElement.query(By.css("section:last-of-type mat-icon")).nativeElement
           .textContent
-      ).toBe("cached");
+      ).toBe("center_focus_strong");
       expect(fixture.debugElement.query(By.css("div.drop"))).not.toBeTruthy();
       expect(preview.componentInstance.blob).toEqual(fixture.componentInstance.blob);
     });
