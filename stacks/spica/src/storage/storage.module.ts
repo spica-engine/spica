@@ -39,8 +39,7 @@ import {StorageInitializer} from "./storage.initializer";
 import {PassportService} from "@spica-client/passport";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {RootDirService} from "./services/root.dir.service";
-import {DragDropModule} from '@angular/cdk/drag-drop';
-
+import {DragDropModule} from "@angular/cdk/drag-drop";
 
 @NgModule({
   imports: [

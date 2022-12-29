@@ -129,7 +129,14 @@ describe("Storage Service", () => {
     });
 
     it("should filter by content type", async () => {
-      const res = await storageService.getAll(resourceFilter, {"content.type": "type1"}, false, 0, 0, {});
+      const res = await storageService.getAll(
+        resourceFilter,
+        {"content.type": "type1"},
+        false,
+        0,
+        0,
+        {}
+      );
       expect(res.map(r => r.content.type)).toEqual(["type1"]);
     });
   });
@@ -154,9 +161,16 @@ describe("Storage Service", () => {
       }
     ];
     await storageService.insertMany(storageObjects);
-    const res = await storageService.getAll(resourceFilter, {name: {$regex: "^object"}}, false, 2, 1, {
-      name: -1
-    });
+    const res = await storageService.getAll(
+      resourceFilter,
+      {name: {$regex: "^object"}},
+      false,
+      2,
+      1,
+      {
+        name: -1
+      }
+    );
     expect(res.map(r => r.name)).toEqual(["object2", "object1"]);
   });
 

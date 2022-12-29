@@ -1,5 +1,5 @@
 import {Component, Inject, OnInit} from "@angular/core";
-import { NgModel } from "@angular/forms";
+import {NgModel} from "@angular/forms";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 
 @Component({
@@ -23,5 +23,4 @@ export class AddDirectoryDialog implements OnInit {
       });
     }
   }
-
 }

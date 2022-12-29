@@ -25,7 +25,7 @@ import {RootDirService} from "../../services/root.dir.service";
 import {IndexComponent} from "./index.component";
 import {Storage, StorageNode} from "../../interfaces/storage";
 import {ActivatedRoute} from "@angular/router";
-import { Filters } from "../../helpers";
+import {Filters} from "../../helpers";
 
 describe("Storage/IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
@@ -102,7 +102,9 @@ describe("Storage/IndexComponent", () => {
     rootDirService = {
       findAll: jasmine
         .createSpy("findAll")
-        .and.returnValue(of(storageObjects.filter(s => Filters.ListRootDirs.name.$regex.match(s.name))))
+        .and.returnValue(
+          of(storageObjects.filter(s => Filters.ListRootDirs.name.$regex.match(s.name)))
+        )
     };
     TestBed.configureTestingModule({
       imports: [
@@ -453,7 +455,7 @@ describe("Storage/IndexComponent", () => {
     fixture.detectChanges();
 
     expect(storageService.listSubResources).toHaveBeenCalledTimes(1);
-    expect(storageService.listSubResources).toHaveBeenCalledWith("files/docs/",true);
+    expect(storageService.listSubResources).toHaveBeenCalledWith("files/docs/", true);
 
     expect(deleleteSpy).toHaveBeenCalledTimes(2);
     expect(deleleteSpy.calls.allArgs()).toEqual([["3"], ["4"]]);

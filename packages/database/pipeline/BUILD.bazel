@@ -7,9 +7,9 @@ ts_project(
     package_name = "@spica-server/database/pipeline",
     srcs = [
         "builder.ts",
+        "index.ts",
         "interface.ts",
         "module.ts",
-        "index.ts"
     ],
     deps = [
         "//packages/database",

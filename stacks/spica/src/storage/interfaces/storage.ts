@@ -1,4 +1,4 @@
-export interface Storage{
+export interface Storage {
   _id?: string;
   name: string;
   url?: string;
@@ -9,8 +9,8 @@ export interface Storage{
 }
 
 export type StorageNode = Storage & {
-  index?:number;
-  parent: StorageNode|undefined;
+  index?: number;
+  parent: StorageNode | undefined;
   children: StorageNode[];
   isDirectory: boolean;
   isHighlighted: boolean;

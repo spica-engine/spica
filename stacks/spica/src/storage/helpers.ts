@@ -34,7 +34,7 @@ export namespace Filters {
 
 const storageNodeKeys = ["parent", "children", "depth", "isDirectory", "isHighlighted", "index"];
 
-export function getFullName(node: StorageNode, suffix?: string):string {
+export function getFullName(node: StorageNode, suffix?: string): string {
   const newName = suffix
     ? `${node.name}/${suffix}`
     : node.isDirectory
