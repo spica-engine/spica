@@ -93,6 +93,7 @@ export class HomeLayoutComponent implements OnInit {
       map(routes => {
         const categoryNames = Array.from(this._categories.keys());
         const categories = categoryNames
+          .filter(categoryName => routes.some(route => route.category == categoryName))
           .map(categoryName => {
             this.isSidebarReady = true;
             const category = this._categories.get(categoryName);

@@ -35,6 +35,7 @@ import {PassportModule} from "../passport/passport.module";
 import {LanguageDirective} from "./directives/dynamic.language";
 import {FunctionRoutingModule} from "./function-routing.module";
 import {FunctionInitializer} from "./function.initializer";
+import {WebhookInitializer} from "./webhook.initializer";
 import {FunctionService} from "./services/function.service";
 import {FunctionOptions, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "./interface";
 import {AddComponent} from "./pages/add/add.component";
@@ -116,13 +117,24 @@ export class FunctionModule {
         {
           provide: FunctionInitializer,
           useClass: FunctionInitializer,
-          deps: [FunctionService, WebhookService, RouteService, PassportService]
+          deps: [FunctionService, RouteService, PassportService]
+        },
+        {
+          provide: WebhookInitializer,
+          useClass: WebhookInitializer,
+          deps: [WebhookService, RouteService, PassportService]
         },
         {
           provide: LAYOUT_INITIALIZER,
           useFactory: provideFunctionLoader,
           multi: true,
           deps: [FunctionInitializer]
+        },
+        {
+          provide: LAYOUT_INITIALIZER,
+          useFactory: provideWebhookLoader,
+          multi: true,
+          deps: [WebhookInitializer]
         },
         {
           provide: ACTIVITY_FACTORY,
@@ -135,4 +147,7 @@ export class FunctionModule {
 }
 export function provideFunctionLoader(l: FunctionInitializer) {
   return l.appInitializer.bind(l);
+}
+export function provideWebhookLoader(w: WebhookInitializer) {
+  return w.appInitializer.bind(w);
 }

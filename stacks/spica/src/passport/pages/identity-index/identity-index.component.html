@@ -30,7 +30,11 @@
     <button mat-button [matMenuTriggerFor]="filterMenu" [color]="filterer.active ? 'accent' : ''">
       <mat-icon>filter_alt</mat-icon>
       Filter
-      <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
+      <mat-menu
+        class="identity-filter-menu"
+        #filterMenu="matMenu"
+        (click)="$event.stopPropagation()"
+      >
         <filter
           #filterer
           [filter]="filter"
