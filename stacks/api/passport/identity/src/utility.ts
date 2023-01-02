@@ -43,7 +43,9 @@ export function provideSettingsFinalizer(identityService: IdentityService) {
         return true;
       })
       // for array targets
-      .map(change => change.path.join(".").replace(/\/\[0-9]\*\//g, "$[]"));
+      .map(change => change.path.join(".").replace(/\/\[0-9]\*\//g, "$[]"))
+      // test this
+      .filter(change => change != "");
 
     const unsetFields = {};
 
