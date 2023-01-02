@@ -22,7 +22,7 @@ import {Asset, Config, ExportMeta, Resource} from "@spica-server/interface/asset
 import {exporters, listers, operators, registrar, validators} from "./registration";
 import {compareResourceGroups} from "@spica-server/core/differ";
 import {putConfiguration} from "./helpers";
-import {BOOLEAN} from "@spica-server/core";
+import {BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {ASSET_REP_MANAGER} from "./interface";
@@ -92,17 +92,7 @@ export class AssetController {
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("asset:index"))
-  async find(@Query("url") url: string, @Query("status") status: string) {
-    const filter: any = {};
-
-    if (url) {
-      filter.url = url;
-    }
-
-    if (status) {
-      filter.status = status;
-    }
-
+  find(@Query("filter", DEFAULT({}), JSONP) filter: object) {
     return this.service.find(filter);
   }
 
@@ -215,45 +205,17 @@ export class AssetController {
       return {insertions, updations, deletions};
     }
 
-    await this.operate(asset._id, insertions, "insert").catch(e =>
-      this.onInstallationFailed(id, e)
-    );
-    await this.operate(asset._id, updations, "update").catch(e => this.onInstallationFailed(id, e));
-    await this.operate(asset._id, deletions, "delete").catch(e => this.onInstallationFailed(id, e));
+    await this.operate(insertions, "insert").catch(e => this.onOperationFailed(id, e));
+    await this.operate(updations, "update").catch(e => this.onOperationFailed(id, e));
+    await this.operate(deletions, "delete").catch(e => this.onOperationFailed(id, e));
 
     if (installedAsset) {
       this.service.findOneAndUpdate({_id: installedAsset._id}, {$set: {status: "downloaded"}});
     }
 
     asset.status = "installed";
+    delete asset.failure_message;
     return this.service.findOneAndReplace({_id: asset._id}, asset, {returnOriginal: false});
-  }
-
-  async validateResources(resources: Resource[]) {
-    const validations = resources.map(resource => {
-      const relatedValidators = validators.get(resource.module);
-      if (!relatedValidators || !relatedValidators.length) {
-        return Promise.reject(
-          `Validation has been failed: Unknown module named '${resource.module}'.`
-        );
-      }
-      return relatedValidators.map(validator => validator(resource));
-    });
-    await Promise.all(validations);
-  }
-
-  onInstallationFailed(_id: ObjectId, e: string) {
-    e = e.toString();
-    this.service.findOneAndUpdate(
-      {_id},
-      {
-        $set: {
-          status: "failed",
-          failure_message: e
-        }
-      }
-    );
-    throw new InternalServerErrorException(e);
   }
 
   @Delete(":id")
@@ -266,13 +228,14 @@ export class AssetController {
     const asset = await this.service.findOne({_id: id});
 
     if (asset.status != "downloaded") {
-      await this.operate(asset._id, asset.resources, "delete").catch(e =>
-        this.onInstallationFailed(id, e)
-      );
+      await this.operate(asset.resources, "delete").catch(e => this.onOperationFailed(id, e));
     }
 
     if (type == "soft") {
-      return this.service.findOneAndUpdate({_id: id}, {$set: {status: "downloaded"}});
+      return this.service.findOneAndUpdate(
+        {_id: id},
+        {$set: {status: "downloaded"}, $unset: {failure_message: ""}}
+      );
     }
 
     if (type == "hard") {
@@ -282,7 +245,7 @@ export class AssetController {
     throw new BadRequestException(`Unknown delete type '${type}'`);
   }
 
-  async operate(assetId: ObjectId, resources: Resource[], action: "insert" | "update" | "delete") {
+  async operate(resources: Resource[], action: "insert" | "update" | "delete") {
     const operations = resources.map(resource => {
       const relatedOperators = operators.get(resource.module);
       if (!relatedOperators || !relatedOperators.length) {
@@ -293,5 +256,32 @@ export class AssetController {
       return Promise.all(relatedOperators.map(operator => operator[action](resource)));
     });
     await Promise.all(operations);
+  }
+
+  // async validateResources(resources: Resource[]) {
+  //   const validations = resources.map(resource => {
+  //     const relatedValidators = validators.get(resource.module);
+  //     if (!relatedValidators || !relatedValidators.length) {
+  //       return Promise.reject(
+  //         `Validation has been failed: Unknown module named '${resource.module}'.`
+  //       );
+  //     }
+  //     return relatedValidators.map(validator => validator(resource));
+  //   });
+  //   await Promise.all(validations);
+  // }
+
+  onOperationFailed(_id: ObjectId, e: string) {
+    e = e.toString();
+    this.service.findOneAndUpdate(
+      {_id},
+      {
+        $set: {
+          status: "failed",
+          failure_message: e
+        }
+      }
+    );
+    throw new InternalServerErrorException(e);
   }
 }

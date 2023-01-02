@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://spica.internal/asset",
   "type": "object",
-  "required": ["name", "resources"],
+  "required": ["name", "resources", "url"],
   "properties": {
     "name": {
       "type": "string",
