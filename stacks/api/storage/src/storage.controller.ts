@@ -15,7 +15,8 @@ import {
   UseGuards,
   UseInterceptors,
   HttpCode,
-  HttpException
+  HttpException,
+  Patch
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
@@ -106,16 +107,16 @@ export class StorageController {
   }
 
   @UseInterceptors(activity(createStorageActivity))
-  @Put(":id/meta")
+  @Patch(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:update", "storage/:id"))
-  async updateMeta(
+  async patch(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(
       Schema.validate({
         type: "object",
         properties: {
           name: {
-            type: "string"
+            type: ["string", "null"]
           }
         },
         additionalProperties: false

@@ -65,7 +65,8 @@ describe("Home Layout", () => {
           {category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1"},
           {category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2"},
           {category: RouteCategory.Dashboard, id: "12", path: "", icon: "", display: "dashboard1"},
-          {category: RouteCategory.Dashboard, id: "13", path: "", icon: "", display: "dashboard2"}
+          {category: RouteCategory.Dashboard, id: "13", path: "", icon: "", display: "dashboard2"},
+          {category: RouteCategory.Storage, id: "14", path: "", icon: "", display: "storage"}
         ])
       );
       tick();

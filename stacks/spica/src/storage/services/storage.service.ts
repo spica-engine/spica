@@ -168,6 +168,6 @@ export class StorageService {
   }
 
   updateName(_id: string, name: string) {
-    return this.http.put(`api:/storage/${_id}/meta`, {name});
+    return this.http.put(`api:/storage/${_id}`, {name});
   }
 }
