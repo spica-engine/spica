@@ -118,25 +118,25 @@ describe("Helpers", () => {
     });
 
     it("should subresources on the first depth", () => {
-      const regexp = new RegExp(Filters.ListFirstSubs("root/").name.$regex);
+      const regexp = new RegExp(Filters.ListFirstChildren("root/").name.$regex);
       const filtereds = files.filter(f => regexp.test(f));
       expect(filtereds).toEqual(["root/sub/", "root/asd.txt"]);
     });
 
     it("should subresources on the first depth with itself", () => {
-      const regexp = new RegExp(Filters.ListFirstSubs("root/", true).name.$regex);
+      const regexp = new RegExp(Filters.ListFirstChildren("root/", true).name.$regex);
       const filtereds = files.filter(f => regexp.test(f));
       expect(filtereds).toEqual(["root/", "root/sub/", "root/asd.txt"]);
     });
 
     it("should list anything under the directory", () => {
-      const regexp = new RegExp(Filters.ListAllSubs("root/").name.$regex);
+      const regexp = new RegExp(Filters.ListAllChildren("root/").name.$regex);
       const filtereds = files.filter(f => regexp.test(f));
       expect(filtereds).toEqual(["root/sub/", "root/asd.txt", "root/sub/test.png"]);
     });
 
     it("should list anything under the directory with itself", () => {
-      const regexp = new RegExp(Filters.ListAllSubs("root/", true).name.$regex);
+      const regexp = new RegExp(Filters.ListAllChildren("root/", true).name.$regex);
       const filtereds = files.filter(f => regexp.test(f));
       expect(filtereds).toEqual(["root/", "root/sub/", "root/asd.txt", "root/sub/test.png"]);
     });

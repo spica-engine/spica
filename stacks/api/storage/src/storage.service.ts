@@ -95,6 +95,9 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
         .aggregate<PaginatedStorageResponse>(pipeline)
         .next()
         .then(async r => {
+          if (!r.data.length) {
+            r.meta = {count: 0};
+          }
           r.data = await this.putUrls(r.data);
           return r;
         });

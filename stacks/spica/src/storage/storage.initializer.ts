@@ -33,7 +33,8 @@ export class StorageInitializer {
           display: "Add New Directory",
           data: {
             action: "storage:create"
-          }
+          },
+          customClass: "dashed-item"
         })
       );
     });
@@ -42,7 +43,7 @@ export class StorageInitializer {
   async appInitializer() {
     const allowed = await this.passport.checkAllowed("storage:index", "*").toPromise();
     if (this.passport.identified && allowed) {
-      this.rootDirService.findAll();
+      this.rootDirService.findAll().toPromise();
     } else {
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Storage));
     }

@@ -164,10 +164,10 @@ export class StorageService {
   }
 
   listSubResources(name: string, itself: boolean) {
-    return this.getAll({filter: Filters.ListAllSubs(name, itself)}).toPromise();
+    return this.getAll({filter: Filters.ListAllChildren(name, itself)}).toPromise();
   }
 
   updateName(_id: string, name: string) {
-    return this.http.put(`api:/storage/${_id}`, {name});
+    return this.http.patch(`api:/storage/${_id}`, {name});
   }
 }

@@ -1,6 +1,6 @@
 import {StorageNode, Storage} from "./interfaces/storage";
 
-function regexFilterGenerator($regex: string) {
+function generateRegexFilter($regex: string) {
   return {
     name: {$regex}
   };
@@ -8,27 +8,27 @@ function regexFilterGenerator($regex: string) {
 
 export namespace Filters {
   // prettier-ignore
-  export const ListRootDirs = regexFilterGenerator("^[^\/]+\/$");
+  export const ListRootDirs = generateRegexFilter("^[^\/]+\/$");
   // prettier-ignore
-  export const ListOnlyObjects = regexFilterGenerator("^.*[^\/]$");
-  export const Match = name => regexFilterGenerator(`^${name}$`);
-  export const ListFirstSubs = (dir, itself = false) => {
+  export const ListOnlyObjects = generateRegexFilter("^.*[^\/]$");
+  export const Match = name => generateRegexFilter(`^${name}$`);
+  export const ListFirstChildren = (dir, itself = false) => {
     let regex = `^${dir}[^\/]+\/?$`;
 
     if (itself) {
       regex = `${regex}|^${dir}$`;
     }
 
-    return regexFilterGenerator(regex);
+    return generateRegexFilter(regex);
   };
-  export const ListAllSubs = (dir, itself = false) => {
+  export const ListAllChildren = (dir, itself = false) => {
     let regex = `^${dir}.+`;
 
     if (itself) {
       regex = `${regex}|^${dir}$`;
     }
 
-    return regexFilterGenerator(regex);
+    return generateRegexFilter(regex);
   };
 }
 

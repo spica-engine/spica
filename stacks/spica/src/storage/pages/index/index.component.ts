@@ -332,7 +332,7 @@ export class IndexComponent implements OnInit, OnDestroy {
       name += "/";
 
       // root directory should return itself to keep consistency but sub directories don't have to
-      const filter = Filters.ListFirstSubs(name, endIndex == 1);
+      const filter = Filters.ListFirstChildren(name, endIndex == 1);
 
       filters.push(filter);
 
@@ -356,7 +356,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   addRootDir() {
-    return this.rootDirService.findAll().then(objects => {
+    return this.rootDirService.findAll().toPromise().then(objects => {
       const existingNames = objects.map(o => {
         return o.name.replace("/", "");
       });

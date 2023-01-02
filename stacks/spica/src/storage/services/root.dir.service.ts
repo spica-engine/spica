@@ -4,32 +4,37 @@ import {Filters} from "../helpers";
 import {Observable, Subscriber} from "rxjs";
 import {Storage} from "../interfaces/storage";
 import {HttpEventType} from "@angular/common/http";
+import {map} from "rxjs/operators";
 
 // somehow, our reducer that uses ngrx to store resources didn't work for this module.
 // I had to implement this way, but we should consider using ngrx store just like other modules use.
 @Injectable({providedIn: "root"})
 export class RootDirService {
-  storages: Storage[] = [];
+  private storages: Storage[] = [];
 
-  subscribers: Subscriber<Storage[]>[] = [];
+  private subscribers: Subscriber<Storage[]>[] = [];
 
   constructor(private storageService: StorageService) {}
 
   watch() {
     return new Observable<Storage[]>(subscriber => {
       this.subscribers.push(subscriber);
-      this.findAll().then(storages => {
-        this.storages = storages;
-        subscriber.next(this.storages);
-      });
+      this.findAll()
+        .toPromise()
+        .then(storages => {
+          this.storages = storages;
+          subscriber.next(this.storages);
+        });
     });
   }
 
   private onChange() {
-    this.findAll().then(storages => {
-      this.storages = storages;
-      this.subscribers.forEach(s => s.next(this.storages));
-    });
+    this.findAll()
+      .toPromise()
+      .then(storages => {
+        this.storages = storages;
+        this.subscribers.forEach(s => s.next(this.storages));
+      });
   }
 
   add(name: string) {
@@ -47,16 +52,21 @@ export class RootDirService {
   }
 
   async delete(name: string) {
-    const regex = `^${name}/`;
-    const filter = {name: {$regex: regex}};
-
-    const storages = await this.storageService.getAll({filter}).toPromise();
+    const storages = await this.storageService
+      .getAll({filter: Filters.ListAllChildren(`${name}/`, true)})
+      .toPromise();
     const promises = storages.map(s => this.storageService.delete(s._id).toPromise());
 
     return Promise.all(promises).then(() => this.onChange());
   }
 
   findAll() {
-    return this.storageService.getAll({filter: Filters.ListRootDirs}).toPromise();
+    return this.storageService.getAll({filter: Filters.ListRootDirs});
+  }
+
+  find(name: string) {
+    return this.storageService
+      .getAll({filter: Filters.Match(`${name}/`), limit: 1})
+      .pipe(map(r => (r ? r[0] : undefined)));
   }
 }
