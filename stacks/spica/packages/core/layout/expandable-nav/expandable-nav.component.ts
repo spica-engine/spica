@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from "@angular/core";
+import {Component, Input, OnInit} from "@angular/core"; 
 import {Route} from "@spica-client/core/route";
 import {CategoryService} from "../category/category.service";
 

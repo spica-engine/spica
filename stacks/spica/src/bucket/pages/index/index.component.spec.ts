@@ -1,45 +1,46 @@
-import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
-import {FormsModule, NgModel} from "@angular/forms";
-import {MatBadgeModule} from "@angular/material/badge";
-import {MatButtonModule} from "@angular/material/button";
-import {MatCardModule} from "@angular/material/card";
-import {MatCheckboxModule} from "@angular/material/checkbox";
-import {MatChipsModule} from "@angular/material/chips";
-import {MatDividerModule} from "@angular/material/divider";
-import {MatExpansionModule} from "@angular/material/expansion";
-import {MatIconModule} from "@angular/material/icon";
-import {MatMenuModule} from "@angular/material/menu";
-import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
-import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
-import {MatSelectModule} from "@angular/material/select";
-import {MatSortModule} from "@angular/material/sort";
-import {MatTableModule} from "@angular/material/table";
-import {MatToolbarModule} from "@angular/material/toolbar";
-import {MatTooltipModule} from "@angular/material/tooltip";
-import {By} from "@angular/platform-browser";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {ActivatedRoute} from "@angular/router";
-import {RouterTestingModule} from "@angular/router/testing";
-import {OwlDateTimeModule} from "@danielmoncada/angular-datetime-picker";
+import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
+import { FormsModule, NgModel } from "@angular/forms";
+import { MatBadgeModule } from "@angular/material/badge";
+import { MatButtonModule } from "@angular/material/button";
+import { MatCardModule } from "@angular/material/card";
+import { MatCheckboxModule } from "@angular/material/checkbox";
+import { MatChipsModule } from "@angular/material/chips";
+import { MatDividerModule } from "@angular/material/divider";
+import { MatExpansionModule } from "@angular/material/expansion";
+import { MatIconModule } from "@angular/material/icon";
+import { MatMenuModule } from "@angular/material/menu";
+import { MatPaginator, MatPaginatorModule } from "@angular/material/paginator";
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
+import { MatSelectModule } from "@angular/material/select";
+import { MatSortModule } from "@angular/material/sort";
+import { MatTableModule } from "@angular/material/table";
+import { MatToolbarModule } from "@angular/material/toolbar";
+import { MatTooltipModule } from "@angular/material/tooltip";
+import { By } from "@angular/platform-browser";
+import { NoopAnimationsModule } from "@angular/platform-browser/animations";
+import { ActivatedRoute } from "@angular/router";
+import { RouterTestingModule } from "@angular/router/testing";
+import { OwlDateTimeModule } from "@danielmoncada/angular-datetime-picker";
 import {
   CommonModule as SpicaCommon,
   InputModule,
   PersistHeaderWidthDirective
 } from "@spica-client/common";
-import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
-import {MatResizeHeaderModule} from "@spica-client/material/resize";
-import {of, Subject} from "rxjs";
-import {map} from "rxjs/operators";
-import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
-import {FilterComponent} from "../../components/filter/filter.component";
-import {Bucket, BUCKET_OPTIONS} from "../../interfaces/bucket";
-import {BucketRow} from "../../interfaces/bucket-entry";
-import {BucketDataService} from "../../services/bucket-data.service";
-import {BucketService} from "../../services/bucket.service";
-import {IndexComponent} from "./index.component";
-import {LayoutModule} from "@spica-client/core/layout";
-import {MatFormFieldModule} from "@angular/material/form-field";
-import {MatInputModule} from "@angular/material/input";
+import { MatAwareDialogModule, MatClipboardModule } from "@spica-client/material";
+import { MatResizeHeaderModule } from "@spica-client/material/resize";
+import { of, Subject } from "rxjs";
+import { map } from "rxjs/operators";
+import { CanInteractDirectiveTest } from "@spica-client/passport/directives/can-interact.directive";
+import { FilterComponent } from "../../components/filter/filter.component";
+import { Bucket, BUCKET_OPTIONS } from "../../interfaces/bucket";
+import { BucketRow } from "../../interfaces/bucket-entry";
+import { BucketDataService } from "../../services/bucket-data.service";
+import { BucketService } from "../../services/bucket.service";
+import { IndexComponent } from "./index.component";
+import { LayoutModule } from "@spica-client/core/layout";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatInputModule } from "@angular/material/input";
+import { PropertyMenuComponent } from "../../components/property-menu/property-menu.component"
 
 describe("IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
@@ -48,7 +49,7 @@ describe("IndexComponent", () => {
   let bucketDataService = {
     find: jasmine
       .createSpy("find")
-      .and.returnValue(rows.pipe(map(r => ({meta: {total: r.length}, data: r}))))
+      .and.returnValue(rows.pipe(map(r => ({ meta: { total: r.length }, data: r }))))
   };
   let bucketService = {
     getBucket: jasmine.createSpy("getBucket").and.returnValue(bucket),
@@ -122,14 +123,15 @@ describe("IndexComponent", () => {
         },
         {
           provide: BUCKET_OPTIONS,
-          useValue: {url: "http://insteadof"}
+          useValue: { url: "http://insteadof" }
         }
       ],
       declarations: [
         IndexComponent,
         FilterComponent,
         PersistHeaderWidthDirective,
-        CanInteractDirectiveTest
+        CanInteractDirectiveTest,
+        PropertyMenuComponent
       ]
     }).compileComponents();
 
@@ -144,7 +146,7 @@ describe("IndexComponent", () => {
     bucketService.getBucket.calls.reset();
     navigateSpy = spyOn(fixture.componentInstance["router"], "navigate");
 
-    activatedRoute.params.next({id: 1});
+    activatedRoute.params.next({ id: 1 });
     fixture.detectChanges();
   });
 
@@ -261,7 +263,8 @@ describe("IndexComponent", () => {
           .query(By.css("div.actions > button:nth-of-type(4)"))
           .nativeElement.click();
         fixture.detectChanges();
-        document.body.querySelector<HTMLButtonElement>(".mat-menu-content .mat-menu-item").click();
+        const menuItem = document.body.querySelector<HTMLButtonElement>(".mat-menu-content .mat-menu-item")
+        menuItem && menuItem.click()
 
         expect(navigateSpy).toHaveBeenCalledTimes(1);
         expect(navigateSpy).toHaveBeenCalledWith([], {
@@ -283,9 +286,9 @@ describe("IndexComponent", () => {
         fixture.detectChanges();
         expect(
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
-            e.textContent.trim()
+            e.textContent && e.textContent.trim()
           )
-        ).toEqual(["Display all", "test"]);
+        ).toEqual(["Display all", "test", "New property"]);
       });
 
       it("should set displayed properties from local storage", async () => {
@@ -338,9 +341,9 @@ describe("IndexComponent", () => {
 
         expect(
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
-            e.textContent.trim()
+            e.textContent && e.textContent.trim()
           )
-        ).toEqual(["Display all", "test"]);
+        ).toEqual(["Display all", "test", "New property"]);
       });
 
       it("should display later checked properties", fakeAsync(() => {
@@ -351,11 +354,12 @@ describe("IndexComponent", () => {
           .nativeElement.click();
         fixture.detectChanges();
 
-        document.body
+        const checkItem = document.body
           .querySelector<HTMLButtonElement>(
             ".mat-menu-content .mat-menu-item:nth-of-type(2) .mat-checkbox-label"
           )
-          .click();
+
+        checkItem && checkItem.click();
         tick(1);
         fixture.detectChanges();
 
@@ -365,7 +369,7 @@ describe("IndexComponent", () => {
 
         expect(fixture.componentInstance.displayedProperties).toContain("test");
 
-        expect(setItem).toHaveBeenCalledTimes(1);
+        expect(setItem).toHaveBeenCalledTimes(2);
         expect(setItem).toHaveBeenCalledWith("1-displayedProperties", '["test"]');
       }));
     });
@@ -396,7 +400,7 @@ describe("IndexComponent", () => {
 
   describe("rows", () => {
     beforeEach(() => {
-      rows.next([{_id: "1", test: "123"}]);
+      rows.next([{ _id: "1", test: "123" }]);
       fixture.detectChanges();
       bucket.next({
         _id: "1",
@@ -421,8 +425,9 @@ describe("IndexComponent", () => {
       const cell = fixture.debugElement.nativeElement.querySelector(
         "table[mat-table] tr[mat-row] td[mat-cell].mat-column-test span"
       );
-      expect(headerCells[2].textContent).toBe(" test ");
-      expect(headerCells[3].textContent).toBe("Actions");
+      expect(headerCells[2].textContent).toBe(" test arrow_drop_down");
+      expect(headerCells[3].textContent).toBe("add");
+      expect(headerCells[4].textContent).toBe("Actions");
       expect(cell.textContent).toBe("123");
     });
 
@@ -451,7 +456,7 @@ describe("IndexComponent", () => {
         tick();
         fixture.detectChanges();
 
-        expect(fixture.componentInstance.selectedItems).toContain({_id: "1", test: "123"});
+        expect(fixture.componentInstance.selectedItems).toContain({ _id: "1", test: "123" });
         expect(
           fixture.debugElement.nativeElement.querySelector(
             "table[mat-table] tr[mat-header-row] th[mat-header-cell]:first-of-type mat-checkbox"
@@ -483,11 +488,11 @@ describe("IndexComponent", () => {
           ).classList
         ).toContain("mat-checkbox-checked");
         expect(selectAllCheckbox.classList).toContain("mat-checkbox-checked");
-        expect(fixture.componentInstance.selectedItems).toEqual([{_id: "1", test: "123"}]);
+        expect(fixture.componentInstance.selectedItems).toEqual([{ _id: "1", test: "123" }]);
       }));
 
       it("should show delete action", () => {
-        fixture.componentInstance.selectedItems.push({_id: "1", test: "123"});
+        fixture.componentInstance.selectedItems.push({ _id: "1", test: "123" });
         fixture.detectChanges();
         expect(
           fixture.debugElement.nativeElement.querySelector("div.actions > button:first-of-type")
@@ -510,7 +515,7 @@ describe("IndexComponent", () => {
     it("should return defult div when value is undefined or null", () => {
       const template = fixture.componentInstance.buildTemplate(
         undefined,
-        {type: "string"},
+        { type: "string" },
         "title"
       );
       expect(template).toEqual(defaultDiv(""));
@@ -518,8 +523,8 @@ describe("IndexComponent", () => {
 
     it("should return object", () => {
       const template = fixture.componentInstance.buildTemplate(
-        {test: "value"},
-        {type: "object"},
+        { test: "value" },
+        { type: "object" },
         "object"
       );
       // &#34; => "
@@ -541,7 +546,7 @@ describe("IndexComponent", () => {
     it("should return color", () => {
       const template = fixture.componentInstance.buildTemplate(
         "#ffffff",
-        {type: "color"},
+        { type: "color" },
         "favorite_color"
       );
       expect(template).toEqual(
@@ -551,7 +556,7 @@ describe("IndexComponent", () => {
 
     it("should return relation one to one", () => {
       const template = fixture.componentInstance.buildTemplate(
-        {test: "test", otherField: "other_value"},
+        { test: "test", otherField: "other_value" },
         {
           type: "relation",
           relationType: "onetoone",
@@ -564,7 +569,7 @@ describe("IndexComponent", () => {
 
     it("should return relation one to many", () => {
       const template = fixture.componentInstance.buildTemplate(
-        [{test: "val1", otherField: "other_value"}, {test: "val2", otherField: "other_value2"}],
+        [{ test: "val1", otherField: "other_value" }, { test: "val2", otherField: "other_value2" }],
         {
           type: "relation",
           relationType: "onetomany",
@@ -580,7 +585,7 @@ describe("IndexComponent", () => {
 
       let template = fixture.componentInstance.buildTemplate(
         "test_url",
-        {type: "storage"},
+        { type: "storage" },
         "avatar"
       );
 
@@ -621,7 +626,7 @@ describe("IndexComponent", () => {
 
       const template = fixture.componentInstance.buildTemplate(
         "test_url",
-        {type: "storage"},
+        { type: "storage" },
         "avatar"
       );
 
@@ -631,7 +636,7 @@ describe("IndexComponent", () => {
 
       const sameTemplate = fixture.componentInstance.buildTemplate(
         "test_url",
-        {type: "storage"},
+        { type: "storage" },
         "avatar"
       );
 
@@ -649,7 +654,7 @@ describe("IndexComponent", () => {
 
       const template = fixture.componentInstance.buildTemplate(
         "test_url",
-        {type: "storage"},
+        { type: "storage" },
         "avatar"
       );
 
@@ -659,7 +664,7 @@ describe("IndexComponent", () => {
 
       const differentTemplate = fixture.componentInstance.buildTemplate(
         "test_url2",
-        {type: "storage"},
+        { type: "storage" },
         "avatar"
       );
 
@@ -672,13 +677,13 @@ describe("IndexComponent", () => {
     });
 
     it("should create new template for arrays", () => {
-      const template = fixture.componentInstance.buildTemplate(["test"], {type: "array"}, "items");
+      const template = fixture.componentInstance.buildTemplate(["test"], { type: "array" }, "items");
 
       expect(templateCache.get(`items_["test"]`)).toEqual(template);
 
       const differentTemplate = fixture.componentInstance.buildTemplate(
         ["test2"],
-        {type: "array"},
+        { type: "array" },
         "items"
       );
 
@@ -689,16 +694,16 @@ describe("IndexComponent", () => {
 
     it("should create new template for objects", () => {
       const template = fixture.componentInstance.buildTemplate(
-        {field1: "test"},
-        {type: "object"},
+        { field1: "test" },
+        { type: "object" },
         "address"
       );
 
       expect(templateCache.get(`address_{"field1":"test"}`)).toEqual(template);
 
       const differentTemplate = fixture.componentInstance.buildTemplate(
-        {field1: "test2"},
-        {type: "object"},
+        { field1: "test2" },
+        { type: "object" },
         "address"
       );
 
@@ -710,7 +715,7 @@ describe("IndexComponent", () => {
     it("should sanitize input that includes possible malicious code", () => {
       const template = fixture.componentInstance.buildTemplate(
         "<a onmouseover='alert(`some malicious code`)'>click me</a>",
-        {type: "string"},
+        { type: "string" },
         "title"
       );
       expect(template).toEqual(defaultDiv("<a>click me</a>"));
@@ -732,7 +737,7 @@ describe("IndexComponent", () => {
           }
         }
       });
-      rows.next([{test: "123"}]);
+      rows.next([{ test: "123" }]);
       fixture.detectChanges();
     });
 
@@ -836,7 +841,7 @@ describe("IndexComponent", () => {
         queryParams: {
           filter: "{}",
           paginator: JSON.stringify(fixture.componentInstance.defaultPaginatorOptions),
-          sort: JSON.stringify({test: 1}),
+          sort: JSON.stringify({ test: 1 }),
           language: undefined
         }
       });
@@ -856,7 +861,7 @@ describe("IndexComponent", () => {
           queryParams: {
             filter: "{}",
             paginator: JSON.stringify(fixture.componentInstance.defaultPaginatorOptions),
-            sort: JSON.stringify({test: -1}),
+            sort: JSON.stringify({ test: -1 }),
             language: undefined
           }
         }
@@ -868,7 +873,7 @@ describe("IndexComponent", () => {
     let paginator: MatPaginator;
 
     beforeEach(() => {
-      rows.next(new Array(40).fill({_id: "1", test: "123"}));
+      rows.next(new Array(40).fill({ _id: "1", test: "123" }));
       fixture.detectChanges();
       paginator = fixture.debugElement.query(By.directive(MatPaginator)).injector.get(MatPaginator);
       bucketDataService.find.calls.reset();
@@ -884,7 +889,7 @@ describe("IndexComponent", () => {
       expect(navigateSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledWith([], {
         queryParams: {
-          paginator: JSON.stringify({previousPageIndex: 0, pageIndex: 1, pageSize: 25, length: 40}),
+          paginator: JSON.stringify({ previousPageIndex: 0, pageIndex: 1, pageSize: 25, length: 40 }),
           filter: "{}",
           sort: "{}",
           language: undefined
@@ -898,7 +903,7 @@ describe("IndexComponent", () => {
       expect(navigateSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledWith([], {
         queryParams: {
-          paginator: JSON.stringify({previousPageIndex: 0, pageIndex: 0, pageSize: 5, length: 40}),
+          paginator: JSON.stringify({ previousPageIndex: 0, pageIndex: 0, pageSize: 5, length: 40 }),
           filter: "{}",
           sort: "{}",
           language: undefined
@@ -909,17 +914,17 @@ describe("IndexComponent", () => {
 
   describe("queryParams", () => {
     it("should navigate with queryparams which includes old ones when paginator changes", () => {
-      fixture.componentInstance.filter = {test: "test"};
-      fixture.componentInstance.sort = {test: -1};
+      fixture.componentInstance.filter = { test: "test" };
+      fixture.componentInstance.sort = { test: -1 };
       fixture.componentInstance.language = "tr_TR";
 
-      fixture.componentInstance.onPaginatorChange({length: 10, pageIndex: 1, pageSize: 5});
+      fixture.componentInstance.onPaginatorChange({ length: 10, pageIndex: 1, pageSize: 5 });
       expect(navigateSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledWith([], {
         queryParams: {
-          paginator: JSON.stringify({length: 10, pageIndex: 1, pageSize: 5}),
-          filter: JSON.stringify({test: "test"}),
-          sort: JSON.stringify({test: -1}),
+          paginator: JSON.stringify({ length: 10, pageIndex: 1, pageSize: 5 }),
+          filter: JSON.stringify({ test: "test" }),
+          sort: JSON.stringify({ test: -1 }),
           language: "tr_TR"
         }
       });
@@ -930,24 +935,24 @@ describe("IndexComponent", () => {
       fixture.componentInstance.paginator.pageSize = 5;
       fixture.componentInstance.paginator.pageIndex = 1;
 
-      fixture.componentInstance.sort = {test: -1};
+      fixture.componentInstance.sort = { test: -1 };
       fixture.componentInstance.language = "tr_TR";
 
-      fixture.componentInstance.onFilterChange({title: "test"});
+      fixture.componentInstance.onFilterChange({ title: "test" });
       expect(navigateSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledWith([], {
         queryParams: {
           paginator: JSON.stringify(fixture.componentInstance.defaultPaginatorOptions),
-          filter: JSON.stringify({title: "test"}),
-          sort: JSON.stringify({test: -1}),
+          filter: JSON.stringify({ title: "test" }),
+          sort: JSON.stringify({ test: -1 }),
           language: "tr_TR"
         }
       });
     });
 
     it("should navigate with queryparams which includes old ones except paginator's when language changes", () => {
-      fixture.componentInstance.filter = {test: "test"};
-      fixture.componentInstance.sort = {test: 1};
+      fixture.componentInstance.filter = { test: "test" };
+      fixture.componentInstance.sort = { test: 1 };
       fixture.componentInstance.paginator.length = 10;
       fixture.componentInstance.paginator.pageSize = 5;
       fixture.componentInstance.paginator.pageIndex = 1;
@@ -957,31 +962,31 @@ describe("IndexComponent", () => {
       expect(navigateSpy).toHaveBeenCalledWith([], {
         queryParams: {
           paginator: JSON.stringify(fixture.componentInstance.defaultPaginatorOptions),
-          filter: JSON.stringify({test: "test"}),
-          sort: JSON.stringify({test: 1}),
+          filter: JSON.stringify({ test: "test" }),
+          sort: JSON.stringify({ test: 1 }),
           language: "en_US"
         }
       });
     });
 
     it("should navigate with queryparams which includes old ones when sort changes", () => {
-      fixture.componentInstance.filter = {test: "test"};
+      fixture.componentInstance.filter = { test: "test" };
       fixture.componentInstance.paginator.pageSize = 10;
       fixture.componentInstance.paginator.pageIndex = 1;
       fixture.componentInstance.paginator.length = 20;
       fixture.componentInstance.language = "tr_TR";
 
-      fixture.componentInstance.onSortChange({active: "title", direction: "asc"});
+      fixture.componentInstance.onSortChange({ active: "title", direction: "asc" });
       expect(navigateSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledWith([], {
         queryParams: {
-          filter: JSON.stringify({test: "test"}),
+          filter: JSON.stringify({ test: "test" }),
           paginator: JSON.stringify({
             pageSize: 10,
             pageIndex: 1,
             length: 20
           }),
-          sort: JSON.stringify({title: 1}),
+          sort: JSON.stringify({ title: 1 }),
           language: "tr_TR"
         }
       });

@@ -14,7 +14,6 @@ import {debounceTime, map, switchMap, tap} from "rxjs/operators";
 import {Route, RouteCategory, RouteService} from "../../route";
 import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
 import {Root_Categories} from "@spica-client/core/route/route";
-import {CategoryService} from "../category/category.service";
 
 @Component({
   selector: "layout-home",
@@ -56,7 +55,6 @@ export class HomeLayoutComponent implements OnInit {
     @Inject(LAYOUT_ACTIONS)
     public components: {component: Component; position: "left" | "right" | "center"}[],
     @Optional() @Inject(LAYOUT_INITIALIZER) private initializer: Function[],
-    public categoryService: CategoryService,
     private resolver: ComponentFactoryResolver
   ) {
     this.categories$ = this.routeService.routes.pipe(

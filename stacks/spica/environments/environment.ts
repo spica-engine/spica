@@ -5,5 +5,6 @@
 
 export const environment = {
   production: true,
-  api: "https://master.spicaengine.com/api"
+  // api: "https://master.spicaengine.com/api"
+  api: "https://dvt-tst-001-8ba10.hq.spicaengine.com/api"
 };
