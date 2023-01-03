@@ -356,17 +356,20 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   addRootDir() {
-    return this.rootDirService.findAll().toPromise().then(objects => {
-      const existingNames = objects.map(o => {
-        return o.name.replace("/", "");
+    return this.rootDirService
+      .findAll()
+      .toPromise()
+      .then(objects => {
+        const existingNames = objects.map(o => {
+          return o.name.replace("/", "");
+        });
+        return this.openAddDirDialog("root_directory", existingNames, name => {
+          this.rootDirService
+            .add(`${name}/`)
+            .toPromise()
+            .then(() => this.router.navigate(["storage", name]));
+        });
       });
-      return this.openAddDirDialog("root_directory", existingNames, name => {
-        this.rootDirService
-          .add(`${name}/`)
-          .toPromise()
-          .then(() => this.router.navigate(["storage", name]));
-      });
-    });
   }
 
   openAddDirDialog(
