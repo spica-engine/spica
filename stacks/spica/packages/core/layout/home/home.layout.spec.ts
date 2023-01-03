@@ -1,26 +1,26 @@
-import { BreakpointObserver } from "@angular/cdk/layout";
-import { ANALYZE_FOR_ENTRY_COMPONENTS, Component, ComponentFactoryResolver } from "@angular/core";
-import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
-import { MatIconModule } from "@angular/material/icon";
-import { MatListModule } from "@angular/material/list";
-import { MatSidenavModule } from "@angular/material/sidenav";
-import { MatToolbarModule } from "@angular/material/toolbar";
-import { By } from "@angular/platform-browser";
-import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { RouterTestingModule } from "@angular/router/testing";
-import { StoreModule } from "@ngrx/store";
-import { of } from "rxjs";
-import { RouteCategory, RouteModule } from "../../route";
-import { Retrieve } from "../../route/route.reducer";
-import { RouteService } from "../../route/route.service";
-import { LAYOUT_ACTIONS, LAYOUT_INITIALIZER } from "../config";
-import { ToolbarActionDirective } from "../toolbar-action";
-import { HomeLayoutComponent } from "./home.layout";
-import { CanInteractDirectiveTest } from "@spica-client/passport/directives/can-interact.directive";
-import { MatMenuModule } from "@angular/material/menu";
-import { MatTooltipModule } from "@angular/material/tooltip";
-import { ExpandableNavComponent } from "../expandable-nav/expandable-nav.component";
-import { CategoryComponent } from "../category/category.component";
+import {BreakpointObserver} from "@angular/cdk/layout";
+import {ANALYZE_FOR_ENTRY_COMPONENTS, Component, ComponentFactoryResolver} from "@angular/core";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
+import {MatIconModule} from "@angular/material/icon";
+import {MatListModule} from "@angular/material/list";
+import {MatSidenavModule} from "@angular/material/sidenav";
+import {MatToolbarModule} from "@angular/material/toolbar";
+import {By} from "@angular/platform-browser";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {RouterTestingModule} from "@angular/router/testing";
+import {StoreModule} from "@ngrx/store";
+import {of} from "rxjs";
+import {RouteCategory, RouteModule} from "../../route";
+import {Retrieve} from "../../route/route.reducer";
+import {RouteService} from "../../route/route.service";
+import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
+import {ToolbarActionDirective} from "../toolbar-action";
+import {HomeLayoutComponent} from "./home.layout";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
+import {MatMenuModule} from "@angular/material/menu";
+import {MatTooltipModule} from "@angular/material/tooltip";
+import {ExpandableNavComponent} from "../expandable-nav/expandable-nav.component";
+import {CategoryComponent} from "../category/category.component";
 
 describe("Home Layout", () => {
   describe("test for categories, routes", () => {
@@ -29,7 +29,13 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent, ToolbarActionDirective, CanInteractDirectiveTest, ExpandableNavComponent, CategoryComponent],
+        declarations: [
+          HomeLayoutComponent,
+          ToolbarActionDirective,
+          CanInteractDirectiveTest,
+          ExpandableNavComponent,
+          CategoryComponent
+        ],
         imports: [
           MatTooltipModule,
           MatSidenavModule,
@@ -56,18 +62,18 @@ describe("Home Layout", () => {
     it("should show categories that include first one is selected as default if theres route", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
-          { category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1" },
-          { category: RouteCategory.System, id: "0", path: "", icon: "", display: "system2" },
-          { category: RouteCategory.Developer, id: "3", path: "", icon: "", display: "developer1" },
-          { category: RouteCategory.Developer, id: "4", path: "", icon: "", display: "developer2" },
-          { category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1" },
-          { category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2" },
-          { category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1" },
-          { category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2" },
-          { category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1" },
-          { category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2" },
-          { category: RouteCategory.Dashboard, id: "12", path: "", icon: "", display: "dashboard1" },
-          { category: RouteCategory.Dashboard, id: "13", path: "", icon: "", display: "dashboard2" }
+          {category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1"},
+          {category: RouteCategory.System, id: "0", path: "", icon: "", display: "system2"},
+          {category: RouteCategory.Developer, id: "3", path: "", icon: "", display: "developer1"},
+          {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: "developer2"},
+          {category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1"},
+          {category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2"},
+          {category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1"},
+          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"},
+          {category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1"},
+          {category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2"},
+          {category: RouteCategory.Dashboard, id: "12", path: "", icon: "", display: "dashboard1"},
+          {category: RouteCategory.Dashboard, id: "13", path: "", icon: "", display: "dashboard2"}
         ])
       );
       tick(200);
@@ -82,18 +88,18 @@ describe("Home Layout", () => {
     it("should show clicked category as active with child routes", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
-          { category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1" },
-          { category: RouteCategory.System, id: "0", path: "", icon: "", display: "system2" },
-          { category: RouteCategory.Developer, id: "3", path: "", icon: "", display: "developer1" },
-          { category: RouteCategory.Developer, id: "4", path: "", icon: "", display: "developer2" },
-          { category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1" },
-          { category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2" },
-          { category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1" },
-          { category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2" },
-          { category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1" },
-          { category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2" },
-          { category: RouteCategory.Dashboard, id: "12", path: "", icon: "", display: "dashboard1" },
-          { category: RouteCategory.Dashboard, id: "13", path: "", icon: "", display: "dashboard2" }
+          {category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1"},
+          {category: RouteCategory.System, id: "0", path: "", icon: "", display: "system2"},
+          {category: RouteCategory.Developer, id: "3", path: "", icon: "", display: "developer1"},
+          {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: "developer2"},
+          {category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1"},
+          {category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2"},
+          {category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1"},
+          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"},
+          {category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1"},
+          {category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2"},
+          {category: RouteCategory.Dashboard, id: "12", path: "", icon: "", display: "dashboard1"},
+          {category: RouteCategory.Dashboard, id: "13", path: "", icon: "", display: "dashboard2"}
         ])
       );
       tick(500);
@@ -107,12 +113,16 @@ describe("Home Layout", () => {
         const selectedCategoryRoutes = fixture.debugElement.nativeElement.querySelectorAll(
           ".routerlist mat-list-item"
         );
-        console.log("selectedCategoryRoutes -----******************------------- :", fixture.debugElement.nativeElement.querySelectorAll(".routerlist"), selectedCategoryRoutes)
+        console.log(
+          "selectedCategoryRoutes -----******************------------- :",
+          fixture.debugElement.nativeElement.querySelectorAll(".routerlist"),
+          selectedCategoryRoutes
+        );
 
         expect(selectedCategoryRoutes.length).toEqual(2);
         expect(selectedCategoryRoutes[0].textContent).toEqual(" dashboard1 ");
         expect(selectedCategoryRoutes[1].textContent).toEqual(" dashboard2 ");
-      })
+      });
     }));
 
     it("should show sub menu", fakeAsync(() => {
@@ -163,8 +173,8 @@ describe("Home Layout", () => {
     it("should show action button instead of mat menu", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
-          { category: RouteCategory.Primary, id: "9", path: "", icon: "", display: "system1" },
-          { category: RouteCategory.Primary_Sub, id: "3", path: "", icon: "", display: "sub1" }
+          {category: RouteCategory.Primary, id: "9", path: "", icon: "", display: "system1"},
+          {category: RouteCategory.Primary_Sub, id: "3", path: "", icon: "", display: "sub1"}
         ])
       );
       tick(200);
@@ -186,7 +196,13 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent, ToolbarActionDirective,ExpandableNavComponent,CategoryComponent, CanInteractDirectiveTest],
+        declarations: [
+          HomeLayoutComponent,
+          ToolbarActionDirective,
+          ExpandableNavComponent,
+          CategoryComponent,
+          CanInteractDirectiveTest
+        ],
         imports: [
           MatSidenavModule,
           MatListModule,
@@ -202,7 +218,7 @@ describe("Home Layout", () => {
           {
             provide: BreakpointObserver,
             useValue: {
-              observe: jasmine.createSpy("observe").and.returnValue(of({ matches: true }))
+              observe: jasmine.createSpy("observe").and.returnValue(of({matches: true}))
             }
           }
         ]
@@ -227,14 +243,14 @@ describe("Home Layout", () => {
     it("should open sidenav", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
-          { category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1" }
+          {category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1"}
         ])
       );
       const toolbarButton = fixture.debugElement.nativeElement.querySelector(
         "mat-toolbar > button"
       );
       toolbarButton.click();
-      tick(200)
+      tick(200);
       fixture.detectChanges();
       const sideNav = fixture.debugElement.nativeElement.querySelector("mat-sidenav");
       expect(sideNav.getAttribute("style")).not.toContain("visibility:hidden");
@@ -262,7 +278,7 @@ describe("Home Layout", () => {
           {
             provide: BreakpointObserver,
             useValue: {
-              observe: jasmine.createSpy("observe").and.returnValue(of({ matches: false }))
+              observe: jasmine.createSpy("observe").and.returnValue(of({matches: false}))
             }
           }
         ]
@@ -289,7 +305,7 @@ describe("Home Layout", () => {
       selector: "dummy-action",
       template: "<button>BUTTON</button>"
     })
-    class DummyAction { }
+    class DummyAction {}
 
     let component: HomeLayoutComponent;
     let fixture: ComponentFixture<HomeLayoutComponent>;
