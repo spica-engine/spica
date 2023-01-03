@@ -1,18 +1,13 @@
 import {CdkDragDrop, moveItemInArray, transferArrayItem} from "@angular/cdk/drag-drop";
-import {
-  Component,
-  OnInit,
-  Input,
-  Output,
-  EventEmitter,
-  SimpleChanges,
-  TemplateRef
-} from "@angular/core";
+import {ComponentType} from "@angular/cdk/portal";
+import {Component, OnInit, Input, Output, EventEmitter, SimpleChanges} from "@angular/core";
 import {MatDialog, MatDialogRef} from "@angular/material/dialog";
+import {Route} from "@spica-client/core/route";
+import {Subscription} from "rxjs";
 import {CategoryService} from "./category.service";
 
 export interface Schema {
-  category?: string;
+  resource_category?: string;
   _id?: string;
 }
 
@@ -24,62 +19,105 @@ export interface Schema {
 export class CategoryComponent implements OnInit {
   constructor(private dialog: MatDialog, public categoryService: CategoryService) {}
 
-  @Input() schemas: Schema[];
   @Input() categoryStorageKey: string;
-
-  @Input() itemTemplate: TemplateRef<any>;
-
-  categories: {name?: string; order?: number}[] = [];
-
+  @Input() routes$;
+  @Input() currentCategory;
+  @Input() moreTemplate: ComponentType<any>;
   @Output() onChangedOrder = new EventEmitter();
   @Output() onClickItem = new EventEmitter();
 
+  routes: Route[] = [];
+  categories: {name?: string; order?: number}[] = [];
+  categoryExpandStatus: {[propValue: string]: boolean} = {};
   categoryModalRef: MatDialogRef<any>;
+  addCategoryModalRef: MatDialogRef<any>;
+  adCategoryItemName: string;
   categoryModalMode: string;
   newCategory;
   dropListIds: string[];
   categorizedSchemas: {};
+  subs: Subscription;
 
   ngOnInit(): void {
-    //sort from local storage
-    this.categories = this.setCategoryOrderFromStorage([
-      ...new Set(this.schemas.filter(schema => schema.category).map(bucket => bucket.category)),
-      ...this.categories
-    ]);
+    this.subs = this.routes$.pipe().subscribe(routes => {
+      this.routes = routes;
 
-    this.setSchemaByCategory(this.schemas);
+      //sort from local storage
+      this.categories = this.setCategoryOrderFromStorage([
+        ...new Set([
+          ...this.routes
+            .filter(route => route.resource_category)
+            .map(bucket => bucket.resource_category)
+        ])
+      ]);
+      this.setSchemaByCategory(this.routes);
+    });
+  }
+  ngOnDestroy(): void {
+    //Called once, before the instance is destroyed.
+    //Add 'implements OnDestroy' to the class.
+    this.subs.unsubscribe();
   }
 
   setSchemaByCategory(data) {
-    this.categorizedSchemas = this.categoryService.groupCategoryByKey(data, "category");
+    this.categorizedSchemas = this.categoryService.groupCategoryByKey(data, "resource_category");
 
     //create a drop list for each category
-    this.dropListIds = Object.keys(this.categorizedSchemas).map((schemaKey, index) => {
-      if (schemaKey == this.categoryService.EMPTY_CATEGORY_KEYWORD || !schemaKey) {
-        return this.categoryService.EMPTY_CATEGORY_DROP_ID;
-      }
-      return "cdk-drop-list-0" + (index + 1);
-    });
+    this.dropListIds = Object.keys(this.categorizedSchemas)
+      .filter(key => key && key != this.categoryService.EMPTY_CATEGORY_KEYWORD)
+      .map((_, index) => {
+        return "cdk-drop-list-0" + (index + 1);
+      });
 
     //For those who don't have a category.
     if (!this.categorizedSchemas[this.categoryService.EMPTY_CATEGORY_KEYWORD]) {
       this.categorizedSchemas[this.categoryService.EMPTY_CATEGORY_KEYWORD] = [];
-      this.dropListIds.push(this.categoryService.EMPTY_CATEGORY_DROP_ID);
     }
+    this.dropListIds.push(this.categoryService.EMPTY_CATEGORY_DROP_ID);
     if (!localStorage.getItem(this.categoryStorageKey + "-category-order")) {
       this.updateCategoryOrdersFromStorage();
     }
+    // console.log("this.categorizedSchemas :", this.categorizedSchemas)
+    // console.log("this.dropListIds :", this.dropListIds)
   }
 
   categoryAction() {
     this.categoryModalRef.close(true);
   }
+  onAddToCategory() {
+    this.addCategoryModalRef.close(true);
+  }
 
-  openCategoryModal(modalTemplate) {
-    let editedCategory = this.categoryModalMode == "edit" ? this.newCategory : "";
+  openAddToCategory(modalTemplate, routeId) {
+    this.addCategoryModalRef = this.dialog.open(modalTemplate, {
+      minWidth: "380px",
+      maxHeight: "90vh",
+      panelClass: "categoryDialog"
+    });
+    this.addCategoryModalRef
+      .afterClosed()
+      .toPromise()
+      .then(result => {
+        if (!result) return;
 
+        const existCategory = this.categories.find(category => category.name == this.newCategory);
+        if (!existCategory) {
+          this.categories.push({name: this.newCategory, order: this.categories.length + 1});
+          this.updateCategoryOrdersFromStorage();
+        }
+        this.onChangedOrder.emit([
+          {
+            id: routeId,
+            changes: {category: this.newCategory}
+          }
+        ]);
+        this.newCategory = "";
+      });
+  }
+
+  openCategoryModal(modalTemplate, oldName: string) {
     this.categoryModalRef = this.dialog.open(modalTemplate, {
-      width: "800px",
+      minWidth: "380px",
       maxHeight: "90vh",
       panelClass: "categoryDialog"
     });
@@ -89,33 +127,19 @@ export class CategoryComponent implements OnInit {
       .toPromise()
       .then(result => {
         if (result && !this.categories.find(category => category.name == this.newCategory)) {
-          switch (this.categoryModalMode) {
-            case "add":
-              this.categories.push({name: this.newCategory, order: 0});
-              this.dropListIds.push("cdk-drop-list-0" + this.dropListIds.length);
+          const category = this.categories.find(item => item.name == oldName);
+          category.name = this.newCategory;
 
-              moveItemInArray(this.dropListIds, this.dropListIds.length - 1, 0);
+          const changedItems = [];
+          this.categorizedSchemas[oldName].forEach(schema => {
+            changedItems.push({id: schema.id, changes: {category: this.newCategory}});
+          });
 
-              this.categorizedSchemas[this.newCategory] = [];
-              this.changeCategoryOrder(this.categories.length - 1, 0);
+          this.updateCategoryOrdersFromStorage();
+          this.onChangedOrder.emit(changedItems);
 
-              break;
-            case "edit":
-              const category = this.categories.find(item => item.name == editedCategory);
-              category.name = this.newCategory;
-              this.updateCategoryOrdersFromStorage();
-
-              const changedItems = [];
-              this.categorizedSchemas[editedCategory].forEach(schema => {
-                changedItems.push({entry_id: schema._id, changes: {category: this.newCategory}});
-              });
-              this.onChangedOrder.emit(changedItems);
-
-              this.categorizedSchemas[this.newCategory] = this.categorizedSchemas[editedCategory];
-              delete this.categorizedSchemas[editedCategory];
-
-              break;
-          }
+          this.categorizedSchemas[this.newCategory] = this.categorizedSchemas[oldName];
+          delete this.categorizedSchemas[oldName];
         }
         this.newCategory = "";
       });
@@ -123,11 +147,16 @@ export class CategoryComponent implements OnInit {
 
   deleteCategory(deletedCategory: string) {
     const changedItems = [];
-
-    this.categorizedSchemas[deletedCategory].forEach((schema, i) => {
+    this.categorizedSchemas[deletedCategory].forEach((route: Route, i) => {
       changedItems.push({
-        entry_id: schema._id,
-        changes: {category: null, order: schema.order + this.schemas.length + i}
+        id: route.id,
+        changes: {
+          category: null,
+          order:
+            this.routes.length -
+            this.categorizedSchemas[this.categoryService.EMPTY_CATEGORY_DROP_ID] +
+            i
+        }
       });
     });
 
@@ -144,7 +173,6 @@ export class CategoryComponent implements OnInit {
     this.updateCategoryOrdersFromStorage();
     this.onChangedOrder.emit(changedItems);
   }
-
   drop(event: CdkDragDrop<any>) {
     const getIndexnumber = (str: string) => Number(str.split("-0")[1]) - 1;
     const previousContainerIndex = getIndexnumber(event.previousContainer.id);
@@ -194,14 +222,14 @@ export class CategoryComponent implements OnInit {
         event.previousIndex < event.currentIndex ? event.previousIndex : event.currentIndex;
     }
 
+    schemaArray = schemaArray.filter(item => item.draggable);
+
     // set changed items for output
     const changedItems = [];
     for (let i = entryCountsOfBefore; i < schemaArray.length; i++) {
-      changedItems.push({entry_id: schemaArray[i]._id, changes: {order: i}});
+      changedItems.push({id: schemaArray[i].id, changes: {order: i}});
     }
-    const draggedItem = changedItems.find(
-      item => item.entry_id == event.item.element.nativeElement.id
-    );
+    const draggedItem = changedItems.find(item => item.id == event.item.element.nativeElement.id);
 
     if (draggedItem && this.categories[currentContainerIndex]) {
       draggedItem.changes["category"] = this.categories[currentContainerIndex].name;
@@ -237,11 +265,14 @@ export class CategoryComponent implements OnInit {
     );
   }
 
-  setCategoryOrderFromStorage(data) {
+  getStoredCategories() {
     const storedCategories =
       localStorage.getItem(this.categoryStorageKey + "-category-order") || "[]";
-    let categoryOrders = JSON.parse(storedCategories);
+    return JSON.parse(storedCategories);
+  }
 
+  setCategoryOrderFromStorage(data) {
+    const categoryOrders = this.getStoredCategories();
     return data
       .map(element => {
         const findedElement = categoryOrders.find(item => item.name == element) || {order: 0};
@@ -261,5 +292,10 @@ export class CategoryComponent implements OnInit {
     ) {
       this.setSchemaByCategory(changes.schemas.currentValue);
     }
+  }
+  getCategoryByName(name: string = "") {
+    return this.categories.filter(category =>
+      category.name.toLowerCase().includes(name.toLowerCase())
+    );
   }
 }
