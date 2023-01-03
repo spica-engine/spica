@@ -1,11 +1,13 @@
 import {HttpEventType} from "@angular/common/http";
 import {Component, forwardRef, HostListener, Inject} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
+import {MatDialog} from "@angular/material/dialog";
 import {INPUT_SCHEMA, InternalPropertySchema} from "@spica-client/common";
 import {Observable} from "rxjs";
 import {map, share} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
 import {StorageService} from "../../storage.service";
+import {StorageDialogOverviewDialog} from "../storage-dialog-overview/storage-dialog-overview";
 
 @Component({
   selector: "storage",
@@ -38,7 +40,8 @@ export class StorageComponent implements ControlValueAccessor {
 
   constructor(
     @Inject(INPUT_SCHEMA) public readonly schema: InternalPropertySchema,
-    private storage: StorageService
+    private storage: StorageService,
+    private dialog: MatDialog
   ) {}
 
   @HostListener("drop", ["$event"])
@@ -88,7 +91,6 @@ export class StorageComponent implements ControlValueAccessor {
     this.value = obj.url;
 
     const pureUrl = this.storage.clearTimestamp(obj.url);
-
     this.onChangeFn(pureUrl);
   }
 
@@ -118,5 +120,15 @@ export class StorageComponent implements ControlValueAccessor {
     this.progress$ = undefined;
     this.value = this.blob = undefined;
     this.onChangeFn(this.value);
+  }
+  openPreview(storage: Storage): void {
+    const url = typeof storage == "string" ? storage : storage.url;
+    const pureUrl = this.storage.clearTimestamp(url);
+    this.dialog.open(StorageDialogOverviewDialog, {
+      maxWidth: "80%",
+      maxHeight: "80%",
+      panelClass: "preview-object",
+      data: pureUrl
+    });
   }
 }

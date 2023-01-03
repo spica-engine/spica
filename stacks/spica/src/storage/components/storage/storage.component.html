@@ -11,25 +11,48 @@
       [value]="progress"
     ></mat-progress-spinner>
     <ng-content></ng-content>
-    <button
-      *ngIf="value || blob"
-      mat-icon-button
-      mat-flat-button
-      [matTooltip]="!progress$ ? 'Clear storage object' : 'Stop'"
-      (click)="clear()"
-    >
-      <mat-icon>clear_all</mat-icon>
-    </button>
+    <ng-container *ngIf="value || blob">
+      <button
+        storagePicker
+        ngModel
+        (ngModelChange)="pickFromStorage($event)"
+        mat-icon-button
+        mat-flat-button
+        matTooltip="Edit"
+      >
+        <mat-icon>edit</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        mat-flat-button
+        [matTooltip]="!progress$ ? 'Clear' : 'Stop'"
+        (click)="clear()"
+      >
+        <mat-icon>clear_all</mat-icon>
+      </button>
+    </ng-container>
   </span>
 </section>
-<section storagePicker ngModel (ngModelChange)="pickFromStorage($event)">
+<section>
   <ng-container *ngIf="blob || value">
     <mat-progress-bar *ngIf="view.ready == false" mode="indeterminate"></mat-progress-bar>
-    <storage-view #view [blob]="blob || value"></storage-view>
-    <mat-icon class="change">{{ isDraggingOver ? "save_alt" : "cached" }}</mat-icon>
+    <storage-view
+      #view
+      [blob]="blob || value"
+      matTooltip="View this object"
+      (click)="openPreview(value || blob)"
+    >
+    </storage-view>
+    <mat-icon class="change">{{ isDraggingOver ? "save_alt" : "center_focus_strong" }}</mat-icon>
   </ng-container>
 
-  <div class="drop" *ngIf="!value && !blob">
+  <div
+    class="drop"
+    *ngIf="!value && !blob"
+    storagePicker
+    ngModel
+    (ngModelChange)="pickFromStorage($event)"
+  >
     <mat-icon inline="true">save_alt</mat-icon>
     <small class="mat-small">Drag & Drop your file here</small>
   </div>

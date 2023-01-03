@@ -22,6 +22,7 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
   private ownablePolicies: Policy[] = [];
   private ownedPolicies: Policy[] = [];
   private allPolicies: Policy[] = [];
+  public viewState: "meta" | "policy" = "meta";
 
   constructor(
     private router: Router,
