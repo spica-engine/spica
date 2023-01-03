@@ -32,6 +32,7 @@
   matTooltip="In order to delete the primary field, you must first select another field as primary."
 >
   <button
+    color="warn"
     [disabled]="schema.primary == property.key"
     (click)="$event.stopImmediatePropagation()"
     (confirm)="deleteProperty(property.key)"

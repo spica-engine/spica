@@ -1,16 +1,15 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from "@angular/core/testing";
 
-import { PropertyMenuComponent } from './property-menu.component';
+import {PropertyMenuComponent} from "./property-menu.component";
 
-describe('PropertyMenuComponent', () => {
+describe("PropertyMenuComponent", () => {
   let component: PropertyMenuComponent;
   let fixture: ComponentFixture<PropertyMenuComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ PropertyMenuComponent ]
-    })
-    .compileComponents();
+      declarations: [PropertyMenuComponent]
+    }).compileComponents();
   });
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('PropertyMenuComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

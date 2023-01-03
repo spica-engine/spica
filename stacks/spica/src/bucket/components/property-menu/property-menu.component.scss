@@ -4,10 +4,6 @@
     .delete-field-content {
       padding: 0;
       button {
-        color: var(--warn-500) !important;
-        &:disabled {
-          opacity: 0.7;
-        }
         .mat-button-focus-overlay {
           background: transparent;
         }
@@ -15,4 +11,3 @@
     }
   }
 }
-

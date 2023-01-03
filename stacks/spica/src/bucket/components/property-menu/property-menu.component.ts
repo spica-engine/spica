@@ -1,44 +1,47 @@
-import { moveItemInArray } from '@angular/cdk/drag-drop';
-import { Component, Input, OnInit } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { Bucket } from '@spica-client/bucket/interfaces/bucket';
-import { AddFieldModalComponent } from '@spica-client/bucket/pages/add-field-modal/add-field-modal.component';
-import { BucketService } from '@spica-client/bucket/services/bucket.service';
-import { SnackbarError } from '@spica-client/core/layout/snackbar/interface';
-import { SnackbarComponent } from '@spica-client/core/layout/snackbar/snackbar.component';
+import {moveItemInArray} from "@angular/cdk/drag-drop";
+import {Component, Input, OnInit} from "@angular/core";
+import {MatDialog} from "@angular/material/dialog";
+import {MatSnackBar} from "@angular/material/snack-bar";
+import {Bucket} from "@spica-client/bucket/interfaces/bucket";
+import {AddFieldModalComponent} from "@spica-client/bucket/pages/add-field-modal/add-field-modal.component";
+import {BucketService} from "@spica-client/bucket/services/bucket.service";
+import {SnackbarError} from "@spica-client/core/layout/snackbar/interface";
+import {SnackbarComponent} from "@spica-client/core/layout/snackbar/snackbar.component";
 
 @Component({
-  selector: 'app-property-menu',
-  templateUrl: './property-menu.component.html',
-  styleUrls: ['./property-menu.component.scss']
+  selector: "app-property-menu",
+  templateUrl: "./property-menu.component.html",
+  styleUrls: ["./property-menu.component.scss"]
 })
 export class PropertyMenuComponent implements OnInit {
-
   @Input() schema: Bucket;
   @Input() displayedProperties: string[];
   @Input() property: any;
-  constructor(private _snackBar: MatSnackBar, private bs: BucketService, private dialog: MatDialog) { }
+  constructor(
+    private _snackBar: MatSnackBar,
+    private bs: BucketService,
+    private dialog: MatDialog
+  ) {}
 
-  ngOnInit(): void {
-  }
+  ngOnInit(): void {}
 
   deleteProperty(propertyKey: string) {
     if (this.schema.primary === propertyKey) {
       this._snackBar.openFromComponent(SnackbarComponent, {
         data: {
-          message: "In order to delete the primary field, you must first select another field as primary"
+          message:
+            "In order to delete the primary field, you must first select another field as primary"
         } as SnackbarError,
         duration: 5000
       });
-      return
+      return;
     }
 
     delete this.schema.properties[propertyKey];
     if (this.schema.required && this.schema.required.includes(propertyKey)) {
       this.schema.required.splice(this.schema.required.indexOf(propertyKey), 1);
     }
-    this.saveSchema()
+    this.saveSchema();
   }
   async editNewProperty(propertyKey: string = null) {
     this.dialog.open(AddFieldModalComponent, {
@@ -52,19 +55,20 @@ export class PropertyMenuComponent implements OnInit {
   }
 
   saveSchema() {
-    console.log("")
-    this.bs.replaceOne(this.schema)
+    this.bs
+      .replaceOne(this.schema)
       .toPromise()
-      .catch((err) => this._snackBar.openFromComponent(SnackbarComponent, {
-        data: {
-          status: err.status,
-          message: err.error.message
-        } as SnackbarError,
-        duration: 5000
-      }))
+      .catch(err =>
+        this._snackBar.openFromComponent(SnackbarComponent, {
+          data: {
+            status: err.status,
+            message: err.error.message
+          } as SnackbarError,
+          duration: 5000
+        })
+      );
   }
   moveField(field, value) {
-
     const keys = Object.keys(this.schema.properties);
     const properties = Object.entries(this.schema.properties);
 
@@ -79,7 +83,7 @@ export class PropertyMenuComponent implements OnInit {
     );
 
     const fromIndex = cachedDisplayedProperties.indexOf(field); // 👉️ 0
-    const element = cachedDisplayedProperties.splice(fromIndex, 1)[0]
+    const element = cachedDisplayedProperties.splice(fromIndex, 1)[0];
 
     cachedDisplayedProperties.splice(fromIndex + value, 0, element);
     localStorage.setItem(
@@ -87,9 +91,6 @@ export class PropertyMenuComponent implements OnInit {
       JSON.stringify(cachedDisplayedProperties)
     );
 
-    this.saveSchema()
+    this.saveSchema();
   }
-
-
-
 }

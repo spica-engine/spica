@@ -96,41 +96,12 @@
   </mat-card-content>
 
   <mat-card-actions>
-    <form #scheduleForm="ngForm" *ngIf="data?._schedule">
-      <button [disabled]="bucket.readOnly" mat-button color="warn" (click)="cancelSchedule()">
-        <mat-icon>cancel</mat-icon> Cancel Schedule
-      </button>
-      <mat-form-field>
-        <input
-          matInput
-          readonly
-          required
-          name="schedule_date"
-          [(ngModel)]="data._schedule"
-          [disabled]="bucket.readOnly"
-          [owlDateTime]="dt1"
-          [owlDateTimeTrigger]="dt1"
-          [min]="minScheduleDate"
-        />
-        <owl-date-time #dt1></owl-date-time>
-      </mat-form-field>
-    </form>
-
-    <button
-      *ngIf="!data._schedule"
-      mat-icon-button
-      matTooltip="Set publish date"
-      [disabled]="bucket.readOnly"
-      (click)="schedule()"
-    >
-      <mat-icon>schedule</mat-icon>
-    </button>
     <button
       class="save-button"
       [canInteract]="data._id ? 'bucket:data:update' : 'bucket:data:create'"
       [resource]="data._id ? bucketId + '/' + data._id : bucketId"
       *matSave="$save | async; let state"
-      [disabled]="form.invalid || scheduleForm?.invalid || bucket.readOnly || !!state"
+      [disabled]="form.invalid || bucket.readOnly || !!state"
       mat-button
       (click)="saveBucketRow()"
       [ngSwitch]="state"

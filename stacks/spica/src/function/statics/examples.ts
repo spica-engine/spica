@@ -31,14 +31,6 @@ const examples = {
 \t\tsocket.close();
 \t}
 }`,
-  schedule: `export default function (stop) {
-\tconst expired_at = new Date("2050-01-01");
-\tconst now = new Date();
-\tif (now > expired_at) {
-\t\tconsole.log("Crobjob has been stopped at ", now)
-\t\tstop();
-\t}
-}`,
   system: `export default function () {
 \tconsole.log("Spica is ready.");
 }`,
