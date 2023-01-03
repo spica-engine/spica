@@ -75,11 +75,15 @@
               padding: 0px 3px;
               background: rgba(var(--background-background-rgb), 0.9);
               > mat-list-item {
+                margin: 3px 0px;
+                padding: 15px 0px;
+                height: unset;
                 &.active {
                   background: rgba(255, 255, 255, 0.17);
                   border-radius: 5px;
                 }
                 &:first-of-type {
+                  margin: 15px 0;
                   pointer-events: none;
                   img {
                     width: 26px;
@@ -91,14 +95,6 @@
               }
             }
             mat-list-item {
-              margin: 3px 0px;
-              padding: 15px 0px;
-              height: unset;
-
-              &:first-of-type {
-                margin: 15px 0;
-              }
-
               &.iconlist-below {
                 display: flex;
                 height: 100%;
