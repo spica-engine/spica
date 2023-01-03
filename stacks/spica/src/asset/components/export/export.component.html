@@ -33,16 +33,21 @@
     </mat-form-field>
   </div>
   <h4>Configurations</h4>
-  <div class="config" *ngFor="let config of exportMeta.configs; let i = index; trackBy: _trackBy">
-    <button class="remove-config" (click)="removeConfig(i)" mat-icon-button color="warn">
+  <div class="config" *ngFor="let config of currentConfigs; let ci = index; trackBy: _trackBy">
+    <button class="remove-config" (click)="removeConfig(ci)" mat-icon-button color="warn">
       <mat-icon>clear</mat-icon>
     </button>
-    <div
-      [inputPlacer]="configSchema[configKv.key]"
-      [(ngModel)]="config[configKv.key]"
-      *ngFor="let configKv of config | keyvalue; let j = index; trackBy: _trackBy2"
-    ></div>
-    <mat-divider *ngIf="exportMeta.configs.length > 1"></mat-divider>
+    <ng-container *ngFor="let step of configSteps[ci]; let si = index; trackBy: _trackBy2">
+      <mat-form-field class="config-step" *ngIf="step.length">
+        <mat-label>{{step[0].name}}</mat-label>
+        <mat-select ngModel (ngModelChange)="onChange($event, ci, si)">
+          <mat-option *ngFor="let selectable of step" [value]="selectable">
+            {{ selectable.title }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </ng-container>
+    <mat-divider *ngIf="currentConfigs.length > 1"></mat-divider>
   </div>
   <button class="add-config" mat-button (click)="addConfig()">+ Add New</button>
 

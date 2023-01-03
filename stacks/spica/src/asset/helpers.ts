@@ -1,9 +1,4 @@
-import {
-  Config,
-  InstallationPreview,
-  InstallationPreviewByModules,
-  Resource
-} from "./interfaces";
+import {Config, InstallationPreview, InstallationPreviewByModules, Resource} from "./interfaces";
 
 export function separatePreviewResourcesByModule(
   preview: InstallationPreview
@@ -101,72 +96,84 @@ export function displayPreview(resources: any[]) {
 //   return schemas.find(s => (s.module = module));
 // };
 
-export const getConfigSchema = () => {
-  return {
-    title: {
-      type: "string",
-      title: "Title",
-      description:
-        "It will be displayed on the configuration step while others installing this asset."
-    },
-    module: {
-      type: "string",
-      title: "Module",
-      description: "Select one of these modules",
-      // backend should set this
-      enum: ["bucket", "function", "preference"]
-    },
-    resource_id: {
-      type: "string",
-      title: "Resource Id",
-      description: "Select one of these resource ids"
-    },
-    submodule: {
-      type: "string",
-      title: "Sub-Module",
-      description: "Select one of these sub modules"
-    },
-    property: {
-      type: "string",
-      title: "Property",
-      description:
-        "Property target of the configuration will affect. Use dot(.) for nested properties"
-    },
-    value: {
-      type: "string",
-      title: "Value",
-      description:
-        "Value of the configuration that will be replaced with the value of matched property."
-    },
-    type: {
-      type: "string",
-      title: "Value Type",
-      description: "Select one of these types",
-      enum: ["number", "string", "boolean", "object", "array"]
-    }
-  };
-};
+// export const getConfigSchema = () => {
+//   return {
+//     title: {
+//       type: "string",
+//       title: "Title",
+//       description:
+//         "It will be displayed on the configuration step while others installing this asset."
+//     },
+//     module: {
+//       type: "string",
+//       title: "Module",
+//       description: "Select one of these modules",
+//       // backend should set this
+//       enum: ["bucket", "function", "preference"]
+//     },
+//     resource_id: {
+//       type: "string",
+//       title: "Resource Id",
+//       description: "Select one of these resource ids"
+//     },
+//     submodule: {
+//       type: "string",
+//       title: "Sub-Module",
+//       description: "Select one of these sub modules"
+//     },
+//     property: {
+//       type: "string",
+//       title: "Property",
+//       description:
+//         "Property target of the configuration will affect. Use dot(.) for nested properties"
+//     },
+//     value: {
+//       type: "string",
+//       title: "Value",
+//       description:
+//         "Value of the configuration that will be replaced with the value of matched property."
+//     },
+//     type: {
+//       type: "string",
+//       title: "Value Type",
+//       description: "Select one of these types",
+//       enum: ["number", "string", "boolean", "object", "array"]
+//     }
+//   };
+// };
+
+// export function getEmptyConfig() {
+//   const config: any = {};
+//   Object.entries(getConfigSchema()).forEach(([k]) => {
+//     config[k] = undefined;
+//   });
+//   return config;
+// }
+
+// export function getEmptyExportResources() {
+//   const res = [];
+//   Object.keys(getExportResourceSchema()).forEach(mod => {
+//     res.push({module: mod, ids: []});
+//   });
+//   return res;
+// }
+
+// export function getExportResourceSchema() {
+//   return {
+//     bucket: [{id: "639836422b16efb47b264868", title: "New Bucket"}],
+//     function: [{id: "6398364b2b16efb47b26486c", title: "test"}],
+//     preference: [{id: "identity", title: "Identity"}]
+//   };
+// }
 
 export function getEmptyConfig() {
-  const config: any = {};
-  Object.entries(getConfigSchema()).forEach(([k]) => {
-    config[k] = undefined;
-  });
-  return config;
-}
-
-export function getEmptyExportResources() {
-  const res = [];
-  Object.keys(getExportResourceSchema()).forEach(mod => {
-    res.push({module: mod, ids: []});
-  });
-  return res;
-}
-
-export function getExportResourceSchema() {
   return {
-    bucket: [{id: "639836422b16efb47b264868", title: "New Bucket"}],
-    function: [{id: "6398364b2b16efb47b26486c", title: "test"}],
-    preference: [{id: "identity", title: "Identity"}]
+    title: undefined,
+    module: undefined,
+    submodule: undefined,
+    resource_id: undefined,
+    property: undefined,
+    type: undefined,
+    value: undefined
   };
 }

@@ -1,3 +1,5 @@
+import {InjectionToken} from "@angular/core";
+
 export interface Asset {
   _id?: string;
   name: string;
@@ -46,7 +48,7 @@ export interface ExportMeta {
   description: string;
   configs: Config[];
   resources: ExportResource;
-  url:string;
+  url: string;
 }
 
 export interface ExportResource {
@@ -56,3 +58,13 @@ export interface ExportResource {
 export interface CurrentResources {
   [module: string]: {title: string; _id: string}[];
 }
+
+export const ASSET_CONFIG_EXPORTER = new InjectionToken<any>("ASSET_CONFIG_EXPORTER");
+
+export interface Selectable {
+  name: string;
+  value: any;
+  title:string;
+  onSelect: (...args) => Promise<Selectable[]>;
+}
+

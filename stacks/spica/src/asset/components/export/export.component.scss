@@ -8,6 +8,9 @@
 
   div.config{
     position: relative;
+    mat-form-field{
+      width: 100%;
+    }
     button.remove-config{
       position: absolute;
       top: -30px;

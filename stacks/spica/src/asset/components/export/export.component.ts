@@ -1,10 +1,12 @@
-import {Component, OnInit} from "@angular/core";
+import {Component, Inject, OnInit} from "@angular/core";
+import {getEmptyConfig} from "@spica-client/asset/helpers";
 import {
-  getConfigSchema,
-  getEmptyConfig,
-  getExportResourceSchema
-} from "@spica-client/asset/helpers";
-import {CurrentResources, ExportMeta} from "@spica-client/asset/interfaces";
+  ASSET_CONFIG_EXPORTER,
+  Config,
+  CurrentResources,
+  ExportMeta,
+  Selectable
+} from "@spica-client/asset/interfaces";
 import {AssetService} from "@spica-client/asset/services/asset.service";
 
 @Component({
@@ -13,8 +15,6 @@ import {AssetService} from "@spica-client/asset/services/asset.service";
   styleUrls: ["./export.component.scss"]
 })
 export class ExportComponent implements OnInit {
-  configSchema = getConfigSchema();
-  exportResources = getExportResourceSchema();
   resources: CurrentResources = {};
 
   exportMeta: ExportMeta = {
@@ -25,41 +25,50 @@ export class ExportComponent implements OnInit {
     url: undefined
   };
 
-  constructor(private assetService: AssetService) {
-    this.assetService
-      .listResources()
-      .toPromise()
-      .then(resources => {
-        console.log(resources);
-        this.resources = resources;
-        this.exportMeta.resources = Object.keys(this.resources).reduce((acc, curr) => {
-          acc[curr] = [];
-          return acc;
-        }, {});
-      });
-  }
+  configSteps: Selectable[][][] = [];
+
+  currentConfigs: Config[] = [];
+
+  constructor(
+    private assetService: AssetService,
+    @Inject(ASSET_CONFIG_EXPORTER) private _configExporters: Selectable[]
+  ) {}
 
   ngOnInit(): void {}
 
+  onChange(selectable: Selectable, configIndex: number, stepIndex: number) {
+    this.currentConfigs[configIndex][selectable.name] = selectable.value;
+
+    selectable.onSelect(selectable.value).then(selectables => {
+      this.configSteps[configIndex][stepIndex + 1] = selectables;
+      this.configSteps[configIndex] = this.configSteps[configIndex].slice(0, stepIndex + 2);
+    });
+  }
+
   export() {
-    this.assetService
-      .export(this.exportMeta)
-      .toPromise()
-      .then(r => {
-        const blob = new Blob([r], {type: r.type});
-        const downloadUrl = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = downloadUrl;
-        link.click();
-      });
+    // this.assetService
+    //   .export(this.exportMeta)
+    //   .toPromise()
+    //   .then(r => {
+    //     const blob = new Blob([r], {type: r.type});
+    //     const downloadUrl = URL.createObjectURL(blob);
+    //     const link = document.createElement("a");
+    //     link.href = downloadUrl;
+    //     link.click();
+    //   });
   }
 
   addConfig() {
-    this.exportMeta.configs.push(getEmptyConfig());
+    this.currentConfigs.push(getEmptyConfig());
+    this.configSteps.push([this._configExporters]);
+    // this.exportMeta.configs.push();
   }
 
   removeConfig(i) {
-    this.exportMeta.configs.splice(i, 1);
+    console.log(i);
+    this.currentConfigs.splice(i, 1);
+    this.configSteps.splice(i, 1);
+    // this.exportMeta.configs.splice(i, 1);
   }
 
   _trackBy: (i) => any = i => i;

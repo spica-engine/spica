@@ -50,6 +50,8 @@ import {WebhookModule} from "./webhook.module";
 import {MatDialogModule} from "@angular/material/dialog";
 import {WebhookService} from "./services";
 import {CategoryModule} from "@spica-client/common/category";
+import {ASSET_CONFIG_EXPORTER} from "@spica-client/asset/interfaces";
+import {assetConfigExporter} from "./asset";
 
 @NgModule({
   imports: [
@@ -132,6 +134,12 @@ export class FunctionModule {
         {
           provide: BUILDLINK_FACTORY,
           useValue: {caller: "asset", factory: provideAssetFactory},
+          multi: true
+        },
+        {
+          provide: ASSET_CONFIG_EXPORTER,
+          useFactory: assetConfigExporter,
+          deps: [FunctionService],
           multi: true
         }
       ]

@@ -68,6 +68,8 @@ import {HighlightModule, HIGHLIGHT_OPTIONS} from "ngx-highlightjs";
 import {CategoryModule} from "@spica-client/common/category";
 import {BucketOptions, BUCKET_OPTIONS} from "./interfaces/bucket";
 import {IGNORE_HTTP_ERRORS} from "@spica-client/core/layout/config";
+import {ASSET_CONFIG_EXPORTER} from "@spica-client/asset/interfaces";
+import {assetConfigExporter} from "./asset";
 
 @NgModule({
   imports: [
@@ -219,6 +221,12 @@ export class BucketModule {
             }
             return false;
           },
+          multi: true
+        },
+        {
+          provide: ASSET_CONFIG_EXPORTER,
+          useFactory: assetConfigExporter,
+          deps: [BucketService],
           multi: true
         }
       ]
