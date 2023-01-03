@@ -1,10 +1,12 @@
-import {Component, Input, OnDestroy, ViewChild, OnInit} from "@angular/core";
+import {Component, Input, OnDestroy, OnInit} from "@angular/core";
 import {Subject} from "rxjs";
-import {Bucket} from "../../interfaces/bucket";
 import {BucketService} from "../../services/bucket.service";
-import {filter, takeUntil} from "rxjs/operators";
-import {ActivatedRoute, Router} from "@angular/router";
-import {RouteCategory} from "@spica-client/core/route";
+import {filter} from "rxjs/operators";
+import {Router} from "@angular/router";
+import {Route} from "@spica-client/core";
+import {MatDialog} from "@angular/material/dialog";
+import {AddBucketComponent} from "@spica-client/bucket/components/add-bucket/add-bucket.component";
+import {Bucket} from "@spica-client/bucket/interfaces/bucket";
 
 @Component({
   selector: "bucket-index",
@@ -12,17 +14,11 @@ import {RouteCategory} from "@spica-client/core/route";
   styleUrls: ["./bucket-index.component.scss"]
 })
 export class BucketIndexComponent implements OnDestroy, OnInit {
-  categoryStorageKey: string = RouteCategory.Content;
-  buckets;
-  selectedItem: Bucket;
+  buckets: Bucket[];
   private dispose = new Subject();
-  @Input() sideCar = false;
+  @Input() route: Route;
 
-  constructor(
-    private bs: BucketService,
-    private router: Router,
-    private activatedRoute: ActivatedRoute
-  ) {
+  constructor(private bs: BucketService, private router: Router, private dialog: MatDialog) {
     this.bs
       .getBuckets()
       .pipe(filter((data: any) => data && data.length))
@@ -31,44 +27,38 @@ export class BucketIndexComponent implements OnDestroy, OnInit {
       });
   }
 
-  ngOnInit() {
-    this.activatedRoute.url.pipe(takeUntil(this.dispose)).subscribe(segments => {
-      if (!segments.length) {
-        const target = this.buckets.length ? this.buckets[0]._id : "add";
-        this.router.navigate(["buckets", target]);
-      }
-    });
-  }
+  ngOnInit() {}
 
-  delete(bucket: Bucket) {
-    const index = this.buckets.findIndex(b => b._id == bucket._id);
+  delete(id: string) {
+    const index = this.buckets.findIndex(b => b._id == id);
 
-    const lastSegment = this.activatedRoute.snapshot.url[
-      this.activatedRoute.snapshot.url.length - 1
-    ].toString();
+    const currentBucketRoute = this.router.routerState.snapshot.url.split("/")[2];
+    let target = currentBucketRoute;
 
-    let target = lastSegment;
-
-    if (lastSegment == bucket._id) {
-      if (this.buckets.length > 1) {
+    if (this.buckets.length > 1) {
+      if (currentBucketRoute == id) {
         const nextIndex = index == 0 ? index + 1 : index - 1;
         target = this.buckets[nextIndex]._id;
-      } else {
-        target = "welcome";
       }
+    } else {
+      target = "welcome";
     }
 
     this.bs
-      .delete(bucket._id)
+      .delete(id)
       .toPromise()
-      .then(() => this.router.navigate(["buckets", target]));
+      .then(() => target && this.router.navigate(["bucket", target]));
   }
 
+  editBucket() {
+    this.dialog.open(AddBucketComponent, {
+      data: {
+        bucket: this.buckets.find(item => item._id == this.route.id)
+      },
+      autoFocus: false
+    });
+  }
   ngOnDestroy(): void {
     this.dispose.next();
-  }
-
-  updateIndexes(event) {
-    event.forEach(item => this.bs.patchBucket(item.entry_id, item.changes).toPromise());
   }
 }

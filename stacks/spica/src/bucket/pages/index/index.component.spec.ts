@@ -285,7 +285,7 @@ describe("IndexComponent", () => {
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
             e.textContent.trim()
           )
-        ).toEqual(["Display all", "test", "Scheduled"]);
+        ).toEqual(["Display all", "test"]);
       });
 
       it("should set displayed properties from local storage", async () => {
@@ -340,7 +340,7 @@ describe("IndexComponent", () => {
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
             e.textContent.trim()
           )
-        ).toEqual(["Display all", "test", "Scheduled"]);
+        ).toEqual(["Display all", "test"]);
       });
 
       it("should display later checked properties", fakeAsync(() => {
@@ -377,16 +377,6 @@ describe("IndexComponent", () => {
         .nativeElement.click();
       fixture.detectChanges();
       expect(bucketDataService.find).toHaveBeenCalledTimes(1);
-    });
-
-    it("should show scheduled", () => {
-      bucketDataService.find.calls.reset();
-      fixture.debugElement
-        .query(By.css("div.actions > button:nth-of-type(4)"))
-        .nativeElement.click();
-      fixture.detectChanges();
-      expect(bucketDataService.find).toHaveBeenCalledTimes(1);
-      expect(bucketDataService.find.calls.mostRecent().args[1].schedule).toBe(true);
     });
 
     it("should show guide button", () => {

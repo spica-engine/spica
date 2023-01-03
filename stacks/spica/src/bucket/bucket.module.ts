@@ -52,7 +52,6 @@ import {RelationComponent} from "./components/relation/relation.component";
 import {RichTextEditorComponent} from "./components/richtext/richtext";
 import {AddFieldModalComponent} from "./pages/add-field-modal/add-field-modal.component";
 import {AddComponent} from "./pages/add/add.component";
-import {BucketAddComponent} from "./pages/bucket-add/bucket-add.component";
 import {AddBucketComponent} from "./components/add-bucket/add-bucket.component";
 import {BucketIndexComponent} from "./pages/bucket-index/bucket-index.component";
 import {IndexComponent} from "./pages/index/index.component";
@@ -66,11 +65,10 @@ import * as fromBucket from "./state/bucket.reducer";
 import {RequiredTranslate} from "./validators";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
 import {HighlightModule, HIGHLIGHT_OPTIONS} from "ngx-highlightjs";
-import {CategoryModule} from "@spica-client/common/category";
 import {BucketOptions, BUCKET_OPTIONS} from "./interfaces/bucket";
 import {IGNORE_HTTP_ERRORS} from "@spica-client/core/layout/config";
-import { SettingsBucketComponent } from "./components/settings-bucket/settings-bucket.component";
-import { PropertyMenuComponent } from "./components/property-menu/property-menu.component";
+import {SettingsBucketComponent} from "./components/settings-bucket/settings-bucket.component";
+import {PropertyMenuComponent} from "./components/property-menu/property-menu.component";
 
 @NgModule({
   imports: [
@@ -144,14 +142,12 @@ import { PropertyMenuComponent } from "./components/property-menu/property-menu.
     PassportModule.forChild(),
     SpicaCommon,
     EditorModule,
-    HighlightModule,
-    CategoryModule
+    HighlightModule
   ],
   declarations: [
     IndexComponent,
     AddComponent,
     BucketIndexComponent,
-    BucketAddComponent,
     AddBucketComponent,
     WelcomeComponent,
     RichTextEditorComponent,
@@ -167,7 +163,8 @@ import { PropertyMenuComponent } from "./components/property-menu/property-menu.
     JsonLanguageDirective,
     PropertyLanguageComponent,
     SettingsBucketComponent,
-    PropertyMenuComponent  ]
+    PropertyMenuComponent
+  ]
 })
 export class BucketModule {
   public static forRoot(options: BucketOptions): ModuleWithProviders<BucketModule> {
@@ -213,7 +210,7 @@ export class BucketModule {
           useValue: (url: string, code: number) => {
             if (
               url.endsWith("000000000000000000000000/history/000000000000000000000000") &&
-              code == 404
+              code == 0
             ) {
               return true;
             }

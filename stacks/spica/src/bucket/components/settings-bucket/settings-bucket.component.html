@@ -10,22 +10,6 @@
   <mat-icon>gavel</mat-icon>
   Options
 </button>
-<button
-  [resource]="schema._id"
-  canInteract="bucket:delete"
-  class="delete-bucket-button"
-  mat-menu-item
-  disableRipple
-  [matAwareDialog]="{
-    title: 'Confirmation',
-    templateOrDescription: dialogTemplate,
-    answer: schema.title
-  }"
-  (confirm)="delete(schema)"
->
-  <mat-icon color="warn">delete</mat-icon>
-  Delete Bucket
-</button>
 <mat-menu
   (closed)="saveBucket()"
   class="bucket-settings-menu-toggles"

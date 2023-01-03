@@ -1,19 +1,19 @@
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 
-import {SettingsBucketComponent} from "./settings-bucket.component";
+import {RouteItemComponent} from "./route-item.component";
 
-describe("SettingsBucketComponent", () => {
-  let component: SettingsBucketComponent;
-  let fixture: ComponentFixture<SettingsBucketComponent>;
+describe("RouteItemComponent", () => {
+  let component: RouteItemComponent;
+  let fixture: ComponentFixture<RouteItemComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [SettingsBucketComponent]
+      declarations: [RouteItemComponent]
     }).compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SettingsBucketComponent);
+    fixture = TestBed.createComponent(RouteItemComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

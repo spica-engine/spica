@@ -53,6 +53,7 @@ export class BucketService {
   }
 
   replaceOne(bucket: Bucket): Observable<Bucket> {
+    bucket = this.ignoreSchema(bucket);
     return this.http
       .put<Bucket>(`api:/bucket/${bucket._id}`, bucket)
       .pipe(tap(bucket => this.store.dispatch(new fromBucket.Replace(bucket))));
@@ -66,10 +67,19 @@ export class BucketService {
       .pipe(tap(_ => this.store.dispatch(new fromBucket.Update(id, changes))));
   }
 
-  patchIndexes(buckets: Bucket[]): Promise<Bucket[]> {
+  patchBucketWithoutStore(id: string, changes: object) {
+    return this.http.patch<Bucket>(`api:/bucket/${id}`, changes, {
+      headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
+    });
+  }
+
+  patchBucketMany(changes: {id: string; changes: object}[]): Promise<Bucket[]> {
     return Promise.all(
-      buckets.map((bucket, index) => this.patchBucket(bucket._id, {order: index}).toPromise())
-    );
+      changes.map(change => this.patchBucketWithoutStore(change.id, change.changes).toPromise())
+    ).then((res: Bucket[]) => {
+      this.store.dispatch(new fromBucket.UpdateMany(changes));
+      return Promise.resolve(res);
+    });
   }
 
   getPredefinedDefaults(): Observable<PredefinedDefault[]> {
@@ -132,5 +142,9 @@ export class BucketService {
 
   guideRequest(request: string, headers?: object): Observable<any> {
     return this.http.get(`api:${request}`, headers);
+  }
+  ignoreSchema(schema) {
+    ["category"].forEach(e => !schema[e] && delete schema[e]);
+    return schema;
   }
 }

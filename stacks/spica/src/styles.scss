@@ -150,6 +150,12 @@ $custom-typography: mat-typography-config(
     background: unset !important;
   }
 }
+button[color="warn"] {
+  color: var(--warn-500) !important;
+  &:disabled {
+    opacity: 0.7;
+  }
+}
 
 .ng-disabled-button:hover {
   cursor: not-allowed;
@@ -161,6 +167,9 @@ table.striped tr:nth-child(even) td {
 
 mat-table.striped mat-row:nth-child(even) {
   background-color: rgba(var(--background-background-rgb), 1) !important;
+}
+.mat-menu-panel {
+  min-width: 180px !important;
 }
 
 .minimal-input-placer {

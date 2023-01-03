@@ -1,19 +1,19 @@
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 
-import {SettingsBucketComponent} from "./settings-bucket.component";
+import {ExpandableNavComponent} from "./expandable-nav.component";
 
-describe("SettingsBucketComponent", () => {
-  let component: SettingsBucketComponent;
-  let fixture: ComponentFixture<SettingsBucketComponent>;
+describe("ExpandableNavComponent", () => {
+  let component: ExpandableNavComponent;
+  let fixture: ComponentFixture<ExpandableNavComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [SettingsBucketComponent]
+      declarations: [ExpandableNavComponent]
     }).compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SettingsBucketComponent);
+    fixture = TestBed.createComponent(ExpandableNavComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

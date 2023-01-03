@@ -1,7 +1,7 @@
 <mat-card class="add-new-bucket-modal mat-elevation-z0">
   <mat-card-header>
     <mat-card-title>
-      Add new bucket
+      {{ bucket._id ? "Update bucket" : "Add new bucket" }}
     </mat-card-title>
   </mat-card-header>
   <mat-divider></mat-divider>
@@ -17,6 +17,7 @@
           required
           minlength="4"
           maxlength="100"
+          (keyup.enter)="titleForm.valid && saveBucket()"
         />
         <mat-hint align="end">{{ tm.value?.length || 0 }} / 100</mat-hint>
         <mat-error *ngIf="tm?.errors?.required">This field is required.</mat-error>
@@ -91,7 +92,6 @@
         !!state
       "
       (click)="saveBucket()"
-      (keyup.enter)="saveBucket()"
       [ngSwitch]="state"
     >
       <mat-icon *ngSwitchDefault>save</mat-icon>

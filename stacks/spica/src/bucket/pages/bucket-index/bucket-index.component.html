@@ -1,53 +1,25 @@
-<category
-  *ngIf="buckets"
-  (onChangedOrder)="updateIndexes($event)"
-  (onClickItem)="selectedItem = $event._id"
-  [schemas]="buckets"
-  [itemTemplate]="itemTmpl"
-  [categoryStorageKey]="categoryStorageKey"
->
-  <ng-container schemaHeader>
-    <mat-icon>view_day</mat-icon>
-    <span>Buckets</span>
-  </ng-container>
-
-  <ng-container schemaHeaderActions>
-    <button canInteract="bucket:create" mat-button [routerLink]="['../add']">
-      <mat-icon>add</mat-icon>
-      Add Bucket
-    </button>
-  </ng-container>
-</category>
-
-<ng-template #itemTmpl let-item="item">
-  <div canInteract="bucket:show" [resource]="item._id">
-    <div [class.selected]="selectedItem == item._id" class="schema-card drag-box mat-elevation-1">
-      <div class="schema-title" [routerLink]="['../' + item._id]">
-        <div>
-          <mat-icon>{{ item.icon }}</mat-icon>
-          <span>{{ item.title }}</span>
-        </div>
-        <small>ID: {{ item._id }}</small>
-      </div>
-      <div class="actions">
-        <button
-          canInteract="bucket:delete"
-          [resource]="item._id"
-          mat-icon-button
-          color="warn"
-          [matAwareDialog]="{
-            title: 'Confirmation',
-            templateOrDescription: dialogTemplate,
-            answer: item.title
-          }"
-          (confirm)="delete(item)"
-        >
-          <mat-icon>delete</mat-icon>
-        </button>
-      </div>
-    </div>
-  </div>
-</ng-template>
+<ng-container *ngIf="route">
+  <button mat-menu-item canInteract="bucket:update" [resource]="route.id" (click)="editBucket()">
+    <mat-icon>edit</mat-icon>
+    Edit
+  </button>
+  <mat-divider> </mat-divider>
+  <button
+    mat-menu-item
+    canInteract="bucket:delete"
+    [resource]="route.id"
+    color="warn"
+    [matAwareDialog]="{
+      title: 'Confirmation',
+      templateOrDescription: dialogTemplate,
+      answer: route.display
+    }"
+    (confirm)="delete(route.id)"
+  >
+    <mat-icon color="warn">delete</mat-icon>
+    Delete
+  </button>
+</ng-container>
 
 <ng-template #dialogTemplate let-answer="answer">
   <p>This action will <b>permanently</b> delete this bucket and break all relations.</p>

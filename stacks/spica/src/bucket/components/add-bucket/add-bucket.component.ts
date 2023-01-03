@@ -24,7 +24,7 @@ export class AddBucketComponent implements OnInit {
   constructor(
     private bs: BucketService,
     private router: Router,
-    @Inject(MAT_DIALOG_DATA) public data: {name: string},
+    @Inject(MAT_DIALOG_DATA) public data: {bucket: Bucket},
     public dialogRef: MatDialogRef<AddBucketComponent>
   ) {
     this.bs
@@ -34,7 +34,7 @@ export class AddBucketComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.bucket = emptyBucket();
+    this.bucket = this.data && this.data.bucket ? this.data.bucket : emptyBucket();
   }
 
   saveBucket() {
