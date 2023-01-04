@@ -64,7 +64,7 @@ export const ASSET_CONFIG_EXPORTER = new InjectionToken<any>("ASSET_CONFIG_EXPOR
 export interface Selectable {
   name: string;
   value: any;
-  title:string;
+  title: string;
   onSelect: (...args) => Promise<Selectable[]>;
+  isLast?: boolean;
 }
-

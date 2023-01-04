@@ -177,3 +177,28 @@ export function getEmptyConfig() {
     value: undefined
   };
 }
+
+export function listEditableProps(schema: object) {
+  const visit = (value, paths = []) => {
+    if (typeof value != "object" || Array.isArray(value)) {
+      return paths.join(".");
+    }
+
+    const targets = [];
+    for (let subkey in value) {
+      const newPaths = paths.concat(...[subkey]);
+      let target = visit(value[subkey], newPaths);
+      Array.isArray(target) ? targets.push(...target) : targets.push(target);
+    }
+
+    return targets;
+  };
+
+  const targets = [];
+  for (let [key, value] of Object.entries(schema)) {
+    const target = visit(value, [key]);
+    Array.isArray(target) ? targets.push(...target) : targets.push(target);
+  }
+
+  return targets;
+}

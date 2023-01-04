@@ -34,7 +34,9 @@ export class ExportComponent implements OnInit {
     @Inject(ASSET_CONFIG_EXPORTER) private _configExporters: Selectable[]
   ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+
+  }
 
   onChange(selectable: Selectable, configIndex: number, stepIndex: number) {
     this.currentConfigs[configIndex][selectable.name] = selectable.value;
@@ -42,6 +44,12 @@ export class ExportComponent implements OnInit {
     selectable.onSelect(selectable.value).then(selectables => {
       this.configSteps[configIndex][stepIndex + 1] = selectables;
       this.configSteps[configIndex] = this.configSteps[configIndex].slice(0, stepIndex + 2);
+      
+      // if(selectables.some(s => s.isLast)){
+
+      // }
+
+      
     });
   }
 

@@ -37,15 +37,37 @@
     <button class="remove-config" (click)="removeConfig(ci)" mat-icon-button color="warn">
       <mat-icon>clear</mat-icon>
     </button>
+    <mat-form-field class="config-step">
+      <mat-label>Title</mat-label>
+      <input matInput [(ngModel)]="config.title" />
+    </mat-form-field>
     <ng-container *ngFor="let step of configSteps[ci]; let si = index; trackBy: _trackBy2">
-      <mat-form-field class="config-step" *ngIf="step.length">
-        <mat-label>{{step[0].name}}</mat-label>
-        <mat-select ngModel (ngModelChange)="onChange($event, ci, si)">
-          <mat-option *ngFor="let selectable of step" [value]="selectable">
-            {{ selectable.title }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+      <ng-container *ngIf="step.length">
+        <mat-form-field class="config-step">
+          <mat-label>{{ step[0].name }}</mat-label>
+          <mat-select ngModel (ngModelChange)="onChange($event, ci, si)">
+            <mat-option *ngFor="let selectable of step" [value]="selectable">
+              {{ selectable.title }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <ng-container *ngIf="step[0].isLast && config[step[0].name]">
+          <mat-checkbox
+            name="default"
+            ngModel
+            (ngModelChange)="!$event.value && (config.value = undefined)"
+            #hasDefaultValue="ngModel"
+            >Default</mat-checkbox
+          >
+          <ng-container *ngIf="hasDefaultValue.value === true">
+            <span
+              [name]="config.module + config.submodule + config.resource_id + config.property"
+              [inputPlacer]="{type: config.type, placeholder: 'Set the default value'}"
+              [(ngModel)]="config.value"
+            ></span>
+          </ng-container>
+        </ng-container>
+      </ng-container>
     </ng-container>
     <mat-divider *ngIf="currentConfigs.length > 1"></mat-divider>
   </div>

@@ -1,3 +1,4 @@
+import {listEditableProps} from "@spica-client/asset/helpers";
 import {Selectable} from "@spica-client/asset/interfaces";
 import {BucketService} from "./services/bucket.service";
 
@@ -22,8 +23,10 @@ export const assetConfigExporter = (bs: BucketService) => {
                 title: b.title,
                 onSelect: async _id => {
                   const bucket = await Promise.resolve(b);
+                  delete bucket._id;
+                  const editableProps = listEditableProps(bucket);
                   return Promise.resolve(
-                    Object.keys(bucket).map(k => {
+                    editableProps.map(k => {
                       return {
                         name: "property",
                         value: k,

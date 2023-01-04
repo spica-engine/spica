@@ -43,6 +43,8 @@ import {PreviewComponent} from "./components/preview/preview.component";
 import {AssetStoreComponent} from "./pages/asset-store/asset-store.component";
 import {ExportComponent} from "./components/export/export.component";
 import {MatDialogModule} from "@angular/material/dialog";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
+import {MatCheckboxModule} from "@angular/material/checkbox";
 
 @NgModule({
   imports: [
@@ -66,6 +68,8 @@ import {MatDialogModule} from "@angular/material/dialog";
     StoreModule.forFeature("asset", fromAsset.reducer),
     InputModule,
     FormsModule,
+    MatSlideToggleModule,
+    MatCheckboxModule,
     // MatStepperModule,
     // MatSelectModule,
     // MatTabsModule,
