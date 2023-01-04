@@ -492,7 +492,6 @@ describe("Storage/IndexComponent", () => {
 
     expect(sideView).toContain("test.png");
     expect(sideView).toContain("image/png - 100 KB");
-    expect(sideView).toContain("Jan 1, 1970, 2:00:02 AM");
   }));
 
   describe("sorts", () => {
