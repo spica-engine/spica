@@ -92,7 +92,12 @@ export const Root_Categories = new Map<
   ],
   [
     RouteCategory.Developer,
-    {icon: "memory", index: 4, children: {name: RouteCategory.Developer_Sub, icon: "bug_report"}}
+    {
+      icon: "memory",
+      drawer: CategoryComponent,
+      index: 4,
+      children: {name: RouteCategory.Developer_Sub, icon: "bug_report"}
+    }
   ],
   [
     RouteCategory.Webhook,
