@@ -10,6 +10,16 @@
     <mat-icon>edit</mat-icon>
     Edit
   </button>
+  <button
+    canInteract="function:logs:index"
+    [routerLink]="['function/logs']"
+    [queryParams]="{function: route.id}"
+    mat-menu-item
+    [resource]="route.id"
+  >
+    <mat-icon>bug_report</mat-icon>
+    Logs
+  </button>
   <mat-divider> </mat-divider>
   <button
     mat-menu-item
