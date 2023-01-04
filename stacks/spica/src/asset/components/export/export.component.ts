@@ -2,8 +2,8 @@ import {Component, Inject, OnInit} from "@angular/core";
 import {getEmptyConfig} from "@spica-client/asset/helpers";
 import {
   ASSET_CONFIG_EXPORTER,
+  AvailableResources,
   Config,
-  CurrentResources,
   ExportMeta,
   Selectable
 } from "@spica-client/asset/interfaces";
@@ -15,8 +15,9 @@ import {AssetService} from "@spica-client/asset/services/asset.service";
   styleUrls: ["./export.component.scss"]
 })
 export class ExportComponent implements OnInit {
-  resources: CurrentResources = {};
-
+  
+  availableResources: AvailableResources[] = [];
+  
   exportMeta: ExportMeta = {
     name: undefined,
     description: undefined,
@@ -27,56 +28,48 @@ export class ExportComponent implements OnInit {
 
   configSteps: Selectable[][][] = [];
 
-  currentConfigs: Config[] = [];
-
   constructor(
     private assetService: AssetService,
     @Inject(ASSET_CONFIG_EXPORTER) private _configExporters: Selectable[]
-  ) {}
-
-  ngOnInit(): void {
-
+  ) {
+    this.assetService
+      .listResources()
+      .toPromise()
+      .then(r => (this.availableResources = r));
   }
 
+  ngOnInit(): void {}
+
   onChange(selectable: Selectable, configIndex: number, stepIndex: number) {
-    this.currentConfigs[configIndex][selectable.name] = selectable.value;
+    this.exportMeta.configs[configIndex][selectable.name] = selectable.value;
 
     selectable.onSelect(selectable.value).then(selectables => {
       this.configSteps[configIndex][stepIndex + 1] = selectables;
       this.configSteps[configIndex] = this.configSteps[configIndex].slice(0, stepIndex + 2);
-      
-      // if(selectables.some(s => s.isLast)){
-
-      // }
-
-      
     });
   }
 
   export() {
-    // this.assetService
-    //   .export(this.exportMeta)
-    //   .toPromise()
-    //   .then(r => {
-    //     const blob = new Blob([r], {type: r.type});
-    //     const downloadUrl = URL.createObjectURL(blob);
-    //     const link = document.createElement("a");
-    //     link.href = downloadUrl;
-    //     link.click();
-    //   });
+    this.assetService
+      .export(this.exportMeta)
+      .toPromise()
+      .then(r => {
+        const blob = new Blob([r], {type: r.type});
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.click();
+      });
   }
 
   addConfig() {
-    this.currentConfigs.push(getEmptyConfig());
+    this.exportMeta.configs.push(getEmptyConfig());
     this.configSteps.push([this._configExporters]);
-    // this.exportMeta.configs.push();
   }
 
   removeConfig(i) {
-    console.log(i);
-    this.currentConfigs.splice(i, 1);
     this.configSteps.splice(i, 1);
-    // this.exportMeta.configs.splice(i, 1);
+    this.exportMeta.configs.splice(i, 1);
   }
 
   _trackBy: (i) => any = i => i;

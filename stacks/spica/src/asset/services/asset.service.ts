@@ -6,7 +6,7 @@ import {filter, switchMap, tap} from "rxjs/operators";
 import {
   Asset,
   Config,
-  CurrentResources,
+  AvailableResources,
   ExportMeta,
   InstallationPreview,
   Status
@@ -50,7 +50,7 @@ export class AssetService {
   }
 
   listResources() {
-    return this.http.get<CurrentResources>("api:/asset/resource");
+    return this.http.get<AvailableResources[]>("api:/asset/resource");
   }
 
   retrieve() {

@@ -3,25 +3,27 @@
   <mat-divider></mat-divider>
   <div class="meta">
     <h4>Meta</h4>
-    <mat-form-field>
-      <mat-label>Name</mat-label>
-      <input matInput [(ngModel)]="exportMeta.name" />
-      <mat-hint>Give a unique name to this asset</mat-hint>
-    </mat-form-field>
-    <mat-form-field>
-      <mat-label>Description</mat-label>
-      <input matInput [(ngModel)]="exportMeta.description" />
-      <mat-hint>Describe your asset</mat-hint>
-    </mat-form-field>
-    <mat-form-field>
-      <mat-label>URL</mat-label>
-      <input matInput [(ngModel)]="exportMeta.url" />
-      <mat-hint>Url of the asset that others can download it from</mat-hint>
-    </mat-form-field>
+    <form #metaForm="ngForm">
+      <mat-form-field>
+        <mat-label>Name</mat-label>
+        <input matInput required [(ngModel)]="exportMeta.name" />
+        <mat-hint>Give a unique name to this asset</mat-hint>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Description</mat-label>
+        <input matInput required [(ngModel)]="exportMeta.description" />
+        <mat-hint>Describe your asset</mat-hint>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>URL</mat-label>
+        <input matInput required [(ngModel)]="exportMeta.url" />
+        <mat-hint>Url of the asset that others can download it from</mat-hint>
+      </mat-form-field>
+    </form>
   </div>
   <div class="meta">
     <h4>Resources</h4>
-    <mat-form-field *ngFor="let resourceKv of resources | keyvalue; trackBy: _trackBy3">
+    <mat-form-field *ngFor="let resourceKv of availableResources | keyvalue; trackBy: _trackBy3">
       <mat-label>{{ resourceKv.key | titlecase }}</mat-label>
       <mat-select [(ngModel)]="exportMeta.resources[resourceKv.key]" multiple>
         <mat-option
@@ -33,48 +35,61 @@
     </mat-form-field>
   </div>
   <h4>Configurations</h4>
-  <div class="config" *ngFor="let config of currentConfigs; let ci = index; trackBy: _trackBy">
-    <button class="remove-config" (click)="removeConfig(ci)" mat-icon-button color="warn">
-      <mat-icon>clear</mat-icon>
-    </button>
-    <mat-form-field class="config-step">
-      <mat-label>Title</mat-label>
-      <input matInput [(ngModel)]="config.title" />
-    </mat-form-field>
-    <ng-container *ngFor="let step of configSteps[ci]; let si = index; trackBy: _trackBy2">
-      <ng-container *ngIf="step.length">
-        <mat-form-field class="config-step">
-          <mat-label>{{ step[0].name }}</mat-label>
-          <mat-select ngModel (ngModelChange)="onChange($event, ci, si)">
-            <mat-option *ngFor="let selectable of step" [value]="selectable">
-              {{ selectable.title }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        <ng-container *ngIf="step[0].isLast && config[step[0].name]">
-          <mat-checkbox
-            name="default"
-            ngModel
-            (ngModelChange)="!$event.value && (config.value = undefined)"
-            #hasDefaultValue="ngModel"
-            >Default</mat-checkbox
-          >
-          <ng-container *ngIf="hasDefaultValue.value === true">
-            <span
-              [name]="config.module + config.submodule + config.resource_id + config.property"
-              [inputPlacer]="{type: config.type, placeholder: 'Set the default value'}"
-              [(ngModel)]="config.value"
-            ></span>
+  <form #configForm="ngForm">
+    <div
+      class="config"
+      *ngFor="let config of exportMeta.configs; let ci = index; trackBy: _trackBy"
+    >
+      <button class="remove-config" (click)="removeConfig(ci)" mat-icon-button color="warn">
+        <mat-icon>clear</mat-icon>
+      </button>
+      <mat-form-field class="config-step">
+        <mat-label>Title</mat-label>
+        <input [name]="'config' + ci" required matInput [(ngModel)]="config.title" />
+      </mat-form-field>
+      <ng-container *ngFor="let step of configSteps[ci]; let si = index; trackBy: _trackBy2">
+        <ng-container *ngIf="step.length">
+          <mat-form-field class="config-step">
+            <mat-label>{{ step[0].name.replace("_", " ") | titlecase }}</mat-label>
+            <mat-select
+              [name]="'config' + ci + 'selectable' + si + step.name"
+              ngModel
+              (ngModelChange)="onChange($event, ci, si)"
+              required
+            >
+              <mat-option *ngFor="let selectable of step" [value]="selectable">
+                {{ selectable.title }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <ng-container *ngIf="step[0].isLast && config[step[0].name]">
+            <mat-checkbox
+              [name]="'config' + ci + 'selectable' + si + 'default'"
+              ngModel
+              (ngModelChange)="!$event.value && (config.value = undefined)"
+              #hasDefaultValue="ngModel"
+              >Default</mat-checkbox
+            >
+            <ng-container *ngIf="hasDefaultValue.value === true">
+              <span
+                [name]="'config' + ci + 'selectable' + si + 'value'"
+                required
+                [inputPlacer]="{type: config.type}"
+                [(ngModel)]="config.value"
+              ></span>
+            </ng-container>
           </ng-container>
         </ng-container>
       </ng-container>
-    </ng-container>
-    <mat-divider *ngIf="currentConfigs.length > 1"></mat-divider>
-  </div>
-  <button class="add-config" mat-button (click)="addConfig()">+ Add New</button>
+      <mat-divider *ngIf="exportMeta.configs.length > 1"></mat-divider>
+    </div>
+  </form>
+  <button class="add-config" mat-button (click)="addConfig()">
+    + Add New
+  </button>
 
   <div class="bottom-actions">
-    <button mat-button (click)="export()">
+    <button [disabled]="metaForm.invalid || configForm.invalid" mat-button (click)="export()">
       Export
     </button>
   </div>

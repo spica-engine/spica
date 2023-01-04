@@ -1,17 +1,17 @@
 :host {
   overflow-x: scroll;
-  div.meta  {
-    > * {
+  div.meta {
+    mat-form-field {
       width: 100%;
     }
   }
 
-  div.config{
+  div.config {
     position: relative;
-    mat-form-field{
+    mat-form-field {
       width: 100%;
     }
-    button.remove-config{
+    button.remove-config {
       position: absolute;
       top: -30px;
       right: -25px;

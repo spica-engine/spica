@@ -55,7 +55,7 @@ export interface ExportResource {
   [module: string]: string[];
 }
 
-export interface CurrentResources {
+export interface AvailableResources {
   [module: string]: {title: string; _id: string}[];
 }
 

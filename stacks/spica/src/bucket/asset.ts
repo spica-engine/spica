@@ -31,7 +31,30 @@ export const assetConfigExporter = (bs: BucketService) => {
                         name: "property",
                         value: k,
                         title: k,
-                        onSelect: () => Promise.resolve([])
+                        onSelect: () =>
+                          Promise.resolve([
+                            {
+                              name: "type",
+                              value: "string",
+                              title: "String",
+                              isLast: true,
+                              onSelect: () => Promise.resolve([])
+                            },
+                            {
+                              name: "type",
+                              value: "number",
+                              title: "Number",
+                              isLast: true,
+                              onSelect: () => Promise.resolve([])
+                            },
+                            {
+                              name: "type",
+                              value: "boolean",
+                              title: "Boolean",
+                              isLast: true,
+                              onSelect: () => Promise.resolve([])
+                            }
+                          ])
                       };
                     })
                   );
