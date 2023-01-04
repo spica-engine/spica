@@ -97,6 +97,46 @@ describe("Storage Acceptance", () => {
         }
       ]);
     });
+
+    it("should work with paginate true", async () => {
+      const {body} = await req.get("/storage", {
+        paginate: true,
+        limit: "1",
+        sort: JSON.stringify({_id: -1})
+      });
+
+      expect(body.meta).toEqual({total: 3});
+      expect(body.data).toEqual([
+        {
+          _id: "__skip__",
+          name: "third.txt",
+          url: `http://insteadof/storage/${body.data[0]._id}/view`,
+          content: {
+            type: `text/plain`,
+            size: 5
+          }
+        }
+      ]);
+    });
+
+    it("should work with paginate true and zero result", async () => {
+      const {body} = await req.get("/storage", {
+        paginate: true,
+        filter: JSON.stringify({name: "non_exist_name"})
+      });
+
+      expect(body.meta).toEqual({total: 0});
+      expect(body.data).toEqual([]);
+    });
+
+    it("should work with paginate false and zero result", async () => {
+      const {body} = await req.get("/storage", {
+        paginate: false,
+        filter: JSON.stringify({name: "non_exist_name"})
+      });
+
+      expect(body).toEqual([]);
+    });
   });
 
   describe("filter", () => {

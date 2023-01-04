@@ -92,7 +92,7 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
         .next()
         .then(async r => {
           if (!r.data.length) {
-            r.meta = {count: 0};
+            r.meta = {total: 0};
           }
           r.data = await this.putUrls(r.data);
           return r;
@@ -189,7 +189,7 @@ export type StorageResponse = Omit<StorageObject, "content"> & {
 
 export interface PaginatedStorageResponse {
   meta: {
-    count: number;
+    total: number;
   };
   data: StorageResponse[];
 }
