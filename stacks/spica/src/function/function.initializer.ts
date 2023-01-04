@@ -1,4 +1,4 @@
-import {Injectable} from "@angular/core";
+import {EventEmitter, Injectable, Output} from "@angular/core";
 import {
   Add,
   CherryPickAndRemove,
@@ -8,15 +8,27 @@ import {
   Upsert
 } from "@spica-client/core/route";
 import {PassportService} from "@spica-client/passport";
+import {ConfigurationComponent} from "./components/configuration/configuration.component";
+import {IndexComponent} from "./pages/index/index.component";
 import {FunctionService} from "./services/function.service";
 
 @Injectable()
 export class FunctionInitializer {
+  @Output() onFunctionCategoryChange = new EventEmitter();
   constructor(
     private functionService: FunctionService,
     private routeService: RouteService,
     private passport: PassportService
   ) {
+    this.routeService.patchCategory(RouteCategory.Developer, {
+      props: {
+        moreTemplate: IndexComponent,
+        onChangedOrder: this.onFunctionCategoryChange,
+        categoryStorageKey: RouteCategory.Developer
+      }
+    });
+    this.onFunctionCategoryChange.subscribe(event => this.functionService.patchFunctionMany(event));
+
     functionService.getFunctions().subscribe(async funcs => {
       this.routeService.dispatch(
         new CherryPickAndRemove(e => e.category == RouteCategory.Developer)
@@ -36,7 +48,9 @@ export class FunctionInitializer {
               icon: "memory",
               path: `/function/${func._id}`,
               display: func.name,
-              resource_category: func.category
+              resource_category: func.category,
+              draggable: true,
+              has_more: true
             })
           );
         }
@@ -46,8 +60,9 @@ export class FunctionInitializer {
           id: "add-function",
           category: RouteCategory.Developer,
           icon: "add",
-          path: "/function/add",
+          path: ConfigurationComponent,
           display: "Add New Function",
+          index: Number.MAX_SAFE_INTEGER,
           data: {
             action: "function:create"
           },

@@ -4,60 +4,63 @@
     align-items: baseline;
     justify-content: space-between;
   }
-  mat-list {
-    height: 100%;
+  form {
+    min-width: 520px;
+    mat-list {
+      height: 100%;
 
-    h4[mat-subheader] {
-      margin-top: -20px;
-    }
-
-    mat-divider {
-      margin-bottom: 20px;
-    }
-
-    mat-list-item {
-      margin-bottom: 40px;
-      mat-form-field {
-        width: 100%;
+      h4[mat-subheader] {
+        margin-top: -20px;
       }
 
-      span.http-url {
-        margin-top: -40px;
-        font-size: 11px;
-        float: right;
+      mat-divider {
+        margin-bottom: 20px;
       }
 
-      mat-select {
-        mat-select-trigger {
+      mat-list-item {
+        margin-bottom: 40px;
+        mat-form-field {
+          width: 100%;
+        }
+
+        span.http-url {
+          margin-top: -40px;
+          font-size: 11px;
+          float: right;
+        }
+
+        mat-select {
+          mat-select-trigger {
+            > * {
+              vertical-align: middle;
+            }
+            svg {
+              height: 24px;
+              margin-top: -4px;
+            }
+          }
+        }
+
+        div.timeout {
+          width: 100%;
           > * {
-            vertical-align: middle;
+            display: block;
           }
-          svg {
-            height: 24px;
-            margin-top: -4px;
+
+          mat-slider {
+            width: 100%;
           }
         }
-      }
 
-      div.timeout {
-        width: 100%;
-        > * {
-          display: block;
-        }
+        &.trigger,
+        &.trigger-details {
+          ::ng-deep .mat-list-item-content {
+            display: block;
+          }
 
-        mat-slider {
-          width: 100%;
-        }
-      }
-
-      &.trigger,
-      &.trigger-details {
-        ::ng-deep .mat-list-item-content {
-          display: block;
-        }
-
-        ::ng-deep ng-component {
-          width: 100%;
+          ::ng-deep ng-component {
+            width: 100%;
+          }
         }
       }
     }
@@ -65,6 +68,14 @@
 
   button.save {
     float: right;
+    display: flex;
+    mat-icon {
+      margin-right: 5px;
+    }
+    mat-progress-spinner {
+      display: inline-block;
+      margin-right: 5px;
+    }
   }
 
   button.close {

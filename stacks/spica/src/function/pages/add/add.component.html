@@ -78,7 +78,7 @@
     <form #form="ngForm" (keydown.enter)="$event.preventDefault()">
       <mat-list>
         <mat-list-item class="describe">
-          <h4 class="name" *ngIf="!editName && function._id" (click)="editName = true">
+          <h4 class="name" *ngIf="!editName && function._id" (click)="openEditDialog()">
             {{ function._id ? function.name : "New Function" }}<mat-icon>edit</mat-icon>
           </h4>
           <mat-form-field *ngIf="editName || !function._id">
@@ -102,15 +102,15 @@
               Name must be less than {{ nameModel.errors.max.max }} characters.
             </mat-error>
           </mat-form-field>
-          <p
+          <!-- <p
             class="description"
             *ngIf="!editDescription && function._id"
             (click)="editDescription = true"
           >
             {{ function._id ? function.description || "No description added" : "Description"
             }}<mat-icon>edit</mat-icon>
-          </p>
-          <mat-form-field *ngIf="editDescription || !function._id">
+          </p> -->
+          <!-- <mat-form-field *ngIf="editDescription || !function._id">
             <mat-label>Description</mat-label>
             <textarea
               matInput
@@ -123,8 +123,8 @@
           </mat-form-field>
           <p class="description" *ngIf="function._id" (click)="editDescription = true">
             <b>{{ function.language + " Engine" | titlecase }}</b>
-          </p>
-          <mat-form-field *ngIf="!function._id">
+          </p> -->
+          <!-- <mat-form-field *ngIf="!function._id">
             <mat-label>Language</mat-label>
             <mat-select
               placeholder="Language"
@@ -151,8 +151,8 @@
               <mat-option value="typescript">Typescript</mat-option>
             </mat-select>
             <mat-hint>Language of the function.</mat-hint>
-          </mat-form-field>
-          <div class="timeout" *ngIf="(information | async)?.timeout; let timeout">
+          </mat-form-field> -->
+          <!-- <div class="timeout" *ngIf="(information | async)?.timeout; let timeout">
             <mat-label>
               Timeout in seconds <b>({{ formatTimeout(function.timeout || timeout) }})</b>
             </mat-label>
@@ -173,7 +173,7 @@
             <mat-error *ngIf="timeoutModel?.errors?.min">
               Timeout value must be positive.
             </mat-error>
-          </div>
+          </div> -->
         </mat-list-item>
 
         <h4 mat-subheader (click)="sections.triggers = !sections.triggers">

@@ -1,82 +1,29 @@
-<ng-container *ngIf="$data | async">
-  <category
-    [categoryStorageKey]="categoryStorageKey"
-    (onChangedOrder)="updateIndexes($event)"
-    [schemas]="$data | async"
-    [itemTemplate]="itemTmpl"
-  >
-    <ng-container schemaHeader>
-      <mat-icon>memory</mat-icon>
-      <span>Functions</span>
-    </ng-container>
-
-    <ng-container schemaHeaderActions>
-      <button canInteract="function:create" mat-button routerLink="add">
-        <mat-icon>add</mat-icon>
-        Add Function
-      </button>
-    </ng-container>
-
-    <ng-container schemaExtraContent>
-      <div class="list-header">
-        <div>ID</div>
-        <div>Name</div>
-        <div>Actions</div>
-      </div>
-    </ng-container>
-  </category>
-</ng-container>
-
-<ng-template #itemTmpl let-item="item">
-  <div>
-    <div class="schema-card drag-box mat-elevation-1">
-      <div>
-        {{ item._id }}
-      </div>
-      <div>
-        {{ item.name }}
-      </div>
-      <div class="actions">
-        <button
-          canInteract="function:show"
-          [resource]="item._id"
-          mat-icon-button
-          [routerLink]="item._id"
-          matTooltip="Edit"
-        >
-          <mat-icon>edit</mat-icon>
-        </button>
-        <button
-          mat-icon-button
-          canInteract="function:logs:index"
-          [routerLink]="['logs']"
-          [queryParams]="{function: item._id}"
-          matTooltip="Logs"
-        >
-          <mat-icon>bug_report</mat-icon>
-        </button>
-        <button
-          canInteract="function:delete"
-          [resource]="item._id"
-          mat-icon-button
-          color="warn"
-          matTooltip="Delete"
-          [matAwareDialog]="{
-            title: 'Confirmation',
-            templateOrDescription: dialogTemplate,
-            answer: item.name
-          }"
-          (confirm)="delete(item._id)"
-        >
-          <mat-icon>delete</mat-icon>
-        </button>
-      </div>
-    </div>
-  </div>
-</ng-template>
 <ng-template #dialogTemplate let-answer="answer">
   <p>This action will <b>permanently</b> delete this function.</p>
   <p>
     Please type in <code>{{ answer }}</code> to confirm.
   </p>
 </ng-template>
+
+<ng-container *ngIf="route">
+  <button mat-menu-item canInteract="function:update" [resource]="route.id" (click)="editFn()">
+    <mat-icon>edit</mat-icon>
+    Edit
+  </button>
+  <mat-divider> </mat-divider>
+  <button
+    mat-menu-item
+    canInteract="function:delete"
+    [resource]="route.id"
+    color="warn"
+    [matAwareDialog]="{
+      title: 'Confirmation',
+      templateOrDescription: dialogTemplate,
+      answer: route.display
+    }"
+    (confirm)="delete(route.id)"
+  >
+    <mat-icon color="warn">delete</mat-icon>
+    Delete
+  </button>
+</ng-container>

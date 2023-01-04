@@ -7,7 +7,8 @@ import {
   DeleteFunction,
   LoadFunctions,
   UpsertFunction,
-  UpdateFunction
+  UpdateFunction,
+  UpdateFunctions
 } from "../actions/function.actions";
 import {Function, Information, Log, LogFilter, WEBSOCKET_INTERCEPTOR, Trigger} from "../interface";
 import * as fromFunction from "../reducers/function.reducer";
@@ -130,11 +131,26 @@ export class FunctionService {
   }
 
   replaceOne(fn: Function): Observable<Function> {
+    fn = this.ignoreSchema(fn);
     return this.http
       .put<Function>(`api:/function/${fn._id}`, fn)
       .pipe(
         tap(fn => this.store.dispatch(new UpdateFunction({function: {id: fn._id, changes: fn}})))
       );
+  }
+  patchFunctionWithoutStore(id: string, changes: object) {
+    return this.http.patch<Function>(`api:/function/${id}`, changes, {
+      headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
+    });
+  }
+
+  patchFunctionMany(changes: {id: string; changes: object}[]): Promise<Function[]> {
+    return Promise.all(
+      changes.map(change => this.patchFunctionWithoutStore(change.id, change.changes).toPromise())
+    ).then((res: Function[]) => {
+      this.store.dispatch(new UpdateFunctions({functions: changes}));
+      return Promise.resolve(res);
+    });
   }
 
   updateOne(id: string, update: {[key: string]: any}) {
@@ -151,5 +167,9 @@ export class FunctionService {
     return this.http
       .delete(`api:/function/${id}`)
       .pipe(tap(() => this.store.dispatch(new DeleteFunction({id}))));
+  }
+  ignoreSchema(schema) {
+    ["category"].forEach(e => !schema[e] && delete schema[e]);
+    return schema;
   }
 }
