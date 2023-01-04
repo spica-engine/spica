@@ -122,12 +122,5 @@ describe("StorageComponent", () => {
       paginator.nextPage();
       expect(storageService.getAll).toHaveBeenCalledTimes(1);
     });
-
-    // it("should handle pageSize changes", () => {
-    //   paginator._changePageSize(15);
-    //   expect(storageService.getAll).toHaveBeenCalledTimes(1);
-    //   expect(storageService.getAll.calls.mostRecent().args[0]).toBe(15);
-    //   expect(storageService.getAll.calls.mostRecent().args[1]).toBe(0);
-    // });
   });
 });
