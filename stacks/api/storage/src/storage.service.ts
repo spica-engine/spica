@@ -54,10 +54,6 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
     }
   }
 
-  test() {
-    this.getAll({}, undefined, false, 10, 10, {});
-  }
-
   async getAll<P extends boolean>(
     resourceFilter: object,
     filter: object,
