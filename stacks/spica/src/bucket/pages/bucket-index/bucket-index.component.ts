@@ -1,7 +1,7 @@
 import {Component, Input, OnDestroy, OnInit} from "@angular/core";
 import {Subject} from "rxjs";
 import {BucketService} from "../../services/bucket.service";
-import {filter} from "rxjs/operators";
+import {filter, takeUntil} from "rxjs/operators";
 import {Router} from "@angular/router";
 import {Route} from "@spica-client/core";
 import {MatDialog} from "@angular/material/dialog";
@@ -21,7 +21,10 @@ export class BucketIndexComponent implements OnDestroy, OnInit {
   constructor(private bs: BucketService, private router: Router, private dialog: MatDialog) {
     this.bs
       .getBuckets()
-      .pipe(filter((data: any) => data && data.length))
+      .pipe(
+        takeUntil(this.dispose),
+        filter((data: any) => data && data.length)
+      )
       .subscribe(data => {
         this.buckets = data;
       });

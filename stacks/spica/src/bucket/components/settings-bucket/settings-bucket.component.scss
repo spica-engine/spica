@@ -116,4 +116,12 @@
       }
     }
   }
+  .view-conf-item {
+    display: flex;
+    align-items: center;
+    &.cdk-drag-placeholder {
+      padding: 11px;
+      margin: 5px;
+    }
+  }
 }
