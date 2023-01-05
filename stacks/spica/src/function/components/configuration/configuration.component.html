@@ -1,13 +1,8 @@
 <form #form="ngForm" (keydown.enter)="form.valid && save()">
   <mat-list>
-    <div class="dialog-title">
-      <h4 mat-subheader>
-        {{ function._id ? "Update function" : "Add new function" }}
-      </h4>
-      <!-- <button mat-icon-button class="close" mat-dialog-close>
-        <mat-icon>clear</mat-icon>
-      </button> -->
-    </div>
+    <h4 mat-dialog-title>
+      {{ function._id ? "Update function" : "Add new function" }}
+    </h4>
     <mat-divider></mat-divider>
     <mat-list-item>
       <mat-form-field>
@@ -34,7 +29,12 @@
     <mat-list-item>
       <mat-form-field>
         <mat-label>Language</mat-label>
-        <mat-select [(ngModel)]="function.language" #languageModel="ngModel" name="language">
+        <mat-select
+          [disabled]="function._id"
+          [(ngModel)]="function.language"
+          #languageModel="ngModel"
+          name="language"
+        >
           <mat-select-trigger>
             <svg viewBox="0 0 24 24" [ngSwitch]="languageModel.value">
               <path

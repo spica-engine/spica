@@ -1,9 +1,12 @@
 :host {
-  div.dialog-title {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
+  mat-list-item {
+    ::ng-deep {
+      .mat-list-item-content {
+        padding: 0;
+      }
+    }
   }
+
   form {
     min-width: 520px;
     mat-list {
