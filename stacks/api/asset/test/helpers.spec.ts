@@ -1,11 +1,6 @@
-import {
-  Asset,
-  Configuration,
-  eliminateNonConfigurables,
-  putConfiguration,
-  replaceValue
-} from "@spica-server/asset";
+import {eliminateNonConfigurables, putConfiguration, replaceValue} from "@spica-server/asset";
 import {ObjectId} from "@spica-server/database";
+import {Asset, Config} from "@spica-server/interface/asset";
 
 describe("Helpers", () => {
   describe("replaceValue", () => {
@@ -67,42 +62,50 @@ describe("Helpers", () => {
   describe("eliminateNonConfigurables", () => {
     it("should filter configurables", () => {
       const _id = new ObjectId();
-      const actual: Configuration[] = [
+      const actual: Config[] = [
         {
+          title: "Set dashboard name",
           module: "dashboard",
           resource_id: _id.toString(),
           submodule: "schema",
           property: "properties.name",
-          value: "your_dashboard"
+          value: "your_dashboard",
+          type: "string"
         }
       ];
 
-      const desired: Configuration[] = [
+      const desired: Config[] = [
         {
+          title: "Set dashboard name",
           module: "dashboard",
           resource_id: _id.toString(),
           submodule: "schema",
           property: "properties.name",
-          value: "my_dahsboard"
+          value: "my_dahsboard",
+          type: "string"
         },
         {
+          title: "Set bucket title type",
           module: "bucket",
           resource_id: "some_id",
           submodule: "schema",
           property: "properties.title.type",
-          value: "number"
+          value: "number",
+          type: "string"
         }
       ];
 
       const configurables = eliminateNonConfigurables(actual, desired);
       expect(configurables).toEqual([
         {
+          title: "Set dashboard name",
           module: "dashboard",
           resource_id: _id.toString(),
           submodule: "schema",
           property: "properties.name",
           // it's important to keep value of desired configuration
-          value: "my_dahsboard"
+          value: "my_dahsboard",
+          type: "string"
         }
       ]);
     });
@@ -116,22 +119,27 @@ describe("Helpers", () => {
 
     beforeEach(() => {
       asset = {
+        url: "test.com",
         name: "asset1",
         description: "description of the asset",
         configs: [
           {
+            title: "Default role",
             module: "bucket",
             resource_id: bucketId.toString(),
             submodule: "schema",
-            property: "properties.role.enum",
-            value: ["user"]
+            property: "properties.role.default",
+            value: "user",
+            type: "string"
           },
           {
+            title: "Card ID",
             module: "function",
             resource_id: fnId.toString(),
             submodule: "env",
             property: "CARD",
-            value: "**** **** **** ****"
+            value: "**** **** **** ****",
+            type: "string"
           }
         ],
         status: "downloaded",
@@ -144,7 +152,7 @@ describe("Helpers", () => {
                 properties: {
                   role: {
                     type: "string",
-                    enum: ["user"]
+                    default: "user"
                   }
                 }
               }
@@ -169,42 +177,51 @@ describe("Helpers", () => {
     });
 
     it("should put bucket schema and function environment configurations", () => {
-      const configs = [
+      const configs: Config[] = [
         {
+          title: "Default role",
           module: "bucket",
           resource_id: bucketId.toString(),
           submodule: "schema",
-          property: "properties.role.enum",
-          value: ["admin", "user"]
+          property: "properties.role.default",
+          value: "user",
+          type: "string"
         },
         {
+          title: "Card ID",
           module: "function",
           resource_id: fnId.toString(),
           submodule: "env",
           property: "CARD",
-          value: "4242 4242 4242 4242"
+          value: "4242 4242 4242 4242",
+          type: "string"
         }
       ];
 
       asset = putConfiguration(asset, configs);
 
       expect(asset).toEqual({
+        url: "test.com",
         name: "asset1",
         description: "description of the asset",
         configs: [
           {
+            title: "Default role",
             module: "bucket",
             resource_id: bucketId.toString(),
             submodule: "schema",
-            property: "properties.role.enum",
-            value: ["admin", "user"]
+            property: "properties.role.default",
+            value: "user",
+            type: "string"
           },
           {
+            title: "Card ID",
             module: "function",
             resource_id: fnId.toString(),
             submodule: "env",
             property: "CARD",
-            value: "4242 4242 4242 4242"
+            value: "4242 4242 4242 4242",
+            type: "string"
           }
         ],
         status: "downloaded",
@@ -217,7 +234,7 @@ describe("Helpers", () => {
                 properties: {
                   role: {
                     type: "string",
-                    enum: ["admin", "user"]
+                    default: "user"
                   }
                 }
               }
