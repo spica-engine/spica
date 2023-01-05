@@ -3,6 +3,7 @@ import {RouterModule, Routes} from "@angular/router";
 import {Route, RouteModule} from "@spica-client/core";
 import {IdentityGuard, PolicyGuard} from "../passport";
 import {IndexComponent} from "./pages/index/index.component";
+import {WelcomeComponent} from "./pages/welcome/welcome.component";
 
 const routes: Routes = [
   {
@@ -10,6 +11,7 @@ const routes: Routes = [
     canActivateChild: [IdentityGuard, PolicyGuard],
     data: {service: "storage"},
     children: [
+      {path: "welcome", component: WelcomeComponent},
       {path: "add", component: IndexComponent, data: {action: "create"}},
       {path: ":name", component: IndexComponent, data: {action: "index"}}
     ]

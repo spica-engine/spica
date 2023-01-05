@@ -40,6 +40,7 @@ import {PassportService} from "@spica-client/passport";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {RootDirService} from "./services/root.dir.service";
 import {DragDropModule} from "@angular/cdk/drag-drop";
+import {WelcomeComponent} from "./pages/welcome/welcome.component";
 
 @NgModule({
   imports: [
@@ -87,7 +88,8 @@ import {DragDropModule} from "@angular/cdk/drag-drop";
     StorageComponent,
     StorageViewComponent,
     ImageEditorComponent,
-    AddDirectoryDialog
+    AddDirectoryDialog,
+    WelcomeComponent
   ],
   exports: [PickerDirective]
 })

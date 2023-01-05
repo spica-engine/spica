@@ -194,7 +194,19 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   deleteRootDir() {
-    return this.rootDirService.delete(this.root).then(() => this.refresh.next());
+    return this.rootDirService.delete(this.root).then(() => {
+      this.rootDirService
+        .findAll()
+        .toPromise()
+        .then(r => {
+          if (!r || !r.length) {
+            return this.router.navigate(["storage","welcome"])
+          }
+
+          const target = r[0].name.replace("/", "");
+          return this.router.navigate(["storage",target]);
+        });
+    });
   }
 
   async deleteMany(ids: string[]) {
