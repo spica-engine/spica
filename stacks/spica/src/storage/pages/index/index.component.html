@@ -15,7 +15,7 @@
         Cancel
       </button>
       <button
-        *ngIf="selectedStorageIds.length"
+        *ngIf="selectedStorageNames.length"
         mat-button
         color="warn"
         canInteract="storage:delete"
@@ -24,7 +24,7 @@
           templateOrDescription: multipleDeleteDialogTemplate,
           answer: 'agree'
         }"
-        (confirm)="deleteMany(selectedStorageIds); disableSelectMode()"
+        (confirm)="deleteMany(selectedStorageNames); disableSelectMode()"
       >
         <mat-icon>delete</mat-icon>
         Delete
@@ -228,8 +228,8 @@
       <div class="content">
         <mat-checkbox
           *ngIf="selectionActive"
-          [checked]="selectedStorageIds.indexOf(node._id) != -1"
-          [disabled]="selectedStorageIds.indexOf(node.parent._id) != -1"
+          [checked]="selectedStorageNames.indexOf(getFullName(node)) != -1"
+          [disabled]="selectedStorageNames.indexOf(getFullName(node.parent)) != -1"
           (change)="onSelect(node)"
           (click)="$event.stopPropagation()"
         ></mat-checkbox>

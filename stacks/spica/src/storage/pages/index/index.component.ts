@@ -9,7 +9,7 @@ import {PassportService} from "@spica-client/passport";
 import {AddDirectoryDialog} from "@spica-client/storage/components/add-directory-dialog/add-directory-dialog.component";
 import {
   Filters,
-  findNodeById,
+  findNodeByName,
   getCanDropChecks,
   getFullName,
   mapNodesToObjects,
@@ -47,7 +47,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   isEmpty = true;
 
-  selectedStorageIds = [];
+  selectedStorageNames = [];
   selectionActive = false;
 
   currentNode: StorageNode;
@@ -86,15 +86,20 @@ export class IndexComponent implements OnInit, OnDestroy {
       });
   }
 
+  updateNodes(nodes: StorageNode[]) {
+    this.nodes = nodes;
+    this.currentNode = this.currentNode || this.nodes[0];
+    this.setHighlighteds(getFullName(this.currentNode), this.nodes);
+  }
+
   ngOnInit(): void {
     const storagesSubs = combineLatest([this.refresh, this.filter$])
       .pipe(
         tap(() => this.loading$.next(true)),
         switchMap(([_, filter]) => this.storageService.getAll({filter, sort: this.sorter})),
-        map(storages => (this.nodes = mapObjectsToNodes(storages))),
-        tap(() => {
-          this.currentNode = this.currentNode || this.nodes[0];
-          this.setHighlighteds(getFullName(this.currentNode), this.nodes);
+        map(storages => {
+          const newNodes = mapObjectsToNodes(storages);
+          this.updateNodes(newNodes);
         }),
         tap(() => this.loading$.next(false))
       )
@@ -212,19 +217,19 @@ export class IndexComponent implements OnInit, OnDestroy {
     });
   }
 
-  async deleteMany(ids: string[]) {
-    const findShallowestDeletedStorage = (node: StorageNode, _ids: string[]) => {
-      const hasSelectedParent = node.parent && _ids.includes(node.parent._id);
-      return hasSelectedParent ? findShallowestDeletedStorage(node.parent, _ids) : node;
+  async deleteMany(names: string[]) {
+    const findShallowestDeletedStorage = (node: StorageNode, _names: string[]) => {
+      const hasSelectedParent = node.parent && _names.includes(getFullName(node.parent));
+      return hasSelectedParent ? findShallowestDeletedStorage(node.parent, _names) : node;
     };
 
     const idsWillBeDeleted = new Set<string>();
 
     const idsPromises = [];
 
-    for (const id of ids) {
-      const node = findNodeById(id, this.nodes);
-      const shallowestDeletedNode = findShallowestDeletedStorage(node, ids);
+    for (const name of names) {
+      const node = findNodeByName(name, this.nodes);
+      const shallowestDeletedNode = findShallowestDeletedStorage(node, names);
       if (shallowestDeletedNode.isDirectory) {
         const fullName = getFullName(shallowestDeletedNode);
         idsPromises.push(
@@ -276,12 +281,10 @@ export class IndexComponent implements OnInit, OnDestroy {
 
     const fullName = getFullName(node);
 
-    if (!node.isDirectory) {
-      return this.setHighlighteds(fullName, this.nodes);
-    }
+    return this.setHighlighteds(fullName, this.nodes);
 
-    const filter = this.buildFilterForDir(fullName);
-    this.filter$.next(filter);
+    // const filter = this.buildFilterForDir(fullName);
+    // this.filter$.next(filter);
   }
 
   onDetailsClosed(node: StorageNode) {
@@ -347,7 +350,7 @@ export class IndexComponent implements OnInit, OnDestroy {
       name += "/";
 
       // root directory should return itself to keep consistency but sub directories don't have to
-      const filter = Filters.ListFirstChildren(name, endIndex == 1);
+      const filter = Filters.ListAllChildren(name, endIndex == 1);
 
       filters.push(filter);
 
@@ -422,22 +425,23 @@ export class IndexComponent implements OnInit, OnDestroy {
   enableSelectMode() {
     this.currentNode = this.currentNode.isDirectory ? this.currentNode : this.currentNode.parent;
     this.selectionActive = true;
-    this.selectedStorageIds = [];
+    this.selectedStorageNames = [];
   }
 
   disableSelectMode() {
     this.selectionActive = false;
-    this.selectedStorageIds = [];
+    this.selectedStorageNames = [];
   }
 
   onSelect(node: StorageNode) {
     const updateSelecteds = (selecteds: string[], _node: StorageNode, action: "push" | "pop") => {
-      const isExist = selecteds.includes(_node._id);
+      const _fullName = getFullName(_node);
+      const isExist = selecteds.includes(_fullName);
 
       if (action == "push" && !isExist) {
-        selecteds.push(_node._id);
+        selecteds.push(_fullName);
       } else if (action == "pop" && isExist) {
-        selecteds.splice(selecteds.indexOf(_node._id), 1);
+        selecteds.splice(selecteds.indexOf(_fullName), 1);
       }
 
       if (_node.children) {
@@ -445,9 +449,12 @@ export class IndexComponent implements OnInit, OnDestroy {
       }
     };
 
-    const action = this.selectedStorageIds.indexOf(node._id) != -1 ? "pop" : "push";
-    updateSelecteds(this.selectedStorageIds, node, action);
+    const action = this.selectedStorageNames.indexOf(getFullName(node)) != -1 ? "pop" : "push";
+    updateSelecteds(this.selectedStorageNames, node, action);
   }
+
+  // to make html use it;
+  getFullName = getFullName;
 
   onRenameClicked(node: StorageNode, element) {
     this.renamingNode = node;

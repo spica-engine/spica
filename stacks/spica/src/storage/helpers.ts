@@ -48,11 +48,11 @@ export function isDirectory(storage: StorageNode | Storage) {
   return storage.content.size == 0 && storage.content.type == "";
 }
 
-export function findNodeById(_id: string, nodes: StorageNode[]) {
+export function findNodeByName(name: string, nodes: StorageNode[]) {
   let targetNode: StorageNode;
 
   const find = (node: StorageNode) => {
-    if (node._id == _id) {
+    if (getFullName(node) == name) {
       targetNode = node;
       return;
     }
@@ -98,7 +98,7 @@ export function mapObjectsToNodes(objects: (StorageNode | Storage)[]) {
         name: root,
         children: [],
         parent,
-        isDirectory: false,
+        isDirectory: true,
         isHighlighted: false
       });
     }
@@ -135,7 +135,7 @@ export function mapObjectsToNodes(objects: (StorageNode | Storage)[]) {
 
 export function getCanDropChecks(): CanDropCheck[] {
   const isDifferentNode: CanDropCheck = (oldParent, newParent, node) =>
-    oldParent._id != newParent._id;
+    getFullName(oldParent) != getFullName(newParent);
 
   const isNameUnique: CanDropCheck = (oldParent, newParent, node) =>
     newParent.children.every(c => c.name != node.name);
@@ -145,7 +145,7 @@ export function getCanDropChecks(): CanDropCheck[] {
       return true;
     }
 
-    return !findNodeById(newParent._id, [node]);
+    return !findNodeByName(getFullName(newParent), [node]);
   };
 
   return [isDifferentNode, isNameUnique, isNotChildDir];
