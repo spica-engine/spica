@@ -65,6 +65,6 @@ export interface Selectable {
   name: string;
   value: any;
   title: string;
-  onSelect: (...args) => Promise<Selectable[]>;
+  onSelect?: (...args) => Promise<Selectable[]>;
   isLast?: boolean;
 }

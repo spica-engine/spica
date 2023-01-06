@@ -1,71 +1,64 @@
-import {listEditableProps} from "@spica-client/asset/helpers";
-import {Selectable} from "@spica-client/asset/interfaces";
+import {ConfigExporter, listEditableProps} from "@spica-client/asset/helpers";
+import {take} from "rxjs/operators";
 import {BucketService} from "./services/bucket.service";
 
 export const assetConfigExporter = (bs: BucketService) => {
-  const bucketModule: Selectable = {
-    name: "module",
-    value: "bucket",
-    title: "Bucket",
-    onSelect: async () => {
-      const subModules = await Promise.resolve(["schema"]);
-      return subModules.map(submodule => {
-        return {
-          name: "submodule",
-          value: submodule,
-          title: submodule,
-          onSelect: async () => {
-            const buckets = await bs.retrieve().toPromise();
-            return buckets.map(b => {
-              return {
-                name: "resource_id",
-                value: b._id,
-                title: b.title,
-                onSelect: async _id => {
-                  const bucket = await Promise.resolve(b);
-                  delete bucket._id;
-                  const editableProps = listEditableProps(bucket);
-                  return Promise.resolve(
-                    editableProps.map(k => {
-                      return {
-                        name: "property",
-                        value: k,
-                        title: k,
-                        onSelect: () =>
-                          Promise.resolve([
-                            {
-                              name: "type",
-                              value: "string",
-                              title: "String",
-                              isLast: true,
-                              onSelect: () => Promise.resolve([])
-                            },
-                            {
-                              name: "type",
-                              value: "number",
-                              title: "Number",
-                              isLast: true,
-                              onSelect: () => Promise.resolve([])
-                            },
-                            {
-                              name: "type",
-                              value: "boolean",
-                              title: "Boolean",
-                              isLast: true,
-                              onSelect: () => Promise.resolve([])
-                            }
-                          ])
-                      };
-                    })
-                  );
-                }
-              };
-            });
-          }
-        };
-      });
-    }
+  const configExporter = new ConfigExporter();
+
+  const typeLoader = () =>
+    Promise.resolve([
+      {value: "string", title: "String"},
+      {value: "boolean", title: "Boolean"},
+      {value: "number", title: "Number"}
+    ]);
+
+  const propertyLoader = async selections => {
+    let bucket: any = await bs
+      .getBucket(selections.resource_id)
+      .pipe(take(1))
+      .toPromise();
+
+    delete bucket._id;
+
+    return listEditableProps(bucket).map(prop => {
+      return {
+        value: prop,
+        title: prop
+      };
+    });
   };
 
-  return bucketModule;
+  const resourceIdLoader = () => {
+    return bs
+      .getBuckets()
+      .pipe(take(1))
+      .toPromise()
+      .then(buckets => {
+        return buckets.map(fn => {
+          return {value: fn._id, title: fn.title};
+        });
+      });
+  };
+
+  const subModuleLoader = () => Promise.resolve([{title: "Schema", value: "schema"}]);
+
+  return configExporter.build({
+    moduleName: "bucket",
+    exporters: {
+      name: "submodule",
+      loader: subModuleLoader,
+      children: {
+        name: "resource_id",
+        loader: resourceIdLoader,
+        children: {
+          name: "property",
+          loader: propertyLoader,
+          children: {
+            name: "type",
+            loader: typeLoader
+          }
+        }
+      }
+    }
+  });
 };

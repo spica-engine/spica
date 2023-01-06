@@ -1,74 +1,71 @@
-import {listEditableProps} from "@spica-client/asset/helpers";
-import {Selectable} from "@spica-client/asset/interfaces";
+import {ConfigExporter, listEditableProps} from "@spica-client/asset/helpers";
+import {take} from "rxjs/operators";
 import {FunctionService} from "./services/function.service";
 
 export const assetConfigExporter = (fs: FunctionService) => {
-  const functionModule: Selectable = {
-    name: "module",
-    value: "function",
-    title: "Function",
-    onSelect: async () => {
-      const subModules = await Promise.resolve(["schema", "env"]);
-      return subModules.map(submodule => {
-        return {
-          name: "submodule",
-          value: submodule,
-          title: submodule,
-          onSelect: async () => {
-            const fns = await fs.loadFunctions().toPromise();
-            return fns.map(f => {
-              return {
-                name: "resource_id",
-                value: f._id,
-                title: f.name,
-                onSelect: async _id => {
-                  let fn: any = await Promise.resolve(fns.find(f => f._id == _id));
-                  delete fn._id;
-                  if (submodule == "env") {
-                    fn = fn.env;
-                  }
-                  const editableProps = listEditableProps(fn);
-                  return Promise.resolve(
-                    editableProps.map(k => {
-                      return {
-                        name: "property",
-                        value: k,
-                        title: k,
-                        onSelect: () =>
-                          Promise.resolve([
-                            {
-                              name: "type",
-                              value: "string",
-                              title: "String",
-                              isLast: true,
-                              onSelect: () => Promise.resolve([])
-                            },
-                            {
-                              name: "type",
-                              value: "number",
-                              title: "Number",
-                              isLast: true,
-                              onSelect: () => Promise.resolve([])
-                            },
-                            {
-                              name: "type",
-                              value: "boolean",
-                              title: "Boolean",
-                              isLast: true,
-                              onSelect: () => Promise.resolve([])
-                            }
-                          ])
-                      };
-                    })
-                  );
-                }
-              };
-            });
-          }
-        };
-      });
+  const configExporter = new ConfigExporter();
+
+  const typeLoader = () =>
+    Promise.resolve([
+      {value: "string", title: "String"},
+      {value: "boolean", title: "Boolean"},
+      {value: "number", title: "Number"}
+    ]);
+
+  const propertyLoader = async selections => {
+    let fn: any = await fs
+      .getFunction(selections.resource_id)
+      .pipe(take(1))
+      .toPromise();
+
+    delete fn._id;
+
+    if (selections.submodule == "env") {
+      fn = fn.env;
     }
+
+    return listEditableProps(fn).map(prop => {
+      return {
+        value: prop,
+        title: prop
+      };
+    });
   };
 
-  return functionModule;
+  const resourceIdLoader = () => {
+    return fs
+      .getFunctions()
+      .toPromise()
+      .then(fns => {
+        return fns.map(fn => {
+          return {value: fn._id, title: fn.name};
+        });
+      });
+  };
+
+  const subModuleLoader = () =>
+    Promise.resolve([
+      {title: "Schema", value: "schema"},
+      {title: "Environment Variable", value: "env"}
+    ]);
+
+  return configExporter.build({
+    moduleName: "function",
+    exporters: {
+      name: "submodule",
+      loader: subModuleLoader,
+      children: {
+        name: "resource_id",
+        loader: resourceIdLoader,
+        children: {
+          name: "property",
+          loader: propertyLoader,
+          children: {
+            name: "type",
+            loader: typeLoader
+          }
+        }
+      }
+    }
+  });
 };

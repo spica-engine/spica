@@ -1,4 +1,10 @@
-import {Config, InstallationPreview, InstallationPreviewByModules, Resource} from "./interfaces";
+import {
+  Config,
+  InstallationPreview,
+  InstallationPreviewByModules,
+  Resource,
+  Selectable
+} from "./interfaces";
 
 export function separatePreviewResourcesByModule(
   preview: InstallationPreview
@@ -31,140 +37,6 @@ export function displayPreview(resources: any[]) {
   x.document.write("<html><body><pre>" + data + "</pre></body></html>");
   x.document.close();
 }
-
-// export const getModuleConfigSchema = module => {
-//   const schemas = [
-//     {
-//       module: "function",
-//       schema: {
-//         resource_id: {
-//           type: "string",
-//           title: "Resource Id",
-//           description: "Select one of these resource ids",
-//           enum: ["6398364b2b16efb47b26486c"],
-//           viewEnum: ["test"]
-//         },
-//         submodule: {
-//           type: "string",
-//           title: "Sub-Module",
-//           description: "Select one of these sub modules",
-//           enum: ["schema", "package", "index", "env"],
-//           viewEnum: ["Schema", "Dependencies", "Index", "Environment"]
-//         }
-//       }
-//     },
-//     {
-//       module: "bucket",
-//       schema: {
-//         resource_id: {
-//           type: "string",
-//           title: "Resource Id",
-//           description: "Select one of these resource ids",
-//           enum: ["639836422b16efb47b264868"],
-//           viewEnum: ["New Bucket"]
-//         },
-//         submodule: {
-//           type: "string",
-//           title: "Sub-Module",
-//           description: "Select one of these sub modules",
-//           enum: ["schema"],
-//           viewEnum: ["Schema"]
-//         }
-//       }
-//     },
-//     {
-//       module: "preference",
-//       schema: {
-//         resource_id: {
-//           type: "string",
-//           title: "Resource Id",
-//           description: "Select one of these resource ids",
-//           enum: ["identity"],
-//           viewEnum: ["Identity"]
-//         },
-//         submodule: {
-//           type: "string",
-//           title: "Sub-Module",
-//           description: "Select one of these sub modules",
-//           enum: ["schema"],
-//           viewEnum: ["Schema"]
-//         }
-//       }
-//     }
-//   ];
-
-//   return schemas.find(s => (s.module = module));
-// };
-
-// export const getConfigSchema = () => {
-//   return {
-//     title: {
-//       type: "string",
-//       title: "Title",
-//       description:
-//         "It will be displayed on the configuration step while others installing this asset."
-//     },
-//     module: {
-//       type: "string",
-//       title: "Module",
-//       description: "Select one of these modules",
-//       // backend should set this
-//       enum: ["bucket", "function", "preference"]
-//     },
-//     resource_id: {
-//       type: "string",
-//       title: "Resource Id",
-//       description: "Select one of these resource ids"
-//     },
-//     submodule: {
-//       type: "string",
-//       title: "Sub-Module",
-//       description: "Select one of these sub modules"
-//     },
-//     property: {
-//       type: "string",
-//       title: "Property",
-//       description:
-//         "Property target of the configuration will affect. Use dot(.) for nested properties"
-//     },
-//     value: {
-//       type: "string",
-//       title: "Value",
-//       description:
-//         "Value of the configuration that will be replaced with the value of matched property."
-//     },
-//     type: {
-//       type: "string",
-//       title: "Value Type",
-//       description: "Select one of these types",
-//       enum: ["number", "string", "boolean", "object", "array"]
-//     }
-//   };
-// };
-
-// export function getEmptyConfig() {
-//   const config: any = {};
-//   Object.entries(getConfigSchema()).forEach(([k]) => {
-//     config[k] = undefined;
-//   });
-//   return config;
-// }
-
-// export function getEmptyExportResources() {
-//   const res = [];
-//   Object.keys(getExportResourceSchema()).forEach(mod => {
-//     res.push({module: mod, ids: []});
-//   });
-//   return res;
-// }
-
-// export function getExportResourceSchema() {
-//   return {
-//     bucket: [{id: "639836422b16efb47b264868", title: "New Bucket"}],
-//     function: [{id: "6398364b2b16efb47b26486c", title: "test"}],
-//     preference: [{id: "identity", title: "Identity"}]
-//   };
-// }
 
 export function getEmptyConfig() {
   return {
@@ -201,4 +73,59 @@ export function listEditableProps(schema: object) {
   }
 
   return targets;
+}
+
+interface moduleConfigExporterOption {
+  value: string;
+  title: string;
+}
+
+export interface Exporter {
+  name: string;
+  loader: (currentSelections: {[name: string]: string}) => Promise<moduleConfigExporterOption[]>;
+  children?: Exporter;
+}
+export interface moduleConfigExporter {
+  moduleName: string;
+  exporters: Exporter;
+}
+
+export class ConfigExporter {
+  selections: {[name: string]: string} = {};
+
+  build(moduleConfigExporter: moduleConfigExporter) {
+    const visit = (exporter: Exporter, parentName: string) => {
+      const onSelect = async selection => {
+        this.selections[parentName] = selection;
+        const options = await exporter.loader(this.selections);
+
+        const selectables: Selectable[] = [];
+        for (const option of options) {
+          const selectable: Selectable = {
+            name: exporter.name,
+            title: option.title,
+            value: option.value
+          };
+
+          if (exporter.children) {
+            selectable.onSelect = visit(exporter.children, exporter.name);
+          } else {
+            selectable.isLast = true;
+            selectable.onSelect = () => Promise.resolve([]);
+          }
+
+          selectables.push(selectable);
+        }
+        return selectables;
+      };
+      return onSelect;
+    };
+
+    return {
+      name: "module",
+      title: moduleConfigExporter.moduleName,
+      value: moduleConfigExporter.moduleName,
+      onSelect: visit(moduleConfigExporter.exporters, "module")
+    } as Selectable;
+  }
 }
