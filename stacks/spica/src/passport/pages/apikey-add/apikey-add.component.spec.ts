@@ -234,6 +234,12 @@ describe("ApiKeyAddComponent", () => {
     });
 
     it("should attach and detach policy", async () => {
+      const button = fixture.debugElement.nativeElement.querySelector(
+        "div.actions button:nth-of-type(2)"
+      );
+      button.click();
+      fixture.detectChanges();
+
       const firstOwnablePolicyButon = fixture.debugElement.query(
         By.css("mat-list:last-of-type button:first-of-type")
       ).nativeElement;

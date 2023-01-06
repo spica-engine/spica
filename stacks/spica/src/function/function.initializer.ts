@@ -8,47 +8,15 @@ import {
   Upsert
 } from "@spica-client/core/route";
 import {PassportService} from "@spica-client/passport";
-import {WebhookService} from "./services/webhook.service";
 import {FunctionService} from "./services/function.service";
 
 @Injectable()
 export class FunctionInitializer {
   constructor(
     private functionService: FunctionService,
-    private webhookService: WebhookService,
     private routeService: RouteService,
     private passport: PassportService
   ) {
-    webhookService.getWebhooks().subscribe(webhooks => {
-      this.routeService.dispatch(
-        new CherryPickAndRemove(e => e.icon == "webhook" && /\/webhook\//.test(e.path))
-      );
-      this.routeService.dispatch(new RemoveCategory(RouteCategory.Webhook));
-
-      for (const webhook of webhooks) {
-        this.routeService.dispatch(
-          new Upsert({
-            category: RouteCategory.Webhook,
-            id: webhook._id,
-            icon: "webhook",
-            path: `/webhook/${webhook._id}`,
-            display: webhook.title
-          })
-        );
-      }
-
-      this.routeService.dispatch(
-        new Upsert({
-          id: "add-webhook",
-          category: RouteCategory.Webhook,
-          icon: "add",
-          path: "/webhook/add",
-          display: "Add New Webhook",
-          customClass: "dashed-item"
-        })
-      );
-    });
-
     functionService.getFunctions().subscribe(async funcs => {
       this.routeService.dispatch(
         new CherryPickAndRemove(e => e.icon == "memory" && /\/function\//.test(e.path))
@@ -94,36 +62,21 @@ export class FunctionInitializer {
       return;
     }
 
-    const [functionIndex, webhookIndex] = await Promise.all([
-      this.passport.checkAllowed("function:index", "*").toPromise(),
-      this.passport.checkAllowed("webhook:index", "*").toPromise()
-    ]);
+    const functionIndex = await this.passport.checkAllowed("function:index", "*").toPromise();
 
-    if (!functionIndex && !webhookIndex) {
+    if (!functionIndex) {
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Developer));
       return;
     }
 
-    if (functionIndex) {
-      this.functionService.loadFunctions().toPromise();
-      this.webhookService.loadWebhooks().toPromise();
-    }
+    this.functionService.loadFunctions().toPromise();
 
-    const [functionLog, webhookLog] = await Promise.all([
-      functionIndex
-        ? this.passport.checkAllowed("function:logs:index").toPromise()
-        : Promise.resolve(false),
-      webhookIndex
-        ? this.passport.checkAllowed("webhook:logs:index").toPromise()
-        : Promise.resolve(false)
-    ]);
+    const functionLog = (await functionIndex)
+      ? this.passport.checkAllowed("function:logs:index").toPromise()
+      : Promise.resolve(false);
 
-    if (!functionLog && !webhookLog) {
-      this.routeService.dispatch(new RemoveCategory(RouteCategory.Developer_Sub));
-    } else if (!functionLog) {
+    if (!functionLog) {
       this.routeService.dispatch(new CherryPickAndRemove(e => e.id == "list_all_logs"));
-    } else if (!webhookLog) {
-      this.routeService.dispatch(new CherryPickAndRemove(e => e.id == "webhook_logs"));
     }
   }
 }
