@@ -18,6 +18,7 @@
         *ngIf="selectedStorageIds.length"
         mat-button
         color="warn"
+        canInteract="storage:delete"
         [matAwareDialog]="{
           title: 'Confirmation',
           templateOrDescription: multipleDeleteDialogTemplate,
@@ -102,7 +103,7 @@
         (click)="!progress ? addSubDir(currentNode) : undefined"
       >
         <mat-icon *ngIf="!progress">create_new_folder</mat-icon>
-        Create New Directory
+        Create New Folder
         <mat-progress-spinner
           color="accent"
           *ngIf="progress"
@@ -249,10 +250,18 @@
           <mat-icon>more_vert</mat-icon>
         </button>
         <mat-menu #moreMenu="matMenu">
-          <button mat-menu-item (click)="onRenameClicked(node, nameSpan)">Rename</button>
-          <button mat-menu-item (click)="enableSelectMode(); onSelect(node)">
-            Select
-          </button>
+          <ng-template matMenuContent>
+            <button
+              mat-menu-item
+              canInteract="storage:update"
+              (click)="onRenameClicked(node, nameSpan)"
+            >
+              Rename
+            </button>
+            <button mat-menu-item (click)="enableSelectMode(); onSelect(node)">
+              Select
+            </button>
+          </ng-template>
         </mat-menu>
       </div>
     </div>

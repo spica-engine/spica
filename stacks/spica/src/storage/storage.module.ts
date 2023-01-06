@@ -34,9 +34,8 @@ import {IndexComponent} from "./pages/index/index.component";
 import {StorageRoutingModule} from "./storage-routing.module";
 import {AddDirectoryDialog} from "./components/add-directory-dialog/add-directory-dialog.component";
 import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
-import {StorageService} from "./services/storage.service";
 import {StorageInitializer} from "./storage.initializer";
-import {PassportService} from "@spica-client/passport";
+import {PassportModule, PassportService} from "@spica-client/passport";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {RootDirService} from "./services/root.dir.service";
 import {DragDropModule} from "@angular/cdk/drag-drop";
@@ -78,7 +77,8 @@ import {WelcomeComponent} from "./pages/welcome/welcome.component";
         color: "#ab1ada",
         placer: StorageComponent
       }
-    ])
+    ]),
+    PassportModule.forChild()
   ],
   declarations: [
     IndexComponent,

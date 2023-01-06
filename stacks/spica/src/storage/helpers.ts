@@ -132,3 +132,27 @@ export function mapObjectsToNodes(objects: (StorageNode | Storage)[]) {
 
   return result;
 }
+
+export function getCanDropChecks(): CanDropCheck[] {
+  const isDifferentNode: CanDropCheck = (oldParent, newParent, node) =>
+    oldParent._id != newParent._id;
+
+  const isNameUnique: CanDropCheck = (oldParent, newParent, node) =>
+    newParent.children.every(c => c.name != node.name);
+
+  const isNotChildDir: CanDropCheck = (oldParent, newParent, node) => {
+    if (!node.isDirectory) {
+      return true;
+    }
+
+    return !findNodeById(newParent._id, [node]);
+  };
+
+  return [isDifferentNode, isNameUnique, isNotChildDir];
+}
+
+export type CanDropCheck = (
+  oldParent: StorageNode,
+  newParent: StorageNode,
+  node: StorageNode
+) => boolean;

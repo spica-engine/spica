@@ -5,10 +5,12 @@ import {Component, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
 import {ActivatedRoute, Router} from "@angular/router";
+import {PassportService} from "@spica-client/passport";
 import {AddDirectoryDialog} from "@spica-client/storage/components/add-directory-dialog/add-directory-dialog.component";
 import {
   Filters,
   findNodeById,
+  getCanDropChecks,
   getFullName,
   mapNodesToObjects,
   mapObjectsToNodes
@@ -57,6 +59,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   renamingNode: StorageNode;
 
   constructor(
+    private passportService: PassportService,
     private storageService: StorageService,
     private rootDirService: RootDirService,
     public breakpointObserver: BreakpointObserver,
@@ -199,12 +202,12 @@ export class IndexComponent implements OnInit, OnDestroy {
         .findAll()
         .toPromise()
         .then(r => {
-          if (!r || !r.length) {
-            return this.router.navigate(["storage","welcome"])
+          if (!r || !r.length) {
+            return this.router.navigate(["storage", "welcome"]);
           }
 
           const target = r[0].name.replace("/", "");
-          return this.router.navigate(["storage",target]);
+          return this.router.navigate(["storage", target]);
         });
     });
   }
@@ -375,7 +378,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         const existingNames = objects.map(o => {
           return o.name.replace("/", "");
         });
-        return this.openAddDirDialog("root_directory", existingNames, name => {
+        return this.openAddDirDialog("directory", existingNames, name => {
           this.rootDirService
             .add(`${name}/`)
             .toPromise()
@@ -385,7 +388,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   openAddDirDialog(
-    type: "root_directory" | "sub_directory",
+    type: "directory" | "folder",
     existingNames: string[],
     afterClosed: (name) => void
   ) {
@@ -410,7 +413,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
     const existingNames = target.children.map(c => c.name);
 
-    this.openAddDirDialog("sub_directory", existingNames, name => {
+    this.openAddDirDialog("folder", existingNames, name => {
       const prefix = getFullName(target);
       return this.addDirectory(prefix ? `${prefix}${name}/` : `${name}/`);
     });
@@ -496,20 +499,12 @@ export class IndexComponent implements OnInit, OnDestroy {
       ? event.container.data[0].parent
       : this.currentNode;
 
-    if (oldParent == newParent) {
-      return;
-    }
-
     const node = event.previousContainer.data[event.previousIndex];
-    if (newParent.children.some(c => c.name == node.name)) {
-      return;
-    }
 
-    if (node.isDirectory) {
-      const isDroppedToChildDir = findNodeById(newParent._id, [node]);
-      if (isDroppedToChildDir) {
-        return;
-      }
+    const canDrop = getCanDropChecks().every(check => check(oldParent, newParent, node));
+
+    if (!canDrop) {
+      return;
     }
 
     const oldPrefix = getFullName(oldParent);
