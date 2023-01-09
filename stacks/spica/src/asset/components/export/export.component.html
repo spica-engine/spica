@@ -57,7 +57,18 @@
               (ngModelChange)="onChange($event, ci, si)"
               required
             >
-              <mat-option *ngFor="let selectable of step" [value]="selectable">
+              <mat-option
+                *ngFor="let selectable of step"
+                [value]="selectable"
+                [disabled]="
+                  !exportMeta ||
+                  !exportMeta.resources ||
+                  (selectable.name == 'module' && !exportMeta.resources[selectable.value]) ||
+                  (selectable.name == 'resource_id' &&
+                    exportMeta.resources[exportMeta.configs[ci].module].indexOf(selectable.value) ==
+                      -1)
+                "
+              >
                 {{ selectable.title }}
               </mat-option>
             </mat-select>
