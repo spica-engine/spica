@@ -224,7 +224,22 @@ describe("Storage/IndexComponent", () => {
             isDirectory: true,
             isHighlighted: false,
             index: 2,
-            children: []
+            children: [
+              {
+                _id: "4",
+                name: "doc.txt",
+                content: {
+                  type: "text/plain",
+                  size: 100
+                },
+                index: 3,
+                url: "http://example/4",
+                parent: fixture.componentInstance.nodes[0].children[1],
+                children: [],
+                isDirectory: false,
+                isHighlighted: false
+              }
+            ]
           }
         ]
       }
@@ -450,7 +465,7 @@ describe("Storage/IndexComponent", () => {
       "delete"
     ).and.returnValue(of());
 
-    fixture.componentInstance.deleteMany(["3"]);
+    fixture.componentInstance.deleteMany(["files/docs/"]);
     tick(500);
     fixture.detectChanges();
 

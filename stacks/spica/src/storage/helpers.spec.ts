@@ -1,6 +1,6 @@
 import {
   Filters,
-  findNodeById,
+  findNodeByName,
   getFullName,
   isDirectory,
   mapNodesToObjects,
@@ -160,9 +160,9 @@ describe("Helpers", () => {
     });
   });
 
-  describe("findNodeById", () => {
-    it("should find node by id", () => {
-      const foundNode = findNodeById("3", nodes);
+  describe("findNodeByName", () => {
+    it("should find node by name", () => {
+      const foundNode = findNodeByName("root/sub/text.txt", nodes);
       expect(foundNode).toEqual(text);
     });
   });
@@ -178,6 +178,95 @@ describe("Helpers", () => {
     it("should map objecst to the nodes", () => {
       const _nodes = mapObjectsToNodes(objects);
       expect(_nodes).toEqual(nodes);
+    });
+
+    it("should map objects to nodes even if their parents do not actually exist", () => {
+      const objects = [
+        {
+          _id: "3",
+          name: "root/sub/text.txt",
+          content: {
+            type: "text/plain",
+            size: 1
+          },
+          url: "obj3"
+        },
+        {
+          _id: "4",
+          name: "root/sub/subsub/another.png",
+          content: {
+            type: "image/png",
+            size: 2
+          },
+          url: "obj4"
+        }
+      ];
+
+      const nodes = mapObjectsToNodes(objects);
+      const anotherPng: StorageNode = {
+        _id: "4",
+        name: "another.png",
+        content: {
+          type: "image/png",
+          size: 2
+        },
+        url: "obj4",
+        children: [],
+        parent: undefined,
+        isDirectory: false,
+        isHighlighted: false,
+        index: 1
+      };
+      const subSub: StorageNode = {
+        name: "subsub",
+        content: {type: "", size: 0},
+        parent: undefined,
+        isDirectory: true,
+        isHighlighted: false,
+        children: [anotherPng]
+      };
+
+      const textTxt: StorageNode = {
+        _id: "3",
+        name: "text.txt",
+        content: {
+          type: "text/plain",
+          size: 1
+        },
+        url: "obj3",
+        children: [],
+        parent: undefined,
+        isDirectory: false,
+        isHighlighted: false,
+        index: 0
+      };
+      const sub: StorageNode = {
+        name: "sub",
+        content: {type: "", size: 0},
+        parent: undefined,
+        isDirectory: true,
+        isHighlighted: false,
+        children: [textTxt, subSub]
+      };
+
+      const root: StorageNode = {
+        name: "root",
+        content: {
+          type: "",
+          size: 0
+        },
+        parent: undefined,
+        isDirectory: true,
+        isHighlighted: false,
+        children: [sub]
+      };
+
+      sub.parent = root;
+      subSub.parent = sub;
+      textTxt.parent = sub;
+      anotherPng.parent = subSub;
+
+      expect(nodes).toEqual([root]);
     });
   });
 });

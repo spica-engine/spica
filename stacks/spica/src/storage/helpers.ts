@@ -111,6 +111,7 @@ export function mapObjectsToNodes(objects: (StorageNode | Storage)[]) {
     const hasChild = newObj.name != "";
 
     if (hasChild) {
+      currentNode.content = {type: "", size: 0};
       newObj.content = obj.content;
       newObj.url = obj.url;
       newObj._id = obj._id;
