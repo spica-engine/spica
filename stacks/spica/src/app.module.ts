@@ -4,7 +4,12 @@ import {BrowserModule, HammerModule} from "@angular/platform-browser";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterModule} from "@angular/router";
 import {StoreModule} from "@ngrx/store";
-import {BaseUrlInterceptorModule, LayoutModule, RouteModule} from "@spica-client/core";
+import {
+  BaseUrlInterceptorModule,
+  LayoutModule,
+  PreferencesModule,
+  RouteModule
+} from "@spica-client/core";
 import {environment} from "../environments/environment";
 import {ActivityModule} from "./activity/activity.module";
 import {AppComponent} from "./app.component";
@@ -45,7 +50,8 @@ const API_FULL_URL = environment.api.startsWith("http")
     BucketModule.forRoot({url: API_FULL_URL}),
     StorageModule.forRoot(),
     FunctionModule.forRoot({url: API_FULL_URL}),
-    AssetModule
+    AssetModule,
+    PreferencesModule.forRoot()
   ],
   providers: [
     {provide: ErrorStateMatcher, useClass: ShowOnDirtyErrorStateMatcher},
