@@ -8,19 +8,19 @@ ts_project(
     srcs = glob([
         "schema/*.json",
         "**/*.ts",
-        "index.ts"
+        "index.ts",
     ]),
     deps = [
+        "//packages/core",
+        "//packages/core/differ",
+        "//packages/core/schema",
+        "//packages/database",
+        "//packages/interface/asset",
         "//packages/representative",
         "//stacks/api/passport/guard",
-        "//packages/core/schema",
-        "//packages/core",
-        "//packages/interface/asset",
-        "//packages/core/differ",
-        "//packages/database",
         "@npm//@nestjs/common",
+        "@npm//@types/archiver",
         "@npm//@types/node",
         "@npm//archiver",
-        "@npm//@types/archiver",
     ],
 )

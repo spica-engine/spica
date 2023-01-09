@@ -43,10 +43,7 @@ export function replaceValue(val: object, property: string, replace: unknown) {
   return val;
 }
 
-export function eliminateNonConfigurables(
-  actual: Config[],
-  desired: Config[]
-): Config[] {
+export function eliminateNonConfigurables(actual: Config[], desired: Config[]): Config[] {
   return desired.filter(d => {
     const isMatch = actual.some(
       a =>

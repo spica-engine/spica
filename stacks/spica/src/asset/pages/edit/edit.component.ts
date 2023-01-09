@@ -65,7 +65,6 @@ export class EditComponent {
       .then(r => (this.preview = separatePreviewResourcesByModule(r)));
   }
 
-
   // categorizeResourcesByModule(resources) {
   //   const categorizedResources = {};
 

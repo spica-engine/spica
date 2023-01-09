@@ -107,9 +107,6 @@ describe("Schema Validation", () => {
       });
     });
 
-    it("should wait empty config if asset is not configurable", () => {
-      
-    })
-
+    it("should wait empty config if asset is not configurable", () => {});
   });
 });

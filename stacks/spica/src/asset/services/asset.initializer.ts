@@ -38,8 +38,7 @@ export class AssetInitializer {
   }
 
   async appInitializer() {
-    const allowed = await this.passport.checkAllowed("asset:index","*").toPromise();
-    console.log(allowed)
+    const allowed = await this.passport.checkAllowed("asset:index", "*").toPromise();
     if (this.passport.identified && allowed) {
       this.as.retrieve().toPromise();
     } else {

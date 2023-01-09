@@ -28,6 +28,7 @@ ts_project(
         "@npm_cli//columnify",
         "@npm_cli//cosmiconfig",
         "@npm_cli//dockerode",
+        "@npm_cli//dotenv",
         "@npm_cli//get-port",
         "@npm_cli//jsonpath",
         "@npm_cli//open",
@@ -36,7 +37,6 @@ ts_project(
         "@npm_cli//semver",
         "@npm_cli//typescript",
         "@npm_cli//yaml",
-        "@npm_cli//dotenv",
     ],
 )
 

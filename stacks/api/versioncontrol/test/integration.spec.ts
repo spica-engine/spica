@@ -10,7 +10,12 @@ import {FunctionEngine} from "@spica-server/function/src/engine";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as os from "os";
 
-import {SyncDirection, VersionControlModule, Synchronizer, VC_REP_MANAGER} from "@spica-server/versioncontrol";
+import {
+  SyncDirection,
+  VersionControlModule,
+  Synchronizer,
+  VC_REP_MANAGER
+} from "@spica-server/versioncontrol";
 import {RepresentativeManager} from "@spica-server/representative";
 import {PreferenceModule} from "@spica-server/preference";
 import {PreferenceService} from "@spica-server/preference/services";

@@ -10,11 +10,11 @@ ts_project(
         "src/*.ts",
     ]),
     deps = [
-        "//packages/interface/representative",
         "//packages/core/differ",
+        "//packages/interface/representative",
         "@npm//@nestjs/common",
+        "@npm//@types/node",
         "@npm//dotenv",
         "@npm//yaml",
-        "@npm//@types/node",
     ],
 )

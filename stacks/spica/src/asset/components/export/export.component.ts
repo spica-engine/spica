@@ -15,9 +15,8 @@ import {AssetService} from "@spica-client/asset/services/asset.service";
   styleUrls: ["./export.component.scss"]
 })
 export class ExportComponent implements OnInit {
-  
   availableResources: AvailableResources[] = [];
-  
+
   exportMeta: ExportMeta = {
     name: undefined,
     description: undefined,

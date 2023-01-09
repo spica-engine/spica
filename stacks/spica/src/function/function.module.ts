@@ -146,7 +146,7 @@ export class FunctionModule {
           provide: ASSET_CONFIG_EXPORTER,
           useFactory: assetConfigExporter,
           deps: [FunctionService],
-          multi: true,
+          multi: true
         },
         {
           provide: LAYOUT_INITIALIZER,
