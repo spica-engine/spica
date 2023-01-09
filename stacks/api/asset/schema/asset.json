@@ -38,6 +38,11 @@
       "type": "string",
       "description": "Download url of the asset."
     },
+    "icon": {
+      "type": "string",
+      "description": "Icon of this asset",
+      "default": "check_circle_outline"
+    },
     "configs": {
       "$ref": "http://spica.internal/asset/configs"
     }

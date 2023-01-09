@@ -18,7 +18,7 @@ export class AssetInitializer {
           new Upsert({
             category: RouteCategory.Asset,
             id: `assets/${asset._id}`,
-            icon: "check",
+            icon: asset.icon,
             path: `/assets/${asset._id}`,
             display: asset.name
           })

@@ -10,10 +10,10 @@
         [name]="config.module + config.subresource_id + config.property"
         required
       ></span>
-      <ng-container *ngIf="!data.asset.configs.length">
-        No configuration required.
-      </ng-container>
     </div>
+    <p *ngIf="!data.asset.configs || !data.asset.configs.length">
+      No configuration is required.
+    </p>
     <div class="bottom-actions">
       <button [disabled]="configForm.invalid" mat-button (click)="preview()">
         Preview

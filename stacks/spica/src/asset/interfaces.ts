@@ -9,6 +9,7 @@ export interface Asset {
   configs: Config[];
   failure_message?: string;
   url: string;
+  icon: string;
 }
 
 export type Status = "downloaded" | "installed" | "failed";
