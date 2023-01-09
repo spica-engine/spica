@@ -77,7 +77,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   stickyProperties: Array<string> = [
     "$$spicainternal_select",
     "$$spicainternal_id",
-    "$$spicainternal_actions"
+    "$$spicainternal_new_property"
   ];
   properties: Array<{name: string; title: string}> = [];
 
@@ -157,8 +157,7 @@ export class IndexComponent implements OnInit, OnDestroy {
             name,
             title: value.title
           })),
-          {name: "$$spicainternal_new_property", title: "New property"},
-          {name: "$$spicainternal_actions", title: "Actions"}
+          {name: "$$spicainternal_new_property", title: "New property"}
         ];
 
         this.editableProps = Object.entries(schema.properties).filter(
@@ -180,7 +179,6 @@ export class IndexComponent implements OnInit, OnDestroy {
                 .concat([
                   "$$spicainternal_id",
                   "$$spicainternal_new_property",
-                  "$$spicainternal_actions",
                   "$$spicainternal_select"
                 ])
                 .some(schemaProps => schemaProps == dispProps)
@@ -328,8 +326,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         "$$spicainternal_select",
         "$$spicainternal_id",
         ...Object.keys(schema.properties),
-        "$$spicainternal_new_property",
-        "$$spicainternal_actions"
+        "$$spicainternal_new_property"
       ];
     } else {
       this.displayedProperties = [...this.stickyProperties];
@@ -713,7 +710,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         );
 
         if (newFields.length > 0) {
-          this.displayedProperties.splice(this.displayedProperties.length - 2, 0, ...newFields);
+          this.displayedProperties.splice(this.displayedProperties.length - 1, 0, ...newFields);
 
           localStorage.setItem(
             `${this.bucketId}-displayedProperties`,

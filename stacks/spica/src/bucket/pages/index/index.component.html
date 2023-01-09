@@ -190,6 +190,14 @@
               (ngModelChange)="onItemSelected($event, row)"
               [ngModel]="hasSelected(row._id)"
             ></mat-checkbox>
+            <button
+              canInteract="bucket:data:show"
+              [resource]="schema._id + '/' + row._id"
+              mat-icon-button
+              [routerLink]="row._id"
+            >
+              <mat-icon>{{ readOnly ? "remove_red_eye" : "edit" }}</mat-icon>
+            </button>
           </td>
         </ng-container>
         <ng-container matColumnDef="$$spicainternal_id" *ngIf="schema$ | async; let schema" sticky>
@@ -200,60 +208,11 @@
             {{ row._id }}
           </td>
         </ng-container>
-        <ng-container
-          matColumnDef="$$spicainternal_new_property"
-          *ngIf="schema$ | async; let schema"
-        >
-          <th
-            mat-header-cell
-            *matHeaderCellDef
-            mat-resize-header
-            [overrideMinWidth]="true"
-            [persist-header-width]="schema._id"
-            (click)="addNewProperty()"
-            class="add-new-property"
-            canInteract="bucket:update"
-          >
-            <mat-icon>add</mat-icon>
+        <ng-container matColumnDef="$$spicainternal_new_property" stickyEnd>
+          <th mat-header-cell *matHeaderCellDef (click)="addNewProperty()">
+            <div><mat-icon>add</mat-icon> New field</div>
           </th>
           <td mat-cell *matCellDef="let row"></td>
-        </ng-container>
-        <ng-container
-          matColumnDef="$$spicainternal_actions"
-          *ngIf="schema$ | async; let schema"
-          stickyEnd
-        >
-          <th mat-header-cell class="action" *matHeaderCellDef>Actions</th>
-          <td mat-cell class="action" *matCellDef="let row">
-            <button
-              canInteract="bucket:data:show"
-              [resource]="schema._id + '/' + row._id"
-              mat-icon-button
-              [routerLink]="row._id"
-            >
-              <mat-icon>{{ readOnly ? "remove_red_eye" : "edit" }}</mat-icon>
-            </button>
-            <button
-              mat-icon-button
-              [disabled]="readOnly"
-              canInteract="bucket:data:delete"
-              [resource]="schema._id + '/' + row._id"
-              color="warn"
-              [matAwareDialog]="{
-                title: 'Confirmation',
-                templateOrDescription: getDependents(schema, [row]).length
-                  ? deleteWithDependentsDialog
-                  : deleteDialog,
-                answer: row.hasOwnProperty(schema.primary)
-                  ? row[schema.primary]?.toString()
-                  : 'agree',
-                list: getDependents(schema, [row])
-              }"
-              (confirm)="delete(row._id)"
-            >
-              <mat-icon>delete</mat-icon>
-            </button>
-          </td>
         </ng-container>
 
         <ng-container *ngIf="schema$ | async; let schema">

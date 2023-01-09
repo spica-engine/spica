@@ -4,9 +4,8 @@
 </button>
 <ng-container
   *ngIf="
-    !['$$spicainternal_new_property', '$$spicainternal_actions'].includes(
-      displayedProperties[displayedProperties.indexOf(property.key) + 1]
-    )
+    displayedProperties[displayedProperties.indexOf(property.key) + 1] !=
+    '$$spicainternal_new_property'
   "
 >
   <button canInteract="bucket:update" (click)="moveField(property.key, 1)" mat-menu-item>
@@ -25,31 +24,27 @@
 </ng-container>
 
 <mat-divider></mat-divider>
-<span
+
+<button
   mat-menu-item
-  class="delete-field-content"
   [matTooltipDisabled]="schema.primary != property.key"
   matTooltip="In order to delete the primary field, you must first select another field as primary."
+  color="warn"
+  (click)="$event.stopImmediatePropagation()"
+  (confirm)="deleteProperty(property.key)"
+  [matAwareDialog]="{
+    title: 'Confirmation',
+    templateOrDescription: deleteFieldDialog,
+    answer: '',
+    noAnswer: true
+  }"
+  [matAwareDialogDisabled]="schema.primary == property.key"
+  canInteract="bucket:update"
+  [resource]="schema._id"
 >
-  <button
-    color="warn"
-    [disabled]="schema.primary == property.key"
-    (click)="$event.stopImmediatePropagation()"
-    (confirm)="deleteProperty(property.key)"
-    [matAwareDialog]="{
-      title: 'Confirmation',
-      templateOrDescription: deleteFieldDialog,
-      answer: '',
-      noAnswer: true
-    }"
-    [matAwareDialogDisabled]="!schema._id"
-    canInteract="bucket:update"
-    mat-button
-  >
-    <mat-icon color="warn">delete</mat-icon>
-    <span>Delete field</span>
-  </button>
-</span>
+  <mat-icon color="warn">delete</mat-icon>
+  Delete field
+</button>
 
 <ng-template #deleteFieldDialog let-answer="answer">
   <p>

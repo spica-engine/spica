@@ -65,6 +65,7 @@
           border-right: 1px solid rgba(var(--foreground-base-rgb), 0.1);
           > mat-icon {
             margin-right: 5px;
+            color: var(--foreground-disabled);
           }
           h4 {
             margin: 0;

@@ -150,11 +150,8 @@ $custom-typography: mat-typography-config(
     background: unset !important;
   }
 }
-button[color="warn"] {
+.mat-menu-item[color="warn"] {
   color: var(--warn-500) !important;
-  &:disabled {
-    opacity: 0.7;
-  }
 }
 
 .ng-disabled-button:hover {

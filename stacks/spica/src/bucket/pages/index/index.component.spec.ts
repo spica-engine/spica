@@ -290,7 +290,7 @@ describe("IndexComponent", () => {
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(
             e => e.textContent && e.textContent.trim()
           )
-        ).toEqual(["Display all", "test", "New property"]);
+        ).toEqual(["Display all", "test"]);
       });
 
       it("should set displayed properties from local storage", async () => {
@@ -345,7 +345,7 @@ describe("IndexComponent", () => {
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(
             e => e.textContent && e.textContent.trim()
           )
-        ).toEqual(["Display all", "test", "New property"]);
+        ).toEqual(["Display all", "test"]);
       });
 
       it("should display later checked properties", fakeAsync(() => {
@@ -427,17 +427,15 @@ describe("IndexComponent", () => {
         "table[mat-table] tr[mat-row] td[mat-cell].mat-column-test span"
       );
       expect(headerCells[2].textContent).toBe(" test arrow_drop_down");
-      expect(headerCells[3].textContent).toBe("add");
-      expect(headerCells[4].textContent).toBe("Actions");
+      expect(headerCells[3].textContent).toBe("add New field");
       expect(cell.textContent).toBe("123");
     });
 
     it("should render actions correctly", () => {
       const [editButton, deleteButton] = fixture.debugElement.nativeElement.querySelectorAll(
-        "table[mat-table] tr[mat-row] td[mat-cell]:last-of-type > button"
+        "table[mat-table] tr[mat-row] td[mat-cell]:first-of-type > button"
       );
       expect(editButton.textContent).toBe("edit");
-      expect(deleteButton.textContent).toBe("delete");
     });
 
     describe("select", () => {
@@ -742,19 +740,11 @@ describe("IndexComponent", () => {
       fixture.detectChanges();
     });
 
-    it("should disable remove button", () => {
-      expect(
-        fixture.debugElement.nativeElement.querySelector(
-          "table[mat-table] tr[mat-row] td[mat-cell]:last-of-type button:last-of-type"
-        ).disabled
-      ).toBe(true);
-    });
-
     it("should change icon of edit button", () => {
       fixture.detectChanges();
       expect(
         fixture.debugElement.nativeElement.querySelector(
-          "table[mat-table] tr[mat-row] td[mat-cell]:last-of-type button:first-of-type"
+          "table[mat-table] tr[mat-row] td[mat-cell]:first-of-type button:first-of-type"
         ).textContent
       ).toBe("remove_red_eye");
     });

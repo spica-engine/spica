@@ -10,8 +10,7 @@ import {SnackbarComponent} from "@spica-client/core/layout/snackbar/snackbar.com
 
 @Component({
   selector: "app-property-menu",
-  templateUrl: "./property-menu.component.html",
-  styleUrls: ["./property-menu.component.scss"]
+  templateUrl: "./property-menu.component.html"
 })
 export class PropertyMenuComponent implements OnInit {
   @Input() schema: Bucket;

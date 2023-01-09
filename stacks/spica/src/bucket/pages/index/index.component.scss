@@ -147,9 +147,7 @@
       padding: 0px;
       margin: 0px 16px;
       table {
-        min-width: calc(100% - 32px);
-        width: calc(100% - 32px);
-
+        width: 100%;
         overflow: auto;
         .select {
           width: 75px;
@@ -173,24 +171,35 @@
             top: -16px;
           }
         }
-        th.add-new-property {
-          text-align: center;
-          padding: 0 !important;
-          width: 100px !important;
-          min-width: 100px !important;
-          mat-icon {
-            font-size: 1.5rem;
-            width: calc(100% - 20px);
-            cursor: pointer !important;
-          }
-        }
         tr {
           height: 40px !important;
           > th:last-of-type {
-            padding-right: 35px;
+            // padding-right: 24px;
+            padding-right: 0;
+            width: 200px;
+            > div {
+              color: var(--foreground-text);
+              display: flex;
+              align-items: center;
+              min-width: 100px;
+              justify-content: center;
+              cursor: pointer !important;
+              > mat-icon {
+                font-size: 1.4rem;
+                width: 1.4rem;
+                height: 1.4rem;
+              }
+            }
           }
           > *:last-of-type {
             text-align: right;
+          }
+          &:hover {
+            td.mat-column---spicainternal_select {
+              button {
+                opacity: 1;
+              }
+            }
           }
         }
 
@@ -209,12 +218,20 @@
             width: 200px;
             min-width: 200px;
           }
-          &.mat-column---spicainternal_actions {
+          &.mat-column---spicainternal_new_property {
             border-left: 1px solid var(--foreground-divider);
             padding: 0px 10px;
+            border-bottom-color: transparent;
+            background-color: var(--background-card) !important;
+          }
+          &.mat-column---spicainternal_select {
+            button {
+              opacity: 0;
+              transition: opacity 0.3s ease;
+            }
           }
         }
-        td.mat-cell:not(.action) {
+        td.mat-cell:not(.mat-column---spicainternal_select) {
           max-width: 0;
           &.editable {
             cursor: pointer;
