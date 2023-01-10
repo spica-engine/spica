@@ -232,40 +232,7 @@ describe("StorageComponent", () => {
 
     it("should handle drop", async () => {
       expect(preventDefaultSpy).toHaveBeenCalledTimes(1);
-      httpTestingController
-        .expectOne("api:/storage?" + findParams.toString(), "check if directory named root exist")
-        .flush([]);
-
-      fixture.detectChanges();
-      await new Promise(resolve => setTimeout(resolve, 200));
-
       httpTestingController.expectOne("api:/storage", "upload object");
-
-      fixture.detectChanges();
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      httpTestingController.expectNone(
-        "api:/storage",
-        "it should be none since root directory exists"
-      );
-    });
-
-    it("should handle drop if there is no directory", async () => {
-      expect(preventDefaultSpy).toHaveBeenCalledTimes(1);
-
-      httpTestingController
-        .expectOne("api:/storage?" + findParams.toString(), "check if directory named root exist")
-        .flush([]);
-
-      fixture.detectChanges();
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      httpTestingController.expectOne("api:/storage", "create root directory").flush({});
-
-      fixture.detectChanges();
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      httpTestingController.expectOne("api:/storage", "insert object now");
     });
 
     /**

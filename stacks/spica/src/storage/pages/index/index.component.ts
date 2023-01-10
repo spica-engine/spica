@@ -17,7 +17,7 @@ import {
 } from "@spica-client/storage/helpers";
 import {RootDirService} from "@spica-client/storage/services/root.dir.service";
 import {BehaviorSubject, Subject, combineLatest, Subscription} from "rxjs";
-import {filter, map, switchMap, tap} from "rxjs/operators";
+import {switchMap, tap} from "rxjs/operators";
 import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
 import {Storage, StorageNode} from "../../interfaces/storage";
 import {StorageService} from "../../services/storage.service";
@@ -99,13 +99,18 @@ export class IndexComponent implements OnInit, OnDestroy {
     }
     this.nodes = nodes;
 
-    if (this.currentNode) {
-      const newCurrentNode = findNodeByName(getFullName(this.currentNode), this.nodes);
-      if (newCurrentNode) {
-        this.currentNode = newCurrentNode;
-        this.setHighlighteds(this.currentNode);
-      }
+    if (!this.currentNode) {
+      this.currentNode = this.nodes[0];
     }
+
+    const newCurrentNode = findNodeByName(getFullName(this.currentNode), this.nodes);
+
+    if (!newCurrentNode) {
+      return;
+    }
+
+    this.currentNode = newCurrentNode;
+    this.setHighlighteds(this.currentNode);
   }
 
   ngOnInit(): void {
@@ -312,9 +317,7 @@ export class IndexComponent implements OnInit, OnDestroy {
       }
     };
 
-    // if (node) {
     setHighlighted(node);
-    // }
   }
 
   buildFilterForDir(fullName: string) {

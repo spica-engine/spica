@@ -242,6 +242,20 @@ describe("Storage/IndexComponent", () => {
             ]
           }
         ]
+      },
+      {
+        _id: "5",
+        name: "others",
+        content: {
+          type: "",
+          size: 0
+        },
+        url: "http://example/5",
+        children: [],
+        isDirectory: true,
+        isHighlighted: false,
+        parent: undefined,
+        index: 4
       }
     ]);
   });
@@ -339,6 +353,20 @@ describe("Storage/IndexComponent", () => {
               ]
             }
           ]
+        },
+        {
+          _id: "5",
+          name: "others",
+          content: {
+            type: "",
+            size: 0
+          },
+          url: "http://example/5",
+          children: [],
+          isDirectory: true,
+          isHighlighted: false,
+          parent: undefined,
+          index: 4
         }
       ]);
     });
