@@ -59,7 +59,6 @@ export class IndexComponent implements OnInit, OnDestroy {
   renamingNode: StorageNode;
 
   constructor(
-    private passportService: PassportService,
     private storageService: StorageService,
     private rootDirService: RootDirService,
     public breakpointObserver: BreakpointObserver,
@@ -87,9 +86,26 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   updateNodes(nodes: StorageNode[]) {
+    if (this.root == "") {
+      const rootParent = {
+        name: this.root,
+        children: nodes,
+        isDirectory: true,
+        isHighlighted: true,
+        parent: undefined
+      };
+      nodes.forEach(n => (n.parent = rootParent));
+      nodes = [rootParent];
+    }
     this.nodes = nodes;
-    this.currentNode = this.currentNode || this.nodes[0];
-    this.setHighlighteds(getFullName(this.currentNode), this.nodes);
+
+    if (this.currentNode) {
+      const newCurrentNode = findNodeByName(getFullName(this.currentNode), this.nodes);
+      if (newCurrentNode) {
+        this.currentNode = newCurrentNode;
+        this.setHighlighteds(this.currentNode);
+      }
+    }
   }
 
   ngOnInit(): void {
@@ -97,7 +113,7 @@ export class IndexComponent implements OnInit, OnDestroy {
       .pipe(
         tap(() => this.loading$.next(true)),
         switchMap(([_, filter]) => this.storageService.getAll({filter, sort: this.sorter})),
-        map(storages => {
+        tap(storages => {
           const newNodes = mapObjectsToNodes(storages);
           this.updateNodes(newNodes);
         }),
@@ -105,26 +121,12 @@ export class IndexComponent implements OnInit, OnDestroy {
       )
       .subscribe();
 
-    const routeSubs = this.route.params
-      .pipe(
-        tap(params => {
-          if (!params.name) {
-            this.root = undefined;
-            this.addRootDir();
-            return;
-          }
-        }),
-        filter(params => params.name),
-        map(params => params.name)
-      )
-      .subscribe(name => {
-        this.currentNode = undefined;
+    const routeSubs = this.route.params.subscribe(({name}) => {
+      this.root = name || "";
 
-        this.root = name;
-
-        const filter = this.buildFilterForDir(this.root);
-        this.filter$.next(filter);
-      });
+      const filter = this.buildFilterForDir(this.root);
+      this.filter$.next(filter);
+    });
 
     this.subscriptions.push(storagesSubs, routeSubs);
   }
@@ -208,7 +210,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         .toPromise()
         .then(r => {
           if (!r || !r.length) {
-            return this.router.navigate(["storage", "welcome"]);
+            return this.router.navigate(["storages"]);
           }
 
           const target = r[0].name.replace("/", "");
@@ -279,28 +281,12 @@ export class IndexComponent implements OnInit, OnDestroy {
   onNodeHighlighted(node: StorageNode) {
     this.currentNode = node;
 
-    const fullName = getFullName(node);
-
-    return this.setHighlighteds(fullName, this.nodes);
-
-    // const filter = this.buildFilterForDir(fullName);
-    // this.filter$.next(filter);
+    this.setHighlighteds(node);
   }
 
   onDetailsClosed(node: StorageNode) {
-    const fullName = getFullName(node);
-
-    const parentNameParts = fullName.split("/").filter(n => n != "");
-    parentNameParts.pop();
-
-    if (!parentNameParts.length) {
-      this.clearHighlighteds();
-    } else {
-      const parentFullName = parentNameParts.join("/");
-      this.setHighlighteds(parentFullName, this.nodes);
-    }
-
     this.currentNode = node.parent;
+    this.setHighlighteds(node);
   }
 
   clearHighlighteds() {
@@ -316,51 +302,27 @@ export class IndexComponent implements OnInit, OnDestroy {
     clear(this.nodes);
   }
 
-  setHighlighteds(fullName: string, nodes: StorageNode[]) {
+  setHighlighteds(node: StorageNode) {
     this.clearHighlighteds();
 
-    const setHighlighted = (_fullName: string, _nodes: StorageNode[]) => {
-      const parts = _fullName.split("/").filter(n => n != "");
-      const name = parts[0];
-
-      const targetNode = _nodes.find(t => t.name == name);
-      if (!targetNode) {
-        return;
-      }
-
-      targetNode.isHighlighted = true;
-
-      if (parts.length > 1) {
-        setHighlighted(parts.slice(1, parts.length).join("/"), targetNode.children);
-      } else {
-        this.currentNode = targetNode;
+    const setHighlighted = _node => {
+      _node.isHighlighted = true;
+      if (_node.parent) {
+        setHighlighted(_node.parent);
       }
     };
-    setHighlighted(fullName, nodes);
+
+    // if (node) {
+    setHighlighted(node);
+    // }
   }
 
   buildFilterForDir(fullName: string) {
-    const parts = fullName.split("/").filter(n => n != "");
-
-    const filters = [];
-
-    let endIndex = 1;
-    while (true) {
-      let name = parts.slice(0, endIndex).join("/");
-      name += "/";
-
-      // root directory should return itself to keep consistency but sub directories don't have to
-      const filter = Filters.ListAllChildren(name, endIndex == 1);
-
-      filters.push(filter);
-
-      endIndex++;
-      if (endIndex > parts.length) {
-        break;
-      }
+    if (!fullName) {
+      return null;
     }
 
-    return {$or: filters};
+    return Filters.ListAllChildren(fullName, true);
   }
 
   onColumnClicked(nodes: StorageNode[]) {
@@ -411,8 +373,12 @@ export class IndexComponent implements OnInit, OnDestroy {
     });
   }
 
-  addSubDir(node: StorageNode) {
-    const target = node.isDirectory ? node : node.parent;
+  addSubDir() {
+    const target = this.currentNode
+      ? this.currentNode.isDirectory
+        ? this.currentNode
+        : this.currentNode.parent
+      : this.nodes[0];
 
     const existingNames = target.children.map(c => c.name);
 

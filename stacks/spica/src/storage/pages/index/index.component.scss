@@ -74,6 +74,7 @@
       overflow: auto;
       .column {
         width: 300px;
+        min-width: 300px;
         border-right: 1px solid rgba(0, 0, 0, 0.1);
       }
     }
@@ -149,7 +150,7 @@
         height: 24px;
       }
 
-      span {
+      > span {
         padding: 4px;
         max-width: 220px;
         text-overflow: ellipsis;

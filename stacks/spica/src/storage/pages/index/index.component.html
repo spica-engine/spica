@@ -8,7 +8,7 @@
       Upload any kind of document into public storage.
     </p>
   </div>
-  <div *ngIf="root" class="actions">
+  <div class="actions">
     <ng-container *ngIf="selectionActive">
       <button mat-button (click)="disableSelectMode()">
         <mat-icon>cancel</mat-icon>
@@ -112,6 +112,7 @@
         ></mat-progress-spinner>
       </button>
       <button
+        *ngIf="root != ''"
         mat-button
         canInteract="storage:delete"
         [disabled]="progress"
@@ -129,8 +130,7 @@
     </ng-container>
   </div>
 </mat-toolbar>
-
-<mat-card *ngIf="root">
+<mat-card>
   <div class="directory-view" *ngIf="nodes.length && nodes[0].children.length > 0">
     <ng-container *ngTemplateOutlet="column; context: {nodes: nodes[0].children}"></ng-container>
     <mat-progress-spinner

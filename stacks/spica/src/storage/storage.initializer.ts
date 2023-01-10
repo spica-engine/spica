@@ -19,22 +19,33 @@ export class StorageInitializer {
             id: storage._id,
             icon: "folder",
             path: `/storage/${storage.name}`,
-            display: storage.name.replace("/", "")
+            display: storage.name
           })
         );
       }
 
       routeService.dispatch(
         new Upsert({
+          id: "storages",
+          category: RouteCategory.Storage,
+          icon: "folder",
+          path: "/storages",
+          display: "/",
+          data: {
+            action: "storage:index"
+          }
+        })
+      );
+
+      routeService.dispatch(
+        new Upsert({
           id: "add-storage",
           category: RouteCategory.Storage,
           icon: "add",
-          path: "/storage/add",
+          path: "/storage/welcome",
           display: "Add New Directory",
-          data: {
-            action: "storage:create"
-          },
-          customClass: "dashed-item"
+          customClass: "dashed-item",
+          queryParams: {openDialog: true}
         })
       );
     });

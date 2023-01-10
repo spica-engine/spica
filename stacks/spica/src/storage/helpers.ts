@@ -36,9 +36,13 @@ const storageNodeKeys = ["parent", "children", "depth", "isDirectory", "isHighli
 
 export function getFullName(node: StorageNode, suffix?: string): string {
   const newName = suffix
-    ? `${node.name}/${suffix}`
+    ? node.name
+      ? `${node.name}/${suffix}`
+      : suffix
     : node.isDirectory
-    ? `${node.name}/`
+    ? node.name
+      ? `${node.name}/`
+      : ""
     : node.name;
 
   return node.parent ? getFullName(node.parent, newName) : newName;
