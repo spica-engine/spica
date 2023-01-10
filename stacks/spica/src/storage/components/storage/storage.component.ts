@@ -56,21 +56,16 @@ export class StorageComponent implements ControlValueAccessor {
     if (files.length) {
       this.blob = files.item(0);
 
-      this.progress$ = this.rootDir.find("root").pipe(
-        switchMap(r => (r ? of(r) : this.rootDir.add("root").toPromise())),
-        switchMap(() =>
-          this.storage.insertMany(files, "root/").pipe(
-            map(event => {
-              if (event.type === HttpEventType.UploadProgress) {
-                return Math.round((100 * event.loaded) / event.total);
-              } else if (event.type === HttpEventType.Response) {
-                this.value = event.body[0].url;
-                this.onChangeFn(this.value);
-                this.progress$ = undefined;
-              }
-            })
-          )
-        ),
+      this.progress$ = this.storage.insertMany(files, "root/").pipe(
+        map(event => {
+          if (event.type === HttpEventType.UploadProgress) {
+            return Math.round((100 * event.loaded) / event.total);
+          } else if (event.type === HttpEventType.Response) {
+            this.value = event.body[0].url;
+            this.onChangeFn(this.value);
+            this.progress$ = undefined;
+          }
+        }),
         share()
       );
     }
