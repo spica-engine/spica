@@ -34,18 +34,26 @@ export namespace Filters {
 
 const storageNodeKeys = ["parent", "children", "depth", "isDirectory", "isHighlighted", "index"];
 
-export function getFullName(node: StorageNode, suffix?: string): string {
-  const newName = suffix
-    ? node.name
-      ? `${node.name}/${suffix}`
-      : suffix
-    : node.isDirectory
-    ? node.name
-      ? `${node.name}/`
-      : ""
-    : node.name;
+export function getFullName(node: StorageNode): string {
+  const names = [];
 
-  return node.parent ? getFullName(node.parent, newName) : newName;
+  const sumNames = (_node: StorageNode) => {
+    if (_node.name) {
+      names.unshift(_node.name);
+    }
+
+    if (_node.parent) {
+      sumNames(_node.parent);
+    }
+  };
+
+  sumNames(node);
+
+  if (node.isDirectory) {
+    names.push("");
+  }
+
+  return names.join("/");
 }
 
 export function isDirectory(storage: StorageNode | Storage) {

@@ -377,11 +377,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   addSubDir() {
-    const target = this.currentNode
-      ? this.currentNode.isDirectory
-        ? this.currentNode
-        : this.currentNode.parent
-      : this.nodes[0];
+    const target = this.currentNode.isDirectory ? this.currentNode : this.currentNode.parent;
 
     const existingNames = target.children.map(c => c.name);
 
