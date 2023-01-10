@@ -10,8 +10,5 @@
     ],
     "0.8.2": [
         "0.8.2/update_location_bucket_bucket-data"
-    ],
-    "0.9.26": [
-        "0.9.26/add_root_dir_for_storage_objects"
     ]
 }
