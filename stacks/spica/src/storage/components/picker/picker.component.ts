@@ -1,10 +1,11 @@
 import {Component, OnInit, ViewChild} from "@angular/core";
 import {MatDialogRef} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
-import {merge, Observable, of, Subject} from "rxjs";
+import {Filters} from "@spica-client/storage/helpers";
+import {BehaviorSubject, merge, Observable} from "rxjs";
 import {map, switchMap} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
-import {StorageService} from "../../storage.service";
+import {StorageService} from "../../services/storage.service";
 
 @Component({
   selector: "storage-picker",
@@ -16,7 +17,7 @@ export class PickerComponent implements OnInit {
 
   totalItems: number = 0;
   progress: number;
-  refresh: Subject<void> = new Subject<void>();
+  refresh: BehaviorSubject<any> = new BehaviorSubject<any>("");
   incomingFile: FileList;
 
   @ViewChild(MatPaginator, {static: true}) private _paginator: MatPaginator;
@@ -28,13 +29,15 @@ export class PickerComponent implements OnInit {
   constructor(private storage: StorageService, private ref: MatDialogRef<PickerComponent>) {}
 
   ngOnInit(): void {
-    this.storages$ = merge(this._paginator.page, of(null), this.refresh).pipe(
+    this.storages$ = merge(this._paginator.page, this.refresh).pipe(
       switchMap(() =>
-        this.storage.getAll(
-          this._paginator.pageSize || this._pageSize,
-          this._paginator.pageSize * this._paginator.pageIndex,
-          this.sorter
-        )
+        this.storage.getAll({
+          filter: Filters.ListOnlyObjects,
+          limit: this._paginator.pageSize || this._pageSize,
+          skip: this._paginator.pageSize * this._paginator.pageIndex,
+          sort: this.sorter,
+          paginate: true
+        })
       ),
       map(storage => {
         this._paginator.length = storage.meta.total;
@@ -47,7 +50,7 @@ export class PickerComponent implements OnInit {
   sortStorage(value) {
     value.direction = value.direction === "asc" ? 1 : -1;
     this.sorter = {[value.name]: value.direction};
-    this.refresh.next();
+    this.refresh.next("");
   }
 
   close(storage: Storage) {

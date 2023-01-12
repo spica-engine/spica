@@ -3,10 +3,12 @@ import {Component, forwardRef, HostListener, Inject} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {MatDialog} from "@angular/material/dialog";
 import {INPUT_SCHEMA, InternalPropertySchema} from "@spica-client/common";
-import {Observable} from "rxjs";
-import {map, share} from "rxjs/operators";
+import {Filters} from "@spica-client/storage/helpers";
+import {RootDirService} from "@spica-client/storage/services/root.dir.service";
+import {Observable, of} from "rxjs";
+import {map, share, switchMap} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
-import {StorageService} from "../../storage.service";
+import {StorageService} from "../../services/storage.service";
 import {StorageDialogOverviewDialog} from "../storage-dialog-overview/storage-dialog-overview";
 
 @Component({
@@ -41,6 +43,7 @@ export class StorageComponent implements ControlValueAccessor {
   constructor(
     @Inject(INPUT_SCHEMA) public readonly schema: InternalPropertySchema,
     private storage: StorageService,
+    private rootDir: RootDirService,
     private dialog: MatDialog
   ) {}
 
@@ -52,7 +55,8 @@ export class StorageComponent implements ControlValueAccessor {
 
     if (files.length) {
       this.blob = files.item(0);
-      this.progress$ = this.storage.insertMany(files).pipe(
+
+      this.progress$ = this.storage.insertMany(files, "root/").pipe(
         map(event => {
           if (event.type === HttpEventType.UploadProgress) {
             return Math.round((100 * event.loaded) / event.total);
