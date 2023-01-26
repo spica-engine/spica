@@ -2,40 +2,6 @@
 <ng-container *ngIf="asset">
   <mat-toolbar>
     <h4 class="mat-h4">
-      <!-- <button
-            mat-icon-button
-            menu-icon
-            class="mat-elevation-z25"
-            matTooltip="You can change icon by clicking here."
-            [matMenuTriggerFor]="iconSelector"
-          >
-            <mat-icon>{{ asset.icon }}</mat-icon>
-            <mat-menu #iconSelector="matMenu">
-              <ng-container matMenuContent>
-                <button
-                  *ngFor="let icon of visibleIcons"
-                  mat-icon-button
-                  mat-flat-button
-                  [matTooltip]="icon"
-                  (click)="asset.icon = icon"
-                >
-                  <mat-icon>{{ icon }}</mat-icon>
-                </button>
-                <mat-paginator
-                  (page)="
-                    this.visibleIcons = this.icons.slice(
-                      $event.pageIndex * $event.pageSize,
-                      ($event.pageIndex + 1) * $event.pageSize
-                    )
-                  "
-                  (click)="$event.stopPropagation()"
-                  [length]="icons.length"
-                  [pageSize]="iconPageSize"
-                >
-                </mat-paginator>
-              </ng-container>
-            </mat-menu>
-          </button> -->
       <span>Edit Asset</span>
     </h4>
   </mat-toolbar>
@@ -96,7 +62,7 @@
               </mat-nested-tree-node>
             </mat-tree>
           </mat-list-item>
-          <mat-list-item>
+          <mat-list-item *ngIf="asset.configs.length">
             <h4>Configurations</h4>
             <mat-divider></mat-divider>
           </mat-list-item>
@@ -112,7 +78,7 @@
         </mat-list>
       </form>
     </mat-card-content>
-    <mat-card-actions>
+    <mat-card-actions *ngIf="asset.configs.length">
       <button
         class="save-button"
         [canInteract]="'asset:install'"

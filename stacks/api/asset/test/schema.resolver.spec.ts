@@ -26,6 +26,7 @@ describe("Schema Validation", () => {
 
     beforeEach(async () => {
       asset = {
+        icon:"icon1",
         _id: "6399a8db01e9930e9bff5a3c",
         name: "my-asset",
         url: "mock_url",

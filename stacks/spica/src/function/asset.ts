@@ -35,6 +35,7 @@ export const assetConfigExporter = (fs: FunctionService) => {
   const resourceIdLoader = () => {
     return fs
       .getFunctions()
+      .pipe(take(1))
       .toPromise()
       .then(fns => {
         return fns.map(fn => {

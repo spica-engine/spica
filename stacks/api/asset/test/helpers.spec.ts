@@ -119,6 +119,7 @@ describe("Helpers", () => {
 
     beforeEach(() => {
       asset = {
+        icon:"icon1",
         url: "test.com",
         name: "asset1",
         description: "description of the asset",
@@ -201,6 +202,7 @@ describe("Helpers", () => {
       asset = putConfiguration(asset, configs);
 
       expect(asset).toEqual({
+        icon:"icon1",
         url: "test.com",
         name: "asset1",
         description: "description of the asset",
