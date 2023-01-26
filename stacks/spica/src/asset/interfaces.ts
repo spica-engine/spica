@@ -62,10 +62,23 @@ export interface AvailableResources {
 
 export const ASSET_CONFIG_EXPORTER = new InjectionToken<any>("ASSET_CONFIG_EXPORTER");
 
-export interface Selectable {
-  name: string;
-  value: any;
+interface RawOption {
+  value: string;
   title: string;
-  onSelect?: (...args) => Promise<Selectable[]>;
+}
+
+export interface Option extends RawOption {
+  name: string;
+  onSelect?: (...args) => Promise<Option[]>;
   isLast?: boolean;
+}
+
+export interface Exporter {
+  name: string;
+  loadOptions: (currentSelections: {[name: string]: string}) => Promise<RawOption[]>;
+  children?: Exporter;
+}
+export interface ModuleConfigExporter {
+  moduleName: string;
+  exporters: Exporter;
 }

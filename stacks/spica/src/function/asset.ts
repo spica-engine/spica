@@ -1,4 +1,4 @@
-import {ConfigExporter, listEditableProps} from "@spica-client/asset/helpers";
+import {ConfigExporter, getPathsOfSchema} from "@spica-client/asset/helpers";
 import {take} from "rxjs/operators";
 import {FunctionService} from "./services/function.service";
 
@@ -24,7 +24,7 @@ export const assetConfigExporter = (fs: FunctionService) => {
       fn = fn.env;
     }
 
-    return listEditableProps(fn).map(prop => {
+    return getPathsOfSchema(fn).map(prop => {
       return {
         value: prop,
         title: prop
@@ -54,16 +54,16 @@ export const assetConfigExporter = (fs: FunctionService) => {
     moduleName: "function",
     exporters: {
       name: "submodule",
-      loader: subModuleLoader,
+      loadOptions: subModuleLoader,
       children: {
         name: "resource_id",
-        loader: resourceIdLoader,
+        loadOptions: resourceIdLoader,
         children: {
           name: "property",
-          loader: propertyLoader,
+          loadOptions: propertyLoader,
           children: {
             name: "type",
-            loader: typeLoader
+            loadOptions: typeLoader
           }
         }
       }

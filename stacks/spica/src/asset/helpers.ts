@@ -1,9 +1,10 @@
 import {
-  Config,
+  Exporter,
   InstallationPreview,
   InstallationPreviewByModules,
+  ModuleConfigExporter,
   Resource,
-  Selectable
+  Option
 } from "./interfaces";
 
 export function separatePreviewResourcesByModule(
@@ -50,7 +51,7 @@ export function getEmptyConfig() {
   };
 }
 
-export function listEditableProps(schema: object) {
+export function getPathsOfSchema(schema: object): string[] {
   const visit = (value, paths = []) => {
     if (typeof value != "object" || Array.isArray(value)) {
       return paths.join(".");
@@ -75,48 +76,33 @@ export function listEditableProps(schema: object) {
   return targets;
 }
 
-interface moduleConfigExporterOption {
-  value: string;
-  title: string;
-}
-
-export interface Exporter {
-  name: string;
-  loader: (currentSelections: {[name: string]: string}) => Promise<moduleConfigExporterOption[]>;
-  children?: Exporter;
-}
-export interface moduleConfigExporter {
-  moduleName: string;
-  exporters: Exporter;
-}
-
 export class ConfigExporter {
   selections: {[name: string]: string} = {};
 
-  build(moduleConfigExporter: moduleConfigExporter) {
+  build(moduleConfigExporter: ModuleConfigExporter) {
     const visit = (exporter: Exporter, parentName: string) => {
       const onSelect = async selection => {
         this.selections[parentName] = selection;
-        const options = await exporter.loader(this.selections);
+        const rawOptions = await exporter.loadOptions(this.selections);
 
-        const selectables: Selectable[] = [];
-        for (const option of options) {
-          const selectable: Selectable = {
+        const options: Option[] = [];
+        for (const rawOption of rawOptions) {
+          const option: Option = {
             name: exporter.name,
-            title: option.title,
-            value: option.value
+            title: rawOption.title,
+            value: rawOption.value
           };
 
           if (exporter.children) {
-            selectable.onSelect = visit(exporter.children, exporter.name);
+            option.onSelect = visit(exporter.children, exporter.name);
           } else {
-            selectable.isLast = true;
-            selectable.onSelect = () => Promise.resolve([]);
+            option.isLast = true;
+            option.onSelect = () => Promise.resolve([]);
           }
 
-          selectables.push(selectable);
+          options.push(option);
         }
-        return selectables;
+        return options;
       };
       return onSelect;
     };
@@ -126,6 +112,6 @@ export class ConfigExporter {
       title: moduleConfigExporter.moduleName,
       value: moduleConfigExporter.moduleName,
       onSelect: visit(moduleConfigExporter.exporters, "module")
-    } as Selectable;
+    } as Option;
   }
 }

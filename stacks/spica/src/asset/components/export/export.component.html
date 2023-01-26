@@ -47,35 +47,35 @@
         <mat-label>Title</mat-label>
         <input [name]="'config' + ci" required matInput [(ngModel)]="config.title" />
       </mat-form-field>
-      <ng-container *ngFor="let step of configSteps[ci]; let si = index; trackBy: _trackBy2">
+      <ng-container *ngFor="let step of configSteps[ci]; let oi = index; trackBy: _trackBy2">
         <ng-container *ngIf="step.length">
           <mat-form-field class="config-step">
             <mat-label>{{ step[0].name.replace("_", " ") | titlecase }}</mat-label>
             <mat-select
-              [name]="'config' + ci + 'selectable' + si + step.name"
+              [name]="'config' + ci + 'option' + oi + step.name"
               ngModel
-              (ngModelChange)="onChange($event, ci, si)"
+              (ngModelChange)="onChange($event, ci, oi)"
               required
             >
               <mat-option
-                *ngFor="let selectable of step"
-                [value]="selectable"
+                *ngFor="let option of step"
+                [value]="option"
                 [disabled]="
                   !exportMeta ||
                   !exportMeta.resources ||
-                  (selectable.name == 'module' && !exportMeta.resources[selectable.value]) ||
-                  (selectable.name == 'resource_id' &&
-                    exportMeta.resources[exportMeta.configs[ci].module].indexOf(selectable.value) ==
+                  (option.name == 'module' && !exportMeta.resources[option.value]) ||
+                  (option.name == 'resource_id' &&
+                    exportMeta.resources[exportMeta.configs[ci].module].indexOf(option.value) ==
                       -1)
                 "
               >
-                {{ selectable.title }}
+                {{ option.title }}
               </mat-option>
             </mat-select>
           </mat-form-field>
           <ng-container *ngIf="step[0].isLast && config[step[0].name]">
             <mat-checkbox
-              [name]="'config' + ci + 'selectable' + si + 'default'"
+              [name]="'config' + ci + 'option' + oi + 'default'"
               ngModel
               (ngModelChange)="!$event.value && (config.value = undefined)"
               #hasDefaultValue="ngModel"
@@ -83,7 +83,7 @@
             >
             <ng-container *ngIf="hasDefaultValue.value === true">
               <span
-                [name]="'config' + ci + 'selectable' + si + 'value'"
+                [name]="'config' + ci + 'option' + oi + 'value'"
                 required
                 [inputPlacer]="{type: config.type}"
                 [(ngModel)]="config.value"

@@ -5,7 +5,7 @@ import {
   AvailableResources,
   Config,
   ExportMeta,
-  Selectable
+  Option
 } from "@spica-client/asset/interfaces";
 import {AssetService} from "@spica-client/asset/services/asset.service";
 
@@ -25,11 +25,11 @@ export class ExportComponent implements OnInit {
     url: undefined
   };
 
-  configSteps: Selectable[][][] = [];
+  configSteps: Option[][][] = [];
 
   constructor(
     private assetService: AssetService,
-    @Inject(ASSET_CONFIG_EXPORTER) private _configExporters: Selectable[]
+    @Inject(ASSET_CONFIG_EXPORTER) private _configExporters: Option[]
   ) {
     this.assetService
       .listResources()
@@ -39,11 +39,11 @@ export class ExportComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  onChange(selectable: Selectable, configIndex: number, stepIndex: number) {
-    this.exportMeta.configs[configIndex][selectable.name] = selectable.value;
+  onChange(option: Option, configIndex: number, stepIndex: number) {
+    this.exportMeta.configs[configIndex][option.name] = option.value;
 
-    selectable.onSelect(selectable.value).then(selectables => {
-      this.configSteps[configIndex][stepIndex + 1] = selectables;
+    option.onSelect(option.value).then(options => {
+      this.configSteps[configIndex][stepIndex + 1] = options;
       this.configSteps[configIndex] = this.configSteps[configIndex].slice(0, stepIndex + 2);
     });
   }
@@ -77,8 +77,8 @@ export class ExportComponent implements OnInit {
   _trackBy3: (i) => any = i => i;
   _trackBy4: (i) => any = i => i;
 
-  isResourceIdAvailableResource(selectable:Selectable,selectables:Selectable[]){
-    console.log(selectable,selectables)
+  isResourceIdAvailableResource(option:Option,options:Option[]){
+    console.log(option,options)
   }
 
 }

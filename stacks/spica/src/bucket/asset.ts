@@ -1,4 +1,4 @@
-import {ConfigExporter, listEditableProps} from "@spica-client/asset/helpers";
+import {ConfigExporter, getPathsOfSchema} from "@spica-client/asset/helpers";
 import {take} from "rxjs/operators";
 import {BucketService} from "./services/bucket.service";
 
@@ -20,7 +20,7 @@ export const assetConfigExporter = (bs: BucketService) => {
 
     delete bucket._id;
 
-    return listEditableProps(bucket).map(prop => {
+    return getPathsOfSchema(bucket).map(prop => {
       return {
         value: prop,
         title: prop
@@ -46,16 +46,16 @@ export const assetConfigExporter = (bs: BucketService) => {
     moduleName: "bucket",
     exporters: {
       name: "submodule",
-      loader: subModuleLoader,
+      loadOptions: subModuleLoader,
       children: {
         name: "resource_id",
-        loader: resourceIdLoader,
+        loadOptions: resourceIdLoader,
         children: {
           name: "property",
-          loader: propertyLoader,
+          loadOptions: propertyLoader,
           children: {
             name: "type",
-            loader: typeLoader
+            loadOptions: typeLoader
           }
         }
       }

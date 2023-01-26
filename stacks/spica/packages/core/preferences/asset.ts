@@ -1,4 +1,4 @@
-import {ConfigExporter, listEditableProps} from "@spica-client/asset/helpers";
+import {ConfigExporter, getPathsOfSchema} from "@spica-client/asset/helpers";
 import {take} from "rxjs/operators";
 import {PreferencesService} from "./preferences.service";
 
@@ -22,7 +22,7 @@ export const assetConfigExporter = (ps: PreferencesService) => {
     delete pref._id;
     delete pref.identity.attributes.type;
 
-    return listEditableProps(pref).map(prop => {
+    return getPathsOfSchema(pref).map(prop => {
       return {
         value: prop,
         title: prop
@@ -34,22 +34,22 @@ export const assetConfigExporter = (ps: PreferencesService) => {
     return Promise.resolve([{value: "identity", title: "Identity"}]);
   };
 
-  const subModuleLoader = () => Promise.resolve([{title: "Schema", value: "schema"}]);
+  const loadSubModules = () => Promise.resolve([{title: "Schema", value: "schema"}]);
 
   return configExporter.build({
     moduleName: "preference",
     exporters: {
       name: "submodule",
-      loader: subModuleLoader,
+      loadOptions: loadSubModules,
       children: {
         name: "resource_id",
-        loader: resourceIdLoader,
+        loadOptions: resourceIdLoader,
         children: {
           name: "property",
-          loader: propertyLoader,
+          loadOptions: propertyLoader,
           children: {
             name: "type",
-            loader: typeLoader
+            loadOptions: typeLoader
           }
         }
       }
