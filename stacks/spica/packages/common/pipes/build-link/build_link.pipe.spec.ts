@@ -2,7 +2,7 @@ import {Component} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {By} from "@angular/platform-browser";
 import {BuildLinkPipe} from "./build_link.pipe";
-import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
+import {BUILDLINK_FACTORY} from "@spica-client/core/factories/factory";
 
 @Component({
   template: `
@@ -20,6 +20,10 @@ class BuildLinkTestComponent {
 }
 
 function functionProvider(activity: any) {
+  if (activity.action == 3) {
+    return false;
+  }
+
   let module = activity.resource.name;
   let documentId = activity.resource.documentId;
   let url;
@@ -30,6 +34,10 @@ function functionProvider(activity: any) {
 }
 
 function bucketProvider(activity: any) {
+  if (activity.action == 3) {
+    return false;
+  }
+
   let module = activity.resource.name;
   let documentId = activity.resource.documentId;
   let url;
@@ -46,13 +54,13 @@ describe("BuildLinkPipe", () => {
       declarations: [BuildLinkPipe, BuildLinkTestComponent],
       providers: [
         {
-          provide: ACTIVITY_FACTORY,
-          useValue: functionProvider,
+          provide: BUILDLINK_FACTORY,
+          useValue: {caller: "activity", factory: functionProvider},
           multi: true
         },
         {
-          provide: ACTIVITY_FACTORY,
-          useValue: bucketProvider,
+          provide: BUILDLINK_FACTORY,
+          useValue: {caller: "activity", factory: bucketProvider},
           multi: true
         }
       ]

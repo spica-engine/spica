@@ -53,14 +53,13 @@ export class IndexComponent implements OnInit {
 
     dialogRef
       .afterClosed()
-      .pipe(filter(r => !!r))
-      .subscribe(() => {
-        this.showSpinner();
-        this.assetService
-          .remove(asset._id, type)
-          .toPromise()
-          .finally(() => this.hideSpinner());
-      });
+      .pipe(
+        filter(r => !!r),
+        tap(() => this.showSpinner()),
+        switchMap(() => this.assetService.remove(asset._id, type))
+      )
+      .toPromise()
+      .finally(() => this.hideSpinner());
   }
 
   showSpinner() {
