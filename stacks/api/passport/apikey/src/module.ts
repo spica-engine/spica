@@ -3,7 +3,6 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {ApiKeyController} from "./apikey.controller";
 import {ApiKeyService} from "./apikey.service";
 import {ApiKeyStrategy} from "./apikey.strategy";
-import {registerInformers} from "./machinery";
 import {APIKEY_POLICY_FINALIZER} from "@spica-server/passport/policy";
 import {providePolicyFinalizer} from "./utility";
 import ApiKeySchema = require("./schemas/apikey.json");
@@ -11,9 +10,7 @@ import ApiKeySchema = require("./schemas/apikey.json");
 @Global()
 @Module({})
 export class ApiKeyModule {
-  constructor(apiKeyService: ApiKeyService) {
-    registerInformers(apiKeyService);
-  }
+  constructor() {}
   static forRoot(): DynamicModule {
     return {
       module: ApiKeyModule,

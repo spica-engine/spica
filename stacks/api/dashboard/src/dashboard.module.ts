@@ -2,14 +2,11 @@ import {Module, DynamicModule} from "@nestjs/common";
 import {DashboardController} from "./dashboard.controller";
 import {DashboardService} from "./dashboard.service";
 import {SchemaModule} from "@spica-server/core/schema";
-import {registerInformers} from "./machinery";
 import DashboardSchema = require("../schema/dashboard.json");
 
 @Module({})
 export class DashboardModule {
-  constructor(dashboardService: DashboardService) {
-    registerInformers(dashboardService);
-  }
+  constructor() {}
   static forRoot(): DynamicModule {
     return {
       module: DashboardModule,

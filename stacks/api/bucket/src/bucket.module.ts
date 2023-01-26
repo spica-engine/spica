@@ -15,7 +15,6 @@ import {
 } from "./bucket.schema.resolver";
 import {GraphQLModule} from "@spica-server/bucket/graphql";
 import {provideLanguageFinalizer} from "@spica-server/bucket/common";
-import {registerInformers} from "./machinery";
 import {DocumentScheduler} from "./scheduler";
 import {registerStatusProvider} from "./status";
 import BucketSchema = require("./schemas/bucket.schema.json");
@@ -136,7 +135,6 @@ export class BucketModule {
       }
     });
 
-    registerInformers(bs);
     registerStatusProvider(bs, bds);
     registerAssetHandlers(bs, bds, history, validator, this.assetRepManager);
   }

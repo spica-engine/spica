@@ -12,7 +12,6 @@ import {DatabaseModule} from "@spica-server/database";
 import {FunctionModule} from "@spica-server/function";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
-import {ApiMachineryModule} from "@spica-server/machinery";
 import {StatusModule} from "@spica-server/status";
 import {StorageModule} from "@spica-server/storage";
 import {VersionControlModule} from "@spica-server/versioncontrol";
@@ -399,7 +398,6 @@ Example: http(s)://doomed-d45f1.spica.io/api`
 const modules = [
   DashboardModule.forRoot(),
   PreferenceModule.forRoot(),
-  ApiMachineryModule,
   AssetModule.forRoot({persistentPath: args["persistent-path"]}),
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],

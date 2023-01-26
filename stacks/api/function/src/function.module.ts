@@ -6,7 +6,6 @@ import * as path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
 import {LogModule, LogService} from "@spica-server/function/src/log";
-import {registerInformers} from "./machinery";
 import {
   FunctionOptions,
   FUNCTION_OPTIONS,
@@ -43,8 +42,6 @@ export class FunctionModule {
     if (registerSync) {
       getSyncProviders(fs, this.vcRepManager, fe, logs).forEach(provider => registerSync(provider));
     }
-
-    registerInformers(fs, fe);
 
     registerStatusProvider(fs, scheduler);
 

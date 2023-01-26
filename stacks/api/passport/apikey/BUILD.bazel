@@ -15,7 +15,6 @@ ts_project(
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/activity/services",
-        "//stacks/api/machinery",
         "//stacks/api/passport/guard",
         "//stacks/api/passport/policy",
         "@npm//@nestjs/common",

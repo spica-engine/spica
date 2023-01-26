@@ -28,7 +28,6 @@ ts_project(
         "//stacks/api/function/services",
         "//stacks/api/function/src/log",
         "//stacks/api/function/webhook",
-        "//stacks/api/machinery",
         "//stacks/api/passport/guard",
         "//stacks/api/passport/policy",
         "//stacks/api/replication",
