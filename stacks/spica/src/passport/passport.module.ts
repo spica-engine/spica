@@ -27,7 +27,7 @@ import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
 import {LAYOUT_ACTIONS, ROUTE_FILTERS} from "@spica-client/core";
 import {BUILDLINK_FACTORY} from "@spica-client/core/factories/factory";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
-import {provideActivityFactory, provideAssetFactory} from "@spica-client/passport/providers";
+import {provideActivityFactory, provideApikeyAssetConfigExporter, provideAssetFactory} from "@spica-client/passport/providers";
 import {AccessTokenComponent} from "./components/access-token/access-token.component";
 import {IdentityBadgeComponent} from "./components/identity-badge/identity-badge.component";
 import {HomeBadgeComponent} from "./components/home-badge/home-badge.component";
@@ -52,6 +52,8 @@ import {MatSortModule} from "@angular/material/sort";
 import {FilterComponent} from "./components/filter/filter.component";
 import {PolicyResourceAddComponent} from "./components/policy-resource-add/policy-resource-add.component";
 import {MatFormFieldModule} from "@angular/material/form-field";
+import { ASSET_CONFIG_EXPORTER } from "@spica-client/asset/interfaces";
+import { ApiKeyService } from "./services/apikey.service";
 
 @NgModule({
   declarations: [
@@ -140,6 +142,12 @@ export class PassportModule {
         {
           provide: BUILDLINK_FACTORY,
           useValue: {caller: "asset", factory: provideAssetFactory},
+          multi: true
+        },
+        {
+          provide: ASSET_CONFIG_EXPORTER,
+          useFactory: provideApikeyAssetConfigExporter,
+          deps: [ApiKeyService],
           multi: true
         }
       ]
