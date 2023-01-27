@@ -12,8 +12,6 @@ import {PreferenceModule} from "@spica-server/preference";
 import {IdentityModule} from "@spica-server/passport/identity";
 import {PolicyModule} from "@spica-server/passport/policy";
 
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:45677";
-
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
 

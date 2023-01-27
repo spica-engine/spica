@@ -30,7 +30,7 @@ import {AssetRepManager} from "./representative";
 import {createReadStream} from "fs";
 
 /**
- * Mongodb transactions(need to be implemented in tricky way because our db classes does not support it)
+ * Mongodb transactions
  * Authorization, Authentication
  * Migration of policies
  * Deprecation of old endpoints

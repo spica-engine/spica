@@ -34,6 +34,7 @@ ts_project(
         "//packages/database/testing",
         "//stacks/api/asset",
         "//stacks/api/bucket",
+        "//stacks/api/dashboard",
         "//stacks/api/passport/testing",
         "//stacks/api/preference/testing",
         "//stacks/api/replication/testing",

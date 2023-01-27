@@ -14,7 +14,7 @@ import {MatListModule} from "@angular/material/list";
 import {BrowserModule} from "@angular/platform-browser";
 import {StoreModule} from "@ngrx/store";
 import {InputModule} from "@spica-client/common";
-import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
+import {BUILDLINK_FACTORY, LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {ChartsModule} from "ng2-charts";
 import {PassportService, PassportModule} from "../passport";
 import {DashboardRoutingModule} from "./dashboard-routing.module";
@@ -46,6 +46,8 @@ import {MatDividerModule} from "@angular/material/divider";
 import {StatisticComponent} from "./components/statistic/statistic.component";
 import {VersionControlComponent} from "./pages/versioncontrol/versioncontrol.component";
 import {MatExpansionModule} from "@angular/material/expansion";
+import {provideAssetFactory, provideAssetConfigExporter} from "./providers/asset";
+import {ASSET_CONFIG_EXPORTER} from "@spica-client/asset/interfaces";
 
 @NgModule({
   imports: [
@@ -109,6 +111,17 @@ import {MatExpansionModule} from "@angular/material/expansion";
       useFactory: provideDashboardLoader,
       multi: true,
       deps: [DashboardInitializer]
+    },
+    {
+      provide: BUILDLINK_FACTORY,
+      useValue: {caller: "asset", factory: provideAssetFactory},
+      multi: true
+    },
+    {
+      provide: ASSET_CONFIG_EXPORTER,
+      useFactory: provideAssetConfigExporter,
+      deps: [DashboardService],
+      multi: true
     }
   ]
 })

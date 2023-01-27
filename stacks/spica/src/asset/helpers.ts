@@ -69,6 +69,10 @@ export function getPathsOfSchema(schema: object): string[] {
 
   const targets = [];
   for (let [key, value] of Object.entries(schema)) {
+    if (Array.isArray(value)) {
+      continue;
+    }
+
     const target = visit(value, [key]);
     Array.isArray(target) ? targets.push(...target) : targets.push(target);
   }
@@ -77,7 +81,7 @@ export function getPathsOfSchema(schema: object): string[] {
 }
 
 export class ConfigExporter {
-  selections: {[name: string]: string} = {};
+  private selections: {[name: string]: string} = {};
 
   build(moduleConfigExporter: ModuleConfigExporter) {
     const visit = (exporter: Exporter, parentName: string) => {
