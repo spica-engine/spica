@@ -1,4 +1,5 @@
 import {Component, Inject, OnInit} from "@angular/core";
+import {MatDialogRef} from "@angular/material/dialog";
 import {getEmptyConfig} from "@spica-client/asset/helpers";
 import {
   ASSET_CONFIG_EXPORTER,
@@ -29,15 +30,14 @@ export class ExportComponent implements OnInit {
 
   constructor(
     private assetService: AssetService,
-    @Inject(ASSET_CONFIG_EXPORTER) private _configExporters: Option[]
+    @Inject(ASSET_CONFIG_EXPORTER) private _configExporters: Option[],
+    public dialogRef: MatDialogRef<ExportComponent>
   ) {
     this.assetService
       .listResources()
       .toPromise()
       .then(r => (this.availableResources = r));
   }
-
-  ngOnInit(): void {}
 
   onChange(option: Option, configIndex: number, stepIndex: number) {
     this.exportMeta.configs[configIndex][option.name] = option.value;
@@ -58,6 +58,8 @@ export class ExportComponent implements OnInit {
         const link = document.createElement("a");
         link.href = downloadUrl;
         link.click();
+
+        this.dialogRef.close();
       });
   }
 
@@ -77,8 +79,7 @@ export class ExportComponent implements OnInit {
   _trackBy3: (i) => any = i => i;
   _trackBy4: (i) => any = i => i;
 
-  isResourceIdAvailableResource(option:Option,options:Option[]){
-    console.log(option,options)
+  isResourceIdAvailableResource(option: Option, options: Option[]) {
+    console.log(option, options);
   }
-
 }

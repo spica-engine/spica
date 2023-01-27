@@ -28,7 +28,7 @@ export class AssetService {
   install(id: string, configs: Config[], preview: boolean) {
     return this.http
       .post<any>(`api:/asset/${id}`, {configs}, {params: {preview: preview.toString()}})
-      .pipe(tap(() => !preview && this.retrieve()));
+      .pipe(tap(asset => !preview && this.store.dispatch(new fromAsset.Update(id, asset))));
   }
 
   remove(id: string, type: "hard" | "soft" = "soft") {

@@ -71,6 +71,6 @@ export class IndexComponent implements OnInit {
   }
 
   export() {
-    const dialogRef = this.dialog.open(ExportComponent, {width: "80vh"});
+    this.dialog.open(ExportComponent, {width: "80vh"});
   }
 }
