@@ -47,14 +47,14 @@
         <mat-label>Title</mat-label>
         <input [name]="'config' + ci" required matInput [(ngModel)]="config.title" />
       </mat-form-field>
-      <ng-container *ngFor="let step of configSteps[ci]; let oi = index; trackBy: _trackBy2">
+      <ng-container *ngFor="let step of configSteps[ci]; let si = index; trackBy: _trackBy2">
         <ng-container *ngIf="step.length">
           <mat-form-field class="config-step">
             <mat-label>{{ step[0].name.replace("_", " ") | titlecase }}</mat-label>
             <mat-select
-              [name]="'config' + ci + 'option' + oi + step.name"
+              [name]="'config' + ci + 'option' + si + step.name"
               ngModel
-              (ngModelChange)="onChange($event, ci, oi)"
+              (ngModelChange)="onChange($event, ci, si)"
               required
             >
               <mat-option
@@ -75,7 +75,7 @@
           </mat-form-field>
           <ng-container *ngIf="step[0].isLast && config[step[0].name]">
             <mat-checkbox
-              [name]="'config' + ci + 'option' + oi + 'default'"
+              [name]="'config' + ci + 'option' + si + 'default'"
               ngModel
               (ngModelChange)="!$event.value && (config.value = undefined)"
               #hasDefaultValue="ngModel"
@@ -83,7 +83,7 @@
             >
             <ng-container *ngIf="hasDefaultValue.value === true">
               <span
-                [name]="'config' + ci + 'option' + oi + 'value'"
+                [name]="'config' + ci + 'option' + si + 'value'"
                 required
                 [inputPlacer]="{type: config.type}"
                 [(ngModel)]="config.value"

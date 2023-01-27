@@ -13,18 +13,19 @@ export const assetConfigExporter = (fs: FunctionService) => {
     ]);
 
   const propertyLoader = async selections => {
-    let fn: any = await fs
+    const fn = await fs
       .getFunction(selections.resource_id)
       .pipe(take(1))
       .toPromise();
 
-    delete fn._id;
+    let copy = JSON.parse(JSON.stringify(fn));
+    delete copy._id;
 
     if (selections.submodule == "env") {
-      fn = fn.env;
+      copy = copy.env;
     }
 
-    return getPathsOfSchema(fn).map(prop => {
+    return getPathsOfSchema(copy).map(prop => {
       return {
         value: prop,
         title: prop

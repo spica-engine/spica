@@ -13,14 +13,15 @@ export const assetConfigExporter = (bs: BucketService) => {
     ]);
 
   const propertyLoader = async selections => {
-    let bucket: any = await bs
+    const bucket = await bs
       .getBucket(selections.resource_id)
       .pipe(take(1))
       .toPromise();
 
-    delete bucket._id;
+    const copy = JSON.parse(JSON.stringify(bucket));
+    delete copy._id;
 
-    return getPathsOfSchema(bucket).map(prop => {
+    return getPathsOfSchema(copy).map(prop => {
       return {
         value: prop,
         title: prop
@@ -34,8 +35,8 @@ export const assetConfigExporter = (bs: BucketService) => {
       .pipe(take(1))
       .toPromise()
       .then(buckets => {
-        return buckets.map(fn => {
-          return {value: fn._id, title: fn.title};
+        return buckets.map(bucket => {
+          return {value: bucket._id, title: bucket.title};
         });
       });
   };

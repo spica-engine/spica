@@ -13,16 +13,17 @@ export const assetConfigExporter = (ps: PreferencesService) => {
     ]);
 
   const propertyLoader = async () => {
-    let pref: any = await ps
+    const pref = await ps
       .get("passport")
       .pipe(take(1))
       .toPromise();
 
-    delete pref.scope;
-    delete pref._id;
-    delete pref.identity.attributes.type;
+    const copy = JSON.parse(JSON.stringify(pref));
+    delete copy.scope;
+    delete copy._id;
+    delete copy.identity.attributes.type;
 
-    return getPathsOfSchema(pref).map(prop => {
+    return getPathsOfSchema(copy).map(prop => {
       return {
         value: prop,
         title: prop

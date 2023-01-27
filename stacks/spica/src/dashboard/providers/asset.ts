@@ -26,9 +26,10 @@ export function provideAssetConfigExporter(ds: DashboardService) {
       .pipe(take(1))
       .toPromise();
 
-    delete dashboard._id;
+    const copy = JSON.parse(JSON.stringify(dashboard));
+    delete copy._id;
 
-    return getPathsOfSchema(dashboard).map(prop => {
+    return getPathsOfSchema(copy).map(prop => {
       return {
         value: prop,
         title: prop

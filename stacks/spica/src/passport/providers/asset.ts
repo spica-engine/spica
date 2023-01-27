@@ -25,9 +25,10 @@ export function provideApikeyAssetConfigExporter(as: ApiKeyService) {
   const propertyLoader = async selections => {
     const apikey = await as.get(selections.resource_id).toPromise();
 
-    delete apikey._id;
+    const copy = JSON.parse(JSON.stringify(apikey));
+    delete copy._id;
 
-    return getPathsOfSchema(apikey).map(prop => {
+    return getPathsOfSchema(copy).map(prop => {
       return {
         value: prop,
         title: prop
