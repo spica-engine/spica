@@ -1,12 +1,7 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {
-  BaseCollection,
-  Collection,
-  DatabaseService,
-  FilterQuery,
-  ObjectId
-} from "@spica-server/database";
-import {StorageObject} from "./body";
+import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
+import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {StorageObject, StorageObjectContent} from "./body";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {Strategy} from "./strategy/strategy";
 
@@ -59,50 +54,62 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
     }
   }
 
-  getAll(
-    policyAgg: object[],
+  async getAll<P extends boolean>(
+    resourceFilter: object,
+    filter: object,
+    paginate: P,
+    limit: number,
+    skip: number,
+    sort?: any
+  ): Promise<P extends true ? PaginatedStorageResponse : StorageResponse[]>;
+  async getAll<P extends boolean>(
+    resourceFilter: object,
+    filter: object,
+    paginate: P,
     limit: number,
     skip: number = 0,
     sort?: any
-  ): Promise<StorageResponse> {
-    const dataPipeline: object[] = [];
+  ): Promise<PaginatedStorageResponse | StorageResponse[]> {
+    let pipelineBuilder = await new PipelineBuilder()
+      .filterResources(resourceFilter)
+      .filterByUserRequest(filter);
 
-    if (sort) {
-      dataPipeline.push({$sort: sort});
+    const seeking = new PipelineBuilder()
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .result();
+
+    const pipeline = (await pipelineBuilder.paginate(
+      paginate,
+      seeking,
+      this.estimatedDocumentCount()
+    )).result();
+
+    if (paginate) {
+      return this._coll
+        .aggregate<PaginatedStorageResponse>(pipeline)
+        .next()
+        .then(async r => {
+          if (!r.data.length) {
+            r.meta = {total: 0};
+          }
+          r.data = await this.putUrls(r.data);
+          return r;
+        });
     }
-
-    // sub-pipeline in $facet stage cannot be empty
-    dataPipeline.push({$skip: skip});
-
-    if (limit) {
-      dataPipeline.push({$limit: limit});
-    }
-
-    const aggregation = [
-      ...policyAgg,
-      {
-        $facet: {
-          meta: [{$count: "total"}],
-          data: dataPipeline
-        }
-      },
-      {
-        $project: {
-          meta: {$ifNull: [{$arrayElemAt: ["$meta", 0]}, {total: 0}]},
-          data: "$data"
-        }
-      }
-    ];
 
     return this._coll
-      .aggregate<StorageResponse>(aggregation)
-      .next()
-      .then(async result => {
-        for (const object of result.data) {
-          object.url = await this.service.url(object._id.toString());
-        }
-        return result;
-      });
+      .aggregate<StorageResponse>([...pipeline, ...seeking])
+      .toArray()
+      .then(r => this.putUrls(r));
+  }
+
+  private async putUrls(objects: StorageResponse[]) {
+    for (const object of objects) {
+      object.url = await this.service.url(object._id.toString());
+    }
+    return objects;
   }
 
   async get(id: ObjectId): Promise<StorageObject> {
@@ -120,6 +127,17 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
     }
 
     await this.service.delete(id.toHexString());
+  }
+
+  async updateMeta(_id: ObjectId, name: string) {
+    const existing = await this._coll.findOne({_id});
+    if (!existing) {
+      throw new Error(`Storage object ${_id} could not be found`);
+    }
+
+    return this._coll
+      .findOneAndUpdate({_id}, {$set: {name}}, {returnOriginal: false})
+      .then(r => r.value);
   }
 
   async update(_id: ObjectId, object: StorageObject): Promise<StorageObject> {
@@ -165,9 +183,13 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
   }
 }
 
-export interface StorageResponse {
+export type StorageResponse = Omit<StorageObject, "content"> & {
+  content: Omit<StorageObjectContent, "data">;
+};
+
+export interface PaginatedStorageResponse {
   meta: {
-    count: number;
+    total: number;
   };
-  data: Array<StorageObject>;
+  data: StorageResponse[];
 }

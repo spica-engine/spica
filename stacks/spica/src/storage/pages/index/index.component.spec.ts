@@ -19,52 +19,92 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {of} from "rxjs";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
-import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
-import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
 import {StorageViewComponent} from "../../components/storage-view/storage-view.component";
-import {StorageService} from "../../storage.service";
+import {StorageService} from "../../services/storage.service";
+import {RootDirService} from "../../services/root.dir.service";
 import {IndexComponent} from "./index.component";
-import {DebugElement} from "@angular/core";
+import {Storage, StorageNode} from "../../interfaces/storage";
+import {ActivatedRoute} from "@angular/router";
+import {Filters} from "../../helpers";
 
 describe("Storage/IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
   let storageService: jasmine.SpyObj<Partial<StorageService>>;
+  let rootDirService: jasmine.SpyObj<Partial<RootDirService>>;
+  let storageObjects: Storage[];
 
   beforeEach(async () => {
+    storageObjects = [
+      {
+        _id: "1",
+        name: "files/",
+        content: {
+          type: "",
+          size: 0
+        },
+        url: "http://example/1"
+      },
+      {
+        _id: "2",
+        name: "files/test.png",
+        content: {
+          type: "image/png",
+          size: 100_000
+        },
+        url: "http://example/2"
+      },
+      {
+        _id: "3",
+        name: "files/docs/",
+        content: {
+          type: "",
+          size: 0
+        },
+        url: "http://example/3"
+      },
+      {
+        _id: "4",
+        name: "files/docs/doc.txt",
+        content: {
+          type: "text/plain",
+          size: 100
+        },
+        url: "http://example/4"
+      },
+      {
+        _id: "5",
+        name: "others/",
+        content: {
+          type: "",
+          size: 0
+        },
+        url: "http://example/5"
+      }
+    ];
     storageService = {
-      getAll: jasmine.createSpy("getAll").and.returnValue(
-        of({
-          meta: {total: 10000},
-          data: [
-            {
-              _id: "1",
-              name: "test1",
-              content: {
-                type: "image/png"
-              },
-              url: "http://example/test.png"
-            },
-            {
-              _id: "2",
-              name: "test2",
-              content: {
-                type: "text/txt"
-              },
-              url: "http://example/test2.txt"
-            },
-            {
-              _id: "3",
-              name: "test3",
-              content: {
-                type: "video/mp4"
-              },
-              url: "http://example/test3.mp4"
-            }
-          ]
-        })
-      ),
-      insertMany: null,
-      delete: null
+      getAll: jasmine.createSpy("getAll").and.callFake(params => {
+        let result = storageObjects;
+
+        const {filter, sort} = params;
+
+        if (filter.$or) {
+          result = result.filter(r => filter.$or.some(f => new RegExp(f.name.$regex).test(r.name)));
+        }
+
+        return of(result);
+      }),
+      insertMany: (() => {}) as any,
+      delete: (() => {}) as any,
+      listSubResources: jasmine.createSpy("listSubResources").and.callFake(fullname => {
+        return of(storageObjects.filter(o => o.name.startsWith(fullname))).toPromise();
+      })
+    };
+    rootDirService = {
+      findAll: jasmine
+        .createSpy("findAll")
+        .and.returnValue(
+          of(storageObjects.filter(s => Filters.ListRootDirs.name.$regex.match(s.name)))
+        )
     };
     TestBed.configureTestingModule({
       imports: [
@@ -78,7 +118,7 @@ describe("Storage/IndexComponent", () => {
         MatGridListModule,
         MatFormFieldModule,
         MatTooltipModule,
-        RouterTestingModule.withRoutes([{path: "1", component: IndexComponent}]),
+        RouterTestingModule,
         MatPaginatorModule,
         MatAwareDialogModule,
         MatClipboardModule,
@@ -108,6 +148,16 @@ describe("Storage/IndexComponent", () => {
         {
           provide: StorageService,
           useValue: storageService
+        },
+        {
+          provide: RootDirService,
+          useValue: rootDirService
+        },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            params: of({name: "files"})
+          }
         }
       ],
       declarations: [IndexComponent, StorageViewComponent, CanInteractDirectiveTest]
@@ -120,371 +170,421 @@ describe("Storage/IndexComponent", () => {
     fixture.detectChanges(false);
   });
 
-  describe("basic behaviours", () => {
-    it("should show name of first data on storage", () => {
-      expect(
-        fixture.debugElement.query(
-          By.css("mat-grid-list mat-grid-tile:nth-child(1) mat-card mat-card-actions mat-label")
-        ).nativeElement.textContent
-      ).toBe("test1");
-    });
+  it("should list file and folders under the 'files' directory as initial state", () => {
+    const columns = fixture.debugElement.queryAll(By.css(".column"));
+    expect(columns.length).toEqual(1);
 
-    it("should define col number", () => {
-      expect(fixture.componentInstance.cols).toBe(
-        4,
-        "should define this value as 4 if current breakpoint value is Medium"
-      );
-    });
+    const firstColumnLines = fixture.debugElement
+      .queryAll(By.css(".column:nth-of-type(1) .line"))
+      .map(el => el.nativeElement.textContent);
+
+    expect(firstColumnLines.length).toEqual(2);
+    expect(firstColumnLines[0]).toContain("test.png");
+    expect(firstColumnLines[1]).toContain("docs");
   });
 
-  describe("actions", () => {
-    it("show navigate to the edit page", fakeAsync(() => {
-      fixture.debugElement
-        .query(
-          By.css("mat-grid-list mat-grid-tile:nth-child(1) mat-card mat-card-actions mat-menu")
-        )
-        .nativeElement.click();
-      fixture.detectChanges(false);
-
-      const editButton = document.body.querySelector("div.mat-menu-content button:nth-of-type(2)");
-      expect(
-        document.body.querySelector("div.mat-menu-content button:nth-of-type(2)").textContent
-      ).toContain("Edit", "should show edit button if this data content type is image");
-
-      (editButton as HTMLElement).click();
-      tick(500);
-      fixture.detectChanges();
-
-      expect(fixture.componentInstance.dialog.open).toHaveBeenCalledTimes(1);
-      expect(fixture.componentInstance.dialog.open).toHaveBeenCalledWith(ImageEditorComponent, {
-        maxWidth: "80%",
-        maxHeight: "80%",
-        panelClass: "edit-object",
-        data: {
-          _id: "1",
-          name: "test1",
-          content: {
-            type: "image/png"
+  it("should set nodes", () => {
+    expect(fixture.componentInstance.nodes).toEqual([
+      {
+        _id: "1",
+        name: "files",
+        content: {
+          type: "",
+          size: 0
+        },
+        url: "http://example/1",
+        parent: undefined as any,
+        isDirectory: true,
+        isHighlighted: true,
+        index: 0,
+        children: [
+          {
+            _id: "2",
+            name: "test.png",
+            content: {
+              type: "image/png",
+              size: 100_000
+            },
+            url: "http://example/2",
+            parent: fixture.componentInstance.nodes[0],
+            isDirectory: false,
+            isHighlighted: false,
+            index: 1,
+            children: []
           },
-          url: `http://example/test.png`
+          {
+            _id: "3",
+            name: "docs",
+            content: {
+              type: "",
+              size: 0
+            },
+            url: "http://example/3",
+            parent: fixture.componentInstance.nodes[0],
+            isDirectory: true,
+            isHighlighted: false,
+            index: 2,
+            children: [
+              {
+                _id: "4",
+                name: "doc.txt",
+                content: {
+                  type: "text/plain",
+                  size: 100
+                },
+                index: 3,
+                url: "http://example/4",
+                parent: fixture.componentInstance.nodes[0].children[1],
+                children: [],
+                isDirectory: false,
+                isHighlighted: false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        _id: "5",
+        name: "others",
+        content: {
+          type: "",
+          size: 0
+        },
+        url: "http://example/5",
+        children: [],
+        isDirectory: true,
+        isHighlighted: false,
+        parent: undefined,
+        index: 4
+      }
+    ]);
+  });
+
+  describe("expand folder", () => {
+    beforeEach(fakeAsync(() => {
+      const docsLine = fixture.debugElement
+        .queryAll(By.css(".line"))
+        .filter(el => el.nativeElement.textContent.indexOf("docs") != -1)[0].nativeElement;
+
+      docsLine.click();
+
+      fixture.detectChanges();
+      tick();
+    }));
+
+    it("should expand docs folder", () => {
+      const columns = fixture.debugElement.queryAll(By.css(".column"));
+      expect(columns.length).toEqual(2);
+
+      const firstColumnLines = fixture.debugElement
+        .queryAll(By.css(".column:nth-of-type(1) .line"))
+        .map(el => el.nativeElement.textContent);
+
+      expect(firstColumnLines.length).toEqual(2);
+      expect(firstColumnLines[0]).toContain("test.png");
+      expect(firstColumnLines[1]).toContain("docs");
+
+      const secondColumnLines = fixture.debugElement
+        .queryAll(By.css(".column:nth-of-type(2) .line"))
+        .map(el => el.nativeElement.textContent);
+
+      expect(secondColumnLines.length).toEqual(1);
+      expect(secondColumnLines[0]).toContain("doc.txt");
+    });
+
+    it("should update nodes", () => {
+      expect(fixture.componentInstance.nodes).toEqual([
+        {
+          _id: "1",
+          name: "files",
+          content: {
+            type: "",
+            size: 0
+          },
+          url: "http://example/1",
+          parent: undefined as any,
+          isDirectory: true,
+          isHighlighted: true,
+          index: 0,
+          children: [
+            {
+              _id: "2",
+              name: "test.png",
+              content: {
+                type: "image/png",
+                size: 100_000
+              },
+              url: "http://example/2",
+              parent: fixture.componentInstance.nodes[0],
+              isDirectory: false,
+              isHighlighted: false,
+              index: 1,
+              children: []
+            },
+            {
+              _id: "3",
+              name: "docs",
+              content: {
+                type: "",
+                size: 0
+              },
+              url: "http://example/3",
+              parent: fixture.componentInstance.nodes[0],
+              isDirectory: true,
+              isHighlighted: true,
+              index: 2,
+              children: [
+                {
+                  _id: "4",
+                  name: "doc.txt",
+                  content: {
+                    type: "text/plain",
+                    size: 100
+                  },
+                  url: "http://example/4",
+                  isDirectory: false,
+                  isHighlighted: false,
+                  parent: fixture.componentInstance.nodes[0].children.find(
+                    n => n.name == "docs"
+                  ) as StorageNode,
+                  children: [],
+                  index: 3
+                }
+              ]
+            }
+          ]
+        },
+        {
+          _id: "5",
+          name: "others",
+          content: {
+            type: "",
+            size: 0
+          },
+          url: "http://example/5",
+          children: [],
+          isDirectory: true,
+          isHighlighted: false,
+          parent: undefined,
+          index: 4
         }
-      });
-    }));
-
-    it("should show disabled add button while file uploading process in progress", () => {
-      const event: HttpEvent<Storage> = {
-        type: HttpEventType.UploadProgress,
-        loaded: 10,
-        total: 100
-      };
-      const insertSpy = spyOn(fixture.componentInstance["storage"], "insertMany").and.returnValue(
-        of(event)
-      );
-      fixture.componentInstance.uploadStorageMany({length: 1} as any);
-      fixture.detectChanges();
-
-      expect(
-        fixture.debugElement.query(By.css("mat-toolbar button:last-of-type")).nativeElement.disabled
-      ).toBe(true);
-
-      expect(insertSpy).toHaveBeenCalledTimes(1);
-      expect(insertSpy).toHaveBeenCalledWith({length: 1} as any);
+      ]);
     });
 
-    it("should complete upload progress", () => {
-      const refreshSpy = spyOn(fixture.componentInstance.refresh, "next");
-      const insertSpy = spyOn(fixture.componentInstance["storage"], "insertMany").and.returnValue(
-        of({type: HttpEventType.Response} as any)
-      );
+    it("should upload file to the docs folder", fakeAsync(() => {
+      const insertManySpy = spyOn(
+        fixture.componentInstance["storageService"],
+        "insertMany"
+      ).and.returnValue(of());
 
-      fixture.componentInstance.uploadStorageMany({length: 1} as any);
+      const files: any = [new File([], "myfile.png")];
+      fixture.componentInstance.uploadStorageMany(files);
+      tick();
       fixture.detectChanges();
 
-      expect(
-        fixture.debugElement.query(By.css("mat-toolbar button:last-of-type")).nativeElement.disabled
-      ).toBe(false);
-
-      expect(insertSpy).toHaveBeenCalledTimes(1);
-      expect(insertSpy).toHaveBeenCalledWith({length: 1} as any);
-
-      expect(refreshSpy).toHaveBeenCalledTimes(1);
-      expect(fixture.componentInstance.progress).toBe(undefined);
-    });
-
-    it("should delete data", fakeAsync(() => {
-      const deleleteSpy = spyOn(fixture.componentInstance["storage"], "delete").and.returnValue(
-        of(null)
-      );
-
-      const refreshSpy = spyOn(fixture.componentInstance.refresh, "next");
-
-      fixture.componentInstance.delete("1");
-      tick(500);
-      fixture.detectChanges();
-
-      expect(deleleteSpy).toHaveBeenCalledTimes(1);
-      expect(deleleteSpy).toHaveBeenCalledWith("1");
-
-      expect(refreshSpy).toHaveBeenCalledTimes(1);
+      expect(insertManySpy).toHaveBeenCalledTimes(1);
+      expect(insertManySpy).toHaveBeenCalledWith(files, "files/docs/");
     }));
 
-    describe("selection mode", () => {
-      let cards: DebugElement[] = [];
-      beforeEach(() => {
-        const selectButton = fixture.debugElement.query(
-          By.css("mat-toolbar div.actions button:first-of-type")
-        ).nativeElement;
+    describe("collapse folder", () => {
+      beforeEach(fakeAsync(() => {
+        const firstColumn = fixture.debugElement.query(By.css(".column:nth-of-type(1)"))
+          .nativeElement;
 
-        selectButton.click();
+        firstColumn.click();
+
         fixture.detectChanges();
+        tick();
+      }));
 
-        cards = fixture.debugElement.queryAll(By.css("mat-grid-list mat-grid-tile mat-card"));
+      it("should collapse docs folder", () => {
+        const columns = fixture.debugElement.queryAll(By.css(".column"));
+        expect(columns.length).toEqual(1);
+
+        const firstColumnLines = fixture.debugElement
+          .queryAll(By.css(".column:nth-of-type(1) .line"))
+          .map(el => el.nativeElement.textContent);
+
+        expect(firstColumnLines.length).toEqual(2);
+        expect(firstColumnLines[0]).toContain("test.png");
+        expect(firstColumnLines[1]).toContain("docs");
       });
 
-      it("should switch selection mode on", () => {
-        expect(fixture.componentInstance.selectionActive).toEqual(true);
-        expect(fixture.componentInstance.selectedStorageIds).toEqual([]);
+      it("should upload to the files directory", fakeAsync(() => {
+        const insertManySpy = spyOn(
+          fixture.componentInstance["storageService"],
+          "insertMany"
+        ).and.returnValue(of());
 
-        expect(
-          fixture.debugElement.query(By.css("mat-toolbar div.actions button:nth-of-type(1)"))
-            .nativeElement.textContent
-        ).toEqual("cancel Cancel ");
-
-        expect(
-          fixture.debugElement.query(By.css("mat-toolbar div.actions button:nth-of-type(2)"))
-            .nativeElement.textContent
-        ).toEqual("select_all Select All ");
-
-        expect(
-          cards.map(card =>
-            (card.nativeElement as HTMLElement).classList.toString().includes("unselected")
-          )
-        ).toEqual([true, true, true]);
-
-        // disabling child elements events when selection mode on
-        expect(
-          cards.map(
-            card => card.query(By.css("mat-card-content")).nativeElement.style["pointer-events"]
-          )
-        ).toEqual(["none", "none", "none"]);
-
-        expect(
-          cards.map(
-            card => card.query(By.css("mat-card-actions")).nativeElement.style["pointer-events"]
-          )
-        ).toEqual(["none", "none", "none"]);
-      });
-
-      it("should select and deselect objects, but keep their pointer-events none", () => {
-        cards[0].nativeElement.click();
-        cards[1].nativeElement.click();
+        const files: any = [new File([], "myfile.png")];
+        fixture.componentInstance.uploadStorageMany(files);
+        tick();
         fixture.detectChanges();
 
-        expect(fixture.componentInstance.selectedStorageIds).toEqual(["1", "2"]);
-
-        expect(
-          cards.map(card =>
-            (card.nativeElement as HTMLElement).classList.toString().includes("unselected")
-          )
-        ).toEqual([false, false, true]);
-
-        cards[0].nativeElement.click();
-        fixture.detectChanges();
-
-        expect(fixture.componentInstance.selectedStorageIds).toEqual(["2"]);
-
-        expect(
-          cards.map(card =>
-            (card.nativeElement as HTMLElement).classList.toString().includes("unselected")
-          )
-        ).toEqual([true, false, true]);
-
-        expect(
-          cards.map(
-            card => card.query(By.css("mat-card-content")).nativeElement.style["pointer-events"]
-          )
-        ).toEqual(["none", "none", "none"]);
-
-        expect(
-          cards.map(
-            card => card.query(By.css("mat-card-actions")).nativeElement.style["pointer-events"]
-          )
-        ).toEqual(["none", "none", "none"]);
-      });
-
-      it("should cancel selections and switch selection mode off", () => {
-        cards[0].nativeElement.click();
-        fixture.debugElement
-          .query(By.css("mat-toolbar div.actions button:nth-of-type(1)"))
-          .nativeElement.click();
-        fixture.detectChanges();
-
-        expect(fixture.componentInstance.selectionActive).toEqual(false);
-        expect(fixture.componentInstance.selectedStorageIds).toEqual([]);
-
-        expect(
-          cards.map(card =>
-            (card.nativeElement as HTMLElement).classList.toString().includes("unselected")
-          )
-        ).toEqual([false, false, false]);
-
-        expect(
-          cards.map(
-            card => card.query(By.css("mat-card-content")).nativeElement.style["pointer-events"]
-          )
-        ).toEqual(["initial", "initial", "initial"]);
-
-        expect(
-          cards.map(
-            card => card.query(By.css("mat-card-actions")).nativeElement.style["pointer-events"]
-          )
-        ).toEqual(["initial", "initial", "initial"]);
-      });
-
-      it("should select all", () => {
-        fixture.debugElement
-          .query(By.css("mat-toolbar div.actions button:nth-of-type(2)"))
-          .nativeElement.click();
-        fixture.detectChanges();
-
-        expect(fixture.componentInstance.selectedStorageIds).toEqual(["1", "2", "3"]);
-
-        expect(
-          cards.map(card =>
-            (card.nativeElement as HTMLElement).classList.toString().includes("unselected")
-          )
-        ).toEqual([false, false, false]);
-      });
-
-      it("should delete selected objects ", fakeAsync(() => {
-        const deleleteSpy = spyOn(fixture.componentInstance["storage"], "delete").and.returnValue(
-          of(null)
-        );
-        const refreshSpy = spyOn(fixture.componentInstance.refresh, "next");
-
-        fixture.componentInstance.selectedStorageIds = ["1", "2"];
-        fixture.componentInstance.deleteMany();
-
-        tick(500);
-        fixture.detectChanges();
-
-        expect(deleleteSpy).toHaveBeenCalledTimes(2);
-        expect(deleleteSpy.calls.allArgs()).toEqual([["1"], ["2"]]);
-
-        expect(refreshSpy).toHaveBeenCalledTimes(1);
+        expect(insertManySpy).toHaveBeenCalledTimes(1);
+        expect(insertManySpy).toHaveBeenCalledWith(files, "files/");
       }));
     });
-
-    it("should open preview", () => {
-      fixture.debugElement
-        .query(
-          By.css("mat-grid-list mat-grid-tile:nth-child(1) mat-card mat-card-content storage-view")
-        )
-        .nativeElement.click();
-      fixture.detectChanges();
-
-      expect(fixture.componentInstance.dialog.open).toHaveBeenCalledTimes(1);
-      expect(fixture.componentInstance.dialog.open).toHaveBeenCalledWith(
-        StorageDialogOverviewDialog,
-        {
-          maxWidth: "80%",
-          maxHeight: "80%",
-          panelClass: "preview-object",
-          data: {
-            _id: "1",
-            name: "test1",
-            content: {
-              type: "image/png"
-            },
-            url: `http://example/test.png`
-          }
-        }
-      );
-    });
-
-    describe("sorts", () => {
-      beforeEach(() => {
-        fixture.debugElement
-          .query(By.css("mat-toolbar button:nth-of-type(2)"))
-          .nativeElement.click();
-        fixture.detectChanges(false);
-      });
-
-      it("should create parameter to sort descend by name", () => {
-        (document.body.querySelector(
-          "div.mat-menu-content button:nth-child(1)"
-        ) as HTMLButtonElement).click();
-        fixture.detectChanges();
-
-        expect(fixture.componentInstance.sorter).toEqual({
-          name: -1
-        });
-      });
-
-      it("should create parameter to sort ascend by name", () => {
-        (document.body.querySelector(
-          "div.mat-menu-content button:nth-child(2)"
-        ) as HTMLButtonElement).click();
-        fixture.detectChanges();
-
-        expect(fixture.componentInstance.sorter).toEqual({
-          name: 1
-        });
-      });
-
-      it("should create parameter to sort descend by date", () => {
-        (document.body.querySelector(
-          "div.mat-menu-content button:nth-child(3)"
-        ) as HTMLButtonElement).click();
-        fixture.detectChanges();
-
-        expect(fixture.componentInstance.sorter).toEqual({
-          _id: -1
-        });
-      });
-
-      it("should create parameter to sort ascend by name", () => {
-        (document.body.querySelector(
-          "div.mat-menu-content button:nth-child(4)"
-        ) as HTMLButtonElement).click();
-        fixture.detectChanges();
-
-        expect(fixture.componentInstance.sorter).toEqual({
-          _id: 1
-        });
-      });
-    });
   });
 
-  describe("pagination", () => {
-    let paginator: MatPaginator;
+  it("should show disabled add button while file uploading process in progress", () => {
+    const event: HttpEvent<Storage> = {
+      type: HttpEventType.UploadProgress,
+      loaded: 10,
+      total: 100
+    };
+    const insertSpy = spyOn(
+      fixture.componentInstance["storageService"],
+      "insertMany"
+    ).and.returnValue(of(event));
+    fixture.componentInstance.uploadStorageMany({length: 1} as any);
+    fixture.detectChanges();
 
+    expect(
+      fixture.debugElement.query(By.css("mat-toolbar button:last-of-type")).nativeElement.disabled
+    ).toBe(true);
+
+    expect(insertSpy).toHaveBeenCalledTimes(1);
+    expect(insertSpy).toHaveBeenCalledWith({length: 1} as any, "files/");
+  });
+
+  it("should complete upload progress", () => {
+    const refreshSpy = spyOn(fixture.componentInstance.refresh, "next");
+    const insertSpy = spyOn(
+      fixture.componentInstance["storageService"],
+      "insertMany"
+    ).and.returnValue(of({type: HttpEventType.Response} as any));
+
+    fixture.componentInstance.uploadStorageMany({length: 1} as any);
+    fixture.detectChanges();
+
+    expect(
+      fixture.debugElement.query(By.css("mat-toolbar button:last-of-type")).nativeElement.disabled
+    ).toBe(false);
+
+    expect(insertSpy).toHaveBeenCalledTimes(1);
+    expect(insertSpy).toHaveBeenCalledWith({length: 1} as any, "files/");
+
+    expect(refreshSpy).toHaveBeenCalledTimes(1);
+    expect(fixture.componentInstance.progress).toBe(undefined as any);
+  });
+
+  it("should delete data", fakeAsync(() => {
+    const deleleteSpy = spyOn(
+      fixture.componentInstance["storageService"],
+      "delete"
+    ).and.returnValue(of());
+
+    const refreshSpy = spyOn(fixture.componentInstance.refresh, "next");
+
+    fixture.componentInstance.delete("1");
+    tick(500);
+    fixture.detectChanges();
+
+    expect(deleleteSpy).toHaveBeenCalledTimes(1);
+    expect(deleleteSpy).toHaveBeenCalledWith("1");
+
+    expect(refreshSpy).toHaveBeenCalledTimes(1);
+  }));
+
+  it("should delete docs directory and its subresources", fakeAsync(() => {
+    const deleleteSpy = spyOn(
+      fixture.componentInstance["storageService"],
+      "delete"
+    ).and.returnValue(of());
+
+    fixture.componentInstance.deleteMany(["files/docs/"]);
+    tick(500);
+    fixture.detectChanges();
+
+    expect(storageService.listSubResources).toHaveBeenCalledTimes(1);
+    expect(storageService.listSubResources).toHaveBeenCalledWith("files/docs/", true);
+
+    expect(deleleteSpy).toHaveBeenCalledTimes(2);
+    expect(deleleteSpy.calls.allArgs()).toEqual([["3"], ["4"]]);
+  }));
+
+  it("should insert files to the current directory", fakeAsync(() => {
+    const insertManySpy = spyOn(
+      fixture.componentInstance["storageService"],
+      "insertMany"
+    ).and.returnValue(of());
+
+    const files: any = [new File([], "myfile.png")];
+    fixture.componentInstance.uploadStorageMany(files);
+    tick();
+    fixture.detectChanges();
+
+    expect(insertManySpy).toHaveBeenCalledTimes(1);
+    expect(insertManySpy).toHaveBeenCalledWith(files, "files/");
+  }));
+
+  it("should display image", fakeAsync(() => {
+    const testPng = fixture.debugElement.query(By.css(".column:nth-child(1) .line")).nativeElement;
+    testPng.click();
+
+    fixture.detectChanges();
+    tick();
+
+    const storageView = fixture.debugElement.query(By.css(".object-details storage-view"))
+      .nativeElement;
+    expect(storageView.getAttribute("ng-reflect-blob")).toEqual("http://example/2");
+
+    const sideView = fixture.debugElement.query(By.css(".object-details .meta")).nativeElement
+      .textContent;
+
+    expect(sideView).toContain("test.png");
+    expect(sideView).toContain("image/png - 100 KB");
+  }));
+
+  describe("sorts", () => {
     beforeEach(() => {
-      paginator = fixture.debugElement.query(By.directive(MatPaginator)).injector.get(MatPaginator);
+      fixture.debugElement.query(By.css("mat-toolbar button:nth-of-type(1)")).nativeElement.click();
+      fixture.detectChanges(false);
     });
 
-    it("it should show paginator size", fakeAsync(() => {
-      expect(fixture.componentInstance.paginator.length).toBe(10000);
-      expect(
-        fixture.debugElement.query(By.css("div.mat-paginator-range-label")).nativeElement
-          .textContent
-      ).toBe(" 1 – 12 of 10000 ");
-    }));
-    it("should change page", () => {
-      paginator.nextPage();
+    it("should create parameter to sort descend by name", () => {
+      (document.body.querySelector(
+        "div.mat-menu-content button:nth-child(1)"
+      ) as HTMLButtonElement).click();
       fixture.detectChanges();
-      expect(
-        fixture.debugElement.query(By.css("div.mat-paginator-range-label")).nativeElement
-          .textContent
-      ).toBe(" 13 – 24 of 10000 ");
+
+      expect(fixture.componentInstance.sorter).toEqual({
+        name: -1
+      });
     });
-    it("should change page size", () => {
-      paginator._changePageSize(24);
+
+    it("should create parameter to sort ascend by name", () => {
+      (document.body.querySelector(
+        "div.mat-menu-content button:nth-child(2)"
+      ) as HTMLButtonElement).click();
       fixture.detectChanges();
-      expect(
-        fixture.debugElement.query(By.css("div.mat-paginator-range-label")).nativeElement
-          .textContent
-      ).toBe(" 1 – 24 of 10000 ");
+
+      expect(fixture.componentInstance.sorter).toEqual({
+        name: 1
+      });
+    });
+
+    it("should create parameter to sort descend by date", () => {
+      (document.body.querySelector(
+        "div.mat-menu-content button:nth-child(3)"
+      ) as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.sorter).toEqual({
+        _id: -1
+      });
+    });
+
+    it("should create parameter to sort ascend by name", () => {
+      (document.body.querySelector(
+        "div.mat-menu-content button:nth-child(4)"
+      ) as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.sorter).toEqual({
+        _id: 1
+      });
     });
   });
 });

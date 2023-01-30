@@ -15,7 +15,7 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {Subject} from "rxjs";
 import {map} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
-import {StorageService} from "../../storage.service";
+import {StorageService} from "../../services/storage.service";
 import {StorageViewComponent} from "../storage-view/storage-view.component";
 import {PickerComponent} from "./picker.component";
 import {PickerDirective} from "./picker.directive";

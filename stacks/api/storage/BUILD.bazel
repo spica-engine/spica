@@ -16,6 +16,7 @@ ts_project(
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
+        "//packages/database/pipeline",
         "//stacks/api/activity/services",
         "//stacks/api/passport/guard",
         "//stacks/api/status",

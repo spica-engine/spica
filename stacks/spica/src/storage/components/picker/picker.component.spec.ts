@@ -12,7 +12,7 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {Subject} from "rxjs";
 import {map} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
-import {StorageService} from "../../storage.service";
+import {StorageService} from "../../services/storage.service";
 import {StorageViewComponent} from "../storage-view/storage-view.component";
 import {PickerComponent} from "./picker.component";
 import {MatMenuModule} from "@angular/material/menu";
@@ -121,13 +121,6 @@ describe("StorageComponent", () => {
     it("should change page", () => {
       paginator.nextPage();
       expect(storageService.getAll).toHaveBeenCalledTimes(1);
-    });
-
-    it("should handle pageSize changes", () => {
-      paginator._changePageSize(15);
-      expect(storageService.getAll).toHaveBeenCalledTimes(1);
-      expect(storageService.getAll.calls.mostRecent().args[0]).toBe(15);
-      expect(storageService.getAll.calls.mostRecent().args[1]).toBe(0);
     });
   });
 });

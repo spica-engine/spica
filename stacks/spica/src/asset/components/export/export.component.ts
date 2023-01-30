@@ -1,4 +1,4 @@
-import {Component, Inject, OnInit} from "@angular/core";
+import {Component, Inject} from "@angular/core";
 import {MatDialogRef} from "@angular/material/dialog";
 import {getEmptyConfig} from "@spica-client/asset/helpers";
 import {
@@ -15,7 +15,7 @@ import {AssetService} from "@spica-client/asset/services/asset.service";
   templateUrl: "./export.component.html",
   styleUrls: ["./export.component.scss"]
 })
-export class ExportComponent implements OnInit {
+export class ExportComponent {
   availableResources: AvailableResources[] = [];
 
   exportMeta: ExportMeta = {

@@ -65,7 +65,8 @@ describe("Home Layout", () => {
           {category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1"},
           {category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2"},
           {category: RouteCategory.Dashboard, id: "12", path: "", icon: "", display: "dashboard1"},
-          {category: RouteCategory.Dashboard, id: "13", path: "", icon: "", display: "dashboard2"}
+          {category: RouteCategory.Dashboard, id: "13", path: "", icon: "", display: "dashboard2"},
+          {category: RouteCategory.Storage, id: "14", path: "", icon: "", display: "storage"}
         ])
       );
       tick();
@@ -73,7 +74,7 @@ describe("Home Layout", () => {
       const navCategories = fixture.debugElement.nativeElement.querySelectorAll(
         ".iconlist > mat-list-item:not(:first-of-type)"
       );
-      expect(navCategories.length).toBe(8);
+      expect(navCategories.length).toBe(9);
       expect(navCategories[0].getAttribute("class")).toContain("active");
     }));
 

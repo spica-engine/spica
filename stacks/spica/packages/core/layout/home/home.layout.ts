@@ -69,6 +69,10 @@ export class HomeLayoutComponent implements OnInit {
     [
       RouteCategory.Webhook,
       {icon: "webhook", index: 6, children: {name: RouteCategory.Webhook_Sub, icon: "bug_report"}}
+    ],
+    [
+      RouteCategory.Storage,
+      {icon: "filter_drama", index: 7, children: {name: RouteCategory.Storage_Sub, icon: "list"}}
     ]
   ]);
 
