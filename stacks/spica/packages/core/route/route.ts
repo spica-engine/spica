@@ -3,7 +3,6 @@ import {Observable} from "rxjs";
 
 export enum RouteCategory {
   Dashboard = "Dashboard",
-  Primary = "Primary",
   Developer = "Function",
   Content = "Bucket",
   System = "Access Management",
@@ -11,7 +10,6 @@ export enum RouteCategory {
   Asset = "Asset",
   Storage = "Storage",
 
-  Primary_Sub = "Settings",
   Content_Sub = "All Buckets",
   Developer_Sub = "Function Logs",
   Webhook_Sub = "Webhook Logs",

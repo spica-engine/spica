@@ -35,22 +35,18 @@ export class HomeLayoutComponent implements OnInit {
 
   private _categories = new Map([
     [
-      RouteCategory.Primary,
-      {icon: "stars", index: 0, children: {name: RouteCategory.Primary_Sub, icon: "list"}}
-    ],
-    [
       RouteCategory.Dashboard,
-      {icon: "dashboard", index: 1, children: {name: RouteCategory.Dashboard_Sub, icon: "list"}}
+      {icon: "dashboard", index: 0, children: {name: RouteCategory.Dashboard_Sub, icon: "list"}}
     ],
     [
       RouteCategory.Asset,
-      {icon: "shopping_cart", index: 2, children: {name: RouteCategory.Asset_Sub, icon: "list"}}
+      {icon: "shopping_cart", index: 1, children: {name: RouteCategory.Asset_Sub, icon: "list"}}
     ],
     [
       RouteCategory.Content,
       {
         icon: "view_stream",
-        index: 3,
+        index: 2,
         children: {name: RouteCategory.Content_Sub, icon: "format_list_numbered"}
       }
     ],
@@ -58,21 +54,21 @@ export class HomeLayoutComponent implements OnInit {
       RouteCategory.System,
       {
         icon: "supervisor_account",
-        index: 4,
+        index: 3,
         children: {name: RouteCategory.System_Sub, icon: "list"}
       }
     ],
     [
       RouteCategory.Developer,
-      {icon: "memory", index: 5, children: {name: RouteCategory.Developer_Sub, icon: "bug_report"}}
+      {icon: "memory", index: 4, children: {name: RouteCategory.Developer_Sub, icon: "bug_report"}}
     ],
     [
       RouteCategory.Webhook,
-      {icon: "webhook", index: 6, children: {name: RouteCategory.Webhook_Sub, icon: "bug_report"}}
+      {icon: "webhook", index: 5, children: {name: RouteCategory.Webhook_Sub, icon: "bug_report"}}
     ],
     [
       RouteCategory.Storage,
-      {icon: "filter_drama", index: 7, children: {name: RouteCategory.Storage_Sub, icon: "list"}}
+      {icon: "filter_drama", index: 6, children: {name: RouteCategory.Storage_Sub, icon: "list"}}
     ]
   ]);
 

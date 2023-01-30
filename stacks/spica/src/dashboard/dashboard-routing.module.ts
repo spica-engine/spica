@@ -65,14 +65,6 @@ const route: Route[] = [
     icon: "format_list_numbered",
     path: "/dashboards",
     display: "List"
-  },
-  {
-    category: RouteCategory.Primary,
-    icon: "shopping_cart",
-    path: "assets",
-    display: "Asset Store",
-    id: "asset_store",
-    index: 3
   }
 ];
 

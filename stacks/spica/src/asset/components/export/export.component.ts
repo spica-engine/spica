@@ -78,8 +78,4 @@ export class ExportComponent {
 
   _trackBy3: (i) => any = i => i;
   _trackBy4: (i) => any = i => i;
-
-  isResourceIdAvailableResource(option: Option, options: Option[]) {
-    console.log(option, options);
-  }
 }
