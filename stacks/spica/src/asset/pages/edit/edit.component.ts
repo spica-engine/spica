@@ -65,22 +65,11 @@ export class EditComponent {
       .then(r => (this.preview = separatePreviewResourcesByModule(r)));
   }
 
-  // categorizeResourcesByModule(resources) {
-  //   const categorizedResources = {};
-
-  //   for (const resource of resources) {
-  //     categorizedResources[resource.module] = categorizedResources[resource.module] || [];
-  //     categorizedResources[resource.module].push(resource);
-  //   }
-
-  //   return categorizedResources;
-  // }
-
-  buildResourceName(resource) {
-    return resource.contents.schema.title || resource.contents.schema.name || resource._id;
+  getResourceName(resource: Resource<any>) {
+    return resource.contents.schema.title || resource.contents.schema.name;
   }
 
-  categorizeResourcesByModule(resources) {
+  categorizeResourcesByModule(resources: (Resource<any>)[]) {
     const categorizedResources: AssetResourceNode[] = [];
 
     for (const resource of resources) {
@@ -92,7 +81,7 @@ export class EditComponent {
       }
 
       categorizedResources[indexOfCategory].children.push({
-        name: this.buildResourceName(resource),
+        name: this.getResourceName(resource),
         children: [],
         resource: resource
       });

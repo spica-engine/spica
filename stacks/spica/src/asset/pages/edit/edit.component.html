@@ -18,7 +18,7 @@
               <mat-label>
                 Name
               </mat-label>
-              <input disabled matInput name="name" [ngModel]="asset.name" required />
+              <input disabled matInput name="name" [ngModel]="asset.name" />
             </mat-form-field>
           </mat-list-item>
           <mat-list-item>
@@ -26,12 +26,12 @@
               <mat-label>
                 Description
               </mat-label>
-              <input disabled matInput name="name" [ngModel]="asset.description" required />
+              <input disabled matInput name="name" [ngModel]="asset.description" />
             </mat-form-field>
           </mat-list-item>
           <mat-list-item>
             <h4>Resources</h4>
-            <mat-divier></mat-divier>
+            <mat-divider></mat-divider>
           </mat-list-item>
           <mat-list-item>
             <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="example-tree">
