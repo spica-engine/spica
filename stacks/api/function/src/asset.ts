@@ -105,17 +105,6 @@ export function registerAssetHandlers(
   };
 
   registrar.exporter(_module, exporter);
-
-  registrar.resourceLister(_module, () =>
-    fs.find().then(fns => {
-      return fns.map(f => {
-        return {
-          _id: f._id.toHexString(),
-          title: f.name
-        };
-      });
-    })
-  );
 }
 
 function validateFn(fn: Function, validator: Validator) {

@@ -67,7 +67,6 @@ export function registerAssetHandlers(
         };
       });
     });
-  registrar.resourceLister(_module, lister);
 }
 
 export interface ApikeyAsset {

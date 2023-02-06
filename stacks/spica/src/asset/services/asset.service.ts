@@ -1,21 +1,28 @@
 import {HttpClient, HttpParams} from "@angular/common/http";
-import {Injectable} from "@angular/core";
+import {Inject, Injectable} from "@angular/core";
 import {Store} from "@ngrx/store";
 import {of} from "rxjs";
 import {filter, switchMap, tap} from "rxjs/operators";
 import {
   Asset,
   Config,
-  AvailableResources,
+  AvailableResourcesByModule,
   ExportMeta,
   InstallationPreview,
-  Status
+  Status,
+  ASSET_RESOURCE_LISTER,
+  AvailableResource
 } from "../interfaces";
 import * as fromAsset from "../state/asset.reducer";
 
 @Injectable()
 export class AssetService {
-  constructor(private http: HttpClient, private store: Store<fromAsset.State>) {}
+  constructor(
+    private http: HttpClient,
+    private store: Store<fromAsset.State>,
+    @Inject(ASSET_RESOURCE_LISTER)
+    private _resourceListers: {name: string; list: () => Promise<AvailableResource[]>}[]
+  ) {}
 
   find() {
     return this.store.select(fromAsset.selectAll);
@@ -50,7 +57,15 @@ export class AssetService {
   }
 
   listResources() {
-    return this.http.get<AvailableResources[]>("api:/asset/resource");
+    const res: AvailableResourcesByModule = {};
+    const promises = [];
+
+    for (let lister of this._resourceListers) {
+      const promise = lister.list().then(resources => (res[lister.name] = resources));
+      promises.push(promise);
+    }
+
+    return Promise.all(promises).then(() => res);
   }
 
   retrieve() {

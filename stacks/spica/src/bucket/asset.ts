@@ -63,3 +63,14 @@ export const assetConfigExporter = (bs: BucketService) => {
     }
   });
 };
+
+export const listResources = (bs: BucketService) =>
+  bs
+    .getBuckets()
+    .pipe(take(1))
+    .toPromise()
+    .then(buckets => {
+      return buckets.map(bucket => {
+        return {_id: bucket._id, title: bucket.title};
+      });
+    });

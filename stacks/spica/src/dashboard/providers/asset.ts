@@ -70,3 +70,14 @@ export function provideAssetConfigExporter(ds: DashboardService) {
     }
   });
 }
+
+export const listResources = (ds: DashboardService) =>
+  ds
+    .findAll()
+    .pipe(take(1))
+    .toPromise()
+    .then(dashboards => {
+      return dashboards.map(dashboard => {
+        return {_id: dashboard._id, title: dashboard.name};
+      });
+    });

@@ -68,3 +68,13 @@ export function provideApikeyAssetConfigExporter(as: ApiKeyService) {
     }
   });
 }
+
+export const listResources = (as: ApiKeyService) =>
+  as
+    .getAll(0,0,{_id:-1})
+    .toPromise()
+    .then(({data:apikeys}) => {
+      return apikeys.map(apikey => {
+        return {_id: apikey._id, title: apikey.name};
+      });
+    });

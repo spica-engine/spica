@@ -45,51 +45,6 @@ export class AssetController {
     @Inject(ASSET_REP_MANAGER) private repManager: AssetRepManager
   ) {}
 
-  @Get("resource")
-  @UseGuards(AuthGuard())
-  async information() {
-    const schemas = {};
-
-    for (let [_module, _listers] of listers.entries()) {
-      const _resources = [];
-      for (let lister of _listers) {
-        const moduleResources = await lister();
-        _resources.push(...moduleResources);
-      }
-      schemas[_module] = _resources;
-    }
-
-    return schemas;
-  }
-
-  // @Get("config/:module")
-  // @UseGuards(AuthGuard())
-  // async information(@Query("module") module: string) {
-  //   const baseSchema = {
-  //     title: {
-  //       type: "string",
-  //       title: "Title",
-  //       description:
-  //         "It will be displayed on the configuration step while others installing this asset."
-  //     },
-  //     module: {
-  //       type: "string",
-  //       title: "Module",
-  //       description: "Select one of these modules",
-  //       enum: [registrar.getModules()]
-  //     }
-  //   };
-
-  //   if (!module) {
-  //     return baseSchema;
-  //   }
-  //   return {
-  //     ...baseSchema,...{
-
-  //     }
-  //   };
-  // }
-
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("asset:index"))
   find(@Query("filter", DEFAULT({}), JSONP) filter: object) {

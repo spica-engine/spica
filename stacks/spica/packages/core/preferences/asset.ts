@@ -57,3 +57,5 @@ export const assetConfigExporter = (ps: PreferencesService) => {
     }
   });
 };
+
+export const listResources = () => Promise.resolve([{_id: "identity", title: "Identity"}]);

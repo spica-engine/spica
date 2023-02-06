@@ -51,8 +51,8 @@ import {WebhookModule} from "./webhook.module";
 import {MatDialogModule} from "@angular/material/dialog";
 import {WebhookService} from "./services";
 import {CategoryModule} from "@spica-client/common/category";
-import {ASSET_CONFIG_EXPORTER} from "@spica-client/asset/interfaces";
-import {assetConfigExporter} from "./asset";
+import {ASSET_CONFIG_EXPORTER, ASSET_RESOURCE_LISTER} from "@spica-client/asset/interfaces";
+import {assetConfigExporter, listResources} from "./asset";
 
 @NgModule({
   imports: [
@@ -145,6 +145,14 @@ export class FunctionModule {
         {
           provide: ASSET_CONFIG_EXPORTER,
           useFactory: assetConfigExporter,
+          deps: [FunctionService],
+          multi: true
+        },
+        {
+          provide: ASSET_RESOURCE_LISTER,
+          useFactory: fs => {
+            return {name: "function", list: () => listResources(fs)};
+          },
           deps: [FunctionService],
           multi: true
         },

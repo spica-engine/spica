@@ -56,11 +56,18 @@ export interface ExportResource {
   [module: string]: string[];
 }
 
-export interface AvailableResources {
-  [module: string]: {title: string; _id: string}[];
+export interface AvailableResource {
+  title: string;
+  _id: string;
+}
+[];
+
+export interface AvailableResourcesByModule {
+  [module: string]: AvailableResource[];
 }
 
 export const ASSET_CONFIG_EXPORTER = new InjectionToken<any>("ASSET_CONFIG_EXPORTER");
+export const ASSET_RESOURCE_LISTER = new InjectionToken<any>("ASSET_RESOURCE_LISTER");
 
 interface RawOption {
   value: string;

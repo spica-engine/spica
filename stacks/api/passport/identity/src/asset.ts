@@ -84,8 +84,6 @@ export function registerAssetHandlers(
   };
 
   registrar.exporter(_module, exporter);
-
-  registrar.resourceLister(_module, () => Promise.resolve([{_id: "identity", title: "Identity"}]));
 }
 
 function validateFn(schema: IdentitySchema, validator: Validator) {

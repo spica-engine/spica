@@ -46,8 +46,8 @@ import {MatDividerModule} from "@angular/material/divider";
 import {StatisticComponent} from "./components/statistic/statistic.component";
 import {VersionControlComponent} from "./pages/versioncontrol/versioncontrol.component";
 import {MatExpansionModule} from "@angular/material/expansion";
-import {provideAssetFactory, provideAssetConfigExporter} from "./providers/asset";
-import {ASSET_CONFIG_EXPORTER} from "@spica-client/asset/interfaces";
+import {provideAssetFactory, provideAssetConfigExporter, listResources} from "./providers/asset";
+import {ASSET_CONFIG_EXPORTER, ASSET_RESOURCE_LISTER} from "@spica-client/asset/interfaces";
 
 @NgModule({
   imports: [
@@ -120,6 +120,14 @@ import {ASSET_CONFIG_EXPORTER} from "@spica-client/asset/interfaces";
     {
       provide: ASSET_CONFIG_EXPORTER,
       useFactory: provideAssetConfigExporter,
+      deps: [DashboardService],
+      multi: true
+    },
+    {
+      provide: ASSET_RESOURCE_LISTER,
+      useFactory: ds => {
+        return {name: "dashboard", list: () => listResources(ds)};
+      },
       deps: [DashboardService],
       multi: true
     }

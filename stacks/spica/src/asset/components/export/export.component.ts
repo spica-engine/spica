@@ -3,7 +3,7 @@ import {MatDialogRef} from "@angular/material/dialog";
 import {getEmptyConfig} from "@spica-client/asset/helpers";
 import {
   ASSET_CONFIG_EXPORTER,
-  AvailableResources,
+  AvailableResourcesByModule,
   Config,
   ExportMeta,
   Option
@@ -16,7 +16,7 @@ import {AssetService} from "@spica-client/asset/services/asset.service";
   styleUrls: ["./export.component.scss"]
 })
 export class ExportComponent {
-  availableResources: AvailableResources[] = [];
+  availableResources: AvailableResourcesByModule;
 
   exportMeta: ExportMeta = {
     name: undefined,
@@ -33,10 +33,7 @@ export class ExportComponent {
     @Inject(ASSET_CONFIG_EXPORTER) private _configExporters: Option[],
     public dialogRef: MatDialogRef<ExportComponent>
   ) {
-    this.assetService
-      .listResources()
-      .toPromise()
-      .then(r => (this.availableResources = r));
+    this.assetService.listResources().then(r => (this.availableResources = r));
   }
 
   onChange(option: Option, configIndex: number, stepIndex: number) {

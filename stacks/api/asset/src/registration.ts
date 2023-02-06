@@ -20,9 +20,4 @@ export namespace registrar {
     const existingExporters = exporters.get(_module) || [];
     exporters.set(_module, existingExporters.concat(exporter));
   }
-
-  export function resourceLister(_module: string, lister: ResourceLister) {
-    const existingListers = listers.get(_module) || [];
-    listers.set(_module, existingListers.concat(lister));
-  }
 }

@@ -71,3 +71,14 @@ export const assetConfigExporter = (fs: FunctionService) => {
     }
   });
 };
+
+export const listResources = (fs: FunctionService) =>
+  fs
+    .getFunctions()
+    .pipe(take(1))
+    .toPromise()
+    .then(fns => {
+      return fns.map(fn => {
+        return {_id: fn._id, title: fn.name};
+      });
+    });
