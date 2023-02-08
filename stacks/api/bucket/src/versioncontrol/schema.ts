@@ -22,11 +22,20 @@ export const getSyncProvider = (
     );
   };
 
-  const insert = bucket => CRUD.insert(bs, bucket);
+  const insert = bucket =>
+    CRUD.insert(bs, bucket)
+      .then(CRUD.runCommands)
+      .then(() => bucket);
 
-  const update = bucket => CRUD.replace(bs, bds, history, bucket);
+  const update = bucket =>
+    CRUD.replace(bs, bds, history, bucket)
+      .then(CRUD.runCommands)
+      .then(() => bucket);
 
-  const remove = bucket => CRUD.remove(bs, bds, history, bucket._id);
+  const remove = bucket =>
+    CRUD.remove(bs, bds, history, bucket._id)
+      .then(CRUD.runCommands)
+      .then(() => bucket);
 
   const document = {
     getAll,

@@ -29,6 +29,7 @@ import * as expression from "@spica-server/bucket/expression";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket/cache";
 import * as CRUD from "./crud";
 import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core/patch";
+import {Command} from "@spica-server/interface/asset";
 /**
  * All APIs related to bucket schemas.
  * @name bucket
@@ -98,9 +99,12 @@ export class BucketController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:create"))
   async add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
-    return CRUD.insert(this.bs, bucket).catch(error => {
-      throw new HttpException(error.message, error.status || 500);
-    });
+    return CRUD.insert(this.bs, bucket)
+      .then(CRUD.runCommands)
+      .catch(error => {
+        throw new HttpException(error.message, error.status || 500);
+      })
+      .then(() => bucket);
   }
 
   /**
@@ -133,9 +137,12 @@ export class BucketController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
-    return CRUD.replace(this.bs, this.bds, this.history, {...bucket, _id: id}).catch(error => {
-      throw new HttpException(error.message, error.status || 500);
-    });
+    return CRUD.replace(this.bs, this.bds, this.history, {...bucket, _id: id})
+      .then(CRUD.runCommands)
+      .catch(error => {
+        throw new HttpException(error.message, error.status || 500);
+      })
+      .then(() => bucket);
   }
 
   /**
@@ -202,6 +209,10 @@ export class BucketController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return CRUD.remove(this.bs, this.bds, this.history, id);
+    return CRUD.remove(this.bs, this.bds, this.history, id)
+      .then(CRUD.runCommands)
+      .catch(error => {
+        throw new HttpException(error.message, error.status || 500);
+      });
   }
 }

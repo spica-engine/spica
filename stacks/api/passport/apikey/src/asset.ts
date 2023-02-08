@@ -43,7 +43,7 @@ export function registerAssetHandlers(
 
     delete: (resource: Resource<ApikeyAsset>) => as.deleteOne({_id: new ObjectId(resource._id)})
   };
-  registrar.operator(_module, operator);
+  // registrar.operator(_module, operator);
 
   const exporter = async (_id: string) => {
     if (!ObjectId.isValid(_id)) {

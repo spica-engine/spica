@@ -69,7 +69,7 @@ export function registerAssetHandlers(
     delete: remove
   };
 
-  registrar.operator(_module, operator);
+  // registrar.operator(_module, operator);
 
   const exporter = async (_id: string) => {
     if (!isIdentityPreference(_id)) {

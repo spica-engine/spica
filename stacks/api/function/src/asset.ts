@@ -56,7 +56,7 @@ export function registerAssetHandlers(
     }
   };
 
-  registrar.operator(_module, operator);
+  // registrar.operator(_module, operator);
 
   const exporter = async (_id: string) => {
     if (!ObjectId.isValid(_id)) {

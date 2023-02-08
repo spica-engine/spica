@@ -24,12 +24,14 @@ export function registerAssetHandlers(
   registrar.validator(_module, validator);
 
   const operator = {
-    insert: (resource: Resource<BucketAsset>) => CRUD.insert(bs, resource.contents.schema),
+    insert: (resource: Resource<BucketAsset>) =>
+      CRUD.insert(bs, resource.contents.schema),
 
     update: (resource: Resource<BucketAsset>) =>
       CRUD.replace(bs, bds, history, resource.contents.schema),
 
-    delete: (resource: Resource<BucketAsset>) => CRUD.remove(bs, bds, history, resource._id)
+    delete: (resource: Resource<BucketAsset>) =>
+      CRUD.remove(bs, bds, history, resource._id),
   };
 
   registrar.operator(_module, operator);

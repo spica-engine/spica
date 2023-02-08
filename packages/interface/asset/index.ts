@@ -31,9 +31,9 @@ export interface Resource<C = object> {
 export type Validator = (resource: Resource) => Promise<void>;
 
 export interface Operator {
-  insert(resource: Resource): Promise<any>;
-  update(resource: Resource): Promise<any>;
-  delete(resource: Resource): Promise<any>;
+  insert(resource: Resource): Promise<Command[]>;
+  update(resource: Resource): Promise<Command[]>;
+  delete(resource: Resource): Promise<Command[]>;
 }
 
 export type Exporter = (_id: string) => Promise<void>;
@@ -46,3 +46,13 @@ export interface ExportMeta {
 }
 
 export type ResourceLister = () => Promise<{_id: string; title: string}[]>;
+
+export interface Command {
+  title: string;
+  execute: () => Promise<any>;
+  undo: () => Promise<any>;
+}
+
+export interface CommandWithId extends Command {
+  id: number;
+}

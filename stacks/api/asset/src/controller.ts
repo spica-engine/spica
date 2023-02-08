@@ -18,7 +18,7 @@ import {
 } from "@nestjs/common";
 import {AssetService} from "./service";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
-import {Asset, Config, ExportMeta, Resource} from "@spica-server/interface/asset";
+import {Asset, Command, Config, ExportMeta, Resource} from "@spica-server/interface/asset";
 import {exporters, listers, operators, registrar, validators} from "./registration";
 import {compareResourceGroups} from "@spica-server/core/differ";
 import {putConfiguration} from "./helpers";
@@ -28,6 +28,7 @@ import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {ASSET_REP_MANAGER} from "./interface";
 import {AssetRepManager} from "./representative";
 import {createReadStream} from "fs";
+import {AssetCommander, Commander} from "./commander";
 
 /**
  * Mongodb transactions
@@ -160,9 +161,15 @@ export class AssetController {
       return {insertions, updations, deletions};
     }
 
-    await this.operate(insertions, "insert").catch(e => this.onOperationFailed(id, e));
-    await this.operate(updations, "update").catch(e => this.onOperationFailed(id, e));
-    await this.operate(deletions, "delete").catch(e => this.onOperationFailed(id, e));
+    await this.operate(insertions, "insert").catch(e => {
+      throw new InternalServerErrorException(e.message);
+    });
+    await this.operate(updations, "update").catch(e => {
+      throw new InternalServerErrorException(e.message);
+    });
+    await this.operate(deletions, "delete").catch(e => {
+      throw new InternalServerErrorException(e.message);
+    });
 
     if (installedAsset) {
       this.service.findOneAndUpdate({_id: installedAsset._id}, {$set: {status: "downloaded"}});
@@ -183,7 +190,9 @@ export class AssetController {
     const asset = await this.service.findOne({_id: id});
 
     if (asset.status != "downloaded") {
-      await this.operate(asset.resources, "delete").catch(e => this.onOperationFailed(id, e));
+      await this.operate(asset.resources, "delete").catch(e => {
+        throw new InternalServerErrorException(e.message);
+      });
     }
 
     if (type == "soft") {
@@ -201,16 +210,26 @@ export class AssetController {
   }
 
   async operate(resources: Resource[], action: "insert" | "update" | "delete") {
-    const operations = resources.map(resource => {
-      const relatedOperators = operators.get(resource.module);
+    const commands: Command[] = [];
+    let promises = resources.map(resource => {
+      let relatedOperators = operators.get(resource.module);
       if (!relatedOperators || !relatedOperators.length) {
-        throw new BadRequestException(
-          `Operation ${action} has been failed: Unknown module named '${resource.module}'.`
-        );
+        relatedOperators = [];
+        // throw new BadRequestException(
+        //   `Operation ${action} has been failed: Unknown module named '${resource.module}'.`
+        // );
       }
-      return Promise.all(relatedOperators.map(operator => operator[action](resource)));
+      return Promise.all(
+        relatedOperators.map(operator =>
+          operator[action](resource).then(cmds => commands.push(...cmds))
+        )
+      );
     });
-    await Promise.all(operations);
+
+    await Promise.all(promises);
+
+    const commander = new AssetCommander(commands);
+    return commander.run();
   }
 
   // async validateResources(resources: Resource[]) {
@@ -226,17 +245,17 @@ export class AssetController {
   //   await Promise.all(validations);
   // }
 
-  onOperationFailed(_id: ObjectId, e: string) {
-    e = e.toString();
-    this.service.findOneAndUpdate(
-      {_id},
-      {
-        $set: {
-          status: "failed",
-          failure_message: e
-        }
-      }
-    );
-    throw new InternalServerErrorException(e);
-  }
+  // onOperationFailed(_id: ObjectId, e: string) {
+  //   e = e.toString();
+  //   this.service.findOneAndUpdate(
+  //     {_id},
+  //     {
+  //       $set: {
+  //         status: "failed",
+  //         failure_message: e
+  //       }
+  //     }
+  //   );
+  //   throw new InternalServerErrorException(e);
+  // }
 }
