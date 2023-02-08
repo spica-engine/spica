@@ -5,6 +5,7 @@ import {
   DatabaseService,
   FilterQuery,
   FindOneAndReplaceOption,
+  MongoClient,
   OptionalId
 } from "@spica-server/database";
 import {Preference} from "./interface";
@@ -14,8 +15,8 @@ import {Observable} from "rxjs";
 export class PreferenceService extends BaseCollection("preferences") {
   private _defaults = new Map<string, Preference>();
 
-  constructor(db: DatabaseService) {
-    super(db, {afterInit: () => {}});
+  constructor(db: DatabaseService, client: MongoClient) {
+    super(db, client, {afterInit: () => {}});
   }
 
   watch<T extends Preference>(

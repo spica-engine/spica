@@ -1,5 +1,5 @@
 import {Injectable, Inject} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService, MongoClient} from "@spica-server/database";
 import {Identity} from "./interface";
 import {Validator, Default} from "@spica-server/core/schema";
 import {hash, compare} from "./hash";
@@ -10,11 +10,12 @@ import {IDENTITY_OPTIONS, IdentityOptions} from "./options";
 export class IdentityService extends BaseCollection<Identity>("identity") {
   constructor(
     database: DatabaseService,
+    client: MongoClient,
     private validator: Validator,
     private jwt: JwtService,
     @Inject(IDENTITY_OPTIONS) private identityOptions: IdentityOptions
   ) {
-    super(database, {
+    super(database, client, {
       entryLimit: identityOptions.entryLimit,
       afterInit: () => this._coll.createIndex({identifier: 1}, {unique: true})
     });

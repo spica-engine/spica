@@ -6,7 +6,8 @@ import {
   InsertOneWriteOpResult,
   FilterQuery,
   FindOneAndReplaceOption,
-  BaseCollection
+  BaseCollection,
+  MongoClient
 } from "@spica-server/database";
 import {Policy} from "./interface";
 import managedPolicies from "./policies";
@@ -20,8 +21,8 @@ export class PolicyService extends BaseCollection("policies") {
     return [...this.managedPolicies, ...this.customerManagedPolicies];
   }
 
-  constructor(db: DatabaseService) {
-    super(db);
+  constructor(db: DatabaseService,client:MongoClient) {
+    super(db,client);
     this.managedPolicies = managedPolicies.map(p => ({...p, system: true} as PolicyWithType));
   }
 

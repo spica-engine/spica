@@ -2,11 +2,14 @@ import {Inject, Injectable, Optional} from "@nestjs/common";
 import {Default, Validator} from "@spica-server/core/schema";
 import {
   BaseCollection,
+  ClientSession,
   Collection,
+  CommonOptions,
   DatabaseService,
   FilterQuery,
   FindOneAndReplaceOption,
   IndexOptions,
+  MongoClient,
   ObjectId
 } from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference/services";
@@ -37,11 +40,12 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
 
   constructor(
     db: DatabaseService,
+    client: MongoClient,
     private pref: PreferenceService,
     private validator: Validator,
     @Optional() @Inject(BUCKET_DATA_LIMIT) private bucketDataLimit
   ) {
-    super(db);
+    super(db, client);
   }
 
   getPreferences() {
@@ -81,6 +85,26 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     }
   }
 
+  async performWithTransaction(operationCb: () => Promise<unknown>) {
+    const session = this.client.startSession();
+
+    session.startTransaction();
+
+    try {
+      const res = await operationCb();
+
+      await session.commitTransaction();
+
+      return res;
+    } catch (error) {
+      await session.abortTransaction();
+
+      return Promise.reject(error);
+    } finally {
+      session.endSession();
+    }
+  }
+
   async insertOne(bucket: Bucket) {
     await this.totalDocCountValidation(
       bucket.documentSettings ? bucket.documentSettings.countLimit : 0
@@ -105,7 +129,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
       .then(r => this.updateIndexes({...doc, _id: filter._id}).then(() => r));
   }
 
-  async updateIndexes(bucket: Bucket): Promise<void> {
+  async updateIndexes(bucket: Bucket, options?: CommonOptions): Promise<void> {
     const bucketDataCollection = this.db.collection(getBucketDataCollection(bucket._id));
 
     const indexDefinitions = this.createIndexDefinitions(bucket);
@@ -115,13 +139,17 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
 
     const indexes = await this.getIndexesWillBeDropped(bucketDataCollection);
     for (const index of indexes) {
-      indexesWillBeDropped.push(bucketDataCollection.dropIndex(index).catch(e => errors.push(e)));
+      indexesWillBeDropped.push(
+        bucketDataCollection.dropIndex(index, options).catch(e => errors.push(e))
+      );
     }
 
     await Promise.all(indexesWillBeDropped);
     await Promise.all(
       indexDefinitions.map(index =>
-        bucketDataCollection.createIndex(index.definition, index.options).catch(e => errors.push(e))
+        bucketDataCollection
+          .createIndex(index.definition, {...options, ...index.options})
+          .catch(e => errors.push(e))
       )
     );
 

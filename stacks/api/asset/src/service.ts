@@ -1,12 +1,12 @@
 import {Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
+import {BaseCollection, DatabaseService, MongoClient, ObjectId} from "@spica-server/database";
 import {Asset} from "@spica-server/interface/asset";
 import {Observable} from "rxjs";
 
 @Injectable()
 export class AssetService extends BaseCollection<Asset>("asset") {
-  constructor(db: DatabaseService) {
-    super(db);
+  constructor(db: DatabaseService, client: MongoClient) {
+    super(db, client);
   }
 
   watch() {

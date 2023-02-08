@@ -98,9 +98,7 @@ export class BucketController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:create"))
   async add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
-    return CRUD.insert(this.bs, bucket).catch(error => {
-      throw new HttpException(error.message, error.status || 500);
-    });
+    return this.bs.performWithTransaction(() => this.bs.insertOne(bucket));
   }
 
   /**

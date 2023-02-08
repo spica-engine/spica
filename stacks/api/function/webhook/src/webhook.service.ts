@@ -1,12 +1,12 @@
 import {Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService, MongoClient} from "@spica-server/database";
 import {Observable} from "rxjs";
 import {Webhook} from "./interface";
 
 @Injectable()
 export class WebhookService extends BaseCollection<Webhook>("webhook") {
-  constructor(database: DatabaseService) {
-    super(database);
+  constructor(database: DatabaseService,client:MongoClient) {
+    super(database,client);
   }
 
   targets(): Observable<TargetChange> {

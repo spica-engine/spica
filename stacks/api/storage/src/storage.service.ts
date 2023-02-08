@@ -1,7 +1,12 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {StorageObject, StorageObjectContent} from "./body";
+import {
+  BaseCollection,
+  DatabaseService,
+  MongoClient,
+  ObjectId
+} from "@spica-server/database";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {Strategy} from "./strategy/strategy";
 
@@ -9,10 +14,11 @@ import {Strategy} from "./strategy/strategy";
 export class StorageService extends BaseCollection<StorageObject>("storage") {
   constructor(
     database: DatabaseService,
+    client: MongoClient,
     private service: Strategy,
     @Inject(STORAGE_OPTIONS) private storageOptions: StorageOptions
   ) {
-    super(database);
+    super(database, client);
   }
 
   private existingSize(): Promise<number> {

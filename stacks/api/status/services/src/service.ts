@@ -1,4 +1,4 @@
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService, MongoClient} from "@spica-server/database";
 import {Inject, Injectable} from "@nestjs/common";
 import {ApiStatus, StatusOptions, STATUS_OPTIONS} from "./interface";
 import {ObjectId} from "@spica-server/database";
@@ -6,10 +6,14 @@ import {ObjectId} from "@spica-server/database";
 @Injectable()
 export class StatusService extends BaseCollection<ApiStatus>("status") {
   moduleOptions: StatusOptions;
-  constructor(db: DatabaseService, @Inject(STATUS_OPTIONS) _moduleOptions: StatusOptions) {
+  constructor(
+    db: DatabaseService,
+    client: MongoClient,
+    @Inject(STATUS_OPTIONS) _moduleOptions: StatusOptions
+  ) {
     // this service will insert document for each request, enabling entry limit feature here will increase request-response time.
     // we will apply entry limitation from somewhere else
-    super(db, {afterInit: () => this.upsertTTLIndex(_moduleOptions.expireAfterSeconds)});
+    super(db, client, {afterInit: () => this.upsertTTLIndex(_moduleOptions.expireAfterSeconds)});
     this.moduleOptions = _moduleOptions;
   }
 

@@ -10,7 +10,11 @@ import {
   ObjectId,
   UpdateManyOptions,
   UpdateQuery,
-  CollectionCreateOptions
+  CollectionCreateOptions,
+  MongoClient,
+  ClientSession,
+  CommonOptions,
+  CollectionInsertOneOptions
 } from "mongodb";
 import {DatabaseService} from "./database.service";
 
@@ -29,6 +33,7 @@ export class _MixinCollection<T> {
 
   constructor(
     public readonly db: DatabaseService,
+    public readonly client: MongoClient,
     public readonly _collection: string,
     public readonly _options: InitializeOptions = {}
   ) {
@@ -80,10 +85,10 @@ export class _MixinCollection<T> {
   }
 
   // Insert
-  async insertOne(doc: T): Promise<T> {
+  async insertOne(doc: T, options?: CollectionInsertOneOptions): Promise<T> {
     await this.documentCountLimitValidation(1);
 
-    return this._coll.insertOne(doc).then(t => t.ops[0]);
+    return this._coll.insertOne(doc, options).then(t => t.ops[0]);
   }
 
   async insertMany(docs: Array<T>): Promise<ObjectId[]> {
@@ -171,7 +176,7 @@ export class _MixinCollection<T> {
   }
 
   collection(collection: string, options?: InitializeOptions) {
-    return new _MixinCollection(this.db, collection, options);
+    return new _MixinCollection(this.db, this.client, collection, options);
   }
 }
 
@@ -179,8 +184,8 @@ export type BaseCollection<T> = _MixinCollection<T>;
 
 export function BaseCollection<T extends OptionalId<T>>(collection?: string) {
   return class extends _MixinCollection<T> {
-    constructor(db: DatabaseService, options?: InitializeOptions) {
-      super(db, collection, options);
+    constructor(db: DatabaseService, client: MongoClient, options?: InitializeOptions) {
+      super(db, client, collection, options);
     }
   };
 }
