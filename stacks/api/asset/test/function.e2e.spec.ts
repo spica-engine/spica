@@ -225,7 +225,11 @@ describe("function", () => {
     assetv3 = await downloadAsset(assetv3);
 
     preview = await previewAssetInstallation(assetv3._id);
-    expect(preview).toEqual({insertions: [], updations: [], deletions: [fnv2Resource]});
+    expect(preview).toEqual({
+      insertions: [],
+      updations: [],
+      deletions: [{...fnv2Resource, installation_status: "installed"}]
+    });
 
     assetv1 = await getAsset(assetv1._id);
     expect(assetv1.status).toEqual("downloaded");
@@ -292,7 +296,7 @@ describe("function", () => {
   //     assetv1 = await getAsset(assetv1._id);
   //     expect(assetv1.status).toEqual("installed");
 
-  //     assetv2 = await getAsset(assetv2._id);
+  //     assetv2 = await getAsset(assetv2._id);p
   //     expect(assetv2.status).toEqual("downloaded");
 
   //     const fns = await getFns();

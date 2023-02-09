@@ -114,7 +114,6 @@ export class AssetController {
   @Post(":id")
   @UseGuards(AuthGuard(), ActionGuard("asset:install", "asset"))
   async install(
-    @Req() req,
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(
       Schema.validate({
@@ -136,40 +135,63 @@ export class AssetController {
       throw new NotFoundException();
     }
 
-    // we will update asset already installed with new configuration, so this check should be removed
-    // if (asset.status == "installed") {
-    //   throw new BadRequestException("Asset is already installed.");
-    // }
-
     asset = putConfiguration(asset, configs);
 
-    // validation seems not possible because some resources should dependent to the others
-    // for example buckets of the function bucket triggers must be exist before function installation.
-    // await this.validateResources(asset.resources).catch(e => this.onInstallationFailed(id, e));
+    await this.validateResources(asset.resources);
 
     const installedAsset = await this.service.findOne({
       url: asset.url,
-      status: "installed"
+      status: {$in: ["installed", "partially_installed"]}
     });
+
+    if (
+      installedAsset &&
+      installedAsset._id.toString() != asset._id.toString() &&
+      installedAsset.status == "partially_installed"
+    ) {
+      throw new BadRequestException(
+        "Found another version of this asset with partially_installed status. Please reinstall or remove that version before install a new one."
+      );
+    }
+
+    const existingResources = installedAsset
+      ? installedAsset.resources.filter(resource => resource.installation_status != "failed")
+      : [];
+
     const {insertions, updations, deletions} = compareResourceGroups<Resource>(
       asset.resources,
-      installedAsset ? installedAsset.resources : []
+      existingResources,
+      {uniqueField: "_id", ignoredFields: ["installation_status", "failure_message"]}
     );
 
     if (preview) {
       return {insertions, updations, deletions};
     }
 
-    await this.operate(insertions, "insert").catch(e => this.onOperationFailed(id, e));
-    await this.operate(updations, "update").catch(e => this.onOperationFailed(id, e));
-    await this.operate(deletions, "delete").catch(e => this.onOperationFailed(id, e));
+    await Promise.all([
+      this.operate(insertions, "insert"),
+      this.operate(updations, "update"),
+      this.operate(deletions, "delete")
+    ]);
 
-    if (installedAsset) {
-      this.service.findOneAndUpdate({_id: installedAsset._id}, {$set: {status: "downloaded"}});
+    this.updateResourceStatuses([...insertions, ...updations, ...deletions], asset, installedAsset);
+
+    const isPartiallyInstalled = asset.resources.some(r => r.installation_status == "failed");
+
+    asset.status = isPartiallyInstalled ? "partially_installed" : "installed";
+
+    if (installedAsset && installedAsset._id.toString() != asset._id.toString()) {
+      const resources = installedAsset.resources.map(r => {
+        delete r.failure_message;
+        delete r.installation_status;
+        return r;
+      });
+      this.service.findOneAndUpdate(
+        {_id: installedAsset._id},
+        {$set: {resources: resources, status: "downloaded"}}
+      );
     }
 
-    asset.status = "installed";
-    delete asset.failure_message;
     return this.service.findOneAndReplace({_id: asset._id}, asset, {returnOriginal: false});
   }
 
@@ -183,13 +205,18 @@ export class AssetController {
     const asset = await this.service.findOne({_id: id});
 
     if (asset.status != "downloaded") {
-      await this.operate(asset.resources, "delete").catch(e => this.onOperationFailed(id, e));
+      await this.operate(asset.resources, "delete");
     }
 
     if (type == "soft") {
+      const resources = asset.resources.map(r => {
+        delete r.installation_status;
+        delete r.failure_message;
+        return r;
+      });
       return this.service.findOneAndUpdate(
         {_id: id},
-        {$set: {status: "downloaded"}, $unset: {failure_message: ""}}
+        {$set: {status: "downloaded", resources: resources}}
       );
     }
 
@@ -208,35 +235,80 @@ export class AssetController {
           `Operation ${action} has been failed: Unknown module named '${resource.module}'.`
         );
       }
-      return Promise.all(relatedOperators.map(operator => operator[action](resource)));
+
+      return () =>
+        Promise.all(
+          relatedOperators.map(operator =>
+            operator[action](resource)
+              .then(() => {
+                resource.installation_status = "installed";
+                delete resource.failure_message;
+              })
+              .catch(e => {
+                resource.installation_status = "failed";
+                resource.failure_message = e;
+              })
+          )
+        );
     });
-    await Promise.all(operations);
+    await Promise.all(operations.map(o => o()));
   }
 
-  // async validateResources(resources: Resource[]) {
-  //   const validations = resources.map(resource => {
-  //     const relatedValidators = validators.get(resource.module);
-  //     if (!relatedValidators || !relatedValidators.length) {
-  //       return Promise.reject(
-  //         `Validation has been failed: Unknown module named '${resource.module}'.`
-  //       );
-  //     }
-  //     return relatedValidators.map(validator => validator(resource));
-  //   });
-  //   await Promise.all(validations);
-  // }
-
-  onOperationFailed(_id: ObjectId, e: string) {
-    e = e.toString();
-    this.service.findOneAndUpdate(
-      {_id},
-      {
-        $set: {
-          status: "failed",
-          failure_message: e
-        }
+  async validateResources(resources: Resource[]) {
+    const validations = resources.map(resource => {
+      const relatedValidators = validators.get(resource.module);
+      if (!relatedValidators || !relatedValidators.length) {
+        throw new BadRequestException(
+          `Validation has been failed: Unknown module named '${resource.module}'.`
+        );
       }
-    );
-    throw new InternalServerErrorException(e);
+      return () =>
+        Promise.all(
+          relatedValidators.map(validator =>
+            validator(resource).catch(e => {
+              throw new BadRequestException(
+                `Module '${resource.module}' resource '${resource._id}' validation has been failed: ${e}`
+              );
+            })
+          )
+        );
+    });
+    await Promise.all(validations.map(v => v()));
+  }
+
+  updateResourceStatuses(resourcesAfterInstall: Resource[], asset: Asset, previousAsset?: Asset) {
+    for (const resourceAfterInstall of resourcesAfterInstall) {
+      asset.resources = asset.resources.map(resource => {
+        if (resource._id.toString() == resourceAfterInstall._id.toString()) {
+          resource.installation_status = resourceAfterInstall.installation_status;
+          if (resourceAfterInstall.failure_message) {
+            resource.failure_message = resourceAfterInstall.failure_message;
+          } else {
+            delete resource.failure_message;
+          }
+        }
+
+        return resource;
+      });
+    }
+
+    // previous asset might be installed partially
+    // and resources that exist both(pre,curr) assets and installed from previous asset won't be installed again(optimization)
+    // but these resources on the current asset should be marked as installed
+    if (previousAsset) {
+      asset.resources = asset.resources.map(curRes => {
+        const resourceAlreadyInstalled = previousAsset.resources.find(
+          preRes =>
+            preRes._id.toString() == curRes._id.toString() &&
+            preRes.installation_status == "installed"
+        );
+
+        if (resourceAlreadyInstalled) {
+          curRes.installation_status = "installed";
+        }
+
+        return curRes;
+      });
+    }
   }
 }

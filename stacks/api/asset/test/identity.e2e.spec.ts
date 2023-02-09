@@ -210,7 +210,7 @@ describe("identity-settings", () => {
     expect(preview).toEqual({
       insertions: [],
       updations: [],
-      deletions: [identitySettingsV2Resource]
+      deletions: [{...identitySettingsV2Resource, installation_status: "installed"}]
     });
 
     assetv1 = await getAsset(assetv1._id);

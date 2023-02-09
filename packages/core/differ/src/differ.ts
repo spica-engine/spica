@@ -126,6 +126,9 @@ export function compareResourceGroups<T>(
 ) {
   const {ignoredFields, uniqueField} = comparisonOptions;
 
+  desired = JSON.parse(JSON.stringify(desired));
+  actual = JSON.parse(JSON.stringify(actual));
+
   const existings = actual.filter(target =>
     desired.some(source => source[uniqueField] == target[uniqueField])
   );
@@ -133,11 +136,11 @@ export function compareResourceGroups<T>(
   const existingIds = existings.map(existing => existing[uniqueField]);
 
   const updations = () => {
-    const updations = [];
+    const updations: T[] = [];
     for (const existing of existings) {
       const source = desired.find(source => source[uniqueField] == existing[uniqueField]);
 
-      const copySource = JSON.parse(JSON.stringify(source));
+      const copySource: T = JSON.parse(JSON.stringify(source));
 
       if (ignoredFields.length) {
         ignoredFields.forEach(field => {

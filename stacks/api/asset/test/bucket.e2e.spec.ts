@@ -181,7 +181,11 @@ describe("Bucket", () => {
     assetv3 = await downloadAsset(assetv3);
     preview = await previewAssetInstallation(assetv3._id);
 
-    expect(preview).toEqual({insertions: [], updations: [], deletions: [bucketv2Resource]});
+    expect(preview).toEqual({
+      insertions: [],
+      updations: [],
+      deletions: [{...bucketv2Resource, installation_status: "installed"}]
+    });
 
     assetv1 = await getAsset(assetv1._id);
     expect(assetv1.status).toEqual("downloaded");

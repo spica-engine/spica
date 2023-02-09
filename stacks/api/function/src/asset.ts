@@ -23,9 +23,14 @@ export function registerAssetHandlers(
   schemaValidator: Validator,
   manager: IRepresentativeManager
 ) {
-  const validator = (resource: Resource<FunctionContents>) => {
+  const validator = async (resource: Resource<FunctionContents>) => {
     const fn = resource.contents.schema;
-    return validateFn(fn, schemaValidator);
+
+    const schemaValidation = () => Promise.resolve(validateSchema(fn, schemaValidator));
+
+    const validations = [schemaValidation];
+
+    await Promise.all(validations.map(v => v()));
   };
 
   registrar.validator(_module, validator);
@@ -107,8 +112,25 @@ export function registerAssetHandlers(
   registrar.exporter(_module, exporter);
 }
 
-function validateFn(fn: Function, validator: Validator) {
-  const validatorMixin = Schema.validate(generate({body: fn}));
+function validateSchema(fn: Function, validator: Validator) {
+  const schema = generate({body: fn});
+  const validatorMixin = Schema.validate(deleteEnqueuerValidation(schema));
   const pipe: any = new validatorMixin(validator);
   return pipe.transform(fn);
+}
+
+function deleteEnqueuerValidation(schema: any) {
+  schema.allOf = schema.allOf.map(subSchema => {
+    if (!subSchema.properties || !subSchema.properties.triggers) {
+      return subSchema;
+    }
+
+    Object.keys(subSchema.properties.triggers.properties).forEach(trigger => {
+      delete subSchema.properties.triggers.properties[trigger].options;
+    });
+
+    return subSchema;
+  });
+
+  return schema;
 }

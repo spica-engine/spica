@@ -16,9 +16,9 @@ export function registerAssetHandlers(
   schemaValidator: Validator,
   assetRepManager: IRepresentativeManager
 ) {
-  const validator = (resource: Resource<BucketAsset>) => {
+  const validator = async (resource: Resource<BucketAsset>) => {
     const bucket = resource.contents.schema;
-    return validateBucket(bucket, schemaValidator);
+    await validateBucket(bucket, schemaValidator);
   };
 
   registrar.validator(_module, validator);

@@ -5,12 +5,11 @@ export interface Asset {
   resources: Resource[];
   status: Status;
   configs: Config[];
-  failure_message?: string;
   url: string;
   icon: string;
 }
 
-export type Status = "downloaded" | "installed" | "failed";
+export type Status = "downloaded" | "installed" | "partially_installed";
 
 export interface Config {
   title: string;
@@ -26,6 +25,8 @@ export interface Resource<C = object> {
   _id: any;
   module: string;
   contents: C;
+  installation_status?: "installed" | "failed";
+  failure_message?: string;
 }
 
 export type Validator = (resource: Resource) => Promise<void>;

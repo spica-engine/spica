@@ -23,8 +23,8 @@ export class Request {
     return this.request<T>({method: "GET", path, query, headers});
   }
 
-  delete<T>(path: string, body?: object, headers?: Headers) {
-    return this.request<T>({method: "DELETE", path, body, headers});
+  delete<T>(path: string, body?: object, headers?: Headers, query?: any) {
+    return this.request<T>({method: "DELETE", path, body, headers, query});
   }
 
   post<T>(path: string, body?: any, headers?: Headers, query?: any) {

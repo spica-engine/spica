@@ -6,6 +6,7 @@ import {Resource} from "@spica-server/interface/asset";
 import {registrar} from "@spica-server/asset";
 import {ObjectId} from "@spica-server/database";
 import * as uniqid from "uniqid";
+import ApiKeySchema = require("./schemas/apikey.json");
 
 const _module = "apikey";
 
@@ -74,7 +75,14 @@ export interface ApikeyAsset {
 }
 
 function validateApikey(apikey: any, validator: Validator): Promise<void> {
-  const validatorMixin = Schema.validate("http://spica.internal/passport/apikey");
+  const schema: any = ApiKeySchema;
+  schema.properties.policies = {
+    type: "array",
+    items: {
+      type: "string"
+    }
+  };
+  const validatorMixin = Schema.validate(schema);
 
   const pipe: any = new validatorMixin(validator);
   return pipe.transform(apikey);
