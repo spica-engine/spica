@@ -23,30 +23,47 @@
 
       <ng-container matColumnDef="status">
         <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
-        <mat-cell *matCellDef="let asset">{{ asset.status }}</mat-cell>
+        <mat-cell *matCellDef="let asset">
+          {{ asset.status.replace("_", " ") | titlecase }}
+          <button
+            mat-icon-button
+            *ngIf="asset.status == 'partially_installed'"
+            (click)="showPreview(asset.resources)"
+          >
+            <mat-icon>info</mat-icon>
+          </button>
+        </mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="actions">
         <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
         <mat-cell *matCellDef="let asset">
           <button
-            *ngIf="!isPending"
+            *ngIf="asset.status == 'downloaded' || asset.status == 'partially_installed'"
             mat-icon-button
             canInteract="asset:install"
             [resource]="asset._id"
-            (click)="
-              asset.status == 'downloaded'
-                ? onInstall(asset)
-                : onDelete(asset, 'soft', {
-                    title: 'Confirmation',
-                    templateOrDescription: assetSoftDeleteTemplate,
-                    answer: asset.name
-                  })
-            "
+            (click)="onInstall(asset)"
+            [disabled]="isPending"
           >
-            <mat-icon>{{ asset.status == "downloaded" ? "play_arrow" : "stop_circle" }}</mat-icon>
+            <mat-icon>{{ asset.status == "downloaded" ? "play_arrow" : "replay" }}</mat-icon>
           </button>
-          <mat-spinner color="accent" diameter="20" *ngIf="isPending"></mat-spinner>
+          <button
+            *ngIf="asset.status == 'installed' || asset.status == 'partially_installed'"
+            mat-icon-button
+            canInteract="asset:delete"
+            [resource]="asset._id"
+            (click)="
+              onDelete(asset, 'soft', {
+                title: 'Confirmation',
+                templateOrDescription: assetSoftDeleteTemplate,
+                answer: asset.name
+              })
+            "
+            [disabled]="isPending"
+          >
+            <mat-icon>stop_circle</mat-icon>
+          </button>
           <button
             mat-icon-button
             canInteract="asset:delete"

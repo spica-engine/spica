@@ -1,3 +1,4 @@
+import {MatDialog} from "@angular/material/dialog";
 import {
   Exporter,
   InstallationPreview,
@@ -6,6 +7,7 @@ import {
   Resource,
   Option
 } from "./interfaces";
+import {ResourcesComponent} from "./components/resources/resources.component";
 
 export function separatePreviewResourcesByModule(
   preview: InstallationPreview
@@ -31,12 +33,18 @@ export function getEmptyPreview(): InstallationPreview {
   };
 }
 
-export function displayPreview(resources: any[]) {
-  const data = JSON.stringify(resources, null, 2);
-  const x = window.open();
-  x.document.open();
-  x.document.write("<html><body><pre>" + data + "</pre></body></html>");
-  x.document.close();
+export function displayPreview(dialog: MatDialog, resources: any[]) {
+  dialog.open(ResourcesComponent, {
+    data: resources,
+    width: "30vw",
+    minWidth: "400px",
+    maxHeight: "calc(100vh - 15px)"
+  });
+  // const data = JSON.stringify(resources, null, 2);
+  // const x = window.open();
+  // x.document.open();
+  // x.document.write("<html><body><pre>" + data + "</pre></body></html>");
+  // x.document.close();
 }
 
 export function getEmptyConfig() {

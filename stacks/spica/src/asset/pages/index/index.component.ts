@@ -7,6 +7,7 @@ import {AssetInstallDialog} from "@spica-client/asset/components/install/install
 import {filter, switchMap, tap} from "rxjs/operators";
 import {MatAwareDialogComponent} from "@spica-client/material";
 import {ExportComponent} from "@spica-client/asset/components/export/export.component";
+import {displayPreview} from "@spica-client/asset/helpers";
 
 @Component({
   selector: "asset-index",
@@ -72,5 +73,9 @@ export class IndexComponent implements OnInit {
 
   export() {
     this.dialog.open(ExportComponent, {width: "80vh"});
+  }
+
+  showPreview(resources) {
+    displayPreview(this.dialog, resources);
   }
 }

@@ -19,7 +19,7 @@ import {
 import {AssetService} from "./service";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
 import {Asset, Config, ExportMeta, Resource} from "@spica-server/interface/asset";
-import {exporters, listers, operators, registrar, validators} from "./registration";
+import {exporters, operators, validators} from "./registration";
 import {compareResourceGroups} from "@spica-server/core/differ";
 import {putConfiguration} from "./helpers";
 import {BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
@@ -205,7 +205,10 @@ export class AssetController {
     const asset = await this.service.findOne({_id: id});
 
     if (asset.status != "downloaded") {
-      await this.operate(asset.resources, "delete");
+      await this.operate(
+        asset.resources.filter(resource => resource.installation_status == "installed"),
+        "delete"
+      );
     }
 
     if (type == "soft") {
@@ -227,26 +230,28 @@ export class AssetController {
     throw new BadRequestException(`Unknown delete type '${type}'`);
   }
 
-  async operate(resources: Resource[], action: "insert" | "update" | "delete") {
-    const operations = resources.map(resource => {
-      const relatedOperators = operators.get(resource.module);
+  async operate(originals: Resource[], action: "insert" | "update" | "delete") {
+    const copies: Resource[] = this.deepCopy(originals);
+
+    const operations = copies.map((copy, i) => {
+      const relatedOperators = operators.get(copy.module);
       if (!relatedOperators || !relatedOperators.length) {
         throw new BadRequestException(
-          `Operation ${action} has been failed: Unknown module named '${resource.module}'.`
+          `Operation ${action} has been failed: Unknown module named '${copy.module}'.`
         );
       }
 
       return () =>
         Promise.all(
           relatedOperators.map(operator =>
-            operator[action](resource)
+            operator[action](copy)
               .then(() => {
-                resource.installation_status = "installed";
-                delete resource.failure_message;
+                originals[i].installation_status = "installed";
+                delete originals[i].failure_message;
               })
               .catch(e => {
-                resource.installation_status = "failed";
-                resource.failure_message = e;
+                originals[i].installation_status = "failed";
+                originals[i].failure_message = e.message ? e.message : e;
               })
           )
         );
@@ -254,26 +259,32 @@ export class AssetController {
     await Promise.all(operations.map(o => o()));
   }
 
-  async validateResources(resources: Resource[]) {
-    const validations = resources.map(resource => {
-      const relatedValidators = validators.get(resource.module);
+  async validateResources(originals: Resource[]) {
+    const copies: Resource[] = this.deepCopy(originals);
+
+    const validations = copies.map(copy => {
+      const relatedValidators = validators.get(copy.module);
       if (!relatedValidators || !relatedValidators.length) {
         throw new BadRequestException(
-          `Validation has been failed: Unknown module named '${resource.module}'.`
+          `Validation has been failed: Unknown module named '${copy.module}'.`
         );
       }
       return () =>
         Promise.all(
           relatedValidators.map(validator =>
-            validator(resource).catch(e => {
+            validator(copy).catch(e => {
               throw new BadRequestException(
-                `Module '${resource.module}' resource '${resource._id}' validation has been failed: ${e}`
+                `Module '${copy.module}' resource '${copy._id}' validation has been failed: ${e}`
               );
             })
           )
         );
     });
     await Promise.all(validations.map(v => v()));
+  }
+
+  deepCopy(object: any) {
+    return JSON.parse(JSON.stringify(object));
   }
 
   updateResourceStatuses(resourcesAfterInstall: Resource[], asset: Asset, previousAsset?: Asset) {

@@ -38,6 +38,7 @@ import {ExportComponent} from "./components/export/export.component";
 import {MatDialogModule} from "@angular/material/dialog";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatCheckboxModule} from "@angular/material/checkbox";
+import { ResourcesComponent } from "./components/resources/resources.component";
 
 @NgModule({
   imports: [
@@ -71,7 +72,8 @@ import {MatCheckboxModule} from "@angular/material/checkbox";
     MatAwareDialogModule,
     MatSaveModule,
     MatDialogModule,
-    MatSelectModule
+    MatSelectModule,
+    CommonModule
   ],
   declarations: [
     IndexComponent,
@@ -79,7 +81,8 @@ import {MatCheckboxModule} from "@angular/material/checkbox";
     EditComponent,
     PreviewComponent,
     AssetStoreComponent,
-    ExportComponent
+    ExportComponent,
+    ResourcesComponent
   ],
   providers: [
     AssetService,
