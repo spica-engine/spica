@@ -7,7 +7,6 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
-  InternalServerErrorException,
   NotFoundException,
   Param,
   Post,
@@ -20,12 +19,16 @@ import {AssetService} from "./service";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
 import {Asset, Config, ExportMeta, Resource} from "@spica-server/interface/asset";
 import {exporters, operators, validators} from "./registration";
-import {compareResourceGroups} from "@spica-server/core/differ";
 import {putConfiguration} from "./helpers";
 import {BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
-import {ASSET_REP_MANAGER} from "./interface";
+import {
+  ASSET_REP_MANAGER,
+  IInstallationStrategy,
+  InstallationChanges,
+  INSTALLATION_STRATEGIES
+} from "./interface";
 import {AssetRepManager} from "./representative";
 import {createReadStream} from "fs";
 
@@ -42,7 +45,8 @@ import {createReadStream} from "fs";
 export class AssetController {
   constructor(
     private service: AssetService,
-    @Inject(ASSET_REP_MANAGER) private repManager: AssetRepManager
+    @Inject(ASSET_REP_MANAGER) private repManager: AssetRepManager,
+    @Inject(INSTALLATION_STRATEGIES) private installationStrategies: IInstallationStrategy[]
   ) {}
 
   @Get()
@@ -139,60 +143,38 @@ export class AssetController {
 
     await this.validateResources(asset.resources);
 
-    const installedAsset = await this.service.findOne({
+    const previousAssets = await this.service.find({
       url: asset.url,
-      status: {$in: ["installed", "partially_installed"]}
+      _id: {$ne: asset._id}
     });
 
-    if (
-      installedAsset &&
-      installedAsset._id.toString() != asset._id.toString() &&
-      installedAsset.status == "partially_installed"
-    ) {
-      throw new BadRequestException(
-        "Found another version of this asset with partially_installed status. Please reinstall or remove that version before install a new one."
-      );
+    const strategy = this.installationStrategies.find(s => s.isMyTask(asset, previousAssets));
+
+    let changes: InstallationChanges;
+
+    try {
+      changes = strategy.getChanges();
+    } catch (error) {
+      throw new BadRequestException(error.message || error);
     }
-
-    const existingResources = installedAsset
-      ? installedAsset.resources.filter(resource => resource.installation_status != "failed")
-      : [];
-
-    const {insertions, updations, deletions} = compareResourceGroups<Resource>(
-      asset.resources,
-      existingResources,
-      {uniqueField: "_id", ignoredFields: ["installation_status", "failure_message"]}
-    );
 
     if (preview) {
-      return {insertions, updations, deletions};
+      return changes;
     }
+
+    const resourcesAfterInstall: Resource[] = [];
 
     await Promise.all([
-      this.operate(insertions, "insert"),
-      this.operate(updations, "update"),
-      this.operate(deletions, "delete")
+      this.operate(changes.insertions, "insert").then(r => resourcesAfterInstall.push(...r)),
+      this.operate(changes.updations, "update").then(r => resourcesAfterInstall.push(...r)),
+      this.operate(changes.deletions, "delete").then(r => resourcesAfterInstall.push(...r))
     ]);
 
-    this.updateResourceStatuses([...insertions, ...updations, ...deletions], asset, installedAsset);
+    const assetsAfterInstall = strategy.afterInstall(resourcesAfterInstall);
 
-    const isPartiallyInstalled = asset.resources.some(r => r.installation_status == "failed");
+    await Promise.all(assetsAfterInstall.map(a => this.service.findOneAndReplace({_id: a._id}, a)));
 
-    asset.status = isPartiallyInstalled ? "partially_installed" : "installed";
-
-    if (installedAsset && installedAsset._id.toString() != asset._id.toString()) {
-      const resources = installedAsset.resources.map(r => {
-        delete r.failure_message;
-        delete r.installation_status;
-        return r;
-      });
-      this.service.findOneAndUpdate(
-        {_id: installedAsset._id},
-        {$set: {resources: resources, status: "downloaded"}}
-      );
-    }
-
-    return this.service.findOneAndReplace({_id: asset._id}, asset, {returnOriginal: false});
+    return assetsAfterInstall.find(a => a._id == asset._id);
   }
 
   @Delete(":id")
@@ -230,10 +212,10 @@ export class AssetController {
     throw new BadRequestException(`Unknown delete type '${type}'`);
   }
 
-  async operate(originals: Resource[], action: "insert" | "update" | "delete") {
-    const copies: Resource[] = this.deepCopy(originals);
+  async operate(resources: Resource[], action: "insert" | "update" | "delete") {
+    const copies: Resource[] = this.deepCopy(resources);
 
-    const operations = copies.map((copy, i) => {
+    const operations = copies.map(copy => {
       const relatedOperators = operators.get(copy.module);
       if (!relatedOperators || !relatedOperators.length) {
         throw new BadRequestException(
@@ -246,21 +228,22 @@ export class AssetController {
           relatedOperators.map(operator =>
             operator[action](copy)
               .then(() => {
-                originals[i].installation_status = "installed";
-                delete originals[i].failure_message;
+                copy.installation_status = "installed";
+                delete copy.failure_message;
               })
               .catch(e => {
-                originals[i].installation_status = "failed";
-                originals[i].failure_message = e.message ? e.message : e;
+                copy.installation_status = "failed";
+                copy.failure_message = e.message ? e.message : e;
               })
           )
         );
     });
-    await Promise.all(operations.map(o => o()));
+
+    return Promise.all(operations.map(o => o())).then(() => copies);
   }
 
-  async validateResources(originals: Resource[]) {
-    const copies: Resource[] = this.deepCopy(originals);
+  async validateResources(resources: Resource[]) {
+    const copies: Resource[] = this.deepCopy(resources);
 
     const validations = copies.map(copy => {
       const relatedValidators = validators.get(copy.module);
@@ -285,41 +268,5 @@ export class AssetController {
 
   deepCopy(object: any) {
     return JSON.parse(JSON.stringify(object));
-  }
-
-  updateResourceStatuses(resourcesAfterInstall: Resource[], asset: Asset, previousAsset?: Asset) {
-    for (const resourceAfterInstall of resourcesAfterInstall) {
-      asset.resources = asset.resources.map(resource => {
-        if (resource._id.toString() == resourceAfterInstall._id.toString()) {
-          resource.installation_status = resourceAfterInstall.installation_status;
-          if (resourceAfterInstall.failure_message) {
-            resource.failure_message = resourceAfterInstall.failure_message;
-          } else {
-            delete resource.failure_message;
-          }
-        }
-
-        return resource;
-      });
-    }
-
-    // previous asset might be installed partially
-    // and resources that exist both(pre,curr) assets and installed from previous asset won't be installed again(optimization)
-    // but these resources on the current asset should be marked as installed
-    if (previousAsset) {
-      asset.resources = asset.resources.map(curRes => {
-        const resourceAlreadyInstalled = previousAsset.resources.find(
-          preRes =>
-            preRes._id.toString() == curRes._id.toString() &&
-            preRes.installation_status == "installed"
-        );
-
-        if (resourceAlreadyInstalled) {
-          curRes.installation_status = "installed";
-        }
-
-        return curRes;
-      });
-    }
   }
 }

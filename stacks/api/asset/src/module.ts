@@ -3,7 +3,12 @@ import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {AssetController} from "./controller";
 import {AssetService} from "./service";
 
-import {AssetOptions, ASSET_REP_MANAGER, ASSET_WORKING_DIRECTORY} from "./interface";
+import {
+  AssetOptions,
+  ASSET_REP_MANAGER,
+  ASSET_WORKING_DIRECTORY,
+  INSTALLATION_STRATEGIES
+} from "./interface";
 import * as fs from "fs";
 
 import AssetSchema = require("../schema/asset.json");
@@ -11,6 +16,7 @@ import ConfigsSchema = require("../schema/configs.json");
 import ExportSchema = require("../schema/export.json");
 import {AssetRepManager} from "./representative";
 import {AssetInstallSchemaResolver, provideAssetInstallSchemaResolver} from "./schema.resolver";
+import {installationStrategies} from "./strategies";
 
 @Global()
 @Module({})
@@ -45,6 +51,10 @@ export class AssetModule {
           provide: AssetInstallSchemaResolver,
           useFactory: provideAssetInstallSchemaResolver,
           inject: [AssetService, Validator]
+        },
+        {
+          provide: INSTALLATION_STRATEGIES,
+          useValue: installationStrategies
         }
       ],
       exports: [ASSET_REP_MANAGER]

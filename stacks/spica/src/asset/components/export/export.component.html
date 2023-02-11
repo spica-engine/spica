@@ -65,8 +65,7 @@
                   !exportMeta.resources ||
                   (option.name == 'module' && !exportMeta.resources[option.value]) ||
                   (option.name == 'resource_id' &&
-                    exportMeta.resources[exportMeta.configs[ci].module].indexOf(option.value) ==
-                      -1)
+                    exportMeta.resources[exportMeta.configs[ci].module].indexOf(option.value) == -1)
                 "
               >
                 {{ option.title }}

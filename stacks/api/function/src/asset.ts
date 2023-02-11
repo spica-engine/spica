@@ -126,11 +126,10 @@ function deleteEnqueuerValidation(schema: any) {
     }
 
     Object.keys(subSchema.properties.triggers.properties).forEach(trigger => {
-      delete subSchema.properties.triggers.properties[trigger].options;
+      subSchema.properties.triggers.properties[trigger].properties.options = true;
     });
 
     return subSchema;
   });
-
   return schema;
 }
