@@ -9,9 +9,9 @@ async function _delete({options}: ActionParameters) {
   const rawDocument = fs.readFileSync(folderPath).toString();
   const assetMeta = YAML.parseDocument(rawDocument).toJSON();
 
-  const machineryClient = await httpService.createFromCurrentCtx();
+  const client = await httpService.createFromCurrentCtx();
 
-  const asset = await machineryClient
+  const asset = await client
     .get("/asset", {
       params: {
         name: assetMeta.name
@@ -23,7 +23,7 @@ async function _delete({options}: ActionParameters) {
     console.error(`Asset ${assetMeta.name} does not exist`);
   }
 
-  await machineryClient.delete(`/asset/${asset._id}`, {params: {type}});
+  await client.delete(`/asset/${asset._id}`, {params: {type}});
 
   return console.info("Asset ${assetMeta.name} has been deleted successfully");
 }

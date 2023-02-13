@@ -45,9 +45,9 @@ async function apply({options}: ActionParameters) {
     resources
   };
 
-  const machineryClient = await httpService.createFromCurrentCtx();
+  const client = await httpService.createFromCurrentCtx();
 
-  await machineryClient.post("/asset", body);
+  await client.post("/asset", body);
 
   return console.info(`Asset ${body.name} has been uploaded successfully`);
 }
