@@ -55,7 +55,7 @@ describe("IndexComponent", () => {
       {
         _id: "3",
         url: "asset3.com",
-        status: "failed",
+        status: "partially_installed",
         resources: [],
         configs: [],
         description: "Description of asset3",
@@ -147,19 +147,19 @@ describe("IndexComponent", () => {
 
     expect(dataCells[0].textContent).toBe("1");
     expect(dataCells[1].textContent).toBe("Asset 1");
-    expect(dataCells[2].textContent).toBe("downloaded");
+    expect(dataCells[2].textContent).toBe(" Downloaded ");
     expect(dataCells[3].textContent).toContain("play_arrow");
     expect(dataCells[3].textContent).toContain("delete");
 
     expect(dataCells[4].textContent).toBe("2");
     expect(dataCells[5].textContent).toBe("Asset 2");
-    expect(dataCells[6].textContent).toBe("installed");
+    expect(dataCells[6].textContent).toBe(" Installed ");
     expect(dataCells[7].textContent).toContain("stop_circle");
     expect(dataCells[7].textContent).toContain("delete");
 
     expect(dataCells[8].textContent).toBe("3");
     expect(dataCells[9].textContent).toBe("Asset 3");
-    expect(dataCells[10].textContent).toBe("failed");
+    expect(dataCells[10].textContent).toBe(" Partially Installed info");
     expect(dataCells[11].textContent).toContain("stop_circle");
     expect(dataCells[11].textContent).toContain("delete");
   });
@@ -193,7 +193,7 @@ describe("IndexComponent", () => {
     expect(dataCells[0].textContent).toBe("1");
     expect(dataCells[1].textContent).toBe("Asset 1");
     expect(dataCells[2].textContent).toBe(
-      "installed",
+      " Installed ",
       "if it's status changed from downloaded to installed"
     );
     expect(dataCells[3].textContent).toContain("stop_circle");
@@ -225,7 +225,7 @@ describe("IndexComponent", () => {
     expect(dataCells[4].textContent).toBe("2");
     expect(dataCells[5].textContent).toBe("Asset 2");
     expect(dataCells[6].textContent).toBe(
-      "downloaded",
+      " Downloaded ",
       "if it's status changed from installed to downloaded"
     );
     expect(dataCells[7].textContent).toContain("play_arrow");
@@ -234,7 +234,7 @@ describe("IndexComponent", () => {
 
   it("should hard delete asset", fakeAsync(() => {
     const deleteButton = fixture.debugElement.nativeElement.querySelector(
-      "mat-table mat-row:nth-of-type(3) mat-cell.mat-column-actions button:nth-of-type(2)"
+      "mat-table mat-row:nth-of-type(3) mat-cell.mat-column-actions button:nth-of-type(3)"
     );
     deleteButton.click();
 
@@ -258,13 +258,13 @@ describe("IndexComponent", () => {
 
     expect(dataCells[0].textContent).toBe("1");
     expect(dataCells[1].textContent).toBe("Asset 1");
-    expect(dataCells[2].textContent).toBe("downloaded");
+    expect(dataCells[2].textContent).toBe(" Downloaded ");
     expect(dataCells[3].textContent).toContain("play_arrow");
     expect(dataCells[3].textContent).toContain("delete");
 
     expect(dataCells[4].textContent).toBe("2");
     expect(dataCells[5].textContent).toBe("Asset 2");
-    expect(dataCells[6].textContent).toBe("installed");
+    expect(dataCells[6].textContent).toBe(" Installed ");
     expect(dataCells[7].textContent).toContain("stop_circle");
     expect(dataCells[7].textContent).toContain("delete");
   }));

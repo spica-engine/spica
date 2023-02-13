@@ -12,7 +12,7 @@ export interface Asset {
   icon: string;
 }
 
-export type Status = "downloaded" | "installed" | "failed";
+export type Status = "downloaded" | "installed" | "partially_installed";
 
 export interface Config {
   module: string;
