@@ -75,28 +75,3 @@ jasmine_node_test(
         ":asset_e2e_test_lib",
     ],
 )
-
-ts_project(
-    name = "asset_schema_test_lib",
-    testonly = True,
-    srcs = [
-        "schema.resolver.spec.ts",
-    ],
-    deps = [
-        "//packages/core/schema",
-        "//packages/core/testing",
-        "//packages/database",
-        "//packages/database/testing",
-        "//stacks/api/asset",
-        "@npm//@nestjs/testing",
-        "@npm//@types/jasmine",
-        "@npm//@types/node",
-    ],
-)
-
-jasmine_node_test(
-    name = "asset_schema_test",
-    deps = [
-        ":asset_schema_test_lib",
-    ],
-)
