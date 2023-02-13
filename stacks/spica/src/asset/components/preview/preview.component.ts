@@ -1,5 +1,5 @@
 import {Component, Input, OnInit} from "@angular/core";
-import { MatDialog } from "@angular/material/dialog";
+import {MatDialog} from "@angular/material/dialog";
 import {displayPreview} from "@spica-client/asset/helpers";
 import {InstallationPreviewByModules, Resource} from "../../interfaces";
 
@@ -11,9 +11,9 @@ import {InstallationPreviewByModules, Resource} from "../../interfaces";
 export class PreviewComponent {
   @Input() preview: InstallationPreviewByModules;
 
-  constructor(public dialog:MatDialog) {}
+  constructor(public dialog: MatDialog) {}
 
   show(resources: Resource[]) {
-    displayPreview(this.dialog,resources);
+    displayPreview(this.dialog, resources);
   }
 }

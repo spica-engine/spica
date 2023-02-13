@@ -101,7 +101,7 @@ export class StorageModule {
         {
           provide: BUILDLINK_FACTORY,
           useValue: {caller: "activity", factory: provideActivityFactory},
-          multi:true
+          multi: true
         },
         {
           provide: StorageInitializer,

@@ -71,7 +71,7 @@ export class ExportComponent {
     this.exportMeta.configs.splice(i, 1);
   }
 
-  selectAllResources(module: string, resources: Resource<unknown>[],from) {
+  selectAllResources(module: string, resources: Resource<unknown>[], from) {
     if (
       !this.exportMeta.resources[module] ||
       this.exportMeta.resources[module].length < resources.length

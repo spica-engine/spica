@@ -26,7 +26,7 @@ export class AssetInstallDialog {
       .install(this.data.asset._id, this.data.asset.configs, true)
       .toPromise()
       .then(preview => (this.installationPreview = separatePreviewResourcesByModule(preview)))
-      .catch((e) => {
+      .catch(e => {
         this.configure();
       });
   }

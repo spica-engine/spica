@@ -31,14 +31,14 @@ ts_project(
         "e2e.spec.ts",
     ],
     deps = [
-        "//stacks/api/asset",
-        "@npm//@types/jasmine",
-        "@npm//@types/node",
-        "@npm//@nestjs/testing",
         "//packages/core/testing",
         "//packages/database/testing",
+        "//stacks/api/asset",
         "//stacks/api/passport/testing",
         "//stacks/api/replication/testing",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
     ],
 )
 

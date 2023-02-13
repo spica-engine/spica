@@ -62,7 +62,7 @@ export class EditComponent {
   }
 
   getResourceName(resource: Resource<any>) {
-    return resource.contents.schema.title || resource.contents.schema.name || resource._id
+    return resource.contents.schema.title || resource.contents.schema.name || resource._id;
   }
 
   categorizeResourcesByModule(resources: (Resource<any>)[]) {
