@@ -1,5 +1,5 @@
 import {Global, Module} from "@nestjs/common";
-import {SchemaModule, Validator} from "@spica-server/core/schema";
+import {SchemaModule} from "@spica-server/core/schema";
 import {AssetController} from "./controller";
 import {AssetService} from "./service";
 
@@ -15,7 +15,6 @@ import AssetSchema = require("../schema/asset.json");
 import ConfigsSchema = require("../schema/configs.json");
 import ExportSchema = require("../schema/export.json");
 import {AssetRepManager} from "./representative";
-import {AssetInstallSchemaResolver, provideAssetInstallSchemaResolver} from "./schema.resolver";
 import {installationStrategies} from "./strategies";
 
 @Global()
@@ -46,11 +45,6 @@ export class AssetModule {
           provide: ASSET_REP_MANAGER,
           useFactory: dir => new AssetRepManager(dir),
           inject: [ASSET_WORKING_DIRECTORY]
-        },
-        {
-          provide: AssetInstallSchemaResolver,
-          useFactory: provideAssetInstallSchemaResolver,
-          inject: [AssetService, Validator]
         },
         {
           provide: INSTALLATION_STRATEGIES,
