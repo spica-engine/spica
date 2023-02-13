@@ -84,7 +84,7 @@
         [canInteract]="'asset:install'"
         [resource]="asset._id"
         mat-button
-        [disabled]="form.invalid"
+        [disabled]="form.invalid || !!state"
         (click)="setInstallationPreview()"
         (confirm)="save()"
         *matSave="$save | async; let state"

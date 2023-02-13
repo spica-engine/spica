@@ -26,6 +26,20 @@
     <mat-form-field *ngFor="let resourceKv of availableResources | keyvalue; trackBy: _trackBy3">
       <mat-label>{{ resourceKv.key | titlecase }}</mat-label>
       <mat-select [(ngModel)]="exportMeta.resources[resourceKv.key]" multiple>
+        <div
+          matRipple
+          class="mat-option select-all"
+          (click)="selectAllResources(resourceKv.key, resourceKv.value)"
+        >
+          <mat-checkbox
+            [checked]="
+              exportMeta.resources[resourceKv.key] &&
+              exportMeta.resources[resourceKv.key].length == resourceKv.value.length
+            "
+            (click)="$event.preventDefault()"
+          ></mat-checkbox>
+          <span>Select All</span>
+        </div>
         <mat-option
           *ngFor="let option of resourceKv.value; trackBy: _trackBy4"
           [value]="option._id"

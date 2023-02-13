@@ -1,5 +1,4 @@
 import {Asset, Resource} from "@spica-server/interface/asset";
-import {AssetService} from "./service";
 
 export const ASSET_REP_MANAGER = Symbol.for("ASSET_REP_MANAGER");
 
@@ -22,7 +21,7 @@ export interface IInstallationStrategy {
   previousAsset: Asset;
   changes: InstallationChanges;
 
-  isMyTask(currentAsset: Asset, previousAssets: Asset[]): boolean;
+  isMyTask(currentAsset: Asset, allVersions: Asset[]): boolean;
 
   getChanges(): {
     insertions: Resource<object>[];

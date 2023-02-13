@@ -75,7 +75,9 @@ export interface ApikeyAsset {
 }
 
 function validateApikey(apikey: any, validator: Validator): Promise<void> {
-  const schema: any = ApiKeySchema;
+  const schema: any = JSON.parse(JSON.stringify(ApiKeySchema));
+
+  schema.$id = "http://spica.internal/passport/apikey-with-policies";
   schema.properties.policies = {
     type: "array",
     items: {

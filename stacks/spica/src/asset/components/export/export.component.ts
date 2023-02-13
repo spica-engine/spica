@@ -6,7 +6,8 @@ import {
   AvailableResourcesByModule,
   Config,
   ExportMeta,
-  Option
+  Option,
+  Resource
 } from "@spica-client/asset/interfaces";
 import {AssetService} from "@spica-client/asset/services/asset.service";
 
@@ -68,6 +69,17 @@ export class ExportComponent {
   removeConfig(i) {
     this.configSteps.splice(i, 1);
     this.exportMeta.configs.splice(i, 1);
+  }
+
+  selectAllResources(module: string, resources: Resource<unknown>[],from) {
+    if (
+      !this.exportMeta.resources[module] ||
+      this.exportMeta.resources[module].length < resources.length
+    ) {
+      this.exportMeta.resources[module] = resources.map(r => r._id);
+    } else {
+      this.exportMeta.resources[module] = [];
+    }
   }
 
   _trackBy: (i) => any = i => i;

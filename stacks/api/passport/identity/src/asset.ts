@@ -76,7 +76,7 @@ export function registerAssetHandlers(
       return;
     }
 
-    const schema = prefService.get("passport").then(s => {
+    const schema = await prefService.get("passport").then(s => {
       return s.identity;
     });
 

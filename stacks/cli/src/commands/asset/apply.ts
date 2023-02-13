@@ -23,8 +23,7 @@ async function apply({options}: ActionParameters) {
   moduleAndFiles.set("dashboard", ["schema.yaml"]);
   moduleAndFiles.set("apikey", ["schema.yaml"]);
 
-  // fix this validator before mark PR as ready
-  const resourceNameValidator = id => id.match(/^[0-9a-fA-F]{24}$/);
+  const resourceNameValidator = id => id.match(/^([0-9a-fA-F]{24}$)|identity/);
 
   const resources = [];
 
@@ -50,7 +49,7 @@ async function apply({options}: ActionParameters) {
 
   await machineryClient.post("/asset", body);
 
-  return console.info("Uploaded Successfully");
+  return console.info(`Asset ${body.name} has been uploaded successfully`);
 }
 
 export default function({createCommand}: CreateCommandParameters): Command {

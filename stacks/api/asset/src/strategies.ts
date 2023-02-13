@@ -11,7 +11,7 @@ export abstract class InstallationStrategy implements IInstallationStrategy {
     deletions: Resource<object>[];
   };
 
-  abstract isMyTask(currentAsset: Asset, previousAssets: Asset[]);
+  abstract isMyTask(currentAsset: Asset, allVersions: Asset[]);
 
   abstract getChanges();
 
@@ -44,9 +44,11 @@ export abstract class InstallationStrategy implements IInstallationStrategy {
 }
 
 export class UpgradePartiallyInstalledAsset extends InstallationStrategy {
-  isMyTask(currentAsset: Asset, previousAssets: Asset[]) {
+  isMyTask(currentAsset: Asset, allVersions: Asset[]) {
     this.asset = currentAsset;
-    this.previousAsset = previousAssets.find(asset => asset.status == "partially_installed");
+    this.previousAsset = allVersions
+      .filter(asset => asset._id.toString() != currentAsset._id.toString())
+      .find(asset => asset.status == "partially_installed");
 
     return !!this.previousAsset;
   }
@@ -67,9 +69,11 @@ export class UpgradePartiallyInstalledAsset extends InstallationStrategy {
 }
 
 export class UpgradeInstalledAsset extends InstallationStrategy {
-  isMyTask(currentAsset: Asset, previousAssets: Asset[]) {
+  isMyTask(currentAsset: Asset, allVersions: Asset[]) {
     super.asset = currentAsset;
-    this.previousAsset = previousAssets.find(asset => asset.status == "installed");
+    this.previousAsset = allVersions
+      .filter(asset => asset._id.toString() != currentAsset._id.toString())
+      .find(asset => asset.status == "installed");
 
     return !!this.previousAsset;
   }
@@ -100,26 +104,29 @@ export class UpgradeInstalledAsset extends InstallationStrategy {
     const isPartiallyInstalled = this.asset.resources.some(r => r.installation_status == "failed");
 
     this.asset.status = isPartiallyInstalled ? "partially_installed" : "installed";
-    console.dir(this.previousAsset,{depth:Infinity})
     return [this.asset, this.previousAsset];
   }
 }
 
 export class InstallAsset extends InstallationStrategy {
-  isMyTask(currentAsset: Asset, previousAssets: Asset[]): boolean {
+  isMyTask(currentAsset: Asset, allVersions: Asset[]): boolean {
     this.asset = currentAsset;
-    this.previousAsset = previousAssets.find(
-      asset => asset.status == "installed" || asset.status == "partially_installed"
+    this.previousAsset = allVersions.find(
+      asset => asset._id.toString() == currentAsset._id.toString()
     );
 
-    return !this.previousAsset;
+    const otherVersionsInstalled = allVersions
+      .filter(asset => asset._id.toString() != currentAsset._id.toString())
+      .some(asset => asset.status == "installed" || asset.status == "partially_installed");
+
+    return !otherVersionsInstalled;
   }
   getChanges(): {
     insertions: Resource<object>[];
     updations: Resource<object>[];
     deletions: Resource<object>[];
   } {
-    const existingResources = this.asset.resources.filter(
+    const existingResources = this.previousAsset.resources.filter(
       resource => resource.installation_status == "installed"
     );
     const desiredResources = this.asset.resources;

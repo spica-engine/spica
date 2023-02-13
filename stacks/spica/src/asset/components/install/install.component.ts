@@ -25,7 +25,10 @@ export class AssetInstallDialog {
     return this.assetService
       .install(this.data.asset._id, this.data.asset.configs, true)
       .toPromise()
-      .then(preview => (this.installationPreview = separatePreviewResourcesByModule(preview)));
+      .then(preview => (this.installationPreview = separatePreviewResourcesByModule(preview)))
+      .catch((e) => {
+        this.configure();
+      });
   }
 
   configure() {

@@ -43,10 +43,6 @@ export class EditComponent {
   treeControl = new NestedTreeControl<AssetResourceNode>(node => node.children);
   dataSource = new MatTreeNestedDataSource<AssetResourceNode>();
 
-  icons: Array<string> = ICONS;
-  readonly iconPageSize = 24;
-  visibleIcons: Array<any> = this.icons.slice(0, this.iconPageSize);
-
   save() {
     this.$save = merge(
       of(SavingState.Saving),
@@ -66,7 +62,7 @@ export class EditComponent {
   }
 
   getResourceName(resource: Resource<any>) {
-    return resource.contents.schema.title || resource.contents.schema.name;
+    return resource.contents.schema.title || resource.contents.schema.name || resource._id
   }
 
   categorizeResourcesByModule(resources: (Resource<any>)[]) {

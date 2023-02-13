@@ -38,7 +38,8 @@ import {ExportComponent} from "./components/export/export.component";
 import {MatDialogModule} from "@angular/material/dialog";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatCheckboxModule} from "@angular/material/checkbox";
-import { ResourcesComponent } from "./components/resources/resources.component";
+import {ResourcesComponent} from "./components/resources/resources.component";
+import {MatRippleModule} from "@angular/material/core";
 
 @NgModule({
   imports: [
@@ -73,7 +74,8 @@ import { ResourcesComponent } from "./components/resources/resources.component";
     MatSaveModule,
     MatDialogModule,
     MatSelectModule,
-    CommonModule
+    CommonModule,
+    MatRippleModule
   ],
   declarations: [
     IndexComponent,

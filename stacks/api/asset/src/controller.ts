@@ -32,15 +32,6 @@ import {
 import {AssetRepManager} from "./representative";
 import {createReadStream} from "fs";
 
-/**
- * Mongodb transactions
- * Authorization, Authentication
- * Migration of policies
- * Deprecation of old endpoints
- * Updates on CLI
- * Updates on asset store
- */
-
 @Controller("asset")
 export class AssetController {
   constructor(
@@ -143,12 +134,11 @@ export class AssetController {
 
     await this.validateResources(asset.resources);
 
-    const previousAssets = await this.service.find({
-      url: asset.url,
-      _id: {$ne: asset._id}
+    const allVersions = await this.service.find({
+      url: asset.url
     });
 
-    const strategy = this.installationStrategies.find(s => s.isMyTask(asset, previousAssets));
+    const strategy = this.installationStrategies.find(s => s.isMyTask(asset, allVersions));
 
     let changes: InstallationChanges;
 

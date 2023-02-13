@@ -43,3 +43,10 @@
     justify-content: flex-end;
   }
 }
+
+div.mat-option.select-all {
+  > span {
+    margin-left: 8px;
+  }
+  border-bottom: 1px solid var(--foreground-dividers);
+}
