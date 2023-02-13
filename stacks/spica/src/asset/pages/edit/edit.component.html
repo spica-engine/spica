@@ -1,114 +1,107 @@
-<!--Remove this container before merging-->
-<ng-container *ngIf="asset">
-  <mat-toolbar>
-    <h4 class="mat-h4">
-      <span>Edit Asset</span>
-    </h4>
-  </mat-toolbar>
-  <mat-card class="mat-elevation-z25">
-    <mat-card-content>
-      <form #form="ngForm">
-        <mat-list>
-          <mat-list-item>
-            <h4>Info</h4>
-            <mat-divider></mat-divider>
-          </mat-list-item>
-          <mat-list-item>
-            <mat-form-field>
-              <mat-label>
-                Name
-              </mat-label>
-              <input disabled matInput name="name" [ngModel]="asset.name" />
-            </mat-form-field>
-          </mat-list-item>
-          <mat-list-item>
-            <mat-form-field>
-              <mat-label>
-                Description
-              </mat-label>
-              <input disabled matInput name="name" [ngModel]="asset.description" />
-            </mat-form-field>
-          </mat-list-item>
-          <mat-list-item>
-            <h4>Resources</h4>
-            <mat-divider></mat-divider>
-          </mat-list-item>
-          <mat-list-item>
-            <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="example-tree">
-              <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
-                <a
-                  target="_blank"
-                  class="resource-url"
-                  [routerLink]="'../../' + (node.resource | buildLink: 'asset')"
-                  >{{ node.name | titlecase }} <mat-icon>open_in_new</mat-icon>
-                </a>
-              </mat-tree-node>
-              <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
-                <div class="mat-tree-node">
-                  <button
-                    mat-icon-button
-                    matTreeNodeToggle
-                    [attr.aria-label]="'Toggle ' + node.name"
-                  >
-                    <mat-icon class="mat-icon-rtl-mirror">
-                      {{ treeControl.isExpanded(node) ? "expand_more" : "chevron_right" }}
-                    </mat-icon>
-                  </button>
-                  {{ node.name | titlecase }}
-                </div>
-                <div [class.example-tree-invisible]="!treeControl.isExpanded(node)" role="group">
-                  <ng-container matTreeNodeOutlet></ng-container>
-                </div>
-              </mat-nested-tree-node>
-            </mat-tree>
-          </mat-list-item>
-          <mat-list-item *ngIf="asset.configs.length">
-            <h4>Configurations</h4>
-            <mat-divider></mat-divider>
-          </mat-list-item>
-          <mat-list-item *ngFor="let config of asset.configs">
-            <span
-              class="inputplacer"
-              [inputPlacer]="config"
-              [(ngModel)]="config.value"
-              [name]="config.module + config.subresource_id + config.property"
-              required
-            ></span>
-          </mat-list-item>
-        </mat-list>
-      </form>
-    </mat-card-content>
-    <mat-card-actions *ngIf="asset.configs.length">
-      <button
-        class="save-button"
-        [canInteract]="'asset:install'"
-        [resource]="asset._id"
-        mat-button
-        [disabled]="form.invalid || !!state"
-        (click)="setInstallationPreview()"
-        (confirm)="save()"
-        *matSave="$save | async; let state"
-        [ngSwitch]="state"
-        [matAwareDialog]="{
-          title: 'Confirm changes to continue',
-          templateOrDescription: dialogTemplate,
-          noAnswer: true
-        }"
-      >
-        <mat-icon *ngSwitchDefault>save</mat-icon>
-        <mat-progress-spinner
-          *ngSwitchCase="'saving'"
-          [diameter]="18"
-          color="primary"
-          mode="indeterminate"
-        ></mat-progress-spinner>
-        <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
-        <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
-        <span>{{ (!state ? "save" : state) | titlecase }}</span>
-      </button>
-    </mat-card-actions>
-  </mat-card>
-</ng-container>
+<mat-toolbar>
+  <h4 class="mat-h4">
+    <span>Edit Asset</span>
+  </h4>
+</mat-toolbar>
+<mat-card class="mat-elevation-z25">
+  <mat-card-content>
+    <form #form="ngForm">
+      <mat-list>
+        <mat-list-item>
+          <h4>Info</h4>
+          <mat-divider></mat-divider>
+        </mat-list-item>
+        <mat-list-item>
+          <mat-form-field>
+            <mat-label>
+              Name
+            </mat-label>
+            <input disabled matInput name="name" [ngModel]="asset.name" />
+          </mat-form-field>
+        </mat-list-item>
+        <mat-list-item>
+          <mat-form-field>
+            <mat-label>
+              Description
+            </mat-label>
+            <input disabled matInput name="name" [ngModel]="asset.description" />
+          </mat-form-field>
+        </mat-list-item>
+        <mat-list-item>
+          <h4>Resources</h4>
+          <mat-divider></mat-divider>
+        </mat-list-item>
+        <mat-list-item>
+          <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="example-tree">
+            <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
+              <a
+                target="_blank"
+                class="resource-url"
+                [routerLink]="'../../' + (node.resource | buildLink: 'asset')"
+                >{{ node.name | titlecase }} <mat-icon>open_in_new</mat-icon>
+              </a>
+            </mat-tree-node>
+            <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
+              <div class="mat-tree-node">
+                <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
+                  <mat-icon class="mat-icon-rtl-mirror">
+                    {{ treeControl.isExpanded(node) ? "expand_more" : "chevron_right" }}
+                  </mat-icon>
+                </button>
+                {{ node.name | titlecase }}
+              </div>
+              <div [class.example-tree-invisible]="!treeControl.isExpanded(node)" role="group">
+                <ng-container matTreeNodeOutlet></ng-container>
+              </div>
+            </mat-nested-tree-node>
+          </mat-tree>
+        </mat-list-item>
+        <mat-list-item *ngIf="asset.configs.length">
+          <h4>Configurations</h4>
+          <mat-divider></mat-divider>
+        </mat-list-item>
+        <mat-list-item *ngFor="let config of asset.configs">
+          <span
+            class="inputplacer"
+            [inputPlacer]="config"
+            [(ngModel)]="config.value"
+            [name]="config.module + config.subresource_id + config.property"
+            required
+          ></span>
+        </mat-list-item>
+      </mat-list>
+    </form>
+  </mat-card-content>
+  <mat-card-actions *ngIf="asset.configs.length">
+    <button
+      class="save-button"
+      [canInteract]="'asset:install'"
+      [resource]="asset._id"
+      mat-button
+      [disabled]="form.invalid || !!state"
+      (click)="setInstallationPreview()"
+      (confirm)="save()"
+      *matSave="$save | async; let state"
+      [ngSwitch]="state"
+      [matAwareDialog]="{
+        title: 'Confirm changes to continue',
+        templateOrDescription: dialogTemplate,
+        noAnswer: true
+      }"
+    >
+      <mat-icon *ngSwitchDefault>save</mat-icon>
+      <mat-progress-spinner
+        *ngSwitchCase="'saving'"
+        [diameter]="18"
+        color="primary"
+        mode="indeterminate"
+      ></mat-progress-spinner>
+      <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
+      <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
+      <span>{{ (!state ? "save" : state) | titlecase }}</span>
+    </button>
+  </mat-card-actions>
+</mat-card>
 
 <ng-template #dialogTemplate>
   <asset-preview [preview]="preview"></asset-preview>

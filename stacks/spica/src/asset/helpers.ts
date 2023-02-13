@@ -40,11 +40,6 @@ export function displayPreview(dialog: MatDialog, resources: any[]) {
     minWidth: "400px",
     maxHeight: "calc(100vh - 15px)"
   });
-  // const data = JSON.stringify(resources, null, 2);
-  // const x = window.open();
-  // x.document.open();
-  // x.document.write("<html><body><pre>" + data + "</pre></body></html>");
-  // x.document.close();
 }
 
 export function getEmptyConfig() {
