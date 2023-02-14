@@ -207,7 +207,7 @@ describe("function", () => {
 
     // UPDATE
     const res = await installAsset(assetv2._id);
-    console.dir(res, {depth: Infinity});
+
     assetv1 = await getAsset(assetv1._id);
     expect(assetv1.status).toEqual("downloaded");
 

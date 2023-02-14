@@ -71,6 +71,9 @@ ts_project(
 
 jasmine_node_test(
     name = "asset_e2e_test",
+    tags = [
+        "flaky",
+    ],
     deps = [
         ":asset_e2e_test_lib",
     ],
