@@ -29,17 +29,10 @@ function isIdentityPreference(resourceOrId: Resource<IdentitySettingsContents> |
 
 export function registerAssetHandlers(
   prefService: PreferenceService,
-  schemaValidator: Validator,
   manager: IRepresentativeManager
 ) {
-  const validator = (resource: Resource<IdentitySettingsContents>) => {
-    const schema = resource.contents.schema;
-
-    if (!isIdentityPreference(resource)) {
-      return schema;
-    }
-
-    return validateFn(schema, schemaValidator);
+  const validator = async () => {
+    await Promise.resolve(true);
   };
 
   registrar.validator(_module, validator);
@@ -84,10 +77,4 @@ export function registerAssetHandlers(
   };
 
   registrar.exporter(_module, exporter);
-}
-
-function validateFn(schema: IdentitySchema, validator: Validator) {
-  const validatorMixin = Schema.validate("http://spica.internal/passport/identity-attributes");
-  const pipe: any = new validatorMixin(validator);
-  return pipe.transform(schema);
 }

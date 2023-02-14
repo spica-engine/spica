@@ -34,12 +34,10 @@ describe("Dashboard", () => {
       imports: [
         CoreTestingModule,
         DatabaseTestingModule.replicaSet(),
-        // PreferenceModule.forRoot(),
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
         DashboardModule.forRoot(),
         AssetModule.forRoot({persistentPath: os.tmpdir()})
-        // ReplicationTestingModule.create()
       ]
     }).compile();
 

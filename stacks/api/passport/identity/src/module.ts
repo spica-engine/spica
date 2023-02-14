@@ -26,7 +26,6 @@ export class IdentityModule {
     @Inject(IDENTITY_OPTIONS) options: IdentityOptions,
     private identityService: IdentityService,
     private prefService: PreferenceService,
-    private validator: Validator,
     @Optional() @Inject(ASSET_REP_MANAGER) private repManager: IRepresentativeManager
   ) {
     if (options.defaultIdentityIdentifier) {
@@ -37,7 +36,7 @@ export class IdentityModule {
       });
     }
     registerStatusProvider(identityService);
-    registerAssetHandlers(prefService, validator, repManager);
+    registerAssetHandlers(prefService, repManager);
   }
 
   static forRoot(options: IdentityOptions): DynamicModule {

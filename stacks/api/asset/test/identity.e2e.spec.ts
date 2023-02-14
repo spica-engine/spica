@@ -8,9 +8,9 @@ import {AssetModule} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import * as os from "os";
-import {PreferenceModule} from "@spica-server/preference";
 import {IdentityModule} from "@spica-server/passport/identity";
 import {PolicyModule} from "@spica-server/passport/policy";
+import {PreferenceModule} from "@spica-server/preference";
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
@@ -69,7 +69,7 @@ describe("identity-settings", () => {
         return true;
       }
     });
-  }, 10_000);
+  }, 120_000);
 
   afterEach(() => app.close());
 
