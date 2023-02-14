@@ -81,6 +81,9 @@ describe("function", () => {
     });
   }, 10_000);
 
+  afterEach(() => app.close());
+
+
   function getFns() {
     return req.get("function").then(r => r.body);
   }

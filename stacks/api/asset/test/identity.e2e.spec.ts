@@ -69,7 +69,9 @@ describe("identity-settings", () => {
         return true;
       }
     });
-  });
+  }, 10_000);
+
+  afterEach(() => app.close());
 
   function getIdentitySettings() {
     return req.get("preference/passport").then(r => r.body);

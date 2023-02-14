@@ -53,7 +53,9 @@ describe("Apikey", () => {
         return true;
       }
     });
-  });
+  }, 10_000);
+
+  afterEach(() => app.close());
 
   function getApikeys() {
     return req.get("passport/apikey").then(r => r.body.data);

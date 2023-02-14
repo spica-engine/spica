@@ -61,7 +61,9 @@ describe("Bucket", () => {
         return true;
       }
     });
-  });
+  }, 10_000);
+
+  afterEach(() => app.close());
 
   function getBuckets() {
     return req.get("bucket").then(r => r.body);

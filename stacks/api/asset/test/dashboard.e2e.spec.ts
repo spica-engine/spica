@@ -53,7 +53,9 @@ describe("Dashboard", () => {
         return true;
       }
     });
-  });
+  }, 10_000);
+
+  afterEach(() => app.close());
 
   function getDashboards() {
     return req.get("dashboard").then(r => r.body);
