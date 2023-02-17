@@ -68,6 +68,7 @@ import {HighlightModule, HIGHLIGHT_OPTIONS} from "ngx-highlightjs";
 import {CategoryModule} from "@spica-client/common/category";
 import {BucketOptions, BUCKET_OPTIONS} from "./interfaces/bucket";
 import {IGNORE_HTTP_ERRORS} from "@spica-client/core/layout/config";
+
 @NgModule({
   imports: [
     InputModule.withPlacers([
