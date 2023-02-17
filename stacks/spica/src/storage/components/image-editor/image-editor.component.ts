@@ -2,7 +2,7 @@ import {Component, ElementRef, Inject, OnInit, ViewChild} from "@angular/core";
 import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {CropperComponent} from "angular-cropperjs";
 import {Storage} from "../../interfaces/storage";
-import {StorageService} from "../../storage.service";
+import {StorageService} from "../../services/storage.service";
 import {Observable, of, BehaviorSubject} from "rxjs";
 import {SavingState} from "@spica-client/material";
 import {tap, take} from "rxjs/operators";

@@ -40,13 +40,13 @@ export class HomeLayoutComponent implements OnInit {
     ],
     [
       RouteCategory.Dashboard,
-      {icon: "dashboard", index: 0, children: {name: RouteCategory.Dashboard_Sub, icon: "list"}}
+      {icon: "dashboard", index: 1, children: {name: RouteCategory.Dashboard_Sub, icon: "list"}}
     ],
     [
       RouteCategory.Content,
       {
         icon: "view_stream",
-        index: 1,
+        index: 2,
         children: {name: RouteCategory.Content_Sub, icon: "format_list_numbered"}
       }
     ],
@@ -54,17 +54,21 @@ export class HomeLayoutComponent implements OnInit {
       RouteCategory.System,
       {
         icon: "supervisor_account",
-        index: 2,
+        index: 3,
         children: {name: RouteCategory.System_Sub, icon: "list"}
       }
     ],
     [
       RouteCategory.Developer,
-      {icon: "memory", index: 3, children: {name: RouteCategory.Developer_Sub, icon: "bug_report"}}
+      {icon: "memory", index: 4, children: {name: RouteCategory.Developer_Sub, icon: "bug_report"}}
     ],
     [
       RouteCategory.Webhook,
-      {icon: "webhook", index: 4, children: {name: RouteCategory.Webhook_Sub, icon: "bug_report"}}
+      {icon: "webhook", index: 5, children: {name: RouteCategory.Webhook_Sub, icon: "bug_report"}}
+    ],
+    [
+      RouteCategory.Storage,
+      {icon: "filter_drama", index: 6, children: {name: RouteCategory.Storage_Sub, icon: "list"}}
     ]
   ]);
 
@@ -89,6 +93,7 @@ export class HomeLayoutComponent implements OnInit {
       map(routes => {
         const categoryNames = Array.from(this._categories.keys());
         const categories = categoryNames
+          .filter(categoryName => routes.some(route => route.category == categoryName))
           .map(categoryName => {
             this.isSidebarReady = true;
             const category = this._categories.get(categoryName);

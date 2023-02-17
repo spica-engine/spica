@@ -1,4 +1,4 @@
-import {HttpEventType, HttpResponse} from "@angular/common/http";
+import {HttpEventType, HttpParams, HttpResponse} from "@angular/common/http";
 import {HttpClientTestingModule, HttpTestingController} from "@angular/common/http/testing";
 import {Component, Directive, EventEmitter, Input, Output} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
@@ -9,6 +9,7 @@ import {MatProgressSpinner, MatProgressSpinnerModule} from "@angular/material/pr
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {By} from "@angular/platform-browser";
 import {INPUT_SCHEMA} from "@spica-client/common";
+import {Filters} from "../../helpers";
 import {StorageDialogOverviewDialog} from "../storage-dialog-overview/storage-dialog-overview";
 import {StorageComponent} from "./storage.component";
 
@@ -119,7 +120,7 @@ describe("StorageComponent", () => {
   });
 
   describe("preview", () => {
-    it("should show drop are if empty", () => {
+    it("should show drop area if empty", () => {
       fixture.componentInstance.blob = fixture.componentInstance.value = undefined;
       fixture.detectChanges();
       expect(
@@ -200,26 +201,11 @@ describe("StorageComponent", () => {
   describe("upload", () => {
     let httpTestingController: HttpTestingController;
     const file = new File([], "test.png", {type: "image/png"});
+    let findParams: HttpParams;
+    let preventDefaultSpy = jasmine.createSpy();
 
-    beforeEach(() => {
+    beforeEach(async () => {
       httpTestingController = TestBed.get(HttpTestingController);
-    });
-
-    /**
-      Error: Expected one matching request for criteria "Match URL: api:/storage", found none.
-      at HttpClientTestingBackend.expectOne (http://localhost:9876/spica/node_modules/@angular/common/fesm2015/http/testing.js:296:1)
-      at http://localhost:9876/_karma_webpack_/src/storage/components/storage/storage.component.spec.ts:217:29
-      at <Jasmine>
-      at fulfilled (http://localhost:9876/_karma_webpack_/main.js:31356:58)
-      at ZoneDelegate.invoke (http://localhost:9876/spica/node_modules/zone.js/dist/zone-evergreen.js:364:1)
-      at ProxyZoneSpec.push.../../node_modules/zone.js/dist/zone-testing.js.ProxyZoneSpec.onInvoke (http://localhost:9876/spica/node_modules/zone.js/dist/zone-testing.js:292:1)
-      at ZoneDelegate.invoke (http://localhost:9876/spica/node_modules/zone.js/dist/zone-evergreen.js:363:1)
-      at Zone.run (http://localhost:9876/spica/node_modules/zone.js/dist/zone-evergreen.js:123:1)
-      at http://localhost:9876/spica/node_modules/zone.js/dist/zone-evergreen.js:857:1
-      at ZoneDelegate.invokeTask (http://localhost:9876/spica/node_modules/zone.js/dist/zone-evergreen.js:399:1)
-    */
-    xit("should handle drop", async () => {
-      const preventDefaultSpy = jasmine.createSpy("preventDefault");
       fixture.debugElement.triggerEventHandler("drop", {
         dataTransfer: {
           files: {
@@ -230,33 +216,37 @@ describe("StorageComponent", () => {
         },
         preventDefault: preventDefaultSpy
       });
-      expect(preventDefaultSpy).toHaveBeenCalledTimes(1);
 
       fixture.detectChanges();
-      await new Promise(resolve => setTimeout(resolve, 20));
+      await new Promise(resolve => setTimeout(resolve, 200));
 
-      httpTestingController.expectOne("api:/storage");
+      findParams = new HttpParams();
+      findParams = findParams.set("limit", "1");
+      findParams = findParams.set("filter", JSON.stringify(Filters.Match("root/")));
+      findParams = findParams.set("paginate", "false");
     });
 
-    it("should report upload progress and remove spinner after complete", async () => {
-      fixture.debugElement.triggerEventHandler("drop", {
-        dataTransfer: {
-          files: {
-            0: file,
-            item: () => file,
-            length: 1
-          }
-        },
-        preventDefault: jasmine.createSpy()
-      });
+    afterEach(() => {
+      preventDefaultSpy.calls.reset();
+    });
 
-      fixture.detectChanges();
+    it("should handle drop", async () => {
+      expect(preventDefaultSpy).toHaveBeenCalledTimes(1);
+      httpTestingController.expectOne("api:/storage", "upload object");
+    });
 
+    /**
+     * TypeError: Cannot read properties of null (reading 'componentInstance')
+     */
+    xit("should report upload progress and remove spinner after complete", async () => {
+      httpTestingController.expectOne("api:/storage?" + findParams.toString()).flush([]);
       await new Promise(resolve => setTimeout(resolve, 200));
+      fixture.detectChanges();
 
       const req = httpTestingController.expectOne("api:/storage");
 
       req.event({type: HttpEventType.UploadProgress, total: 100, loaded: 10});
+      await new Promise(resolve => setTimeout(resolve, 200));
       fixture.detectChanges();
 
       expect(

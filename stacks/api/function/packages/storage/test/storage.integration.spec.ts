@@ -60,6 +60,23 @@ describe("Storage", () => {
     await Storage.insert(storageObject);
 
     const getAllResponse = await Storage.getAll();
+    expect(getAllResponse).toEqual([
+      {
+        _id: "__objectid__",
+        name: "test.txt",
+        url: `${PUBLIC_URL}/storage/${getAllResponse[0]._id}/view`,
+        content: {
+          size: 5,
+          type: "text/plain"
+        }
+      }
+    ]);
+  });
+
+  it("should get all with paginate", async () => {
+    await Storage.insert(storageObject);
+
+    const getAllResponse = await Storage.getAll({paginate: true});
     expect(getAllResponse).toEqual({
       meta: {total: 1},
       data: [
@@ -138,10 +155,7 @@ describe("Storage", () => {
     expect(insertedObjects).toEqual(expectedObjects);
 
     const existings = await Storage.getAll();
-    expect(existings).toEqual({
-      meta: {total: 2},
-      data: expectedObjects
-    });
+    expect(existings).toEqual(expectedObjects);
   });
 
   it("should update", async () => {
@@ -167,13 +181,34 @@ describe("Storage", () => {
     expect(existing).toEqual(expectedObject);
   });
 
+  it("should patch", async () => {
+    const insertedObj = await Storage.insert(storageObject);
+
+    const updateResponse = await Storage.updateMeta(insertedObj._id, {name: "updated_test.txt"});
+
+    const expectedObject = {
+      _id: insertedObj._id,
+      name: "updated_test.txt",
+      url: `${PUBLIC_URL}/storage/${insertedObj._id}/view`,
+      content: {
+        size: 5,
+        type: "text/plain"
+      }
+    };
+
+    expect(updateResponse).toEqual(expectedObject);
+
+    const existing = await Storage.get(insertedObj._id);
+    expect(existing).toEqual(expectedObject);
+  });
+
   it("should remove", async () => {
     const insertedObj = await Storage.insert(storageObject);
 
     await Storage.remove(insertedObj._id);
 
     const existings = await Storage.getAll();
-    expect(existings).toEqual({meta: {total: 0}, data: []});
+    expect(existings).toEqual([]);
   });
 
   it("should download", async done => {

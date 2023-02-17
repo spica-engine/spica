@@ -1,0 +1,13 @@
+<mat-toolbar>
+  <mat-toolbar-row>
+    <h1>Storage</h1>
+  </mat-toolbar-row>
+  <mat-toolbar-row>
+    <h4>Upload any kind of document into public storage.</h4>
+  </mat-toolbar-row>
+  <mat-toolbar-row>
+    <button canInteract="storage:create" mat-raised-button (click)="openDialog()">
+      Add New Directory
+    </button>
+  </mat-toolbar-row>
+</mat-toolbar>
