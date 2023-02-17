@@ -102,7 +102,6 @@ export class IndexComponent implements OnInit, OnDestroy {
   displayTranslateButton = false;
 
   private postRenderingQueue: Array<any> = [];
-  systemFields: InputPlacerWithMetaPlacer[] = [];
 
   constructor(
     private bs: BucketService,
@@ -164,11 +163,6 @@ export class IndexComponent implements OnInit, OnDestroy {
         const cachedDisplayedProperties = JSON.parse(
           localStorage.getItem(`${this.bucketId}-displayedProperties`)
         );
-
-        this.systemFields = [];
-        this._inputResolver
-          .entries()
-          .map(e => this.systemFields.push(this._inputResolver.resolve(e)));
 
         //eliminate the properties which are not included by schema
         this.displayedProperties = cachedDisplayedProperties
