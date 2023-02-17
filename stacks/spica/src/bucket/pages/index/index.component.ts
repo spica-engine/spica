@@ -110,7 +110,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     private router: Router,
     private sanitizer: DomSanitizer,
     private scheme: SchemeObserver,
-    private _inputResolver: InputResolver,
+    public inputResolver: InputResolver,
     @Inject(BUCKET_OPTIONS) private options: BucketOptions
   ) {
     this.scheme
