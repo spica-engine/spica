@@ -75,6 +75,12 @@ describe("MatResize", () => {
     );
   });
 
+  it("should add the size as a padding from right", () => {
+    const [positionColumnHeader, weightColumnHeader] = columnHeaders;
+    expect(positionColumnHeader.styles["padding-right"]).toBe("100px");
+    expect(weightColumnHeader.styles["padding-right"]).toBe("100px");
+  });
+
   it("should disable sort when mouseover and re-enable when the mouse move away", () => {
     const [positionColumnHeader] = columnHeaders;
 
