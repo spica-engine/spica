@@ -9,6 +9,7 @@ import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatGridListModule} from "@angular/material/grid-list";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
+import {MatListModule} from "@angular/material/list";
 import {MatMenuModule} from "@angular/material/menu";
 import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatProgressBarModule} from "@angular/material/progress-bar";
@@ -31,6 +32,14 @@ import {StorageViewComponent} from "./components/storage-view/storage-view.compo
 import {StorageComponent} from "./components/storage/storage.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {StorageRoutingModule} from "./storage-routing.module";
+import {AddDirectoryDialog} from "./components/add-directory-dialog/add-directory-dialog.component";
+import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
+import {StorageInitializer} from "./storage.initializer";
+import {PassportModule, PassportService} from "@spica-client/passport";
+import {MatCheckboxModule} from "@angular/material/checkbox";
+import {RootDirService} from "./services/root.dir.service";
+import {DragDropModule} from "@angular/cdk/drag-drop";
+import {WelcomeComponent} from "./pages/welcome/welcome.component";
 
 @NgModule({
   imports: [
@@ -57,6 +66,9 @@ import {StorageRoutingModule} from "./storage-routing.module";
     MatClipboardModule,
     MatMenuModule,
     MatSaveModule,
+    MatListModule,
+    MatCheckboxModule,
+    DragDropModule,
     InputModule.withPlacers([
       {
         origin: "string",
@@ -65,7 +77,8 @@ import {StorageRoutingModule} from "./storage-routing.module";
         color: "#ab1ada",
         placer: StorageComponent
       }
-    ])
+    ]),
+    PassportModule.forChild()
   ],
   declarations: [
     IndexComponent,
@@ -74,7 +87,9 @@ import {StorageRoutingModule} from "./storage-routing.module";
     PickerDirective,
     StorageComponent,
     StorageViewComponent,
-    ImageEditorComponent
+    ImageEditorComponent,
+    AddDirectoryDialog,
+    WelcomeComponent
   ],
   exports: [PickerDirective]
 })
@@ -83,6 +98,17 @@ export class StorageModule {
     return {
       ngModule: StorageModule,
       providers: [
+        {
+          provide: StorageInitializer,
+          useClass: StorageInitializer,
+          deps: [RootDirService, RouteService, PassportService]
+        },
+        {
+          provide: LAYOUT_INITIALIZER,
+          useFactory: provideStorageLoader,
+          multi: true,
+          deps: [StorageInitializer]
+        },
         {
           provide: ACTIVITY_FACTORY,
           useValue: provideActivityFactory,
@@ -95,4 +121,8 @@ export class StorageModule {
   static forChild(): ModuleWithProviders {
     return {ngModule: StorageModule, providers: []};
   }
+}
+
+export function provideStorageLoader(l: StorageInitializer) {
+  return l.appInitializer.bind(l);
 }

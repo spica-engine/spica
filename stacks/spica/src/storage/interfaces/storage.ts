@@ -7,3 +7,11 @@ export interface Storage {
     size?: number;
   };
 }
+
+export type StorageNode = Storage & {
+  index?: number;
+  parent: StorageNode | undefined;
+  children: StorageNode[];
+  isDirectory: boolean;
+  isHighlighted: boolean;
+};

@@ -1,13 +1,5 @@
 import {animate, style, transition, trigger} from "@angular/animations";
-import {
-  Component,
-  ElementRef,
-  Inject,
-  OnDestroy,
-  OnInit,
-  SecurityContext,
-  ViewChild
-} from "@angular/core";
+import {Component, Inject, OnDestroy, OnInit, SecurityContext, ViewChild} from "@angular/core";
 import {MatPaginator, PageEvent} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute, Router} from "@angular/router";

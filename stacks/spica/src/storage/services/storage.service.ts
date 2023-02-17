@@ -5,9 +5,10 @@ import * as BSON from "bson";
 import {Buffer} from "buffer";
 import {from, Observable} from "rxjs";
 import {flatMap, map} from "rxjs/operators";
-import {LastUpdateCache} from "./cache";
+import {LastUpdateCache} from "../cache";
+import {Filters} from "../helpers";
 
-import {Storage} from "./interfaces/storage";
+import {Storage} from "../interfaces/storage";
 
 window["Buffer"] = Buffer;
 
@@ -18,8 +19,26 @@ export class StorageService {
     this.lastUpdates = new LastUpdateCache();
   }
 
-  getAll(limit?: number, skip?: number, sort?): Observable<IndexResult<Storage>> {
+  getAll<P extends boolean = false>(options?: {
+    filter?: object;
+    limit?: number;
+    skip?: number;
+    sort?;
+    paginate?: P;
+  }): Observable<P extends true ? IndexResult<Storage> : Storage[]>;
+  getAll(
+    options: {
+      filter?: object;
+      limit?: number;
+      skip?: number;
+      sort?: object;
+      paginate?: boolean;
+    } = {}
+  ): Observable<Storage[] | IndexResult<Storage>> {
     let params = new HttpParams();
+
+    const {limit, skip, sort, filter, paginate} = options;
+
     if (limit) {
       params = params.append("limit", limit.toString());
     }
@@ -30,9 +49,15 @@ export class StorageService {
       params = params.append("sort", JSON.stringify(sort));
     }
 
-    return this.http.get<IndexResult<Storage>>("api:/storage", {params}).pipe(
+    if (filter) {
+      params = params.append("filter", JSON.stringify(filter));
+    }
+
+    params = params.append("paginate", JSON.stringify(paginate || false));
+
+    return this.http.get<Storage[] | IndexResult<Storage>>("api:/storage", {params}).pipe(
       map(objects => {
-        for (let object of objects.data) {
+        for (let object of Array.isArray(objects) ? objects : objects.data) {
           object = this.prepareToDisplay(object);
         }
         return objects;
@@ -79,13 +104,13 @@ export class StorageService {
     );
   }
 
-  insertMany(fileList: FileList): Observable<HttpEvent<Storage>> {
+  insertMany(fileList: FileList, prefix?: string): Observable<HttpEvent<Storage>> {
     const files = Array.from(fileList);
     return from(Promise.all(files.map(f => fileToBuffer(f)))).pipe(
       flatMap(content => {
         const contents = {
           content: content.map((c, i) => ({
-            name: files[i].name,
+            name: prefix ? `${prefix}${files[i].name}` : files[i].name,
             content: {
               data: new BSON.Binary(c),
               type: files[i].type
@@ -136,5 +161,13 @@ export class StorageService {
 
   private deepCopy(value: unknown) {
     return JSON.parse(JSON.stringify(value));
+  }
+
+  listSubResources(name: string, itself: boolean) {
+    return this.getAll({filter: Filters.ListAllChildren(name, itself)}).toPromise();
+  }
+
+  updateName(_id: string, name: string) {
+    return this.http.patch(`api:/storage/${_id}`, {name});
   }
 }
