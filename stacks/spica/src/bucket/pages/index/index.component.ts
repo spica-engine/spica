@@ -25,7 +25,7 @@ import {NgModel} from "@angular/forms";
 import {Scheme, SchemeObserver} from "@spica-client/core";
 import {guides} from "./guides";
 import {FilterComponent} from "@spica-client/bucket/components/filter/filter.component";
-import {InputPlacerWithMetaPlacer, InputResolver} from "@spica-client/common";
+import {InputResolver} from "@spica-client/common";
 
 @Component({
   selector: "bucket-data-index",
