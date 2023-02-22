@@ -1,5 +1,6 @@
 import {Component, Input, OnInit} from "@angular/core";
 import {Route} from "@spica-client/core/route";
+import { BehaviorSubject, Observable } from "rxjs";
 import {CategoryService} from "../category/category.service";
 
 @Component({
@@ -10,8 +11,8 @@ import {CategoryService} from "../category/category.service";
 export class ExpandableNavComponent implements OnInit {
   constructor(public categoryService: CategoryService) {}
 
-  @Input() routes$;
-  @Input() currentCategory;
+  @Input() routes$: Observable<Route[]>;
+  @Input() currentCategory: BehaviorSubject<any>;
   routes: {
     [propValue: string]: Route[];
   } = {};

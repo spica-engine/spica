@@ -3,7 +3,7 @@ import {RouterModule, Routes} from "@angular/router";
 import {Route, RouteCategory, RouteModule} from "@spica-client/core";
 import {IdentityGuard, PolicyGuard} from "../passport";
 import {AddComponent} from "./pages/add/add.component";
-import {IndexComponent} from "./pages/index/index.component";
+import {FunctionActionsComponent} from "./pages/function-actions/function-actions.component";
 import {LogViewComponent} from "./pages/log-view/log-view.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {FunctionIndexGuard} from "./resolvers/function.guard";
@@ -19,7 +19,7 @@ const routes: Routes = [
       {
         canActivate: [FunctionIndexGuard],
         path: "",
-        component: IndexComponent,
+        component: FunctionActionsComponent,
         data: {action: "index"}
       },
       {

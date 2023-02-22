@@ -1,6 +1,6 @@
 import {Component, Input, OnInit} from "@angular/core";
-import {Observable, Subject} from "rxjs";
-import {filter, takeUntil, tap} from "rxjs/operators";
+import { Subject} from "rxjs";
+import {filter, takeUntil} from "rxjs/operators";
 
 import {FunctionService} from "../../services";
 import {Function} from "../../interface";
@@ -10,18 +10,16 @@ import {ConfigurationComponent} from "@spica-client/function/components/configur
 import {Router} from "@angular/router";
 
 @Component({
-  selector: "function-index",
-  templateUrl: "./index.component.html",
-  styleUrls: ["./index.component.scss"]
+  selector: "function-actions",
+  templateUrl: "./function-actions.component.html",
+  styleUrls: ["./function-actions.component.scss"]
 })
-export class IndexComponent implements OnInit {
-  // public $data: Observable<Function[]>;
+export class FunctionActionsComponent implements OnInit {
+
   functions: Function[];
   @Input() route: Route;
   private dispose = new Subject();
   categoryStorageKey: string = RouteCategory.Developer;
-
-  // public displayedColumns = ["_id", "name", "description", "actions"];
 
   constructor(
     private functionService: FunctionService,
@@ -40,10 +38,6 @@ export class IndexComponent implements OnInit {
         this.functions = data;
       });
   }
-
-  // delete(id: string): void {
-  //   this.functionService.delete(id).toPromise();
-  // }
 
   updateIndexes(event) {
     event.forEach(e => this.functionService.updateOne(e.entry_id, e.changes).toPromise());

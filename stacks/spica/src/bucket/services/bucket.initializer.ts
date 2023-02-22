@@ -2,7 +2,7 @@ import {EventEmitter, Injectable, Output} from "@angular/core";
 import {RemoveCategory, RouteCategory, RouteService, Upsert} from "@spica-client/core";
 import {PassportService} from "../../passport";
 import {AddBucketComponent} from "../components/add-bucket/add-bucket.component";
-import {BucketIndexComponent} from "../pages/bucket-index/bucket-index.component";
+import {BucketActionsComponent} from "../pages/bucket-actions/bucket-actions.component";
 import {BucketService} from "./bucket.service";
 
 @Injectable()
@@ -17,7 +17,7 @@ export class BucketInitializer {
   ) {
     this.routeService.patchCategory(RouteCategory.Content, {
       props: {
-        moreTemplate: BucketIndexComponent,
+        moreTemplate: BucketActionsComponent,
         onChangedOrder: this.onBucketCategoryChange,
         categoryStorageKey: this.categoryStorageKey
       }

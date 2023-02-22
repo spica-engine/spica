@@ -13,7 +13,7 @@ import {BehaviorSubject, Observable} from "rxjs";
 import {debounceTime, map, switchMap, tap} from "rxjs/operators";
 import {Route, RouteCategory, RouteService} from "../../route";
 import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
-import {Root_Categories} from "@spica-client/core/route/route";
+import {rootCategories} from "@spica-client/core/route/route";
 
 @Component({
   selector: "layout-home",
@@ -41,7 +41,7 @@ export class HomeLayoutComponent implements OnInit {
     Array<{icon: string; category: RouteCategory; index: number; children: object}>
   >;
 
-  _categories = Root_Categories;
+  _categories = rootCategories;
   currentCategory = new BehaviorSubject(null);
   currentCategoryName: string;
 

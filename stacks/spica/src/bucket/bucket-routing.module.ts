@@ -3,7 +3,7 @@ import {RouterModule, Routes} from "@angular/router";
 import {Route, RouteCategory, RouteModule} from "@spica-client/core";
 import {IdentityGuard, PolicyGuard} from "../passport";
 import {AddComponent} from "./pages/add/add.component";
-import {BucketIndexComponent} from "./pages/bucket-index/bucket-index.component";
+import {BucketActionsComponent} from "./pages/bucket-actions/bucket-actions.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {SettingsComponent} from "./pages/settings/settings.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
@@ -51,23 +51,6 @@ const routes: Routes = [
         component: AddComponent,
         data: {
           action: "show"
-        }
-      }
-    ]
-  },
-  {
-    path: "buckets",
-    canActivateChild: [IdentityGuard, PolicyGuard],
-    data: {
-      service: "bucket"
-    },
-    children: [
-      {
-        canActivate: [BucketIndexGuard],
-        path: "",
-        component: BucketIndexComponent,
-        data: {
-          action: "index"
         }
       }
     ]

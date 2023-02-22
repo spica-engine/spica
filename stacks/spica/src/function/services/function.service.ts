@@ -1,8 +1,8 @@
-import {HttpClient, HttpHeaders} from "@angular/common/http";
-import {Injectable, Inject} from "@angular/core";
-import {select, Store} from "@ngrx/store";
-import {Observable} from "rxjs";
-import {map, tap} from "rxjs/operators";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { Injectable, Inject } from "@angular/core";
+import { select, Store } from "@ngrx/store";
+import { Observable } from "rxjs";
+import { map, tap } from "rxjs/operators";
 import {
   DeleteFunction,
   LoadFunctions,
@@ -10,20 +10,20 @@ import {
   UpdateFunction,
   UpdateFunctions
 } from "../actions/function.actions";
-import {Function, Information, Log, LogFilter, WEBSOCKET_INTERCEPTOR, Trigger} from "../interface";
+import { Function, Information, Log, LogFilter, WEBSOCKET_INTERCEPTOR, Trigger } from "../interface";
 import * as fromFunction from "../reducers/function.reducer";
-import {PassportService} from "@spica-client/passport";
-import {getWsObs, checkConnectivity} from "@spica-client/common";
-import {examples} from "../statics/examples";
+import { PassportService } from "@spica-client/passport";
+import { getWsObs, checkConnectivity } from "@spica-client/common";
+import { examples } from "../statics/examples";
 
-@Injectable({providedIn: "root"})
+@Injectable({ providedIn: "root" })
 export class FunctionService {
   constructor(
     private http: HttpClient,
     private store: Store<fromFunction.State>,
     @Inject(WEBSOCKET_INTERCEPTOR) private wsInterceptor: string,
     private passport: PassportService
-  ) {}
+  ) { }
 
   getExample(trigger: Trigger) {
     if (trigger.type == "bucket") {
@@ -45,7 +45,7 @@ export class FunctionService {
   loadFunctions() {
     return this.http
       .get<Function[]>(`api:/function/`)
-      .pipe(tap(functions => this.store.dispatch(new LoadFunctions({functions}))));
+      .pipe(tap(functions => this.store.dispatch(new LoadFunctions({ functions }))));
   }
 
   getFunctions(): Observable<Function[]> {
@@ -98,7 +98,7 @@ export class FunctionService {
     }
 
     if (!filter.sort) {
-      filter.sort = {_id: -1};
+      filter.sort = { _id: -1 };
     }
 
     url.searchParams.set("sort", JSON.stringify(filter.sort));
@@ -113,11 +113,11 @@ export class FunctionService {
   }
 
   updateIndex(fnId: string, index: string): Observable<void> {
-    return this.http.post<any>(`api:/function/${fnId}/index`, {index});
+    return this.http.post<any>(`api:/function/${fnId}/index`, { index });
   }
 
-  getDeclarations(): Observable<{declarations: string}> {
-    return this.http.get<{declarations: string}>(`api:/function/declaration`);
+  getDeclarations(): Observable<{ declarations: string }> {
+    return this.http.get<{ declarations: string }>(`api:/function/declaration`);
   }
 
   information(scope?: string): Observable<Information> {
@@ -127,48 +127,50 @@ export class FunctionService {
   insertOne(fn: Function): Observable<Function> {
     return this.http
       .post<Function>(`api:/function`, fn)
-      .pipe(tap(fn => this.store.dispatch(new UpsertFunction({function: fn}))));
+      .pipe(tap(fn => this.store.dispatch(new UpsertFunction({ function: fn }))));
   }
 
   replaceOne(fn: Function): Observable<Function> {
-    fn = this.ignoreSchema(fn);
+    fn = this.ignoreUnreplacableFields(fn);
     return this.http
       .put<Function>(`api:/function/${fn._id}`, fn)
       .pipe(
-        tap(fn => this.store.dispatch(new UpdateFunction({function: {id: fn._id, changes: fn}})))
+        tap(fn => this.store.dispatch(new UpdateFunction({ function: { id: fn._id, changes: fn } })))
       );
   }
-  patchFunctionWithoutStore(id: string, changes: object) {
+
+  sendPatchRequest(id: string, changes: object) {
     return this.http.patch<Function>(`api:/function/${id}`, changes, {
       headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
     });
   }
 
-  patchFunctionMany(changes: {id: string; changes: object}[]): Promise<Function[]> {
+  patchFunctionMany(changes: { id: string; changes: object }[]): Promise<Function[]> {
     return Promise.all(
-      changes.map(change => this.patchFunctionWithoutStore(change.id, change.changes).toPromise())
+      changes.map(change => this.sendPatchRequest(change.id, change.changes).toPromise())
     ).then((res: Function[]) => {
-      this.store.dispatch(new UpdateFunctions({functions: changes}));
+      this.store.dispatch(new UpdateFunctions({ functions: changes }));
       return Promise.resolve(res);
     });
   }
 
-  updateOne(id: string, update: {[key: string]: any}) {
+  updateOne(id: string, update: { [key: string]: any }) {
     return this.http
       .patch(`api:/function/${id}`, update, {
         headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
       })
       .pipe(
-        tap(_ => this.store.dispatch(new UpdateFunction({function: {id: id, changes: update}})))
+        tap(_ => this.store.dispatch(new UpdateFunction({ function: { id: id, changes: update } })))
       );
   }
 
   delete(id: string): Observable<any> {
     return this.http
       .delete(`api:/function/${id}`)
-      .pipe(tap(() => this.store.dispatch(new DeleteFunction({id}))));
+      .pipe(tap(() => this.store.dispatch(new DeleteFunction({ id }))));
   }
-  ignoreSchema(schema) {
+
+  ignoreUnreplacableFields(schema) {
     ["category"].forEach(e => !schema[e] && delete schema[e]);
     return schema;
   }

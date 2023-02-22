@@ -41,7 +41,7 @@ import {FunctionOptions, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "./interf
 import {AddComponent} from "./pages/add/add.component";
 import {ExampleComponent} from "@spica-client/common/example";
 import {ConfigurationComponent} from "./components/configuration/configuration.component";
-import {IndexComponent} from "./pages/index/index.component";
+import {FunctionActionsComponent} from "./pages/function-actions/function-actions.component";
 import {LogViewComponent} from "./pages/log-view/log-view.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {EnqueuerPipe} from "./pipes/enqueuer";
@@ -93,7 +93,7 @@ import {WebhookService} from "./services";
   ],
   declarations: [
     AddComponent,
-    IndexComponent,
+    FunctionActionsComponent,
     LogViewComponent,
     WelcomeComponent,
     LanguageDirective,

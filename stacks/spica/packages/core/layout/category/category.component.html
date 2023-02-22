@@ -1,5 +1,5 @@
 <ng-template #addToCategory>
-  <h3>Move "{{ adCategoryItemName }}" to category</h3>
+  <h3>Move "{{ addCategoryItemName }}" to category</h3>
   <mat-divider></mat-divider>
   <form>
     <mat-form-field>
@@ -170,7 +170,7 @@
               <button
                 mat-menu-item
                 (click)="
-                  adCategoryItemName = item.display; openAddToCategory(addToCategory, item.id)
+                  addCategoryItemName = item.display; openAddToCategory(addToCategory, item.id)
                 "
               >
                 <mat-icon>add</mat-icon>

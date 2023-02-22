@@ -37,7 +37,7 @@ export interface Route {
   has_more?: boolean;
 }
 
-export const Root_Categories = new Map<
+export const rootCategories = new Map<
   RouteCategory,
   {
     icon: string;

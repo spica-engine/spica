@@ -1,12 +1,12 @@
-import {moveItemInArray} from "@angular/cdk/drag-drop";
-import {Component, Input, OnInit} from "@angular/core";
-import {MatDialog} from "@angular/material/dialog";
-import {MatSnackBar} from "@angular/material/snack-bar";
-import {Bucket} from "@spica-client/bucket/interfaces/bucket";
-import {AddFieldModalComponent} from "@spica-client/bucket/pages/add-field-modal/add-field-modal.component";
-import {BucketService} from "@spica-client/bucket/services/bucket.service";
-import {SnackbarError} from "@spica-client/core/layout/snackbar/interface";
-import {SnackbarComponent} from "@spica-client/core/layout/snackbar/snackbar.component";
+import { moveItemInArray } from "@angular/cdk/drag-drop";
+import { Component, Input, OnInit } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
+import { MatSnackBar } from "@angular/material/snack-bar";
+import { Bucket } from "@spica-client/bucket/interfaces/bucket";
+import { AddFieldModalComponent } from "@spica-client/bucket/pages/add-field-modal/add-field-modal.component";
+import { BucketService } from "@spica-client/bucket/services/bucket.service";
+import { SnackbarError } from "@spica-client/core/layout/snackbar/interface";
+import { SnackbarComponent } from "@spica-client/core/layout/snackbar/snackbar.component";
 
 @Component({
   selector: "app-property-menu",
@@ -20,9 +20,9 @@ export class PropertyMenuComponent implements OnInit {
     private _snackBar: MatSnackBar,
     private bs: BucketService,
     private dialog: MatDialog
-  ) {}
+  ) { }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   deleteProperty(propertyKey: string) {
     if (this.schema.primary === propertyKey) {
@@ -57,17 +57,9 @@ export class PropertyMenuComponent implements OnInit {
     this.bs
       .replaceOne(this.schema)
       .toPromise()
-      .catch(err =>
-        this._snackBar.openFromComponent(SnackbarComponent, {
-          data: {
-            status: err.status,
-            message: err.error.message
-          } as SnackbarError,
-          duration: 5000
-        })
-      );
   }
-  moveField(field, value) {
+
+  moveField(field: string, value: 1 | -1) {
     const keys = Object.keys(this.schema.properties);
     const properties = Object.entries(this.schema.properties);
 

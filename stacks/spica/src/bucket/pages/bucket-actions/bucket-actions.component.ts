@@ -9,11 +9,11 @@ import {AddBucketComponent} from "@spica-client/bucket/components/add-bucket/add
 import {Bucket} from "@spica-client/bucket/interfaces/bucket";
 
 @Component({
-  selector: "bucket-index",
-  templateUrl: "./bucket-index.component.html",
-  styleUrls: ["./bucket-index.component.scss"]
+  selector: "bucket-actions",
+  templateUrl: "./bucket-actions.component.html",
+  styleUrls: ["./bucket-actions.component.scss"]
 })
-export class BucketIndexComponent implements OnDestroy, OnInit {
+export class BucketActionsComponent implements OnDestroy, OnInit {
   buckets: Bucket[];
   private dispose = new Subject();
   @Input() route: Route;

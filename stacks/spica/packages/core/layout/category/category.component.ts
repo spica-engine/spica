@@ -1,10 +1,10 @@
-import {CdkDragDrop, moveItemInArray, transferArrayItem} from "@angular/cdk/drag-drop";
-import {ComponentType} from "@angular/cdk/portal";
-import {Component, OnInit, Input, Output, EventEmitter, SimpleChanges} from "@angular/core";
-import {MatDialog, MatDialogRef} from "@angular/material/dialog";
-import {Route} from "@spica-client/core/route";
-import {Subscription} from "rxjs";
-import {CategoryService} from "./category.service";
+import { CdkDragDrop, moveItemInArray, transferArrayItem } from "@angular/cdk/drag-drop";
+import { ComponentType } from "@angular/cdk/portal";
+import { Component, OnInit, Input, Output, EventEmitter, SimpleChanges } from "@angular/core";
+import { MatDialog, MatDialogRef } from "@angular/material/dialog";
+import { Route } from "@spica-client/core/route";
+import { BehaviorSubject, Observable, Subscription } from "rxjs";
+import { CategoryService } from "./category.service";
 
 export interface Schema {
   resource_category?: string;
@@ -17,21 +17,21 @@ export interface Schema {
   styleUrls: ["./category.component.scss"]
 })
 export class CategoryComponent implements OnInit {
-  constructor(private dialog: MatDialog, public categoryService: CategoryService) {}
+  constructor(private dialog: MatDialog, public categoryService: CategoryService) { }
 
   @Input() categoryStorageKey: string;
-  @Input() routes$;
-  @Input() currentCategory;
+  @Input() routes$: Observable<Route[]>;
+  @Input() currentCategory: BehaviorSubject<any>;
   @Input() moreTemplate: ComponentType<any>;
   @Output() onChangedOrder = new EventEmitter();
   @Output() onClickItem = new EventEmitter();
 
   routes: Route[] = [];
-  categories: {name?: string; order?: number}[] = [];
-  categoryExpandStatus: {[propValue: string]: boolean} = {};
+  categories: { name?: string; order?: number }[] = [];
+  categoryExpandStatus: { [propValue: string]: boolean } = {};
   categoryModalRef: MatDialogRef<any>;
   addCategoryModalRef: MatDialogRef<any>;
-  adCategoryItemName: string;
+  addCategoryItemName: string;
   categoryModalMode: string;
   newCategory;
   dropListIds: string[];
@@ -77,8 +77,7 @@ export class CategoryComponent implements OnInit {
     if (!localStorage.getItem(this.categoryStorageKey + "-category-order")) {
       this.updateCategoryOrdersFromStorage();
     }
-    // console.log("this.categorizedSchemas :", this.categorizedSchemas)
-    // console.log("this.dropListIds :", this.dropListIds)
+
   }
 
   categoryAction() {
@@ -102,13 +101,13 @@ export class CategoryComponent implements OnInit {
 
         const existCategory = this.categories.find(category => category.name == this.newCategory);
         if (!existCategory) {
-          this.categories.push({name: this.newCategory, order: this.categories.length + 1});
+          this.categories.push({ name: this.newCategory, order: this.categories.length + 1 });
           this.updateCategoryOrdersFromStorage();
         }
         this.onChangedOrder.emit([
           {
             id: routeId,
-            changes: {category: this.newCategory}
+            changes: { category: this.newCategory }
           }
         ]);
         this.newCategory = "";
@@ -132,7 +131,7 @@ export class CategoryComponent implements OnInit {
 
           const changedItems = [];
           this.categorizedSchemas[oldName].forEach(schema => {
-            changedItems.push({id: schema.id, changes: {category: this.newCategory}});
+            changedItems.push({ id: schema.id, changes: { category: this.newCategory } });
           });
 
           this.updateCategoryOrdersFromStorage();
@@ -227,7 +226,7 @@ export class CategoryComponent implements OnInit {
     // set changed items for output
     const changedItems = [];
     for (let i = entryCountsOfBefore; i < schemaArray.length; i++) {
-      changedItems.push({id: schemaArray[i].id, changes: {order: i}});
+      changedItems.push({ id: schemaArray[i].id, changes: { order: i } });
     }
     const draggedItem = changedItems.find(item => item.id == event.item.element.nativeElement.id);
 
@@ -275,7 +274,7 @@ export class CategoryComponent implements OnInit {
     const categoryOrders = this.getStoredCategories();
     return data
       .map(element => {
-        const findedElement = categoryOrders.find(item => item.name == element) || {order: 0};
+        const findedElement = categoryOrders.find(item => item.name == element) || { order: 0 };
         return {
           name: element,
           order: findedElement.order

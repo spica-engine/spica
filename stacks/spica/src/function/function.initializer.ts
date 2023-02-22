@@ -9,7 +9,7 @@ import {
 } from "@spica-client/core/route";
 import {PassportService} from "@spica-client/passport";
 import {ConfigurationComponent} from "./components/configuration/configuration.component";
-import {IndexComponent} from "./pages/index/index.component";
+import {FunctionActionsComponent} from "./pages/function-actions/function-actions.component";
 import {FunctionService} from "./services/function.service";
 
 @Injectable()
@@ -22,7 +22,7 @@ export class FunctionInitializer {
   ) {
     this.routeService.patchCategory(RouteCategory.Developer, {
       props: {
-        moreTemplate: IndexComponent,
+        moreTemplate: FunctionActionsComponent,
         onChangedOrder: this.onFunctionCategoryChange,
         categoryStorageKey: RouteCategory.Developer
       }
@@ -30,6 +30,7 @@ export class FunctionInitializer {
     this.onFunctionCategoryChange.subscribe(event => this.functionService.patchFunctionMany(event));
 
     functionService.getFunctions().subscribe(async funcs => {
+      console.log("funcs :",funcs)
       this.routeService.dispatch(
         new CherryPickAndRemove(e => e.category == RouteCategory.Developer)
       );

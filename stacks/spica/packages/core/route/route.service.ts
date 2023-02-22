@@ -10,7 +10,7 @@ import {
   map,
   switchMap
 } from "rxjs/operators";
-import {Root_Categories, Route, RouteFilter} from "./route";
+import {rootCategories, Route, RouteFilter} from "./route";
 import {RouteAction, RouteState, selectRoutes} from "./route.reducer";
 
 function wrap<T>(value: T | Promise<T> | Observable<T>) {
@@ -46,7 +46,7 @@ export class RouteService {
   }
 
   patchCategory(category, value) {
-    Root_Categories.set(category, {...Root_Categories.get(category), ...value});
+    rootCategories.set(category, {...rootCategories.get(category), ...value});
   }
 
   dispatch(action: RouteAction) {
