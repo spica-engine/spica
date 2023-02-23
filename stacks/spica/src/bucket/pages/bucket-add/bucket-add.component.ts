@@ -26,7 +26,7 @@ import {BucketService} from "../../services/bucket.service";
 import {BucketHistoryService} from "@spica-client/bucket/services/bucket-history.service";
 import {MatDialog} from "@angular/material/dialog";
 import {AddFieldModalComponent} from "../add-field-modal/add-field-modal.component";
-import { RelationSchemaComponent } from "../../components/relation-schema/relation-schema.component";
+import {RelationSchemaComponent} from "../../components/relation-schema/relation-schema.component";
 
 @Component({
   selector: "bucket-add",
@@ -52,7 +52,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   buckets: Bucket[];
   bucket: Bucket;
 
-
   $save: Observable<SavingState>;
 
   $remove: Observable<SavingState>;
@@ -76,7 +75,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
       .getBuckets()
       .pipe(take(1))
       .subscribe(buckets => (this.buckets = buckets));
-
   }
 
   ngOnInit(): void {
@@ -87,16 +85,14 @@ export class BucketAddComponent implements OnInit, OnDestroy {
         catchError(() => of(false))
       );
 
-    this.activatedRoute.params 
+    this.activatedRoute.params
       .pipe(
         tap(params => {
-
           this.$save = of(SavingState.Pristine);
           this.$remove = of(SavingState.Pristine);
           if (!params.id) {
             this.bucket = emptyBucket();
             this.updatePositionProperties();
-
           }
         }),
         filter(params => params.id),
@@ -160,14 +156,12 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     this.updatePositionProperties();
   }
 
-  saveBucket() { 
-
+  saveBucket() {
     const isInsert = !this.bucket._id;
 
     if (!this.bucket.hasOwnProperty("order")) {
       this.bucket.order = this.buckets.length;
     }
-
 
     const save = isInsert ? this.bs.insertOne(this.bucket) : this.bs.replaceOne(this.bucket);
 
@@ -207,9 +201,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(data => {
       this.updatePositionProperties();
     });
-
   }
-
 
   ngOnDestroy() {
     this.onDestroy.next();

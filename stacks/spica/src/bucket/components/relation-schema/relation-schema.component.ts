@@ -6,9 +6,9 @@ import {Bucket} from "../../interfaces/bucket";
 import {RelationSchema, RelationType} from "../relation";
 import {tap} from "rxjs/operators";
 
-import * as pluralize from 'pluralize';
+import * as pluralize from "pluralize";
 
-import { AddFieldModalComponent } from "@spica-client/bucket/pages/add-field-modal/add-field-modal.component";
+import {AddFieldModalComponent} from "@spica-client/bucket/pages/add-field-modal/add-field-modal.component";
 
 @Component({
   selector: "bucket-relation",
@@ -31,38 +31,38 @@ export class RelationSchemaComponent implements OnInit {
     setTimeout(() => {
       if (!this.schema.relationType && !pluralize.isPlural(this.propertyKey)) {
         this.schema.relationType = RelationType.OneToOne;
-      }
-      else{
+      } else {
         this.schema.relationType = RelationType.OneToMany;
       }
 
       this.buckets = this.bucketService.getBuckets().pipe(
         tap(buckets => {
-
           if (!this.schema.bucketId) {
-            
-            this.matchedRelation = buckets.map((bucket, index) => (bucket.title.toLowerCase() === pluralize.plural(this.propertyKey) || bucket.title.toLowerCase() === this.propertyKey) ? index : undefined)
-            .filter(index => index !== undefined);
+            this.matchedRelation = buckets
+              .map((bucket, index) =>
+                bucket.title.toLowerCase() === pluralize.plural(this.propertyKey) ||
+                bucket.title.toLowerCase() === this.propertyKey
+                  ? index
+                  : undefined
+              )
+              .filter(index => index !== undefined);
 
-            if(this.matchedRelation.length>0){
-             this.schema.bucketId = buckets[this.matchedRelation]._id;
-            }
-            else{
-             this.schema.bucketId = buckets[0]._id;
+            if (this.matchedRelation.length > 0) {
+              this.schema.bucketId = buckets[this.matchedRelation]._id;
+            } else {
+              this.schema.bucketId = buckets[0]._id;
             }
           }
         })
       );
     });
-
   }
-  ngOnInit():void{
+  ngOnInit(): void {
     this.parentSchema = this.data.parentSchema;
     if (this.data.propertyKey) {
-      this.propertyKey = this.data.propertyKey; 
+      this.propertyKey = this.data.propertyKey;
       this.propertyKv = this.parentSchema.properties[this.propertyKey];
-      this.field = this.propertyKv.type; 
+      this.field = this.propertyKv.type;
     }
   }
-
 }
