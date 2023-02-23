@@ -72,6 +72,9 @@
           }
           mat-nav-list {
             &.iconlist {
+              position: sticky;
+              height: 100vh;
+              top: 0;
               padding: 0px 3px;
               background: rgba(var(--background-background-rgb), 0.9);
               mat-list-item {
