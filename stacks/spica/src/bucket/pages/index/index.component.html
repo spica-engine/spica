@@ -141,6 +141,16 @@
             </ng-template>
           </mat-menu>
         </button>
+
+        <button
+          mat-button
+          [matTooltip]="(guide ? 'Hide' : 'Show') + ' Guide'"
+          (click)="guide = !guide"
+        >
+          <mat-icon>contact_support</mat-icon>
+          For Developers
+        </button>
+
         <button mat-button [matMenuTriggerFor]="bucketSettingsMenu">
           <mat-icon>more_vert</mat-icon>
           More
@@ -153,15 +163,6 @@
               <settings-bucket [schema]="schema"></settings-bucket>
             </ng-template>
           </mat-menu>
-        </button>
-
-        <button
-          mat-button
-          [matTooltip]="(guide ? 'Hide' : 'Show') + ' Guide'"
-          (click)="guide = !guide"
-        >
-          <mat-icon>contact_support</mat-icon>
-          For Developers
         </button>
       </div>
     </div>

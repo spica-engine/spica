@@ -3,6 +3,11 @@
     padding: 0 !important;
     align-items: flex-start;
     flex-direction: column;
+    mat-card-header {
+      .mat-card-header-text {
+        margin: 0;
+      }
+    }
     form {
       min-width: 340px;
       display: flex;

@@ -30,7 +30,6 @@ export class FunctionInitializer {
     this.onFunctionCategoryChange.subscribe(event => this.functionService.patchFunctionMany(event));
 
     functionService.getFunctions().subscribe(async funcs => {
-      console.log("funcs :",funcs)
       this.routeService.dispatch(
         new CherryPickAndRemove(e => e.category == RouteCategory.Developer)
       );

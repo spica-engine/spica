@@ -10,7 +10,7 @@
   >
     <section class="routes">
       <mat-nav-list class="iconlist">
-        <mat-list-item disableRipple>
+        <mat-list-item class="logo" disableRipple>
           <img src="assets/astro-composer.svg" />
         </mat-list-item>
         <mat-list-item
@@ -29,7 +29,7 @@
         </mat-list-item>
 
         <mat-list-item disableRipple class="iconlist-below">
-          <mat-nav-list *ngIf="isSidebarReady">
+          <mat-nav-list class="iconlist_sub" *ngIf="isSidebarReady">
             <mat-list-item
               matTooltip="Version Control"
               [routerLink]="['/versioncontrol']"
