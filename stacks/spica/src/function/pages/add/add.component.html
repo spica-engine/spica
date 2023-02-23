@@ -374,9 +374,13 @@
                 <mat-error *ngIf="dependencyModel?.errors?.required">
                   This field is required.
                 </mat-error>
-                 <button mat-button class="add-dependency-button" (click)="addDependency(dependencyModel.value); dependencyModel.reset()">
+                <button
+                  mat-button
+                  class="add-dependency-button"
+                  (click)="addDependency(dependencyModel.value); dependencyModel.reset()"
+                >
                   <mat-icon>add</mat-icon>
-              </button>
+                </button>
               </mat-form-field>
             </mat-list-item>
           </div>
