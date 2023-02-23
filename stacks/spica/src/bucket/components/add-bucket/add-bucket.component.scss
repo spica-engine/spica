@@ -8,6 +8,7 @@
         margin: 0;
       }
     }
+
     form {
       min-width: 340px;
       display: flex;
@@ -23,6 +24,15 @@
       }
       > button {
         margin-top: 10px;
+      }
+    }
+  }
+  .icon-container {
+    padding: 0px 8px;
+    .search-icon {
+      width: 100%;
+      mat-icon {
+        color: var(--foreground-icon);
       }
     }
   }
