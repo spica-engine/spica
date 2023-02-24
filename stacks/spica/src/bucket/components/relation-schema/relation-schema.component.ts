@@ -22,11 +22,14 @@ export class RelationSchemaComponent implements OnInit {
   propertyKey: string = "";
   propertyKv: any;
   matchedRelation: any;
+  singularPropertyKey: string = "";
+  pluralPropertyKey: string = "";
+
 
   constructor(
     @Inject(INPUT_SCHEMA) public schema: RelationSchema,
     private bucketService: BucketService,
-    @Inject(AddFieldModalComponent) public data: AddFieldModalComponent
+    @Inject(AddFieldModalComponent) public data: AddFieldModalComponent,
   ) {
     setTimeout(() => {
       if (!this.schema.relationType && !pluralize.isPlural(this.propertyKey)) {
@@ -34,14 +37,13 @@ export class RelationSchemaComponent implements OnInit {
       } else {
         this.schema.relationType = RelationType.OneToMany;
       }
-
       this.buckets = this.bucketService.getBuckets().pipe(
         tap(buckets => {
           if (!this.schema.bucketId) {
             this.matchedRelation = buckets
               .map((bucket, index) =>
-                bucket.title.toLowerCase() === pluralize.plural(this.propertyKey) ||
-                bucket.title.toLowerCase() === this.propertyKey
+                bucket.title.toLowerCase() === this.pluralPropertyKey ||
+                bucket.title.toLowerCase() === this.singularPropertyKey
                   ? index
                   : undefined
               )
@@ -61,6 +63,8 @@ export class RelationSchemaComponent implements OnInit {
     this.parentSchema = this.data.parentSchema;
     if (this.data.propertyKey) {
       this.propertyKey = this.data.propertyKey;
+      this.singularPropertyKey = pluralize.singular(this.data.propertyKey);
+      this.pluralPropertyKey = pluralize.plural(this.data.propertyKey);
       this.propertyKv = this.parentSchema.properties[this.propertyKey];
       this.field = this.propertyKv.type;
     }
