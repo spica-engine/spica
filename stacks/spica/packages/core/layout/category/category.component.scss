@@ -59,12 +59,19 @@
       width: 100%;
       display: flex;
       justify-content: flex-end;
+      .mat-button-wrapper {
+        display: flex;
+        align-items: center;
+        mat-icon {
+          margin-right: 5px;
+        }
+      }
     }
     .select-input {
       display: flex;
       flex-direction: column;
       gap: 5px;
-      margin-top: 12px;
+      margin-top: 24px;
       mat-chip-list {
         .mat-chip-list-wrapper {
           flex-direction: column;

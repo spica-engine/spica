@@ -169,14 +169,7 @@
   </ng-container>
   <mat-card class="mat-elevation-z25">
     <mat-card-content>
-      <table
-        class="striped"
-        mat-table
-        #rowtable
-        [dataSource]="data$ | async"
-        matSort
-        (matSortChange)="onSortChange($event)"
-      >
+      <table class="striped" mat-table #rowtable [dataSource]="data$ | async">
         <ng-container matColumnDef="$$spicainternal_select" sticky>
           <th class="select" mat-header-cell *matHeaderCellDef>
             <mat-checkbox
@@ -202,8 +195,16 @@
           </td>
         </ng-container>
         <ng-container matColumnDef="$$spicainternal_id" *ngIf="schema$ | async; let schema" sticky>
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          <th mat-header-cell *matHeaderCellDef>
             _id
+            <ng-container
+              [ngTemplateOutlet]="propertyMenuTemplate"
+              [ngTemplateOutletContext]="{
+                schema: schema,
+                displayedProperties: displayedProperties,
+                property: {key: '$$spicainternal_id'}
+              }"
+            ></ng-container>
           </th>
           <td mat-cell *matCellDef="let row">
             {{ row._id }}
@@ -224,22 +225,19 @@
             <th
               mat-header-cell
               *matHeaderCellDef
-              mat-sort-header
               [persist-header-width]="schema._id"
               mat-resize-header
               [overrideMinWidth]="true"
             >
               {{ property.value.title }}
-              <button mat-icon-button [matMenuTriggerFor]="editPropertyMenu">
-                <mat-icon>arrow_drop_down</mat-icon>
-              </button>
-              <mat-menu class="edit-property-menu" #editPropertyMenu="matMenu">
-                <app-property-menu
-                  [schema]="schema"
-                  [displayedProperties]="displayedProperties"
-                  [property]="property"
-                ></app-property-menu>
-              </mat-menu>
+              <ng-container
+                [ngTemplateOutlet]="propertyMenuTemplate"
+                [ngTemplateOutletContext]="{
+                  schema: schema,
+                  displayedProperties: displayedProperties,
+                  property: property
+                }"
+              ></ng-container>
             </th>
             <td
               mat-cell
@@ -355,6 +353,25 @@
     </div>
   </div>
 </div>
+<ng-template
+  let-schema="schema"
+  let-displayedProperties="displayedProperties"
+  let-property="property"
+  #propertyMenuTemplate
+>
+  <button mat-icon-button [matMenuTriggerFor]="editPropertyMenu">
+    <mat-icon>arrow_drop_down</mat-icon>
+  </button>
+  <mat-menu class="edit-property-menu" #editPropertyMenu="matMenu">
+    <app-property-menu
+      (handleSortChange)="onSortChange($event)"
+      [schema]="schema"
+      [displayedProperties]="displayedProperties"
+      [property]="property"
+    ></app-property-menu>
+  </mat-menu>
+</ng-template>
+
 <ng-template #deleteRowsDialog let-answer="answer">
   <p>
     This action will <b>permanently</b> delete these selected

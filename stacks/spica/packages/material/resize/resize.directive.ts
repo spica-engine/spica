@@ -9,7 +9,7 @@ import {
   Output,
   AfterViewInit
 } from "@angular/core";
-import {MatSortHeader} from "@angular/material/sort";
+import { MatSortHeader } from "@angular/material/sort";
 
 @Directive({
   selector: "[mat-resize-header]",
@@ -54,7 +54,7 @@ export class MatResizeHeader implements AfterViewInit {
   constructor(
     private elem: ElementRef<HTMLTableColElement>,
     @Optional() @Host() private matSort: MatSortHeader
-  ) {}
+  ) { }
 
   ngAfterViewInit() {
     setTimeout(() => {
@@ -100,7 +100,7 @@ export class MatResizeHeader implements AfterViewInit {
   }
 
   getIsInMovementRect(x: number) {
-    return this._rect.left + this._rect.width - x < this.size;
+    return this._rect.left + this._rect.width - x < 20;
   }
 
   /**
@@ -115,7 +115,7 @@ export class MatResizeHeader implements AfterViewInit {
       }
 
       if (disabled) {
-        this.matSort["_handleClick"] = () => {};
+        this.matSort["_handleClick"] = () => { };
       } else {
         this.matSort["_handleClick"] = this._originalHandleClick;
       }

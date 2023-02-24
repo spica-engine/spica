@@ -1,7 +1,8 @@
 import { moveItemInArray } from "@angular/cdk/drag-drop";
-import { Component, Input, OnInit } from "@angular/core";
+import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { MatSnackBar } from "@angular/material/snack-bar";
+import { Sort } from "@angular/material/sort";
 import { Bucket } from "@spica-client/bucket/interfaces/bucket";
 import { AddFieldModalComponent } from "@spica-client/bucket/pages/add-field-modal/add-field-modal.component";
 import { BucketService } from "@spica-client/bucket/services/bucket.service";
@@ -16,6 +17,8 @@ export class PropertyMenuComponent implements OnInit {
   @Input() schema: Bucket;
   @Input() displayedProperties: string[];
   @Input() property: any;
+  @Output() handleSortChange = new EventEmitter<Sort>()
+
   constructor(
     private _snackBar: MatSnackBar,
     private bs: BucketService,
@@ -84,4 +87,5 @@ export class PropertyMenuComponent implements OnInit {
 
     this.saveSchema();
   }
+
 }
