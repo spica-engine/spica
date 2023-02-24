@@ -1,5 +1,5 @@
 import {Component, Input, OnInit} from "@angular/core";
-import { Subject} from "rxjs";
+import {Subject} from "rxjs";
 import {filter, takeUntil} from "rxjs/operators";
 
 import {FunctionService} from "../../services";
@@ -15,7 +15,6 @@ import {Router} from "@angular/router";
   styleUrls: ["./function-actions.component.scss"]
 })
 export class FunctionActionsComponent implements OnInit {
-
   functions: Function[];
   @Input() route: Route;
   private dispose = new Subject();

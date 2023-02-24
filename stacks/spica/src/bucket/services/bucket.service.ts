@@ -1,14 +1,14 @@
-import { HttpClient, HttpHeaders, HttpRequest } from "@angular/common/http";
-import { Injectable } from "@angular/core";
-import { select, Store } from "@ngrx/store";
-import { fileToBuffer, PreferencesService } from "@spica-client/core";
+import {HttpClient, HttpHeaders, HttpRequest} from "@angular/common/http";
+import {Injectable} from "@angular/core";
+import {select, Store} from "@ngrx/store";
+import {fileToBuffer, PreferencesService} from "@spica-client/core";
 import * as BSON from "bson";
-import { from, Observable, pipe } from "rxjs";
-import { filter, flatMap, map, tap, debounceTime } from "rxjs/operators";
-import { Storage } from "../../storage/interfaces/storage";
-import { Bucket, BucketTemplate } from "../interfaces/bucket";
-import { BucketSettings } from "../interfaces/bucket-settings";
-import { PredefinedDefault } from "../interfaces/predefined-default";
+import {from, Observable, pipe} from "rxjs";
+import {filter, flatMap, map, tap, debounceTime} from "rxjs/operators";
+import {Storage} from "../../storage/interfaces/storage";
+import {Bucket, BucketTemplate} from "../interfaces/bucket";
+import {BucketSettings} from "../interfaces/bucket-settings";
+import {PredefinedDefault} from "../interfaces/predefined-default";
 import * as fromBucket from "../state/bucket.reducer";
 
 @Injectable()
@@ -17,7 +17,7 @@ export class BucketService {
     private http: HttpClient,
     private store: Store<fromBucket.State>,
     private preference: PreferencesService
-  ) { }
+  ) {}
 
   getPreferences() {
     return this.preference.get<BucketSettings>("bucket");
@@ -59,27 +59,29 @@ export class BucketService {
   }
 
   sendPatchRequest(id: string, changes: object): Observable<Bucket> {
-    return this.http
-      .patch<Bucket>(`api:/bucket/${id}`, changes, {
-        headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
-      })
+    return this.http.patch<Bucket>(`api:/bucket/${id}`, changes, {
+      headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
+    });
   }
 
   patchBucket(id: string, changes: object): Observable<Bucket> {
-    return this.sendPatchRequest(id, changes)
-      .pipe(tap(_ => this.store.dispatch(new fromBucket.Update(id, changes))));
+    return this.sendPatchRequest(id, changes).pipe(
+      tap(_ => this.store.dispatch(new fromBucket.Update(id, changes)))
+    );
   }
 
-  patchBucketMany(changes: { id: string; changes: object }[]): Promise<Bucket[]> {
+  patchBucketMany(changes: {id: string; changes: object}[]): Promise<Bucket[]> {
     return Promise.all(
       changes.map(change => this.sendPatchRequest(change.id, change.changes).toPromise())
     ).then((res: Bucket[]) => {
-
       //If field come with undefined value, Upsert will remove that field. But Upsert must know which value has undefined.
-      this.store.dispatch(new fromBucket.UpsertMany(
-        res.map((bucketItem) => {
-          return { ...bucketItem, ...changes.find((change) => change.id == bucketItem._id).changes }
-        })));
+      this.store.dispatch(
+        new fromBucket.UpsertMany(
+          res.map(bucketItem => {
+            return {...bucketItem, ...changes.find(change => change.id == bucketItem._id).changes};
+          })
+        )
+      );
 
       return Promise.resolve(res);
     });
@@ -100,7 +102,7 @@ export class BucketService {
         });
         const request = new HttpRequest("POST", `api:/bucket/import/${bucketId}`, data.buffer, {
           reportProgress: true,
-          headers: new HttpHeaders({ "Content-Type": "application/bson" })
+          headers: new HttpHeaders({"Content-Type": "application/bson"})
         });
 
         return this.http.request<Storage>(request);
@@ -119,7 +121,7 @@ export class BucketService {
         });
         const request = new HttpRequest("POST", `api:/bucket/import-schema`, data.buffer, {
           reportProgress: true,
-          headers: new HttpHeaders({ "Content-Type": "application/bson" })
+          headers: new HttpHeaders({"Content-Type": "application/bson"})
         });
 
         return this.http.request<Storage>(request);
@@ -128,11 +130,11 @@ export class BucketService {
   }
 
   exportData(bucketIds: Array<string>): Observable<any> {
-    return this.http.post(`api:/bucket/export`, bucketIds, { responseType: "blob" });
+    return this.http.post(`api:/bucket/export`, bucketIds, {responseType: "blob"});
   }
 
   exportSchema(bucketIds: Array<string>): Observable<any> {
-    return this.http.post(`api:/bucket/export-schema`, bucketIds, { responseType: "blob" });
+    return this.http.post(`api:/bucket/export-schema`, bucketIds, {responseType: "blob"});
   }
 
   getTemplates(): Observable<any> {

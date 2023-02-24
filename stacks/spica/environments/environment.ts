@@ -7,5 +7,4 @@ export const environment = {
   production: true,
   api: "https://master.spicaengine.com/api"
   // api: "https://unser-moment-5ec86.hq.spicaengine.com/api"
-
 };

@@ -1,6 +1,6 @@
 import {Component, Input, OnInit} from "@angular/core";
 import {Route} from "@spica-client/core/route";
-import { BehaviorSubject, Observable } from "rxjs";
+import {BehaviorSubject, Observable} from "rxjs";
 import {CategoryService} from "../category/category.service";
 
 @Component({

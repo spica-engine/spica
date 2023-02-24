@@ -1,6 +1,6 @@
-import { createEntityAdapter, EntityState } from "@ngrx/entity";
-import { Action, createFeatureSelector, createSelector } from "@ngrx/store";
-import { Bucket } from "../interfaces/bucket";
+import {createEntityAdapter, EntityState} from "@ngrx/entity";
+import {Action, createFeatureSelector, createSelector} from "@ngrx/store";
+import {Bucket} from "../interfaces/bucket";
 
 export enum BucketActionTypes {
   RETRIEVE = "BUCKET_RETRIEVE",
@@ -15,43 +15,51 @@ export enum BucketActionTypes {
 
 export class Add implements Action {
   readonly type = BucketActionTypes.ADD;
-  constructor(public bucket: Bucket) { }
+  constructor(public bucket: Bucket) {}
 }
 
 export class Update implements Action {
   readonly type = BucketActionTypes.UPDATE;
-  constructor(public id: string, public changes: Partial<Bucket>) { }
+  constructor(public id: string, public changes: Partial<Bucket>) {}
 }
 export class UpdateMany implements Action {
   readonly type = BucketActionTypes.UPDATE_MANY;
-  constructor(public buckets: { id: string; changes: Partial<Bucket> }[]) { }
+  constructor(public buckets: {id: string; changes: Partial<Bucket>}[]) {}
 }
 
 export class Replace implements Action {
   readonly type = BucketActionTypes.REPLACE;
-  constructor(public bucket: Bucket) { }
+  constructor(public bucket: Bucket) {}
 }
 
 export class Upsert implements Action {
   readonly type = BucketActionTypes.UPSERT;
-  constructor(public bucket: Bucket) { }
+  constructor(public bucket: Bucket) {}
 }
 export class UpsertMany implements Action {
   readonly type = BucketActionTypes.UPSERT_MANY;
-  constructor(public buckets: Bucket[]) { }
+  constructor(public buckets: Bucket[]) {}
 }
 
 export class Remove implements Action {
   readonly type = BucketActionTypes.REMOVE;
-  constructor(public id: string) { }
+  constructor(public id: string) {}
 }
 
 export class Retrieve implements Action {
   readonly type = BucketActionTypes.RETRIEVE;
-  constructor(public buckets: Bucket[]) { }
+  constructor(public buckets: Bucket[]) {}
 }
 
-export type BucketAction = Retrieve | Add | Update | UpdateMany | Remove | Upsert | Replace | UpsertMany;
+export type BucketAction =
+  | Retrieve
+  | Add
+  | Update
+  | UpdateMany
+  | Remove
+  | Upsert
+  | Replace
+  | UpsertMany;
 
 export interface State extends EntityState<Bucket> {
   loaded: boolean;
@@ -62,12 +70,12 @@ export const adapter = createEntityAdapter<Bucket>({
   sortComparer: (a, b) => a.order - b.order
 });
 
-export const initialState: State = adapter.getInitialState({ loaded: false });
+export const initialState: State = adapter.getInitialState({loaded: false});
 
 export function reducer(state: State = initialState, action: BucketAction): State {
   switch (action.type) {
     case BucketActionTypes.RETRIEVE:
-      return adapter.addAll(action.buckets, { ...state, loaded: true });
+      return adapter.addAll(action.buckets, {...state, loaded: true});
     case BucketActionTypes.ADD:
       return adapter.addOne(action.bucket, state);
     case BucketActionTypes.REMOVE:
@@ -75,7 +83,7 @@ export function reducer(state: State = initialState, action: BucketAction): Stat
     case BucketActionTypes.REPLACE:
       return adapter.setOne(action.bucket, state);
     case BucketActionTypes.UPDATE:
-      return adapter.updateOne({ id: action.id, changes: action.changes }, state);
+      return adapter.updateOne({id: action.id, changes: action.changes}, state);
     case BucketActionTypes.UPDATE_MANY:
       return adapter.updateMany(action.buckets, state);
     case BucketActionTypes.UPSERT:
@@ -89,7 +97,7 @@ export function reducer(state: State = initialState, action: BucketAction): Stat
 
 export const bucketFeatureSelector = createFeatureSelector<State>("bucket");
 
-export const { selectIds, selectEntities, selectAll, selectTotal } = adapter.getSelectors(
+export const {selectIds, selectEntities, selectAll, selectTotal} = adapter.getSelectors(
   bucketFeatureSelector
 );
 
