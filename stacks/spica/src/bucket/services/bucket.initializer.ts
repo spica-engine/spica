@@ -8,7 +8,12 @@ import {BucketService} from "./bucket.service";
 @Injectable()
 export class BucketInitializer {
   categoryStorageKey: string = RouteCategory.Content;
-  @Output() onBucketCategoryChange = new EventEmitter();
+  @Output() onBucketCategoryChange = new EventEmitter<
+    {
+      id: string;
+      changes: object;
+    }[]
+  >();
   buckets = [];
   constructor(
     private bs: BucketService,

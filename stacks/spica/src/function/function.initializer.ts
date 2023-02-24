@@ -14,7 +14,12 @@ import {FunctionService} from "./services/function.service";
 
 @Injectable()
 export class FunctionInitializer {
-  @Output() onFunctionCategoryChange = new EventEmitter();
+  @Output() onFunctionCategoryChange = new EventEmitter<
+    {
+      id: string;
+      changes: object;
+    }[]
+  >();
   constructor(
     private functionService: FunctionService,
     private routeService: RouteService,

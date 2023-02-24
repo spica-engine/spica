@@ -37,7 +37,18 @@ export interface Route {
   has_more?: boolean;
 }
 
-export const rootCategories = new Map<
+export type RouteCategoryType = {
+  icon: string;
+  index: number;
+  drawer?: ComponentType<any>;
+  props?: {};
+  children: {
+    name: RouteCategory;
+    icon: string;
+  };
+};
+
+export const routeCategories: Map<RouteCategory, RouteCategoryType> = new Map<
   RouteCategory,
   {
     icon: string;
