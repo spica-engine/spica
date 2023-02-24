@@ -431,7 +431,7 @@ describe("IndexComponent", () => {
       const cell = fixture.debugElement.nativeElement.querySelector(
         "table[mat-table] tr[mat-row] td[mat-cell].mat-column-test span"
       );
-      expect(headerCells[2].textContent).toBe(" test ");
+      expect(headerCells[2].textContent).toBe("format_quote test ");
       expect(headerCells[3].textContent).toBe("Actions");
       expect(cell.textContent).toBe("123");
     });
