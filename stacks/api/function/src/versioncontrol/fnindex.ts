@@ -1,11 +1,12 @@
 import {ObjectId} from "@spica-server/database";
 import {FunctionService} from "@spica-server/function/services";
-import {IRepresentativeManager, SyncProvider} from "@spica-server/versioncontrol";
-import {ChangeKind, createTargetChanges} from "../change";
+import {SyncProvider} from "@spica-server/versioncontrol";
 import {FunctionEngine} from "../engine";
+import * as CRUD from "../crud";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 
 export function indexSyncProviders(
-  service: FunctionService,
+  fs: FunctionService,
   manager: IRepresentativeManager,
   engine: FunctionEngine
 ): SyncProvider {
@@ -13,7 +14,7 @@ export function indexSyncProviders(
   const module = "function";
 
   const getAll = async () => {
-    const fns = await service.find();
+    const fns = await fs.find();
     const promises = [];
 
     const indexes = [];
@@ -28,17 +29,7 @@ export function indexSyncProviders(
     return Promise.all(promises).then(() => indexes);
   };
 
-  const insert = async fn => {
-    const index = fn.index;
-    fn = await service.findOne({_id: new ObjectId(fn._id)});
-
-    await engine.update(fn, index);
-
-    const changes = createTargetChanges(fn, ChangeKind.Updated);
-    engine.categorizeChanges(changes);
-
-    return engine.compile(fn);
-  };
+  const insert = fn => CRUD.index.write(fs, engine, fn._id, fn.index);
 
   // we can not remove index because it can break the function
   const rm = () => Promise.resolve();

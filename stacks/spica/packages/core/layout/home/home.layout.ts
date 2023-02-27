@@ -35,12 +35,12 @@ export class HomeLayoutComponent implements OnInit {
 
   private _categories = new Map([
     [
-      RouteCategory.Primary,
-      {icon: "stars", index: 0, children: {name: RouteCategory.Primary_Sub, icon: "list"}}
+      RouteCategory.Dashboard,
+      {icon: "dashboard", index: 0, children: {name: RouteCategory.Dashboard_Sub, icon: "list"}}
     ],
     [
-      RouteCategory.Dashboard,
-      {icon: "dashboard", index: 1, children: {name: RouteCategory.Dashboard_Sub, icon: "list"}}
+      RouteCategory.Asset,
+      {icon: "shopping_cart", index: 1, children: {name: RouteCategory.Asset_Sub, icon: "list"}}
     ],
     [
       RouteCategory.Content,

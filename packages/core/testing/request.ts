@@ -7,6 +7,12 @@ export class Request {
   reject: boolean = false;
   debug: boolean = false;
 
+  headers: Headers = {};
+
+  setDefaultHeaders(headers: Headers) {
+    this.headers = headers;
+  }
+
   constructor(@Inject("SOCKET") readonly socket: string) {}
 
   options<T>(path: string, headers?: Headers) {
@@ -17,8 +23,8 @@ export class Request {
     return this.request<T>({method: "GET", path, query, headers});
   }
 
-  delete<T>(path: string, body?: object, headers?: Headers) {
-    return this.request<T>({method: "DELETE", path, body, headers});
+  delete<T>(path: string, body?: object, headers?: Headers, query?: any) {
+    return this.request<T>({method: "DELETE", path, body, headers, query});
   }
 
   post<T>(path: string, body?: any, headers?: Headers, query?: any) {
@@ -35,7 +41,7 @@ export class Request {
 
   request<T>(options: RequestOptions): Promise<Response<T>> {
     const req: any = {
-      headers: options.headers,
+      headers: options.headers ? {...this.headers, ...options.headers} : this.headers,
       method: options.method,
       socketPath: this.socket,
       pathname: options.path,

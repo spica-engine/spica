@@ -34,11 +34,10 @@ import {createFunctionActivity} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService, FUNCTION_OPTIONS, Options} from "@spica-server/function/services";
 import {Function} from "@spica-server/interface/function";
-import {ChangeKind, hasContextChange} from "./change";
-import {changesFromTriggers, createTargetChanges} from "./change";
 import {LogService} from "@spica-server/function/src/log/src/log.service";
 import {generate} from "./schema/enqueuer.resolver";
 import {applyPatch} from "@spica-server/core/patch";
+import * as CRUD from "./crud";
 
 /**
  * @name Function
@@ -107,17 +106,7 @@ export class FunctionController {
   @UseGuards(AuthGuard(), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const fn = await this.fs.findOneAndDelete({_id: id}, {});
-    if (!fn) {
-      throw new NotFoundException("Couldn't find the function.");
-    }
-
-    const _ = this.log.deleteMany({function: id.toString()});
-
-    const changes = createTargetChanges(fn, ChangeKind.Removed);
-    this.engine.categorizeChanges(changes);
-
-    await this.engine.deleteFunction(fn);
+    CRUD.remove(this.fs, this.engine, this.log, id);
   }
 
   /**
@@ -132,26 +121,9 @@ export class FunctionController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate(generate)) fn: Function
   ) {
-    fn._id = id;
-    delete fn._id;
-    // Language is immutable
-    delete fn.language;
-    const previousFn = await this.fs.findOneAndUpdate({_id: id}, {$set: fn});
-
-    fn._id = id;
-
-    let changes;
-
-    if (hasContextChange(previousFn, fn)) {
-      // mark all triggers updated
-      changes = createTargetChanges(fn, ChangeKind.Updated);
-    } else {
-      changes = changesFromTriggers(previousFn, fn);
-    }
-
-    this.engine.categorizeChanges(changes);
-
-    return fn;
+    return CRUD.replace(this.fs, this.engine, {...fn, _id: id}).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
+    });
   }
 
   /**
@@ -210,15 +182,9 @@ export class FunctionController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
-    fn = await this.fs.insertOne(fn).catch(error => {
+    return CRUD.insert(this.fs, this.engine, fn).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
-
-    const changes = createTargetChanges(fn, ChangeKind.Added);
-    this.engine.categorizeChanges(changes);
-
-    await this.engine.createFunction(fn);
-    return fn;
   }
 
   /**
@@ -230,17 +196,8 @@ export class FunctionController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
   async updateIndex(@Param("id", OBJECT_ID) id: ObjectId, @Body("index") index: string) {
-    const fn = await this.fs.findOne({_id: id});
-    if (!fn) {
-      throw new NotFoundException("Cannot find function.");
-    }
-    await this.engine.update(fn, index);
-
-    const changes = createTargetChanges(fn, ChangeKind.Updated);
-    this.engine.categorizeChanges(changes);
-
-    return this.engine
-      .compile(fn)
+    return CRUD.index
+      .write(this.fs, this.engine, id, index)
       .catch(diagnostics => Promise.reject(new HttpException(diagnostics, 422)));
   }
 

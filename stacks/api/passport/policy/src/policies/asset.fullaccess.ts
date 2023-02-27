@@ -7,16 +7,20 @@ export default {
   statement: [
     ...AssetReadOnlyAccess.statement,
     {
-      action: "apis:create",
-      module: "apis"
+      action: "asset:download",
+      module: "asset"
     },
     {
-      action: "apis:update",
-      module: "apis"
+      action: "asset:install",
+      module: "asset"
     },
     {
-      action: "apis:delete",
-      module: "apis"
+      action: "asset:delete",
+      module: "asset"
+    },
+    {
+      action: "asset:export",
+      module: "asset"
     }
   ]
 };

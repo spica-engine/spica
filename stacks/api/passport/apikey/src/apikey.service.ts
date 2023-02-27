@@ -5,6 +5,8 @@ import {ApiKey} from "./interface";
 @Injectable()
 export class ApiKeyService extends BaseCollection<ApiKey>("apikey") {
   constructor(db: DatabaseService) {
-    super(db);
+    super(db, {
+      afterInit: () => this._coll.createIndex({key: 1}, {unique: true})
+    });
   }
 }
