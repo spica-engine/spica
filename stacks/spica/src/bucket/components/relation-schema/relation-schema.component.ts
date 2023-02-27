@@ -19,18 +19,20 @@ export class RelationSchemaComponent implements OnInit {
   public buckets: Observable<Bucket[]>;
   singularPropertyKey: string = "";
   pluralPropertyKey: string = "";
-
   constructor(
     @Inject(INPUT_SCHEMA) public schema: RelationSchema,
     private bucketService: BucketService,
     @Inject(AddFieldModalComponent) public data: AddFieldModalComponent,
   ) {
     setTimeout(() => {
-      if (!this.schema.relationType && !pluralize.isPlural(this.data.propertyKey)) {
-        this.schema.relationType = RelationType.OneToOne;
-      } else {
-        this.schema.relationType = RelationType.OneToMany;
-      }
+      if (!this.schema.relationType) {
+        if(!pluralize.isPlural(this.data.propertyKey)){
+          this.schema.relationType = RelationType.OneToOne;
+        }
+        else {
+          this.schema.relationType = RelationType.OneToMany;
+        }
+      } 
       this.buckets = this.bucketService.getBuckets().pipe(
         tap(buckets => {
           if (!this.schema.bucketId) {
