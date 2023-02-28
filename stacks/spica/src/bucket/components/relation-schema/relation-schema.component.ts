@@ -5,10 +5,7 @@ import {BucketService} from "../../services/bucket.service";
 import {Bucket} from "../../interfaces/bucket";
 import {RelationSchema, RelationType} from "../relation";
 import {tap} from "rxjs/operators";
-
 import * as pluralize from "pluralize";
-
-import {AddFieldModalComponent} from "@spica-client/bucket/pages/add-field-modal/add-field-modal.component";
 
 @Component({
   selector: "bucket-relation",
@@ -19,45 +16,54 @@ export class RelationSchemaComponent implements OnInit {
   public buckets: Observable<Bucket[]>;
   singularPropertyKey: string = "";
   pluralPropertyKey: string = "";
+
   constructor(
     @Inject(INPUT_SCHEMA) public schema: RelationSchema,
-    private bucketService: BucketService,
-    @Inject(AddFieldModalComponent) public data: AddFieldModalComponent
+    private bucketService: BucketService
   ) {
     setTimeout(() => {
       if (!this.schema.relationType) {
-        if (!pluralize.isPlural(this.data.propertyKey)) {
-          this.schema.relationType = RelationType.OneToOne;
-        } else {
-          this.schema.relationType = RelationType.OneToMany;
-        }
+        this.setRelationType();
       }
+
       this.buckets = this.bucketService.getBuckets().pipe(
         tap(buckets => {
           if (!this.schema.bucketId) {
-            let matchedRelation: number[] = buckets
-              .map((bucket, index) =>
-                bucket.title.toLowerCase() === this.pluralPropertyKey ||
-                bucket.title.toLowerCase() === this.singularPropertyKey
-                  ? index
-                  : undefined
-              )
-              .filter(index => index !== undefined);
-
-            if (matchedRelation.length > 0) {
-              this.schema.bucketId = buckets[matchedRelation]._id;
-            } else {
-              this.schema.bucketId = buckets[0]._id;
-            }
+            this.setBucketId(buckets);
           }
         })
       );
     });
   }
+
+  setRelationType() {
+    if (!this.schema.title) {
+      return;
+    }
+
+    this.schema.relationType = pluralize.isPlural(this.schema.title)
+      ? RelationType.OneToMany
+      : RelationType.OneToOne;
+  }
+
+  setBucketId(buckets) {
+    const matchedRelationIndex = buckets.findIndex(
+      bucket =>
+        bucket.title.toLowerCase() === this.pluralPropertyKey ||
+        bucket.title.toLowerCase() === this.singularPropertyKey
+    );
+
+    if (matchedRelationIndex != -1) {
+      this.schema.bucketId = buckets[matchedRelationIndex]._id;
+    } else {
+      this.schema.bucketId = buckets[0]._id;
+    }
+  }
+
   ngOnInit(): void {
-    if (this.data.propertyKey) {
-      this.singularPropertyKey = pluralize.singular(this.data.propertyKey);
-      this.pluralPropertyKey = pluralize.plural(this.data.propertyKey);
+    if (this.schema.title) {
+      this.singularPropertyKey = pluralize.singular(this.schema.title);
+      this.pluralPropertyKey = pluralize.plural(this.schema.title);
     }
   }
 }
