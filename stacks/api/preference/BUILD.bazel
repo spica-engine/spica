@@ -11,6 +11,7 @@ ts_project(
     ]),
     deps = [
         "//packages/database",
+        "//packages/interface/representative",
         "//stacks/api/activity/services",
         "//stacks/api/passport",
         "//stacks/api/preference/services",

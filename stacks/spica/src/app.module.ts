@@ -4,7 +4,12 @@ import {BrowserModule, HammerModule} from "@angular/platform-browser";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterModule} from "@angular/router";
 import {StoreModule} from "@ngrx/store";
-import {BaseUrlInterceptorModule, LayoutModule, RouteModule} from "@spica-client/core";
+import {
+  BaseUrlInterceptorModule,
+  LayoutModule,
+  PreferencesModule,
+  RouteModule
+} from "@spica-client/core";
 import {environment} from "../environments/environment";
 import {ActivityModule} from "./activity/activity.module";
 import {AppComponent} from "./app.component";
@@ -15,6 +20,7 @@ import {PassportModule} from "./passport";
 import {StorageModule} from "./storage/storage.module";
 import {ErrorStateMatcher, ShowOnDirtyErrorStateMatcher} from "@angular/material/core";
 import {OverlayContainer, FullscreenOverlayContainer} from "@angular/cdk/overlay";
+import {AssetModule} from "./asset/asset.module";
 
 const API_FULL_URL = environment.api.startsWith("http")
   ? environment.api
@@ -43,7 +49,9 @@ const API_FULL_URL = environment.api.startsWith("http")
     PassportModule.forRoot(),
     BucketModule.forRoot({url: API_FULL_URL}),
     StorageModule.forRoot(),
-    FunctionModule.forRoot({url: API_FULL_URL})
+    FunctionModule.forRoot({url: API_FULL_URL}),
+    AssetModule,
+    PreferencesModule.forRoot()
   ],
   providers: [
     {provide: ErrorStateMatcher, useClass: ShowOnDirtyErrorStateMatcher},

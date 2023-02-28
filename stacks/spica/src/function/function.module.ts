@@ -27,8 +27,8 @@ import {StoreModule} from "@ngrx/store";
 import {InputModule} from "@spica-client/common";
 import {EditorModule} from "@spica-client/common/code-editor";
 import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
-import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
-import {provideActivityFactory} from "@spica-client/function/providers/activity";
+import {BUILDLINK_FACTORY} from "@spica-client/core/factories/factory";
+import {provideActivityFactory, provideAssetFactory} from "@spica-client/function/providers";
 import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
 import {PassportService} from "@spica-client/passport";
 import {PassportModule} from "../passport/passport.module";
@@ -51,6 +51,8 @@ import {WebhookModule} from "./webhook.module";
 import {MatDialogModule} from "@angular/material/dialog";
 import {WebhookService} from "./services";
 import {CategoryModule} from "@spica-client/common/category";
+import {ASSET_CONFIG_EXPORTER, ASSET_RESOURCE_LISTER} from "@spica-client/asset/interfaces";
+import {assetConfigExporter, listResources} from "./asset";
 
 @NgModule({
   imports: [
@@ -131,15 +133,34 @@ export class FunctionModule {
           deps: [FunctionInitializer]
         },
         {
+          provide: BUILDLINK_FACTORY,
+          useValue: {caller: "activity", factory: provideActivityFactory},
+          multi: true
+        },
+        {
+          provide: BUILDLINK_FACTORY,
+          useValue: {caller: "asset", factory: provideAssetFactory},
+          multi: true
+        },
+        {
+          provide: ASSET_CONFIG_EXPORTER,
+          useFactory: assetConfigExporter,
+          deps: [FunctionService],
+          multi: true
+        },
+        {
+          provide: ASSET_RESOURCE_LISTER,
+          useFactory: fs => {
+            return {name: "function", list: () => listResources(fs)};
+          },
+          deps: [FunctionService],
+          multi: true
+        },
+        {
           provide: LAYOUT_INITIALIZER,
           useFactory: provideWebhookLoader,
           multi: true,
           deps: [WebhookInitializer]
-        },
-        {
-          provide: ACTIVITY_FACTORY,
-          useValue: provideActivityFactory,
-          multi: true
         }
       ]
     };

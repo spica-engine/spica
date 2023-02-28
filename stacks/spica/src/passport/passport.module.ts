@@ -25,9 +25,14 @@ import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
 import {LAYOUT_ACTIONS, ROUTE_FILTERS} from "@spica-client/core";
-import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
+import {BUILDLINK_FACTORY} from "@spica-client/core/factories/factory";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
-import {provideActivityFactory} from "@spica-client/passport/providers/activity";
+import {
+  listResources,
+  provideActivityFactory,
+  provideApikeyAssetConfigExporter,
+  provideAssetFactory
+} from "@spica-client/passport/providers";
 import {AccessTokenComponent} from "./components/access-token/access-token.component";
 import {IdentityBadgeComponent} from "./components/identity-badge/identity-badge.component";
 import {HomeBadgeComponent} from "./components/home-badge/home-badge.component";
@@ -52,6 +57,8 @@ import {MatSortModule} from "@angular/material/sort";
 import {FilterComponent} from "./components/filter/filter.component";
 import {PolicyResourceAddComponent} from "./components/policy-resource-add/policy-resource-add.component";
 import {MatFormFieldModule} from "@angular/material/form-field";
+import {ASSET_CONFIG_EXPORTER, ASSET_RESOURCE_LISTER} from "@spica-client/asset/interfaces";
+import {ApiKeyService} from "./services/apikey.service";
 
 @NgModule({
   declarations: [
@@ -132,8 +139,30 @@ export class PassportModule {
           multi: true
         },
         {provide: ROUTE_FILTERS, useExisting: PassportRouteFilter, multi: true},
-
-        {provide: ACTIVITY_FACTORY, useValue: provideActivityFactory, multi: true}
+        {
+          provide: BUILDLINK_FACTORY,
+          useValue: {caller: "activity", factory: provideActivityFactory},
+          multi: true
+        },
+        {
+          provide: BUILDLINK_FACTORY,
+          useValue: {caller: "asset", factory: provideAssetFactory},
+          multi: true
+        },
+        {
+          provide: ASSET_CONFIG_EXPORTER,
+          useFactory: provideApikeyAssetConfigExporter,
+          deps: [ApiKeyService],
+          multi: true
+        },
+        {
+          provide: ASSET_RESOURCE_LISTER,
+          useFactory: as => {
+            return {name: "apikey", list: () => listResources(as)};
+          },
+          deps: [ApiKeyService],
+          multi: true
+        }
       ]
     };
   }

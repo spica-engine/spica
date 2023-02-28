@@ -16,6 +16,7 @@ ts_project(
     source_map = True,
     tsconfig = "//:tsconfig.json",
     deps = [
+        "//packages/interface/asset",
         "//packages/interface/function",
         "@npm_cli//@caporal/core",
         "@npm_cli//@types/dockerode",
@@ -27,6 +28,7 @@ ts_project(
         "@npm_cli//columnify",
         "@npm_cli//cosmiconfig",
         "@npm_cli//dockerode",
+        "@npm_cli//dotenv",
         "@npm_cli//get-port",
         "@npm_cli//jsonpath",
         "@npm_cli//open",

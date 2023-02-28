@@ -12,7 +12,6 @@ ts_project(
     deps = [
         "//packages/core/schema",
         "//packages/database",
-        "//stacks/api/machinery",
         "//stacks/api/passport",
         "//stacks/api/passport/guard",
         "@npm//@nestjs/common",

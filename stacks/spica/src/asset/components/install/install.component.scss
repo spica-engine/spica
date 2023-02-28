@@ -1,0 +1,19 @@
+:host {
+  div.configs:first-of-type {
+    margin-top: 10px;
+  }
+  ::ng-deep {
+    span.inputplacer,
+    .input-placer-input {
+      width: 100% !important;
+    }
+  }
+
+  div.bottom-actions {
+    width: 100%;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+}

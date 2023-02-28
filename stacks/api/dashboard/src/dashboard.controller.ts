@@ -8,7 +8,8 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
-  Post
+  Post,
+  BadRequestException
 } from "@nestjs/common";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {DashboardService} from "./dashboard.service";
@@ -36,7 +37,9 @@ export class DashboardController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("dashboard:create"))
   insert(@Body(Schema.validate("http://spica.internal/dashboard")) dashboard: Dashboard) {
-    return this.dashboardService.insertOne(dashboard);
+    return this.dashboardService.insertOne(dashboard).catch(e => {
+      throw new BadRequestException(e.message);
+    });
   }
 
   @Put(":id")

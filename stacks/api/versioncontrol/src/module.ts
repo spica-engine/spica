@@ -1,16 +1,16 @@
 import {Global, Module} from "@nestjs/common";
 import {VersionControlController} from "./controller";
 import {
-  REGISTER_SYNC_PROVIDER,
-  WORKING_DIR,
+  REGISTER_VC_SYNC_PROVIDER,
   VersionManager,
-  VersionControlOptions
+  VersionControlOptions,
+  VERSIONCONTROL_WORKING_DIRECTORY,
+  VC_REP_MANAGER
 } from "./interface";
-import {RepresentativeManager} from "./representative";
-import {Synchronizer} from "./synchronizer";
+import {RepresentativeManager} from "@spica-server/representative";
 import {Git} from "./versionmanager";
-
 import * as fs from "fs";
+import {Synchronizer} from "./synchronizer";
 
 @Global()
 @Module({})
@@ -21,7 +21,7 @@ export class VersionControlModule {
       controllers: [VersionControlController],
       providers: [
         {
-          provide: WORKING_DIR,
+          provide: VERSIONCONTROL_WORKING_DIRECTORY,
           useFactory: () => {
             const dir = `${options.persistentPath}/representatives`;
             if (!fs.existsSync(dir)) {
@@ -30,16 +30,24 @@ export class VersionControlModule {
             return dir;
           }
         },
-        RepresentativeManager,
-        Synchronizer,
-        {provide: VersionManager, useFactory: cwd => new Git(cwd), inject: [WORKING_DIR]},
         {
-          provide: REGISTER_SYNC_PROVIDER,
+          provide: VC_REP_MANAGER,
+          useFactory: dir => new RepresentativeManager(dir),
+          inject: [VERSIONCONTROL_WORKING_DIRECTORY]
+        },
+        Synchronizer,
+        {
+          provide: VersionManager,
+          useFactory: cwd => new Git(cwd),
+          inject: [VERSIONCONTROL_WORKING_DIRECTORY]
+        },
+        {
+          provide: REGISTER_VC_SYNC_PROVIDER,
           useFactory: (sync: Synchronizer) => provider => sync.register(provider),
-          inject: [Synchronizer, RepresentativeManager]
+          inject: [Synchronizer, VC_REP_MANAGER]
         }
       ],
-      exports: [REGISTER_SYNC_PROVIDER, RepresentativeManager]
+      exports: [REGISTER_VC_SYNC_PROVIDER, VC_REP_MANAGER]
     };
   }
 }

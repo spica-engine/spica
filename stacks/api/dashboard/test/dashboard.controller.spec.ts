@@ -4,6 +4,8 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DashboardModule} from "@spica-server/dashboard";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {SchemaModule} from "@spica-server/core/schema";
+import {OBJECT_ID} from "@spica-server/core/schema/formats";
 
 describe("DashboardController", () => {
   let request: Request;
@@ -32,7 +34,10 @@ describe("DashboardController", () => {
         CoreTestingModule,
         PassportTestingModule.initialize(),
         DashboardModule.forRoot(),
-        DatabaseTestingModule.standalone()
+        DatabaseTestingModule.standalone(),
+        SchemaModule.forRoot({
+          formats: [OBJECT_ID]
+        })
       ]
     }).compile();
 
