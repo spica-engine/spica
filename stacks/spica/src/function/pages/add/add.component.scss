@@ -471,6 +471,12 @@
       margin-left: 10px;
     }
   }
+  .add-dependency-button {
+    position: absolute;
+    right: 0;
+    bottom: 5px;
+    cursor: pointer;
+  }
 }
 
 .full-screen-code-actions {
