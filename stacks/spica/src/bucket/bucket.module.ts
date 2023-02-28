@@ -32,11 +32,11 @@ import {MatTooltipModule} from "@angular/material/tooltip";
 import {LeafletModule} from "@asymmetrik/ngx-leaflet";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular-datetime-picker";
 import {StoreModule} from "@ngrx/store";
-import {provideActivityFactory} from "@spica-client/bucket/providers/activity";
+import {provideActivityFactory, provideAssetFactory} from "@spica-client/bucket/providers";
 import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
 import {EditorModule} from "@spica-client/common/code-editor";
 import {LAYOUT_INITIALIZER, PreferencesModule, RouteService} from "@spica-client/core";
-import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
+import {BUILDLINK_FACTORY} from "@spica-client/core/factories/factory";
 import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
 import {MatResizeHeaderModule} from "@spica-client/material/resize";
 import {PassportModule, PassportService} from "../passport";
@@ -68,6 +68,8 @@ import {HighlightModule, HIGHLIGHT_OPTIONS} from "ngx-highlightjs";
 import {CategoryModule} from "@spica-client/common/category";
 import {BucketOptions, BUCKET_OPTIONS} from "./interfaces/bucket";
 import {IGNORE_HTTP_ERRORS} from "@spica-client/core/layout/config";
+import {ASSET_CONFIG_EXPORTER, ASSET_RESOURCE_LISTER} from "@spica-client/asset/interfaces";
+import {assetConfigExporter, listResources} from "./asset";
 
 @NgModule({
   imports: [
@@ -184,8 +186,13 @@ export class BucketModule {
           deps: [BucketInitializer]
         },
         {
-          provide: ACTIVITY_FACTORY,
-          useValue: provideActivityFactory,
+          provide: BUILDLINK_FACTORY,
+          useValue: {caller: "activity", factory: provideActivityFactory},
+          multi: true
+        },
+        {
+          provide: BUILDLINK_FACTORY,
+          useValue: {caller: "asset", factory: provideAssetFactory},
           multi: true
         },
         {
@@ -214,6 +221,20 @@ export class BucketModule {
             }
             return false;
           },
+          multi: true
+        },
+        {
+          provide: ASSET_CONFIG_EXPORTER,
+          useFactory: assetConfigExporter,
+          deps: [BucketService],
+          multi: true
+        },
+        {
+          provide: ASSET_RESOURCE_LISTER,
+          useFactory: bs => {
+            return {name: "bucket", list: () => listResources(bs)};
+          },
+          deps: [BucketService],
           multi: true
         }
       ]

@@ -130,7 +130,7 @@
               </ng-container>
             </ng-container>
             document
-            <a [routerLink]="activity | buildLink">
+            <a [routerLink]="'../' + (activity | buildLink: 'activity')">
               <ng-container [ngSwitch]="activity.resource[0]">
                 <ng-container *ngSwitchCase="'passport'">
                   {{ (activity.resource[1] | titlecase) + "-" + activity.resource[2] }}
