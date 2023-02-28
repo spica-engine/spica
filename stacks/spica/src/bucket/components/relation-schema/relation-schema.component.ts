@@ -22,21 +22,20 @@ export class RelationSchemaComponent implements OnInit {
   constructor(
     @Inject(INPUT_SCHEMA) public schema: RelationSchema,
     private bucketService: BucketService,
-    @Inject(AddFieldModalComponent) public data: AddFieldModalComponent,
+    @Inject(AddFieldModalComponent) public data: AddFieldModalComponent
   ) {
     setTimeout(() => {
       if (!this.schema.relationType) {
-        if(!pluralize.isPlural(this.data.propertyKey)){
+        if (!pluralize.isPlural(this.data.propertyKey)) {
           this.schema.relationType = RelationType.OneToOne;
-        }
-        else {
+        } else {
           this.schema.relationType = RelationType.OneToMany;
         }
-      } 
+      }
       this.buckets = this.bucketService.getBuckets().pipe(
         tap(buckets => {
           if (!this.schema.bucketId) {
-            let matchedRelation: number[]= buckets
+            let matchedRelation: number[] = buckets
               .map((bucket, index) =>
                 bucket.title.toLowerCase() === this.pluralPropertyKey ||
                 bucket.title.toLowerCase() === this.singularPropertyKey
