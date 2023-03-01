@@ -1,6 +1,5 @@
 import * as expression from "@spica-server/bucket/expression";
-import {ObjectId} from "@spica-server/database";
-import {Bucket} from "@spica-server/bucket/services";
+import {Bucket, replaceFilterDates} from "@spica-server/bucket/services";
 import {CrudFactories} from "./crud";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
 import {deepCopy} from "@spica-server/core/patch";
@@ -103,6 +102,9 @@ export class BucketPipelineBuilder extends PipelineBuilder {
         Object.keys(filterByUserRequest).length
       ) {
         filterByUserRequest = replaceFilterObjectIds(filterByUserRequest);
+        filterByUserRequest = replaceFilterDates(filterByUserRequest, this.schema);
+        // console.dir(filterByUserRequest,{depth:Infinity})
+
         filterPropertyMap = extractFilterPropertyMap(filterByUserRequest);
         filterExpression = filterByUserRequest;
       } else if (typeof filterByUserRequest == "string") {
