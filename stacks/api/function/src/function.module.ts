@@ -6,7 +6,6 @@ import * as path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
 import {LogModule, LogService} from "@spica-server/function/src/log";
-import {registerInformers} from "./machinery";
 import {
   FunctionOptions,
   FUNCTION_OPTIONS,
@@ -20,10 +19,13 @@ import {registerStatusProvider} from "./status";
 import FunctionSchema = require("./schema/function.json");
 import {
   RegisterSyncProvider,
-  REGISTER_SYNC_PROVIDER,
-  RepresentativeManager
+  REGISTER_VC_SYNC_PROVIDER,
+  VC_REP_MANAGER
 } from "@spica-server/versioncontrol";
 import {getSyncProviders} from "./versioncontrol";
+import {registerAssetHandlers} from "./asset";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
 
 @Module({})
 export class FunctionModule {
@@ -31,17 +33,19 @@ export class FunctionModule {
     fs: FunctionService,
     fe: FunctionEngine,
     scheduler: Scheduler,
-    @Optional() private repManager: RepresentativeManager,
-    @Optional() @Inject(REGISTER_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
-    logs: LogService
+    @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
+    @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
+    @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
+    logs: LogService,
+    validator: Validator
   ) {
     if (registerSync) {
-      getSyncProviders(fs, this.repManager, fe, logs).forEach(provider => registerSync(provider));
+      getSyncProviders(fs, this.vcRepManager, fe, logs).forEach(provider => registerSync(provider));
     }
 
-    registerInformers(fs, fe);
-
     registerStatusProvider(fs, scheduler);
+
+    registerAssetHandlers(fs, fe, logs, validator, assetRepManager);
   }
 
   static forRoot(options: SchedulingOptions & FunctionOptions): DynamicModule {

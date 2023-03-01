@@ -1,10 +1,11 @@
 import {Global, Inject, Module, Optional} from "@nestjs/common";
 import {DatabaseModule} from "@spica-server/database";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {PreferenceService} from "@spica-server/preference/services";
 import {
-  RepresentativeManager,
-  REGISTER_SYNC_PROVIDER,
-  RegisterSyncProvider
+  REGISTER_VC_SYNC_PROVIDER,
+  RegisterSyncProvider,
+  VC_REP_MANAGER
 } from "@spica-server/versioncontrol";
 import {PreferenceController} from "./preference.controller";
 import {getSyncProvider} from "./versioncontrol/schema";
@@ -14,11 +15,11 @@ import {getSyncProvider} from "./versioncontrol/schema";
 export class PreferenceModule {
   constructor(
     prefService: PreferenceService,
-    @Optional() private repManager: RepresentativeManager,
-    @Optional() @Inject(REGISTER_SYNC_PROVIDER) registerSync: RegisterSyncProvider
+    @Optional() @Inject(VC_REP_MANAGER) private repManager: IRepresentativeManager,
+    @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider
   ) {
     if (registerSync) {
-      const provider = getSyncProvider(prefService, repManager);
+      const provider = getSyncProvider(prefService, this.repManager);
       registerSync(provider);
     }
   }

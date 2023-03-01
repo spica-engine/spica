@@ -113,9 +113,9 @@ export class Patch {
   length2: number;
 }
 
-export function compareResourceGroups(
-  sources: any[],
-  targets: any[],
+export function compareResourceGroups<T>(
+  desired: T[],
+  actual: T[],
   comparisonOptions: {
     uniqueField: string;
     ignoredFields: string[];
@@ -126,18 +126,21 @@ export function compareResourceGroups(
 ) {
   const {ignoredFields, uniqueField} = comparisonOptions;
 
-  const existings = targets.filter(target =>
-    sources.some(source => source[uniqueField] == target[uniqueField])
+  desired = JSON.parse(JSON.stringify(desired));
+  actual = JSON.parse(JSON.stringify(actual));
+
+  const existings = actual.filter(target =>
+    desired.some(source => source[uniqueField] == target[uniqueField])
   );
 
   const existingIds = existings.map(existing => existing[uniqueField]);
 
   const updations = () => {
-    const updations = [];
+    const updations: T[] = [];
     for (const existing of existings) {
-      const source = sources.find(source => source[uniqueField] == existing[uniqueField]);
+      const source = desired.find(source => source[uniqueField] == existing[uniqueField]);
 
-      const copySource = JSON.parse(JSON.stringify(source));
+      const copySource: T = JSON.parse(JSON.stringify(source));
 
       if (ignoredFields.length) {
         ignoredFields.forEach(field => {
@@ -154,9 +157,9 @@ export function compareResourceGroups(
     return updations;
   };
 
-  const insertions = () => sources.filter(source => existingIds.indexOf(source[uniqueField]) == -1);
+  const insertions = () => desired.filter(source => existingIds.indexOf(source[uniqueField]) == -1);
 
-  const deletions = () => targets.filter(target => existingIds.indexOf(target[uniqueField]) == -1);
+  const deletions = () => actual.filter(target => existingIds.indexOf(target[uniqueField]) == -1);
 
   return {
     insertions: insertions(),

@@ -1,4 +1,4 @@
-import {Module, Global, DynamicModule, Inject} from "@nestjs/common";
+import {Module, Global, DynamicModule, Inject, Optional} from "@nestjs/common";
 import {SchemaResolver, provideSchemaResolver} from "./schema.resolver";
 import {Validator, SchemaModule} from "@spica-server/core/schema";
 import {PreferenceService, IDENTITY_SETTINGS_FINALIZER} from "@spica-server/preference/services";
@@ -15,13 +15,18 @@ import IdentityCreateSchema = require("./schemas/identity-create.json");
 import AuthFactorSchema = require("./schemas/authfactor.json");
 import {AuthResolver} from "./relation";
 import {AUTH_RESOLVER} from "@spica-server/bucket/common";
+import {registerAssetHandlers} from "./asset";
+import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 
 @Global()
 @Module({})
 export class IdentityModule {
   constructor(
     @Inject(IDENTITY_OPTIONS) options: IdentityOptions,
-    private identityService: IdentityService
+    private identityService: IdentityService,
+    private prefService: PreferenceService,
+    @Optional() @Inject(ASSET_REP_MANAGER) private repManager: IRepresentativeManager
   ) {
     if (options.defaultIdentityIdentifier) {
       identityService.default({
@@ -31,6 +36,7 @@ export class IdentityModule {
       });
     }
     registerStatusProvider(identityService);
+    registerAssetHandlers(prefService, repManager);
   }
 
   static forRoot(options: IdentityOptions): DynamicModule {

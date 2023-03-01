@@ -23,7 +23,6 @@ describe("RouteService", () => {
       const routes = [
         {category: RouteCategory.Content, id: "1", path: "", icon: "", display: ""},
         {category: RouteCategory.Developer, id: "2", path: "", icon: "", display: ""},
-        {category: RouteCategory.Primary, id: "3", path: "", icon: "", display: ""},
         {category: RouteCategory.System, id: "4", path: "", icon: "", display: ""}
       ];
       routeService.dispatch(new Retrieve(routes));
@@ -143,10 +142,8 @@ describe("RouteService", () => {
         {category: RouteCategory.Content, id: "2", path: "", icon: "", display: ""},
         {category: RouteCategory.Developer, id: "3", path: "", icon: "", display: ""},
         {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: ""},
-        {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: ""},
-        {category: RouteCategory.Primary, id: "7", path: "", icon: "", display: ""},
-        {category: RouteCategory.System, id: "10", path: "", icon: "", display: ""},
-        {category: RouteCategory.System, id: "11", path: "", icon: "", display: ""}
+        {category: RouteCategory.System, id: "5", path: "", icon: "", display: ""},
+        {category: RouteCategory.System, id: "6", path: "", icon: "", display: ""}
       ];
 
       routeService.dispatch(new Retrieve(routes));
@@ -186,10 +183,8 @@ describe("RouteService", () => {
         {category: RouteCategory.Content, id: "2", path: "", icon: "", display: ""},
         {category: RouteCategory.Developer, id: "3", path: "", icon: "", display: ""},
         {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: ""},
-        {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: ""},
-        {category: RouteCategory.Primary, id: "7", path: "", icon: "", display: ""},
-        {category: RouteCategory.System, id: "10", path: "", icon: "", display: ""},
-        {category: RouteCategory.System, id: "11", path: "", icon: "", display: ""}
+        {category: RouteCategory.System, id: "5", path: "", icon: "", display: ""},
+        {category: RouteCategory.System, id: "6", path: "", icon: "", display: ""}
       ];
 
       routeService.dispatch(new Retrieve(routes));
@@ -197,10 +192,8 @@ describe("RouteService", () => {
         expect(receivedRoutes).toEqual([
           {category: RouteCategory.Content, id: "1", path: "", icon: "", display: ""},
           {category: RouteCategory.Content, id: "2", path: "", icon: "", display: ""},
-          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: ""},
-          {category: RouteCategory.Primary, id: "7", path: "", icon: "", display: ""},
-          {category: RouteCategory.System, id: "10", path: "", icon: "", display: ""},
-          {category: RouteCategory.System, id: "11", path: "", icon: "", display: ""}
+          {category: RouteCategory.System, id: "5", path: "", icon: "", display: ""},
+          {category: RouteCategory.System, id: "6", path: "", icon: "", display: ""}
         ]);
         done();
       }, done.fail);

@@ -20,7 +20,7 @@ import {MatTabsModule} from "@angular/material/tabs";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {InputModule} from "@spica-client/common";
-import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
+import {BUILDLINK_FACTORY} from "@spica-client/core/factories/factory";
 import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
 import {provideActivityFactory} from "@spica-client/storage/providers/activity";
 import {AngularCropperjsModule} from "angular-cropperjs";
@@ -99,6 +99,11 @@ export class StorageModule {
       ngModule: StorageModule,
       providers: [
         {
+          provide: BUILDLINK_FACTORY,
+          useValue: {caller: "activity", factory: provideActivityFactory},
+          multi: true
+        },
+        {
           provide: StorageInitializer,
           useClass: StorageInitializer,
           deps: [RootDirService, RouteService, PassportService]
@@ -108,11 +113,6 @@ export class StorageModule {
           useFactory: provideStorageLoader,
           multi: true,
           deps: [StorageInitializer]
-        },
-        {
-          provide: ACTIVITY_FACTORY,
-          useValue: provideActivityFactory,
-          multi: true
         }
       ]
     };

@@ -16,7 +16,7 @@ import {MatTooltipModule} from "@angular/material/tooltip";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterTestingModule} from "@angular/router/testing";
 import {BuildLinkPipe} from "@spica-client/common/pipes";
-import {ACTIVITY_FACTORY} from "@spica-client/core";
+import {BUILDLINK_FACTORY} from "@spica-client/core/factories/factory";
 import {of} from "rxjs";
 import {ActivityService} from "../../services/activity.service";
 import {IndexComponent} from "../index/index.component";
@@ -82,7 +82,7 @@ describe("IndexComponent", () => {
           }
         },
         {
-          provide: ACTIVITY_FACTORY,
+          provide: BUILDLINK_FACTORY,
           useValue: [],
           multi: true
         }

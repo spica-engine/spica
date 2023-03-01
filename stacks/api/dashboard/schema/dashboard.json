@@ -4,6 +4,11 @@
   "type": "object",
   "required": ["name"],
   "properties": {
+    "_id": {
+      "type": "string",
+      "format": "objectid",
+      "description": "Unique objectid id of schema."
+    },
     "name": {
       "type": "string",
       "description": "Name of this dashboard that will be placed on the dashboard list pages"

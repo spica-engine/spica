@@ -60,8 +60,6 @@ describe("Home Layout", () => {
           {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: "developer2"},
           {category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1"},
           {category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2"},
-          {category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1"},
-          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"},
           {category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1"},
           {category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2"},
           {category: RouteCategory.Dashboard, id: "12", path: "", icon: "", display: "dashboard1"},
@@ -74,7 +72,7 @@ describe("Home Layout", () => {
       const navCategories = fixture.debugElement.nativeElement.querySelectorAll(
         ".iconlist > mat-list-item:not(:first-of-type)"
       );
-      expect(navCategories.length).toBe(9);
+      expect(navCategories.length).toBe(8);
       expect(navCategories[0].getAttribute("class")).toContain("active");
     }));
 
@@ -87,8 +85,6 @@ describe("Home Layout", () => {
           {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: "developer2"},
           {category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1"},
           {category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2"},
-          {category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1"},
-          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"},
           {category: RouteCategory.Webhook, id: "10", path: "", icon: "", display: "webhook1"},
           {category: RouteCategory.Webhook, id: "11", path: "", icon: "", display: "webhook2"},
           {category: RouteCategory.Dashboard, id: "12", path: "", icon: "", display: "dashboard1"},
@@ -106,15 +102,15 @@ describe("Home Layout", () => {
         ".routerlist > mat-list-item"
       );
       expect(selectedCategoryRoutes.length).toEqual(2);
-      expect(selectedCategoryRoutes[0].textContent).toEqual(" dashboard1 ");
-      expect(selectedCategoryRoutes[1].textContent).toEqual(" dashboard2 ");
+      expect(selectedCategoryRoutes[0].textContent).toEqual(" content1 ");
+      expect(selectedCategoryRoutes[1].textContent).toEqual(" content2 ");
     }));
 
     it("should show sub menu", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
           {
-            category: RouteCategory.Primary,
+            category: RouteCategory.Asset,
             id: "9",
             path: "",
             icon: "",
@@ -122,7 +118,7 @@ describe("Home Layout", () => {
             displayType: "menu"
           },
           {
-            category: RouteCategory.Primary,
+            category: RouteCategory.Asset,
             id: "0",
             path: "",
             icon: "",
@@ -130,7 +126,7 @@ describe("Home Layout", () => {
             displayType: "menu"
           },
           {
-            category: RouteCategory.Primary_Sub,
+            category: RouteCategory.Asset_Sub,
             id: "3",
             path: "",
             icon: "",
@@ -138,7 +134,7 @@ describe("Home Layout", () => {
             displayType: "menu"
           },
           {
-            category: RouteCategory.Primary_Sub,
+            category: RouteCategory.Asset_Sub,
             id: "4",
             path: "",
             icon: "",
@@ -158,8 +154,8 @@ describe("Home Layout", () => {
     it("should show action button instead of mat menu", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
-          {category: RouteCategory.Primary, id: "9", path: "", icon: "", display: "system1"},
-          {category: RouteCategory.Primary_Sub, id: "3", path: "", icon: "", display: "sub1"}
+          {category: RouteCategory.Asset, id: "9", path: "", icon: "", display: "system1"},
+          {category: RouteCategory.Asset_Sub, id: "3", path: "", icon: "", display: "sub1"}
         ])
       );
       tick();
