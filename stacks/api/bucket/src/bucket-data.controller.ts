@@ -22,11 +22,7 @@ import {
 import {activity, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
-import {
-  BucketDataService,
-  BucketDocument,
-  BucketService,
-} from "@spica-server/bucket/services";
+import {BucketDataService, BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {
   ARRAY,
   BOOLEAN,

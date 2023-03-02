@@ -34,5 +34,3 @@ jasmine_node_test(
         ":bucket_data_service_test_lib",
     ],
 )
-
-
