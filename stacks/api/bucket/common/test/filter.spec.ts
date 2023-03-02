@@ -92,47 +92,47 @@ describe("Bucket data filter", () => {
         stringId2 = objectId2.toString();
       });
 
-      it("should not construct if value is not valid an object id", () => {
+      it("should not construct if value is not a valid object id", async () => {
         filter._id = "not_id";
-        const replacedFilter = replaceFilterObjectIds(filter);
+        const replacedFilter = await replaceFilterObjectIds(filter);
         expect(replacedFilter).toEqual({...filter, _id: "not_id"});
       });
 
-      it("should construct object id", () => {
+      it("should construct object id", async () => {
         filter._id = stringId1;
-        const replacedFilter = replaceFilterObjectIds(filter);
+        const replacedFilter = await replaceFilterObjectIds(filter);
         expect(replacedFilter).toEqual({...filter, _id: objectId1});
       });
 
-      it("should construct object id in nested queries", () => {
+      it("should construct object id in nested queries", async () => {
         filter["user._id"] = stringId1;
-        const replacedFilter = replaceFilterObjectIds(filter);
+        const replacedFilter = await replaceFilterObjectIds(filter);
         expect(replacedFilter).toEqual({...filter, "user._id": objectId1});
       });
 
-      it("should construct objectid array", () => {
+      it("should construct objectid array", async () => {
         filter._id = {$in: [stringId1, stringId2]};
-        const replacedFilter = replaceFilterObjectIds(filter);
+        const replacedFilter = await replaceFilterObjectIds(filter);
         expect(replacedFilter).toEqual({...filter, _id: {$in: [objectId1, objectId2]}});
       });
 
-      it("should construct if object id is used with operator", () => {
+      it("should construct if object id is used with operator", async () => {
         filter._id = {$eq: stringId1};
-        const replacedFilter = replaceFilterObjectIds(filter);
+        const replacedFilter = await replaceFilterObjectIds(filter);
         expect(replacedFilter).toEqual({...filter, _id: {$eq: objectId1}});
       });
 
-      it("should construct if object id is used with multiple operators", () => {
+      it("should construct if object id is used with multiple operators", async () => {
         filter._id = {$gt: stringId1, $lt: stringId2};
-        const replacedFilter = replaceFilterObjectIds(filter);
+        const replacedFilter = await replaceFilterObjectIds(filter);
         expect(replacedFilter).toEqual({...filter, _id: {$gt: objectId1, $lt: objectId2}});
       });
 
-      it("should construct if there is a logical operator", () => {
+      it("should construct if there is a logical operator", async () => {
         const filterBefore = {
           $or: [{...filter, _id: stringId1}, {_id: {$gt: stringId1, $lt: stringId2}}]
         };
-        const replacedFilter = replaceFilterObjectIds(filterBefore);
+        const replacedFilter = await replaceFilterObjectIds(filterBefore);
         const filterAfter = {
           $or: [{...filter, _id: objectId1}, {_id: {$gt: objectId1, $lt: objectId2}}]
         };

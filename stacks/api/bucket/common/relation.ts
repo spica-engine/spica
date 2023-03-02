@@ -135,7 +135,6 @@ export async function createRelationMap(options: RelationMapOptions): Promise<Re
       }
 
       if (propertySpec.type == "object") {
-        // prefix = prefix ? prefix + "." + propertyKey : propertyKey;
         const objectRelations = await visit(
           propertySpec.properties,
           matchingPaths,
@@ -268,7 +267,7 @@ function createRelationPaths(relationMap: RelationMap): string[] {
   return paths;
 }
 
-export function assertRelationType(type: RelationType) {
+function assertRelationType(type: RelationType) {
   if (type != RelationType.One && type != RelationType.Many) {
     throw new Error(`unknown relation type ${type}`);
   }

@@ -3,7 +3,7 @@ import {Bucket} from "@spica-server/bucket/services";
 import * as Relation from "./relation";
 import {getPropertyByPath} from "./schema";
 
-// should be kept this reviver for backward compatibility and in case the filter is complex and our replacer can't detect the value that should be constructed
+// this reviver should be kept for backward compatibility and in case the filter is complex and our replacer can't detect the value that should be constructed
 export function filterReviver(k: string, v: string) {
   const availableConstructors = {
     Date: v => new Date(v),
@@ -100,16 +100,16 @@ export const constructFilterValues = async (
 
 export type FilterReplacer = (
   filter: object,
-  bucket?: Bucket,
-  relationResolver?: Relation.RelationResolver
+  bucket: Bucket,
+  relationResolver: Relation.RelationResolver
 ) => Promise<object>;
 
-function replaceFilterObjectIds(filter: object) {
+export function replaceFilterObjectIds(filter: object) {
   const keyValidators = [key => key == "_id" || key.endsWith("._id")];
   return Promise.resolve(replaceFilter(filter, keyValidators, ObjectIdIfValid));
 }
 
-async function replaceFilterDates(
+export async function replaceFilterDates(
   filter: object,
   bucket: Bucket,
   relationResolver: Relation.RelationResolver
