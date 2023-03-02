@@ -19,8 +19,7 @@ import {
   AUTH_RESOLVER,
   IAuthResolver,
   filterReviver,
-  replaceFilterObjectIds,
-  replaceFilterDates
+  constructFilterValues
 } from "@spica-server/bucket/common";
 import * as expression from "@spica-server/bucket/expression";
 import {aggregate} from "@spica-server/bucket/expression";
@@ -151,7 +150,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         {req: client.upgradeReq},
         {
           collection: schema => this.bucketDataService.children(schema),
-          schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)}),
+          schema: this.getBucketResolver(),
           deleteOne: id => this.delete(client, {_id: id}),
           authResolver: this.authResolver
         }
@@ -220,7 +219,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         {req: client.upgradeReq},
         {
           collection: schema => this.bucketDataService.children(schema),
-          schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)}),
+          schema: this.getBucketResolver(),
           authResolver: this.authResolver
         }
       );
@@ -320,7 +319,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         {req: client.upgradeReq},
         {
           collection: schema => this.bucketDataService.children(schema),
-          schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)}),
+          schema: this.getBucketResolver(),
           authResolver: this.authResolver
         },
         {returnOriginal: false}
@@ -394,7 +393,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         {req: client.upgradeReq},
         {
           collection: schema => this.bucketDataService.children(schema),
-          schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)}),
+          schema: this.getBucketResolver(),
           authResolver: this.authResolver
         }
       );
@@ -503,8 +502,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       let parsedFilter = parseFilter((value: string) => JSON.parse(value, filterReviver), filter);
 
       if (parsedFilter) {
-        parsedFilter = replaceFilterObjectIds(parsedFilter);
-        parsedFilter = replaceFilterDates(parsedFilter, schema);
+        parsedFilter = await constructFilterValues(parsedFilter, schema, this.getBucketResolver());
       } else if (!parsedFilter) {
         parsedFilter = parseFilter(aggregate, filter, {});
       }
@@ -577,6 +575,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
       resolve(schema);
     });
+  }
+
+  getBucketResolver() {
+    return (id: string | ObjectId) => this.bucketService.findOne({_id: new ObjectId(id)});
   }
 
   send(client, kind: ChunkKind, status: number, message: string) {

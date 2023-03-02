@@ -4,7 +4,7 @@ import {
   extractFilterPropertyMap,
   replaceFilterObjectIds,
   replaceFilterDates
-} from "@spica-server/bucket/services/src";
+} from "@spica-server/bucket/common";
 import {ObjectId} from "@spica-server/database";
 
 describe("Bucket data filter", () => {
@@ -181,67 +181,92 @@ describe("Bucket data filter", () => {
                 }
               }
             }
+          },
+          addresses: {
+            type: "relation",
+            bucketId: "address_bucket_id",
+            relationType: "onetomany"
           }
         }
       } as any;
 
-      it("should not construct if value is not a valid date", () => {
+      let addressSchema = {
+        _id: "address_bucket_id",
+        properties: {
+          built_at: {
+            type: "date"
+          }
+        }
+      };
+
+      const schemas = [schema, addressSchema];
+      const resolve = id => {
+        return Promise.resolve(schemas.find(s => s._id == id) as any);
+      };
+
+      it("should not construct if value is not a valid date", async () => {
         filter.due_date = "not_date";
-        const replacedFilter = replaceFilterDates(filter, schema);
+        const replacedFilter = await replaceFilterDates(filter, schema, resolve);
         expect(replacedFilter).toEqual({...filter, due_date: "not_date"});
       });
 
-      it("should construct date", () => {
+      it("should construct date", async () => {
         filter.due_date = dueString1;
-        const replacedFilter = replaceFilterDates(filter, schema);
+        const replacedFilter = await replaceFilterDates(filter, schema, resolve);
         expect(replacedFilter).toEqual({...filter, due_date: dueDate1});
       });
 
-      it("should construct date in nested queries", () => {
+      it("should construct date in nested queries", async () => {
         filter["user.created_at"] = dueString1;
-        const replacedFilter = replaceFilterDates(filter, schema);
+        const replacedFilter = await replaceFilterDates(filter, schema, resolve);
         expect(replacedFilter).toEqual({...filter, "user.created_at": dueDate1});
       });
 
-      it("should construct dates in array", () => {
+      it("should construct dates in array", async () => {
         filter.login_dates = [dueString1];
-        const replacedFilter = replaceFilterDates(filter, schema);
+        const replacedFilter = await replaceFilterDates(filter, schema, resolve);
         expect(replacedFilter).toEqual({...filter, login_dates: [dueDate1]});
       });
 
-      it("should construct dates in object array", () => {
+      it("should construct dates in object array", async () => {
         filter["meta.photos.created_at"] = dueString1;
-        const replacedFilter = replaceFilterDates(filter, schema);
+        const replacedFilter = await replaceFilterDates(filter, schema, resolve);
         expect(replacedFilter).toEqual({...filter, "meta.photos.created_at": dueDate1});
       });
 
-      it("should construct date array", () => {
+      it("should construct date array", async () => {
         filter.due_date = {$in: [dueString1, dueString2]};
-        const replacedFilter = replaceFilterDates(filter, schema);
+        const replacedFilter = await replaceFilterDates(filter, schema, resolve);
         expect(replacedFilter).toEqual({...filter, due_date: {$in: [dueDate1, dueDate2]}});
       });
 
-      it("should construct if date is used with operator", () => {
+      it("should construct if date is used with operator", async () => {
         filter.due_date = {$eq: dueString1};
-        const replacedFilter = replaceFilterDates(filter, schema);
+        const replacedFilter = await replaceFilterDates(filter, schema, resolve);
         expect(replacedFilter).toEqual({...filter, due_date: {$eq: dueDate1}});
       });
 
-      it("should construct if date is used with multiple operators", () => {
+      it("should construct if date is used with multiple operators", async () => {
         filter.due_date = {$gt: dueString1, $lt: dueString2};
-        const replacedFilter = replaceFilterDates(filter, schema);
+        const replacedFilter = await replaceFilterDates(filter, schema, resolve);
         expect(replacedFilter).toEqual({...filter, due_date: {$gt: dueDate1, $lt: dueDate2}});
       });
 
-      it("should construct if there is a logical operator", () => {
+      it("should construct if there is a logical operator", async () => {
         const filterBefore = {
           $or: [{...filter, due_date: dueString1}, {due_date: {$gt: dueString1, $lt: dueString2}}]
         };
-        const replacedFilter = replaceFilterDates(filterBefore, schema);
+        const replacedFilter = await replaceFilterDates(filterBefore, schema, resolve);
         const filterAfter = {
           $or: [{...filter, due_date: dueDate1}, {due_date: {$gt: dueDate1, $lt: dueDate2}}]
         };
         expect(replacedFilter).toEqual(filterAfter);
+      });
+
+      it("should construct date for related buckets", async () => {
+        filter["addresses.built_at"] = dueString1;
+        const replacedFilter = await replaceFilterDates(filter, schema, resolve);
+        expect(replacedFilter).toEqual({...filter, "addresses.built_at": dueDate1});
       });
     });
   });

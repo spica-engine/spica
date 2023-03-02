@@ -9,11 +9,7 @@ import {
   getRelationPipeline,
   RelationMap
 } from "./relation";
-import {
-  extractFilterPropertyMap,
-  replaceFilterDates,
-  replaceFilterObjectIds
-} from "@spica-server/bucket/common";
+import {constructFilterValues, extractFilterPropertyMap} from "@spica-server/bucket/common";
 import {categorizePropertyMap} from "./helpers";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 
@@ -105,8 +101,11 @@ export class BucketPipelineBuilder extends PipelineBuilder {
         !Array.isArray(filterByUserRequest) &&
         Object.keys(filterByUserRequest).length
       ) {
-        filterByUserRequest = replaceFilterObjectIds(filterByUserRequest);
-        filterByUserRequest = replaceFilterDates(filterByUserRequest, this.schema);
+        filterByUserRequest = await constructFilterValues(
+          filterByUserRequest,
+          this.schema,
+          this.factories.schema
+        );
 
         filterPropertyMap = extractFilterPropertyMap(filterByUserRequest);
         filterExpression = filterByUserRequest;

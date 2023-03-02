@@ -1,6 +1,9 @@
 import {ObjectId} from "@spica-server/database";
 import {Bucket} from "@spica-server/bucket/services";
+import * as Relation from "./relation";
+import {getPropertyByPath} from "./schema";
 
+// should be kept this reviver for backward compatibility and in case the filter is complex and our replacer can't detect the value that should be constructed
 export function filterReviver(k: string, v: string) {
   const availableConstructors = {
     Date: v => new Date(v),
@@ -83,7 +86,54 @@ export function extractFilterPropertyMap(filter: object) {
   return maps;
 }
 
-export function replaceFilter(
+export const constructFilterValues = async (
+  filter: object,
+  bucket: Bucket,
+  relationResolver: Relation.RelationResolver
+) => {
+  const replacers: FilterReplacer[] = [replaceFilterObjectIds, replaceFilterDates];
+  for (let replacer of replacers) {
+    filter = await replacer(filter, bucket, relationResolver);
+  }
+  return filter;
+};
+
+export type FilterReplacer = (
+  filter: object,
+  bucket?: Bucket,
+  relationResolver?: Relation.RelationResolver
+) => Promise<object>;
+
+function replaceFilterObjectIds(filter: object) {
+  const keyValidators = [key => key == "_id" || key.endsWith("._id")];
+  return Promise.resolve(replaceFilter(filter, keyValidators, ObjectIdIfValid));
+}
+
+async function replaceFilterDates(
+  filter: object,
+  bucket: Bucket,
+  relationResolver: Relation.RelationResolver
+) {
+  const propertyMap = extractFilterPropertyMap(filter);
+  const relationResolvedSchema = await Relation.getRelationResolvedBucketSchema(
+    bucket,
+    propertyMap,
+    relationResolver
+  );
+  const keyValidators = [
+    key => {
+      const property = getPropertyByPath(relationResolvedSchema.properties, key);
+      return (
+        property &&
+        (property.type == "date" || (property.type == "array" && property.items.type == "date"))
+      );
+    }
+  ];
+  return replaceFilter(filter, keyValidators, DateIfValid);
+}
+
+// HELPERS
+function replaceFilter(
   filter: object,
   keyValidators: KeyValidator[],
   valueConstructor: ValueConstructor
@@ -104,60 +154,11 @@ export function replaceFilter(
   return filter;
 }
 
-export function replaceFilterObjectIds(filter: object) {
-  const keyValidators = [key => key == "_id" || key.endsWith("._id")];
-  return replaceFilter(filter, keyValidators, ObjectIdIfValid);
-}
-
-function getPropertyByPath(properties: object, path: string) {
-  const segments = path.split(".");
-  const key = segments[0];
-
-  const isKeyOneOfProperties = !!properties[key];
-
-  if (!isKeyOneOfProperties) {
-    return undefined;
-  }
-
-  if (segments.length == 1) {
-    return properties[key];
-  }
-
-  const isObject = properties[key].type == "object";
-  const isObjectArray = properties[key].type == "array" && properties[key].items.type == "object";
-
-  const subProperties = isObject
-    ? properties[key].properties
-    : isObjectArray
-    ? properties[key].items.properties
-    : undefined;
-
-  if (!subProperties) {
-    return undefined;
-  }
-
-  const segmentsExceptFirstOne = segments.slice(1).join(".");
-  return getPropertyByPath(subProperties, segmentsExceptFirstOne);
-}
-
-export function replaceFilterDates(filter: object, bucket: Bucket) {
-  const keyValidators = [
-    key => {
-      const property = getPropertyByPath(bucket.properties, key);
-      return (
-        property &&
-        (property.type == "date" || (property.type == "array" && property.items.type == "date"))
-      );
-    }
-  ];
-  return replaceFilter(filter, keyValidators, DateIfValid);
-}
-
-export function constructValue(value: object, ctor: ValueConstructor) {
-  // { "_id": { ... } }
+function constructValue(value: object, ctor: ValueConstructor) {
+  // { "key": { ... } }
   if (typeof value == "object") {
     for (let [k, v] of Object.entries(value)) {
-      // { "_id": { $in: [...] } }
+      // { "key": { $in: [<value1>,<value2>] } }
       if (typeof v == "object") {
         if (Array.isArray(v)) {
           value[k] = v.map(id => {
@@ -165,13 +166,13 @@ export function constructValue(value: object, ctor: ValueConstructor) {
           });
         }
       }
-      // { "_id": { $eq: "<id>" } }
+      // { "key": { $eq: "<value>" } }
       else if (typeof v == "string") {
         value[k] = ctor(v);
       }
     }
   }
-  // { "_id": "<id>" }
+  // { "key": "<value>" }
   else if (typeof value == "string") {
     value = ctor(value);
   }
@@ -186,5 +187,5 @@ function DateIfValid(val): ValueConstructor<Date> {
   return !isNaN(Date.parse(val)) ? new Date(val) : val;
 }
 
-export type KeyValidator = (key: string) => boolean;
-export type ValueConstructor<NewType = any> = (val) => NewType;
+type KeyValidator = (key: string) => boolean;
+type ValueConstructor<NewType = any> = (val) => NewType;
