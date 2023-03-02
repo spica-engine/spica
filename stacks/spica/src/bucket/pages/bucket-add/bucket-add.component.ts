@@ -26,6 +26,7 @@ import {BucketService} from "../../services/bucket.service";
 import {BucketHistoryService} from "@spica-client/bucket/services/bucket-history.service";
 import {MatDialog} from "@angular/material/dialog";
 import {AddFieldModalComponent} from "../add-field-modal/add-field-modal.component";
+import {RelationSchemaComponent} from "../../components/relation-schema/relation-schema.component";
 
 @Component({
   selector: "bucket-add",
@@ -112,6 +113,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
     this.bucket.properties = properties.reduce((accumulator, [key, value], index) => {
       accumulator[key] = value;
+
       return accumulator;
     }, {});
   }
