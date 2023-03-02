@@ -1,5 +1,5 @@
 import {ObjectId} from "@spica-server/database";
-import {Bucket} from "./bucket";
+import {Bucket} from "@spica-server/bucket/services";
 
 export function filterReviver(k: string, v: string) {
   const availableConstructors = {

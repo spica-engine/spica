@@ -17,7 +17,10 @@ import {
   getDependents,
   authIdToString,
   AUTH_RESOLVER,
-  IAuthResolver
+  IAuthResolver,
+  filterReviver,
+  replaceFilterObjectIds,
+  replaceFilterDates
 } from "@spica-server/bucket/common";
 import * as expression from "@spica-server/bucket/expression";
 import {aggregate} from "@spica-server/bucket/expression";
@@ -26,10 +29,8 @@ import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {
   BucketService,
   getBucketDataCollection,
-  filterReviver,
   BucketDataService,
-  BucketDocument,
-  replaceFilterObjectIds
+  BucketDocument
 } from "@spica-server/bucket/services";
 import {applyPatch, deepCopy} from "@spica-server/core/patch";
 import {Schema, Validator} from "@spica-server/core/schema";
@@ -503,6 +504,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
       if (parsedFilter) {
         parsedFilter = replaceFilterObjectIds(parsedFilter);
+        parsedFilter = replaceFilterDates(parsedFilter, schema);
       } else if (!parsedFilter) {
         parsedFilter = parseFilter(aggregate, filter, {});
       }
