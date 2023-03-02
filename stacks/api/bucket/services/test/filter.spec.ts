@@ -1,4 +1,3 @@
-import { createRelationMap } from "@spica-server/bucket/common";
 import {
   DefaultExtractor,
   LogicalExtractor,
@@ -160,6 +159,28 @@ describe("Bucket data filter", () => {
                 type: "date"
               }
             }
+          },
+          login_dates: {
+            type: "array",
+            items: {
+              type: "date"
+            }
+          },
+          meta: {
+            type: "object",
+            properties: {
+              photos: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    created_at: {
+                      type: "date"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       } as any;
@@ -178,11 +199,20 @@ describe("Bucket data filter", () => {
 
       it("should construct date in nested queries", () => {
         filter["user.created_at"] = dueString1;
-        const propMap = extractFilterPropertyMap(filter);
-        createRelationMap({paths:propMap,properties:schema.properties,resolve:(id) => Promise.resolve({properties:{}})})
-        return;
-        const replacedFilter = replaceFilterObjectIds(filter);
+        const replacedFilter = replaceFilterDates(filter, schema);
         expect(replacedFilter).toEqual({...filter, "user.created_at": dueDate1});
+      });
+
+      it("should construct dates in array", () => {
+        filter.login_dates = [dueString1];
+        const replacedFilter = replaceFilterDates(filter, schema);
+        expect(replacedFilter).toEqual({...filter, login_dates: [dueDate1]});
+      });
+
+      it("should construct dates in object array", () => {
+        filter["meta.photos.created_at"] = dueString1;
+        const replacedFilter = replaceFilterDates(filter, schema);
+        expect(replacedFilter).toEqual({...filter, "meta.photos.created_at": dueDate1});
       });
 
       it("should construct date array", () => {

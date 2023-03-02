@@ -109,10 +109,46 @@ export function replaceFilterObjectIds(filter: object) {
   return replaceFilter(filter, keyValidators, ObjectIdIfValid);
 }
 
+function getPropertyByPath(properties: object, path: string) {
+  const segments = path.split(".");
+  const key = segments[0];
+
+  const isKeyOneOfProperties = !!properties[key];
+
+  if (!isKeyOneOfProperties) {
+    return undefined;
+  }
+
+  if (segments.length == 1) {
+    return properties[key];
+  }
+
+  const isObject = properties[key].type == "object";
+  const isObjectArray = properties[key].type == "array" && properties[key].items.type == "object";
+
+  const subProperties = isObject
+    ? properties[key].properties
+    : isObjectArray
+    ? properties[key].items.properties
+    : undefined;
+
+  if (!subProperties) {
+    return undefined;
+  }
+
+  const segmentsExceptFirstOne = segments.slice(1).join(".");
+  return getPropertyByPath(subProperties, segmentsExceptFirstOne);
+}
+
 export function replaceFilterDates(filter: object, bucket: Bucket) {
   const keyValidators = [
-    key => !!bucket.properties[key],
-    key => bucket.properties[key].type == "date"
+    key => {
+      const property = getPropertyByPath(bucket.properties, key);
+      return (
+        property &&
+        (property.type == "date" || (property.type == "array" && property.items.type == "date"))
+      );
+    }
   ];
   return replaceFilter(filter, keyValidators, DateIfValid);
 }
