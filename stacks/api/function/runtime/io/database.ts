@@ -1,6 +1,7 @@
 import {Collection, DatabaseService} from "@spica-server/database";
 import {PassThrough, Transform, Writable} from "stream";
 import {StandartStream, StreamOptions} from "./standart_stream";
+import {seperateMessageAndLevel, LogChannels} from "@spica-server/function/runtime/logger";
 
 export class DatabaseOutput extends StandartStream {
   private collection: Collection;
@@ -10,23 +11,20 @@ export class DatabaseOutput extends StandartStream {
   }
 
   create(options: StreamOptions): [Writable, Writable] {
-    const createTransform = (channel: "stderr" | "stdout") => {
+    const createTransform = (channel: LogChannels) => {
       return new Transform({
         transform: (data, _, callback) => {
-          let msg: any = Buffer.from(data).toString();
+          let message: any = Buffer.from(data).toString();
 
-          try {
-            const parsedData = JSON.parse(msg);
-            channel = parsedData.channel;
-            msg = parsedData.msg;
-          } catch (e) {}
+          const {level, message: _message} = seperateMessageAndLevel(message, channel);
 
           this.collection
             .insertOne({
               function: options.functionId,
               event_id: options.eventId,
               channel,
-              content: msg,
+              level,
+              content: _message,
               created_at: new Date()
             })
             .then(() => callback(undefined, data))
@@ -35,8 +33,8 @@ export class DatabaseOutput extends StandartStream {
       });
     };
     return [
-      new PassThrough().pipe(createTransform("stdout")),
-      new PassThrough().pipe(createTransform("stderr"))
+      new PassThrough().pipe(createTransform(LogChannels.OUT)),
+      new PassThrough().pipe(createTransform(LogChannels.ERROR))
     ];
   }
 }

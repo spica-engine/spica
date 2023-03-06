@@ -56,15 +56,6 @@ class NodeWorker extends Worker {
 
     this._process.stdout.pipe(stdout);
     this._process.stderr.pipe(stderr);
-
-    this._process.on("message", console.log);
-
-    this._process.on("debug", console.log);
-    this._process.on("log", console.log);
-
-    this._process.on("info", console.log);
-    this._process.on("warn", console.log);
-    this._process.on("error", console.log);
   }
 
   kill() {

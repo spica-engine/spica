@@ -15,6 +15,7 @@ import {
 import {Database, event, Firehose, Http} from "@spica-server/function/queue/proto";
 import {createRequire} from "module";
 import * as path from "path";
+import {registerLogger, unregisterLogger} from "@spica-server/function/runtime/logger";
 
 if (!process.env.FUNCTION_GRPC_ADDRESS) {
   exitAbnormally("Environment variable FUNCTION_GRPC_ADDRESS was not set.");
@@ -234,37 +235,4 @@ function exitAbnormally(reason) {
     console.error(reason);
   }
   process.exit(126);
-}
-
-const actualConsoleMethods = [];
-
-function registerConsoleWarn() {
-  const actual = console.warn;
-
-  console.warn = (...args) => {
-    console.log("HELLO",args);
-    return actual.bind(console)(...args);
-  };
-}
-
-function registerLogger() {
-  return registerConsoleWarn();
-  const methods = ["debug", "log", "info", "warn", "error"];
-
-  for (const method of methods) {
-    const actual = console[method];
-    actualConsoleMethods.push({name: method, implementation: actual});
-
-    console[method] = (...params) => {
-      process.send(method, params[0]);
-
-      return actual.bind(console)(...params);
-    };
-  }
-}
-
-function unregisterLogger() {
-  for (const method of actualConsoleMethods) {
-    console[method.name] = method.implementation;
-  }
 }
