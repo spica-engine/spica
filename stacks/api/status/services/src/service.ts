@@ -7,8 +7,6 @@ import {ObjectId} from "@spica-server/database";
 export class StatusService extends BaseCollection<ApiStatus>("status") {
   moduleOptions: StatusOptions;
   constructor(db: DatabaseService, @Inject(STATUS_OPTIONS) _moduleOptions: StatusOptions) {
-    // this service will insert document for each request, enabling entry limit feature here will increase request-response time.
-    // we will apply entry limitation from somewhere else
     super(db, {afterInit: () => this.upsertTTLIndex(_moduleOptions.expireAfterSeconds)});
     this.moduleOptions = _moduleOptions;
   }
@@ -48,7 +46,6 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
       });
     return {
       request: {
-        limit: this.moduleOptions ? this.moduleOptions.requestLimit : undefined,
         current: result.request,
         unit: "count"
       },

@@ -254,10 +254,6 @@ const args = yargs
       description:
         "When enabled, server will be able to show the stats of core modules and track the request-response stats too.",
       default: true
-    },
-    "request-limit": {
-      number: true,
-      description: "Maximum request count that server can process"
     }
   })
   /* Version Control Options */
@@ -474,7 +470,6 @@ if (args["activity-stream"]) {
 if (args["status-tracking"]) {
   modules.push(
     StatusModule.forRoot({
-      requestLimit: args["request-limit"],
       expireAfterSeconds: args["common-log-lifespan"]
     })
   );

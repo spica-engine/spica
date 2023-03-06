@@ -1,5 +1,4 @@
 export interface StatusOptions {
-  requestLimit: number;
   expireAfterSeconds: number;
 }
 
