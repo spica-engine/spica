@@ -15,6 +15,7 @@ ts_project(
         "//packages/database/realtime",
         "//stacks/api/passport",
         "//stacks/api/passport/guard",
+        "//stacks/api/function/runtime/logger",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@nestjs/websockets",

@@ -18,6 +18,7 @@ import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server
 import {event} from "@spica-server/function/queue/proto";
 import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
+import {generateLog, LogLevels} from "@spica-server/function/runtime/logger";
 import {Node} from "@spica-server/function/runtime/node";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import * as uniqid from "uniqid";
@@ -190,12 +191,14 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
       const timeoutInMs = Math.min(this.options.timeout, event.target.context.timeout) * 1000;
       const timeoutFn = () => {
-        if (stderr.writable) {
-          stderr.write(
+        if (stdout.writable) {
+          const timeoutLog = generateLog(
             `${timeoutInMs / 1000} seconds timeout value has been reached for function '${
               event.target.handler
-            }'. The worker is being shut down.`
+            }'. The worker is being shut down.`,
+            LogLevels.INFO
           );
+          stdout.write(timeoutLog);
         }
         worker.kill();
       };

@@ -1,5 +1,4 @@
 export enum LogLevels {
-  TRACE,
   DEBUG,
   LOG,
   INFO,
@@ -22,7 +21,7 @@ export function registerLogger() {
     originalConsoleMethods.push({method, callback});
 
     console[method] = (...params) => {
-      params = putLogLevel(params, LogLevels[logLevelName]);
+      params = reserveLog(params, LogLevels[logLevelName]);
       return callback.bind(console)(...params);
     };
   }
@@ -34,42 +33,58 @@ export function unregisterLogger() {
   }
 }
 
-export function seperateMessageAndLevel(message: string, channel: LogChannels) {
-  let level = channel == LogChannels.ERROR ? LogLevels.ERROR : LogLevels.LOG;
-  const defaultRes = {
-    level,
-    message
-  };
+export function getLogs(message: string, channel: LogChannels) {
+  let defaultLevel = channel == LogChannels.ERROR ? LogLevels.ERROR : LogLevels.LOG;
 
-  const logLevel = extractLogLevel(message);
-  const matchedMethod = LogLevels[logLevel];
+  const matcheds: {level: number; message: string}[] = [];
 
-  if (!matchedMethod) {
-    return defaultRes;
+  let m;
+  while ((m = RESERVED_LOG_REGEX.exec(message)) !== null) {
+    // This is necessary to avoid infinite loops with zero-width matches
+    if (m.index === RESERVED_LOG_REGEX.lastIndex) {
+      RESERVED_LOG_REGEX.lastIndex++;
+    }
+
+    // m[0] => matched string as whole
+    // m[1] => first matched group from matched string(log level)
+    // m[2] => second matched group from matched string(log message)
+    if (!m[1] || !m[2]) {
+      continue;
+    }
+
+    matcheds.push({
+      level: Number(m[1]),
+      message: m[2].trim()
+    });
   }
 
-  level = logLevel;
-  message = removeLogLevel(message);
+  const restOfMessage = message.replace(RESERVED_LOG_REGEX, "").trim();
 
-  return {
-    level,
-    message
-  };
+  if (restOfMessage) {
+    matcheds.push({level: defaultLevel, message: restOfMessage});
+  }
+
+  return matcheds;
 }
 
-const LOG_LEVEL_REGEX = /.*\log_level:\ (\d+)/;
+const RESERVED_STARTING_INDICATOR = "---SPICA_LOG_START";
+const RESERVED_LOG_LEVEL_INDICATOR = "-SPICA_LOG_LEVEL:";
+const RESERVED_ENDING_INDICATOR = "SPICA_LOG_END---";
 
-function putLogLevel(args: any[], level: LogLevels) {
-  args.unshift(`log_level: ${level}`);
+const RESERVED_LOG_REGEX = new RegExp(
+  `${RESERVED_STARTING_INDICATOR}\\n${RESERVED_LOG_LEVEL_INDICATOR}(\\d)\\n+(.*?)\\n${RESERVED_ENDING_INDICATOR}`,
+  "gms"
+);
+function reserveLog(args: any[], level: LogLevels) {
+  args = [
+    `${RESERVED_STARTING_INDICATOR}\n${RESERVED_LOG_LEVEL_INDICATOR}${level}\n`,
+    ...args,
+    `\n${RESERVED_ENDING_INDICATOR}`
+  ];
   return args;
 }
 
-function extractLogLevel(msg: string) {
-  const mactheds = LOG_LEVEL_REGEX.exec(msg);
-
-  return mactheds ? Number(mactheds[1]) : undefined;
-}
-
-function removeLogLevel(msg: string) {
-  return msg.replace(LOG_LEVEL_REGEX, "");
+export function generateLog(message: string, level: LogLevels) {
+  const args = reserveLog([message], level);
+  return args.join(" ");
 }

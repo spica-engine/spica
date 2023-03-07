@@ -25,7 +25,8 @@ export class LogController {
     @Query("begin", DEFAULT(() => new Date().setUTCHours(0, 0, 0, 0)), DATE) begin: Date,
     @Query("end", DEFAULT(() => new Date().setUTCHours(23, 59, 59, 999)), DATE) end: Date,
     @Query("functions", ARRAY(String)) functions: string[],
-    @Query("channel") channel: string
+    @Query("channel") channel: string,
+    @Query("levels", ARRAY(Number)) levels: number[] = []
   ) {
     const match: any = {
       _id: {
@@ -36,6 +37,12 @@ export class LogController {
 
     if (channel) {
       match.channel = channel;
+    }
+
+    if (levels.length) {
+      match.level = {
+        $in: levels
+      };
     }
 
     if (functions && functions.length) {

@@ -58,6 +58,8 @@ async function initialize() {
 }
 
 async function _process(ev, queue) {
+  registerLogger();
+
   process.chdir(ev.target.cwd);
 
   process.env.TIMEOUT = String(ev.target.context.timeout);
@@ -199,7 +201,6 @@ async function _process(ev, queue) {
     module = module.default; // Do not ask me why
   }
 
-  registerLogger();
   try {
     // Call the function
     if (!(ev.target.handler in module)) {
