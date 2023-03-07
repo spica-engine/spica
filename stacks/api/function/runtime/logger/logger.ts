@@ -1,17 +1,14 @@
-export enum LogLevels {
-  DEBUG,
-  LOG,
-  INFO,
-  WARN,
-  ERROR
-}
+import {
+  ConsoleMethods,
+  LogChannels,
+  LogLevels,
+  RESERVED_ENDING_INDICATOR,
+  RESERVED_LOG_LEVEL_INDICATOR,
+  RESERVED_LOG_REGEX,
+  RESERVED_STARTING_INDICATOR
+} from "./interface";
 
-export enum LogChannels {
-  OUT = "stdout",
-  ERROR = "stderr"
-}
-
-const originalConsoleMethods: {method: string; callback: (...args) => any}[] = [];
+const originalConsoleMethods: ConsoleMethods = [];
 
 export function registerLogger() {
   for (const logLevelName of Object.keys(LogLevels)) {
@@ -67,14 +64,6 @@ export function getLogs(message: string, channel: LogChannels) {
   return matcheds;
 }
 
-const RESERVED_STARTING_INDICATOR = "---SPICA_LOG_START";
-const RESERVED_LOG_LEVEL_INDICATOR = "-SPICA_LOG_LEVEL:";
-const RESERVED_ENDING_INDICATOR = "SPICA_LOG_END---";
-
-const RESERVED_LOG_REGEX = new RegExp(
-  `${RESERVED_STARTING_INDICATOR}\\n${RESERVED_LOG_LEVEL_INDICATOR}(\\d)\\n+(.*?)\\n${RESERVED_ENDING_INDICATOR}`,
-  "gms"
-);
 function reserveLog(args: any[], level: LogLevels) {
   args = [
     `${RESERVED_STARTING_INDICATOR}\n${RESERVED_LOG_LEVEL_INDICATOR}${level}\n`,

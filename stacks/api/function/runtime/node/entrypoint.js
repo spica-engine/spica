@@ -231,7 +231,6 @@ async function _process(ev, queue) {
 }
 
 function exitAbnormally(reason) {
-  unregisterLogger();
   if (reason) {
     console.error(reason);
   }
