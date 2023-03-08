@@ -24,8 +24,6 @@
 //       const onDataListener = data => {
 //         msg += data;
 //       };
-      
-
 
 //       loggerConsole.debug("Debugging..");
 //       loggerConsole.debug({keep: "json"});

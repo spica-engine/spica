@@ -202,8 +202,7 @@ const args = yargs
     },
     "function-logger": {
       boolean: true,
-      description:
-        "Allows keeping logs with their levels like DEBUG, INFO, WARN, ERROR etc.",
+      description: "Allows keeping logs with their levels like DEBUG, INFO, WARN, ERROR etc.",
       default: true
     }
   })
