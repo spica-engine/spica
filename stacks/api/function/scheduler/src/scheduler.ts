@@ -190,14 +190,17 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       worker.attach(stdout, stderr);
 
       const timeoutInMs = Math.min(this.options.timeout, event.target.context.timeout) * 1000;
-      // check if logger is enabled, then write message to the stdout with info level, otherwise write message to the stderr
+
+      const msg = `${timeoutInMs / 1000} seconds timeout value has been reached for function '${
+        event.target.handler
+      }'. The worker is being shut down.`;
+
+      const timeoutMsg = this.options.logger ? generateLog(msg, LogLevels.INFO) : msg;
+      const channel = this.options.logger ? stdout : stderr;
+
       const timeoutFn = () => {
-        if (stdout.writable) {
-          stdout.write(
-            `${timeoutInMs / 1000} seconds timeout value has been reached for function '${
-              event.target.handler
-            }'. The worker is being shut down.`
-          );
+        if (channel.writable) {
+          channel.write(timeoutMsg);
         }
         worker.kill();
       };
