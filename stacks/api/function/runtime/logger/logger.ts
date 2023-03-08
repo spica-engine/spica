@@ -7,22 +7,22 @@ import {
   RESERVED_STARTING_INDICATOR
 } from "./interface";
 
-export function registerLogger() {
+export function getLoggerConsole() {
   const copiedConsole = Object.assign({}, console);
   for (const logLevelName of Object.keys(LogLevels)) {
     const method = logLevelName.toLowerCase();
 
-    const callback = console[method];
+    const callback = copiedConsole[method];
 
     copiedConsole[method] = (...params) => {
       params = reserveLog(params, LogLevels[logLevelName]);
-      return callback.bind(console)(...params);
+      return callback.bind(copiedConsole)(...params);
     };
   }
   return copiedConsole;
 }
 
-export function unregisterLogger() {
+export function getOriginalConsole() {
   return Object.assign({}, console);
 }
 

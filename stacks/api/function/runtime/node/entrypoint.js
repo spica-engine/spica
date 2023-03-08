@@ -15,12 +15,12 @@ import {
 import {Database, event, Firehose, Http} from "@spica-server/function/queue/proto";
 import {createRequire} from "module";
 import * as path from "path";
-import {registerLogger, unregisterLogger} from "@spica-server/function/runtime/logger";
+import {getLoggerConsole, getOriginalConsole} from "@spica-server/function/runtime/logger";
 
 if (!process.env.DISABLE_LOGGER) {
-  console = registerLogger();
+  console = getLoggerConsole();
 } else {
-  console = unregisterLogger();
+  console = getOriginalConsole();
 }
 
 if (!process.env.FUNCTION_GRPC_ADDRESS) {
