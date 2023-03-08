@@ -28,7 +28,6 @@ class NodeWorker extends Worker {
           ENTRYPOINT: "index",
           RUNTIME: "node",
           WORKER_ID: options.id,
-          DISABLE_LOGGER: process.env.DISABLE_LOGGER,
           ...options.env
         }
       }

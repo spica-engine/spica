@@ -15,12 +15,10 @@ import {
 import {Database, event, Firehose, Http} from "@spica-server/function/queue/proto";
 import {createRequire} from "module";
 import * as path from "path";
-import {getLoggerConsole, getOriginalConsole} from "@spica-server/function/runtime/logger";
+import {getLoggerConsole} from "@spica-server/function/runtime/logger";
 
-if (!process.env.DISABLE_LOGGER) {
+if (process.env.LOGGER) {
   console = getLoggerConsole();
-} else {
-  console = getOriginalConsole();
 }
 
 if (!process.env.FUNCTION_GRPC_ADDRESS) {
@@ -64,8 +62,6 @@ async function initialize() {
 }
 
 async function _process(ev, queue) {
-  registerLogger();
-
   process.chdir(ev.target.cwd);
 
   process.env.TIMEOUT = String(ev.target.context.timeout);

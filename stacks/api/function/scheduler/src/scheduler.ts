@@ -190,6 +190,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       worker.attach(stdout, stderr);
 
       const timeoutInMs = Math.min(this.options.timeout, event.target.context.timeout) * 1000;
+      // check if logger is enabled, then write message to the stdout with info level, otherwise write message to the stderr
       const timeoutFn = () => {
         if (stdout.writable) {
           stdout.write(
@@ -276,7 +277,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
           __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
           __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
             ? "true"
-            : ""
+            : "",
+          LOGGER: this.options.logger ? "true" : undefined
         }
       });
 
