@@ -192,13 +192,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       const timeoutInMs = Math.min(this.options.timeout, event.target.context.timeout) * 1000;
       const timeoutFn = () => {
         if (stdout.writable) {
-          const timeoutLog = generateLog(
+          stdout.write(
             `${timeoutInMs / 1000} seconds timeout value has been reached for function '${
               event.target.handler
-            }'. The worker is being shut down.`,
-            LogLevels.INFO
+            }'. The worker is being shut down.`
           );
-          stdout.write(timeoutLog);
         }
         worker.kill();
       };

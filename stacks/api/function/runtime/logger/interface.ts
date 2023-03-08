@@ -11,11 +11,6 @@ export enum LogChannels {
   ERROR = "stderr"
 }
 
-export type ConsoleMethods = {
-  method: string;
-  callback: (...args) => any;
-}[];
-
 export const RESERVED_STARTING_INDICATOR = "---SPICA_LOG_START";
 export const RESERVED_LOG_LEVEL_INDICATOR = "-SPICA_LOG_LEVEL:";
 export const RESERVED_ENDING_INDICATOR = "SPICA_LOG_END---";

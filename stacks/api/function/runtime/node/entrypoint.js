@@ -17,6 +17,12 @@ import {createRequire} from "module";
 import * as path from "path";
 import {registerLogger, unregisterLogger} from "@spica-server/function/runtime/logger";
 
+if (!process.env.DISABLE_LOGGER) {
+  console = registerLogger();
+} else {
+  console = unregisterLogger();
+}
+
 if (!process.env.FUNCTION_GRPC_ADDRESS) {
   exitAbnormally("Environment variable FUNCTION_GRPC_ADDRESS was not set.");
 }
@@ -227,7 +233,6 @@ async function _process(ev, queue) {
 
     console.error(e);
   }
-  unregisterLogger();
 }
 
 function exitAbnormally(reason) {

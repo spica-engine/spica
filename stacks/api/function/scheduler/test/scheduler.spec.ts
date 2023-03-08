@@ -8,6 +8,7 @@ import {ReplicationTestingModule} from "@spica-server/replication/testing";
 import {PassThrough} from "stream";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5687";
+process.env.DISABLE_LOGGER = "true";
 
 describe("Scheduler", () => {
   let scheduler: Scheduler;

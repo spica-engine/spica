@@ -12,8 +12,8 @@ ts_project(
         "standart_stream.ts",
     ],
     deps = [
-        "//stacks/api/function/runtime/logger",
         "//packages/database",
+        "//stacks/api/function/runtime/logger",
         "@npm//@types/node",
     ],
 )

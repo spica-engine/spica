@@ -1,5 +1,4 @@
 import {
-  ConsoleMethods,
   LogChannels,
   LogLevels,
   RESERVED_ENDING_INDICATOR,
@@ -8,26 +7,23 @@ import {
   RESERVED_STARTING_INDICATOR
 } from "./interface";
 
-const originalConsoleMethods: ConsoleMethods = [];
-
 export function registerLogger() {
+  const copiedConsole = Object.assign({}, console);
   for (const logLevelName of Object.keys(LogLevels)) {
     const method = logLevelName.toLowerCase();
 
     const callback = console[method];
-    originalConsoleMethods.push({method, callback});
 
-    console[method] = (...params) => {
+    copiedConsole[method] = (...params) => {
       params = reserveLog(params, LogLevels[logLevelName]);
       return callback.bind(console)(...params);
     };
   }
+  return copiedConsole;
 }
 
 export function unregisterLogger() {
-  for (const methodWithCb of originalConsoleMethods) {
-    console[methodWithCb.method] = methodWithCb.callback;
-  }
+  return Object.assign({}, console);
 }
 
 export function getLogs(message: string, channel: LogChannels) {

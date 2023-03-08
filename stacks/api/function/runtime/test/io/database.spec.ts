@@ -38,7 +38,8 @@ describe("IO Database", () => {
         content: "this is my message",
         channel: "stdout",
         event_id: "event",
-        function: "1"
+        function: "1",
+        level: 1
       });
       done();
     });
@@ -62,7 +63,8 @@ describe("IO Database", () => {
         content: "this is my message",
         channel: "stderr",
         event_id: "event",
-        function: "1"
+        function: "1",
+        level: 4
       });
       done();
     });

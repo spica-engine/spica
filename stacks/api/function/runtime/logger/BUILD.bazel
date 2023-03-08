@@ -6,9 +6,9 @@ ts_project(
     name = "logger",
     package_name = "@spica-server/function/runtime/logger",
     srcs = [
-        "logger.ts",
         "index.ts",
-        "interface.ts"
+        "interface.ts",
+        "logger.ts",
     ],
     deps = [],
 )
