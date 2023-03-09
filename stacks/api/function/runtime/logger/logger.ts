@@ -27,9 +27,9 @@ export function getOriginalConsole() {
 }
 
 export function getLogs(message: string, channel: LogChannels) {
-  let defaultLevel = channel == LogChannels.ERROR ? LogLevels.ERROR : LogLevels.LOG;
+  const defaultLevel = channel == LogChannels.ERROR ? LogLevels.ERROR : LogLevels.LOG;
 
-  const matcheds: {level: number; message: string}[] = [];
+  const pairs: {level: number; message: string}[] = [];
 
   let m;
   while ((m = RESERVED_LOG_REGEX.exec(message)) !== null) {
@@ -45,7 +45,7 @@ export function getLogs(message: string, channel: LogChannels) {
       continue;
     }
 
-    matcheds.push({
+    pairs.push({
       level: Number(m[1]),
       message: m[2].trim()
     });
@@ -54,10 +54,10 @@ export function getLogs(message: string, channel: LogChannels) {
   const restOfMessage = message.replace(RESERVED_LOG_REGEX, "").trim();
 
   if (restOfMessage) {
-    matcheds.push({level: defaultLevel, message: restOfMessage});
+    pairs.push({level: defaultLevel, message: restOfMessage});
   }
 
-  return matcheds;
+  return pairs;
 }
 
 function reserveLog(args: any[], level: LogLevels) {
