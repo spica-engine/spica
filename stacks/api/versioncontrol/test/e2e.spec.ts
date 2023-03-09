@@ -103,7 +103,8 @@ describe("Versioning e2e", () => {
           entryLimit: 20,
           maxConcurrency: 1,
           debug: false,
-          realtimeLogs: false
+          realtimeLogs: false,
+          logger: false
         }),
         VersionControlModule.forRoot({persistentPath: os.tmpdir()})
       ]

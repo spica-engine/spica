@@ -72,7 +72,8 @@ xdescribe("Hooks Integration", () => {
           logExpireAfterSeconds: 60,
           maxConcurrency: 1,
           debug: false,
-          realtimeLogs: false
+          realtimeLogs: false,
+          logger:false
         })
       ]
     }).compile();
