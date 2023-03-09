@@ -39,7 +39,7 @@ describe("Engine", () => {
           },
           maxConcurrency: 1,
           debug: false,
-          logger:false,
+          logger: false
         }),
         DatabaseTestingModule.replicaSet()
       ]

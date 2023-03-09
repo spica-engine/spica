@@ -60,7 +60,7 @@ describe("function", () => {
         maxConcurrency: 1,
         debug: false,
         realtimeLogs: false,
-        logger:false
+        logger: false
       })
     ]
   };
