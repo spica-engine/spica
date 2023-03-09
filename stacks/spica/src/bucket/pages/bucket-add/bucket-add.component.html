@@ -101,6 +101,7 @@
                   minlength="4"
                   maxlength="100"
                 />
+
                 <mat-hint align="end">{{ tm.value?.length || 0 }} / 100</mat-hint>
                 <mat-error *ngIf="tm?.errors?.required">This field is required.</mat-error>
                 <mat-error *ngIf="tm?.errors?.minlength">
