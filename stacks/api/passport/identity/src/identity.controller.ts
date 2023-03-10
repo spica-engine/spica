@@ -31,6 +31,7 @@ import {Identity, PaginationResponse} from "./interface";
 import {POLICY_PROVIDER} from "./options";
 import {registerPolicyAttacher} from "./utility";
 import {ClassCommander} from "@spica-server/replication";
+import {PipelineBuilder} from "@spica-server/database/pipeline";
 
 @Controller("passport/identity")
 export class IdentityController {
@@ -113,59 +114,43 @@ export class IdentityController {
   async find(
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
-    @Query("sort", DEFAULT({}), JSONP) sort: object,
+    @Query("sort", JSONP) sort: object,
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
-    @Query("filter", DEFAULT({}), JSONP) filter: object,
+    @Query("filter", JSONP) filter: object,
     @ResourceFilter() resourceFilter: object
   ) {
-    const pipeline: object[] = [];
+    const pipelineBuilder = await new PipelineBuilder()
+      .filterResources(resourceFilter)
+      .filterByUserRequest(filter);
 
-    pipeline.push(resourceFilter);
+    const hideSecretsExpression = this.hideSecretsExpression();
 
-    pipeline.push({$project: this.hideSecretsExpression()});
+    const seekingPipeline = new PipelineBuilder()
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .attachToPipeline(true, {$project: hideSecretsExpression})
+      .result();
 
-    //@TODO: remove this line
-    pipeline.push({$set: {_id: {$toString: "$_id"}}});
-
-    if (Object.keys(filter).length) {
-      pipeline.push({$match: filter});
-    }
-
-    const seekingPipeline: object[] = [];
-
-    if (Object.keys(sort).length) {
-      seekingPipeline.push({$sort: sort});
-    }
-
-    // sub-pipeline in $facet stage cannot be empty
-    seekingPipeline.push({$skip: skip});
-
-    if (limit) {
-      seekingPipeline.push({$limit: limit});
-    }
+    const pipeline = (await pipelineBuilder.paginate(
+      paginate,
+      seekingPipeline,
+      this.identityService.estimatedDocumentCount()
+    )).result();
 
     if (paginate) {
-      pipeline.push(
-        {
-          $facet: {
-            meta: [
-              {
-                $count: "total"
-              }
-            ],
-            data: seekingPipeline
-          }
-        },
-        {$unwind: {path: "$meta", preserveNullAndEmptyArrays: true}}
-      );
-
-      const result = await this.identityService
+      return this.identityService
         .aggregate<PaginationResponse<Identity>>(pipeline)
-        .next();
-
-      return result.data.length ? result : {meta: {total: 0}, data: []};
+        .next()
+        .then(r => {
+          if (!r.data.length) {
+            r.meta = {total: 0};
+          }
+          return r;
+        });
     }
-    return this.identityService.aggregate<Identity>([...pipeline, ...seekingPipeline]).toArray();
+
+    return this.identityService.aggregate<Identity[]>([...pipeline, ...seekingPipeline]);
   }
   @Get("predefs")
   @UseGuards(AuthGuard())

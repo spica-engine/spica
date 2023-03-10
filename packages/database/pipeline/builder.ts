@@ -17,15 +17,21 @@ export class PipelineBuilder implements IPipelineBuilder {
     return this;
   }
 
-  filterResources(resourceFilter: object): this {
-    this.attachToPipeline(resourceFilter, resourceFilter);
+  filterResources(resourceFilter: any): this {
+    console.log("RESOURCEFILTER", resourceFilter);
+    this.attachToPipeline(this.isValidObject(resourceFilter.$match), resourceFilter);
     return this;
   }
 
   filterByUserRequest(filter: object) {
-    this.isFilterApplied = filter && !!Object.keys(filter).length;
+    console.log("filter", filter);
+    this.isFilterApplied = this.isValidObject(filter);
     this.attachToPipeline(this.isFilterApplied, {$match: filter});
     return Promise.resolve(this);
+  }
+
+  private isValidObject(obj) {
+    return typeof obj == "object" && !Array.isArray(obj) && !!Object.keys(obj).length;
   }
 
   sort(sort: object = {}): this {
