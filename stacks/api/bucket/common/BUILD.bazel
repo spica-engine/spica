@@ -12,6 +12,7 @@ ts_project(
         "//packages/core/differ",
         "//packages/core/patch",
         "//packages/database",
+        "//packages/filter",
         "//packages/database/pipeline",
         "//stacks/api/activity/services",
         "//stacks/api/bucket/cache",
