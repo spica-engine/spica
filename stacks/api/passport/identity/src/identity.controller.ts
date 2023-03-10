@@ -123,13 +123,11 @@ export class IdentityController {
       .filterResources(resourceFilter)
       .filterByUserRequest(filter);
 
-    const hideSecretsExpression = this.hideSecretsExpression();
-
     const seekingPipeline = new PipelineBuilder()
       .sort(sort)
       .skip(skip)
       .limit(limit)
-      .attachToPipeline(true, {$project: hideSecretsExpression})
+      .setVisibilityOfFields(this.hideSecretsExpression())
       .result();
 
     const pipeline = (await pipelineBuilder.paginate(
@@ -150,7 +148,7 @@ export class IdentityController {
         });
     }
 
-    return this.identityService.aggregate<Identity[]>([...pipeline, ...seekingPipeline]);
+    return this.identityService.aggregate<Identity[]>([...pipeline, ...seekingPipeline]).toArray();
   }
   @Get("predefs")
   @UseGuards(AuthGuard())

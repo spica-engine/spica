@@ -17,17 +17,20 @@ export class PipelineBuilder implements IPipelineBuilder {
     return this;
   }
 
-  filterResources(resourceFilter: any): this {
-    console.log("RESOURCEFILTER", resourceFilter);
-    this.attachToPipeline(this.isValidObject(resourceFilter.$match), resourceFilter);
+  filterResources(resourceFilter: object): this {
+    this.attachToPipeline(this.isValidObject(resourceFilter), resourceFilter);
     return this;
   }
 
   filterByUserRequest(filter: object) {
-    console.log("filter", filter);
     this.isFilterApplied = this.isValidObject(filter);
     this.attachToPipeline(this.isFilterApplied, {$match: filter});
     return Promise.resolve(this);
+  }
+
+  setVisibilityOfFields(fields: {[field: string]: 0 | 1}) {
+    this.attachToPipeline(this.isValidObject(fields), {$project: fields});
+    return this;
   }
 
   private isValidObject(obj) {
