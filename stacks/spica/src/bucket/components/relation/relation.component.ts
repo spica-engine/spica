@@ -109,11 +109,31 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
   }
 
   valueIds() {
+    if (this.isNotResolved(this.value)) {
+      return this.value as string | string[];
+    }
+
     return this.value
       ? Array.isArray(this.value)
         ? this.value.map(v => v._id)
         : this.value._id
       : undefined;
+  }
+
+  isObject(val) {
+    return typeof val == "object" && !Array.isArray(val);
+  }
+
+  isString(val) {
+    return typeof val == "string";
+  }
+
+  isStringArray(val) {
+    return Array.isArray(val) && val.every(v => this.isString(v));
+  }
+
+  isNotResolved(val) {
+    return this.isString(val) || this.isStringArray(val);
   }
 
   @HostListener("click")
