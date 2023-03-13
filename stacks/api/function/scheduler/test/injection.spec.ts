@@ -48,7 +48,8 @@ describe("Scheduler Injection", () => {
             allowedOrigins: ["*"]
           },
           maxConcurrency: 1,
-          debug: false
+          debug: false,
+          logger: false
         }),
         SpySchedulerModule
       ]

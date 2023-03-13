@@ -76,16 +76,16 @@ export class FunctionService {
     url.searchParams.set("skip", filter.skip.toString());
     url.searchParams.set("limit", filter.limit.toString());
 
-    if (!filter.showErrors) {
-      url.searchParams.set("channel", "stdout");
-    }
-
     return this.http.get<Log[]>(url.toString());
   }
 
   setCommonParams(url: URL, filter: LogFilter) {
     if (filter.function.length > 0) {
       filter.function.forEach(fn => url.searchParams.append("functions", fn));
+    }
+
+    if (filter.levels) {
+      filter.levels.forEach(level => url.searchParams.append("levels", level.toString()));
     }
 
     if (filter.begin instanceof Date) {
