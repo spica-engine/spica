@@ -50,6 +50,7 @@ rollup_bundle(
         "//stacks/api/function/packages/database",
         "//stacks/api/function/queue/node",
         "//stacks/api/function/queue/proto",
+        "//stacks/api/function/runtime/logger",
         "@npm//@grpc/grpc-js",
         "@npm//@rollup/plugin-commonjs",
         "@npm//@rollup/plugin-json",

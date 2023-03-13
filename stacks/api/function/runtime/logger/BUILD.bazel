@@ -1,0 +1,14 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
+package(default_visibility = ["//visibility:public"])
+
+ts_project(
+    name = "logger",
+    package_name = "@spica-server/function/runtime/logger",
+    srcs = [
+        "index.ts",
+        "interface.ts",
+        "logger.ts",
+    ],
+    deps = [],
+)
