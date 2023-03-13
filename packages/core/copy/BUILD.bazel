@@ -9,7 +9,5 @@ ts_project(
         "src/*.ts",
         "index.ts",
     ]),
-    deps = [
-        "@npm//json-merge-patch",
-    ],
+    deps = [],
 )

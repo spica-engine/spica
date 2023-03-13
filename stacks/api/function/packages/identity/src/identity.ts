@@ -20,6 +20,7 @@ import {
 } from "@spica-devkit/internal_common";
 import {Strategy} from "./interface";
 import {Observable} from "rxjs";
+import {deepCopyJSON} from "@spica-server/core/copy"
 
 let authorization;
 
@@ -200,6 +201,7 @@ export function getAll(
 export async function insert(identity: IdentityCreate): Promise<IdentityGet> {
   checkInitialized(authorization);
 
+  identity = deepCopyJSON(identity);
   const desiredPolicies = identity.policies;
   delete identity.policies;
 
@@ -218,6 +220,7 @@ export async function update(id: string, identity: IdentityUpdate): Promise<Iden
 
   await policy.detach(id, existingIdentity.policies || []);
 
+  identity = deepCopyJSON(identity);
   const desiredPolicies = identity.policies;
   delete identity.policies;
 
