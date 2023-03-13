@@ -9,6 +9,8 @@ import * as os from "os";
 import {PassThrough, Writable} from "stream";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:24075";
+process.env.DISABLE_LOGGER = "true";
+
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
 describe("Entrypoint", () => {

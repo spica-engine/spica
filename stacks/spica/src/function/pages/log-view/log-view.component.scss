@@ -16,12 +16,17 @@
     margin: 30px;
     margin-top: -85px;
 
-    > *:first-child {
-      margin-right: 5px;
-    }
+    div.header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
 
-    > *:not(:first-child):not(mat-table) {
-      margin: 0px 10px;
+      span.start {
+        width: 80%;
+        > mat-form-field:not(:last-of-type) {
+          margin-right: 10px;
+        }
+      }
     }
   }
 
@@ -43,11 +48,15 @@
           word-wrap: break-word;
         }
         span:nth-child(1) {
-          width: 15%;
+          width: 5%;
           margin: 0px 5px 0px 0px;
         }
         span:nth-child(2) {
           width: 15%;
+          margin: 0px 5px;
+        }
+        span:nth-child(3) {
+          width: 10%;
           margin: 0px 5px;
         }
         span:last-of-type {
@@ -79,12 +88,34 @@
             align-items: center;
           }
           span:nth-child(1) {
-            width: 15%;
+            width: 5%;
             word-break: break-word;
             margin: 0px 5px 0px 0px;
+            mat-icon {
+              &.debug {
+                color: #3d8d50;
+              }
+              &.log {
+                transform: scale(0.6);
+              }
+              &.info {
+                color: #4080d9;
+              }
+              &.warning {
+                color: #fba747;
+              }
+              &.error {
+                color: rgb(217, 48, 37);
+              }
+            }
           }
           span:nth-child(2) {
             width: 15%;
+            word-break: break-word;
+            margin: 0px 5px;
+          }
+          span:nth-child(3) {
+            width: 10%;
             word-break: break-word;
             margin: 0px 5px;
             outline: none;
@@ -111,12 +142,10 @@
             overflow: hidden;
             width: 70%;
             margin: 0px 0px 0px 5px;
-            span {
-              display: inline-block;
-              width: 100%;
-              height: 26px;
-              line-height: 26px;
-            }
+
+            display: inline-block;
+            height: 26px;
+            line-height: 26px;
           }
         }
       }

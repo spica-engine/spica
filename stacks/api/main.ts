@@ -199,6 +199,11 @@ const args = yargs
       boolean: true,
       description: "Enable/disable tracking function logs realtime. Default value is false.",
       default: true
+    },
+    "function-logger": {
+      boolean: true,
+      description: "Allows keeping logs with their levels like DEBUG, INFO, WARN, ERROR etc.",
+      default: true
     }
   })
   /* Storage Options */
@@ -463,7 +468,8 @@ const modules = [
     },
     debug: args["function-debug"],
     maxConcurrency: args["function-worker-concurrency"],
-    realtimeLogs: args["function-realtime-logs"]
+    realtimeLogs: args["function-realtime-logs"],
+    logger: args["function-logger"]
   })
 ];
 
