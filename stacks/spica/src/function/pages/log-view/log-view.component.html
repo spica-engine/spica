@@ -18,68 +18,92 @@
 </mat-toolbar>
 
 <mat-card class="mat-elevation-z25">
-  <mat-slide-toggle
-    *ngIf="realtimeConnectivity"
-    #realtimeToggle
-    [checked]="(queryParams | async)?.realtime"
-    (change)="next({realtime: $event.checked ? true : false})"
-  >
-    Live Logs
-  </mat-slide-toggle>
+  <div class="header">
+    <span class="start">
+      <mat-form-field *ngIf="!realtimeToggle?.checked">
+        <mat-label>Select a date range</mat-label>
+        <mat-date-range-input [max]="maxDate" [rangePicker]="picker">
+          <input
+            matStartDate
+            placeholder="Start date"
+            #begin="ngModel"
+            [ngModel]="(queryParams | async)?.begin"
+          />
 
-  <mat-form-field *ngIf="!realtimeToggle?.checked">
-    <mat-label>Select a date range</mat-label>
-    <mat-date-range-input [max]="maxDate" [rangePicker]="picker">
-      <input
-        matStartDate
-        placeholder="Start date"
-        #begin="ngModel"
-        [ngModel]="(queryParams | async)?.begin"
-      />
+          <input
+            matEndDate
+            placeholder="End date"
+            #end="ngModel"
+            [ngModel]="(queryParams | async)?.end"
+          />
+        </mat-date-range-input>
 
-      <input
-        matEndDate
-        placeholder="End date"
-        #end="ngModel"
-        [ngModel]="(queryParams | async)?.end"
-      />
-    </mat-date-range-input>
-
-    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-    <mat-date-range-picker
-      #picker
-      (closed)="
-        next(
-          formatHours({
-            begin: begin.value,
-            end: end.value
-          })
-        )
-      "
-    ></mat-date-range-picker>
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label>Functions</mat-label>
-    <mat-select
-      multiple
-      [ngModel]="(queryParams | async)?.function"
-      (ngModelChange)="next({function: $event})"
-    >
-      <mat-option
-        class="mat-accent"
-        *ngFor="let function of functions$ | async"
-        [value]="function._id"
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-date-range-picker
+          #picker
+          (closed)="
+            next(
+              formatHours({
+                begin: begin.value,
+                end: end.value
+              })
+            )
+          "
+        ></mat-date-range-picker>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Functions</mat-label>
+        <mat-select
+          multiple
+          [ngModel]="(queryParams | async)?.function"
+          (ngModelChange)="next({function: $event})"
+        >
+          <mat-option
+            class="mat-accent"
+            *ngFor="let function of functions$ | async"
+            [value]="function._id"
+          >
+            {{ function.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Levels</mat-label>
+        <mat-select
+          [ngModel]="(queryParams | async)?.params"
+          (ngModelChange)="next({levels: $event})"
+          multiple
+        >
+          <mat-option class="mat-accent" value="0">
+            Debug
+          </mat-option>
+          <mat-option class="mat-accent" value="1">
+            Log
+          </mat-option>
+          <mat-option class="mat-accent" value="2">
+            Info
+          </mat-option>
+          <mat-option class="mat-accent" value="3">
+            Warning
+          </mat-option>
+          <mat-option class="mat-accent" value="4">
+            Error
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </span>
+    <span class="end">
+      <mat-slide-toggle
+        *ngIf="realtimeConnectivity"
+        #realtimeToggle
+        [checked]="(queryParams | async)?.realtime"
+        (change)="next({realtime: $event.checked ? true : false})"
       >
-        {{ function.name }}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
-  <mat-slide-toggle
-    [checked]="(queryParams | async)?.showErrors"
-    (change)="next({showErrors: $event.checked})"
-  >
-    Errors
-  </mat-slide-toggle>
+        Live Logs
+      </mat-slide-toggle>
+    </span>
+  </div>
+
   <mat-card-content>
     <mat-accordion>
       <cdk-virtual-scroll-viewport
@@ -90,6 +114,7 @@
         (scrolledIndexChange)="!realtimeToggle?.checked && onScroll($event)"
       >
         <div class="header">
+          <span>Level</span>
           <span>Timestamp</span>
           <span>Name</span>
           <span>Content</span>
@@ -105,6 +130,25 @@
             <mat-expansion-panel-header>
               <mat-panel-title>
                 <span>
+                  <ng-container [ngSwitch]="log.level">
+                    <mat-icon class="debug" *ngSwitchCase="0">
+                      bug_report
+                    </mat-icon>
+                    <mat-icon class="log" *ngSwitchCase="1">
+                      emergency
+                    </mat-icon>
+                    <mat-icon class="info" *ngSwitchCase="2">
+                      info
+                    </mat-icon>
+                    <mat-icon class="warning" *ngSwitchCase="3">
+                      error
+                    </mat-icon>
+                    <mat-icon class="error" *ngSwitchCase="4">
+                      crisis_alert
+                    </mat-icon>
+                  </ng-container>
+                </span>
+                <span>
                   {{ log.created_at | date: "MM/dd/yyyy HH:mm:ss" }}
                 </span>
                 <span
@@ -115,14 +159,8 @@
                 >
                   {{ log.function.name }} <mat-icon>filter_alt</mat-icon>
                 </span>
-
                 <span>
-                  <mat-icon *ngIf="log.channel == 'stderr'">
-                    error
-                  </mat-icon>
-                  <span>
-                    {{ log.content }}
-                  </span>
+                  {{ log.content }}
                 </span>
               </mat-panel-title>
             </mat-expansion-panel-header>

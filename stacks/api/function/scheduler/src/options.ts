@@ -10,6 +10,7 @@ export interface SchedulingOptions {
   corsOptions: CorsOptions;
   maxConcurrency: number;
   debug: boolean;
+  logger: boolean;
 }
 
 export const SCHEDULING_OPTIONS = Symbol.for("SCHEDULING_OPTIONS");

@@ -70,7 +70,8 @@ export class FunctionModule {
           timeout: options.timeout,
           experimentalDevkitDatabaseCache: options.experimentalDevkitDatabaseCache,
           corsOptions: options.corsOptions,
-          debug: options.debug
+          debug: options.debug,
+          logger: options.logger
         }),
         ServicesModule.forRoot({
           logExpireAfterSeconds: options.logExpireAfterSeconds,
