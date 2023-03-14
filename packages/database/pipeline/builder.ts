@@ -18,14 +18,23 @@ export class PipelineBuilder implements IPipelineBuilder {
   }
 
   filterResources(resourceFilter: object): this {
-    this.attachToPipeline(resourceFilter, resourceFilter);
+    this.attachToPipeline(this.isValidObject(resourceFilter), resourceFilter);
     return this;
   }
 
   filterByUserRequest(filter: object) {
-    this.isFilterApplied = filter && !!Object.keys(filter).length;
+    this.isFilterApplied = this.isValidObject(filter);
     this.attachToPipeline(this.isFilterApplied, {$match: filter});
     return Promise.resolve(this);
+  }
+
+  setVisibilityOfFields(fields: {[field: string]: 0 | 1}) {
+    this.attachToPipeline(this.isValidObject(fields), {$project: fields});
+    return this;
+  }
+
+  private isValidObject(obj) {
+    return typeof obj == "object" && !Array.isArray(obj) && !!Object.keys(obj).length;
   }
 
   sort(sort: object = {}): this {
