@@ -9,9 +9,10 @@ import {
   getRelationPipeline,
   RelationMap
 } from "./relation";
-import {constructFilterValues, extractFilterPropertyMap} from "@spica-server/bucket/common";
+import {constructFilterValues} from "@spica-server/bucket/common";
 import {categorizePropertyMap} from "./helpers";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {extractFilterPropertyMap} from "@spica-server/filter";
 
 export class BucketPipelineBuilder extends PipelineBuilder {
   private schema: Bucket;
