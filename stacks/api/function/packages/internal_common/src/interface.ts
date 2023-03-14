@@ -1,7 +1,8 @@
-import {HttpService} from "./request";
+import {HttpService, InterceptorDef} from "./request";
 
 interface InitializeOptions {
   publicUrl?: string;
+  interceptor?: InterceptorDef;
 }
 
 export interface ApikeyInitialization extends InitializeOptions {

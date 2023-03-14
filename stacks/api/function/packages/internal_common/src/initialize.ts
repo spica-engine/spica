@@ -27,6 +27,10 @@ export function initialize(
     service.setAuthorization(authorization);
   }
 
+  if (options.interceptor) {
+    service.attachInterceptor(options.interceptor);
+  }
+
   return {authorization, publicUrl, service};
 }
 
