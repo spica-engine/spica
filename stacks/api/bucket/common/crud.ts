@@ -132,10 +132,7 @@ export async function findDocuments<T>(
   );
 
   // for graphql responses
-  seekingPipeline.attachToPipeline(
-    params.projectMap.length,
-    getProjectAggregation(params.projectMap)
-  );
+  seekingPipeline.setVisibilityOfFields(getVisibilityOfFields(params.projectMap));
 
   const seeking = seekingPipeline.result();
 
@@ -380,12 +377,12 @@ async function executeWriteRule(
   }
 }
 
-function getProjectAggregation(fieldMap: string[][]) {
+function getVisibilityOfFields(fieldMap: string[][]) {
   const result = {};
   for (const fields of fieldMap) {
     result[fields.join(".")] = 1;
   }
-  return {$project: result};
+  return result;
 }
 
 function handleWriteErrors(error: any) {
