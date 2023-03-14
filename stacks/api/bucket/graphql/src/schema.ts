@@ -439,15 +439,6 @@ function mergeNodes(node: any, rootKey: string) {
   return mergedNode;
 }
 
-export function getProjectAggregation(requestedFields: string[][]) {
-  const result = {};
-  for (const pattern of requestedFields) {
-    const path = pattern.join(".");
-    result[path] = 1;
-  }
-  return {$project: result};
-}
-
 export function extractAggregationFromQuery(bucket: any, query: object, buckets: Bucket[]): object {
   const bucketProperties = bucket.properties;
   if (ObjectId.isValid(bucket._id)) {
