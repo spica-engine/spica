@@ -1,4 +1,13 @@
-import {Directive, Input, OnChanges, OnDestroy, OnInit, SimpleChanges} from "@angular/core";
+import {
+  Directive,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  Output,
+  SimpleChanges
+} from "@angular/core";
 
 @Directive({
   selector: "code-editor[language]",
@@ -8,6 +17,11 @@ import {Directive, Input, OnChanges, OnDestroy, OnInit, SimpleChanges} from "@an
 export class LanguageDirective implements OnChanges, OnDestroy {
   @Input() language: string;
   @Input() dependencies: {name: string; version: string; types: {[path: string]: string}}[] = [];
+
+  @Input("ngModel") index: string = "";
+
+  @Output("handlers") handlerEmitter = new EventEmitter<string[]>();
+
   private disposables: Array<any> = [];
 
   private extraLibDisposables = [];
@@ -96,12 +110,37 @@ export class LanguageDirective implements OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    this.emitHandlers(this.index);
+
     if (changes.language && this.editor) {
       this.updateLanguage();
     }
     if (changes.dependencies && changes.dependencies.currentValue && this.editor) {
       this.upsertDependencies();
     }
+  }
+
+  private emitHandlers(index: string) {
+    const handlers = [];
+    const regex = new RegExp(
+      /^\s*export +(async +)?function\s+(\w+)\s*\(|^\s*export +(default)\s+(async +)?function\s*\(/gm
+    );
+
+    let groups;
+    while ((groups = regex.exec(index)) !== null) {
+      // This is necessary to avoid infinite loops with zero-width matches
+      if (groups.index === regex.lastIndex) {
+        regex.lastIndex++;
+      }
+
+      const handlersInGroup = groups
+        .slice(1)
+        .filter(Boolean)
+        .filter(name => name.trim() != "async");
+      handlers.push(...handlersInGroup);
+    }
+
+    this.handlerEmitter.emit(handlers);
   }
 
   upsertDependencies() {
