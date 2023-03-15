@@ -1,17 +1,12 @@
-import {
-  Bucket,
-  BucketDocument,
-  ApikeyInitialization,
-  IdentityInitialization,
-  IndexResult,
-  RealtimeConnection,
-  RealtimeConnectionOne
-} from "./interface";
+import {Bucket, BucketDocument, RealtimeConnection, RealtimeConnectionOne} from "./interface";
 import {
   initialize as _initialize,
   checkInitialized,
   buildUrl,
-  HttpService
+  HttpService,
+  ApikeyInitialization,
+  IdentityInitialization,
+  IndexResult
 } from "@spica-devkit/internal_common";
 import {getWsObs} from "./operators";
 

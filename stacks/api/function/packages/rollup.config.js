@@ -8,7 +8,8 @@ module.exports = {
   },
   plugins: [
     resolve({
-      preferBuiltins: true
+      preferBuiltins: true,
+      browser: true
     }),
     commonjs(),
     json()

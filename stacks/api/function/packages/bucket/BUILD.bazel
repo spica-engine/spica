@@ -104,10 +104,11 @@ pkg_npm(
     name = "package",
     package_name = "@spica-devkit/bucket",
     srcs = [
-        "package.json",
+        "package.json"
     ],
     substitutions = {"0.0.0-PLACEHOLDER": "{BUILD_SCM_VERSION}"},
     tags = ["release-with-spica"],
+    # nested_packages = ["//stacks/api/function/packages/internal_common:package"],
     deps = [
         ":bundle",
     ],
