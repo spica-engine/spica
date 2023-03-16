@@ -137,7 +137,12 @@ describe("LogViewComponent", () => {
     let clearSpy = spyOn(fixture.componentInstance["fs"], "clearLogs").and.callThrough();
     fixture.componentInstance.clearLogs();
     expect(clearSpy).toHaveBeenCalledTimes(1);
-    expect(clearSpy).toHaveBeenCalledWith("fn_id");
+    expect(clearSpy).toHaveBeenCalledWith("fn_id", {
+      function: ["fn_id"],
+      begin: new Date(now.toString()),
+      end: new Date(now.toString()),
+      levels: [0, 1]
+    } as any);
   });
 
   it("should navigate with new filter params", fakeAsync(async () => {
