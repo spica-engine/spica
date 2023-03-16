@@ -113,54 +113,18 @@ describe("Function Add", () => {
     fixture = TestBed.createComponent(AddComponent);
   });
 
-  it("should set isHandlerDuplicated true", () => {
-    fixture.componentInstance.function = {
-      name: "test function",
-      description: "test description",
-      triggers: [emptyTrigger("handler1"), emptyTrigger("handler1")],
-      env: [],
-      language: "javascript"
-    };
-
-    fixture.componentInstance.checkHandlers();
-    expect(fixture.componentInstance.isHandlerDuplicated).toEqual(true);
-  });
-
-  it("should set isHandlerDuplicated false", () => {
-    fixture.componentInstance.function = {
+  it("should delete trigger on the given index", () => {
+    const func = (fixture.componentInstance.function = {
       name: "test function",
       description: "test description",
       triggers: [emptyTrigger("handler1"), emptyTrigger("handler2")],
       env: [],
       language: "javascript"
-    };
-
-    fixture.componentInstance.checkHandlers();
-    expect(fixture.componentInstance.isHandlerDuplicated).toBe(false);
-  });
-
-  it("should delete trigger on the given index, then set isHandlerDuplicated false", () => {
-    const func = (fixture.componentInstance.function = {
-      name: "test function",
-      description: "test description",
-      triggers: [emptyTrigger("handler1"), emptyTrigger("handler2"), emptyTrigger("handler1")],
-      env: [],
-      language: "javascript"
     });
 
-    fixture.componentInstance.deleteTrigger(2);
+    fixture.componentInstance.deleteTrigger(1);
 
-    expect(func.triggers).toEqual([
-      {handler: "handler1", options: {}, type: "http", active: true},
-      {
-        handler: "handler2",
-        options: {},
-        type: "http",
-        active: true
-      }
-    ]);
-
-    expect(fixture.componentInstance.isHandlerDuplicated).toBe(false);
+    expect(func.triggers).toEqual([{handler: "handler1", options: {}, type: "http", active: true}]);
   });
 
   describe("example codes", () => {
