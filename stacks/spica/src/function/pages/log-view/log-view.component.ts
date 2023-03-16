@@ -195,7 +195,7 @@ export class LogViewComponent implements OnInit, OnDestroy {
         flatMap(([filter, allIds]) => {
           const deletedFunctionIds: string[] =
             filter.function && filter.function.length ? filter.function : allIds;
-          return forkJoin(deletedFunctionIds.map(id => this.fs.clearLogs(id))).pipe(
+          return forkJoin(deletedFunctionIds.map(id => this.fs.clearLogs(id, filter))).pipe(
             tap(() => {
               if (!filter.realtime) {
                 this.resetScroll();
