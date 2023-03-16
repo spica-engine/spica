@@ -38,28 +38,38 @@ describe("@spica-devkit/identity", () => {
     };
 
     it("should insert identity", () => {
-      const expected = JSON.parse(JSON.stringify(identity));
       Identity.insert(identity);
 
-      delete expected.policies;
-
       expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenCalledWith("passport/identity", expected);
+      expect(postSpy).toHaveBeenCalledWith("passport/identity", {
+        identifier: "test",
+        password: "test"
+      });
+
+      expect(identity).toEqual(
+        {identifier: "test", password: "test", policies: []},
+        "should fail if original identity modified"
+      );
     });
 
     it("should insert identity with policies", async () => {
       const identityWithPolicy = {...identity, policies: ["policy_id"]};
-      const expected = JSON.parse(JSON.stringify(identityWithPolicy));
 
       await Identity.insert(identityWithPolicy);
 
-      delete expected.policies;
-
       expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenCalledWith("passport/identity", expected);
+      expect(postSpy).toHaveBeenCalledWith("passport/identity", {
+        identifier: "test",
+        password: "test"
+      });
 
       expect(putSpy).toHaveBeenCalledTimes(1);
       expect(putSpy).toHaveBeenCalledWith("passport/identity/identity_id/policy/policy_id", {});
+
+      expect(identity).toEqual(
+        {identifier: "test", password: "test", policies: []},
+        "should fail if original identity modified"
+      );
     });
 
     it("should get all identities", () => {

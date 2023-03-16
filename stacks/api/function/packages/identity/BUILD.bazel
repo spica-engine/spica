@@ -13,6 +13,7 @@ ts_project(
     srcs = SRCS,
     tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
+        "//packages/core/copy",
         "//stacks/api/function/packages/internal_common",
         "@npm//rxjs",
     ],
@@ -25,6 +26,7 @@ ts_project(
     out_dir = "publish",
     tsconfig = "//stacks/api/function/packages:tsconfig_publish",
     deps = [
+        "//packages/core/copy",
         "//stacks/api/function/packages/internal_common",
         "@npm//rxjs",
     ],
