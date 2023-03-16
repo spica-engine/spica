@@ -4,10 +4,11 @@ import {
   Input,
   OnChanges,
   OnDestroy,
-  OnInit,
   Output,
   SimpleChanges
 } from "@angular/core";
+import {BehaviorSubject, merge, Subscription} from "rxjs";
+import {debounceTime, take} from "rxjs/operators";
 
 @Directive({
   selector: "code-editor[language]",
@@ -27,6 +28,18 @@ export class LanguageDirective implements OnChanges, OnDestroy {
   private extraLibDisposables = [];
 
   private editor: monaco.editor.IStandaloneCodeEditor;
+
+  // function declaration
+  // default functionDeclaration
+  // function expression
+  private handlersInIndexRegex = new RegExp(
+    //prettier-ignore
+    /^\s*export +(async +)?function\s+(\w+)\s*\(|^\s*export +(default)\s+(async +)?function\s*\(|^\s*export +(let|var|const)\s*(\w+)\s*=\s*(function\s*)?\(/,
+    "gm"
+  );
+
+  private onIndexChange$ = new BehaviorSubject<string>(this.index);
+  private onIndexChangeSubs: Subscription;
 
   format() {
     return this.editor.getAction("editor.action.formatDocument").run();
@@ -72,6 +85,13 @@ export class LanguageDirective implements OnChanges, OnDestroy {
     });
 
     this.upsertDependencies();
+
+    const sourceObservable = this.onIndexChange$.asObservable();
+
+    this.onIndexChangeSubs = merge(
+      sourceObservable.pipe(take(1)),
+      sourceObservable.pipe(debounceTime(2000))
+    ).subscribe(index => this.emitHandlers(index));
   }
 
   // https://github.com/Microsoft/monaco-editor/issues/926#issuecomment-398689036
@@ -110,7 +130,7 @@ export class LanguageDirective implements OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    this.emitHandlers(this.index);
+    this.onIndexChange$.next(this.index);
 
     if (changes.language && this.editor) {
       this.updateLanguage();
@@ -123,20 +143,11 @@ export class LanguageDirective implements OnChanges, OnDestroy {
   private emitHandlers(index: string) {
     const handlers = [];
 
-    // function declaration
-    // default functionDeclaration
-    // function expression
-    const regex = new RegExp(
-      //prettier-ignore
-      /^\s*export +(async +)?function\s+(\w+)\s*\(|^\s*export +(default)\s+(async +)?function\s*\(|^\s*export +(let|var|const)\s*(\w+)\s*=\s*(function\s*)?\(/,
-      "gm"
-    );
-
     let groups;
-    while ((groups = regex.exec(index)) !== null) {
+    while ((groups = this.handlersInIndexRegex.exec(index)) !== null) {
       // This is necessary to avoid infinite loops with zero-width matches
-      if (groups.index === regex.lastIndex) {
-        regex.lastIndex++;
+      if (groups.index === this.handlersInIndexRegex.lastIndex) {
+        this.handlersInIndexRegex.lastIndex++;
       }
 
       const handlersInGroup = groups
@@ -181,5 +192,6 @@ export class LanguageDirective implements OnChanges, OnDestroy {
   ngOnDestroy(): void {
     this.disposables.forEach(d => d.dispose());
     this.extraLibDisposables.forEach(d => d.dispose());
+    this.onIndexChangeSubs.unsubscribe();
   }
 }
