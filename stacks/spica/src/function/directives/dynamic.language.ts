@@ -122,8 +122,14 @@ export class LanguageDirective implements OnChanges, OnDestroy {
 
   private emitHandlers(index: string) {
     const handlers = [];
+
+    // function declaration
+    // default functionDeclaration
+    // function expression
     const regex = new RegExp(
-      /^\s*export +(async +)?function\s+(\w+)\s*\(|^\s*export +(default)\s+(async +)?function\s*\(/gm
+      //prettier-ignore
+      /^\s*export +(async +)?function\s+(\w+)\s*\(|^\s*export +(default)\s+(async +)?function\s*\(|^\s*export +(let|var|const)\s*(\w+)\s*=\s*(function\s*)?\(/,
+      "gm"
     );
 
     let groups;
@@ -136,7 +142,7 @@ export class LanguageDirective implements OnChanges, OnDestroy {
       const handlersInGroup = groups
         .slice(1)
         .filter(Boolean)
-        .filter(name => name.trim() != "async");
+        .filter(name => !["async", "const", "var", "let", "function"].includes(name.trim()));
       handlers.push(...handlersInGroup);
     }
 
