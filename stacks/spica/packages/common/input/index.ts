@@ -6,6 +6,7 @@ export {
   INPUT_SCHEMA,
   InternalPropertySchema
 } from "./input";
+export * from "./input-schema-placer/predefineds/interface";
 export {InputSchemaPlacer} from "./input-schema-placer/input.schema.placer";
 export {InputModule} from "./input.module";
 export {InputPlacerComponent} from "./input.placer";

@@ -20,6 +20,11 @@ import {
 } from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {MatSuffix} from "@angular/material/form-field";
+import {PredefinedOptionLoader} from "../input";
+import {
+  predefinedOptions,
+  STRING_PREDEFINED_OPTION_LOADER
+} from "./components/string-schema/predefineds";
 import {InputSchema, INPUT_SCHEMA} from "./input";
 import {InputResolver} from "./input.resolver";
 
@@ -112,6 +117,13 @@ export class InputPlacerComponent
           {
             provide: INPUT_SCHEMA,
             useValue: copySchema
+          },
+          {
+            provide: STRING_PREDEFINED_OPTION_LOADER,
+            useFactory: () => {
+              console.log("IM CALLED")
+              return new PredefinedOptionLoader<string>().add(predefinedOptions);
+            }
           }
         ],
         this._injector
