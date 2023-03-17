@@ -12,9 +12,13 @@ export class PredefinedOptionLoader implements IPredefinedOptionLoader {
     this.options.push(...options);
   }
 
+  list(): PredefinedOption[];
   list(type: PredefinedOptionType.ENUM): PredefinedEnum[];
   list(type: PredefinedOptionType.PATTERN): PredefinedPattern[];
-  list(type: PredefinedOptionType): PredefinedOption[] {
+  list(type?: PredefinedOptionType) {
+    if (!type) {
+      return this.options;
+    }
     return this.options.filter(option => option.type == type);
   }
 }
