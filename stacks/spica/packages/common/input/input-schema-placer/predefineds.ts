@@ -38,8 +38,8 @@ export interface PredefinedPattern extends PredefinedOption {
   type: PredefinedOptionType.PATTERN;
 }
 
-const CountryEnum: PredefinedEnum = {
-  title: "country",
+const CountriesEnum: PredefinedEnum = {
+  title: "countries",
   type: PredefinedOptionType.ENUM,
   values: [
     "United States",
@@ -292,13 +292,25 @@ const DaysEnum: PredefinedEnum = {
   values: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 };
 
-const EmailRegex: PredefinedPattern = {
+const EmailPattern: PredefinedPattern = {
   title: "email",
   type: PredefinedOptionType.PATTERN,
-  values: ["/^S+@S+.S+$/"]
+  // do not forget to escape slash and backslashes
+  values: ["^\\w+@\\w+\\.\\w+$"]
 };
 
-export const predefinedStringOptions: PredefinedOption[] = [CountryEnum, DaysEnum, EmailRegex];
+const PhoneNumberPattern: PredefinedPattern = {
+  title: "phone number",
+  type: PredefinedOptionType.PATTERN,
+  values: ["^[0-9-+\\s]+$"]
+};
+
+export const predefinedStringOptions: PredefinedOption[] = [
+  CountriesEnum,
+  DaysEnum,
+  EmailPattern,
+  PhoneNumberPattern
+];
 
 export const STRING_PREDEFINED_OPTION_LOADER = new InjectionToken<PredefinedOptionLoader>(
   "STRING_PREDEFINED_OPTION_LOADER"

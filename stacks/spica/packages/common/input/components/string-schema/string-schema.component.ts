@@ -49,10 +49,12 @@ export class StringSchemaComponent extends SchemaComponent {
   }
 
   removeEnum() {
+    this.selectedEnums = [];
     delete this.schema.enum;
   }
 
   removePattern() {
+    this.selectedPatterns = [];
     delete this.schema.pattern;
   }
 
