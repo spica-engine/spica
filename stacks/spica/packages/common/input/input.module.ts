@@ -39,10 +39,6 @@ import {NumberSchemaComponent} from "./components/number-schema/number-schema.co
 import {NumberComponent} from "./components/number/number.component";
 import {ObjectSchemaComponent} from "./components/object-schema/object-schema.component";
 import {ObjectComponent} from "./components/object/object.component";
-import {
-  STRING_PREDEFINED_OPTION_LOADER,
-  predefinedOptions
-} from "./components/string-schema/predefineds";
 import {StringSchemaComponent} from "./components/string-schema/string-schema.component";
 import {StringComponent} from "./components/string/string.component";
 import {TextAreaComponent} from "./components/textarea/textarea.component";
@@ -63,7 +59,6 @@ import {
 import {ConditionalSchemaPipe} from "./conditional";
 import {MultiselectSchemaComponent} from "./components/multiselect-schema/multiselect-schema.component";
 import {MultiselectComponent} from "./components/multiselect/multiselect.component";
-import {PredefinedOptionLoader} from "../input";
 
 export function coerceObject() {
   return {};
@@ -138,12 +133,6 @@ export function coerceObject() {
       useFactory: provideInputResolver,
       deps: [[new Inject(INPUT_PLACERS), new Optional()]]
     },
-    // {
-    //   provide: STRING_PREDEFINED_OPTION_LOADER,
-    //   useFactory: () => {
-    //     return new PredefinedOptionLoader<string>().add(predefinedOptions);
-    //   }
-    // },
     providePlacers([
       {
         origin: "string",
