@@ -296,18 +296,18 @@ const Days: EnumPreset = {
   values: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 };
 
-const EmailPattern: PatternPreset = {
+const Email: PatternPreset = {
   title: "email",
   type: PresetType.PATTERN,
   values: ["^\\w+@\\w+\\.\\w+$"]
 };
 
-const PhoneNumberPattern: PatternPreset = {
+const PhoneNumber: PatternPreset = {
   title: "phone number",
   type: PresetType.PATTERN,
   values: ["^[0-9-+\\s]+$"]
 };
 
-export const presets: Preset[] = [Countries, Days, EmailPattern, PhoneNumberPattern];
+export const presets: Preset[] = [Countries, Days, Email, PhoneNumber];
 
 export const STRING_PRESET_LOADER = new InjectionToken<PresetLoader>("STRING_PRESET_LOADER");
