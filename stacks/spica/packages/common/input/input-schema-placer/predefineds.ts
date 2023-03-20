@@ -1,50 +1,50 @@
 import {InjectionToken} from "@angular/core";
 
-export interface IPredefinedOptionLoader {
-  add(options: PredefinedOption[]);
-  list(type: string): PredefinedOption[];
+export interface IPresetLoader {
+  add(options: Preset[]);
+  list(type: string): Preset[];
 }
 
-export class PredefinedOptionLoader implements IPredefinedOptionLoader {
-  private options: PredefinedOption[] = [];
+export class PresetLoader implements IPresetLoader {
+  private presets: Preset[] = [];
 
-  add(options: PredefinedOption[]) {
-    this.options.push(...options);
+  add(presets: Preset[]) {
+    this.presets.push(...presets);
   }
 
-  list(): PredefinedOption[];
-  list(type: PredefinedOptionType.ENUM): PredefinedEnum[];
-  list(type: PredefinedOptionType.PATTERN): PredefinedPattern[];
-  list(type?: PredefinedOptionType) {
+  list(): Preset[];
+  list(type: PresetType.ENUM): EnumPreset[];
+  list(type: PresetType.PATTERN): PatternPreset[];
+  list(type?: PresetType) {
     if (!type) {
-      return this.options;
+      return this.presets;
     }
-    return this.options.filter(option => option.type == type);
+    return this.presets.filter(preset => preset.type == type);
   }
 }
 
-export interface PredefinedOption {
+export interface Preset {
   title: string;
-  type: PredefinedOptionType;
+  type: PresetType;
   values: string[];
 }
 
-export enum PredefinedOptionType {
+export enum PresetType {
   ENUM = "enum",
   PATTERN = "pattern"
 }
 
-export interface PredefinedEnum extends PredefinedOption {
-  type: PredefinedOptionType.ENUM;
+export interface EnumPreset extends Preset {
+  type: PresetType.ENUM;
 }
 
-export interface PredefinedPattern extends PredefinedOption {
-  type: PredefinedOptionType.PATTERN;
+export interface PatternPreset extends Preset {
+  type: PresetType.PATTERN;
 }
 
-const CountriesEnum: PredefinedEnum = {
+const Countries: EnumPreset = {
   title: "countries",
-  type: PredefinedOptionType.ENUM,
+  type: PresetType.ENUM,
   values: [
     "United States",
     "Canada",
@@ -290,32 +290,24 @@ const CountriesEnum: PredefinedEnum = {
   ]
 };
 
-const DaysEnum: PredefinedEnum = {
+const Days: EnumPreset = {
   title: "days",
-  type: PredefinedOptionType.ENUM,
+  type: PresetType.ENUM,
   values: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 };
 
-const EmailPattern: PredefinedPattern = {
+const EmailPattern: PatternPreset = {
   title: "email",
-  type: PredefinedOptionType.PATTERN,
-  // do not forget to escape slash and backslashes
+  type: PresetType.PATTERN,
   values: ["^\\w+@\\w+\\.\\w+$"]
 };
 
-const PhoneNumberPattern: PredefinedPattern = {
+const PhoneNumberPattern: PatternPreset = {
   title: "phone number",
-  type: PredefinedOptionType.PATTERN,
+  type: PresetType.PATTERN,
   values: ["^[0-9-+\\s]+$"]
 };
 
-export const predefinedStringOptions: PredefinedOption[] = [
-  CountriesEnum,
-  DaysEnum,
-  EmailPattern,
-  PhoneNumberPattern
-];
+export const presets: Preset[] = [Countries, Days, EmailPattern, PhoneNumberPattern];
 
-export const STRING_PREDEFINED_OPTION_LOADER = new InjectionToken<PredefinedOptionLoader>(
-  "STRING_PREDEFINED_OPTION_LOADER"
-);
+export const STRING_PRESET_LOADER = new InjectionToken<PresetLoader>("STRING_PRESET_LOADER");

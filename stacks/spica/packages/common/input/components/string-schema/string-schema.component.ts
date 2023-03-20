@@ -1,12 +1,12 @@
 import {Component, Inject} from "@angular/core";
 import {INPUT_SCHEMA, InputSchema} from "../../input";
 import {
-  PredefinedEnum,
-  PredefinedOption,
-  PredefinedOptionLoader,
-  PredefinedOptionType,
-  PredefinedPattern,
-  STRING_PREDEFINED_OPTION_LOADER
+  EnumPreset,
+  Preset,
+  PresetLoader,
+  PresetType,
+  PatternPreset,
+  STRING_PRESET_LOADER
 } from "../../input-schema-placer/predefineds";
 import {SchemaComponent} from "../schema.component";
 
@@ -15,58 +15,36 @@ import {SchemaComponent} from "../schema.component";
   styleUrls: ["./string-schema.component.scss"]
 })
 export class StringSchemaComponent extends SchemaComponent {
-  enumOptions: PredefinedEnum[] = [];
-  selectedEnums: PredefinedEnum[] = [];
+  enums: EnumPreset[] = [];
+  selectedEnums: EnumPreset[] = [];
   isEnumEnabled = false;
 
-  patternOptions: PredefinedPattern[] = [];
-  selectedPatterns: PredefinedPattern[] = [];
+  patterns: PatternPreset[] = [];
+  selectedPatterns: PatternPreset[] = [];
   isPatternEnabled = false;
 
-  predefineds: PredefinedOption[] = [];
-  selectedPredefineds: PredefinedOption[] = [];
+  presets: Preset[] = [];
+  selectedPresets: Preset[] = [];
 
   readonly PATTERN_SEPERATOR = "|";
 
   constructor(
     @Inject(INPUT_SCHEMA) public schema: InputSchema,
-    @Inject(STRING_PREDEFINED_OPTION_LOADER)
-    loader: PredefinedOptionLoader
+    @Inject(STRING_PRESET_LOADER)
+    loader: PresetLoader
   ) {
     super(schema);
 
-    this.predefineds = loader.list();
+    this.presets = loader.list();
 
-    this.selectedPredefineds = this.findSelecteds(this.predefineds, [
-      ...((this.schema.enum || []) as string[]),
-      ...this.seperatePattern(this.schema.pattern || "")
+    const selectedEnumValues = (this.schema.enum || []) as string[];
+    const selectedPatternValues = this.seperatePattern(this.schema.pattern || "");
+    this.selectedPresets = this.findSelecteds(this.presets, [
+      ...selectedEnumValues,
+      ...selectedPatternValues
     ]);
 
-    this.onOptionSelected(this.selectedPredefineds);
-
-    // this.selectedEnums = this.getOptions(
-    //   this.predefineds,
-    //   PredefinedOptionType.ENUM
-    // ) as PredefinedEnum[];
-    // this.selectedPatterns = this.getOptions(
-    //   this.predefineds,
-    //   PredefinedOptionType.PATTERN
-    // ) as PredefinedPattern[];
-
-    // this.enumOptions = loader.list(PredefinedOptionType.ENUM);
-    // this.patternOptions = loader.list(PredefinedOptionType.PATTERN);
-
-    // if (this.schema.enum) {
-    //   this.isEnumEnabled = true;
-    //   this.selectedEnums = this.findSelecteds(this.enumOptions, this.schema.enum as string[]);
-    // }
-    // if (this.schema.pattern) {
-    //   this.isPatternEnabled = true;
-    //   this.selectedPatterns = this.findSelecteds(
-    //     this.patternOptions,
-    //     this.seperatePattern(this.schema.pattern)
-    //   );
-    // }
+    this.onPresetSelected(this.selectedPresets);
   }
 
   initEnum() {
@@ -80,37 +58,33 @@ export class StringSchemaComponent extends SchemaComponent {
   removeEnum() {
     this.isEnumEnabled = false;
     this.selectedEnums = [];
-    this.selectedPredefineds = this.selectedPredefineds.filter(
-      p => p.type != PredefinedOptionType.ENUM
-    );
+    this.selectedPresets = this.selectedPresets.filter(p => p.type != PresetType.ENUM);
     delete this.schema.enum;
   }
 
   removePattern() {
     this.isPatternEnabled = false;
     this.selectedPatterns = [];
-    this.selectedPredefineds = this.selectedPredefineds.filter(
-      p => p.type != PredefinedOptionType.PATTERN
-    );
+    this.selectedPresets = this.selectedPresets.filter(p => p.type != PresetType.PATTERN);
     delete this.schema.pattern;
   }
 
-  onOptionSelected(options: PredefinedOption[]) {
-    const enums = this.getOptions(options, PredefinedOptionType.ENUM);
-    const patterns = this.getOptions(options, PredefinedOptionType.PATTERN);
+  onPresetSelected(presets: Preset[]) {
+    const enums = this.filterPresets(presets, PresetType.ENUM);
+    const patterns = this.filterPresets(presets, PresetType.PATTERN);
 
-    this.onEnumOptionSelected(enums);
-    this.onPatternOptionSelected(patterns);
+    this.onEnumPresetSelected(enums);
+    this.onPatternPresetSelected(patterns);
   }
 
-  onEnumOptionSelected(enums: PredefinedEnum[]) {
-    const addedValues = this.getAddedOptionValues(this.selectedEnums, enums);
-    if (addedValues.length) {
+  onEnumPresetSelected(enums: EnumPreset[]) {
+    const insertedValues = this.getInsertedValues(this.selectedEnums, enums);
+    if (insertedValues.length) {
       this.initEnum();
-      this.schema.enum = this.schema.enum.concat(...addedValues);
+      this.schema.enum = this.schema.enum.concat(...insertedValues);
     }
 
-    const removedValues = this.getRemovedOptionValues(this.selectedEnums, enums);
+    const removedValues = this.getRemovedValues(this.selectedEnums, enums);
     if (removedValues.length) {
       this.schema.enum = (this.schema.enum as string[]).filter(e => !removedValues.includes(e));
     }
@@ -120,8 +94,8 @@ export class StringSchemaComponent extends SchemaComponent {
     this.isEnumEnabled = !!(this.schema.enum && this.schema.enum.length);
   }
 
-  onPatternOptionSelected(patterns: PredefinedPattern[]) {
-    const addedValues = this.getAddedOptionValues(this.selectedPatterns, patterns);
+  onPatternPresetSelected(patterns: PatternPreset[]) {
+    const addedValues = this.getInsertedValues(this.selectedPatterns, patterns);
     if (addedValues.length) {
       this.initPattern();
       this.schema.pattern = this.joinPatterns([
@@ -130,7 +104,7 @@ export class StringSchemaComponent extends SchemaComponent {
       ]);
     }
 
-    const removedValues = this.getRemovedOptionValues(this.selectedPatterns, patterns);
+    const removedValues = this.getRemovedValues(this.selectedPatterns, patterns);
     if (removedValues.length) {
       this.schema.pattern = this.joinPatterns(
         this.seperatePattern(this.schema.pattern).filter(p => !removedValues.includes(p))
@@ -142,28 +116,25 @@ export class StringSchemaComponent extends SchemaComponent {
     this.isPatternEnabled = !!(this.schema.pattern && this.schema.pattern.length);
   }
 
-  getAddedOptionValues(previos: PredefinedOption[], current: PredefinedOption[]): string[] {
+  getInsertedValues(previos: Preset[], current: Preset[]): string[] {
     return [].concat(
       ...current.filter(c => !previos.some(p => p.title == c.title)).map(e => e.values)
     );
   }
 
-  getRemovedOptionValues(previos: PredefinedOption[], current: PredefinedOption[]): string[] {
+  getRemovedValues(previos: Preset[], current: Preset[]): string[] {
     return [].concat(
       ...previos.filter(p => !current.some(c => c.title == p.title)).map(e => e.values)
     );
   }
 
-  findSelecteds(options: PredefinedEnum[], values: string[]): PredefinedEnum[];
-  findSelecteds(options: PredefinedPattern[], values: string[]): PredefinedPattern[];
-  findSelecteds(options: PredefinedOption[], values: string[]): PredefinedOption[];
-  findSelecteds(options: PredefinedOption[], values: string[]) {
+  findSelecteds(options: Preset[], values: string[]): Preset[] {
     return options.filter(o => o.values.every(val => values.includes(val)));
   }
 
-  getOptions(options: PredefinedOption[], type: PredefinedOptionType.ENUM): PredefinedEnum[];
-  getOptions(options: PredefinedOption[], type: PredefinedOptionType.PATTERN): PredefinedPattern[];
-  getOptions(options: PredefinedOption[], type: PredefinedOptionType) {
+  filterPresets(options: Preset[], type: PresetType.ENUM): EnumPreset[];
+  filterPresets(options: Preset[], type: PresetType.PATTERN): PatternPreset[];
+  filterPresets(options: Preset[], type: PresetType) {
     return options.filter(o => o.type == type);
   }
 
@@ -174,8 +145,4 @@ export class StringSchemaComponent extends SchemaComponent {
   private joinPatterns(patterns: string[]) {
     return patterns.filter(p => p != "").join(this.PATTERN_SEPERATOR);
   }
-
-  // getValuesOfOptions(options: PredefinedOption[]): string[] {
-  //   return [].concat(...options.map(o => o.values));
-  // }
 }

@@ -10,11 +10,7 @@ import {
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {EMPTY_INPUT_SCHEMA, InputSchema, INPUT_SCHEMA} from "../input";
 import {InputResolver} from "../input.resolver";
-import {
-  PredefinedOptionLoader,
-  predefinedStringOptions,
-  STRING_PREDEFINED_OPTION_LOADER
-} from "./predefineds";
+import {PresetLoader, presets, STRING_PRESET_LOADER} from "./predefineds";
 
 @Component({
   selector: "[inputSchemaPlacer][ngModel], input-schema-placer",
@@ -106,10 +102,10 @@ export class InputSchemaPlacer implements OnChanges, ControlValueAccessor {
             useValue: this.schema
           },
           {
-            provide: STRING_PREDEFINED_OPTION_LOADER,
+            provide: STRING_PRESET_LOADER,
             useFactory: () => {
-              const loader = new PredefinedOptionLoader();
-              loader.add(predefinedStringOptions);
+              const loader = new PresetLoader();
+              loader.add(presets);
               return loader;
             }
           }

@@ -13,13 +13,13 @@
 <mat-form-field>
   <mat-label>Presets</mat-label>
   <mat-select
-    *ngIf="predefineds.length"
-    [(ngModel)]="selectedPredefineds"
-    (ngModelChange)="onOptionSelected($event)"
+    *ngIf="presets.length"
+    [(ngModel)]="selectedPresets"
+    (ngModelChange)="onPresetSelected($event)"
     multiple
   >
-    <mat-option class="mat-accent" *ngFor="let predefined of predefineds" [value]="predefined">
-      {{ predefined.title | titlecase }}
+    <mat-option class="mat-accent" *ngFor="let preset of presets" [value]="preset">
+      {{ preset.title | titlecase }}
     </mat-option>
   </mat-select>
 </mat-form-field>
