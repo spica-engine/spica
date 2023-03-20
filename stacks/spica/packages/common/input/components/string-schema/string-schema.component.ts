@@ -92,15 +92,19 @@ export class StringSchemaComponent extends SchemaComponent {
     this.selectedEnums = enums;
 
     this.isEnumEnabled = !!(this.schema.enum && this.schema.enum.length);
+
+    if (!this.isEnumEnabled) {
+      this.removeEnum();
+    }
   }
 
   onPatternPresetSelected(patterns: PatternPreset[]) {
-    const addedValues = this.getInsertedValues(this.selectedPatterns, patterns);
-    if (addedValues.length) {
+    const insertedValues = this.getInsertedValues(this.selectedPatterns, patterns);
+    if (insertedValues.length) {
       this.initPattern();
       this.schema.pattern = this.joinPatterns([
         ...this.seperatePattern(this.schema.pattern),
-        ...addedValues
+        ...insertedValues
       ]);
     }
 
@@ -114,6 +118,10 @@ export class StringSchemaComponent extends SchemaComponent {
     this.selectedPatterns = patterns;
 
     this.isPatternEnabled = !!(this.schema.pattern && this.schema.pattern.length);
+
+    if (!this.isPatternEnabled) {
+      this.removePattern();
+    }
   }
 
   getInsertedValues(previos: Preset[], current: Preset[]): string[] {
