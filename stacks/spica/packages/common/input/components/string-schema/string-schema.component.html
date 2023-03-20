@@ -14,7 +14,7 @@
   <mat-label>Presets</mat-label>
   <mat-select
     *ngIf="predefineds.length"
-    [ngModel]="selectedPredefineds"
+    [(ngModel)]="selectedPredefineds"
     (ngModelChange)="onOptionSelected($event)"
     multiple
   >
@@ -30,23 +30,7 @@
   (ngModelChange)="$event ? initEnum() : removeEnum()"
   >Make field enumerated</mat-slide-toggle
 >
-<ng-container *ngIf="isEnum.checked">
-  <!-- <mat-form-field>
-    <mat-label>Options</mat-label>
-    <mat-select
-      *ngIf="enumOptions.length"
-      [ngModel]="selectedEnums"
-      (ngModelChange)="onEnumOptionSelected($event)"
-      multiple
-    >
-      <mat-option class="mat-accent" *ngFor="let enum of enumOptions" [value]="enum">
-        {{ enum.title | titlecase }}
-      </mat-option>
-      <mat-divider></mat-divider>
-    </mat-select>
-  </mat-form-field> -->
-  <enum-schema></enum-schema>
-</ng-container>
+<enum-schema *ngIf="isEnum.checked"></enum-schema>
 
 <mat-slide-toggle
   #hasPattern
@@ -54,24 +38,6 @@
   (ngModelChange)="$event ? initPattern() : removePattern()"
   >Define pattern</mat-slide-toggle
 >
-<ng-container *ngIf="hasPattern.checked">
-  <!-- <mat-form-field>
-    <mat-label>Options</mat-label>
-    <mat-select
-      *ngIf="patternOptions.length"
-      [ngModel]="selectedPatterns"
-      (ngModelChange)="onPatternOptionSelected($event)"
-      multiple
-    >
-      <mat-option class="mat-accent" *ngFor="let pattern of patternOptions" [value]="pattern">
-        {{ pattern.title | titlecase }}
-      </mat-option>
-      <mat-divider></mat-divider>
-    </mat-select>
-  </mat-form-field> -->
-</ng-container>
-<ng-container *ngIf="hasPattern.checked">
-  <mat-form-field>
-    <input matInput placeholder="Regular expression" type="text" [(ngModel)]="schema.pattern" />
-  </mat-form-field>
-</ng-container>
+<mat-form-field *ngIf="hasPattern.checked">
+  <input matInput placeholder="Regular expression" type="text" [(ngModel)]="schema.pattern" />
+</mat-form-field>

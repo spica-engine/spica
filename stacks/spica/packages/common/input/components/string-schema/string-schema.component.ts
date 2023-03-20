@@ -36,14 +36,22 @@ export class StringSchemaComponent extends SchemaComponent {
     super(schema);
 
     this.predefineds = loader.list();
-    this.selectedEnums = this.getOptions(
-      this.predefineds,
-      PredefinedOptionType.ENUM
-    ) as PredefinedEnum[];
-    this.selectedPatterns = this.getOptions(
-      this.predefineds,
-      PredefinedOptionType.PATTERN
-    ) as PredefinedPattern[];
+
+    this.selectedPredefineds = this.findSelecteds(this.predefineds, [
+      ...((this.schema.enum || []) as string[]),
+      ...this.seperatePattern(this.schema.pattern || "")
+    ]);
+
+    this.onOptionSelected(this.selectedPredefineds);
+
+    // this.selectedEnums = this.getOptions(
+    //   this.predefineds,
+    //   PredefinedOptionType.ENUM
+    // ) as PredefinedEnum[];
+    // this.selectedPatterns = this.getOptions(
+    //   this.predefineds,
+    //   PredefinedOptionType.PATTERN
+    // ) as PredefinedPattern[];
 
     // this.enumOptions = loader.list(PredefinedOptionType.ENUM);
     // this.patternOptions = loader.list(PredefinedOptionType.PATTERN);
@@ -97,33 +105,41 @@ export class StringSchemaComponent extends SchemaComponent {
 
   onEnumOptionSelected(enums: PredefinedEnum[]) {
     const addedValues = this.getAddedOptionValues(this.selectedEnums, enums);
-    const removedValues = this.getRemovedOptionValues(this.selectedEnums, enums);
+    if (addedValues.length) {
+      this.initEnum();
+      this.schema.enum = this.schema.enum.concat(...addedValues);
+    }
 
-    this.initEnum();
-    this.schema.enum = this.schema.enum.concat(...addedValues);
-    this.schema.enum = (this.schema.enum as string[]).filter(e => !removedValues.includes(e));
+    const removedValues = this.getRemovedOptionValues(this.selectedEnums, enums);
+    if (removedValues.length) {
+      this.schema.enum = (this.schema.enum as string[]).filter(e => !removedValues.includes(e));
+    }
 
     this.selectedEnums = enums;
 
-    this.isEnumEnabled = !!this.schema.enum.length;
+    this.isEnumEnabled = !!(this.schema.enum && this.schema.enum.length);
   }
 
   onPatternOptionSelected(patterns: PredefinedPattern[]) {
     const addedValues = this.getAddedOptionValues(this.selectedPatterns, patterns);
-    const removedValues = this.getRemovedOptionValues(this.selectedPatterns, patterns);
+    if (addedValues.length) {
+      this.initPattern();
+      this.schema.pattern = this.joinPatterns([
+        ...this.seperatePattern(this.schema.pattern),
+        ...addedValues
+      ]);
+    }
 
-    this.initPattern();
-    this.schema.pattern = this.joinPatterns([
-      ...this.seperatePattern(this.schema.pattern),
-      ...addedValues
-    ]);
-    this.schema.pattern = this.joinPatterns(
-      this.seperatePattern(this.schema.pattern).filter(p => !removedValues.includes(p))
-    );
+    const removedValues = this.getRemovedOptionValues(this.selectedPatterns, patterns);
+    if (removedValues.length) {
+      this.schema.pattern = this.joinPatterns(
+        this.seperatePattern(this.schema.pattern).filter(p => !removedValues.includes(p))
+      );
+    }
 
     this.selectedPatterns = patterns;
 
-    this.isPatternEnabled = !!this.schema.pattern.length;
+    this.isPatternEnabled = !!(this.schema.pattern && this.schema.pattern.length);
   }
 
   getAddedOptionValues(previos: PredefinedOption[], current: PredefinedOption[]): string[] {
@@ -140,6 +156,7 @@ export class StringSchemaComponent extends SchemaComponent {
 
   findSelecteds(options: PredefinedEnum[], values: string[]): PredefinedEnum[];
   findSelecteds(options: PredefinedPattern[], values: string[]): PredefinedPattern[];
+  findSelecteds(options: PredefinedOption[], values: string[]): PredefinedOption[];
   findSelecteds(options: PredefinedOption[], values: string[]) {
     return options.filter(o => o.values.every(val => values.includes(val)));
   }
@@ -157,4 +174,8 @@ export class StringSchemaComponent extends SchemaComponent {
   private joinPatterns(patterns: string[]) {
     return patterns.filter(p => p != "").join(this.PATTERN_SEPERATOR);
   }
+
+  // getValuesOfOptions(options: PredefinedOption[]): string[] {
+  //   return [].concat(...options.map(o => o.values));
+  // }
 }
