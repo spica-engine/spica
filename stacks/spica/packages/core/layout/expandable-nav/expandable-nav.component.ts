@@ -20,10 +20,10 @@ export class ExpandableNavComponent implements OnInit {
 
   ngOnInit(): void {
     this.routes$.subscribe(res => {
-      this.routes = this.categoryService.groupCategoryByKey(res, "resource_category");
+      this.routes = this.categoryService.categorizeRoutesByKey(res, "resource_category");
     });
   }
-  sortedByCategory(data) {
+  sortByCategory(data) {
     const storedCategories =
       localStorage.getItem(this.currentCategory.value.category + "-category-order") || "[]";
     let categoryOrders = JSON.parse(storedCategories);

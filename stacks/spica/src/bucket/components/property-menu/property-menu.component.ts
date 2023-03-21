@@ -74,7 +74,7 @@ export class PropertyMenuComponent implements OnInit {
       localStorage.getItem(`${this.schema._id}-displayedProperties`)
     );
 
-    const fromIndex = cachedDisplayedProperties.indexOf(field); // 👉️ 0
+    const fromIndex = cachedDisplayedProperties.indexOf(field);
     const element = cachedDisplayedProperties.splice(fromIndex, 1)[0];
 
     cachedDisplayedProperties.splice(fromIndex + value, 0, element);

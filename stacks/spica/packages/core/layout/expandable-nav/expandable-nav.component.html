@@ -1,4 +1,4 @@
-<ng-container *ngFor="let routes of sortedByCategory(routes | keyvalue)">
+<ng-container *ngFor="let routes of sortByCategory(routes | keyvalue)">
   <ng-container *ngIf="routes.key != categoryService.EMPTY_CATEGORY_KEYWORD">
     <mat-accordion>
       <mat-expansion-panel

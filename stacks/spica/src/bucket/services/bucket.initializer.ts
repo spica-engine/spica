@@ -7,7 +7,7 @@ import {BucketService} from "./bucket.service";
 
 @Injectable()
 export class BucketInitializer {
-  categoryStorageKey: string = RouteCategory.Content;
+  categoryStorageKey = RouteCategory.Content;
   @Output() onBucketCategoryChange = new EventEmitter<
     {
       id: string;

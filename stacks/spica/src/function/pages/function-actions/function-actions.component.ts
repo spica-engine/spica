@@ -38,10 +38,6 @@ export class FunctionActionsComponent implements OnInit {
       });
   }
 
-  updateIndexes(event) {
-    event.forEach(e => this.functionService.updateOne(e.entry_id, e.changes).toPromise());
-  }
-
   editFn() {
     this.dialog.open(ConfigurationComponent, {
       data: {
@@ -54,6 +50,7 @@ export class FunctionActionsComponent implements OnInit {
   delete(id: string) {
     const index = this.functions.findIndex(b => b._id == id);
 
+    // its copy pasted from bucket, fix the bucket keywords or move this method to the common package
     const currentBucketRoute = this.router.routerState.snapshot.url.split("/")[2];
     let target = currentBucketRoute;
 

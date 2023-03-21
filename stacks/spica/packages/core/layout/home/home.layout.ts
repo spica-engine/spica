@@ -81,7 +81,7 @@ export class HomeLayoutComponent implements OnInit {
         if (!this.currentCategory.value) {
           this.currentCategory.next(categories[0]);
           setTimeout(() => {
-            this.setDrawer(categories[0]);
+            this.drawCategory(categories[0]);
           }, 200);
         }
 
@@ -89,7 +89,7 @@ export class HomeLayoutComponent implements OnInit {
       })
     );
     this.routes$ = this.currentCategory.pipe(
-      tap(currentCategory => this.setDrawer(currentCategory)),
+      tap(currentCategory => this.drawCategory(currentCategory)),
       tap(currentCategory => (this.currentCategoryName = currentCategory.category)),
       switchMap(currentCategory => {
         if (!this.expanded) {
@@ -121,7 +121,7 @@ export class HomeLayoutComponent implements OnInit {
     return this.components.filter(component => component.position == position);
   }
 
-  setDrawer(currentCategory) {
+  drawCategory(currentCategory) {
     if (
       this.placeholder &&
       currentCategory.drawer &&

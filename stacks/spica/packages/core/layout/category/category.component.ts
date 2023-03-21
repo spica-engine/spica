@@ -35,7 +35,7 @@ export class CategoryComponent implements OnInit {
   categoryModalMode: string;
   newCategory;
   dropListIds: string[];
-  categorizedSchemas: {};
+  categorizedSchemas: {[propValue: string]: Route[]};
   subs: Subscription;
 
   ngOnInit(): void {
@@ -59,8 +59,11 @@ export class CategoryComponent implements OnInit {
     this.subs.unsubscribe();
   }
 
-  setSchemaByCategory(data) {
-    this.categorizedSchemas = this.categoryService.groupCategoryByKey(data, "resource_category");
+  setSchemaByCategory(routes: Route[]) {
+    this.categorizedSchemas = this.categoryService.categorizeRoutesByKey(
+      routes,
+      "resource_category"
+    );
 
     //create a drop list for each category
     this.dropListIds = Object.keys(this.categorizedSchemas)
@@ -152,7 +155,8 @@ export class CategoryComponent implements OnInit {
           category: null,
           order:
             this.routes.length -
-            this.categorizedSchemas[this.categoryService.EMPTY_CATEGORY_DROP_ID] +
+            // ???
+            (this.categorizedSchemas[this.categoryService.EMPTY_CATEGORY_DROP_ID] as any) +
             i
         }
       });
@@ -263,20 +267,20 @@ export class CategoryComponent implements OnInit {
     );
   }
 
-  getStoredCategories() {
+  getStoredCategories(): {name: string; order: number}[] {
     const storedCategories =
       localStorage.getItem(this.categoryStorageKey + "-category-order") || "[]";
     return JSON.parse(storedCategories);
   }
 
-  setCategoryOrderFromStorage(data) {
+  setCategoryOrderFromStorage(data: string[]) {
     const categoryOrders = this.getStoredCategories();
     return data
-      .map(element => {
-        const findedElement = categoryOrders.find(item => item.name == element) || {order: 0};
+      .map(name => {
+        const {order} = categoryOrders.find(item => item.name == name) || {order: 0};
         return {
-          name: element,
-          order: findedElement.order
+          name,
+          order
         };
       })
       .sort((item1, item2) => item1.order - item2.order);

@@ -1,4 +1,4 @@
-import {InjectionToken} from "@angular/core";
+import {EventEmitter, InjectionToken} from "@angular/core";
 import {Observable} from "rxjs";
 
 import {ComponentType} from "@angular/cdk/overlay";
@@ -41,7 +41,17 @@ export type RouteCategoryType = {
   icon: string;
   index: number;
   drawer?: ComponentType<any>;
-  props?: {};
+  props?: {
+    moreTemplate?: ComponentType<any>;
+    onChangedOrder?: EventEmitter<
+      {
+        id: string;
+        changes: object;
+      }[]
+    >;
+    // Check this key usage, probably its redundant
+    categoryStorageKey?: RouteCategory;
+  };
   children: {
     name: RouteCategory;
     icon: string;
@@ -50,16 +60,7 @@ export type RouteCategoryType = {
 
 export const routeCategories: Map<RouteCategory, RouteCategoryType> = new Map<
   RouteCategory,
-  {
-    icon: string;
-    index: number;
-    drawer?: ComponentType<any>;
-    props?: any;
-    children: {
-      name: RouteCategory;
-      icon: string;
-    };
-  }
+  RouteCategoryType
 >([
   [
     RouteCategory.Primary,
@@ -67,7 +68,6 @@ export const routeCategories: Map<RouteCategory, RouteCategoryType> = new Map<
       icon: "stars",
       index: 0,
       drawer: ExpandableNavComponent,
-      props: {},
       children: {name: RouteCategory.Primary_Sub, icon: "list"}
     }
   ],
@@ -78,7 +78,6 @@ export const routeCategories: Map<RouteCategory, RouteCategoryType> = new Map<
       icon: "dashboard",
       index: 1,
       drawer: ExpandableNavComponent,
-      props: {},
       children: {name: RouteCategory.Dashboard_Sub, icon: "list"}
     }
   ],
@@ -97,7 +96,6 @@ export const routeCategories: Map<RouteCategory, RouteCategoryType> = new Map<
       icon: "supervisor_account",
       index: 3,
       drawer: ExpandableNavComponent,
-      props: {},
       children: {name: RouteCategory.System_Sub, icon: "list"}
     }
   ],
@@ -116,7 +114,6 @@ export const routeCategories: Map<RouteCategory, RouteCategoryType> = new Map<
       icon: "webhook",
       index: 5,
       drawer: ExpandableNavComponent,
-      props: {},
       children: {name: RouteCategory.Webhook_Sub, icon: "bug_report"}
     }
   ]

@@ -1,4 +1,5 @@
 import {Injectable} from "@angular/core";
+import {Route} from "@spica-client/core";
 
 @Injectable({
   providedIn: "root"
@@ -9,8 +10,8 @@ export class CategoryService {
   public EMPTY_CATEGORY_DROP_ID: string = "cdk-drop-list-0" + this.EMPTY_CATEGORY_NUMBER;
   constructor() {}
 
-  groupCategoryByKey(array, key) {
-    return array.reduce((previousValue, currentValue) => {
+  categorizeRoutesByKey(routes: Route[], key: string): {[propValue: string]: Route[]} {
+    return routes.reduce((previousValue, currentValue) => {
       let schemaCategory = currentValue[key];
 
       if (!schemaCategory) {
