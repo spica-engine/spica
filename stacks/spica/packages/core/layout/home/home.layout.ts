@@ -135,7 +135,7 @@ export class HomeLayoutComponent implements OnInit {
       component.instance["routes$"] = this.routes$;
       component.instance["currentCategory"] = this.currentCategory;
 
-      Object.keys(currentCategory.props).forEach(key => {
+      Object.keys(currentCategory.props || {}).forEach(key => {
         component.instance[key] = currentCategory.props[key];
       });
     }
