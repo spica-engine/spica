@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import {Route} from "@spica-client/core";
-import {CategorizedRoutes} from "./interface"
+import {CategorizedRoutes, CategoryOrder} from "./interface";
 
 @Injectable({
   providedIn: "root"
@@ -24,5 +24,24 @@ export class CategoryService {
 
       return previousValue;
     }, {});
+  }
+
+  saveCategoryOrders(categoryStorageKey: string, categories: CategoryOrder[]) {
+    localStorage.setItem(
+      categoryStorageKey + "-category-order",
+      JSON.stringify(
+        categories.map((item, index) => {
+          return {
+            name: item.name,
+            order: index
+          };
+        })
+      )
+    );
+  }
+
+  readCategoryOrders(categoryStorageKey: string): CategoryOrder[] {
+    const storedCategories = localStorage.getItem(categoryStorageKey + "-category-order") || "[]";
+    return JSON.parse(storedCategories);
   }
 }

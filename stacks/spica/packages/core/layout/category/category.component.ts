@@ -13,7 +13,7 @@ import {MatDialog, MatDialogRef} from "@angular/material/dialog";
 import {Route} from "@spica-client/core/route";
 import {BehaviorSubject, Observable, Subscription} from "rxjs";
 import {CategoryService} from "./category.service";
-import {CategorizedRoutes} from "./interface";
+import {CategorizedRoutes, CategoryOrder} from "./interface";
 
 @Component({
   selector: "category",
@@ -32,7 +32,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
   routes: Route[] = [];
 
-  categories: {name?: string; order?: number}[] = [];
+  categories: CategoryOrder[] = [];
   categoryExpandStatus: {[propValue: string]: boolean} = {};
 
   editCategoryModalRef: MatDialogRef<any>;
@@ -78,8 +78,8 @@ export class CategoryComponent implements OnInit, OnDestroy {
     }
     this.dropListIds.push(this.categoryService.EMPTY_CATEGORY_DROP_ID);
 
-    if (!localStorage.getItem(this.categoryStorageKey + "-category-order")) {
-      this.saveCategoryOrders();
+    if (!this.categoryService.readCategoryOrders(this.categoryStorageKey).length) {
+      this.categoryService.saveCategoryOrders(this.categoryStorageKey, this.categories);
     }
   }
 
@@ -92,7 +92,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
       const existCategory = this.categories.find(category => category.name == this.newCategory);
       if (!existCategory) {
         this.categories.push({name: this.newCategory, order: this.categories.length});
-        this.saveCategoryOrders();
+        this.categoryService.saveCategoryOrders(this.categoryStorageKey, this.categories);
       }
 
       this.onChangedOrder.emit([
@@ -121,7 +121,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
         changedItems.push({id: route.id, changes: {category: this.newCategory}});
       });
 
-      this.saveCategoryOrders();
+      this.categoryService.saveCategoryOrders(this.categoryStorageKey, this.categories);
       this.onChangedOrder.emit(changedItems);
 
       this.categorizedRoutes[this.newCategory] = this.categorizedRoutes[oldName];
@@ -179,7 +179,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
     this.categories = this.categories.filter(category => category.name != name);
 
-    this.saveCategoryOrders();
+    this.categoryService.saveCategoryOrders(this.categoryStorageKey, this.categories);
     this.onChangedOrder.emit(changedItems);
   }
 
@@ -251,31 +251,11 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
   changeCategoryOrder(previousIndex, currentIndex) {
     moveItemInArray(this.categories, previousIndex, currentIndex);
-    this.saveCategoryOrders();
-  }
-
-  saveCategoryOrders() {
-    localStorage.setItem(
-      this.categoryStorageKey + "-category-order",
-      JSON.stringify(
-        this.categories.map((item, index) => {
-          return {
-            name: item.name,
-            order: index
-          };
-        })
-      )
-    );
-  }
-
-  readCategoryOrders(): {name: string; order: number}[] {
-    const storedCategories =
-      localStorage.getItem(this.categoryStorageKey + "-category-order") || "[]";
-    return JSON.parse(storedCategories);
+    this.categoryService.saveCategoryOrders(this.categoryStorageKey, this.categories);
   }
 
   fillCategoryOrders(data: string[]) {
-    const categoryOrders = this.readCategoryOrders();
+    const categoryOrders = this.categoryService.readCategoryOrders(this.categoryStorageKey);
     return data
       .map(name => {
         const {order} = categoryOrders.find(item => item.name == name) || {order: 0};

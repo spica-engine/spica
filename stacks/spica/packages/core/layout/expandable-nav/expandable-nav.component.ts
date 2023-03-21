@@ -2,9 +2,10 @@ import {Component, Input, OnInit} from "@angular/core";
 import {Route} from "@spica-client/core/route";
 import {BehaviorSubject, Observable} from "rxjs";
 import {CategoryService} from "../category/category.service";
+import {CategorizedRoutes} from "../category/interface";
 
 @Component({
-  selector: "app-expandable-nav",
+  selector: "expandable-nav",
   templateUrl: "./expandable-nav.component.html",
   styleUrls: ["./expandable-nav.component.scss"]
 })
@@ -13,9 +14,7 @@ export class ExpandableNavComponent implements OnInit {
 
   @Input() routes$: Observable<Route[]>;
   @Input() currentCategory: BehaviorSubject<any>;
-  routes: {
-    [propValue: string]: Route[];
-  } = {};
+  routes: CategorizedRoutes = {};
   categoryExpandStatus: {[propValue: string]: boolean} = {};
 
   ngOnInit(): void {
@@ -23,7 +22,8 @@ export class ExpandableNavComponent implements OnInit {
       this.routes = this.categoryService.categorizeRoutesByKey(res, "resource_category");
     });
   }
-  sortByCategory(data) {
+
+  sortByCategory(categoryAndRoutes: {key: string; value: Route[]}[]) {
     const storedCategories =
       localStorage.getItem(this.currentCategory.value.category + "-category-order") || "[]";
     let categoryOrders = JSON.parse(storedCategories);
@@ -38,9 +38,12 @@ export class ExpandableNavComponent implements OnInit {
       });
     else emptyCategory.order = this.categoryService.EMPTY_CATEGORY_NUMBER;
 
-    return data.sort((a, b) => {
-      const firstOrder = categoryOrders.find(category => category.name == a.key) || {order: 0};
-      const secondOrder = categoryOrders.find(category => category.name == b.key) || {order: 0};
+    return categoryAndRoutes.sort((first, second) => {
+      const def = {order: 0};
+
+      const firstOrder = categoryOrders.find(category => category.name == first.key) || def;
+      const secondOrder = categoryOrders.find(category => category.name == second.key) || def;
+
       return firstOrder.order - secondOrder.order;
     });
   }
