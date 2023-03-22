@@ -16,11 +16,11 @@ import {CategoryService, CategorizedRoutes, CategoryOrder} from "@spica-client/c
 import {ViewChange} from "@spica-client/core/route/route";
 
 @Component({
-  selector: "advanced-lister",
+  selector: "advanced-drawer",
   templateUrl: "./advanced.component.html",
   styleUrls: ["./advanced.component.scss"]
 })
-export class AdvancedRouteListerComponent implements OnInit, OnDestroy {
+export class AdvancedDrawerComponent implements OnInit, OnDestroy {
   constructor(private dialog: MatDialog, public categoryService: CategoryService) {}
 
   @Input() categoryStorageKey: string;

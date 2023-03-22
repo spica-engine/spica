@@ -3,7 +3,7 @@ import {Observable} from "rxjs";
 
 import {ComponentType} from "@angular/cdk/overlay";
 import {AdvancedRouteListerComponent} from "@spica-client/core/layout/route/listers/advanced/advanced.component";
-import {BasicRouteListerComponent} from "@spica-client/core/layout/route/listers/basic/basic.component";
+import {BasicDrawerComponent} from "@spica-client/core/layout/route/drawers/basic/basic.component";
 
 export enum RouteCategoryType {
   Dashboard = "Dashboard",
@@ -70,7 +70,7 @@ export const routeCategories: Map<RouteCategoryType, RouteCategorySpec> = new Ma
     {
       icon: "stars",
       index: 0,
-      lister: BasicRouteListerComponent,
+      lister: BasicDrawerComponent,
       children: {name: RouteCategoryType.Primary_Sub, icon: "list"}
     }
   ],
@@ -80,7 +80,7 @@ export const routeCategories: Map<RouteCategoryType, RouteCategorySpec> = new Ma
     {
       icon: "dashboard",
       index: 1,
-      lister: BasicRouteListerComponent,
+      lister: BasicDrawerComponent,
       children: {name: RouteCategoryType.Dashboard_Sub, icon: "list"}
     }
   ],
@@ -98,7 +98,7 @@ export const routeCategories: Map<RouteCategoryType, RouteCategorySpec> = new Ma
     {
       icon: "supervisor_account",
       index: 3,
-      lister: BasicRouteListerComponent,
+      lister: BasicDrawerComponent,
       children: {name: RouteCategoryType.System_Sub, icon: "list"}
     }
   ],
@@ -116,7 +116,7 @@ export const routeCategories: Map<RouteCategoryType, RouteCategorySpec> = new Ma
     {
       icon: "webhook",
       index: 5,
-      lister: BasicRouteListerComponent,
+      lister: BasicDrawerComponent,
       children: {name: RouteCategoryType.Webhook_Sub, icon: "bug_report"}
     }
   ]

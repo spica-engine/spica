@@ -29,8 +29,8 @@ import {MAT_FORM_FIELD_DEFAULT_OPTIONS} from "@angular/material/form-field";
 import {MatMenuModule} from "@angular/material/menu";
 import {DragDropModule} from "@angular/cdk/drag-drop";
 import {RouteItemComponent} from "./route/route-item/route-item.component";
-import {BasicRouteListerComponent} from "./route/listers/basic/basic.component";
-import {AdvancedRouteListerComponent} from "./route/listers/advanced/advanced.component";
+import {BasicDrawerComponent} from "./route/drawers/basic/basic.component";
+import {AdvancedDrawerComponent} from "./route/drawers/advanced/advanced.component";
 import {MatInputModule} from "@angular/material/input";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {FormsModule} from "@angular/forms";
@@ -74,23 +74,23 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     SnackbarComponent,
     ToolbarActionDirective,
     RouteItemComponent,
-    BasicRouteListerComponent,
-    AdvancedRouteListerComponent
+    BasicDrawerComponent,
+    AdvancedDrawerComponent
   ],
   exports: [
     LayoutRouterOutlet,
     RouterModule,
     RouteItemComponent,
-    BasicRouteListerComponent,
-    AdvancedRouteListerComponent
+    BasicDrawerComponent,
+    AdvancedDrawerComponent
   ],
   entryComponents: [
     HomeLayoutComponent,
     SchemeSwitcherComponent,
     SnackbarComponent,
     RouteItemComponent,
-    BasicRouteListerComponent,
-    AdvancedRouteListerComponent
+    BasicDrawerComponent,
+    AdvancedDrawerComponent
   ]
 })
 export class LayoutModule {

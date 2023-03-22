@@ -4,10 +4,10 @@ import {BehaviorSubject, Observable} from "rxjs";
 import {CategoryService, CategorizedRoutes} from "@spica-client/core/route/category";
 
 @Component({
-  selector: "basic-lister",
+  selector: "basic-drawer",
   templateUrl: "./basic.component.html"
 })
-export class BasicRouteListerComponent implements OnInit {
+export class BasicDrawerComponent implements OnInit {
   constructor(public categoryService: CategoryService) {}
 
   @Input() routes$: Observable<Route[]>;
