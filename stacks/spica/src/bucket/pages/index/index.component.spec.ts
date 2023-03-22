@@ -41,6 +41,8 @@ import {LayoutModule} from "@spica-client/core/layout";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatInputModule} from "@angular/material/input";
 import {PropertyMenuComponent} from "../../components/property-menu/property-menu.component";
+import {BucketRoutingModule} from "../../bucket-routing.module";
+import {StoreModule} from "@ngrx/store";
 
 describe("IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
@@ -105,7 +107,8 @@ describe("IndexComponent", () => {
         NoopAnimationsModule,
         LayoutModule,
         MatFormFieldModule,
-        MatInputModule
+        MatInputModule,
+        StoreModule.forRoot({})
       ],
 
       providers: [
@@ -426,7 +429,7 @@ describe("IndexComponent", () => {
       const cell = fixture.debugElement.nativeElement.querySelector(
         "table[mat-table] tr[mat-row] td[mat-cell].mat-column-test span"
       );
-      expect(headerCells[2].textContent).toBe(" test arrow_drop_down");
+      expect(headerCells[2].textContent).toBe("format_quote test arrow_drop_down");
       expect(headerCells[3].textContent).toBe("add New field");
       expect(cell.textContent).toBe("123");
     });
@@ -824,8 +827,17 @@ describe("IndexComponent", () => {
 
     it("should sort ascending", () => {
       fixture.debugElement.nativeElement
-        .querySelector("table[mat-table] th[mat-header-cell].mat-column-test")
+        .querySelector("table[mat-table] th[mat-header-cell].mat-column-test button")
         .click();
+
+      fixture.detectChanges();
+
+      const sortButton = document.body.querySelector(
+        ".mat-menu-content button:nth-of-type(2)"
+      ) as HTMLButtonElement;
+      sortButton.click();
+
+      fixture.detectChanges();
 
       expect(navigateSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledWith([], {
@@ -839,24 +851,28 @@ describe("IndexComponent", () => {
     });
 
     it("should sort descending", () => {
-      const sort = fixture.debugElement.nativeElement.querySelector(
-        "table[mat-table] th[mat-header-cell].mat-column-test"
-      );
-      sort.click();
-      sort.click();
+      fixture.debugElement.nativeElement
+        .querySelector("table[mat-table] th[mat-header-cell].mat-column-test button")
+        .click();
 
-      expect(navigateSpy).toHaveBeenCalledTimes(2);
-      expect(navigateSpy.calls.mostRecent().args).toEqual([
-        [],
-        {
-          queryParams: {
-            filter: "{}",
-            paginator: JSON.stringify(fixture.componentInstance.defaultPaginatorOptions),
-            sort: JSON.stringify({test: -1}),
-            language: undefined
-          }
+      fixture.detectChanges();
+
+      const sortButton = document.body.querySelector(
+        ".mat-menu-content button:nth-of-type(3)"
+      ) as HTMLButtonElement;
+      sortButton.click();
+
+      fixture.detectChanges();
+
+      expect(navigateSpy).toHaveBeenCalledTimes(1);
+      expect(navigateSpy).toHaveBeenCalledWith([], {
+        queryParams: {
+          filter: "{}",
+          paginator: JSON.stringify(fixture.componentInstance.defaultPaginatorOptions),
+          sort: JSON.stringify({test: -1}),
+          language: undefined
         }
-      ]);
+      });
     });
   });
 

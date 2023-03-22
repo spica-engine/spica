@@ -21,7 +21,7 @@ import {MatToolbarModule} from "@angular/material/toolbar";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
-import {Store} from "@ngrx/store";
+import {Store, StoreModule} from "@ngrx/store";
 import {EditorModule} from "@spica-client/common/code-editor";
 import {InputModule} from "@spica-client/common/input";
 import {LayoutModule} from "@spica-client/core/layout";
@@ -73,7 +73,8 @@ describe("Function Add", () => {
         ScrollingModule,
         MatDatepickerModule,
         MatNativeDateModule,
-        MatDividerModule
+        MatDividerModule,
+        StoreModule.forRoot({}),
       ],
       providers: [
         {

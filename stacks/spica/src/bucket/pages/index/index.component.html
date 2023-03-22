@@ -364,12 +364,12 @@
     <mat-icon>arrow_drop_down</mat-icon>
   </button>
   <mat-menu class="edit-property-menu" #editPropertyMenu="matMenu">
-    <app-property-menu
+    <property-menu
       (handleSortChange)="onSortChange($event)"
       [schema]="schema"
       [displayedProperties]="displayedProperties"
       [property]="property"
-    ></app-property-menu>
+    ></property-menu>
   </mat-menu>
 </ng-template>
 

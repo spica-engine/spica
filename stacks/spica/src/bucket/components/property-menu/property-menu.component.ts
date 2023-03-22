@@ -10,7 +10,7 @@ import {SnackbarError} from "@spica-client/core/layout/snackbar/interface";
 import {SnackbarComponent} from "@spica-client/core/layout/snackbar/snackbar.component";
 
 @Component({
-  selector: "app-property-menu",
+  selector: "property-menu",
   templateUrl: "./property-menu.component.html"
 })
 export class PropertyMenuComponent implements OnInit {
