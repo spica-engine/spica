@@ -28,7 +28,6 @@ export class AdvancedDrawerComponent implements OnInit, OnDestroy {
   @Input() currentCategory: BehaviorSubject<any>;
   @Input() moreTemplate: ComponentType<any>;
   @Output() onViewChange = new EventEmitter<ViewChange[]>();
-  @Output() onClickItem = new EventEmitter();
 
   routes: Route[] = [];
 

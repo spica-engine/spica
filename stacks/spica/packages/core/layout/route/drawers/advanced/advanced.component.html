@@ -156,7 +156,6 @@
       >
         <div class="draggable-item" *ngFor="let item of items">
           <div
-            (click)="onClickItem.emit(item)"
             cdkDragLockAxis="y"
             [cdkDragDisabled]="!item.draggable"
             cdkDrag
