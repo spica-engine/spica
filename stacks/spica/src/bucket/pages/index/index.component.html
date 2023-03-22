@@ -229,6 +229,7 @@
               mat-resize-header
               [overrideMinWidth]="true"
             >
+              <mat-icon>{{ inputResolver.resolve(property.value.type).icon }}</mat-icon>
               {{ property.value.title }}
               <ng-container
                 [ngTemplateOutlet]="propertyMenuTemplate"

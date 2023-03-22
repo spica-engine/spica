@@ -55,10 +55,13 @@ export class AddFieldModalComponent implements OnInit {
     this._inputResolver.entries().map(e => this.systemFields.push(this._inputResolver.resolve(e)));
     this.parentSchema = this.data.parentSchema;
     this.immutableProperties = Object.keys(this.parentSchema.properties);
+
     if (this.data.propertyKey) {
       this.step = 1;
       this.propertyKey = this.data.propertyKey;
+
       this.propertyKv = this.parentSchema.properties[this.propertyKey];
+
       this.field = this.propertyKv.type;
       this.fieldConfig = this.systemFields.filter(systemField => systemField.type == this.field)[0];
     }
@@ -66,12 +69,14 @@ export class AddFieldModalComponent implements OnInit {
 
   chooseFieldType(field) {
     this.field = field;
+
     this.step = 1;
   }
 
   addProperty(name: string, description: string = null) {
     if (!description) description = `Description of the ${name} input`;
     this.propertyKey = name.toLowerCase();
+
     if (name && !this.parentSchema.properties[this.propertyKey]) {
       this.propertyKv = this.parentSchema.properties[this.propertyKey] = {
         type: this.field,

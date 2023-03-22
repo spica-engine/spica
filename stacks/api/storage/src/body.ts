@@ -101,11 +101,13 @@ export interface StorageObject<DataType = Buffer> {
   _id?: string | ObjectId;
   name: string;
   url?: string;
-  content: {
-    data: DataType;
-    type: string;
-    size?: number;
-  };
+  content: StorageObjectContent<DataType>;
+}
+
+export interface StorageObjectContent<DataType = Buffer> {
+  data: DataType;
+  type: string;
+  size?: number;
 }
 
 export interface BsonBody {

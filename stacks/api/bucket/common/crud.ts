@@ -13,7 +13,6 @@ import {
   resetNonOverlappingPathsInRelationMap
 } from "./relation";
 import {getUpdateQueryForPatch} from "@spica-server/core/patch";
-import {iPipelineBuilder, PipelineBuilder} from "./pipeline.builder";
 import {
   ACLSyntaxException,
   BadRequestException,
@@ -22,6 +21,8 @@ import {
 } from "./exception";
 import {IAuthResolver} from "./interface";
 import {categorizePropertyMap} from "./helpers";
+import {BucketPipelineBuilder} from "./pipeline.builder";
+import {PipelineBuilder} from "@spica-server/database/pipeline";
 
 interface CrudOptions<Paginate> {
   schedule?: boolean;
@@ -79,8 +80,8 @@ export async function findDocuments<T>(
   factories: CrudFactories<T>
 ): Promise<unknown> {
   const collection = factories.collection(schema);
-  const pipelineBuilder: iPipelineBuilder = new PipelineBuilder(schema, factories);
-  const seekingPipelineBuilder: iPipelineBuilder = new PipelineBuilder(schema, factories);
+  const pipelineBuilder = new BucketPipelineBuilder(schema, factories);
+  const seekingPipelineBuilder = new PipelineBuilder();
 
   let rulePropertyMap;
   let ruleRelationMap: RelationMap[];
@@ -116,7 +117,7 @@ export async function findDocuments<T>(
     .attachToPipeline(!!ruleResetStage, ruleResetStage)
     .filterByUserRequest(params.filter);
 
-  const seekingPipeline: iPipelineBuilder = seekingPipelineBuilder
+  const seekingPipeline = seekingPipelineBuilder
     .sort(params.sort)
     .skip(params.skip)
     .limit(params.limit);
@@ -131,10 +132,7 @@ export async function findDocuments<T>(
   );
 
   // for graphql responses
-  seekingPipeline.attachToPipeline(
-    params.projectMap.length,
-    getProjectAggregation(params.projectMap)
-  );
+  seekingPipeline.setVisibilityOfFields(getVisibilityOfFields(params.projectMap));
 
   const seeking = seekingPipeline.result();
 
@@ -379,12 +377,12 @@ async function executeWriteRule(
   }
 }
 
-function getProjectAggregation(fieldMap: string[][]) {
+function getVisibilityOfFields(fieldMap: string[][]) {
   const result = {};
   for (const fields of fieldMap) {
     result[fields.join(".")] = 1;
   }
-  return {$project: result};
+  return result;
 }
 
 function handleWriteErrors(error: any) {

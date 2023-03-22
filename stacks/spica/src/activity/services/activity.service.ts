@@ -94,7 +94,7 @@ export class ActivityService {
           case "bucket":
             return this.bucket.getBuckets().pipe(map(bucket => bucket.map(bucket => bucket._id)));
           case "storage":
-            return this.storage.getAll().pipe(map(result => result.data.map(strObj => strObj._id)));
+            return this.storage.getAll().pipe(map(result => result.map(strObj => strObj._id)));
           case "function":
             return this.func.getFunctions().pipe(map(fns => fns.map(fn => fn._id)));
           case "preference":

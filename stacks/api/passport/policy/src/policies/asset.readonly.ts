@@ -4,8 +4,12 @@ export default {
   description: "Read only access to asset service.",
   statement: [
     {
-      action: "apis:index",
-      module: "apis"
+      action: "asset:index",
+      module: "asset"
+    },
+    {
+      action: "asset:show",
+      module: "asset"
     }
   ]
 };

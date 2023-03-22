@@ -11,11 +11,12 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as os from "os";
 
 import {
-  Synchronizer,
-  RepresentativeManager,
   SyncDirection,
-  VersionControlModule
+  VersionControlModule,
+  Synchronizer,
+  VC_REP_MANAGER
 } from "@spica-server/versioncontrol";
+import {RepresentativeManager} from "@spica-server/representative";
 import {PreferenceModule} from "@spica-server/preference";
 import {PreferenceService} from "@spica-server/preference/services";
 import {ReplicationTestingModule} from "@spica-server/replication/testing";
@@ -62,7 +63,8 @@ describe("Versioning", () => {
           logExpireAfterSeconds: 60,
           maxConcurrency: 1,
           debug: false,
-          realtimeLogs: false
+          realtimeLogs: false,
+          logger: false
         }),
         VersionControlModule.forRoot({persistentPath: os.tmpdir()})
       ]
@@ -71,7 +73,7 @@ describe("Versioning", () => {
     app = module.createNestApplication();
     synchronizer = module.get(Synchronizer);
     bs = module.get(BucketService);
-    rep = module.get(RepresentativeManager);
+    rep = module.get(VC_REP_MANAGER);
 
     fs = module.get(FunctionService);
     engine = module.get(FunctionEngine);
@@ -98,7 +100,7 @@ describe("Versioning", () => {
       app = module.createNestApplication();
 
       synchronizer = module.get(Synchronizer);
-      rep = module.get(RepresentativeManager);
+      rep = module.get(VC_REP_MANAGER);
       prefService = module.get(PreferenceService);
 
       prefService.default(defaultPref);

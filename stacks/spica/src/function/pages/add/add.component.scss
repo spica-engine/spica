@@ -441,7 +441,7 @@
         padding: 6px 16px;
       }
       mat-form-field {
-        width: 33% !important;
+        width: 25% !important;
       }
       mat-slide-toggle,
       mat-card-content {
@@ -484,6 +484,12 @@
     span {
       margin-left: 10px;
     }
+  }
+  .add-dependency-button {
+    position: absolute;
+    right: 0;
+    bottom: 5px;
+    cursor: pointer;
   }
 }
 

@@ -83,10 +83,30 @@ export function download(
   });
 }
 
-export function getAll(queryParams?: {limit?: number; skip?: number; sort?: object}) {
+export function getAll(queryParams?: {
+  filter?: object;
+  paginate?: false;
+  limit?: number;
+  skip?: number;
+  sort?: object;
+}): Promise<StorageObject[]>;
+export function getAll(queryParams?: {
+  filter?: object;
+  paginate?: true;
+  limit?: number;
+  skip?: number;
+  sort?: object;
+}): Promise<IndexResult<StorageObject>>;
+export function getAll(queryParams?: {
+  filter?: object;
+  paginate?: boolean;
+  limit?: number;
+  skip?: number;
+  sort?: object;
+}): Promise<IndexResult<StorageObject> | StorageObject[]> {
   checkInitialized(authorization);
 
-  return service.get<IndexResult<StorageObject>>(`storage`, {
+  return service.get<IndexResult<StorageObject> | StorageObject[]>(`storage`, {
     params: queryParams
   });
 }
@@ -102,6 +122,16 @@ export async function update(
 
   return service.put<StorageObject>(`storage/${id}`, body, {
     onUploadProgress
+  });
+}
+
+export async function updateMeta(id: string, meta: {name: string}) {
+  checkInitialized(authorization);
+
+  return service.patch<StorageObject>(`storage/${id}`, meta, {
+    headers: {
+      "Content-Type": "application/json"
+    }
   });
 }
 

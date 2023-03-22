@@ -15,17 +15,19 @@ import {
 } from "./bucket.schema.resolver";
 import {GraphQLModule} from "@spica-server/bucket/graphql";
 import {provideLanguageFinalizer} from "@spica-server/bucket/common";
-import {registerInformers} from "./machinery";
 import {DocumentScheduler} from "./scheduler";
 import {registerStatusProvider} from "./status";
 import BucketSchema = require("./schemas/bucket.schema.json");
 import BucketsSchema = require("./schemas/buckets.schema.json");
 import {
   RegisterSyncProvider,
-  REGISTER_SYNC_PROVIDER,
-  RepresentativeManager
+  REGISTER_VC_SYNC_PROVIDER,
+  VC_REP_MANAGER
 } from "@spica-server/versioncontrol";
 import {getSyncProvider} from "./versioncontrol/schema";
+import {registerAssetHandlers} from "./asset";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
 
 @Module({})
 export class BucketModule {
@@ -111,12 +113,14 @@ export class BucketModule {
     preference: PreferenceService,
     bs: BucketService,
     bds: BucketDataService,
+    validator: Validator,
     @Optional() private history: HistoryService,
-    @Optional() private repManager: RepresentativeManager,
-    @Optional() @Inject(REGISTER_SYNC_PROVIDER) registerSync: RegisterSyncProvider
+    @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
+    @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
+    @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager
   ) {
     if (registerSync) {
-      const provider = getSyncProvider(bs, bds, this.history, this.repManager);
+      const provider = getSyncProvider(bs, bds, this.history, this.vcRepManager);
       registerSync(provider);
     }
 
@@ -131,8 +135,8 @@ export class BucketModule {
       }
     });
 
-    registerInformers(bs);
     registerStatusProvider(bs, bds);
+    registerAssetHandlers(bs, bds, history, validator, this.assetRepManager);
   }
 }
 

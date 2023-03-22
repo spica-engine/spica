@@ -1,18 +1,24 @@
 import {Injectable, Pipe, PipeTransform, Inject} from "@angular/core";
-import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
+import {BuildLinkFactories} from "./interface";
+import {BUILDLINK_FACTORY} from "@spica-client/core/factories/factory";
+
 @Injectable()
 @Pipe({
   name: "buildLink",
   pure: true
 })
 export class BuildLinkPipe implements PipeTransform {
-  constructor(@Inject(ACTIVITY_FACTORY) private factories: Function[]) {}
-  transform(value: any) {
-    if (value.action == 3) return;
+  constructor(@Inject(BUILDLINK_FACTORY) private factories: BuildLinkFactories[]) {}
+  transform(value: any, caller: string) {
+    let url = this.factories
+      .filter(f => f.caller == caller)
+      .map(f => f.factory(value))
+      .find(url => !!url);
 
-    let url = this.factories.map(fn => fn(value)).find(url => !!url);
-    if (!url) return;
+    if (!url) {
+      return;
+    }
 
-    return `../${url}`;
+    return url;
   }
 }

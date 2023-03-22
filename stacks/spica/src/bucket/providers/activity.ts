@@ -1,4 +1,8 @@
 export function provideActivityFactory(activity: any) {
+  if (activity.action == 3) {
+    return false;
+  }
+
   let url;
   let module = activity.resource[0];
 

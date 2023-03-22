@@ -1,5 +1,4 @@
 import * as expression from "@spica-server/bucket/expression";
-import {ObjectId} from "@spica-server/database";
 import {Bucket} from "@spica-server/bucket/services";
 import {CrudFactories} from "./crud";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
@@ -10,39 +9,12 @@ import {
   getRelationPipeline,
   RelationMap
 } from "./relation";
-import {extractFilterPropertyMap, replaceFilterObjectIds} from "@spica-server/bucket/services";
+import {constructFilterValues} from "@spica-server/bucket/common";
 import {categorizePropertyMap} from "./helpers";
+import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {extractFilterPropertyMap} from "@spica-server/filter";
 
-export interface iPipelineBuilder {
-  attachToPipeline(condition: any, ...attachedObject: object[]): this;
-  findOneIfRequested(entryId: ObjectId): this;
-  filterResources(resourceFilter: object): this;
-  filterScheduledData(isScheduled: boolean): this;
-  localize(
-    isLocalizationRequested: boolean,
-    language: string,
-    callback?: (locale: Locale) => void
-  ): Promise<this>;
-  rules(user: any, callback?: (arg0: string[][], arg1: RelationMap[]) => void): Promise<this>;
-  filterByUserRequest(filterByUserRequest: string | object): Promise<this>;
-  resolveRelationPath(
-    relationPaths: string[][],
-    callback?: (relationStage: object[]) => void
-  ): Promise<this>;
-  sort(sort: Object): this;
-  limit(limit: number): this;
-  skip(skip: number): this;
-  paginate(
-    paginate: boolean,
-    seekingPipeline: object[],
-    totalDocumentCount: Promise<number>
-  ): Promise<this>;
-  result(): object[];
-}
-
-export class PipelineBuilder implements iPipelineBuilder {
-  private isFilterApplied: boolean;
-  private pipeline: object[] = [];
+export class BucketPipelineBuilder extends PipelineBuilder {
   private schema: Bucket;
   private factories: CrudFactories<any>;
   private usedRelationPaths: string[] = [];
@@ -52,6 +24,7 @@ export class PipelineBuilder implements iPipelineBuilder {
   private isRuleFilteringDocuments: boolean;
 
   constructor(schema: Bucket, factories: CrudFactories<any>) {
+    super();
     this.schema = schema;
     this.factories = factories;
   }
@@ -64,24 +37,11 @@ export class PipelineBuilder implements iPipelineBuilder {
     });
   }
 
-  attachToPipeline(condition: unknown, ...attachedObject: object[]) {
-    if (!!condition) {
-      this.pipeline.push(...attachedObject);
-    }
-    return this;
-  }
-  findOneIfRequested(entryId: ObjectId): this {
-    this.attachToPipeline(entryId, {$match: {_id: entryId}});
-    return this;
-  }
-  filterResources(resourceFilter: object): this {
-    this.attachToPipeline(resourceFilter, resourceFilter);
-    return this;
-  }
   filterScheduledData(isScheduled: boolean): this {
     this.attachToPipeline(true, {$match: {_schedule: {$exists: isScheduled}}});
     return this;
   }
+
   async localize(
     isLocalizationRequested: boolean,
     language: string,
@@ -130,7 +90,7 @@ export class PipelineBuilder implements iPipelineBuilder {
     return this;
   }
 
-  async filterByUserRequest(filterByUserRequest: string | object): Promise<this> {
+  async filterByUserRequest(filterByUserRequest: string | object) {
     let filterPropertyMap: string[][] = [];
     let filterRelationMap: object[] = [];
     // filter
@@ -142,7 +102,12 @@ export class PipelineBuilder implements iPipelineBuilder {
         !Array.isArray(filterByUserRequest) &&
         Object.keys(filterByUserRequest).length
       ) {
-        filterByUserRequest = replaceFilterObjectIds(filterByUserRequest);
+        filterByUserRequest = await constructFilterValues(
+          filterByUserRequest,
+          this.schema,
+          this.factories.schema
+        );
+
         filterPropertyMap = extractFilterPropertyMap(filterByUserRequest);
         filterExpression = filterByUserRequest;
       } else if (typeof filterByUserRequest == "string") {
@@ -183,57 +148,17 @@ export class PipelineBuilder implements iPipelineBuilder {
     return this;
   }
 
-  sort(sort: object = {}): this {
-    this.attachToPipeline(Object.keys(sort).length, {$sort: sort});
-    return this;
-  }
-  limit(limit: number): this {
-    this.attachToPipeline(limit, {$limit: limit});
-    return this;
-  }
-  skip(skip: number): this {
-    this.attachToPipeline(skip, {$skip: skip});
-    return this;
-  }
-
   async paginate(
     paginate: boolean,
     seekingPipeline: object[],
     totalDocumentCount: Promise<number>
   ): Promise<this> {
-    let meta;
-
-    if (paginate) {
-      const filteredsLength = [{$count: "total"}];
-
-      const totalLength = [
-        {$limit: 1},
-        {
-          $addFields: {
-            total: await totalDocumentCount
-          }
-        },
-        {
-          $project: {
-            total: 1,
-            _id: 0
-          }
-        }
-      ];
-
-      meta = this.isFilterApplied || this.isRuleFilteringDocuments ? filteredsLength : totalLength;
-
-      this.pipeline.push(
-        {
-          $facet: {
-            meta,
-            data: seekingPipeline.length ? seekingPipeline : [{$unwind: "$_id"}]
-          }
-        },
-        {$unwind: {path: "$meta", preserveNullAndEmptyArrays: true}}
-      );
-    }
-    return this;
+    return super.paginate(
+      paginate,
+      seekingPipeline,
+      totalDocumentCount,
+      () => this.isFilterApplied || this.isRuleFilteringDocuments
+    );
   }
 
   result(): object[] {

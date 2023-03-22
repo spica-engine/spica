@@ -12,11 +12,11 @@ import {DatabaseModule} from "@spica-server/database";
 import {FunctionModule} from "@spica-server/function";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
-import {ApiMachineryModule} from "@spica-server/machinery";
 import {StatusModule} from "@spica-server/status";
 import {StorageModule} from "@spica-server/storage";
 import {VersionControlModule} from "@spica-server/versioncontrol";
 import {ReplicationModule} from "@spica-server/replication";
+import {AssetModule} from "@spica-server/asset";
 import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
@@ -198,6 +198,11 @@ const args = yargs
     "function-realtime-logs": {
       boolean: true,
       description: "Enable/disable tracking function logs realtime. Default value is false.",
+      default: true
+    },
+    "function-logger": {
+      boolean: true,
+      description: "Allows keeping logs with their levels like DEBUG, INFO, WARN, ERROR etc.",
       default: true
     }
   })
@@ -398,7 +403,7 @@ Example: http(s)://doomed-d45f1.spica.io/api`
 const modules = [
   DashboardModule.forRoot(),
   PreferenceModule.forRoot(),
-  ApiMachineryModule,
+  AssetModule.forRoot({persistentPath: args["persistent-path"]}),
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
@@ -463,7 +468,8 @@ const modules = [
     },
     debug: args["function-debug"],
     maxConcurrency: args["function-worker-concurrency"],
-    realtimeLogs: args["function-realtime-logs"]
+    realtimeLogs: args["function-realtime-logs"],
+    logger: args["function-logger"]
   })
 ];
 

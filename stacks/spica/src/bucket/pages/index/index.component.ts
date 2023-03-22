@@ -1,13 +1,5 @@
 import {animate, style, transition, trigger} from "@angular/animations";
-import {
-  Component,
-  ElementRef,
-  Inject,
-  OnDestroy,
-  OnInit,
-  SecurityContext,
-  ViewChild
-} from "@angular/core";
+import {Component, Inject, OnDestroy, OnInit, SecurityContext, ViewChild} from "@angular/core";
 import {MatPaginator, PageEvent} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute, Router} from "@angular/router";
@@ -35,6 +27,7 @@ import {guides} from "./guides";
 import {FilterComponent} from "@spica-client/bucket/components/filter/filter.component";
 import {MatDialog} from "@angular/material/dialog";
 import {AddFieldModalComponent} from "../add-field-modal/add-field-modal.component";
+import {InputResolver} from "@spica-client/common";
 
 @Component({
   selector: "bucket-data-index",
@@ -120,6 +113,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     private sanitizer: DomSanitizer,
     private scheme: SchemeObserver,
     private dialog: MatDialog,
+    public inputResolver: InputResolver,
     @Inject(BUCKET_OPTIONS) private options: BucketOptions
   ) {
     this.scheme

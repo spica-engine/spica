@@ -13,6 +13,7 @@ ts_project(
     ],
     deps = [
         "//packages/database",
+        "//stacks/api/function/runtime/logger",
         "@npm//@types/node",
     ],
 )

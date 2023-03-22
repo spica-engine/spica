@@ -76,7 +76,7 @@
           <dashboard-default
             *ngIf="!apiStatusPending"
             [componentData$]="apiChart.request"
-            type="bar"
+            type="line"
             (onUpdate)="onApiStatusFilterUpdate($event)"
           >
           </dashboard-default>

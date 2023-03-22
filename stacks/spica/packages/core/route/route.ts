@@ -7,18 +7,20 @@ import {BasicDrawerComponent} from "@spica-client/core/layout/route/drawers/basi
 
 export enum RouteCategoryType {
   Dashboard = "Dashboard",
-  Primary = "Primary",
   Developer = "Function",
   Content = "Bucket",
   System = "Access Management",
   Webhook = "Webhook",
+  Asset = "Asset",
+  Storage = "Storage",
 
-  Primary_Sub = "Settings",
   Content_Sub = "All Buckets",
   Developer_Sub = "Function Logs",
   Webhook_Sub = "Webhook Logs",
   System_Sub = "IA Management",
-  Dashboard_Sub = "Dashboards"
+  Dashboard_Sub = "Dashboards",
+  Asset_Sub = "Downloaded Assets",
+  Storage_Sub = "Storage_Sub"
 }
 
 export interface Route {
@@ -61,15 +63,6 @@ export type RouteCategorySpec = {
 };
 
 export const routeCategories = new Map<RouteCategoryType, RouteCategorySpec>([
-  [
-    RouteCategoryType.Primary,
-    {
-      icon: "stars",
-      index: 0,
-      drawer: BasicDrawerComponent,
-      children: {name: RouteCategoryType.Primary_Sub, icon: "list"}
-    }
-  ],
   [
     RouteCategoryType.Dashboard,
 
@@ -115,6 +108,14 @@ export const routeCategories = new Map<RouteCategoryType, RouteCategorySpec>([
       drawer: BasicDrawerComponent,
       children: {name: RouteCategoryType.Webhook_Sub, icon: "bug_report"}
     }
+  ],
+  [
+    RouteCategoryType.Asset,
+    {icon: "shopping_cart", index: 1, children: {name: RouteCategoryType.Asset_Sub, icon: "list"}}
+  ],
+  [
+    RouteCategoryType.Storage,
+    {icon: "filter_drama", index: 6, children: {name: RouteCategoryType.Storage_Sub, icon: "list"}}
   ]
 ]);
 

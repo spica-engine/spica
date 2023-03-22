@@ -1,7 +1,8 @@
-import {DynamicModule, Global, Module} from "@nestjs/common";
+import {DynamicModule, Global, Inject, Module, Optional} from "@nestjs/common";
 import {PassportModule} from "@nestjs/passport";
 import {GuardService} from "@spica-server/passport";
 import {AuthFactor} from "@spica-server/passport/authfactor";
+import {PreferenceService} from "@spica-server/preference/services";
 import {ClassCommander} from "@spica-server/replication";
 import {ReplicationTestingModule} from "@spica-server/replication/testing";
 import {TestingOptions} from "./interface";
@@ -47,6 +48,12 @@ export class MockAuthResolverModule {}
 @Global()
 @Module({})
 export class PassportTestingModule {
+  constructor(@Optional() preference: PreferenceService) {
+    if (preference) {
+      preference.default({scope: "passport", identity: {attributes: {}}});
+    }
+  }
+
   static initialize(options?: TestingOptions): DynamicModule {
     options = options || {};
     options.skipActionCheck = options.skipActionCheck == undefined ? true : options.skipActionCheck;

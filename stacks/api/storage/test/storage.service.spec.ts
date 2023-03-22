@@ -14,6 +14,8 @@ describe("Storage Service", () => {
   let storageObject: StorageObject;
   let storageObjectId: ObjectId = new ObjectId("56cb91bdc3464f14678934ca");
 
+  const resourceFilter = {$match: {}};
+
   beforeEach(async () => {
     storageObject = {
       _id: storageObjectId,
@@ -57,10 +59,10 @@ describe("Storage Service", () => {
       )
     ).toBeResolved();
     return await expectAsync(
-      storageService.getAll([], 30, 0, {_id: -1}).then(result => {
+      storageService.getAll(resourceFilter, undefined, true, 30, 0, {_id: -1}).then(result => {
         Array.from(result.data).forEach((val, index) => {
           expect(val.name).toBe("name" + (result.data.length - 1 - index));
-          expect(val.content.data).toBe(undefined);
+          expect(val.content["data"]).toBe(undefined);
           expect(val.content.type).toBe((result.data.length - 1 - index).toString());
         });
         return result;
@@ -106,6 +108,72 @@ describe("Storage Service", () => {
     return await expectAsync(storageService.get(storageObjectId)).toBeResolvedTo(null);
   });
 
+  describe("filter", () => {
+    beforeEach(async () => {
+      const storageObjects = [
+        {
+          name: "object1",
+          content: {data: Buffer.from(""), type: "type1"}
+        },
+        {
+          name: "object2",
+          content: {data: Buffer.from(""), type: "type2"}
+        }
+      ];
+      await storageService.insertMany(storageObjects);
+    });
+
+    it("should filter by name", async () => {
+      const res = await storageService.getAll(resourceFilter, {name: "object1"}, false, 0, 0, {});
+      expect(res.map(r => r.name)).toEqual(["object1"]);
+    });
+
+    it("should filter by content type", async () => {
+      const res = await storageService.getAll(
+        resourceFilter,
+        {"content.type": "type1"},
+        false,
+        0,
+        0,
+        {}
+      );
+      expect(res.map(r => r.content.type)).toEqual(["type1"]);
+    });
+  });
+
+  it("should filter, limit skip and sort and not paginate ", async () => {
+    const storageObjects = [
+      {
+        name: "object1",
+        content: {data: Buffer.from(""), type: "type1"}
+      },
+      {
+        name: "object2",
+        content: {data: Buffer.from(""), type: "type2"}
+      },
+      {
+        name: "object3",
+        content: {data: Buffer.from(""), type: "type3"}
+      },
+      {
+        name: "won't_pass_filter",
+        content: {data: Buffer.from(""), type: "type4"}
+      }
+    ];
+    await storageService.insertMany(storageObjects);
+    const res = await storageService.getAll(
+      resourceFilter,
+      {name: {$regex: "^object"}},
+      false,
+      2,
+      1,
+      {
+        name: -1
+      }
+    );
+    expect(res.map(r => r.name)).toEqual(["object2", "object1"]);
+  });
+
   describe("sorts", () => {
     let storageObjects: StorageObject[];
     beforeEach(async () => {
@@ -120,7 +188,7 @@ describe("Storage Service", () => {
     });
     it("should sort storage objects descend by name", async () => {
       return await expectAsync(
-        storageService.getAll([], 3, 0, {name: -1}).then(result => {
+        storageService.getAll(resourceFilter, undefined, true, 3, 0, {name: -1}).then(result => {
           expect(result.data[0].name).toBe("name2");
           expect(result.data[1].name).toBe("name1");
           expect(result.data[2].name).toBe("name0");
@@ -130,7 +198,7 @@ describe("Storage Service", () => {
     });
     it("should sort storage objects ascend by name", async () => {
       return await expectAsync(
-        storageService.getAll([], 3, 0, {name: 1}).then(result => {
+        storageService.getAll(resourceFilter, undefined, true, 3, 0, {name: 1}).then(result => {
           expect(result.data[0].name).toBe("name0");
           expect(result.data[1].name).toBe("name1");
           expect(result.data[2].name).toBe("name2");
@@ -140,7 +208,7 @@ describe("Storage Service", () => {
     });
     it("should sort storage objects descend by date", async () => {
       return await expectAsync(
-        storageService.getAll([], 3, 0, {_id: -1}).then(result => {
+        storageService.getAll(resourceFilter, undefined, true, 3, 0, {_id: -1}).then(result => {
           expect(result.data[0].name).toBe("name0");
           expect(result.data[1].name).toBe("name1");
           expect(result.data[2].name).toBe("name2");
@@ -150,7 +218,7 @@ describe("Storage Service", () => {
     });
     it("should sort storage objects ascend by date", async () => {
       return await expectAsync(
-        storageService.getAll([], 3, 0, {_id: 1}).then(result => {
+        storageService.getAll(resourceFilter, undefined, true, 3, 0, {_id: 1}).then(result => {
           expect(result.data[0].name).toBe("name2");
           expect(result.data[1].name).toBe("name1");
           expect(result.data[2].name).toBe("name0");

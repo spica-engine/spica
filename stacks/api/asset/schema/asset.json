@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/asset",
+  "type": "object",
+  "required": ["name", "resources", "url"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the asset"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the asset"
+    },
+    "resources": {
+      "type": "array",
+      "description": "Resources of the asset",
+      "items": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "Id of the resource"
+          },
+          "module": {
+            "type": "string",
+            "description": "Module of the resource"
+          },
+          "contents": {
+            "type": "object",
+            "description": "Contents of the resource. Key is represents content name while value represents content definition"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "url": {
+      "type": "string",
+      "description": "Download url of the asset."
+    },
+    "icon": {
+      "type": "string",
+      "description": "Icon of this asset",
+      "default": "check_circle_outline"
+    },
+    "configs": {
+      "$ref": "http://spica.internal/asset/configs"
+    }
+  },
+  "additionalProperties": false
+}

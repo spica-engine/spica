@@ -25,7 +25,8 @@ export class LogController {
     @Query("begin", DEFAULT(() => new Date().setUTCHours(0, 0, 0, 0)), DATE) begin: Date,
     @Query("end", DEFAULT(() => new Date().setUTCHours(23, 59, 59, 999)), DATE) end: Date,
     @Query("functions", ARRAY(String)) functions: string[],
-    @Query("channel") channel: string
+    @Query("channel") channel: string,
+    @Query("levels", ARRAY(Number)) levels: number[] = []
   ) {
     const match: any = {
       _id: {
@@ -36,6 +37,12 @@ export class LogController {
 
     if (channel) {
       match.channel = channel;
+    }
+
+    if (levels.length) {
+      match.level = {
+        $in: levels
+      };
     }
 
     if (functions && functions.length) {
@@ -77,9 +84,26 @@ export class LogController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
-  clearLogs(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.logService.deleteMany({
-      function: id.toHexString()
-    });
+  clearLogs(
+    @Param("id") fnId: string,
+    @Query("begin", DEFAULT(() => new Date(0)), DATE) begin: Date,
+    @Query("end", DEFAULT(() => new Date().setUTCHours(23, 59, 59, 999)), DATE) end: Date,
+    @Query("levels", ARRAY(Number)) levels: number[] = []
+  ) {
+    const filter: any = {
+      _id: {
+        $gte: ObjectId.createFromTime(begin.getTime() / 1000),
+        $lt: ObjectId.createFromTime(end.getTime() / 1000)
+      },
+      function: fnId
+    };
+
+    if (levels.length) {
+      filter.level = {
+        $in: levels
+      };
+    }
+
+    return this.logService.deleteMany(filter);
   }
 }

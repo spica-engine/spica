@@ -118,6 +118,7 @@ export interface LogFilter {
   sort: {[key: string]: 1 | -1};
   realtime: boolean;
   showErrors: boolean;
+  levels: number[];
 }
 
 export interface Log {
@@ -127,6 +128,7 @@ export interface Log {
   content: string;
   channel: "stderr" | "stdout";
   created_at: string;
+  level: number;
 }
 
 export interface Webhook {

@@ -1,0 +1,17 @@
+package(default_visibility = ["//visibility:public"])
+
+load("//tools/ts_project:index.bzl", "ts_project")
+
+ts_project(
+    name = "pipeline",
+    package_name = "@spica-server/database/pipeline",
+    srcs = [
+        "builder.ts",
+        "index.ts",
+        "interface.ts",
+        "module.ts",
+    ],
+    deps = [
+        "//packages/database",
+    ],
+)

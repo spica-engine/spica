@@ -1,0 +1,34 @@
+<div *ngFor="let propertyKv of preview | keyvalue">
+  <mat-list>
+    <h4>{{ propertyKv.key | titlecase }}</h4>
+    <mat-list-item *ngIf="propertyKv.value.insertions.length; let insertionsLength">
+      <span
+        ><b>{{ insertionsLength }}</b> resources will be created.</span
+      >
+      <button mat-icon-button (click)="show(propertyKv.value.insertions)">
+        <mat-icon>open_in_new</mat-icon>
+      </button>
+    </mat-list-item>
+    <mat-list-item *ngIf="propertyKv.value.updations.length; let updationsLength">
+      <span
+        ><b>{{ updationsLength }}</b> resources will be updated.</span
+      >
+      <button mat-icon-button (click)="show(propertyKv.value.updations)">
+        <mat-icon>open_in_new</mat-icon>
+      </button>
+    </mat-list-item>
+    <mat-list-item *ngIf="propertyKv.value.deletions.length; let deletionsLength">
+      <span
+        ><b>{{ deletionsLength }}</b> resources will be deleted.</span
+      >
+      <button
+        *ngIf="propertyKv.value.deletions.length"
+        mat-icon-button
+        (click)="show(propertyKv.value.deletions)"
+      >
+        <mat-icon>open_in_new</mat-icon>
+      </button>
+    </mat-list-item>
+  </mat-list>
+  <mat-divider></mat-divider>
+</div>

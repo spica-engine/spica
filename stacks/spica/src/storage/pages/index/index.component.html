@@ -10,218 +10,278 @@
   </div>
   <div class="actions">
     <ng-container *ngIf="selectionActive">
-      <button mat-button (click)="selectionActive = false; selectedStorageIds = []">
+      <button mat-button (click)="disableSelectMode()">
         <mat-icon>cancel</mat-icon>
         Cancel
       </button>
-      <ng-container *ngIf="storages$ | async; let storages">
-        <button
-          *ngIf="storages.length > selectedStorageIds.length"
-          mat-button
-          (click)="selectAll(storages)"
-        >
-          <mat-icon>select_all</mat-icon>
-          Select All
-        </button>
-      </ng-container>
       <button
-        *ngIf="selectedStorageIds.length"
+        *ngIf="selectedStorageNames.length"
         mat-button
         color="warn"
+        canInteract="storage:delete"
         [matAwareDialog]="{
           title: 'Confirmation',
           templateOrDescription: multipleDeleteDialogTemplate,
           answer: 'agree'
         }"
-        (confirm)="deleteMany(); selectionActive = false; selectedStorageIds = []"
+        (confirm)="deleteMany(selectedStorageNames); disableSelectMode()"
       >
         <mat-icon>delete</mat-icon>
         Delete
       </button>
     </ng-container>
 
-    <button *ngIf="!selectionActive && !isEmpty" mat-button (click)="selectionActive = true">
-      <mat-icon>check_box_outline_blank</mat-icon>
-      Select
-    </button>
-    <button
-      [style.visibility]="isEmpty ? 'hidden' : 'visible'"
-      mat-button
-      [matMenuTriggerFor]="menu"
-    >
-      <mat-icon>sort</mat-icon>
-      Sort
-      <mat-menu #menu="matMenu" class="storage-filter-menu">
-        <button
-          mat-menu-item
-          [class.active]="sorter?.name == -1"
-          (click)="sortStorage({direction: 'desc', name: 'name'})"
-        >
-          Name (Descending)
-        </button>
-        <button
-          mat-menu-item
-          [class.active]="sorter?.name == 1"
-          (click)="sortStorage({direction: 'asc', name: 'name'})"
-        >
-          Name (Ascending)
-        </button>
-        <button
-          mat-menu-item
-          [class.active]="sorter?._id == -1"
-          (click)="sortStorage({direction: 'desc', name: '_id'})"
-        >
-          Date (Descending)
-        </button>
-        <button
-          mat-menu-item
-          [class.active]="sorter?._id == 1"
-          (click)="sortStorage({direction: 'asc', name: '_id'})"
-        >
-          Date (Ascending)
-        </button>
-      </mat-menu>
-    </button>
+    <ng-container *ngIf="!selectionActive">
+      <button mat-button [matMenuTriggerFor]="menu">
+        <mat-icon>sort</mat-icon>
+        Sort
+        <mat-menu #menu="matMenu" class="storage-filter-menu">
+          <button
+            mat-menu-item
+            [class.active]="sorter?.name == -1"
+            (click)="sortStorage({direction: 'desc', name: 'name'})"
+          >
+            Name (Descending)
+          </button>
+          <button
+            mat-menu-item
+            [class.active]="sorter?.name == 1"
+            (click)="sortStorage({direction: 'asc', name: 'name'})"
+          >
+            Name (Ascending)
+          </button>
+          <button
+            mat-menu-item
+            [class.active]="sorter?._id == -1"
+            (click)="sortStorage({direction: 'desc', name: '_id'})"
+          >
+            Date (Descending)
+          </button>
+          <button
+            mat-menu-item
+            [class.active]="sorter?._id == 1"
+            (click)="sortStorage({direction: 'asc', name: '_id'})"
+          >
+            Date (Ascending)
+          </button>
+        </mat-menu>
+      </button>
 
-    <button mat-button (click)="clearLastUpdates()">
-      <mat-icon>refresh</mat-icon>
-      Refresh
-    </button>
+      <button mat-button (click)="clearLastUpdates()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
 
-    <button
-      mat-button
-      canInteract="storage:create"
-      [disabled]="progress"
-      (click)="!progress ? fileSelector?.click() : undefined"
-    >
-      <input
-        class="file-selector"
-        type="file"
-        #fileSelector
-        multiple
-        #fileModel="ngModel"
-        [ngModel]="undefined"
-        (ngModelChange)="uploadStorageMany(fileSelector.files)"
-      />
-      <mat-icon *ngIf="!progress">add</mat-icon>
-      Add New
-      <mat-progress-spinner
-        color="accent"
-        *ngIf="progress"
-        [diameter]="18"
-        [value]="progress"
-      ></mat-progress-spinner>
-    </button>
+      <button
+        mat-button
+        canInteract="storage:create"
+        [disabled]="progress"
+        (click)="!progress ? fileSelector?.click() : undefined"
+      >
+        <input
+          class="file-selector"
+          type="file"
+          #fileSelector
+          multiple
+          #fileModel="ngModel"
+          [ngModel]="undefined"
+          (ngModelChange)="uploadStorageMany(fileSelector.files)"
+        />
+        <mat-icon *ngIf="!progress">upload</mat-icon>
+        Upload Files
+        <mat-progress-spinner
+          color="accent"
+          *ngIf="progress"
+          [diameter]="18"
+          [value]="progress"
+        ></mat-progress-spinner>
+      </button>
+      <button
+        mat-button
+        canInteract="storage:create"
+        [disabled]="progress"
+        (click)="!progress ? addSubDir(currentNode) : undefined"
+      >
+        <mat-icon *ngIf="!progress">create_new_folder</mat-icon>
+        Create New Folder
+        <mat-progress-spinner
+          color="accent"
+          *ngIf="progress"
+          [diameter]="18"
+          [value]="progress"
+        ></mat-progress-spinner>
+      </button>
+      <button
+        *ngIf="root != ''"
+        mat-button
+        canInteract="storage:delete"
+        [disabled]="progress"
+        color="warn"
+        [matAwareDialog]="{
+          title: 'Confirmation',
+          templateOrDescription: deleteDirDialogTemplate,
+          answer: root
+        }"
+        (confirm)="deleteRootDir()"
+      >
+        <mat-icon>delete</mat-icon>
+        Delete This Directory
+      </button>
+    </ng-container>
   </div>
 </mat-toolbar>
-
-<mat-progress-spinner
-  [style.visibility]="(loading$ | async) ? 'visible' : 'hidden'"
-  class="content-spinner"
-  color="accent"
-  [diameter]="40"
-  mode="indeterminate"
-></mat-progress-spinner>
-<mat-grid-list [cols]="cols" rowHeight="1:1" gutterSize="10px">
-  <mat-grid-tile
-    [style.visibility]="(loading$ | async) ? 'hidden' : 'visible'"
-    *ngFor="let storage of storages$ | async; let i = index"
-  >
-    <div *ngIf="updates.has(storage._id)" class="loading">
-      <mat-progress-spinner
-        color="accent"
-        [diameter]="50"
-        [value]="updates.get(storage._id)"
-      ></mat-progress-spinner>
-    </div>
-    <mat-card
-      [class.unselected]="selectionActive && selectedStorageIds.indexOf(storage._id) == -1"
-      class="mat-elevation-z25"
-      (click)="
-        selectionActive &&
-          (selectedStorageIds.indexOf(storage._id) != -1
-            ? selectedStorageIds.splice(selectedStorageIds.indexOf(storage._id), 1)
-            : selectedStorageIds.push(storage._id))
-      "
-      [class.updating]="updates.has(storage._id)"
-    >
-      <mat-card-content
-        [style.pointer-events]="selectionActive || updates.has(storage._id) ? 'none' : 'initial'"
-      >
-        <storage-view
-          mat-card-image
-          matTooltip="View this object"
-          [blob]="storage"
-          (click)="openPreview(storage)"
-        >
-        </storage-view>
-      </mat-card-content>
-      <mat-card-actions
-        [style.pointer-events]="selectionActive || updates.has(storage._id) ? 'none' : 'initial'"
-      >
-        <mat-label [matTooltip]="'Mime type: ' + storage?.content?.type">{{
-          storage.name
-        }}</mat-label>
-        <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Actions">
-          <mat-icon>more_vert</mat-icon>
-          <mat-menu class="actions-menu" #menu="matMenu" yPosition="above">
-            <button mat-menu-item [matClipboard]="storage.url">
-              <mat-icon>file_copy</mat-icon>
-              Copy
-            </button>
-            <button
-              canInteract="storage:update"
-              [resource]="storage._id"
-              *ngIf="storage.content?.type?.startsWith('image/')"
-              mat-menu-item
-              (click)="openEdit(storage)"
-            >
-              <mat-icon>edit</mat-icon>
-              Edit
-            </button>
-            <button
-              canInteract="storage:update"
-              [resource]="storage._id"
-              mat-menu-item
-              (click)="fileSelector?.click()"
-            >
-              <input
-                class="file-selector"
-                type="file"
-                #fileSelector
-                #fileModel="ngModel"
-                [ngModel]="undefined"
-                (ngModelChange)="updateStorage(storage, fileSelector.files[0])"
-              />
-              <mat-icon>sync_alt</mat-icon>
-              Replace
-            </button>
-            <button
-              canInteract="storage:delete"
-              [resource]="storage._id"
-              mat-menu-item
-              color="warn"
-              [matAwareDialog]="{
-                title: 'Confirmation',
-                templateOrDescription: deleteDialogTemplate,
-                answer: 'agree'
-              }"
-              (confirm)="delete(storage._id)"
-            >
-              <mat-icon>delete</mat-icon>
-              Delete
-            </button>
-          </mat-menu>
+<mat-card>
+  <div class="directory-view" *ngIf="nodes.length && nodes[0].children.length > 0">
+    <ng-container *ngTemplateOutlet="column; context: {nodes: nodes[0].children}"></ng-container>
+    <mat-progress-spinner
+      [style.display]="(loading$ | async) ? 'inline' : 'none'"
+      class="content-spinner"
+      color="accent"
+      [diameter]="40"
+      mode="indeterminate"
+    ></mat-progress-spinner>
+  </div>
+  <div *ngIf="currentNode && !currentNode.isDirectory" class="object-details">
+    <div class="meta">
+      <div class="close">
+        <button mat-icon-button (click)="onDetailsClosed(currentNode)">
+          <mat-icon>clear</mat-icon>
         </button>
-      </mat-card-actions>
-    </mat-card>
-  </mat-grid-tile>
-</mat-grid-list>
-<mat-paginator
-  [style.visibility]="isEmpty ? 'hidden' : 'visible'"
-  [pageSize]="cols * 3"
-  [pageSizeOptions]="[cols * 3, cols * 6, cols * 9]"
-></mat-paginator>
+      </div>
+      <storage-view [blob]="currentNode.url"></storage-view>
+      <h4>{{ currentNode.name }}</h4>
+      <p>
+        {{ currentNode.content.type }} - {{ currentNode.content.size / 1000 | number: "1.0-0" }} KB
+      </p>
+      <p>{{ objectIdToDate(currentNode._id) | date: "medium" }}</p>
+    </div>
+    <div class="action-buttons">
+      <button mat-stroked-button [matClipboard]="currentNode.url">
+        <mat-icon>file_copy</mat-icon>
+        Copy
+      </button>
+      <button
+        canInteract="storage:update"
+        [resource]="currentNode._id"
+        *ngIf="currentNode.content?.type?.startsWith('image/')"
+        mat-stroked-button
+        (click)="openEdit(currentNode)"
+      >
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+      <button
+        canInteract="storage:update"
+        [resource]="currentNode._id"
+        mat-stroked-button
+        (click)="fileSelector?.click()"
+      >
+        <input
+          class="file-selector"
+          type="file"
+          #fileSelector
+          #fileModel="ngModel"
+          [ngModel]="undefined"
+          (ngModelChange)="updateStorage(currentNode, fileSelector.files[0])"
+        />
+        <mat-icon>sync_alt</mat-icon>
+        Replace
+      </button>
+      <button
+        canInteract="storage:delete"
+        [resource]="currentNode._id"
+        mat-stroked-button
+        color="warn"
+        [matAwareDialog]="{
+          title: 'Confirmation',
+          templateOrDescription: deleteDialogTemplate,
+          answer: 'agree'
+        }"
+        (confirm)="delete(currentNode._id)"
+      >
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </div>
+  </div>
+</mat-card>
+<ng-template #column let-nodes="nodes" cdkDropListGroup>
+  <div
+    class="column"
+    cdkDropList
+    [cdkDropListData]="nodes"
+    (cdkDropListDropped)="onDropped($event)"
+    [cdkDropListSortingDisabled]="false"
+    (click)="!selectionActive ? onColumnClicked(nodes) : undefined"
+  >
+    <div
+      (click)="
+        $event.stopPropagation(); !selectionActive ? onNodeHighlighted(node) : onSelect(node)
+      "
+      class="line"
+      [class.highlight]="node.isHighlighted"
+      *ngFor="let node of nodes"
+      cdkDrag
+      [cdkDragData]="node"
+      [cdkDragDisabled]="selectionActive"
+    >
+      <div class="content">
+        <mat-checkbox
+          *ngIf="selectionActive"
+          [checked]="selectedStorageNames.indexOf(getFullName(node)) != -1"
+          [disabled]="selectedStorageNames.indexOf(getFullName(node.parent)) != -1"
+          (change)="onSelect(node)"
+          (click)="$event.stopPropagation()"
+        ></mat-checkbox>
+        <mat-icon *ngIf="!selectionActive">{{
+          node.isDirectory ? "folder" : "description"
+        }}</mat-icon>
+        <span
+          #nameSpan
+          [attr.contenteditable]="renamingNode && renamingNode._id == node._id"
+          (keyup.enter)="onRenameCompleted(nameSpan.textContent, node)"
+          (keyup.esc)="onRenameCancelled()"
+          (focusout)="onRenameCancelled()"
+          >{{ node.name }}</span
+        >
+      </div>
+      <div *ngIf="!selectionActive" class="more">
+        <button mat-icon-button (click)="$event.stopPropagation()" [matMenuTriggerFor]="moreMenu">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #moreMenu="matMenu">
+          <ng-template matMenuContent>
+            <button
+              mat-menu-item
+              canInteract="storage:update"
+              (click)="onRenameClicked(node, nameSpan)"
+            >
+              Rename
+            </button>
+            <button mat-menu-item (click)="enableSelectMode(); onSelect(node)">
+              Select
+            </button>
+          </ng-template>
+        </mat-menu>
+      </div>
+    </div>
+  </div>
+  <ng-container *ngFor="let node of nodes">
+    <ng-container *ngIf="node.isHighlighted && node.isDirectory && node.children">
+      <ng-container *ngTemplateOutlet="column; context: {nodes: node.children}"></ng-container>
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<ng-template #deleteDirDialogTemplate let-answer="answer">
+  <p>
+    This action will <b>permanently</b> delete <code>{{ answer }}</code> directory and it's
+    subresources.
+  </p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>
 
 <ng-template #deleteDialogTemplate let-answer="answer">
   <p>This action will <b>permanently</b> delete this object and break all associations.</p>
@@ -232,8 +292,8 @@
 
 <ng-template #multipleDeleteDialogTemplate let-answer="answer">
   <p>
-    This action will <b>permanently</b> delete these
-    <code>{{ selectedStorageIds.length }}</code> objects and break all associations.
+    This action will <b>permanently</b> delete the selected objects, it's subresources and break all
+    associations.
   </p>
   <p>
     Please type in <code>{{ answer }}</code> to confirm.

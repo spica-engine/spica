@@ -26,7 +26,18 @@ import {MatResizeHeader} from "./resize.directive";
           Weight
         </mat-header-cell>
       </ng-container>
-      <mat-header-row *matHeaderRowDef="['position', 'weight']"></mat-header-row>
+      <ng-container matColumnDef="height">
+        <mat-header-cell
+          *matHeaderCellDef
+          mat-sort-header
+          mat-resize-header
+          (resize)="positionColumnResize($event)"
+          (resizeend)="positionColumnResizeEnd($event)"
+        >
+          Height
+        </mat-header-cell>
+      </ng-container>
+      <mat-header-row *matHeaderRowDef="['position', 'weight', 'height']"></mat-header-row>
     </mat-table>
   `
 })
@@ -56,14 +67,14 @@ describe("MatResize", () => {
       declarations: [TestComponent, MatResizeHeader]
     });
     fixture = TestBed.createComponent(TestComponent);
+
     fixture.detectChanges();
     columnHeaders = fixture.debugElement.queryAll(By.directive(MatHeaderCell));
+    await fixture.whenStable();
+    fixture.detectChanges();
   });
 
   it("should set initial width of element", async () => {
-    await fixture.whenStable();
-    fixture.detectChanges();
-
     const [positionColumnHeader] = columnHeaders;
     positionColumnHeader.triggerEventHandler("mouseup", {});
 
@@ -97,33 +108,6 @@ describe("MatResize", () => {
     expect(hasOriginalClickHandler(positionColumnHeader)).toBe(true);
   });
 
-  it("should resize and invoke resize and resizeend events", () => {
-    const [positionColumnHeader] = columnHeaders;
-
-    const borderPosition = getElementScreenXForSize(positionColumnHeader, 0);
-    const initalWidth = positionColumnHeader.nativeElement.clientWidth;
-
-    positionColumnHeader.triggerEventHandler("mousedown", {
-      target: positionColumnHeader.nativeElement,
-      pageX: borderPosition - 50
-    });
-    positionColumnHeader.triggerEventHandler("mousemove", {pageX: borderPosition + 100});
-    positionColumnHeader.triggerEventHandler("mouseup", {});
-    fixture.detectChanges();
-
-    const desiredWidth = initalWidth + 150;
-    expect(positionColumnHeader.styles.width).toBe(`${desiredWidth}px`);
-    expect(fixture.componentInstance.positionColumnResize).toHaveBeenCalledTimes(1);
-    expect(fixture.componentInstance.positionColumnResize).toHaveBeenCalledWith(desiredWidth);
-
-    expect(fixture.componentInstance.positionColumnResizeEnd).toHaveBeenCalledTimes(1);
-    expect(fixture.componentInstance.positionColumnResizeEnd).toHaveBeenCalledWith(desiredWidth);
-
-    expect(fixture.componentInstance.positionColumnResize).toHaveBeenCalledBefore(
-      fixture.componentInstance.positionColumnResizeEnd
-    );
-  });
-
   it("should resize and call resizeend only if when the width has been changed", () => {
     const [positionColumnHeader] = columnHeaders;
     const borderPosition = getElementScreenXForSize(positionColumnHeader, 0);
@@ -140,7 +124,7 @@ describe("MatResize", () => {
     expect(fixture.componentInstance.positionColumnResizeEnd).not.toHaveBeenCalled();
   });
 
-  it("should finish resizing when the user moves and releases the mouse on out of resizing area", () => {
+  it("should resize and invoke resize and resizeend events", async () => {
     const [positionColumnHeader] = columnHeaders;
     const borderPosition = getElementScreenXForSize(positionColumnHeader, 0);
     const initalWidth = positionColumnHeader.nativeElement.clientWidth;
@@ -150,11 +134,20 @@ describe("MatResize", () => {
       pageX: borderPosition - 50
     });
     positionColumnHeader.triggerEventHandler("mousemove", {pageX: borderPosition + 100});
-    window.dispatchEvent(new MouseEvent("mouseup"));
+    positionColumnHeader.triggerEventHandler("mouseup", {});
     fixture.detectChanges();
-    expect(fixture.componentInstance.positionColumnResize).toHaveBeenCalledWith(initalWidth + 150);
-    expect(fixture.componentInstance.positionColumnResizeEnd).toHaveBeenCalledWith(
-      initalWidth + 150
+
+    const desiredWidth = initalWidth + 150;
+
+    expect(positionColumnHeader.styles.width).toBe(`${desiredWidth}px`);
+    expect(fixture.componentInstance.positionColumnResize).toHaveBeenCalledTimes(1);
+    expect(fixture.componentInstance.positionColumnResize).toHaveBeenCalledWith(desiredWidth);
+
+    expect(fixture.componentInstance.positionColumnResizeEnd).toHaveBeenCalledTimes(1);
+    expect(fixture.componentInstance.positionColumnResizeEnd).toHaveBeenCalledWith(desiredWidth);
+
+    expect(fixture.componentInstance.positionColumnResize).toHaveBeenCalledBefore(
+      fixture.componentInstance.positionColumnResizeEnd
     );
   });
 });
