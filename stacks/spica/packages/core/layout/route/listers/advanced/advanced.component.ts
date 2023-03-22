@@ -10,24 +10,24 @@ import {
   OnDestroy
 } from "@angular/core";
 import {MatDialog, MatDialogRef} from "@angular/material/dialog";
-import {Route} from "@spica-client/core/route";
 import {BehaviorSubject, Observable, Subscription} from "rxjs";
-import {CategoryService} from "./category.service";
-import {CategorizedRoutes, CategoryOrder} from "./interface";
+import {Route} from "@spica-client/core/route";
+import {CategoryService, CategorizedRoutes, CategoryOrder} from "@spica-client/core/route/category";
+import {ViewChange} from "@spica-client/core/route/route";
 
 @Component({
-  selector: "category",
-  templateUrl: "./category.component.html",
-  styleUrls: ["./category.component.scss"]
+  selector: "advanced-lister",
+  templateUrl: "./advanced.component.html",
+  styleUrls: ["./advanced.component.scss"]
 })
-export class CategoryComponent implements OnInit, OnDestroy {
+export class AdvancedRouteListerComponent implements OnInit, OnDestroy {
   constructor(private dialog: MatDialog, public categoryService: CategoryService) {}
 
   @Input() categoryStorageKey: string;
   @Input() routes$: Observable<Route[]>;
   @Input() currentCategory: BehaviorSubject<any>;
   @Input() moreTemplate: ComponentType<any>;
-  @Output() onChangedOrder = new EventEmitter();
+  @Output() onViewChange = new EventEmitter<ViewChange[]>();
   @Output() onClickItem = new EventEmitter();
 
   routes: Route[] = [];
@@ -95,7 +95,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
         this.categoryService.saveCategoryOrders(this.categoryStorageKey, this.categories);
       }
 
-      this.onChangedOrder.emit([
+      this.onViewChange.emit([
         {
           id: routeId,
           changes: {category: this.newCategory}
@@ -122,7 +122,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
       });
 
       this.categoryService.saveCategoryOrders(this.categoryStorageKey, this.categories);
-      this.onChangedOrder.emit(changedItems);
+      this.onViewChange.emit(changedItems);
 
       this.categorizedRoutes[this.newCategory] = this.categorizedRoutes[oldName];
       delete this.categorizedRoutes[oldName];
@@ -180,7 +180,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
     this.categories = this.categories.filter(category => category.name != name);
 
     this.categoryService.saveCategoryOrders(this.categoryStorageKey, this.categories);
-    this.onChangedOrder.emit(changedItems);
+    this.onViewChange.emit(changedItems);
   }
 
   drop(event: CdkDragDrop<any>) {
@@ -246,7 +246,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
       draggedItem.changes["category"] = null;
     }
 
-    this.onChangedOrder.emit(changedItems);
+    this.onViewChange.emit(changedItems);
   }
 
   changeCategoryOrder(previousIndex, currentIndex) {

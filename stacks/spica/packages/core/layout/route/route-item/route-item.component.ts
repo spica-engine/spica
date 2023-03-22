@@ -9,8 +9,8 @@ import {
 } from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {Title} from "@angular/platform-browser";
+import {Route} from "@spica-client/core/route";
 import {BehaviorSubject} from "rxjs";
-import {Route} from "../../route";
 
 @Component({
   selector: "route-item",

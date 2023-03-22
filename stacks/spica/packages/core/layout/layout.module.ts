@@ -28,14 +28,14 @@ import {ToolbarActionDirective} from "./toolbar-action";
 import {MAT_FORM_FIELD_DEFAULT_OPTIONS} from "@angular/material/form-field";
 import {MatMenuModule} from "@angular/material/menu";
 import {DragDropModule} from "@angular/cdk/drag-drop";
-import {RouteItemComponent} from "./route-item/route-item.component";
-import {ExpandableNavComponent} from "./expandable-nav/expandable-nav.component";
-import {CategoryComponent} from "./category/category.component";
-import {CategoryService} from "./category/category.service";
+import {RouteItemComponent} from "./route/route-item/route-item.component";
+import {BasicRouteListerComponent} from "./route/listers/basic/basic.component";
+import {AdvancedRouteListerComponent} from "./route/listers/advanced/advanced.component";
 import {MatInputModule} from "@angular/material/input";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {FormsModule} from "@angular/forms";
 import {MatAwareDialogModule} from "@spica-client/material";
+import {RouteModule} from "../route";
 
 const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
 
@@ -62,9 +62,10 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     MatInputModule,
     MatFormFieldModule,
     FormsModule,
-    MatAwareDialogModule
+    MatAwareDialogModule,
+    RouteModule
   ],
-  providers: [SchemeObserver, CategoryService, Title],
+  providers: [SchemeObserver, Title],
   declarations: [
     HomeLayoutComponent,
     LayoutRouterOutlet,
@@ -73,23 +74,23 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     SnackbarComponent,
     ToolbarActionDirective,
     RouteItemComponent,
-    ExpandableNavComponent,
-    CategoryComponent
+    BasicRouteListerComponent,
+    AdvancedRouteListerComponent
   ],
   exports: [
     LayoutRouterOutlet,
     RouterModule,
     RouteItemComponent,
-    ExpandableNavComponent,
-    CategoryComponent
+    BasicRouteListerComponent,
+    AdvancedRouteListerComponent
   ],
   entryComponents: [
     HomeLayoutComponent,
     SchemeSwitcherComponent,
     SnackbarComponent,
     RouteItemComponent,
-    ExpandableNavComponent,
-    CategoryComponent
+    BasicRouteListerComponent,
+    AdvancedRouteListerComponent
   ]
 })
 export class LayoutModule {

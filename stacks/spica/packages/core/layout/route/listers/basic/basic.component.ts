@@ -1,15 +1,13 @@
 import {Component, Input, OnInit} from "@angular/core";
 import {Route} from "@spica-client/core/route";
 import {BehaviorSubject, Observable} from "rxjs";
-import {CategoryService} from "../category/category.service";
-import {CategorizedRoutes} from "../category/interface";
+import {CategoryService, CategorizedRoutes} from "@spica-client/core/route/category";
 
 @Component({
-  selector: "expandable-nav",
-  templateUrl: "./expandable-nav.component.html",
-  styleUrls: ["./expandable-nav.component.scss"]
+  selector: "basic-lister",
+  templateUrl: "./basic.component.html"
 })
-export class ExpandableNavComponent implements OnInit {
+export class BasicRouteListerComponent implements OnInit {
   constructor(public categoryService: CategoryService) {}
 
   @Input() routes$: Observable<Route[]>;

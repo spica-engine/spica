@@ -69,7 +69,7 @@ export class HomeLayoutComponent implements OnInit {
               icon: category.icon,
               category: categoryName,
               index: category.index,
-              drawer: category.drawer,
+              lister: category.lister,
               props: category.props,
               children: {
                 items: routes.filter(route => route.category == category.children.name),
@@ -124,12 +124,12 @@ export class HomeLayoutComponent implements OnInit {
   drawCategory(currentCategory) {
     if (
       this.placeholder &&
-      currentCategory.drawer &&
+      currentCategory.lister &&
       this.currentCategoryName != currentCategory.category
     ) {
       this.placeholder.clear();
 
-      const componentFactory = this.resolver.resolveComponentFactory(currentCategory.drawer);
+      const componentFactory = this.resolver.resolveComponentFactory(currentCategory.lister);
 
       const component = this.placeholder.createComponent(componentFactory);
       component.instance["routes$"] = this.routes$;
