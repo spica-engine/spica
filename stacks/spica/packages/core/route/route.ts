@@ -2,7 +2,7 @@ import {EventEmitter, InjectionToken} from "@angular/core";
 import {Observable} from "rxjs";
 
 import {ComponentType} from "@angular/cdk/overlay";
-import {AdvancedRouteListerComponent} from "@spica-client/core/layout/route/listers/advanced/advanced.component";
+import {AdvancedDrawerComponent} from "@spica-client/core/layout/route/drawers/advanced/advanced.component";
 import {BasicDrawerComponent} from "@spica-client/core/layout/route/drawers/basic/basic.component";
 
 export enum RouteCategoryType {
@@ -48,11 +48,10 @@ export interface ViewChange {
 export type RouteCategorySpec = {
   icon: string;
   index: number;
-  lister?: ComponentType<any>;
+  drawer?: ComponentType<any>;
   props?: {
     moreTemplate?: ComponentType<any>;
     onViewChange?: EventEmitter<ViewChange[]>;
-    // Check this key usage, probably its redundant
     categoryStorageKey?: RouteCategoryType;
   };
   children: {
@@ -61,16 +60,13 @@ export type RouteCategorySpec = {
   };
 };
 
-export const routeCategories: Map<RouteCategoryType, RouteCategorySpec> = new Map<
-  RouteCategoryType,
-  RouteCategorySpec
->([
+export const routeCategories = new Map<RouteCategoryType, RouteCategorySpec>([
   [
     RouteCategoryType.Primary,
     {
       icon: "stars",
       index: 0,
-      lister: BasicDrawerComponent,
+      drawer: BasicDrawerComponent,
       children: {name: RouteCategoryType.Primary_Sub, icon: "list"}
     }
   ],
@@ -80,7 +76,7 @@ export const routeCategories: Map<RouteCategoryType, RouteCategorySpec> = new Ma
     {
       icon: "dashboard",
       index: 1,
-      lister: BasicDrawerComponent,
+      drawer: BasicDrawerComponent,
       children: {name: RouteCategoryType.Dashboard_Sub, icon: "list"}
     }
   ],
@@ -89,7 +85,7 @@ export const routeCategories: Map<RouteCategoryType, RouteCategorySpec> = new Ma
     {
       icon: "view_stream",
       index: 2,
-      lister: AdvancedRouteListerComponent,
+      drawer: AdvancedDrawerComponent,
       children: {name: RouteCategoryType.Content_Sub, icon: "format_list_numbered"}
     }
   ],
@@ -98,7 +94,7 @@ export const routeCategories: Map<RouteCategoryType, RouteCategorySpec> = new Ma
     {
       icon: "supervisor_account",
       index: 3,
-      lister: BasicDrawerComponent,
+      drawer: BasicDrawerComponent,
       children: {name: RouteCategoryType.System_Sub, icon: "list"}
     }
   ],
@@ -106,7 +102,7 @@ export const routeCategories: Map<RouteCategoryType, RouteCategorySpec> = new Ma
     RouteCategoryType.Developer,
     {
       icon: "memory",
-      lister: AdvancedRouteListerComponent,
+      drawer: AdvancedDrawerComponent,
       index: 4,
       children: {name: RouteCategoryType.Developer_Sub, icon: "bug_report"}
     }
@@ -116,7 +112,7 @@ export const routeCategories: Map<RouteCategoryType, RouteCategorySpec> = new Ma
     {
       icon: "webhook",
       index: 5,
-      lister: BasicDrawerComponent,
+      drawer: BasicDrawerComponent,
       children: {name: RouteCategoryType.Webhook_Sub, icon: "bug_report"}
     }
   ]
