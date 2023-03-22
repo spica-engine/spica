@@ -1,4 +1,10 @@
-export {Route, ROUTE, ROUTE_FILTERS, RouteCategoryType as RouteCategory, RouteFilter} from "./route/route";
+export {
+  Route,
+  ROUTE,
+  ROUTE_FILTERS,
+  RouteCategoryType as RouteCategory,
+  RouteFilter
+} from "./route/route";
 export {RouteModule} from "./route/route.module";
 export {
   Add,

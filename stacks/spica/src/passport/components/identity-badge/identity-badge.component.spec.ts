@@ -6,7 +6,7 @@ import {MatTooltip, MatTooltipModule} from "@angular/material/tooltip";
 import {By} from "@angular/platform-browser";
 import {Router} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
-import { StoreModule } from "@ngrx/store";
+import {StoreModule} from "@ngrx/store";
 import {LayoutModule} from "@spica-client/core/layout";
 import {PassportService} from "../../services/passport.service";
 import {IdentityBadgeComponent} from "./identity-badge.component";
@@ -28,7 +28,7 @@ describe("IdentityBadgeComponent", () => {
         MatTooltipModule,
         LayoutModule,
         RouterTestingModule,
-        StoreModule.forRoot({}),
+        StoreModule.forRoot({})
       ],
       declarations: [IdentityBadgeComponent],
       providers: [

@@ -155,12 +155,7 @@
         [cdkDropListData]="items"
       >
         <div class="draggable-item" *ngFor="let item of items">
-          <div
-            cdkDragLockAxis="y"
-            [cdkDragDisabled]="!item.draggable"
-            cdkDrag
-            [id]="item.id"
-          >
+          <div cdkDragLockAxis="y" [cdkDragDisabled]="!item.draggable" cdkDrag [id]="item.id">
             <route-item
               [currentCategory]="currentCategory"
               [moreTemplate]="moreTemplate"

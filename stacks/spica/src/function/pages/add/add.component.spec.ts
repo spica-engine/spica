@@ -74,7 +74,7 @@ describe("Function Add", () => {
         MatDatepickerModule,
         MatNativeDateModule,
         MatDividerModule,
-        StoreModule.forRoot({}),
+        StoreModule.forRoot({})
       ],
       providers: [
         {

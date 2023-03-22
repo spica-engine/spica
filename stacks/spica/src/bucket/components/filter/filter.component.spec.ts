@@ -13,7 +13,7 @@ import {EditorModule} from "@spica-client/common/code-editor";
 import {MatChipsModule} from "@angular/material/chips";
 import {MatIconModule} from "@angular/material/icon";
 import {MatTooltipModule} from "@angular/material/tooltip";
-import { StoreModule } from "@ngrx/store";
+import {StoreModule} from "@ngrx/store";
 
 @Component({
   template: `
@@ -91,7 +91,7 @@ describe("FilterComponent", () => {
         MatChipsModule,
         MatIconModule,
         MatTooltipModule,
-        StoreModule.forRoot({}),
+        StoreModule.forRoot({})
       ],
       declarations: [FilterComponent, NoopPlacer]
     }).compileComponents();

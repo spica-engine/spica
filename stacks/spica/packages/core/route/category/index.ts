@@ -1,2 +1,2 @@
-export * from "./category.service"
-export * from "./interface"
+export * from "./category.service";
+export * from "./interface";

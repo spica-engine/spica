@@ -33,7 +33,9 @@ describe("RouteService", () => {
     });
 
     it("should dispatch previous routes and new added", done => {
-      const routes = [{category: RouteCategoryType.Content, id: "", path: "", icon: "", display: ""}];
+      const routes = [
+        {category: RouteCategoryType.Content, id: "", path: "", icon: "", display: ""}
+      ];
       const laterAddedRoute = {
         category: RouteCategoryType.Developer,
         id: "123",
