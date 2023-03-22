@@ -1,5 +1,6 @@
 import {EventEmitter, Injectable, Output} from "@angular/core";
 import {RemoveCategory, RouteCategory, RouteService, Upsert} from "@spica-client/core";
+import {ViewChange} from "@spica-client/core/route/route";
 import {PassportService} from "../../passport";
 import {AddBucketComponent} from "../components/add-bucket/add-bucket.component";
 import {BucketActionsComponent} from "../pages/bucket-actions/bucket-actions.component";
@@ -8,12 +9,7 @@ import {BucketService} from "./bucket.service";
 @Injectable()
 export class BucketInitializer {
   categoryStorageKey = RouteCategory.Content;
-  @Output() onBucketCategoryChange = new EventEmitter<
-    {
-      id: string;
-      changes: object;
-    }[]
-  >();
+  @Output() onBucketCategoryChange = new EventEmitter<ViewChange[]>();
   buckets = [];
   constructor(
     private bs: BucketService,
@@ -23,7 +19,7 @@ export class BucketInitializer {
     this.routeService.patchCategory(RouteCategory.Content, {
       props: {
         moreTemplate: BucketActionsComponent,
-        onChangedOrder: this.onBucketCategoryChange,
+        onViewChange: this.onBucketCategoryChange,
         categoryStorageKey: this.categoryStorageKey
       }
     });

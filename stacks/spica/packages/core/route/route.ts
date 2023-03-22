@@ -5,7 +5,7 @@ import {ComponentType} from "@angular/cdk/overlay";
 import {ExpandableNavComponent} from "../layout/expandable-nav/expandable-nav.component";
 import {CategoryComponent} from "../layout/category/category.component";
 
-export enum RouteCategory {
+export enum RouteCategoryType {
   Dashboard = "Dashboard",
   Primary = "Primary",
   Developer = "Function",
@@ -26,7 +26,7 @@ export interface Route {
   icon: string;
   display: string;
   path: string | ComponentType<any>; // If path is component, can open component in modal
-  category: RouteCategory;
+  category: RouteCategoryType;
   data?: {[key: string]: any};
   queryParams?: {[key: string]: any};
   index?: number;
@@ -37,84 +37,89 @@ export interface Route {
   has_more?: boolean;
 }
 
-export type RouteCategoryType = {
+export interface ViewChange {
+  id: string;
+  changes: {
+    category: string;
+    order: number;
+  };
+}
+
+export type RouteCategorySpec = {
   icon: string;
   index: number;
   drawer?: ComponentType<any>;
   props?: {
     moreTemplate?: ComponentType<any>;
-    onChangedOrder?: EventEmitter<
-      {
-        id: string;
-        changes: object;
-      }[]
+    onViewChange?: EventEmitter<
+      ViewChange[]
     >;
     // Check this key usage, probably its redundant
-    categoryStorageKey?: RouteCategory;
+    categoryStorageKey?: RouteCategoryType;
   };
   children: {
-    name: RouteCategory;
+    name: RouteCategoryType;
     icon: string;
   };
 };
 
-export const routeCategories: Map<RouteCategory, RouteCategoryType> = new Map<
-  RouteCategory,
-  RouteCategoryType
+export const routeCategories: Map<RouteCategoryType, RouteCategorySpec> = new Map<
+  RouteCategoryType,
+  RouteCategorySpec
 >([
   [
-    RouteCategory.Primary,
+    RouteCategoryType.Primary,
     {
       icon: "stars",
       index: 0,
       drawer: ExpandableNavComponent,
-      children: {name: RouteCategory.Primary_Sub, icon: "list"}
+      children: {name: RouteCategoryType.Primary_Sub, icon: "list"}
     }
   ],
   [
-    RouteCategory.Dashboard,
+    RouteCategoryType.Dashboard,
 
     {
       icon: "dashboard",
       index: 1,
       drawer: ExpandableNavComponent,
-      children: {name: RouteCategory.Dashboard_Sub, icon: "list"}
+      children: {name: RouteCategoryType.Dashboard_Sub, icon: "list"}
     }
   ],
   [
-    RouteCategory.Content,
+    RouteCategoryType.Content,
     {
       icon: "view_stream",
       index: 2,
       drawer: CategoryComponent,
-      children: {name: RouteCategory.Content_Sub, icon: "format_list_numbered"}
+      children: {name: RouteCategoryType.Content_Sub, icon: "format_list_numbered"}
     }
   ],
   [
-    RouteCategory.System,
+    RouteCategoryType.System,
     {
       icon: "supervisor_account",
       index: 3,
       drawer: ExpandableNavComponent,
-      children: {name: RouteCategory.System_Sub, icon: "list"}
+      children: {name: RouteCategoryType.System_Sub, icon: "list"}
     }
   ],
   [
-    RouteCategory.Developer,
+    RouteCategoryType.Developer,
     {
       icon: "memory",
       drawer: CategoryComponent,
       index: 4,
-      children: {name: RouteCategory.Developer_Sub, icon: "bug_report"}
+      children: {name: RouteCategoryType.Developer_Sub, icon: "bug_report"}
     }
   ],
   [
-    RouteCategory.Webhook,
+    RouteCategoryType.Webhook,
     {
       icon: "webhook",
       index: 5,
       drawer: ExpandableNavComponent,
-      children: {name: RouteCategory.Webhook_Sub, icon: "bug_report"}
+      children: {name: RouteCategoryType.Webhook_Sub, icon: "bug_report"}
     }
   ]
 ]);

@@ -1,6 +1,6 @@
 import {createEntityAdapter, EntityState} from "@ngrx/entity";
 import {Action, createFeatureSelector, createSelector} from "@ngrx/store";
-import {Route, RouteCategory} from "./route";
+import {Route, RouteCategoryType} from "./route";
 
 export enum RouteActionTypes {
   RETRIEVE = "ROUTE_RETRIEVE",
@@ -34,7 +34,7 @@ export class Remove implements Action {
 
 export class RemoveCategory implements Action {
   public readonly type = RouteActionTypes.REMOVECATEGORY;
-  constructor(public category: RouteCategory) {}
+  constructor(public category: RouteCategoryType) {}
 }
 
 export class CherryPickAndRemove implements Action {

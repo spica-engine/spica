@@ -13,7 +13,7 @@ import {BehaviorSubject} from "rxjs";
 import {Route} from "../../route";
 
 @Component({
-  selector: "app-route-item",
+  selector: "route-item",
   templateUrl: "./route-item.component.html",
   styleUrls: ["./route-item.component.scss"]
 })

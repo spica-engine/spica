@@ -7,6 +7,7 @@ import {
   RouteService,
   Upsert
 } from "@spica-client/core/route";
+import {ViewChange} from "@spica-client/core/route/route";
 import {PassportService} from "@spica-client/passport";
 import {ConfigurationComponent} from "./components/configuration/configuration.component";
 import {FunctionActionsComponent} from "./pages/function-actions/function-actions.component";
@@ -14,12 +15,7 @@ import {FunctionService} from "./services/function.service";
 
 @Injectable()
 export class FunctionInitializer {
-  @Output() onFunctionCategoryChange = new EventEmitter<
-    {
-      id: string;
-      changes: object;
-    }[]
-  >();
+  @Output() onFunctionCategoryChange = new EventEmitter<ViewChange[]>();
   constructor(
     private functionService: FunctionService,
     private routeService: RouteService,
@@ -28,7 +24,7 @@ export class FunctionInitializer {
     this.routeService.patchCategory(RouteCategory.Developer, {
       props: {
         moreTemplate: FunctionActionsComponent,
-        onChangedOrder: this.onFunctionCategoryChange,
+        onViewChange: this.onFunctionCategoryChange,
         categoryStorageKey: RouteCategory.Developer
       }
     });

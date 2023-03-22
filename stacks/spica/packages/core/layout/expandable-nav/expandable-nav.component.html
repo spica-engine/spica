@@ -24,6 +24,6 @@
 
 <ng-template #routeItemList let-items="items">
   <ng-container *ngFor="let item of items">
-    <app-route-item [currentCategory]="currentCategory" [route]="item"></app-route-item>
+    <route-item [currentCategory]="currentCategory" [route]="item"></route-item>
   </ng-container>
 </ng-template>

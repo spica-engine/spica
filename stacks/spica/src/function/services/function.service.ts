@@ -15,6 +15,7 @@ import * as fromFunction from "../reducers/function.reducer";
 import {PassportService} from "@spica-client/passport";
 import {getWsObs, checkConnectivity} from "@spica-client/common";
 import {examples} from "../statics/examples";
+import {ViewChange} from "@spica-client/core/route/route";
 
 @Injectable({providedIn: "root"})
 export class FunctionService {
@@ -139,19 +140,19 @@ export class FunctionService {
       );
   }
 
-  sendPatchRequest(id: string, changes: object) {
+  sendPatchRequest({id, changes}: ViewChange) {
     return this.http.patch<Function>(`api:/function/${id}`, changes, {
       headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
     });
   }
 
-  patchFunctionMany(changes: {id: string; changes: object}[]): Promise<Function[]> {
-    return Promise.all(
-      changes.map(change => this.sendPatchRequest(change.id, change.changes).toPromise())
-    ).then((res: Function[]) => {
-      this.store.dispatch(new UpdateFunctions({functions: changes}));
-      return Promise.resolve(res);
-    });
+  patchFunctionMany(changes: ViewChange[]): Promise<Function[]> {
+    return Promise.all(changes.map(change => this.sendPatchRequest(change).toPromise())).then(
+      (res: Function[]) => {
+        this.store.dispatch(new UpdateFunctions({functions: changes}));
+        return Promise.resolve(res);
+      }
+    );
   }
 
   updateOne(id: string, update: {[key: string]: any}) {
