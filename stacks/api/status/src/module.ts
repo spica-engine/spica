@@ -25,7 +25,7 @@ export class StatusModule {
           provide: APP_INTERCEPTOR,
           useClass: StatusInterceptor
         }
-      ],
+      ]
     };
   }
 }

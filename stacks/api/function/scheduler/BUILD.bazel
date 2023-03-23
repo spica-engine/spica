@@ -12,7 +12,6 @@ ts_project(
     deps = [
         "//packages/core",
         "//packages/database",
-        "//stacks/api/status/services",
         "//stacks/api/function/compiler",
         "//stacks/api/function/compiler/javascript",
         "//stacks/api/function/compiler/typescript",
@@ -25,6 +24,7 @@ ts_project(
         "//stacks/api/function/runtime/io",
         "//stacks/api/function/runtime/node",
         "//stacks/api/replication",
+        "//stacks/api/status/services",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@types/node",
