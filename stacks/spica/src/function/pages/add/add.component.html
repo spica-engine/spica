@@ -57,6 +57,7 @@
       #language="language"
       [language]="function.language"
       [dependencies]="dependencies | async"
+      (handlers)="onHandlersEmitted($event)"
     >
     </code-editor>
     <div class="resize-cursor" (mousedown)="onMouseDown()"></div>
@@ -178,9 +179,6 @@
 
         <h4 mat-subheader (click)="sections.triggers = !sections.triggers">
           <mat-icon>{{ sections.triggers ? "expand_more" : "chevron_right" }}</mat-icon> Triggers
-          <mat-error *ngIf="isHandlerDuplicated">
-            Duplicated handler detected. Each handlers must be unique.
-          </mat-error>
           <mat-error *ngIf="serverError">
             {{ serverError }}
           </mat-error>
@@ -191,7 +189,7 @@
             <div
               class="trigger-explanation"
               *ngIf="information | async; let information"
-              [class.error]="!trigger.handler || isHandlerDuplicated.handler == trigger.handler"
+              [class.error]="!trigger.handler"
             >
               <ng-container *ngIf="information.enqueuers | enqueuer: trigger.type; let enqueuer">
                 <span (click)="triggersEditMode[i] = !triggersEditMode[i]">
@@ -223,16 +221,22 @@
               <ng-container *ngIf="information | async; let information">
                 <mat-form-field>
                   <mat-label>Handler</mat-label>
-                  <input
-                    matInput
-                    required
-                    minlength="1"
-                    placeholder="Handler"
-                    [(ngModel)]="trigger.handler"
+                  <mat-select
                     name="handler"
                     #handlerModel="ngModel"
-                    (ngModelChange)="checkHandlers()"
-                  />
+                    placeholder="Handler"
+                    [(ngModel)]="trigger.handler"
+                    required
+                  >
+                    <mat-option
+                      *ngFor="let handler of handlers"
+                      class="mat-accent"
+                      [value]="handler"
+                      [disabled]="isHandlerInUse(handler)"
+                    >
+                      {{ handler }}
+                    </mat-option>
+                  </mat-select>
                   <mat-error *ngIf="handlerModel.errors?.required">
                     This field is required.
                   </mat-error>
@@ -460,7 +464,7 @@
         class="save-button"
         mat-button
         *matSave="$save | async; let state"
-        [disabled]="form.invalid || isHandlerDuplicated || !!state || isIndexPending"
+        [disabled]="form.invalid || !!state || isIndexPending"
         [canInteract]="function._id ? 'function:update' : 'function:create'"
         [resource]="function._id ? function._id : undefined"
         (click)="save()"
