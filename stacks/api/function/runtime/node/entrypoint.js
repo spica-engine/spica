@@ -15,6 +15,11 @@ import {
 import {Database, event, Firehose, Http} from "@spica-server/function/queue/proto";
 import {createRequire} from "module";
 import * as path from "path";
+import {getLoggerConsole} from "@spica-server/function/runtime/logger";
+
+if (process.env.LOGGER) {
+  console = getLoggerConsole();
+}
 
 if (!process.env.FUNCTION_GRPC_ADDRESS) {
   exitAbnormally("Environment variable FUNCTION_GRPC_ADDRESS was not set.");

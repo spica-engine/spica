@@ -50,10 +50,10 @@ describe("LogViewComponent", () => {
           provide: ActivatedRoute,
           useValue: {
             queryParams: of({
-              showErrors: "false",
               function: "fn_id",
               begin: now.toString(),
-              end: now.toString()
+              end: now.toString(),
+              levels: [0, 1]
             })
           }
         },
@@ -95,10 +95,10 @@ describe("LogViewComponent", () => {
   it("should map filter", () => {
     fixture.componentInstance.queryParams.pipe(take(1)).subscribe(filter =>
       expect(filter).toEqual({
-        showErrors: false,
         function: ["fn_id"],
         begin: new Date(now.toString()),
-        end: new Date(now.toString())
+        end: new Date(now.toString()),
+        levels: [0, 1]
       })
     );
   });
@@ -113,7 +113,8 @@ describe("LogViewComponent", () => {
           content: "content",
           created_at: "",
           event_id: "new_event",
-          function: "fn1"
+          function: "fn1",
+          level: 0
         }
       ],
       [{_id: "fn1", name: "function_name"} as any]
@@ -126,7 +127,8 @@ describe("LogViewComponent", () => {
         content: "content",
         created_at: new Date("2019-12-31T21:00:00.000Z").toString(),
         event_id: "new_event",
-        function: {_id: "fn1", name: "function_name"} as any
+        function: {_id: "fn1", name: "function_name"} as any,
+        level: 0
       }
     ]);
   });
@@ -135,7 +137,12 @@ describe("LogViewComponent", () => {
     let clearSpy = spyOn(fixture.componentInstance["fs"], "clearLogs").and.callThrough();
     fixture.componentInstance.clearLogs();
     expect(clearSpy).toHaveBeenCalledTimes(1);
-    expect(clearSpy).toHaveBeenCalledWith("fn_id");
+    expect(clearSpy).toHaveBeenCalledWith("fn_id", {
+      function: ["fn_id"],
+      begin: new Date(now.toString()),
+      end: new Date(now.toString()),
+      levels: [0, 1]
+    } as any);
   });
 
   it("should navigate with new filter params", fakeAsync(async () => {

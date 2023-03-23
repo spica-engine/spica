@@ -34,23 +34,3 @@ jasmine_node_test(
         ":bucket_data_service_test_lib",
     ],
 )
-
-ts_project(
-    name = "bucket_filter_test_lib",
-    testonly = True,
-    srcs = [
-        "filter.spec.ts",
-    ],
-    deps = [
-        "//stacks/api/bucket/services",
-        "@npm//@types/jasmine",
-        "@npm//@types/node",
-    ],
-)
-
-jasmine_node_test(
-    name = "bucket_filter_test",
-    deps = [
-        ":bucket_filter_test_lib",
-    ],
-)

@@ -7,6 +7,7 @@ import {
 import {ObjectId} from "@spica-server/database";
 import {buildI18nAggregation, Locale} from "./locale";
 import {deepCopy} from "@spica-server/core/patch";
+import {setPropertyByPath} from "./schema";
 
 export function findRelations(
   schema: any,
@@ -74,12 +75,42 @@ export interface RelationMap {
   target: string;
   path: string;
   children?: RelationMap[];
+  schema: Bucket;
 }
 
 interface RelationMapOptions {
-  resolve: (id: string) => Promise<Bucket>;
+  resolve: RelationResolver;
   paths: string[][];
   properties: object;
+}
+
+export async function getRelationResolvedBucketSchema(
+  bucket: Bucket,
+  paths: string[][],
+  resolve: RelationResolver
+): Promise<Bucket> {
+  const copy = deepCopy(bucket);
+  const relationMaps = await createRelationMap({properties: copy.properties, paths, resolve});
+  const replaceWithRelatedBucket = (relationMap: RelationMap, properties: object) => {
+    let replaceWith: any = {type: "object", properties: relationMap.schema.properties};
+    if (relationMap.type == RelationType.Many) {
+      replaceWith = {type: "array", items: replaceWith};
+    }
+
+    const setProperty = setPropertyByPath(properties, relationMap.path, replaceWith);
+
+    if (relationMap.children) {
+      for (let child of relationMap.children) {
+        replaceWithRelatedBucket(child, setProperty.properties);
+      }
+    }
+  };
+
+  for (let relationMap of relationMaps) {
+    replaceWithRelatedBucket(relationMap, copy.properties);
+  }
+
+  return copy;
 }
 
 export async function createRelationMap(options: RelationMapOptions): Promise<RelationMap[]> {
@@ -104,12 +135,11 @@ export async function createRelationMap(options: RelationMapOptions): Promise<Re
       }
 
       if (propertySpec.type == "object") {
-        prefix = prefix ? prefix + "." + propertyKey : propertyKey;
         const objectRelations = await visit(
           propertySpec.properties,
           matchingPaths,
           depth + 1,
-          prefix
+          prefix ? prefix + "." + propertyKey : propertyKey
         );
         maps.push(...objectRelations);
         continue;
@@ -129,7 +159,8 @@ export async function createRelationMap(options: RelationMapOptions): Promise<Re
         path,
         target: propertySpec.bucketId,
         type: propertySpec.relationType,
-        children: children.length ? children : undefined
+        children: children.length ? children : undefined,
+        schema
       });
     }
 
@@ -391,3 +422,5 @@ export function getDependents(schema: Bucket, deletedDocument: BucketDocument) {
 
   return dependents;
 }
+
+export type RelationResolver = (id: string) => Promise<Bucket>;

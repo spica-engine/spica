@@ -42,3 +42,23 @@ jasmine_node_test(
         "locale_test_lib",
     ],
 )
+
+ts_project(
+    name = "bucket_filter_test_lib",
+    testonly = True,
+    srcs = [
+        "filter.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/bucket/common",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+    ],
+)
+
+jasmine_node_test(
+    name = "bucket_filter_test",
+    deps = [
+        ":bucket_filter_test_lib",
+    ],
+)

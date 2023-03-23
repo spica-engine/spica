@@ -207,7 +207,8 @@ describe("Status", () => {
             entryLimit: 20,
             maxConcurrency: 1,
             debug: false,
-            realtimeLogs: false
+            realtimeLogs: false,
+            logger: false
           })
         ]
       }).compile();

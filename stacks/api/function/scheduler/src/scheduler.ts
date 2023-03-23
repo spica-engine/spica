@@ -18,6 +18,7 @@ import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server
 import {event} from "@spica-server/function/queue/proto";
 import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
+import {generateLog, LogLevels} from "@spica-server/function/runtime/logger";
 import {Node} from "@spica-server/function/runtime/node";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {
@@ -196,13 +197,17 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       worker.attach(stdout, stderr);
 
       const timeoutInMs = Math.min(this.options.timeout, event.target.context.timeout) * 1000;
+
+      const msg = `${timeoutInMs / 1000} seconds timeout value has been reached for function '${
+        event.target.handler
+      }'. The worker is being shut down.`;
+
+      const timeoutMsg = this.options.logger ? generateLog(msg, LogLevels.INFO) : msg;
+      const channel = this.options.logger ? stdout : stderr;
+
       const timeoutFn = () => {
-        if (stderr.writable) {
-          stderr.write(
-            `${timeoutInMs / 1000} seconds timeout value has been reached for function '${
-              event.target.handler
-            }'. The worker is being shut down.`
-          );
+        if (channel.writable) {
+          channel.write(timeoutMsg);
         }
         worker.kill();
       };
@@ -282,7 +287,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
           __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
           __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
             ? "true"
-            : ""
+            : "",
+          LOGGER: this.options.logger ? "true" : undefined
         }
       });
 

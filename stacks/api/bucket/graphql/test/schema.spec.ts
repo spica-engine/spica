@@ -2,7 +2,6 @@ import {format as _format} from "prettier";
 import {
   createSchema,
   extractAggregationFromQuery,
-  getProjectAggregation,
   requestedFieldsFromExpression,
   requestedFieldsFromInfo,
   validateBuckets
@@ -724,77 +723,6 @@ describe("Schema", () => {
       const requestedFields = requestedFieldsFromInfo(info, "data");
 
       expect(requestedFields).toEqual([["name"], ["surname"], ["created_at"]]);
-    });
-
-    describe("aggregations", () => {
-      let bucket;
-      let localeFactory;
-      let buckets;
-
-      let relatedBucket;
-
-      beforeEach(() => {
-        bucket = {
-          _id: "first_bucket_id",
-          properties: {
-            name: {
-              type: "string"
-            },
-            translatable_field: {
-              type: "string",
-              options: {
-                translate: true
-              }
-            },
-            to_second_bucket: {
-              type: "relation",
-              relationType: "onetoone",
-              bucketId: "second_bucket_id"
-            }
-          }
-        };
-
-        relatedBucket = {
-          _id: "second_bucket_id",
-          properties: {
-            title: {
-              type: "string"
-            },
-            to_first_bucket: {
-              type: "relation",
-              relationType: "onetoone",
-              bucketId: "first_bucket_id"
-            }
-          }
-        };
-
-        buckets = [bucket, relatedBucket];
-
-        localeFactory = jasmine
-          .createSpy("localeFactory")
-          .and.returnValue(Promise.resolve({best: "EN", fallback: "EN"}));
-      });
-
-      it("should create project aggregation from requested fields", () => {
-        const fields = [
-          ["name"],
-          ["to_second_bucket", "title"],
-          ["to_second_bucket", "to_first_bucket", "name"],
-          ["to_second_bucket", "to_first_bucket", "translatable_field"],
-          ["translatable_field"]
-        ];
-
-        const project = getProjectAggregation(fields);
-        expect(project).toEqual({
-          $project: {
-            name: 1,
-            "to_second_bucket.title": 1,
-            "to_second_bucket.to_first_bucket.name": 1,
-            "to_second_bucket.to_first_bucket.translatable_field": 1,
-            translatable_field: 1
-          }
-        });
-      });
     });
   });
 });
