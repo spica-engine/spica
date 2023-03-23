@@ -9,21 +9,35 @@
     (ngModelChange)="onChange($event, 'default')"
   />
 </mat-form-field>
+
+<mat-form-field>
+  <mat-label>Presets</mat-label>
+  <mat-select
+    *ngIf="presets.length"
+    [(ngModel)]="selectedPresets"
+    (ngModelChange)="onPresetSelected($event)"
+    multiple
+  >
+    <mat-option class="mat-accent" *ngFor="let preset of presets" [value]="preset">
+      {{ preset.title | titlecase }}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
+
 <mat-slide-toggle
   #isEnum
-  [ngModel]="schema.enum?.length > 0"
-  (ngModelChange)="$event ? (schema.enum = []) : removeEnum()"
+  [(ngModel)]="isEnumEnabled"
+  (ngModelChange)="$event ? initEnum() : removeEnum()"
   >Make field enumerated</mat-slide-toggle
 >
 <enum-schema *ngIf="isEnum.checked"></enum-schema>
+
 <mat-slide-toggle
   #hasPattern
-  [ngModel]="schema.pattern ? schema.pattern : undefined"
-  (ngModelChange)="schema.pattern ? removePattern() : (schema.pattern = '')"
+  [(ngModel)]="isPatternEnabled"
+  (ngModelChange)="$event ? initPattern() : removePattern()"
   >Define pattern</mat-slide-toggle
 >
-<ng-container *ngIf="hasPattern.checked">
-  <mat-form-field>
-    <input matInput placeholder="Regular expression" type="text" [(ngModel)]="schema.pattern" />
-  </mat-form-field>
-</ng-container>
+<mat-form-field *ngIf="hasPattern.checked">
+  <input matInput placeholder="Regular expression" type="text" [(ngModel)]="schema.pattern" />
+</mat-form-field>
