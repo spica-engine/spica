@@ -13,7 +13,14 @@ export class VersionControlComponent {
 
   isPending = false;
 
-  constructor(private vcs: VersionControlService) {}
+  availableCommands: string[] = [];
+
+  constructor(private vcs: VersionControlService) {
+    vcs
+      .getCommands()
+      .toPromise()
+      .then(commands => (this.availableCommands = commands));
+  }
 
   execute() {
     const {action, args} = this.separateCommand();
