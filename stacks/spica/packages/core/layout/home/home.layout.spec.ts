@@ -84,7 +84,7 @@ describe("Home Layout", () => {
       expect(navCategories[0].getAttribute("class")).toContain("active");
     }));
 
-    xit("should show clicked category as active with child routes", fakeAsync(() => {
+    xit("should show clicked category as active with child routes", fakeAsync(async () => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
           {category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1"},
@@ -101,10 +101,12 @@ describe("Home Layout", () => {
       );
       tick(500);
       fixture.detectChanges();
-      const contentCategory = fixture.debugElement.nativeElement.querySelectorAll(
-        ".iconlist > mat-list-item:not(:first-of-type)"
+      const systemCategory = fixture.debugElement.nativeElement.querySelectorAll(
+        ".iconlist > mat-list-item"
       )[1];
-      contentCategory.click();
+      systemCategory.click();
+      tick(500);
+      await fixture.whenStable();
       fixture.detectChanges();
       const selectedCategoryRoutes = fixture.debugElement.nativeElement.querySelectorAll(
         ".routerlist > mat-list-item"
