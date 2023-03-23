@@ -3,6 +3,7 @@ import {CommonModule} from "@angular/common";
 import {
   ANALYZE_FOR_ENTRY_COMPONENTS,
   Inject,
+  InjectionToken,
   ModuleWithProviders,
   NgModule,
   Optional
