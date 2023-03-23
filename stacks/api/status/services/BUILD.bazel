@@ -14,5 +14,7 @@ ts_project(
         "//packages/database",
         "@npm//@nestjs/common",
         "@npm//rxjs",
+        "@npm//@types/express",
+        "@npm//express",
     ],
 )
