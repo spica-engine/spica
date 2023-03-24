@@ -162,7 +162,7 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
 
     this.muuriItemPositionLocalStorageKey = `dashboard_${this.dashboard._id}_muuriItemLayouts`;
 
+    this.muuriItemStyles = [];
     this.dashboard.components.forEach((c, i) => this.setComponentStyles(c.ratio, i));
-    // console.log(changes);
   }
 }

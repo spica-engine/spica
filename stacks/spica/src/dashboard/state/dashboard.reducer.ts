@@ -21,7 +21,7 @@ export class Remove implements Action {
 
 export class Update implements Action {
   readonly type = DashboardActionTypes.UPDATE;
-  constructor(public id: string, public changes: Partial<Dashboard>) {}
+  constructor(public dashboard: Dashboard) {}
 }
 
 export class Add implements Action {
@@ -47,7 +47,7 @@ export function reducer(state: State = initialState, action: DashboardAction): S
     case DashboardActionTypes.ADD:
       return adapter.addOne(action.dashboard, state);
     case DashboardActionTypes.UPDATE:
-      return adapter.updateOne({id: action.id, changes: action.changes}, state);
+      return adapter.setOne(action.dashboard, state);
     default:
       return state;
   }

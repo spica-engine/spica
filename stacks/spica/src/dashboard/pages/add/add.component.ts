@@ -66,7 +66,7 @@ export class AddComponent implements OnInit, OnDestroy {
           )
         )
       )
-      .subscribe();
+      .toPromise();
   }
 
   clearCards() {
@@ -108,6 +108,13 @@ export class AddComponent implements OnInit, OnDestroy {
 
   addComponent() {
     this.dashboard.components.push(getEmptyComponent());
+
+    this.updateRef();
+  }
+
+  removeComponent(i: number) {
+    this.dashboard.components.splice(i, 1);
+    this.componentData$.splice(i, 1);
 
     this.updateRef();
   }

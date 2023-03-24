@@ -42,9 +42,7 @@ export class DashboardService {
     return this.http
       .put<Dashboard>(`api:/dashboard/${id}`, dashboard)
       .pipe(
-        tap(updatedDashboard =>
-          this.store.dispatch(new fromDashboard.Update(dashboard._id, updatedDashboard))
-        )
+        tap(updatedDashboard => this.store.dispatch(new fromDashboard.Update(updatedDashboard)))
       );
   }
 
