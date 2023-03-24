@@ -1,58 +1,54 @@
-:host{
-  .default-charts{
-    height:100% !important;
+:host {
+  .default-charts {
+    height: 100% !important;
     mat-card-header {
       align-items: center;
       justify-content: center;
-      ::ng-deep .mat-card-header-text{
-        margin:0;
-        text-align:center;
-        display:flex;
-        align-items:center;
+      ::ng-deep .mat-card-header-text {
+        margin: 0;
+        text-align: center;
+        display: flex;
+        align-items: center;
       }
     }
-  
-    
+
     div.filters {
       display: flex;
       justify-content: space-between;
-      align-items:center;
-      width:100% !important;
-      .filter-inputs{
-        
+      align-items: center;
+      width: 100% !important;
+      .filter-inputs {
       }
-     .ng-star-inserted{
-      width:45%;
-     }
+      .ng-star-inserted {
+        width: 45%;
+      }
       > h4 {
         margin: 0px 0px 5px 0px;
       }
       > span {
         margin-right: 5px;
-               
       }
     }
-    
+
     div.chart-container {
       min-height: 320px;
       height: calc(100% - 120px);
-      
     }
-   
+
     button.refresh {
       position: absolute;
       right: 10px;
       top: 10px;
-    
+
       width: 30px;
       height: 30px;
       line-height: 30px;
     }
-    div.show-chart{
-      width:100%;
+    div.show-chart {
+      width: 100%;
       text-align: center;
-     
-       button.show-chart-button{
+
+      button.show-chart-button {
         padding: 1.2em 1.5em;
         font-size: 16px;
         color: white;
@@ -60,45 +56,38 @@
         outline: none;
         background: #2e2e2e7a;
         border-radius: 5px;
-        cursor:pointer;
+        cursor: pointer;
       }
-      .hidden-chart{
-        position:absolute;
+      .hidden-chart {
+        position: absolute;
         background: white;
         top: 2px;
         left: 17em;
         padding: 0 10px;
+      }
+      .hidden-chart-2-1 {
+        position: absolute;
+        background: white;
+        bottom: 2px;
+        left: 0;
+        padding: 0 10px;
+      }
+      .chart-container-hidden {
+        width: 0px;
+        height: 0px;
+        overflow: hidden;
+        transition: 0.3s all;
+      }
+      .chart-container-unhidden {
+        width: 480px !important;
+        min-height: 480px !important;
+        // height:calc(100%-100px) !important;
+        overflow: visible;
+        transition: 0.3s all;
+      }
     }
-    .hidden-chart-2-1{
-      position:absolute;
-      background: white;
-      bottom: 2px;
-      left: 0;
-      padding: 0 10px;
-  } 
-      .chart-container-hidden{
-       width:0px;
-       height:0px;
-       overflow:hidden;  
-       transition:0.3s all;
-
-      }
-      .chart-container-unhidden{
-          width:480px !important;
-          min-height:480px !important; 
-          // height:calc(100%-100px) !important; 
-          overflow:visible;  
-          transition:0.3s all;
-      }
-      
-      
+    canvas {
+      height: 100%;
     }
-    canvas
-      {
-        height: 100%;
-      }
   }
-  
-  
-  
 }

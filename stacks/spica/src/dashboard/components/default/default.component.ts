@@ -21,6 +21,8 @@ export class DefaultComponent implements OnInit {
   @Input() ratio: string = "";
   @Input() refresh: boolean;
 
+  @Input() isSmallComponent = false;
+
   @Output() isHovered = new EventEmitter<boolean>();
 
   public showChart: boolean = false;

@@ -17,7 +17,13 @@ export class TableComponent implements AfterViewInit {
   // otherwise mat-sort won't work
   displayedColumns = [];
 
+  @Input() isSmallComponent = false;
+
   @Output() onUpdate: EventEmitter<object> = new EventEmitter();
+
+  @Output() isHovered = new EventEmitter<boolean>();
+
+  public showTable = false;
 
   dataSource: MatTableDataSource<Object[]>;
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
@@ -33,5 +39,10 @@ export class TableComponent implements AfterViewInit {
         this.dataSource.paginator = this.paginator;
       })
     );
+  }
+
+  onShowTableClicked() {
+    this.showTable = !this.showTable;
+    this.isHovered.emit(this.showTable);
   }
 }

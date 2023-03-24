@@ -12,7 +12,7 @@
   >
     <mat-icon>refresh</mat-icon>
   </button>
-  <div class="filters">
+  <div class="filters" *ngIf="!isSmallComponent">
     <ng-container *ngFor="let filter of componentData.filters">
       <span
         [name]="filter.key"
@@ -25,13 +25,36 @@
   </div>
 </ng-container>
 
-<mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
-  <ng-container *ngFor="let c of displayedColumns" [matColumnDef]="c">
-    <mat-header-cell *matHeaderCellDef mat-sort-header>{{ c }}</mat-header-cell>
-    <mat-cell *matCellDef="let element">{{ element[c] }}</mat-cell>
-  </ng-container>
+<ng-template #tableElement>
+  <mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+    <ng-container *ngFor="let c of displayedColumns" [matColumnDef]="c">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>{{ c }}</mat-header-cell>
+      <mat-cell *matCellDef="let element">{{ element[c] }}</mat-cell>
+    </ng-container>
 
-  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-  <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
-</mat-table>
-<mat-paginator [pageSizeOptions]="[3, 10, 20]"></mat-paginator>
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+  </mat-table>
+  <mat-paginator [pageSizeOptions]="[3, 10, 20]"></mat-paginator>
+</ng-template>
+
+<div class="show-chart" *ngIf="isSmallComponent">
+  <button class="show-table-button" (click)="onShowChartClicked()">show chart</button>
+  <div
+    class="hidden-chart"
+    [ngClass]="showChart ? 'chart-container-unhidden' : 'chart-container-hidden'"
+  >
+    <canvas
+      baseChart
+      [data]="componentData.data"
+      [datasets]="componentData.datasets"
+      [labels]="componentData.label"
+      [options]="componentData.options"
+      [colors]="componentData.colors"
+      [legend]="componentData.legend"
+      [plugins]="componentData.plugins"
+      [chartType]="type"
+    >
+    </canvas>
+  </div>
+</div>

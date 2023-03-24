@@ -26,6 +26,8 @@ export class CardComponent {
 
   @Output() onUpdate: EventEmitter<object> = new EventEmitter();
 
+  @Input() isSmallComponent = false;
+
   token: string;
 
   constructor(private passport: PassportService, private http: HttpClient) {

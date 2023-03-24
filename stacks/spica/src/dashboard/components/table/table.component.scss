@@ -26,6 +26,49 @@ div.filters {
   > span {
     margin-right: 5px;
   }
+
+  div.show-table {
+    width: 100%;
+    text-align: center;
+
+    button.show-table-button {
+      padding: 1.2em 1.5em;
+      font-size: 16px;
+      color: white;
+      border: none;
+      outline: none;
+      background: #2e2e2e7a;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .hidden-table {
+      position: absolute;
+      background: white;
+      top: 2px;
+      left: 17em;
+      padding: 0 10px;
+    }
+    .hidden-table-2-1 {
+      position: absolute;
+      background: white;
+      bottom: 2px;
+      left: 0;
+      padding: 0 10px;
+    }
+    .table-container-hidden {
+      width: 0px;
+      height: 0px;
+      overflow: hidden;
+      transition: 0.3s all;
+    }
+    .table-container-unhidden {
+      width: 480px !important;
+      min-height: 480px !important;
+      // height:calc(100%-100px) !important;
+      overflow: visible;
+      transition: 0.3s all;
+    }
+  }
 }
 
 button.refresh {

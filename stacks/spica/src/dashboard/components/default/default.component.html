@@ -1,4 +1,18 @@
 <div class="default-charts" *ngIf="componentData$ | async; let componentData">
+  <ng-template #canvasElement>
+    <canvas
+      baseChart
+      [data]="componentData.data"
+      [datasets]="componentData.datasets"
+      [labels]="componentData.label"
+      [options]="componentData.options"
+      [colors]="componentData.colors"
+      [legend]="componentData.legend"
+      [plugins]="componentData.plugins"
+      [chartType]="type"
+    >
+    </canvas>
+  </ng-template>
   <ng-container>
     <mat-card-header
       ><mat-card-title>
@@ -14,7 +28,7 @@
     >
       <mat-icon>refresh</mat-icon>
     </button>
-    <div class="filters" *ngIf="ratio != '1/1'">
+    <div class="filters" *ngIf="isSmallComponent">
       <div *ngFor="let filter of componentData.filters">
         <span
           [name]="filter.key"
@@ -25,39 +39,16 @@
         </span>
       </div>
     </div>
-    <div class="chart-container" *ngIf="!(ratio == '1/1' || ratio == '1/2' || ratio == '2/1')">
-      <canvas
-        baseChart
-        [data]="componentData.data"
-        [datasets]="componentData.datasets"
-        [labels]="componentData.label"
-        [options]="componentData.options"
-        [colors]="componentData.colors"
-        [legend]="componentData.legend"
-        [plugins]="componentData.plugins"
-        [chartType]="type"
-      >
-      </canvas>
+    <div class="chart-container" *ngIf="!isSmallComponent">
+      <ng-container *ngTemplateOutlet="canvasElement"> </ng-container>
     </div>
-    <div class="show-chart" *ngIf="ratio == '1/1' || ratio == '1/2' || ratio == '2/1'">
+    <div class="show-chart" *ngIf="isSmallComponent">
       <button class="show-chart-button" (click)="onShowChartClicked()">show chart</button>
       <div
         class="hidden-chart"
-        [ngClass]="ratio == '2/1' ? 'hidden-chart-2-1' : 'hidden-chart'"
         [ngClass]="showChart ? 'chart-container-unhidden' : 'chart-container-hidden'"
       >
-        <canvas
-          baseChart
-          [data]="componentData.data"
-          [datasets]="componentData.datasets"
-          [labels]="componentData.label"
-          [options]="componentData.options"
-          [colors]="componentData.colors"
-          [legend]="componentData.legend"
-          [plugins]="componentData.plugins"
-          [chartType]="type"
-        >
-        </canvas>
+        <ng-container *ngTemplateOutlet="canvasElement"> </ng-container>
       </div>
     </div>
   </ng-container>

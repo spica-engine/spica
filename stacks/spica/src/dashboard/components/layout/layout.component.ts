@@ -64,6 +64,10 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
 
   ngAfterViewInit() {}
 
+  isSmallComponent(ratio: string) {
+    return ratio == "1/1" || ratio == "1/2" || ratio == "2/1";
+  }
+
   zIndexOnHover(value: boolean, i: number) {
     if (value) {
       this.muuriItemStyles[i]["z-index"] = 1000;
