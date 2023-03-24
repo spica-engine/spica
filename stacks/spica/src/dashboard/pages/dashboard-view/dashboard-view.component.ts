@@ -5,6 +5,9 @@ import {DashboardService} from "../../services/dashboard.service";
 import {Dashboard} from "@spica-client/dashboard/interfaces";
 import {Component, OnInit} from "@angular/core";
 import {BreakpointObserver, BreakpointState} from "@angular/cdk/layout";
+import { GridOptions } from 'muuri';
+import Grid from 'muuri';
+
 
 interface ComponentStyle {
   "z-index": number;
@@ -12,6 +15,13 @@ interface ComponentStyle {
   height: string;
   transform: string;
 }
+
+// interface MuuriItemStyles {
+//   width: string;
+//   height: string;
+//   "z-index": number;
+// }
+
 
 @Component({
   selector: "app-dashboard-view",
@@ -31,11 +41,23 @@ export class DashboardViewComponent implements OnInit {
 
   componentStyles: ComponentStyle[] = [];
 
+  muuriItemStyles= [];
+
   localStorageKey: string;
+
+  muuriItemPositionLocalStorageKey: string;
 
   customizeDisabled = false;
 
   arePendings: boolean[] = [];
+
+  public layoutConfig: GridOptions = {
+ 
+    dragEnabled: false,
+
+  }
+  ratios = ["1/1", "1/2", "2/1", "2/2", "4/2", "4/4"];
+
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -58,29 +80,96 @@ export class DashboardViewComponent implements OnInit {
 
             this.clearCards();
 
-            this.localStorageKey = `dashboard_${dashboard._id}_component_styles`;
+            // for (const [index, component] of dashboard.components.entries()) {
+            //   const refresh$ = new BehaviorSubject(undefined);
+            //   this.refreshSubjects$.push(refresh$);
 
-            this.loadComponentStyles(dashboard.components.length);
-            this.saveComponentStyles();
+            //   this.arePendings.push(true);
 
-            for (const [index, component] of dashboard.components.entries()) {
-              const refresh$ = new BehaviorSubject(undefined);
-              this.refreshSubjects$.push(refresh$);
-
-              this.arePendings.push(true);
-
-              this.componentData$.push(
-                refresh$.pipe(
-                  tap(() => (this.arePendings[index] = true)),
-                  switchMap(filter => this.ds.executeComponent(component.url, filter)),
-                  tap(() => (this.arePendings[index] = false))
-                )
-              );
-            }
+            //   this.componentData$.push(
+            //     refresh$.pipe(
+            //       tap(() => (this.arePendings[index] = true)),
+            //       switchMap(filter => this.ds.executeComponent(component.url, filter)),
+            //       tap(() => (this.arePendings[index] = false))
+            //     )
+            //   );
+            // }
           })
         )
       )
     );
+  }
+
+  onGridCreated(grid: Grid) {
+    setTimeout(() => {
+
+     
+
+      const itemIds = grid.getItems().map((item) => {
+        return item.getElement().getAttribute("id");
+      });
+
+      let layout= this.getLayout();
+
+      if (layout) {
+        console.log("bura gelirmi");
+        if ((itemIds.length> layout.length)) {
+          for (let i = (layout.length); i < itemIds.length; i++) {
+            layout.push(itemIds[i]);  
+          }  
+        }
+        this.loadLayout(grid, layout);
+      }
+      else {
+        grid.layout(true);
+      }
+        
+      grid.on("move", () => {
+        this.saveLayout(grid);
+      });
+    }, 500);
+  }
+
+  serializeLayout(grid: Grid) {
+    const itemIds = grid.getItems().map((item) => {
+      return item.getElement().getAttribute("id");
+    });
+    return JSON.stringify(itemIds);
+  }
+
+  saveLayout(grid: Grid) {
+    const layout = this.serializeLayout(grid);
+    
+    localStorage.setItem(this.muuriItemPositionLocalStorageKey, layout);
+    
+  }
+
+  loadLayout(grid: Grid, serializedLayout) {
+    
+    const currentItems = grid.getItems();
+    const currentItemIds = currentItems.map((item) =>
+      item.getElement().getAttribute("id")
+    );
+
+    let newItems = [];
+    serializedLayout.forEach((itemId) => {
+      let itemIndex = currentItemIds.indexOf(itemId);
+      if (itemIndex > -1) {
+        newItems.push(currentItems[itemIndex]);
+      }
+    });
+    grid.sort(newItems, { layout: "instant" });
+
+  }
+
+
+  getLayout() {
+
+    const denem = localStorage.getItem(this.muuriItemPositionLocalStorageKey);
+
+    const datadeneme = JSON.parse(denem);
+
+    return datadeneme;
   }
 
   clearCards() {
@@ -139,60 +228,38 @@ export class DashboardViewComponent implements OnInit {
   }
 
   loadComponentStyles(componentsLength: number) {
-    let savedStyles: any = localStorage.getItem(this.localStorageKey);
+    let muuriGridItemSavedStyles: any = localStorage.getItem(this.localStorageKey);
 
     try {
-      savedStyles = JSON.parse(savedStyles) || this.getDefaultComponentStyles(componentsLength);
+      muuriGridItemSavedStyles = JSON.parse(muuriGridItemSavedStyles) || this.getDefaultComponentStyles(componentsLength);
     } catch (e) {
-      savedStyles = [];
+      muuriGridItemSavedStyles = [];
     }
 
-    this.componentStyles = savedStyles;
+    this.muuriItemStyles = muuriGridItemSavedStyles;
 
     // user might have added new component to dashboard
-    if (componentsLength > this.componentStyles.length) {
-      const diff = componentsLength - this.componentStyles.length;
+    if (componentsLength > this.muuriItemStyles.length) {
+      const diff = componentsLength - this.muuriItemStyles.length;
       const addedComponentStyles = this.getDefaultComponentStyles(
         diff,
-        this.componentStyles.length
+        this.muuriItemStyles.length
       );
 
-      this.componentStyles.push(...addedComponentStyles);
+      this.muuriItemStyles.push(...addedComponentStyles);
     }
   }
-
   getDefaultComponentStyles(componentsLength: number, minZIndex: number = 0) {
-    const width = 500;
-    const height = 500;
-
-    const container = document.getElementsByClassName("dashboard-container")[0] as HTMLElement;
-    const containerWidth = container.clientWidth;
-
-    let multiplierX = -1;
-    let multiplierY = -1;
-
-    let toRight = true;
-
     return new Array(componentsLength).fill(undefined).map((_, i) => {
-      toRight ? multiplierX++ : multiplierX--;
-      multiplierY++;
-
-      const translateX = multiplierX * 50;
-      const translateY = multiplierY * 50;
-
-      const nextIteration = (multiplierX + (toRight ? 1 : -1)) * 50;
-
-      if (nextIteration + width >= containerWidth || nextIteration < 0) {
-        toRight = !toRight;
-      }
       return {
-        "z-index": minZIndex + i,
-        width: `${width}px`,
-        height: `${height}px`,
-        transform: `translate3d(${translateX}px, ${translateY}px, 0px)`
+        "width": "240px",
+        "height": "240px",
+        "z-index": 1
+
       };
     });
   }
+
 
   autoAlign(columns: number) {
     const margin = 10;

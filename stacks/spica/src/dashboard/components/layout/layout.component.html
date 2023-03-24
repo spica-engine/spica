@@ -1,0 +1,91 @@
+<!-- 
+<div *ngIf="dashboard$ | async; let dashboard" class="dashboard-container">
+  <div  #myGrid class="grid charts-container" muuriGrid [config]="layoutConfig" (gridCreated)="onGridCreated($event)" >
+    <div class="item" muuriGridItem *ngFor="let component of dashboard.components; index as i" [style.width]="muuriItemStyles[i].width" [style.height]="muuriItemStyles[i].height" [style.z-index]="muuriItemStyles[i]['z-index']"  [attr.id]="'chart'+i">
+      <mat-card class="item-content">
+        <div class="drag-cursor" ></div>
+        <div class="content" [style.visibility]="arePendings[i] ? 'hidden' : 'visible'">
+          <dashboard-default (isHovered)="zIndexOnHover($event, i)"
+    [reset]="reset"
+    [ratio]="component.ratio"
+      *ngIf="defaultTypes.indexOf(component.type) != -1"
+      [componentData$]="componentData$[i]"
+      [type]="component.type"
+      (onUpdate)="onUpdate($event, i)"
+    >
+    </dashboard-default>
+    <dashboard-table
+      *ngIf="component.type == 'table'"
+      [componentData$]="componentData$[i]"
+      [type]="component.type"
+      (onUpdate)="onUpdate($event, i)"
+    >
+    </dashboard-table>
+    <dashboard-card
+      *ngIf="component.type == 'card'"
+      [componentData$]="componentData$[i]"
+      [type]="component.type"
+      (onUpdate)="onUpdate($event, i)"
+    >
+    </dashboard-card>
+    <dashboard-statistic
+      *ngIf="component.type == 'statistic'"
+      [componentData$]="componentData$[i]"
+      [type]="component.type"
+      (onUpdate)="onUpdate($event, i)"
+    >
+    </dashboard-statistic>
+        </div>
+        
+      </mat-card>
+
+    </div>
+ </div>
+
+</div> -->
+
+<div  #myGrid class="grid charts-container" muuriGrid [config]="layoutConfig" (gridCreated)="onGridCreated($event)" >
+    <div class="item" muuriGridItem *ngFor="let component of dashboard.components; index as i" [style.width]="muuriItemStyles[i].width" [style.height]="muuriItemStyles[i].height" [style.z-index]="muuriItemStyles[i]['z-index']"  [attr.id]="'chart'+i">
+      <mat-card class="item-content">
+        <div class="drag-cursor" ></div>
+        <div class="content">
+          <!-- [style.visibility]="arePendings[i] ? 'hidden' : 'visible'" -->
+          <dashboard-default (isHovered)="zIndexOnHover($event, i)"
+    [reset]="reset"
+    [ratio]="component.ratio"
+      *ngIf="defaultTypes.indexOf(component.type) != -1"
+      [componentData$]="componentData$[i]"
+      [mockData]="mockData[i]"
+      [type]="component.type"
+      (onUpdate)="onUpdate($event, i)"
+    >
+    </dashboard-default>
+    <dashboard-table
+      *ngIf="component.type == 'table'"
+      [componentData$]="componentData$[i]"
+      [type]="component.type"
+      (onUpdate)="onUpdate($event, i)"
+    >
+    </dashboard-table>
+    <dashboard-card
+      *ngIf="component.type == 'card'"
+      [componentData$]="componentData$[i]"
+      [type]="component.type"
+      (onUpdate)="onUpdate($event, i)"
+    >
+    </dashboard-card>
+    <dashboard-statistic
+      *ngIf="component.type == 'statistic'"
+      [componentData$]="componentData$[i]"
+      [type]="component.type"
+      (onUpdate)="onUpdate($event, i)"
+    >
+    </dashboard-statistic>
+        </div>
+        
+      </mat-card>
+
+    </div>
+ </div>
+
+ 

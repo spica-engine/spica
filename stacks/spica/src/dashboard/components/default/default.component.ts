@@ -1,6 +1,6 @@
 import {Component, Input, Output, EventEmitter, OnInit} from "@angular/core";
 import {Observable} from "rxjs";
-import {map} from "rxjs/operators";
+import {map, tap} from "rxjs/operators";
 
 @Component({
   selector: "dashboard-default",
@@ -10,6 +10,20 @@ import {map} from "rxjs/operators";
 export class DefaultComponent implements OnInit {
   @Input() componentData$: Observable<any>;
   @Input() type: string;
+  @Input() ratio: string= "";
+  @Input() reset: boolean;
+
+  @Input() mockData;
+
+
+  @Output()  isHovered = new EventEmitter<boolean>();
+
+  // @Input() isHovered:boolean;
+
+  public isChartHovered:boolean = false;
+
+
+
   @Output() onUpdate: EventEmitter<object> = new EventEmitter();
 
   ngOnInit() {
@@ -20,8 +34,35 @@ export class DefaultComponent implements OnInit {
           responsive: true,
           maintainAspectRatio: false
         };
+
         return data;
-      })
+      }),
+      tap(console.log)
+
     );
+   
+    
+
+    
   }
+
+  onChartHovered(){
+    console.log("before hovered",this.isChartHovered);
+    this.isChartHovered = true;
+    console.log("after hovered",this.isChartHovered);
+
+  }
+  onChartUnHovered(){
+    console.log("before unhovered",this.isChartHovered);    
+     this.isChartHovered = false;
+     console.log("after unhovered",this.isChartHovered);
+
+  }
+
+  onClickDeneme(value:boolean){
+    this.isChartHovered =!value;
+    this.isHovered.emit(this.isChartHovered);
+  }
+
+
 }

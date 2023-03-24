@@ -5,7 +5,7 @@
         <mat-icon> {{ dashboard.icon }} </mat-icon>
         <span> {{ dashboard.name }}</span>
       </h1>
-      <div *ngIf="!customizeDisabled" class="actions">
+      <!-- <div *ngIf="!customizeDisabled" class="actions">
         <mat-form-field>
           <mat-label>
             Auto Align
@@ -42,9 +42,9 @@
           </mat-icon>
           Reset
         </button>
-      </div>
+      </div> -->
     </mat-toolbar>
-    <div class="components-container">
+    <!-- <div class="components-container">
       <mat-card
         *ngFor="let component of dashboard.components; index as i"
         class="card"
@@ -88,6 +88,10 @@
           </dashboard-statistic>
         </div>
       </mat-card>
-    </div>
+    </div> -->
+
+    <dashboard-layout  [dashboard]="dashboard" ></dashboard-layout>
+
+
   </div>
 </div>
