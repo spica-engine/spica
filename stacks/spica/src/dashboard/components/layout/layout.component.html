@@ -15,7 +15,6 @@
       <div class="drag-cursor"></div>
       <div class="content" [style.visibility]="arePendings[i] ? 'hidden' : 'visible'">
         <dashboard-default
-          #dashboardDefault
           (isHovered)="zIndexOnHover($event, i)"
           [ratio]="component.ratio"
           *ngIf="defaultTypes.indexOf(component.type) != -1"

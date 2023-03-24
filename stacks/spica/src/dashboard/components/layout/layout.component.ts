@@ -1,15 +1,7 @@
-import {
-  Component,
-  OnInit,
-  Input,
-  SimpleChanges,
-  OnChanges,
-  AfterViewInit,
-  ElementRef
-} from "@angular/core";
+import {Component, OnInit, Input, SimpleChanges, OnChanges, AfterViewInit} from "@angular/core";
 import {Observable, BehaviorSubject} from "rxjs";
 import {Dashboard, getEmptyDashboard} from "@spica-client/dashboard/interfaces";
-import {GridOptions} from "muuri";
+import {GridOptions, Item} from "muuri";
 import Grid from "muuri";
 
 interface MuuriItemStyles {
@@ -112,9 +104,7 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
 
       grid.refreshItems().layout();
 
-      const itemIds = grid.getItems().map(item => {
-        return item.getElement().getAttribute("id");
-      });
+      const itemIds = this.getItemIds(grid.getItems());
 
       let layout = this.getLayout();
 
@@ -135,38 +125,34 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
     }, 500);
   }
 
-  serializeLayout(grid: Grid) {
-    const itemIds = grid.getItems().map(item => {
-      return item.getElement().getAttribute("id");
-    });
-    return JSON.stringify(itemIds);
+  getItemIds(items: Item[]) {
+    return items.map(item => item.getElement().getAttribute("id"));
   }
 
   saveLayout(grid: Grid) {
-    const layout = this.serializeLayout(grid);
-
-    localStorage.setItem(this.muuriItemPositionLocalStorageKey, layout);
+    const layout = this.getItemIds(grid.getItems());
+    localStorage.setItem(this.muuriItemPositionLocalStorageKey, JSON.stringify(layout));
   }
 
-  loadLayout(grid: Grid, serializedLayout) {
+  loadLayout(grid: Grid, layout: string[]) {
     const currentItems = grid.getItems();
-    const currentItemIds = currentItems.map(item => item.getElement().getAttribute("id"));
+    const currentItemIds = this.getItemIds(currentItems);
 
-    let newItems = [];
-    serializedLayout.forEach(itemId => {
+    let itemsOrder: Item[] = [];
+    layout.forEach(itemId => {
       let itemIndex = currentItemIds.indexOf(itemId);
       if (itemIndex > -1) {
-        newItems.push(currentItems[itemIndex]);
+        itemsOrder.push(currentItems[itemIndex]);
       }
     });
-    grid.sort(newItems, {layout: "instant"});
+    grid.sort(itemsOrder);
     this.grid = grid;
   }
 
-  getLayout() {
-    const muuriİtemPosition = localStorage.getItem(this.muuriItemPositionLocalStorageKey);
+  getLayout(): string[] {
+    const muuriItemPosition = localStorage.getItem(this.muuriItemPositionLocalStorageKey);
 
-    const muuriItemLayout = JSON.parse(muuriİtemPosition);
+    const muuriItemLayout = JSON.parse(muuriItemPosition);
 
     return muuriItemLayout;
   }

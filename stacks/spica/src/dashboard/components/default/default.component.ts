@@ -19,13 +19,11 @@ export class DefaultComponent implements OnInit {
   @Input() componentData$: Observable<any>;
   @Input() type: string;
   @Input() ratio: string = "";
-  @Input() reset: boolean;
+  @Input() refresh: boolean;
 
   @Output() isHovered = new EventEmitter<boolean>();
 
-  // @Input() isHovered:boolean;
-
-  public isChartHovered: boolean = false;
+  public showChart: boolean = false;
 
   @Output() onUpdate: EventEmitter<object> = new EventEmitter();
 
@@ -39,24 +37,12 @@ export class DefaultComponent implements OnInit {
         };
 
         return data;
-      }),
-      tap(console.log)
+      })
     );
   }
 
-  onChartHovered() {
-    console.log("before hovered", this.isChartHovered);
-    this.isChartHovered = true;
-    console.log("after hovered", this.isChartHovered);
-  }
-  onChartUnHovered() {
-    console.log("before unhovered", this.isChartHovered);
-    this.isChartHovered = false;
-    console.log("after unhovered", this.isChartHovered);
-  }
-
-  onClickDeneme(value: boolean) {
-    this.isChartHovered = !value;
-    this.isHovered.emit(this.isChartHovered);
+  onShowChartClicked() {
+    this.showChart = !this.showChart;
+    this.isHovered.emit(this.showChart);
   }
 }
