@@ -6,14 +6,7 @@ import {Observable} from "rxjs";
 export class VersionControlService {
   constructor(private http: HttpClient) {}
 
-  getCommands(): Observable<{
-    [command: string]: {
-      type: string;
-      items?: {
-        type: string;
-      };
-    };
-  }> {
+  getCommands(): Observable<string[]> {
     return this.http.get<any>("api:/versioncontrol/commands");
   }
 
