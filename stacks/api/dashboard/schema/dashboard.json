@@ -35,6 +35,10 @@
           "type": {
             "type": "string",
             "description": "Type of this component"
+          },
+          "ratio": {
+            "type": "string",
+            "description": "Aspect/ratio of the component like 1/1, 2/2 etc."
           }
         },
         "additionalProperties": false

@@ -11,4 +11,5 @@ export interface Component {
   name: string;
   url: string;
   type: string;
+  ratio: string;
 }
