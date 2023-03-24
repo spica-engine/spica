@@ -9,7 +9,6 @@ export interface Component {
   name: string;
   url: string;
   type: string;
-  //menim elavem
   ratio: string;
 }
 
@@ -18,5 +17,14 @@ export const getEmptyDashboard = (): Dashboard => {
     name: undefined,
     icon: "leaderboard",
     components: []
+  };
+};
+
+export const getEmptyComponent = (): Component => {
+  return {
+    name: undefined,
+    url: undefined,
+    type: undefined,
+    ratio: "2/2"
   };
 };

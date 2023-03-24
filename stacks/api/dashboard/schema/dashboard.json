@@ -38,7 +38,8 @@
           },
           "ratio": {
             "type": "string",
-            "description": "Aspect/ratio of the component like 1/1, 2/2 etc."
+            "description": "Aspect/ratio of the component like 1/1, 2/2 etc.",
+            "default": "2/2"
           }
         },
         "additionalProperties": false

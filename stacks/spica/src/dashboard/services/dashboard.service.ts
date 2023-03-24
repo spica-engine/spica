@@ -2,14 +2,14 @@ import {HttpClient, HttpParams} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {Store} from "@ngrx/store";
 import {Observable} from "rxjs";
-import {tap,map} from "rxjs/operators";
+import {tap} from "rxjs/operators";
 import {Dashboard} from "../interfaces";
 import * as fromDashboard from "../state/dashboard.reducer";
 import {example} from "./example-code";
 
 @Injectable()
 export class DashboardService {
-   copiedDashboards = new Map<string, Dashboard>();
+  copiedDashboards = new Map<string, Dashboard>();
   constructor(private http: HttpClient, private store: Store<fromDashboard.State>) {}
 
   getExample(type: string) {
@@ -26,32 +26,8 @@ export class DashboardService {
     return this.store.select(fromDashboard.selectAll);
   }
 
-  copiedDeneme(){
-
-   console.log(this.copiedDashboards);
-
-    // return this.store.select(fromDashboard.selectEntity(id));
-  }
-
   findOne(id: string): Observable<Dashboard> {
-  
-
-    return this.store.select(fromDashboard.selectEntity(id)).pipe(map((dashboard) => {
-      const copiedDashboard = this.copiedDashboards.get(id);
-      if(!copiedDashboard){
-        return dashboard;
-      }
-         dashboard.components = dashboard.components.map((originalComponent)=>{
-        const matchedComponent = copiedDashboard.components.find( (copiedComponent) =>{
-          return copiedComponent.name == originalComponent.name
-         } 
-         )
-         originalComponent.ratio = matchedComponent.ratio;
-         return originalComponent;
-      })
-
-      return dashboard;
-    }))
+    return this.store.select(fromDashboard.selectEntity(id));
   }
 
   executeComponent(url: string, filter: {[key: string]: string}): Observable<any> {
@@ -60,12 +36,6 @@ export class DashboardService {
   }
 
   update(dashboard: Dashboard) {
-    this.copiedDashboards.set(dashboard._id, JSON.parse(JSON.stringify(dashboard)));
-    dashboard.components = dashboard.components.map((component)=>{
-      delete component.ratio; 
-      return component;
-    })
-
     const id = dashboard._id;
     delete dashboard._id;
 
@@ -79,11 +49,6 @@ export class DashboardService {
   }
 
   insert(dashboard: Dashboard) {
-    this.copiedDashboards.set(dashboard._id, JSON.parse(JSON.stringify(dashboard)));
-    dashboard.components = dashboard.components.map((component)=>{
-      delete component.ratio; 
-      return component;
-    })
     return this.http
       .post<Dashboard>("api:/dashboard", dashboard)
       .pipe(

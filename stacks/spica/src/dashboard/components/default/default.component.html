@@ -1,68 +1,67 @@
-<div class="default-charts" >
-  <ng-container   >
+<div class="default-charts" *ngIf="componentData$ | async; let componentData">
+  <ng-container>
     <mat-card-header
       ><mat-card-title>
-        {{ mockData.title }}
+        {{ componentData.title }}
       </mat-card-title>
     </mat-card-header>
-    <button *ngIf="reset"
+    <button
+      *ngIf="reset"
       class="refresh"
       mat-icon-button
       matTooltip="Refresh data"
-      (click)="onUpdate.next(mockData.filters)"
+      (click)="onUpdate.next(componentData.filters)"
     >
       <mat-icon>refresh</mat-icon>
     </button>
-    <div class="filters"  *ngIf="ratio != '1/1'">
-      <div  *ngFor="let filter of mockData.filters">
+    <div class="filters" *ngIf="ratio != '1/1'">
+      <div *ngFor="let filter of componentData.filters">
         <span
-          
           [name]="filter.key"
           [inputPlacer]="filter"
           [(ngModel)]="filter.value"
-          (keyup.enter)="onUpdate.next(mockData.filters)"
+          (keyup.enter)="onUpdate.next(componentData.filters)"
         >
         </span>
       </div>
     </div>
-    <div class="chart-container"  *ngIf="!(ratio == '1/1' || ratio == '1/2' || ratio == '2/1')">
+    <div class="chart-container" *ngIf="!(ratio == '1/1' || ratio == '1/2' || ratio == '2/1')">
       <canvas
         baseChart
-        [data]="mockData.data"
-        [datasets]="mockData.datasets"
-        [labels]="mockData.label"
-        [options]="mockData.options"
-        [colors]="mockData.colors"
-        [legend]="mockData.legend"
-        [plugins]="mockData.plugins"
+        [data]="componentData.data"
+        [datasets]="componentData.datasets"
+        [labels]="componentData.label"
+        [options]="componentData.options"
+        [colors]="componentData.colors"
+        [legend]="componentData.legend"
+        [plugins]="componentData.plugins"
         [chartType]="type"
       >
       </canvas>
     </div>
-    <div class="show-chart"  *ngIf="ratio == '1/1' || ratio == '1/2' || ratio == '2/1'">
-    <button class="show-chart-button" (click)="onClickDeneme(isChartHovered)">show chart
-    </button>
-    <div class="hidden-chart" [ngClass]="(ratio=='2/1')? 'hidden-chart-2-1' : 'hidden-chart'" [ngClass]="isChartHovered ? 'chart-container-unhidden' : 'chart-container-hidden'" >
-    
-      <canvas
-      baseChart
-      [data]="mockData.data"
-      [datasets]="mockData.datasets"
-      [labels]="mockData.label"
-      [options]="mockData.options"
-      [colors]="mockData.colors"
-      [legend]="mockData.legend"
-      [plugins]="mockData.plugins"
-      [chartType]="type"
-    >
-    </canvas>
-     
-    </div>
+    <div class="show-chart" *ngIf="ratio == '1/1' || ratio == '1/2' || ratio == '2/1'">
+      <button class="show-chart-button" (click)="onClickDeneme(isChartHovered)">show chart</button>
+      <div
+        class="hidden-chart"
+        [ngClass]="ratio == '2/1' ? 'hidden-chart-2-1' : 'hidden-chart'"
+        [ngClass]="isChartHovered ? 'chart-container-unhidden' : 'chart-container-hidden'"
+      >
+        <canvas
+          baseChart
+          [data]="componentData.data"
+          [datasets]="componentData.datasets"
+          [labels]="componentData.label"
+          [options]="componentData.options"
+          [colors]="componentData.colors"
+          [legend]="componentData.legend"
+          [plugins]="componentData.plugins"
+          [chartType]="type"
+        >
+        </canvas>
+      </div>
     </div>
   </ng-container>
 </div>
-
-
 
 <!-- <div class="default-charts" [ratio]="ratio" *ngIf="ratio == '2/2' || ratio == '4/2' || ratio == '4/4'">
   <ng-container *ngIf="componentData$ | async; let componentData" >

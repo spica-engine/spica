@@ -37,8 +37,8 @@
     <span>{{ dashboard._id ? "Edit dashboard" : "New dashboard" }}</span>
   </h4>
 </mat-toolbar>
-<div >
-  <mat-card class="mat-elevation-z25" >
+<div>
+  <mat-card class="mat-elevation-z25">
     <mat-card-content>
       <form #form="ngForm">
         <mat-list>
@@ -79,19 +79,27 @@
                 <mat-label>
                   Type
                 </mat-label>
-                <mat-select [name]="i + '.type'" [(ngModel)]="component.type" required (selectionChange)="getMockData(component.type, i)">
+                <mat-select
+                  [name]="i + '.type'"
+                  [(ngModel)]="component.type"
+                  required
+                  (selectionChange)="getMockData(component.type, i)"
+                >
                   <mat-option class="mat-accent" *ngFor="let type of types" [value]="type">
                     {{ type | titlecase }}
                   </mat-option>
                 </mat-select>
               </mat-form-field>
               <mat-form-field class="ratio-button">
-                <mat-select placeholder="2/2" [name]="i + '.ratio'" [(ngModel)]="component.ratio" (selectionChange)="onRatioChoose(component.ratio, i)">
-                  <!-- ; saveComponentStyles() -->
+                <mat-select
+                  placeholder="2/2"
+                  [name]="i + '.ratio'"
+                  [(ngModel)]="component.ratio"
+                  (ngModelChange)="updateRef()"
+                >
                   <mat-option class="mat-accent" *ngFor="let ratio of ratios" [value]="ratio">
                     {{ ratio }}
                   </mat-option>
-                
                 </mat-select>
               </mat-form-field>
             </div>
@@ -104,7 +112,7 @@
               </button>
             </div>
           </mat-list-item>
-  
+
           <button type="button" mat-button class="new-component" (click)="addComponent()">
             <mat-icon>add</mat-icon>Add New Component
           </button>
@@ -123,62 +131,10 @@
         <mat-icon>save</mat-icon>
         Save
       </button>
-     
     </mat-card-actions>
   </mat-card>
- 
 </div>
 
-<div *ngIf="dashboard$ | async; let dashboard">
-  <dashboard-layout  [dashboard]="dashboard" [mockData]="mockData"></dashboard-layout>
+<div *ngIf="dashboard">
+  <dashboard-layout [componentData$]="componentData$" [dashboard]="dashboard"></dashboard-layout>
 </div>
-
-
-<!-- <div *ngIf="dashboard$ | async; let dashboard" class="dashboard-container"> -->
-   <!-- <dashboard-layout  [dashboard]="dashboard" [mockData]="mockData"></dashboard-layout> -->
-   <!-- <div #myGrid class="grid charts-container" muuriGrid [config]="layoutConfig" (gridCreated)="onGridCreated($event)">
-      <div class="item" muuriGridItem *ngFor="let component of dashboard.components; index as i" [style.width]="muuriItemStyles[i].width" [style.height]="muuriItemStyles[i].height" [style.z-index]="muuriItemStyles[i]['z-index']"  [attr.id]="'chart'+i">
-        <mat-card class="item-content">
-          <div class="drag-cursor" ></div>
-          <div class="content" [style.visibility]="arePendings[i] ? 'hidden' : 'visible'">
-            <dashboard-default (isHovered)="zIndexOnHover($event, i)"
-      [reset]="reset"
-      [ratio]="component.ratio"
-        *ngIf="defaultTypes.indexOf(component.type) != -1"
-        [componentData$]="componentData$[i]"
-        [type]="component.type"
-        (onUpdate)="onUpdate($event, i)"
-      >
-      </dashboard-default>
-      <dashboard-table
-        *ngIf="component.type == 'table'"
-        [componentData$]="componentData$[i]"
-        [type]="component.type"
-        (onUpdate)="onUpdate($event, i)"
-      >
-      </dashboard-table>
-      <dashboard-card
-        *ngIf="component.type == 'card'"
-        [componentData$]="componentData$[i]"
-        [type]="component.type"
-        (onUpdate)="onUpdate($event, i)"
-      >
-      </dashboard-card>
-      <dashboard-statistic
-        *ngIf="component.type == 'statistic'"
-        [componentData$]="componentData$[i]"
-        [type]="component.type"
-        (onUpdate)="onUpdate($event, i)"
-      >
-      </dashboard-statistic>
-          </div>
-          
-        </mat-card>
-
-      </div>
-   </div> -->
-<!-- </div> -->
-
-
-
-
