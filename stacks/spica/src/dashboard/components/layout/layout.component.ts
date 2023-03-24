@@ -38,6 +38,8 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
 
   grid: Grid;
 
+  onMoveListenerAttached = false;
+
   public layoutConfig: GridOptions = {
     items: [],
     layoutOnInit: true,
@@ -86,13 +88,21 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
       "z-index": 1
     };
 
-    this.onGridCreated(this.grid);
-
     return {
       height,
       width,
       "z-index": 1
     };
+  }
+
+  attachMoveListener(grid: Grid) {
+    if (this.onMoveListenerAttached) {
+      return;
+    }
+    grid.on("move", () => {
+      this.saveLayout(grid);
+    });
+    this.onMoveListenerAttached = true;
   }
 
   onGridCreated(grid: Grid) {
@@ -105,23 +115,15 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
       grid.refreshItems().layout();
 
       const itemIds = this.getItemIds(grid.getItems());
-
       let layout = this.getLayout();
-
-      if (layout) {
-        if (itemIds.length > layout.length) {
-          for (let i = layout.length; i < itemIds.length; i++) {
-            layout.push(itemIds[i]);
-          }
+      if (itemIds.length > layout.length) {
+        for (let i = layout.length; i < itemIds.length; i++) {
+          layout.push(itemIds[i]);
         }
-        this.loadLayout(grid, layout);
-      } else {
-        grid.layout(true);
       }
+      this.loadLayout(grid, layout);
 
-      grid.on("move", () => {
-        this.saveLayout(grid);
-      });
+      this.attachMoveListener(grid);
     }, 500);
   }
 
@@ -154,7 +156,7 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
 
     const muuriItemLayout = JSON.parse(muuriItemPosition);
 
-    return muuriItemLayout;
+    return muuriItemLayout || [];
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -164,5 +166,7 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
 
     this.muuriItemStyles = [];
     this.dashboard.components.forEach((c, i) => this.setComponentStyles(c.ratio, i));
+
+    this.onGridCreated(this.grid);
   }
 }
