@@ -25,27 +25,28 @@
   </div>
 </ng-container>
 
-<ng-template #tableElement>
-  <mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
-    <ng-container *ngFor="let c of displayedColumns" [matColumnDef]="c">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>{{ c }}</mat-header-cell>
-      <mat-cell *matCellDef="let element">{{ element[c] }}</mat-cell>
-    </ng-container>
-
-    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
-  </mat-table>
-  <mat-paginator ></mat-paginator>
-</ng-template>
-
-<ng-container *ngTemplateOutlet="tableElement"> </ng-container>
-
-<div class="show-table" *ngIf="isSmall">
-  <button class="show-table-button" (click)="onShowTableClicked()">show chart</button>
+<div [ngClass]="isSmall ? 'show-table' : 'table-container'">
+  <button *ngIf="isSmall" class="show-table-button" (click)="onShowTableClicked()">
+    show table
+  </button>
   <div
-    class="hidden-table"
-    [ngClass]="showTable ? 'table-container-unhidden' : 'table-container-hidden'"
+    [ngClass]="
+      isSmall
+        ? showTable
+          ? 'hidden-table table-container-unhidden'
+          : 'hidden-table table-container-hidden'
+        : ''
+    "
   >
-  <ng-container *ngTemplateOutlet="tableElement"> </ng-container>
+    <mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+      <ng-container *ngFor="let c of displayedColumns" [matColumnDef]="c">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>{{ c }}</mat-header-cell>
+        <mat-cell *matCellDef="let element">{{ element[c] }}</mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    </mat-table>
+    <mat-paginator></mat-paginator>
   </div>
 </div>

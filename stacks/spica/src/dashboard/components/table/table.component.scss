@@ -26,8 +26,6 @@ div.filters {
   > span {
     margin-right: 5px;
   }
-
- 
 }
 div.show-table {
   width: 100%;
@@ -45,9 +43,7 @@ div.show-table {
   }
   .hidden-table {
     position: absolute;
-    background: white;
     left: 0em;
-    padding: 0 10px;
   }
   .table-container-hidden {
     width: 0px;
@@ -57,7 +53,7 @@ div.show-table {
   }
   .table-container-unhidden {
     width: 480px !important;
-    min-height: 480px !important;
+    height: 480px !important;
     // height:calc(100%-100px) !important;
     overflow: visible;
     transition: 0.3s all;
