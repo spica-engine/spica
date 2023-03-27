@@ -6,6 +6,7 @@ import {InputPlacerWithMetaPlacer} from "@spica-client/common";
 import {InputResolver} from "@spica-client/common/input/input.resolver";
 import {map, take} from "rxjs/operators";
 import {NgModel} from "@angular/forms";
+import {SavingState} from "@spica-client/material";
 
 @Component({
   selector: "app-add-field-modal",
@@ -18,6 +19,7 @@ export class AddFieldModalComponent implements OnInit {
   parentSchema: any;
   propertyKey: string = "";
   propertyKv: any;
+  savingState: SavingState;
 
   translatableTypes = ["string", "textarea", "array", "object", "richtext", "storage"];
   basicPropertyTypes = ["string", "textarea", "boolean", "number"];
@@ -36,6 +38,7 @@ export class AddFieldModalComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.savingState = SavingState.Pristine;
     this.bs
       .getPredefinedDefaults()
       .pipe(
@@ -88,7 +91,15 @@ export class AddFieldModalComponent implements OnInit {
   }
 
   save() {
-    this.dialogRef.close();
+    this.savingState = SavingState.Saving;
+    this.bs
+      .replaceOne(this.parentSchema)
+      .toPromise()
+      .then(() => {
+        this.savingState = SavingState.Saved;
+        this.dialogRef.close(true);
+      })
+      .catch(() => (this.savingState = SavingState.Failed));
   }
 
   toggleRequired(key: string, required: boolean) {

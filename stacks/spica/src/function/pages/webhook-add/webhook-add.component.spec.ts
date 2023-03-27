@@ -23,6 +23,7 @@ import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-in
 import {Webhook} from "../../interface";
 import {WebhookService} from "../../services";
 import {WebhookAddComponent} from "./webhook-add.component";
+import {StoreModule} from "@ngrx/store";
 
 describe("Webhook", () => {
   let fixture: ComponentFixture<WebhookAddComponent>;
@@ -57,7 +58,8 @@ describe("Webhook", () => {
         HttpClientTestingModule,
         MatProgressSpinnerModule,
         MatSaveModule,
-        EditorModule
+        EditorModule,
+        StoreModule.forRoot({})
       ],
       declarations: [WebhookAddComponent, CanInteractDirectiveTest],
       providers: [

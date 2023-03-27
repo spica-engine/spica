@@ -1,0 +1,350 @@
+<button mat-menu-item disableRipple (click)="openModal(viewTemplate)">
+  <mat-icon>text_fields</mat-icon>
+  Configure the view
+</button>
+<button mat-menu-item disableRipple (click)="openModal(ruleTemplate)">
+  <mat-icon>gavel</mat-icon>
+  Configure rules
+</button>
+<button mat-menu-item [matMenuTriggerFor]="bucketOptionsMenu" disableRipple>
+  <mat-icon>gavel</mat-icon>
+  Options
+</button>
+<mat-menu
+  (closed)="saveBucket()"
+  class="bucket-settings-menu-toggles"
+  (click)="$event.stopPropagation()"
+  #bucketOptionsMenu="matMenu"
+>
+  <div class="toggles" *ngIf="schema">
+    <div mat-menu-item (click)="$event.stopPropagation()">
+      <div class="read-only">
+        <mat-slide-toggle
+          [resource]="schema._id"
+          canInteract="bucket:update"
+          disableRipple
+          matInput
+          name="readOnly"
+          placeholder="Read Only"
+          [(ngModel)]="schema.readOnly"
+        >
+          Read Only
+        </mat-slide-toggle>
+        <button
+          mat-icon-button
+          color="accent"
+          disableRipple
+          matTooltip="If you mark this bucket as read only, no one will be able to edit or change any data in this schema."
+        >
+          <mat-icon>info</mat-icon>
+        </button>
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+    <div mat-menu-item (click)="$event.stopPropagation()">
+      <div class="history">
+        <mat-slide-toggle
+          [resource]="schema._id"
+          canInteract="bucket:update"
+          disableRipple
+          [disabled]="!(isHistoryEndpointEnabled$ | async)"
+          name="history"
+          placeholder="History"
+          [(ngModel)]="schema.history"
+          [matTooltip]="
+            !(isHistoryEndpointEnabled$ | async)
+              ? 'This feature is unavailable for this instance.'
+              : ''
+          "
+        >
+          History
+        </mat-slide-toggle>
+        <button
+          mat-icon-button
+          color="accent"
+          disableRipple
+          matTooltip="When enabled, the history of the data inside this bucket will be kept."
+        >
+          <mat-icon>info</mat-icon>
+        </button>
+      </div>
+    </div>
+    <div (click)="$event.stopPropagation()" class="clear-history-button" *ngIf="schema.history">
+      <button
+        [resource]="schema._id"
+        canInteract="bucket:update"
+        (click)="clearHistories()"
+        mat-raised-button
+        color="warn"
+        *matSave="removeState"
+        [disabled]="!!removeState"
+        [ngSwitch]="removeState"
+      >
+        <ng-container *ngSwitchDefault>
+          <mat-icon>delete</mat-icon>
+          <span>Remove History</span>
+        </ng-container>
+        <ng-container *ngSwitchCase="'saving'">
+          <mat-progress-spinner
+            [diameter]="18"
+            color="primary"
+            mode="indeterminate"
+          ></mat-progress-spinner>
+          <span>Removing..</span>
+        </ng-container>
+        <ng-container *ngSwitchCase="'saved'">
+          <mat-icon>done</mat-icon>
+          <span>Removed</span>
+        </ng-container>
+        <ng-container *ngSwitchCase="'failed'">
+          <mat-icon>clear</mat-icon>
+          <span>Failed</span>
+        </ng-container>
+      </button>
+    </div>
+    <mat-divider></mat-divider>
+    <div mat-menu-item (click)="$event.stopPropagation()">
+      <div class="limitations">
+        <mat-slide-toggle
+          matInput
+          name="limitations"
+          placeholder="Limitations"
+          [ngModel]="schema.documentSettings"
+          (ngModelChange)="onDocumentSettingsChange()"
+        >
+          Limitations
+        </mat-slide-toggle>
+        <button
+          mat-icon-button
+          color="accent"
+          disableRipple
+          matTooltip="Switch this toggle if you want to specify limitations for this schema."
+        >
+          <mat-icon>info</mat-icon>
+        </button>
+      </div>
+    </div>
+    <div
+      (click)="$event.stopPropagation()"
+      *ngIf="schema.documentSettings"
+      class="limitations-details"
+    >
+      <div>
+        <mat-form-field>
+          <mat-label>Maximum number of documents</mat-label>
+          <input
+            matInput
+            type="number"
+            name="countLimit"
+            placeholder="Maximum number of documents"
+            [(ngModel)]="schema.documentSettings.countLimit"
+            required
+            min="1"
+          />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>After reached limit</mat-label>
+          <mat-select
+            name="limitExceedBehaviour"
+            [(ngModel)]="schema.documentSettings.limitExceedBehaviour"
+            required
+          >
+            <mat-option
+              matTooltip="It will prevent inserting document after the limit has been reached"
+              value="prevent"
+            >
+              Do not insert
+            </mat-option>
+            <mat-option
+              matTooltip="It will not prevent inserting document, but the oldest document of this bucket will be deleted for each inserted document after the limit has been reached"
+              value="remove"
+            >
+              Insert but delete the oldest
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+  </div>
+</mat-menu>
+
+<ng-template #ruleTemplate>
+  <mat-card class="bucket-settings-menu-modal mat-elevation-z0">
+    <mat-card-header>
+      <mat-card-title> <mat-icon>gavel</mat-icon> Access Control Rules</mat-card-title>
+    </mat-card-header>
+
+    <mat-divider></mat-divider>
+    <mat-card-content>
+      <div class="code-editors">
+        <div>
+          <a target="_blank" href="https://spicaengine.com/docs/concept/bucket#rules">
+            <b>
+              <mat-icon>contact_support</mat-icon>
+              <span>Reading rules</span>
+            </b>
+          </a>
+          <code-editor
+            placeholder="ACL"
+            [(ngModel)]="schema.acl.read"
+            [options]="{
+              minimap: {enabled: false},
+              lineNumbers: 'off',
+              contextmenu: false,
+              language: 'cel'
+            }"
+            language="cel"
+            [properties]="schema.properties"
+          >
+          </code-editor>
+        </div>
+        <div>
+          <a target="_blank" href="https://spicaengine.com/docs/concept/bucket#rules">
+            <b>
+              <span>Writing Rules</span>
+              <mat-icon>contact_support</mat-icon>
+            </b>
+          </a>
+          <code-editor
+            placeholder="ACL"
+            [(ngModel)]="schema.acl.write"
+            [options]="{
+              minimap: {enabled: false},
+              lineNumbers: 'off',
+              contextmenu: false,
+              language: 'cel'
+            }"
+            language="cel"
+            [properties]="schema.properties"
+          >
+          </code-editor>
+        </div>
+      </div>
+    </mat-card-content>
+    <mat-card-actions>
+      <button
+        class="save-button"
+        mat-button
+        canInteract="bucket:update"
+        [resource]="schema._id"
+        *matSave="savingState"
+        [disabled]="!!savingState"
+        (click)="saveBucket()"
+        [ngSwitch]="savingState"
+      >
+        <mat-icon *ngSwitchDefault>save</mat-icon>
+        <mat-progress-spinner
+          *ngSwitchCase="'saving'"
+          [diameter]="18"
+          color="primary"
+          mode="indeterminate"
+        >
+        </mat-progress-spinner>
+        <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
+        <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
+        <span>{{ (!savingState ? "save" : savingState) | titlecase }}</span>
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</ng-template>
+
+<ng-template #viewTemplate>
+  <mat-card class="bucket-settings-menu-modal mat-elevation-z0">
+    <mat-card-header>
+      <mat-card-title> <mat-icon>view_module</mat-icon> View</mat-card-title>
+    </mat-card-header>
+    <mat-divider></mat-divider>
+    <mat-card-content>
+      <mat-grid-list [cols]="4" gutterSize="10px" rowHeight="200px">
+        <mat-grid-tile
+          [colspan]="2"
+          #leftList="cdkDropList"
+          cdkDropList
+          cdkDropListSortingDisabled
+          [cdkDropListData]="propertyPositionMap.left"
+          [cdkDropListConnectedTo]="[rightList, bottomList, nonPositioned]"
+          (cdkDropListDropped)="setPosition($event, 'left')"
+        >
+          <mat-card
+            class="mat-elevation-z0 view-conf-item"
+            *ngFor="let propertyKv of propertyPositionMap.left"
+            cdkDrag
+          >
+            <mat-icon>{{ _inputResolver.resolve(propertyKv.value.type).icon }}</mat-icon>
+            <span>{{ propertyKv.value.title }}</span>
+          </mat-card>
+          <span>Left</span>
+        </mat-grid-tile>
+        <mat-grid-tile
+          [colspan]="2"
+          #rightList="cdkDropList"
+          cdkDropList
+          cdkDropListSortingDisabled
+          [cdkDropListData]="propertyPositionMap.right"
+          [cdkDropListConnectedTo]="[leftList, bottomList, nonPositioned]"
+          (cdkDropListDropped)="setPosition($event, 'right')"
+        >
+          <mat-card
+            class="mat-elevation-z0"
+            *ngFor="let propertyKv of propertyPositionMap.right"
+            cdkDrag
+          >
+            <mat-icon>{{ _inputResolver.resolve(propertyKv.value.type).icon }}</mat-icon>
+            <span>{{ propertyKv.value.title }}</span>
+          </mat-card>
+          <span>Right</span>
+        </mat-grid-tile>
+        <mat-grid-tile
+          [colspan]="4"
+          #bottomList="cdkDropList"
+          cdkDropList
+          cdkDropListSortingDisabled
+          [cdkDropListData]="propertyPositionMap.bottom"
+          [cdkDropListConnectedTo]="[rightList, leftList, nonPositioned]"
+          (cdkDropListDropped)="setPosition($event, 'bottom')"
+        >
+          <mat-card
+            class="mat-elevation-z0"
+            *ngFor="let propertyKv of propertyPositionMap.bottom"
+            cdkDrag
+          >
+            <mat-icon>{{ _inputResolver.resolve(propertyKv.value.type).icon }}</mat-icon>
+            <span>{{ propertyKv.value.title }}</span>
+          </mat-card>
+          <span>Bottom</span>
+        </mat-grid-tile>
+      </mat-grid-list>
+    </mat-card-content>
+    <mat-card-actions>
+      <button
+        class="save-button"
+        mat-button
+        canInteract="bucket:update"
+        [resource]="schema._id"
+        *matSave="savingState"
+        [disabled]="!!savingState"
+        (click)="saveBucket()"
+        [ngSwitch]="savingState"
+      >
+        <mat-icon *ngSwitchDefault>save</mat-icon>
+        <mat-progress-spinner
+          *ngSwitchCase="'saving'"
+          [diameter]="18"
+          color="primary"
+          mode="indeterminate"
+        >
+        </mat-progress-spinner>
+        <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
+        <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
+        <span>{{ (!savingState ? "save" : savingState) | titlecase }}</span>
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</ng-template>
+
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action will <b>permanently</b> delete this bucket and break all relations.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>

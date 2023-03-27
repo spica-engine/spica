@@ -1,0 +1,29 @@
+<ng-container *ngIf="route">
+  <button mat-menu-item canInteract="bucket:update" [resource]="route.id" (click)="editBucket()">
+    <mat-icon>edit</mat-icon>
+    Edit
+  </button>
+  <mat-divider> </mat-divider>
+  <button
+    mat-menu-item
+    canInteract="bucket:delete"
+    [resource]="route.id"
+    color="warn"
+    [matAwareDialog]="{
+      title: 'Confirmation',
+      templateOrDescription: dialogTemplate,
+      answer: route.display
+    }"
+    (confirm)="delete(route.id)"
+  >
+    <mat-icon color="warn">delete</mat-icon>
+    Delete
+  </button>
+</ng-container>
+
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action will <b>permanently</b> delete this bucket and break all relations.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>

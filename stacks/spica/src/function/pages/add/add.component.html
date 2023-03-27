@@ -5,12 +5,18 @@
   [class.with-sidecar]="enableLogView"
 >
   <div class="code">
-    <h4 class="code-actions">
-      <mat-icon>code</mat-icon> Code
+    <div class="code-actions">
+      <div class="title">
+        <mat-icon>code</mat-icon>
+        <h4>{{ function.name }}</h4>
+      </div>
 
-      <span class="separator"></span>
+      <div class="separator"></div>
 
       <div class="actions">
+        <button mat-icon-button (click)="openEditDialog()" matTooltip="Edit">
+          <mat-icon>edit</mat-icon>
+        </button>
         <button
           mat-icon-button
           (click)="switchToFullscreen()"
@@ -46,8 +52,7 @@
           </mat-icon>
         </button>
       </div>
-    </h4>
-    <mat-divider></mat-divider>
+    </div>
     <code-editor
       class="editor"
       (save)="updateIndex()"
@@ -78,105 +83,6 @@
   <div class="info">
     <form #form="ngForm" (keydown.enter)="$event.preventDefault()">
       <mat-list>
-        <mat-list-item class="describe">
-          <h4 class="name" *ngIf="!editName && function._id" (click)="editName = true">
-            {{ function._id ? function.name : "New Function" }}<mat-icon>edit</mat-icon>
-          </h4>
-          <mat-form-field *ngIf="editName || !function._id">
-            <mat-label>Name</mat-label>
-            <input
-              matInput
-              placeholder="Name"
-              #nameModel="ngModel"
-              [(ngModel)]="function.name"
-              name="name"
-              required
-              minlength="3"
-              maxlength="50"
-            />
-            <mat-hint>Name of the function.</mat-hint>
-            <mat-error *ngIf="nameModel?.errors?.required">Name is required.</mat-error>
-            <mat-error *ngIf="nameModel?.errors?.minLength">
-              Name must be greater than {{ nameModel.errors.min.min }} characters.
-            </mat-error>
-            <mat-error *ngIf="nameModel?.errors?.maxLength">
-              Name must be less than {{ nameModel.errors.max.max }} characters.
-            </mat-error>
-          </mat-form-field>
-          <p
-            class="description"
-            *ngIf="!editDescription && function._id"
-            (click)="editDescription = true"
-          >
-            {{ function._id ? function.description || "No description added" : "Description"
-            }}<mat-icon>edit</mat-icon>
-          </p>
-          <mat-form-field *ngIf="editDescription || !function._id">
-            <mat-label>Description</mat-label>
-            <textarea
-              matInput
-              placeholder="Description"
-              [(ngModel)]="function.description"
-              name="description"
-              rows="1"
-            ></textarea>
-            <mat-hint>Description of the function.</mat-hint>
-          </mat-form-field>
-          <p class="description" *ngIf="function._id" (click)="editDescription = true">
-            <b>{{ function.language + " Engine" | titlecase }}</b>
-          </p>
-          <mat-form-field *ngIf="!function._id">
-            <mat-label>Language</mat-label>
-            <mat-select
-              placeholder="Language"
-              [(ngModel)]="function.language"
-              #languageModel="ngModel"
-              name="language"
-            >
-              <mat-select-trigger>
-                <svg viewBox="0 0 24 24" [ngSwitch]="languageModel.value">
-                  <path
-                    *ngSwitchCase="'javascript'"
-                    fill="currentColor"
-                    d="M3,3H21V21H3V3M7.73,18.04C8.13,18.89 8.92,19.59 10.27,19.59C11.77,19.59 12.8,18.79 12.8,17.04V11.26H11.1V17C11.1,17.86 10.75,18.08 10.2,18.08C9.62,18.08 9.38,17.68 9.11,17.21L7.73,18.04M13.71,17.86C14.21,18.84 15.22,19.59 16.8,19.59C18.4,19.59 19.6,18.76 19.6,17.23C19.6,15.82 18.79,15.19 17.35,14.57L16.93,14.39C16.2,14.08 15.89,13.87 15.89,13.37C15.89,12.96 16.2,12.64 16.7,12.64C17.18,12.64 17.5,12.85 17.79,13.37L19.1,12.5C18.55,11.54 17.77,11.17 16.7,11.17C15.19,11.17 14.22,12.13 14.22,13.4C14.22,14.78 15.03,15.43 16.25,15.95L16.67,16.13C17.45,16.47 17.91,16.68 17.91,17.26C17.91,17.74 17.46,18.09 16.76,18.09C15.93,18.09 15.45,17.66 15.09,17.06L13.71,17.86Z"
-                  />
-                  <path
-                    *ngSwitchCase="'typescript'"
-                    fill="currentColor"
-                    d="M3,3H21V21H3V3M13.71,17.86C14.21,18.84 15.22,19.59 16.8,19.59C18.4,19.59 19.6,18.76 19.6,17.23C19.6,15.82 18.79,15.19 17.35,14.57L16.93,14.39C16.2,14.08 15.89,13.87 15.89,13.37C15.89,12.96 16.2,12.64 16.7,12.64C17.18,12.64 17.5,12.85 17.79,13.37L19.1,12.5C18.55,11.54 17.77,11.17 16.7,11.17C15.19,11.17 14.22,12.13 14.22,13.4C14.22,14.78 15.03,15.43 16.25,15.95L16.67,16.13C17.45,16.47 17.91,16.68 17.91,17.26C17.91,17.74 17.46,18.09 16.76,18.09C15.93,18.09 15.45,17.66 15.09,17.06L13.71,17.86M13,11.25H8V12.75H9.5V20H11.25V12.75H13V11.25Z"
-                  />
-                </svg>
-                <mat-label>{{ languageModel.value | titlecase }}</mat-label>
-              </mat-select-trigger>
-              <mat-option value="javascript">Javascript</mat-option>
-              <mat-option value="typescript">Typescript</mat-option>
-            </mat-select>
-            <mat-hint>Language of the function.</mat-hint>
-          </mat-form-field>
-          <div class="timeout" *ngIf="(information | async)?.timeout; let timeout">
-            <mat-label>
-              Timeout in seconds <b>({{ formatTimeout(function.timeout || timeout) }})</b>
-            </mat-label>
-            <mat-slider
-              thumbLabel
-              [displayWith]="formatTimeout"
-              tickInterval="auto"
-              min="0.1"
-              step="0.1"
-              [max]="timeout"
-              [ngModel]="function.timeout || timeout"
-              (ngModelChange)="function.timeout = $event"
-              name="timeout"
-              #timeoutModel="ngModel"
-            >
-            </mat-slider>
-            <mat-error *ngIf="timeoutModel?.errors?.required">Timeout is required.</mat-error>
-            <mat-error *ngIf="timeoutModel?.errors?.min">
-              Timeout value must be positive.
-            </mat-error>
-          </div>
-        </mat-list-item>
-
         <h4 mat-subheader (click)="sections.triggers = !sections.triggers">
           <mat-icon>{{ sections.triggers ? "expand_more" : "chevron_right" }}</mat-icon> Triggers
           <mat-error *ngIf="serverError">

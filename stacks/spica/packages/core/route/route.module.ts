@@ -6,6 +6,7 @@ import {
   Optional
 } from "@angular/core";
 import {Store, StoreModule} from "@ngrx/store";
+import {CategoryService} from "./category";
 import {Route, ROUTE, ROUTE_FILTERS} from "./route";
 import {RouteInitializer} from "./route.initializer";
 import {reducer} from "./route.reducer";
@@ -32,6 +33,10 @@ export class RouteModule {
           provide: RouteService,
           useClass: RouteService,
           deps: [Store, [ROUTE_FILTERS, new Optional()]]
+        },
+        {
+          provide: CategoryService,
+          useClass: CategoryService
         }
       ]
     };

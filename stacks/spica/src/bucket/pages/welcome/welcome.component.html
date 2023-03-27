@@ -9,7 +9,7 @@
     </h4>
   </mat-toolbar-row>
   <mat-toolbar-row>
-    <button canInteract="bucket:create" mat-raised-button routerLink="../add">
+    <button (click)="addBucket()" canInteract="bucket:create" mat-raised-button>
       Create a bucket
     </button>
     <button mat-icon-button mat-raised-button routerLink="../settings">

@@ -1,4 +1,4 @@
-import {Injectable} from "@angular/core";
+import {EventEmitter, Injectable, Output} from "@angular/core";
 import {
   Add,
   CherryPickAndRemove,
@@ -7,19 +7,32 @@ import {
   RouteService,
   Upsert
 } from "@spica-client/core/route";
+import {ViewChange} from "@spica-client/core/route/route";
 import {PassportService} from "@spica-client/passport";
+import {ConfigurationComponent} from "./components/configuration/configuration.component";
+import {FunctionActionsComponent} from "./pages/function-actions/function-actions.component";
 import {FunctionService} from "./services/function.service";
 
 @Injectable()
 export class FunctionInitializer {
+  @Output() onFunctionCategoryChange = new EventEmitter<ViewChange[]>();
   constructor(
     private functionService: FunctionService,
     private routeService: RouteService,
     private passport: PassportService
   ) {
+    this.routeService.patchCategory(RouteCategory.Developer, {
+      props: {
+        moreTemplate: FunctionActionsComponent,
+        onViewChange: this.onFunctionCategoryChange,
+        categoryStorageKey: RouteCategory.Developer
+      }
+    });
+    this.onFunctionCategoryChange.subscribe(event => this.functionService.patchFunctionMany(event));
+
     functionService.getFunctions().subscribe(async funcs => {
       this.routeService.dispatch(
-        new CherryPickAndRemove(e => e.icon == "memory" && /\/function\//.test(e.path))
+        new CherryPickAndRemove(e => e.category == RouteCategory.Developer)
       );
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Developer));
 
@@ -36,7 +49,9 @@ export class FunctionInitializer {
               icon: "memory",
               path: `/function/${func._id}`,
               display: func.name,
-              resource_category: func.category
+              resource_category: func.category,
+              draggable: true,
+              has_more: true
             })
           );
         }
@@ -46,8 +61,9 @@ export class FunctionInitializer {
           id: "add-function",
           category: RouteCategory.Developer,
           icon: "add",
-          path: "/function/add",
+          path: ConfigurationComponent,
           display: "Add New Function",
+          index: Number.MAX_SAFE_INTEGER,
           data: {
             action: "function:create"
           },

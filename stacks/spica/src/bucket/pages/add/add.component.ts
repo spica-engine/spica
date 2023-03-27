@@ -38,7 +38,6 @@ export class AddComponent implements OnInit {
   bucketId: string;
   data: BucketRow = {};
   now: BucketRow;
-  minScheduleDate: Date = new Date();
   bucket$: Observable<Bucket>;
   histories$: Observable<Array<BucketHistory>>;
 
@@ -101,9 +100,6 @@ export class AddComponent implements OnInit {
             )
           );
         }
-        if (typeof this.data._schedule != "undefined") {
-          this.data._schedule = new Date(this.data._schedule);
-        }
 
         // What we do here is simply coercing the translated data
         Object.keys(schema.properties).forEach(key => {
@@ -134,14 +130,6 @@ export class AddComponent implements OnInit {
       this.now = this.data;
     }
     this.data = await this.bhs.revertTo(this.bucketId, this.data._id, historyId).toPromise();
-  }
-
-  schedule() {
-    this.data._schedule = new Date();
-  }
-
-  cancelSchedule() {
-    delete this.data._schedule;
   }
 
   saveBucketRow() {

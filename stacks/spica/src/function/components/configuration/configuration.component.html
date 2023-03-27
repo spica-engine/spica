@@ -1,13 +1,8 @@
-<form #form="ngForm" (keydown.enter)="form.valid && dialogRef.close(true)">
+<form #form="ngForm" (keydown.enter)="form.valid && save()">
   <mat-list>
-    <div class="dialog-title">
-      <h4 mat-subheader>
-        Basics
-      </h4>
-      <button mat-icon-button class="close" mat-dialog-close>
-        <mat-icon>clear</mat-icon>
-      </button>
-    </div>
+    <h4 mat-dialog-title>
+      {{ function._id ? "Update function" : "Add new function" }}
+    </h4>
     <mat-divider></mat-divider>
     <mat-list-item>
       <mat-form-field>
@@ -15,7 +10,7 @@
         <input
           matInput
           #nameModel="ngModel"
-          [(ngModel)]="data.function.name"
+          [(ngModel)]="function.name"
           name="name"
           required
           minlength="3"
@@ -34,7 +29,12 @@
     <mat-list-item>
       <mat-form-field>
         <mat-label>Language</mat-label>
-        <mat-select [(ngModel)]="data.function.language" #languageModel="ngModel" name="language">
+        <mat-select
+          [disabled]="function._id"
+          [(ngModel)]="function.language"
+          #languageModel="ngModel"
+          name="language"
+        >
           <mat-select-trigger>
             <svg viewBox="0 0 24 24" [ngSwitch]="languageModel.value">
               <path
@@ -61,7 +61,7 @@
         <div class="timeout">
           <mat-label>
             Timeout in seconds
-            <b>({{ formatTimeout(data.function.timeout || information.timeout) }})</b>
+            <b>({{ formatTimeout(function.timeout || information.timeout) }})</b>
           </mat-label>
           <mat-slider
             thumbLabel
@@ -70,8 +70,8 @@
             min="0.1"
             step="0.1"
             [max]="information.timeout"
-            [ngModel]="data.function.timeout || information.timeout"
-            (ngModelChange)="data.function.timeout = $event"
+            [ngModel]="function.timeout || information.timeout"
+            (ngModelChange)="function.timeout = $event"
             name="timeout"
             #timeoutModel="ngModel"
           >
@@ -82,68 +82,87 @@
           </mat-error>
         </div>
       </mat-list-item>
-      <h4 mat-subheader>
-        Trigger
-      </h4>
-      <mat-divider></mat-divider>
-      <mat-list-item class="trigger">
-        <mat-form-field>
-          <mat-label>Type</mat-label>
-          <mat-select
-            #typeModel="ngModel"
-            name="trigger-type"
-            [(ngModel)]="data.function.triggers[0].type"
-            (ngModelChange)="data.function.triggers[0].options = {}"
-            required
-          >
-            <mat-select-trigger
-              *ngIf="information.enqueuers | enqueuer: data.function.triggers[0].type; let enqueuer"
+      <ng-container *ngIf="!function._id">
+        <h4 mat-subheader>
+          Trigger
+        </h4>
+        <mat-divider></mat-divider>
+        <mat-list-item class="trigger">
+          <mat-form-field>
+            <mat-label>Type</mat-label>
+            <mat-select
+              #typeModel="ngModel"
+              name="trigger-type"
+              [(ngModel)]="function.triggers[0].type"
+              (ngModelChange)="function.triggers[0].options = {}"
+              required
             >
-              <mat-icon>{{ enqueuer.description.icon }}</mat-icon>
-              <mat-label>{{ enqueuer.description.title }}</mat-label>
-            </mat-select-trigger>
-            <mat-option
-              *ngFor="let enqueuer of information.enqueuers"
-              [value]="enqueuer.description.name"
-            >
-              <mat-icon>{{ enqueuer.description.icon }}</mat-icon>
-              <mat-label>
-                <span>{{ enqueuer.description.title }}</span> —
-                <small class="mat-small">{{ enqueuer.description.description }}</small>
-              </mat-label>
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="typeModel.errors?.required">You must select an enqueuer.</mat-error>
-        </mat-form-field>
-      </mat-list-item>
-      <ng-container
-        *ngIf="
-          (information.enqueuers | enqueuer: data.function.triggers[0].type)?.options
-            | conditionalSchema: data.function.triggers[0].options;
-          let options
-        "
-      >
-        <mat-list-item
-          class="trigger-details"
-          *ngFor="let propertyKv of options.properties | keyvalue; last as isLast"
-        >
-          <div
-            [inputPlacer]="propertyKv.value"
-            [(ngModel)]="data.function.triggers[0].options[propertyKv.key]"
-            [name]="propertyKv.key"
-            [required]="options.required?.indexOf(propertyKv.key) > -1"
-          ></div>
-          <span class="http-url" *ngIf="data.function.triggers[0].type == 'http' && isLast">
-            {{ apiUrl + "/fn-execute" + data.function.triggers[0].options.path }}
-          </span>
+              <mat-select-trigger
+                *ngIf="information.enqueuers | enqueuer: function.triggers[0].type; let enqueuer"
+              >
+                <mat-icon>{{ enqueuer.description.icon }}</mat-icon>
+                <mat-label>{{ enqueuer.description.title }}</mat-label>
+              </mat-select-trigger>
+              <mat-option
+                *ngFor="let enqueuer of information.enqueuers"
+                [value]="enqueuer.description.name"
+              >
+                <mat-icon>{{ enqueuer.description.icon }}</mat-icon>
+                <mat-label>
+                  <span>{{ enqueuer.description.title }}</span> —
+                  <small class="mat-small">{{ enqueuer.description.description }}</small>
+                </mat-label>
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="typeModel.errors?.required">You must select an enqueuer.</mat-error>
+          </mat-form-field>
         </mat-list-item>
+        <ng-container
+          *ngIf="
+            (information.enqueuers | enqueuer: function.triggers[0].type)?.options
+              | conditionalSchema: function.triggers[0].options;
+            let options
+          "
+        >
+          <mat-list-item
+            class="trigger-details"
+            *ngFor="let propertyKv of options.properties | keyvalue; last as isLast"
+          >
+            <div
+              [inputPlacer]="propertyKv.value"
+              [(ngModel)]="function.triggers[0].options[propertyKv.key]"
+              [name]="propertyKv.key"
+              [required]="options.required?.indexOf(propertyKv.key) > -1"
+            ></div>
+            <span class="http-url" *ngIf="function.triggers[0].type == 'http' && isLast">
+              {{ apiUrl + "/fn-execute" + function.triggers[0].options.path }}
+            </span>
+          </mat-list-item>
+        </ng-container>
       </ng-container>
     </ng-container>
   </mat-list>
-  <button mat-button class="save" [disabled]="form.invalid" [mat-dialog-close]="true">
-    <mat-icon>
-      save
-    </mat-icon>
-    Save
+
+  <button
+    class="save save-button"
+    mat-button
+    *matSave="$save | async; let state"
+    [disabled]="form.invalid || !!state"
+    [canInteract]="function._id ? 'function:update' : 'function:create'"
+    [resource]="function._id ? function._id : undefined"
+    (click)="save()"
+    [ngSwitch]="state"
+  >
+    <mat-icon *ngSwitchDefault>save</mat-icon>
+    <mat-progress-spinner
+      *ngSwitchCase="'saving'"
+      [diameter]="18"
+      color="accent"
+      mode="indeterminate"
+    >
+    </mat-progress-spinner>
+    <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
+    <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
+    <span>{{ (!state ? "save" : state) | titlecase }}</span>
   </button>
 </form>

@@ -133,7 +133,7 @@ export class MatResizeHeader implements AfterViewInit {
   hasIntervalClass = () => this.elemRow.classList.contains(this.elemRowClass);
 
   getIsInMovementRect(x: number) {
-    return this._rect.left + this._rect.width - x < this.size;
+    return this._rect.left + this._rect.width - x < 20;
   }
 
   /**

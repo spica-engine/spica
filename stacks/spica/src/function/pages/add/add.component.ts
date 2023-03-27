@@ -34,6 +34,7 @@ import {
   emptyFunction,
   emptyTrigger,
   Enqueuer,
+  Function,
   FunctionOptions,
   FUNCTION_OPTIONS,
   Information,
@@ -166,8 +167,13 @@ export class AddComponent implements OnInit, OnDestroy {
     )
       .pipe(
         tap(id => this.selectedFunctionId.next(id)),
-        switchMap(id => this.functionService.getFunction(id).pipe(take(1))),
+        switchMap(id => this.functionService.getFunction(id).pipe()),
         tap(fn => {
+          if (this.function._id && this.function._id == fn._id) {
+            // No need to set dependencies & environments again because they are only editable on this page.
+            this.function = {...fn, env: this.function.env, triggers: this.function.triggers};
+            return;
+          }
           this.dependencyInstallPending = false;
           this.serverError = undefined;
           this.isIndexPending = true;
@@ -543,5 +549,17 @@ export class AddComponent implements OnInit, OnDestroy {
       this.renderer.removeClass(codeSection, "code-expanded");
       this.renderer.removeClass(infoSection, "info-hidden");
     }
+  }
+  openEditDialog() {
+    const fn = denormalizeFunction(this.function);
+    if (!fn.triggers.default) {
+      delete fn.triggers.default;
+    }
+    this.dialog.open(ConfigurationComponent, {
+      data: {
+        function: fn
+      },
+      autoFocus: false
+    });
   }
 }

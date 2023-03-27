@@ -1,0 +1,75 @@
+<ng-container *ngIf="property.key != '$$spicainternal_id'; else idFieldTemplate">
+  <button canInteract="bucket:update" (click)="editNewProperty(property.key)" mat-menu-item>
+    <mat-icon>edit</mat-icon>
+    <span>Edit field</span>
+  </button>
+
+  <ng-container
+    *ngIf="
+      displayedProperties[displayedProperties.indexOf(property.key) + 1] !=
+      '$$spicainternal_new_property'
+    "
+  >
+    <button canInteract="bucket:update" (click)="moveField(property.key, 1)" mat-menu-item>
+      <mat-icon>arrow_forward</mat-icon>
+      <span> Move Right </span>
+    </button>
+  </ng-container>
+
+  <ng-container
+    *ngIf="
+      displayedProperties[displayedProperties.indexOf(property.key) - 1] != '$$spicainternal_id'
+    "
+  >
+    <button canInteract="bucket:update" (click)="moveField(property.key, -1)" mat-menu-item>
+      <mat-icon>arrow_back</mat-icon>
+      <span>Move Left</span>
+    </button>
+  </ng-container>
+  <ng-container [ngTemplateOutlet]="sortTemplate"></ng-container>
+  <mat-divider></mat-divider>
+
+  <button
+    mat-menu-item
+    [matTooltipDisabled]="schema.primary != property.key"
+    matTooltip="In order to delete the primary field, you must first select another field as primary."
+    color="warn"
+    (click)="$event.stopImmediatePropagation()"
+    (confirm)="deleteProperty(property.key)"
+    [matAwareDialog]="{
+      title: 'Confirmation',
+      templateOrDescription: deleteFieldDialog,
+      answer: '',
+      noAnswer: true
+    }"
+    [matAwareDialogDisabled]="schema.primary == property.key"
+    canInteract="bucket:update"
+    [resource]="schema._id"
+  >
+    <mat-icon color="warn">delete</mat-icon>
+    Delete field
+  </button>
+</ng-container>
+<ng-template #idFieldTemplate>
+  <ng-container [ngTemplateOutlet]="sortTemplate"></ng-container>
+</ng-template>
+
+<ng-template #deleteFieldDialog let-answer="answer">
+  <p>
+    This action will remove the field from bucket entries.
+  </p>
+  <p>
+    Please confirm this action to continue.
+  </p>
+</ng-template>
+
+<ng-template #sortTemplate>
+  <button mat-menu-item (click)="handleSortChange.emit({direction: 'asc', active: property.key})">
+    <mat-icon>arrow_upward</mat-icon>
+    <span> Sort By Asc </span>
+  </button>
+  <button mat-menu-item (click)="handleSortChange.emit({direction: 'desc', active: property.key})">
+    <mat-icon>arrow_downward</mat-icon>
+    <span> Sort By Desc </span>
+  </button>
+</ng-template>

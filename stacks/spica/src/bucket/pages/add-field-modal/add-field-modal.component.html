@@ -136,22 +136,41 @@
         </mat-checkbox>
       </div>
     </div>
-    <button
-      mat-button
-      *ngIf="parentSchema.properties[propertyKey]"
-      [disabled]="pnm.invalid || dm.invalid"
-      (click)="save()"
-    >
-      Save
-    </button>
-    <button
-      mat-button
-      *ngIf="parentSchema.properties[propertyKey]"
-      [disabled]="pnm.invalid || dm.invalid"
-      (click)="step = 0; field = null; propertyKey = ''"
-    >
-      Add Another Field
-    </button>
+    <mat-card class="mat-elevation-z0">
+      <mat-card-actions>
+        <button
+          mat-button
+          *ngIf="parentSchema.properties[propertyKey]"
+          [disabled]="pnm.invalid || dm.invalid"
+          (click)="step = 0; field = null; propertyKey = ''"
+        >
+          <mat-icon>add</mat-icon>
+          Add Another Field
+        </button>
+        <button
+          *ngIf="parentSchema.properties[propertyKey]"
+          class="save-button"
+          mat-button
+          canInteract="bucket:update"
+          [resource]="parentSchema._id"
+          [disabled]="!!savingState || pnm.invalid || dm.invalid"
+          (click)="save()"
+          [ngSwitch]="savingState"
+        >
+          <mat-icon *ngSwitchDefault>save</mat-icon>
+          <mat-progress-spinner
+            *ngSwitchCase="'saving'"
+            [diameter]="18"
+            color="primary"
+            mode="indeterminate"
+          >
+          </mat-progress-spinner>
+          <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
+          <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
+          <span>{{ (!savingState ? "save" : savingState) | titlecase }}</span>
+        </button>
+      </mat-card-actions>
+    </mat-card>
   </div>
 
   <div class="field-name-settings" *ngIf="!parentSchema.properties[propertyKey]">
