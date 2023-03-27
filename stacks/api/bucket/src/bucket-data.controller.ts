@@ -133,7 +133,7 @@ export class BucketDataController {
       },
       {
         localize,
-        paginate,
+        paginate
       },
       {
         collection: schema => this.bds.children(schema),
