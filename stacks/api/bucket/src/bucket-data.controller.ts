@@ -83,7 +83,6 @@ export class BucketDataController {
    * @param acceptedLanguage Documents that have translations are present in this language.
    * @param relation When true, relations in the documents will be replaced with the related document in the response.
    * @param localize When true, documents that have translations is localized to `accept-language`.
-   * @param schedule When true, only scheduled documents is present.
    * @param filter An expression to filter documents. Example: `name == James" `, `age > 35`, `age > 35 && age < 50`, `gender == "F" && age > 20`
    * @param paginate When true, a meta property that contains the total number of documents is present.
    * @param limit The maximum amount documents that can be present in the response.
@@ -102,7 +101,6 @@ export class BucketDataController {
     @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
     relation?: boolean | string[],
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate?: boolean,
-    @Query("schedule", DEFAULT(false), BOOLEAN) schedule?: boolean,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
     @Query("filter", OR(isJSONFilter, JSONPR(filterReviver), EXPRESSION(expressionFilterParser)))
     filter?: string | object,
@@ -136,7 +134,6 @@ export class BucketDataController {
       {
         localize,
         paginate,
-        schedule
       },
       {
         collection: schema => this.bds.children(schema),

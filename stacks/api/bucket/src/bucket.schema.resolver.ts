@@ -29,10 +29,6 @@ export class BucketSchemaResolver {
 
           let jsonSchema = compile(schema, prefs);
           jsonSchema.$id = uri;
-          jsonSchema.properties._schedule = {
-            type: "string",
-            format: "date-time"
-          };
           return jsonSchema;
         })
       );

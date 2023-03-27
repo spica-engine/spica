@@ -93,31 +93,6 @@ jasmine_node_test(
 )
 
 ts_project(
-    name = "scheduler_test_lib",
-    testonly = True,
-    srcs = [
-        "scheduler.spec.ts",
-    ],
-    deps = [
-        "//packages/database/testing",
-        "//stacks/api/bucket",
-        "//stacks/api/bucket/services",
-        "//stacks/api/passport/testing",
-        "//stacks/api/preference/testing",
-        "@npm//@nestjs/testing",
-        "@npm//@types/jasmine",
-        "@npm//@types/node",
-    ],
-)
-
-jasmine_node_test(
-    name = "scheduler_test",
-    deps = [
-        ":scheduler_test_lib",
-    ],
-)
-
-ts_project(
     name = "bucket_module_test_lib",
     testonly = True,
     srcs = ["bucket.module.spec.ts"],

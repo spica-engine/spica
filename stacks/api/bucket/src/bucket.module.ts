@@ -15,7 +15,6 @@ import {
 } from "./bucket.schema.resolver";
 import {GraphQLModule} from "@spica-server/bucket/graphql";
 import {provideLanguageFinalizer} from "@spica-server/bucket/common";
-import {DocumentScheduler} from "./scheduler";
 import {registerStatusProvider} from "./status";
 import BucketSchema = require("./schemas/bucket.schema.json");
 import BucketsSchema = require("./schemas/buckets.schema.json");
@@ -98,7 +97,6 @@ export class BucketModule {
       controllers: [BucketController, BucketDataController],
       imports: imports,
       providers: [
-        DocumentScheduler,
         {
           provide: BucketSchemaResolver,
           useFactory: provideBucketSchemaResolver,
