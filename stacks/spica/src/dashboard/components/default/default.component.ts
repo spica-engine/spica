@@ -9,19 +9,21 @@ import {
 } from "@angular/core";
 import {Observable} from "rxjs";
 import {map, tap} from "rxjs/operators";
+import { isSmallComponent, Ratio } from "@spica-client/dashboard/interfaces";
+
 
 @Component({
   selector: "dashboard-default",
   templateUrl: "./default.component.html",
   styleUrls: ["./default.component.scss"]
 })
-export class DefaultComponent implements OnInit {
+export class DefaultComponent implements OnInit, OnChanges {
   @Input() componentData$: Observable<any>;
   @Input() type: string;
-  @Input() ratio: string = "";
+  @Input() ratio: Ratio;
   @Input() refresh: boolean;
 
-  @Input() isSmallComponent = false;
+  isSmall = false;
 
   @Output() isHovered = new EventEmitter<boolean>();
 
@@ -48,5 +50,8 @@ export class DefaultComponent implements OnInit {
   onShowChartClicked() {
     this.showChart = !this.showChart;
     this.isHovered.emit(this.showChart);
+  }
+  ngOnChanges(){
+    this.isSmall = isSmallComponent(this.ratio)
   }
 }

@@ -17,7 +17,6 @@
         <dashboard-default
           [ratio]="component.ratio"
           (isHovered)="zIndexOnHover($event, i)"
-          [isSmallComponent]="isSmallComponent(component.ratio)"
           *ngIf="defaultTypes.indexOf(component.type) != -1"
           [componentData$]="componentData$[i]"
           [type]="component.type"
@@ -25,8 +24,8 @@
         >
         </dashboard-default>
         <dashboard-table
+          [ratio]="component.ratio"
           (isHovered)="zIndexOnHover($event, i)"
-          [isSmallComponent]="isSmallComponent(component.ratio)"
           *ngIf="component.type == 'table'"
           [componentData$]="componentData$[i]"
           [type]="component.type"
@@ -35,7 +34,6 @@
         </dashboard-table>
         <dashboard-card
           [ratio]="component.ratio"
-          [isSmallComponent]="isSmallComponent(component.ratio)"
           *ngIf="component.type == 'card'"
           [componentData$]="componentData$[i]"
           [type]="component.type"
@@ -43,6 +41,7 @@
         >
         </dashboard-card>
         <dashboard-statistic
+          [ratio]="component.ratio"  
           *ngIf="component.type == 'statistic'"
           [componentData$]="componentData$[i]"
           [type]="component.type"

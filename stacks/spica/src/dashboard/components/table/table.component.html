@@ -12,7 +12,7 @@
   >
     <mat-icon>refresh</mat-icon>
   </button>
-  <div class="filters" *ngIf="!isSmallComponent">
+  <div class="filters" *ngIf="!isSmall">
     <ng-container *ngFor="let filter of componentData.filters">
       <span
         [name]="filter.key"
@@ -35,26 +35,17 @@
     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
     <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
   </mat-table>
-  <mat-paginator [pageSizeOptions]="[3, 10, 20]"></mat-paginator>
+  <mat-paginator ></mat-paginator>
 </ng-template>
 
-<div class="show-chart" *ngIf="isSmallComponent">
-  <button class="show-table-button" (click)="onShowChartClicked()">show chart</button>
+<ng-container *ngTemplateOutlet="tableElement"> </ng-container>
+
+<div class="show-table" *ngIf="isSmall">
+  <button class="show-table-button" (click)="onShowTableClicked()">show chart</button>
   <div
-    class="hidden-chart"
-    [ngClass]="showChart ? 'chart-container-unhidden' : 'chart-container-hidden'"
+    class="hidden-table"
+    [ngClass]="showTable ? 'table-container-unhidden' : 'table-container-hidden'"
   >
-    <canvas
-      baseChart
-      [data]="componentData.data"
-      [datasets]="componentData.datasets"
-      [labels]="componentData.label"
-      [options]="componentData.options"
-      [colors]="componentData.colors"
-      [legend]="componentData.legend"
-      [plugins]="componentData.plugins"
-      [chartType]="type"
-    >
-    </canvas>
+  <ng-container *ngTemplateOutlet="tableElement"> </ng-container>
   </div>
 </div>

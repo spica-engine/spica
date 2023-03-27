@@ -4,6 +4,7 @@ import {Dashboard, getEmptyDashboard} from "@spica-client/dashboard/interfaces";
 import {GridOptions, Item} from "muuri";
 import Grid from "muuri";
 
+
 interface MuuriItemStyles {
   width: string;
   height: string;
@@ -63,10 +64,6 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
   ngOnInit() {}
 
   ngAfterViewInit() {}
-
-  isSmallComponent(ratio: string) {
-    return ratio == "1/1" || ratio == "1/2" || ratio == "2/1";
-  }
 
   zIndexOnHover(value: boolean, i: number) {
     if (value) {

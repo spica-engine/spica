@@ -4,6 +4,8 @@ import {MatTableDataSource} from "@angular/material/table";
 import {MatPaginator} from "@angular/material/paginator";
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
+import { isSmallComponent, Ratio } from "@spica-client/dashboard/interfaces";
+
 
 @Component({
   selector: "dashboard-table",
@@ -17,7 +19,9 @@ export class TableComponent implements AfterViewInit {
   // otherwise mat-sort won't work
   displayedColumns = [];
 
-  @Input() isSmallComponent = false;
+   @Input() ratio: Ratio;
+
+   isSmall = false;
 
   @Output() onUpdate: EventEmitter<object> = new EventEmitter();
 
@@ -25,18 +29,37 @@ export class TableComponent implements AfterViewInit {
 
   public showTable = false;
 
+
   dataSource: MatTableDataSource<Object[]>;
-  @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
-  @ViewChild(MatSort, {static: true}) sort: MatSort;
+  @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
+  @ViewChild(MatSort, {static: false}) sort: MatSort;
 
   ngAfterViewInit() {
+    this.isSmall = isSmallComponent(this.ratio)
     this.componentData$ = this.componentData$.pipe(
       tap(componentData => {
         this.displayedColumns = componentData.displayedColumns;
 
+        console.log("columns", this.displayedColumns);
+        
+        
         this.dataSource = new MatTableDataSource(componentData.data);
+        console.log("dataSouce", this.dataSource);
+
         this.dataSource.sort = this.sort;
+        console.log("dataSource.sort", this.dataSource.sort);
+        
+        console.log("sort", this.sort);
+
+
+        console.log("dataSource.paginator", this.dataSource.paginator);
+        console.log("pageSize", this.dataSource.paginator.pageSizeOptions[2]);
+        
+        if(this.ratio == Ratio.TwoByTwo || this.ratio == Ratio.FourByTwo){
+          this.paginator.pageSizeOptions = [3];
+        }
         this.dataSource.paginator = this.paginator;
+
       })
     );
   }
