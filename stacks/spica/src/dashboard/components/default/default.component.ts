@@ -30,6 +30,8 @@ export class DefaultComponent implements OnInit {
   @Output() onUpdate: EventEmitter<object> = new EventEmitter();
 
   ngOnInit() {
+    console.log(this.ratio);
+    
     this.componentData$ = this.componentData$.pipe(
       map(data => {
         data.options = {

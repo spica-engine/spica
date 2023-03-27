@@ -1,6 +1,9 @@
 :host {
   .default-charts {
     height: 100% !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     mat-card-header {
       align-items: center;
       justify-content: center;
@@ -14,21 +17,32 @@
 
     div.filters {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       width: 100% !important;
       .filter-inputs {
       }
-      .ng-star-inserted {
-        width: 45%;
-      }
+      
       > h4 {
         margin: 0px 0px 5px 0px;
       }
       > span {
         margin-right: 5px;
       }
+      mat-form-field {
+        mat-hint{
+          display: none;
+        }
+      }
     }
+    .no-wrap-filter{
+      .ng-star-inserted {
+        width: 45%;
+      }
+    }
+    
+
 
     div.chart-container {
       min-height: 320px;
@@ -61,15 +75,7 @@
       .hidden-chart {
         position: absolute;
         background: white;
-        top: 2px;
-        left: 17em;
-        padding: 0 10px;
-      }
-      .hidden-chart-2-1 {
-        position: absolute;
-        background: white;
-        bottom: 2px;
-        left: 0;
+        left: 0em;
         padding: 0 10px;
       }
       .chart-container-hidden {

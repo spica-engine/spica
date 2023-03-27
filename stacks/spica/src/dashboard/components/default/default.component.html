@@ -28,7 +28,7 @@
     >
       <mat-icon>refresh</mat-icon>
     </button>
-    <div class="filters" *ngIf="isSmallComponent">
+    <div class="filters" [ngClass]="ratio !='1/2' ? 'no-wrap-filter' : null">
       <div *ngFor="let filter of componentData.filters">
         <span
           [name]="filter.key"
@@ -43,7 +43,8 @@
       <ng-container *ngTemplateOutlet="canvasElement"> </ng-container>
     </div>
     <div class="show-chart" *ngIf="isSmallComponent">
-      <button class="show-chart-button" (click)="onShowChartClicked()">show chart</button>
+      <button
+        class="show-chart-button" (click)="onShowChartClicked()">show chart</button>
       <div
         class="hidden-chart"
         [ngClass]="showChart ? 'chart-container-unhidden' : 'chart-container-hidden'"

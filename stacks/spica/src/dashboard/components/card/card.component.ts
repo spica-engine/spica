@@ -28,6 +28,9 @@ export class CardComponent {
 
   @Input() isSmallComponent = false;
 
+  @Input() ratio: string= '';
+
+
   token: string;
 
   constructor(private passport: PassportService, private http: HttpClient) {
