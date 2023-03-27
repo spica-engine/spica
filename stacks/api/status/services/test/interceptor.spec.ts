@@ -40,7 +40,7 @@ describe("Status Interceptor", () => {
         imports: [
           DatabaseTestingModule.standalone(),
           CoreTestingModule,
-          StatusModule.forRoot({requestLimit: 10, expireAfterSeconds: 60 * 60}),
+          StatusModule.forRoot({expireAfterSeconds: 60 * 60}),
           PassportTestingModule.initialize()
         ],
         controllers: [TestController]
@@ -70,7 +70,6 @@ describe("Status Interceptor", () => {
         module: "api",
         status: {
           request: {
-            limit: 10,
             current: 1,
             unit: "count"
           },
@@ -100,7 +99,6 @@ describe("Status Interceptor", () => {
         module: "api",
         status: {
           request: {
-            limit: 10,
             current: 2,
             unit: "count"
           },

@@ -12,6 +12,7 @@ ts_project(
     deps = [
         "//packages/core",
         "//packages/database",
+        "//stacks/api/status/services",
         "//stacks/api/replication",
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",
