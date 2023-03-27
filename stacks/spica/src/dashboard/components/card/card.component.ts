@@ -30,9 +30,7 @@ export class CardComponent implements OnChanges {
 
   isSmall = false;
 
-
   @Input() ratio:Ratio;
-
 
   token: string;
 
