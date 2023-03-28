@@ -43,14 +43,13 @@
       <ng-container *ngTemplateOutlet="canvasElement"> </ng-container>
     </div>
     <div class="show-chart" *ngIf="isSmall">
-      <button
-        class="show-chart-button" (click)="onShowChartClicked()">show chart</button>
-      <div
+      <button mat-stroked-button class="show-chart-button" (click)="onShowChartClicked()">Show</button>
+      <mat-card
         class="hidden-chart"
-        [ngClass]="showChart ? 'chart-container-unhidden' : 'chart-container-hidden'"
+        [ngClass]="showChart ? 'chart-container-visible' : 'chart-container-hidden'"
       >
         <ng-container *ngTemplateOutlet="canvasElement"> </ng-container>
-      </div>
+      </mat-card>
     </div>
   </ng-container>
 </div>

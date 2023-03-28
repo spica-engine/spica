@@ -23,7 +23,7 @@
       width: 100% !important;
       .filter-inputs {
       }
-      
+
       > h4 {
         margin: 0px 0px 5px 0px;
       }
@@ -31,18 +31,16 @@
         margin-right: 5px;
       }
       mat-form-field {
-        mat-hint{
+        mat-hint {
           display: none;
         }
       }
     }
-    .no-wrap-filter{
+    .no-wrap-filter {
       .ng-star-inserted {
         width: 45%;
       }
     }
-    
-
 
     div.chart-container {
       min-height: 320px;
@@ -63,34 +61,33 @@
       text-align: center;
 
       button.show-chart-button {
-        padding: 1.2em 1.5em;
-        font-size: 16px;
-        color: white;
-        border: none;
-        outline: none;
-        background: #2e2e2e7a;
-        border-radius: 5px;
-        cursor: pointer;
+        // padding: 1.2em 1.5em;
+        // font-size: 16px;
+        // color: white;
+        // border: none;
+        // outline: none;
+        // background: #2e2e2e7a;
+        // border-radius: 5px;
+        // cursor: pointer;
       }
       .hidden-chart {
         position: absolute;
-        background: white;
-        left: 0em;
-        padding: 0 10px;
-        background: rgba(var(--primary-default-rgb), 0.07);
+        left: 0;
+        padding: 0;
+        border: 1px solid rgb(var(--background-app-bar-rgb));
       }
       .chart-container-hidden {
         width: 0px;
         height: 0px;
-        overflow: hidden;
         transition: 0.3s all;
+        opacity: 0;
       }
-      .chart-container-unhidden {
-        width: 480px !important;
-        min-height: 480px !important;
-        // height:calc(100%-100px) !important;
-        overflow: visible;
+      .chart-container-visible {
+        width: 480px;
+        height: 480px;
         transition: 0.3s all;
+        padding: 10px;
+        opacity: 1;
       }
     }
     canvas {
