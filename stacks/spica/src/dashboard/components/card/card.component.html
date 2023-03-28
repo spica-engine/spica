@@ -3,7 +3,7 @@
     <mat-card-title>{{ componentData.title }}</mat-card-title>
     <button
       *ngIf="refresh"
-      class="refresh-button"
+      class="dashboard-component-refresh-button"
       mat-icon-button
       matTooltip="Refresh card"
       (click)="this.onUpdate.next()"
@@ -21,7 +21,7 @@
     target="_blank"
     [enctype]="componentData.button.enctype"
   >
-    <mat-card-content class="inputs">
+    <mat-card-content class="dashboard-component-filter">
       <ng-container *ngFor="let input of componentData.inputs">
         <button
           *ngIf="input.type == 'file'"

@@ -1,5 +1,5 @@
 <div class="dashboard-component" *ngIf="componentData$ | async; let componentData">
-  <button *ngIf="refresh" class="refresh-button" mat-icon-button matTooltip="Refresh card" (click)="this.onUpdate.next()">
+  <button *ngIf="refresh" class="dashboard-component-refresh-button" mat-icon-button matTooltip="Refresh card" (click)="this.onUpdate.next()">
     <mat-icon>refresh</mat-icon>
   </button>
   <div class="content dashboard-component">

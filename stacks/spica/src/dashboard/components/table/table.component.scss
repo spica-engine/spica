@@ -1,10 +1,11 @@
 :host{
-
+  .table-dashboard-1-1{
+    justify-content: start;
+  }
   mat-card-header {
     align-items: center;
     justify-content: center;
   }
-  
   mat-table {
     box-shadow: none !important;
     min-width: 100%;
@@ -19,18 +20,10 @@
     text-align: center;
   }
   
-  div.filters {
-    display: flex;
-  
-    > h4 {
-      margin: 0px 0px 5px 0px;
-    }
-    > span {
-      margin-right: 5px;
-    }
-  }
   .table-scroll{
    overflow-x: scroll;  
+   width: unset !important;
+   height: unset !important;
   }
   ::-webkit-scrollbar {
     width: 1em;

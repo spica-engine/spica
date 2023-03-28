@@ -1,5 +1,4 @@
 :host {
- 
     mat-card-header {
       align-items: center;
       justify-content: center;
@@ -8,33 +7,6 @@
         text-align: center;
         display: flex;
         align-items: center;
-      }
-    }
-
-    div.filters {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      width: 100% !important;
-      .filter-inputs {
-      }
-
-      > h4 {
-        margin: 0px 0px 5px 0px;
-      }
-      > span {
-        margin-right: 5px;
-      }
-      mat-form-field {
-        mat-hint {
-          display: none;
-        }
-      }
-    }
-    .no-wrap-filter {
-      .ng-star-inserted {
-        width: 45%;
       }
     }
 

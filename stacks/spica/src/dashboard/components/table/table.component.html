@@ -1,4 +1,4 @@
-<div class="dashboard-component" *ngIf="componentData$ | async; let componentData">
+<div class="dashboard-component" [ngClass]="!isSmall ? 'table-dashboard-1-1' : null" *ngIf="componentData$ | async; let componentData">
   <mat-card-header>
     <mat-card-title>
       {{ componentData.title }}
@@ -6,14 +6,14 @@
   </mat-card-header>
   <button
     *ngIf="refresh"
-    class="refresh-button"
+    class="dashboard-component-refresh-button"
     mat-icon-button
     matTooltip="Refresh data"
     (click)="onUpdate.next(componentData.filters)"
   >
     <mat-icon>refresh</mat-icon>
   </button>
-  <div class="filters" *ngIf="!isSmall">
+  <div class="dashboard-component-filter" *ngIf="!isSmall">
     <ng-container *ngFor="let filter of componentData.filters">
       <span
         [name]="filter.key"
@@ -28,7 +28,7 @@
     <button mat-stroked-button *ngIf="isSmall"  (click)="onShowTableClicked()">
       Show
     </button>
-    <div class="table-scroll"
+    <mat-card class="table-scroll"
       [ngClass]="
         isSmall
           ? showTable
@@ -47,7 +47,7 @@
         <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
       </mat-table>
       <mat-paginator></mat-paginator>
-    </div>
+    </mat-card>
   </div>
 </div>
 
