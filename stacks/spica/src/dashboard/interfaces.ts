@@ -18,7 +18,7 @@ export enum Ratio {
   TwoByOne = "2/1",
   TwoByTwo = "2/2",
   FourByTwo = "4/2",
-  FourByFour = "4/4",
+  FourByFour = "4/4"
 }
 
 export function isSmallComponent(ratio: Ratio): boolean {
@@ -41,3 +41,12 @@ export const getEmptyComponent = (): Component => {
     ratio: Ratio.TwoByTwo
   };
 };
+
+export function fillComponentRatios(components: Component[]) {
+  return components.map(c => {
+    if (!c.ratio) {
+      c.ratio = Ratio.TwoByTwo;
+    }
+    return c;
+  });
+}
