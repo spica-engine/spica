@@ -209,6 +209,7 @@ div.dashboard-component-content{
 
   .dashboard-hidden-component {
     position: absolute;
+    top: 100%;
     left: 0;
     padding: 0;
     border: 1px solid rgb(var(--background-app-bar-rgb));
@@ -221,7 +222,7 @@ div.dashboard-component-content{
     transition: 0.3s all;
     opacity: 0;
   }
-  
+
   .dashboard-visible-component-container {
     width: 480px;
     height: 480px;

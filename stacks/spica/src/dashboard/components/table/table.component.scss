@@ -1,30 +1,50 @@
+:host{
 
-mat-card-header {
-  align-items: center;
-  justify-content: center;
-}
-
-mat-table {
-  box-shadow: none !important;
-  min-width: 100%;
-  width: max-content;
-  mat-cell,
-  mat-header-cell {
-    margin: 0 15px;
+  mat-card-header {
+    align-items: center;
+    justify-content: center;
   }
-}
-
-h3 {
-  text-align: center;
-}
-
-div.filters {
-  display: flex;
-
-  > h4 {
-    margin: 0px 0px 5px 0px;
+  
+  mat-table {
+    box-shadow: none !important;
+    min-width: 100%;
+    width: max-content;
+    mat-cell,
+    mat-header-cell {
+      margin: 0 15px;
+    }
   }
-  > span {
-    margin-right: 5px;
+  
+  h3 {
+    text-align: center;
   }
+  
+  div.filters {
+    display: flex;
+  
+    > h4 {
+      margin: 0px 0px 5px 0px;
+    }
+    > span {
+      margin-right: 5px;
+    }
+  }
+  .table-scroll{
+   overflow-x: scroll;  
+  }
+  ::-webkit-scrollbar {
+    width: 1em;
+    height: 0.5em;
+  }
+   
+  ::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  }
+   
+  ::-webkit-scrollbar-thumb {
+    background-color: darkgrey;
+    outline: 1px solid slategrey;
+    border-radius: 10px;
+  }  
+
 }

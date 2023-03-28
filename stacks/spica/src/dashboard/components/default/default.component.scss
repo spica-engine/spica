@@ -41,18 +41,7 @@
     div.chart-container {
       min-height: 320px;
       height: calc(100% - 120px);
-    }
-
-    button.refresh {
-      position: absolute;
-      right: 10px;
-      top: 10px;
-
-      width: 30px;
-      height: 30px;
-      line-height: 30px;
-    }
-  
+    }  
     canvas {
       height: 100%;
     }    
