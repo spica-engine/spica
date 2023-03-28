@@ -1,4 +1,5 @@
 import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
+import {Ratio} from "@spica-client/dashboard/interfaces";
 import {Observable} from "rxjs";
 
 @Component({
@@ -8,6 +9,7 @@ import {Observable} from "rxjs";
 })
 export class StatisticComponent implements OnInit {
   @Input() componentData$: Observable<any>;
+  @Input() ratio: Ratio;
 
   @Output() onUpdate: EventEmitter<object> = new EventEmitter();
   constructor() {}

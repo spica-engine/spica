@@ -163,6 +163,24 @@ const example = {
       "title": "Send Request"
     }
   }
+  `,
+  statistic: `
+  {
+    "icon": {
+      "name": "attach_money",
+      "color": "white",
+      "background_color": "#28ab24"
+    },
+    "main": {
+      "title": "Application Usage",
+      "color": "white",
+      "value": "Profit"
+    },
+    "difference": {
+      "value": 20,
+      "title": "Compared to last week"
+    }
+  }
   `
 };
 
