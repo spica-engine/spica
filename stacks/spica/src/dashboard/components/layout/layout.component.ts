@@ -4,7 +4,6 @@ import {Dashboard, getEmptyDashboard} from "@spica-client/dashboard/interfaces";
 import {GridOptions, Item} from "muuri";
 import Grid from "muuri";
 
-
 interface MuuriItemStyles {
   width: string;
   height: string;
@@ -24,12 +23,10 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
   muuriItemStyles: MuuriItemStyles[] = [];
 
   @Input() dashboard: Dashboard = getEmptyDashboard();
-
-  @Input() draggable: boolean;
+  @Input() componentData$: Observable<object>[] = [];
+  @Input() refresh: boolean = false;
 
   refreshSubjects$: BehaviorSubject<any>[] = [];
-
-  @Input() componentData$: Observable<object>[] = [];
 
   arePendings: boolean[] = [];
 

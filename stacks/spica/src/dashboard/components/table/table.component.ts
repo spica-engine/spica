@@ -28,6 +28,7 @@ export class TableComponent implements AfterViewInit, OnChanges {
   displayedColumns = [];
 
   @Input() ratio: Ratio;
+  @Input() refresh: boolean;
 
   isSmall = false;
 

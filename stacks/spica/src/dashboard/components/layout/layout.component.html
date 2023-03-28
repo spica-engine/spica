@@ -15,6 +15,7 @@
       <div class="drag-cursor"></div>
       <div class="content" [style.visibility]="arePendings[i] ? 'hidden' : 'visible'">
         <dashboard-default
+          [refresh]="refresh"
           [ratio]="component.ratio"
           (isHovered)="zIndexOnHover($event, i)"
           *ngIf="defaultTypes.indexOf(component.type) != -1"
@@ -24,6 +25,7 @@
         >
         </dashboard-default>
         <dashboard-table
+          [refresh]="refresh"
           [ratio]="component.ratio"
           (isHovered)="zIndexOnHover($event, i)"
           *ngIf="component.type == 'table'"
@@ -33,6 +35,7 @@
         >
         </dashboard-table>
         <dashboard-card
+          [refresh]="refresh"
           [ratio]="component.ratio"
           *ngIf="component.type == 'card'"
           [componentData$]="componentData$[i]"
@@ -41,6 +44,7 @@
         >
         </dashboard-card>
         <dashboard-statistic
+          [refresh]="refresh"
           [ratio]="component.ratio"  
           *ngIf="component.type == 'statistic'"
           [componentData$]="componentData$[i]"

@@ -10,6 +10,7 @@ import {Observable} from "rxjs";
 export class StatisticComponent implements OnInit {
   @Input() componentData$: Observable<any>;
   @Input() ratio: Ratio;
+  @Input() refresh: boolean;
 
   @Output() onUpdate: EventEmitter<object> = new EventEmitter();
   constructor() {}

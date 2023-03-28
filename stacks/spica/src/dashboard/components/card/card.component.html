@@ -2,6 +2,7 @@
   <mat-card-header>
     <mat-card-title>{{ componentData.title }}</mat-card-title>
     <button
+      *ngIf="refresh"
       class="refresh"
       mat-icon-button
       matTooltip="Refresh card"

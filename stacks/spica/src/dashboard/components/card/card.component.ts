@@ -3,8 +3,7 @@ import {Component, EventEmitter, Input, Output, OnInit, OnChanges} from "@angula
 import {Form} from "@angular/forms";
 import {PassportService} from "@spica-client/passport";
 import {Observable} from "rxjs";
-import { isSmallComponent, Ratio } from "@spica-client/dashboard/interfaces";
-
+import {isSmallComponent, Ratio} from "@spica-client/dashboard/interfaces";
 
 interface CardInput {
   key: string;
@@ -30,7 +29,8 @@ export class CardComponent implements OnChanges {
 
   isSmall = false;
 
-  @Input() ratio:Ratio;
+  @Input() ratio: Ratio;
+  @Input() refresh: boolean;
 
   token: string;
 
@@ -38,8 +38,8 @@ export class CardComponent implements OnChanges {
     this.token = this.passport.token;
   }
 
-  ngOnChanges(){
-    this.isSmall = isSmallComponent(this.ratio)
+  ngOnChanges() {
+    this.isSmall = isSmallComponent(this.ratio);
   }
 
   async submit(form: HTMLFormElement, inputs: CardInput[], button: CardButton) {
