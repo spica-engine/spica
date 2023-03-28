@@ -97,10 +97,6 @@ export class LogViewComponent implements OnInit, OnDestroy {
 
         this.resetScroll();
 
-        if (filter.showErrors) {
-          filter.showErrors = JSON.parse(filter.showErrors);
-        }
-
         if (filter.realtime) {
           filter.realtime = JSON.parse(filter.realtime);
         }
@@ -144,8 +140,8 @@ export class LogViewComponent implements OnInit, OnDestroy {
             map(logs => {
               return {
                 logs:
-                  !_filter.showErrors && _filter.realtime
-                    ? logs.filter(log => log.channel != "stderr")
+                  _filter.levels && _filter.levels.length && _filter.realtime
+                    ? logs.filter(log => _filter.levels.includes(log.level.toString()))
                     : logs,
                 filter: _filter
               };
@@ -199,7 +195,7 @@ export class LogViewComponent implements OnInit, OnDestroy {
         flatMap(([filter, allIds]) => {
           const deletedFunctionIds: string[] =
             filter.function && filter.function.length ? filter.function : allIds;
-          return forkJoin(deletedFunctionIds.map(id => this.fs.clearLogs(id))).pipe(
+          return forkJoin(deletedFunctionIds.map(id => this.fs.clearLogs(id, filter))).pipe(
             tap(() => {
               if (!filter.realtime) {
                 this.resetScroll();

@@ -3,7 +3,7 @@ import {RouterModule, Routes} from "@angular/router";
 import {Route, RouteCategory, RouteModule} from "@spica-client/core";
 import {IdentityGuard, PolicyGuard} from "../passport";
 import {AddComponent} from "./pages/add/add.component";
-import {IndexComponent} from "./pages/index/index.component";
+import {FunctionActionsComponent} from "./pages/function-actions/function-actions.component";
 import {LogViewComponent} from "./pages/log-view/log-view.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {FunctionIndexGuard} from "./resolvers/function.guard";
@@ -19,14 +19,8 @@ const routes: Routes = [
       {
         canActivate: [FunctionIndexGuard],
         path: "",
-        component: IndexComponent,
+        component: FunctionActionsComponent,
         data: {action: "index"}
-      },
-      {
-        path: "add",
-        component: AddComponent,
-        data: {action: "create"},
-        canDeactivate: [FunctionCanDeactivate]
       },
       {
         canActivate: [FunctionIndexGuard],
@@ -61,14 +55,6 @@ const route: Route[] = [
     path: "/webhook/logs",
     display: "Logs",
     data: {action: "webhook:logs:index"}
-  },
-  {
-    category: RouteCategory.Developer_Sub,
-    id: `list_all_functions`,
-    icon: "format_list_numbered",
-    path: `/function`,
-    display: "List",
-    data: {action: "function:index"}
   },
   {
     category: RouteCategory.Developer_Sub,

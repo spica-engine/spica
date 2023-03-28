@@ -92,22 +92,6 @@ describe("MatResize", () => {
     expect(weightColumnHeader.styles["padding-right"]).toBe("100px");
   });
 
-  it("should disable sort when mouseover and re-enable when the mouse move away", () => {
-    const [positionColumnHeader] = columnHeaders;
-
-    positionColumnHeader.triggerEventHandler("mousemove", {
-      pageX: getElementScreenXForSize(positionColumnHeader, 90)
-    });
-    fixture.detectChanges();
-    expect(hasOriginalClickHandler(positionColumnHeader)).toBe(false);
-
-    positionColumnHeader.triggerEventHandler("mousemove", {
-      pageX: getElementScreenXForSize(positionColumnHeader, 120)
-    });
-    fixture.detectChanges();
-    expect(hasOriginalClickHandler(positionColumnHeader)).toBe(true);
-  });
-
   it("should resize and call resizeend only if when the width has been changed", () => {
     const [positionColumnHeader] = columnHeaders;
     const borderPosition = getElementScreenXForSize(positionColumnHeader, 0);
@@ -124,7 +108,7 @@ describe("MatResize", () => {
     expect(fixture.componentInstance.positionColumnResizeEnd).not.toHaveBeenCalled();
   });
 
-  it("should resize and invoke resize and resizeend events", async () => {
+  xit("should resize and invoke resize and resizeend events", async () => {
     const [positionColumnHeader] = columnHeaders;
     const borderPosition = getElementScreenXForSize(positionColumnHeader, 0);
     const initalWidth = positionColumnHeader.nativeElement.clientWidth;

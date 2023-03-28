@@ -21,10 +21,21 @@ import {SchemeSwitcherComponent} from "./scheme-switcher/scheme-switcher.compone
 import {SchemeObserver} from "./scheme.observer";
 import {SnackbarComponent} from "./snackbar/snackbar.component";
 import {MatSnackBarModule} from "@angular/material/snack-bar";
+import {MatDialogModule} from "@angular/material/dialog";
+import {MatChipsModule} from "@angular/material/chips";
+
 import {ToolbarActionDirective} from "./toolbar-action";
 import {MAT_FORM_FIELD_DEFAULT_OPTIONS} from "@angular/material/form-field";
 import {MatMenuModule} from "@angular/material/menu";
-import {CategoryService} from "@spica-client/common/category/category.service";
+import {DragDropModule} from "@angular/cdk/drag-drop";
+import {RouteItemComponent} from "./route/route-item/route-item.component";
+import {BasicDrawerComponent} from "./route/drawers/basic/basic.component";
+import {AdvancedDrawerComponent} from "./route/drawers/advanced/advanced.component";
+import {MatInputModule} from "@angular/material/input";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {FormsModule} from "@angular/forms";
+import {MatAwareDialogModule} from "@spica-client/material";
+import {RouteModule} from "../route";
 
 const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
 
@@ -44,19 +55,43 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     RouterModule.forChild(routes),
     MatSnackBarModule,
     MatMenuModule,
-    BrowserModule
+    BrowserModule,
+    DragDropModule,
+    MatDialogModule,
+    MatChipsModule,
+    MatInputModule,
+    MatFormFieldModule,
+    FormsModule,
+    MatAwareDialogModule,
+    RouteModule
   ],
-  providers: [SchemeObserver, CategoryService, Title],
+  providers: [SchemeObserver, Title],
   declarations: [
     HomeLayoutComponent,
     LayoutRouterOutlet,
     ErrorPageComponent,
     SchemeSwitcherComponent,
     SnackbarComponent,
-    ToolbarActionDirective
+    ToolbarActionDirective,
+    RouteItemComponent,
+    BasicDrawerComponent,
+    AdvancedDrawerComponent
   ],
-  exports: [LayoutRouterOutlet, RouterModule],
-  entryComponents: [HomeLayoutComponent, SchemeSwitcherComponent, SnackbarComponent]
+  exports: [
+    LayoutRouterOutlet,
+    RouterModule,
+    RouteItemComponent,
+    BasicDrawerComponent,
+    AdvancedDrawerComponent
+  ],
+  entryComponents: [
+    HomeLayoutComponent,
+    SchemeSwitcherComponent,
+    SnackbarComponent,
+    RouteItemComponent,
+    BasicDrawerComponent,
+    AdvancedDrawerComponent
+  ]
 })
 export class LayoutModule {
   static forRoot(config: LayoutConfig = {}): ModuleWithProviders<LayoutModule> {

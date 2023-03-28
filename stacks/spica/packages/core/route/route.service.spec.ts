@@ -1,7 +1,7 @@
 import {TestBed, tick, fakeAsync} from "@angular/core/testing";
 import {StoreModule} from "@ngrx/store";
 import {take} from "rxjs/operators";
-import {RouteCategory, RouteFilter, Route, ROUTE_FILTERS} from "./route";
+import {RouteCategoryType, RouteFilter, Route, ROUTE_FILTERS} from "./route";
 import {RouteModule} from "./route.module";
 import {Add, RemoveCategory, Retrieve, Upsert, Remove} from "./route.reducer";
 import {RouteService} from "./route.service";
@@ -21,9 +21,9 @@ describe("RouteService", () => {
 
     it("should dispatch full routes on retrieve", done => {
       const routes = [
-        {category: RouteCategory.Content, id: "1", path: "", icon: "", display: ""},
-        {category: RouteCategory.Developer, id: "2", path: "", icon: "", display: ""},
-        {category: RouteCategory.System, id: "4", path: "", icon: "", display: ""}
+        {category: RouteCategoryType.Content, id: "1", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.Developer, id: "2", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.System, id: "4", path: "", icon: "", display: ""}
       ];
       routeService.dispatch(new Retrieve(routes));
       routeService.routes.pipe(take(1)).subscribe(r => {
@@ -33,9 +33,11 @@ describe("RouteService", () => {
     });
 
     it("should dispatch previous routes and new added", done => {
-      const routes = [{category: RouteCategory.Content, id: "", path: "", icon: "", display: ""}];
+      const routes = [
+        {category: RouteCategoryType.Content, id: "", path: "", icon: "", display: ""}
+      ];
       const laterAddedRoute = {
-        category: RouteCategory.Developer,
+        category: RouteCategoryType.Developer,
         id: "123",
         path: "",
         icon: "",
@@ -45,9 +47,9 @@ describe("RouteService", () => {
       routeService.dispatch(new Add(laterAddedRoute));
       routeService.routes.pipe(take(1)).subscribe(r => {
         expect(r).toEqual([
-          {category: RouteCategory.Content, id: "", path: "", icon: "", display: ""},
+          {category: RouteCategoryType.Content, id: "", path: "", icon: "", display: ""},
           {
-            category: RouteCategory.Developer,
+            category: RouteCategoryType.Developer,
             id: "123",
             path: "",
             icon: "",
@@ -60,48 +62,48 @@ describe("RouteService", () => {
 
     it("should clear route(s) specified category", done => {
       const routes = [
-        {category: RouteCategory.Content, id: "1", path: "", icon: "", display: ""},
-        {category: RouteCategory.Content, id: "5", path: "", icon: "", display: ""},
-        {category: RouteCategory.Developer, id: "2", path: "", icon: "", display: ""},
-        {category: RouteCategory.Developer, id: "3", path: "", icon: "", display: ""},
-        {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: ""}
+        {category: RouteCategoryType.Content, id: "1", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.Content, id: "5", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.Developer, id: "2", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.Developer, id: "3", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.Developer, id: "4", path: "", icon: "", display: ""}
       ];
       routeService.dispatch(new Retrieve(routes));
-      routeService.dispatch(new RemoveCategory(RouteCategory.Content));
+      routeService.dispatch(new RemoveCategory(RouteCategoryType.Content));
       routeService.routes.pipe(take(1)).subscribe(r => {
         expect(r).toEqual([
-          {category: RouteCategory.Developer, id: "2", path: "", icon: "", display: ""},
-          {category: RouteCategory.Developer, id: "3", path: "", icon: "", display: ""},
-          {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: ""}
+          {category: RouteCategoryType.Developer, id: "2", path: "", icon: "", display: ""},
+          {category: RouteCategoryType.Developer, id: "3", path: "", icon: "", display: ""},
+          {category: RouteCategoryType.Developer, id: "4", path: "", icon: "", display: ""}
         ]);
         done();
       });
     });
     it("should clear route specified id", done => {
       const routes = [
-        {category: RouteCategory.Content, id: "1", path: "", icon: "", display: ""},
-        {category: RouteCategory.Content, id: "5", path: "", icon: "", display: ""},
-        {category: RouteCategory.Developer, id: "2", path: "", icon: "", display: ""},
-        {category: RouteCategory.Developer, id: "3", path: "", icon: "", display: ""},
-        {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: ""}
+        {category: RouteCategoryType.Content, id: "1", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.Content, id: "5", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.Developer, id: "2", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.Developer, id: "3", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.Developer, id: "4", path: "", icon: "", display: ""}
       ];
       routeService.dispatch(new Retrieve(routes));
       routeService.dispatch(new Remove("1"));
       routeService.routes.pipe(take(1)).subscribe(r => {
         expect(r).toEqual([
-          {category: RouteCategory.Content, id: "5", path: "", icon: "", display: ""},
-          {category: RouteCategory.Developer, id: "2", path: "", icon: "", display: ""},
-          {category: RouteCategory.Developer, id: "3", path: "", icon: "", display: ""},
-          {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: ""}
+          {category: RouteCategoryType.Content, id: "5", path: "", icon: "", display: ""},
+          {category: RouteCategoryType.Developer, id: "2", path: "", icon: "", display: ""},
+          {category: RouteCategoryType.Developer, id: "3", path: "", icon: "", display: ""},
+          {category: RouteCategoryType.Developer, id: "4", path: "", icon: "", display: ""}
         ]);
         done();
       });
     });
 
     it("should upsert existing category", done => {
-      const route = {category: RouteCategory.Content, id: "1", path: "", icon: "", display: ""};
+      const route = {category: RouteCategoryType.Content, id: "1", path: "", icon: "", display: ""};
       const changedRoute = {
-        category: RouteCategory.Content,
+        category: RouteCategoryType.Content,
         id: "1",
         path: "",
         icon: "",
@@ -128,7 +130,7 @@ describe("RouteService", () => {
             multi: true,
             useValue: new (class implements RouteFilter {
               filter(route: Route): Promise<boolean> | Observable<boolean> | boolean {
-                return route.category == RouteCategory.Developer ? true : false;
+                return route.category == RouteCategoryType.Developer ? true : false;
               }
             })()
           }
@@ -138,19 +140,19 @@ describe("RouteService", () => {
     });
     it("should filter routes which has category Developer", done => {
       const routes = [
-        {category: RouteCategory.Content, id: "1", path: "", icon: "", display: ""},
-        {category: RouteCategory.Content, id: "2", path: "", icon: "", display: ""},
-        {category: RouteCategory.Developer, id: "3", path: "", icon: "", display: ""},
-        {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: ""},
-        {category: RouteCategory.System, id: "5", path: "", icon: "", display: ""},
-        {category: RouteCategory.System, id: "6", path: "", icon: "", display: ""}
+        {category: RouteCategoryType.Content, id: "1", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.Content, id: "2", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.Developer, id: "3", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.Developer, id: "4", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.System, id: "5", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.System, id: "6", path: "", icon: "", display: ""}
       ];
 
       routeService.dispatch(new Retrieve(routes));
       routeService.routes.subscribe(receivedRoutes => {
         expect(receivedRoutes).toEqual([
-          {category: RouteCategory.Developer, id: "3", path: "", icon: "", display: ""},
-          {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: ""}
+          {category: RouteCategoryType.Developer, id: "3", path: "", icon: "", display: ""},
+          {category: RouteCategoryType.Developer, id: "4", path: "", icon: "", display: ""}
         ]);
         done();
       }, done.fail);
@@ -169,7 +171,7 @@ describe("RouteService", () => {
             multi: true,
             useValue: new (class implements RouteFilter {
               filter(route: Route): Promise<boolean> | Observable<boolean> | boolean {
-                return route.category == RouteCategory.Developer ? false : true;
+                return route.category == RouteCategoryType.Developer ? false : true;
               }
             })()
           }
@@ -179,21 +181,21 @@ describe("RouteService", () => {
     });
     it("should filter routes which has not category Developer", done => {
       const routes = [
-        {category: RouteCategory.Content, id: "1", path: "", icon: "", display: ""},
-        {category: RouteCategory.Content, id: "2", path: "", icon: "", display: ""},
-        {category: RouteCategory.Developer, id: "3", path: "", icon: "", display: ""},
-        {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: ""},
-        {category: RouteCategory.System, id: "5", path: "", icon: "", display: ""},
-        {category: RouteCategory.System, id: "6", path: "", icon: "", display: ""}
+        {category: RouteCategoryType.Content, id: "1", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.Content, id: "2", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.Developer, id: "3", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.Developer, id: "4", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.System, id: "5", path: "", icon: "", display: ""},
+        {category: RouteCategoryType.System, id: "6", path: "", icon: "", display: ""}
       ];
 
       routeService.dispatch(new Retrieve(routes));
       routeService.routes.subscribe(receivedRoutes => {
         expect(receivedRoutes).toEqual([
-          {category: RouteCategory.Content, id: "1", path: "", icon: "", display: ""},
-          {category: RouteCategory.Content, id: "2", path: "", icon: "", display: ""},
-          {category: RouteCategory.System, id: "5", path: "", icon: "", display: ""},
-          {category: RouteCategory.System, id: "6", path: "", icon: "", display: ""}
+          {category: RouteCategoryType.Content, id: "1", path: "", icon: "", display: ""},
+          {category: RouteCategoryType.Content, id: "2", path: "", icon: "", display: ""},
+          {category: RouteCategoryType.System, id: "5", path: "", icon: "", display: ""},
+          {category: RouteCategoryType.System, id: "6", path: "", icon: "", display: ""}
         ]);
         done();
       }, done.fail);

@@ -38,6 +38,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   apiStatusPending;
 
+  borderColor = "rgb(47, 114, 255)";
+  lineBackgroundColor = "rgba(47, 114, 255, 0.1)";
+
+  requestDataLength = 40;
+  downloadUploadDataLength = this.requestDataLength / 2;
+
   constructor(
     private activatedRoute: ActivatedRoute,
     private http: HttpClient,
@@ -97,7 +103,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.refresh$.next("");
   }
 
-  getDateRangesBetween(begin: Date, end: Date, length: number = 40) {
+  getDateRangesBetween(begin: Date, end: Date, length: number) {
     const multiplier = (end.getTime() - begin.getTime()) / length;
 
     const dates: Date[][] = [];
@@ -114,7 +120,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   setApiChart(
     name: string,
-    dataLabel: string,
     xLabels: string[],
     data: number[],
     unit: string,
@@ -133,20 +138,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
       );
     }
 
+    const colors = [
+      {
+        backgroundColor: this.borderColor,
+        borderColor: this.borderColor,
+        pointBackgroundColor: this.borderColor
+      }
+    ];
+
+    if (name == "request") {
+      colors[0].backgroundColor = this.lineBackgroundColor;
+    }
+
     this.apiChart[name] = of({
       datasets: [
         {
-          data: data,
-          label: dataLabel
+          data: data
         }
       ],
       label: xLabels,
-      colors: [{backgroundColor: "#28a745"}],
+      colors,
       options: {
         scaleBeginAtZero: false,
         barBeginAtOrigin: true,
         responsive: true,
         maintainAspectRatio: false,
+        legend: {
+          display: false
+        },
         tooltips: {
           callbacks: {
             title: items => {
@@ -190,7 +209,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   updateApiStatusCharts(begin: Date, end: Date) {
     this.apiStatusPending = true;
-    const ranges = this.getDateRangesBetween(begin, end);
+    const ranges = this.getDateRangesBetween(begin, end, this.requestDataLength);
 
     const promises = ranges.map((range, i) => {
       const url = new URL("api:/status/api");
@@ -219,21 +238,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     return Promise.all(promises)
       .then(() => {
-        const labels = ranges.map(d => d[0].toLocaleString());
-        this.setApiChart(
-          "request",
-          "Request",
-          labels,
-          this.apiRequestData,
-          "Count",
-          true,
+        const chunkSize = this.requestDataLength / this.downloadUploadDataLength;
+        this.apiDownloadedData = this.reduceDataLength(this.apiDownloadedData, chunkSize);
+        this.apiUploadedData = this.reduceDataLength(this.apiUploadedData, chunkSize);
+
+        const rangesToTitles = ranges => ranges.map(d => d[0].toLocaleString());
+
+        const requestLabels = rangesToTitles(ranges);
+
+        const downloadUploadRanges = this.getDateRangesBetween(
           begin,
-          end
+          end,
+          this.downloadUploadDataLength
         );
+        const downloadUploadLabels = rangesToTitles(downloadUploadRanges);
+
+        this.setApiChart("request", requestLabels, this.apiRequestData, "Count", true, begin, end);
         this.setApiChart(
           "downloaded",
-          "Downloaded(mb)",
-          labels,
+          downloadUploadLabels,
           this.apiDownloadedData,
           "Mb",
           false,
@@ -242,8 +265,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         );
         this.setApiChart(
           "uploaded",
-          "Uploaded(mb)",
-          labels,
+          downloadUploadLabels,
           this.apiUploadedData,
           "Mb",
           false,
@@ -252,6 +274,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
         );
       })
       .finally(() => (this.apiStatusPending = false));
+  }
+
+  reduceDataLength(data: any[], chunkSize: number) {
+    const newData = [];
+
+    const sum = (arr: number[]) => arr.reduce((acc, curr) => (acc += curr));
+
+    for (let i = 0; i <= data.length - chunkSize; i = i + chunkSize) {
+      const chunk = data.slice(i, i + chunkSize);
+      newData.push(sum(chunk));
+    }
+    return newData;
   }
 
   getModuleStatus(

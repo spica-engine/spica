@@ -6,6 +6,7 @@ import {InputPlacerWithMetaPlacer} from "@spica-client/common";
 import {InputResolver} from "@spica-client/common/input/input.resolver";
 import {map, take} from "rxjs/operators";
 import {NgModel} from "@angular/forms";
+import {SavingState} from "@spica-client/material";
 
 @Component({
   selector: "app-add-field-modal",
@@ -18,6 +19,7 @@ export class AddFieldModalComponent implements OnInit {
   parentSchema: any;
   propertyKey: string = "";
   propertyKv: any;
+  savingState: SavingState;
 
   translatableTypes = ["string", "textarea", "array", "object", "richtext", "storage"];
   basicPropertyTypes = ["string", "textarea", "boolean", "number"];
@@ -36,6 +38,7 @@ export class AddFieldModalComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.savingState = SavingState.Pristine;
     this.bs
       .getPredefinedDefaults()
       .pipe(
@@ -52,10 +55,13 @@ export class AddFieldModalComponent implements OnInit {
     this._inputResolver.entries().map(e => this.systemFields.push(this._inputResolver.resolve(e)));
     this.parentSchema = this.data.parentSchema;
     this.immutableProperties = Object.keys(this.parentSchema.properties);
+
     if (this.data.propertyKey) {
       this.step = 1;
       this.propertyKey = this.data.propertyKey;
+
       this.propertyKv = this.parentSchema.properties[this.propertyKey];
+
       this.field = this.propertyKv.type;
       this.fieldConfig = this.systemFields.filter(systemField => systemField.type == this.field)[0];
     }
@@ -63,12 +69,14 @@ export class AddFieldModalComponent implements OnInit {
 
   chooseFieldType(field) {
     this.field = field;
+
     this.step = 1;
   }
 
   addProperty(name: string, description: string = null) {
     if (!description) description = `Description of the ${name} input`;
     this.propertyKey = name.toLowerCase();
+
     if (name && !this.parentSchema.properties[this.propertyKey]) {
       this.propertyKv = this.parentSchema.properties[this.propertyKey] = {
         type: this.field,
@@ -83,7 +91,15 @@ export class AddFieldModalComponent implements OnInit {
   }
 
   save() {
-    this.dialogRef.close();
+    this.savingState = SavingState.Saving;
+    this.bs
+      .replaceOne(this.parentSchema)
+      .toPromise()
+      .then(() => {
+        this.savingState = SavingState.Saved;
+        this.dialogRef.close(true);
+      })
+      .catch(() => (this.savingState = SavingState.Failed));
   }
 
   toggleRequired(key: string, required: boolean) {

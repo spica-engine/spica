@@ -7,7 +7,9 @@ export enum BucketActionTypes {
   ADD = "BUCKET_ADD",
   REMOVE = "BUCKET_REMOVE",
   UPDATE = "BUCKET_UPDATE",
+  UPDATE_MANY = "BUCKET_UPDATE_MANY",
   UPSERT = "BUCKET_UPSERT",
+  UPSERT_MANY = "BUCKET_UPSERT_MANY",
   REPLACE = "BUCKET_REPLACE"
 }
 
@@ -20,6 +22,10 @@ export class Update implements Action {
   readonly type = BucketActionTypes.UPDATE;
   constructor(public id: string, public changes: Partial<Bucket>) {}
 }
+export class UpdateMany implements Action {
+  readonly type = BucketActionTypes.UPDATE_MANY;
+  constructor(public buckets: {id: string; changes: Partial<Bucket>}[]) {}
+}
 
 export class Replace implements Action {
   readonly type = BucketActionTypes.REPLACE;
@@ -29,6 +35,10 @@ export class Replace implements Action {
 export class Upsert implements Action {
   readonly type = BucketActionTypes.UPSERT;
   constructor(public bucket: Bucket) {}
+}
+export class UpsertMany implements Action {
+  readonly type = BucketActionTypes.UPSERT_MANY;
+  constructor(public buckets: Bucket[]) {}
 }
 
 export class Remove implements Action {
@@ -41,7 +51,15 @@ export class Retrieve implements Action {
   constructor(public buckets: Bucket[]) {}
 }
 
-export type BucketAction = Retrieve | Add | Update | Remove | Upsert | Replace;
+export type BucketAction =
+  | Retrieve
+  | Add
+  | Update
+  | UpdateMany
+  | Remove
+  | Upsert
+  | Replace
+  | UpsertMany;
 
 export interface State extends EntityState<Bucket> {
   loaded: boolean;
@@ -66,8 +84,12 @@ export function reducer(state: State = initialState, action: BucketAction): Stat
       return adapter.setOne(action.bucket, state);
     case BucketActionTypes.UPDATE:
       return adapter.updateOne({id: action.id, changes: action.changes}, state);
+    case BucketActionTypes.UPDATE_MANY:
+      return adapter.updateMany(action.buckets, state);
     case BucketActionTypes.UPSERT:
       return adapter.upsertOne(action.bucket, state);
+    case BucketActionTypes.UPSERT_MANY:
+      return adapter.upsertMany(action.buckets, state);
     default:
       return state;
   }

@@ -19,7 +19,7 @@ export class WebhookInitializer {
   ) {
     webhookService.getWebhooks().subscribe(webhooks => {
       this.routeService.dispatch(
-        new CherryPickAndRemove(e => e.icon == "webhook" && /\/webhook\//.test(e.path))
+        new CherryPickAndRemove(e => e.icon == "webhook" && /\/webhook\//.test(e.path as string))
       );
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Webhook));
 

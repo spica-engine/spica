@@ -24,6 +24,7 @@ ts_project(
         "//stacks/api/function/runtime/io",
         "//stacks/api/function/runtime/node",
         "//stacks/api/replication",
+        "//stacks/api/status/services",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@types/node",

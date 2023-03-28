@@ -1,5 +1,5 @@
 import {Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
-import {HttpAdapterHost} from "@nestjs/core";
+import {APP_INTERCEPTOR, HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica-server/database";
 import {Language} from "@spica-server/function/compiler";
 import {Javascript} from "@spica-server/function/compiler/javascript";
@@ -18,8 +18,14 @@ import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server
 import {event} from "@spica-server/function/queue/proto";
 import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
+import {generateLog, LogLevels} from "@spica-server/function/runtime/logger";
 import {Node} from "@spica-server/function/runtime/node";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
+import {
+  AttachStatusTracker,
+  ATTACH_STATUS_TRACKER,
+  StatusInterceptor
+} from "@spica-server/status/services";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
@@ -46,7 +52,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     private commander: ClassCommander,
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>,
-    private jobReducer: JobReducer
+    private jobReducer: JobReducer,
+    @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker
   ) {
     this.commander.register(this, [this.deleteWorkersOfTarget]);
 
@@ -85,7 +92,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.httpQueue,
         this.http.httpAdapter.getInstance(),
         this.options.corsOptions,
-        schedulerUnsubscription
+        schedulerUnsubscription,
+        this.attachStatusTracker
       )
     );
 
@@ -189,13 +197,17 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       worker.attach(stdout, stderr);
 
       const timeoutInMs = Math.min(this.options.timeout, event.target.context.timeout) * 1000;
+
+      const msg = `${timeoutInMs / 1000} seconds timeout value has been reached for function '${
+        event.target.handler
+      }'. The worker is being shut down.`;
+
+      const timeoutMsg = this.options.logger ? generateLog(msg, LogLevels.INFO) : msg;
+      const channel = this.options.logger ? stdout : stderr;
+
       const timeoutFn = () => {
-        if (stderr.writable) {
-          stderr.write(
-            `${timeoutInMs / 1000} seconds timeout value has been reached for function '${
-              event.target.handler
-            }'. The worker is being shut down.`
-          );
+        if (channel.writable) {
+          channel.write(timeoutMsg);
         }
         worker.kill();
       };
@@ -275,7 +287,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
           __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
           __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
             ? "true"
-            : ""
+            : "",
+          LOGGER: this.options.logger ? "true" : undefined
         }
       });
 

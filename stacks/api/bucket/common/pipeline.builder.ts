@@ -1,5 +1,4 @@
 import * as expression from "@spica-server/bucket/expression";
-import {ObjectId} from "@spica-server/database";
 import {Bucket} from "@spica-server/bucket/services";
 import {CrudFactories} from "./crud";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
@@ -10,9 +9,10 @@ import {
   getRelationPipeline,
   RelationMap
 } from "./relation";
-import {extractFilterPropertyMap, replaceFilterObjectIds} from "@spica-server/bucket/services";
+import {constructFilterValues} from "@spica-server/bucket/common";
 import {categorizePropertyMap} from "./helpers";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {extractFilterPropertyMap} from "@spica-server/filter";
 
 export class BucketPipelineBuilder extends PipelineBuilder {
   private schema: Bucket;
@@ -102,7 +102,12 @@ export class BucketPipelineBuilder extends PipelineBuilder {
         !Array.isArray(filterByUserRequest) &&
         Object.keys(filterByUserRequest).length
       ) {
-        filterByUserRequest = replaceFilterObjectIds(filterByUserRequest);
+        filterByUserRequest = await constructFilterValues(
+          filterByUserRequest,
+          this.schema,
+          this.factories.schema
+        );
+
         filterPropertyMap = extractFilterPropertyMap(filterByUserRequest);
         filterExpression = filterByUserRequest;
       } else if (typeof filterByUserRequest == "string") {

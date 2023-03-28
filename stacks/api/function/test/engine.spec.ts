@@ -38,7 +38,8 @@ describe("Engine", () => {
             allowedHeaders: ["*"]
           },
           maxConcurrency: 1,
-          debug: false
+          debug: false,
+          logger: false
         }),
         DatabaseTestingModule.replicaSet()
       ]

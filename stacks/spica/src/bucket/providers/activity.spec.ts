@@ -2,7 +2,7 @@ import {provideActivityFactory} from "./activity";
 describe("Bucket Activity Factory", () => {
   it("should return bucket url", () => {
     let url = provideActivityFactory({resource: ["bucket", "id1"]});
-    expect(url).toEqual("buckets/id1");
+    expect(url).toEqual("bucket/id1");
   });
 
   it("should return bucket-data url", () => {
@@ -12,7 +12,7 @@ describe("Bucket Activity Factory", () => {
 
   it("should return bucket settings url", () => {
     let url = provideActivityFactory({resource: ["preference", "bucket"]});
-    expect(url).toEqual("buckets/settings");
+    expect(url).toEqual("bucket/settings");
   });
 
   it("should return undefined", () => {

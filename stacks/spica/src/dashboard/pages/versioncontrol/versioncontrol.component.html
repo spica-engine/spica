@@ -88,6 +88,10 @@ git add <span class="editable" contenteditable>MODULE_NAME</span>/<span class="e
             <mat-spinner *ngIf="isPending" color="accent" diameter="20"> </mat-spinner>
             <mat-icon *ngIf="!isPending">send</mat-icon>
           </button>
+          <button mat-icon-button [matMenuTriggerFor]="availableCommandsMenu" [disabled]="isPending"><mat-icon>arrow_drop_down</mat-icon></button>
+          <mat-menu #availableCommandsMenu="matMenu">
+            <button *ngFor="let availableCommand of availableCommands" mat-menu-item (click)="command = availableCommand">{{availableCommand | titlecase}}</button>
+          </mat-menu>
       </pre>
       </mat-form-field>
     </div>

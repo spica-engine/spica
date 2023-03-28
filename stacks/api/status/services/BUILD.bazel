@@ -13,6 +13,8 @@ ts_project(
         "//packages/core",
         "//packages/database",
         "@npm//@nestjs/common",
+        "@npm//@types/express",
+        "@npm//express",
         "@npm//rxjs",
     ],
 )

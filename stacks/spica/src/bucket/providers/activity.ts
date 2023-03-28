@@ -11,10 +11,10 @@ export function provideActivityFactory(activity: any) {
     if (activity.resource[2] == "data") {
       url = `bucket/${bucketId}/${activity.resource[3]}`;
     } else {
-      url = `buckets/${bucketId}`;
+      url = `bucket/${bucketId}`;
     }
   } else if (module == "preference" && activity.resource[1] == "bucket") {
-    url = `buckets/settings`;
+    url = `bucket/settings`;
   }
 
   return url;

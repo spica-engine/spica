@@ -43,15 +43,33 @@
       display: flex;
       flex-direction: column;
       max-width: calc(100% - 400px);
-
       transition: all 0.5s ease-in-out;
       .code-actions {
-        padding: 5px 10px 5px 20px;
         margin: 0px;
         align-items: center;
         display: flex;
-        > span.separator {
+        border-bottom: 5px solid rgba(var(--background-app-bar-rgb), calc(0.41 + var(--tone-diff)));
+        > div.separator {
           flex: 1;
+          height: 100%;
+        }
+        > *:not(.title) {
+          border-bottom: 1px solid rgba(var(--foreground-base-rgb), 0.1);
+        }
+        .title {
+          background: rgba(var(--background-app-bar-rgb), calc(0.41 + var(--tone-diff)));
+          align-items: center;
+          display: flex;
+          height: 100%;
+          padding: 0 30px;
+          border-right: 1px solid rgba(var(--foreground-base-rgb), 0.1);
+          > mat-icon {
+            margin-right: 5px;
+            color: var(--foreground-disabled);
+          }
+          h4 {
+            margin: 0;
+          }
         }
 
         span.repo-response {
@@ -82,11 +100,7 @@
           max-width: 100%;
           align-items: center;
           display: flex;
-
-          span {
-            align-items: center;
-            display: flex;
-          }
+          padding: 5px 10px 5px 0px;
         }
       }
     }
@@ -427,7 +441,7 @@
         padding: 6px 16px;
       }
       mat-form-field {
-        width: 33% !important;
+        width: 25% !important;
       }
       mat-slide-toggle,
       mat-card-content {
@@ -484,15 +498,18 @@
   left: 0 !important;
   top: 0px !important;
   width: 100% !important;
-  height: 40px !important;
+  height: 46px !important;
   background: var(--background-card) !important;
   z-index: 1000 !important;
+  .actions {
+    padding: 0 10px 0 0 !important;
+  }
 }
 
 .full-screen-code {
   position: fixed !important;
   left: 0 !important;
-  top: 40px !important;
+  top: 46px !important;
   width: 100% !important;
   height: calc(100vh - 440px) !important;
   background: var(--background-card) !important;

@@ -34,7 +34,7 @@ describe("Status", () => {
         imports: [
           SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME]}),
           DatabaseTestingModule.replicaSet(),
-          StatusModule.forRoot({expireAfterSeconds: 60, requestLimit: 60}),
+          StatusModule.forRoot({expireAfterSeconds: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),
           PreferenceTestingModule,
@@ -128,7 +128,7 @@ describe("Status", () => {
         imports: [
           DatabaseTestingModule.standalone(),
           PolicyModule.forRoot(),
-          StatusModule.forRoot({expireAfterSeconds: 60, requestLimit: 60}),
+          StatusModule.forRoot({expireAfterSeconds: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),
           PreferenceTestingModule,
@@ -184,7 +184,7 @@ describe("Status", () => {
       module = await Test.createTestingModule({
         imports: [
           DatabaseTestingModule.replicaSet(),
-          StatusModule.forRoot({expireAfterSeconds: 60, requestLimit: 60}),
+          StatusModule.forRoot({expireAfterSeconds: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),
           ReplicationTestingModule.create(),
@@ -207,7 +207,8 @@ describe("Status", () => {
             entryLimit: 20,
             maxConcurrency: 1,
             debug: false,
-            realtimeLogs: false
+            realtimeLogs: false,
+            logger: false
           })
         ]
       }).compile();
@@ -300,7 +301,7 @@ describe("Status", () => {
       module = await Test.createTestingModule({
         imports: [
           DatabaseTestingModule.standalone(),
-          StatusModule.forRoot({expireAfterSeconds: 60, requestLimit: 60}),
+          StatusModule.forRoot({expireAfterSeconds: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),
           StorageModule.forRoot({

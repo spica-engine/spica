@@ -11,7 +11,6 @@ import {Observable, of} from "rxjs";
 import {first, map, switchMap, tap} from "rxjs/operators";
 import {emptyBucket} from "../interfaces/bucket";
 import {AddComponent} from "../pages/add/add.component";
-import {BucketAddComponent} from "../pages/bucket-add/bucket-add.component";
 import {BucketDataService} from "../services/bucket-data.service";
 import {BucketService} from "../services/bucket.service";
 import isEqual from "lodash-es/isEqual";
@@ -30,55 +29,6 @@ const awareDialogData = {
   cancelText: "Cancel",
   noAnswer: true
 };
-
-@Injectable()
-export class BucketCanDeactivate implements CanDeactivate<BucketAddComponent> {
-  constructor(
-    private router: Router,
-    private bucketService: BucketService,
-    public matDialog: MatDialog
-  ) {}
-
-  openDialog() {
-    return this.matDialog
-      .open(MatAwareDialogComponent, {
-        data: awareDialogData
-      })
-      .afterClosed()
-      .pipe(first());
-  }
-
-  canDeactivate(
-    component: BucketAddComponent,
-    currentRoute: ActivatedRouteSnapshot,
-    currentState: RouterStateSnapshot,
-    nextState: RouterStateSnapshot
-  ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
-    const state = this.router.getCurrentNavigation().extras.state;
-
-    if (state && state.skipSaveChanges) {
-      return true;
-    }
-
-    const bucketWithChanges = component.bucket;
-    const initialBucket = emptyBucket();
-
-    if (isEqual(bucketWithChanges, initialBucket)) {
-      return true;
-    }
-
-    if (bucketWithChanges._id) {
-      return this.bucketService.getBucket(bucketWithChanges._id).pipe(
-        first(),
-        switchMap(existingBucket =>
-          isEqual(existingBucket, bucketWithChanges) ? of(true) : this.openDialog()
-        )
-      );
-    }
-
-    return this.openDialog();
-  }
-}
 
 @Injectable()
 export class BucketDataCanDeactivate implements CanDeactivate<AddComponent> {

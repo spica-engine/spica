@@ -144,35 +144,32 @@
 
         <button
           mat-button
-          [matTooltip]="(showScheduled ? 'Hide' : 'Show') + ' scheduled documents'"
-          [color]="showScheduled ? 'accent' : 'secondary'"
-          (click)="toggleScheduled()"
-        >
-          <mat-icon>schedule</mat-icon>
-          Schedule
-        </button>
-
-        <button
-          mat-button
           [matTooltip]="(guide ? 'Hide' : 'Show') + ' Guide'"
           (click)="guide = !guide"
         >
           <mat-icon>contact_support</mat-icon>
           For Developers
         </button>
+
+        <button mat-button [matMenuTriggerFor]="bucketSettingsMenu">
+          <mat-icon>more_vert</mat-icon>
+          More
+          <mat-menu
+            class="bucket-settings-menu"
+            #bucketSettingsMenu="matMenu"
+            (click)="$event.stopPropagation()"
+          >
+            <ng-template matMenuContent>
+              <settings-bucket [schema]="schema"></settings-bucket>
+            </ng-template>
+          </mat-menu>
+        </button>
       </div>
     </div>
   </ng-container>
   <mat-card class="mat-elevation-z25">
     <mat-card-content>
-      <table
-        class="striped"
-        mat-table
-        #rowtable
-        [dataSource]="data$ | async"
-        matSort
-        (matSortChange)="onSortChange($event)"
-      >
+      <table class="striped" mat-table #rowtable [dataSource]="data$ | async">
         <ng-container matColumnDef="$$spicainternal_select" sticky>
           <th class="select" mat-header-cell *matHeaderCellDef>
             <mat-checkbox
@@ -187,36 +184,6 @@
               (ngModelChange)="onItemSelected($event, row)"
               [ngModel]="hasSelected(row._id)"
             ></mat-checkbox>
-          </td>
-        </ng-container>
-        <ng-container matColumnDef="$$spicainternal_id" *ngIf="schema$ | async; let schema" sticky>
-          <th mat-header-cell *matHeaderCellDef mat-sort-header><mat-icon> key</mat-icon> _id</th>
-          <td mat-cell *matCellDef="let row">
-            {{ row._id }}
-          </td>
-        </ng-container>
-        <ng-container matColumnDef="$$spicainternal_schedule" *ngIf="schema$ | async; let schema">
-          <th
-            mat-header-cell
-            *matHeaderCellDef
-            mat-sort-header
-            mat-resize-header
-            [overrideMinWidth]="true"
-            [persist-header-width]="schema._id"
-          >
-            <mat-icon>schedule</mat-icon> Scheduled
-          </th>
-          <td mat-cell *matCellDef="let row">
-            {{ row._schedule | date: "MMM d, y, h:mm:ss a" }}
-          </td>
-        </ng-container>
-        <ng-container
-          matColumnDef="$$spicainternal_actions"
-          *ngIf="schema$ | async; let schema"
-          stickyEnd
-        >
-          <th mat-header-cell class="action" *matHeaderCellDef>Actions</th>
-          <td mat-cell class="action" *matCellDef="let row">
             <button
               canInteract="bucket:data:show"
               [resource]="schema._id + '/' + row._id"
@@ -225,27 +192,29 @@
             >
               <mat-icon>{{ readOnly ? "remove_red_eye" : "edit" }}</mat-icon>
             </button>
-            <button
-              mat-icon-button
-              [disabled]="readOnly"
-              canInteract="bucket:data:delete"
-              [resource]="schema._id + '/' + row._id"
-              color="warn"
-              [matAwareDialog]="{
-                title: 'Confirmation',
-                templateOrDescription: getDependents(schema, [row]).length
-                  ? deleteWithDependentsDialog
-                  : deleteDialog,
-                answer: row.hasOwnProperty(schema.primary)
-                  ? row[schema.primary]?.toString()
-                  : 'agree',
-                list: getDependents(schema, [row])
-              }"
-              (confirm)="delete(row._id)"
-            >
-              <mat-icon>delete</mat-icon>
-            </button>
           </td>
+        </ng-container>
+        <ng-container matColumnDef="$$spicainternal_id" *ngIf="schema$ | async; let schema" sticky>
+          <th mat-header-cell *matHeaderCellDef>
+            _id
+            <ng-container
+              [ngTemplateOutlet]="propertyMenuTemplate"
+              [ngTemplateOutletContext]="{
+                schema: schema,
+                displayedProperties: displayedProperties,
+                property: {key: '$$spicainternal_id'}
+              }"
+            ></ng-container>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            {{ row._id }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="$$spicainternal_new_property" stickyEnd>
+          <th mat-header-cell *matHeaderCellDef (click)="addNewProperty()">
+            <div><mat-icon>add</mat-icon> New field</div>
+          </th>
+          <td mat-cell *matCellDef="let row"></td>
         </ng-container>
 
         <ng-container *ngIf="schema$ | async; let schema">
@@ -256,20 +225,27 @@
             <th
               mat-header-cell
               *matHeaderCellDef
-              mat-sort-header
               [persist-header-width]="schema._id"
               mat-resize-header
               [overrideMinWidth]="true"
             >
               <mat-icon>{{ inputResolver.resolve(property.value.type).icon }}</mat-icon>
               {{ property.value.title }}
+              <ng-container
+                [ngTemplateOutlet]="propertyMenuTemplate"
+                [ngTemplateOutletContext]="{
+                  schema: schema,
+                  displayedProperties: displayedProperties,
+                  property: property
+                }"
+              ></ng-container>
             </th>
             <td
               mat-cell
               *matCellDef="let row"
               [ngClass]="{editable: nonEditableTypes.indexOf(property.value.type) == -1}"
               [resource]="schema._id + '/' + row._id"
-              (click)="enableEditMode(row._id, property)"
+              (click)="!schema.readOnly && enableEditMode(row._id, property)"
             >
               <div canInteract="bucket:data:update">
                 <span
@@ -378,6 +354,25 @@
     </div>
   </div>
 </div>
+<ng-template
+  let-schema="schema"
+  let-displayedProperties="displayedProperties"
+  let-property="property"
+  #propertyMenuTemplate
+>
+  <button mat-icon-button [matMenuTriggerFor]="editPropertyMenu">
+    <mat-icon>arrow_drop_down</mat-icon>
+  </button>
+  <mat-menu class="edit-property-menu" #editPropertyMenu="matMenu">
+    <property-menu
+      (handleSortChange)="onSortChange($event)"
+      [schema]="schema"
+      [displayedProperties]="displayedProperties"
+      [property]="property"
+    ></property-menu>
+  </mat-menu>
+</ng-template>
+
 <ng-template #deleteRowsDialog let-answer="answer">
   <p>
     This action will <b>permanently</b> delete these selected

@@ -34,6 +34,7 @@ import {
   emptyFunction,
   emptyTrigger,
   Enqueuer,
+  Function,
   FunctionOptions,
   FUNCTION_OPTIONS,
   Information,
@@ -103,6 +104,8 @@ export class AddComponent implements OnInit, OnDestroy {
 
   lastSavedIndex;
 
+  handlers = [];
+
   constructor(
     private activatedRoute: ActivatedRoute,
     private router: Router,
@@ -164,8 +167,13 @@ export class AddComponent implements OnInit, OnDestroy {
     )
       .pipe(
         tap(id => this.selectedFunctionId.next(id)),
-        switchMap(id => this.functionService.getFunction(id).pipe(take(1))),
+        switchMap(id => this.functionService.getFunction(id).pipe()),
         tap(fn => {
+          if (this.function._id && this.function._id == fn._id) {
+            // No need to set dependencies & environments again because they are only editable on this page.
+            this.function = {...fn, env: this.function.env, triggers: this.function.triggers};
+            return;
+          }
           this.dependencyInstallPending = false;
           this.serverError = undefined;
           this.isIndexPending = true;
@@ -203,6 +211,10 @@ export class AddComponent implements OnInit, OnDestroy {
     return `${value}s`;
   }
 
+  isHandlerInUse(handler: string) {
+    return this.function.triggers.map(t => t.handler).includes(handler);
+  }
+
   addTrigger() {
     this.function.triggers.push(emptyTrigger());
     this.triggersEditMode[this.function.triggers.length - 1] = true;
@@ -211,7 +223,6 @@ export class AddComponent implements OnInit, OnDestroy {
   deleteTrigger(i: number) {
     this.function.triggers.splice(i, 1);
     this.triggersEditMode.splice(i, 1);
-    this.checkHandlers();
   }
 
   addVariable() {
@@ -346,14 +357,8 @@ export class AddComponent implements OnInit, OnDestroy {
       });
   }
 
-  checkHandlers() {
-    this.isHandlerDuplicated = false;
-    for (const trigger of this.function.triggers) {
-      if (this.function.triggers.filter(item => item.handler == trigger.handler).length > 1) {
-        this.isHandlerDuplicated = true;
-        break;
-      }
-    }
+  onHandlersEmitted(handlers: string[]) {
+    this.handlers = handlers;
   }
 
   // FULLSCREEN CODE EDITOR
@@ -544,5 +549,17 @@ export class AddComponent implements OnInit, OnDestroy {
       this.renderer.removeClass(codeSection, "code-expanded");
       this.renderer.removeClass(infoSection, "info-hidden");
     }
+  }
+  openEditDialog() {
+    const fn = denormalizeFunction(this.function);
+    if (!fn.triggers.default) {
+      delete fn.triggers.default;
+    }
+    this.dialog.open(ConfigurationComponent, {
+      data: {
+        function: fn
+      },
+      autoFocus: false
+    });
   }
 }

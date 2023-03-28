@@ -147,9 +147,7 @@
       padding: 0px;
       margin: 0px 16px;
       table {
-        min-width: calc(100% - 32px);
-        width: calc(100% - 32px);
-
+        width: 100%;
         overflow: auto;
         .select {
           width: 75px;
@@ -161,20 +159,53 @@
         th:not(.select):not(:last-of-type) {
           position: relative;
           padding-left: 5px;
-          &:not(.mat-column---spicainternal_id):after {
-            content: "||";
+          &:not(.mat-column---spicainternal_id) {
+            &:after {
+              content: "||";
+              position: absolute;
+              right: 2px;
+              top: 10px;
+              opacity: 0;
+            }
+            &:hover::after {
+              opacity: 1;
+            }
+          }
+          button {
             position: absolute;
-            right: 2px;
-            top: 10px;
+            right: 6px;
+            top: -4px;
           }
         }
         tr {
           height: 40px !important;
           > th:last-of-type {
-            padding-right: 35px;
+            padding-right: 0;
+            width: 200px;
+            > div {
+              color: var(--foreground-text);
+              display: flex;
+              align-items: center;
+              min-width: 100px;
+              justify-content: center;
+              cursor: pointer !important;
+              > mat-icon {
+                font-size: 1.4rem;
+                width: 1.4rem;
+                height: 1.4rem;
+                margin-right: 5px;
+              }
+            }
           }
           > *:last-of-type {
             text-align: right;
+          }
+          &:hover {
+            td.mat-column---spicainternal_select {
+              button {
+                opacity: 1;
+              }
+            }
           }
         }
         th {
@@ -201,12 +232,21 @@
             width: 200px;
             min-width: 200px;
           }
-          &.mat-column---spicainternal_actions {
+          &.mat-column---spicainternal_new_property {
             border-left: 1px solid var(--foreground-divider);
             padding: 0px 10px;
+            border-bottom-color: transparent;
+            background-color: var(--background-card) !important;
+          }
+          &.mat-column---spicainternal_select {
+            button {
+              margin-left: 8px;
+              opacity: 0;
+              transition: opacity 0.3s ease;
+            }
           }
         }
-        td.mat-cell:not(.action) {
+        td.mat-cell:not(.mat-column---spicainternal_select) {
           max-width: 0;
           &.editable {
             cursor: pointer;

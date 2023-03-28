@@ -25,6 +25,8 @@ import {NgModel} from "@angular/forms";
 import {Scheme, SchemeObserver} from "@spica-client/core";
 import {guides} from "./guides";
 import {FilterComponent} from "@spica-client/bucket/components/filter/filter.component";
+import {MatDialog} from "@angular/material/dialog";
+import {AddFieldModalComponent} from "../add-field-modal/add-field-modal.component";
 import {InputResolver} from "@spica-client/common";
 
 @Component({
@@ -51,6 +53,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   bucketId: string;
   schema$: Observable<Bucket>;
+  schema: Bucket;
   data$: Observable<BucketData>;
   refresh = new Subject();
   loaded: boolean;
@@ -61,14 +64,13 @@ export class IndexComponent implements OnInit, OnDestroy {
   filter: {[key: string]: any} = {};
   sort: {[key: string]: number} = {};
 
-  showScheduled: boolean = false;
   readOnly: boolean = true;
 
   displayedProperties: Array<string> = [];
   stickyProperties: Array<string> = [
     "$$spicainternal_select",
     "$$spicainternal_id",
-    "$$spicainternal_actions"
+    "$$spicainternal_new_property"
   ];
   properties: Array<{name: string; title: string}> = [];
 
@@ -110,6 +112,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     private router: Router,
     private sanitizer: DomSanitizer,
     private scheme: SchemeObserver,
+    private dialog: MatDialog,
     public inputResolver: InputResolver,
     @Inject(BUCKET_OPTIONS) private options: BucketOptions
   ) {
@@ -128,7 +131,6 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.schema$ = this.route.params.pipe(
       tap(params => {
         this.bucketId = params.id;
-        this.showScheduled = false;
 
         this.searchValue = "";
 
@@ -140,6 +142,7 @@ export class IndexComponent implements OnInit, OnDestroy {
       }),
       flatMap(() => this.bs.getBucket(this.bucketId)),
       tap(schema => {
+        this.schema = schema;
         this.guideResponse = {};
         this.readOnly = schema.readOnly;
         this.properties = [
@@ -148,8 +151,7 @@ export class IndexComponent implements OnInit, OnDestroy {
             name,
             title: value.title
           })),
-          {name: "$$spicainternal_schedule", title: "Scheduled"},
-          {name: "$$spicainternal_actions", title: "Actions"}
+          {name: "$$spicainternal_new_property", title: "New property"}
         ];
 
         this.editableProps = Object.entries(schema.properties).filter(
@@ -170,13 +172,14 @@ export class IndexComponent implements OnInit, OnDestroy {
               Object.keys(schema.properties)
                 .concat([
                   "$$spicainternal_id",
-                  "$$spicainternal_schedule",
-                  "$$spicainternal_actions",
+                  "$$spicainternal_new_property",
                   "$$spicainternal_select"
                 ])
                 .some(schemaProps => schemaProps == dispProps)
             )
-          : this.properties.map(p => p.name).filter(p => p != "$$spicainternal_schedule");
+          : this.properties.map(p => p.name);
+
+        if (!cachedDisplayedProperties) this.toggleDisplayAll(true, schema);
       }),
       tap(schema => {
         Object.keys(schema.properties).map(key => {
@@ -226,8 +229,7 @@ export class IndexComponent implements OnInit, OnDestroy {
           filter: this.filter && Object.keys(this.filter).length > 0 && this.filter,
           sort: Object.keys(this.sort).length > 0 ? this.sort : {_id: -1},
           limit: this.paginator.pageSize || 10,
-          skip: this.paginator.pageSize * this.paginator.pageIndex,
-          schedule: this.showScheduled
+          skip: this.paginator.pageSize * this.paginator.pageIndex
         });
       }),
       map(response => {
@@ -318,8 +320,7 @@ export class IndexComponent implements OnInit, OnDestroy {
         "$$spicainternal_select",
         "$$spicainternal_id",
         ...Object.keys(schema.properties),
-        "$$spicainternal_schedule",
-        "$$spicainternal_actions"
+        "$$spicainternal_new_property"
       ];
     } else {
       this.displayedProperties = [...this.stickyProperties];
@@ -345,23 +346,6 @@ export class IndexComponent implements OnInit, OnDestroy {
       `${this.bucketId}-displayedProperties`,
       JSON.stringify(this.displayedProperties)
     );
-  }
-
-  toggleScheduled() {
-    this.showScheduled = !this.showScheduled;
-    let displayScheduleIndex = this.displayedProperties.indexOf("$$spicainternal_schedule");
-    if (displayScheduleIndex > -1 && !this.showScheduled) {
-      this.displayedProperties.splice(displayScheduleIndex, 1);
-    }
-    if (displayScheduleIndex == -1 && this.showScheduled) {
-      let lastIndex = this.displayedProperties.lastIndexOf("$$spicainternal_actions");
-      this.displayedProperties.splice(lastIndex, 0, "$$spicainternal_schedule");
-    }
-    localStorage.setItem(
-      `${this.bucketId}-displayedProperties`,
-      JSON.stringify(this.displayedProperties)
-    );
-    this.refresh.next();
   }
 
   onSortChange(sort: Sort) {
@@ -697,5 +681,36 @@ export class IndexComponent implements OnInit, OnDestroy {
       this.postRenderingQueue[postRenderingIndex]();
     }
     this.postRenderingQueue = [];
+  }
+
+  async addNewProperty() {
+    const tempSchema = JSON.parse(JSON.stringify(this.schema));
+    const dialogRef = this.dialog.open(AddFieldModalComponent, {
+      width: "800px",
+      maxHeight: "90vh",
+      data: {
+        parentSchema: this.schema,
+        propertyKey: null
+      }
+    });
+    dialogRef
+      .afterClosed()
+      .toPromise()
+      .then(res => {
+        if (!res) return;
+
+        const newFields = Object.keys(this.schema.properties).filter(
+          item => !Object.keys(tempSchema.properties).find(prop => prop == item)
+        );
+
+        if (newFields.length > 0) {
+          this.displayedProperties.splice(this.displayedProperties.length - 1, 0, ...newFields);
+
+          localStorage.setItem(
+            `${this.bucketId}-displayedProperties`,
+            JSON.stringify(this.displayedProperties)
+          );
+        }
+      });
   }
 }

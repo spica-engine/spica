@@ -5,8 +5,10 @@ import {
   isObject,
   isDesiredRelation,
   RelationType,
-  createRelationMap
+  createRelationMap,
+  getRelationResolvedBucketSchema
 } from "@spica-server/bucket/common";
+import {deepCopy} from "@spica-server/core/patch";
 
 describe("Relation", () => {
   it("should check whether schema is object or not", () => {
@@ -83,175 +85,291 @@ describe("Relation", () => {
     });
   });
 
-  describe("relationMap", () => {
-    const mainSchema = {
-      properties: {
-        user: {
-          type: "relation",
-          relationType: "onetoone",
-          bucketId: "user_bucket_id"
-        },
-        userWithMeta: {
-          type: "object",
-          properties: {
-            user: {
-              type: "relation",
-              relationType: "onetoone",
-              bucketId: "user_bucket_id"
-            },
-            score: {
-              type: "number"
-            }
-          }
-        }
-      }
-    };
+  describe("relationMap and resolving relation of bucket schema", () => {
+    let mainSchema;
 
-    const userSchema = {
-      _id: "user_bucket_id",
-      properties: {
-        name: {
-          type: "string"
-        },
-        wallet: {
-          type: "relation",
-          relationType: "onetomany",
-          bucketId: "wallet_bucket_id"
-        }
-      }
-    };
+    let userSchema;
 
-    const walletSchema = {
-      _id: "wallet_bucket_id",
-      properties: {
-        brand: {
-          type: "string"
-        }
-      }
-    };
+    let walletSchema;
 
-    const schemas = [userSchema, walletSchema];
+    let schemas;
 
-    const resolve = id => {
-      return Promise.resolve(schemas.find(s => s._id == id) as any);
-    };
+    let resolve;
 
-    it("should create relation if name of the user is requested", async () => {
-      const mainSchema = {
+    beforeEach(() => {
+      mainSchema = {
         properties: {
           user: {
             type: "relation",
             relationType: "onetoone",
             bucketId: "user_bucket_id"
+          },
+          userWithMeta: {
+            type: "object",
+            properties: {
+              user: {
+                type: "relation",
+                relationType: "onetoone",
+                bucketId: "user_bucket_id"
+              },
+              score: {
+                type: "number"
+              }
+            }
           }
         }
       };
 
-      const relationMap = await createRelationMap({
-        paths: [["user", "name"]],
-        properties: mainSchema.properties,
-        resolve: resolve
-      });
-
-      expect(relationMap).toEqual([
-        {
-          path: "user",
-          target: "user_bucket_id",
-          type: RelationType.One,
-          children: undefined
+      userSchema = {
+        _id: "user_bucket_id",
+        properties: {
+          name: {
+            type: "string"
+          },
+          wallet: {
+            type: "relation",
+            relationType: "onetomany",
+            bucketId: "wallet_bucket_id"
+          }
         }
-      ]);
-    });
+      };
 
-    it("should not create relation map if property of user is not requested", async () => {
-      const relationMap = await createRelationMap({
-        paths: [["user"]],
-        properties: mainSchema.properties,
-        resolve: resolve
-      });
-
-      expect(relationMap).toEqual([]);
-    });
-
-    it("should create relation map if _id of user is requested", async () => {
-      const relationMap = await createRelationMap({
-        paths: [["user", "_id"]],
-        properties: mainSchema.properties,
-        resolve: resolve
-      });
-
-      expect(relationMap).toEqual([
-        {
-          path: "user",
-          target: "user_bucket_id",
-          type: RelationType.One,
-          children: undefined
+      walletSchema = {
+        _id: "wallet_bucket_id",
+        properties: {
+          brand: {
+            type: "string"
+          }
         }
-      ]);
+      };
+
+      schemas = [userSchema, walletSchema];
+
+      resolve = id => {
+        return Promise.resolve(schemas.find(s => s._id == id) as any);
+      };
     });
 
-    it("should create relation map if brand of the wallet of the user is requested", async () => {
-      const relationMap = await createRelationMap({
-        paths: [["user", "wallet", "brand"]],
-        properties: mainSchema.properties,
-        resolve: resolve
-      });
-
-      expect(relationMap).toEqual([
-        {
-          path: "user",
-          target: "user_bucket_id",
-          type: RelationType.One,
-          children: [
-            {
-              path: "wallet",
-              target: "wallet_bucket_id",
-              type: RelationType.Many,
-              children: undefined
+    describe("relationMap", () => {
+      it("should create relation if name of the user is requested", async () => {
+        const mainSchema = {
+          properties: {
+            user: {
+              type: "relation",
+              relationType: "onetoone",
+              bucketId: "user_bucket_id"
             }
-          ]
-        }
-      ]);
-    });
+          }
+        };
 
-    it("should create relation map if name of the user is requested from userwithmeta object", async () => {
-      const relationMap = await createRelationMap({
-        paths: [["userWithMeta", "user", "name"]],
-        properties: mainSchema.properties,
-        resolve: resolve
+        const relationMap = await createRelationMap({
+          paths: [["user", "name"]],
+          properties: mainSchema.properties,
+          resolve: resolve
+        });
+
+        expect(relationMap).toEqual([
+          {
+            path: "user",
+            target: "user_bucket_id",
+            type: RelationType.One,
+            children: undefined,
+            schema: userSchema
+          }
+        ]);
       });
 
-      expect(relationMap).toEqual([
-        {
-          path: "userWithMeta.user",
-          target: "user_bucket_id",
-          type: RelationType.One,
-          children: undefined
-        }
-      ]);
-    });
+      it("should not create relation map if property of user is not requested", async () => {
+        const relationMap = await createRelationMap({
+          paths: [["user"]],
+          properties: mainSchema.properties,
+          resolve: resolve
+        });
 
-    it("should create relation map if multiple relations requested", async () => {
-      const relationMap = await createRelationMap({
-        paths: [["userWithMeta", "user", "name"], ["user", "name"]],
-        properties: mainSchema.properties,
-        resolve: resolve
+        expect(relationMap).toEqual([]);
       });
 
-      expect(relationMap).toEqual([
-        {
-          path: "user",
-          target: "user_bucket_id",
-          type: RelationType.One,
-          children: undefined
-        },
-        {
-          path: "userWithMeta.user",
-          target: "user_bucket_id",
-          type: RelationType.One,
-          children: undefined
-        }
-      ]);
+      it("should create relation map if _id of user is requested", async () => {
+        const relationMap = await createRelationMap({
+          paths: [["user", "_id"]],
+          properties: mainSchema.properties,
+          resolve: resolve
+        });
+
+        expect(relationMap).toEqual([
+          {
+            path: "user",
+            target: "user_bucket_id",
+            type: RelationType.One,
+            children: undefined,
+            schema: userSchema
+          }
+        ]);
+      });
+
+      it("should create relation map if brand of the wallet of the user is requested", async () => {
+        const relationMap = await createRelationMap({
+          paths: [["user", "wallet", "brand"]],
+          properties: mainSchema.properties,
+          resolve: resolve
+        });
+
+        expect(relationMap).toEqual([
+          {
+            path: "user",
+            target: "user_bucket_id",
+            type: RelationType.One,
+            schema: userSchema,
+            children: [
+              {
+                path: "wallet",
+                target: "wallet_bucket_id",
+                type: RelationType.Many,
+                children: undefined,
+                schema: walletSchema
+              }
+            ]
+          }
+        ]);
+      });
+
+      it("should create relation map if name of the user is requested from userwithmeta object", async () => {
+        const relationMap = await createRelationMap({
+          paths: [["userWithMeta", "user", "name"]],
+          properties: mainSchema.properties,
+          resolve: resolve
+        });
+
+        expect(relationMap).toEqual([
+          {
+            path: "userWithMeta.user",
+            target: "user_bucket_id",
+            type: RelationType.One,
+            children: undefined,
+            schema: userSchema
+          }
+        ]);
+      });
+
+      it("should create relation map if multiple relations requested", async () => {
+        const relationMap = await createRelationMap({
+          paths: [["userWithMeta", "user", "name"], ["user", "name"]],
+          properties: mainSchema.properties,
+          resolve: resolve
+        });
+
+        expect(relationMap).toEqual([
+          {
+            path: "user",
+            target: "user_bucket_id",
+            type: RelationType.One,
+            children: undefined,
+            schema: userSchema
+          },
+          {
+            path: "userWithMeta.user",
+            target: "user_bucket_id",
+            type: RelationType.One,
+            children: undefined,
+            schema: userSchema
+          }
+        ]);
+      });
+    });
+
+    describe("getRelationResolvedBucketSchema", () => {
+      it("should resolve user relation of main schema", async () => {
+        const mainSchemaBefore = deepCopy(mainSchema);
+        const expectedSchema = deepCopy(mainSchema);
+
+        const relationResolvedMainSchema = await getRelationResolvedBucketSchema(
+          mainSchema,
+          [["user", "name"]],
+          resolve
+        );
+
+        expectedSchema.properties.user = {
+          // we are expecting this definition instead of relation
+          type: "object",
+          properties: {
+            name: {type: "string"},
+            wallet: {
+              type: "relation",
+              relationType: "onetomany",
+              bucketId: "wallet_bucket_id"
+            }
+          }
+        };
+        expect(relationResolvedMainSchema).toEqual(expectedSchema);
+
+        expect(mainSchema).toEqual(mainSchemaBefore, "it should not modify the original schema");
+      });
+
+      it("should resolve user and wallets of user relation of main schema", async () => {
+        const mainSchemaBefore = deepCopy(mainSchema);
+        const expectedSchema = deepCopy(mainSchema);
+
+        const relationResolvedMainSchema = await getRelationResolvedBucketSchema(
+          mainSchema,
+          [["user", "wallet", "brand"]],
+          resolve
+        );
+
+        expectedSchema.properties.user = {
+          type: "object",
+          properties: {
+            name: {type: "string"},
+            wallet: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  brand: {
+                    type: "string"
+                  }
+                }
+              }
+            }
+          }
+        };
+        expect(relationResolvedMainSchema).toEqual(expectedSchema);
+
+        expect(mainSchema).toEqual(mainSchemaBefore, "it should not modify the original schema");
+      });
+
+      it("should resolve user inside of the userWithMeta object of main schema", async () => {
+        const mainSchemaBefore = deepCopy(mainSchema);
+        const expectedSchema = deepCopy(mainSchema);
+
+        const relationResolvedMainSchema = await getRelationResolvedBucketSchema(
+          mainSchema,
+          [["userWithMeta", "user", "name"]],
+          resolve
+        );
+
+        expectedSchema.properties.userWithMeta = {
+          type: "object",
+          properties: {
+            user: {
+              type: "object",
+              properties: {
+                name: {type: "string"},
+                wallet: {
+                  type: "relation",
+                  relationType: "onetomany",
+                  bucketId: "wallet_bucket_id"
+                }
+              }
+            },
+            score: {
+              type: "number"
+            }
+          }
+        };
+        expect(relationResolvedMainSchema).toEqual(expectedSchema);
+
+        expect(mainSchema).toEqual(mainSchemaBefore, "it should not modify the original schema");
+      });
     });
   });
 });

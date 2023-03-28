@@ -52,8 +52,8 @@ import {RelationComponent} from "./components/relation/relation.component";
 import {RichTextEditorComponent} from "./components/richtext/richtext";
 import {AddFieldModalComponent} from "./pages/add-field-modal/add-field-modal.component";
 import {AddComponent} from "./pages/add/add.component";
-import {BucketAddComponent} from "./pages/bucket-add/bucket-add.component";
-import {BucketIndexComponent} from "./pages/bucket-index/bucket-index.component";
+import {AddBucketComponent} from "./components/add-bucket/add-bucket.component";
+import {BucketActionsComponent} from "./pages/bucket-actions/bucket-actions.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {SettingsComponent} from "./pages/settings/settings.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
@@ -65,9 +65,10 @@ import * as fromBucket from "./state/bucket.reducer";
 import {RequiredTranslate} from "./validators";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
 import {HighlightModule, HIGHLIGHT_OPTIONS} from "ngx-highlightjs";
-import {CategoryModule} from "@spica-client/common/category";
 import {BucketOptions, BUCKET_OPTIONS} from "./interfaces/bucket";
 import {IGNORE_HTTP_ERRORS} from "@spica-client/core/layout/config";
+import {SettingsBucketComponent} from "./components/settings-bucket/settings-bucket.component";
+import {PropertyMenuComponent} from "./components/property-menu/property-menu.component";
 import {ASSET_CONFIG_EXPORTER, ASSET_RESOURCE_LISTER} from "@spica-client/asset/interfaces";
 import {assetConfigExporter, listResources} from "./asset";
 
@@ -143,14 +144,13 @@ import {assetConfigExporter, listResources} from "./asset";
     PassportModule.forChild(),
     SpicaCommon,
     EditorModule,
-    HighlightModule,
-    CategoryModule
+    HighlightModule
   ],
   declarations: [
     IndexComponent,
     AddComponent,
-    BucketIndexComponent,
-    BucketAddComponent,
+    BucketActionsComponent,
+    AddBucketComponent,
     WelcomeComponent,
     RichTextEditorComponent,
     RelationComponent,
@@ -163,7 +163,9 @@ import {assetConfigExporter, listResources} from "./asset";
     PropertyLanguageComponent,
     CelLanguageDirective,
     JsonLanguageDirective,
-    PropertyLanguageComponent
+    PropertyLanguageComponent,
+    SettingsBucketComponent,
+    PropertyMenuComponent
   ]
 })
 export class BucketModule {

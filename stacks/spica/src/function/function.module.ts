@@ -41,7 +41,7 @@ import {FunctionOptions, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "./interf
 import {AddComponent} from "./pages/add/add.component";
 import {ExampleComponent} from "@spica-client/common/example";
 import {ConfigurationComponent} from "./components/configuration/configuration.component";
-import {IndexComponent} from "./pages/index/index.component";
+import {FunctionActionsComponent} from "./pages/function-actions/function-actions.component";
 import {LogViewComponent} from "./pages/log-view/log-view.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {EnqueuerPipe} from "./pipes/enqueuer";
@@ -50,7 +50,6 @@ import * as fromWebhook from "./reducers/webhook.reducer";
 import {WebhookModule} from "./webhook.module";
 import {MatDialogModule} from "@angular/material/dialog";
 import {WebhookService} from "./services";
-import {CategoryModule} from "@spica-client/common/category";
 import {ASSET_CONFIG_EXPORTER, ASSET_RESOURCE_LISTER} from "@spica-client/asset/interfaces";
 import {assetConfigExporter, listResources} from "./asset";
 
@@ -92,12 +91,11 @@ import {assetConfigExporter, listResources} from "./asset";
     MatDatepickerModule,
     ScrollingModule,
     MatClipboardModule,
-    EditorModule,
-    CategoryModule
+    EditorModule
   ],
   declarations: [
     AddComponent,
-    IndexComponent,
+    FunctionActionsComponent,
     LogViewComponent,
     WelcomeComponent,
     LanguageDirective,

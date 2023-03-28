@@ -40,6 +40,9 @@ import {IndexComponent} from "./index.component";
 import {LayoutModule} from "@spica-client/core/layout";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatInputModule} from "@angular/material/input";
+import {PropertyMenuComponent} from "../../components/property-menu/property-menu.component";
+import {BucketRoutingModule} from "../../bucket-routing.module";
+import {StoreModule} from "@ngrx/store";
 
 describe("IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
@@ -104,7 +107,8 @@ describe("IndexComponent", () => {
         NoopAnimationsModule,
         LayoutModule,
         MatFormFieldModule,
-        MatInputModule
+        MatInputModule,
+        StoreModule.forRoot({})
       ],
 
       providers: [
@@ -129,7 +133,8 @@ describe("IndexComponent", () => {
         IndexComponent,
         FilterComponent,
         PersistHeaderWidthDirective,
-        CanInteractDirectiveTest
+        CanInteractDirectiveTest,
+        PropertyMenuComponent
       ]
     }).compileComponents();
 
@@ -261,7 +266,10 @@ describe("IndexComponent", () => {
           .query(By.css("div.actions > button:nth-of-type(4)"))
           .nativeElement.click();
         fixture.detectChanges();
-        document.body.querySelector<HTMLButtonElement>(".mat-menu-content .mat-menu-item").click();
+        const menuItem = document.body.querySelector<HTMLButtonElement>(
+          ".mat-menu-content .mat-menu-item"
+        );
+        menuItem && menuItem.click();
 
         expect(navigateSpy).toHaveBeenCalledTimes(1);
         expect(navigateSpy).toHaveBeenCalledWith([], {
@@ -282,10 +290,10 @@ describe("IndexComponent", () => {
           .nativeElement.click();
         fixture.detectChanges();
         expect(
-          Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
-            e.textContent.trim()
+          Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(
+            e => e.textContent && e.textContent.trim()
           )
-        ).toEqual(["Display all", "test", "Scheduled"]);
+        ).toEqual(["Display all", "test"]);
       });
 
       it("should set displayed properties from local storage", async () => {
@@ -337,10 +345,10 @@ describe("IndexComponent", () => {
         fixture.detectChanges();
 
         expect(
-          Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
-            e.textContent.trim()
+          Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(
+            e => e.textContent && e.textContent.trim()
           )
-        ).toEqual(["Display all", "test", "Scheduled"]);
+        ).toEqual(["Display all", "test"]);
       });
 
       it("should display later checked properties", fakeAsync(() => {
@@ -351,11 +359,11 @@ describe("IndexComponent", () => {
           .nativeElement.click();
         fixture.detectChanges();
 
-        document.body
-          .querySelector<HTMLButtonElement>(
-            ".mat-menu-content .mat-menu-item:nth-of-type(2) .mat-checkbox-label"
-          )
-          .click();
+        const checkItem = document.body.querySelector<HTMLButtonElement>(
+          ".mat-menu-content .mat-menu-item:nth-of-type(2) .mat-checkbox-label"
+        );
+
+        checkItem && checkItem.click();
         tick(1);
         fixture.detectChanges();
 
@@ -365,7 +373,7 @@ describe("IndexComponent", () => {
 
         expect(fixture.componentInstance.displayedProperties).toContain("test");
 
-        expect(setItem).toHaveBeenCalledTimes(1);
+        expect(setItem).toHaveBeenCalledTimes(2);
         expect(setItem).toHaveBeenCalledWith("1-displayedProperties", '["test"]');
       }));
     });
@@ -377,16 +385,6 @@ describe("IndexComponent", () => {
         .nativeElement.click();
       fixture.detectChanges();
       expect(bucketDataService.find).toHaveBeenCalledTimes(1);
-    });
-
-    it("should show scheduled", () => {
-      bucketDataService.find.calls.reset();
-      fixture.debugElement
-        .query(By.css("div.actions > button:nth-of-type(4)"))
-        .nativeElement.click();
-      fixture.detectChanges();
-      expect(bucketDataService.find).toHaveBeenCalledTimes(1);
-      expect(bucketDataService.find.calls.mostRecent().args[1].schedule).toBe(true);
     });
 
     it("should show guide button", () => {
@@ -431,17 +429,16 @@ describe("IndexComponent", () => {
       const cell = fixture.debugElement.nativeElement.querySelector(
         "table[mat-table] tr[mat-row] td[mat-cell].mat-column-test span"
       );
-      expect(headerCells[2].textContent).toBe("format_quote test ");
-      expect(headerCells[3].textContent).toBe("Actions");
+      expect(headerCells[2].textContent).toBe("format_quote test arrow_drop_down");
+      expect(headerCells[3].textContent).toBe("add New field");
       expect(cell.textContent).toBe("123");
     });
 
     it("should render actions correctly", () => {
       const [editButton, deleteButton] = fixture.debugElement.nativeElement.querySelectorAll(
-        "table[mat-table] tr[mat-row] td[mat-cell]:last-of-type > button"
+        "table[mat-table] tr[mat-row] td[mat-cell]:first-of-type > button"
       );
       expect(editButton.textContent).toBe("edit");
-      expect(deleteButton.textContent).toBe("delete");
     });
 
     describe("select", () => {
@@ -746,19 +743,11 @@ describe("IndexComponent", () => {
       fixture.detectChanges();
     });
 
-    it("should disable remove button", () => {
-      expect(
-        fixture.debugElement.nativeElement.querySelector(
-          "table[mat-table] tr[mat-row] td[mat-cell]:last-of-type button:last-of-type"
-        ).disabled
-      ).toBe(true);
-    });
-
     it("should change icon of edit button", () => {
       fixture.detectChanges();
       expect(
         fixture.debugElement.nativeElement.querySelector(
-          "table[mat-table] tr[mat-row] td[mat-cell]:last-of-type button:first-of-type"
+          "table[mat-table] tr[mat-row] td[mat-cell]:first-of-type button:first-of-type"
         ).textContent
       ).toBe("remove_red_eye");
     });
@@ -838,8 +827,17 @@ describe("IndexComponent", () => {
 
     it("should sort ascending", () => {
       fixture.debugElement.nativeElement
-        .querySelector("table[mat-table] th[mat-header-cell].mat-column-test")
+        .querySelector("table[mat-table] th[mat-header-cell].mat-column-test button")
         .click();
+
+      fixture.detectChanges();
+
+      const sortButton = document.body.querySelector(
+        ".mat-menu-content button:nth-of-type(2)"
+      ) as HTMLButtonElement;
+      sortButton.click();
+
+      fixture.detectChanges();
 
       expect(navigateSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledWith([], {
@@ -853,24 +851,28 @@ describe("IndexComponent", () => {
     });
 
     it("should sort descending", () => {
-      const sort = fixture.debugElement.nativeElement.querySelector(
-        "table[mat-table] th[mat-header-cell].mat-column-test"
-      );
-      sort.click();
-      sort.click();
+      fixture.debugElement.nativeElement
+        .querySelector("table[mat-table] th[mat-header-cell].mat-column-test button")
+        .click();
 
-      expect(navigateSpy).toHaveBeenCalledTimes(2);
-      expect(navigateSpy.calls.mostRecent().args).toEqual([
-        [],
-        {
-          queryParams: {
-            filter: "{}",
-            paginator: JSON.stringify(fixture.componentInstance.defaultPaginatorOptions),
-            sort: JSON.stringify({test: -1}),
-            language: undefined
-          }
+      fixture.detectChanges();
+
+      const sortButton = document.body.querySelector(
+        ".mat-menu-content button:nth-of-type(3)"
+      ) as HTMLButtonElement;
+      sortButton.click();
+
+      fixture.detectChanges();
+
+      expect(navigateSpy).toHaveBeenCalledTimes(1);
+      expect(navigateSpy).toHaveBeenCalledWith([], {
+        queryParams: {
+          filter: "{}",
+          paginator: JSON.stringify(fixture.componentInstance.defaultPaginatorOptions),
+          sort: JSON.stringify({test: -1}),
+          language: undefined
         }
-      ]);
+      });
     });
   });
 

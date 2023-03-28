@@ -2,6 +2,7 @@ import {HttpClient, HttpHeaders, HttpRequest} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {select, Store} from "@ngrx/store";
 import {fileToBuffer, PreferencesService} from "@spica-client/core";
+import {ViewChange} from "@spica-client/core/route/route";
 import * as BSON from "bson";
 import {from, Observable, pipe} from "rxjs";
 import {filter, flatMap, map, tap, debounceTime} from "rxjs/operators";
@@ -58,17 +59,35 @@ export class BucketService {
       .pipe(tap(bucket => this.store.dispatch(new fromBucket.Replace(bucket))));
   }
 
-  patchBucket(id: string, changes: object): Observable<Bucket> {
-    return this.http
-      .patch<Bucket>(`api:/bucket/${id}`, changes, {
-        headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
-      })
-      .pipe(tap(_ => this.store.dispatch(new fromBucket.Update(id, changes))));
+  sendPatchRequest({id, changes}: ViewChange): Observable<Bucket> {
+    return this.http.patch<Bucket>(`api:/bucket/${id}`, changes, {
+      headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
+    });
   }
 
-  patchIndexes(buckets: Bucket[]): Promise<Bucket[]> {
-    return Promise.all(
-      buckets.map((bucket, index) => this.patchBucket(bucket._id, {order: index}).toPromise())
+  patchBucket({id, changes}: ViewChange): Observable<Bucket> {
+    return this.sendPatchRequest({id, changes}).pipe(
+      tap(_ => this.store.dispatch(new fromBucket.Update(id, changes)))
+    );
+  }
+
+  patchBucketMany(changes: ViewChange[]): Promise<Bucket[]> {
+    return Promise.all(changes.map(change => this.sendPatchRequest(change).toPromise())).then(
+      (res: Bucket[]) => {
+        //If field come with undefined value, Upsert will remove that field. But Upsert must know which value has undefined.
+        this.store.dispatch(
+          new fromBucket.UpsertMany(
+            res.map(bucketItem => {
+              return {
+                ...bucketItem,
+                ...changes.find(change => change.id == bucketItem._id).changes
+              };
+            })
+          )
+        );
+
+        return Promise.resolve(res);
+      }
     );
   }
 

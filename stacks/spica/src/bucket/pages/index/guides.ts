@@ -127,33 +127,12 @@ const result = await Bucket.data.getAll({
 console.log(result);`
       }
     },
-    getOnlyScheduled: {
-      title: "Get Scheduled Data",
-      description:
-        "You can get all scheduled data with using 'shcedule' [boolean] query parameter. You can try the live demo below.",
-      example: {
-        api: `/${bucketUrl}limit=1&schedule=true`,
-        curl: `curl --request GET '${rootURL}${bucketUrl}limit=1&schedule=true' \\
---header 'Authorization: <YOUR AUTHORIZATION TOKEN>' \\
---header 'Content-Type: application/json'`,
-        js: `import * as Bucket from '@spica-devkit/bucket'
-
-Bucket.initialize({publicUrl: '${rootURL}', identity: '<YOUR AUTHORIZATION TOKEN>'});
-const result = await Bucket.data.getAll({ 
-    queryParams: { 
-        limit: 1, 
-        schedule:true 
-    } 
-});
-console.log(result);`
-      }
-    },
     getDataWithLang: {
       title: "Get Localized Data",
       description:
         "To get localized data, you can use 'Accept-Language' request header. As an example '{Accept-Language: \"en-EN\"}'",
       example: {
-        curl: `curl --request GET '${rootURL}${bucketUrl}limit=1&schedule=true' \\
+        curl: `curl --request GET '${rootURL}${bucketUrl}limit=1' \\
 --header 'Authorization: <YOUR AUTHORIZATION TOKEN>' \\
 --header 'Content-Type: application/json' \\
 --header 'Accept-Language: en-EN'`,
