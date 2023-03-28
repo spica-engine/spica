@@ -56,7 +56,7 @@ export class AddComponent implements OnInit, OnDestroy {
 
               dashboard.components = dashboard.components.map((element)=>{
                 // remove this before make the PR ready
-                element.ratio = Ratio.TwoByTwo
+                element.ratio = Ratio.OneByOne
                 return element;
               })
 

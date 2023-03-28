@@ -1,9 +1,5 @@
 :host {
-  .default-charts {
-    height: 100% !important;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+ 
     mat-card-header {
       align-items: center;
       justify-content: center;
@@ -56,42 +52,8 @@
       height: 30px;
       line-height: 30px;
     }
-    div.show-chart {
-      width: 100%;
-      text-align: center;
-
-      button.show-chart-button {
-        // padding: 1.2em 1.5em;
-        // font-size: 16px;
-        // color: white;
-        // border: none;
-        // outline: none;
-        // background: #2e2e2e7a;
-        // border-radius: 5px;
-        // cursor: pointer;
-      }
-      .hidden-chart {
-        position: absolute;
-        left: 0;
-        padding: 0;
-        border: 1px solid rgb(var(--background-app-bar-rgb));
-      }
-      .chart-container-hidden {
-        width: 0px;
-        height: 0px;
-        transition: 0.3s all;
-        opacity: 0;
-      }
-      .chart-container-visible {
-        width: 480px;
-        height: 480px;
-        transition: 0.3s all;
-        padding: 10px;
-        opacity: 1;
-      }
-    }
+  
     canvas {
       height: 100%;
-    }
-  }
+    }    
 }

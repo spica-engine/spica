@@ -1,4 +1,4 @@
-<ng-container *ngIf="componentData$ | async; let componentData">
+<div class="dashboard-component" *ngIf="componentData$ | async; let componentData">
   <mat-card-header>
     <mat-card-title>
       {{ componentData.title }}
@@ -6,7 +6,7 @@
   </mat-card-header>
   <button
     *ngIf="refresh"
-    class="refresh"
+    class="refresh-button"
     mat-icon-button
     matTooltip="Refresh data"
     (click)="onUpdate.next(componentData.filters)"
@@ -24,30 +24,31 @@
       </span>
     </ng-container>
   </div>
-</ng-container>
-
-<div [ngClass]="isSmall ? 'show-table' : 'table-container'">
-  <button *ngIf="isSmall" class="show-table-button" (click)="onShowTableClicked()">
-    show table
-  </button>
-  <div
-    [ngClass]="
-      isSmall
-        ? showTable
-          ? 'hidden-table table-container-unhidden'
-          : 'hidden-table table-container-hidden'
-        : ''
-    "
-  >
-    <mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
-      <ng-container *ngFor="let c of displayedColumns" [matColumnDef]="c">
-        <mat-header-cell *matHeaderCellDef mat-sort-header>{{ c }}</mat-header-cell>
-        <mat-cell *matCellDef="let element">{{ element[c] }}</mat-cell>
-      </ng-container>
-
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
-    </mat-table>
-    <mat-paginator></mat-paginator>
+  <div [ngClass]="isSmall ? 'dashboard-component-content' : 'table-container'">
+    <button mat-stroked-button *ngIf="isSmall"  (click)="onShowTableClicked()">
+      Show
+    </button>
+    <div
+      [ngClass]="
+        isSmall
+          ? showTable
+            ? 'dashboard-hidden-component dashboard-visible-component-container'
+            : 'dashboard-hidden-component dashboard-hidden-component-container'
+          : ''
+      "
+    >
+      <mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+        <ng-container *ngFor="let c of displayedColumns" [matColumnDef]="c">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>{{ c }}</mat-header-cell>
+          <mat-cell *matCellDef="let element">{{ element[c] }}</mat-cell>
+        </ng-container>
+  
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+      </mat-table>
+      <mat-paginator></mat-paginator>
+    </div>
   </div>
 </div>
+
+

@@ -1,41 +1,34 @@
 .card{
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  justify-content: start;
 }
 mat-card-header {
   align-items: center;
   justify-content: center;
 }
 
-button.refresh {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  mat-icon {
-    width: 30px;
-    height: 30px;
-    line-height: 30px;
-  }
+mat-card-content{
+ text-align: center;  
 }
-
 mat-card-content.inputs {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-evenly;
   flex-wrap: wrap;
   width: 100% !important;
   > span,
   button {
     margin-right: 5px;
   }
-
+  span{
+    flex: 1;
+    ::ng-deep .string{
+      width: 100%;
+    }
+  }
   ::ng-deep .mat-form-field-wrapper{
     padding: 0 !important;
     width: 100% !important;
   }
-
-
+  
   button.file-selector {
     height: 44px;
     width: 200px;

@@ -1,8 +1,8 @@
-<ng-container *ngIf="componentData$ | async; let componentData">
-  <button *ngIf="refresh" class="refresh" mat-icon-button matTooltip="Refresh card" (click)="this.onUpdate.next()">
+<div class="dashboard-component" *ngIf="componentData$ | async; let componentData">
+  <button *ngIf="refresh" class="refresh-button" mat-icon-button matTooltip="Refresh card" (click)="this.onUpdate.next()">
     <mat-icon>refresh</mat-icon>
   </button>
-  <div class="content">
+  <div class="content dashboard-component">
     <div class="icon-container" [style.background]="componentData.icon?.background_color">
       <mat-icon [style.color]="componentData.icon?.color">{{ componentData.icon?.name }}</mat-icon>
     </div>
@@ -33,4 +33,4 @@
       </div>
     </div>
   </div>
-</ng-container>
+</div>

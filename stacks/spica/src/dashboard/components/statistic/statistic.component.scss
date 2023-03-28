@@ -1,19 +1,9 @@
-button.refresh {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  mat-icon {
-    width: 30px;
-    height: 30px;
-    line-height: 30px;
-  }
+.statistic-dashboard{
+  flex-direction: column;
 }
-
 div.content {
-  height: 200px;
-  display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: space-evenly;
 
   div.icon-container {
     padding: 20px;
@@ -26,6 +16,10 @@ div.content {
   }
 
   div.statistic {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     div.title {
       font-size: 20px;
       opacity: 0.8;
@@ -35,6 +29,7 @@ div.content {
     div.value {
       font-size: 50px;
       font-weight: 500;
+      text-align: center;
     }
   }
   div.difference {

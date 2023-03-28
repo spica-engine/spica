@@ -1,4 +1,4 @@
-<div class="default-charts" *ngIf="componentData$ | async; let componentData">
+<div class="dashboard-component" *ngIf="componentData$ | async; let componentData">
   <ng-template #canvasElement>
     <canvas
       baseChart
@@ -21,18 +21,19 @@
     </mat-card-header>
     <button
       *ngIf="refresh"
-      class="refresh"
+      class="refresh-button"
       mat-icon-button
       matTooltip="Refresh data"
       (click)="onUpdate.next(componentData.filters)"
     >
       <mat-icon>refresh</mat-icon>
     </button>
-    <div class="filters" *ngIf="!isSmall">
+    <div class="dashboard-component-filter">
       <div *ngFor="let filter of componentData.filters">
         <span
           [name]="filter.key"
           [inputPlacer]="filter"
+          [minimal]="true"
           [(ngModel)]="filter.value"
           (keyup.enter)="onUpdate.next(componentData.filters)"
         >
@@ -42,11 +43,11 @@
     <div class="chart-container" *ngIf="!isSmall">
       <ng-container *ngTemplateOutlet="canvasElement"> </ng-container>
     </div>
-    <div class="show-chart" *ngIf="isSmall">
+    <div class="dashboard-component-content" *ngIf="isSmall">
       <button mat-stroked-button class="show-chart-button" (click)="onShowChartClicked()">Show</button>
       <mat-card
-        class="hidden-chart"
-        [ngClass]="showChart ? 'chart-container-visible' : 'chart-container-hidden'"
+        class="dashboard-hidden-component"
+        [ngClass]="showChart ? 'dashboard-visible-component-container' : 'dashboard-hidden-component-container'"
       >
         <ng-container *ngTemplateOutlet="canvasElement"> </ng-container>
       </mat-card>

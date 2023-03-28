@@ -12,7 +12,6 @@ import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
   ]
 })
 export class DateComponent implements ControlValueAccessor{
-  matHint: boolean = false;
   _value: Date;
   _disabled: boolean = false;
   _onChangeFn = (_: Date) => {};

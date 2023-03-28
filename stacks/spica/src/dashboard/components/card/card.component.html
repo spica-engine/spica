@@ -1,9 +1,9 @@
-<ng-container class="card" *ngIf="componentData$ | async; let componentData">
+<div class="dashboard-component card" *ngIf="componentData$ | async; let componentData">
   <mat-card-header>
     <mat-card-title>{{ componentData.title }}</mat-card-title>
     <button
       *ngIf="refresh"
-      class="refresh"
+      class="refresh-button"
       mat-icon-button
       matTooltip="Refresh card"
       (click)="this.onUpdate.next()"
@@ -64,4 +64,4 @@
       </button>
     </mat-card-actions>
   </form>
-</ng-container>
+</div>
