@@ -6,6 +6,11 @@
         <span> {{ dashboard.name }}</span>
       </h1>
     </mat-toolbar>
-    <dashboard-layout [refresh]="true" [componentData$]="componentData$" [dashboard]="dashboard"></dashboard-layout>
+    <dashboard-layout
+      [refreshSubjects$]="refreshSubjects$"
+      [refresh]="true"
+      [componentData$]="componentData$"
+      [dashboard]="dashboard"
+    ></dashboard-layout>
   </div>
 </div>

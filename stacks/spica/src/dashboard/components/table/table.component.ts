@@ -60,11 +60,10 @@ export class TableComponent implements AfterViewInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.ratio.isFirstChange()) {
-      return;
-    }
     this.isSmall = isSmallComponent(this.ratio);
-    this.setPageSizeOptions();
+    if (this.paginator) {
+      this.setPageSizeOptions();
+    }
   }
 
   setPageSizeOptions() {

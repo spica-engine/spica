@@ -26,7 +26,7 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
   @Input() componentData$: Observable<object>[] = [];
   @Input() refresh: boolean = false;
 
-  refreshSubjects$: BehaviorSubject<any>[] = [];
+  @Input() refreshSubjects$: BehaviorSubject<any>[] = [];
 
   arePendings: boolean[] = [];
 
@@ -166,5 +166,15 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
     this.dashboard.components.forEach((c, i) => this.setComponentStyles(c.ratio, i));
 
     this.onGridCreated(this.grid);
+  }
+
+  onUpdate(filters: any[] = [], i: number) {
+    const queryFilter = {};
+
+    for (const filter of filters) {
+      queryFilter[filter.key] = filter.value;
+    }
+
+    this.refreshSubjects$[i].next(queryFilter);
   }
 }

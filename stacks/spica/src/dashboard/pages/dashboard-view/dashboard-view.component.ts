@@ -68,15 +68,4 @@ export class DashboardViewComponent implements OnInit {
     this.componentData$ = [];
     this.arePendings = [];
   }
-
-  onUpdate(filters: any[] = [], i: number) {
-    const queryFilter = {};
-
-    for (const filter of filters) {
-      queryFilter[filter.key] = filter.value;
-    }
-
-    this.refreshSubjects$[i].next(queryFilter);
-  }
-
 }

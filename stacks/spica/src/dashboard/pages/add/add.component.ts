@@ -1,6 +1,6 @@
-import {Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit} from "@angular/core";
+import {Component, OnInit, OnDestroy} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Dashboard, getEmptyComponent, getEmptyDashboard, Ratio} from "@spica-client/dashboard/interfaces";
+import {Dashboard, getEmptyComponent, getEmptyDashboard} from "@spica-client/dashboard/interfaces";
 import {DashboardService} from "@spica-client/dashboard/services/dashboard.service";
 import {switchMap, tap} from "rxjs/operators";
 import {of, Subject} from "rxjs";
@@ -53,12 +53,6 @@ export class AddComponent implements OnInit, OnDestroy {
               if (!dashboard || !dashboard.components) {
                 return;
               }
-
-              dashboard.components = dashboard.components.map((element)=>{
-                // remove this before make the PR ready
-                element.ratio = Ratio.OneByOne
-                return element;
-              })
 
               this.dashboard = deepCopy(dashboard);
 
