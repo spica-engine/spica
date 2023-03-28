@@ -1,5 +1,5 @@
 <ng-container *ngIf="componentData$ | async; let componentData">
-  <button *ngIf="refresg" class="refresh" mat-icon-button matTooltip="Refresh card" (click)="this.onUpdate.next()">
+  <button *ngIf="refresh" class="refresh" mat-icon-button matTooltip="Refresh card" (click)="this.onUpdate.next()">
     <mat-icon>refresh</mat-icon>
   </button>
   <div class="content">
