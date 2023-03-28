@@ -1,6 +1,10 @@
 import {Component, OnInit, Input, SimpleChanges, OnChanges, AfterViewInit} from "@angular/core";
 import {Observable, BehaviorSubject} from "rxjs";
-import {Dashboard, fillComponentRatios, getEmptyDashboard} from "@spica-client/dashboard/interfaces";
+import {
+  Dashboard,
+  fillComponentRatios,
+  getEmptyDashboard
+} from "@spica-client/dashboard/interfaces";
 import {GridOptions, Item} from "muuri";
 import Grid from "muuri";
 
@@ -85,12 +89,6 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
       height,
       "z-index": 1
     };
-
-    return {
-      height,
-      width,
-      "z-index": 1
-    };
   }
 
   attachMoveListener(grid: Grid) {
@@ -163,7 +161,7 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
     this.muuriItemPositionLocalStorageKey = `dashboard_${this.dashboard._id}_muuriItemLayouts`;
 
     this.muuriItemStyles = [];
-    this.dashboard.components = fillComponentRatios(this.dashboard.components)
+    this.dashboard.components = fillComponentRatios(this.dashboard.components);
     this.dashboard.components.forEach((c, i) => this.setComponentStyles(c.ratio, i));
 
     this.onGridCreated(this.grid);

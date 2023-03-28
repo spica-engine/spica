@@ -90,9 +90,11 @@
                   </mat-option>
                 </mat-select>
               </mat-form-field>
-              <mat-form-field class="ratio-button">
+              <mat-form-field>
+                <mat-label>
+                  Aspect/Ratio
+                </mat-label>
                 <mat-select
-                  placeholder="2/2"
                   [name]="i + '.ratio'"
                   [(ngModel)]="component.ratio"
                   (ngModelChange)="updateRef()"
@@ -136,5 +138,9 @@
 </div>
 
 <div *ngIf="dashboard">
-  <dashboard-layout [refresh]="false" [componentData$]="componentData$" [dashboard]="dashboard"></dashboard-layout>
+  <dashboard-layout
+    [refresh]="false"
+    [componentData$]="componentData$"
+    [dashboard]="dashboard"
+  ></dashboard-layout>
 </div>
