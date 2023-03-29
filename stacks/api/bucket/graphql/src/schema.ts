@@ -169,7 +169,7 @@ export function createSchema(bucket: Bucket, staticTypes: string, bucketIds: str
       }
 
       type Query{
-        Find${name}(limit: Int, skip: Int, sort: JSON, language: String, schedule:Boolean, query: JSON): ${name}FindResponse
+        Find${name}(limit: Int, skip: Int, sort: JSON, language: String, query: JSON): ${name}FindResponse
         FindBy${name}Id(_id: ObjectID!, language: String):${name}
       }
 

@@ -25,7 +25,6 @@ import {BucketPipelineBuilder} from "./pipeline.builder";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 
 interface CrudOptions<Paginate> {
-  schedule?: boolean;
   localize?: boolean;
   paginate?: Paginate;
 }
@@ -89,10 +88,6 @@ export async function findDocuments<T>(
   let basePipeline = await pipelineBuilder
     .findOneIfRequested(params.documentId)
     .filterResources(params.resourceFilter);
-
-  if (typeof options.schedule == "boolean") {
-    basePipeline = basePipeline.filterScheduledData(options.schedule);
-  }
 
   basePipeline = await basePipeline.localize(options.localize, params.language, locale => {
     params.req.res.header("Content-language", locale.best || locale.fallback);

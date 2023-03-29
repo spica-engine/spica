@@ -37,11 +37,6 @@ export class BucketPipelineBuilder extends PipelineBuilder {
     });
   }
 
-  filterScheduledData(isScheduled: boolean): this {
-    this.attachToPipeline(true, {$match: {_schedule: {$exists: isScheduled}}});
-    return this;
-  }
-
   async localize(
     isLocalizationRequested: boolean,
     language: string,

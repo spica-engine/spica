@@ -233,7 +233,7 @@ export class GraphqlController implements OnModuleInit {
   find(bucket: Bucket): Function {
     return async (
       root: any,
-      {limit, skip, sort, language, schedule = false, query}: {[arg: string]: any},
+      {limit, skip, sort, language, query}: {[arg: string]: any},
       context: any,
       info: GraphQLResolveInfo
     ): Promise<FindResponse> => {
@@ -270,7 +270,7 @@ export class GraphqlController implements OnModuleInit {
           filter: matchExpression,
           projectMap: responseFields
         },
-        {localize: true, paginate: true, schedule},
+        {localize: true, paginate: true},
         {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),

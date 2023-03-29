@@ -127,7 +127,6 @@ describe("Bucket Schema Resolver", () => {
         readOnly: false,
         additionalProperties: false,
         properties: {
-          _schedule: {type: "string", format: "date-time"},
           title: {
             type: "string",
             title: "title",
@@ -166,7 +165,6 @@ describe("Bucket Schema Resolver", () => {
         readOnly: false,
         additionalProperties: false,
         properties: {
-          _schedule: {type: "string", format: "date-time"},
           title: {
             type: "string",
             title: "title",
@@ -200,7 +198,6 @@ describe("Bucket Schema Resolver", () => {
         readOnly: false,
         additionalProperties: false,
         properties: {
-          _schedule: {type: "string", format: "date-time"},
           title: {
             type: "string",
             title: "title",

@@ -205,7 +205,7 @@ describe("Schema", () => {
     }
 
     type Query{
-      FindBucket_id(limit: Int, skip: Int, sort: JSON, language: String, schedule: Boolean, query: JSON): Bucket_idFindResponse
+      FindBucket_id(limit: Int, skip: Int, sort: JSON, language: String, query: JSON): Bucket_idFindResponse
       FindByBucket_idId(_id: ObjectID!, language: String):Bucket_id
     }
 
