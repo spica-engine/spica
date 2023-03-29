@@ -39,7 +39,7 @@ import {TableComponent} from "./components/table/table.component";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular-datetime-picker";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {CardComponent} from "./components/card/card.component";
-import {DashboardLayout} from "./components/layout/layout.component"
+import {DashboardLayout} from "./components/layout/layout.component";
 import {DragDropModule} from "@angular/cdk/drag-drop";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatProgressBarModule} from "@angular/material/progress-bar";
@@ -49,8 +49,7 @@ import {VersionControlComponent} from "./pages/versioncontrol/versioncontrol.com
 import {MatExpansionModule} from "@angular/material/expansion";
 import {provideAssetFactory, provideAssetConfigExporter, listResources} from "./providers/asset";
 import {ASSET_CONFIG_EXPORTER, ASSET_RESOURCE_LISTER} from "@spica-client/asset/interfaces";
-import { MuuriModule } from 'muuri-angular';
-
+import {MuuriModule} from "muuri-angular";
 
 @NgModule({
   imports: [
@@ -88,7 +87,6 @@ import { MuuriModule } from 'muuri-angular';
     MatDividerModule,
     MatExpansionModule,
     MuuriModule
-
   ],
   declarations: [
     DashboardComponent,

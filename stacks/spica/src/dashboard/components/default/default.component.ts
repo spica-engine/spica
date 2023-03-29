@@ -9,8 +9,7 @@ import {
 } from "@angular/core";
 import {Observable} from "rxjs";
 import {map, tap} from "rxjs/operators";
-import { isSmallComponent, Ratio } from "@spica-client/dashboard/interfaces";
-
+import {isSmallComponent, Ratio} from "@spica-client/dashboard/interfaces";
 
 @Component({
   selector: "dashboard-default",
@@ -49,7 +48,7 @@ export class DefaultComponent implements OnInit, OnChanges {
     this.showChart = !this.showChart;
     this.isHovered.emit(this.showChart);
   }
-  ngOnChanges(){
-    this.isSmall = isSmallComponent(this.ratio)
+  ngOnChanges() {
+    this.isSmall = isSmallComponent(this.ratio);
   }
 }

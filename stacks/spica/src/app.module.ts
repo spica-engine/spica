@@ -22,7 +22,6 @@ import {ErrorStateMatcher, ShowOnDirtyErrorStateMatcher} from "@angular/material
 import {OverlayContainer, FullscreenOverlayContainer} from "@angular/cdk/overlay";
 import {AssetModule} from "./asset/asset.module";
 
-
 const API_FULL_URL = environment.api.startsWith("http")
   ? environment.api
   : window.location.origin + environment.api;
@@ -52,7 +51,7 @@ const API_FULL_URL = environment.api.startsWith("http")
     StorageModule.forRoot(),
     FunctionModule.forRoot({url: API_FULL_URL}),
     AssetModule,
-    PreferencesModule.forRoot(),
+    PreferencesModule.forRoot()
   ],
   providers: [
     {provide: ErrorStateMatcher, useClass: ShowOnDirtyErrorStateMatcher},

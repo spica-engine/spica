@@ -183,22 +183,22 @@ mat-table.striped mat-row:nth-child(even) {
   }
 }
 
-button.dashboard-component-refresh-button{
+button.dashboard-component-refresh-button {
   position: absolute;
-    right: 0px;
-    top: 0px;
-    mat-icon {
-      width: 30px;
-      height: 30px;
-      line-height: 30px;
-    }
+  right: 0px;
+  top: 0px;
+  mat-icon {
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+  }
 }
 
-.dashboard-component{
+.dashboard-component {
   height: 100% !important;
   display: flex !important;
   flex-direction: column;
-  justify-content: space-between;  
+  justify-content: space-between;
 }
 
 .dashboard-component-filter {
@@ -209,7 +209,7 @@ button.dashboard-component-refresh-button{
   width: 100% !important;
 }
 
-div.dashboard-component-content{
+div.dashboard-component-content {
   width: 100%;
   text-align: center;
 

@@ -1,8 +1,8 @@
-:host{
+:host {
   div.content {
     align-items: center;
     justify-content: space-evenly;
-  
+
     div.icon-container {
       padding: 20px;
       border-radius: 50px;
@@ -12,7 +12,7 @@
         font-size: 50px;
       }
     }
-  
+
     div.statistic {
       display: flex;
       flex-direction: column;
@@ -23,7 +23,7 @@
         opacity: 0.8;
         font-weight: 100;
       }
-  
+
       div.value {
         font-size: 50px;
         font-weight: 500;
@@ -35,12 +35,11 @@
         font-size: 15px;
         font-weight: 450;
       }
-  
+
       span:last-of-type {
         font-weight: 100;
         opacity: 0.8;
       }
     }
   }
-  
 }
