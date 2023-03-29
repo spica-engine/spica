@@ -9,7 +9,6 @@ import {example} from "./example-code";
 
 @Injectable()
 export class DashboardService {
-  copiedDashboards = new Map<string, Dashboard>();
   constructor(private http: HttpClient, private store: Store<fromDashboard.State>) {}
 
   getExample(type: string) {
