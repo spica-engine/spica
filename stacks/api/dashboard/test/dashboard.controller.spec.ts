@@ -23,7 +23,8 @@ describe("DashboardController", () => {
       {
         name: "chart2",
         url: "https://spica.internal",
-        type: "pie"
+        type: "pie",
+        ratio: "1/1"
       }
     ]
   };
@@ -70,12 +71,15 @@ describe("DashboardController", () => {
         {
           name: "chart1",
           url: "https://spica.internal",
-          type: "line"
+          type: "line",
+          // should set the default ratio
+          ratio: "2/2"
         },
         {
           name: "chart2",
           url: "https://spica.internal",
-          type: "pie"
+          type: "pie",
+          ratio: "1/1"
         }
       ]
     });
@@ -96,12 +100,14 @@ describe("DashboardController", () => {
           {
             name: "chart1",
             url: "https://spica.internal",
-            type: "line"
+            type: "line",
+            ratio: "2/2"
           },
           {
             name: "chart2",
             url: "https://spica.internal",
-            type: "pie"
+            type: "pie",
+            ratio: "1/1"
           }
         ]
       }
@@ -122,12 +128,14 @@ describe("DashboardController", () => {
         {
           name: "chart1",
           url: "https://spica.internal",
-          type: "line"
+          type: "line",
+          ratio: "2/2"
         },
         {
           name: "chart2",
           url: "https://spica.internal",
-          type: "pie"
+          type: "pie",
+          ratio: "1/1"
         }
       ]
     });
@@ -151,12 +159,14 @@ describe("DashboardController", () => {
         {
           name: "chart1",
           url: "https://spica.internal",
-          type: "line"
+          type: "line",
+          ratio: "2/2"
         },
         {
           name: "chart2",
           url: "https://spica.internal",
-          type: "pie"
+          type: "pie",
+          ratio: "1/1"
         }
       ]
     });

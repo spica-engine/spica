@@ -1,0 +1,58 @@
+<div
+  class="grid charts-container"
+  muuriGrid
+  [config]="layoutConfig"
+  (gridCreated)="onGridCreated($event)"
+>
+  <div
+    class="item"
+    muuriGridItem
+    *ngFor="let component of dashboard.components; index as i"
+    [ngStyle]="muuriItemStyles[i]"
+    [attr.id]="'chart' + i"
+  >
+    <mat-card class="item-content">
+      <div class="drag-cursor"></div>
+      <div class="content" [style.visibility]="arePendings[i] ? 'hidden' : 'visible'">
+        <dashboard-default
+          [refresh]="refresh"
+          [ratio]="component.ratio"
+          (isHovered)="zIndexOnHover($event, i)"
+          *ngIf="defaultTypes.indexOf(component.type) != -1"
+          [componentData$]="componentData$[i]"
+          [type]="component.type"
+          (onUpdate)="onUpdate($event, i)"
+        >
+        </dashboard-default>
+        <dashboard-table
+          [refresh]="refresh"
+          [ratio]="component.ratio"
+          (isHovered)="zIndexOnHover($event, i)"
+          *ngIf="component.type == 'table'"
+          [componentData$]="componentData$[i]"
+          [type]="component.type"
+          (onUpdate)="onUpdate($event, i)"
+        >
+        </dashboard-table>
+        <dashboard-card
+          [refresh]="refresh"
+          [ratio]="component.ratio"
+          *ngIf="component.type == 'card'"
+          [componentData$]="componentData$[i]"
+          [type]="component.type"
+          (onUpdate)="onUpdate($event, i)"
+        >
+        </dashboard-card>
+        <dashboard-statistic
+          [refresh]="refresh"
+          [ratio]="component.ratio"
+          *ngIf="component.type == 'statistic'"
+          [componentData$]="componentData$[i]"
+          [type]="component.type"
+          (onUpdate)="onUpdate($event, i)"
+        >
+        </dashboard-statistic>
+      </div>
+    </mat-card>
+  </div>
+</div>

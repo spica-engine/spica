@@ -1,13 +1,14 @@
 import {Component, OnInit, OnDestroy} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Dashboard, getEmptyDashboard} from "@spica-client/dashboard/interfaces";
+import {Dashboard, getEmptyComponent, getEmptyDashboard} from "@spica-client/dashboard/interfaces";
 import {DashboardService} from "@spica-client/dashboard/services/dashboard.service";
-import {filter, map, switchMap, take, tap, takeUntil} from "rxjs/operators";
-import {Subject} from "rxjs";
+import {switchMap, tap} from "rxjs/operators";
+import {of, Subject} from "rxjs";
 import {ICONS} from "@spica-client/material";
 import {MatDialog} from "@angular/material/dialog";
 import {ExampleComponent} from "@spica-client/common/example";
 import {deepCopy} from "@spica-client/core";
+import {Observable, BehaviorSubject} from "rxjs";
 
 @Component({
   selector: "dashboard-add",
@@ -15,6 +16,18 @@ import {deepCopy} from "@spica-client/core";
   styleUrls: ["./add.component.scss"]
 })
 export class AddComponent implements OnInit, OnDestroy {
+  dashboard: Dashboard = getEmptyDashboard();
+
+  onDestroy$: Subject<any> = new Subject();
+
+  componentData$: Observable<object>[] = [];
+
+  refreshSubjects$: BehaviorSubject<any>[] = [];
+
+  defaultTypes = ["line", "pie", "doughnut", "polarArea", "scatter", "bubble", "radar", "bar"];
+
+  customTypes = ["table", "card", "statistic"];
+
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
@@ -22,22 +35,9 @@ export class AddComponent implements OnInit, OnDestroy {
     private dialog: MatDialog
   ) {}
 
-  dashboard: Dashboard = getEmptyDashboard();
-  onDestroy$: Subject<any> = new Subject();
+  types = this.defaultTypes.concat(...this.customTypes);
 
-  types = [
-    "line",
-    "pie",
-    "doughnut",
-    "polarArea",
-    "scatter",
-    "bubble",
-    "radar",
-    "bar",
-    "table",
-    "card",
-    "statistic"
-  ];
+  ratios = ["1/1", "1/2", "2/1", "2/2", "4/2", "4/4"];
 
   readonly icons: Array<string> = ICONS;
   readonly iconPageSize = 21;
@@ -47,24 +47,46 @@ export class AddComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.activatedRoute.params
       .pipe(
-        filter(params => params.id),
-        map(params => params.id),
-        switchMap(id =>
-          this.dashboardService.findOne(id).pipe(
+        switchMap(params =>
+          this.dashboardService.findOne(params.id).pipe(
             tap(dashboard => {
-              if (dashboard) {
-                this.dashboard = deepCopy(dashboard);
+              if (!dashboard || !dashboard.components) {
+                return;
+              }
+
+              this.dashboard = deepCopy(dashboard);
+
+              this.clearCards();
+
+              for (let component of this.dashboard.components) {
+                const data = JSON.parse(this.dashboardService.getExample(component.type));
+                this.componentData$.push(of(data));
               }
             })
           )
-        ),
-        takeUntil(this.onDestroy$)
+        )
       )
-      .subscribe();
+      .toPromise();
+  }
+
+  clearCards() {
+    this.refreshSubjects$ = [];
+    this.componentData$ = [];
+  }
+
+  getMockData(type: string, index: number) {
+    let data = JSON.parse(this.dashboardService.getExample(type));
+
+    if (index >= 0 && index < this.componentData$.length) {
+      this.componentData$[index] = of(data);
+    } else {
+      this.componentData$.push(of(data));
+    }
   }
 
   showExample(type: string) {
     const example = this.dashboardService.getExample(type);
+
     this.dialog.open(ExampleComponent, {
       width: "50%",
       data: {
@@ -81,11 +103,25 @@ export class AddComponent implements OnInit, OnDestroy {
     const upsert = this.dashboard._id
       ? this.dashboardService.update(this.dashboard)
       : this.dashboardService.insert(this.dashboard);
-
     upsert.toPromise().then(() => this.router.navigate(["dashboards"]));
   }
 
   addComponent() {
-    this.dashboard.components.push({name: undefined, url: undefined, type: undefined});
+    this.dashboard.components.push(getEmptyComponent());
+
+    this.updateRef();
+  }
+
+  removeComponent(i: number) {
+    this.dashboard.components.splice(i, 1);
+    this.componentData$.splice(i, 1);
+
+    this.updateRef();
+  }
+
+  updateRef() {
+    this.dashboard = {
+      ...this.dashboard
+    };
   }
 }

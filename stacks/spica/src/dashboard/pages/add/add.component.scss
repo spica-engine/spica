@@ -15,11 +15,10 @@
       }
     }
   }
+
   mat-card {
     margin: 30px;
     margin-top: -85px;
-    overflow: hidden;
-
     mat-list {
       padding-top: 0px;
       mat-list-item {
@@ -61,14 +60,18 @@
             }
 
             > mat-form-field:nth-of-type(1) {
-              flex: 1;
-            }
-
-            > mat-form-field:nth-of-type(2) {
               flex: 2;
             }
 
+            > mat-form-field:nth-of-type(2) {
+              flex: 4;
+            }
+
             > mat-form-field:nth-of-type(3) {
+              flex: 2;
+            }
+
+            > mat-form-field:nth-of-type(4) {
               flex: 1;
             }
           }

@@ -1,8 +1,9 @@
-<ng-container *ngIf="componentData$ | async; let componentData">
+<div class="dashboard-component card" *ngIf="componentData$ | async; let componentData">
   <mat-card-header>
     <mat-card-title>{{ componentData.title }}</mat-card-title>
     <button
-      class="refresh"
+      *ngIf="refresh"
+      class="dashboard-component-refresh-button"
       mat-icon-button
       matTooltip="Refresh card"
       (click)="this.onUpdate.next()"
@@ -10,7 +11,7 @@
       <mat-icon>refresh</mat-icon>
     </button>
   </mat-card-header>
-  <mat-card-content>
+  <mat-card-content *ngIf="!isSmall">
     <p>{{ componentData.description }}</p>
   </mat-card-content>
   <form
@@ -20,7 +21,7 @@
     target="_blank"
     [enctype]="componentData.button.enctype"
   >
-    <mat-card-content class="inputs">
+    <mat-card-content class="dashboard-component-filter">
       <ng-container *ngFor="let input of componentData.inputs">
         <button
           *ngIf="input.type == 'file'"
@@ -63,4 +64,4 @@
       </button>
     </mat-card-actions>
   </form>
-</ng-container>
+</div>

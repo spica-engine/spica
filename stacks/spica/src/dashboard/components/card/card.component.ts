@@ -1,8 +1,9 @@
 import {HttpClient} from "@angular/common/http";
-import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {Component, EventEmitter, Input, Output, OnInit, OnChanges} from "@angular/core";
 import {Form} from "@angular/forms";
 import {PassportService} from "@spica-client/passport";
 import {Observable} from "rxjs";
+import {isSmallComponent, Ratio} from "@spica-client/dashboard/interfaces";
 
 interface CardInput {
   key: string;
@@ -21,15 +22,24 @@ interface CardButton {
   templateUrl: "./card.component.html",
   styleUrls: ["./card.component.scss"]
 })
-export class CardComponent {
+export class CardComponent implements OnChanges {
   @Input() componentData$: Observable<any>;
 
   @Output() onUpdate: EventEmitter<object> = new EventEmitter();
+
+  isSmall = false;
+
+  @Input() ratio: Ratio;
+  @Input() refresh: boolean;
 
   token: string;
 
   constructor(private passport: PassportService, private http: HttpClient) {
     this.token = this.passport.token;
+  }
+
+  ngOnChanges() {
+    this.isSmall = isSmallComponent(this.ratio);
   }
 
   async submit(form: HTMLFormElement, inputs: CardInput[], button: CardButton) {

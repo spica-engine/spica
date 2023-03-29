@@ -1,31 +1,44 @@
-mat-card-header {
-  align-items: center;
-  justify-content: center;
-}
-
-button.refresh {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  mat-icon {
-    width: 30px;
-    height: 30px;
-    line-height: 30px;
+:host {
+  .card {
+    justify-content: start;
   }
-}
-
-mat-card-content.inputs {
-  > span,
-  button {
-    margin-right: 5px;
+  mat-card-header {
+    align-items: center;
+    justify-content: center;
   }
 
-  button.file-selector {
-    height: 44px;
-    width: 200px;
+  mat-card-content {
+    text-align: center;
+  }
+  mat-card-content {
+    > span,
+    button {
+      margin-right: 5px;
+    }
+    span {
+      flex: 1;
+      ::ng-deep .string {
+        width: 100%;
+      }
+    }
+    ::ng-deep .mat-form-field-wrapper {
+      padding: 0 !important;
+      width: 100% !important;
+    }
 
-    overflow-x: hidden;
-    text-overflow: ellipsis;
-    display: inline-block;
+    button.file-selector {
+      height: 44px;
+      width: 200px;
+
+      overflow-x: hidden;
+      text-overflow: ellipsis;
+      display: inline-block;
+    }
+    mat-form-field-wrapper {
+      padding: 0 !important;
+    }
+  }
+  mat-card-actions {
+    justify-content: center;
   }
 }

@@ -1,51 +1,45 @@
-button.refresh {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  mat-icon {
-    width: 30px;
-    height: 30px;
-    line-height: 30px;
-  }
-}
+:host {
+  div.content {
+    align-items: center;
+    justify-content: space-evenly;
 
-div.content {
-  height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-
-  div.icon-container {
-    padding: 20px;
-    border-radius: 50px;
-    mat-icon {
-      width: 50px;
-      height: 50px;
-      font-size: 50px;
-    }
-  }
-
-  div.statistic {
-    div.title {
-      font-size: 20px;
-      opacity: 0.8;
-      font-weight: 100;
+    div.icon-container {
+      padding: 20px;
+      border-radius: 50px;
+      mat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 50px;
+      }
     }
 
-    div.value {
-      font-size: 50px;
-      font-weight: 500;
-    }
-  }
-  div.difference {
-    span:first-of-type {
-      font-size: 15px;
-      font-weight: 450;
-    }
+    div.statistic {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      div.title {
+        font-size: 20px;
+        opacity: 0.8;
+        font-weight: 100;
+      }
 
-    span:last-of-type {
-      font-weight: 100;
-      opacity: 0.8;
+      div.value {
+        font-size: 50px;
+        font-weight: 500;
+        text-align: center;
+      }
+    }
+    div.difference {
+      span:first-of-type {
+        font-size: 15px;
+        font-weight: 450;
+      }
+
+      span:last-of-type {
+        font-weight: 100;
+        opacity: 0.8;
+      }
     }
   }
 }

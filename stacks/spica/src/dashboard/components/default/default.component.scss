@@ -1,31 +1,20 @@
-mat-card-header {
-  align-items: center;
-  justify-content: center;
-}
-
-div.filters {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  > h4 {
-    margin: 0px 0px 5px 0px;
+:host {
+  mat-card-header {
+    align-items: center;
+    justify-content: center;
+    ::ng-deep .mat-card-header-text {
+      margin: 0;
+      text-align: center;
+      display: flex;
+      align-items: center;
+    }
   }
-  > span {
-    margin-right: 5px;
+
+  div.chart-container {
+    min-height: 320px;
+    height: calc(100% - 120px);
   }
-}
-
-div.chart-container {
-  min-height: 100px;
-  height: calc(100% - 150px);
-}
-
-button.refresh {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-
-  width: 30px;
-  height: 30px;
-  line-height: 30px;
+  canvas {
+    height: 100%;
+  }
 }

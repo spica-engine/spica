@@ -1,90 +1,16 @@
-div {
-  mat-toolbar {
-    min-height: 250px;
-    padding: 0 30px;
-    align-items: flex-start;
+:host {
+  div {
+    @media only screen and (max-width: 1280px) {
+      div.components-container > {
+        mat-card {
+          width: calc(100% - 20px) !important;
+          height: 500px !important;
+          position: relative !important;
+          transform: unset !important;
 
-    justify-content: space-between;
-    h1 {
-      & > * {
-        vertical-align: middle;
-        display: inline-block;
-      }
-      mat-icon {
-        margin-left: -3px;
-      }
-      span {
-        margin-left: 5px;
-      }
-    }
-
-    div.actions {
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      > * {
-        margin-left: 5px;
-      }
-      mat-form-field {
-        font-size: 14px;
-        width: 150px;
-      }
-    }
-  }
-  div.components-container {
-    margin-top: -160px;
-    width: 100%;
-    height: 300vh;
-    mat-card {
-      position: absolute;
-      height: 500px;
-      width: 500px;
-
-      min-width: 250px;
-      min-height: 250px;
-
-      resize: both;
-      overflow: auto;
-
-      margin: 10px;
-
-      &:active {
-        box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14),
-          0 3px 14px 2px rgba(0, 0, 0, 0.12);
-      }
-
-      mat-spinner {
-        top: calc(50% - 75px);
-        margin: auto;
-      }
-
-      div.drag-cursor {
-        cursor: move;
-        width: 100%;
-        height: 50px;
-
-        position: absolute;
-        left: 0;
-        top: 0;
-      }
-
-      div.content {
-        height: 100%;
-      }
-    }
-  }
-
-  @media only screen and (max-width: 1280px) {
-    div.components-container > {
-      mat-card {
-        width: calc(100% - 20px) !important;
-        height: 500px !important;
-        position: relative !important;
-        transform: unset !important;
-
-        div.drag-cursor {
-          display: none;
+          div.drag-cursor {
+            display: none;
+          }
         }
       }
     }
