@@ -30,7 +30,6 @@ Spica is a full-fledged, free and open-source backend development platform. It a
 
 ## Secondary Features
 - Inline image editing
-- Scheduled data publishing
 - Data history
 - Data localization
 - Event driven function triggers
