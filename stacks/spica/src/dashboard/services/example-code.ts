@@ -125,7 +125,7 @@ const example = {
   table: `{
     "title": "table title",
     "data": [
-      { "position": 1, "name": "Hydrogen", "weight": 1.0079, "symbol": "H","a":"aasdjhasvdasd"},
+      { "position": 1, "name": "Hydrogen", "weight": 1.0079, "symbol": "H"},
       { "position": 2, "name": "Helium", "weight": 4.0026, "symbol": "He"},
       { "position": 3, "name": "Lithium", "weight": 6.941, "symbol": "Li"},
       { "position": 4, "name": "Beryllium", "weight": 9.0122, "symbol": "Be"},
@@ -136,7 +136,7 @@ const example = {
       { "position": 9, "name": "Fluorine", "weight": 18.9984, "symbol": "F"},
       { "position": 10, "name": "Neon", "weight": 20.1797, "symbol": "Ne"}
     ],
-    "displayedColumns": ["position", "name", "weight", "symbol","a"],
+    "displayedColumns": ["position", "name", "weight", "symbol"],
     "filters": [{ "key": "name", "type": "string", "value": "['Hydrogen','Nitrogen']" }]
   }`,
   card: `{
