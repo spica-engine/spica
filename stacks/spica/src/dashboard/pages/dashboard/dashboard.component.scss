@@ -163,14 +163,10 @@
         }
 
         div.requests {
-          position: relative;
-          height: 500px;
           width: 100%;
         }
         div.downloads,
         div.uploads {
-          position: relative;
-          height: 500px;
           width: calc(50% - 10px);
         }
 

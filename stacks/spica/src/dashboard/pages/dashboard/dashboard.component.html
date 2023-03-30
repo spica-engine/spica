@@ -78,6 +78,7 @@
             [componentData$]="apiChart.request"
             type="line"
             (onUpdate)="onApiStatusFilterUpdate($event)"
+            refresh="true"
           >
           </dashboard-default>
         </div>
@@ -88,6 +89,7 @@
             *ngIf="!apiStatusPending"
             [componentData$]="apiChart.downloaded"
             type="bar"
+            refresh="true"
           >
           </dashboard-default>
         </div>
@@ -98,6 +100,7 @@
             *ngIf="!apiStatusPending"
             [componentData$]="apiChart.uploaded"
             type="bar"
+            refresh="true"
           >
           </dashboard-default>
         </div>

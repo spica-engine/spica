@@ -204,8 +204,9 @@ button.dashboard-component-refresh-button {
 .dashboard-component-filter {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-evenly;
+  justify-content: center;
   align-items: center;
+  gap: 0px 10px;
   width: 100% !important;
 }
 
