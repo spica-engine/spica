@@ -22,11 +22,11 @@ export function attachStatusTrackerFactory(service: StatusService): AttachStatus
     return Buffer.byteLength(payload ? payload : "");
   };
 
-  const interceptMethod = (obj: object, methodName: string, intercept: (arg) => void) => {
+  const interceptMethod = (obj: object, methodName: string, intercept: (...args) => void) => {
     const actual = obj[methodName];
-    obj[methodName] = arg => {
-      intercept(arg);
-      return actual.bind(obj)(arg);
+    obj[methodName] = (...args) => {
+      intercept(...args);
+      return actual.bind(obj)(...args);
     };
   };
 
@@ -55,7 +55,9 @@ export function attachStatusTrackerFactory(service: StatusService): AttachStatus
 
     interceptMethod(res, "write", payload => (resSize += calculatePayloadSize(payload)));
     interceptMethod(res, "end", payload => {
-      resSize += calculatePayloadSize(payload);
+      if (typeof payload != "function") {
+        resSize += calculatePayloadSize(payload);
+      }
       saveStatus();
     });
     interceptMethod(res, "send", payload => {
