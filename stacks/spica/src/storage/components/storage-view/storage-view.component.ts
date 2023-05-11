@@ -1,14 +1,13 @@
 import {HttpClient} from "@angular/common/http";
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   ComponentFactoryResolver,
-  EmbeddedViewRef,
   Input,
   OnChanges,
   SimpleChanges,
-  TemplateRef,
   Type,
   ViewChild,
   ViewContainerRef
@@ -26,7 +25,7 @@ import {VideoViewerComponent} from "../video-viewer/video-viewer.component";
   styleUrls: ["./storage-view.component.scss"],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StorageViewComponent implements OnChanges {
+export class StorageViewComponent implements OnChanges,AfterViewInit {
   contentTypeComponentMap = new Map<string, Type<any>>();
 
   @Input() blob: string | Blob | Storage;
@@ -46,6 +45,10 @@ export class StorageViewComponent implements OnChanges {
     this.contentTypeComponentMap.set("image/.*", ImageViewerComponent);
     this.contentTypeComponentMap.set("video/.*", VideoViewerComponent);
     this.contentTypeComponentMap.set(".*", DefaultViewerComponent);
+  }
+
+  ngAfterViewInit(){
+    this.renderViewer();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -78,25 +81,25 @@ export class StorageViewComponent implements OnChanges {
   }
 
   renderViewer() {
+    if (!this.viewerContainer) {
+      return;
+    }
+
     const contentTypeKey = Array.from(this.contentTypeComponentMap.keys()).find(ctype =>
       RegExp(ctype).test(this.contentType)
     );
-
     const componentType = this.contentTypeComponentMap.get(contentTypeKey);
-
     const componentFactory = this.componentFactoryResolver.resolveComponentFactory(componentType);
-    // fix the timing issue
-    setTimeout(() => {
-      this.viewerContainer.clear();
-      const componentRef = this.viewerContainer.createComponent(componentFactory);
 
-      // try to pass these values dynamically
-      componentRef.instance.content = this.content;
-      componentRef.instance.error = this.error;
-      componentRef.instance.contentType = this.contentType;
-      componentRef.instance.autoplay = this.autoplay;
+    this.viewerContainer.clear();
+    const componentRef = this.viewerContainer.createComponent(componentFactory);
 
-      this.cd.markForCheck();
-    }, 1000);
+    // try to pass these values dynamically
+    componentRef.instance.content = this.content;
+    componentRef.instance.error = this.error;
+    componentRef.instance.contentType = this.contentType;
+    componentRef.instance.autoplay = this.autoplay;
+
+    this.cd.markForCheck();
   }
 }
