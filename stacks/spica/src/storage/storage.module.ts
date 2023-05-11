@@ -44,6 +44,7 @@ import {ImageViewerComponent} from "./components/image-viewer/image-viewer.compo
 import {DefaultViewerComponent} from "./components/default-viewer/default-viewer.component";
 import { VideoViewerComponent } from './components/video-viewer/video-viewer.component';
 import { TextViewerComponent } from './components/text-viewer/text-viewer.component';
+import { PdfViewerComponent } from './components/pdf-viewer/pdf-viewer.component';
 
 @NgModule({
   imports: [
@@ -97,7 +98,8 @@ import { TextViewerComponent } from './components/text-viewer/text-viewer.compon
     ImageViewerComponent,
     DefaultViewerComponent,
     VideoViewerComponent,
-    TextViewerComponent
+    TextViewerComponent,
+    PdfViewerComponent
   ],
   exports: [PickerDirective]
 })
