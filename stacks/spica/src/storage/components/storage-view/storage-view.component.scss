@@ -1,29 +1,29 @@
 :host {
   display: block;
   cursor: pointer;
-  img {
-    display: block;
-    object-fit: cover;
-    width: 100%;
-    min-height: 120px;
-    max-height: 120px;
-  }
+  // img {
+  //   display: block;
+  //   object-fit: cover;
+  //   width: 100%;
+  //   min-height: 120px;
+  //   max-height: 120px;
+  // }
 
-  video {
-    display: block;
-    object-fit: cover;
-    width: 100%;
-    min-height: 120px;
-    max-height: 120px;
-  }
-  div {
-    display: flex;
-    flex-flow: column;
-    align-items: center;
-    padding: 20px 0;
-    max-height: 120px;
-    small {
-      text-align: center;
-    }
-  }
+  // video {
+  //   display: block;
+  //   object-fit: cover;
+  //   width: 100%;
+  //   min-height: 120px;
+  //   max-height: 120px;
+  // }
+  // div {
+  //   display: flex;
+  //   flex-flow: column;
+  //   align-items: center;
+  //   padding: 20px 0;
+  //   max-height: 120px;
+  //   small {
+  //     text-align: center;
+  //   }
+  // }
 }

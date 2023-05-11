@@ -1,0 +1,12 @@
+:host {
+  div {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    padding: 20px 0;
+    max-height: 120px;
+    small {
+      text-align: center;
+    }
+  }
+}

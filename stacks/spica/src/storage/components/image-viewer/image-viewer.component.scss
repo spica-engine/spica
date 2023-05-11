@@ -1,0 +1,10 @@
+:host {
+  display: inline-block;
+  img {
+    display: block;
+    object-fit: cover;
+    width: 100%;
+    min-height: 120px;
+    max-height: 120px;
+  }
+}

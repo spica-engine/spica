@@ -40,6 +40,9 @@ import {MatCheckboxModule} from "@angular/material/checkbox";
 import {RootDirService} from "./services/root.dir.service";
 import {DragDropModule} from "@angular/cdk/drag-drop";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
+import {ImageViewerComponent} from "./components/image-viewer/image-viewer.component";
+import {DefaultViewerComponent} from "./components/default-viewer/default-viewer.component";
+import { VideoViewerComponent } from './components/video-viewer/video-viewer.component';
 
 @NgModule({
   imports: [
@@ -89,7 +92,10 @@ import {WelcomeComponent} from "./pages/welcome/welcome.component";
     StorageViewComponent,
     ImageEditorComponent,
     AddDirectoryDialog,
-    WelcomeComponent
+    WelcomeComponent,
+    ImageViewerComponent,
+    DefaultViewerComponent,
+    VideoViewerComponent
   ],
   exports: [PickerDirective]
 })

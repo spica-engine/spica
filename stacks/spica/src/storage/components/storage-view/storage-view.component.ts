@@ -3,91 +3,100 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  ElementRef,
+  ComponentFactoryResolver,
+  EmbeddedViewRef,
   Input,
   OnChanges,
-  SimpleChanges
+  SimpleChanges,
+  TemplateRef,
+  Type,
+  ViewChild,
+  ViewContainerRef
 } from "@angular/core";
 import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
-import {Observable} from "rxjs";
-import {distinctUntilChanged, filter, map, switchMap, takeWhile, tap} from "rxjs/operators";
+import {tap} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
+import {ImageViewerComponent} from "../image-viewer/image-viewer.component";
+import {DefaultViewerComponent} from "../default-viewer/default-viewer.component";
+import {VideoViewerComponent} from "../video-viewer/video-viewer.component";
 
 @Component({
   selector: "storage-view",
-  templateUrl: "./storage-view.component.html",
+  template: "<ng-container #viewerContainer></ng-container>",
   styleUrls: ["./storage-view.component.scss"],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StorageViewComponent implements OnChanges {
+  contentTypeComponentMap = new Map<string, Type<any>>();
+
   @Input() blob: string | Blob | Storage;
   @Input() autoplay = false;
-  displayableTypes: RegExp = /image\/.*?|video\/.*?/;
-  ready: boolean = false;
-  error: string;
   contentType: string;
+  error: string;
   content: SafeUrl | string;
 
+  @ViewChild("viewerContainer", {read: ViewContainerRef}) viewerContainer: ViewContainerRef;
+
   constructor(
-    private http: HttpClient,
+    private componentFactoryResolver: ComponentFactoryResolver,
     private cd: ChangeDetectorRef,
-    private sanitizer: DomSanitizer,
-    private element: ElementRef<Element>
-  ) {}
+    private http: HttpClient,
+    private sanitizer: DomSanitizer
+  ) {
+    this.contentTypeComponentMap.set("image/.*", ImageViewerComponent);
+    this.contentTypeComponentMap.set("video/.*", VideoViewerComponent);
+    this.contentTypeComponentMap.set(".*", DefaultViewerComponent);
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.blob && changes.blob.currentValue) {
-      this.error = undefined;
       if (typeof this.blob == "string") {
-        this.ready = false;
         const url = this.blob;
-        this.observe()
-          .pipe(
-            switchMap(() => this.http.get(url, {responseType: "blob"})),
-            tap(r => (this.contentType = r.type)),
-            takeWhile(r => this.displayableTypes.test(r.type))
-          )
+        this.http
+          .get(url, {responseType: "blob"})
+          .pipe(tap(r => (this.contentType = r.type)))
           .subscribe({
             next: r => {
               this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(r));
-              this.ready = true;
-              this.cd.markForCheck();
+              this.renderViewer();
             },
             error: event => {
-              this.ready = true;
               this.error = event.error.type;
-              this.cd.markForCheck();
-            },
-            complete: () => {
-              this.ready = !this.displayableTypes.test(this.contentType);
-              this.cd.markForCheck();
+              this.renderViewer();
             }
           });
       } else if (this.blob instanceof Blob) {
         this.contentType = this.blob.type;
-        this.ready = !this.displayableTypes.test(this.contentType);
         this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(this.blob));
+        this.renderViewer();
       } else {
         this.contentType = this.blob.content.type;
-        this.ready = !this.displayableTypes.test(this.contentType);
         this.content = this.blob.url;
+        this.renderViewer();
       }
     }
   }
 
-  viewError(event: MediaError) {
-    this.error = event.message;
-  }
-
-  private observe() {
-    return new Observable<IntersectionObserverEntry[]>(observer => {
-      const iobserver = new IntersectionObserver(entry => observer.next(entry));
-      iobserver.observe(this.element.nativeElement);
-      return () => iobserver.disconnect();
-    }).pipe(
-      map(r => r.some(r => r.isIntersecting)),
-      distinctUntilChanged(),
-      filter(r => r)
+  renderViewer() {
+    const contentTypeKey = Array.from(this.contentTypeComponentMap.keys()).find(ctype =>
+      RegExp(ctype).test(this.contentType)
     );
+
+    const componentType = this.contentTypeComponentMap.get(contentTypeKey);
+
+    const componentFactory = this.componentFactoryResolver.resolveComponentFactory(componentType);
+    // fix the timing issue
+    setTimeout(() => {
+      this.viewerContainer.clear();
+      const componentRef = this.viewerContainer.createComponent(componentFactory);
+
+      // try to pass these values dynamically
+      componentRef.instance.content = this.content;
+      componentRef.instance.error = this.error;
+      componentRef.instance.contentType = this.contentType;
+      componentRef.instance.autoplay = this.autoplay;
+
+      this.cd.markForCheck();
+    }, 1000);
   }
 }
