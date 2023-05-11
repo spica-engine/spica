@@ -43,6 +43,7 @@ import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {ImageViewerComponent} from "./components/image-viewer/image-viewer.component";
 import {DefaultViewerComponent} from "./components/default-viewer/default-viewer.component";
 import { VideoViewerComponent } from './components/video-viewer/video-viewer.component';
+import { TextViewerComponent } from './components/text-viewer/text-viewer.component';
 
 @NgModule({
   imports: [
@@ -95,7 +96,8 @@ import { VideoViewerComponent } from './components/video-viewer/video-viewer.com
     WelcomeComponent,
     ImageViewerComponent,
     DefaultViewerComponent,
-    VideoViewerComponent
+    VideoViewerComponent,
+    TextViewerComponent
   ],
   exports: [PickerDirective]
 })

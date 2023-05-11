@@ -2,7 +2,7 @@ import {Component, Input, OnInit} from "@angular/core";
 import {SafeUrl} from "@angular/platform-browser";
 
 @Component({
-  selector: "app-default-viewer",
+  selector: "default-viewer",
   templateUrl: "./default-viewer.component.html",
   styleUrls: ["./default-viewer.component.scss"]
 })

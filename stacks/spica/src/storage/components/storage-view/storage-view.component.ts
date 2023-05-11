@@ -18,6 +18,7 @@ import {Storage} from "../../interfaces/storage";
 import {ImageViewerComponent} from "../image-viewer/image-viewer.component";
 import {DefaultViewerComponent} from "../default-viewer/default-viewer.component";
 import {VideoViewerComponent} from "../video-viewer/video-viewer.component";
+import { TextViewerComponent } from "../text-viewer/text-viewer.component";
 
 @Component({
   selector: "storage-view",
@@ -44,6 +45,7 @@ export class StorageViewComponent implements OnChanges,AfterViewInit {
   ) {
     this.contentTypeComponentMap.set("image/.*", ImageViewerComponent);
     this.contentTypeComponentMap.set("video/.*", VideoViewerComponent);
+    this.contentTypeComponentMap.set("text/plain|text/javascript", TextViewerComponent);
     this.contentTypeComponentMap.set(".*", DefaultViewerComponent);
   }
 
@@ -60,7 +62,7 @@ export class StorageViewComponent implements OnChanges,AfterViewInit {
           .pipe(tap(r => (this.contentType = r.type)))
           .subscribe({
             next: r => {
-              this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(r));
+              this.content = r;
               this.renderViewer();
             },
             error: event => {
@@ -70,7 +72,7 @@ export class StorageViewComponent implements OnChanges,AfterViewInit {
           });
       } else if (this.blob instanceof Blob) {
         this.contentType = this.blob.type;
-        this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(this.blob));
+        this.content = this.blob
         this.renderViewer();
       } else {
         this.contentType = this.blob.content.type;

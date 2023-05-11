@@ -1,5 +1,5 @@
 import {Component, Input, OnInit} from "@angular/core";
-import {SafeUrl} from "@angular/platform-browser";
+import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
 
 @Component({
   selector: "image-viewer",
@@ -7,9 +7,14 @@ import {SafeUrl} from "@angular/platform-browser";
   styleUrls: ["./image-viewer.component.scss"]
 })
 export class ImageViewerComponent implements OnInit {
-  @Input() content: SafeUrl | string;
+  @Input() content;
 
-  constructor() {}
+  constructor(
+    private sanitizer:DomSanitizer
+  ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(this.content));
+
+  }
 }
