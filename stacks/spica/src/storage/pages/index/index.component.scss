@@ -105,14 +105,10 @@
           width: 500px;
         }
         storage-view {
-          cursor: unset;
-          ::ng-deep > *:first-child {
-            object-fit: contain;
-            max-height: unset;
-            min-height: unset;
-            width: 500px;
-            height: 300px;
-          }
+          display: block;
+          width: 500px;
+          height: 300px;
+          overflow-x: scroll;
         }
       }
 

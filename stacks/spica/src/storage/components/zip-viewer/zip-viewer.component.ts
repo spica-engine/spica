@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, Input, OnInit} from "@angular/core";
+import {AfterViewInit, ChangeDetectorRef, Component, Input, OnInit} from "@angular/core";
 import JSZip from "jszip";
 
 interface FileNode {

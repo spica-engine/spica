@@ -15,17 +15,17 @@ import {DomSanitizer} from "@angular/platform-browser";
   styleUrls: ["./text-viewer.component.scss"],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TextViewerComponent implements AfterViewInit {
+export class TextViewerComponent implements OnInit {
   @Input() content;
 
   constructor(private sanitizer: DomSanitizer, private cd: ChangeDetectorRef) {}
 
-  ngAfterViewInit(): void {
+  ngOnInit(): void {
     const fileReader = new FileReader();
     fileReader.onload = e => {
-      this.content = e.target.result.toString();
-      // it sanitizes the content even this line is missing
-      this.content = this.sanitizer.bypassSecurityTrustHtml(this.content)
+      let readFile = e.target.result.toString();
+
+      this.content = this.sanitizer.bypassSecurityTrustHtml(readFile);
       this.cd.markForCheck();
     };
     fileReader.readAsText(this.content);

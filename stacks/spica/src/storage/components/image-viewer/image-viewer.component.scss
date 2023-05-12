@@ -1,10 +1,11 @@
 :host {
-  display: inline-block;
+  // display: inline-block;
   img {
-    display: block;
-    object-fit: cover;
+    // display: block;
+    object-fit: contain;
+    height: 100%;
     width: 100%;
-    min-height: 120px;
-    max-height: 120px;
+    // min-height: 120px;
+    // max-height: 120px;
   }
 }

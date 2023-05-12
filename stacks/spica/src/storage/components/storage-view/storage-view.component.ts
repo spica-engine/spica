@@ -47,7 +47,7 @@ export class StorageViewComponent implements OnChanges,AfterViewInit {
   ) {
     this.contentTypeComponentMap.set("image/.*", ImageViewerComponent);
     this.contentTypeComponentMap.set("video/.*", VideoViewerComponent);
-    this.contentTypeComponentMap.set("text/plain|text/javascript", TextViewerComponent);
+    this.contentTypeComponentMap.set("text/plain|text/javascript|application/json", TextViewerComponent);
     this.contentTypeComponentMap.set("application/pdf", PdfViewerComponent);
     this.contentTypeComponentMap.set("application/zip", ZipViewerComponent);
     this.contentTypeComponentMap.set(".*", DefaultViewerComponent);

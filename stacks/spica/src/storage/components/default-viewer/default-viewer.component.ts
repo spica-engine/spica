@@ -1,5 +1,5 @@
-import {Component, Input, OnInit} from "@angular/core";
-import {SafeUrl} from "@angular/platform-browser";
+import {AfterViewInit, Component, Input, OnInit} from "@angular/core";
+import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
 
 @Component({
   selector: "default-viewer",
@@ -8,9 +8,13 @@ import {SafeUrl} from "@angular/platform-browser";
 })
 export class DefaultViewerComponent implements OnInit {
   @Input() error: string;
-  @Input() content: SafeUrl | string;
+  @Input() content;
 
-  constructor() {}
+  constructor(
+    private sanitizer:DomSanitizer
+  ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(this.content));
+  }
 }

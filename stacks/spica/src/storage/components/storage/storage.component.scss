@@ -53,6 +53,12 @@
         }
       }
 
+      storage-view {
+        display: block;
+        width: 100%;
+        height: 300px;
+      }
+
       mat-icon.change {
         position: absolute;
         left: calc(50% - 12px);
