@@ -45,6 +45,7 @@ import {DefaultViewerComponent} from "./components/default-viewer/default-viewer
 import { VideoViewerComponent } from './components/video-viewer/video-viewer.component';
 import { TextViewerComponent } from './components/text-viewer/text-viewer.component';
 import { PdfViewerComponent } from './components/pdf-viewer/pdf-viewer.component';
+import { ZipViewerComponent } from './components/zip-viewer/zip-viewer.component';
 
 @NgModule({
   imports: [
@@ -99,7 +100,8 @@ import { PdfViewerComponent } from './components/pdf-viewer/pdf-viewer.component
     DefaultViewerComponent,
     VideoViewerComponent,
     TextViewerComponent,
-    PdfViewerComponent
+    PdfViewerComponent,
+    ZipViewerComponent
   ],
   exports: [PickerDirective]
 })

@@ -15,7 +15,7 @@ import {DomSanitizer} from "@angular/platform-browser";
   styleUrls: ["./text-viewer.component.scss"],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TextViewerComponent implements OnInit, AfterViewInit {
+export class TextViewerComponent implements AfterViewInit {
   @Input() content;
 
   constructor(private sanitizer: DomSanitizer, private cd: ChangeDetectorRef) {}

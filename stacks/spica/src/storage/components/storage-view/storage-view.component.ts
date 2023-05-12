@@ -20,6 +20,7 @@ import {DefaultViewerComponent} from "../default-viewer/default-viewer.component
 import {VideoViewerComponent} from "../video-viewer/video-viewer.component";
 import { TextViewerComponent } from "../text-viewer/text-viewer.component";
 import { PdfViewerComponent } from "../pdf-viewer/pdf-viewer.component";
+import { ZipViewerComponent } from "../zip-viewer/zip-viewer.component";
 
 @Component({
   selector: "storage-view",
@@ -48,6 +49,7 @@ export class StorageViewComponent implements OnChanges,AfterViewInit {
     this.contentTypeComponentMap.set("video/.*", VideoViewerComponent);
     this.contentTypeComponentMap.set("text/plain|text/javascript", TextViewerComponent);
     this.contentTypeComponentMap.set("application/pdf", PdfViewerComponent);
+    this.contentTypeComponentMap.set("application/zip", ZipViewerComponent);
     this.contentTypeComponentMap.set(".*", DefaultViewerComponent);
   }
 

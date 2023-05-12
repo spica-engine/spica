@@ -1,0 +1,27 @@
+<ng-template #fileView let-nodes="nodes">
+  <button
+    mat-icon-button
+    *ngIf="nodes && nodes[0].parent && nodes[0].parent.parent"
+    (click)="back(nodes)"
+  >
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+  <mat-nav-list>
+    <mat-list-item *ngFor="let node of nodes" (click)="onNodeClicked(node)">
+      <div>
+        <span class="node-name">
+          <mat-icon> {{node.dir ? 'folder' : 'description'}} </mat-icon>
+          {{ node.name }}
+        </span>
+        <span class="node-date">
+          {{ node.date | date: "mediumDate" }}
+        </span>
+        <span class="node-size">
+          {{ node.size }} Bytes
+        </span>
+      </div>
+    </mat-list-item>
+  </mat-nav-list>
+</ng-template>
+
+<div *ngTemplateOutlet="fileView; context: {nodes: nodes}"></div>
