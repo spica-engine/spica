@@ -6,15 +6,15 @@ import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
   templateUrl: "./default-viewer.component.html",
   styleUrls: ["./default-viewer.component.scss"]
 })
-export class DefaultViewerComponent implements OnInit {
+export class DefaultViewerComponent implements AfterViewInit {
   @Input() error: string;
-  @Input() content;
+  content;
 
   constructor(
     private sanitizer:DomSanitizer
   ) {}
 
-  ngOnInit(): void {
+  ngAfterViewInit(): void {
     this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(this.content));
   }
 }

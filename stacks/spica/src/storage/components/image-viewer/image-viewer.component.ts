@@ -14,7 +14,6 @@ export class ImageViewerComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    console.log(this.content);
     this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(this.content));
 
   }
