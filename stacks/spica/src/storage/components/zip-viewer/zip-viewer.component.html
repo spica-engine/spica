@@ -1,24 +1,43 @@
 <ng-template #fileView let-nodes="nodes">
-  <button
+  <!-- <button
     mat-icon-button
     *ngIf="nodes && nodes[0].parent && nodes[0].parent.parent"
     (click)="back(nodes)"
   >
     <mat-icon>arrow_back</mat-icon>
-  </button>
+  </button> -->
+  <div class="list-header">
+    <div class="node">
+      <ng-container *ngIf="nodes && nodes[0].parent && nodes[0].parent.parent; else noBack">
+        <button mat-icon-button (click)="back(nodes)" disableRipple>
+          <mat-icon>arrow_back </mat-icon>
+        </button>
+      </ng-container>
+      <ng-template #noBack>
+        <span>#</span>
+      </ng-template>
+      <span class="node-name">
+        {{ nodes && nodes[0].parent ? nodes[0].parent.name : "" }}
+      </span>
+      <span class="node-date">
+        Last Modified
+      </span>
+      <span class="node-size">Size</span>
+    </div>
+  </div>
   <mat-nav-list>
     <mat-list-item *ngFor="let node of nodes" (click)="onNodeClicked(node)">
-      <div>
+      <div class="node">
+        <mat-icon> {{ node.dir ? "folder" : "description" }} </mat-icon>
         <span class="node-name">
-          <mat-icon> {{node.dir ? 'folder' : 'description'}} </mat-icon>
           {{ node.name }}
         </span>
         <span class="node-date">
           {{ node.date | date: "mediumDate" }}
         </span>
-        <span class="node-size">
-          {{ node.size }} Bytes
-        </span>
+        <span class="node-size">{{
+          node.size > 1000 ? (node.size / 1000).toFixed(1) + " KB" : node.size.toFixed(1) + " Bytes"
+        }}</span>
       </div>
     </mat-list-item>
   </mat-nav-list>

@@ -12,7 +12,7 @@ interface FileNode {
 }
 
 @Component({
-  selector: "app-zip-viewer",
+  selector: "zip-viewer",
   templateUrl: "./zip-viewer.component.html",
   styleUrls: ["./zip-viewer.component.scss"]
 })
@@ -56,7 +56,7 @@ export class ZipViewerComponent implements OnInit {
         if (existingNode) {
           parent = existingNode;
         } else {
-          const size = data[filePath]._data ? data[filePath]._data.uncompressedSize : 0;
+          const size = data[filePath]._data ? data[filePath]._data.uncompressedSize || 0 : 0;
           const node: FileNode = {
             name,
             dir: isDir,

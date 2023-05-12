@@ -1,0 +1,41 @@
+:host {
+  mat-list-item {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  div.list-header{
+    height: 48px;
+    display: flex;
+    padding: 0px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  mat-nav-list{
+    padding: 0px;
+  }
+
+  div.node {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    // justify-content: space-around;
+
+    >*:first-of-type{
+      width: 10%;
+      text-align: left;
+    }
+
+    .node-name {
+      width: 50%;
+    }
+
+    .node-date {
+      width: 20%;
+    }
+
+    .node-size {
+      width: 20%;
+    }
+  }
+}
