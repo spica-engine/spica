@@ -31,15 +31,22 @@
         width: 100%;
         height: 85%;
         overflow: hidden;
+
+        transform: scale(0.7);
       }
       mat-label {
+        display: block;
+
         height: 15%;
         width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        padding: 10px;
 
         text-align: center;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+
+        border-top: 1px solid rgba(var(--foreground-base-rgb), 0.1);
       }
     }
   }

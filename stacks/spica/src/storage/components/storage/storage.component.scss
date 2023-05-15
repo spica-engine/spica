@@ -45,9 +45,9 @@
         calc(var(--opacity) - calc(var(--opacity) / 2))
       );
       transition: filter 0.3s ease-in-out;
-      filter: grayscale(1);
+      filter: opacity(0.5);
       &:hover {
-        filter: grayscale(0);
+        filter: opacity(1);
         mat-icon.change {
           cursor: pointer;
           transform: rotate(180deg);

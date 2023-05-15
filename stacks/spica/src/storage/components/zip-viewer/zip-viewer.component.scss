@@ -3,6 +3,18 @@
   // height: 500px;
   // width: 300px;
 
+  div.disabled-controls {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    mat-icon {
+      transform: scale(4);
+    }
+  }
+
   mat-list-item {
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }

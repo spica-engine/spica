@@ -1,0 +1,13 @@
+:host {
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 8px;
+      text-align: left;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+  }
+}
