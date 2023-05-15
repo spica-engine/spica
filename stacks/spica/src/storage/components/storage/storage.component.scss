@@ -49,6 +49,7 @@
       &:hover {
         filter: grayscale(0);
         mat-icon.change {
+          cursor: pointer;
           transform: rotate(180deg);
         }
       }

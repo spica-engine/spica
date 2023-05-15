@@ -42,13 +42,15 @@ import {DragDropModule} from "@angular/cdk/drag-drop";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {ImageViewerComponent} from "./components/image-viewer/image-viewer.component";
 import {DefaultViewerComponent} from "./components/default-viewer/default-viewer.component";
-import { VideoViewerComponent } from './components/video-viewer/video-viewer.component';
-import { TextViewerComponent } from './components/text-viewer/text-viewer.component';
-import { PdfViewerComponent } from './components/pdf-viewer/pdf-viewer.component';
-import { ZipViewerComponent } from './components/zip-viewer/zip-viewer.component';
+import {VideoViewerComponent} from "./components/video-viewer/video-viewer.component";
+import {TextViewerComponent} from "./components/text-viewer/text-viewer.component";
+import {PdfViewerComponent} from "./components/pdf-viewer/pdf-viewer.component";
+import {ZipViewerComponent} from "./components/zip-viewer/zip-viewer.component";
+import {PdfViewerModule} from "ng2-pdf-viewer";
 
 @NgModule({
   imports: [
+    PdfViewerModule,
     CommonModule,
     FormsModule,
     MatAwareDialogModule,

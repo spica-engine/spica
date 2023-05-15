@@ -129,8 +129,8 @@ export class StorageComponent implements ControlValueAccessor {
     const url = typeof storage == "string" ? storage : storage.url;
     const pureUrl = this.storage.clearTimestamp(url);
     this.dialog.open(StorageDialogOverviewDialog, {
-      maxWidth: "80%",
-      maxHeight: "80%",
+      width: "80%",
+      height: "80%",
       panelClass: "preview-object",
       data: pureUrl
     });
