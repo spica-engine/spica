@@ -39,8 +39,11 @@
   </button>
 </div>
 <mat-grid-list cols="4" rowHeight="1:1" gutterSize="10px">
-  <mat-grid-tile *ngFor="let storage of storages$ | async" (click)="close(storage)">
-    <storage-view [blob]="storage.url"></storage-view>
+  <mat-grid-tile
+    *ngFor="let storage of storages$ | async"
+    (click)="$event.stopPropagation(); close(storage)"
+  >
+    <storage-view [blob]="storage.url" [controls]="false"></storage-view>
     <mat-label>{{ storage.name }}</mat-label>
   </mat-grid-tile>
 </mat-grid-list>

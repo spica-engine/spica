@@ -28,11 +28,13 @@ import {ZipViewerComponent} from "../zip-viewer/zip-viewer.component";
   styleUrls: ["./storage-view.component.scss"],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StorageViewComponent implements OnChanges, AfterViewInit {
+export class StorageViewComponent implements OnChanges {
   contentTypeComponentMap = new Map<string, Type<any>>();
 
   @Input() blob: string | Blob | Storage;
   @Input() autoplay = false;
+  @Input() controls = true;
+
   contentType: string;
   error: string;
   content: SafeUrl | string;
@@ -122,6 +124,8 @@ export class StorageViewComponent implements OnChanges, AfterViewInit {
     componentRef.instance.error = this.error;
     componentRef.instance.contentType = this.contentType;
     componentRef.instance.autoplay = this.autoplay;
+    componentRef.instance.controls = this.controls;
+      
 
     this.cd.markForCheck();
   }

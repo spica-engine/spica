@@ -25,22 +25,32 @@
       <span class="node-size">Size</span>
     </div>
   </div>
-  <mat-nav-list>
-    <mat-list-item *ngFor="let node of nodes" (click)="onNodeClicked(node)">
-      <div class="node">
-        <mat-icon> {{ node.dir ? "folder" : "description" }} </mat-icon>
-        <span class="node-name">
-          {{ node.name }}
-        </span>
-        <span class="node-date">
-          {{ node.date | date: "mediumDate" }}
-        </span>
-        <span class="node-size">{{
-          node.size > 1000 ? (node.size / 1000).toFixed(1) + " KB" : node.size.toFixed(1) + " Bytes"
-        }}</span>
-      </div>
-    </mat-list-item>
+  <mat-nav-list *ngIf="controls">
+    <ng-container *ngTemplateOutlet="listItems; context: {nodes: nodes, controls: controls}">
+    </ng-container>
   </mat-nav-list>
+
+  <mat-list *ngIf="!controls">
+    <ng-container *ngTemplateOutlet="listItems; context: {nodes: nodes, controls: controls}">
+    </ng-container>
+  </mat-list>
 </ng-template>
 
 <div *ngTemplateOutlet="fileView; context: {nodes: nodes}"></div>
+
+<ng-template #listItems let-nodes="nodes" let-controls="controls">
+  <mat-list-item *ngFor="let node of nodes" (click)="controls && onNodeClicked(node)">
+    <div class="node">
+      <mat-icon> {{ node.dir ? "folder" : "description" }} </mat-icon>
+      <span class="node-name">
+        {{ node.name }}
+      </span>
+      <span class="node-date">
+        {{ node.date | date: "mediumDate" }}
+      </span>
+      <span class="node-size">{{
+        node.size > 1000 ? (node.size / 1000).toFixed(1) + " KB" : node.size.toFixed(1) + " Bytes"
+      }}</span>
+    </div>
+  </mat-list-item>
+</ng-template>

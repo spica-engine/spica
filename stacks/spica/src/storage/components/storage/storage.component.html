@@ -41,6 +41,7 @@
       [blob]="blob || value"
       matTooltip="View this object"
       (click)="openPreview(value || blob)"
+      [controls]="false"
     >
     </storage-view>
     <mat-icon class="change">{{ isDraggingOver ? "save_alt" : "center_focus_strong" }}</mat-icon>

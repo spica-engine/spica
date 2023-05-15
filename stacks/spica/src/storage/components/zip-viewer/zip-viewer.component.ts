@@ -18,6 +18,8 @@ interface FileNode {
 })
 export class ZipViewerComponent implements OnInit {
   @Input() content;
+  @Input() controls: boolean;
+  
   nodes: FileNode[];
   currentItem: FileNode | undefined;
 
