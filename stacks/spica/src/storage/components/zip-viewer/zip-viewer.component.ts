@@ -19,9 +19,9 @@ interface FileNode {
 export class ZipViewerComponent implements OnInit {
   @Input() content;
   @Input() controls: boolean;
-  
+
   nodes: FileNode[];
-  currentItem: FileNode | undefined;
+  currentNode: FileNode;
 
   constructor(private cd: ChangeDetectorRef) {}
 
@@ -31,6 +31,7 @@ export class ZipViewerComponent implements OnInit {
       const arrayBuffer = fileReader.result as ArrayBuffer;
       JSZip.loadAsync(arrayBuffer).then(zip => {
         this.nodes = this.createFileTree(zip.files);
+        this.currentNode = this.nodes[0].parent;
         this.cd.markForCheck();
       });
     };
@@ -97,10 +98,34 @@ export class ZipViewerComponent implements OnInit {
       return;
     }
 
-    this.nodes = node.children;
+    this.currentNode = node;
   }
 
-  back(nodes: FileNode[]) {
-    this.nodes = nodes[0].parent.parent.children;
+  back() {
+    this.currentNode = this.currentNode.parent;
+  }
+
+  formatSize(node: FileNode) {
+    let size = node.size;
+
+    if (node.dir) {
+      return " ";
+    }
+
+    let unit;
+    const mb = 1024 * 1024;
+    const kb = 1024;
+
+    if (size > mb) {
+      size = size / mb;
+      unit = "MB";
+    } else if (size > kb && size < mb) {
+      size = size / kb;
+      unit = "KB";
+    } else {
+      unit = "Bytes";
+    }
+
+    return `${size.toFixed(1)} ${unit}`;
   }
 }

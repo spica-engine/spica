@@ -1,15 +1,8 @@
 <ng-template #fileView let-nodes="nodes">
-  <!-- <button
-    mat-icon-button
-    *ngIf="nodes && nodes[0].parent && nodes[0].parent.parent"
-    (click)="back(nodes)"
-  >
-    <mat-icon>arrow_back</mat-icon>
-  </button> -->
   <div class="list-header">
     <div class="node">
-      <ng-container *ngIf="nodes && nodes[0].parent && nodes[0].parent.parent; else noBack">
-        <button mat-icon-button (click)="back(nodes)" disableRipple>
+      <ng-container *ngIf="currentNode.parent; else noBack">
+        <button mat-icon-button (click)="back()" disableRipple>
           <mat-icon>arrow_back </mat-icon>
         </button>
       </ng-container>
@@ -17,7 +10,7 @@
         <span>#</span>
       </ng-template>
       <span class="node-name">
-        {{ nodes && nodes[0].parent ? nodes[0].parent.name : "" }}
+        {{ currentNode.name }}
       </span>
       <span class="node-date">
         Last Modified
@@ -30,10 +23,10 @@
     </ng-container>
   </mat-nav-list>
 
-  <mat-list *ngIf="!controls">
+  <!-- <mat-list *ngIf="!controls">
     <ng-container *ngTemplateOutlet="listItems; context: {nodes: nodes, controls: controls}">
     </ng-container>
-  </mat-list>
+  </mat-list> -->
 </ng-template>
 
 <ng-template #listItems let-nodes="nodes" let-controls="controls">
@@ -46,15 +39,15 @@
       <span class="node-date">
         {{ node.date | date: "mediumDate" }}
       </span>
-      <span class="node-size">{{
-        node.size > 1000 ? (node.size / 1000).toFixed(1) + " KB" : node.size.toFixed(1) + " Bytes"
-      }}</span>
+      <span class="node-size">{{ formatSize(node) }}</span>
     </div>
   </mat-list-item>
 </ng-template>
-<ng-container *ngIf="controls">
-  <div *ngTemplateOutlet="fileView; context: {nodes: nodes}"></div>
+
+<ng-container *ngIf="currentNode && controls">
+  <div *ngTemplateOutlet="fileView; context: {nodes: currentNode.children}"></div>
 </ng-container>
+
 <ng-container *ngIf="!controls">
   <div class="disabled-controls">
     <mat-icon>folder_zip</mat-icon>
