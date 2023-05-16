@@ -47,7 +47,7 @@ import {TextViewerComponent} from "./components/text-viewer/text-viewer.componen
 import {PdfViewerComponent} from "./components/pdf-viewer/pdf-viewer.component";
 import {ZipViewerComponent} from "./components/zip-viewer/zip-viewer.component";
 import {PdfViewerModule} from "ng2-pdf-viewer";
-import { XlsxViewerComponent } from './components/xlsx-viewer/xlsx-viewer.component';
+import { TableViewerComponent } from './components/table-viewer/table-viewer.component';
 import { MatTableModule } from "@angular/material/table";
 
 @NgModule({
@@ -107,7 +107,7 @@ import { MatTableModule } from "@angular/material/table";
     TextViewerComponent,
     PdfViewerComponent,
     ZipViewerComponent,
-    XlsxViewerComponent
+    TableViewerComponent
   ],
   exports: [PickerDirective]
 })

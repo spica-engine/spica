@@ -2,11 +2,11 @@ import {ChangeDetectorRef, Component, Input, OnInit} from "@angular/core";
 import * as XLSX from "xlsx";
 
 @Component({
-  selector: "xlsx-viewer",
-  templateUrl: "./xlsx-viewer.component.html",
-  styleUrls: ["./xlsx-viewer.component.scss"]
+  selector: "table-viewer",
+  templateUrl: "./table-viewer.component.html",
+  styleUrls: ["./table-viewer.component.scss"]
 })
-export class XlsxViewerComponent implements OnInit {
+export class TableViewerComponent implements OnInit {
   @Input() content;
   readContent = []
 

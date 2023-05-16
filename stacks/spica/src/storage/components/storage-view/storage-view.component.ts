@@ -21,7 +21,7 @@ import {VideoViewerComponent} from "../video-viewer/video-viewer.component";
 import {TextViewerComponent} from "../text-viewer/text-viewer.component";
 import {PdfViewerComponent} from "../pdf-viewer/pdf-viewer.component";
 import {ZipViewerComponent} from "../zip-viewer/zip-viewer.component";
-import {XlsxViewerComponent} from "../xlsx-viewer/xlsx-viewer.component";
+import {TableViewerComponent} from "../table-viewer/table-viewer.component";
 
 @Component({
   selector: "storage-view",
@@ -58,7 +58,7 @@ export class StorageViewComponent implements OnChanges {
     this.contentTypeComponentMap.set("application/zip", ZipViewerComponent);
     this.contentTypeComponentMap.set(
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|text/csv",
-      XlsxViewerComponent
+      TableViewerComponent
     );
     this.contentTypeComponentMap.set(".*", DefaultViewerComponent);
   }

@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { XlsxViewerComponent } from './xlsx-viewer.component';
+import { TableViewerComponent } from './table-viewer.component';
 
-describe('XlsxViewerComponent', () => {
-  let component: XlsxViewerComponent;
-  let fixture: ComponentFixture<XlsxViewerComponent>;
+describe('TableViewerComponent', () => {
+  let component: TableViewerComponent;
+  let fixture: ComponentFixture<TableViewerComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ XlsxViewerComponent ]
+      declarations: [ TableViewerComponent ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(XlsxViewerComponent);
+    fixture = TestBed.createComponent(TableViewerComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
