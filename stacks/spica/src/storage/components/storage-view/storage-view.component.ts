@@ -22,7 +22,7 @@ import {TableViewerComponent} from "../table-viewer/table-viewer.component";
 
 @Component({
   selector: "storage-view",
-  template: "<ng-container #viewerContainer></ng-container>",
+  templateUrl: "storage-view.component.html",
   styleUrls: ["./storage-view.component.scss"]
 })
 export class StorageViewComponent implements OnChanges {
@@ -31,6 +31,7 @@ export class StorageViewComponent implements OnChanges {
   @Input() blob: string | Blob | Storage;
   @Input() autoplay = false;
   @Input() controls = true;
+  isPending = false;
 
   contentType: string;
   error: string;
@@ -62,6 +63,8 @@ export class StorageViewComponent implements OnChanges {
     if (!(changes.blob || changes.blob.currentValue)) {
       return;
     }
+
+    this.isPending = true;
 
     if (this.isBlob(this.blob)) {
       this.contentType = this.blob.type;
@@ -125,5 +128,7 @@ export class StorageViewComponent implements OnChanges {
     componentRef.instance.contentType = this.contentType;
     componentRef.instance.autoplay = this.autoplay;
     componentRef.instance.controls = this.controls;
+
+    this.isPending = false;
   }
 }

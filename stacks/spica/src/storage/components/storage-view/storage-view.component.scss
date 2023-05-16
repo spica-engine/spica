@@ -1,6 +1,23 @@
 :host {
   // display: block;
   cursor: pointer;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: block;
+
+  .spinner-container{
+    width: 100%;
+    height: 100%;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    position: absolute;
+    top: 0;
+  }
+
   // img {
   //   display: block;
   //   object-fit: cover;
