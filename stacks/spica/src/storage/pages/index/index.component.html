@@ -142,18 +142,21 @@
     ></mat-progress-spinner>
   </div>
   <div *ngIf="currentNode && !currentNode.isDirectory" class="object-details">
-    <div class="meta">
+    <div class="preview">
       <div class="close">
         <button mat-icon-button (click)="onDetailsClosed(currentNode)">
           <mat-icon>clear</mat-icon>
         </button>
       </div>
       <storage-view [blob]="currentNode.url"></storage-view>
-      <h4>{{ currentNode.name }}</h4>
-      <p>
-        {{ currentNode.content.type }} - {{ currentNode.content.size / 1000 | number: "1.0-0" }} KB
-      </p>
-      <p>{{ objectIdToDate(currentNode._id) | date: "medium" }}</p>
+      <div class="meta">
+        <h4>{{ currentNode.name }}</h4>
+        <p>
+          {{ currentNode.content.type }} -
+          {{ currentNode.content.size / 1000 | number: "1.0-0" }} KB
+        </p>
+        <p>{{ objectIdToDate(currentNode._id) | date: "medium" }}</p>
+      </div>
     </div>
     <div class="action-buttons">
       <button mat-stroked-button [matClipboard]="currentNode.url">
