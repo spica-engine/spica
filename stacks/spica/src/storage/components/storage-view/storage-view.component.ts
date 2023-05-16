@@ -57,7 +57,7 @@ export class StorageViewComponent implements OnChanges {
     this.contentTypeComponentMap.set("application/pdf", PdfViewerComponent);
     this.contentTypeComponentMap.set("application/zip", ZipViewerComponent);
     this.contentTypeComponentMap.set(
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|text/csv",
       XlsxViewerComponent
     );
     this.contentTypeComponentMap.set(".*", DefaultViewerComponent);
