@@ -1,4 +1,4 @@
-import {AfterViewInit, ChangeDetectorRef, Component, Input, OnInit} from "@angular/core";
+import {AfterViewInit, Component, Input, OnInit} from "@angular/core";
 import JSZip from "jszip";
 
 interface FileNode {
@@ -23,7 +23,7 @@ export class ZipViewerComponent implements OnInit {
   nodes: FileNode[];
   currentNode: FileNode;
 
-  constructor(private cd: ChangeDetectorRef) {}
+  constructor() {}
 
   ngOnInit(): void {
     const fileReader = new FileReader();
@@ -32,7 +32,6 @@ export class ZipViewerComponent implements OnInit {
       JSZip.loadAsync(arrayBuffer).then(zip => {
         this.nodes = this.createFileTree(zip.files);
         this.currentNode = this.nodes[0].parent;
-        this.cd.markForCheck();
       });
     };
     fileReader.readAsArrayBuffer(this.content);

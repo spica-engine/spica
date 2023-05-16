@@ -1,8 +1,5 @@
 import {HttpClient} from "@angular/common/http";
 import {
-  AfterViewInit,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
   ComponentFactoryResolver,
   Input,
@@ -26,8 +23,7 @@ import {TableViewerComponent} from "../table-viewer/table-viewer.component";
 @Component({
   selector: "storage-view",
   template: "<ng-container #viewerContainer></ng-container>",
-  styleUrls: ["./storage-view.component.scss"],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ["./storage-view.component.scss"]
 })
 export class StorageViewComponent implements OnChanges {
   contentTypeComponentMap = new Map<string, Type<any>>();
@@ -45,7 +41,6 @@ export class StorageViewComponent implements OnChanges {
 
   constructor(
     private componentFactoryResolver: ComponentFactoryResolver,
-    private cd: ChangeDetectorRef,
     private http: HttpClient
   ) {
     this.contentTypeComponentMap.set("image/.*", ImageViewerComponent);
@@ -130,7 +125,5 @@ export class StorageViewComponent implements OnChanges {
     componentRef.instance.contentType = this.contentType;
     componentRef.instance.autoplay = this.autoplay;
     componentRef.instance.controls = this.controls;
-
-    this.cd.markForCheck();
   }
 }

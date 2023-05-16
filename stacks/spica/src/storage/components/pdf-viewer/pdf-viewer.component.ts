@@ -1,6 +1,4 @@
 import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
   Input,
   OnInit
@@ -11,13 +9,12 @@ import {DomSanitizer} from "@angular/platform-browser";
   selector: "pdf-viewer",
   templateUrl: "./pdf-viewer.component.html",
   styleUrls: ["./pdf-viewer.component.scss"],
-  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PdfViewerComponent implements OnInit {
   @Input() content;
   @Input() controls: boolean;
 
-  constructor(private sanitizer: DomSanitizer, private cd: ChangeDetectorRef) {}
+  constructor(private sanitizer: DomSanitizer) {}
 
   ngOnInit(): void {
     const resourceUrl =

@@ -1,7 +1,6 @@
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
   Input,
   OnInit,
@@ -13,12 +12,11 @@ import {DomSanitizer} from "@angular/platform-browser";
   selector: "text-viewer",
   templateUrl: "./text-viewer.component.html",
   styleUrls: ["./text-viewer.component.scss"],
-  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TextViewerComponent implements OnInit {
   @Input() content;
 
-  constructor(private sanitizer: DomSanitizer, private cd: ChangeDetectorRef) {}
+  constructor(private sanitizer: DomSanitizer) {}
 
   ngOnInit(): void {
     const fileReader = new FileReader();
@@ -26,7 +24,6 @@ export class TextViewerComponent implements OnInit {
       let readFile = e.target.result.toString();
 
       this.content = this.sanitizer.bypassSecurityTrustHtml(readFile);
-      this.cd.markForCheck();
     };
     fileReader.readAsText(this.content);
   }

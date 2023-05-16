@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, Input, OnInit} from "@angular/core";
+import {Component, Input, OnInit} from "@angular/core";
 import * as XLSX from "xlsx";
 
 @Component({
@@ -10,7 +10,7 @@ export class TableViewerComponent implements OnInit {
   @Input() content;
   readContent = []
 
-  constructor(private cd: ChangeDetectorRef) {}
+  constructor() {}
 
   ngOnInit(): void {
     if (!this.content) {
@@ -37,8 +37,6 @@ export class TableViewerComponent implements OnInit {
       const worksheet = workbook.Sheets[sheetName];
 
       this.readContent = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-
-      this.cd.markForCheck();
     };
     reader.readAsArrayBuffer(this.content);
   }
@@ -51,8 +49,6 @@ export class TableViewerComponent implements OnInit {
         const cells = c.split(",");
         this.readContent.push(cells);
       });
-
-      this.cd.markForCheck();
     };
     reader.readAsText(this.content);
   }
