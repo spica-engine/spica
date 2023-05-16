@@ -63,12 +63,10 @@ export class StorageViewComponent implements OnChanges {
       thumbnailIcon: "movie"
     });
     this.contentTypeComponentMap.set("text/plain|text/javascript|application/json", {
-      component: TextViewerComponent,
-      thumbnailIcon: "description"
+      component: TextViewerComponent
     });
     this.contentTypeComponentMap.set("application/pdf", {
-      component: PdfViewerComponent,
-      thumbnailIcon: "picture_as_pdf"
+      component: PdfViewerComponent
     });
     this.contentTypeComponentMap.set("application/zip", {
       component: ZipViewerComponent,
