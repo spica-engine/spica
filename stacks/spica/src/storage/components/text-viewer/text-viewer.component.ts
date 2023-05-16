@@ -21,9 +21,7 @@ export class TextViewerComponent implements OnInit {
   ngOnInit(): void {
     const fileReader = new FileReader();
     fileReader.onload = e => {
-      let readFile = e.target.result.toString();
-
-      this.content = this.sanitizer.bypassSecurityTrustHtml(readFile);
+      this.content = e.target.result.toString();
     };
     fileReader.readAsText(this.content);
   }
