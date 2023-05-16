@@ -159,6 +159,11 @@ export class StorageService {
     return updatedUrl.toString();
   }
 
+  urlToId(url:string){
+    const parts = url.split("/");
+    return parts[parts.length - 2]
+  }
+
   private deepCopy(value: unknown) {
     return JSON.parse(JSON.stringify(value));
   }

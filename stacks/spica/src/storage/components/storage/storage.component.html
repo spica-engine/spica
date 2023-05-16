@@ -42,9 +42,12 @@
       matTooltip="View this object"
       (click)="openPreview(value || blob)"
       [controls]="false"
+      [contentType]="blob?.content?.type"
     >
     </storage-view>
-    <mat-icon color="accent" class="change">{{ isDraggingOver ? "save_alt" : "center_focus_strong" }}</mat-icon>
+    <mat-icon color="accent" class="change">{{
+      isDraggingOver ? "save_alt" : "center_focus_strong"
+    }}</mat-icon>
   </ng-container>
 
   <div

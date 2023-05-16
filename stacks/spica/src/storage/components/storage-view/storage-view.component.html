@@ -1,4 +1,9 @@
 <ng-container #viewerContainer></ng-container>
-<div class="spinner-container"  *ngIf="isPending">
+
+<div class="thumbnail-container" *ngIf="!controls">
+  <mat-icon>{{ thumbnailIcon }}</mat-icon>
+</div>
+
+<div class="spinner-container" *ngIf="isPending">
   <mat-spinner color="accent" diameter="50"></mat-spinner>
 </div>

@@ -1,5 +1,7 @@
 import {HttpClient} from "@angular/common/http";
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   ComponentFactoryResolver,
   Input,
@@ -10,7 +12,7 @@ import {
   ViewContainerRef
 } from "@angular/core";
 import {SafeUrl} from "@angular/platform-browser";
-import {tap} from "rxjs/operators";
+import {takeUntil, tap} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
 import {ImageViewerComponent} from "../image-viewer/image-viewer.component";
 import {DefaultViewerComponent} from "../default-viewer/default-viewer.component";
@@ -19,6 +21,7 @@ import {TextViewerComponent} from "../text-viewer/text-viewer.component";
 import {PdfViewerComponent} from "../pdf-viewer/pdf-viewer.component";
 import {ZipViewerComponent} from "../zip-viewer/zip-viewer.component";
 import {TableViewerComponent} from "../table-viewer/table-viewer.component";
+import {Subject} from "rxjs";
 
 @Component({
   selector: "storage-view",
@@ -26,16 +29,26 @@ import {TableViewerComponent} from "../table-viewer/table-viewer.component";
   styleUrls: ["./storage-view.component.scss"]
 })
 export class StorageViewComponent implements OnChanges {
-  contentTypeComponentMap = new Map<string, Type<any>>();
+  contentTypeComponentMap = new Map<
+    string,
+    {
+      component: Type<any>;
+      thumbnailIcon?: string;
+    }
+  >();
 
   @Input() blob: string | Blob | Storage;
   @Input() autoplay = false;
   @Input() controls = true;
   isPending = false;
 
-  contentType: string;
+  @Input() contentType: string;
   error: string;
   content: SafeUrl | string;
+
+  thumbnailIcon;
+
+  private destroy$ = new Subject<void>();
 
   @ViewChild("viewerContainer", {read: ViewContainerRef, static: true})
   private viewerContainer: ViewContainerRef;
@@ -44,24 +57,47 @@ export class StorageViewComponent implements OnChanges {
     private componentFactoryResolver: ComponentFactoryResolver,
     private http: HttpClient
   ) {
-    this.contentTypeComponentMap.set("image/.*", ImageViewerComponent);
-    this.contentTypeComponentMap.set("video/.*", VideoViewerComponent);
-    this.contentTypeComponentMap.set(
-      "text/plain|text/javascript|application/json",
-      TextViewerComponent
-    );
-    this.contentTypeComponentMap.set("application/pdf", PdfViewerComponent);
-    this.contentTypeComponentMap.set("application/zip", ZipViewerComponent);
+    this.contentTypeComponentMap.set("image/.*", {component: ImageViewerComponent});
+    this.contentTypeComponentMap.set("video/.*", {
+      component: VideoViewerComponent,
+      thumbnailIcon: "movie"
+    });
+    this.contentTypeComponentMap.set("text/plain|text/javascript|application/json", {
+      component: TextViewerComponent,
+      thumbnailIcon: "description"
+    });
+    this.contentTypeComponentMap.set("application/pdf", {
+      component: PdfViewerComponent,
+      thumbnailIcon: "picture_as_pdf"
+    });
+    this.contentTypeComponentMap.set("application/zip", {
+      component: ZipViewerComponent,
+      thumbnailIcon: "folder_zip"
+    });
     this.contentTypeComponentMap.set(
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|text/csv",
-      TableViewerComponent
+      {component: TableViewerComponent, thumbnailIcon: "table"}
     );
-    this.contentTypeComponentMap.set(".*", DefaultViewerComponent);
+    this.contentTypeComponentMap.set(".*", {component: DefaultViewerComponent});
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (!(changes.blob || changes.blob.currentValue)) {
       return;
+    }
+
+    this.isPending = false;
+    this.destroy$.next();
+
+    if (!this.controls) {
+      const contentTypeKey = this.findComponent();
+      const componentType = this.contentTypeComponentMap.get(contentTypeKey);
+
+      if (componentType.thumbnailIcon) {
+        this.thumbnailIcon = componentType.thumbnailIcon;
+        this.viewerContainer.clear();
+        return;
+      }
     }
 
     this.isPending = true;
@@ -86,7 +122,10 @@ export class StorageViewComponent implements OnChanges {
 
     this.http
       .get(url, {responseType: "blob"})
-      .pipe(tap(r => (this.contentType = r.type)))
+      .pipe(
+        takeUntil(this.destroy$),
+        tap(r => (this.contentType = r.type))
+      )
       .subscribe({
         next: r => {
           this.content = r;
@@ -114,11 +153,11 @@ export class StorageViewComponent implements OnChanges {
   renderViewer() {
     this.viewerContainer.clear();
 
-    const contentTypeKey = Array.from(this.contentTypeComponentMap.keys()).find(ctype =>
-      RegExp(ctype).test(this.contentType)
-    );
+    const contentTypeKey = this.findComponent();
     const componentType = this.contentTypeComponentMap.get(contentTypeKey);
-    const componentFactory = this.componentFactoryResolver.resolveComponentFactory(componentType);
+    const componentFactory = this.componentFactoryResolver.resolveComponentFactory(
+      componentType.component
+    );
 
     const componentRef = this.viewerContainer.createComponent(componentFactory);
 
@@ -130,5 +169,15 @@ export class StorageViewComponent implements OnChanges {
     componentRef.instance.controls = this.controls;
 
     this.isPending = false;
+  }
+
+  findComponent() {
+    return Array.from(this.contentTypeComponentMap.keys()).find(ctype =>
+      RegExp(ctype).test(this.contentType)
+    );
+  }
+
+  ngOnDestroy(){
+    this.destroy$.next()
   }
 }
