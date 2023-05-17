@@ -46,14 +46,12 @@ import {VideoViewerComponent} from "./components/video-viewer/video-viewer.compo
 import {TextViewerComponent} from "./components/text-viewer/text-viewer.component";
 import {PdfViewerComponent} from "./components/pdf-viewer/pdf-viewer.component";
 import {ZipViewerComponent} from "./components/zip-viewer/zip-viewer.component";
-import {PdfViewerModule} from "ng2-pdf-viewer";
 import {TableViewerComponent} from "./components/table-viewer/table-viewer.component";
 import {MatTableModule} from "@angular/material/table";
 
 @NgModule({
   imports: [
     MatTableModule,
-    PdfViewerModule,
     CommonModule,
     FormsModule,
     MatAwareDialogModule,
