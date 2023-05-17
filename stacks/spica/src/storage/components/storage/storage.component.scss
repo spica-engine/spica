@@ -28,9 +28,22 @@
       border-top-right-radius: 4px;
       background: rgba(var(--background-app-bar-rgb), var(--opacity));
       padding: 10px 10px;
-      span:last-of-type {
+
+      span {
+        flex: 1;
+      }
+
+      span.storage-meta {
+        > h5 {
+          margin: 0;
+        }
+        text-align: center;
+      }
+
+      span.actions {
         display: flex;
         align-items: center;
+        justify-content: end;
         ::ng-deep > *:not(:last-child) {
           margin-right: 5px;
         }
