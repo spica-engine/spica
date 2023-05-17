@@ -88,12 +88,11 @@ export class StorageViewComponent implements OnChanges {
     this.destroy$.next();
 
     if (!this.controls) {
-      const contentTypeKey = this.findComponent();
-      const componentType = this.contentTypeComponentMap.get(contentTypeKey);
+      const componentType = this.findComponent();
 
       if (componentType.thumbnailIcon) {
+        this.clear();
         this.thumbnailIcon = componentType.thumbnailIcon;
-        this.viewerContainer.clear();
         return;
       }
     }
@@ -131,7 +130,6 @@ export class StorageViewComponent implements OnChanges {
         },
         error: event => {
           this.error = event.error.type;
-          this.renderViewer();
         }
       });
   }
@@ -148,20 +146,22 @@ export class StorageViewComponent implements OnChanges {
     return typeof object == "string";
   }
 
-  renderViewer() {
+  clear() {
+    this.error = undefined;
     this.viewerContainer.clear();
+  }
 
-    const contentTypeKey = this.findComponent();
-    const componentType = this.contentTypeComponentMap.get(contentTypeKey);
+  renderViewer() {
+    this.clear();
+
+    const componentType = this.findComponent();
     const componentFactory = this.componentFactoryResolver.resolveComponentFactory(
       componentType.component
     );
 
     const componentRef = this.viewerContainer.createComponent(componentFactory);
 
-    // try to pass these values dynamically
     componentRef.instance.content = this.content;
-    componentRef.instance.error = this.error;
     componentRef.instance.contentType = this.contentType;
     componentRef.instance.autoplay = this.autoplay;
     componentRef.instance.controls = this.controls;
@@ -170,12 +170,14 @@ export class StorageViewComponent implements OnChanges {
   }
 
   findComponent() {
-    return Array.from(this.contentTypeComponentMap.keys()).find(ctype =>
+    const componentTypeKey = Array.from(this.contentTypeComponentMap.keys()).find(ctype =>
       RegExp(ctype).test(this.contentType)
     );
+
+    return this.contentTypeComponentMap.get(componentTypeKey);
   }
 
-  ngOnDestroy(){
-    this.destroy$.next()
+  ngOnDestroy() {
+    this.destroy$.next();
   }
 }

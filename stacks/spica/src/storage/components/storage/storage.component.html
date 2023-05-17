@@ -34,11 +34,11 @@
   </span>
 </section>
 <section>
-  <ng-container *ngIf="blob || value">
+  <ng-container *ngIf="blob">
     <mat-progress-bar *ngIf="view.ready == false" mode="indeterminate"></mat-progress-bar>
     <storage-view
       #view
-      [blob]="blob || value"
+      [blob]="blob"
       matTooltip="View this object"
       (click)="openPreview(value || blob)"
       [controls]="false"

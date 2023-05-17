@@ -7,7 +7,6 @@ import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
   styleUrls: ["./default-viewer.component.scss"]
 })
 export class DefaultViewerComponent implements AfterViewInit {
-  @Input() error: string;
   content;
 
   constructor(

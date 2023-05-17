@@ -1,12 +1,8 @@
 import {
-  AfterViewInit,
-  ChangeDetectionStrategy,
   Component,
   Input,
   OnInit,
-  Sanitizer
 } from "@angular/core";
-import {DomSanitizer} from "@angular/platform-browser";
 
 @Component({
   selector: "text-viewer",
@@ -16,7 +12,7 @@ import {DomSanitizer} from "@angular/platform-browser";
 export class TextViewerComponent implements OnInit {
   @Input() content;
 
-  constructor(private sanitizer: DomSanitizer) {}
+  constructor() {}
 
   ngOnInit(): void {
     const fileReader = new FileReader();

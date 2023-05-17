@@ -22,11 +22,6 @@
     <ng-container *ngTemplateOutlet="listItems; context: {nodes: nodes, controls: controls}">
     </ng-container>
   </mat-nav-list>
-
-  <!-- <mat-list *ngIf="!controls">
-    <ng-container *ngTemplateOutlet="listItems; context: {nodes: nodes, controls: controls}">
-    </ng-container>
-  </mat-list> -->
 </ng-template>
 
 <ng-template #listItems let-nodes="nodes" let-controls="controls">
