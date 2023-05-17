@@ -47,8 +47,8 @@ import {TextViewerComponent} from "./components/text-viewer/text-viewer.componen
 import {PdfViewerComponent} from "./components/pdf-viewer/pdf-viewer.component";
 import {ZipViewerComponent} from "./components/zip-viewer/zip-viewer.component";
 import {PdfViewerModule} from "ng2-pdf-viewer";
-import { TableViewerComponent } from './components/table-viewer/table-viewer.component';
-import { MatTableModule } from "@angular/material/table";
+import {TableViewerComponent} from "./components/table-viewer/table-viewer.component";
+import {MatTableModule} from "@angular/material/table";
 
 @NgModule({
   imports: [

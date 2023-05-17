@@ -1,16 +1,15 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from "@angular/core/testing";
 
-import { PdfViewerComponent } from './pdf-viewer.component';
+import {PdfViewerComponent} from "./pdf-viewer.component";
 
-describe('PdfViewerComponent', () => {
+describe("PdfViewerComponent", () => {
   let component: PdfViewerComponent;
   let fixture: ComponentFixture<PdfViewerComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ PdfViewerComponent ]
-    })
-    .compileComponents();
+      declarations: [PdfViewerComponent]
+    }).compileComponents();
   });
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('PdfViewerComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

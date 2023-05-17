@@ -101,9 +101,12 @@ export class StorageComponent implements ControlValueAccessor {
   writeValue(value: string): void {
     if (value) {
       const id = this.storage.urlToId(value);
-      this.storage.getOne(id).toPromise().then(s => {
-        this.blob = s;
-      })
+      this.storage
+        .getOne(id)
+        .toPromise()
+        .then(s => {
+          this.blob = s;
+        });
     }
     this.value = value;
   }

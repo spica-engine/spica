@@ -1,16 +1,15 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from "@angular/core/testing";
 
-import { TableViewerComponent } from './table-viewer.component';
+import {TableViewerComponent} from "./table-viewer.component";
 
-describe('TableViewerComponent', () => {
+describe("TableViewerComponent", () => {
   let component: TableViewerComponent;
   let fixture: ComponentFixture<TableViewerComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ TableViewerComponent ]
-    })
-    .compileComponents();
+      declarations: [TableViewerComponent]
+    }).compileComponents();
   });
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('TableViewerComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

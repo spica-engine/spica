@@ -9,9 +9,7 @@ import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
 export class DefaultViewerComponent implements AfterViewInit {
   content;
 
-  constructor(
-    private sanitizer:DomSanitizer
-  ) {}
+  constructor(private sanitizer: DomSanitizer) {}
 
   ngAfterViewInit(): void {
     this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(this.content));

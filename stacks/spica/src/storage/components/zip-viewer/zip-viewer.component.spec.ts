@@ -1,16 +1,15 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from "@angular/core/testing";
 
-import { ZipViewerComponent } from './zip-viewer.component';
+import {ZipViewerComponent} from "./zip-viewer.component";
 
-describe('ZipViewerComponent', () => {
+describe("ZipViewerComponent", () => {
   let component: ZipViewerComponent;
   let fixture: ComponentFixture<ZipViewerComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ZipViewerComponent ]
-    })
-    .compileComponents();
+      declarations: [ZipViewerComponent]
+    }).compileComponents();
   });
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('ZipViewerComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

@@ -159,9 +159,9 @@ export class StorageService {
     return updatedUrl.toString();
   }
 
-  urlToId(url:string){
+  urlToId(url: string) {
     const parts = url.split("/");
-    return parts[parts.length - 2]
+    return parts[parts.length - 2];
   }
 
   private deepCopy(value: unknown) {

@@ -8,7 +8,7 @@ import * as XLSX from "xlsx";
 })
 export class TableViewerComponent implements OnInit {
   @Input() content;
-  readContent = []
+  readContent = [];
 
   constructor() {}
 
@@ -45,7 +45,7 @@ export class TableViewerComponent implements OnInit {
     const reader = new FileReader();
     reader.onload = e => {
       const columns = (e.target.result as string).split("\n");
-      columns.forEach((c) => {
+      columns.forEach(c => {
         const cells = c.split(",");
         this.readContent.push(cells);
       });

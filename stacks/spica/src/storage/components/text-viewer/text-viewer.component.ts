@@ -1,13 +1,9 @@
-import {
-  Component,
-  Input,
-  OnInit,
-} from "@angular/core";
+import {Component, Input, OnInit} from "@angular/core";
 
 @Component({
   selector: "text-viewer",
   templateUrl: "./text-viewer.component.html",
-  styleUrls: ["./text-viewer.component.scss"],
+  styleUrls: ["./text-viewer.component.scss"]
 })
 export class TextViewerComponent implements OnInit {
   @Input() content;

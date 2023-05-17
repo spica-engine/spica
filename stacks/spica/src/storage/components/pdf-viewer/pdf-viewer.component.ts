@@ -1,14 +1,10 @@
-import {
-  Component,
-  Input,
-  OnInit
-} from "@angular/core";
+import {Component, Input, OnInit} from "@angular/core";
 import {DomSanitizer} from "@angular/platform-browser";
 
 @Component({
   selector: "pdf-viewer",
   templateUrl: "./pdf-viewer.component.html",
-  styleUrls: ["./pdf-viewer.component.scss"],
+  styleUrls: ["./pdf-viewer.component.scss"]
 })
 export class PdfViewerComponent implements OnInit {
   @Input() content;

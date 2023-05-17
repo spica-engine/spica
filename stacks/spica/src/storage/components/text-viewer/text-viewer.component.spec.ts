@@ -1,16 +1,15 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from "@angular/core/testing";
 
-import { TextViewerComponent } from './text-viewer.component';
+import {TextViewerComponent} from "./text-viewer.component";
 
-describe('TextViewerComponent', () => {
+describe("TextViewerComponent", () => {
   let component: TextViewerComponent;
   let fixture: ComponentFixture<TextViewerComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ TextViewerComponent ]
-    })
-    .compileComponents();
+      declarations: [TextViewerComponent]
+    }).compileComponents();
   });
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('TextViewerComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });
