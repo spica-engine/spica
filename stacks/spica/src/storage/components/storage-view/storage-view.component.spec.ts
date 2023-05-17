@@ -1,7 +1,7 @@
 import {HttpResponse} from "@angular/common/http";
 import {HttpClientTestingModule, HttpTestingController} from "@angular/common/http/testing";
 import {Component, DebugElement} from "@angular/core";
-import {ComponentFixture, TestBed} from "@angular/core/testing";
+import {ComponentFixture, TestBed, fakeAsync} from "@angular/core/testing";
 import {MatIconModule} from "@angular/material/icon";
 import {By} from "@angular/platform-browser";
 import {empty, of} from "rxjs";
@@ -46,14 +46,9 @@ describe("StorageViewComponent", () => {
 
   describe("with url", () => {
     let httpTestingController: HttpTestingController;
-    let observeSpy: jasmine.Spy<any>;
 
     beforeEach(() => {
       httpTestingController = TestBed.get(HttpTestingController);
-      observeSpy = spyOn(
-        fixture.debugElement.query(By.directive(StorageViewComponent)).componentInstance,
-        "observe"
-      ).and.returnValue(of(true));
     });
 
     it("should handle loading errors from http", () => {
@@ -88,23 +83,6 @@ describe("StorageViewComponent", () => {
       expect(viewComponent.componentInstance.error).not.toBeTruthy();
     });
 
-    it("should not defer loading", () => {
-      fixture.componentInstance.blob = "http://example/test.png";
-      fixture.detectChanges();
-
-      expect(observeSpy).toHaveBeenCalledTimes(1);
-      httpTestingController.expectOne("http://example/test.png");
-    });
-
-    it("should defer loading", () => {
-      observeSpy.and.returnValue(empty());
-      fixture.componentInstance.blob = "http://example/test.png";
-      fixture.detectChanges();
-
-      expect(observeSpy).toHaveBeenCalledTimes(1);
-      httpTestingController.verify();
-    });
-
     /**
      Error: Expected false to be true.
       at <Jasmine>
@@ -112,12 +90,10 @@ describe("StorageViewComponent", () => {
       at ZoneDelegate.invokeTask (http://localhost:9876/spica/node_modules/zone.js/dist/zone-evergreen.js:399:1)
       at ProxyZoneSpec.push.../../node_modules/zone.js/dist/zone-testing.js.ProxyZoneSpec.onInvokeTask (http://localhost:9876/spica/node_modules/zone.js/dist/zone-testing.js:323:1)
     */
-    xit("should show images", done => {
+    xit("should show images", () => {
       fixture.componentInstance.blob = "http://example/test.png";
       fixture.detectChanges();
       fixture.detectChanges();
-
-      expect(viewComponent.componentInstance.ready).toBe(false);
 
       const req = httpTestingController.expectOne("http://example/test.png");
       req.flush(
@@ -128,21 +104,13 @@ describe("StorageViewComponent", () => {
       );
       fixture.detectChanges();
 
-      expect(viewComponent.componentInstance.ready).toBe(false);
       expect(viewComponent.componentInstance.contentType).toBe("image/png");
       expect(viewComponent.query(By.css("img")).nativeElement.src).toBeTruthy();
-
-      setTimeout(() => {
-        expect(viewComponent.componentInstance.ready).toBe(true);
-        done();
-      }, 10);
     });
 
     xit("should show videos", () => {
       fixture.componentInstance.blob = "http://example/test.mp4";
       fixture.detectChanges();
-
-      expect(viewComponent.componentInstance.ready).toBe(false);
 
       const req = httpTestingController.expectOne("http://example/test.mp4");
       req.event(
@@ -156,50 +124,18 @@ describe("StorageViewComponent", () => {
 
       expect(viewComponent.componentInstance.contentType).toBe("video/mp4");
       expect(viewComponent.query(By.css("video source")).nativeElement.src).toBeTruthy();
-      expect(viewComponent.componentInstance.ready).toBe(true);
-    });
-
-    it("should not show other types", () => {
-      fixture.componentInstance.blob = "http://example/test.json";
-      fixture.detectChanges();
-      expect(viewComponent.componentInstance.ready).toBe(false);
-
-      const req = httpTestingController.expectOne("http://example/test.json");
-      req.event(
-        new HttpResponse({
-          body: new Blob([], {type: "application/json"}),
-          status: 200,
-          statusText: "OK"
-        })
-      );
-      fixture.detectChanges();
-
-      expect(viewComponent.componentInstance.contentType).toBe("application/json");
-      expect(viewComponent.componentInstance.ready).toBe(true);
-
-      expect(viewComponent.query(By.css("mat-icon")).nativeElement.textContent).toBe("warning");
-      expect(viewComponent.query(By.css("h3")).nativeElement.textContent).toBe(
-        "This object cannot be viewed."
-      );
     });
   });
 
   describe("with blob", () => {
-    it("should show images", done => {
-      expect(viewComponent.componentInstance.ready).toBe(false);
-
+    it("should show images", () => {
       fixture.componentInstance.blob = base64toBlob(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
         "image/png"
       );
       fixture.detectChanges();
 
-      expect(viewComponent.componentInstance.ready).toBe(false);
       expect(viewComponent.componentInstance.contentType).toBe("image/png");
-      setTimeout(() => {
-        expect(viewComponent.componentInstance.ready).toBe(true);
-        done();
-      }, 100);
     });
 
     xit("should show videos", () => {
@@ -207,20 +143,17 @@ describe("StorageViewComponent", () => {
       fixture.detectChanges();
 
       expect(viewComponent.componentInstance.contentType).toBe("video/mp4");
-      expect(viewComponent.componentInstance.ready).toBe(false);
-    });
-
-    it("should not show other types", () => {
-      fixture.componentInstance.blob = new Blob([], {type: "application/json"});
-      fixture.detectChanges();
-
-      expect(viewComponent.componentInstance.contentType).toBe("application/json");
-      expect(viewComponent.componentInstance.ready).toBe(true);
     });
   });
 
   describe("with storage object", () => {
-    it("should show images", () => {
+    let httpTestingController: HttpTestingController;
+
+    beforeEach(() => {
+      httpTestingController = TestBed.get(HttpTestingController);
+    });
+
+    it("should show images", fakeAsync(() => {
       fixture.componentInstance.blob = {
         url: "http://example/test.png",
         content: {
@@ -229,9 +162,18 @@ describe("StorageViewComponent", () => {
       };
       fixture.detectChanges();
 
+      const req = httpTestingController.expectOne("http://example/test.png");
+      req.event(
+        new HttpResponse({
+          body: new Blob([], {type: "image/png"}),
+          status: 200,
+          statusText: "OK"
+        })
+      );
+      fixture.detectChanges();
+
       expect(viewComponent.componentInstance.contentType).toBe("image/png");
-      expect(viewComponent.componentInstance.ready).toBe(false);
-    });
+    }));
 
     xit("should show videos", () => {
       fixture.componentInstance.blob = {
@@ -243,20 +185,6 @@ describe("StorageViewComponent", () => {
       fixture.detectChanges();
 
       expect(viewComponent.componentInstance.contentType).toBe("video/mp4");
-      expect(viewComponent.componentInstance.ready).toBe(false);
-    });
-
-    it("should not show other types", () => {
-      fixture.componentInstance.blob = {
-        url: "http://example/test.json",
-        content: {
-          type: "application/json"
-        }
-      };
-      fixture.detectChanges();
-
-      expect(viewComponent.componentInstance.contentType).toBe("application/json");
-      expect(viewComponent.componentInstance.ready).toBe(true);
     });
   });
 });

@@ -1,9 +1,9 @@
 <ng-container #viewerContainer></ng-container>
-<ng-container *ngIf="error">
+<div class="error" *ngIf="error">
   <mat-icon>error</mat-icon>
   <h3 class="mat-h3">Could not load the object.</h3>
   <small class="mat-small">{{ error }}</small>
-</ng-container>
+</div>
 
 <div class="thumbnail-container" *ngIf="!controls">
   <mat-icon>{{ thumbnailIcon }}</mat-icon>

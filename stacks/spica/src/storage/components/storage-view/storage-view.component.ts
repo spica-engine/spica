@@ -40,12 +40,11 @@ export class StorageViewComponent implements OnChanges {
   @Input() blob: string | Blob | Storage;
   @Input() autoplay = false;
   @Input() controls = true;
-  isPending = false;
-
   @Input() contentType: string;
+
+  isPending = false;
   error: string;
   content: SafeUrl | string;
-
   thumbnailIcon;
 
   private destroy$ = new Subject<void>();
@@ -74,30 +73,42 @@ export class StorageViewComponent implements OnChanges {
     });
     this.contentTypeComponentMap.set(
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|text/csv",
-      {component: TableViewerComponent, thumbnailIcon: "table"}
+      {component: TableViewerComponent, thumbnailIcon: "grid_on"}
     );
-    this.contentTypeComponentMap.set(".*", {component: DefaultViewerComponent});
+    this.contentTypeComponentMap.set(".*", {
+      component: DefaultViewerComponent,
+      thumbnailIcon: "description"
+    });
+  }
+
+  onChangeReceived() {
+    this.isPending = true;
+    this.content = undefined;
+    this.thumbnailIcon = undefined;
+    this.error = undefined;
+
+    this.destroy$.next();
+    this.viewerContainer.clear();
+  }
+
+  onChangeRendered() {
+    this.isPending = false;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (!(changes.blob || changes.blob.currentValue)) {
       return;
     }
-
-    this.isPending = false;
-    this.destroy$.next();
+    this.onChangeReceived();
 
     if (!this.controls) {
       const componentType = this.findComponent();
-
       if (componentType.thumbnailIcon) {
-        this.clear();
         this.thumbnailIcon = componentType.thumbnailIcon;
+        this.onChangeRendered();
         return;
       }
     }
-
-    this.isPending = true;
 
     if (this.isBlob(this.blob)) {
       this.contentType = this.blob.type;
@@ -130,6 +141,7 @@ export class StorageViewComponent implements OnChanges {
         },
         error: event => {
           this.error = event.error.type;
+          this.onChangeRendered();
         }
       });
   }
@@ -146,14 +158,7 @@ export class StorageViewComponent implements OnChanges {
     return typeof object == "string";
   }
 
-  clear() {
-    this.error = undefined;
-    this.viewerContainer.clear();
-  }
-
   renderViewer() {
-    this.clear();
-
     const componentType = this.findComponent();
     const componentFactory = this.componentFactoryResolver.resolveComponentFactory(
       componentType.component
@@ -166,7 +171,7 @@ export class StorageViewComponent implements OnChanges {
     componentRef.instance.autoplay = this.autoplay;
     componentRef.instance.controls = this.controls;
 
-    this.isPending = false;
+    this.onChangeRendered();
   }
 
   findComponent() {
