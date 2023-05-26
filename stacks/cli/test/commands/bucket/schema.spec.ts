@@ -160,21 +160,21 @@ export namespace new_bucket {
       return Bucket.data.getAll<New_Bucket & id>(BUCKET_ID, ...args);
     };
     export function insert (document: Omit<New_Bucket, "_id">) {
-      ['relationmany'].forEach((field) => {
+      (['relationmany'] as (keyof typeof document)[]).forEach((field) => {
         if (typeof document[field] == 'object') {
-          document[field] = Array.isArray(document[field])
-            ? document[field].map((v) => v._id || v)
-            : document[field]._id;
+          (document[field] as any) = Array.isArray(document[field])
+            ? (document[field] as any).map((v:any) => v._id || v)
+            : (document[field] as any)._id;
         }
       });
       return Bucket.data.insert(BUCKET_ID, document);
     };
     export function update (document: New_Bucket & id) {
-      ['relationmany'].forEach((field) => {
+      (['relationmany'] as (keyof typeof document)[]).forEach((field) => {
         if (typeof document[field] == 'object') {
-          document[field] = Array.isArray(document[field])
-            ? document[field].map((v) => v._id || v)
-            : document[field]._id;
+          (document[field] as any) = Array.isArray(document[field])
+            ? (document[field] as any).map((v:any) => v._id || v)
+            : (document[field] as any)._id;
         }
       });
       return Bucket.data.update(
@@ -186,11 +186,11 @@ export namespace new_bucket {
     export function patch (
       document: Partial<New_Bucket> & id
     ) {
-      ['relationmany'].forEach((field) => {
+      (['relationmany'] as (keyof typeof document)[]).forEach((field) => {
         if (typeof document[field] == 'object') {
-          document[field] = Array.isArray(document[field])
-            ? document[field].map((v) => v._id || v)
-            : document[field]._id;
+          (document[field] as any) = Array.isArray(document[field])
+            ? (document[field] as any).map((v:any) => v._id || v)
+            : (document[field] as any)._id;
         }
       });
       return Bucket.data.patch(BUCKET_ID, document._id, document);
