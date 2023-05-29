@@ -78,12 +78,96 @@ export namespace Schema {
 
     for (const bucket of buckets) {
       buildInterface(bucket, lines);
-      buildMethod(bucket, lines);
     }
 
     lines = replaceRelations(buckets, lines);
 
+    lines = addCrud(lines, buckets);
+
     return lines.join("");
+  }
+
+  function addCrud(lines: string[], buckets: BucketSchema[]) {
+    const crud = `
+class CRUD<Scheme> {
+  constructor(
+    private bucketId: string,
+    private bdService: typeof Bucket.data,
+    private relationalFields: string[]
+  ) {}
+
+  private normalizeRelations(document: any) {
+    this.relationalFields.forEach((field) => {
+      if (typeof document[field] == 'object') {
+        document[field] = Array.isArray(document[field])
+          ? document[field].map((v: any) => v._id || v)
+          : document[field]._id;
+      }
+    });
+    return document;
+  }
+
+  get(...args: getArgs) {
+    return this.bdService.get<Scheme & id>(this.bucketId, ...args);
+  }
+
+  getAll(...args: getAllArgs) {
+    return this.bdService.getAll<Scheme & id>(this.bucketId, ...args);
+  }
+
+  insert(document: Omit<Scheme, '_id'>) {
+    document = this.normalizeRelations(document);
+    return this.bdService.insert(this.bucketId, document);
+  }
+  update(document: Scheme & id) {
+    document = this.normalizeRelations(document);
+    return this.bdService.update(this.bucketId, document._id, document);
+  }
+  patch(document: Partial<Scheme> & id) {
+    document = this.normalizeRelations(document);
+    return this.bdService.patch(this.bucketId, document._id, document);
+  }
+
+  remove(documentId: string) {
+    return this.bdService.remove(this.bucketId, documentId);
+  }
+
+  realtime = {
+    get: (...args: realtimeGetArgs) => {
+      return this.bdService.realtime.get<Scheme & id>(
+        this.bucketId,
+        ...args
+      );
+    },
+    getAll: (...args: realtimeGetAllArgs) => {
+      return this.bdService.realtime.getAll<Scheme & id>(
+        this.bucketId,
+        ...args
+      );
+    },
+  };
+}`;
+
+    lines.push("\n");
+    lines.push(crud);
+
+    for (let bucket of buckets) {
+      const property = prepareNamespace(bucket.title);
+      const interfaceName = prepareInterfaceTitle(bucket.title);
+
+      const bucketId = bucket._id;
+      const bdService = "Bucket.data";
+      const relationalFields = getRelationFields(bucket.properties);
+
+      const definition = `
+export const ${property} = new CRUD<${interfaceName}>('${bucketId}',${bdService},[${relationalFields
+        .map(i => `'${i}'`)
+        .join(",")}]);`;
+
+      lines.push(definition);
+    }
+
+    return lines;
   }
 
   function buildInterface(schema: BucketSchema, lines: string[]) {
@@ -97,81 +181,6 @@ export namespace Schema {
   function prepareInterfaceTitle(str: string) {
     str = replaceNonWords(str);
     return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-
-  function buildMethod(schema: BucketSchema, lines: string[]) {
-    const namespace = prepareNamespace(schema.title);
-    const interfaceName = prepareInterfaceTitle(schema.title);
-
-    lines.push(`\nexport namespace ${namespace} {`);
-    lines.push(`\n  const BUCKET_ID = '${schema._id}';`);
-
-    // GET
-    lines.push(`
-      export function get (...args: getArgs) {
-        return Bucket.data.get<${interfaceName} & id>(BUCKET_ID, ...args);
-      };`);
-
-    // GETALL
-    lines.push(`
-      export function getAll (...args: getAllArgs) {
-        return Bucket.data.getAll<${interfaceName} & id>(BUCKET_ID, ...args);
-      };`);
-
-    const relationFields = getRelationFields(schema.properties);
-    const normalizeRelationCode = relationFields.length
-      ? getNormalizeRelationCode(relationFields)
-      : "";
-    // INSERT
-    lines.push(`
-      export function insert (document: Omit<${interfaceName}, "_id">) {
-        ${normalizeRelationCode}
-        return Bucket.data.insert(BUCKET_ID, document);
-      };`);
-
-    // UPDATE
-    lines.push(`
-      export function update (document: ${interfaceName} & id) {
-        ${normalizeRelationCode}
-        return Bucket.data.update(
-          BUCKET_ID,
-          document._id,
-          document
-        );
-      };`);
-
-    // PATCH
-    lines.push(`  
-      export function patch (
-        document: Partial<${interfaceName}> & id
-      ) {
-        ${normalizeRelationCode}
-        return Bucket.data.patch(BUCKET_ID, document._id, document);
-      };`);
-
-    // DELETE
-    lines.push(`  
-      export function remove (documentId: string) {
-        return Bucket.data.remove(BUCKET_ID, documentId);
-      };`);
-
-    // REALTIME
-    lines.push("\n  export namespace realtime {");
-
-    // GET
-    lines.push(`
-        export function get (...args: realtimeGetArgs) {
-          return Bucket.data.realtime.get<${interfaceName} & id>(BUCKET_ID, ...args);
-        };`);
-
-    // GETALL
-    lines.push(`
-        export function getAll (...args: realtimeGetAllArgs) {
-          return Bucket.data.realtime.getAll<${interfaceName} & id>(BUCKET_ID, ...args);
-        };`);
-    lines.push("\n  }");
-
-    lines.push("\n}");
   }
 
   function replaceRelations(buckets: BucketSchema[], lines: string[]) {
@@ -293,15 +302,6 @@ function getRelationFields(properties: Properties) {
   return fields;
 }
 
-function getNormalizeRelationCode(fields: string[]) {
-  return `([${fields.map(f => `'${f}'`)}] as (keyof typeof document)[]).forEach((field) => {
-        if (typeof document[field] == 'object') {
-          (document[field] as any) = Array.isArray(document[field])
-            ? (document[field] as any).map((v:any) => v._id || v)
-            : (document[field] as any)._id;
-        }
-      });`;
-}
 function makeTitlesUnique(buckets: BucketSchema[], warnings: string[]): BucketSchema[] {
   const titles = [];
   for (const bucket of buckets) {
