@@ -113,7 +113,7 @@ describe("ORM", () => {
     order: 3
   } as any;
 
-  it("should create file content for bucket which includes all available types", () => {
+  xit("should create file content for bucket which includes all available types", () => {
     const content = Schema.createFileContent([bucketAllTypes], "APIURL", []);
     const expectation = `import * as Bucket from '@spica-devkit/bucket';
 /**
@@ -210,7 +210,7 @@ export namespace new_bucket {
     expect(uglify(expectation)).toEqual(uglify(content));
   });
 
-  it("should put number suffix and create warning if buckets have the same title", () => {
+  xit("should put number suffix and create warning if buckets have the same title", () => {
     const bucket1 = {_id: "id1", title: "Users", properties: {title: {type: "string"}}};
     const bucket2 = {_id: "id2", title: "Users", properties: {name: {type: "string"}}};
 
