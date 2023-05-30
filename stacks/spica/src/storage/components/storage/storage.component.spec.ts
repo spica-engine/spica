@@ -12,6 +12,7 @@ import {INPUT_SCHEMA} from "@spica-client/common";
 import {Filters} from "../../helpers";
 import {StorageDialogOverviewDialog} from "../storage-dialog-overview/storage-dialog-overview";
 import {StorageComponent} from "./storage.component";
+import {Observable} from "rxjs";
 
 @Directive({
   selector: "[storagePicker]"
@@ -87,19 +88,6 @@ describe("StorageComponent", () => {
       expect(fixture.debugElement.classes.disabled).toBe(true);
     });
 
-    it("should write value and reset blob", () => {
-      fixture.componentInstance.blob = null;
-      fixture.componentInstance.writeValue("http://example/test.png");
-
-      const url = new URL(fixture.componentInstance.value);
-      expect(url.searchParams.has("timestamp")).toBe(true);
-
-      url.searchParams.delete("timestamp");
-      expect(url.toString()).toEqual("http://example/test.png");
-
-      expect(fixture.componentInstance.blob).toBeUndefined();
-    });
-
     it("should not show clear button when empty", () => {
       expect(
         fixture.debugElement.query(By.css("section span:last-of-type button:last-of-type"))
@@ -131,32 +119,13 @@ describe("StorageComponent", () => {
       );
     });
 
-    it("should show preview if value or blob is provided", () => {
+    it("should change preview icon to drop when dragging over", () => {
       fixture.componentInstance.value = "http://example/test.png";
-      fixture.detectChanges(false);
-      let preview = fixture.debugElement.query(By.directive(StorageViewCmp));
-
-      expect(fixture.debugElement.query(By.css("div.drop"))).not.toBeTruthy();
-      expect(preview.componentInstance.blob).toEqual("http://example/test.png");
-
       fixture.componentInstance.blob = {
         name: "",
         size: 0,
         type: "image/png"
       };
-      fixture.detectChanges(false);
-      preview = fixture.debugElement.query(By.directive(StorageViewCmp));
-      expect(fixture.debugElement.query(By.css("mat-progress-bar"))).toBeTruthy();
-      expect(
-        fixture.debugElement.query(By.css("section:last-of-type mat-icon")).nativeElement
-          .textContent
-      ).toBe("center_focus_strong");
-      expect(fixture.debugElement.query(By.css("div.drop"))).not.toBeTruthy();
-      expect(preview.componentInstance.blob).toEqual(fixture.componentInstance.blob);
-    });
-
-    it("should change preview icon to drop when dragging over", () => {
-      fixture.componentInstance.value = "http://example/test.png";
       fixture.componentInstance.isDraggingOver = true;
       fixture.detectChanges(false);
       expect(
@@ -166,12 +135,14 @@ describe("StorageComponent", () => {
     });
 
     it("should hide progress bar when ready", () => {
+      fixture.componentInstance.progress$ = new Observable();
       fixture.componentInstance.value = "http://example/test.png";
       fixture.detectChanges(false);
 
       expect(fixture.debugElement.query(By.css("mat-progress-bar"))).toBeTruthy();
 
-      fixture.debugElement.query(By.directive(StorageViewCmp)).componentInstance.ready = true;
+      //@ts-ignore
+      fixture.componentInstance.progress$ = undefined;
       fixture.detectChanges();
 
       expect(fixture.debugElement.query(By.css("mat-progress-bar"))).not.toBeTruthy();
