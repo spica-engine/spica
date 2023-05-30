@@ -1,0 +1,14 @@
+<table *ngIf="readContent">
+  <thead>
+    <tr>
+      <td *ngFor="let header of this.readContent[0]">
+        {{ header }}
+      </td>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let row of this.readContent.slice(1)">
+      <td *ngFor="let cell of row">{{ cell }}</td>
+    </tr>
+  </tbody>
+</table>

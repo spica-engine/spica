@@ -27,6 +27,7 @@
     "core-js": "^3.6.5",
     "cropperjs": "^1.5.7",
     "hammer": "^0.0.5",
+    "jszip": "^3.10.1",
     "jwt-decode": "^2.2.0",
     "leaflet": "^1.5.1",
     "lodash": "^4.17.21",
@@ -48,6 +49,7 @@
     "tslib": "^2.0.0",
     "uuid": "^8.3.2",
     "web-animations-js": "^2.3.2",
+    "xlsx": "^0.18.5",
     "zone.js": "~0.10.2"
   },
   "devDependencies": {

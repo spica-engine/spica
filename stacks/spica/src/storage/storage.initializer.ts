@@ -10,6 +10,23 @@ export class StorageInitializer {
     private routeService: RouteService,
     private passport: PassportService
   ) {
+    const initRouteCategory = () => {
+      routeService.dispatch(
+        new Upsert({
+          id: "storages",
+          category: RouteCategory.Storage,
+          icon: "folder",
+          path: "/storages",
+          display: "/",
+          data: {
+            action: "storage:index"
+          }
+        })
+      );
+    };
+
+    initRouteCategory();
+
     rootDirService.watch().subscribe(storages => {
       routeService.dispatch(new RemoveCategory(RouteCategory.Storage));
       for (const storage of storages) {
@@ -24,18 +41,7 @@ export class StorageInitializer {
         );
       }
 
-      routeService.dispatch(
-        new Upsert({
-          id: "storages",
-          category: RouteCategory.Storage,
-          icon: "folder",
-          path: "/storages",
-          display: "/",
-          data: {
-            action: "storage:index"
-          }
-        })
-      );
+      initRouteCategory();
 
       routeService.dispatch(
         new Upsert({
