@@ -3,91 +3,186 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  ElementRef,
+  ComponentFactoryResolver,
   Input,
   OnChanges,
-  SimpleChanges
+  SimpleChanges,
+  Type,
+  ViewChild,
+  ViewContainerRef
 } from "@angular/core";
-import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
-import {Observable} from "rxjs";
-import {distinctUntilChanged, filter, map, switchMap, takeWhile, tap} from "rxjs/operators";
+import {SafeUrl} from "@angular/platform-browser";
+import {takeUntil, tap} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
+import {ImageViewerComponent} from "../image-viewer/image-viewer.component";
+import {DefaultViewerComponent} from "../default-viewer/default-viewer.component";
+import {VideoViewerComponent} from "../video-viewer/video-viewer.component";
+import {TextViewerComponent} from "../text-viewer/text-viewer.component";
+import {PdfViewerComponent} from "../pdf-viewer/pdf-viewer.component";
+import {ZipViewerComponent} from "../zip-viewer/zip-viewer.component";
+import {TableViewerComponent} from "../table-viewer/table-viewer.component";
+import {Subject} from "rxjs";
 
 @Component({
   selector: "storage-view",
-  templateUrl: "./storage-view.component.html",
-  styleUrls: ["./storage-view.component.scss"],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: "storage-view.component.html",
+  styleUrls: ["./storage-view.component.scss"]
 })
 export class StorageViewComponent implements OnChanges {
+  contentTypeComponentMap = new Map<
+    string,
+    {
+      component: Type<any>;
+      thumbnailIcon?: string;
+    }
+  >();
+
   @Input() blob: string | Blob | Storage;
   @Input() autoplay = false;
-  displayableTypes: RegExp = /image\/.*?|video\/.*?/;
-  ready: boolean = false;
+  @Input() controls = true;
+  @Input() contentType: string;
+
+  isPending = false;
   error: string;
-  contentType: string;
   content: SafeUrl | string;
+  thumbnailIcon;
+
+  private destroy$ = new Subject<void>();
+
+  @ViewChild("viewerContainer", {read: ViewContainerRef, static: true})
+  private viewerContainer: ViewContainerRef;
 
   constructor(
-    private http: HttpClient,
-    private cd: ChangeDetectorRef,
-    private sanitizer: DomSanitizer,
-    private element: ElementRef<Element>
-  ) {}
+    private componentFactoryResolver: ComponentFactoryResolver,
+    private http: HttpClient
+  ) {
+    this.contentTypeComponentMap.set("image/.*", {component: ImageViewerComponent});
+    this.contentTypeComponentMap.set("video/.*", {
+      component: VideoViewerComponent,
+      thumbnailIcon: "movie"
+    });
+    this.contentTypeComponentMap.set("text/plain|text/javascript|application/json", {
+      component: TextViewerComponent
+    });
+    this.contentTypeComponentMap.set("application/pdf", {
+      component: PdfViewerComponent
+    });
+    this.contentTypeComponentMap.set("application/zip", {
+      component: ZipViewerComponent,
+      thumbnailIcon: "folder_zip"
+    });
+    this.contentTypeComponentMap.set(
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|text/csv",
+      {component: TableViewerComponent, thumbnailIcon: "grid_on"}
+    );
+    this.contentTypeComponentMap.set(".*", {
+      component: DefaultViewerComponent,
+      thumbnailIcon: "description"
+    });
+  }
+
+  onChangeReceived() {
+    this.isPending = true;
+    this.content = undefined;
+    this.thumbnailIcon = undefined;
+    this.error = undefined;
+
+    this.destroy$.next();
+    this.viewerContainer.clear();
+  }
+
+  onChangeRendered() {
+    this.isPending = false;
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.blob && changes.blob.currentValue) {
-      this.error = undefined;
-      if (typeof this.blob == "string") {
-        this.ready = false;
-        const url = this.blob;
-        this.observe()
-          .pipe(
-            switchMap(() => this.http.get(url, {responseType: "blob"})),
-            tap(r => (this.contentType = r.type)),
-            takeWhile(r => this.displayableTypes.test(r.type))
-          )
-          .subscribe({
-            next: r => {
-              this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(r));
-              this.ready = true;
-              this.cd.markForCheck();
-            },
-            error: event => {
-              this.ready = true;
-              this.error = event.error.type;
-              this.cd.markForCheck();
-            },
-            complete: () => {
-              this.ready = !this.displayableTypes.test(this.contentType);
-              this.cd.markForCheck();
-            }
-          });
-      } else if (this.blob instanceof Blob) {
-        this.contentType = this.blob.type;
-        this.ready = !this.displayableTypes.test(this.contentType);
-        this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(this.blob));
-      } else {
-        this.contentType = this.blob.content.type;
-        this.ready = !this.displayableTypes.test(this.contentType);
-        this.content = this.blob.url;
+    if (!(changes.blob || changes.blob.currentValue)) {
+      return;
+    }
+    this.onChangeReceived();
+
+    if (!this.controls) {
+      const componentType = this.findComponent();
+      if (componentType.thumbnailIcon) {
+        this.thumbnailIcon = componentType.thumbnailIcon;
+        this.onChangeRendered();
+        return;
       }
     }
+
+    if (this.isBlob(this.blob)) {
+      this.contentType = this.blob.type;
+      this.content = this.blob;
+      this.renderViewer();
+      return;
+    }
+
+    let url;
+
+    if (this.isStorage(this.blob)) {
+      url = this.blob.url;
+    } else if (this.isUrl(this.blob)) {
+      url = this.blob;
+    } else {
+      console.error("Unknown object received!");
+      return;
+    }
+
+    this.http
+      .get(url, {responseType: "blob"})
+      .pipe(
+        takeUntil(this.destroy$),
+        tap(r => (this.contentType = r.type))
+      )
+      .subscribe({
+        next: r => {
+          this.content = r;
+          this.renderViewer();
+        },
+        error: event => {
+          this.error = event.error.type;
+          this.onChangeRendered();
+        }
+      });
   }
 
-  viewError(event: MediaError) {
-    this.error = event.message;
+  isBlob(object: string | Blob | Storage): object is Blob {
+    return object instanceof Blob;
   }
 
-  private observe() {
-    return new Observable<IntersectionObserverEntry[]>(observer => {
-      const iobserver = new IntersectionObserver(entry => observer.next(entry));
-      iobserver.observe(this.element.nativeElement);
-      return () => iobserver.disconnect();
-    }).pipe(
-      map(r => r.some(r => r.isIntersecting)),
-      distinctUntilChanged(),
-      filter(r => r)
+  isStorage(object: string | Blob | Storage): object is Storage {
+    return typeof object == "object" && Object.keys(object).includes("url");
+  }
+
+  isUrl(object: string | Blob | Storage): object is string {
+    return typeof object == "string";
+  }
+
+  renderViewer() {
+    const componentType = this.findComponent();
+    const componentFactory = this.componentFactoryResolver.resolveComponentFactory(
+      componentType.component
     );
+
+    const componentRef = this.viewerContainer.createComponent(componentFactory);
+
+    componentRef.instance.content = this.content;
+    componentRef.instance.contentType = this.contentType;
+    componentRef.instance.autoplay = this.autoplay;
+    componentRef.instance.controls = this.controls;
+
+    this.onChangeRendered();
+  }
+
+  findComponent() {
+    const componentTypeKey = Array.from(this.contentTypeComponentMap.keys()).find(ctype =>
+      RegExp(ctype).test(this.contentType)
+    );
+
+    return this.contentTypeComponentMap.get(componentTypeKey);
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
   }
 }

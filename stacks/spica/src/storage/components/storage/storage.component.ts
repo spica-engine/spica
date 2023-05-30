@@ -100,11 +100,14 @@ export class StorageComponent implements ControlValueAccessor {
 
   writeValue(value: string): void {
     if (value) {
-      const now = new Date().getTime().toString();
-      value = this.storage.putTimestamp(value, now);
+      const id = this.storage.urlToId(value);
+      this.storage
+        .getOne(id)
+        .toPromise()
+        .then(s => {
+          this.blob = s;
+        });
     }
-
-    this.blob = undefined;
     this.value = value;
   }
 
@@ -129,8 +132,8 @@ export class StorageComponent implements ControlValueAccessor {
     const url = typeof storage == "string" ? storage : storage.url;
     const pureUrl = this.storage.clearTimestamp(url);
     this.dialog.open(StorageDialogOverviewDialog, {
-      maxWidth: "80%",
-      maxHeight: "80%",
+      width: "80%",
+      height: "80%",
       panelClass: "preview-object",
       data: pureUrl
     });

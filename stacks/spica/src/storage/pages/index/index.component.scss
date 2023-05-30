@@ -64,7 +64,7 @@
 
   mat-card {
     margin-top: -85px;
-    min-height: calc(100vh - 300px);
+    height: calc(100vh - 250px);
     padding: 0px;
     display: flex;
     justify-content: space-between;
@@ -73,24 +73,25 @@
       display: flex;
       overflow: auto;
       .column {
+        height: 100%;
+        overflow: scroll;
         width: 300px;
-        min-width: 300px;
         border-right: 1px solid rgba(0, 0, 0, 0.1);
       }
     }
 
     .object-details {
-      padding: 16px;
+      height: 100%;
       border-left: 1px solid rgba(0, 0, 0, 0.1);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
 
       .close > button {
         float: right;
       }
 
-      .meta {
+      .preview {
+        height: calc(100vh - 320px);
+        overflow: scroll;
+
         p,
         h1,
         h2,
@@ -105,18 +106,15 @@
           width: 500px;
         }
         storage-view {
-          cursor: unset;
-          ::ng-deep > *:first-child {
-            object-fit: contain;
-            max-height: unset;
-            min-height: unset;
-            width: 500px;
-            height: 300px;
-          }
+          display: block;
+          width: 500px;
+          height: 75%;
+          overflow-x: scroll;
         }
       }
 
       .action-buttons {
+        height: 40px;
         display: flex;
         justify-content: center;
         gap: 10px;

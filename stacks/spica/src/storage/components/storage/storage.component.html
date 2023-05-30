@@ -1,9 +1,12 @@
 <section>
-  <span>
+  <span class="schema-meta">
     <h5 class="mat-h5 mat-hint">{{ schema.title }}</h5>
     <small class="mat-hint" *ngIf="schema.description">{{ schema.description }}</small>
   </span>
-  <span>
+  <span class="storage-meta" *ngIf="blob">
+    <h5 class="mat-h5 mat-hint">{{ blob.name }}</h5>
+  </span>
+  <span class="actions">
     <mat-progress-spinner
       *ngIf="progress$ | async; let progress"
       diameter="40"
@@ -34,16 +37,20 @@
   </span>
 </section>
 <section>
-  <ng-container *ngIf="blob || value">
-    <mat-progress-bar *ngIf="view.ready == false" mode="indeterminate"></mat-progress-bar>
+  <mat-progress-bar *ngIf="progress$" mode="indeterminate"></mat-progress-bar>
+  <ng-container *ngIf="blob">
     <storage-view
       #view
-      [blob]="blob || value"
+      [blob]="blob"
       matTooltip="View this object"
       (click)="openPreview(value || blob)"
+      [controls]="false"
+      [contentType]="blob?.content?.type"
     >
     </storage-view>
-    <mat-icon class="change">{{ isDraggingOver ? "save_alt" : "center_focus_strong" }}</mat-icon>
+    <mat-icon color="accent" class="change">{{
+      isDraggingOver ? "save_alt" : "center_focus_strong"
+    }}</mat-icon>
   </ng-container>
 
   <div

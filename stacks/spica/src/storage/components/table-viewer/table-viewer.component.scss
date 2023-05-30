@@ -1,0 +1,17 @@
+:host {
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+      overflow: scroll;
+      max-width: 100px;
+      white-space: nowrap;
+
+      padding: 8px;
+      text-align: left;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+  }
+}

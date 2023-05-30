@@ -1,43 +1,14 @@
-<ng-container [ngSwitch]="contentType?.split('/')[0]">
-  <img
-    *ngSwitchCase="'image'"
-    [src]="content"
-    loading="lazy"
-    (error)="viewError($event)"
-    (load)="ready = true"
-  />
-  <video
-    *ngSwitchCase="'video'"
-    controls
-    preload="none"
-    (error)="viewError($event)"
-    (loadedmetadata)="ready = true"
-    [autoplay]="autoplay"
-  >
-    <source [src]="content" [type]="contentType" />
-    Your browser does not support the video tag.
-  </video>
-  <div *ngSwitchDefault>
-    <ng-container *ngIf="error">
-      <mat-icon>error</mat-icon>
-      <h3 class="mat-h3">Could not load the object.</h3>
-      <small class="mat-small">{{ error }}</small>
-    </ng-container>
-    <ng-container *ngIf="!error">
-      <mat-icon>warning</mat-icon>
-      <h3 class="mat-h3">This object cannot be viewed.</h3>
-      <small class="mat-small">
-        Instead you might want to open it directly.
-        <a
-          mat-icon-button
-          mat-flat-button
-          target="_blank"
-          [href]="content"
-          (click)="$event.stopPropagation()"
-        >
-          <mat-icon>launch</mat-icon>
-        </a>
-      </small>
-    </ng-container>
-  </div>
-</ng-container>
+<ng-container #viewerContainer></ng-container>
+<div class="error" *ngIf="error">
+  <mat-icon>error</mat-icon>
+  <h3 class="mat-h3">Could not load the object.</h3>
+  <small class="mat-small">{{ error }}</small>
+</div>
+
+<div class="thumbnail-container" *ngIf="!controls">
+  <mat-icon>{{ thumbnailIcon }}</mat-icon>
+</div>
+
+<div class="spinner-container" *ngIf="isPending">
+  <mat-spinner color="accent" diameter="50"></mat-spinner>
+</div>
