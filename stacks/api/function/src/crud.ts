@@ -96,23 +96,39 @@ export namespace index {
 }
 
 export namespace dependencies {
-  export async function reinstall(engine: FunctionEngine, fn: FunctionWithDependencies) {
-    await dependencies.uninstall(engine, fn);
-
-    const newDeps = Object.entries(fn.dependencies).map(([name, version]) => {
+  export async function install(engine: FunctionEngine, fn: Function, deps: Dependency) {
+    const newDeps = Object.entries(deps).map(([name, version]) => {
       return `${name}@${(version as string).slice(1)}`;
     });
 
     if (newDeps.length) {
       await engine.addPackage(fn, newDeps).toPromise();
     }
+  }
+
+  export async function update(engine: FunctionEngine, fn: FunctionWithDependencies) {
+    const oldDependencies = await engine.getPackages(fn);
+    const newDependencies = {...fn.dependencies};
+
+    for (let [name, version] of Object.entries(newDependencies)) {
+      const existingIndex = oldDependencies.findIndex(
+        dep => dep.name == name && dep.version == version
+      );
+
+      if (existingIndex != -1) {
+        oldDependencies.splice(existingIndex, 1);
+        delete newDependencies[name];
+      }
+    }
+
+    await dependencies.uninstall(engine, fn, oldDependencies.map(d => d.name));
+    await dependencies.install(engine, fn, newDependencies);
 
     return fn;
   }
 
-  export async function uninstall(engine: FunctionEngine, fn: Function) {
-    const deps = await engine.getPackages(fn);
-    await Promise.all(deps.map(dep => engine.removePackage(fn, dep.name)));
+  export async function uninstall(engine: FunctionEngine, fn: Function, deps: string[]) {
+    await Promise.all(deps.map(dep => engine.removePackage(fn, dep)));
   }
 }
 

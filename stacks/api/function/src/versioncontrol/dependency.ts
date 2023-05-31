@@ -37,14 +37,19 @@ export function dependecySyncProviders(
     return Promise.all(promises).then(() => dependencies);
   };
 
-  const reinstall = fn => CRUD.dependencies.reinstall(engine, fn);
+  const install = fn => CRUD.dependencies.install(engine, fn, fn.dependencies);
 
-  const uninstall = fn => CRUD.dependencies.uninstall(engine, fn);
+  const update = fn => CRUD.dependencies.update(engine, fn);
+
+  const uninstall = async fn => {
+    const deps = await engine.getPackages(fn);
+    return CRUD.dependencies.uninstall(engine, fn, deps.map(d => d.name));
+  };
 
   const document = {
     getAll,
-    insert: reinstall,
-    update: reinstall,
+    insert: install,
+    update: update,
     delete: uninstall
   };
 
