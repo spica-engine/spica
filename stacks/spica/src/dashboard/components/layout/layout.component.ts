@@ -88,14 +88,19 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
   }
 
   setComponentStyles(ratio: string, i: number) {
+    const gap = 10;
+
     const itemWitdh = 240;
     const itemHeight = 240;
 
     const column = parseInt(ratio.slice(0, 1));
     const row = parseInt(ratio.slice(2, 3));
 
-    const height = itemHeight * row + "px";
-    const width = itemWitdh * column + "px";
+    const columnDiff = (column - 1) * gap;
+    const rowDiff = (row - 1) * gap;
+
+    const width = itemWitdh * column + columnDiff + "px";
+    const height = itemHeight * row + rowDiff + "px";
 
     this.muuriItemStyles[i] = {
       width,
