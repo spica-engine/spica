@@ -1,5 +1,5 @@
 import {Component, OnInit, Input, SimpleChanges, OnChanges, AfterViewInit} from "@angular/core";
-import {Observable, BehaviorSubject} from "rxjs";
+import {Observable, BehaviorSubject, Subject, combineLatest} from "rxjs";
 import {
   Dashboard,
   fillComponentRatios,
@@ -7,6 +7,7 @@ import {
 } from "@spica-client/dashboard/interfaces";
 import {GridOptions, Item} from "muuri";
 import Grid from "muuri";
+import {delay, map} from "rxjs/operators";
 
 interface MuuriItemStyles {
   width: string;
@@ -20,7 +21,19 @@ interface MuuriItemStyles {
   styleUrls: ["./layout.component.scss"]
 })
 export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
-  constructor() {}
+  onStyleChanged$: BehaviorSubject<any>;
+  onGridCreated$: Subject<Grid>;
+
+  constructor() {
+    this.onStyleChanged$ = new BehaviorSubject("");
+    this.onGridCreated$ = new Subject<Grid>();
+    combineLatest(this.onStyleChanged$, this.onGridCreated$)
+      .pipe(
+        map(([, grid]) => grid),
+        delay(1)
+      )
+      .subscribe(grid => this.updateGrid(grid));
+  }
 
   muuriItemPositionLocalStorageKey: string;
   muuriItemsLocalStorageKey: string;
@@ -102,25 +115,22 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
   }
 
   onGridCreated(grid: Grid) {
-    // fix this settimeout
-    setTimeout(() => {
-      if (!grid) {
-        return;
+    this.onGridCreated$.next(grid);
+  }
+
+  updateGrid(grid: Grid) {
+    grid.refreshItems().layout();
+
+    const itemIds = this.getItemIds(grid.getItems());
+    let layout = this.getLayout();
+    if (itemIds.length > layout.length) {
+      for (let i = layout.length; i < itemIds.length; i++) {
+        layout.push(itemIds[i]);
       }
+    }
+    this.loadLayout(grid, layout);
 
-      grid.refreshItems().layout();
-
-      const itemIds = this.getItemIds(grid.getItems());
-      let layout = this.getLayout();
-      if (itemIds.length > layout.length) {
-        for (let i = layout.length; i < itemIds.length; i++) {
-          layout.push(itemIds[i]);
-        }
-      }
-      this.loadLayout(grid, layout);
-
-      this.attachMoveListener(grid);
-    }, 500);
+    this.attachMoveListener(grid);
   }
 
   getItemIds(items: Item[]) {
@@ -164,7 +174,7 @@ export class DashboardLayout implements OnInit, OnChanges, AfterViewInit {
     this.dashboard.components = fillComponentRatios(this.dashboard.components);
     this.dashboard.components.forEach((c, i) => this.setComponentStyles(c.ratio, i));
 
-    this.onGridCreated(this.grid);
+    this.onStyleChanged$.next("");
   }
 
   onUpdate(filters: any[] = [], i: number) {
