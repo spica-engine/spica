@@ -75,6 +75,7 @@ export namespace Schema {
     lines.push("\ntype id = { _id: string };");
 
     lines.push(`
+
 type Find<Targets extends string[], Search extends string> = {
   [K in keyof Targets]: Targets[K] extends \`\${Search}.$\{infer Rest}\`
     ? Targets[K]
@@ -132,19 +133,21 @@ class CRUD<Scheme> {
     return document;
   }
 
-  private applyRelations(queryParams: any) {
-    queryParams = queryParams || {};
-    queryParams.relation = [...this.relation];
+  private applyRelations(options: any) {
+    options = options || {};
+    options.queryParams = options.queryParams || {};
+    options.queryParams.relation = options.queryParams.relation ||  [...this.relation];
     this.relation = [];
+    return options
   }
 
   get(...args: getArgs) {
-    this.applyRelations(args[1]?.queryParams);
+    args[1] = this.applyRelations(args[1]);
     return this.bdService.get<Scheme & id>(this.bucketId, ...args);
   }
 
   getAll(...args: getAllArgs) {
-    this.applyRelations(args[0]?.queryParams);
+    args[0] = this.applyRelations(args[0]);
     return this.bdService.getAll<Scheme & id>(this.bucketId, ...args);
   }
 
@@ -204,7 +207,7 @@ const ${interfaceName}RelationFields: string[] = ${relationalFieldsDefinition}
 type ${interfaceName}RelationEnum = ${resolveRelationEnumsDefinition}
 type ${interfaceName}RelationSelection = ConvertArrayToTuple<${interfaceName}RelationEnum>
 
-export class ${interfaceName}CRUD extends CRUD<${interfaceName}<${interfaceName}RelationEnum>>{
+class ${interfaceName}CRUD extends CRUD<${interfaceName}<${interfaceName}RelationEnum>>{
   resolveRelations<R extends ${interfaceName}RelationSelection>(relations: R): PickMethods<CRUD<${interfaceName}<R>>,"get" | "getAll"> {
     const copy = new CRUD<${interfaceName}<R>>(this.bucketId,this.bdService,this.relationalFields)
     copy.relation.push(...relations);
@@ -225,7 +228,7 @@ export const ${property} = new ${interfaceName}CRUD('${bucketId}',${bdService},$
 
   function buildInterface(schema: BucketSchema, lines: string[]) {
     const name = prepareInterfaceTitle(schema.title);
-    lines.push(`\n\nexport interface ${name}<Relations extends string[] = []>{`);
+    lines.push(`\n\nexport interface ${name}<Relations extends string[]>{`);
     lines.push(`\n  _id?: string;`);
     buildProperties(schema.properties, schema.required || [], "bucket", lines);
     lines.push("\n}");
