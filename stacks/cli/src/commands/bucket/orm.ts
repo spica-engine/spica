@@ -74,6 +74,29 @@ export namespace Schema {
     lines.push("\ntype realtimeGetAllArgs = Rest<Parameters<typeof Bucket.data.realtime.getAll>>;");
     lines.push("\ntype id = { _id: string };");
 
+    lines.push(`
+type Find<Targets extends string[], Search extends string> = {
+  [K in keyof Targets]: Targets[K] extends \`\${Search}.$\{infer Rest}\`
+    ? Targets[K]
+    : Targets[K] extends \`\${Search}\`
+    ? Targets[K]
+    : never;
+}[number];
+
+type FindRest<T extends string[], S extends string> = {
+  [K in keyof T]: T[K] extends \`\${S}.$\{infer Rest}\`
+    ? Rest
+    : never
+}[number]; 
+
+type PickMethods<T, M extends keyof T> = {
+  [K in M]: T[K] extends (...args: any[]) => any ? T[K] : never;
+};
+
+type ConvertArrayToTuple<T extends string[]> = T extends (infer U)[] ? [U, ...U[]] : never;
+
+`);
+
     buckets = makeTitlesUnique(buckets, warnings);
 
     for (const bucket of buckets) {
@@ -90,10 +113,12 @@ export namespace Schema {
   function addCrud(lines: string[], buckets: BucketSchema[]) {
     const crud = `
 class CRUD<Scheme> {
+  relation: string[] = [];
+
   constructor(
-    private bucketId: string,
-    private bdService: typeof Bucket.data,
-    private relationalFields: string[]
+    protected bucketId: string,
+    protected bdService: typeof Bucket.data,
+    protected relationalFields: string[]
   ) {}
 
   private normalizeRelations(document: any) {
@@ -107,11 +132,19 @@ class CRUD<Scheme> {
     return document;
   }
 
+  private applyRelations(queryParams: any) {
+    queryParams = queryParams || {};
+    queryParams.relation = [...this.relation];
+    this.relation = [];
+  }
+
   get(...args: getArgs) {
+    this.applyRelations(args[1]?.queryParams);
     return this.bdService.get<Scheme & id>(this.bucketId, ...args);
   }
 
   getAll(...args: getAllArgs) {
+    this.applyRelations(args[0]?.queryParams);
     return this.bdService.getAll<Scheme & id>(this.bucketId, ...args);
   }
 
@@ -157,13 +190,33 @@ class CRUD<Scheme> {
 
       const bucketId = bucket._id;
       const bdService = "Bucket.data";
+
       const relationalFields = getRelationFields(bucket.properties);
+      const relationalFieldsDefinition = `[${relationalFields.map(i => `'${i}'`).join(",")}]`;
+
+      const resolveRelationEnums = getResolveRelationEnums(bucket._id, buckets);
+      const resolveRelationEnumsDefinition = resolveRelationEnums.length
+        ? `(${resolveRelationEnums.map(i => `'${i}'`).join("|")})[]`
+        : "[]";
+
+      const crudDefinition = `
+const ${interfaceName}RelationFields: string[] = ${relationalFieldsDefinition}
+type ${interfaceName}RelationEnum = ${resolveRelationEnumsDefinition}
+type ${interfaceName}RelationSelection = ConvertArrayToTuple<${interfaceName}RelationEnum>
+
+export class ${interfaceName}CRUD extends CRUD<${interfaceName}<${interfaceName}RelationEnum>>{
+  resolveRelations<R extends ${interfaceName}RelationSelection>(relations: R): PickMethods<CRUD<${interfaceName}<R>>,"get" | "getAll"> {
+    const copy = new CRUD<${interfaceName}<R>>(this.bucketId,this.bdService,this.relationalFields)
+    copy.relation.push(...relations);
+    return copy;
+  }
+}
+        `;
+      lines.push(crudDefinition);
 
       const definition = `
-export const ${property} = new CRUD<${interfaceName}>('${bucketId}',${bdService},[${relationalFields
-        .map(i => `'${i}'`)
-        .join(",")}]);`;
-
+export const ${property} = new ${interfaceName}CRUD('${bucketId}',${bdService},${interfaceName}RelationFields)
+`;
       lines.push(definition);
     }
 
@@ -172,7 +225,7 @@ export const ${property} = new CRUD<${interfaceName}>('${bucketId}',${bdService}
 
   function buildInterface(schema: BucketSchema, lines: string[]) {
     const name = prepareInterfaceTitle(schema.title);
-    lines.push(`\n\nexport interface ${name}{`);
+    lines.push(`\n\nexport interface ${name}<Relations extends string[] = []>{`);
     lines.push(`\n  _id?: string;`);
     buildProperties(schema.properties, schema.required || [], "bucket", lines);
     lines.push("\n}");
@@ -188,7 +241,7 @@ export const ${property} = new CRUD<${interfaceName}>('${bucketId}',${bdService}
       const target = `<${bucket._id}>`;
       lines = lines.map(line => {
         if (line.includes(target)) {
-          return line.replace(target, prepareInterfaceTitle(bucket.title) + " & id");
+          return line.replace(target, prepareInterfaceTitle(bucket.title));
         }
         return line;
       });
@@ -211,7 +264,7 @@ function buildProperties(
   for (const [key, value] of Object.entries(props)) {
     const reqFlag = !reqs.includes(key) ? "?" : "";
     lines.push(`\n  ${key + reqFlag}: `);
-    buildPropDef(value, lines);
+    buildPropDef(key, value, lines);
     lines.push(";");
   }
 
@@ -220,12 +273,12 @@ function buildProperties(
   }
 }
 
-function buildArray(def: Property, lines: string[]) {
-  buildPropDef(def, lines);
+function buildArray(key: string, def: Property, lines: string[]) {
+  buildPropDef(key, def, lines);
   lines.push("[]");
 }
 
-function buildPropDef(prop: Property, lines: string[]) {
+function buildPropDef(key: string, prop: Property, lines: string[]) {
   if (prop.enum) {
     lines.push("(");
     lines.push(
@@ -263,11 +316,13 @@ function buildPropDef(prop: Property, lines: string[]) {
 
     case "array":
     case "multiselect":
-      buildArray(prop.items, lines);
+      buildArray(key, prop.items, lines);
       break;
 
     case "relation":
-      lines.push(`(<${prop.bucketId}> | string)${prop.relationType == "onetomany" ? "[]" : ""}`);
+      const suffix = prop.relationType == "onetomany" ? "[]" : "";
+      const definition = `Find<Relations,"${key}">[] extends never[] ? string${suffix} : (<${prop.bucketId}><FindRest<Relations,"${key}">[]>&id)${suffix}`;
+      lines.push(definition);
       break;
 
     case "location":
@@ -319,6 +374,44 @@ Number suffix will be added but should use unique titles for the best practice.`
   return buckets;
 }
 
+function getResolveRelationEnums(id: string, buckets: BucketSchema[]): string[] {
+  const enums: string[] = [];
+  const maxDepth = 5;
+
+  const _getResolveRelationEnums = (_bucket: BucketSchema, prefix?) => {
+    const hasRelation = Object.values(_bucket.properties).some(v => v.type == "relation");
+    if (!hasRelation) {
+      if (prefix && !enums.includes(prefix)) {
+        enums.push(prefix);
+      }
+      return;
+    }
+
+    Object.entries(_bucket.properties).forEach(([key, value]) => {
+      if (value.type == "relation") {
+        const paths = prefix ? `${prefix}.${key}` : key;
+
+        const isMaxLengthExceeded = paths.split(".").length > maxDepth;
+        if (isMaxLengthExceeded) {
+          return;
+        }
+
+        if (!enums.includes(paths)) {
+          enums.push(paths);
+        }
+
+        const relatedBuckets = buckets.filter(b => b._id == value.bucketId);
+        relatedBuckets.forEach(b => _getResolveRelationEnums(b, paths));
+      }
+    });
+  };
+
+  const targetBucket = buckets.find(b => b._id == id);
+  _getResolveRelationEnums(targetBucket);
+
+  return enums;
+}
+
 // INTERFACE
 export interface BucketSchema {
   _id: string;
@@ -367,3 +460,85 @@ interface RelationProperty extends IProperty {
 interface LocationProperty extends IProperty {
   type: "location";
 }
+
+// type Includes<Arr extends string[], Str extends string> = Extract<Arr[number], Str> extends never ? false : true;
+
+// type Find<Targets extends string[], Search extends string> = {
+//   [K in keyof Targets]: Targets[K] extends Search ? Targets[K] : never;
+// }[number];
+
+// type FindRest<T extends string[], S extends string> = {
+//   [K in keyof T]: T[K] extends `${S}.${infer Rest}`
+//     ? Rest
+//     : never
+// }[number]
+
+// type DeliveryRelationEnum = 'user' | 'user.address' | 'user.address.loc' | 'order'
+
+// interface Delivery<Relations extends DeliveryRelationEnum[] = []> {
+//   title: string;
+//   user: Find<Relations, "user"> extends never ? string : User;
+//   order: Find<Relations, "order"> extends never ? string : Order;
+// }
+
+// interface User<Relations extends string[] = []> {
+//   name: string;
+//   surname: string;
+//   address: Find<Relations,"address">[] extends never[] ? string : Address<FindRest<Relations,"address">[]>
+// }
+
+// interface Address<Relations extends string[] = []> {
+//   street: string;
+//   city: string;
+//   location: Find<Relations,"loc">[] extends never[] ? string : Loc<FindRest<Relations,"loc">[]>
+// }
+
+// interface Loc<Relations extends string[] = []>{
+//   lat:number,
+//   lng:number
+// }
+
+// interface Order<Relations extends string[] = []> {
+//   type: string;
+// }
+
+// type UnionToTuple<T extends string[]> = (
+//   T extends any ? (arg: T) => void : never
+// ) extends (arg: infer U) => void ? U : never;
+
+// type ConvertArrayToTuple<T extends string[]> = T extends (infer U)[] ? [U, ...U[]] : never;
+
+// function resolve<T extends ConvertArrayToTuple<DeliveryRelationEnum[]>>(relations: T): Delivery<T> {
+//   return null as any; // Placeholder implementation
+// }
+
+// resolve(["order","user"])
+
+// class MyClass {
+//   method1() {
+//     console.log("Method 1");
+//   }
+
+//   method2() {
+//     console.log("Method 2");
+//   }
+
+//   method3() {
+//     console.log("Method 3");
+//   }
+// }
+
+// type RemoveMethods<T, M extends keyof T> = {
+//   [K in keyof T as K extends M ? never : K]: T[K];
+// };
+
+// type MyPickedMethods = PickMethods<MyClass, "method1" | "method3">;
+
+// const obj: MyPickedMethods = new MyClass();
+// obj.method1(); // Output: Method 1
+// obj.method2(); // Output: Method 1
+// obj.method3(); // Output: Method 3
+
+// type PickMethods<T, M extends keyof T> = {
+//   [K in M]: T[K] extends (...args: any[]) => any ? T[K] : never;
+// };
