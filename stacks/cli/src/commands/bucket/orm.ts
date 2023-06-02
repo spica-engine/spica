@@ -94,7 +94,11 @@ type PickMethods<T, M extends keyof T> = {
   [K in M]: T[K] extends (...args: any[]) => any ? T[K] : never;
 };
 
-type ConvertArrayToTuple<T extends string[]> = T extends (infer U)[] ? [U, ...U[]] : never;
+type ConvertEnumToSelection<T extends string[]> = T extends []
+  ? []
+  : T extends (infer U)[]
+  ? [U, ...U[]]
+  : [];
 
 `);
 
@@ -113,8 +117,27 @@ type ConvertArrayToTuple<T extends string[]> = T extends (infer U)[] ? [U, ...U[
 
   function addCrud(lines: string[], buckets: BucketSchema[]) {
     const crud = `
-class CRUD<Scheme> {
-  relation: string[] = [];
+class CRUD<Scheme,Paginate extends boolean = false> {
+  options: {
+    headers: {
+      'accept-language'?: string;
+    };
+    queryParams: {
+      limit?: number;
+      skip?: number;
+      sort?: {
+        [T in keyof Scheme]: -1 | 1;
+      };
+      paginate?: boolean;
+
+      relation?: string[];
+      localize?: boolean;
+      filter?: any;
+    };
+  } = {
+    headers: {},
+    queryParams: {},
+  };
 
   constructor(
     protected bucketId: string,
@@ -133,22 +156,32 @@ class CRUD<Scheme> {
     return document;
   }
 
-  private applyRelations(options: any) {
-    options = options || {};
-    options.queryParams = options.queryParams || {};
-    options.queryParams.relation = options.queryParams.relation ||  [...this.relation];
-    this.relation = [];
-    return options
+  private buildOptions(options: any) {
+    options = options ? options : this.options;
+    this.options = {
+      headers: {},
+      queryParams: {},
+    };
+    return options;
   }
 
   get(...args: getArgs) {
-    args[1] = this.applyRelations(args[1]);
+    args[1] = this.buildOptions(args[1]);
     return this.bdService.get<Scheme & id>(this.bucketId, ...args);
   }
 
-  getAll(...args: getAllArgs) {
-    args[0] = this.applyRelations(args[0]);
-    return this.bdService.getAll<Scheme & id>(this.bucketId, ...args);
+  getAll(
+    ...args: getAllArgs
+  ): Paginate extends true
+    ? Promise<Bucket.IndexResult<Scheme>>
+    : Promise<Scheme[]> {
+    args[0] = this.buildOptions(args[0]);
+    return this.bdService.getAll<Scheme & id>(
+      this.bucketId,
+      ...args
+    ) as Paginate extends true
+      ? Promise<Bucket.IndexResult<Scheme>>
+      : Promise<Scheme[]>;
   }
 
   insert(document: Omit<Scheme, '_id'>) {
@@ -205,14 +238,42 @@ class CRUD<Scheme> {
       const crudDefinition = `
 const ${interfaceName}RelationFields: string[] = ${relationalFieldsDefinition}
 type ${interfaceName}RelationEnum = ${resolveRelationEnumsDefinition}
-type ${interfaceName}RelationSelection = ConvertArrayToTuple<${interfaceName}RelationEnum>
+type ${interfaceName}RelationSelection = ConvertEnumToSelection<${interfaceName}RelationEnum>
 
-class ${interfaceName}CRUD extends CRUD<${interfaceName}<${interfaceName}RelationEnum>>{
-  resolveRelations<R extends ${interfaceName}RelationSelection>(relations: R): PickMethods<CRUD<${interfaceName}<R>>,"get" | "getAll"> {
-    const copy = new CRUD<${interfaceName}<R>>(this.bucketId,this.bdService,this.relationalFields)
-    copy.relation.push(...relations);
+class ${interfaceName}CRUD<R extends ${interfaceName}RelationEnum = ${interfaceName}RelationEnum, P extends boolean = false> extends CRUD<${interfaceName}<R>,P>{
+  resolveRelations<R extends ${interfaceName}RelationSelection>(relations: R): ${interfaceName}CRUD<R,P> {
+    const copy = new ${interfaceName}CRUD<R,P>(this.bucketId,this.bdService,this.relationalFields);
+    copy.options = {...this.options};
+    copy.options.queryParams.relation = relations;
     return copy;
   }
+
+  limit(limit:number):${interfaceName}CRUD<R,P>{
+    this.options.queryParams.limit = limit;
+    return this;
+  }
+
+  skip(skip:number):${interfaceName}CRUD<R,P>{
+    this.options.queryParams.skip = skip;
+    return this;
+  }
+
+  sort(sort:{[T in keyof ${interfaceName}<[]>]:-1 | 1}):${interfaceName}CRUD<R,P>{
+    this.options.queryParams.sort = sort;
+    return this;
+  }
+
+  paginate(): ${interfaceName}CRUD<R,true> {
+    const copy = new ${interfaceName}CRUD<R,true>(
+      this.bucketId,
+      this.bdService,
+      this.relationalFields
+    );
+    copy.options = {...this.options};
+    copy.options.queryParams.paginate = true;
+    return copy;
+  }
+
 }
         `;
       lines.push(crudDefinition);
@@ -228,7 +289,7 @@ export const ${property} = new ${interfaceName}CRUD('${bucketId}',${bdService},$
 
   function buildInterface(schema: BucketSchema, lines: string[]) {
     const name = prepareInterfaceTitle(schema.title);
-    lines.push(`\n\nexport interface ${name}<Relations extends string[]>{`);
+    lines.push(`\n\nexport interface ${name}<Relations extends string[] = []>{`);
     lines.push(`\n  _id?: string;`);
     buildProperties(schema.properties, schema.required || [], "bucket", lines);
     lines.push("\n}");
@@ -509,9 +570,9 @@ interface LocationProperty extends IProperty {
 //   T extends any ? (arg: T) => void : never
 // ) extends (arg: infer U) => void ? U : never;
 
-// type ConvertArrayToTuple<T extends string[]> = T extends (infer U)[] ? [U, ...U[]] : never;
+// type ConvertEnumToSelection<T extends string[]> = T extends (infer U)[] ? [U, ...U[]] : never;
 
-// function resolve<T extends ConvertArrayToTuple<DeliveryRelationEnum[]>>(relations: T): Delivery<T> {
+// function resolve<T extends ConvertEnumToSelection<DeliveryRelationEnum[]>>(relations: T): Delivery<T> {
 //   return null as any; // Placeholder implementation
 // }
 
