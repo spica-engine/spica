@@ -18,11 +18,14 @@ async function orm({options}: ActionParameters) {
     text: "Fetching buckets..",
     op: async spinner => {
       const buckets = await httpClient.get<BucketSchema[]>("/bucket");
+      const languages = await httpClient
+        .get<{language: {available: {[lang: string]: string}}}>("/preference/bucket")
+        .then(r => Object.keys(r.language.available));
 
       spinner.text = "Building interface and method definitions..";
 
       const warnings: string[] = [];
-      const content = Schema.createFileContent(buckets, url, warnings);
+      const content = Schema.createFileContent(buckets, languages, url, warnings);
 
       spinner.text = "Writing to the destination..";
       fs.writeFileSync(DESTINATION, content);
@@ -48,7 +51,12 @@ export default function({createCommand}: CreateCommandParameters): Command {
 }
 
 export namespace Schema {
-  export function createFileContent(buckets: BucketSchema[], apiurl: string, warnings: string[]) {
+  export function createFileContent(
+    buckets: BucketSchema[],
+    languages: string[],
+    apiurl: string,
+    warnings: string[]
+  ) {
     let lines: string[] = [];
     // DEVKIT INIT
     lines.push("import * as Bucket from '@spica-devkit/bucket';");
@@ -105,17 +113,17 @@ type ConvertEnumToSelection<T extends string[]> = T extends []
     buckets = makeTitlesUnique(buckets, warnings);
 
     for (const bucket of buckets) {
-      buildInterface(bucket, lines);
+      buildInterface(bucket, languages, lines);
     }
 
     lines = replaceRelations(buckets, lines);
 
-    lines = addCrud(lines, buckets);
+    lines = addCrud(lines, buckets, languages);
 
     return lines.join("");
   }
 
-  function addCrud(lines: string[], buckets: BucketSchema[]) {
+  function addCrud(lines: string[], buckets: BucketSchema[], languages: string[]) {
     const crud = `
 class CRUD<Scheme,Paginate extends boolean = false> {
   options: {
@@ -235,42 +243,66 @@ class CRUD<Scheme,Paginate extends boolean = false> {
         ? `(${resolveRelationEnums.map(i => `'${i}'`).join("|")})[]`
         : "[]";
 
+      const languagesDefinition = `${languages.map(i => `'${i}'`).join("|")}`;
+
       const crudDefinition = `
 const ${interfaceName}RelationFields: string[] = ${relationalFieldsDefinition}
 type ${interfaceName}RelationEnum = ${resolveRelationEnumsDefinition}
 type ${interfaceName}RelationSelection = ConvertEnumToSelection<${interfaceName}RelationEnum>
 
-class ${interfaceName}CRUD<R extends ${interfaceName}RelationEnum = ${interfaceName}RelationEnum, P extends boolean = false> extends CRUD<${interfaceName}<R>,P>{
-  resolveRelations<R extends ${interfaceName}RelationSelection>(relations: R): ${interfaceName}CRUD<R,P> {
-    const copy = new ${interfaceName}CRUD<R,P>(this.bucketId,this.bdService,this.relationalFields);
+class ${interfaceName}CRUD<R extends ${interfaceName}RelationEnum = ${interfaceName}RelationEnum, P extends boolean = false, L extends boolean = true> extends CRUD<${interfaceName}<R,L>,P>{
+  resolveRelations<R extends ${interfaceName}RelationSelection>(relations: R): ${interfaceName}CRUD<R,P,L> {
+    const copy = new ${interfaceName}CRUD<R,P,L>(this.bucketId,this.bdService,this.relationalFields);
     copy.options = {...this.options};
     copy.options.queryParams.relation = relations;
     return copy;
   }
 
-  limit(limit:number):${interfaceName}CRUD<R,P>{
+  limit(limit:number):${interfaceName}CRUD<R,P,L>{
     this.options.queryParams.limit = limit;
     return this;
   }
 
-  skip(skip:number):${interfaceName}CRUD<R,P>{
+  skip(skip:number):${interfaceName}CRUD<R,P,L>{
     this.options.queryParams.skip = skip;
     return this;
   }
 
-  sort(sort:{[T in keyof ${interfaceName}<[]>]:-1 | 1}):${interfaceName}CRUD<R,P>{
+  sort(sort:{[T in keyof ${interfaceName}<[]>]:-1 | 1}):${interfaceName}CRUD<R,P,L>{
     this.options.queryParams.sort = sort;
     return this;
   }
 
-  paginate(): ${interfaceName}CRUD<R,true> {
-    const copy = new ${interfaceName}CRUD<R,true>(
+  paginate(): ${interfaceName}CRUD<R,true,L> {
+    const copy = new ${interfaceName}CRUD<R,true,L>(
       this.bucketId,
       this.bdService,
       this.relationalFields
     );
     copy.options = {...this.options};
     copy.options.queryParams.paginate = true;
+    return copy;
+  }
+
+
+  filter(filter:any): ${interfaceName}CRUD<R, P, L>{
+    this.options.queryParams.filter = filter;
+    return this;
+  }
+
+  translate(language: ${languagesDefinition}): ${interfaceName}CRUD<R, P, L>{
+    this.options.headers['accept-language'] = language;
+    return this;
+  }
+
+  nonLocalize(): ${interfaceName}CRUD<R, P, false>{
+    const copy = new ${interfaceName}CRUD<R, P, false>(
+      this.bucketId,
+      this.bdService,
+      this.relationalFields
+    );
+    copy.options = {...this.options};
+    copy.options.queryParams.localize = false;
     return copy;
   }
 
@@ -287,11 +319,13 @@ export const ${property} = new ${interfaceName}CRUD('${bucketId}',${bdService},$
     return lines;
   }
 
-  function buildInterface(schema: BucketSchema, lines: string[]) {
+  function buildInterface(schema: BucketSchema, languages: string[], lines: string[]) {
     const name = prepareInterfaceTitle(schema.title);
-    lines.push(`\n\nexport interface ${name}<Relations extends string[] = []>{`);
+    lines.push(
+      `\n\nexport interface ${name}<Relations extends string[] = [], Localize extends boolean = true>{`
+    );
     lines.push(`\n  _id?: string;`);
-    buildProperties(schema.properties, schema.required || [], "bucket", lines);
+    buildProperties(schema.properties, languages, schema.required || [], "bucket", lines);
     lines.push("\n}");
   }
 
@@ -317,6 +351,7 @@ export const ${property} = new ${interfaceName}CRUD('${bucketId}',${bdService},$
 // HELPERS
 function buildProperties(
   props: Properties,
+  languages: string[],
   reqs: string[],
   bucketOrObject: "bucket" | "object",
   lines: string[]
@@ -328,7 +363,7 @@ function buildProperties(
   for (const [key, value] of Object.entries(props)) {
     const reqFlag = !reqs.includes(key) ? "?" : "";
     lines.push(`\n  ${key + reqFlag}: `);
-    buildPropDef(key, value, lines);
+    buildPropDef(key, value, languages, lines);
     lines.push(";");
   }
 
@@ -337,12 +372,12 @@ function buildProperties(
   }
 }
 
-function buildArray(key: string, def: Property, lines: string[]) {
-  buildPropDef(key, def, lines);
+function buildArray(key: string, def: Property, languages: string[], lines: string[]) {
+  buildPropDef(key, def, languages, lines);
   lines.push("[]");
 }
 
-function buildPropDef(key: string, prop: Property, lines: string[]) {
+function buildPropDef(key: string, prop: Property, languages: string[], lines: string[]) {
   if (prop.enum) {
     lines.push("(");
     lines.push(
@@ -359,7 +394,16 @@ function buildPropDef(key: string, prop: Property, lines: string[]) {
     case "color":
     case "richtext":
     case "storage":
-      lines.push("string");
+      let def = "string";
+
+      if (prop.options && prop.options.translate) {
+        let nonLocalizedType = {};
+        languages.forEach(l => (nonLocalizedType[l] = "string"));
+        nonLocalizedType = JSON.stringify(nonLocalizedType);
+        def = `Localize extends true ? string : ${nonLocalizedType}`;
+      }
+
+      lines.push(def);
       break;
 
     case "number":
@@ -375,12 +419,12 @@ function buildPropDef(key: string, prop: Property, lines: string[]) {
       break;
 
     case "object":
-      buildProperties(prop.properties, prop.required || [], "object", lines);
+      buildProperties(prop.properties, prop.required || [], languages, "object", lines);
       break;
 
     case "array":
     case "multiselect":
-      buildArray(key, prop.items, lines);
+      buildArray(key, prop.items, languages, lines);
       break;
 
     case "relation":
@@ -502,6 +546,9 @@ interface IProperty {
 
 interface BasicProperty extends IProperty {
   type: "string" | "textarea" | "color" | "richtext" | "storage" | "number" | "date" | "boolean";
+  options: {
+    translate: boolean;
+  };
 }
 
 interface ArrayProperty extends IProperty {
