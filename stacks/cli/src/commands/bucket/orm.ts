@@ -233,7 +233,7 @@ class CRUD<Scheme,Paginate extends boolean = false> {
   };
 }
 
-class QueryBuilderCRUD<Scheme,Paginate extends boolean = false> extends CRUD<Scheme,Paginate>{
+class Cursor<Scheme,Paginate extends boolean = false> extends CRUD<Scheme,Paginate>{
   limit(limit: number): any {
     this.options.queryParams.limit = limit;
     return this;
@@ -298,63 +298,53 @@ class QueryBuilderCRUD<Scheme,Paginate extends boolean = false> extends CRUD<Sch
 const ${interfaceName}RelationFields: string[] = ${relationalFieldsDefinition}
 type ${interfaceName}RelationEnum = ${resolveRelationEnumsDefinition}
 type ${interfaceName}RelationSelection = ConvertEnumToSelection<${interfaceName}RelationEnum>
-type ${interfaceName}QueryableMethods<
+type ${interfaceName}CursorMethods<
   R extends string[] = [],
   P extends boolean = false,
   L extends boolean = true
 > = RemoveProps<
-  ${interfaceName}CRUD<R, P, L>,
+  ${interfaceName}Cursor<R, P, L>,
   Exclude<Props<CRUD<${interfaceName}<R, L>, P>>, 'get' | 'getAll'>
 >;
 
-class ${interfaceName}CRUD<R extends string[] = [], P extends boolean = false, L extends boolean = true> extends QueryBuilderCRUD<${interfaceName}<R,L>,P>{
+class ${interfaceName}Cursor<R extends string[] = [], P extends boolean = false, L extends boolean = true> extends Cursor<${interfaceName}<R,L>,P>{
   
- 
   override resolveRelations<Selecteds extends ${interfaceName}RelationSelection>(
     relations: Selecteds
-  ): ${interfaceName}QueryableMethods<Selecteds, P, L> {
-    super.resolveRelations(relations);
-    //@ts-ignore
-    return this as ${interfaceName}QueryableMethods<Selecteds, P, L>
+  ): ${interfaceName}Cursor<Selecteds, P, L> {
+    return super.resolveRelations(relations);
   }
 
-  override nonLocalize(): ${interfaceName}QueryableMethods<R, P, false> {
-    super.nonLocalize();
-    return this as ${interfaceName}QueryableMethods<R, P, false>;
+  override nonLocalize(): ${interfaceName}Cursor<R, P, false> {
+    return super.nonLocalize();
   }
 
-  override limit(limit: number): ${interfaceName}QueryableMethods<R, P, L> {
-    super.limit(limit);
-    return this;
+  override limit(limit: number): ${interfaceName}Cursor<R, P, L> {
+    return super.limit(limit);
   }
 
-  override skip(skip: number): ${interfaceName}QueryableMethods<R, P, L> {
-    super.skip(skip);
-    return this;
+  override skip(skip: number): ${interfaceName}Cursor<R, P, L> {
+    return super.skip(skip);
   }
 
   override sort(sort: {
     [T in keyof ${interfaceName}]: -1 | 1;
-  }): ${interfaceName}QueryableMethods<R, P, L> {
-    super.sort(sort);
-    return this;
+  }): ${interfaceName}Cursor<R, P, L> {
+    return super.sort(sort);
   }
 
-  override filter(filter: any): ${interfaceName}QueryableMethods<R, P, L> {
-    super.filter(filter);
-    return this;
+  override filter(filter: any): ${interfaceName}Cursor<R, P, L> {
+    return super.filter(filter);
   }
 
   override translate(
     language: AvailableLanguages
-  ): ${interfaceName}QueryableMethods<R, P, L> {
-    super.translate(language);
-    return this;
+  ): ${interfaceName}Cursor<R, P, L> {
+    return super.translate(language);
   }
 
-  override paginate(): ${interfaceName}QueryableMethods<R, true, L> {
-    super.paginate();
-    return this as ${interfaceName}QueryableMethods<R, true, L>;
+  override paginate(): ${interfaceName}Cursor<R, true, L> {
+    return super.paginate();
   }
 
 }
@@ -362,7 +352,7 @@ class ${interfaceName}CRUD<R extends string[] = [], P extends boolean = false, L
       lines.push(crudDefinition);
 
       const definition = `
-export const ${property} = new ${interfaceName}CRUD('${bucketId}',${bdService},${interfaceName}RelationFields)
+export const ${property} = new ${interfaceName}Cursor('${bucketId}',${bdService},${interfaceName}RelationFields)
 `;
       lines.push(definition);
     }
