@@ -57,6 +57,10 @@ export namespace Schema {
     apiurl: string,
     warnings: string[]
   ) {
+
+    const languagesDefinition = `${languages.map(i => `'${i}'`).join("|")}`;
+
+
     let lines: string[] = [];
     // DEVKIT INIT
     lines.push("import * as Bucket from '@spica-devkit/bucket';");
@@ -98,15 +102,21 @@ type FindRest<T extends string[], S extends string> = {
     : never
 }[number]; 
 
-type PickMethods<T, M extends keyof T> = {
-  [K in M]: T[K] extends (...args: any[]) => any ? T[K] : never;
-};
-
 type ConvertEnumToSelection<T extends string[]> = T extends []
   ? []
   : T extends (infer U)[]
   ? [U, ...U[]]
   : [];
+
+type Props<T> = {
+  [K in keyof T]: K;
+}[keyof T];
+
+type RemoveProps<TClass, TProps extends keyof TClass> = {
+  [K in keyof TClass as K extends TProps ? never : K]: TClass[K];
+};
+
+type AvailableLanguages = ${languagesDefinition}
 
 `);
 
@@ -124,9 +134,10 @@ type ConvertEnumToSelection<T extends string[]> = T extends []
   }
 
   function addCrud(lines: string[], buckets: BucketSchema[], languages: string[]) {
+
     const crud = `
 class CRUD<Scheme,Paginate extends boolean = false> {
-  options: {
+  protected options: {
     headers: {
       'accept-language'?: string;
     };
@@ -223,7 +234,50 @@ class CRUD<Scheme,Paginate extends boolean = false> {
       );
     },
   };
-}`;
+}
+
+class QueryBuilderCRUD<Scheme,Paginate extends boolean = false> extends CRUD<Scheme,Paginate>{
+  limit(limit: number): any {
+    this.options.queryParams.limit = limit;
+    return this;
+  }
+
+  skip(skip: number): any {
+    this.options.queryParams.skip = skip;
+    return this;
+  }
+
+  sort(sort: { [T in keyof Scheme]: -1 | 1 }): any {
+    this.options.queryParams.sort = sort;
+    return this;
+  }
+
+  filter(filter: any): any {
+    this.options.queryParams.filter = filter;
+    return this;
+  }
+
+  translate(language: AvailableLanguages): any {
+    this.options.headers['accept-language'] = language;
+    return this;
+  }
+
+  paginate(): any {
+    this.options.queryParams.paginate = true;
+    return this;
+  }
+
+  nonLocalize(): any {
+    this.options.queryParams.localize = false;
+    return this;
+  }  
+
+  resolveRelations(relation:any): any {
+    this.options.queryParams.relation = relation;
+    return this;
+  }
+}
+`;
 
     lines.push("\n");
     lines.push(crud);
@@ -243,67 +297,68 @@ class CRUD<Scheme,Paginate extends boolean = false> {
         ? `(${resolveRelationEnums.map(i => `'${i}'`).join("|")})[]`
         : "[]";
 
-      const languagesDefinition = `${languages.map(i => `'${i}'`).join("|")}`;
 
       const crudDefinition = `
 const ${interfaceName}RelationFields: string[] = ${relationalFieldsDefinition}
 type ${interfaceName}RelationEnum = ${resolveRelationEnumsDefinition}
 type ${interfaceName}RelationSelection = ConvertEnumToSelection<${interfaceName}RelationEnum>
+type ${interfaceName}QueryableMethods<
+  R extends string[] = [],
+  P extends boolean = false,
+  L extends boolean = true
+> = RemoveProps<
+  ${interfaceName}CRUD<R, P, L>,
+  Exclude<Props<CRUD<${interfaceName}<R, L>, P>>, 'get' | 'getAll'>
+>;
 
-class ${interfaceName}CRUD<R extends ${interfaceName}RelationEnum = ${interfaceName}RelationEnum, P extends boolean = false, L extends boolean = true> extends CRUD<${interfaceName}<R,L>,P>{
-  resolveRelations<R extends ${interfaceName}RelationSelection>(relations: R): ${interfaceName}CRUD<R,P,L> {
-    const copy = new ${interfaceName}CRUD<R,P,L>(this.bucketId,this.bdService,this.relationalFields);
-    copy.options = {...this.options};
-    copy.options.queryParams.relation = relations;
-    return copy;
+class ${interfaceName}CRUD<R extends string[] = [], P extends boolean = false, L extends boolean = true> extends QueryBuilderCRUD<${interfaceName}<R,L>,P>{
+  
+ 
+  override resolveRelations<Selecteds extends ${interfaceName}RelationSelection>(
+    relations: Selecteds
+  ): ${interfaceName}QueryableMethods<Selecteds, P, L> {
+    super.resolveRelations(relations);
+    //@ts-ignore
+    return this as ${interfaceName}QueryableMethods<Selecteds, P, L>
   }
 
-  limit(limit:number):${interfaceName}CRUD<R,P,L>{
-    this.options.queryParams.limit = limit;
+  override nonLocalize(): ${interfaceName}QueryableMethods<R, P, false> {
+    super.nonLocalize();
+    return this as ${interfaceName}QueryableMethods<R, P, false>;
+  }
+
+  override limit(limit: number): ${interfaceName}QueryableMethods<R, P, L> {
+    super.limit(limit);
     return this;
   }
 
-  skip(skip:number):${interfaceName}CRUD<R,P,L>{
-    this.options.queryParams.skip = skip;
+  override skip(skip: number): ${interfaceName}QueryableMethods<R, P, L> {
+    super.skip(skip);
     return this;
   }
 
-  sort(sort:{[T in keyof ${interfaceName}<[]>]:-1 | 1}):${interfaceName}CRUD<R,P,L>{
-    this.options.queryParams.sort = sort;
+  override sort(sort: {
+    [T in keyof ${interfaceName}]: -1 | 1;
+  }): ${interfaceName}QueryableMethods<R, P, L> {
+    super.sort(sort);
     return this;
   }
 
-  paginate(): ${interfaceName}CRUD<R,true,L> {
-    const copy = new ${interfaceName}CRUD<R,true,L>(
-      this.bucketId,
-      this.bdService,
-      this.relationalFields
-    );
-    copy.options = {...this.options};
-    copy.options.queryParams.paginate = true;
-    return copy;
-  }
-
-
-  filter(filter:any): ${interfaceName}CRUD<R, P, L>{
-    this.options.queryParams.filter = filter;
+  override filter(filter: any): ${interfaceName}QueryableMethods<R, P, L> {
+    super.filter(filter);
     return this;
   }
 
-  translate(language: ${languagesDefinition}): ${interfaceName}CRUD<R, P, L>{
-    this.options.headers['accept-language'] = language;
+  override translate(
+    language: AvailableLanguages
+  ): ${interfaceName}QueryableMethods<R, P, L> {
+    super.translate(language);
     return this;
   }
 
-  nonLocalize(): ${interfaceName}CRUD<R, P, false>{
-    const copy = new ${interfaceName}CRUD<R, P, false>(
-      this.bucketId,
-      this.bdService,
-      this.relationalFields
-    );
-    copy.options = {...this.options};
-    copy.options.queryParams.localize = false;
-    return copy;
+  override paginate(): ${interfaceName}QueryableMethods<R, true, L> {
+    super.paginate();
+    return this as ${interfaceName}QueryableMethods<R, true, L>;
   }
 
 }
@@ -571,85 +626,3 @@ interface RelationProperty extends IProperty {
 interface LocationProperty extends IProperty {
   type: "location";
 }
-
-// type Includes<Arr extends string[], Str extends string> = Extract<Arr[number], Str> extends never ? false : true;
-
-// type Find<Targets extends string[], Search extends string> = {
-//   [K in keyof Targets]: Targets[K] extends Search ? Targets[K] : never;
-// }[number];
-
-// type FindRest<T extends string[], S extends string> = {
-//   [K in keyof T]: T[K] extends `${S}.${infer Rest}`
-//     ? Rest
-//     : never
-// }[number]
-
-// type DeliveryRelationEnum = 'user' | 'user.address' | 'user.address.loc' | 'order'
-
-// interface Delivery<Relations extends DeliveryRelationEnum[] = []> {
-//   title: string;
-//   user: Find<Relations, "user"> extends never ? string : User;
-//   order: Find<Relations, "order"> extends never ? string : Order;
-// }
-
-// interface User<Relations extends string[] = []> {
-//   name: string;
-//   surname: string;
-//   address: Find<Relations,"address">[] extends never[] ? string : Address<FindRest<Relations,"address">[]>
-// }
-
-// interface Address<Relations extends string[] = []> {
-//   street: string;
-//   city: string;
-//   location: Find<Relations,"loc">[] extends never[] ? string : Loc<FindRest<Relations,"loc">[]>
-// }
-
-// interface Loc<Relations extends string[] = []>{
-//   lat:number,
-//   lng:number
-// }
-
-// interface Order<Relations extends string[] = []> {
-//   type: string;
-// }
-
-// type UnionToTuple<T extends string[]> = (
-//   T extends any ? (arg: T) => void : never
-// ) extends (arg: infer U) => void ? U : never;
-
-// type ConvertEnumToSelection<T extends string[]> = T extends (infer U)[] ? [U, ...U[]] : never;
-
-// function resolve<T extends ConvertEnumToSelection<DeliveryRelationEnum[]>>(relations: T): Delivery<T> {
-//   return null as any; // Placeholder implementation
-// }
-
-// resolve(["order","user"])
-
-// class MyClass {
-//   method1() {
-//     console.log("Method 1");
-//   }
-
-//   method2() {
-//     console.log("Method 2");
-//   }
-
-//   method3() {
-//     console.log("Method 3");
-//   }
-// }
-
-// type RemoveMethods<T, M extends keyof T> = {
-//   [K in keyof T as K extends M ? never : K]: T[K];
-// };
-
-// type MyPickedMethods = PickMethods<MyClass, "method1" | "method3">;
-
-// const obj: MyPickedMethods = new MyClass();
-// obj.method1(); // Output: Method 1
-// obj.method2(); // Output: Method 1
-// obj.method3(); // Output: Method 3
-
-// type PickMethods<T, M extends keyof T> = {
-//   [K in M]: T[K] extends (...args: any[]) => any ? T[K] : never;
-// };
