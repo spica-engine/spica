@@ -57,9 +57,7 @@ export namespace Schema {
     apiurl: string,
     warnings: string[]
   ) {
-
     const languagesDefinition = `${languages.map(i => `'${i}'`).join("|")}`;
-
 
     let lines: string[] = [];
     // DEVKIT INIT
@@ -134,7 +132,6 @@ type AvailableLanguages = ${languagesDefinition}
   }
 
   function addCrud(lines: string[], buckets: BucketSchema[], languages: string[]) {
-
     const crud = `
 class CRUD<Scheme,Paginate extends boolean = false> {
   protected options: {
@@ -296,7 +293,6 @@ class QueryBuilderCRUD<Scheme,Paginate extends boolean = false> extends CRUD<Sch
       const resolveRelationEnumsDefinition = resolveRelationEnums.length
         ? `(${resolveRelationEnums.map(i => `'${i}'`).join("|")})[]`
         : "[]";
-
 
       const crudDefinition = `
 const ${interfaceName}RelationFields: string[] = ${relationalFieldsDefinition}
