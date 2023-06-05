@@ -311,39 +311,39 @@ class ${interfaceName}Cursor<R extends string[] = [], P extends boolean = false,
   
   override resolveRelations<Selecteds extends ${interfaceName}RelationSelection>(
     relations: Selecteds
-  ): ${interfaceName}Cursor<Selecteds, P, L> {
+  ): ${interfaceName}CursorMethods<Selecteds, P, L> {
     return super.resolveRelations(relations);
   }
 
-  override nonLocalize(): ${interfaceName}Cursor<R, P, false> {
+  override nonLocalize(): ${interfaceName}CursorMethods<R, P, false> {
     return super.nonLocalize();
   }
 
-  override limit(limit: number): ${interfaceName}Cursor<R, P, L> {
+  override limit(limit: number): ${interfaceName}CursorMethods<R, P, L> {
     return super.limit(limit);
   }
 
-  override skip(skip: number): ${interfaceName}Cursor<R, P, L> {
+  override skip(skip: number): ${interfaceName}CursorMethods<R, P, L> {
     return super.skip(skip);
   }
 
   override sort(sort: {
     [T in keyof ${interfaceName}]: -1 | 1;
-  }): ${interfaceName}Cursor<R, P, L> {
+  }): ${interfaceName}CursorMethods<R, P, L> {
     return super.sort(sort);
   }
 
-  override filter(filter: any): ${interfaceName}Cursor<R, P, L> {
+  override filter(filter: any): ${interfaceName}CursorMethods<R, P, L> {
     return super.filter(filter);
   }
 
   override translate(
     language: AvailableLanguages
-  ): ${interfaceName}Cursor<R, P, L> {
+  ): ${interfaceName}CursorMethods<R, P, L> {
     return super.translate(language);
   }
 
-  override paginate(): ${interfaceName}Cursor<R, true, L> {
+  override paginate(): ${interfaceName}CursorMethods<R, true, L> {
     return super.paginate();
   }
 
