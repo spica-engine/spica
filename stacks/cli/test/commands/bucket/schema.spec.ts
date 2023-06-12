@@ -182,7 +182,7 @@
 //         document._id,
 //         document
 //       );
-//     };  
+//     };
 //     export function patch (
 //       document: Partial<New_Bucket> & id
 //     ) {
@@ -194,7 +194,7 @@
 //         }
 //       });
 //       return Bucket.data.patch(BUCKET_ID, document._id, document);
-//     };  
+//     };
 //     export function remove (documentId: string) {
 //       return Bucket.data.remove(BUCKET_ID, documentId);
 //     };
@@ -248,23 +248,23 @@
 //       return Bucket.data.getAll<Users & id>(BUCKET_ID, ...args);
 //     };
 //     export function insert (document: Omit<Users, "_id">) {
-      
+
 //       return Bucket.data.insert(BUCKET_ID, document);
 //     };
 //     export function update (document: Users & id) {
-      
+
 //       return Bucket.data.update(
 //         BUCKET_ID,
 //         document._id,
 //         document
 //       );
-//     };  
+//     };
 //     export function patch (
 //       document: Partial<Users> & id
 //     ) {
-      
+
 //       return Bucket.data.patch(BUCKET_ID, document._id, document);
-//     };  
+//     };
 //     export function remove (documentId: string) {
 //       return Bucket.data.remove(BUCKET_ID, documentId);
 //     };
@@ -291,23 +291,23 @@
 //       return Bucket.data.getAll<Users2 & id>(BUCKET_ID, ...args);
 //     };
 //     export function insert (document: Omit<Users2, "_id">) {
-      
+
 //       return Bucket.data.insert(BUCKET_ID, document);
 //     };
 //     export function update (document: Users2 & id) {
-      
+
 //       return Bucket.data.update(
 //         BUCKET_ID,
 //         document._id,
 //         document
 //       );
-//     };  
+//     };
 //     export function patch (
 //       document: Partial<Users2> & id
 //     ) {
-      
+
 //       return Bucket.data.patch(BUCKET_ID, document._id, document);
-//     };  
+//     };
 //     export function remove (documentId: string) {
 //       return Bucket.data.remove(BUCKET_ID, documentId);
 //     };
@@ -323,7 +323,7 @@
 
 //     expect(uglify(content)).toEqual(uglify(expectation));
 //     expect(warnings).toEqual([
-//       `It seems there is more than one bucket that has the title 'Users'. 
+//       `It seems there is more than one bucket that has the title 'Users'.
 // Number suffix will be added but should use unique titles for the best practice.`
 //     ]);
 //   });
