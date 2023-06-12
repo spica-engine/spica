@@ -42,8 +42,7 @@ export function registerAssetHandlers(
 
       await CRUD.index.write(fs, engine, fn._id, resource.contents.index);
 
-      const fnWithDeps = {dependencies: resource.contents.package.dependencies, ...fn};
-      await CRUD.dependencies.reinstall(engine, fnWithDeps);
+      await CRUD.dependencies.install(engine, fn, resource.contents.package.dependencies);
     },
 
     update: async (resource: Resource<FunctionContents>) => {
@@ -53,7 +52,7 @@ export function registerAssetHandlers(
       await CRUD.index.write(fs, engine, fn._id, resource.contents.index);
 
       fn.dependencies = resource.contents.package.dependencies;
-      await CRUD.dependencies.reinstall(engine, fn);
+      await CRUD.dependencies.update(engine, fn);
     },
 
     delete: async (resource: Resource<FunctionContents>) => {
