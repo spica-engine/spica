@@ -16,7 +16,8 @@ import {
   Headers,
   Inject,
   UnauthorizedException,
-  InternalServerErrorException
+  InternalServerErrorException,
+  Optional
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
@@ -58,9 +59,11 @@ export class IdentityController {
     @Inject(POLICY_PROVIDER)
     private identityPolicyResolver: (req: any) => Promise<[{statement: []}]>,
     private authFactor: AuthFactor,
-    private commander: ClassCommander
+    @Optional() private commander: ClassCommander
   ) {
-    this.commander.register(this, [this.setIdentityFactor, this.deleteIdentityFactor]);
+    if (this.commander) {
+      this.commander.register(this, [this.setIdentityFactor, this.deleteIdentityFactor]);
+    }
     this.identityService
       .find({
         authFactor: {$exists: true}

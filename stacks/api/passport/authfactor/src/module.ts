@@ -7,17 +7,17 @@ import {ClassCommander} from "@spica-server/replication";
 @Module({
   providers: [
     {
+      provide: "FACTORS_MAP",
+      useValue: new Map([
+        [
+          "totp",
+          {instanceFactory: meta => new Totp(meta), schemaProvider: TotpFactorSchemaProvider}
+        ]
+      ])
+    },
+    {
       provide: AuthFactor,
-      useFactory: cmd => {
-        const map = new Map();
-
-        map.set("totp", Totp);
-
-        const schemas = [TotpFactorSchemaProvider];
-
-        return new AuthFactor(map, schemas, cmd);
-      },
-      inject: [ClassCommander]
+      useClass: AuthFactor
     }
   ],
   exports: [AuthFactor]

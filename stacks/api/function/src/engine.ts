@@ -44,7 +44,7 @@ export class FunctionEngine implements OnModuleDestroy {
     private fs: FunctionService,
     private db: DatabaseService,
     private scheduler: Scheduler,
-    private commander: ClassCommander,
+    @Optional() private commander: ClassCommander,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
     @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug
@@ -62,7 +62,9 @@ export class FunctionEngine implements OnModuleDestroy {
       }
       this.categorizeChanges(targetChanges);
       // skip the initial trigger subscriptions, since other replicas have already subscribed
-      this.commander.register(this, [this.categorizeChanges]);
+      if (this.commander) {
+        this.commander.register(this, [this.categorizeChanges]);
+      }
     });
   }
 
