@@ -1,6 +1,6 @@
 import {Test} from "@nestjs/testing";
 import {DatabaseService} from "@spica-server/database";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {DatabaseOutput} from "@spica-server/function/runtime/io";
 import {generateLog, getLoggerConsole, LogLevels} from "@spica-server/function/runtime/logger";
 
@@ -24,6 +24,8 @@ describe("IO Database", () => {
   it("should write stdout to collection", done => {
     const [stdout] = dbOutput.create({eventId: "event", functionId: "1"});
     stdout.write(Buffer.from("this is my message"), async err => {
+      await stream.wait();
+
       expect(err).toBeUndefined();
       expect(
         await db
@@ -49,6 +51,8 @@ describe("IO Database", () => {
   it("should write stderr to collection", done => {
     const [, stderr] = dbOutput.create({eventId: "event", functionId: "1"});
     stderr.write(Buffer.from("this is my message"), async err => {
+      await stream.wait();
+
       expect(err).toBeUndefined();
       expect(
         await db
@@ -85,6 +89,8 @@ describe("IO Database", () => {
       const info = generateLog("This is an info message", LogLevels.INFO);
 
       stdout.write(Buffer.from(`${debug}\n${log}\n${info}`), async err => {
+        await stream.wait();
+
         expect(err).toBeUndefined();
         expect(
           await db
@@ -125,7 +131,7 @@ describe("IO Database", () => {
         ]);
         done();
       });
-    });
+    }, 10000);
 
     it("should write error logs to the database with log level", done => {
       const [, stderr] = dbOutput.create({eventId: "event", functionId: "1"});
@@ -133,6 +139,8 @@ describe("IO Database", () => {
       const error = generateLog("This is an error message", LogLevels.ERROR);
 
       stderr.write(Buffer.from(`${warning}\n${error}`), async err => {
+        await stream.wait();
+
         expect(err).toBeUndefined();
         expect(
           await db
@@ -165,6 +173,6 @@ describe("IO Database", () => {
         ]);
         done();
       });
-    });
+    }, 10000);
   });
 });
