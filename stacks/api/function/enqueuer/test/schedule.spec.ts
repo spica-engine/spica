@@ -30,7 +30,7 @@ describe("ScheduleEnqueuer", () => {
     }).compile();
     const jobReducer = module.get(JobReducer);
 
-    enqueuer = new ScheduleEnqueuer(eventQueue, jobReducer, schedulerUnsubscriptionSpy);
+    enqueuer = new ScheduleEnqueuer(eventQueue, schedulerUnsubscriptionSpy, jobReducer);
 
     noopTarget = createTarget();
 

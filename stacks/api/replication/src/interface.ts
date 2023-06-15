@@ -60,7 +60,7 @@ export interface ReplicationServiceOptions {
   expireAfterSeconds: number;
 }
 export const replicationServiceOptions: ReplicationServiceOptions = {
-  expireAfterSeconds: 60 * 1000
+  expireAfterSeconds: 60 * 60
 };
 
 export const COMMAND_MEMORY_OPTIONS = Symbol.for("COMMAND_MEMORY_OPTIONS");

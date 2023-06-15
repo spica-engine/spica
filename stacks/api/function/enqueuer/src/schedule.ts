@@ -21,8 +21,8 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
 
   constructor(
     private queue: EventQueue,
-    private jobReducer: JobReducer,
-    private schedulerUnsubscription: (targetId: string) => void
+    private schedulerUnsubscription: (targetId: string) => void,
+    private jobReducer?: JobReducer
   ) {}
 
   subscribe(target: event.Target, options: ScheduleOptions): void {
@@ -45,7 +45,9 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
         timezone: options.timezone
       };
 
-      this.jobReducer.do(meta, onTick);
+      if (this.jobReducer) {
+        this.jobReducer.do(meta, onTick);
+      }
     };
 
     const job = new cron.CronJob({

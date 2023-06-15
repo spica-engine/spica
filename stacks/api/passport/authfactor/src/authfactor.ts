@@ -1,5 +1,5 @@
 import {Factor, FactorMeta, AuthFactorSchemaProvider} from "./interface";
-import {Injectable} from "@nestjs/common";
+import {Inject, Injectable, Optional} from "@nestjs/common";
 import {ClassCommander} from "@spica-server/replication";
 
 @Injectable()
@@ -7,15 +7,20 @@ export class AuthFactor {
   private userFactor = new Map<string, {hasStarted: boolean; factor: Factor}>();
 
   constructor(
-    private factors: Map<string, any>,
-    private schemas: AuthFactorSchemaProvider[],
-    private commander: ClassCommander
+    @Inject("FACTORS_MAP")
+    private factorsMap: Map<
+      string,
+      {instanceFactory: (meta) => Factor; schemaProvider: () => AuthFactorSchemaProvider}
+    >,
+    @Optional() private commander: ClassCommander
   ) {
-    this.commander.register(this, [this.register, this.unregister, this.start]);
+    if (this.commander) {
+      this.commander.register(this, [this.register, this.unregister, this.start]);
+    }
   }
 
   getSchemas() {
-    return Promise.all(this.schemas.map(fn => fn()));
+    return Promise.all(Array.from(this.factorsMap.values()).map(v => v.schemaProvider()));
   }
 
   // we may want to get these fields from each factor.
@@ -34,13 +39,13 @@ export class AuthFactor {
   }
 
   getFactor(meta: FactorMeta): Factor {
-    const ctor = this.factors.get(meta.type);
+    const factor = this.factorsMap.get(meta.type);
 
-    if (!ctor) {
+    if (!factor) {
       throw Error(`Unknown factor named '${meta.type}'.`);
     }
 
-    return new ctor(meta);
+    return factor.instanceFactory(meta);
   }
 
   start(identity: string) {

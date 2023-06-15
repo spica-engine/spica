@@ -270,6 +270,14 @@ const args = yargs
       default: true
     }
   })
+  /* Replication Options */
+  .options({
+    replication: {
+      boolean: true,
+      description: "When enabled, server will keep all API replicas at the same level.",
+      default: false
+    }
+  })
   /* CORS Options */
   .option({
     "cors-allowed-origins": {
@@ -485,7 +493,9 @@ if (args["version-control"]) {
   modules.push(VersionControlModule.forRoot({persistentPath: args["persistent-path"]}));
 }
 
-modules.push(ReplicationModule.forRoot());
+if (args["replication"]) {
+  modules.push(ReplicationModule.forRoot());
+}
 
 @Module({
   imports: modules

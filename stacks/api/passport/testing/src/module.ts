@@ -3,7 +3,6 @@ import {PassportModule} from "@nestjs/passport";
 import {GuardService} from "@spica-server/passport";
 import {AuthFactor} from "@spica-server/passport/authfactor";
 import {PreferenceService} from "@spica-server/preference/services";
-import {ClassCommander} from "@spica-server/replication";
 import {ReplicationTestingModule} from "@spica-server/replication/testing";
 import {TestingOptions} from "./interface";
 import {NoopStrategy} from "./noop.strategy";
@@ -13,9 +12,12 @@ import {NoopStrategy} from "./noop.strategy";
   imports: [ReplicationTestingModule.create()],
   providers: [
     {
+      provide: "FACTORS_MAP",
+      useValue: new Map([])
+    },
+    {
       provide: AuthFactor,
-      useFactory: cmd => new AuthFactor(new Map(), [], cmd),
-      inject: [ClassCommander]
+      useClass: AuthFactor
     }
   ],
   exports: [AuthFactor]

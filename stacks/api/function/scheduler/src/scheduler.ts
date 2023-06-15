@@ -49,13 +49,15 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   constructor(
     private http: HttpAdapterHost,
     private database: DatabaseService,
-    private commander: ClassCommander,
+    @Optional() private commander: ClassCommander,
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>,
-    private jobReducer: JobReducer,
+    @Optional() private jobReducer: JobReducer,
     @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker
   ) {
-    this.commander.register(this, [this.deleteWorkersOfTarget]);
+    if (this.commander) {
+      this.commander.register(this, [this.deleteWorkersOfTarget]);
+    }
 
     this.output = new DatabaseOutput(database);
 
@@ -111,12 +113,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.queue,
         this.databaseQueue,
         this.database,
-        this.jobReducer,
-        schedulerUnsubscription
+        schedulerUnsubscription,
+        this.jobReducer
       )
     );
 
-    this.enqueuers.add(new ScheduleEnqueuer(this.queue, this.jobReducer, schedulerUnsubscription));
+    this.enqueuers.add(new ScheduleEnqueuer(this.queue, schedulerUnsubscription, this.jobReducer));
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 

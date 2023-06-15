@@ -46,8 +46,8 @@ describe("DatabaseEnqueuer", () => {
       eventQueue,
       databaseQueue,
       database,
-      jobReducer,
-      schedulerUnsubscriptionSpy
+      schedulerUnsubscriptionSpy,
+      jobReducer
     );
   });
 

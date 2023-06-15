@@ -17,7 +17,8 @@ import {
   All,
   Inject,
   Res,
-  Next
+  Next,
+  Optional
 } from "@nestjs/common";
 import {Identity, IdentityService, LoginCredentials} from "@spica-server/passport/identity";
 import {Subject, throwError} from "rxjs";
@@ -67,16 +68,18 @@ export class PassportController {
     private strategyService: StrategyService,
     private authFactor: AuthFactor,
     @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices,
-    private command: ClassCommander
+    @Optional() private commander: ClassCommander
   ) {
-    this.command.register(this, [
-      this.startIdentifyWithState,
-      this.completeIdentifyWithState,
-      this.setIdentityToken,
-      this.deleteIdentityToken,
-      this.setAssertObservers,
-      this.deleteAssertObservers
-    ]);
+    if (this.commander) {
+      this.commander.register(this, [
+        this.startIdentifyWithState,
+        this.completeIdentifyWithState,
+        this.setIdentityToken,
+        this.deleteIdentityToken,
+        this.setAssertObservers,
+        this.deleteAssertObservers
+      ]);
+    }
   }
 
   async getIdentity(identifier: string, password: string) {

@@ -23,8 +23,8 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     private queue: EventQueue,
     private databaseQueue: DatabaseQueue,
     private db: DatabaseService,
-    private jobReducer: JobReducer,
-    private schedulerUnsubscription: (targetId: string) => void
+    private schedulerUnsubscription: (targetId: string) => void,
+    private jobReducer?: JobReducer
   ) {
     super();
   }
@@ -63,7 +63,10 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
         this.databaseQueue.enqueue(ev.id, change);
       };
 
-      return this.jobReducer.do({...rawChange, _id: rawChange._id._data}, onChange);
+      if (this.jobReducer) {
+        this.jobReducer.do({...rawChange, _id: rawChange._id._data}, onChange);
+      }
+      return;
     };
     stream.on("change", onChangeHandler);
 
