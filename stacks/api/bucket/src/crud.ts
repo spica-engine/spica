@@ -5,6 +5,7 @@ import {ObjectId} from "@spica-server/database";
 import {HistoryService} from "@spica-server/bucket/history";
 import * as expression from "@spica-server/bucket/expression";
 import {BadRequestException} from "@nestjs/common";
+import {deepCopy} from "@spica-server/core/patch";
 
 export async function insert(bs: BucketService, bucket: Bucket) {
   ruleValidation(bucket);
@@ -28,7 +29,6 @@ export async function replace(
 ) {
   ruleValidation(bucket);
 
-  // check whether we need to delete bucket id
   const _id = new ObjectId(bucket._id);
   delete bucket._id;
 
@@ -47,6 +47,42 @@ export async function replace(
   }
 
   return currentSchema;
+}
+
+export async function remameProperty(
+  bs: BucketService,
+  bds: BucketDataService,
+  history: HistoryService,
+  bucket: Bucket,
+  oldName: string,
+  newName: string
+) {
+  const doesFieldExist = bucket.properties[oldName];
+  if(!doesFieldExist){
+    throw Error(`Property '${oldName}' does not exist.`)
+  }
+  // update bucket schema
+  let currentBucket = deepCopy(bucket);
+  const propertyValue = currentBucket.properties[oldName];
+  delete currentBucket.properties[oldName];
+  currentBucket.properties[newName] = propertyValue;
+
+  const _id = new ObjectId(currentBucket._id);
+  delete currentBucket._id;
+
+  currentBucket = await bs.findOneAndReplace({_id: _id}, currentBucket, {returnOriginal: false});
+
+  // update bucket-data
+  await bds.children(bucket).updateMany({}, {$rename: {[oldName]: newName}});
+
+  // emit schema changes
+  bs.emitSchemaChanges();
+
+  // emit history
+  // should be detected somehow
+
+  // return schema
+  return currentBucket;
 }
 
 export async function remove(

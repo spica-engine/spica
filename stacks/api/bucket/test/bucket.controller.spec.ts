@@ -177,6 +177,30 @@ describe("BucketController", () => {
       expect(buckets[0]).toEqual(updatedBucket);
     });
 
+    it("should rename bucket property", async () => {
+      const {body: insertedBucket} = await req.post("/bucket", bucket);
+      const {body: bucketData} = await req.post(`/bucket/${insertedBucket._id}/data`, {
+        title: "my title",
+        description: "my description"
+      });
+
+      const {body: updateResult} = await req.put(`/bucket/${insertedBucket._id}/property/title`, {
+        value: "name"
+      });
+
+      expect(updateResult.properties.title).toBeUndefined();
+      expect(updateResult.properties.name).toEqual(insertedBucket.properties.title);
+
+      const {body: updatedBucketData} = await req.get(
+        `/bucket/${insertedBucket._id}/data/${bucketData._id}`
+      );
+      expect(updatedBucketData).toEqual({
+        _id: bucketData._id,
+        name: "my title",
+        description: "my description"
+      });
+    });
+
     it("should update patch buckets", async () => {
       const {body: firstBucket} = await req.post("/bucket", {...bucket, title: "First Bucket"});
       const {body: secondBucket} = await req.post("/bucket", {...bucket2, title: "Second Bucket"});

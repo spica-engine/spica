@@ -72,8 +72,7 @@ export class BucketController {
   }
 
   /**
-   * Replaces the current schema.
-   * @param id Identifier of the schema.
+   * Inserts a new schema.
    * @body ```json
    * {
    *    "icon": "basket",
@@ -101,6 +100,48 @@ export class BucketController {
     return CRUD.insert(this.bs, bucket).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
+  }
+
+
+  /**
+   * Renames the schema property
+   * @param id Identifier of the schema.
+   * @param property Property name that will be renamed
+   * @body ```json
+   * {
+   *    value: "new_name"
+   * }
+   * ```
+   */
+  @UseInterceptors(activity(createBucketActivity), invalidateCache())
+  @Put(":id/property/:property")
+  @UseGuards(AuthGuard(), ActionGuard("bucket:update", "bucket/:id"))
+  async rename(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("property") property: string,
+    @Body(
+      Schema.validate({
+        type: "object",
+        properties: {
+          value: {
+            type: "string"
+          }
+        },
+        additionalProperties: false
+      })
+    )
+    body: {value: string}
+  ) {
+    const bucket = await this.bs.findOne({_id: id});
+    if (!bucket) {
+      throw new NotFoundException(`Bucket with id ${id} does not exist.`);
+    }
+
+    return CRUD.remameProperty(this.bs, this.bds, this.history, bucket, property, body.value).catch(
+      error => {
+        throw new HttpException(error.message, error.status || 500);
+      }
+    );
   }
 
   /**
