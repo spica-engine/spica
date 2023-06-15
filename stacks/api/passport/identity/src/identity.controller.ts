@@ -327,6 +327,9 @@ export class IdentityController {
     if (identity.password) {
       identity.password = await hash(identity.password);
     }
+
+    delete identity.authFactor;
+
     return this.identityService
       .findOneAndUpdate({_id: id}, {$set: identity}, {returnOriginal: false})
       .then(updatedIdentity => this.afterIdentityUpsert(updatedIdentity))
