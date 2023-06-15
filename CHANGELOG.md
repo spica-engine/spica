@@ -1,5 +1,19 @@
+## v0.9.27 (2023-06-15)
+
+* feat(replication): enable/disable module with API option ([0a654a592](https://github.com/spica-engine/spica/commit/0a654a592))
+* fix(passport): disable updating authfactor from identity update endpoint ([de2ee7767](https://github.com/spica-engine/spica/commit/de2ee7767))
+* feat(cli): resolve relations and it's interfaces on bucket orm ([046362fc5](https://github.com/spica-engine/spica/commit/046362fc5))
+* fix(dashboard): initialization and styles ([88fdd13a0](https://github.com/spica-engine/spica/commit/88fdd13a0))
+* perf(function): uninstall only necessary dependencies ([88149754e](https://github.com/spica-engine/spica/commit/88149754e))
+* fix(dashboard): instance usages dashboard styles ([cf9d3f485](https://github.com/spica-engine/spica/commit/cf9d3f485))
+* fix(status): call the original method properly after interceptors ([ac1a15a58](https://github.com/spica-engine/spica/commit/ac1a15a58))
+* feat(storage): display document contents ([dabc62baf](https://github.com/spica-engine/spica/commit/dabc62baf))
+* perf(function): improve code quality of bucket orm output ([afef5e43e](https://github.com/spica-engine/spica/commit/afef5e43e))
+* fix(function): type errors in relation normalization ([7b0bc0ebc](https://github.com/spica-engine/spica/commit/7b0bc0ebc))
+
 ## v0.9.26 (2023-03-29)
 
+* docs: update changelog for v0.9.26 ([2e1ae6037](https://github.com/spica-engine/spica/commit/2e1ae6037))
 * feat(dashboard): component aspect/ratios and grid layout ([d08dcdcb9](https://github.com/spica-engine/spica/commit/d08dcdcb9))
 * deprecate(bucket): scheduling bucket-data publishing ([b7efd4b3d](https://github.com/spica-engine/spica/commit/b7efd4b3d))
 * feat(core): move resource CRUD operations to the left-side menu ([419f1c83f](https://github.com/spica-engine/spica/commit/419f1c83f))
