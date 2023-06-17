@@ -44,6 +44,14 @@ spec:
           volumeMounts:
             - name: {{ .Release.Name }}-data
               mountPath: /data/db
+      {{- if .Values.database.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.database.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.database.tolerations }}
+      tolerations:
+{{ toYaml .Values.database.tolerations | indent 8 }}
+      {{- end }}
   volumeClaimTemplates:
     - metadata:
         name: {{ .Release.Name }}-data
