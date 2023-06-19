@@ -167,7 +167,7 @@ export class AddComponent implements OnInit, OnDestroy {
     )
       .pipe(
         tap(id => this.selectedFunctionId.next(id)),
-        switchMap(id => this.functionService.getFunction(id).pipe()),
+        switchMap(id => this.functionService.getFunction(id).pipe(take(1))),
         tap(fn => {
           if (this.function._id && this.function._id == fn._id) {
             // No need to set dependencies & environments again because they are only editable on this page.
