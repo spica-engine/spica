@@ -9,7 +9,6 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {FunctionModule} from "@spica-server/function";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {ReplicationTestingModule} from "@spica-server/replication/testing";
 import {VersionControlModule, RepresentativeManager} from "@spica-server/versioncontrol";
 
 import * as os from "os";
@@ -85,7 +84,6 @@ describe("Versioning e2e", () => {
           cache: false,
           graphql: false
         }),
-        ReplicationTestingModule.create(),
         FunctionModule.forRoot({
           path: os.tmpdir(),
           databaseName: undefined,

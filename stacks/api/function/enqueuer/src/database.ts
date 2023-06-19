@@ -65,6 +65,8 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
 
       if (this.jobReducer) {
         this.jobReducer.do({...rawChange, _id: rawChange._id._data}, onChange);
+      } else {
+        onChange();
       }
       return;
     };
