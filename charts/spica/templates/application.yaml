@@ -82,6 +82,14 @@ spec:
           volumeMounts:
             - name: {{ .Release.Name }}-data
               mountPath: /data
+      {{- if .Values.application.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.application.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.application.tolerations }}
+      tolerations:
+{{ toYaml .Values.application.tolerations | indent 8 }}
+      {{- end }}
       {{- if eq .Values.application.diskAccessMode "ReadWriteMany"}}
       volumes:
       - name: {{ .Release.Name }}-data

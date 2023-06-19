@@ -34,3 +34,11 @@ spec:
             {{ template "database.nodes" . }},
             "--debug"
           ]
+      {{- if .Values.database.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.database.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.database.tolerations }}
+      tolerations:
+{{ toYaml .Values.database.tolerations | indent 8 }}
+      {{- end }}
