@@ -1,12 +1,11 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, MongoClient} from "@spica-server/database";
+import {DatabaseService} from "@spica-server/database";
 import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
 import {TargetChange, ChangeKind} from "@spica-server/function/src/change";
-import {ReplicationTestingModule} from "@spica-server/replication/testing";
 import {ClassCommander} from "@spica-server/replication";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
@@ -24,7 +23,6 @@ describe("Engine", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
-        ReplicationTestingModule.create(),
         SchedulerModule.forRoot({
           databaseName: undefined,
           databaseReplicaSet: undefined,
@@ -50,13 +48,11 @@ describe("Engine", () => {
     scheduler = module.get(Scheduler);
     database = module.get(DatabaseService);
 
-    const cmd = await module.resolve(ClassCommander);
-
     engine = new FunctionEngine(
       new FunctionService(database, {} as any),
       database,
       scheduler,
-      cmd,
+      undefined,
       {
         root: "test_root",
         timeout: 1

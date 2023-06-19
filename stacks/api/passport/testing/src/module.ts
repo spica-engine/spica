@@ -3,13 +3,11 @@ import {PassportModule} from "@nestjs/passport";
 import {GuardService} from "@spica-server/passport";
 import {AuthFactor} from "@spica-server/passport/authfactor";
 import {PreferenceService} from "@spica-server/preference/services";
-import {ReplicationTestingModule} from "@spica-server/replication/testing";
 import {TestingOptions} from "./interface";
 import {NoopStrategy} from "./noop.strategy";
 
 @Global()
 @Module({
-  imports: [ReplicationTestingModule.create()],
   providers: [
     {
       provide: "FACTORS_MAP",

@@ -4,7 +4,6 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {event} from "@spica-server/function/queue/proto";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
-import {ReplicationTestingModule} from "@spica-server/replication/testing";
 import {PassThrough} from "stream";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5687";
@@ -68,11 +67,7 @@ describe("Scheduler", () => {
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [
-        DatabaseTestingModule.replicaSet(),
-        ReplicationTestingModule.create(),
-        SchedulerModule.forRoot(schedulerOptions)
-      ]
+      imports: [DatabaseTestingModule.replicaSet(), SchedulerModule.forRoot(schedulerOptions)]
     }).compile();
 
     scheduler = module.get(Scheduler);

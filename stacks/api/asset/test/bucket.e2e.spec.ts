@@ -4,7 +4,6 @@ import {BucketModule} from "@spica-server/bucket";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {ReplicationTestingModule} from "@spica-server/replication/testing";
 import {AssetModule} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
@@ -46,8 +45,7 @@ describe("Bucket", () => {
           cache: false,
           graphql: false
         }),
-        AssetModule.forRoot({persistentPath: os.tmpdir()}),
-        ReplicationTestingModule.create()
+        AssetModule.forRoot({persistentPath: os.tmpdir()})
       ]
     }).compile();
 

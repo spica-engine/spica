@@ -47,6 +47,8 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
 
       if (this.jobReducer) {
         this.jobReducer.do(meta, onTick);
+      } else {
+        onTick();
       }
     };
 

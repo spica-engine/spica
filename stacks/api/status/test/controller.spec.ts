@@ -15,7 +15,6 @@ import {StorageModule} from "@spica-server/storage";
 import * as os from "os";
 import * as BSON from "bson";
 import {WsAdapter} from "@spica-server/core/websocket";
-import {ReplicationTestingModule} from "@spica-server/replication/testing";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50051";
 
@@ -187,9 +186,7 @@ describe("Status", () => {
           StatusModule.forRoot({expireAfterSeconds: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),
-          ReplicationTestingModule.create(),
           SchemaModule.forRoot({formats: [OBJECT_ID]}),
-          ReplicationTestingModule.create(),
           FunctionModule.forRoot({
             path: os.tmpdir(),
             databaseName: undefined,
