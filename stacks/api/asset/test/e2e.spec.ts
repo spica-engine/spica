@@ -3,12 +3,10 @@ import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {ReplicationTestingModule} from "@spica-server/replication/testing";
 import {AssetModule, exporters, operators, registrar, validators} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import * as os from "os";
-import {Asset, Exporter, Operator, ResourceLister, Validator} from "@spica-server/interface/asset";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:45672";
 
@@ -46,8 +44,7 @@ describe("E2E Tests", () => {
       DatabaseTestingModule.replicaSet(),
       PassportTestingModule.initialize({overriddenStrategyType: "identity"}),
       SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
-      AssetModule.forRoot({persistentPath: os.tmpdir()}),
-      ReplicationTestingModule.create()
+      AssetModule.forRoot({persistentPath: os.tmpdir()})
     ]
   };
 

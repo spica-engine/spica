@@ -3,7 +3,6 @@ import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {ReplicationTestingModule} from "@spica-server/replication/testing";
 import {AssetModule} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
@@ -49,8 +48,7 @@ describe("identity-settings", () => {
       }),
       PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
       SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
-      AssetModule.forRoot({persistentPath: os.tmpdir()}),
-      ReplicationTestingModule.create()
+      AssetModule.forRoot({persistentPath: os.tmpdir()})
     ]
   };
 

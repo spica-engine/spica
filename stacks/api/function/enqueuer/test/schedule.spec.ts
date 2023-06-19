@@ -2,8 +2,6 @@ import {Test} from "@nestjs/testing";
 import {ScheduleEnqueuer} from "@spica-server/function/enqueuer";
 import {EventQueue} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
-import {JobReducer} from "@spica-server/replication";
-import {ReplicationTestingModule} from "@spica-server/replication/testing";
 
 function createTarget(cwd?: string, handler?: string) {
   const target = new event.Target();

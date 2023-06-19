@@ -10,7 +10,6 @@ import {FunctionModule} from "@spica-server/function";
 import {Function} from "@spica-server/interface/function";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {ReplicationTestingModule} from "@spica-server/replication/testing";
 import * as os from "os";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7681";
@@ -48,7 +47,6 @@ xdescribe("Hooks Integration", () => {
         }),
         CoreTestingModule,
         PreferenceTestingModule,
-        ReplicationTestingModule.create(),
         BucketModule.forRoot({
           hooks: true,
           history: false,

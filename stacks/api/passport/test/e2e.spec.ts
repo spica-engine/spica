@@ -6,7 +6,6 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportModule} from "@spica-server/passport";
 import {REQUEST_SERVICE} from "@spica-server/passport/src/options";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {ReplicationTestingModule} from "@spica-server/replication/testing";
 
 import jsQR from "jsqr";
 import {PNG} from "pngjs";
@@ -184,7 +183,6 @@ describe("E2E Tests", () => {
   const moduleMetaData: ModuleMetadata = {
     controllers: [SAMLController, OAuthController],
     imports: [
-      ReplicationTestingModule.create(),
       SchemaModule.forRoot(),
       DatabaseTestingModule.standalone(),
       PassportModule.forRoot({

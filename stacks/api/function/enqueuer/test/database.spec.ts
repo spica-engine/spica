@@ -8,8 +8,6 @@ import {
 import {DatabaseEnqueuer} from "@spica-server/function/enqueuer";
 import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
 import {Database, event} from "@spica-server/function/queue/proto";
-import {JobReducer} from "@spica-server/replication";
-import {ReplicationTestingModule} from "@spica-server/replication/testing";
 
 function createTarget(cwd?: string, handler?: string) {
   const target = new event.Target();

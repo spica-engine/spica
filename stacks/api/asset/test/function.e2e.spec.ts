@@ -3,7 +3,6 @@ import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {ReplicationTestingModule} from "@spica-server/replication/testing";
 import {AssetModule} from "@spica-server/asset";
 import {FunctionModule} from "@spica-server/function";
 import {SchemaModule} from "@spica-server/core/schema";
@@ -41,7 +40,6 @@ describe("function", () => {
       PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
       SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
       AssetModule.forRoot({persistentPath: os.tmpdir()}),
-      ReplicationTestingModule.create(),
       FunctionModule.forRoot({
         path: os.tmpdir(),
         databaseName: undefined,
