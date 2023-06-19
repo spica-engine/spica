@@ -25,12 +25,7 @@ describe("ScheduleEnqueuer", () => {
 
     schedulerUnsubscriptionSpy = jasmine.createSpy("unsubscription", () => {});
 
-    const module = await Test.createTestingModule({
-      imports: [ReplicationTestingModule.create()]
-    }).compile();
-    const jobReducer = module.get(JobReducer);
-
-    enqueuer = new ScheduleEnqueuer(eventQueue, schedulerUnsubscriptionSpy, jobReducer);
+    enqueuer = new ScheduleEnqueuer(eventQueue, schedulerUnsubscriptionSpy);
 
     noopTarget = createTarget();
 

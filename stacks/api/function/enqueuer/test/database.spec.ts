@@ -29,12 +29,10 @@ describe("DatabaseEnqueuer", () => {
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [ReplicationTestingModule.create(), DatabaseTestingModule.replicaSet()]
+      imports: [DatabaseTestingModule.replicaSet()]
     }).compile();
 
     database = module.get(DatabaseService);
-
-    const jobReducer = module.get(JobReducer);
 
     noopTarget = createTarget();
 
@@ -46,8 +44,7 @@ describe("DatabaseEnqueuer", () => {
       eventQueue,
       databaseQueue,
       database,
-      schedulerUnsubscriptionSpy,
-      jobReducer
+      schedulerUnsubscriptionSpy
     );
   });
 
