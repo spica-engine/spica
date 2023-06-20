@@ -1,11 +1,10 @@
-import {CdkDrag, CdkDragDrop, moveItemInArray, transferArrayItem} from "@angular/cdk/drag-drop";
+import {CdkDragDrop, moveItemInArray, transferArrayItem} from "@angular/cdk/drag-drop";
 import {BreakpointObserver, Breakpoints, BreakpointState} from "@angular/cdk/layout";
 import {HttpEventType} from "@angular/common/http";
 import {Component, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
 import {ActivatedRoute, Router} from "@angular/router";
-import {PassportService} from "@spica-client/passport";
 import {AddDirectoryDialog} from "@spica-client/storage/components/add-directory-dialog/add-directory-dialog.component";
 import {
   Filters,
@@ -117,6 +116,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     const storagesSubs = combineLatest([this.refresh, this.filter$])
       .pipe(
         tap(() => this.loading$.next(true)),
+        tap(() => (this.currentNode = undefined)),
         switchMap(([_, filter]) => this.storageService.getAll({filter, sort: this.sorter})),
         tap(storages => {
           const newNodes = mapObjectsToNodes(storages);
