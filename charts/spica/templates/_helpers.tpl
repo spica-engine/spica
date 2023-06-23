@@ -20,3 +20,18 @@
     {{- end -}}
     {{- printf $uri | trimSuffix "," -}}
 {{- end -}}
+
+
+{{- define "generateReplicaSetMembers" -}}
+{{- $replicaCount := (.Values.database.replicas | int) -}}
+{{- $uri := "" -}}
+{{- $namespace := printf "%s-database" .Release.Name -}}
+{{- $ns := .Release.Namespace -}}
+[
+{{- range $index, $ := until $replicaCount -}}
+  {{- if ne $index 0 }},{{- end -}}
+  {{- $node := printf "\"%s-%d.%s.%s.svc.cluster.local\"" $namespace $index $namespace $ns -}}
+  {"_id": {{ $index }}, "host": {{ $node }} }
+{{- end -}}
+]
+{{- end -}}
