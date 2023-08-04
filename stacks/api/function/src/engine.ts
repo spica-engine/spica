@@ -55,20 +55,35 @@ export class FunctionEngine implements OnModuleDestroy {
 
     this.schemas.set("database", () => getDatabaseSchema(this.db, collSlug));
 
-    this.fs.find().then(fns => {
-      const targetChanges: TargetChange[] = [];
-      for (const fn of fns) {
-        targetChanges.push(...createTargetChanges(fn, ChangeKind.Added));
-      }
-      this.categorizeChanges(targetChanges);
-      // skip the initial trigger subscriptions, since other replicas have already subscribed
+    this.registerTriggers().then(() => {
       if (this.commander) {
+        // trigger updates should be published to the other replicas except initial trigger registration
         this.commander.register(this, [this.categorizeChanges]);
       }
     });
   }
 
-  onModuleDestroy() {
+  registerTriggers() {
+    return this.updateTriggers(ChangeKind.Added);
+  }
+
+  unregisterTriggers() {
+    return this.updateTriggers(ChangeKind.Removed);
+  }
+
+  private updateTriggers(kind: ChangeKind) {
+    return this.fs.find().then(fns => {
+      const targetChanges: TargetChange[] = [];
+      for (const fn of fns) {
+        targetChanges.push(...createTargetChanges(fn, kind));
+      }
+      this.categorizeChanges(targetChanges);
+    });
+  }
+
+  async onModuleDestroy() {
+    await this.unregisterTriggers();
+
     this.dispose.next();
   }
 

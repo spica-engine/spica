@@ -21,14 +21,12 @@ import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io"
 import {generateLog, LogLevels} from "@spica-server/function/runtime/logger";
 import {Node} from "@spica-server/function/runtime/node";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
-import {
-  AttachStatusTracker,
-  ATTACH_STATUS_TRACKER,
-  StatusInterceptor
-} from "@spica-server/status/services";
+import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/status/services";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
+import {Subject} from "rxjs";
+import {take} from "rxjs/operators";
 
 type ScheduleWorker = Worker & {target: event.Target; schedule: (event: event.Event) => void};
 
@@ -133,18 +131,42 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.scaleWorkers();
   }
 
+  killFreeWorkers() {
+    const freeWorkers = Array.from(this.workers.entries()).filter(
+      ([key, worker]) => worker.schedule
+    );
+
+    const killWorkers = freeWorkers.map(([key, worker]) => {
+      return worker.kill();
+    });
+
+    return Promise.all(killWorkers);
+  }
+
+  waitLastWorkerLost() {
+    return this.onLastWorkerLost
+      .asObservable()
+      .pipe(take(1))
+      .toPromise();
+  }
+
+  killLanguages() {
+    return Promise.all(Array.from(this.languages.values()).map(l => l.kill()));
+  }
+
   async onModuleDestroy() {
-    for (const [id, worker] of this.workers.entries()) {
-      await worker.kill();
-      this.workers.delete(id);
-    }
-    for (const language of this.languages.values()) {
-      await language.kill();
-    }
+    this.eventQueue.clear();
+
+    await this.killFreeWorkers();
+    await this.waitLastWorkerLost();
+
+    await this.killLanguages();
+
     return this.queue.kill();
   }
 
   workers = new Map<string, ScheduleWorker>();
+  onLastWorkerLost = new Subject();
 
   eventQueue = new Map<string, event.Event>();
 
@@ -247,7 +269,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     // scheduler unsubscription might have deleted the worker in order to direct next events to the new worker with the latest function index
     if (!relatedWorker) {
-      this.print(`the worker ${id} that has stale function index won't be scheduled.`);
+      this.print(`the worker ${id} won't be scheduled anymore.`);
     } else {
       relatedWorker.schedule = schedule;
 
@@ -266,6 +288,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.timeouts.delete(id);
 
     this.print(`lost a worker ${id}`);
+
+    if (!this.workers.size) {
+      this.onLastWorkerLost.next();
+    }
   }
 
   deleteWorkersOfTarget(targetId: string) {
