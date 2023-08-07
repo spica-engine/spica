@@ -12,6 +12,7 @@ ts_project(
     deps = [
         "//packages/representative",
         "//stacks/api/passport/guard",
+        "//stacks/api/replication",
         "@npm//@nestjs/common",
         "@npm//simple-git",
     ],

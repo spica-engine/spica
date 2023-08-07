@@ -490,7 +490,12 @@ if (args["status-tracking"]) {
 }
 
 if (args["version-control"]) {
-  modules.push(VersionControlModule.forRoot({persistentPath: args["persistent-path"]}));
+  modules.push(
+    VersionControlModule.forRoot({
+      persistentPath: args["persistent-path"],
+      replicationEnabled: args["replication"]
+    })
+  );
 }
 
 if (args["replication"]) {
