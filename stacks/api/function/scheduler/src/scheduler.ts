@@ -144,10 +144,14 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   waitLastWorkerLost() {
-    return this.onLastWorkerLost
-      .asObservable()
-      .pipe(take(1))
-      .toPromise();
+    const lastWorkerHasAlreadLost = this.workers.size == 0;
+
+    return lastWorkerHasAlreadLost
+      ? Promise.resolve()
+      : this.onLastWorkerLost
+          .asObservable()
+          .pipe(take(1))
+          .toPromise();
   }
 
   killLanguages() {

@@ -1,5 +1,5 @@
 import {INestApplication} from "@nestjs/common";
-import {Test} from "@nestjs/testing";
+import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {event} from "@spica-server/function/queue/proto";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
@@ -29,6 +29,7 @@ describe("Scheduler", () => {
     debug: false,
     logger: false
   };
+  let module: TestingModule;
 
   function freeWorkers() {
     return Array.from(scheduler["workers"].entries()).filter(([_, w]) => !w.target);
@@ -51,11 +52,13 @@ describe("Scheduler", () => {
     entrypoint: "index.js"
   };
 
+  function findWorkerFromEventId(evId: string) {
+    return Array.from(scheduler.workers.entries()).find(([id, worker]) => worker.target.id == evId);
+  }
+
   function completeEvent(evId: string) {
-    const [workerId] = Array.from(scheduler.workers.entries()).find(
-      ([id, worker]) => worker.target.id == evId
-    );
-    triggerGotWorker(workerId);
+    const [id, worker] = findWorkerFromEventId(evId);
+    triggerGotWorker(id);
   }
 
   function triggerGotWorker(_id?: string) {
@@ -65,10 +68,16 @@ describe("Scheduler", () => {
     scheduler.gotWorker(workerId, () => {});
   }
 
+  function triggerLostWorker(evId: string) {
+    const [id, worker] = findWorkerFromEventId(evId);
+    scheduler.lostWorker(id);
+  }
+
   beforeEach(async () => {
-    const module = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.replicaSet(), SchedulerModule.forRoot(schedulerOptions)]
     }).compile();
+    module.enableShutdownHooks();
 
     scheduler = module.get(Scheduler);
 
@@ -333,5 +342,111 @@ describe("Scheduler", () => {
     expect(activateds.every(([_, worker]) => worker.target.id == "1")).toBeTrue();
 
     expect(freeWorkers().length).toEqual(1);
+  });
+
+  describe("onModuleDestroy", () => {
+    function getEvent(id: string) {
+      return new event.Event({
+        target: new event.Target({
+          id,
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
+        }),
+        type: -1
+      });
+    }
+
+    function onFreeWorkersAreKilled() {
+      return new Promise((resolve, reject) => {
+        const kill = scheduler.killFreeWorkers;
+        scheduler.killFreeWorkers = () => {
+          return kill
+            .bind(scheduler)()
+            .then(() => {
+              resolve("");
+            });
+        };
+      });
+    }
+
+    function onEventQueueIsEmpty() {
+      return new Promise((resolve, reject) => {
+        const clear = scheduler.eventQueue.clear;
+        scheduler.eventQueue.clear = () => {
+          clear.bind(scheduler.eventQueue)();
+          resolve("");
+        };
+      });
+    }
+
+    // function onWorkerTimeoutExceeded() {
+    //   return new Promise((resolve, reject) => {
+    //     setTimeout(resolve, schedulerOptions.timeout);
+    //   });
+    // }
+
+    it("should clean up if there is no busy worker", async () => {
+      expect(allWorkers().length).toEqual(1);
+      expect(freeWorkers().length).toEqual(1);
+
+      await module.close();
+
+      expect(allWorkers().length).toEqual(0);
+    });
+
+    it("should wait until last worker gets killed", done => {
+      const copyDone = done;
+      done = undefined;
+
+      const ev1 = getEvent("1");
+
+      scheduler.enqueue(ev1);
+
+      expect(activatedWorkers().length).toEqual(1);
+      expect(freeWorkers().length).toEqual(1);
+
+      module.close().then(() => {
+        expect(allWorkers().length).toEqual(0);
+        done();
+      });
+
+      onFreeWorkersAreKilled().then(() => {
+        // to be sure this promise has resolved before module close
+        done = copyDone;
+        expect(activatedWorkers().length).toEqual(1, "should keep the busy worker");
+        expect(freeWorkers().length).toEqual(0);
+        triggerLostWorker("1");
+      });
+    });
+
+    it("should clear event queue", done => {
+      const copyDone = done;
+      done = undefined;
+
+      clock.uninstall();
+      const ev1 = getEvent("1");
+
+      scheduler.enqueue(ev1);
+      scheduler.enqueue(ev1);
+      scheduler.enqueue(ev1);
+
+      // last event is still be in the event queue because of the concurrency limit
+      expect(scheduler.eventQueue.size).toEqual(1);
+
+      module.close().then(() => {
+        expect(allWorkers().length).toEqual(0);
+        expect(scheduler.eventQueue.size).toEqual(0);
+        done();
+      });
+
+      onEventQueueIsEmpty().then(() => {
+        // to be sure this promise has resolved before module close
+        done = copyDone;
+        expect(scheduler.eventQueue.size).toEqual(0);
+        triggerLostWorker("1");
+        triggerLostWorker("1");
+      });
+    });
   });
 });
