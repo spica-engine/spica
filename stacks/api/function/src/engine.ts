@@ -38,8 +38,6 @@ export class FunctionEngine implements OnModuleDestroy {
   ]);
   readonly runSchemas = new Map<string, JSONSchema7>();
 
-  private dispose = new Subject();
-
   constructor(
     private fs: FunctionService,
     private db: DatabaseService,
@@ -81,10 +79,8 @@ export class FunctionEngine implements OnModuleDestroy {
     });
   }
 
-  async onModuleDestroy() {
-    await this.unregisterTriggers();
-
-    this.dispose.next();
+  onModuleDestroy() {
+    return this.unregisterTriggers();
   }
 
   categorizeChanges(changes: TargetChange[]) {

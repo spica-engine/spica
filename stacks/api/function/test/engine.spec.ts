@@ -184,6 +184,26 @@ describe("Engine", () => {
       }
     });
   });
+
+  it("should unregister triggers on module destroy", async () => {
+    let changes: TargetChange[] = [
+      {
+        kind: ChangeKind.Added,
+        target: {
+          id: "test_id",
+          handler: "test_handler"
+        }
+      }
+    ];
+
+    engine["categorizeChanges"](changes);
+
+    await engine.onModuleDestroy();
+
+    expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
+    expect(unsubscribeSpy).toHaveBeenCalledWith(changes);
+  });
+
   describe("Database Schema", () => {
     it("should get initial schema", async () => {
       await database.createCollection("functions");
