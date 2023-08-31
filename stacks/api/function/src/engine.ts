@@ -65,8 +65,13 @@ export class FunctionEngine implements OnModuleDestroy {
     return this.updateTriggers(ChangeKind.Added);
   }
 
+  // until commander unregister method implemented
   unregisterTriggers() {
-    return this.updateTriggers(ChangeKind.Removed);
+    return this.fs.find().then(fns => {
+      for (const fn of fns) {
+        createTargetChanges(fn, ChangeKind.Removed).forEach(change => this.unsubscribe(change));
+      }
+    });
   }
 
   private updateTriggers(kind: ChangeKind) {
