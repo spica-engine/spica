@@ -33,6 +33,9 @@ export class Change<T = unknown> {
     removedFields: Array<string>;
     updatedFields: {[index: string]: unknown};
   };
+  _id: {
+    _data: string;
+  };
   constructor(change: Database.Change) {
     switch (change.kind) {
       case Database.Change.Kind.INSERT:
@@ -48,6 +51,9 @@ export class Change<T = unknown> {
         this.kind = "replace";
         break;
     }
+    this._id = {
+      _data: change._id._data
+    };
     this.collection = change.collection;
     this.documentKey = change.documentKey;
     if (change.document) {

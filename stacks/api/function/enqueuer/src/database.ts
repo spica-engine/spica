@@ -42,6 +42,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     const onChangeHandler = rawChange => {
       const onChange = () => {
         const change = new Database.Change({
+          _id: new Database.Change.Id({_data: rawChange._id._data}),
           kind: getChangeKind(rawChange.operationType),
           document: rawChange.fullDocument ? JSON.stringify(rawChange.fullDocument) : undefined,
           documentKey: rawChange.documentKey._id.toString(),
