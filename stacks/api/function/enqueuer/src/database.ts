@@ -3,6 +3,7 @@ import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
 import {Database, event} from "@spica-server/function/queue/proto";
 import {JobReducer} from "@spica-server/replication";
 import {Description, Enqueuer} from "./enqueuer";
+import {ClassCommander} from "@spica-server/replication";
 
 interface DatabaseOptions {
   collection: string;
@@ -10,6 +11,8 @@ interface DatabaseOptions {
 }
 
 export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
+  type = event.Type.DATABASE;
+
   description: Description = {
     title: "Database",
     name: "database",
@@ -24,9 +27,13 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     private databaseQueue: DatabaseQueue,
     private db: DatabaseService,
     private schedulerUnsubscription: (targetId: string) => void,
-    private jobReducer?: JobReducer
+    private jobReducer?: JobReducer,
+    private commander?: ClassCommander
   ) {
     super();
+    if (this.commander) {
+      this.commander.register(this, [this.shift]);
+    }
   }
 
   subscribe(target: event.Target, options: DatabaseOptions): void {
@@ -39,39 +46,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
       {fullDocument: "updateLookup"}
     );
 
-    const onChangeHandler = rawChange => {
-      const onChange = () => {
-        const change = new Database.Change({
-          _id: new Database.Change.Id({_data: rawChange._id._data}),
-          kind: getChangeKind(rawChange.operationType),
-          document: rawChange.fullDocument ? JSON.stringify(rawChange.fullDocument) : undefined,
-          documentKey: rawChange.documentKey._id.toString(),
-          collection: rawChange.ns.coll
-        });
-
-        if (change.kind == Database.Change.Kind.UPDATE) {
-          change.updateDescription = new Database.Change.UpdateDescription({
-            removedFields: JSON.stringify(rawChange.updateDescription.removedFields),
-            updatedFields: JSON.stringify(rawChange.updateDescription.updatedFields)
-          });
-        }
-
-        const ev = new event.Event({
-          target,
-          type: event.Type.DATABASE
-        });
-        this.queue.enqueue(ev);
-        this.databaseQueue.enqueue(ev.id, change);
-      };
-
-      if (this.jobReducer) {
-        this.jobReducer.do({...rawChange, _id: rawChange._id._data}, onChange);
-      } else {
-        onChange();
-      }
-      return;
-    };
-    stream.on("change", onChangeHandler);
+    stream.on("change", change => this.onChangeHandler(change, target));
 
     Object.defineProperty(stream, "target", {writable: false, value: target});
 
@@ -92,6 +67,68 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
         this.streams.delete(stream);
       }
     }
+  }
+
+  onChangeHandler(rawChange, target: event.Target) {
+    const onChange = () => {
+      const ev = new event.Event({
+        target,
+        type: event.Type.DATABASE
+      });
+      this.queue.enqueue(ev);
+
+      const change = new Database.Change({
+        _id: new Database.Change.Id({_data: rawChange._id._data}),
+        kind: getChangeKind(rawChange.operationType),
+        document: rawChange.fullDocument ? JSON.stringify(rawChange.fullDocument) : undefined,
+        documentKey: rawChange.documentKey._id.toString(),
+        collection: rawChange.ns.coll
+      });
+
+      if (change.kind == Database.Change.Kind.UPDATE) {
+        change.updateDescription = new Database.Change.UpdateDescription({
+          removedFields: JSON.stringify(rawChange.updateDescription.removedFields),
+          updatedFields: JSON.stringify(rawChange.updateDescription.updatedFields)
+        });
+      }
+
+      this.databaseQueue.enqueue(ev.id, change);
+    };
+    if (this.jobReducer) {
+      this.jobReducer.do({...rawChange, _id: rawChange._id._data}, onChange);
+    } else {
+      onChange();
+    }
+    return;
+  }
+
+  onEventsAreDrained(events: event.Event[]) {
+    if (!this.jobReducer) {
+      return;
+    }
+
+    const shiftPromises: Promise<any>[] = [];
+
+    for (const event of events) {
+      const change = this.databaseQueue.get(event.id);
+
+      const shift = this.jobReducer.find({_id: change._id._data}).then(([job]) => {
+        if (!job) {
+          console.error(`Job ${change._id._data} does not exist!`);
+          return;
+        }
+        const newChange = {...job, _id: {_data: job._id}};
+        return this.shift(newChange, event.target);
+      });
+
+      shiftPromises.push(shift);
+    }
+
+    return Promise.all(shiftPromises);
+  }
+
+  private shift(rawChange, target: event.Target) {
+    return this.onChangeHandler(rawChange, target);
   }
 }
 
