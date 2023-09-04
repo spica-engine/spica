@@ -10,6 +10,12 @@ interface FirehoseOptions {
 }
 
 export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
+  type = event.Type.FIREHOSE;
+
+  onEventsAreDrained(events: event.Event[]): Promise<any> {
+    return Promise.resolve();
+  }
+
   readonly description: Description = {
     icon: "compare_arrows",
     name: "firehose",
