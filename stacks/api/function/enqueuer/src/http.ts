@@ -8,6 +8,8 @@ import {CorsOptions} from "@spica-server/core";
 import {AttachStatusTracker} from "@spica-server/status/services";
 
 export class HttpEnqueuer extends Enqueuer<HttpOptions> {
+  type = event.Type.HTTP;
+
   description: Description = {
     icon: "http",
     name: "http",
@@ -152,6 +154,15 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       return true;
     });
     this.reorderUnhandledHandle();
+  }
+
+  onEventsAreDrained(events: event.Event[]): Promise<any> {
+    for (const event of events) {
+      const {response} = this.http.get(event.id);
+      response.status(503).send();
+    }
+
+    return Promise.resolve();
   }
 }
 

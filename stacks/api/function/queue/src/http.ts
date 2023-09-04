@@ -14,6 +14,10 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
     return this.queue.size;
   }
 
+  get(id: string) {
+    return {request: this.queue.get(id), response: this.streamMap.get(id) as any};
+  }
+
   enqueue(id: string, request: Http.Request, response: http.ServerResponse) {
     this.queue.set(id, request);
     this.streamMap.set(id, response);
