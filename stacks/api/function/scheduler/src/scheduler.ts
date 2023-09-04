@@ -112,11 +112,14 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.databaseQueue,
         this.database,
         schedulerUnsubscription,
-        this.jobReducer
+        this.jobReducer,
+        this.commander
       )
     );
 
-    this.enqueuers.add(new ScheduleEnqueuer(this.queue, schedulerUnsubscription, this.jobReducer));
+    this.enqueuers.add(
+      new ScheduleEnqueuer(this.queue, schedulerUnsubscription, this.jobReducer, this.commander)
+    );
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
@@ -159,7 +162,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    this.eventQueue.clear();
+    await this.drainEventQueue();
 
     await this.killFreeWorkers();
     await this.waitLastWorkerLost();
@@ -167,6 +170,20 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     await this.killLanguages();
 
     return this.queue.kill();
+  }
+
+  drainEventQueue() {
+    const promises = [];
+    for (const enqueuer of this.enqueuers.values()) {
+      const events = Array.from(this.eventQueue.values()).filter(
+        event => event.type == enqueuer.type
+      );
+      promises.push(enqueuer.onEventsAreDrained(events));
+    }
+
+    this.eventQueue.clear();
+
+    return Promise.all(promises);
   }
 
   workers = new Map<string, ScheduleWorker>();

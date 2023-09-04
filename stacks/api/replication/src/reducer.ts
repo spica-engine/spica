@@ -1,6 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {JobService} from "./database/job";
 import {IJobReducer, JobMeta} from "./interface";
+import {FilterQuery} from "mongodb";
 
 @Injectable()
 export class JobReducer implements IJobReducer {
@@ -25,5 +26,9 @@ export class JobReducer implements IJobReducer {
         job();
         return true;
       });
+  }
+
+  find(filter: FilterQuery<JobMeta>) {
+    return this.service._coll.find(filter).toArray();
   }
 }
