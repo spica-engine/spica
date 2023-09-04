@@ -24,6 +24,11 @@ function getChangeType(type: string): hooks.Change.Kind {
 }
 
 export class ChangeEnqueuer extends Enqueuer<ChangeOptions> {
+  type = event.Type.BUCKET;
+  
+  onEventsAreDrained(events: event.Event[]): Promise<any> {
+    return Promise.resolve();
+  }
   description: Description = {
     icon: "view_agenda",
     name: "bucket",
