@@ -3,6 +3,7 @@ import {event} from "@spica-server/function/queue/proto";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import * as cron from "cron";
 import {Description, Enqueuer} from "./enqueuer";
+import * as uniqid from "uniqid";
 
 interface ScheduleOptions {
   frequency: string;
@@ -28,7 +29,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     private commander?: ClassCommander
   ) {
     if (this.commander) {
-      this.commander.register(this, [this.shift]);
+      this.commander.register(this, [this.shift], "shift");
     }
   }
 
@@ -64,9 +65,11 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     const now = new Date(new Date().setMilliseconds(0)).getTime();
 
     const ev = new event.Event({
+      id: uniqid(),
       target,
       type: event.Type.SCHEDULE
     });
+
     const onTick = () => {
       this.queue.enqueue(ev);
     };
@@ -93,15 +96,16 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     }
 
     const shiftPromises: Promise<any>[] = [];
-
     for (const event of events) {
       const shift = this.jobReducer.find({event_id: event.id}).then(([job]) => {
         if (!job) {
           console.error(`Job with event id ${event.id} does not exist!`);
           return;
         }
-
-        return this.shift(event.target, {frequency: job.frequency, timezone: job.timezone});
+        return this.shift(event.target.toObject(), {
+          frequency: job.frequency,
+          timezone: job.timezone
+        });
       });
 
       shiftPromises.push(shift);
@@ -110,7 +114,39 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     return Promise.all(shiftPromises);
   }
 
-  shift(target: event.Target, options: ScheduleOptions) {
-    return this.onTickHandler(target, options);
+  shift(
+    target: {
+      id: string;
+      cwd: string;
+      handler: string;
+      context: {
+        env: {
+          key: string;
+          value: string;
+        }[];
+        timeout: number;
+      };
+    },
+    options: ScheduleOptions
+  ) {
+    const newTarget = new event.Target({
+      id: target.id,
+      cwd: target.cwd,
+      handler: target.handler,
+      context: new event.SchedulingContext({
+        env: Object.keys(target.context.env).reduce((envs, key) => {
+          envs.push(
+            new event.SchedulingContext.Env({
+              key,
+              value: target.context.env[key]
+            })
+          );
+          return envs;
+        }, []),
+        timeout: target.context.timeout
+      })
+    });
+
+    return this.onTickHandler(newTarget, options);
   }
 }

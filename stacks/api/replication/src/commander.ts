@@ -63,7 +63,8 @@ export class ClassCommander extends Commander {
     super(cmdMessenger);
   }
 
-  register(ctx: Object, fns: Function[]) {
+  // better implementation for emit type;
+  register(ctx: Object, fns: Function[], emitType: "shift" | "sync" = "sync") {
     // add new function named copy_fn and call the original fn inside of it
     // modify original fn as it will emit copy_fn to others and call the copy_fn
     // since copy_fn will call the original fn, there won't be any change on original implementation
@@ -80,7 +81,10 @@ export class ClassCommander extends Commander {
             args
           }
         });
-        return ctx[`copy_${handler}`](...args);
+
+        if (emitType == "sync") {
+          return ctx[`copy_${handler}`](...args);
+        }
       };
     }
 
@@ -89,6 +93,22 @@ export class ClassCommander extends Commander {
     this.filters.push(filter);
 
     super.register(ctx);
+  }
+
+  unregister(ctx: Object, fns: Function[]) {
+    for (const fn of fns) {
+      const handler = fn.name;
+      const original = ctx[`copy_${handler}`];
+
+      if (!original) {
+        return console.error(`Can't unregister ${handler} because its not registered before.`);
+      }
+
+      ctx[handler] = original;
+      delete ctx[`copy_${handler}`];
+    }
+
+    // add message unsubscription also
   }
 
   private _emit(source: CommandSource) {

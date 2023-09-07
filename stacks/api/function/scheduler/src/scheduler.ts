@@ -28,7 +28,11 @@ import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
 import {Subject} from "rxjs";
 import {take} from "rxjs/operators";
 
-type ScheduleWorker = Worker & {target: event.Target; schedule: (event: event.Event) => void};
+type ScheduleWorker = Worker & {
+  target: event.Target;
+  schedule: (event: event.Event) => void;
+  isOutdated?: boolean;
+};
 
 @Injectable()
 export class Scheduler implements OnModuleInit, OnModuleDestroy {
@@ -54,7 +58,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker
   ) {
     if (this.commander) {
-      this.commander.register(this, [this.deleteWorkersOfTarget]);
+      this.commander.register(this, [this.outdateWorkers]);
     }
 
     this.output = new DatabaseOutput(database);
@@ -83,7 +87,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     const schedulerUnsubscription = (targetId: string) => {
-      this.deleteWorkersOfTarget(targetId);
+      this.outdateWorkers(targetId);
     };
 
     this.enqueuers.add(
@@ -136,7 +140,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   killFreeWorkers() {
     const freeWorkers = Array.from(this.workers.entries()).filter(
-      ([key, worker]) => worker.schedule
+      ([key, worker]) => !worker.target || (worker.target && worker.schedule)
     );
 
     const killWorkers = freeWorkers.map(([key, worker]) => {
@@ -212,7 +216,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     });
 
     const fresh = workers.find(({worker}) => !worker.target);
-    const activateds = workers.filter(({worker}) => worker.target && worker.target.id == target.id);
+    const activateds = workers.filter(
+      ({worker}) => worker.target && worker.target.id == target.id
+    );
 
     const available = activateds.find(({worker}) => worker.schedule);
 
@@ -288,8 +294,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   gotWorker(id: string, schedule: (event: event.Event) => void) {
     const relatedWorker = this.workers.get(id);
 
-    // scheduler unsubscription might have deleted the worker in order to direct next events to the new worker with the latest function index
-    if (!relatedWorker) {
+    if (relatedWorker.isOutdated) {
       this.print(`the worker ${id} won't be scheduled anymore.`);
     } else {
       relatedWorker.schedule = schedule;
@@ -315,10 +320,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  deleteWorkersOfTarget(targetId: string) {
-    Array.from(this.workers.entries())
-      .filter(([id, worker]) => worker.target && worker.target.id == targetId)
-      .forEach(([id]) => this.workers.delete(id));
+  outdateWorkers(targetId: string) {
+    Array.from(this.workers.values())
+      .filter(worker => worker.target && worker.target.id == targetId)
+      .forEach(worker => (worker.isOutdated = true));
   }
 
   private scaleWorkers() {

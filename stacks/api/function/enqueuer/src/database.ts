@@ -118,7 +118,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
           return;
         }
         const newChange = {...job, _id: {_data: job._id}};
-        return this.shift(newChange, event.target);
+        return this.shift(newChange, event.target.toObject());
       });
 
       shiftPromises.push(shift);
@@ -127,8 +127,39 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     return Promise.all(shiftPromises);
   }
 
-  private shift(rawChange, target: event.Target) {
-    return this.onChangeHandler(rawChange, target);
+  private shift(
+    rawChange,
+    target: {
+      id: string;
+      cwd: string;
+      handler: string;
+      context: {
+        env: {
+          key: string;
+          value: string;
+        }[];
+        timeout: number;
+      };
+    }
+  ) {
+    const newTarget = new event.Target({
+      id: target.id,
+      cwd: target.cwd,
+      handler: target.handler,
+      context: new event.SchedulingContext({
+        env: Object.keys(target.context.env).reduce((envs, key) => {
+          envs.push(
+            new event.SchedulingContext.Env({
+              key,
+              value: target.context.env[key]
+            })
+          );
+          return envs;
+        }, []),
+        timeout: target.context.timeout
+      })
+    });
+    return this.onChangeHandler(rawChange, newTarget);
   }
 }
 

@@ -9,7 +9,7 @@ export class JobReducer implements IJobReducer {
 
   do(meta: JobMeta, job: Function) {
     return this.service._coll
-      .updateOne(meta, {$setOnInsert: meta}, {upsert: true})
+      .updateOne({_id: meta._id}, {$setOnInsert: meta}, {upsert: true})
       .catch(e => {
         // If replicas are triggered at the same time(before upsert completion), this error occurs.
         // for this case, we can ignore the error since we know one of replicas already took the job
