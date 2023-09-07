@@ -12,6 +12,8 @@ describe("Storage Service", () => {
   let module: TestingModule;
   let storageService: StorageService;
   let storageObject: StorageObject;
+  let strategyInstance: Default;
+
   let storageObjectId: ObjectId = new ObjectId("56cb91bdc3464f14678934ca");
 
   const resourceFilter = {$match: {}};
@@ -27,13 +29,14 @@ describe("Storage Service", () => {
         size: 10
       }
     };
+    strategyInstance = new Default(process.env.TEST_TMPDIR, "http://insteadof");
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.standalone()],
       providers: [
         StorageService,
         {
           provide: Strategy,
-          useValue: new Default(process.env.TEST_TMPDIR, "http://insteadof")
+          useValue: strategyInstance
         },
         {
           provide: STORAGE_OPTIONS,
@@ -69,8 +72,7 @@ describe("Storage Service", () => {
       })
     );
   });
-  describe("Failed scenario for adding storage", () => {
-    let mockStrategy;
+  it("should delete failed object from database", async () => {
     const storageObjects = [
       {
         _id: "successId",
@@ -100,49 +102,26 @@ describe("Storage Service", () => {
         }
       }
     ];
-
-    beforeEach(async () => {
-      mockStrategy = {
-        write: jasmine.createSpy("write").and.returnValue(Promise.resolve())
-      };
-      module = await Test.createTestingModule({
-        imports: [DatabaseTestingModule.standalone()],
-        providers: [
-          StorageService,
-          {
-            provide: Strategy,
-            useValue: mockStrategy
-          },
-          {
-            provide: STORAGE_OPTIONS,
-            useValue: {totalSizeLimit: 10}
-          }
-        ]
-      }).compile();
-      storageService = module.get(StorageService);
-    });
-
-    it("should delete failed object from database", async () => {
-      mockStrategy.write.and.callFake((id, data, type) => {
-        if (id == "failId") {
-          return Promise.reject("Upload failed for Item");
-        }
-        return Promise.resolve();
-      });
-      try {
-        await storageService.insert(storageObjects);
-      } catch (error) {
-        const failedObject = storageObjects.find(obj => obj._id === "failId");
-        expect(error.message).toBe(`Error: Failed to write object ${failedObject.name} to storage`);
-
-        const failingIndex = storageObjects.findIndex(obj => obj._id === "failId");
-        const expectedDeletedIds = storageObjects.slice(failingIndex).map(obj => obj._id);
-
-        const objectsInDb = await storageService.find({_id: {$in: expectedDeletedIds}});
-        expect(objectsInDb.length).toBe(0);
+    spyOn(strategyInstance, "write").and.callFake((id: string, data: Buffer) => {
+      if (id == "failId") {
+        return Promise.reject("Upload failed for Item");
       }
+      return Promise.resolve();
     });
+
+    try {
+      await storageService.insert(storageObjects);
+    } catch (error) {
+      const failedObject = storageObjects.find(obj => obj._id === "failId");
+      expect(error.message).toBe(
+        `Error: Failed to write object ${failedObject.name} to storage. Reason: Upload failed for Item`
+      );
+
+      const objectsInDb = await storageService.find({_id: "successId"});
+      expect(objectsInDb.length).toBe(1);
+    }
   });
+
   it("should update storage object", async () => {
     await expectAsync(storageService.insert([storageObject])).toBeResolved();
 
