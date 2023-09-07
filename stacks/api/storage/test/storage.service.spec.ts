@@ -69,7 +69,80 @@ describe("Storage Service", () => {
       })
     );
   });
+  describe("Failed scenario for adding storage", () => {
+    let mockStrategy;
+    const storageObjects = [
+      {
+        _id: "successId",
+        name: "name1",
+        content: {
+          data: Buffer.from("abc1"),
+          type: "type1",
+          size: 10
+        }
+      },
+      {
+        _id: "failId",
+        name: "name2",
+        content: {
+          data: Buffer.from("abc2"),
+          type: "type2",
+          size: 20
+        }
+      },
+      {
+        _id: "thirdId",
+        name: "name3",
+        content: {
+          data: Buffer.from("abc3"),
+          type: "type3",
+          size: 30
+        }
+      }
+    ];
 
+    beforeEach(async () => {
+      mockStrategy = {
+        write: jasmine.createSpy("write").and.returnValue(Promise.resolve())
+      };
+      module = await Test.createTestingModule({
+        imports: [DatabaseTestingModule.standalone()],
+        providers: [
+          StorageService,
+          {
+            provide: Strategy,
+            useValue: mockStrategy
+          },
+          {
+            provide: STORAGE_OPTIONS,
+            useValue: {totalSizeLimit: 10}
+          }
+        ]
+      }).compile();
+      storageService = module.get(StorageService);
+    });
+
+    it("should delete failed object from database", async () => {
+      mockStrategy.write.and.callFake((id, data, type) => {
+        if (id == "failId") {
+          return Promise.reject("Upload failed for Item");
+        }
+        return Promise.resolve();
+      });
+      try {
+        await storageService.insert(storageObjects);
+      } catch (error) {
+        const failedObject = storageObjects.find(obj => obj._id === "failId");
+        expect(error.message).toBe(`Error: Failed to write object ${failedObject.name} to storage`);
+
+        const failingIndex = storageObjects.findIndex(obj => obj._id === "failId");
+        const expectedDeletedIds = storageObjects.slice(failingIndex).map(obj => obj._id);
+
+        const objectsInDb = await storageService.find({_id: {$in: expectedDeletedIds}});
+        expect(objectsInDb.length).toBe(0);
+      }
+    });
+  });
   it("should update storage object", async () => {
     await expectAsync(storageService.insert([storageObject])).toBeResolved();
 
