@@ -12,7 +12,7 @@ describe("Storage Service", () => {
   let module: TestingModule;
   let storageService: StorageService;
   let storageObject: StorageObject;
-  let strategyInstance: Default;
+  let strategyInstance: Strategy;
 
   let storageObjectId: ObjectId = new ObjectId("56cb91bdc3464f14678934ca");
 
@@ -29,14 +29,13 @@ describe("Storage Service", () => {
         size: 10
       }
     };
-    strategyInstance = new Default(process.env.TEST_TMPDIR, "http://insteadof");
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.standalone()],
       providers: [
         StorageService,
         {
           provide: Strategy,
-          useValue: strategyInstance
+          useValue: new Default(process.env.TEST_TMPDIR, "http://insteadof")
         },
         {
           provide: STORAGE_OPTIONS,
@@ -45,6 +44,7 @@ describe("Storage Service", () => {
       ]
     }).compile();
     storageService = module.get(StorageService);
+    strategyInstance = module.get(Strategy);
   });
 
   afterEach(() => module.close());
