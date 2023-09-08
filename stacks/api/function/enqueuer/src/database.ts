@@ -4,6 +4,7 @@ import {Database, event} from "@spica-server/function/queue/proto";
 import {JobReducer} from "@spica-server/replication";
 import {Description, Enqueuer} from "./enqueuer";
 import {ClassCommander} from "@spica-server/replication";
+import uniqid = require("uniqid");
 
 interface DatabaseOptions {
   collection: string;
@@ -32,7 +33,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   ) {
     super();
     if (this.commander) {
-      this.commander.register(this, [this.shift]);
+      this.commander.register(this, [this.shift], "shift");
     }
   }
 
@@ -70,34 +71,36 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   }
 
   onChangeHandler(rawChange, target: event.Target) {
-    const onChange = () => {
-      const ev = new event.Event({
-        target,
-        type: event.Type.DATABASE
+    const ev = new event.Event({
+      id: uniqid(),
+      target,
+      type: event.Type.DATABASE
+    });
+
+    const change = new Database.Change({
+      _id: new Database.Change.Id({_data: rawChange._id._data}),
+      kind: getChangeKind(rawChange.operationType),
+      document: rawChange.fullDocument ? JSON.stringify(rawChange.fullDocument) : undefined,
+      documentKey: rawChange.documentKey._id.toString(),
+      collection: rawChange.ns.coll
+    });
+
+    if (change.kind == Database.Change.Kind.UPDATE) {
+      change.updateDescription = new Database.Change.UpdateDescription({
+        removedFields: JSON.stringify(rawChange.updateDescription.removedFields),
+        updatedFields: JSON.stringify(rawChange.updateDescription.updatedFields)
       });
+    }
+
+    const enqueue = () => {
       this.queue.enqueue(ev);
-
-      const change = new Database.Change({
-        _id: new Database.Change.Id({_data: rawChange._id._data}),
-        kind: getChangeKind(rawChange.operationType),
-        document: rawChange.fullDocument ? JSON.stringify(rawChange.fullDocument) : undefined,
-        documentKey: rawChange.documentKey._id.toString(),
-        collection: rawChange.ns.coll
-      });
-
-      if (change.kind == Database.Change.Kind.UPDATE) {
-        change.updateDescription = new Database.Change.UpdateDescription({
-          removedFields: JSON.stringify(rawChange.updateDescription.removedFields),
-          updatedFields: JSON.stringify(rawChange.updateDescription.updatedFields)
-        });
-      }
-
       this.databaseQueue.enqueue(ev.id, change);
     };
+
     if (this.jobReducer) {
-      this.jobReducer.do({...rawChange, _id: rawChange._id._data}, onChange);
+      this.jobReducer.do({...rawChange, event_id: ev.id, _id: rawChange._id._data}, enqueue);
     } else {
-      onChange();
+      enqueue();
     }
     return;
   }
@@ -112,7 +115,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     for (const event of events) {
       const change = this.databaseQueue.get(event.id);
 
-      const shift = this.jobReducer.find({_id: change._id._data}).then(([job]) => {
+      const shift = this.jobReducer.find({event_id: event.id}).then(([job]) => {
         if (!job) {
           console.error(`Job ${change._id._data} does not exist!`);
           return;

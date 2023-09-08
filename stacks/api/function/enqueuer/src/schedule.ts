@@ -70,7 +70,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
       type: event.Type.SCHEDULE
     });
 
-    const onTick = () => {
+    const enqueue = () => {
       this.queue.enqueue(ev);
     };
 
@@ -84,9 +84,9 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     };
 
     if (this.jobReducer) {
-      this.jobReducer.do(meta, onTick);
+      this.jobReducer.do(meta, enqueue);
     } else {
-      onTick();
+      enqueue();
     }
   }
 

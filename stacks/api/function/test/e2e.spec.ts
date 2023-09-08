@@ -161,10 +161,10 @@ describe("Queue shifting", () => {
 
       req.get("/fn-execute/test").then(r => (firstResponse = r));
 
-      await onEventEnqueued(scheduler);
+      await onEventEnqueued(scheduler, event.Type.HTTP);
       req.get("/fn-execute/test").then(r => (secondResponse = r));
 
-      await onEventEnqueued(scheduler);
+      await onEventEnqueued(scheduler, event.Type.HTTP);
       await app.close();
 
       expect([firstResponse.statusCode, firstResponse.statusText]).toEqual([200, "OK"]);
@@ -215,8 +215,6 @@ describe("Queue shifting", () => {
         }
       ]);
     });
-
-    it("should enqueue the shifted event", () => {});
   });
 
   describe("database", () => {
@@ -234,14 +232,6 @@ describe("Queue shifting", () => {
         .then(r => r.ops[0]);
       await stream.change.wait();
 
-      const change = {
-        _id: {_data: "__skip__"},
-        clusterTime: "__skip__",
-        documentKey: {_id: inserted._id},
-        fullDocument: inserted,
-        ns: {db: "__skip__", coll: "my_coll"},
-        operationType: "insert"
-      };
       await app.close();
 
       // here is so dependent to the commander implementation, use better approach
@@ -252,6 +242,15 @@ describe("Queue shifting", () => {
         })
         .toArray();
 
+      const change = {
+        _id: {_data: "__skip__"},
+        clusterTime: "__skip__",
+        documentKey: {_id: inserted._id},
+        fullDocument: inserted,
+        ns: {db: "__skip__", coll: "my_coll"},
+        operationType: "insert",
+        event_id: shiftedEvent.id
+      };
       expect(shiftCmd).toEqual([
         {
           _id: "__skip__",
@@ -275,7 +274,5 @@ describe("Queue shifting", () => {
         }
       ]);
     });
-
-    it("should enqueue the shifted event", () => {});
   });
 });
