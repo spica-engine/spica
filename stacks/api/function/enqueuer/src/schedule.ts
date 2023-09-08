@@ -97,7 +97,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
 
     const shiftPromises: Promise<any>[] = [];
     for (const event of events) {
-      const shift = this.jobReducer.find({event_id: event.id}).then(([job]) => {
+      const shift = this.jobReducer.findOneAndDelete({event_id: event.id}).then(job => {
         if (!job) {
           console.error(`Job with event id ${event.id} does not exist!`);
           return;

@@ -28,7 +28,7 @@ export class JobReducer implements IJobReducer {
       });
   }
 
-  find(filter: FilterQuery<JobMeta>) {
-    return this.service._coll.find(filter).toArray();
+  findOneAndDelete(filter: FilterQuery<JobMeta>) {
+    return this.service._coll.findOneAndDelete(filter).then(r => r.value);
   }
 }

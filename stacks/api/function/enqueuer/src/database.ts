@@ -115,7 +115,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     for (const event of events) {
       const change = this.databaseQueue.get(event.id);
 
-      const shift = this.jobReducer.find({event_id: event.id}).then(([job]) => {
+      const shift = this.jobReducer.findOneAndDelete({event_id: event.id}).then(job => {
         if (!job) {
           console.error(`Job ${change._id._data} does not exist!`);
           return;

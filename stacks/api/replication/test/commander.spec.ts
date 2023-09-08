@@ -1,15 +1,19 @@
 import {Controller} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {ClassCommander, REPLICA_ID} from "@spica-server/replication/src";
-import {ReplicationTestingModule} from "@spica-server/replication/testing";
+import {DatabaseService, DatabaseTestingModule, MongoClient} from "@spica-server/database/testing";
+import {ClassCommander, REPLICA_ID, ReplicationModule} from "@spica-server/replication/src";
+
+function wait(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 @Controller()
-export class MockController {
+export class SyncController {
   calls = {fn1: [], fn2: [], failedFn: []};
 
   commanderSubs;
   constructor(private commander: ClassCommander) {
-    this.commanderSubs = this.commander.register(this, [this.fn1, this.fn2, this.failedFn]);
+    this.commanderSubs = this.commander.register(this, [this.fn1, this.fn2]);
   }
 
   fn1(arg1, arg2) {
@@ -20,78 +24,126 @@ export class MockController {
     this.calls.fn2.push([]);
   }
 
-  failedFn(arg1) {
-    throw Error("Failed!");
-  }
-
   unregister() {
     this.commanderSubs.unsubscribe();
   }
 }
 
-describe("Commander", () => {
-  let module1: TestingModule;
-  let module2: TestingModule;
+@Controller()
+export class ShiftController {
+  calls = {fn1: []};
 
-  let replica1Id: string;
-  let replica2Id: string;
-
-  let ctrl1: MockController;
-  let ctrl2: MockController;
-
-  function compileModule() {
-    return Test.createTestingModule({
-      imports: [ReplicationTestingModule.create()],
-      controllers: [MockController]
-    }).compile();
+  commanderSubs;
+  constructor(private commander: ClassCommander) {
+    this.commanderSubs = this.commander.register(this, [this.fn1], "shift");
   }
 
-  beforeEach(async () => {
-    module1 = await compileModule();
-    replica1Id = module1.get(REPLICA_ID);
-    ctrl1 = module1.get(MockController);
+  fn1(arg1, arg2) {
+    this.calls.fn1.push([arg1, arg2]);
+  }
+}
 
-    module2 = await compileModule();
-    replica2Id = module2.get(REPLICA_ID);
-    ctrl2 = module2.get(MockController);
+describe("Commander", () => {
+  describe("Sync", () => {
+    let module1: TestingModule;
+    let module2: TestingModule;
+
+    let ctrl1: SyncController;
+    let ctrl2: SyncController;
+
+    function getModuleBuilder() {
+      return Test.createTestingModule({
+        imports: [DatabaseTestingModule.replicaSet(), ReplicationModule.forRoot()],
+        controllers: [SyncController]
+      });
+    }
+
+    beforeEach(async () => {
+      const mb = getModuleBuilder();
+      module1 = await mb.compile();
+      ctrl1 = module1.get(SyncController);
+
+      module2 = await mb
+        .overrideProvider(MongoClient)
+        .useValue(module1.get(MongoClient))
+        .overrideProvider(DatabaseService)
+        .useValue(module1.get(DatabaseService))
+        .compile();
+
+      ctrl2 = module2.get(SyncController);
+    });
+
+    afterEach(async () => {
+      await module1.close();
+      await module2.close();
+    });
+
+    it("should execute command on all other controllers", async () => {
+      ctrl1.fn1("call", "me");
+
+      await wait(2000);
+
+      expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
+      expect(ctrl1.calls.fn2).toEqual([]);
+      expect(ctrl1.calls.failedFn).toEqual([]);
+
+      expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
+      expect(ctrl2.calls.fn2).toEqual([]);
+      expect(ctrl2.calls.failedFn).toEqual([]);
+    });
+
+    it("should unsubscribe from commander", async () => {
+      ctrl1.unregister();
+      ctrl1.fn1("call", "me");
+      await wait(2000);
+
+      expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
+
+      expect(ctrl2.calls.fn1).toEqual([]);
+    });
   });
 
-  afterEach(async () => {
-    await module1.close();
-    await module2.close();
-  });
+  describe("Shifting", () => {
+    let module1: TestingModule;
+    let module2: TestingModule;
 
-  it("should execute command on all other controllers", () => {
-    ctrl1.fn1("call", "me");
+    let ctrl1: ShiftController;
+    let ctrl2: ShiftController;
 
-    expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
-    expect(ctrl1.calls.fn2).toEqual([]);
-    expect(ctrl1.calls.failedFn).toEqual([]);
+    function getModuleBuilder() {
+      return Test.createTestingModule({
+        imports: [DatabaseTestingModule.replicaSet(), ReplicationModule.forRoot()],
+        controllers: [ShiftController]
+      });
+    }
 
-    expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
-    expect(ctrl2.calls.fn2).toEqual([]);
-    expect(ctrl2.calls.failedFn).toEqual([]);
-  });
+    beforeEach(async () => {
+      const mb = getModuleBuilder();
+      module1 = await mb.compile();
+      ctrl1 = module1.get(ShiftController);
 
-  it("should log error if command execution failed", () => {
-    const err = spyOn(console, "error");
+      module2 = await mb
+        .overrideProvider(MongoClient)
+        .useValue(module1.get(MongoClient))
+        .overrideProvider(DatabaseService)
+        .useValue(module1.get(DatabaseService))
+        .compile();
 
-    try {
-      ctrl1.failedFn("*!'^");
-    } catch (error) {}
+      ctrl2 = module2.get(ShiftController);
+    });
 
-    expect(err.calls.allArgs()).toEqual([
-      [`Replica ${replica2Id} has failed to execute command MockController.copy_failedFn(*!'^)`],
-      [Error("Failed!")]
-    ]);
-  });
+    afterEach(async () => {
+      await module1.close();
+      await module2.close();
+    });
 
-  it("should unsubscribe from commander", () => {
-    ctrl1.unregister();
-    ctrl1.fn1("call", "me");
+    it("should execute command on all controllers", async () => {
+      ctrl1.fn1("call", "me");
+      await wait(2000);
 
-    expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
+      expect(ctrl1.calls.fn1).toEqual([]);
 
-    expect(ctrl2.calls.fn1).toEqual([]);
+      expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
+    });
   });
 });
