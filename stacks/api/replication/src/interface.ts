@@ -6,7 +6,7 @@ export interface IPublisher<T> {
 }
 
 export interface ISubscriber<T> {
-  subscribe(observer: PartialObserver<T>);
+  subscribe(observer: PartialObserver<T>): {unsubscribe: () => void};
 }
 
 export interface IPubSub<T> extends IPublisher<T>, ISubscriber<T> {}

@@ -16,7 +16,7 @@ abstract class Commander {
     this.replicaId = this.cmdMessenger.replicaId;
   }
 
-  register(ctx: Object, ...args): void {
+  register(ctx: Object, ...args) {
     const onMessageReceived = (msg: CommandMessage) => {
       if (!this.filters.every(filter => filter(msg))) {
         return;
@@ -27,7 +27,7 @@ abstract class Commander {
       }
     };
 
-    this.cmdMessenger.subscribe({
+    return this.cmdMessenger.subscribe({
       next: onMessageReceived
     });
   }
@@ -92,23 +92,29 @@ export class ClassCommander extends Commander {
 
     this.filters.push(filter);
 
-    super.register(ctx);
+    const subs = super.register(ctx);
+
+    const unsubs = subs.unsubscribe;
+    subs.unsubscribe = () => {
+      this.unregister(ctx, fns);
+      unsubs.bind(subs)();
+    };
+
+    return subs;
   }
 
-  unregister(ctx: Object, fns: Function[]) {
+  private unregister(ctx: Object, fns: Function[]) {
     for (const fn of fns) {
       const handler = fn.name;
       const original = ctx[`copy_${handler}`];
 
       if (!original) {
-        return console.error(`Can't unregister ${handler} because its not registered before.`);
+        return console.error(`Can't unregister ${handler} because it's not registered before.`);
       }
 
       ctx[handler] = original;
       delete ctx[`copy_${handler}`];
     }
-
-    // add message unsubscription also
   }
 
   private _emit(source: CommandSource) {

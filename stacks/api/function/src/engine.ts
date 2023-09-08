@@ -37,6 +37,7 @@ export class FunctionEngine implements OnModuleDestroy {
     ["system", SystemSchema]
   ]);
   readonly runSchemas = new Map<string, JSONSchema7>();
+  private cmdSubs: {unsubscribe: () => void};
 
   constructor(
     private fs: FunctionService,
@@ -56,7 +57,7 @@ export class FunctionEngine implements OnModuleDestroy {
     this.registerTriggers().then(() => {
       if (this.commander) {
         // trigger updates should be published to the other replicas except initial trigger registration
-        this.commander.register(this, [this.categorizeChanges]);
+        this.cmdSubs = this.commander.register(this, [this.categorizeChanges]);
       }
     });
   }
@@ -65,13 +66,8 @@ export class FunctionEngine implements OnModuleDestroy {
     return this.updateTriggers(ChangeKind.Added);
   }
 
-  // until commander unregister method implemented
   unregisterTriggers() {
-    return this.fs.find().then(fns => {
-      for (const fn of fns) {
-        createTargetChanges(fn, ChangeKind.Removed).forEach(change => this.unsubscribe(change));
-      }
-    });
+    return this.updateTriggers(ChangeKind.Removed);
   }
 
   private updateTriggers(kind: ChangeKind) {
@@ -85,6 +81,7 @@ export class FunctionEngine implements OnModuleDestroy {
   }
 
   onModuleDestroy() {
+    this.cmdSubs.unsubscribe();
     return this.unregisterTriggers();
   }
 

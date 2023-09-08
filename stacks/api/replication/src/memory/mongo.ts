@@ -28,8 +28,13 @@ export class MongoMemory<T> implements IPubSub<T> {
   subscribe(observer: PartialObserver<T>) {
     const stream = this.changeStream;
 
-    stream.on("change", change => {
-      return observer.next(change.fullDocument);
-    });
+    const callback = change => observer.next(change.fullDocument);
+    stream.on("change", callback);
+
+    return {
+      unsubscribe: () => {
+        stream.removeListener("change", callback);
+      }
+    };
   }
 }

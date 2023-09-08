@@ -6,8 +6,10 @@ import {ReplicationTestingModule} from "@spica-server/replication/testing";
 @Controller()
 export class MockController {
   calls = {fn1: [], fn2: [], failedFn: []};
+
+  commanderSubs;
   constructor(private commander: ClassCommander) {
-    this.commander.register(this, [this.fn1, this.fn2, this.failedFn]);
+    this.commanderSubs = this.commander.register(this, [this.fn1, this.fn2, this.failedFn]);
   }
 
   fn1(arg1, arg2) {
@@ -20,6 +22,10 @@ export class MockController {
 
   failedFn(arg1) {
     throw Error("Failed!");
+  }
+
+  unregister() {
+    this.commanderSubs.unsubscribe();
   }
 }
 
@@ -78,5 +84,14 @@ describe("Commander", () => {
       [`Replica ${replica2Id} has failed to execute command MockController.copy_failedFn(*!'^)`],
       [Error("Failed!")]
     ]);
+  });
+
+  it("should unsubscribe from commander", () => {
+    ctrl1.unregister();
+    ctrl1.fn1("call", "me");
+
+    expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
+
+    expect(ctrl2.calls.fn1).toEqual([]);
   });
 });
