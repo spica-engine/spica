@@ -1,12 +1,12 @@
 import {Injectable} from "@angular/core";
-import {ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot} from "@angular/router";
+import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from "@angular/router";
 import {select, Store} from "@ngrx/store";
 import {map, switchMap, take} from "rxjs/operators";
 import {BucketService} from "../services/bucket.service";
 import * as fromBucket from "./bucket.reducer";
 
 @Injectable({providedIn: "root"})
-export class BucketIndexGuard implements CanActivate {
+export class BucketIndexGuard  {
   constructor(
     private store: Store<fromBucket.State>,
     private bs: BucketService,

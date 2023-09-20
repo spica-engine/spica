@@ -62,6 +62,6 @@ export class BucketActionsComponent implements OnDestroy, OnInit {
     });
   }
   ngOnDestroy(): void {
-    this.dispose.next();
+    this.dispose.next(null);
   }
 }

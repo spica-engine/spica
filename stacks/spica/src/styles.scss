@@ -1,12 +1,12 @@
-@import "~@angular/material/theming";
-@include mat-core();
+@use '@angular/material' as mat;
+@include mat.core();
 
-$primary: mat-palette($mat-gray, 900, 500, 700);
-$primary-for-dark: mat-palette($mat-gray, 900, 100, 700, 100);
-$accent: mat-palette($mat-amber, A200, A100, A400);
+$primary: mat.define-palette(mat.$gray-palette, 900, 500, 700);
+$primary-for-dark: mat.define-palette(mat.$gray-palette, 900, 100, 700, 100);
+$accent: mat.define-palette(mat.$amber-palette, A200, A100, A400);
 
-$app-light-theme: mat-light-theme($primary, $accent);
-$app-dark-theme: mat-dark-theme($primary-for-dark, $accent);
+$app-light-theme: mat.define-light-theme($primary, $accent);
+$app-dark-theme: mat.define-dark-theme($primary-for-dark, $accent);
 
 @mixin vars($theme, $tone) {
   --tone-diff: #{$tone};
@@ -52,22 +52,25 @@ body {
 
 :root {
   &:not(.dark) {
-    @include angular-material-theme($app-light-theme);
+    @include mat.all-component-themes($app-light-theme);
     @include vars($app-light-theme, 0.6);
   }
   &.dark {
-    @include angular-material-theme($app-dark-theme);
+    @include mat.all-component-themes($app-dark-theme);
     @include vars($app-dark-theme, 0);
-    .mat-input-element {
+    .mat-mdc-input-element {
       color: white;
     }
   }
 }
 
+/* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
+/* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
 mat-card {
   &.mat-elevation-z25 {
     box-shadow: 0 4px 16px rgba(var(--primary-default-rgb), 0.07);
   }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
   mat-card-actions {
     margin: 0px !important;
     padding: 0px !important;
@@ -86,6 +89,7 @@ mat-card {
 }
 
 mat-form-field {
+  /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
   .mat-form-field-outline {
     background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
     border-radius: 5px;
@@ -94,10 +98,14 @@ mat-form-field {
       visibility: hidden;
     }
   }
+  /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
   .mat-form-field-label {
     top: 2.14375em !important;
   }
+  /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
+  /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
   &.mat-form-field-appearance-outline.mat-form-field-can-float.mat-form-field-should-float {
+    /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
     .mat-form-field-label {
       transform: translateY(-1.89375em) scale(0.75) !important;
     }
@@ -109,13 +117,11 @@ mat-form-field {
     background-color: #fafafa !important;
   }
 }
-
-$custom-typography: mat-typography-config(
-  $subheading-2: mat-typography-level(1rem, 1.5rem, 700),
-  $body-1: mat-typography-level(1rem, 1.5rem, 500)
+$custom-typography: mat.define-typography-config(
+  $subtitle-2: mat.define-typography-level(1rem, 1.5rem, 700),
+  $body-1: mat.define-typography-level(1rem, 1.5rem, 500)
 );
-
-@include mat-core($custom-typography);
+@include mat.typography-hierarchy($custom-typography);
 
 .ng-tooltip {
   position: absolute;
@@ -146,11 +152,12 @@ $custom-typography: mat-typography-config(
   opacity: 0.3 !important;
 
   // remove hover effect
+  /* TODO(mdc-migration): The following rule targets internal classes of button that may no longer apply for the MDC version.*/
   span.mat-button-focus-overlay {
     background: unset !important;
   }
 }
-.mat-menu-item[color="warn"] {
+.mat-mdc-menu-item[color="warn"] {
   color: var(--warn-500) !important;
 }
 
@@ -165,16 +172,18 @@ table.striped tr:nth-child(even) td {
 mat-table.striped mat-row:nth-child(even) {
   background-color: rgba(var(--background-background-rgb), 1) !important;
 }
-.mat-menu-panel {
+.mat-mdc-menu-panel {
   min-width: 180px !important;
 }
 
 .minimal-input-placer {
   > mat-form-field {
+    /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
+    /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
     .mat-form-field-wrapper {
       padding: 0px !important;
       margin: 0px !important;
-
+      /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
       .mat-form-field-hint-wrapper,
       .mat-form-field-label {
         display: none;

@@ -70,6 +70,6 @@ export class FunctionActionsComponent implements OnInit {
   }
 
   ngOnDestroy(): void {
-    this.dispose.next();
+    this.dispose.next(null);
   }
 }

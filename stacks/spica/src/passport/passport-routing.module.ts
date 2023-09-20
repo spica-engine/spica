@@ -19,7 +19,6 @@ const routes: Routes = [
   {path: "passport/identify", component: IdentifyComponent, data: {layout: false}},
   {
     path: "passport",
-    component: TabsComponent,
     canActivateChild: [IdentityGuard],
     children: [
       {

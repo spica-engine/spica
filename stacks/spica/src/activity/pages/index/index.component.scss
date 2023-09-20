@@ -15,7 +15,7 @@
       margin-top: 60px;
     }
   }
-  .mat-card {
+  .mat-mdc-card {
     margin: 30px;
     margin-top: -85px;
     > *:first-child {
@@ -26,15 +26,15 @@
       margin: 0px 5px;
     }
 
-    .mat-card-content {
+    .mat-mdc-card-content {
       .cdk-virtual-scroll-viewport {
-        .mat-list {
+        .mat-mdc-list {
           .emptyList {
             display: flex;
             justify-content: center;
           }
         }
-        .mat-progress-spinner {
+        .mat-mdc-progress-spinner {
           margin: 15px auto;
         }
       }
@@ -45,7 +45,7 @@
       width: 100%;
     }
 
-    .mat-list-item {
+    .mat-mdc-list-item {
       height: 45px;
       width: 100%;
       span.info {

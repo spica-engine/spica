@@ -7,7 +7,7 @@
     display: flex;
     justify-content: end;
     margin: 0 30px;
-    .mat-flat-button {
+    .mat-mdc-unelevated-button {
       border-bottom: 1px solid rgba(var(--foreground-base-rgb), 0.1);
     }
     -ms-overflow-style: none; /* Internet Explorer 10+ */
@@ -16,8 +16,12 @@
       display: none; /* Safari and Chrome */
     }
   }
-
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
   mat-card {
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
     mat-card-content {
       mat-divider {
         position: static;
@@ -40,6 +44,7 @@
         display: flex;
         flex-flow: row wrap;
         justify-content: space-between;
+        /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
         mat-list {
           flex-grow: 1;
         }

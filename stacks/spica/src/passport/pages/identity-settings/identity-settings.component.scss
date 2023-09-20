@@ -1,4 +1,5 @@
 :host {
+  /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
   mat-list-item.property {
     text-align: center;
     mat-form-field {
@@ -17,11 +18,11 @@
       display: flex;
     }
   }
-
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
   mat-card > p {
     font-size: 13px;
   }
-
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
   mat-card-content {
     margin-bottom: 0px;
   }
@@ -45,12 +46,13 @@
         margin-right: 10px;
       }
     }
-    .mat-subheader {
+    .mat-mdc-subheader {
       padding: 0 !important;
     }
     .mat-expansion-indicator {
       height: 23px;
     }
+    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
     mat-list-item.validation {
       margin: 0 !important;
       padding: 0 !important;

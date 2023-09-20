@@ -17,7 +17,7 @@
   </button>
 </div>
 
-<mat-card class="mat-elevation-z25" *ngIf="viewState == 'meta'">
+<mat-card appearance="outlined" class="mat-elevation-z25" *ngIf="viewState == 'meta'">
   <mat-card-content>
     <form #identityForm="ngForm">
       <mat-form-field>
@@ -184,7 +184,7 @@
     </button>
   </mat-card-actions>
 </mat-card>
-<mat-card class="mat-elevation-z25" *ngIf="viewState == 'policy'">
+<mat-card appearance="outlined" class="mat-elevation-z25" *ngIf="viewState == 'policy'">
   <mat-card-content>
     <div class="policies" *ngIf="identity._id">
       <mat-list>

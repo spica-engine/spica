@@ -56,7 +56,7 @@
           display: flex;
           flex-flow: row;
           justify-content: stretch;
-
+          /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
           mat-list-item {
             &.dashed-item {
               border-top: 1px dashed rgba(255, 255, 255, 0.2);
@@ -77,6 +77,10 @@
               top: 0;
               padding: 0px 3px;
               background: rgba(var(--background-background-rgb), 0.9);
+              /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+              /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+              /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+              /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
               mat-list-item {
                 margin: 3px 0px;
                 padding: 15px 0px;
@@ -104,10 +108,16 @@
                     background: unset;
                   }
                   ::ng-deep {
+                    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+                    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+                    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
                     > .mat-list-item-content {
                       padding: 0;
                       width: 100%;
+                      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+                      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
                       mat-list-item {
+                        /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
                         .mat-list-item-content {
                           justify-content: center;
                           padding: 0;
@@ -143,7 +153,10 @@
                   justify-content: center;
                 }
               }
+              /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+              /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
               mat-list-item {
+                /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
                 ::ng-deep .mat-list-item-content {
                   padding: 8px;
                   > mat-icon {
@@ -272,7 +285,7 @@
   .iconlist {
     background: linear-gradient(0deg, #271f57, #0e0922) !important;
   }
-
+  /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
   mat-list-item {
     color: white !important;
   }

@@ -63,10 +63,10 @@
             Timeout in seconds
             <b>({{ formatTimeout(function.timeout || information.timeout) }})</b>
           </mat-label>
+          <!-- TODO: The 'tickInterval' property no longer exists -->
           <mat-slider
             thumbLabel
             [displayWith]="formatTimeout"
-            tickInterval="auto"
             min="0.1"
             step="0.1"
             [max]="information.timeout"
@@ -74,7 +74,7 @@
             (ngModelChange)="function.timeout = $event"
             name="timeout"
             #timeoutModel="ngModel"
-          >
+          ><input matSliderThumb />
           </mat-slider>
           <mat-error *ngIf="timeoutModel?.errors?.required">Timeout is required.</mat-error>
           <mat-error *ngIf="timeoutModel?.errors?.min">

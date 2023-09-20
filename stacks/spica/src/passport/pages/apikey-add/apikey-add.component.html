@@ -16,7 +16,7 @@
     Policies
   </button>
 </div>
-<mat-card *ngIf="viewState == 'meta'">
+<mat-card appearance="outlined" *ngIf="viewState == 'meta'">
   <mat-card-content>
     <form #apiKeyForm="ngForm">
       <div class="status" *ngIf="apiKey._id">
@@ -73,7 +73,7 @@
   </mat-card-actions>
 </mat-card>
 
-<mat-card *ngIf="viewState == 'policy'">
+<mat-card appearance="outlined" *ngIf="viewState == 'policy'">
   <mat-card-content>
     <div class="policies" *ngIf="apiKey._id">
       <mat-list>

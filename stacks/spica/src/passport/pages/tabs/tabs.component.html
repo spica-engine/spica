@@ -1,4 +1,6 @@
-<mat-toolbar>
+<!-- <mat-toolbar>
   <ng-container *ngTemplateOutlet="outlet?.component?.toolbar"></ng-container>
-</mat-toolbar>
+</mat-toolbar> -->
+
+<div *ngIf="outlet?.component">{{ outlet?.component | json }}</div>
 <router-outlet #outlet="outlet"></router-outlet>

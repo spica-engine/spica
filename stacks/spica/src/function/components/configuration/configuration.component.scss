@@ -1,6 +1,9 @@
 :host {
+  /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+  /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
   mat-list-item {
     ::ng-deep {
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
       .mat-list-item-content {
         padding: 0;
       }
@@ -9,6 +12,10 @@
 
   form {
     min-width: 520px;
+    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
     mat-list {
       height: 100%;
 
@@ -19,7 +26,9 @@
       mat-divider {
         margin-bottom: 20px;
       }
-
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
       mat-list-item {
         margin-bottom: 40px;
         mat-form-field {
@@ -31,8 +40,10 @@
           font-size: 11px;
           float: right;
         }
-
+        /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
+        /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
         mat-select {
+          /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
           mat-select-trigger {
             > * {
               vertical-align: middle;
@@ -49,7 +60,7 @@
           > * {
             display: block;
           }
-
+          /* TODO(mdc-migration): The following rule targets internal classes of slider that may no longer apply for the MDC version. */
           mat-slider {
             width: 100%;
           }
@@ -57,6 +68,7 @@
 
         &.trigger,
         &.trigger-details {
+          /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
           ::ng-deep .mat-list-item-content {
             display: block;
           }

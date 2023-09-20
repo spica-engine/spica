@@ -5,6 +5,7 @@ import {
   ComponentFactoryResolver,
   ComponentRef,
   Directive,
+  EnvironmentInjector,
   Inject,
   Renderer2,
   ViewContainerRef
@@ -20,7 +21,6 @@ export class LayoutRouterOutlet extends RouterOutlet {
   constructor(
     private _location: ViewContainerRef,
     _parentContexts: ChildrenOutletContexts,
-    private _resolver: ComponentFactoryResolver,
     @Attribute("name") _name: string,
     _changeDetector: ChangeDetectorRef,
     @Inject(DEFAULT_LAYOUT) private defaultLayout: any,
@@ -28,7 +28,7 @@ export class LayoutRouterOutlet extends RouterOutlet {
     schemeObserver: SchemeObserver,
     @Inject(DOCUMENT) private document: any
   ) {
-    super(_parentContexts, _location, _resolver, _name, _changeDetector);
+    super();
     // We did not unsubscribe this because our app has only one outlet
     // TODO(thesayyn): reconsider this
     schemeObserver.observe(Scheme.Dark).subscribe(isDark => {
@@ -41,8 +41,8 @@ export class LayoutRouterOutlet extends RouterOutlet {
     });
   }
 
-  activateWith(activatedRoute: ActivatedRoute, resolver: ComponentFactoryResolver | null) {
-    super.activateWith(activatedRoute, resolver);
+  activateWith(activatedRoute: ActivatedRoute) {
+    super.activateWith(activatedRoute);
     if (activatedRoute.snapshot.data.layout === false && this.activatedLayout) {
       this._location.remove(this._location.indexOf(this.activatedLayout.hostView));
       this.activatedLayout = null;
@@ -52,11 +52,11 @@ export class LayoutRouterOutlet extends RouterOutlet {
       const activated: ComponentRef<{}> = (this as any).activated;
 
       if (!this.activatedLayout) {
-        resolver = resolver || this._resolver;
-        const factory = resolver.resolveComponentFactory(this.defaultLayout);
-        this.activatedLayout = factory.create(this._location.injector);
+        this.activatedLayout = this._location.createComponent(this.defaultLayout);
+
         this._location.insert(this.activatedLayout.hostView);
       }
+
       this.activatedLayout.location.nativeElement
         .querySelector("[slot=content]")
         .appendChild(activated.location.nativeElement);

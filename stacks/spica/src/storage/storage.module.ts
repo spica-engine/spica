@@ -1,5 +1,5 @@
 import {CommonModule} from "@angular/common";
-import {ModuleWithProviders} from "@angular/compiler/src/core";
+import {ModuleWithProviders} from "@angular/core";
 import {NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
@@ -110,7 +110,7 @@ import {MatTableModule} from "@angular/material/table";
   exports: [PickerDirective]
 })
 export class StorageModule {
-  static forRoot(): ModuleWithProviders {
+  static forRoot(): ModuleWithProviders<StorageModule> {
     return {
       ngModule: StorageModule,
       providers: [
@@ -134,7 +134,7 @@ export class StorageModule {
     };
   }
 
-  static forChild(): ModuleWithProviders {
+  static forChild(): ModuleWithProviders<StorageModule> {
     return {ngModule: StorageModule, providers: []};
   }
 }

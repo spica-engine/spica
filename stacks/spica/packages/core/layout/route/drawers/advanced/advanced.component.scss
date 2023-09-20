@@ -12,6 +12,7 @@
 ::ng-deep {
   .cdk-drag-preview {
     route-item {
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
       .mat-list-item-content {
         display: flex;
         flex-direction: row;
@@ -59,6 +60,7 @@
       width: 100%;
       display: flex;
       justify-content: flex-end;
+      /* TODO(mdc-migration): The following rule targets internal classes of button that may no longer apply for the MDC version. */
       .mat-button-wrapper {
         display: flex;
         align-items: center;
@@ -72,9 +74,15 @@
       flex-direction: column;
       gap: 5px;
       margin-top: 24px;
+      /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
+      /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
+      /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
       mat-chip-list {
+        /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
+        /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
         .mat-chip-list-wrapper {
           flex-direction: column;
+          /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
           mat-chip {
             width: 100%;
             cursor: pointer;

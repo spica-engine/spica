@@ -24,6 +24,7 @@
   }
 
   ::ng-deep {
+    /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
     .mat-form-field-infix {
       width: unset;
     }
@@ -100,13 +101,16 @@
         align-items: center;
         justify-content: center;
       }
+      /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
+      /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
       mat-chip-list {
         margin-top: 15px;
+        /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
         ::ng-deep .mat-chip-list-wrapper {
           justify-content: center;
         }
       }
-
+      /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
       mat-chip {
         width: 80%;
         display: flex;
@@ -116,7 +120,7 @@
     }
   }
 
-  p.mat-error {
+  p.mat-mdc-form-field-error {
     text-align: center;
   }
 }
