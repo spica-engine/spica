@@ -74,8 +74,7 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
-          "options": {
-          },
+          "options": {},
           "configurations": {
             "production": {
               "browserTarget": "spica-client:build:production"
@@ -106,7 +105,10 @@
   },
   "cli": {
     "packageManager": "yarn",
-    "analytics": false
+    "analytics": false,
+    "cache": {
+      "enabled": false
+    }
   },
   "schematics": {
     "@schematics/angular:component": {
