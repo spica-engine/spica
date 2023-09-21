@@ -11,15 +11,25 @@ import {ObjectId} from "@spica-server/database";
 import {raw, json} from "body-parser";
 import {deserialize} from "bson";
 import {Observable} from "rxjs";
-import {switchMapTo} from "rxjs/operators";
+import {switchMapTo, tap} from "rxjs/operators";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import * as multer from "multer";
+import * as fs from "fs";
 // import { Express } from 'express'
 // import { Multer } from 'multer';
 
 // minimize copy-paste code
 abstract class __MultipartFormData {
   constructor(@Inject(STORAGE_OPTIONS) public options: StorageOptions) {}
+
+  fileCleanup(context: ExecutionContext) {
+    const [req] = context.getArgs();
+    if (req.headers["content-type"].startsWith("multipart/form-data")) {
+      return Promise.all(req.body.map(b => fs.promises.unlink(b.path)));
+    }
+    return Promise.resolve();
+  }
+
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const [req, res] = context.getArgs();
     return new Observable(observer => {
@@ -60,7 +70,7 @@ abstract class __MultipartFormData {
         observer.next();
         observer.complete();
       });
-    }).pipe(switchMapTo(next.handle()));
+    }).pipe(switchMapTo(next.handle().pipe(tap(() => this.fileCleanup(context)))));
   }
 }
 
