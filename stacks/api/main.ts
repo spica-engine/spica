@@ -245,7 +245,7 @@ const args = yargs
     "storage-object-size-limit": {
       number: true,
       description: "Maximum size in Mi that an object could be.",
-      default: 35
+      default: 1000
     },
     "storage-total-size-limit": {
       number: true,

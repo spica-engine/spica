@@ -146,6 +146,7 @@
     "@types/lodash": "^4.14.178",
     "@types/matcher": "^2.0.0",
     "@types/mongodb": "~3.1.27",
+    "@types/multer": "^1.4.7",
     "@types/node": "^16.0.0",
     "@types/node-forge": "^0.9.4",
     "@types/prettier": "^2.0.1",

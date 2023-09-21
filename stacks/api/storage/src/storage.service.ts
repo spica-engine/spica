@@ -158,7 +158,7 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
     });
   }
 
-  async insert(objects: StorageObject[]): Promise<StorageObject[]> {
+  async insert(objects: StorageObject<any>[]): Promise<StorageObject[]> {
     const datas = objects.map(object => object.content.data);
     const schemas = objects.map(object => {
       delete object.content.data;
@@ -172,7 +172,11 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
       .then(result => result.ops as StorageObject[]);
 
     for (const [i, object] of insertedObjects.entries()) {
-      await this.service.write(object._id.toString(), datas[i], object.content.type);
+      if (datas[i] instanceof Buffer) {
+        await this.service.write(object._id.toString(), datas[i], object.content.type);
+      } else {
+        await this.service.writeStream(object._id.toString(), datas[i], object.content.type);
+      }
     }
 
     return insertedObjects;

@@ -4,6 +4,27 @@
   "anyOf": [
     {
       "$schema": "http://json-schema.org/draft-07/schema",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "originalname": {
+            "type": "string"
+          },
+          "mimetype": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    {
+      "$schema": "http://json-schema.org/draft-07/schema",
       "type": "object",
       "additionalProperties": false,
       "required": ["content"],

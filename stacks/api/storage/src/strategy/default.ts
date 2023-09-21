@@ -5,6 +5,10 @@ export class Default implements Strategy {
   constructor(private path: string, private publicUrl: string) {
     this.publicUrl = publicUrl;
   }
+  
+  writeStream(id: string, data: fs.ReadStream, mimeType?: string): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
 
   async read(id: string) {
     await this.ensureStorageDiskExists();

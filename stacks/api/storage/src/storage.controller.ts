@@ -16,7 +16,9 @@ import {
   UseInterceptors,
   HttpCode,
   HttpException,
-  Patch
+  Patch,
+  UploadedFile,
+  Inject
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
@@ -29,11 +31,17 @@ import {
   BsonBodyParser,
   isBsonBody,
   isJsonBody,
+  isMultipartFormDataBody,
   JsonBodyParser,
   MixedBody,
+  MultipartFormDataParser,
   StorageObject
 } from "./body";
 import {StorageService} from "./storage.service";
+import {FileInterceptor} from "@nestjs/platform-express";
+import {Express} from "express";
+import {STORAGE_OPTIONS, StorageOptions} from "./options";
+import * as fs from "fs";
 
 /**
  * @name storage
@@ -176,12 +184,31 @@ export class StorageController {
    *   ]
    * ```
    */
-  @UseInterceptors(BsonBodyParser(), JsonBodyParser(), activity(createStorageActivity))
+  @UseInterceptors(
+    MultipartFormDataParser(),
+    BsonBodyParser(),
+    JsonBodyParser(),
+    activity(createStorageActivity)
+  )
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("storage:create"))
   async insertMany(@Body(Schema.validate("http://spica.internal/storage/body")) body: MixedBody) {
-    let objects = new Array<StorageObject>();
-    if (isBsonBody(body)) {
+    let objects = new Array<StorageObject<fs.ReadStream | Buffer>>();
+
+    // instead of this if else checks, we can use content-type header of request.
+    if (isMultipartFormDataBody(body)) {
+      //@ts-ignore
+      objects = body.map(object => {
+        return {
+          name: object.originalname,
+          content: {
+            type: object.mimetype,
+            data: fs.createReadStream(object.path),
+            size: object.size
+          }
+        };
+      });
+    } else if (isBsonBody(body)) {
       objects = body.content.map(object => {
         if (!(object.content.data instanceof Buffer)) {
           throw new BadRequestException("content.data should be a binary");
@@ -196,6 +223,7 @@ export class StorageController {
         };
       });
     } else if (isJsonBody(body)) {
+      //@ts-ignore
       objects = body.map(object => {
         return {
           name: object.name,
@@ -206,6 +234,8 @@ export class StorageController {
           }
         };
       });
+    } else {
+      throw new BadRequestException("Unknown content-type");
     }
 
     objects = await this.storage.insert(objects).catch(error => {

@@ -1,3 +1,4 @@
+import { ReadStream } from "fs";
 import {Strategy} from "./strategy";
 import * as AWS from "aws-sdk";
 
@@ -6,6 +7,10 @@ export class AWSS3 implements Strategy {
   constructor(private credentialsPath: string, private bucketName: string) {
     AWS.config.loadFromPath(this.credentialsPath);
     this.s3 = new AWS.S3();
+  }
+  
+  writeStream(id: string, data: ReadStream, mimeType?: string): Promise<void> {
+    throw new Error("Method not implemented.");
   }
 
   read(id: string): Promise<Buffer> {
