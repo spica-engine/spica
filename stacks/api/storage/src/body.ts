@@ -11,7 +11,7 @@ import {ObjectId} from "@spica-server/database";
 import {raw, json} from "body-parser";
 import {deserialize} from "bson";
 import {Observable} from "rxjs";
-import {switchMapTo, tap} from "rxjs/operators";
+import {finalize, switchMapTo} from "rxjs/operators";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import * as multer from "multer";
 import * as fs from "fs";
@@ -61,16 +61,21 @@ abstract class __MultipartFormData {
           }
           return observer.error(error);
         }
-        try {
-          req.body = req.files;
-        } catch (error) {
-          return observer.error(error);
-        }
+        req.body = req.files;
 
         observer.next();
         observer.complete();
       });
-    }).pipe(switchMapTo(next.handle().pipe(tap(() => this.fileCleanup(context)))));
+    }).pipe(
+      switchMapTo(
+        next.handle().pipe(
+          finalize(() =>
+            // i think multer(or we) still tries to open file, put the cleanup task to the end
+            setImmediate(() => this.fileCleanup(context))
+          )
+        )
+      )
+    );
   }
 }
 

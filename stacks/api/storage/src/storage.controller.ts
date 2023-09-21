@@ -16,9 +16,7 @@ import {
   UseInterceptors,
   HttpCode,
   HttpException,
-  Patch,
-  UploadedFile,
-  Inject
+  Patch
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
@@ -38,9 +36,6 @@ import {
   StorageObject
 } from "./body";
 import {StorageService} from "./storage.service";
-import {FileInterceptor} from "@nestjs/platform-express";
-import {Express} from "express";
-import {STORAGE_OPTIONS, StorageOptions} from "./options";
 import * as fs from "fs";
 
 /**
