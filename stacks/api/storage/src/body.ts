@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   CallHandler,
   ExecutionContext,
   HttpException,
@@ -272,7 +273,7 @@ export function isBsonBody(object: unknown): object is BsonBody {
   return object && Array.isArray((<BsonBody>object).content);
 }
 
-export function multipartToObject(object: MultipartFormData) {
+export function multipartToStorageObject(object: MultipartFormData): StorageObject<ReadStream> {
   return {
     name: object.originalname,
     content: {
@@ -281,4 +282,47 @@ export function multipartToObject(object: MultipartFormData) {
       size: object.size
     }
   };
+}
+
+export function addContentSize(object: StorageObject<Buffer>) {
+  object.content.size = object.content.data.byteLength;
+  return object;
+}
+
+export function isBufferCheck(body) {
+  if (!(body.content.data instanceof Buffer)) {
+    throw new BadRequestException("content.data should be a binary");
+  }
+}
+
+export interface IStorageObjectConverter {
+  validate: (body) => boolean;
+  build: (body) => StorageObject;
+}
+
+export class StorageObjectBuilder {
+  multipart: IStorageObjectConverter = {
+    validate: body => isMultipartFormDataBody(body),
+    build: body => multipartToStorageObject(body)
+  };
+
+  json: IStorageObjectConverter = {
+    validate: body => isJsonBody(body),
+    build: body => addContentSize(body)
+  };
+
+  bson: IStorageObjectConverter = {
+    validate: body => isBsonBody(body),
+    build: body => {
+      isBufferCheck(body);
+      return addContentSize(body);
+    }
+  };
+
+  converters = [this.multipart,this.json,this.bson]
+
+  constructor() {}
+
+  
+
 }

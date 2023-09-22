@@ -26,15 +26,17 @@ import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/gua
 import * as etag from "etag";
 import {createStorageActivity} from "./activity.resource";
 import {
+  addContentSize,
   BsonBodyParser,
   isBsonBody,
+  isBufferCheck,
   isJsonBody,
   isMultipartFormDataArray,
   isMultipartFormDataBody,
   JsonBodyParser,
   MixedBody,
   MultipartFormDataParser,
-  multipartToObject,
+  multipartToStorageObject,
   StorageObject
 } from "./body";
 import {StorageService} from "./storage.service";
@@ -163,15 +165,11 @@ export class StorageController {
     let object;
 
     if (isMultipartFormDataBody(body)) {
-      object = multipartToObject(body);
+      object = multipartToStorageObject(body);
     } else {
-      //@ts-ignore
-      if (!(body.content.data instanceof Buffer)) {
-        throw new BadRequestException("content.data should be a binary");
-      }
+      isBufferCheck(body);
       object = body;
-      //@ts-ignore
-      object.content.size = body.content.data.byteLength;
+      object = addContentSize(object)
     }
 
     object._id = id;
@@ -211,43 +209,12 @@ export class StorageController {
 
     // instead of this if else checks, we can use content-type header of request.
     if (isMultipartFormDataArray(body)) {
-      //@ts-ignore
-      objects = body.map(object => {
-        return {
-          name: object.originalname,
-          content: {
-            type: object.mimetype,
-            data: fs.createReadStream(object.path),
-            size: object.size
-          }
-        };
-      });
+      objects = body.map(object => multipartToStorageObject(object));
     } else if (isBsonBody(body)) {
-      objects = body.content.map(object => {
-        if (!(object.content.data instanceof Buffer)) {
-          throw new BadRequestException("content.data should be a binary");
-        }
-        return {
-          name: object.name,
-          content: {
-            type: object.content.type,
-            data: object.content.data,
-            size: object.content.data.byteLength
-          }
-        };
-      });
+      body.content.forEach(object => isBufferCheck(object));
+      objects = body.content.map(object => addContentSize(object));
     } else if (isJsonBody(body)) {
-      //@ts-ignore
-      objects = body.map(object => {
-        return {
-          name: object.name,
-          content: {
-            type: object.content.type,
-            data: object.content.data,
-            size: object.content.data.byteLength
-          }
-        };
-      });
+      objects = body.map(object => addContentSize(object));
     } else {
       throw new BadRequestException("Unknown content-type");
     }
