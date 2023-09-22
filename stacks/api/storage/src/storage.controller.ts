@@ -29,10 +29,12 @@ import {
   BsonBodyParser,
   isBsonBody,
   isJsonBody,
+  isMultipartFormDataArray,
   isMultipartFormDataBody,
   JsonBodyParser,
   MixedBody,
   MultipartFormDataParser,
+  multipartToObject,
   StorageObject
 } from "./body";
 import {StorageService} from "./storage.service";
@@ -145,18 +147,35 @@ export class StorageController {
    * }
    * ```
    */
-  @UseInterceptors(BsonBodyParser(), JsonBodyParser(), activity(createStorageActivity))
+  @UseInterceptors(
+    MultipartFormDataParser({isArray: false}),
+    BsonBodyParser(),
+    JsonBodyParser(),
+    activity(createStorageActivity)
+  )
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:update"))
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/storage/body/single")) object: StorageObject
+    @Body(Schema.validate("http://spica.internal/storage/body/single"))
+    body
   ) {
-    if (!(object.content.data instanceof Buffer)) {
-      throw new BadRequestException("content.data should be a binary");
+    let object;
+
+    if (isMultipartFormDataBody(body)) {
+      object = multipartToObject(body);
+    } else {
+      //@ts-ignore
+      if (!(body.content.data instanceof Buffer)) {
+        throw new BadRequestException("content.data should be a binary");
+      }
+      object = body;
+      //@ts-ignore
+      object.content.size = body.content.data.byteLength;
     }
+
     object._id = id;
-    object.content.size = object.content.data.byteLength;
+
     object = await this.storage.update(id, object).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
@@ -180,7 +199,7 @@ export class StorageController {
    * ```
    */
   @UseInterceptors(
-    MultipartFormDataParser(),
+    MultipartFormDataParser({isArray: true}),
     BsonBodyParser(),
     JsonBodyParser(),
     activity(createStorageActivity)
@@ -191,7 +210,7 @@ export class StorageController {
     let objects = new Array<StorageObject<fs.ReadStream | Buffer>>();
 
     // instead of this if else checks, we can use content-type header of request.
-    if (isMultipartFormDataBody(body)) {
+    if (isMultipartFormDataArray(body)) {
       //@ts-ignore
       objects = body.map(object => {
         return {

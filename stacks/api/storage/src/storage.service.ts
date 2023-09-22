@@ -147,9 +147,16 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
     }
 
     await this.validateTotalStorageSize(object.content.size - existing.content.size);
-
     if (object.content.data) {
-      await this.service.write(object._id.toString(), object.content.data, object.content.type);
+      if (object.content.data instanceof Buffer) {
+        await this.service.write(object._id.toString(), object.content.data, object.content.type);
+      } else {
+        await this.service.writeStream(
+          object._id.toString(),
+          object.content.data,
+          object.content.type
+        );
+      }
     }
     delete object.content.data;
     delete object._id;

@@ -64,6 +64,8 @@ class __BaseBody {
 
 // minimize copy-paste code
 abstract class __MultipartFormDataBody extends __BaseBody {
+  isArray: boolean;
+
   constructor(@Inject(STORAGE_OPTIONS) public options: StorageOptions) {
     super(options);
   }
@@ -75,7 +77,8 @@ abstract class __MultipartFormDataBody extends __BaseBody {
   fileCleanup(context: ExecutionContext) {
     const [req] = context.getArgs();
     if (this.isContentTypeValid(req)) {
-      return Promise.all(req.body.map(b => fs.promises.unlink(b.path)));
+      const files = this.isArray ? req.body : [req.body];
+      return Promise.all(files.map(b => fs.promises.unlink(b.path)));
     }
     return Promise.resolve();
   }
@@ -92,20 +95,27 @@ abstract class __MultipartFormDataBody extends __BaseBody {
         return;
       }
 
-      const parser = multer({
+      const multerObj = multer({
         dest: this.options.defaultPath,
         fileFilter(req, file, callback) {
           file.originalname = decodeURIComponent(file.originalname);
           callback(null, true);
         }
-      }).array("files");
+      });
+
+      let parser;
+      if (this.isArray) {
+        parser = multerObj.array("files");
+      } else {
+        parser = multerObj.single("file");
+      }
 
       parser(req, res, error => {
         if (error) {
           return this.handleParseError(error, observer);
         }
 
-        req.body = req.files;
+        req.body = this.isArray ? req.files : req.file;
 
         this.completeObserver(observer);
       });
@@ -211,8 +221,12 @@ export function JsonBodyParser(): Type<any> {
   return mixin(class extends __JsonBody {});
 }
 
-export function MultipartFormDataParser(): Type<any> {
-  return mixin(class extends __MultipartFormDataBody {});
+export function MultipartFormDataParser(options: {isArray: boolean}): Type<any> {
+  return mixin(
+    class extends __MultipartFormDataBody {
+      isArray: boolean = options.isArray;
+    }
+  );
 }
 
 export interface StorageObject<DataType = Buffer> {
@@ -236,19 +250,35 @@ export type JsonBody = StorageObject<Buffer>[];
 
 // multer library overrides the global express object
 //@ts-ignore
-export type MultipartFormData = Express.Multer.File[];
+export type MultipartFormData = Express.Multer.File;
 
-export type MixedBody = BsonBody | JsonBody | MultipartFormData;
+export type MixedBody = BsonBody | JsonBody | MultipartFormData[];
 
 export function isJsonBody(object: unknown): object is JsonBody {
   return Array.isArray(object);
 }
 
 // write a better check here.
-export function isMultipartFormDataBody(object: unknown): object is MultipartFormData {
+export function isMultipartFormDataArray(object: unknown): object is MultipartFormData[] {
   return Array.isArray(object) && Object.keys(object[0]).includes("originalname");
+}
+
+// write a better check here.
+export function isMultipartFormDataBody(object: unknown): object is MultipartFormData {
+  return Object.keys(object).includes("originalname");
 }
 
 export function isBsonBody(object: unknown): object is BsonBody {
   return object && Array.isArray((<BsonBody>object).content);
+}
+
+export function multipartToObject(object: MultipartFormData) {
+  return {
+    name: object.originalname,
+    content: {
+      type: object.mimetype,
+      data: fs.createReadStream(object.path),
+      size: object.size
+    }
+  };
 }
