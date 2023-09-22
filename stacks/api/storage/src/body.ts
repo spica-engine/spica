@@ -93,7 +93,11 @@ abstract class __MultipartFormDataBody extends __BaseBody {
       }
 
       const parser = multer({
-        dest: this.options.defaultPath
+        dest: this.options.defaultPath,
+        fileFilter(req, file, callback) {
+          file.originalname = decodeURIComponent(file.originalname);
+          callback(null, true);
+        }
       }).array("files");
 
       parser(req, res, error => {

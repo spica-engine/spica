@@ -105,27 +105,42 @@ export class StorageService {
   }
 
   insertMany(fileList: FileList, prefix?: string): Observable<HttpEvent<Storage>> {
-    const files = Array.from(fileList);
-    return from(Promise.all(files.map(f => fileToBuffer(f)))).pipe(
-      flatMap(content => {
-        const contents = {
-          content: content.map((c, i) => ({
-            name: prefix ? `${prefix}${files[i].name}` : files[i].name,
-            content: {
-              data: new BSON.Binary(c),
-              type: files[i].type
-            }
-          }))
-        };
-        const size = BSON.calculateObjectSize(contents);
-        const buffer = BSON.serialize(contents, {minInternalBufferSize: size} as any);
-        const request = new HttpRequest("POST", "api:/storage", buffer.buffer, {
-          reportProgress: true,
-          headers: new HttpHeaders({"Content-Type": "application/bson"})
-        });
-        return this.http.request<Storage>(request);
-      })
-    );
+    const files = Array.from(fileList).map(file => {
+      let name = prefix ? `${prefix}${file.name}` : file.name;
+      name = encodeURIComponent(name);
+      return new File([file], name, {type: file.type, lastModified: file.lastModified});
+    });
+
+    const formData = new FormData();
+
+    files.forEach(file => formData.append("files", file));
+
+    const request = new HttpRequest("POST", "api:/storage", formData, {
+      reportProgress: true
+    });
+
+    return this.http.request<Storage>(request);
+
+    // return from(Promise.all(files.map(f => fileToBuffer(f)))).pipe(
+    //   flatMap(content => {
+    //     const contents = {
+    //       content: content.map((c, i) => ({
+    //         name: prefix ? `${prefix}${files[i].name}` : files[i].name,
+    //         content: {
+    //           data: new BSON.Binary(c),
+    //           type: files[i].type
+    //         }
+    //       }))
+    //     };
+    //     const size = BSON.calculateObjectSize(contents);
+    //     const buffer = BSON.serialize(contents, {minInternalBufferSize: size} as any);
+    //     const request = new HttpRequest("POST", "api:/storage", buffer.buffer, {
+    //       reportProgress: true,
+    //       headers: new HttpHeaders({"Content-Type": "application/bson"})
+    //     });
+    //     return this.http.request<Storage>(request);
+    //   })
+    // );
   }
 
   private prepareToDisplay(object: Storage) {
