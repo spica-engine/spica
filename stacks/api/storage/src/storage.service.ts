@@ -1,12 +1,13 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
-import {StorageObject, StorageObjectContent} from "./body";
+import {StorageObject, StorageObjectMeta} from "./body";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {Strategy} from "./strategy/strategy";
+import * as fs from "fs";
 
 @Injectable()
-export class StorageService extends BaseCollection<StorageObject>("storage") {
+export class StorageService extends BaseCollection<StorageObjectMeta>("storage") {
   constructor(
     database: DatabaseService,
     private service: Strategy,
@@ -112,9 +113,10 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
     return objects;
   }
 
-  async get(id: ObjectId): Promise<StorageObject> {
-    const object = await this._coll.findOne({_id: new ObjectId(id)});
+  async get(id: ObjectId): Promise<StorageObject<Buffer>> {
+    const object: StorageObject<Buffer> = await this._coll.findOne({_id: new ObjectId(id)});
     if (!object) return null;
+
     object.content.data = await this.service.read(id.toHexString());
     return object;
   }
@@ -140,7 +142,10 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
       .then(r => r.value);
   }
 
-  async update(_id: ObjectId, object: StorageObject): Promise<StorageObject> {
+  async update(
+    _id: ObjectId,
+    object: StorageObject<fs.ReadStream | Buffer>
+  ): Promise<StorageObjectMeta> {
     const existing = await this._coll.findOne({_id});
     if (!existing) {
       throw new Error(`Storage object ${_id} could not be found`);
@@ -148,26 +153,19 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
 
     await this.validateTotalStorageSize(object.content.size - existing.content.size);
     if (object.content.data) {
-      if (object.content.data instanceof Buffer) {
-        await this.service.write(object._id.toString(), object.content.data, object.content.type);
-      } else {
-        await this.service.writeStream(
-          object._id.toString(),
-          object.content.data,
-          object.content.type
-        );
-      }
+      await this.write(object);
     }
+
     delete object.content.data;
     delete object._id;
+
     return this._coll.findOneAndUpdate({_id}, {$set: object}).then(() => {
       return {...object, _id: _id};
     });
   }
 
-  async insert(objects: StorageObject<any>[]): Promise<StorageObject[]> {
-    const datas = objects.map(object => object.content.data);
-    const schemas = objects.map(object => {
+  async insert(objects: StorageObject<fs.ReadStream | Buffer>[]): Promise<StorageObjectMeta[]> {
+    const schemas: StorageObjectMeta[] = JSON.parse(JSON.stringify(objects)).map(object => {
       delete object.content.data;
       return object;
     });
@@ -176,17 +174,27 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
 
     const insertedObjects = await this._coll
       .insertMany(schemas)
-      .then(result => result.ops as StorageObject[]);
+      .then(result => result.ops as StorageObjectMeta[]);
 
-    for (const [i, object] of insertedObjects.entries()) {
-      if (datas[i] instanceof Buffer) {
-        await this.service.write(object._id.toString(), datas[i], object.content.type);
-      } else {
-        await this.service.writeStream(object._id.toString(), datas[i], object.content.type);
-      }
+    for (const [i, schema] of insertedObjects.entries()) {
+      const obj = objects[i];
+      obj._id = schema._id;
+      await this.write(obj);
     }
 
     return insertedObjects;
+  }
+
+  private write(object: StorageObject<fs.ReadStream | Buffer>) {
+    if (object.content.data instanceof Buffer) {
+      return this.service.write(object._id.toString(), object.content.data, object.content.type);
+    } else {
+      return this.service.writeStream(
+        object._id.toString(),
+        object.content.data,
+        object.content.type
+      );
+    }
   }
 
   async getUrl(id: string) {
@@ -194,9 +202,7 @@ export class StorageService extends BaseCollection<StorageObject>("storage") {
   }
 }
 
-export type StorageResponse = Omit<StorageObject, "content"> & {
-  content: Omit<StorageObjectContent, "data">;
-};
+export type StorageResponse = StorageObjectMeta;
 
 export interface PaginatedStorageResponse {
   meta: {

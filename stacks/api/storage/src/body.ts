@@ -16,10 +16,7 @@ import {finalize, switchMapTo} from "rxjs/operators";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import * as multer from "multer";
 import * as fs from "fs";
-// import { Express } from 'express'
-// import { Multer } from 'multer';
 
-// decide whether it should be abstract
 class __BaseBody {
   payloadSizeError: HttpException;
   limit: number;
@@ -169,6 +166,8 @@ abstract class __BsonBody extends __BaseBody {
         } catch (error) {
           return observer.error(error);
         }
+
+        this.completeObserver(observer);
       });
     };
 
@@ -230,50 +229,48 @@ export function MultipartFormDataParser(options: {isArray: boolean}): Type<any> 
   );
 }
 
-export interface StorageObject<DataType = Buffer> {
+export interface StorageObject<DataType> {
   _id?: string | ObjectId;
   name: string;
   url?: string;
   content: StorageObjectContent<DataType>;
 }
 
-export interface StorageObjectContent<DataType = Buffer> {
+export interface StorageObjectContent<DataType> {
   data: DataType;
   type: string;
   size?: number;
 }
 
-export interface BsonBody {
+export type StorageObjectContentMeta = Omit<StorageObjectContent<any>, "data">;
+
+export type StorageObjectMeta = Omit<StorageObject<any>, "content"> & {
+  content: StorageObjectContentMeta;
+};
+
+export interface BsonArray {
   content: StorageObject<Buffer>[];
 }
 
-export type JsonBody = StorageObject<Buffer>[];
+export type JsonArray = StorageObject<Buffer>[];
 
-// multer library overrides the global express object
-//@ts-ignore
 export type MultipartFormData = Express.Multer.File;
 
-export type MixedBody = BsonBody | JsonBody | MultipartFormData[];
+export type MixedBody = BsonArray | JsonArray | MultipartFormData[];
 
-export function isJsonBody(object: unknown): object is JsonBody {
-  return Array.isArray(object);
-}
-
-// write a better check here.
 export function isMultipartFormDataArray(object: unknown): object is MultipartFormData[] {
-  return Array.isArray(object) && Object.keys(object[0]).includes("originalname");
+  return Array.isArray(object) && isMultipartFormData(object[0]);
 }
 
-// write a better check here.
-export function isMultipartFormDataBody(object: unknown): object is MultipartFormData {
+export function isMultipartFormData(object: unknown): object is MultipartFormData {
   return Object.keys(object).includes("originalname");
 }
 
-export function isBsonBody(object: unknown): object is BsonBody {
-  return object && Array.isArray((<BsonBody>object).content);
+export function isBufferContent(body): body is StorageObject<Buffer> {
+  return body.content && body.content.data instanceof Buffer;
 }
 
-export function multipartToStorageObject(object: MultipartFormData): StorageObject<ReadStream> {
+export function multipartToStorageObject(object: MultipartFormData): StorageObject<fs.ReadStream> {
   return {
     name: object.originalname,
     content: {
@@ -289,40 +286,71 @@ export function addContentSize(object: StorageObject<Buffer>) {
   return object;
 }
 
-export function isBufferCheck(body) {
-  if (!(body.content.data instanceof Buffer)) {
-    throw new BadRequestException("content.data should be a binary");
+interface IBodyConverter<I, O> {
+  validate: (body: unknown) => boolean;
+  convert: (body: I) => O;
+}
+
+const MultipartConverter: IBodyConverter<MultipartFormData, StorageObject<fs.ReadStream>> = {
+  validate: (body: unknown) => isMultipartFormData(body),
+  convert: (body: MultipartFormData) => multipartToStorageObject(body)
+};
+
+const MultipartArrayConverter: IBodyConverter<
+  MultipartFormData[],
+  StorageObject<fs.ReadStream>[]
+> = {
+  validate: (body: MixedBody) => {
+    return (
+      body && Array.isArray(body) && (body as unknown[]).every(b => MultipartConverter.validate(b))
+    );
+  },
+  convert: (body: MultipartFormData[]) => body.map(object => MultipartConverter.convert(object))
+};
+
+const BsonConverter: IBodyConverter<StorageObject<Buffer>, StorageObject<Buffer>> = {
+  validate: (body: unknown) => isBufferContent(body),
+  convert: (body: StorageObject<Buffer>) => addContentSize(body)
+};
+
+const JsonConverter = BsonConverter;
+
+const BsonArrayConverter: IBodyConverter<BsonArray, StorageObject<Buffer>[]> = {
+  validate: (body: MixedBody) => {
+    return (
+      body &&
+      Array.isArray((<BsonArray>body).content) &&
+      (<BsonArray>body).content.every(o => BsonConverter.validate(o))
+    );
+  },
+  convert: (body: BsonArray) => {
+    return body.content.map(object => BsonConverter.convert(object));
   }
+};
+
+const JsonArrayConverter: IBodyConverter<JsonArray, StorageObject<Buffer>[]> = {
+  validate: (body: MixedBody) => {
+    return body && Array.isArray(body) && (body as unknown[]).every(o => JsonConverter.validate(o));
+  },
+  convert: (body: JsonArray) => {
+    return body.map(object => JsonConverter.convert(object));
+  }
+};
+
+const postConverters: IBodyConverter<
+  MultipartFormData[] | BsonArray | JsonArray,
+  StorageObject<fs.ReadStream | Buffer>[]
+>[] = [MultipartArrayConverter, BsonArrayConverter, JsonArrayConverter];
+
+const putConverters: IBodyConverter<
+  MultipartFormData | StorageObject<Buffer>,
+  StorageObject<fs.ReadStream | Buffer>
+>[] = [MultipartConverter, BsonConverter, JsonConverter];
+
+export function getPostBodyConverter(body: MixedBody) {
+  return postConverters.find(c => c.validate(body));
 }
 
-export interface IStorageObjectConverter {
-  validate: (body) => boolean;
-  build: (body) => StorageObject;
-}
-
-export class StorageObjectBuilder {
-  multipart: IStorageObjectConverter = {
-    validate: body => isMultipartFormDataBody(body),
-    build: body => multipartToStorageObject(body)
-  };
-
-  json: IStorageObjectConverter = {
-    validate: body => isJsonBody(body),
-    build: body => addContentSize(body)
-  };
-
-  bson: IStorageObjectConverter = {
-    validate: body => isBsonBody(body),
-    build: body => {
-      isBufferCheck(body);
-      return addContentSize(body);
-    }
-  };
-
-  converters = [this.multipart,this.json,this.bson]
-
-  constructor() {}
-
-  
-
+export function getPutBodyConverter(body: MultipartFormData | StorageObject<Buffer>) {
+  return putConverters.find(c => c.validate(body));
 }

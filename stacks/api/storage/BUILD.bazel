@@ -26,6 +26,7 @@ ts_project(
         "@npm//@nestjs/core",
         "@npm//@types/body-parser",
         "@npm//@types/bson",
+        "@npm//@types/multer",
         "@npm//@types/mongodb",
         "@npm//@types/node",
         "@npm//aws-sdk",

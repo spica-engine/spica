@@ -28,19 +28,18 @@ import {createStorageActivity} from "./activity.resource";
 import {
   addContentSize,
   BsonBodyParser,
-  isBsonBody,
-  isBufferCheck,
-  isJsonBody,
-  isMultipartFormDataArray,
-  isMultipartFormDataBody,
+  isBufferContent,
+  isMultipartFormData,
   JsonBodyParser,
   MixedBody,
   MultipartFormDataParser,
   multipartToStorageObject,
-  StorageObject
+  StorageObject,
+  MultipartFormData,
+  getPostBodyConverter,
+  getPutBodyConverter
 } from "./body";
 import {StorageService} from "./storage.service";
-import * as fs from "fs";
 
 /**
  * @name storage
@@ -160,25 +159,19 @@ export class StorageController {
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/storage/body/single"))
-    body
+    body: MultipartFormData | StorageObject<Buffer>
   ) {
-    let object;
 
-    if (isMultipartFormDataBody(body)) {
-      object = multipartToStorageObject(body);
-    } else {
-      isBufferCheck(body);
-      object = body;
-      object = addContentSize(object)
-    }
+    const converter = getPutBodyConverter(body);
+    const object = converter.convert(body)
 
     object._id = id;
 
-    object = await this.storage.update(id, object).catch(error => {
+    const storageObject = await this.storage.update(id, object).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
-    object.url = await this.storage.getUrl(id.toHexString());
-    return object;
+    storageObject.url = await this.storage.getUrl(id.toHexString());
+    return storageObject;
   }
 
   /**
@@ -205,25 +198,13 @@ export class StorageController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("storage:create"))
   async insertMany(@Body(Schema.validate("http://spica.internal/storage/body")) body: MixedBody) {
-    let objects = new Array<StorageObject<fs.ReadStream | Buffer>>();
 
-    // instead of this if else checks, we can use content-type header of request.
-    if (isMultipartFormDataArray(body)) {
-      objects = body.map(object => multipartToStorageObject(object));
-    } else if (isBsonBody(body)) {
-      body.content.forEach(object => isBufferCheck(object));
-      objects = body.content.map(object => addContentSize(object));
-    } else if (isJsonBody(body)) {
-      objects = body.map(object => addContentSize(object));
-    } else {
-      throw new BadRequestException("Unknown content-type");
-    }
+    const converter = getPostBodyConverter(body);
+    const objects = converter.convert(body);
 
-    objects = await this.storage.insert(objects).catch(error => {
-      throw new HttpException(error.message, error.status || 500);
-    });
+    const storageObjects = await this.storage.insert(objects)
 
-    for (const object of objects) {
+    for (const object of storageObjects) {
       object.url = await this.storage.getUrl(object._id.toString());
     }
     return objects;
