@@ -181,7 +181,7 @@ abstract class __JsonBody extends __BaseBody {
   }
 
   isContentTypeValid(req) {
-    return req.headers["content-type"] != "application/json";
+    return req.headers["content-type"] == "application/json";
   }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
@@ -263,11 +263,15 @@ export function isMultipartFormDataArray(object: unknown): object is MultipartFo
 }
 
 export function isMultipartFormData(object: unknown): object is MultipartFormData {
-  return Object.keys(object).includes("originalname");
+  return ["originalname", "mimetype", "path", "size"].every(key =>
+    Object.keys(object).includes(key)
+  );
 }
 
-export function isBufferContent(body): body is StorageObject<Buffer> {
-  return body.content && body.content.data instanceof Buffer;
+export function checkIsBufferContent(body): void {
+  if (!(body.content.data instanceof Buffer)) {
+    throw new BadRequestException("content.data should be a binary");
+  }
 }
 
 export function multipartToStorageObject(object: MultipartFormData): StorageObject<fs.ReadStream> {
@@ -309,7 +313,8 @@ const MultipartArrayConverter: IBodyConverter<
 };
 
 const BsonConverter: IBodyConverter<StorageObject<Buffer>, StorageObject<Buffer>> = {
-  validate: (body: unknown) => isBufferContent(body),
+  validate: (body: unknown) =>
+    body && ["name", "content"].every(key => Object.keys(body).includes(key)),
   convert: (body: StorageObject<Buffer>) => addContentSize(body)
 };
 
@@ -324,6 +329,7 @@ const BsonArrayConverter: IBodyConverter<BsonArray, StorageObject<Buffer>[]> = {
     );
   },
   convert: (body: BsonArray) => {
+    body.content.forEach(o => checkIsBufferContent(o));
     return body.content.map(object => BsonConverter.convert(object));
   }
 };
@@ -333,6 +339,7 @@ const JsonArrayConverter: IBodyConverter<JsonArray, StorageObject<Buffer>[]> = {
     return body && Array.isArray(body) && (body as unknown[]).every(o => JsonConverter.validate(o));
   },
   convert: (body: JsonArray) => {
+    body.every(o => checkIsBufferContent(o));
     return body.map(object => JsonConverter.convert(object));
   }
 };

@@ -13,7 +13,7 @@ export class GCloud implements Strategy {
   }
 
   write(id: string, data: Buffer, contentType: string) {
-    return this.bucket.file(id).save(data, {contentType, resumable: false});
+    return this.bucket.file(id).save(data, {contentType});
   }
 
   writeStream(id: string, data: ReadStream, contentType: string): Promise<void> {

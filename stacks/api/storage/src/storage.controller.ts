@@ -26,14 +26,10 @@ import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/gua
 import * as etag from "etag";
 import {createStorageActivity} from "./activity.resource";
 import {
-  addContentSize,
   BsonBodyParser,
-  isBufferContent,
-  isMultipartFormData,
   JsonBodyParser,
   MixedBody,
   MultipartFormDataParser,
-  multipartToStorageObject,
   StorageObject,
   MultipartFormData,
   getPostBodyConverter,
@@ -161,9 +157,8 @@ export class StorageController {
     @Body(Schema.validate("http://spica.internal/storage/body/single"))
     body: MultipartFormData | StorageObject<Buffer>
   ) {
-
     const converter = getPutBodyConverter(body);
-    const object = converter.convert(body)
+    const object = converter.convert(body);
 
     object._id = id;
 
@@ -198,16 +193,17 @@ export class StorageController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("storage:create"))
   async insertMany(@Body(Schema.validate("http://spica.internal/storage/body")) body: MixedBody) {
-
     const converter = getPostBodyConverter(body);
     const objects = converter.convert(body);
 
-    const storageObjects = await this.storage.insert(objects)
+    const storageObjects = await this.storage.insert(objects).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
+    });
 
     for (const object of storageObjects) {
       object.url = await this.storage.getUrl(object._id.toString());
     }
-    return objects;
+    return storageObjects;
   }
 
   /**

@@ -11,7 +11,7 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 describe("Storage Service", () => {
   let module: TestingModule;
   let storageService: StorageService;
-  let storageObject: StorageObject;
+  let storageObject: StorageObject<Buffer>;
   let storageObjectId: ObjectId = new ObjectId("56cb91bdc3464f14678934ca");
 
   const resourceFilter = {$match: {}};
@@ -175,7 +175,7 @@ describe("Storage Service", () => {
   });
 
   describe("sorts", () => {
-    let storageObjects: StorageObject[];
+    let storageObjects: StorageObject<Buffer>[];
     beforeEach(async () => {
       storageObjects = Array.from(new Array(3), (val, index) => ({
         name: "name" + (2 - index),

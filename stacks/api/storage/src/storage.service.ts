@@ -153,7 +153,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     await this.validateTotalStorageSize(object.content.size - existing.content.size);
     if (object.content.data) {
-      await this.write(object);
+      await this.write(_id.toString(),object.content.data,object.content.type);
     }
 
     delete object.content.data;
@@ -165,7 +165,8 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   }
 
   async insert(objects: StorageObject<fs.ReadStream | Buffer>[]): Promise<StorageObjectMeta[]> {
-    const schemas: StorageObjectMeta[] = JSON.parse(JSON.stringify(objects)).map(object => {
+    const datas: (Buffer | fs.ReadStream)[] = objects.map(o => o.content.data);
+    const schemas: StorageObjectMeta[] = objects.map(object => {
       delete object.content.data;
       return object;
     });
@@ -177,23 +178,17 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       .then(result => result.ops as StorageObjectMeta[]);
 
     for (const [i, schema] of insertedObjects.entries()) {
-      const obj = objects[i];
-      obj._id = schema._id;
-      await this.write(obj);
+      await this.write(schema._id.toString(), datas[i], schema.content.type);
     }
 
     return insertedObjects;
   }
 
-  private write(object: StorageObject<fs.ReadStream | Buffer>) {
-    if (object.content.data instanceof Buffer) {
-      return this.service.write(object._id.toString(), object.content.data, object.content.type);
+  private write(_id: string, data: fs.ReadStream | Buffer, type: string) {
+    if (data instanceof Buffer) {
+      return this.service.write(_id.toString(), data, type);
     } else {
-      return this.service.writeStream(
-        object._id.toString(),
-        object.content.data,
-        object.content.type
-      );
+      return this.service.writeStream(_id.toString(), data, type);
     }
   }
 
