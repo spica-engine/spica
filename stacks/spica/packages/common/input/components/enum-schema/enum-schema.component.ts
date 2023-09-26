@@ -7,7 +7,7 @@ import {
   SimpleChanges,
   ViewChild
 } from "@angular/core";
-import {FormControl} from "@angular/forms";
+import {UntypedFormControl} from "@angular/forms";
 import {MatChipInputEvent} from "@angular/material/chips";
 import {InputSchema, INPUT_SCHEMA} from "../../input";
 import {COMMA, ENTER} from "@angular/cdk/keycodes";
@@ -19,7 +19,7 @@ import {COMMA, ENTER} from "@angular/cdk/keycodes";
 })
 export class EnumSchemaComponent implements OnChanges {
   _trackBy: (i) => any = i => i;
-  enumCtrl = new FormControl();
+  enumCtrl = new UntypedFormControl();
 
   separatorKeyCodes: number[] = [ENTER, COMMA];
 

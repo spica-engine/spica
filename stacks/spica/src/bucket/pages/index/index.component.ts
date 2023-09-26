@@ -280,7 +280,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.dispose.next();
+    this.dispose.next(null);
   }
 
   getDependents(schema: Bucket, entries: BucketEntry[]) {
@@ -410,21 +410,21 @@ export class IndexComponent implements OnInit, OnDestroy {
     return this.bds
       .patchOne(bucketid, documentid, patch)
       .toPromise()
-      .finally(() => this.refresh.next());
+      .finally(() => this.refresh.next(null));
   }
 
   delete(id: string): void {
     this.bds
       .delete(this.bucketId, id)
       .toPromise()
-      .then(() => this.refresh.next());
+      .then(() => this.refresh.next(null));
   }
 
   deleteSelectedItems() {
     this.bds
       .deleteMany(this.bucketId, this.selectedItems.map(i => i._id))
       .toPromise()
-      .then(() => this.refresh.next());
+      .then(() => this.refresh.next(null));
   }
 
   guideRequest(url: string, key: string) {
@@ -640,7 +640,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       const el = document.getElementById(this.getEditingCellId(id, key));
       if (el) {
-        const input = el.querySelector(".mat-input-element") as HTMLElement;
+        const input = el.querySelector(".mat-mdc-input-element") as HTMLElement;
         if (input) {
           input.focus();
         }

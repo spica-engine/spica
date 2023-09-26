@@ -49,7 +49,7 @@ export function reducer(state = initialState, action: WebhookActions): State {
     }
 
     case WebhookActionTypes.LoadWebhooks: {
-      return adapter.addAll(action.payload.webhooks, {...state, loaded: true});
+      return adapter.setAll(action.payload.webhooks, {...state, loaded: true});
     }
 
     case WebhookActionTypes.ClearWebhooks: {

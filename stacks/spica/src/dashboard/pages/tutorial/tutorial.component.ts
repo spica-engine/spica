@@ -159,6 +159,6 @@ export class TutorialComponent implements OnInit, AfterViewInit {
   }
 
   hideTutorial() {
-    this.onDisable.next();
+    this.onDisable.next(null);
   }
 }

@@ -21,7 +21,7 @@
     width: 100%;
   }
 
-  .mat-card {
+  .mat-mdc-card {
     margin: 5%;
     margin: 30px;
     margin-top: -85px;
@@ -37,7 +37,7 @@
     }
   }
 
-  .mat-card-content {
+  .mat-mdc-card-content {
     height: 100%;
     .emptyList {
       display: flex;
@@ -65,38 +65,38 @@
         }
       }
 
-      ::ng-deep .mat-expansion-panel {
+      ::ng-deep .mat-mdc-expansion-panel {
         box-shadow: none;
         border-bottom: 1px solid rgba(var(--foreground-base-rgb), 0.1) !important;
       }
 
-      .mat-expansion-panel  {
+      .mat-mdc-expansion-panel  {
         pre {
           word-break: break-word;
           white-space: pre-wrap;
         }
-        .mat-expansion-panel-header {
+        .mat-mdc-expansion-panel-header {
           min-height: 64px !important;
           height: auto !important;
         }
-        .mat-expansion-panel-header span {
+        .mat-mdc-expansion-panel-header span {
           width: 25%;
           text-align: center;
           word-break: break-word;
           align-self: center;
           margin: 10px 5px;
         }
-        .mat-expansion-panel-header span:first-child {
+        .mat-mdc-expansion-panel-header span:first-child {
           text-align: left;
           margin: 10px 5px 10px 0px;
         }
-        .mat-expansion-panel-header span:last-child {
+        .mat-mdc-expansion-panel-header span:last-child {
           text-align: right;
           margin: 10px 0px 10px 5px;
         }
       }
 
-      .mat-progress-spinner {
+      .mat-mdc-progress-spinner {
         margin: 15px auto;
       }
     }

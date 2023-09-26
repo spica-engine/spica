@@ -47,7 +47,7 @@
         opacity: 1;
         transition: opacity 0.4s ease-in-out;
       }
-      ::ng-deep .mat-drawer-inner-container {
+      ::ng-deep .mat-mdc-drawer-inner-container {
         overflow-x: hidden;
         overflow-y: auto;
       }
@@ -56,7 +56,7 @@
           display: flex;
           flex-flow: row;
           justify-content: stretch;
-
+          /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
           mat-list-item {
             &.dashed-item {
               border-top: 1px dashed rgba(255, 255, 255, 0.2);
@@ -77,6 +77,10 @@
               top: 0;
               padding: 0px 3px;
               background: rgba(var(--background-background-rgb), 0.9);
+              /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+              /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+              /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+              /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
               mat-list-item {
                 margin: 3px 0px;
                 padding: 15px 0px;
@@ -104,11 +108,17 @@
                     background: unset;
                   }
                   ::ng-deep {
-                    > .mat-list-item-content {
+                    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+                    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+                    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+                    > .mat-mdc-list-item-content {
                       padding: 0;
                       width: 100%;
+                      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+                      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
                       mat-list-item {
-                        .mat-list-item-content {
+                        /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+                        .mat-mdc-list-item-content {
                           justify-content: center;
                           padding: 0;
                         }
@@ -143,8 +153,11 @@
                   justify-content: center;
                 }
               }
+              /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+              /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
               mat-list-item {
-                ::ng-deep .mat-list-item-content {
+                /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+                ::ng-deep .mat-mdc-list-item-content {
                   padding: 8px;
                   > mat-icon {
                     margin-right: 5px;
@@ -184,13 +197,13 @@
                   margin-left: 4px;
                 }
               }
-              .mat-expansion-indicator {
+              .mat-mdc-expansion-indicator {
                 &::after {
                   color: white;
                 }
               }
             }
-            .mat-expansion-panel-body {
+            .mat-mdc-expansion-panel-body {
               padding-left: 6px !important;
               padding: unset;
               padding-bottom: 16px;
@@ -272,7 +285,7 @@
   .iconlist {
     background: linear-gradient(0deg, #271f57, #0e0922) !important;
   }
-
+  /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
   mat-list-item {
     color: white !important;
   }

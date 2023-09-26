@@ -49,7 +49,7 @@ export class AddBucketComponent implements OnInit {
     this.$save = merge(
       of(SavingState.Saving),
       save.pipe(
-        tap(bucket => isInsert && this.router.navigate(["bucket", bucket._id])),
+        tap((bucket: Bucket) => isInsert && this.router.navigate(["bucket", bucket._id])),
         ignoreElements(),
         endWith(SavingState.Saved),
         catchError(() => of(SavingState.Failed)),

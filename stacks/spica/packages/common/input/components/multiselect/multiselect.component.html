@@ -12,7 +12,7 @@
     <mat-option
       #option
       [disabled]="schema.maxItems && _value?.length == schema.maxItems && !option.selected"
-      class="mat-accent"
+      class="mat-mdc-accent"
       *ngFor="let item of schema.items.enum"
       [value]="item"
     >

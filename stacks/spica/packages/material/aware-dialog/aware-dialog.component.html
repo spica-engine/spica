@@ -2,7 +2,7 @@
   <mat-icon>{{ options.icon || "error" }}</mat-icon>
   <span>{{ options.title }}</span>
 </h4>
-<mat-dialog-content class="mat-body">
+<mat-dialog-content class="mat-mdc-body">
   <ng-container *ngIf="isTemplate">
     <ng-template
       [ngTemplateOutlet]="options.templateOrDescription"

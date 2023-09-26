@@ -62,13 +62,13 @@ import {COMPOSER_OPTIONS, ComposerOptions} from "./options";
     PageDeleteDialogComponent,
     BuildProgressComponent,
     ImagePickerComponent
-  ],
-  entryComponents: [
-    BuilderComponent,
-    PageDeleteDialogComponent,
-    BuildProgressComponent,
-    CreatorComponent
   ]
+  // entryComponents: [
+  //   BuilderComponent,
+  //   PageDeleteDialogComponent,
+  //   BuildProgressComponent,
+  //   CreatorComponent
+  // ]
 })
 export class ComposerModule {
   static forRoot(options: ComposerOptions): ModuleWithProviders<ComposerModule> {

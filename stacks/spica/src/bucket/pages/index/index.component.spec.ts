@@ -186,8 +186,9 @@ describe("IndexComponent", () => {
       });
       fixture.detectChanges();
       expect(
-        fixture.debugElement.query(By.css(".actions-line > span > h6 > mat-chip-list mat-chip"))
-          .nativeElement.textContent
+        fixture.debugElement.query(
+          By.css(".actions-line > span > h6 > mat-chip-listbox mat-chip-option")
+        ).nativeElement.textContent
       ).toBe("Read Only");
 
       expect(bucketService.getBucket).toHaveBeenCalledTimes(1);
@@ -255,7 +256,7 @@ describe("IndexComponent", () => {
           .query(By.css("div.actions > button:nth-of-type(4)"))
           .nativeElement.click();
         fixture.detectChanges();
-        const options = document.body.querySelectorAll(".mat-menu-content .mat-menu-item");
+        const options = document.body.querySelectorAll(".mat-mdc-menu-content .mat-mdc-menu-item");
         expect(options[1].textContent).toBe(" Turkish (tr_TR) ");
         expect(options[0].textContent).toBe(" English (en_US) ");
       });
@@ -267,7 +268,7 @@ describe("IndexComponent", () => {
           .nativeElement.click();
         fixture.detectChanges();
         const menuItem = document.body.querySelector<HTMLButtonElement>(
-          ".mat-menu-content .mat-menu-item"
+          ".mat-mdc-menu-content .mat-mdc-menu-item"
         );
         menuItem && menuItem.click();
 
@@ -290,9 +291,9 @@ describe("IndexComponent", () => {
           .nativeElement.click();
         fixture.detectChanges();
         expect(
-          Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(
-            e => e.textContent && e.textContent.trim()
-          )
+          Array.from(
+            document.body.querySelectorAll(".mat-mdc-menu-content .mat-mdc-menu-item")
+          ).map(e => e.textContent && e.textContent.trim())
         ).toEqual(["Display all", "test"]);
       });
 
@@ -345,9 +346,9 @@ describe("IndexComponent", () => {
         fixture.detectChanges();
 
         expect(
-          Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(
-            e => e.textContent && e.textContent.trim()
-          )
+          Array.from(
+            document.body.querySelectorAll(".mat-mdc-menu-content .mat-mdc-menu-item")
+          ).map(e => e.textContent && e.textContent.trim())
         ).toEqual(["Display all", "test"]);
       });
 
@@ -360,7 +361,7 @@ describe("IndexComponent", () => {
         fixture.detectChanges();
 
         const checkItem = document.body.querySelector<HTMLButtonElement>(
-          ".mat-menu-content .mat-menu-item:nth-of-type(2) .mat-checkbox-label"
+          ".mat-mdc-menu-content .mat-mdc-menu-item:nth-of-type(2) .mdc-label"
         );
 
         checkItem && checkItem.click();
@@ -398,7 +399,7 @@ describe("IndexComponent", () => {
         .query(By.css("div.actions > button:nth-of-type(5)"))
         .nativeElement.click();
       fixture.detectChanges();
-      expect(fixture.debugElement.query(By.css("mat-card.hide"))).toBeNull();
+      expect(fixture.debugElement.query(By.css("mat-mdc-card.hide"))).toBeNull();
     });
   });
 
@@ -450,7 +451,7 @@ describe("IndexComponent", () => {
       it("should select", fakeAsync(() => {
         fixture.debugElement.nativeElement
           .querySelector(
-            "table[mat-table] tr[mat-row] td[mat-cell]:first-of-type mat-checkbox .mat-checkbox-label"
+            "table[mat-table] tr[mat-row] td[mat-cell]:first-of-type mat-checkbox .mdc-label"
           )
           .click();
         fixture.detectChanges();
@@ -463,22 +464,22 @@ describe("IndexComponent", () => {
           fixture.debugElement.nativeElement.querySelector(
             "table[mat-table] tr[mat-header-row] th[mat-header-cell]:first-of-type mat-checkbox"
           ).classList
-        ).toContain("mat-checkbox-checked");
+        ).toContain("mat-mdc-checkbox-checked");
         expect(
           fixture.debugElement.nativeElement.querySelector(
             "table[mat-table] tr[mat-row] td[mat-cell]:first-of-type mat-checkbox"
           ).classList
-        ).toContain("mat-checkbox-checked");
+        ).toContain("mat-mdc-checkbox-checked");
       }));
 
       it("should select all", fakeAsync(() => {
         expect(fixture.componentInstance.selectedItems).toEqual([]);
 
         const selectAllCheckbox = fixture.debugElement.nativeElement.querySelector(
-          "table[mat-table] tr[mat-header-row] th[mat-header-cell]:first-of-type mat-checkbox"
+          "table[mat-table] tr[mat-header-row] th[mat-header-cell]:first-of-type .mat-mdc-checkbox"
         );
 
-        selectAllCheckbox.querySelector(".mat-checkbox-label").click();
+        selectAllCheckbox.querySelector(".mdc-label").click();
         fixture.detectChanges();
 
         tick();
@@ -488,8 +489,8 @@ describe("IndexComponent", () => {
           fixture.debugElement.nativeElement.querySelector(
             "table[mat-table] tr[mat-row] td[mat-cell]:first-of-type mat-checkbox"
           ).classList
-        ).toContain("mat-checkbox-checked");
-        expect(selectAllCheckbox.classList).toContain("mat-checkbox-checked");
+        ).toContain("mat-mdc-checkbox-checked");
+        expect(selectAllCheckbox.classList).toContain("mat-mdc-checkbox-checked");
         expect(fixture.componentInstance.selectedItems).toEqual([{_id: "1", test: "123"}]);
       }));
 
@@ -833,7 +834,7 @@ describe("IndexComponent", () => {
       fixture.detectChanges();
 
       const sortButton = document.body.querySelector(
-        ".mat-menu-content button:nth-of-type(2)"
+        ".mat-mdc-menu-content button:nth-of-type(2)"
       ) as HTMLButtonElement;
       sortButton.click();
 
@@ -858,7 +859,7 @@ describe("IndexComponent", () => {
       fixture.detectChanges();
 
       const sortButton = document.body.querySelector(
-        ".mat-menu-content button:nth-of-type(3)"
+        ".mat-mdc-menu-content button:nth-of-type(3)"
       ) as HTMLButtonElement;
       sortButton.click();
 

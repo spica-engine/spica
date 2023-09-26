@@ -41,7 +41,7 @@ export const initialState: State = adapter.getInitialState({loaded: false});
 export function reducer(state: State = initialState, action: DashboardAction): State {
   switch (action.type) {
     case DashboardActionTypes.RETRIEVE:
-      return adapter.addAll(action.dashboards, {...state, loaded: true});
+      return adapter.setAll(action.dashboards, {...state, loaded: true});
     case DashboardActionTypes.REMOVE:
       return adapter.removeOne(action.id, state);
     case DashboardActionTypes.ADD:

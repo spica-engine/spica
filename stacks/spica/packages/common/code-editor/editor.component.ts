@@ -22,16 +22,16 @@ let loadPromise: Promise<void>;
   template: '<div class="editor-container" #editorContainer></div>',
   styles: [
     `
-      :host {
-        display: block;
-      }
-
-      .editor-container {
-        width: 100%;
-        height: 100%;
-        min-height: 100px;
-      }
-    `
+          :host {
+            display: block;
+          }
+    
+          .editor-container {
+            width: 100%;
+            height: 100%;
+            min-height: 100px;
+          }
+        `
   ],
   styleUrls: ["./editor.component.scss"],
   providers: [
@@ -92,16 +92,16 @@ export class EditorComponent implements ControlValueAccessor {
     window["MonacoEnvironment"] = {
       getWorker: function(_, label) {
         if (label === "typescript" || label === "javascript") {
-          return new Worker("./workers/ts.worker", {type: "module", name: "js/ts-worker"});
+          return new Worker(new URL('./workers/ts.worker', import.meta.url), {type: "module", name: "js/ts-worker"});
         } else if (label === "json") {
-          return new Worker("./workers/json.worker", {type: "module", name: "json-worker"});
+          return new Worker(new URL('./workers/json.worker', import.meta.url), {type: "module", name: "json-worker"});
         } else if (label === "handlebars") {
-          return new Worker("./workers/handlebars.worker", {
+          return new Worker(new URL('./workers/handlebars.worker', import.meta.url), {
             type: "module",
             name: "handlebars-worker"
           });
         }
-        return new Worker("./workers/ts.worker", {type: "module", name: "editor-worker"});
+        return new Worker(new URL('./workers/ts.worker', import.meta.url), {type: "module", name: "editor-worker"});
       }
     };
   }

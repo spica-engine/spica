@@ -50,7 +50,7 @@ export function reducer(state = initialState, action: FunctionActions): State {
     }
 
     case FunctionActionTypes.LoadFunctions: {
-      return adapter.addAll(action.payload.functions, {...state, loaded: true});
+      return adapter.setAll(action.payload.functions, {...state, loaded: true});
     }
 
     case FunctionActionTypes.ClearFunctions: {

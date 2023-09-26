@@ -18,7 +18,7 @@
     (ngModelChange)="onPresetSelected($event)"
     multiple
   >
-    <mat-option class="mat-accent" *ngFor="let preset of presets" [value]="preset">
+    <mat-option class="mat-mdc-accent" *ngFor="let preset of presets" [value]="preset">
       {{ preset.title | titlecase }}
     </mat-option>
   </mat-select>

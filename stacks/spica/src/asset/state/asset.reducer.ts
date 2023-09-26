@@ -41,7 +41,7 @@ export const initialState: State = adapter.getInitialState({loaded: false});
 export function reducer(state: State = initialState, action: AssetAction): State {
   switch (action.type) {
     case AssetActionTypes.RETRIEVE:
-      return adapter.addAll(action.assets, {...state, loaded: true});
+      return adapter.setAll(action.assets, {...state, loaded: true});
     case AssetActionTypes.REMOVE:
       return adapter.removeOne(action.id, state);
     case AssetActionTypes.ADD:

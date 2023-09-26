@@ -57,7 +57,7 @@ describe("Aware Dialog Directive", () => {
       }
     });
     const button = document.body.querySelector(
-      "mat-dialog-container > mat-aware-dialog > mat-dialog-actions > button:first-of-type"
+      "mat-mdc-dialog-container > mat-aware-dialog > mat-dialog-actions > button:first-of-type"
     ) as HTMLButtonElement;
     button.click();
     tick(1000);
@@ -72,7 +72,7 @@ describe("Aware Dialog Directive", () => {
     input.value = "111";
     input.dispatchEvent(new Event("input"));
     const button = document.body.querySelector(
-      "mat-dialog-container > mat-aware-dialog > mat-dialog-actions > button:last-of-type"
+      "mat-mdc-dialog-container > mat-aware-dialog > mat-dialog-actions > button:last-of-type"
     ) as HTMLButtonElement;
     button.click();
     flush();

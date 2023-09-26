@@ -33,7 +33,7 @@ describe("Common#boolean", () => {
       fixture = TestBed.createComponent(BooleanComponent);
       fixture.detectChanges();
       labelElement = fixture.debugElement.query(By.css("label")).nativeElement;
-      slideToggle = fixture.debugElement.query(By.css("mat-slide-toggle")).componentInstance;
+      slideToggle = fixture.debugElement.query(By.css("mat-mdc-slide-toggle")).componentInstance;
     }));
 
     it("should propagate true on click if the start value is false", () => {

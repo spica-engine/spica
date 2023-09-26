@@ -60,7 +60,7 @@ describe("Common#enum-schema", () => {
 
     fixture.detectChanges();
 
-    const error = fixture.debugElement.nativeElement.querySelector("mat-error");
+    const error = fixture.debugElement.nativeElement.querySelector("mat-mdc-error");
 
     expect(error.textContent).toEqual("Enum value must be a valid number");
   });
@@ -74,7 +74,7 @@ describe("Common#enum-schema", () => {
 
     fixture.detectChanges();
 
-    const error = fixture.debugElement.nativeElement.querySelector("mat-error");
+    const error = fixture.debugElement.nativeElement.querySelector("mat-mdc-error");
 
     expect(error.textContent).toEqual("Enum value must be a valid string");
   });

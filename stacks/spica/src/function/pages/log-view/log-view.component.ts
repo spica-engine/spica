@@ -172,7 +172,7 @@ export class LogViewComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.dispose.next();
+    this.dispose.next(null);
   }
 
   mapLogs(logs: Log[], fns: Function[]): Log[] {

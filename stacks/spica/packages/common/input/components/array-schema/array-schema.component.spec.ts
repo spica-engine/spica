@@ -60,7 +60,7 @@ describe("Common#array-schema", () => {
   it("should not show inputs ", () => {
     component.origin = undefined;
     fixture.detectChanges();
-    expect(fixture.debugElement.query(By.css(".mat-icon"))).toBeNull();
+    expect(fixture.debugElement.query(By.css(".mat-mdc-icon"))).toBeNull();
     expect(fixture.debugElement.query(By.css(".validators"))).toBeNull();
   });
 
@@ -72,7 +72,7 @@ describe("Common#array-schema", () => {
     tick(10);
     fixture.detectChanges();
     expect(
-      fixture.debugElement.query(By.css("mat-slide-toggle")).classes["mat-checked"]
+      fixture.debugElement.query(By.css("mat-mdc-slide-toggle")).classes["mat-mdc-checked"]
     ).toBeTruthy();
   }));
 

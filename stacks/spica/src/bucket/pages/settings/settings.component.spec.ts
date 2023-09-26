@@ -69,41 +69,41 @@ describe("SettingsComponent", () => {
 
   it("should render languages", () => {
     expect(
-      fixture.debugElement.query(By.css("mat-list mat-list-item:last-of-type h4")).nativeElement
+      fixture.debugElement.query(By.css("mat-mdc-list mat-list-item:last-of-type h4")).nativeElement
         .textContent
     ).toBe("Turkish (tr_TR)");
     expect(
-      fixture.debugElement.query(By.css("mat-list mat-list-item:last-of-type mat-icon"))
+      fixture.debugElement.query(By.css("mat-mdc-list mat-list-item:last-of-type mat-icon"))
         .nativeElement.classList
-    ).toContain("mat-warn");
+    ).toContain("mat-mdc-warn");
     expect(
       fixture.debugElement
-        .query(By.css("mat-list mat-list-item:last-of-type mat-icon"))
+        .query(By.css("mat-mdc-list mat-list-item:last-of-type mat-icon"))
         .injector.get(MatTooltip).disabled
     ).toBe(false);
 
     expect(
       fixture.debugElement
-        .query(By.css("mat-list mat-list-item:last-of-type button"))
+        .query(By.css("mat-mdc-list mat-list-item:last-of-type button"))
         .injector.get(MatButton).disabled
     ).toBe(true, "should work when default language is immutable");
 
     expect(
-      fixture.debugElement.query(By.css("mat-list mat-list-item:first-of-type h4")).nativeElement
-        .textContent
+      fixture.debugElement.query(By.css("mat-mdc-list mat-list-item:first-of-type h4"))
+        .nativeElement.textContent
     ).toBe("English (en_US)");
     expect(
-      fixture.debugElement.query(By.css("mat-list mat-list-item:first-of-type mat-icon"))
+      fixture.debugElement.query(By.css("mat-mdc-list mat-list-item:first-of-type mat-icon"))
         .nativeElement.classList
-    ).not.toContain("mat-warn");
+    ).not.toContain("mat-mdc-warn");
     expect(
       fixture.debugElement
-        .query(By.css("mat-list mat-list-item:first-of-type mat-icon"))
+        .query(By.css("mat-mdc-list mat-list-item:first-of-type mat-icon"))
         .injector.get(MatTooltip).disabled
     ).toBe(true);
     expect(
       fixture.debugElement
-        .query(By.css("mat-list mat-list-item:first-of-type button"))
+        .query(By.css("mat-mdc-list mat-list-item:first-of-type button"))
         .injector.get(MatButton).disabled
     ).toBe(false, "should work when languages are removable except default one");
 
@@ -116,14 +116,14 @@ describe("SettingsComponent", () => {
     model.reset("tr_TR");
     fixture.detectChanges();
     expect(
-      fixture.debugElement.query(By.css("mat-card-content > form > button:last-of-type"))
+      fixture.debugElement.query(By.css("mat-mdc-card-content > form > button:last-of-type"))
         .nativeElement.disabled
     ).toBe(true);
 
     model.reset("ar");
     fixture.detectChanges();
     expect(
-      fixture.debugElement.query(By.css("mat-card-content > form > button:last-of-type"))
+      fixture.debugElement.query(By.css("mat-mdc-card-content > form > button:last-of-type"))
         .nativeElement.disabled
     ).toBe(false);
   });
@@ -133,16 +133,16 @@ describe("SettingsComponent", () => {
     fixture.detectChanges();
 
     expect(
-      fixture.debugElement.query(By.css("mat-list mat-list-item:first-of-type h4")).nativeElement
-        .textContent
+      fixture.debugElement.query(By.css("mat-mdc-list mat-list-item:first-of-type h4"))
+        .nativeElement.textContent
     ).toBe("Afrikaans (af)");
     expect(
-      fixture.debugElement.query(By.css("mat-list mat-list-item:first-of-type mat-icon"))
+      fixture.debugElement.query(By.css("mat-mdc-list mat-list-item:first-of-type mat-icon"))
         .nativeElement.classList
-    ).not.toContain("mat-warn");
+    ).not.toContain("mat-mdc-warn");
     expect(
       fixture.debugElement
-        .query(By.css("mat-list mat-list-item:first-of-type mat-icon"))
+        .query(By.css("mat-mdc-list mat-list-item:first-of-type mat-icon"))
         .injector.get(MatTooltip).disabled
     ).toBe(true);
   });
@@ -186,7 +186,7 @@ describe("SettingsComponent", () => {
 
   it("should update settings", () => {
     fixture.componentInstance.addLanguage("af");
-    fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
+    fixture.debugElement.query(By.css("mat-mdc-card-actions button")).nativeElement.click();
     expect(preferenceService.replaceOne).toHaveBeenCalledTimes(1);
     expect(preferenceService.replaceOne).toHaveBeenCalledWith({
       language: {

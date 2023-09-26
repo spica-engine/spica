@@ -36,12 +36,12 @@ describe("Common#boolean-schema", () => {
     fixture.detectChanges();
     tick();
     fixture.detectChanges();
-    const toggle = document.querySelector(".mat-slide-toggle-input");
+    const toggle = document.querySelector(".mat-mdc-slide-toggle-input");
     expect(toggle.getAttribute("aria-checked")).toBe("true");
   }));
   it("should be checked value equal to component data", fakeAsync(() => {
     fixture.detectChanges();
-    const toggle = fixture.debugElement.query(By.css(".mat-slide-toggle-input"));
+    const toggle = fixture.debugElement.query(By.css(".mat-mdc-slide-toggle-input"));
     toggle.nativeElement.click();
     tick();
     fixture.detectChanges();

@@ -110,7 +110,7 @@ describe("Relation Component", () => {
   });
 
   it("should render description", () => {
-    const hint = fixture.debugElement.query(By.css("mat-hint"));
+    const hint = fixture.debugElement.query(By.css(".mat-mdc-hint"));
     expect(hint.nativeElement.textContent).toBe("Description of the relation");
   });
 
@@ -123,7 +123,7 @@ describe("Relation Component", () => {
     const button = fixture.debugElement.query(By.css("section button"));
     button.triggerEventHandler("click", undefined);
     fixture.detectChanges();
-    const panel = document.querySelector(".mat-menu-panel");
+    const panel = document.querySelector(".mat-mdc-menu-panel");
     expect(panel).toBeTruthy();
   });
 
@@ -132,7 +132,7 @@ describe("Relation Component", () => {
     button.triggerEventHandler("click", undefined);
     fixture.detectChanges();
 
-    const pickButton = document.querySelector(".mat-menu-panel mat-cell button");
+    const pickButton = document.querySelector(".mat-mdc-menu-panel mat-cell button");
     pickButton.dispatchEvent(new MouseEvent("click"));
     fixture.detectChanges();
 
@@ -148,7 +148,7 @@ describe("Relation Component", () => {
     fixture.debugElement.query(By.css("section button")).triggerEventHandler("click", undefined);
     fixture.detectChanges();
     document
-      .querySelector(".mat-menu-panel mat-cell button")
+      .querySelector(".mat-mdc-menu-panel mat-cell button")
       .dispatchEvent(new MouseEvent("click"));
 
     const buttons = fixture.debugElement.queryAll(By.css("section div button"));
@@ -182,7 +182,7 @@ describe("Relation Component", () => {
       button.triggerEventHandler("click", undefined);
       fixture.detectChanges();
 
-      const pickButtons = document.querySelectorAll(".mat-menu-panel mat-table button");
+      const pickButtons = document.querySelectorAll(".mat-mdc-menu-panel mat-table button");
       pickButtons[0].dispatchEvent(new MouseEvent("click"));
       pickButtons[1].dispatchEvent(new MouseEvent("click"));
       fixture.detectChanges();
@@ -199,7 +199,7 @@ describe("Relation Component", () => {
       button.triggerEventHandler("click", undefined);
       fixture.detectChanges();
 
-      const pickButtons = document.querySelectorAll(".mat-menu-panel mat-cell button");
+      const pickButtons = document.querySelectorAll(".mat-mdc-menu-panel mat-cell button");
       pickButtons[0].dispatchEvent(new MouseEvent("click"));
       pickButtons[1].dispatchEvent(new MouseEvent("click"));
       pickButtons[0].dispatchEvent(new MouseEvent("click"));

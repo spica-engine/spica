@@ -56,7 +56,7 @@ export class WebhookAddComponent implements OnInit, OnDestroy {
     this.$save = merge(
       of(SavingState.Saving),
       save.pipe(
-        tap(webhook => {
+        tap((webhook: Webhook) => {
           this.webhook = webhook;
           if (isInsert) {
             this.router.navigate([`webhook/${webhook._id}`]);
@@ -70,6 +70,6 @@ export class WebhookAddComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.dispose.next();
+    this.dispose.next(null);
   }
 }

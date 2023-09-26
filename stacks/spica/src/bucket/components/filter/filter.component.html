@@ -131,7 +131,7 @@
         ></ng-container>
       </div>
     </div>
-    <p class="mat-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <p class="mat-mdc-error" *ngIf="errorMessage">{{ errorMessage }}</p>
   </ng-container>
   <ng-container *ngIf="currentTabIndex == 2">
     <div class="tab-content">
@@ -174,9 +174,9 @@
 </div>
 
 <ng-template #historyTemplate let-itemLength="itemLength" let-type="type" let-histories="histories">
-  <h4 class="mat-h4"><mat-icon>history</mat-icon><span>History</span></h4>
-  <mat-chip-list>
-    <mat-chip
+  <h4 class="mat-mdc-h4"><mat-icon>history</mat-icon><span>History</span></h4>
+  <mat-chip-listbox>
+    <mat-chip-option
       (click)="value[0] = history"
       [matTooltip]="history"
       *ngFor="let history of histories; index as i"
@@ -185,6 +185,6 @@
     >
       {{ history?.length > itemLength ? history.slice(0, itemLength) + ".." : history }}
       <mat-icon matChipRemove>cancel</mat-icon>
-    </mat-chip>
-  </mat-chip-list>
+    </mat-chip-option>
+  </mat-chip-listbox>
 </ng-template>

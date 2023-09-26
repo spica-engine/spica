@@ -58,25 +58,27 @@ describe("Common#string", () => {
     it("should show title", () => {
       const title = (fixture.componentInstance.schema.title = "my title");
       fixture.detectChanges();
-      expect(fixture.debugElement.query(By.css("mat-label")).nativeElement.textContent).toBe(title);
+      expect(fixture.debugElement.query(By.css("mat-mdc-label")).nativeElement.textContent).toBe(
+        title
+      );
     });
 
     it("should show description if provided", () => {
-      expect(fixture.debugElement.query(By.css("mat-hint"))).toBeNull();
+      expect(fixture.debugElement.query(By.css("mat-mdc-hint"))).toBeNull();
       const description = (fixture.componentInstance.schema.description = "my long description");
       fixture.detectChanges(false);
-      expect(fixture.debugElement.query(By.css("mat-hint")).nativeElement.textContent).toBe(
+      expect(fixture.debugElement.query(By.css("mat-mdc-hint")).nativeElement.textContent).toBe(
         description
       );
     });
 
     it("should show select if schema has enums", () => {
       patchScheme(fixture, {enum: ["123", "test"]});
-      expect(fixture.debugElement.query(By.css("mat-select"))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css("mat-mdc-select"))).toBeTruthy();
     });
 
     it("should be valid pristine and untouched", () => {
-      const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
+      const formFieldElem = fixture.debugElement.query(By.css("mat-mdc-form-field")).nativeElement;
       expect(formFieldElem.classList).toContain("ng-untouched");
       expect(formFieldElem.classList).toContain("ng-pristine");
       expect(formFieldElem.classList).toContain("ng-valid");
@@ -123,12 +125,14 @@ describe("Common#string", () => {
     describe("required", () => {
       beforeEach(() => patchScheme(fixture, {$required: true}));
       it("should not be valid at start", () => {
-        const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
+        const formFieldElem = fixture.debugElement.query(By.css("mat-mdc-form-field"))
+          .nativeElement;
         expect(formFieldElem.classList).toContain("ng-invalid");
       });
 
       it("should show required error in touched state", fakeAsync(() => {
-        const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
+        const formFieldElem = fixture.debugElement.query(By.css("mat-mdc-form-field"))
+          .nativeElement;
         expect(formFieldElem.classList).toContain("ng-invalid");
         expect(formFieldElem.classList).toContain("ng-untouched");
 
@@ -136,7 +140,7 @@ describe("Common#string", () => {
         input.control.markAsTouched();
         fixture.detectChanges(false);
         tick();
-        expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
+        expect(fixture.debugElement.query(By.css("mat-mdc-error")).nativeElement.textContent).toBe(
           "This property is required."
         );
       }));
@@ -150,9 +154,10 @@ describe("Common#string", () => {
         input.control.setValue("te");
         input.control.markAsTouched();
         fixture.detectChanges(false);
-        const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
+        const formFieldElem = fixture.debugElement.query(By.css("mat-mdc-form-field"))
+          .nativeElement;
         expect(formFieldElem.classList).toContain("ng-invalid");
-        expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
+        expect(fixture.debugElement.query(By.css("mat-mdc-error")).nativeElement.textContent).toBe(
           " This property must be greater than 2 characters. "
         );
       });
@@ -163,14 +168,15 @@ describe("Common#string", () => {
         input.control.setValue("te");
         input.control.markAsTouched();
         fixture.detectChanges(false);
-        const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
+        const formFieldElem = fixture.debugElement.query(By.css("mat-mdc-form-field"))
+          .nativeElement;
         expect(formFieldElem.classList).toContain("ng-invalid");
 
         input.control.setValue("tet");
         input.control.markAsTouched();
         fixture.detectChanges(false);
         expect(formFieldElem.classList).toContain("ng-valid");
-        expect(fixture.debugElement.query(By.css("mat-error"))).toBe(null);
+        expect(fixture.debugElement.query(By.css("mat-mdc-error"))).toBe(null);
       });
     });
 
@@ -182,9 +188,10 @@ describe("Common#string", () => {
         input.control.setValue("test");
         input.control.markAsTouched();
         fixture.detectChanges(false);
-        const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
+        const formFieldElem = fixture.debugElement.query(By.css("mat-mdc-form-field"))
+          .nativeElement;
         expect(formFieldElem.classList).toContain("ng-invalid");
-        expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
+        expect(fixture.debugElement.query(By.css("mat-mdc-error")).nativeElement.textContent).toBe(
           " This property must be less than 3 characters. "
         );
       });
@@ -195,14 +202,15 @@ describe("Common#string", () => {
         input.control.setValue("test");
         input.control.markAsTouched();
         fixture.detectChanges(false);
-        const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
+        const formFieldElem = fixture.debugElement.query(By.css("mat-mdc-form-field"))
+          .nativeElement;
         expect(formFieldElem.classList).toContain("ng-invalid");
 
         input.control.setValue("tet");
         input.control.markAsTouched();
         fixture.detectChanges(false);
         expect(formFieldElem.classList).toContain("ng-valid");
-        expect(fixture.debugElement.query(By.css("mat-error"))).toBe(null);
+        expect(fixture.debugElement.query(By.css("mat-mdc-error"))).toBe(null);
       });
     });
 
@@ -215,9 +223,10 @@ describe("Common#string", () => {
         input.control.setValue("test[at]example.io");
         input.control.markAsTouched();
         fixture.detectChanges(false);
-        const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
+        const formFieldElem = fixture.debugElement.query(By.css("mat-mdc-form-field"))
+          .nativeElement;
         expect(formFieldElem.classList).toContain("ng-invalid");
-        expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
+        expect(fixture.debugElement.query(By.css("mat-mdc-error")).nativeElement.textContent).toBe(
           " This property must match the pattern. "
         );
       });
@@ -231,14 +240,15 @@ describe("Common#string", () => {
         input.control.setValue("test[at]example.io");
         input.control.markAsTouched();
         fixture.detectChanges(false);
-        const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
+        const formFieldElem = fixture.debugElement.query(By.css("mat-mdc-form-field"))
+          .nativeElement;
         expect(formFieldElem.classList).toContain("ng-invalid");
 
         input.control.setValue("test@example.io");
         input.control.markAsTouched();
         fixture.detectChanges(false);
         expect(formFieldElem.classList).toContain("ng-valid");
-        expect(fixture.debugElement.query(By.css("mat-error"))).toBe(null);
+        expect(fixture.debugElement.query(By.css("mat-mdc-error"))).toBe(null);
       });
     });
   });

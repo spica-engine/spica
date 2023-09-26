@@ -2,7 +2,8 @@
   display: inline-block;
   mat-form-field {
     width: 100%;
-    ::ng-deep .mat-form-field-suffix {
+    /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
+    ::ng-deep .mat-mdc-form-field-suffix {
       align-self: center;
       padding-right: 5px;
     }

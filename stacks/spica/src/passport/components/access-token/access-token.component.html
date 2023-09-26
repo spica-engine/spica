@@ -2,7 +2,7 @@
   <div>{{ passport.token }}</div>
   <button
     mat-icon-button
-    [class.mat-flat-button]="dark$ | async"
+    [class.mat-mdc-flat-button]="dark$ | async"
     #clipboard="matClipboard"
     [matClipboard]="passport.token"
   >

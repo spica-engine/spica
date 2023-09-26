@@ -1,11 +1,11 @@
 <button
   mat-icon-button
-  [class.mat-flat-button]="dark$ | async"
+  [class.mat-mdc-flat-button]="dark$ | async"
   [matMenuTriggerFor]="identityMenu"
   [matTooltip]="identity.identifier"
 >
   <mat-icon>person</mat-icon>
-  <mat-menu #identityMenu="matMenu" class="mat-elevation-z25">
+  <mat-menu #identityMenu="matMenu" class="mat-mdc-elevation-z25">
     <div mat-menu-item>
       <ng-container *ngComponentOutlet="schemeSwitcherComponent"> </ng-container>
     </div>
