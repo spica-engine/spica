@@ -23,12 +23,6 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
   authorization = _authorization;
 
   service = _service;
-
-  service.setWriteDefaults({
-    headers: {
-      "Content-Type": "application/bson"
-    }
-  });
 }
 
 export async function insert(
@@ -36,11 +30,12 @@ export async function insert(
   onUploadProgress?: (progress: ProgressEvent) => void
 ) {
   checkInitialized(authorization);
-  const body = await preparePostBody([object]);
+  const {body,headers} = await preparePostBody([object]);
 
   return service
     .post<StorageObject[]>("storage", body, {
-      onUploadProgress
+      onUploadProgress,
+      headers
     })
     .then(([r]) => r);
 }
@@ -51,10 +46,11 @@ export async function insertMany(
 ): Promise<StorageObject[]> {
   checkInitialized(authorization);
 
-  const body = await preparePostBody(objects);
+  const {body, headers} = await preparePostBody(objects);
 
   return service.post<StorageObject[]>("storage", body, {
-    onUploadProgress
+    onUploadProgress,
+    headers
   });
 }
 
@@ -118,10 +114,11 @@ export async function update(
 ) {
   checkInitialized(authorization);
 
-  const body = await preparePutBody(object);
+  const {body,headers} = await preparePutBody(object);
 
   return service.put<StorageObject>(`storage/${id}`, body, {
-    onUploadProgress
+    onUploadProgress,
+    headers
   });
 }
 
