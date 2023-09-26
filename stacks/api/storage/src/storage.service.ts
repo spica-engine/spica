@@ -153,7 +153,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     await this.validateTotalStorageSize(object.content.size - existing.content.size);
     if (object.content.data) {
-      await this.write(_id.toString(),object.content.data,object.content.type);
+      await this.write(_id.toString(), object.content.data, object.content.type);
     }
 
     delete object.content.data;
