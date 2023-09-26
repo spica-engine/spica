@@ -37,7 +37,7 @@
         &:first-of-type {
           width: 40px;
           button {
-            ::ng-deep .mat-badge-content {
+            ::ng-deep .mat-mdc-badge-content {
               right: -1px;
               top: -1px;
             }
@@ -64,7 +64,7 @@
             height: 25px;
             line-height: 21px;
             /* TODO(mdc-migration): The following rule targets internal classes of button that may no longer apply for the MDC version. */
-            ::ng-deep .mat-button-wrapper {
+            ::ng-deep .mat-mdc-button-wrapper {
               padding: unset;
             }
           }

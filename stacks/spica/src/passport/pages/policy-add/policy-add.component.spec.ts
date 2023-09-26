@@ -24,15 +24,12 @@ describe("Policy Add Component", () => {
     beforeEach(() => {
       TestBed.configureTestingModule({
         imports: [
-          RouterTestingModule.withRoutes(
-            [
-              {
-                path: "passport/policy",
-                component: PolicyAddComponent
-              }
-            ],
-            {relativeLinkResolution: "legacy"}
-          ),
+          RouterTestingModule.withRoutes([
+            {
+              path: "passport/policy",
+              component: PolicyAddComponent
+            }
+          ]),
           MatIconModule,
           MatToolbarModule,
           MatFormFieldModule,
@@ -450,7 +447,7 @@ describe("Policy Add Component", () => {
       beforeEach(() => {
         TestBed.configureTestingModule({
           imports: [
-            RouterModule.forRoot([], {relativeLinkResolution: "legacy"}),
+            RouterModule.forRoot([]),
             MatIconModule,
             MatToolbarModule,
             MatFormFieldModule,
@@ -601,7 +598,7 @@ describe("Policy Add Component", () => {
       beforeEach(async () => {
         TestBed.configureTestingModule({
           imports: [
-            RouterModule.forRoot([], {relativeLinkResolution: "legacy"}),
+            RouterModule.forRoot([]),
             MatIconModule,
             MatToolbarModule,
             MatFormFieldModule,

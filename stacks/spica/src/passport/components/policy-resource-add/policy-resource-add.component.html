@@ -26,7 +26,7 @@
               required
               [disabled]="!!data.currentAction.resource.exclude?.length && isLast"
             >
-              <mat-option *ngFor="let value of values" class="mat-accent" [value]="value">{{
+              <mat-option *ngFor="let value of values" class="mat-mdc-accent" [value]="value">{{
                 value[subResource.primary] || value._id
               }}</mat-option>
             </mat-select>
@@ -92,7 +92,7 @@
               [ngModel]="selectionValue('exclude', resIndex, subResIndex, values)"
               (ngModelChange)="onSubResourceChange('exclude', resIndex, subResIndex, $event._id)"
             >
-              <mat-option *ngFor="let value of values" class="mat-accent" [value]="value">{{
+              <mat-option *ngFor="let value of values" class="mat-mdc-accent" [value]="value">{{
                 value[subResource.primary] || value._id
               }}</mat-option>
             </mat-select>

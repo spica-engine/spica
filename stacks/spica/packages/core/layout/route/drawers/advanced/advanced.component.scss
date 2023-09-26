@@ -13,7 +13,7 @@
   .cdk-drag-preview {
     route-item {
       /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
-      .mat-list-item-content {
+      .mat-mdc-list-item-content {
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -61,7 +61,7 @@
       display: flex;
       justify-content: flex-end;
       /* TODO(mdc-migration): The following rule targets internal classes of button that may no longer apply for the MDC version. */
-      .mat-button-wrapper {
+      .mat-mdc-button-wrapper {
         display: flex;
         align-items: center;
         mat-icon {
@@ -77,13 +77,13 @@
       /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
       /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
       /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
-      mat-chip-list {
+      mat-chip-listbox {
         /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
         /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
-        .mat-chip-list-wrapper {
+        .mat-mdc-chip-list-wrapper {
           flex-direction: column;
           /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
-          mat-chip {
+          mat-chip-option {
             width: 100%;
             cursor: pointer;
           }

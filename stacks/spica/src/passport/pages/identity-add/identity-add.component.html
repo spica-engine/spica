@@ -7,17 +7,21 @@
   </span>
 </ng-template>
 <div class="actions" *ngIf="identity._id">
-  <button mat-button (click)="viewState = 'meta'" [class.mat-flat-button]="viewState == 'meta'">
+  <button mat-button (click)="viewState = 'meta'" [class.mat-mdc-flat-button]="viewState == 'meta'">
     <mat-icon>view_module</mat-icon>
     Credentials
   </button>
-  <button mat-button (click)="viewState = 'policy'" [class.mat-flat-button]="viewState == 'policy'">
+  <button
+    mat-button
+    (click)="viewState = 'policy'"
+    [class.mat-mdc-flat-button]="viewState == 'policy'"
+  >
     <mat-icon>layers</mat-icon>
     Policies
   </button>
 </div>
 
-<mat-card appearance="outlined" class="mat-elevation-z25" *ngIf="viewState == 'meta'">
+<mat-card appearance="outlined" class="mat-mdc-elevation-z25" *ngIf="viewState == 'meta'">
   <mat-card-content>
     <form #identityForm="ngForm">
       <mat-form-field>
@@ -184,7 +188,7 @@
     </button>
   </mat-card-actions>
 </mat-card>
-<mat-card appearance="outlined" class="mat-elevation-z25" *ngIf="viewState == 'policy'">
+<mat-card appearance="outlined" class="mat-mdc-elevation-z25" *ngIf="viewState == 'policy'">
   <mat-card-content>
     <div class="policies" *ngIf="identity._id">
       <mat-list>

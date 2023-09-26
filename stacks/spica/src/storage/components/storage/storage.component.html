@@ -1,10 +1,10 @@
 <section>
   <span class="schema-meta">
-    <h5 class="mat-h5 mat-hint">{{ schema.title }}</h5>
-    <small class="mat-hint" *ngIf="schema.description">{{ schema.description }}</small>
+    <h5 class="mat-mdc-h5 mat-hint">{{ schema.title }}</h5>
+    <small class="mat-mdc-hint" *ngIf="schema.description">{{ schema.description }}</small>
   </span>
   <span class="storage-meta" *ngIf="blob">
-    <h5 class="mat-h5 mat-hint">{{ blob.name }}</h5>
+    <h5 class="mat-mdc-h5 mat-hint">{{ blob.name }}</h5>
   </span>
   <span class="actions">
     <mat-progress-spinner
@@ -61,6 +61,6 @@
     (ngModelChange)="pickFromStorage($event)"
   >
     <mat-icon inline="true">save_alt</mat-icon>
-    <small class="mat-small">Drag & Drop your file here</small>
+    <small class="mat-mdc-small">Drag & Drop your file here</small>
   </div>
 </section>

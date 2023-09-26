@@ -2,10 +2,10 @@
   ::ng-deep {
     /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
     /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
-    .mat-list-item-content {
+    .mat-mdc-list-item-content {
       padding: 0px !important;
       /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
-      .mat-form-field-wrapper {
+      .mat-mdc-form-field-wrapper {
         padding: 0px !important;
       }
     }
@@ -48,7 +48,7 @@
 
         height: auto !important;
         /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
-        ::ng-deep .mat-list-item-content {
+        ::ng-deep .mat-mdc-list-item-content {
           display: flex;
           mat-form-field {
             flex: 1;
@@ -60,7 +60,7 @@
 
         &:not(:first-of-type) {
           /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
-          ::ng-deep .mat-list-item-content {
+          ::ng-deep .mat-mdc-list-item-content {
             display: flex;
           }
         }
@@ -85,11 +85,11 @@
     list-style-type: none;
   }
 
-  .example-tree .mat-nested-tree-node div[role="group"] {
+  .example-tree .mat-mdc-nested-tree-node div[role="group"] {
     padding-left: 40px;
   }
 
-  .example-tree div[role="group"] > .mat-tree-node {
+  .example-tree div[role="group"] > .mat-mdc-tree-node {
     padding-left: 40px;
     a.resource-url {
       font-weight: bold;

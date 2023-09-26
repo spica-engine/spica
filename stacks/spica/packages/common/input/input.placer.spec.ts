@@ -1,4 +1,4 @@
-import {ANALYZE_FOR_ENTRY_COMPONENTS, Component, DebugElement, forwardRef} from "@angular/core";
+import {Component, DebugElement, forwardRef} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {ControlValueAccessor, FormsModule, NgModel, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {MatFormFieldModule} from "@angular/material/form-field";
@@ -122,12 +122,12 @@ describe("InputPlacer", () => {
         {
           provide: InputResolver,
           useValue: resolverSpy
-        },
-        {
-          provide: ANALYZE_FOR_ENTRY_COMPONENTS,
-          multi: true,
-          useValue: [TestPlacer1, TestPlacer2]
         }
+        // {
+        //   provide: ANALYZE_FOR_ENTRY_COMPONENTS,
+        //   multi: true,
+        //   useValue: [TestPlacer1, TestPlacer2]
+        // }
       ],
       declarations: [
         InputPlacerComponent,

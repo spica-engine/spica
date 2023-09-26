@@ -1,11 +1,11 @@
 <mat-toolbar>
-  <h4 class="mat-h4">
+  <h4 class="mat-mdc-h4">
     <span>
       Welcome to Spica!
     </span>
   </h4>
 </mat-toolbar>
-<mat-card appearance="outlined" class="mat-elevation-z25 dashboard">
+<mat-card appearance="outlined" class="mat-mdc-elevation-z25 dashboard">
   <mat-card-content>
     <mat-list class="quicklinks" role="list">
       <h1 mat-subheader>Quicklinks</h1>
@@ -68,7 +68,7 @@
     Instance Usages
   </h2>
   <div class="api-container">
-    <mat-card appearance="outlined" class="mat-elevation-z25">
+    <mat-card appearance="outlined" class="mat-mdc-elevation-z25">
       <mat-card-content>
         <div class="requests">
           <h3>Requests</h3>
@@ -109,7 +109,7 @@
   </div>
 </ng-container>
 <div class="status-container">
-  <mat-card appearance="outlined" *ngFor="let stat of stats" class="mat-elevation-z25">
+  <mat-card appearance="outlined" *ngFor="let stat of stats" class="mat-mdc-elevation-z25">
     <mat-card-content>
       <mat-list>
         <h3>{{ stat.module | titlecase }} Module</h3>

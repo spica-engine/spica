@@ -95,7 +95,7 @@ describe("CardComponent", () => {
 
     const submitSpy = spyOn(form, "submit");
 
-    fixture.debugElement.nativeElement.querySelector("mat-card-actions > button").click();
+    fixture.debugElement.nativeElement.querySelector("mat-mdc-card-actions > button").click();
 
     fixture.detectChanges();
 
@@ -115,7 +115,7 @@ describe("CardComponent", () => {
 
     const submitSpy = spyOn(form, "submit");
 
-    fixture.debugElement.nativeElement.querySelector("mat-card-actions > button").click();
+    fixture.debugElement.nativeElement.querySelector("mat-mdc-card-actions > button").click();
 
     fixture.detectChanges();
 
@@ -128,7 +128,7 @@ describe("CardComponent", () => {
 
     fixture.detectChanges();
 
-    fixture.debugElement.nativeElement.querySelector("mat-card-actions > button").click();
+    fixture.debugElement.nativeElement.querySelector("mat-mdc-card-actions > button").click();
 
     fixture.detectChanges();
 

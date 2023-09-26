@@ -117,7 +117,7 @@ export class InputPlacerComponent
         this._injector
       );
 
-      this._placerRef = this._viewContainerRef.createComponent(placerFactory, null, injector, [
+      this._placerRef = this._viewContainerRef.createComponent(placerFactory, 0, injector, [
         this.matSuffix ? this.matSuffix.toArray().map(e => e.nativeElement) : []
       ]);
 

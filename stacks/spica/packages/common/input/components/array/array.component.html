@@ -1,4 +1,4 @@
-<mat-card appearance="outlined" class="mat-elevation-z0">
+<mat-card appearance="outlined" class="mat-mdc-elevation-z0">
   <mat-card-header>
     <mat-card-title>{{ schema.title }}</mat-card-title>
     <mat-card-subtitle *ngIf="schema.description">{{ schema.description }}</mat-card-subtitle>
@@ -25,7 +25,7 @@
     >
       <button
         *ngFor="let item of _values; let index = index"
-        class="mat-elevation-z0"
+        class="mat-mdc-elevation-z0"
         [class.drag-box]="!_disabled"
         cdkDrag
         mat-icon-button
@@ -79,7 +79,7 @@
       <button
         mat-mini-fab
         color="warn"
-        class="mat-elevation-z0"
+        class="mat-mdc-elevation-z0"
         [disabled]="_disabled"
         *ngIf="_activeIndex != undefined && _values.length"
         (click)="removeItem(); arrayContainer.propagateChanges()"

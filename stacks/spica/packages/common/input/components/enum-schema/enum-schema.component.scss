@@ -14,9 +14,9 @@
         .mat-mdc-form-field {
           /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
           /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
-          .mat-form-field-wrapper {
+          .mat-mdc-form-field-wrapper {
             /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
-            .mat-form-field-subscript-wrapper {
+            .mat-mdc-form-field-subscript-wrapper {
               display: none;
             }
           }

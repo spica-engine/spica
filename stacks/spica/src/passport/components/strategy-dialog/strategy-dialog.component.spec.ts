@@ -44,6 +44,6 @@ describe("StrategyDialogComponent", () => {
   it("should show the progress spinner when the iframe is not ready", () => {
     fixture.componentInstance.loaded = false;
     fixture.detectChanges();
-    expect(fixture.debugElement.query(By.css("mat-progress-spinner"))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css("mat-mdc-progress-spinner"))).toBeTruthy();
   });
 });

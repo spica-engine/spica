@@ -29,11 +29,11 @@
         }
         /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version.*/
         /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version.*/
-        mat-chip-list {
+        mat-chip-listbox {
           display: inline-block;
           margin-left: 10px;
           /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version.*/
-          mat-chip {
+          mat-chip-option {
             font-size: 11px;
             padding: 7px 10px;
             min-height: 20px;
@@ -59,7 +59,7 @@
     margin-top: -85px;
     /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
     mat-card-content {
-      &.handset form {
+      x &.handset form {
         flex-flow: column;
       }
       form {

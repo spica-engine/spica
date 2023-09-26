@@ -42,7 +42,7 @@
         margin-top: 4px;
         width: 32%;
         /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
-        &::ng-deep .mat-form-field-wrapper {
+        &::ng-deep .mat-mdc-form-field-wrapper {
           padding: unset;
         }
         &:not(:first-of-type) {

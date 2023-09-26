@@ -68,7 +68,7 @@ describe("ApiKeyIndexComponent", () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const cells = fixture.debugElement.queryAll(By.css("mat-table mat-cell"));
+    const cells = fixture.debugElement.queryAll(By.css("mat-mdc-table mat-cell"));
     expect(cells).toEqual([]);
   });
 });

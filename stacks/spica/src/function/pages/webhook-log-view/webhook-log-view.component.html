@@ -1,5 +1,5 @@
 <mat-toolbar>
-  <h4 class="mat-h4">
+  <h4 class="mat-mdc-h4">
     <mat-icon>pest_control</mat-icon>
     <span>Webhook Logs</span>
   </h4>
@@ -14,11 +14,11 @@
     </button>
   </div>
 </mat-toolbar>
-<mat-card appearance="outlined" class="mat-elevation-z25">
+<mat-card appearance="outlined" class="mat-mdc-elevation-z25">
   <mat-form-field>
     <mat-label>Select webhook id</mat-label>
     <mat-select [(ngModel)]="filter.webhooks" multiple>
-      <mat-option class="mat-accent" *ngFor="let webhook of webhooks" [value]="webhook">
+      <mat-option class="mat-mdc-accent" *ngFor="let webhook of webhooks" [value]="webhook">
         {{ webhook }}
       </mat-option>
     </mat-select>

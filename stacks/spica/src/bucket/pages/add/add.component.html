@@ -28,7 +28,7 @@
           mat-icon-button
           mat-raised-button
           [disabled]="!now"
-          class="mat-elevation-z0"
+          class="mat-mdc-elevation-z0"
           (click)="data = now; $event.stopPropagation()"
           matTooltip="Now"
           matTooltipPosition="before"
@@ -40,7 +40,7 @@
           mat-icon-button
           mat-raised-button
           color="accent"
-          class="mat-elevation-z0"
+          class="mat-mdc-elevation-z0"
           (click)="revert(history._id); $event.stopPropagation()"
           [matTooltip]="history.date | date: 'MMM d y, h:mm:ss a'"
           matTooltipPosition="before"
@@ -55,7 +55,12 @@
   </button>
 </mat-toolbar>
 
-<mat-card appearance="outlined" *ngIf="bucket$ | async; let bucket" class="mat-elevation-z25" @smooth>
+<mat-card
+  appearance="outlined"
+  *ngIf="bucket$ | async; let bucket"
+  class="mat-mdc-elevation-z25"
+  @smooth
+>
   <mat-card-content [class.handset]="isHandset$ | async">
     <form #form="ngForm">
       <div *ngFor="let layout of layouts" [class]="layout">

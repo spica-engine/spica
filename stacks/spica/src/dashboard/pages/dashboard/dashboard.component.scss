@@ -112,7 +112,7 @@
           margin: 0 16px;
           width: unset;
           /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
-          ::ng-deep div.mat-list-item-content {
+          ::ng-deep div.mat-mdc-list-item-content {
             padding: 0px !important;
           }
           /* TODO(mdc-migration): The following rule targets internal classes of progress-bar that may no longer apply for the MDC version. */
@@ -132,20 +132,20 @@
 
       ::ng-deep {
         /* TODO(mdc-migration): The following rule targets internal classes of progress-bar that may no longer apply for the MDC version. */
-        .low .mat-progress-bar-fill::after {
+        .low .mat-mdc-progress-bar-fill::after {
           background-color: #28a745;
         }
         /* TODO(mdc-migration): The following rule targets internal classes of progress-bar that may no longer apply for the MDC version. */
-        .medium .mat-progress-bar-fill::after {
+        .medium .mat-mdc-progress-bar-fill::after {
           background-color: #f1cd00;
         }
         /* TODO(mdc-migration): The following rule targets internal classes of progress-bar that may no longer apply for the MDC version. */
-        .high .mat-progress-bar-fill::after {
+        .high .mat-mdc-progress-bar-fill::after {
           background-color: #c91e1e;
         }
       }
       /* TODO(mdc-migration): The following rule targets internal classes of progress-bar that may no longer apply for the MDC version. */
-      ::ng-deep .mat-progress-bar-buffer {
+      ::ng-deep .mat-mdc-progress-bar-buffer {
         background: #e9ecef;
       }
     }

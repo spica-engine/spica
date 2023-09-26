@@ -47,7 +47,7 @@
         opacity: 1;
         transition: opacity 0.4s ease-in-out;
       }
-      ::ng-deep .mat-drawer-inner-container {
+      ::ng-deep .mat-mdc-drawer-inner-container {
         overflow-x: hidden;
         overflow-y: auto;
       }
@@ -111,14 +111,14 @@
                     /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
                     /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
                     /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
-                    > .mat-list-item-content {
+                    > .mat-mdc-list-item-content {
                       padding: 0;
                       width: 100%;
                       /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
                       /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
                       mat-list-item {
                         /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
-                        .mat-list-item-content {
+                        .mat-mdc-list-item-content {
                           justify-content: center;
                           padding: 0;
                         }
@@ -157,7 +157,7 @@
               /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
               mat-list-item {
                 /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
-                ::ng-deep .mat-list-item-content {
+                ::ng-deep .mat-mdc-list-item-content {
                   padding: 8px;
                   > mat-icon {
                     margin-right: 5px;
@@ -197,13 +197,13 @@
                   margin-left: 4px;
                 }
               }
-              .mat-expansion-indicator {
+              .mat-mdc-expansion-indicator {
                 &::after {
                   color: white;
                 }
               }
             }
-            .mat-expansion-panel-body {
+            .mat-mdc-expansion-panel-body {
               padding-left: 6px !important;
               padding: unset;
               padding-bottom: 16px;

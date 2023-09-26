@@ -50,18 +50,18 @@ describe("Aware Dialog Component", () => {
       const compiled = fixture.debugElement.nativeElement;
       expect(compiled.querySelector("h4 > mat-icon").textContent).toBe("icon");
       expect(compiled.querySelector("h4 > span").textContent).toBe("title");
-      expect(compiled.querySelector("mat-dialog-content").textContent).toContain("description");
-      expect(compiled.querySelector("mat-dialog-content > mat-form-field").textContent).toBe(
+      expect(compiled.querySelector("mat-mdc-dialog-content").textContent).toContain("description");
+      expect(compiled.querySelector("mat-mdc-dialog-content > mat-form-field").textContent).toBe(
         "hint"
       );
-      expect(compiled.querySelector("mat-dialog-actions > button:first-of-type").textContent).toBe(
-        " cancel "
-      );
-      expect(compiled.querySelector("mat-dialog-actions > button:last-of-type").textContent).toBe(
-        " confirm "
-      );
       expect(
-        compiled.querySelector("mat-dialog-actions > button:last-of-type").disabled
+        compiled.querySelector("mat-mdc-dialog-actions > button:first-of-type").textContent
+      ).toBe(" cancel ");
+      expect(
+        compiled.querySelector("mat-mdc-dialog-actions > button:last-of-type").textContent
+      ).toBe(" confirm ");
+      expect(
+        compiled.querySelector("mat-mdc-dialog-actions > button:last-of-type").disabled
       ).toBeTruthy();
     });
 
@@ -72,7 +72,7 @@ describe("Aware Dialog Component", () => {
       fixture.detectChanges();
       await fixture.whenStable();
       const compiled = fixture.debugElement.nativeElement;
-      expect(compiled.querySelector("mat-dialog-actions > button:last-of-type").disabled).toBe(
+      expect(compiled.querySelector("mat-mdc-dialog-actions > button:last-of-type").disabled).toBe(
         false
       );
     });
@@ -84,14 +84,14 @@ describe("Aware Dialog Component", () => {
       fixture.detectChanges();
       await fixture.whenStable();
       const compiled = fixture.debugElement.nativeElement;
-      expect(compiled.querySelector("mat-dialog-actions > button:last-of-type").disabled).toBe(
+      expect(compiled.querySelector("mat-mdc-dialog-actions > button:last-of-type").disabled).toBe(
         true
       );
     });
 
     it("should call close method with true", async () => {
       const confirmButton = fixture.debugElement.nativeElement.querySelector(
-        "mat-dialog-actions > button:last-of-type"
+        "mat-mdc-dialog-actions > button:last-of-type"
       );
       const input = fixture.debugElement.nativeElement.querySelector("input");
       input.value = "answer";
@@ -103,7 +103,7 @@ describe("Aware Dialog Component", () => {
 
     it("should call close method with false", async () => {
       const confirmButton = fixture.debugElement.nativeElement.querySelector(
-        "mat-dialog-actions > button:first-of-type"
+        "mat-mdc-dialog-actions > button:first-of-type"
       );
       const input = fixture.debugElement.nativeElement.querySelector("input");
       input.value = "answer";
@@ -175,7 +175,7 @@ describe("Aware Dialog Component", () => {
 
     it("should show custom template", () => {
       const template = fixture.debugElement.nativeElement.querySelector(
-        "mat-dialog-content > :not(mat-form-field)"
+        "mat-mdc-dialog-content > :not(mat-form-field)"
       );
       expect(template.textContent).toBe("This is my special template");
     });

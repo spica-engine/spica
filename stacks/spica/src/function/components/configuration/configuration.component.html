@@ -74,7 +74,7 @@
             (ngModelChange)="function.timeout = $event"
             name="timeout"
             #timeoutModel="ngModel"
-          ><input matSliderThumb />
+            ><input matSliderThumb />
           </mat-slider>
           <mat-error *ngIf="timeoutModel?.errors?.required">Timeout is required.</mat-error>
           <mat-error *ngIf="timeoutModel?.errors?.min">
@@ -110,7 +110,7 @@
                 <mat-icon>{{ enqueuer.description.icon }}</mat-icon>
                 <mat-label>
                   <span>{{ enqueuer.description.title }}</span> —
-                  <small class="mat-small">{{ enqueuer.description.description }}</small>
+                  <small class="mat-mdc-small">{{ enqueuer.description.description }}</small>
                 </mat-label>
               </mat-option>
             </mat-select>

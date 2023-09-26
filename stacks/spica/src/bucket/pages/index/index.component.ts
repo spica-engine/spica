@@ -640,7 +640,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       const el = document.getElementById(this.getEditingCellId(id, key));
       if (el) {
-        const input = el.querySelector(".mat-input-element") as HTMLElement;
+        const input = el.querySelector(".mat-mdc-input-element") as HTMLElement;
         if (input) {
           input.focus();
         }

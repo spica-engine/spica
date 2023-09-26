@@ -1,9 +1,9 @@
 <mat-toolbar>
-  <h4 class="mat-h4">
+  <h4 class="mat-mdc-h4">
     <span>Edit Asset</span>
   </h4>
 </mat-toolbar>
-<mat-card appearance="outlined" class="mat-elevation-z25">
+<mat-card appearance="outlined" class="mat-mdc-elevation-z25">
   <mat-card-content>
     <form #form="ngForm">
       <mat-list>
@@ -42,9 +42,9 @@
               </a>
             </mat-tree-node>
             <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
-              <div class="mat-tree-node">
+              <div class="mat-mdc-tree-node">
                 <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
-                  <mat-icon class="mat-icon-rtl-mirror">
+                  <mat-icon class="mat-mdc-icon-rtl-mirror">
                     {{ treeControl.isExpanded(node) ? "expand_more" : "chevron_right" }}
                   </mat-icon>
                 </button>

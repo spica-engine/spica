@@ -90,7 +90,7 @@
     mat-grid-list {
       mat-grid-tile {
         overflow: auto;
-        .mat-figure {
+        .mat-mdc-figure {
           flex-flow: column;
           justify-content: unset;
           padding: 5px;

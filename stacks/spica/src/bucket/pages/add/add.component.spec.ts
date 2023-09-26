@@ -180,8 +180,9 @@ describe("AddComponent", () => {
       tick(1);
       fixture.detectChanges();
       expect(
-        fixture.debugElement.query(By.css("mat-toolbar > span > h4 > mat-chip-list mat-chip"))
-          .nativeElement.textContent
+        fixture.debugElement.query(
+          By.css("mat-toolbar > span > h4 > mat-chip-listbox mat-chip-option")
+        ).nativeElement.textContent
       ).toBe("Read Only");
 
       expect(bucketService.getBucket).toHaveBeenCalledTimes(1);
@@ -288,18 +289,20 @@ describe("AddComponent", () => {
         fixture.detectChanges();
         expect(bucketHistoryService.historyList).toHaveBeenCalledTimes(2);
         expect(bucketHistoryService.historyList).toHaveBeenCalledWith("1", "2");
-        fixture.debugElement.query(By.css("mat-toolbar > button")).nativeElement.click();
+        fixture.debugElement.query(By.css("mat-toolbar")).nativeElement.click();
         fixture.detectChanges();
         const options = document.body.querySelectorAll<HTMLButtonElement>(
-          ".mat-menu-panel > .mat-menu-content button"
+          ".mat-mdc-menu-panel > .mat-mdc-menu-content > button"
         );
 
         expect(options.item(0).textContent).toBe(" N ");
         expect(options.item(0).disabled).toBe(true);
         expect(options.item(1).querySelector("span.mat-button-wrapper").textContent).toBe(" 1 ");
-        expect(options.item(1).querySelector("span.mat-badge-content").textContent).toBe("5");
-        expect(options.item(2).querySelector("span.mat-button-wrapper").textContent).toBe(" 2 ");
-        expect(options.item(2).querySelector("span.mat-badge-content").textContent).toBe("8");
+        expect(options.item(1).querySelector("span.mat-mdc-badge-content").textContent).toBe("5");
+        expect(options.item(2).querySelector("span.mat-mdc-button-wrapper").textContent).toBe(
+          " 2 "
+        );
+        expect(options.item(2).querySelector("span.mat-mdc-badge-content").textContent).toBe("8");
       });
 
       it("should set data to specific data point", fakeAsync(() => {
@@ -316,11 +319,13 @@ describe("AddComponent", () => {
         fixture.detectChanges();
 
         const nowButton = document.body.querySelector<HTMLButtonElement>(
-          ".mat-menu-panel > .mat-menu-content button"
+          ".mat-mdc-menu-panel > .mat-mdc-menu-content button"
         );
-        const secondButton = document.body.querySelector<HTMLButtonElement>(
-          ".mat-menu-panel > .mat-menu-content button:nth-of-type(2)"
+        console.log("nowButton:", nowButton);
+        const secondButton = document.querySelector<HTMLButtonElement>(
+          ".mat-mdc-menu-panel > .mat-menu-content button:nth-of-type(2)"
         );
+        console.log("secondButton:", secondButton);
 
         secondButton.click();
         history.next(specificPoint);
@@ -371,13 +376,13 @@ describe("AddComponent", () => {
       fixture.detectChanges();
 
       let bottomProperties = fixture.debugElement.queryAll(
-          By.css("mat-card > mat-card-content > form > div.bottom > div")
+          By.css("mat-mdc-card > mat-card-content > form > div.bottom > div")
         ),
         leftProperties = fixture.debugElement.queryAll(
-          By.css("mat-card > mat-card-content > form > div.left > div")
+          By.css("mat-mdc-card > mat-card-content > form > div.left > div")
         ),
         rightProperties = fixture.debugElement.queryAll(
-          By.css("mat-card > mat-card-content > form > div.right > div")
+          By.css("mat-mdc-card > mat-card-content > form > div.right > div")
         );
       expect(bottomProperties.length).toBe(2);
       expect(leftProperties.length).toBe(1);
@@ -422,7 +427,7 @@ describe("AddComponent", () => {
         tick(1);
         fixture.detectChanges(false);
         translatedProperty = fixture.debugElement.query(
-          By.css("mat-card > mat-card-content > form > div.bottom > div")
+          By.css("mat-mdc-card > mat-card-content > form > div.bottom > div")
         );
       }));
 

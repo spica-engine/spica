@@ -1,5 +1,5 @@
 <mat-toolbar>
-  <h4 class="mat-h4">
+  <h4 class="mat-mdc-h4">
     <mat-icon>account_box</mat-icon>
     <span>User Activities</span>
   </h4>
@@ -15,7 +15,7 @@
   </div>
 </mat-toolbar>
 
-<mat-card appearance="outlined" class="mat-elevation-z25">
+<mat-card appearance="outlined" class="mat-mdc-elevation-z25">
   <mat-form-field>
     <mat-label>Identifier</mat-label>
     <input matInput [(ngModel)]="filters.identifier" />
@@ -23,13 +23,13 @@
   <mat-form-field>
     <mat-label>Select action type</mat-label>
     <mat-select [(ngModel)]="filters.action" multiple>
-      <mat-option class="mat-accent" value="1">
+      <mat-option class="mat-mdc-accent" value="1">
         Insert
       </mat-option>
-      <mat-option class="mat-accent" value="2">
+      <mat-option class="mat-mdc-accent" value="2">
         Update
       </mat-option>
-      <mat-option class="mat-accent" value="3">
+      <mat-option class="mat-mdc-accent" value="3">
         Delete
       </mat-option>
     </mat-select>
@@ -78,7 +78,7 @@
     <mat-label>Select document id</mat-label>
     <mat-select [(ngModel)]="filters.resource.$in" multiple>
       <mat-option
-        class="mat-accent"
+        class="mat-mdc-accent"
         *ngFor="let documentId of documents$ | async"
         [value]="documentId"
       >

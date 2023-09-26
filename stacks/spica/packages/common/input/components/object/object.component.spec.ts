@@ -1,4 +1,4 @@
-import {ANALYZE_FOR_ENTRY_COMPONENTS, Component, forwardRef} from "@angular/core";
+import {Component, forwardRef} from "@angular/core";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {ControlValueAccessor, FormsModule, NgModel, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {By} from "@angular/platform-browser";
@@ -75,12 +75,12 @@ describe("Common#object", () => {
           {
             provide: InputResolver,
             useValue: inputResolver
-          },
-          {
-            provide: ANALYZE_FOR_ENTRY_COMPONENTS,
-            multi: true,
-            useValue: StringPlacer
           }
+          // {
+          //   provide: ANALYZE_FOR_ENTRY_COMPONENTS,
+          //   multi: true,
+          //   useValue: StringPlacer
+          // }
         ]
       })
       .compileComponents();

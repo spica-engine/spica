@@ -41,7 +41,7 @@
           : ''
       "
     >
-      <mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+      <mat-table [dataSource]="dataSource" matSort class="mat-mdc-elevation-z8">
         <ng-container *ngFor="let c of displayedColumns" [matColumnDef]="c">
           <mat-header-cell *matHeaderCellDef mat-sort-header>{{ c }}</mat-header-cell>
           <mat-cell *matCellDef="let element">{{ element[c] }}</mat-cell>

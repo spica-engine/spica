@@ -5,7 +5,7 @@
     align-items: center;
     justify-content: center;
     /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
-    ::ng-deep .mat-card-header-text {
+    ::ng-deep .mat-mdc-card-header-text {
       margin: 0;
       text-align: center;
       display: flex;

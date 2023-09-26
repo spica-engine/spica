@@ -181,7 +181,7 @@
         }
       }
       /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
-      ::ng-deep .mat-list-item-content {
+      ::ng-deep .mat-mdc-list-item-content {
         display: block !important;
         padding-bottom: 15px !important;
         padding-top: 25px !important;
@@ -238,7 +238,7 @@
 
       &.dependency {
         /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
-        ::ng-deep .mat-list-item-content {
+        ::ng-deep .mat-mdc-list-item-content {
           display: flex !important;
           justify-content: space-between;
           padding-top: 0px !important;
@@ -252,7 +252,7 @@
 
       &.add-dependency {
         /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
-        ::ng-deep .mat-list-item-content {
+        ::ng-deep .mat-mdc-list-item-content {
           padding-top: 0px !important;
           padding-bottom: 0px !important;
         }
@@ -328,7 +328,7 @@
 
       &.environment {
         /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
-        ::ng-deep .mat-list-item-content {
+        ::ng-deep .mat-mdc-list-item-content {
           margin: 0px 16px !important;
           padding: 12px 0px !important;
 
@@ -356,7 +356,7 @@
           form > mat-form-field {
             width: 100%;
             /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
-            ::ng-deep .mat-form-field-wrapper {
+            ::ng-deep .mat-mdc-form-field-wrapper {
               padding-bottom: 0px !important;
             }
           }
@@ -446,7 +446,7 @@
         justify-content: flex-start;
       }
       /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
-      .mat-form-field-wrapper {
+      .mat-mdc-form-field-wrapper {
         margin-bottom: -1.25em;
       }
       .log-viewport {

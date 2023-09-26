@@ -19,7 +19,7 @@
     /* TODO(mdc-migration): The following rule targets internal classes of slide-toggle that may no longer apply for the MDC version. */
     mat-slide-toggle {
       /* TODO(mdc-migration): The following rule targets internal classes of slide-toggle that may no longer apply for the MDC version. */
-      ::ng-deep span.mat-slide-toggle-content {
+      ::ng-deep span.mat-mdc-slide-toggle-content {
         display: none;
       }
     }

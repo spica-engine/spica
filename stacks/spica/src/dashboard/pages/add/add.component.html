@@ -1,9 +1,9 @@
 <mat-toolbar>
-  <h4 class="mat-h4">
+  <h4 class="mat-mdc-h4">
     <button
       mat-icon-button
       menu-icon
-      class="mat-elevation-z25"
+      class="mat-mdc-elevation-z25"
       matTooltip="You can select a icon by clicking here."
       [matMenuTriggerFor]="iconSelector"
     >
@@ -38,7 +38,7 @@
   </h4>
 </mat-toolbar>
 <div>
-  <mat-card appearance="outlined" class="mat-elevation-z25">
+  <mat-card appearance="outlined" class="mat-mdc-elevation-z25">
     <mat-card-content>
       <form #form="ngForm">
         <mat-list>
@@ -85,7 +85,7 @@
                   required
                   (selectionChange)="getMockData(component.type, i)"
                 >
-                  <mat-option class="mat-accent" *ngFor="let type of types" [value]="type">
+                  <mat-option class="mat-mdc-accent" *ngFor="let type of types" [value]="type">
                     {{ type | titlecase }}
                   </mat-option>
                 </mat-select>
@@ -99,7 +99,7 @@
                   [(ngModel)]="component.ratio"
                   (ngModelChange)="updateRef()"
                 >
-                  <mat-option class="mat-accent" *ngFor="let ratio of ratios" [value]="ratio">
+                  <mat-option class="mat-mdc-accent" *ngFor="let ratio of ratios" [value]="ratio">
                     {{ ratio }}
                   </mat-option>
                 </mat-select>

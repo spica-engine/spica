@@ -7,11 +7,15 @@
   </span>
 </ng-template>
 <div class="actions" *ngIf="apiKey._id">
-  <button mat-button (click)="viewState = 'meta'" [class.mat-flat-button]="viewState == 'meta'">
+  <button mat-button (click)="viewState = 'meta'" [class.mat-mdc-flat-button]="viewState == 'meta'">
     <mat-icon>view_module</mat-icon>
     Credentials
   </button>
-  <button mat-button (click)="viewState = 'policy'" [class.mat-flat-button]="viewState == 'policy'">
+  <button
+    mat-button
+    (click)="viewState = 'policy'"
+    [class.mat-mdc-flat-button]="viewState == 'policy'"
+  >
     <mat-icon>layers</mat-icon>
     Policies
   </button>

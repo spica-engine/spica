@@ -67,7 +67,7 @@ body {
 /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
 /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
 mat-card {
-  &.mat-elevation-z25 {
+  &.mat-mdc-elevation-z25 {
     box-shadow: 0 4px 16px rgba(var(--primary-default-rgb), 0.07);
   }
   /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
@@ -90,7 +90,7 @@ mat-card {
 
 mat-form-field {
   /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
-  .mat-form-field-outline {
+  .mat-mdc-form-field-outline {
     background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
     border-radius: 5px;
     top: 0.75em !important;
@@ -99,14 +99,14 @@ mat-form-field {
     }
   }
   /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
-  .mat-form-field-label {
+  .mat-mdc-form-field-label {
     top: 2.14375em !important;
   }
   /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
   /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
-  &.mat-form-field-appearance-outline.mat-form-field-can-float.mat-form-field-should-float {
+  &.mat-mdc-form-field-appearance-outline.mat-mdc-form-field-can-float.mat-mdc-form-field-should-float {
     /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
-    .mat-form-field-label {
+    .mat-mdc-form-field-label {
       transform: translateY(-1.89375em) scale(0.75) !important;
     }
   }
@@ -153,7 +153,7 @@ $custom-typography: mat.define-typography-config(
 
   // remove hover effect
   /* TODO(mdc-migration): The following rule targets internal classes of button that may no longer apply for the MDC version.*/
-  span.mat-button-focus-overlay {
+  span.mat-mdc-button-focus-overlay {
     background: unset !important;
   }
 }
@@ -180,12 +180,12 @@ mat-table.striped mat-row:nth-child(even) {
   > mat-form-field {
     /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
     /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
-    .mat-form-field-wrapper {
+    .mat-mdc-form-field-wrapper {
       padding: 0px !important;
       margin: 0px !important;
       /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
-      .mat-form-field-hint-wrapper,
-      .mat-form-field-label {
+      .mat-mdc-form-field-hint-wrapper,
+      .mat-mdc-form-field-label {
         display: none;
       }
     }
