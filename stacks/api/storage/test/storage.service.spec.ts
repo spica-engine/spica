@@ -109,17 +109,21 @@ describe("Storage Service", () => {
       return Promise.resolve();
     });
 
-    try {
-      await storageService.insert(storageObjects);
-    } catch (error) {
-      const failedObject = storageObjects.find(obj => obj._id === "failId");
-      expect(error.message).toBe(
-        `Error: Failed to write object ${failedObject.name} to storage. Reason: Upload failed for Item`
-      );
+    await expectAsync(storageService.insert(storageObjects)).toBeRejectedWithError(
+      "Error: Failed to write object name2 to storage. Reason: Upload failed for Item"
+    );
 
-      const objectsInDb = await storageService.find({_id: "successId"});
-      expect(objectsInDb.length).toBe(1);
-    }
+    const insertedBbjects = await storageService.find();
+    expect(insertedBbjects).toEqual([
+      {
+        _id: "successId",
+        name: "name1",
+        content: {
+          type: "type1",
+          size: 10
+        }
+      } as any
+    ]);
   });
 
   it("should update storage object", async () => {
