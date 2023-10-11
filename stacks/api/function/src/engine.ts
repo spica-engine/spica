@@ -1,4 +1,4 @@
-import {Inject, Injectable, Optional, OnModuleDestroy} from "@nestjs/common";
+import {Inject, Injectable, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {DatabaseService, MongoClient} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {Package, PackageManager} from "@spica-server/function/pkgmanager";
@@ -29,7 +29,7 @@ import SystemSchema = require("./schema/system.json");
 import {ClassCommander} from "@spica-server/replication";
 
 @Injectable()
-export class FunctionEngine implements OnModuleDestroy {
+export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   readonly schemas = new Map<string, unknown>([
     ["http", HttpSchema],
     ["schedule", ScheduleSchema],
@@ -53,7 +53,9 @@ export class FunctionEngine implements OnModuleDestroy {
     }
 
     this.schemas.set("database", () => getDatabaseSchema(this.db, collSlug));
+  }
 
+  onModuleInit() {
     this.registerTriggers().then(() => {
       if (this.commander) {
         // trigger updates should be published to the other replicas except initial trigger registration

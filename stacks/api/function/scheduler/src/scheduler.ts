@@ -216,9 +216,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     });
 
     const fresh = workers.find(({worker}) => !worker.target);
-    const activateds = workers.filter(
-      ({worker}) => worker.target && worker.target.id == target.id
-    );
+    const activateds = workers.filter(({worker}) => worker.target && worker.target.id == target.id);
 
     const available = activateds.find(({worker}) => worker.schedule);
 
@@ -294,7 +292,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   gotWorker(id: string, schedule: (event: event.Event) => void) {
     const relatedWorker = this.workers.get(id);
 
-    if (relatedWorker.isOutdated) {
+    // debug here. Related worker shouldn't be undefined
+    if (!relatedWorker || relatedWorker.isOutdated) {
       this.print(`the worker ${id} won't be scheduled anymore.`);
     } else {
       relatedWorker.schedule = schedule;

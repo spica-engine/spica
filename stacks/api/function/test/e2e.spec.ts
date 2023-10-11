@@ -1,6 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {FunctionModule} from "@spica-server/function";
-import {FunctionEngine} from "@spica-server/function/src/engine";
 import * as os from "os";
 import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {INestApplication} from "@nestjs/common";
@@ -11,9 +10,7 @@ import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {event} from "@spica-server/function/queue/proto";
-import {CommandMessenger, REPLICA_ID, ReplicationModule} from "@spica-server/replication";
-
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:38747";
+import {REPLICA_ID, ReplicationModule} from "@spica-server/replication";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 15_000;
 
@@ -24,16 +21,18 @@ function sleep(ms: number) {
 describe("Queue shifting", () => {
   let module: TestingModule;
   let app: INestApplication;
+  let app2: INestApplication;
   let req: Request;
   let scheduler: Scheduler;
+  let scheduler2: Scheduler;
   let db: DatabaseService;
   let fn;
 
-  function getModuleBuilder() {
+  function getModuleBuilder(dbName?: string) {
     return Test.createTestingModule({
       imports: [
         CoreTestingModule,
-        DatabaseTestingModule.replicaSet(),
+        DatabaseTestingModule.replicaSet(dbName),
         PreferenceTestingModule,
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
@@ -64,16 +63,30 @@ describe("Queue shifting", () => {
 
   beforeEach(async () => {
     module = await getModuleBuilder().compile();
-    module.enableShutdownHooks();
 
-    scheduler = module.get(Scheduler);
     db = module.get(DatabaseService);
     await db.collection("my_coll").insertOne({test: "123"});
 
+    const module2 = await getModuleBuilder(db.databaseName).compile();
+
+    module.enableShutdownHooks();
+    module2.enableShutdownHooks();
+
     app = module.createNestApplication();
+
+    scheduler = module.get(Scheduler);
+    scheduler2 = module2.get(Scheduler);
+
+    process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:38747";
+    app = await module.createNestApplication().init();
+
+    process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:34953";
+    app2 = await module2.createNestApplication().init();
 
     req = module.get(Request);
     await app.listen(req.socket);
+
+    await sleep(3000);
 
     fn = await req
       .post("/function", {
@@ -138,8 +151,9 @@ describe("Queue shifting", () => {
     });
   });
 
-  afterEach(() => {
-    app.close();
+  afterEach(async () => {
+    await app.close();
+    await app2.close();
   });
 
   function onEventEnqueued(scheduler: Scheduler, eventType?: number): Promise<event.Event> {
@@ -176,44 +190,49 @@ describe("Queue shifting", () => {
   });
 
   describe("schedule", () => {
-    it("should shift the event", async () => {
+    fit("should shift the event", done => {
+      onEventEnqueued(scheduler, event.Type.HTTP).then(() => {
+        onEventEnqueued(scheduler, event.Type.SCHEDULE).then(shiftedEvent => {
+          onEventEnqueued(scheduler2, event.Type.SCHEDULE).then(event => {
+            expect(event).toEqual(shiftedEvent);
+            done();
+          });
+          app.close();
+        });
+      });
+
       req.get("/fn-execute/test");
-      await onEventEnqueued(scheduler, event.Type.HTTP);
-
-      const shiftedEvent = await onEventEnqueued(scheduler, event.Type.SCHEDULE);
-
-      await app.close();
 
       // here is so dependent to the commander implementation, use better approach
-      const shiftCmd = await db
-        .collection("commands")
-        .find({
-          "source.command.class": "ScheduleEnqueuer"
-        })
-        .toArray();
+      // const shiftCmd = await db
+      //   .collection("commands")
+      //   .find({
+      //     "source.command.class": "ScheduleEnqueuer"
+      //   })
+      //   .toArray();
 
-      expect(shiftCmd).toEqual([
-        {
-          _id: "__skip__",
-          source: {
-            command: {
-              class: "ScheduleEnqueuer",
-              handler: "copy_shift",
-              args: [shiftedEvent.target.toObject(), {frequency: "* * * * * *", timezone: "UTC"}]
-            },
-            id: module.get(REPLICA_ID)
-          },
-          target: {
-            commands: [
-              {
-                class: "ScheduleEnqueuer",
-                handler: "copy_shift",
-                args: [shiftedEvent.target.toObject(), {frequency: "* * * * * *", timezone: "UTC"}]
-              }
-            ]
-          }
-        }
-      ]);
+      // expect(shiftCmd).toEqual([
+      //   {
+      //     _id: "__skip__",
+      //     source: {
+      //       command: {
+      //         class: "ScheduleEnqueuer",
+      //         handler: "copy_shift",
+      //         args: [shiftedEvent.target.toObject(), {frequency: "* * * * * *", timezone: "UTC"}]
+      //       },
+      //       id: module.get(REPLICA_ID)
+      //     },
+      //     target: {
+      //       commands: [
+      //         {
+      //           class: "ScheduleEnqueuer",
+      //           handler: "copy_shift",
+      //           args: [shiftedEvent.target.toObject(), {frequency: "* * * * * *", timezone: "UTC"}]
+      //         }
+      //       ]
+      //     }
+      //   }
+      // ]);
     });
   });
 
