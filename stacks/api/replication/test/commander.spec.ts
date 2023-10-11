@@ -1,7 +1,7 @@
 import {Controller} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule, MongoClient} from "@spica-server/database/testing";
-import {ClassCommander, REPLICA_ID, ReplicationModule} from "@spica-server/replication/src";
+import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {ClassCommander, ReplicationModule} from "@spica-server/replication/src";
 
 function wait(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -9,7 +9,7 @@ function wait(ms: number) {
 
 @Controller()
 export class SyncController {
-  calls = {fn1: [], fn2: [], failedFn: []};
+  calls = {fn1: [], fn2: []};
 
   commanderSubs;
   constructor(private commander: ClassCommander) {
@@ -51,24 +51,19 @@ describe("Commander", () => {
     let ctrl1: SyncController;
     let ctrl2: SyncController;
 
-    function getModuleBuilder() {
+    function getModuleBuilder(dbName?: string) {
       return Test.createTestingModule({
-        imports: [DatabaseTestingModule.replicaSet(), ReplicationModule.forRoot()],
+        imports: [DatabaseTestingModule.replicaSet(dbName), ReplicationModule.forRoot()],
         controllers: [SyncController]
       });
     }
 
     beforeEach(async () => {
-      const mb = getModuleBuilder();
-      module1 = await mb.compile();
+      module1 = await getModuleBuilder().compile();
       ctrl1 = module1.get(SyncController);
 
-      module2 = await mb
-        .overrideProvider(MongoClient)
-        .useValue(module1.get(MongoClient))
-        .overrideProvider(DatabaseService)
-        .useValue(module1.get(DatabaseService))
-        .compile();
+      const dbName = module1.get(DatabaseService).databaseName;
+      module2 = await getModuleBuilder(dbName).compile();
 
       ctrl2 = module2.get(SyncController);
     });
@@ -78,27 +73,47 @@ describe("Commander", () => {
       await module2.close();
     });
 
-    it("should execute command on all other controllers", async () => {
+    it("should emit command to ctrl2", async () => {
       ctrl1.fn1("call", "me");
 
       await wait(2000);
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
-      expect(ctrl1.calls.fn2).toEqual([]);
-      expect(ctrl1.calls.failedFn).toEqual([]);
-
       expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
+
+      expect(ctrl1.calls.fn2).toEqual([]);
       expect(ctrl2.calls.fn2).toEqual([]);
-      expect(ctrl2.calls.failedFn).toEqual([]);
     });
 
-    it("should unsubscribe from commander", async () => {
+    it("should emit command to ctrl1", async () => {
+      ctrl2.fn1("call", "me");
+
+      await wait(2000);
+
+      expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
+      expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
+
+      expect(ctrl1.calls.fn2).toEqual([]);
+      expect(ctrl2.calls.fn2).toEqual([]);
+    });
+
+    it("should unsubscribe ctrl1", async () => {
       ctrl1.unregister();
+
       ctrl1.fn1("call", "me");
       await wait(2000);
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
+      expect(ctrl2.calls.fn1).toEqual([]);
+    });
 
+    it("should unsubscribe ctrl2", async () => {
+      ctrl2.unregister();
+
+      ctrl1.fn1("call", "me");
+      await wait(2000);
+
+      expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([]);
     });
   });
@@ -110,24 +125,19 @@ describe("Commander", () => {
     let ctrl1: ShiftController;
     let ctrl2: ShiftController;
 
-    function getModuleBuilder() {
+    function getModuleBuilder(dbName?: string) {
       return Test.createTestingModule({
-        imports: [DatabaseTestingModule.replicaSet(), ReplicationModule.forRoot()],
+        imports: [DatabaseTestingModule.replicaSet(dbName), ReplicationModule.forRoot()],
         controllers: [ShiftController]
       });
     }
 
     beforeEach(async () => {
-      const mb = getModuleBuilder();
-      module1 = await mb.compile();
+      module1 = await getModuleBuilder().compile();
       ctrl1 = module1.get(ShiftController);
 
-      module2 = await mb
-        .overrideProvider(MongoClient)
-        .useValue(module1.get(MongoClient))
-        .overrideProvider(DatabaseService)
-        .useValue(module1.get(DatabaseService))
-        .compile();
+      const dbName = module1.get(DatabaseService).databaseName;
+      module2 = await getModuleBuilder(dbName).compile();
 
       ctrl2 = module2.get(ShiftController);
     });
@@ -137,13 +147,20 @@ describe("Commander", () => {
       await module2.close();
     });
 
-    it("should execute command on all controllers", async () => {
+    it("should shift command to ctrl2", async () => {
       ctrl1.fn1("call", "me");
       await wait(2000);
 
       expect(ctrl1.calls.fn1).toEqual([]);
-
       expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
+    });
+
+    it("should shift command to ctrl1", async () => {
+      ctrl2.fn1("call", "me");
+      await wait(2000);
+
+      expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
+      expect(ctrl2.calls.fn1).toEqual([]);
     });
   });
 });
