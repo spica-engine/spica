@@ -10,7 +10,7 @@ import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {event} from "@spica-server/function/queue/proto";
-import {REPLICA_ID, ReplicationModule} from "@spica-server/replication";
+import {JobReducer, ReplicationModule} from "@spica-server/replication";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 15_000;
 
@@ -69,13 +69,19 @@ describe("Queue shifting", () => {
 
     const module2 = await getModuleBuilder(db.databaseName).compile();
 
+    // put a bit delay to let first replica takes jobs before second replica.
+    // because we always assume that first replica shifts jobs to the second replica for all test cases
+    const secondRepReducer = module2.get(JobReducer);
+    const copyDo = secondRepReducer.do;
+    secondRepReducer.do = async (...args) => {
+      await sleep(1);
+      return copyDo.bind(secondRepReducer)(...args);
+    };
+
     module.enableShutdownHooks();
     module2.enableShutdownHooks();
 
     app = module.createNestApplication();
-
-    scheduler = module.get(Scheduler);
-    scheduler2 = module2.get(Scheduler);
 
     process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:38747";
     app = await module.createNestApplication().init();
@@ -83,10 +89,11 @@ describe("Queue shifting", () => {
     process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:34953";
     app2 = await module2.createNestApplication().init();
 
+    scheduler = module.get(Scheduler);
+    scheduler2 = module2.get(Scheduler);
+
     req = module.get(Request);
     await app.listen(req.socket);
-
-    await sleep(3000);
 
     fn = await req
       .post("/function", {
@@ -152,16 +159,25 @@ describe("Queue shifting", () => {
   });
 
   afterEach(async () => {
-    await app.close();
     await app2.close();
   });
 
-  function onEventEnqueued(scheduler: Scheduler, eventType?: number): Promise<event.Event> {
+  function onEventEnqueued(
+    scheduler: Scheduler,
+    eventType?: number,
+    eventId?: string
+  ): Promise<event.Event> {
     return new Promise((resolve, reject) => {
       const enqueue = scheduler.enqueue;
       scheduler.enqueue = (...args) => {
         enqueue.bind(scheduler)(...args);
-        if (!eventType || (eventType && args[0].type == eventType)) {
+        const areEventTypesMatched = eventType && args[0].type == eventType;
+        const areEventIdsMatched = eventId && args[0].id == eventId;
+        if (
+          !eventType ||
+          (areEventTypesMatched && !eventId) ||
+          (areEventTypesMatched && areEventIdsMatched)
+        ) {
           resolve(args[0]);
         }
       };
@@ -190,108 +206,55 @@ describe("Queue shifting", () => {
   });
 
   describe("schedule", () => {
-    fit("should shift the event", done => {
+    it("should shift the event", done => {
       onEventEnqueued(scheduler, event.Type.HTTP).then(() => {
         onEventEnqueued(scheduler, event.Type.SCHEDULE).then(shiftedEvent => {
-          onEventEnqueued(scheduler2, event.Type.SCHEDULE).then(event => {
-            expect(event).toEqual(shiftedEvent);
+          let expectedEventShifted = false;
+          onEventEnqueued(scheduler2, event.Type.SCHEDULE, shiftedEvent.id).then(enqueuedEvent => {
+            expectedEventShifted = true;
+            expect(enqueuedEvent).toEqual(shiftedEvent);
+          });
+
+          app.close().then(() => {
+            expect(expectedEventShifted).toEqual(true);
             done();
           });
-          app.close();
         });
       });
 
       req.get("/fn-execute/test");
-
-      // here is so dependent to the commander implementation, use better approach
-      // const shiftCmd = await db
-      //   .collection("commands")
-      //   .find({
-      //     "source.command.class": "ScheduleEnqueuer"
-      //   })
-      //   .toArray();
-
-      // expect(shiftCmd).toEqual([
-      //   {
-      //     _id: "__skip__",
-      //     source: {
-      //       command: {
-      //         class: "ScheduleEnqueuer",
-      //         handler: "copy_shift",
-      //         args: [shiftedEvent.target.toObject(), {frequency: "* * * * * *", timezone: "UTC"}]
-      //       },
-      //       id: module.get(REPLICA_ID)
-      //     },
-      //     target: {
-      //       commands: [
-      //         {
-      //           class: "ScheduleEnqueuer",
-      //           handler: "copy_shift",
-      //           args: [shiftedEvent.target.toObject(), {frequency: "* * * * * *", timezone: "UTC"}]
-      //         }
-      //       ]
-      //     }
-      //   }
-      // ]);
     });
   });
 
+  async function triggerDatabaseEvent() {
+    stream.change.next();
+    await db
+      .collection("my_coll")
+      .insertOne({test: "asdqwe"})
+      .then(r => r.ops[0]);
+    await stream.change.wait();
+  }
+
   describe("database", () => {
-    it("should shift the event", async () => {
+    it("should shift the event", done => {
+      onEventEnqueued(scheduler, event.Type.HTTP).then(() => {
+        onEventEnqueued(scheduler, event.Type.DATABASE).then(shiftedEvent => {
+          let expectedEventShifted = false;
+          onEventEnqueued(scheduler2, event.Type.DATABASE).then(enqueuedEvent => {
+            expectedEventShifted = true;
+            expect(enqueuedEvent).toEqual(shiftedEvent);
+          });
+
+          app.close().then(() => {
+            expect(expectedEventShifted).toEqual(true);
+            done();
+          });
+        });
+
+        triggerDatabaseEvent();
+      });
+
       req.get("/fn-execute/test");
-      await onEventEnqueued(scheduler, event.Type.HTTP);
-
-      let shiftedEvent;
-      onEventEnqueued(scheduler, event.Type.DATABASE).then(e => (shiftedEvent = e));
-
-      stream.change.next();
-      const inserted = await db
-        .collection("my_coll")
-        .insertOne({test: "asdqwe"})
-        .then(r => r.ops[0]);
-      await stream.change.wait();
-
-      await app.close();
-
-      // here is so dependent to the commander implementation, use better approach
-      const shiftCmd = await db
-        .collection("commands")
-        .find({
-          "source.command.class": "DatabaseEnqueuer"
-        })
-        .toArray();
-
-      const change = {
-        _id: {_data: "__skip__"},
-        clusterTime: "__skip__",
-        documentKey: {_id: inserted._id},
-        fullDocument: inserted,
-        ns: {db: "__skip__", coll: "my_coll"},
-        operationType: "insert",
-        event_id: shiftedEvent.id
-      };
-      expect(shiftCmd).toEqual([
-        {
-          _id: "__skip__",
-          source: {
-            command: {
-              class: "DatabaseEnqueuer",
-              handler: "copy_shift",
-              args: [change, shiftedEvent.target.toObject()]
-            },
-            id: module.get(REPLICA_ID)
-          },
-          target: {
-            commands: [
-              {
-                class: "DatabaseEnqueuer",
-                handler: "copy_shift",
-                args: [change, shiftedEvent.target.toObject()]
-              }
-            ]
-          }
-        }
-      ]);
     });
   });
 });

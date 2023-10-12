@@ -117,12 +117,17 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.database,
         schedulerUnsubscription,
         this.jobReducer,
-        this.commander
+        new ClassCommander(this.commander["cmdMessenger"])
       )
     );
 
     this.enqueuers.add(
-      new ScheduleEnqueuer(this.queue, schedulerUnsubscription, this.jobReducer, this.commander)
+      new ScheduleEnqueuer(
+        this.queue,
+        schedulerUnsubscription,
+        this.jobReducer,
+        new ClassCommander(this.commander["cmdMessenger"])
+      )
     );
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
@@ -139,8 +144,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   killFreeWorkers() {
+    const isFresh = worker => !worker.target;
+    const isWaitingForNextEvent = worker => worker.target && worker.schedule;
+
     const freeWorkers = Array.from(this.workers.entries()).filter(
-      ([key, worker]) => !worker.target || (worker.target && worker.schedule)
+      ([key, worker]) => isFresh(worker) || isWaitingForNextEvent(worker)
     );
 
     const killWorkers = freeWorkers.map(([key, worker]) => {
@@ -293,7 +301,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     const relatedWorker = this.workers.get(id);
 
     // debug here. Related worker shouldn't be undefined
-    if (!relatedWorker || relatedWorker.isOutdated) {
+    if (!relatedWorker || relatedWorker.isOutdated) {
       this.print(`the worker ${id} won't be scheduled anymore.`);
     } else {
       relatedWorker.schedule = schedule;

@@ -61,11 +61,11 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     }
   }
 
-  onTickHandler(target: event.Target, options: ScheduleOptions) {
+  onTickHandler(target: event.Target, options: ScheduleOptions, eventId?: string) {
     const now = new Date(new Date().setMilliseconds(0)).getTime();
 
     const ev = new event.Event({
-      id: uniqid(),
+      id: eventId || uniqid(),
       target,
       type: event.Type.SCHEDULE
     });
@@ -102,10 +102,14 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
           console.error(`Job with event id ${event.id} does not exist!`);
           return;
         }
-        return this.shift(event.target.toObject(), {
-          frequency: job.frequency,
-          timezone: job.timezone
-        });
+        return this.shift(
+          event.target.toObject(),
+          {
+            frequency: job.frequency,
+            timezone: job.timezone
+          },
+          event.id
+        );
       });
 
       shiftPromises.push(shift);
@@ -127,7 +131,8 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
         timeout: number;
       };
     },
-    options: ScheduleOptions
+    options: ScheduleOptions,
+    eventId: string
   ) {
     const newTarget = new event.Target({
       id: target.id,
@@ -147,6 +152,6 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
       })
     });
 
-    return this.onTickHandler(newTarget, options);
+    return this.onTickHandler(newTarget, options, eventId);
   }
 }

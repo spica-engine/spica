@@ -70,9 +70,9 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     }
   }
 
-  onChangeHandler(rawChange, target: event.Target) {
+  onChangeHandler(rawChange, target: event.Target, eventId?: string) {
     const ev = new event.Event({
-      id: uniqid(),
+      id: eventId || uniqid(),
       target,
       type: event.Type.DATABASE
     });
@@ -121,7 +121,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
           return;
         }
         const newChange = {...job, _id: {_data: job._id}};
-        return this.shift(newChange, event.target.toObject());
+        return this.shift(newChange, event.target.toObject(), event.id);
       });
 
       shiftPromises.push(shift);
@@ -143,7 +143,8 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
         }[];
         timeout: number;
       };
-    }
+    },
+    eventId: string
   ) {
     const newTarget = new event.Target({
       id: target.id,
@@ -162,7 +163,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
         timeout: target.context.timeout
       })
     });
-    return this.onChangeHandler(rawChange, newTarget);
+    return this.onChangeHandler(rawChange, newTarget, eventId);
   }
 }
 
