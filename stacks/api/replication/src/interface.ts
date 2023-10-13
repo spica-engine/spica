@@ -92,3 +92,14 @@ export const replicaIdProvider = () => {
   // we could use process id to track which api failed to execute command, publish etc.
   return uniqid();
 };
+
+export enum CommandType {
+  /**
+   * Propagate the call to all instances except itself
+   */
+  SHIFT,
+  /**
+   * Propagate the call to all instances
+   */
+  SYNC
+}

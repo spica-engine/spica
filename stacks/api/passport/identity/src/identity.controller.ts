@@ -31,7 +31,7 @@ import {IdentityService} from "./identity.service";
 import {Identity, PaginationResponse} from "./interface";
 import {POLICY_PROVIDER} from "./options";
 import {registerPolicyAttacher} from "./utility";
-import {ClassCommander} from "@spica-server/replication";
+import {ClassCommander, CommandType} from "@spica-server/replication";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 
 @Controller("passport/identity")
@@ -62,7 +62,7 @@ export class IdentityController {
     @Optional() private commander: ClassCommander
   ) {
     if (this.commander) {
-      this.commander.register(this, [this.setIdentityFactor, this.deleteIdentityFactor]);
+      this.commander.register(this, [this.setIdentityFactor, this.deleteIdentityFactor],CommandType.SYNC);
     }
     this.identityService
       .find({

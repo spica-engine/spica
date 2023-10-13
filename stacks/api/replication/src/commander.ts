@@ -5,7 +5,8 @@ import {
   CommandMessageFilter,
   CommandSource,
   CommandTarget,
-  Command
+  Command,
+  CommandType
 } from "./interface";
 
 abstract class Commander {
@@ -63,12 +64,12 @@ export class ClassCommander extends Commander {
     super(_cmdMessenger);
   }
 
-  new(){
-    return new ClassCommander(this._cmdMessenger)
+  new() {
+    return new ClassCommander(this._cmdMessenger);
   }
 
   // better implementation for emit type;
-  register(ctx: Object, fns: Function[], emitType: "shift" | "sync" = "sync") {
+  register(ctx: Object, fns: Function[], cmdType: CommandType) {
     // add new function named copy_fn and call the original fn inside of it
     // modify original fn as it will emit copy_fn to others and call the copy_fn
     // since copy_fn will call the original fn, there won't be any change on original implementation
@@ -86,7 +87,7 @@ export class ClassCommander extends Commander {
           }
         });
 
-        if (emitType == "sync") {
+        if (cmdType == CommandType.SYNC) {
           return ctx[`copy_${handler}`](...args);
         }
       };

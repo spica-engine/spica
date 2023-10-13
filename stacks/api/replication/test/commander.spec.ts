@@ -1,7 +1,7 @@
 import {Controller} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
-import {ClassCommander, ReplicationModule} from "@spica-server/replication/src";
+import {ClassCommander, CommandType, ReplicationModule} from "@spica-server/replication/src";
 
 function wait(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -13,7 +13,7 @@ export class SyncController {
 
   commanderSubs;
   constructor(private commander: ClassCommander) {
-    this.commanderSubs = this.commander.register(this, [this.fn1, this.fn2]);
+    this.commanderSubs = this.commander.register(this, [this.fn1, this.fn2],CommandType.SYNC);
   }
 
   fn1(arg1, arg2) {
@@ -35,7 +35,7 @@ export class ShiftController {
 
   commanderSubs;
   constructor(private commander: ClassCommander) {
-    this.commanderSubs = this.commander.register(this, [this.fn1], "shift");
+    this.commanderSubs = this.commander.register(this, [this.fn1], CommandType.SHIFT);
   }
 
   fn1(arg1, arg2) {

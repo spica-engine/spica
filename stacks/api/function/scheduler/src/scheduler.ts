@@ -20,7 +20,7 @@ import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
 import {generateLog, LogLevels} from "@spica-server/function/runtime/logger";
 import {Node} from "@spica-server/function/runtime/node";
-import {ClassCommander, JobReducer} from "@spica-server/replication";
+import {ClassCommander, CommandType, JobReducer} from "@spica-server/replication";
 import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/status/services";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
@@ -58,7 +58,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker
   ) {
     if (this.commander) {
-      this.commander.register(this, [this.outdateWorkers]);
+      this.commander.register(this, [this.outdateWorkers], CommandType.SYNC);
     }
 
     this.output = new DatabaseOutput(database);
@@ -122,12 +122,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     );
 
     this.enqueuers.add(
-      new ScheduleEnqueuer(
-        this.queue,
-        schedulerUnsubscription,
-        this.jobReducer,
-        this.commander
-      )
+      new ScheduleEnqueuer(this.queue, schedulerUnsubscription, this.jobReducer, this.commander)
     );
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
@@ -301,7 +296,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     const relatedWorker = this.workers.get(id);
 
     // debug here. Related worker shouldn't be undefined
-    if (!relatedWorker || relatedWorker.isOutdated) {
+    if (!relatedWorker || relatedWorker.isOutdated) {
       this.print(`the worker ${id} won't be scheduled anymore.`);
     } else {
       relatedWorker.schedule = schedule;

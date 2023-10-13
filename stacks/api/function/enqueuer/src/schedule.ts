@@ -1,6 +1,6 @@
 import {EventQueue} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
-import {ClassCommander, JobReducer} from "@spica-server/replication";
+import {ClassCommander, CommandType, JobReducer} from "@spica-server/replication";
 import * as cron from "cron";
 import {Description, Enqueuer} from "./enqueuer";
 import * as uniqid from "uniqid";
@@ -30,7 +30,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
   ) {
     if (this.commander) {
       this.commander = this.commander.new();
-      this.commander.register(this, [this.shift], "shift");
+      this.commander.register(this, [this.shift], CommandType.SHIFT);
     }
   }
 

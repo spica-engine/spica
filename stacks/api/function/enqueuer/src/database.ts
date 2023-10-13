@@ -1,7 +1,7 @@
 import {ChangeStream, DatabaseService} from "@spica-server/database";
 import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
 import {Database, event} from "@spica-server/function/queue/proto";
-import {JobReducer} from "@spica-server/replication";
+import {CommandType, JobReducer} from "@spica-server/replication";
 import {Description, Enqueuer} from "./enqueuer";
 import {ClassCommander} from "@spica-server/replication";
 import uniqid = require("uniqid");
@@ -34,7 +34,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     super();
     if (this.commander) {
       this.commander = this.commander.new();
-      this.commander.register(this, [this.shift], "shift");
+      this.commander.register(this, [this.shift], CommandType.SHIFT);
     }
   }
 

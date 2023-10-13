@@ -26,7 +26,7 @@ import HttpSchema = require("./schema/http.json");
 import ScheduleSchema = require("./schema/schedule.json");
 import FirehoseSchema = require("./schema/firehose.json");
 import SystemSchema = require("./schema/system.json");
-import {ClassCommander} from "@spica-server/replication";
+import {ClassCommander, CommandType} from "@spica-server/replication";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
@@ -59,7 +59,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     this.registerTriggers().then(() => {
       if (this.commander) {
         // trigger updates should be published to the other replicas except initial trigger registration
-        this.cmdSubs = this.commander.register(this, [this.categorizeChanges]);
+        this.cmdSubs = this.commander.register(this, [this.categorizeChanges],CommandType.SYNC);
       }
     });
   }
