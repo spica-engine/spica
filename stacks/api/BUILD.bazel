@@ -100,7 +100,7 @@ container_push(
     format = "Docker",
     image = ":image",
     registry = "index.docker.io",
-    repository = "htuna07/spica-api",
-    tag = "debug-sigterm-handle-3",
+    repository = "spicaengine/api",
+    tag = "{BUILD_SCM_VERSION}",
     tags = ["release-with-spica"],
 )

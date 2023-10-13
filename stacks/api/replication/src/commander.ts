@@ -68,7 +68,6 @@ export class ClassCommander extends Commander {
     return new ClassCommander(this._cmdMessenger);
   }
 
-  // better implementation for emit type;
   register(ctx: Object, fns: Function[], cmdType: CommandType) {
     // add new function named copy_fn and call the original fn inside of it
     // modify original fn as it will emit copy_fn to others and call the copy_fn

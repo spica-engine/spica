@@ -295,7 +295,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   gotWorker(id: string, schedule: (event: event.Event) => void) {
     const relatedWorker = this.workers.get(id);
 
-    // debug here. Related worker shouldn't be undefined
     if (!relatedWorker || relatedWorker.isOutdated) {
       this.print(`the worker ${id} won't be scheduled anymore.`);
     } else {

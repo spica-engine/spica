@@ -61,7 +61,7 @@ export namespace Database {
         collection: this.collection,
         document: this.document,
         documentKey: this.documentKey,
-        updateDescription: this.updateDescription && this.updateDescription.toObject(),
+        updateDescription: this.updateDescription && this.updateDescription.toObject()
       };
     }
     serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
@@ -168,7 +168,6 @@ export namespace Database {
         return message;
       }
     }
-
     export class Pop extends pb_1.Message {
       constructor(
         data?:

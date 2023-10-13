@@ -3,7 +3,6 @@ syntax = "proto3";
 package Database;
 
 
-
 message Change {
 
     Kind kind = 1;
