@@ -59,8 +59,12 @@ abstract class Commander {
 
 @Injectable({scope: Scope.TRANSIENT})
 export class ClassCommander extends Commander {
-  constructor(cmdMessenger: CommandMessenger) {
-    super(cmdMessenger);
+  constructor(private _cmdMessenger: CommandMessenger) {
+    super(_cmdMessenger);
+  }
+
+  new(){
+    return new ClassCommander(this._cmdMessenger)
   }
 
   // better implementation for emit type;

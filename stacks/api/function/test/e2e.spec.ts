@@ -70,7 +70,7 @@ describe("Queue shifting", () => {
     const module2 = await getModuleBuilder(db.databaseName).compile();
 
     // put a bit delay to let first replica takes jobs before second replica.
-    // because we always assume that first replica shifts jobs to the second replica for all test cases
+    // because we assume that first replica shifts jobs to the second replica for all test cases
     const secondRepReducer = module2.get(JobReducer);
     const copyDo = secondRepReducer.do;
     secondRepReducer.do = async (...args) => {
@@ -185,38 +185,42 @@ describe("Queue shifting", () => {
   }
 
   describe("http", () => {
-    it("should wait until current event completed, return 503 for ones in queue", async () => {
+    it("should wait until current event completed, return 503 for ones in queue", done => {
       let firstResponse;
       let secondResponse;
 
+      onEventEnqueued(scheduler, event.Type.HTTP).then(() => {
+        onEventEnqueued(scheduler, event.Type.HTTP).then(() => {
+          app.close().then(() => {
+            expect([firstResponse.statusCode, firstResponse.statusText]).toEqual([200, "OK"]);
+            expect([secondResponse.statusCode, secondResponse.statusText]).toEqual([
+              503,
+              "Service Unavailable"
+            ]);
+            done();
+          });
+        });
+        req.get("/fn-execute/test").then(r => (secondResponse = r));
+      });
+
       req.get("/fn-execute/test").then(r => (firstResponse = r));
-
-      await onEventEnqueued(scheduler, event.Type.HTTP);
-      req.get("/fn-execute/test").then(r => (secondResponse = r));
-
-      await onEventEnqueued(scheduler, event.Type.HTTP);
-      await app.close();
-
-      expect([firstResponse.statusCode, firstResponse.statusText]).toEqual([200, "OK"]);
-      expect([secondResponse.statusCode, secondResponse.statusText]).toEqual([
-        503,
-        "Service Unavailable"
-      ]);
     });
   });
 
   describe("schedule", () => {
     it("should shift the event", done => {
+      let event1;
+      let event2;
+
       onEventEnqueued(scheduler, event.Type.HTTP).then(() => {
         onEventEnqueued(scheduler, event.Type.SCHEDULE).then(shiftedEvent => {
-          let expectedEventShifted = false;
+          event1 = shiftedEvent;
           onEventEnqueued(scheduler2, event.Type.SCHEDULE, shiftedEvent.id).then(enqueuedEvent => {
-            expectedEventShifted = true;
-            expect(enqueuedEvent).toEqual(shiftedEvent);
+            event2 = enqueuedEvent;
           });
 
           app.close().then(() => {
-            expect(expectedEventShifted).toEqual(true);
+            expect(event1).toEqual(event2);
             done();
           });
         });
@@ -237,16 +241,18 @@ describe("Queue shifting", () => {
 
   describe("database", () => {
     it("should shift the event", done => {
+      let event1;
+      let event2;
+
       onEventEnqueued(scheduler, event.Type.HTTP).then(() => {
         onEventEnqueued(scheduler, event.Type.DATABASE).then(shiftedEvent => {
-          let expectedEventShifted = false;
+          event1 = shiftedEvent;
           onEventEnqueued(scheduler2, event.Type.DATABASE).then(enqueuedEvent => {
-            expectedEventShifted = true;
-            expect(enqueuedEvent).toEqual(shiftedEvent);
+            event2 = enqueuedEvent;
           });
 
           app.close().then(() => {
-            expect(expectedEventShifted).toEqual(true);
+            expect(event1).toEqual(event2);
             done();
           });
         });

@@ -5,6 +5,7 @@ describe("Database", () => {
   describe("Change", () => {
     it("should map INSERT event", () => {
       const ch = new Database.Change();
+      ch._id = new Database.Change.Id({_data: "123"});
       ch.kind = Database.Change.Kind.INSERT;
       ch.documentKey = "obj_id";
       ch.collection = "collection_name";
@@ -18,6 +19,7 @@ describe("Database", () => {
 
     it("should map DELETE event", () => {
       const ch = new Database.Change();
+      ch._id = new Database.Change.Id({_data: "123"});
       ch.kind = Database.Change.Kind.DELETE;
       ch.documentKey = "obj_id";
       ch.collection = "collection_name";
@@ -30,6 +32,7 @@ describe("Database", () => {
 
     it("should map UPDATE event", () => {
       const ch = new Database.Change();
+      ch._id = new Database.Change.Id({_data: "123"});
       ch.kind = Database.Change.Kind.UPDATE;
       ch.documentKey = "obj_id";
       ch.collection = "collection_name";
@@ -49,6 +52,7 @@ describe("Database", () => {
 
     it("should map REPLACE event", () => {
       const ch = new Database.Change();
+      ch._id = new Database.Change.Id({_data: "123"});
       ch.kind = Database.Change.Kind.REPLACE;
       ch.documentKey = "obj_id";
       ch.collection = "collection_name";

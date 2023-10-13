@@ -29,6 +29,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     private commander?: ClassCommander
   ) {
     if (this.commander) {
+      this.commander = this.commander.new();
       this.commander.register(this, [this.shift], "shift");
     }
   }

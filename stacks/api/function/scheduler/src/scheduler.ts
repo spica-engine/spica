@@ -117,7 +117,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.database,
         schedulerUnsubscription,
         this.jobReducer,
-        new ClassCommander(this.commander["cmdMessenger"])
+        this.commander
       )
     );
 
@@ -126,7 +126,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.queue,
         schedulerUnsubscription,
         this.jobReducer,
-        new ClassCommander(this.commander["cmdMessenger"])
+        this.commander
       )
     );
 

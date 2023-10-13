@@ -83,7 +83,9 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleDestroy() {
-    this.cmdSubs.unsubscribe();
+    if (this.commander) {
+      this.cmdSubs.unsubscribe();
+    }
     return this.unregisterTriggers();
   }
 

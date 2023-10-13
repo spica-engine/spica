@@ -33,6 +33,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   ) {
     super();
     if (this.commander) {
+      this.commander = this.commander.new();
       this.commander.register(this, [this.shift], "shift");
     }
   }
