@@ -15,7 +15,7 @@ export class AuthFactor {
     @Optional() private commander: ClassCommander
   ) {
     if (this.commander) {
-      this.commander.register(this, [this.register, this.unregister, this.start],CommandType.SYNC);
+      this.commander.register(this, [this.register, this.unregister, this.start], CommandType.SYNC);
     }
   }
 

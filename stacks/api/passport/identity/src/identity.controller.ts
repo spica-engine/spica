@@ -62,7 +62,11 @@ export class IdentityController {
     @Optional() private commander: ClassCommander
   ) {
     if (this.commander) {
-      this.commander.register(this, [this.setIdentityFactor, this.deleteIdentityFactor],CommandType.SYNC);
+      this.commander.register(
+        this,
+        [this.setIdentityFactor, this.deleteIdentityFactor],
+        CommandType.SYNC
+      );
     }
     this.identityService
       .find({

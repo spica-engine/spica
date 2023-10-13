@@ -58,13 +58,13 @@ ts_project(
     ],
     deps = [
         "//packages/core/testing",
-        "//stacks/api/function",
-        "//stacks/api/passport/testing",
-        "@npm//@types/jasmine",
-        "@npm//@nestjs/testing",
-        "//stacks/api/preference/testing",
         "//packages/database/testing",
         "//stacks/api/bucket",
+        "//stacks/api/function",
+        "//stacks/api/passport/testing",
+        "//stacks/api/preference/testing",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
     ],
 )
 

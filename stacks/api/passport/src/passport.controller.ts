@@ -71,14 +71,18 @@ export class PassportController {
     @Optional() private commander: ClassCommander
   ) {
     if (this.commander) {
-      this.commander.register(this, [
-        this.startIdentifyWithState,
-        this.completeIdentifyWithState,
-        this.setIdentityToken,
-        this.deleteIdentityToken,
-        this.setAssertObservers,
-        this.deleteAssertObservers
-      ],CommandType.SYNC);
+      this.commander.register(
+        this,
+        [
+          this.startIdentifyWithState,
+          this.completeIdentifyWithState,
+          this.setIdentityToken,
+          this.deleteIdentityToken,
+          this.setAssertObservers,
+          this.deleteAssertObservers
+        ],
+        CommandType.SYNC
+      );
     }
   }
 

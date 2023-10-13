@@ -13,7 +13,7 @@ export class SyncController {
 
   commanderSubs;
   constructor(private commander: ClassCommander) {
-    this.commanderSubs = this.commander.register(this, [this.fn1, this.fn2],CommandType.SYNC);
+    this.commanderSubs = this.commander.register(this, [this.fn1, this.fn2], CommandType.SYNC);
   }
 
   fn1(arg1, arg2) {

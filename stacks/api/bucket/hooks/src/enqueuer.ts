@@ -67,10 +67,12 @@ export class ChangeEnqueuer extends Enqueuer<ChangeOptions> {
 
   unsubscribe(target: event.Target) {
     for (const [actionTarget, {handler, options}] of this.changeTargets) {
-      const _actionTarget = JSON.parse(actionTarget)
+      const _actionTarget = JSON.parse(actionTarget);
       if (
         (!target.handler && _actionTarget.cwd == target.cwd) ||
-        (target.handler && _actionTarget.cwd == target.cwd && _actionTarget.handler == target.handler)
+        (target.handler &&
+          _actionTarget.cwd == target.cwd &&
+          _actionTarget.handler == target.handler)
       ) {
         this.changeTargets.delete(actionTarget);
         this.changeEmitter.off(changeKey(options.bucket, options.type), handler);
