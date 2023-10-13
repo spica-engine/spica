@@ -11,7 +11,6 @@ export namespace Database {
             document?: string;
             documentKey?: string;
             updateDescription?: Change.UpdateDescription;
-            _id?: Change.Id;
           }
     ) {
       super();
@@ -22,7 +21,6 @@ export namespace Database {
         this.document = data.document;
         this.documentKey = data.documentKey;
         this.updateDescription = data.updateDescription;
-        this._id = data._id;
       }
     }
     get kind(): Change.Kind | undefined {
@@ -57,12 +55,6 @@ export namespace Database {
     set updateDescription(value: Change.UpdateDescription) {
       pb_1.Message.setWrapperField(this, 5, value);
     }
-    get _id(): Change.Id | undefined {
-      return pb_1.Message.getWrapperField(this, Change.Id, 6) as Change.Id | undefined;
-    }
-    set _id(value: Change.Id) {
-      pb_1.Message.setWrapperField(this, 6, value);
-    }
     toObject() {
       return {
         kind: this.kind,
@@ -70,7 +62,6 @@ export namespace Database {
         document: this.document,
         documentKey: this.documentKey,
         updateDescription: this.updateDescription && this.updateDescription.toObject(),
-        _id: this._id && this._id.toObject()
       };
     }
     serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
@@ -83,8 +74,6 @@ export namespace Database {
         writer.writeMessage(5, this.updateDescription, () =>
           this.updateDescription.serialize(writer)
         );
-      if (this._id !== undefined)
-        writer.writeMessage(6, this._id, () => this._id.serialize(writer));
       if (!w) return writer.getResultBuffer();
     }
     static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Change {
@@ -110,9 +99,6 @@ export namespace Database {
               message.updateDescription,
               () => (message.updateDescription = Change.UpdateDescription.deserialize(reader))
             );
-            break;
-          case 6:
-            reader.readMessage(message._id, () => (message._id = Change.Id.deserialize(reader)));
             break;
           default:
             reader.skipField();
@@ -174,54 +160,6 @@ export namespace Database {
               break;
             case 2:
               message.removedFields = reader.readString();
-              break;
-            default:
-              reader.skipField();
-          }
-        }
-        return message;
-      }
-    }
-
-    export class Id extends pb_1.Message {
-      constructor(
-        data?:
-          | any[]
-          | {
-              _data?: string;
-            }
-      ) {
-        super();
-        pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
-        if (!Array.isArray(data) && typeof data == "object") {
-          this._data = data._data;
-        }
-      }
-      get _data(): string | undefined {
-        return pb_1.Message.getFieldWithDefault(this, 1, undefined) as string | undefined;
-      }
-      set _data(value: string) {
-        pb_1.Message.setField(this, 1, value);
-      }
-
-      toObject() {
-        return {
-          _data: this._data
-        };
-      }
-      serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
-        const writer = w || new pb_1.BinaryWriter();
-        if (this._data !== undefined) writer.writeString(1, this._data);
-        if (!w) return writer.getResultBuffer();
-      }
-      static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Id {
-        const reader = bytes instanceof Uint8Array ? new pb_1.BinaryReader(bytes) : bytes,
-          message = new Id();
-        while (reader.nextField()) {
-          if (reader.isEndGroup()) break;
-          switch (reader.getFieldNumber()) {
-            case 1:
-              message._data = reader.readString();
               break;
             default:
               reader.skipField();

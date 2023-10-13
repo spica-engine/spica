@@ -159,6 +159,7 @@ describe("Queue shifting", () => {
   });
 
   afterEach(async () => {
+    await app.close();
     await app2.close();
   });
 

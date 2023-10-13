@@ -21,12 +21,6 @@ message Change {
         string removedFields = 2;
     }
 
-    Id _id = 6;
-
-    message Id {
-        string _data = 1;
-    }
-
     enum Kind {
         INSERT = 0;
         UPDATE = 1;

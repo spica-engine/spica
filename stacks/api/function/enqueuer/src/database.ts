@@ -79,7 +79,6 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     });
 
     const change = new Database.Change({
-      _id: new Database.Change.Id({_data: rawChange._id._data}),
       kind: getChangeKind(rawChange.operationType),
       document: rawChange.fullDocument ? JSON.stringify(rawChange.fullDocument) : undefined,
       documentKey: rawChange.documentKey._id.toString(),
@@ -114,11 +113,9 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     const shiftPromises: Promise<any>[] = [];
 
     for (const event of events) {
-      const change = this.databaseQueue.get(event.id);
-
       const shift = this.jobReducer.findOneAndDelete({event_id: event.id}).then(job => {
         if (!job) {
-          console.error(`Job ${change._id._data} does not exist!`);
+          console.error(`Job ${event.id} does not exist!`);
           return;
         }
         const newChange = {...job, _id: {_data: job._id}};
