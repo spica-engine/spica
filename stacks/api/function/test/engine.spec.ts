@@ -16,6 +16,7 @@ describe("Engine", () => {
 
   let scheduler: Scheduler;
   let database: DatabaseService;
+  let fs: FunctionService;
 
   let module: TestingModule;
   let app: INestApplication;
@@ -48,8 +49,9 @@ describe("Engine", () => {
     scheduler = module.get(Scheduler);
     database = module.get(DatabaseService);
 
+    fs = new FunctionService(database, {} as any);
     engine = new FunctionEngine(
-      new FunctionService(database, {} as any),
+      fs,
       database,
       scheduler,
       undefined,
@@ -186,13 +188,28 @@ describe("Engine", () => {
   });
 
   it("should unregister triggers on module destroy", async () => {
+    await fs.insertOne({
+      _id: "test_id",
+      env: {},
+      language: "js",
+      timeout: 10,
+      name: "my_fn",
+      triggers: {test_handler: {active: true, options: {}, type: "http"}}
+    });
+
     let changes: TargetChange[] = [
       {
         kind: ChangeKind.Added,
         target: {
           id: "test_id",
-          handler: "test_handler"
-        }
+          handler: "test_handler",
+          context: {
+            env: {},
+            timeout: 10
+          }
+        },
+        options: {},
+        type: "http"
       }
     ];
 
@@ -201,7 +218,7 @@ describe("Engine", () => {
     await engine.onModuleDestroy();
 
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(unsubscribeSpy).toHaveBeenCalledWith(changes);
+    expect(unsubscribeSpy).toHaveBeenCalledWith({...changes[0], kind: ChangeKind.Removed});
   });
 
   describe("Database Schema", () => {
