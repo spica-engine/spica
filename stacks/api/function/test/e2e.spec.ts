@@ -11,6 +11,7 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {event} from "@spica-server/function/queue/proto";
 import {JobReducer, ReplicationModule} from "@spica-server/replication";
+import {BucketModule} from "@spica-server/bucket";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 15_000;
 
@@ -27,6 +28,7 @@ describe("Queue shifting", () => {
   let scheduler2: Scheduler;
   let db: DatabaseService;
   let fn;
+  let bucket;
 
   function getModuleBuilder(dbName?: string) {
     return Test.createTestingModule({
@@ -56,7 +58,14 @@ describe("Queue shifting", () => {
           realtimeLogs: false,
           logger: false
         }),
-        ReplicationModule.forRoot()
+        ReplicationModule.forRoot(),
+        BucketModule.forRoot({
+          cache: false,
+          graphql: false,
+          history: false,
+          hooks: true,
+          realtime: false
+        })
       ]
     });
   }
@@ -95,6 +104,18 @@ describe("Queue shifting", () => {
     req = module.get(Request);
     await app.listen(req.socket);
 
+    bucket = await req
+      .post("/bucket", {
+        title: "Bucket1",
+        description: "Bucket1",
+        properties: {
+          title: {
+            type: "string"
+          }
+        }
+      })
+      .then(r => r.body);
+
     fn = await req
       .post("/function", {
         name: "test",
@@ -126,6 +147,14 @@ describe("Queue shifting", () => {
             },
             type: "database",
             active: true
+          },
+          bucket: {
+            options: {
+              bucket: bucket._id,
+              type: "INSERT"
+            },
+            type: "bucket",
+            active: true
           }
         },
         env: {},
@@ -138,6 +167,10 @@ describe("Queue shifting", () => {
           await new Promise((resolve,reject) => setTimeout(resolve,5000));
           return res.status(200).send("OK")
         }
+
+        export function bucket(change){
+          return "OK";
+        }
         
         export function database(change){
           return "OK";
@@ -149,7 +182,7 @@ describe("Queue shifting", () => {
         `
     });
 
-    await sleep(3000);
+    await sleep(5000);
 
     jasmine.addCustomEqualityTester((actual, expected) => {
       if (expected == "__skip__") {
@@ -159,7 +192,7 @@ describe("Queue shifting", () => {
   });
 
   afterEach(async () => {
-    await app.close();
+    // await app.close();
     await app2.close();
   });
 
@@ -259,6 +292,37 @@ describe("Queue shifting", () => {
         });
 
         triggerDatabaseEvent();
+      });
+
+      req.get("/fn-execute/test");
+    });
+  });
+
+  function triggerBucketDataEvent() {
+    return req.post(`/bucket/${bucket._id}/data`, {
+      title: "me"
+    });
+  }
+
+  describe("bucket", () => {
+    it("should shift the event", done => {
+      let event1;
+      let event2;
+
+      onEventEnqueued(scheduler, event.Type.HTTP).then(() => {
+        onEventEnqueued(scheduler, event.Type.BUCKET).then(shiftedEvent => {
+          event1 = shiftedEvent;
+          onEventEnqueued(scheduler2, event.Type.BUCKET).then(enqueuedEvent => {
+            event2 = enqueuedEvent;
+          });
+
+          app.close().then(() => {
+            expect(event1).toEqual(event2);
+            done();
+          });
+        });
+
+        triggerBucketDataEvent();
       });
 
       req.get("/fn-execute/test");

@@ -5,7 +5,6 @@ import * as grpc from "@grpc/grpc-js";
 export class ChangeQueue implements Queue<typeof hooks.ChangeQueue> {
   TYPE = hooks.ChangeQueue;
 
-  callbacks = new Map<string, Function>();
   queue = new Map<string, hooks.Change>();
 
   get size() {
@@ -24,10 +23,7 @@ export class ChangeQueue implements Queue<typeof hooks.ChangeQueue> {
     callback(null, action);
   }
 
-  enqueue(id: string, action: hooks.Change, callback?: Function) {
-    if (callback) {
-      this.callbacks.set(id, callback);
-    }
+  enqueue(id: string, action: hooks.Change) {
     this.queue.set(id, action);
   }
 

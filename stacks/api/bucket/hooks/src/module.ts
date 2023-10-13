@@ -9,6 +9,7 @@ import {JSONSchema7} from "json-schema";
 import {ChangeEmitter} from "./emitter";
 import {ChangeEnqueuer} from "./enqueuer";
 import {ChangeQueue} from "./queue";
+import {ClassCommander, JobReducer} from "@spica-server/replication";
 
 export function createSchema(db: DatabaseService): Promise<JSONSchema7> {
   const slugs = new Map<string, string>();
@@ -67,17 +68,23 @@ export const collectionSlugFactory = (bs: BucketService) => {
     ChangeEmitter,
     {
       provide: ENQUEUER,
-      useFactory: (changeEmitter: ChangeEmitter) => {
+      useFactory: (changeEmitter: ChangeEmitter, jobReducer?, commander?) => {
         return (queue: EventQueue) => {
           const changeQueue = new ChangeQueue();
-          const changeEnqueuer = new ChangeEnqueuer(queue, changeQueue, changeEmitter);
+          const changeEnqueuer = new ChangeEnqueuer(
+            queue,
+            changeQueue,
+            changeEmitter,
+            jobReducer,
+            commander
+          );
           return {
             enqueuer: changeEnqueuer,
             queue: changeQueue
           };
         };
       },
-      inject: [ChangeEmitter]
+      inject: [ChangeEmitter, JobReducer, ClassCommander]
     },
     {
       provide: SCHEMA,

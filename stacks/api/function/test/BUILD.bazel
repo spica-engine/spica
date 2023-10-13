@@ -64,6 +64,7 @@ ts_project(
         "@npm//@nestjs/testing",
         "//stacks/api/preference/testing",
         "//packages/database/testing",
+        "//stacks/api/bucket",
     ],
 )
 
