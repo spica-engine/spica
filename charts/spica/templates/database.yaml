@@ -33,10 +33,21 @@ spec:
         - name: mongo
           image: mongo:{{ .Values.database.version }}
           command:
-            - mongod
-            - "--replSet"
-            - rs0
-            - "--bind_ip_all"
+          - mongod 
+          - "--replSet" 
+          - rs0 
+          - "--bind_ip_all"
+          {{- if eq (int .Values.database.replicas) 1}}
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - "/bin/sh"
+                  - "-c"
+                  - |
+                    sleep 5s
+                    mongo --eval 'rs.initiate({"_id": "rs0", "members": {{ template "generateReplicaSetMembers" . }} })'
+          {{- end}}
           ports:
             - containerPort: 27017
           resources:
