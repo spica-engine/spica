@@ -20,15 +20,35 @@ function sleep(ms: number) {
 }
 
 describe("Queue shifting", () => {
-  let module: TestingModule;
-  let app: INestApplication;
-  let app2: INestApplication;
-  let req: Request;
-  let scheduler: Scheduler;
-  let scheduler2: Scheduler;
-  let db: DatabaseService;
-  let fn;
-  let bucket;
+  beforeEach(() => {
+    jasmine.addCustomEqualityTester((actual, expected) => {
+      if (expected == "__skip__") {
+        return true;
+      }
+    });
+  });
+
+  function onEventEnqueued(
+    scheduler: Scheduler,
+    eventType?: number,
+    eventId?: string
+  ): Promise<event.Event> {
+    return new Promise((resolve, reject) => {
+      const enqueue = scheduler.enqueue;
+      scheduler.enqueue = (...args) => {
+        enqueue.bind(scheduler)(...args);
+        const areEventTypesMatched = eventType && args[0].type == eventType;
+        const areEventIdsMatched = eventId && args[0].id == eventId;
+        if (
+          !eventType ||
+          (areEventTypesMatched && !eventId) ||
+          (areEventTypesMatched && areEventIdsMatched)
+        ) {
+          resolve(args[0]);
+        }
+      };
+    });
+  }
 
   function getModuleBuilder(dbName?: string) {
     return Test.createTestingModule({
@@ -70,10 +90,10 @@ describe("Queue shifting", () => {
     });
   }
 
-  beforeEach(async () => {
-    module = await getModuleBuilder().compile();
+  async function startApp(grpcaddresses: string[]) {
+    const module = await getModuleBuilder().compile();
 
-    db = module.get(DatabaseService);
+    const db = module.get(DatabaseService);
     await db.collection("my_coll").insertOne({test: "123"});
 
     const module2 = await getModuleBuilder(db.databaseName).compile();
@@ -90,21 +110,21 @@ describe("Queue shifting", () => {
     module.enableShutdownHooks();
     module2.enableShutdownHooks();
 
-    app = module.createNestApplication();
+    process.env.FUNCTION_GRPC_ADDRESS = grpcaddresses[0];
+    // "0.0.0.0:38747";
+    const app = await module.createNestApplication().init();
 
-    process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:38747";
-    app = await module.createNestApplication().init();
+    process.env.FUNCTION_GRPC_ADDRESS = grpcaddresses[1];
+    // "0.0.0.0:34953";
+    const app2 = await module2.createNestApplication().init();
 
-    process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:34953";
-    app2 = await module2.createNestApplication().init();
+    const scheduler = module.get(Scheduler);
+    const scheduler2 = module2.get(Scheduler);
 
-    scheduler = module.get(Scheduler);
-    scheduler2 = module2.get(Scheduler);
-
-    req = module.get(Request);
+    const req = module.get(Request);
     await app.listen(req.socket);
 
-    bucket = await req
+    const bucket = await req
       .post("/bucket", {
         title: "Bucket1",
         description: "Bucket1",
@@ -116,7 +136,7 @@ describe("Queue shifting", () => {
       })
       .then(r => r.body);
 
-    fn = await req
+    const fn = await req
       .post("/function", {
         name: "test",
         description: "test",
@@ -164,61 +184,54 @@ describe("Queue shifting", () => {
 
     await req.post(`/function/${fn._id}/index`, {
       index: `export async function http(req,res){
-          await new Promise((resolve,reject) => setTimeout(resolve,5000));
-          return res.status(200).send("OK")
-        }
-
-        export function bucket(change){
-          return "OK";
-        }
-        
-        export function database(change){
-          return "OK";
-        }
-
-        export function scheduler(){
-          return "OK";
-        }
-        `
+            await new Promise((resolve,reject) => setTimeout(resolve,5000));
+            return res.status(200).send("OK")
+          }
+  
+          export function bucket(change){
+            return "OK";
+          }
+          
+          export function database(change){
+            return "OK";
+          }
+  
+          export function scheduler(){
+            return "OK";
+          }
+          `
     });
 
     await sleep(5000);
 
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__skip__") {
-        return true;
-      }
-    });
-  });
-
-  afterEach(async () => {
-    // await app.close();
-    await app2.close();
-  });
-
-  function onEventEnqueued(
-    scheduler: Scheduler,
-    eventType?: number,
-    eventId?: string
-  ): Promise<event.Event> {
-    return new Promise((resolve, reject) => {
-      const enqueue = scheduler.enqueue;
-      scheduler.enqueue = (...args) => {
-        enqueue.bind(scheduler)(...args);
-        const areEventTypesMatched = eventType && args[0].type == eventType;
-        const areEventIdsMatched = eventId && args[0].id == eventId;
-        if (
-          !eventType ||
-          (areEventTypesMatched && !eventId) ||
-          (areEventTypesMatched && areEventIdsMatched)
-        ) {
-          resolve(args[0]);
-        }
-      };
-    });
+    return {
+      app,
+      app2,
+      req,
+      scheduler,
+      scheduler2,
+      db,
+      fn,
+      bucket
+    };
   }
 
   describe("http", () => {
+    let app: INestApplication;
+    let app2: INestApplication;
+    let req: Request;
+    let scheduler: Scheduler;
+
+    beforeEach(async () => {
+      const res = await startApp(["0.0.0.0:38747", "0.0.0.0:34953"]);
+      app = res.app;
+      app2 = res.app2;
+      req = res.req;
+      scheduler = res.scheduler;
+    });
+
+    afterEach(async () => await app2.close());
+
     it("should wait until current event completed, return 503 for ones in queue", done => {
       let firstResponse;
       let secondResponse;
@@ -242,6 +255,23 @@ describe("Queue shifting", () => {
   });
 
   describe("schedule", () => {
+    let app: INestApplication;
+    let app2: INestApplication;
+    let req: Request;
+    let scheduler: Scheduler;
+    let scheduler2: Scheduler;
+
+    beforeEach(async () => {
+      const res = await startApp(["0.0.0.0:38748", "0.0.0.0:34954"]);
+      app = res.app;
+      app2 = res.app2;
+      req = res.req;
+      scheduler = res.scheduler;
+      scheduler2 = res.scheduler2;
+    });
+
+    afterEach(async () => await app2.close());
+
     it("should shift the event", done => {
       let event1;
       let event2;
@@ -264,16 +294,34 @@ describe("Queue shifting", () => {
     });
   });
 
-  async function triggerDatabaseEvent() {
-    stream.change.next();
-    await db
-      .collection("my_coll")
-      .insertOne({test: "asdqwe"})
-      .then(r => r.ops[0]);
-    await stream.change.wait();
-  }
-
   describe("database", () => {
+    let app: INestApplication;
+    let app2: INestApplication;
+    let req: Request;
+    let scheduler: Scheduler;
+    let scheduler2: Scheduler;
+    let db: DatabaseService;
+
+    beforeEach(async () => {
+      const res = await startApp(["0.0.0.0:38749", "0.0.0.0:34955"]);
+      app = res.app;
+      app2 = res.app2;
+      req = res.req;
+      scheduler = res.scheduler;
+      scheduler2 = res.scheduler2;
+      db = res.db;
+    });
+
+    afterEach(async () => await app2.close());
+
+    async function triggerDatabaseEvent() {
+      return new Promise((resolve, reject) => {
+        stream.change.next();
+        stream.change.wait().then(() => resolve(""));
+        db.collection("my_coll").insertOne({test: "asdqwe"});
+      });
+    }
+
     it("should shift the event", done => {
       let event1;
       let event2;
@@ -298,13 +346,34 @@ describe("Queue shifting", () => {
     });
   });
 
-  function triggerBucketDataEvent() {
-    return req.post(`/bucket/${bucket._id}/data`, {
-      title: "me"
-    });
-  }
-
   describe("bucket", () => {
+    let app: INestApplication;
+    let app2: INestApplication;
+    let req: Request;
+    let scheduler: Scheduler;
+    let scheduler2: Scheduler;
+    let db: DatabaseService;
+    let bucket;
+
+    beforeEach(async () => {
+      const res = await startApp(["0.0.0.0:38750", "0.0.0.0:34956"]);
+      app = res.app;
+      app2 = res.app2;
+      req = res.req;
+      scheduler = res.scheduler;
+      scheduler2 = res.scheduler2;
+      db = res.db;
+      bucket = res.bucket;
+    });
+
+    afterEach(async () => await app2.close());
+
+    function triggerBucketDataEvent() {
+      return req.post(`/bucket/${bucket._id}/data`, {
+        title: "me"
+      });
+    }
+
     it("should shift the event", done => {
       let event1;
       let event2;

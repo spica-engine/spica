@@ -58,7 +58,7 @@ export class ChangeEnqueuer extends Enqueuer<ChangeOptions> {
     const changeHandler = (type, documentKey, previous, current) =>
       this.onChangeHandler({type, documentKey, previous, current}, target);
 
-    this.changeTargets.set(JSON.stringify(target.toObject()), {
+    this.changeTargets.set(this.getTargetKey(target), {
       options,
       handler: changeHandler
     });
@@ -81,7 +81,7 @@ export class ChangeEnqueuer extends Enqueuer<ChangeOptions> {
   }
 
   onChangeHandler(rawChange, target: event.Target, eventId?: string) {
-    const {options} = this.changeTargets.get(JSON.stringify(target.toObject()));
+    const {options} = this.changeTargets.get(this.getTargetKey(target));
 
     const ev = new event.Event({
       id: eventId || uniqid(),
@@ -169,4 +169,9 @@ export class ChangeEnqueuer extends Enqueuer<ChangeOptions> {
     });
     return this.onChangeHandler(rawChange, newTarget, eventId);
   }
+
+  getTargetKey(target:event.Target){
+    return JSON.stringify(target.toObject());
+  }
+
 }
