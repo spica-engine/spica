@@ -32,8 +32,6 @@ describe("@spica-devkit/Storage", () => {
   });
 
   describe("Storage", () => {
-    
-
     describe("nodejs", () => {
       const storageObject: Storage.BufferWithMeta = {
         contentType: "text/plain",
@@ -41,7 +39,6 @@ describe("@spica-devkit/Storage", () => {
         data: "spica"
       };
 
-      
       it("should insert storage object", async () => {
         await Storage.insert(storageObject, onUploadProgress);
 
@@ -62,16 +59,17 @@ describe("@spica-devkit/Storage", () => {
           contentType: "application/json",
           name: "languages.json",
           data: "{'test':123}"
-        }
-        await Storage.insertMany([storageObject,storageObject2], onUploadProgress);
+        };
+        await Storage.insertMany([storageObject, storageObject2], onUploadProgress);
 
         expect(postSpy).toHaveBeenCalledTimes(1);
         const [path, formData, options] = postSpy.calls.allArgs()[0];
         expect(path).toEqual("storage");
 
         expect(getValueOfFormField(formData, "my_text.txt").includes("spica")).toEqual(true);
-        expect(getValueOfFormField(formData, "languages.json").includes("{'test':123}")).toEqual(true);
-
+        expect(getValueOfFormField(formData, "languages.json").includes("{'test':123}")).toEqual(
+          true
+        );
 
         expect((options as any).onUploadProgress).toEqual(onUploadProgress);
         expect((options as any).headers["content-type"].split(";")[0]).toEqual(
@@ -119,13 +117,13 @@ describe("@spica-devkit/Storage", () => {
       });
 
       // we can't write tests for insert and update caseson test environment(NodeJS)
-      // because we don't have native FormData library(built-in package for browsers) 
+      // because we don't have native FormData library(built-in package for browsers)
 
       it("should download storage object", () => {
         Storage.download("storage_object_id", {
           onDownloadProgress
         });
-  
+
         expect(getSpy).toHaveBeenCalledTimes(1);
         expect(getSpy).toHaveBeenCalledWith("storage/storage_object_id/view", {
           headers: undefined,
@@ -155,7 +153,5 @@ describe("@spica-devkit/Storage", () => {
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith("storage/storage_object_id");
     });
-
-    
   });
 });
