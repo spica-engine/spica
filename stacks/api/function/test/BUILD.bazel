@@ -71,5 +71,5 @@ ts_project(
 jasmine_node_test(
     name = "e2e_test",
     srcs = [":e2e_test_lib"],
-    tags = ["flaky"]
+    tags = ["flaky"],
 )
