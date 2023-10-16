@@ -89,7 +89,6 @@ describe("Commander", () => {
 
       await stream.change.wait();
 
-
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
 
@@ -112,7 +111,6 @@ describe("Commander", () => {
 
       ctrl1.fn1("call", "me");
       await stream.change.wait();
-
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([]);
@@ -152,7 +150,6 @@ describe("Commander", () => {
       ctrl1.fn1("call", "me");
       await stream.change.wait();
 
-
       expect(ctrl1.calls.fn1).toEqual([]);
       expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
     });
@@ -160,7 +157,6 @@ describe("Commander", () => {
     it("should shift command to ctrl1", async () => {
       ctrl2.fn1("call", "me");
       await stream.change.wait();
-
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([]);
