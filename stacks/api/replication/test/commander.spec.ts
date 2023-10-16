@@ -1,6 +1,6 @@
 import {Controller} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {ClassCommander, CommandType, ReplicationModule} from "@spica-server/replication/src";
 
 function wait(ms: number) {
@@ -75,8 +75,7 @@ describe("Commander", () => {
 
     it("should emit command to ctrl2", async () => {
       ctrl1.fn1("call", "me");
-
-      await wait(3000);
+      await stream.change.wait();
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
@@ -88,7 +87,8 @@ describe("Commander", () => {
     it("should emit command to ctrl1", async () => {
       ctrl2.fn1("call", "me");
 
-      await wait(3000);
+      await stream.change.wait();
+
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
@@ -101,7 +101,7 @@ describe("Commander", () => {
       ctrl1.unregister();
 
       ctrl1.fn1("call", "me");
-      await wait(3000);
+      await wait(4000);
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([]);
@@ -111,7 +111,8 @@ describe("Commander", () => {
       ctrl2.unregister();
 
       ctrl1.fn1("call", "me");
-      await wait(3000);
+      await stream.change.wait();
+
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([]);
@@ -149,7 +150,8 @@ describe("Commander", () => {
 
     it("should shift command to ctrl2", async () => {
       ctrl1.fn1("call", "me");
-      await wait(3000);
+      await stream.change.wait();
+
 
       expect(ctrl1.calls.fn1).toEqual([]);
       expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
@@ -157,7 +159,8 @@ describe("Commander", () => {
 
     it("should shift command to ctrl1", async () => {
       ctrl2.fn1("call", "me");
-      await wait(3000);
+      await stream.change.wait();
+
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([]);
