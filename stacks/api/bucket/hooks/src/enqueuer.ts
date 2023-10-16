@@ -102,7 +102,6 @@ export class ChangeEnqueuer extends Enqueuer<ChangeOptions> {
     };
 
     if (this.jobReducer) {
-      // use better _id value
       this.jobReducer.do({...rawChange, event_id: ev.id, _id: ev.id}, enqueue);
     } else {
       enqueue();
@@ -170,8 +169,7 @@ export class ChangeEnqueuer extends Enqueuer<ChangeOptions> {
     return this.onChangeHandler(rawChange, newTarget, eventId);
   }
 
-  getTargetKey(target:event.Target){
+  getTargetKey(target: event.Target) {
     return JSON.stringify(target.toObject());
   }
-
 }

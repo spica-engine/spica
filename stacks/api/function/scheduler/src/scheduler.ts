@@ -128,7 +128,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
     if (typeof this.enqueuerFactory == "function") {
-      const factory = this.enqueuerFactory(this.queue);
+      const factory = this.enqueuerFactory(this.queue, this.jobReducer, this.commander);
       this.queue.addQueue(factory.queue);
       this.enqueuers.add(factory.enqueuer);
     }

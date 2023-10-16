@@ -68,8 +68,8 @@ export const collectionSlugFactory = (bs: BucketService) => {
     ChangeEmitter,
     {
       provide: ENQUEUER,
-      useFactory: (changeEmitter: ChangeEmitter, jobReducer?, commander?) => {
-        return (queue: EventQueue) => {
+      useFactory: (changeEmitter: ChangeEmitter) => {
+        return (queue: EventQueue, jobReducer?, commander?) => {
           const changeQueue = new ChangeQueue();
           const changeEnqueuer = new ChangeEnqueuer(
             queue,
@@ -84,7 +84,7 @@ export const collectionSlugFactory = (bs: BucketService) => {
           };
         };
       },
-      inject: [ChangeEmitter, JobReducer, ClassCommander]
+      inject: [ChangeEmitter]
     },
     {
       provide: SCHEMA,
