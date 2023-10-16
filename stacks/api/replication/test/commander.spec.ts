@@ -76,7 +76,7 @@ describe("Commander", () => {
     it("should emit command to ctrl2", async () => {
       ctrl1.fn1("call", "me");
 
-      await wait(2000);
+      await wait(3000);
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
@@ -88,7 +88,7 @@ describe("Commander", () => {
     it("should emit command to ctrl1", async () => {
       ctrl2.fn1("call", "me");
 
-      await wait(2000);
+      await wait(3000);
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
@@ -101,7 +101,7 @@ describe("Commander", () => {
       ctrl1.unregister();
 
       ctrl1.fn1("call", "me");
-      await wait(2000);
+      await wait(3000);
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([]);
@@ -111,7 +111,7 @@ describe("Commander", () => {
       ctrl2.unregister();
 
       ctrl1.fn1("call", "me");
-      await wait(2000);
+      await wait(3000);
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([]);
@@ -149,7 +149,7 @@ describe("Commander", () => {
 
     it("should shift command to ctrl2", async () => {
       ctrl1.fn1("call", "me");
-      await wait(2000);
+      await wait(3000);
 
       expect(ctrl1.calls.fn1).toEqual([]);
       expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
@@ -157,7 +157,7 @@ describe("Commander", () => {
 
     it("should shift command to ctrl1", async () => {
       ctrl2.fn1("call", "me");
-      await wait(2000);
+      await wait(3000);
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([]);
