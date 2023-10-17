@@ -68,6 +68,7 @@ describe("Commander", () => {
       module2 = await getModuleBuilder(dbName).compile();
 
       ctrl2 = module2.get(SyncController);
+      await wait(5000);
     });
 
     afterEach(async () => {
@@ -77,7 +78,7 @@ describe("Commander", () => {
 
     it("should emit command to ctrl2", async () => {
       ctrl1.fn1("call", "me");
-      await stream.change.wait();
+      await wait(5000);
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
@@ -89,7 +90,7 @@ describe("Commander", () => {
     it("should emit command to ctrl1", async () => {
       ctrl2.fn1("call", "me");
 
-      await stream.change.wait();
+      await wait(5000);
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
@@ -112,7 +113,7 @@ describe("Commander", () => {
       ctrl2.unregister();
 
       ctrl1.fn1("call", "me");
-      await stream.change.wait();
+      await wait(5000);
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([]);
@@ -141,6 +142,7 @@ describe("Commander", () => {
       module2 = await getModuleBuilder(dbName).compile();
 
       ctrl2 = module2.get(ShiftController);
+      await wait(5000);
     });
 
     afterEach(async () => {
@@ -150,7 +152,7 @@ describe("Commander", () => {
 
     it("should shift command to ctrl2", async () => {
       ctrl1.fn1("call", "me");
-      await stream.change.wait();
+      await wait(5000);
 
       expect(ctrl1.calls.fn1).toEqual([]);
       expect(ctrl2.calls.fn1).toEqual([["call", "me"]]);
@@ -158,7 +160,7 @@ describe("Commander", () => {
 
     it("should shift command to ctrl1", async () => {
       ctrl2.fn1("call", "me");
-      await stream.change.wait();
+      await wait(5000);
 
       expect(ctrl1.calls.fn1).toEqual([["call", "me"]]);
       expect(ctrl2.calls.fn1).toEqual([]);
