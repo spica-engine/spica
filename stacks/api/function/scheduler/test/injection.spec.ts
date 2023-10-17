@@ -63,7 +63,7 @@ describe("Scheduler Injection", () => {
   it("should inject the provided enqueuer and queue", async () => {
     await app.init();
     expect(spyScheduler).toHaveBeenCalledTimes(1);
-    expect(spyScheduler).toHaveBeenCalledWith(scheduler["queue"]);
+    expect(spyScheduler).toHaveBeenCalledWith(scheduler["queue"], undefined, undefined);
 
     expect(addQueueSpy).toHaveBeenCalledTimes(1);
     expect(addQueueSpy).toHaveBeenCalledWith(null);
