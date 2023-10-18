@@ -27,11 +27,13 @@ import * as etag from "etag";
 import {createStorageActivity} from "./activity.resource";
 import {
   BsonBodyParser,
-  isBsonBody,
-  isJsonBody,
   JsonBodyParser,
   MixedBody,
-  StorageObject
+  MultipartFormDataParser,
+  StorageObject,
+  MultipartFormData,
+  getPostBodyConverter,
+  getPutBodyConverter
 } from "./body";
 import {StorageService} from "./storage.service";
 
@@ -142,23 +144,29 @@ export class StorageController {
    * }
    * ```
    */
-  @UseInterceptors(BsonBodyParser(), JsonBodyParser(), activity(createStorageActivity))
+  @UseInterceptors(
+    MultipartFormDataParser({isArray: false}),
+    BsonBodyParser(),
+    JsonBodyParser(),
+    activity(createStorageActivity)
+  )
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:update"))
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/storage/body/single")) object: StorageObject
+    @Body(Schema.validate("http://spica.internal/storage/body/single"))
+    body: MultipartFormData | StorageObject<Buffer>
   ) {
-    if (!(object.content.data instanceof Buffer)) {
-      throw new BadRequestException("content.data should be a binary");
-    }
+    const converter = getPutBodyConverter(body);
+    const object = converter.convert(body);
+
     object._id = id;
-    object.content.size = object.content.data.byteLength;
-    object = await this.storage.update(id, object).catch(error => {
+
+    const storageObject = await this.storage.update(id, object).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
-    object.url = await this.storage.getUrl(id.toHexString());
-    return object;
+    storageObject.url = await this.storage.getUrl(id.toHexString());
+    return storageObject;
   }
 
   /**
@@ -176,46 +184,26 @@ export class StorageController {
    *   ]
    * ```
    */
-  @UseInterceptors(BsonBodyParser(), JsonBodyParser(), activity(createStorageActivity))
+  @UseInterceptors(
+    MultipartFormDataParser({isArray: true}),
+    BsonBodyParser(),
+    JsonBodyParser(),
+    activity(createStorageActivity)
+  )
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("storage:create"))
   async insertMany(@Body(Schema.validate("http://spica.internal/storage/body")) body: MixedBody) {
-    let objects = new Array<StorageObject>();
-    if (isBsonBody(body)) {
-      objects = body.content.map(object => {
-        if (!(object.content.data instanceof Buffer)) {
-          throw new BadRequestException("content.data should be a binary");
-        }
-        return {
-          name: object.name,
-          content: {
-            type: object.content.type,
-            data: object.content.data,
-            size: object.content.data.byteLength
-          }
-        };
-      });
-    } else if (isJsonBody(body)) {
-      objects = body.map(object => {
-        return {
-          name: object.name,
-          content: {
-            type: object.content.type,
-            data: object.content.data,
-            size: object.content.data.byteLength
-          }
-        };
-      });
-    }
+    const converter = getPostBodyConverter(body);
+    const objects = converter.convert(body);
 
-    objects = await this.storage.insert(objects).catch(error => {
+    const storageObjects = await this.storage.insert(objects).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
 
-    for (const object of objects) {
+    for (const object of storageObjects) {
       object.url = await this.storage.getUrl(object._id.toString());
     }
-    return objects;
+    return storageObjects;
   }
 
   /**

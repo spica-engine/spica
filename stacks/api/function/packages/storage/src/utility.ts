@@ -1,5 +1,9 @@
+import {isPlatformBrowser} from "@spica-devkit/internal_common";
 import {BufferWithMeta} from "./interface";
-import * as BSON from "bson";
+
+function importFormData() {
+  return require("form-data")();
+}
 
 export function fileToBuffer(file: File): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -11,64 +15,59 @@ export function fileToBuffer(file: File): Promise<any> {
 }
 
 export async function preparePostBody(objects: FileList | (BufferWithMeta | File)[]) {
-  let files: (File | BufferWithMeta)[];
-  const contents = [];
+  let files: (File | BufferWithMeta)[] = [];
 
-  // FileList to File array
   if (!Array.isArray(objects)) {
     files = Array.from(objects);
   } else {
     files = objects;
   }
 
+  const form = createForm();
+
   for (const file of files) {
-    const content = await getContent(file);
-    contents.push(content);
+    appendToForm(form, "files", file);
   }
 
-  const body = {
-    content: contents
-  };
-
-  return jsonToArrayBuffer(body);
+  return {body: form, headers: getHeaders(form)};
 }
 
 export async function preparePutBody(object: File | BufferWithMeta) {
-  const body = await getContent(object);
+  const form = createForm();
 
-  return jsonToArrayBuffer(body);
-}
+  appendToForm(form, "file", object);
 
-async function getContent(file: File | BufferWithMeta) {
-  let data;
-  let name: string;
-  let type: string;
-
-  if (instanceOfBufferWithMeta(file)) {
-    data = file.data;
-    name = file.name;
-    type = file.contentType;
-  } else {
-    data = await fileToBuffer(file);
-    name = file.name;
-    type = file.type;
-  }
-
-  return {
-    name,
-    content: {
-      data: new BSON.Binary(data),
-      type
-    }
-  };
-}
-
-export function jsonToArrayBuffer(body: object) {
-  const size = BSON.calculateObjectSize(body);
-  const buffer = BSON.serialize(body, {minInternalBufferSize: size} as any);
-  return buffer.buffer;
+  return {body: form, headers: getHeaders(form)};
 }
 
 function instanceOfBufferWithMeta(value: any): value is BufferWithMeta {
   return "data" in value && "name" in value && "contentType" in value;
+}
+
+function createForm() {
+  return isPlatformBrowser() ? new FormData() : importFormData();
+}
+
+async function appendToForm(form, key: string, file: BufferWithMeta | File) {
+  if (isPlatformBrowser()) {
+    if (instanceOfBufferWithMeta(file)) {
+      (form as FormData).append(key, new Blob([file.data], {type: file.contentType}), file.name);
+    } else {
+      (form as FormData).append(key, file);
+    }
+  } else {
+    form.append(key, (file as BufferWithMeta).data, {
+      contentType: (file as BufferWithMeta).contentType,
+      filename: (file as BufferWithMeta).name
+    });
+  }
+
+  return form;
+}
+
+function getHeaders(form) {
+  if (!isPlatformBrowser()) {
+    return form.getHeaders();
+  }
+  return {};
 }
