@@ -65,7 +65,9 @@ export class EventQueue {
   }
 
   enqueue(event: event.Event) {
-    event.id = uniqid();
+    if (!event.id) {
+      event.id = uniqid();
+    }
     this._enqueue(event);
   }
 

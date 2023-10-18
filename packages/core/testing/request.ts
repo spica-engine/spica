@@ -47,7 +47,10 @@ export class Request {
       pathname: options.path,
       hostname: "unix",
       protocol: "http:",
-      responseType: "text"
+      responseType: "text",
+      retry: {
+        limit: 0
+      }
     };
 
     if (options.followRedirect != undefined) {

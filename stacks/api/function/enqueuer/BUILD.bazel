@@ -21,6 +21,7 @@ ts_project(
         "@npm//express",
         # Schedule
         "@npm//cron",
+        "@npm//uniqid",
         # Firehose
         "@npm//ws",
         "@npm//@types/ws",
