@@ -33,7 +33,9 @@ describe("ChangeEnqueuer", () => {
       type: "INSERT"
     });
 
-    expect(changeEnqeuer["changeTargets"].get(noopTarget).options).toEqual({
+    expect(
+      changeEnqeuer["changeTargets"].get(JSON.stringify(noopTarget.toObject())).options
+    ).toEqual({
       bucket: "test_collection",
       type: "INSERT"
     });
@@ -56,8 +58,12 @@ describe("ChangeEnqueuer", () => {
 
     changeEnqeuer.unsubscribe(noopTarget);
 
-    expect(changeEnqeuer["changeTargets"].get(noopTarget)).toEqual(undefined);
-    expect(changeEnqeuer["changeTargets"].get(noopTarget2).options).toEqual({
+    expect(changeEnqeuer["changeTargets"].get(JSON.stringify(noopTarget.toObject()))).toEqual(
+      undefined
+    );
+    expect(
+      changeEnqeuer["changeTargets"].get(JSON.stringify(noopTarget2.toObject())).options
+    ).toEqual({
       bucket: "test_collection",
       type: "GET"
     });

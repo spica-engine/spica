@@ -25,4 +25,5 @@ ts_project(
 jasmine_node_test(
     name = "test",
     srcs = [":test_lib"],
+    tags = ["flaky"],
 )

@@ -19,7 +19,7 @@ export class CommandMessenger extends Messenger<CommandMessage> {
   }
 
   subscribe(observer: PartialObserver<CommandMessage>) {
-    super.subscribe(observer);
+    return super.subscribe(observer);
   }
 
   publish(msg: CommandMessage) {

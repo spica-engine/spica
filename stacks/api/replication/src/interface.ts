@@ -6,7 +6,7 @@ export interface IPublisher<T> {
 }
 
 export interface ISubscriber<T> {
-  subscribe(observer: PartialObserver<T>);
+  subscribe(observer: PartialObserver<T>): {unsubscribe: () => void};
 }
 
 export interface IPubSub<T> extends IPublisher<T>, ISubscriber<T> {}
@@ -92,3 +92,14 @@ export const replicaIdProvider = () => {
   // we could use process id to track which api failed to execute command, publish etc.
   return uniqid();
 };
+
+export enum CommandType {
+  /**
+   * Propagate the call to all instances except itself
+   */
+  SHIFT,
+  /**
+   * Propagate the call to all instances
+   */
+  SYNC
+}

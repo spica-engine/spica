@@ -11,6 +11,10 @@ export class DatabaseQueue extends Queue<typeof Database.Queue> {
     return this.queue.size;
   }
 
+  get(id: string) {
+    return this.queue.get(id);
+  }
+
   enqueue(id: string, change: Database.Change) {
     this.queue.set(id, change);
   }

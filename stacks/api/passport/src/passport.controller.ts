@@ -31,7 +31,7 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {STRATEGIES} from "./options";
 import {StrategyTypeServices} from "./strategy/interface";
 import {AuthFactor} from "@spica-server/passport/authfactor";
-import {ClassCommander} from "@spica-server/replication";
+import {ClassCommander, CommandType} from "@spica-server/replication";
 
 /**
  * @name passport
@@ -71,14 +71,18 @@ export class PassportController {
     @Optional() private commander: ClassCommander
   ) {
     if (this.commander) {
-      this.commander.register(this, [
-        this.startIdentifyWithState,
-        this.completeIdentifyWithState,
-        this.setIdentityToken,
-        this.deleteIdentityToken,
-        this.setAssertObservers,
-        this.deleteAssertObservers
-      ]);
+      this.commander.register(
+        this,
+        [
+          this.startIdentifyWithState,
+          this.completeIdentifyWithState,
+          this.setIdentityToken,
+          this.deleteIdentityToken,
+          this.setAssertObservers,
+          this.deleteAssertObservers
+        ],
+        CommandType.SYNC
+      );
     }
   }
 

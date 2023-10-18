@@ -49,3 +49,27 @@ jasmine_node_test(
     name = "change_test",
     srcs = [":change_test_lib"],
 )
+
+ts_project(
+    name = "e2e_test_lib",
+    testonly = True,
+    srcs = [
+        "e2e.spec.ts",
+    ],
+    deps = [
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/bucket",
+        "//stacks/api/function",
+        "//stacks/api/passport/testing",
+        "//stacks/api/preference/testing",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "e2e_test",
+    srcs = [":e2e_test_lib"],
+    tags = ["flaky"],
+)

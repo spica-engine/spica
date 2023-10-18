@@ -1,4 +1,4 @@
-import {Inject, Injectable, Optional, OnModuleDestroy} from "@nestjs/common";
+import {Inject, Injectable, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {DatabaseService, MongoClient} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {Package, PackageManager} from "@spica-server/function/pkgmanager";
@@ -26,10 +26,10 @@ import HttpSchema = require("./schema/http.json");
 import ScheduleSchema = require("./schema/schedule.json");
 import FirehoseSchema = require("./schema/firehose.json");
 import SystemSchema = require("./schema/system.json");
-import {ClassCommander} from "@spica-server/replication";
+import {ClassCommander, CommandType} from "@spica-server/replication";
 
 @Injectable()
-export class FunctionEngine implements OnModuleDestroy {
+export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   readonly schemas = new Map<string, unknown>([
     ["http", HttpSchema],
     ["schedule", ScheduleSchema],
@@ -37,8 +37,7 @@ export class FunctionEngine implements OnModuleDestroy {
     ["system", SystemSchema]
   ]);
   readonly runSchemas = new Map<string, JSONSchema7>();
-
-  private dispose = new Subject();
+  private cmdSubs: {unsubscribe: () => void};
 
   constructor(
     private fs: FunctionService,
@@ -54,22 +53,40 @@ export class FunctionEngine implements OnModuleDestroy {
     }
 
     this.schemas.set("database", () => getDatabaseSchema(this.db, collSlug));
+  }
 
-    this.fs.find().then(fns => {
-      const targetChanges: TargetChange[] = [];
-      for (const fn of fns) {
-        targetChanges.push(...createTargetChanges(fn, ChangeKind.Added));
-      }
-      this.categorizeChanges(targetChanges);
-      // skip the initial trigger subscriptions, since other replicas have already subscribed
+  onModuleInit() {
+    this.registerTriggers().then(() => {
       if (this.commander) {
-        this.commander.register(this, [this.categorizeChanges]);
+        // trigger updates should be published to the other replicas except initial trigger registration
+        this.cmdSubs = this.commander.register(this, [this.categorizeChanges], CommandType.SYNC);
       }
     });
   }
 
+  registerTriggers() {
+    return this.updateTriggers(ChangeKind.Added);
+  }
+
+  unregisterTriggers() {
+    return this.updateTriggers(ChangeKind.Removed);
+  }
+
+  private updateTriggers(kind: ChangeKind) {
+    return this.fs.find().then(fns => {
+      const targetChanges: TargetChange[] = [];
+      for (const fn of fns) {
+        targetChanges.push(...createTargetChanges(fn, kind));
+      }
+      this.categorizeChanges(targetChanges);
+    });
+  }
+
   onModuleDestroy() {
-    this.dispose.next();
+    if (this.commander) {
+      this.cmdSubs.unsubscribe();
+    }
+    return this.unregisterTriggers();
   }
 
   categorizeChanges(changes: TargetChange[]) {
