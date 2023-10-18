@@ -108,9 +108,9 @@ describe("Scheduler", () => {
     triggerGotWorker();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     scheduler.kill();
-    app.close();
+    await app.close();
     clock.uninstall();
     spawnSpy.calls.reset();
   });
@@ -406,17 +406,17 @@ describe("Scheduler", () => {
       expect(activatedWorkers().length).toEqual(1);
       expect(freeWorkers().length).toEqual(1);
 
-      module.close().then(() => {
-        expect(allWorkers().length).toEqual(0);
-        done();
-      });
-
       onFreeWorkersAreKilled().then(() => {
         // to be sure this promise has resolved before module close
         done = copyDone;
         expect(activatedWorkers().length).toEqual(1, "should keep the busy worker");
         expect(freeWorkers().length).toEqual(0);
         triggerLostWorker("1");
+      });
+
+      app.close().then(() => {
+        expect(allWorkers().length).toEqual(0);
+        done();
       });
     });
 
