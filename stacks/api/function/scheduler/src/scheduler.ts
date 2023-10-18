@@ -20,17 +20,19 @@ import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
 import {generateLog, LogLevels} from "@spica-server/function/runtime/logger";
 import {Node} from "@spica-server/function/runtime/node";
-import {ClassCommander, JobReducer} from "@spica-server/replication";
-import {
-  AttachStatusTracker,
-  ATTACH_STATUS_TRACKER,
-  StatusInterceptor
-} from "@spica-server/status/services";
+import {ClassCommander, CommandType, JobReducer} from "@spica-server/replication";
+import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/status/services";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
+import {Subject} from "rxjs";
+import {take} from "rxjs/operators";
 
-type ScheduleWorker = Worker & {target: event.Target; schedule: (event: event.Event) => void};
+type ScheduleWorker = Worker & {
+  target: event.Target;
+  schedule: (event: event.Event) => void;
+  isOutdated?: boolean;
+};
 
 @Injectable()
 export class Scheduler implements OnModuleInit, OnModuleDestroy {
@@ -56,7 +58,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker
   ) {
     if (this.commander) {
-      this.commander.register(this, [this.deleteWorkersOfTarget]);
+      this.commander.register(this, [this.outdateWorkers], CommandType.SYNC);
     }
 
     this.output = new DatabaseOutput(database);
@@ -85,7 +87,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     const schedulerUnsubscription = (targetId: string) => {
-      this.deleteWorkersOfTarget(targetId);
+      this.outdateWorkers(targetId);
     };
 
     this.enqueuers.add(
@@ -114,16 +116,19 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.databaseQueue,
         this.database,
         schedulerUnsubscription,
-        this.jobReducer
+        this.jobReducer,
+        this.commander
       )
     );
 
-    this.enqueuers.add(new ScheduleEnqueuer(this.queue, schedulerUnsubscription, this.jobReducer));
+    this.enqueuers.add(
+      new ScheduleEnqueuer(this.queue, schedulerUnsubscription, this.jobReducer, this.commander)
+    );
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
     if (typeof this.enqueuerFactory == "function") {
-      const factory = this.enqueuerFactory(this.queue);
+      const factory = this.enqueuerFactory(this.queue, this.jobReducer, this.commander);
       this.queue.addQueue(factory.queue);
       this.enqueuers.add(factory.enqueuer);
     }
@@ -133,18 +138,63 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.scaleWorkers();
   }
 
+  killFreeWorkers() {
+    const isFresh = worker => !worker.target;
+    const isWaitingForNextEvent = worker => worker.target && worker.schedule;
+
+    const freeWorkers = Array.from(this.workers.entries()).filter(
+      ([key, worker]) => isFresh(worker) || isWaitingForNextEvent(worker)
+    );
+
+    const killWorkers = freeWorkers.map(([key, worker]) => {
+      return worker.kill();
+    });
+
+    return Promise.all(killWorkers);
+  }
+
+  waitLastWorkerLost() {
+    const lastWorkerHasAlreadLost = this.workers.size == 0;
+
+    return lastWorkerHasAlreadLost
+      ? Promise.resolve()
+      : this.onLastWorkerLost
+          .asObservable()
+          .pipe(take(1))
+          .toPromise();
+  }
+
+  killLanguages() {
+    return Promise.all(Array.from(this.languages.values()).map(l => l.kill()));
+  }
+
   async onModuleDestroy() {
-    for (const [id, worker] of this.workers.entries()) {
-      await worker.kill();
-      this.workers.delete(id);
-    }
-    for (const language of this.languages.values()) {
-      await language.kill();
-    }
+    await this.drainEventQueue();
+
+    await this.killFreeWorkers();
+    await this.waitLastWorkerLost();
+
+    await this.killLanguages();
+
     return this.queue.kill();
   }
 
+  drainEventQueue() {
+    const promises = [];
+    for (const enqueuer of this.enqueuers.values()) {
+      const events = Array.from(this.eventQueue.values()).filter(
+        event => event.type == enqueuer.type
+      );
+      promises.push(enqueuer.onEventsAreDrained(events));
+    }
+
+    this.eventQueue.clear();
+
+    return Promise.all(promises);
+  }
+
   workers = new Map<string, ScheduleWorker>();
+  onLastWorkerLost = new Subject();
 
   eventQueue = new Map<string, event.Event>();
 
@@ -245,9 +295,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   gotWorker(id: string, schedule: (event: event.Event) => void) {
     const relatedWorker = this.workers.get(id);
 
-    // scheduler unsubscription might have deleted the worker in order to direct next events to the new worker with the latest function index
-    if (!relatedWorker) {
-      this.print(`the worker ${id} that has stale function index won't be scheduled.`);
+    if (!relatedWorker || relatedWorker.isOutdated) {
+      this.print(`the worker ${id} won't be scheduled anymore.`);
     } else {
       relatedWorker.schedule = schedule;
 
@@ -266,12 +315,16 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.timeouts.delete(id);
 
     this.print(`lost a worker ${id}`);
+
+    if (!this.workers.size) {
+      this.onLastWorkerLost.next();
+    }
   }
 
-  deleteWorkersOfTarget(targetId: string) {
-    Array.from(this.workers.entries())
-      .filter(([id, worker]) => worker.target && worker.target.id == targetId)
-      .forEach(([id]) => this.workers.delete(id));
+  outdateWorkers(targetId: string) {
+    Array.from(this.workers.values())
+      .filter(worker => worker.target && worker.target.id == targetId)
+      .forEach(worker => (worker.isOutdated = true));
   }
 
   private scaleWorkers() {

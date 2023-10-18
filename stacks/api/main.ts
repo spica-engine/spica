@@ -275,7 +275,7 @@ const args = yargs
     replication: {
       boolean: true,
       description: "When enabled, server will keep all API replicas at the same level.",
-      default: false
+      default: true
     }
   })
   /* CORS Options */

@@ -9,6 +9,8 @@ interface EventOptions {
 }
 
 export class SystemEnqueuer implements Enqueuer<EventOptions> {
+  type = event.Type.DATABASE;
+
   private readyTargets = new Set<event.Target>();
   private subscriptionSubject = new Subject();
 
@@ -26,6 +28,10 @@ export class SystemEnqueuer implements Enqueuer<EventOptions> {
         take(1)
       )
       .subscribe(() => this.invokeReadyEventTargets());
+  }
+
+  onEventsAreDrained(events: event.Event[]): Promise<any> {
+    return Promise.resolve();
   }
 
   private invokeReadyEventTargets() {

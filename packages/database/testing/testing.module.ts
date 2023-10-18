@@ -3,16 +3,7 @@ import {DatabaseService, MongoClient} from "@spica-server/database";
 import {start, getDatabaseName} from "./start";
 
 @Global()
-@Module({
-  providers: [
-    {
-      provide: DatabaseService,
-      useFactory: async (client: MongoClient) => client.db(getDatabaseName()),
-      inject: [MongoClient]
-    }
-  ],
-  exports: [DatabaseService]
-})
+@Module({})
 export class DatabaseTestingModule {
   /**
    * @deprecated
@@ -24,28 +15,38 @@ export class DatabaseTestingModule {
     return DatabaseTestingModule.standalone();
   }
 
-  static standalone(): DynamicModule {
+  static standalone(dbName?: string): DynamicModule {
     return {
       module: DatabaseTestingModule,
       providers: [
         {
           provide: MongoClient,
           useFactory: async () => start("standalone")
+        },
+        {
+          provide: DatabaseService,
+          useFactory: async (client: MongoClient) => client.db(dbName || getDatabaseName()),
+          inject: [MongoClient]
         }
       ],
-      exports: [MongoClient]
+      exports: [MongoClient, DatabaseService]
     };
   }
-  static replicaSet(): DynamicModule {
+  static replicaSet(dbName?: string): DynamicModule {
     return {
       module: DatabaseTestingModule,
       providers: [
         {
           provide: MongoClient,
           useFactory: async () => start("replset")
+        },
+        {
+          provide: DatabaseService,
+          useFactory: async (client: MongoClient) => client.db(dbName || getDatabaseName()),
+          inject: [MongoClient]
         }
       ],
-      exports: [DatabaseService, MongoClient]
+      exports: [MongoClient, DatabaseService]
     };
   }
 }
