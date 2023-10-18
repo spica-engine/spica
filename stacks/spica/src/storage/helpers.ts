@@ -57,7 +57,10 @@ export function getFullName(node: StorageNode): string {
 }
 
 export function isDirectory(storage: StorageNode | Storage) {
-  return storage.content.size == 0 && storage.content.type == "";
+  return (
+    storage.content.size == 0 &&
+    (storage.content.type == "" || storage.content.type == "application/octet-stream")
+  );
 }
 
 export function findNodeByName(name: string, nodes: StorageNode[]) {

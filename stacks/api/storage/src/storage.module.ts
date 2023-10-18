@@ -11,6 +11,8 @@ import {registerStatusProvider} from "./status";
 
 import BsonObject = require("./schema/bson.object.schema.json");
 import JsonObject = require("./schema/json.object.schema.json");
+import MultipartObject = require("./schema/multipart.object.schema.json");
+
 import BodySchema = require("./schema/body.schema.json");
 import BodySingleSchema = require("./schema/body.single.schema.json");
 import {AWSS3} from "./strategy/aws.s3";
@@ -26,7 +28,7 @@ export class StorageModule {
       module: StorageModule,
       imports: [
         SchemaModule.forChild({
-          schemas: [BsonObject, JsonObject, BodySchema, BodySingleSchema],
+          schemas: [MultipartObject, BsonObject, JsonObject, BodySchema, BodySingleSchema],
           formats: [BASE_64]
         })
       ],
