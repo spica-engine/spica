@@ -177,8 +177,17 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       .insertMany(schemas)
       .then(result => result.ops as StorageObjectMeta[]);
 
-    for (const [i, schema] of insertedObjects.entries()) {
-      await this.write(schema._id.toString(), datas[i], schema.content.type);
+    for (const [i, object] of insertedObjects.entries()) {
+      try {
+        await this.write(object._id.toString(), datas[i], object.content.type);
+      } catch (error) {
+        const idsToDelete = insertedObjects.slice(i).map(o => o._id);
+        await this._coll.deleteMany({_id: {$in: idsToDelete}});
+
+        throw new Error(
+          `Error: Failed to write object ${object.name} to storage. Reason: ${error}`
+        );
+      }
     }
 
     return insertedObjects;

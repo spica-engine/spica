@@ -10,8 +10,10 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
 describe("Storage Service", () => {
   let module: TestingModule;
+
   let storageService: StorageService;
   let storageObject: StorageObject<Buffer>;
+  let strategyInstance: Strategy;
   let storageObjectId: ObjectId = new ObjectId("56cb91bdc3464f14678934ca");
 
   const resourceFilter = {$match: {}};
@@ -42,6 +44,7 @@ describe("Storage Service", () => {
       ]
     }).compile();
     storageService = module.get(StorageService);
+    strategyInstance = module.get(Strategy);
   });
 
   afterEach(() => module.close());
@@ -68,6 +71,59 @@ describe("Storage Service", () => {
         return result;
       })
     );
+  });
+  it("should delete failed object from database", async () => {
+    const storageObjects = [
+      {
+        _id: "successId",
+        name: "name1",
+        content: {
+          data: Buffer.from("abc1"),
+          type: "type1",
+          size: 10
+        }
+      },
+      {
+        _id: "failId",
+        name: "name2",
+        content: {
+          data: Buffer.from("abc2"),
+          type: "type2",
+          size: 20
+        }
+      },
+      {
+        _id: "thirdId",
+        name: "name3",
+        content: {
+          data: Buffer.from("abc3"),
+          type: "type3",
+          size: 30
+        }
+      }
+    ];
+    spyOn(strategyInstance, "write").and.callFake((id: string, data: Buffer) => {
+      if (id == "failId") {
+        return Promise.reject("Upload failed for Item");
+      }
+      return Promise.resolve();
+    });
+
+    await expectAsync(storageService.insert(storageObjects)).toBeRejectedWithError(
+      "Error: Failed to write object name2 to storage. Reason: Upload failed for Item"
+    );
+
+    const insertedBbjects = await storageService.find();
+    expect(insertedBbjects).toEqual([
+      {
+        _id: "successId",
+        name: "name1",
+        content: {
+          type: "type1",
+          size: 10
+        }
+      } as any
+    ]);
   });
 
   it("should update storage object", async () => {
