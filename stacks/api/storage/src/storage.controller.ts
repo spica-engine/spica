@@ -196,13 +196,12 @@ export class StorageController {
     const converter = getPostBodyConverter(body);
     const objects = converter.convert(body);
 
-    const storageObjects = await this.storage.insert(objects).catch(error => {
+    let storageObjects = await this.storage.insert(objects).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
 
-    for (const object of storageObjects) {
-      object.url = await this.storage.getUrl(object._id.toString());
-    }
+    storageObjects = await this.storage.putUrls(storageObjects);
+
     return storageObjects;
   }
 
