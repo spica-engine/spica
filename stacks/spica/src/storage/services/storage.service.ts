@@ -79,53 +79,40 @@ export class StorageService {
   updateOne(storageObject: Storage, file: File): Observable<HttpEvent<Storage>> {
     storageObject = this.prepareToUpdate(storageObject);
 
-    return from(fileToBuffer(file)).pipe(
-      flatMap(content => {
-        const schema = {
-          ...storageObject,
-          content: {data: new BSON.Binary(content), type: file.type}
-        };
+    const formData = new FormData();
+    formData.append("file", this.updateFileName(file, storageObject.name));
 
-        const id = schema._id;
-        delete schema._id;
+    const request = new HttpRequest("PUT", `api:/storage/${storageObject._id}`, formData, {
+      reportProgress: true
+    });
 
-        delete schema.url;
+    return this.http.request<Storage>(request);
+  }
 
-        const data = BSON.serialize(schema, {
-          minInternalBufferSize: BSON.calculateObjectSize(schema)
-        } as any);
-        const request = new HttpRequest("PUT", `api:/storage/${id}`, data.buffer, {
-          reportProgress: true,
-          headers: new HttpHeaders({"Content-Type": "application/bson"})
-        });
+  private prepareFile(file: File, prefix?: string) {
+    let name = prefix ? `${prefix}${file.name}` : file.name;
+    return this.updateFileName(file, name);
+  }
 
-        return this.http.request<Storage>(request);
-      })
-    );
+  private updateFileName(file: File, name: string) {
+    name = encodeURIComponent(name);
+    return new File([file], name, {type: file.type, lastModified: file.lastModified});
   }
 
   insertMany(fileList: FileList, prefix?: string): Observable<HttpEvent<Storage>> {
-    const files = Array.from(fileList);
-    return from(Promise.all(files.map(f => fileToBuffer(f)))).pipe(
-      flatMap(content => {
-        const contents = {
-          content: content.map((c, i) => ({
-            name: prefix ? `${prefix}${files[i].name}` : files[i].name,
-            content: {
-              data: new BSON.Binary(c),
-              type: files[i].type
-            }
-          }))
-        };
-        const size = BSON.calculateObjectSize(contents);
-        const buffer = BSON.serialize(contents, {minInternalBufferSize: size} as any);
-        const request = new HttpRequest("POST", "api:/storage", buffer.buffer, {
-          reportProgress: true,
-          headers: new HttpHeaders({"Content-Type": "application/bson"})
-        });
-        return this.http.request<Storage>(request);
-      })
-    );
+    const files = Array.from(fileList).map(file => {
+      return this.prepareFile(file, prefix);
+    });
+
+    const formData = new FormData();
+
+    files.forEach(file => formData.append("files", file));
+
+    const request = new HttpRequest("POST", "api:/storage", formData, {
+      reportProgress: true
+    });
+
+    return this.http.request<Storage>(request);
   }
 
   private prepareToDisplay(object: Storage) {

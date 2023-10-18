@@ -3,7 +3,8 @@
     "$id": "http://spica.internal/storage/body/single",
     "anyOf": [
         {"$ref": "http://spica.internal/storage/body/json/object"},
-        {"$ref": "http://spica.internal/storage/body/bson/object"}
+        {"$ref": "http://spica.internal/storage/body/bson/object"},
+        {"$ref": "http://spica.internal/storage/body/multipart/object"}
     ]
   }
   

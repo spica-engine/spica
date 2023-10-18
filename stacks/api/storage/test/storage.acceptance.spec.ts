@@ -710,4 +710,101 @@ describe("Storage Acceptance", () => {
       expect(statusText).toBe("Payload Too Large");
     });
   });
+
+  describe("multipart/form-data", () => {
+    function getMultipartFormDataMeta(
+      files: {name: string; data: string; type: string}[],
+      method: "post" | "put"
+    ) {
+      const boundary = "--------------------------" + Date.now().toString(16);
+      const headers = {
+        "Content-Type": `multipart/form-data; boundary=${boundary}`
+      };
+
+      let body = "";
+
+      for (let file of files) {
+        body +=
+          `--${boundary}\r\n` +
+          `Content-Disposition: form-data; name="${
+            method == "post" ? "files" : "file"
+          }"; filename="${file.name}"\r\n` +
+          `Content-Type: "${file.type}"\r\n\r\n` +
+          `${file.data}\r\n`;
+      }
+
+      body += `--${boundary}--\r\n`;
+
+      return {
+        body: Buffer.from(body),
+        headers: headers
+      };
+    }
+
+    it("should insert storage objects", async () => {
+      const {body, headers} = getMultipartFormDataMeta(
+        [
+          {name: "data.json", data: "{}", type: "application/json"},
+          {name: "test.txt", data: "hello", type: "text/plain"}
+        ],
+        "post"
+      );
+      const {body: resBody, statusCode, statusText} = await req.post("/storage", body, headers);
+
+      expect(resBody).toEqual([
+        {
+          _id: "__skip__",
+          name: "data.json",
+          url: "__skip_if_valid_url__",
+          content: {
+            type: "application/json",
+            size: 2
+          }
+        },
+        {
+          _id: "__skip__",
+          name: "test.txt",
+          url: "__skip_if_valid_url__",
+          content: {
+            type: "text/plain",
+            size: 5
+          }
+        }
+      ]);
+      expect(statusCode).toBe(201);
+      expect(statusText).toBe("Created");
+    });
+
+    it("should update the storage object", async () => {
+      const {
+        body: {
+          data: [row]
+        },
+        headers: {["etag"]: prevETag}
+      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
+
+      const {body, headers} = getMultipartFormDataMeta(
+        [
+          {
+            data: "new data",
+            name: row.name,
+            type: row.content.type
+          }
+        ],
+        "put"
+      );
+
+      const id = row._id;
+
+      await req.put(`/storage/${id}`, body, headers);
+
+      const {
+        body: resBody,
+        headers: {["etag"]: ETag}
+      } = await req.get(`/storage/${id}/view`);
+
+      expect(resBody).toBe("new data");
+      expect(prevETag).not.toBe(ETag);
+    });
+  });
 });
