@@ -106,11 +106,12 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       .then(r => this.putUrls(r));
   }
 
-  private async putUrls(objects: StorageResponse[]) {
+  putUrls(objects: StorageResponse[]) {
+    const urlPromises = [];
     for (const object of objects) {
-      object.url = await this.service.url(object._id.toString());
+      urlPromises.push(this.service.url(object._id.toString()).then(r => (object.url = r)));
     }
-    return objects;
+    return Promise.all(urlPromises).then(() => objects);
   }
 
   async get(id: ObjectId): Promise<StorageObject<Buffer>> {

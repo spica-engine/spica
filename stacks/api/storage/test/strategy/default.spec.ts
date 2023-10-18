@@ -17,8 +17,8 @@ describe("Default", () => {
     expect(fs.existsSync(service["path"])).toEqual(true);
   });
 
-  it("should return url", () => {
-    expect(service.url("test_file")).toBe("http://insteadof/storage/test_file/view");
+  it("should return url", async () => {
+    expect(await service.url("test_file")).toEqual("http://insteadof/storage/test_file/view");
   });
 
   it("should return build path", () => {
