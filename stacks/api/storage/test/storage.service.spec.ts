@@ -10,7 +10,7 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
 describe("Storage Service", () => {
   let module: TestingModule;
-  
+
   let storageService: StorageService;
   let storageObject: StorageObject<Buffer>;
   let strategyInstance: Strategy;
