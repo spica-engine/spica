@@ -1,5 +1,23 @@
-## v0.9.27 (2023-06-15)
+## v0.9.29 (2023-10-18)
 
+* perf(storage): use promise all for getting object urls ([aa155e0f7](https://github.com/spica-engine/spica/commit/aa155e0f7))
+* fix(storage): keep database and storage objects synchronized ([870b5732f](https://github.com/spica-engine/spica/commit/870b5732f))
+* fix(function): better sigterm handle and queue shifting ([30911f4aa](https://github.com/spica-engine/spica/commit/30911f4aa))
+* perf(storage): upload large objects as stream ([453d1b9f6](https://github.com/spica-engine/spica/commit/453d1b9f6))
+* fix(replication): ignore index uniqueness errors if jobs are triggered simultaneously ([668fadcd7](https://github.com/spica-engine/spica/commit/668fadcd7))
+* perf(charts): skip replication controller job for single replicas ([7bd463486](https://github.com/spica-engine/spica/commit/7bd463486))
+
+## v0.9.28 (2023-06-20)
+
+* fix(storage): reset currentNode on selected folder change ([009ed7b09](https://github.com/spica-engine/spica/commit/009ed7b09))
+* fix(function): enqueue events if replication disabled ([fe113186e](https://github.com/spica-engine/spica/commit/fe113186e))
+
+## v0.9.27 (2023-06-19)
+
+* fix(function): take only one value of getFunction observable ([a635b9fff](https://github.com/spica-engine/spica/commit/a635b9fff))
+* feat(charts): node selector and tolerations for containers ([93c7b4e07](https://github.com/spica-engine/spica/commit/93c7b4e07))
+* build: update mongoreplicationcontroller image ([16e089b17](https://github.com/spica-engine/spica/commit/16e089b17))
+* docs: update changelog for v0.9.27 ([716b3c3a6](https://github.com/spica-engine/spica/commit/716b3c3a6))
 * feat(replication): enable/disable module with API option ([0a654a592](https://github.com/spica-engine/spica/commit/0a654a592))
 * fix(passport): disable updating authfactor from identity update endpoint ([de2ee7767](https://github.com/spica-engine/spica/commit/de2ee7767))
 * feat(cli): resolve relations and it's interfaces on bucket orm ([046362fc5](https://github.com/spica-engine/spica/commit/046362fc5))
