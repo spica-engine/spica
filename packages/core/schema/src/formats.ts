@@ -17,6 +17,9 @@ export const OBJECTID_STRING: Format = {
   type: "string",
   validate: objectId => {
     return ObjectId.isValid(objectId);
+  },
+  coerce: objectId => {
+    return new ObjectId(objectId).toString();
   }
 };
 
