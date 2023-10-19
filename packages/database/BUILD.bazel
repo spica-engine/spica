@@ -17,6 +17,7 @@ ts_project(
         "@npm//@nestjs/common",
         "@npm//@types/mongodb",
         "@npm//@types/node",
+        "@npm//bson",
         "@npm//mingo",
         "@npm//mongodb",
     ],
