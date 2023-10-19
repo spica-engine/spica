@@ -5,5 +5,5 @@ export abstract class Strategy {
   abstract write(id: string, data: Buffer, mimeType?: string): Promise<void>;
   abstract writeStream(id: string, data: ReadStream, mimeType?: string): Promise<void>;
   abstract delete(id: string): Promise<void> | void;
-  abstract url(id: string): Promise<string> | string;
+  abstract url(id: string): Promise<string>;
 }

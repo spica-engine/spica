@@ -45,7 +45,7 @@ export class Default implements Strategy {
   }
 
   url(id: string) {
-    return `${this.publicUrl}/storage/${id}/view`;
+    return Promise.resolve(`${this.publicUrl}/storage/${id}/view`);
   }
 
   private buildPath(id: string) {
