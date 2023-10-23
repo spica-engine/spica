@@ -29,7 +29,12 @@ export class MockMemoryService implements IPubSub<CommandMessage> {
   }
 
   subscribe(observer: PartialObserver<CommandMessage>) {
-    this.emitter.on("mock_event", msg => observer.next(msg));
+    const callback = msg => observer.next(msg);
+    this.emitter.on("mock_event", callback);
+
+    return {
+      unsubscribe: () => this.emitter.removeListener("mock_event", callback)
+    };
   }
 
   clear() {

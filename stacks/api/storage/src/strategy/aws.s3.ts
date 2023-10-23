@@ -1,3 +1,4 @@
+import {ReadStream} from "fs";
 import {Strategy} from "./strategy";
 import * as AWS from "aws-sdk";
 
@@ -6,6 +7,10 @@ export class AWSS3 implements Strategy {
   constructor(private credentialsPath: string, private bucketName: string) {
     AWS.config.loadFromPath(this.credentialsPath);
     this.s3 = new AWS.S3();
+  }
+
+  writeStream(id: string, data: ReadStream, mimeType?: string): Promise<void> {
+    return this.write(id, data, mimeType);
   }
 
   read(id: string): Promise<Buffer> {
@@ -20,7 +25,7 @@ export class AWSS3 implements Strategy {
     });
   }
 
-  write(id: string, data: Buffer, mimeType?: string): Promise<void> {
+  write(id: string, data: Buffer | ReadStream, mimeType?: string): Promise<void> {
     return new Promise((resolve, reject) => {
       this.s3.upload(
         {Bucket: this.bucketName, Key: id, Body: data, ContentType: mimeType},
@@ -47,8 +52,10 @@ export class AWSS3 implements Strategy {
     });
   }
 
-  url(id: string): string | Promise<string> {
+  url(id: string): Promise<string> {
     // @TODO: find a way to get object location instead of this
-    return `https://${this.bucketName}.s3.${AWS.config.region}.amazonaws.com/${id}`;
+    return Promise.resolve(
+      `https://${this.bucketName}.s3.${AWS.config.region}.amazonaws.com/${id}`
+    );
   }
 }

@@ -26,5 +26,6 @@ ts_project(
         "@npm//@types/json-schema",
         "@npm//@types/node",
         "@npm//rxjs",
+        "@npm//uniqid",
     ],
 )

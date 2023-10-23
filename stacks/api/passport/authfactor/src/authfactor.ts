@@ -1,6 +1,6 @@
 import {Factor, FactorMeta, AuthFactorSchemaProvider} from "./interface";
 import {Inject, Injectable, Optional} from "@nestjs/common";
-import {ClassCommander} from "@spica-server/replication";
+import {ClassCommander, CommandType} from "@spica-server/replication";
 
 @Injectable()
 export class AuthFactor {
@@ -15,7 +15,7 @@ export class AuthFactor {
     @Optional() private commander: ClassCommander
   ) {
     if (this.commander) {
-      this.commander.register(this, [this.register, this.unregister, this.start]);
+      this.commander.register(this, [this.register, this.unregister, this.start], CommandType.SYNC);
     }
   }
 

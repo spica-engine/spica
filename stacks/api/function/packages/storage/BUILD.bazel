@@ -14,7 +14,7 @@ ts_project(
     tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
         "//stacks/api/function/packages/internal_common",
-        "@npm//bson",
+        "@npm//form-data",
     ],
 )
 
@@ -26,7 +26,7 @@ ts_project(
     tsconfig = "//stacks/api/function/packages:tsconfig_publish",
     deps = [
         "//stacks/api/function/packages/internal_common",
-        "@npm//bson",
+        "@npm//form-data",
     ],
 )
 
