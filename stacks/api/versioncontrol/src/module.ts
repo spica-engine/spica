@@ -11,11 +11,21 @@ import {RepresentativeManager} from "@spica-server/representative";
 import {Git} from "./versionmanager";
 import * as fs from "fs";
 import {Synchronizer} from "./synchronizer";
+import {JobReducer} from "@spica-server/replication";
 
 @Global()
 @Module({})
 export class VersionControlModule {
   static forRoot(options: VersionControlOptions) {
+    const versionManagerProvider = {
+      provide: VersionManager,
+      useFactory: (cwd, jr) => new Git(cwd, jr),
+      inject: [VERSIONCONTROL_WORKING_DIRECTORY]
+    };
+
+    if (options.isReplicationEnabled) {
+      versionManagerProvider.inject.push(JobReducer as any);
+    }
     return {
       module: VersionControlModule,
       controllers: [VersionControlController],
@@ -36,11 +46,7 @@ export class VersionControlModule {
           inject: [VERSIONCONTROL_WORKING_DIRECTORY]
         },
         Synchronizer,
-        {
-          provide: VersionManager,
-          useFactory: cwd => new Git(cwd),
-          inject: [VERSIONCONTROL_WORKING_DIRECTORY]
-        },
+        versionManagerProvider,
         {
           provide: REGISTER_VC_SYNC_PROVIDER,
           useFactory: (sync: Synchronizer) => provider => sync.register(provider),

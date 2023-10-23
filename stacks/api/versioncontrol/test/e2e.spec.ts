@@ -9,7 +9,8 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {FunctionModule} from "@spica-server/function";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {VersionControlModule, RepresentativeManager} from "@spica-server/versioncontrol";
+import {RepresentativeManager} from "@spica-server/representative";
+import {VersionControlModule} from "@spica-server/versioncontrol";
 
 import * as os from "os";
 
@@ -104,7 +105,7 @@ describe("Versioning e2e", () => {
           realtimeLogs: false,
           logger: false
         }),
-        VersionControlModule.forRoot({persistentPath: os.tmpdir()})
+        VersionControlModule.forRoot({persistentPath: os.tmpdir(), isReplicationEnabled: false})
       ]
     }).compile();
 
