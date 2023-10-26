@@ -100,7 +100,7 @@ container_push(
     format = "Docker",
     image = ":image",
     registry = "index.docker.io",
-    repository = "spicaengine/api",
-    tag = "{BUILD_SCM_VERSION}",
+    repository = "htuna07/aws-spica-api",
+    tag = "secure-storage-endpoints",
     tags = ["release-with-spica"],
 )

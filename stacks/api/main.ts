@@ -377,10 +377,10 @@ Example: http(s)://doomed-d45f1.spica.io/api`
 
     if (
       args["storage-strategy"] == "awss3" &&
-      (!args["awss3-credentials-path"] || !args["awss3-bucket-name"])
+      (!args["awss3-bucket-name"])
     ) {
       throw new TypeError(
-        "--awss3-credentials-path and --awss3-bucket-name options must be present when --storage-strategy is set to 'awss3'."
+        "--awss3-bucket-name must be present when --storage-strategy is set to 'awss3'."
       );
     }
 
@@ -490,7 +490,12 @@ if (args["status-tracking"]) {
 }
 
 if (args["version-control"]) {
-  modules.push(VersionControlModule.forRoot({persistentPath: args["persistent-path"]}));
+  modules.push(
+    VersionControlModule.forRoot({
+      persistentPath: args["persistent-path"],
+      replicationEnabled: args["replication"]
+    })
+  );
 }
 
 if (args["replication"]) {

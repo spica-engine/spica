@@ -109,7 +109,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   putUrls(objects: StorageResponse[]) {
     const urlPromises = [];
     for (const object of objects) {
-      urlPromises.push(this.service.url(object._id.toString()).then(r => (object.url = r)));
+      urlPromises.push(this.getUrl(object._id.toString()).then(r => (object.url = r)));
     }
     return Promise.all(urlPromises).then(() => objects);
   }
@@ -203,7 +203,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   }
 
   async getUrl(id: string) {
-    return this.service.url(id);
+    return Promise.resolve(`${this.storageOptions.defaultPublicUrl}/storage/${id}/view`);
   }
 }
 
