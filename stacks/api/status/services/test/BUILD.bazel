@@ -22,7 +22,6 @@ ts_project(
 
 jasmine_node_test(
     name = "interceptor_test",
-    tags = ["flaky"],
     deps = [
         ":status_interceptor_test_lib",
     ],

@@ -2,22 +2,16 @@ import {Controller, Get, INestApplication, Post} from "@nestjs/common";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {Middlewares} from "@spica-server/core";
 import {StatusModule} from "@spica-server/status";
+import {StatusService} from "@spica-server/status/services";
 import {Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
 const MbInKb = 1000 * 1000;
 
-function sleep(ms: number) {
-  return new Promise((resolve, _) => setTimeout(resolve, ms));
-}
-
 @Controller("test")
 export class TestController {
   constructor() {}
-
-  @Get("void")
-  void() {}
 
   @Get()
   get() {
@@ -34,8 +28,9 @@ describe("Status Interceptor", () => {
   describe("With Module", () => {
     let req: Request;
     let app: INestApplication;
+    let statusService: StatusService;
 
-    beforeEach(async () => {
+    beforeAll(async () => {
       const module = await Test.createTestingModule({
         imports: [
           DatabaseTestingModule.standalone(),
@@ -47,72 +42,94 @@ describe("Status Interceptor", () => {
       }).compile();
 
       req = module.get(Request);
+
+      statusService = module.get(StatusService);
+
       app = module.createNestApplication();
+      await app.init();
 
       app.use(Middlewares.JsonBodyParser({limit: 3 * MbInKb, ignoreUrls: []}));
 
       await app.listen(req.socket);
     });
 
-    afterEach(async () => {
+    afterAll(async () => {
       await app.close();
     });
 
-    it("should track request size and count for get request", async () => {
-      await req.get("/test");
+    afterEach(async () => {
+      await statusService._coll.drop();
+    });
 
-      const res = await req.get("/status/api");
-
-      await sleep(2000);
-
-      expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
-      expect(res.body).toEqual({
-        module: "api",
-        status: {
-          request: {
-            current: 1,
-            unit: "count"
-          },
-          uploaded: {
-            current: 0,
-            unit: "mb"
-          },
-          downloaded: {
-            current: 1,
-            unit: "mb"
-          }
-        }
+    function onStatusInserted() {
+      return new Promise((resolve, reject) => {
+        const originalInsert = statusService.insertOne;
+        statusService.insertOne = (...args) => {
+          return originalInsert
+            .bind(statusService)(...args)
+            .then(r => {
+              resolve(args);
+              return r;
+            });
+        };
       });
-    }, 10000);
+    }
 
-    it("should track request size and count for post request", async () => {
-      const body = {message: "a".repeat(2 * MbInKb)};
-      await req.post("/test", body);
-
-      const res = await req.get("/status/api");
-
-      await sleep(2000);
-
-      expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
-
-      expect(res.body).toEqual({
-        module: "api",
-        status: {
-          request: {
-            current: 2,
-            unit: "count"
-          },
-          uploaded: {
-            current: 0,
-            unit: "mb"
-          },
-          downloaded: {
-            current: 1,
-            unit: "mb"
-          }
-        }
+    it("should get request-response statistics for get request", done => {
+      onStatusInserted().then(() => {
+        req.get("/status/api").then(res => {
+          expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
+          expect(res.body).toEqual({
+            module: "api",
+            status: {
+              request: {
+                current: 1,
+                unit: "count"
+              },
+              uploaded: {
+                current: 0,
+                unit: "mb"
+              },
+              downloaded: {
+                current: 1,
+                unit: "mb"
+              }
+            }
+          });
+          done();
+        });
       });
-    }, 10000);
+
+      req.get("/test");
+    });
+
+    it("should get request-response statistics for post request", done => {
+      onStatusInserted().then(() => {
+        req.get("/status/api").then(res => {
+          expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
+          expect(res.body).toEqual({
+            module: "api",
+            status: {
+              request: {
+                current: 1,
+                unit: "count"
+              },
+              uploaded: {
+                current: 0.1,
+                unit: "mb"
+              },
+              downloaded: {
+                current: 1,
+                unit: "mb"
+              }
+            }
+          });
+
+          done();
+        });
+      });
+      req.post("/test", {message: "a".repeat(100000)});
+    });
   });
 
   describe("Without Module", () => {

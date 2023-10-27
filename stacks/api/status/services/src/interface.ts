@@ -12,6 +12,8 @@ export type AttachStatusTracker = (req: Request, res: Response) => void;
 export interface ApiStatus {
   request: {
     size: number;
+    url: string;
+    method: string;
   };
   response: {
     size: number;

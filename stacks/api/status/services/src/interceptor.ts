@@ -40,11 +40,14 @@ export function attachStatusTrackerFactory(service: StatusService): AttachStatus
       if (statusSaved) {
         return;
       }
+
       statusSaved = true;
       service
         .insertOne({
           request: {
-            size: reqSize
+            size: reqSize,
+            url: req.originalUrl,
+            method: req.method
           },
           response: {
             size: resSize
