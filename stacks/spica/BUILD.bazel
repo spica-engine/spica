@@ -49,6 +49,6 @@ container_push(
     image = ":spica",
     registry = "index.docker.io",
     repository = "htuna07/aws-spica-application",
-    tag = "secure-storage-endpoints",
+    tag = "0.9.29",
     tags = ["release-with-spica"],
 )
