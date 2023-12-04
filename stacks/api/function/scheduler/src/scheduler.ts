@@ -309,7 +309,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       relatedWorker.schedule = schedule;
 
       if (this.attachInvocationCounter) {
-        this.handleInvocationCounter(relatedWorker, id);
+        this.handleInvocationCounter(relatedWorker);
       }
 
       this.print(
@@ -320,17 +320,15 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.process();
   }
 
-  handleInvocationCounter(worker: ScheduleWorker, workerId: string) {
+  handleInvocationCounter(worker: ScheduleWorker) {
     const statusBuilder = (...args) => {
       const ev: event.Event = args[0];
       return {
-        invocation_id: ev.id,
         context: ev.target.id,
         method: ev.target.handler,
         module: "function",
         details: {
-          type: event.Type[ev.type],
-          worker_id: workerId
+          type: event.Type[ev.type]
         }
       };
     };

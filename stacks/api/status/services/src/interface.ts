@@ -26,7 +26,6 @@ export interface ApiStatus {
 }
 
 export interface InvocationStatus {
-  invocation_id?: string;
   module: string;
   context: string;
   method: string;
