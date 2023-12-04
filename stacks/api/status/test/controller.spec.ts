@@ -263,7 +263,8 @@ describe("Status", () => {
             activated: 0,
             fresh: 1,
             unit: "count"
-          }
+          },
+          invocations: {unit: "count", current: 0}
         }
       });
 
@@ -283,7 +284,8 @@ describe("Status", () => {
             activated: 1,
             fresh: 1,
             unit: "count"
-          }
+          },
+          invocations: {unit: "count", current: 1}
         }
       });
     });
