@@ -66,6 +66,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }
 
         delete res.status.workers;
+        delete res.status.invocations;
         this.stats.push(res);
       });
 

@@ -18,7 +18,9 @@ export class StatusController {
     resourceFilter = {
       includeds: [],
       excludeds: []
-    }
+    },
+    @Query("begin", DATE) begin: Date,
+    @Query("end", DATE) end: Date
   ) {
     return Promise.all(
       this.providers
@@ -30,7 +32,7 @@ export class StatusController {
           }
           return true;
         })
-        .map(p => p.provide())
+        .map(p => p.provide(begin, end))
     );
   }
 
