@@ -12,6 +12,7 @@ ts_project(
     deps = [
         "//packages/core",
         "//packages/database",
+        "//packages/database/pipeline",
         "@npm//@nestjs/common",
         "@npm//@types/express",
         "@npm//express",

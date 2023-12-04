@@ -2,6 +2,7 @@ import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {Inject, Injectable} from "@nestjs/common";
 import {ApiStatus, StatusOptions, STATUS_OPTIONS, InvocationStatus} from "./interface";
 import {ObjectId} from "@spica-server/database";
+import {PipelineBuilder} from "@spica-server/database/pipeline";
 
 @Injectable()
 export class StatusService extends BaseCollection<ApiStatus>("status") {
@@ -15,7 +16,7 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
     return parseFloat((bytes * Math.pow(10, -6)).toFixed(2));
   }
 
-  async _getStatus(begin: Date, end: Date) {
+  async calculateHttpStatus(begin: Date, end: Date) {
     const pipeline: any[] = [
       {
         $group: {
@@ -27,7 +28,7 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
       }
     ];
 
-    if (this.isValidDate(begin) && this.isValidDate(end)) {
+    if (isValidDate(begin) && isValidDate(end)) {
       pipeline.unshift({
         $match: {
           _id: {
@@ -59,10 +60,6 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
       }
     };
   }
-
-  private isValidDate(date) {
-    return date instanceof Date && !isNaN(date.getTime());
-  }
 }
 
 @Injectable()
@@ -72,4 +69,36 @@ export class InvocationService extends BaseCollection<InvocationStatus>("invocat
     super(db, {afterInit: () => this.upsertTTLIndex(_moduleOptions.expireAfterSeconds)});
     this.moduleOptions = _moduleOptions;
   }
+
+  calculateInvocationStatus(module: string, begin?: Date, end?: Date) {
+    const pipelineBuilder = new PipelineBuilder();
+
+    pipelineBuilder.filterByIdRange(begin, end);
+
+    pipelineBuilder.attachToPipeline(true, {
+      $match: {
+        module
+      }
+    });
+
+    pipelineBuilder.attachToPipeline(true, {
+      $group: {
+        _id: null,
+        total: {$sum: 1}
+      }
+    });
+
+    return this.aggregate<{total: number}>(pipelineBuilder.result())
+      .next()
+      .then(r => {
+        return {
+          unit: "count",
+          current: r ? r.total : 0
+        };
+      });
+  }
+}
+
+export function isValidDate(date) {
+  return date instanceof Date && !isNaN(date.getTime());
 }

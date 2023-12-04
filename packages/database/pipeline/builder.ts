@@ -22,6 +22,28 @@ export class PipelineBuilder implements IPipelineBuilder {
     return this;
   }
 
+  filterByIdRange(begin: Date, end: Date) {
+    const areDatesValid = this.isValidDate(begin) && this.isValidDate(end);
+    if (!areDatesValid) {
+      return this;
+    }
+
+    this.isFilterApplied = true;
+    this.attachToPipeline(true, {
+      $match: {
+        _id: {
+          $gte: ObjectId.createFromTime(begin.getTime() / 1000),
+          $lt: ObjectId.createFromTime(end.getTime() / 1000)
+        }
+      }
+    });
+    return this;
+  }
+
+  private isValidDate(date: unknown) {
+    return date instanceof Date && !isNaN(date.getTime());
+  }
+
   filterByUserRequest(filter: object) {
     this.isFilterApplied = this.isValidObject(filter);
     this.attachToPipeline(this.isFilterApplied, {$match: filter});

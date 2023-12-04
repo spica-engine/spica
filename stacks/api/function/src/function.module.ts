@@ -26,6 +26,7 @@ import {getSyncProviders} from "./versioncontrol";
 import {registerAssetHandlers} from "./asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
+import {InvocationService} from "@spica-server/status/services";
 
 @Module({})
 export class FunctionModule {
@@ -36,6 +37,7 @@ export class FunctionModule {
     @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
     @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
+    @Optional() private invocationService: InvocationService,
     logs: LogService,
     validator: Validator
   ) {
@@ -43,7 +45,7 @@ export class FunctionModule {
       getSyncProviders(fs, this.vcRepManager, fe, logs).forEach(provider => registerSync(provider));
     }
 
-    registerStatusProvider(fs, scheduler);
+    registerStatusProvider(fs, scheduler, this.invocationService);
 
     registerAssetHandlers(fs, fe, logs, validator, assetRepManager);
   }
