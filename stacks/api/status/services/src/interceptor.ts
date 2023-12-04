@@ -1,7 +1,7 @@
 import {Injectable, NestInterceptor, ExecutionContext, CallHandler} from "@nestjs/common";
 import {Observable} from "rxjs";
-import {AttachStatusTracker} from "./interface";
-import {StatusService} from "./service";
+import {AttachHttpCounter, AttachInvocationCounter, InvocationStatus} from "./interface";
+import {StatusService, InvocationService} from "./service";
 
 @Injectable()
 export class StatusInterceptor implements NestInterceptor {
@@ -11,23 +11,31 @@ export class StatusInterceptor implements NestInterceptor {
     const req = context.switchToHttp().getRequest();
     const res = context.switchToHttp().getResponse();
 
-    attachStatusTrackerFactory(this.service)(req, res);
+    attachHttpCounterFactory(this.service)(req, res);
 
     return next.handle();
   }
 }
 
-export function attachStatusTrackerFactory(service: StatusService): AttachStatusTracker {
+export function attachInvocationCounterFactory(
+  service: InvocationService
+): AttachInvocationCounter {
+  return (
+    obj: object,
+    methodName: string,
+    invocationStatusBuilder: (...invocationArgs: any[]) => InvocationStatus
+  ) => {
+    const intercept = (...args) => {
+      const status = invocationStatusBuilder(...args);
+      service.insertOne(status).catch(e => console.error(e));
+    };
+    interceptMethod(obj, methodName, intercept);
+  };
+}
+
+export function attachHttpCounterFactory(service: StatusService): AttachHttpCounter {
   const calculatePayloadSize = (payload: string) => {
     return Buffer.byteLength(payload ? payload : "");
-  };
-
-  const interceptMethod = (obj: object, methodName: string, intercept: (...args) => void) => {
-    const actual = obj[methodName];
-    obj[methodName] = (...args) => {
-      intercept(...args);
-      return actual.bind(obj)(...args);
-    };
   };
 
   return (req, res) => {
@@ -64,5 +72,13 @@ export function attachStatusTrackerFactory(service: StatusService): AttachStatus
       resSize = calculatePayloadSize(payload);
       saveStatus();
     });
+  };
+}
+
+export function interceptMethod(obj: object, methodName: string, intercept: (...args) => void) {
+  const actual = obj[methodName];
+  obj[methodName] = (...args) => {
+    intercept(...args);
+    return actual.bind(obj)(...args);
   };
 }

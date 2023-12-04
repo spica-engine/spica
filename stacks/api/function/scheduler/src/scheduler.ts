@@ -21,7 +21,12 @@ import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io"
 import {generateLog, LogLevels} from "@spica-server/function/runtime/logger";
 import {Node} from "@spica-server/function/runtime/node";
 import {ClassCommander, CommandType, JobReducer} from "@spica-server/replication";
-import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/status/services";
+import {
+  AttachHttpCounter,
+  ATTACH_HTTP_COUNTER,
+  ATTACH_INVOCATION_COUNTER,
+  AttachInvocationCounter
+} from "@spica-server/status/services";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
@@ -55,7 +60,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>,
     @Optional() private jobReducer: JobReducer,
-    @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker
+    @Optional() @Inject(ATTACH_HTTP_COUNTER) private attachHttpCounter: AttachHttpCounter,
+    @Optional()
+    @Inject(ATTACH_INVOCATION_COUNTER)
+    private attachInvocationCounter: AttachInvocationCounter
   ) {
     if (this.commander) {
       this.commander.register(this, [this.outdateWorkers], CommandType.SYNC);
@@ -97,7 +105,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.http.httpAdapter.getInstance(),
         this.options.corsOptions,
         schedulerUnsubscription,
-        this.attachStatusTracker
+        this.attachHttpCounter
       )
     );
 
@@ -300,12 +308,33 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     } else {
       relatedWorker.schedule = schedule;
 
+      if (this.attachInvocationCounter) {
+        this.handleInvocationCounter(relatedWorker, id);
+      }
+
       this.print(
         relatedWorker.target ? `worker ${id} is waiting for new event` : `got a new worker ${id}`
       );
     }
 
     this.process();
+  }
+
+  handleInvocationCounter(worker: ScheduleWorker, workerId: string) {
+    const statusBuilder = (...args) => {
+      const ev: event.Event = args[0];
+      return {
+        invocation_id: ev.id,
+        context: ev.target.id,
+        method: ev.target.handler,
+        module: "function",
+        details: {
+          type: event.Type[ev.type],
+          worker_id: workerId
+        }
+      };
+    };
+    this.attachInvocationCounter(worker, "schedule", statusBuilder);
   }
 
   lostWorker(id: string) {

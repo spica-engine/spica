@@ -1,7 +1,12 @@
 import {Global, Module} from "@nestjs/common";
-import {attachStatusTrackerFactory, StatusInterceptor} from "./interceptor";
-import {StatusOptions, STATUS_OPTIONS, ATTACH_STATUS_TRACKER} from "./interface";
-import {StatusService} from "./service";
+import {attachHttpCounterFactory, attachInvocationCounterFactory} from "./interceptor";
+import {
+  StatusOptions,
+  STATUS_OPTIONS,
+  ATTACH_HTTP_COUNTER,
+  ATTACH_INVOCATION_COUNTER
+} from "./interface";
+import {InvocationService, StatusService} from "./service";
 
 @Global()
 @Module({})
@@ -11,17 +16,25 @@ export class CoreStatusServiceModule {
       module: CoreStatusServiceModule,
       providers: [
         {
-          provide: ATTACH_STATUS_TRACKER,
+          provide: ATTACH_HTTP_COUNTER,
           useFactory: service => {
-            return attachStatusTrackerFactory(service);
+            return attachHttpCounterFactory(service);
           },
           inject: [StatusService]
         },
+        {
+          provide: ATTACH_INVOCATION_COUNTER,
+          useFactory: service => {
+            return attachInvocationCounterFactory(service);
+          },
+          inject: [InvocationService]
+        },
 
         {provide: STATUS_OPTIONS, useValue: options},
-        StatusService
+        StatusService,
+        InvocationService
       ],
-      exports: [ATTACH_STATUS_TRACKER, StatusService]
+      exports: [ATTACH_HTTP_COUNTER, ATTACH_INVOCATION_COUNTER, StatusService, InvocationService]
     };
   }
 }

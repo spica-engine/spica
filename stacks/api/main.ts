@@ -257,7 +257,7 @@ const args = yargs
     "status-tracking": {
       boolean: true,
       description:
-        "When enabled, server will be able to show the stats of core modules and track the request-response stats too.",
+        "When enabled, server will be able to show the stats of core modules and track the request-response stats, function invocations etc.",
       default: true
     }
   })

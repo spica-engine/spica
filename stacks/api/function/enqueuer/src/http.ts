@@ -5,7 +5,7 @@ import {Description, Enqueuer} from "./enqueuer";
 import express = require("express");
 import bodyParser = require("body-parser");
 import {CorsOptions} from "@spica-server/core";
-import {AttachStatusTracker} from "@spica-server/status/services";
+import {AttachHttpCounter} from "@spica-server/status/services";
 
 export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   type = event.Type.HTTP;
@@ -25,7 +25,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     httpServer: express.Application,
     private corsOptions: CorsOptions,
     private schedulerUnsubscription: (targetId: string) => void,
-    private attachStatusTracker?: AttachStatusTracker
+    private attachHttpCounter?: AttachHttpCounter
   ) {
     super();
     this.router.use(bodyParser.raw({
@@ -110,8 +110,8 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         return acc;
       }, []);
 
-      if (this.attachStatusTracker) {
-        this.attachStatusTracker(req, res);
+      if (this.attachHttpCounter) {
+        this.attachHttpCounter(req, res);
       }
 
       this.http.enqueue(ev.id, request, res as any);

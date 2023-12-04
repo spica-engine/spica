@@ -5,9 +5,16 @@ export interface StatusOptions {
 }
 
 export const STATUS_OPTIONS = Symbol.for("STATUS_OPTIONS");
-export const ATTACH_STATUS_TRACKER = Symbol.for("ATTACH_STATUS_TRACKER");
+export const ATTACH_HTTP_COUNTER = Symbol.for("ATTACH_HTTP_COUNTER");
+export const ATTACH_INVOCATION_COUNTER = Symbol.for("ATTACH_INVOCATION_COUNTER");
 
-export type AttachStatusTracker = (req: Request, res: Response) => void;
+export type AttachHttpCounter = (req: Request, res: Response) => void;
+
+export type AttachInvocationCounter = (
+  obj: object,
+  methodName: string,
+  statusBuilder: (...invocationArgs) => InvocationStatus
+) => void;
 
 export interface ApiStatus {
   request: {
@@ -15,5 +22,15 @@ export interface ApiStatus {
   };
   response: {
     size: number;
+  };
+}
+
+export interface InvocationStatus {
+  invocation_id?: string;
+  module: string;
+  context: string;
+  method: string;
+  details?: {
+    [key: string]: any;
   };
 }

@@ -1,6 +1,6 @@
 import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {Inject, Injectable} from "@nestjs/common";
-import {ApiStatus, StatusOptions, STATUS_OPTIONS} from "./interface";
+import {ApiStatus, StatusOptions, STATUS_OPTIONS, InvocationStatus} from "./interface";
 import {ObjectId} from "@spica-server/database";
 
 @Injectable()
@@ -62,5 +62,14 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
 
   private isValidDate(date) {
     return date instanceof Date && !isNaN(date.getTime());
+  }
+}
+
+@Injectable()
+export class InvocationService extends BaseCollection<InvocationStatus>("invocation_status") {
+  moduleOptions: StatusOptions;
+  constructor(db: DatabaseService, @Inject(STATUS_OPTIONS) _moduleOptions: StatusOptions) {
+    super(db, {afterInit: () => this.upsertTTLIndex(_moduleOptions.expireAfterSeconds)});
+    this.moduleOptions = _moduleOptions;
   }
 }
