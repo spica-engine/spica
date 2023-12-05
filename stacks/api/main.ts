@@ -552,7 +552,6 @@ NestFactory.create(RootModule, {
     if (args["access-logs"]) {
       app.use(
         morgan("tiny", {
-          // immediate: true,
           skip: (req, res) => {
             const urlRegex = new RegExp(args["access-logs-url-filter"]);
             const statusCodeRegex = new RegExp(args["access-logs-statuscode-filter"]);
