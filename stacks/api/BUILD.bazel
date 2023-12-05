@@ -34,8 +34,8 @@ ts_project(
         "@npm//@types/express",
         "@npm//@types/node",
         "@npm//@types/yargs",
-        "@npm//yargs",
         "@npm//morgan",
+        "@npm//yargs",
     ],
 )
 
