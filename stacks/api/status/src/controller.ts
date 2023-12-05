@@ -51,4 +51,21 @@ export class StatusController {
 
     return provider.provide(begin, end);
   }
+
+  @Get(":module/:submodule")
+  @UseGuards(AuthGuard(), ActionGuard("status:show", "status/:module"))
+  findSubModule(
+    @Param("module") module: string,
+    @Param("submodule") submodule: string,
+    @Query("begin", DATE) begin: Date,
+    @Query("end", DATE) end: Date
+  ) {
+    const provider = this.providers.find(p => p.module == module && p.submodule == submodule);
+
+    if (!provider) {
+      throw new BadRequestException(`Status for module ${module} ${submodule} does not exist`);
+    }
+
+    return provider.provide(begin, end);
+  }
 }

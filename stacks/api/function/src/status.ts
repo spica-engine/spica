@@ -19,5 +19,16 @@ export async function registerStatusProvider(
     };
   };
 
+  const provideInvocations = async (begin?: Date, end?: Date) => {
+    return {
+      module: "function",
+      submodule: "invocations",
+      status: {
+        invocations: await invocationService.findByModule("function", begin, end)
+      }
+    };
+  };
+
   register({module: "function", provide});
+  register({module: "function", submodule: "invocations", provide: provideInvocations});
 }

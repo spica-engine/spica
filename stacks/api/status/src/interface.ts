@@ -9,5 +9,6 @@ export interface Status {
 
 export interface StatusProvider {
   module: string;
+  submodule?:string;
   provide: (...args) => Promise<Status>;
 }

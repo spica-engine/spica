@@ -75,10 +75,8 @@ export class InvocationService extends BaseCollection<InvocationStatus>("invocat
 
     pipelineBuilder.filterByIdRange(begin, end);
 
-    pipelineBuilder.attachToPipeline(true, {
-      $match: {
-        module
-      }
+    pipelineBuilder.filterByUserRequest({
+      module
     });
 
     pipelineBuilder.attachToPipeline(true, {
@@ -96,6 +94,20 @@ export class InvocationService extends BaseCollection<InvocationStatus>("invocat
           current: r ? r.total : 0
         };
       });
+  }
+
+  findByModule(module: string, begin?: Date, end?: Date) {
+    const pipeline = new PipelineBuilder();
+
+    pipeline.filterByIdRange(begin, end);
+
+    pipeline.filterByUserRequest({
+      module
+    });
+
+    pipeline.setVisibilityOfFields({module: 0});
+
+    return this.aggregate<InvocationStatus>(pipeline.result()).toArray();
   }
 }
 
