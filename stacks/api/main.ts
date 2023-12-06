@@ -550,14 +550,18 @@ NestFactory.create(RootModule, {
     app.enableShutdownHooks();
 
     if (args["access-logs"]) {
+      morgan.token("prefix", () => "access-log:");
       app.use(
-        morgan("tiny", {
-          skip: (req, res) => {
-            const urlRegex = new RegExp(args["access-logs-url-filter"]);
-            const statusCodeRegex = new RegExp(args["access-logs-statuscode-filter"]);
-            return !urlRegex.test(req.url) || !statusCodeRegex.test(res.statusCode.toString());
+        morgan(
+          ':prefix :remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length]',
+          {
+            skip: (req, res) => {
+              const urlRegex = new RegExp(args["access-logs-url-filter"]);
+              const statusCodeRegex = new RegExp(args["access-logs-statuscode-filter"]);
+              return !urlRegex.test(req.url) || !statusCodeRegex.test(res.statusCode.toString());
+            }
           }
-        })
+        )
       );
     }
 
