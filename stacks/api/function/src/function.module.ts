@@ -71,7 +71,8 @@ export class FunctionModule {
           experimentalDevkitDatabaseCache: options.experimentalDevkitDatabaseCache,
           corsOptions: options.corsOptions,
           debug: options.debug,
-          logger: options.logger
+          logger: options.logger,
+          invocationLogs: options.invocationLogs
         }),
         ServicesModule.forRoot({
           logExpireAfterSeconds: options.logExpireAfterSeconds,
