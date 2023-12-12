@@ -44,8 +44,14 @@ spec:
                 command:
                   - "/bin/sh"
                   - "-c"
-                  - |
-                    sleep 5s
+                  - >
+                    retries=0;
+                    max_retries=10;
+                    until mongo --eval "db.runCommand({ ping: 1 })" 2>/dev/null || [ $retries -ge $max_retries ]; do
+                      retries=$((retries+1));
+                      sleep 5;
+                    done;
+                    [ $retries -ge $max_retries ] && echo "MongoDB did not become ready after $max_retries retries. Exiting." && exit 1;
                     mongo --eval 'rs.initiate({"_id": "rs0", "members": {{ template "generateReplicaSetMembers" . }} })'
           {{- end}}
           ports:
