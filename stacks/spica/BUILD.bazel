@@ -49,6 +49,6 @@ container_push(
     image = ":spica",
     registry = "index.docker.io",
     repository = "htuna07/aws-spica-application",
-    tag = "0.9.29",
+    tag = "0.9.29-nginx-update",
     tags = ["release-with-spica"],
 )

@@ -55,7 +55,7 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_pull")
 
 container_pull(
     name = "nginx_image",
-    digest = "sha256:881169baf03885268b54eb07c673bc27f394b263cb728dfd86ff2b65b3450932",
+    digest = "sha256:558b1480dc5c8f4373601a641c56b4fd24a77105d1246bd80b991f8b5c5dc0fc",
     registry = "index.docker.io",
     repository = "library/nginx",
     tag = "alpine",
