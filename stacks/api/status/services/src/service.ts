@@ -1,4 +1,4 @@
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, CollStats, DatabaseService} from "@spica-server/database";
 import {Inject, Injectable} from "@nestjs/common";
 import {ApiStatus, StatusOptions, STATUS_OPTIONS} from "./interface";
 import {ObjectId} from "@spica-server/database";
@@ -9,7 +9,71 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
   constructor(db: DatabaseService, @Inject(STATUS_OPTIONS) _moduleOptions: StatusOptions) {
     super(db, {afterInit: () => this.upsertTTLIndex(_moduleOptions.expireAfterSeconds)});
     this.moduleOptions = _moduleOptions;
+
+    this.trackDocumentCountStats();
   }
+
+  trackDocumentCountStats() {
+    if (!this.moduleOptions.totalDocumentsLogInterval) {
+      return;
+    }
+
+    const logDocumentCountStats = async () => {
+      const docCounts: string[] = [];
+
+      const collStats = await this.getCollStats();
+      for (const [collName, stat] of Object.entries(collStats)) {
+        docCounts.push(`${collName}: ${stat.count}`);
+      }
+
+      const docCountsStr = docCounts.sort((a, b) => a.localeCompare(b)).join(", ");
+      const message = `status-total-documents-log: ${docCountsStr}`;
+      console.log(message);
+    };
+
+    logDocumentCountStats();
+    setInterval(() => logDocumentCountStats(), this.moduleOptions.totalDocumentsLogInterval);
+  }
+
+  async getCollStats() {
+    const colls = await this.db.collections();
+    const result: {[collName: string]: CollStats} = {};
+
+    await Promise.all(
+      colls.map(coll =>
+        coll.stats().then(stat => {
+          result[coll.collectionName] = stat;
+        })
+      )
+    );
+
+    return result;
+  }
+
+  /*
+  getCollStats() {
+    return this.db.collections().then(async colls => {
+      const result = {};
+      const promises = [];
+
+      for (const col of colls) {
+        const promise = col.stats().then(stat => {
+          result[col.collectionName] = stat.count
+          const log = `${col.collectionName}: ${stat.count}`;
+          results.push(log);
+        });
+        pros.push(pro);
+      }
+
+      await Promise.all(pros);
+
+      const totalDocumentsLog = results.sort((r1, r2) => r1.localeCompare(r2)).join(", ");
+      const log = `status-total-documents-log: ${totalDocumentsLog}`;
+
+      return log;
+    });
+  }
+  */
 
   private byteToMb(bytes: number) {
     return parseFloat((bytes * Math.pow(10, -6)).toFixed(2));

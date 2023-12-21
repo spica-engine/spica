@@ -2,6 +2,7 @@ import {Request, Response} from "express";
 
 export interface StatusOptions {
   expireAfterSeconds: number;
+  totalDocumentsLogInterval?: number;
 }
 
 export const STATUS_OPTIONS = Symbol.for("STATUS_OPTIONS");

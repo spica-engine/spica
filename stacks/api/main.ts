@@ -261,6 +261,21 @@ const args = yargs
       default: true
     }
   })
+  .options({
+    "total-documents-log": {
+      boolean: true,
+      description: "When enabled, document counts of collections will be sent to stdout",
+      default: false
+    }
+  })
+  .options({
+    "total-documents-log-interval": {
+      number: true,
+      description:
+        "Set the interval of total document count of collections will be sent to stdout in ms. Default: 60000",
+      default: 60000
+    }
+  })
   /* Version Control Options */
   .options({
     "version-control": {
@@ -484,7 +499,10 @@ if (args["activity-stream"]) {
 if (args["status-tracking"]) {
   modules.push(
     StatusModule.forRoot({
-      expireAfterSeconds: args["common-log-lifespan"]
+      expireAfterSeconds: args["common-log-lifespan"],
+      totalDocumentsLogInterval: args["total-documents-log"]
+        ? args["total-documents-log-interval"]
+        : 0
     })
   );
 }
