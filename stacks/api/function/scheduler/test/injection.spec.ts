@@ -34,6 +34,7 @@ describe("Scheduler Injection", () => {
       imports: [
         DatabaseTestingModule.replicaSet(),
         SchedulerModule.forRoot({
+          invocationLogs: false,
           databaseName: undefined,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
