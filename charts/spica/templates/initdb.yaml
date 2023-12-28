@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{.Release.Namespace}}
+  name: {{ .Release.Name }}-database
+data:
+  init-users.sh: |
+    #!/bin/sh
+
+    ROOT_USERNAME=$ROOT_USERNAME
+    ROOT_PASSWORD=$ROOT_PASSWORD
+    SPICA_USERNAME=$SPICA_USERNAME
+    SPICA_PASSWORD=$SPICA_PASSWORD
+
+    echo "Defining retry command.."
+    retry_command() {
+      local retries=0
+      local max_retries=10
+
+      while true; do
+        "$@" && break  # Break the loop if the command succeeds
+        retries=$((retries+1))
+        if [ $retries -ge $max_retries ]; then
+          echo "Max retries reached. Exiting script."
+          exit 1
+        fi
+        sleep 5
+      done
+    }
+
+    echo "Defined retry command!"
+
+    # Start MongoDB without authentication
+    echo "Starting mongodb with replica and no-auth.."
+    mongod --replSet rs0 --bind_ip_all > /dev/null 2>&1 & PID="$!"
+    echo "Starting mongodb succeeded!"
+
+
+    # retry until mongodb process is ready
+    echo "Trying to ping.."
+    retry_command mongo --quiet --eval "db.runCommand({ ping: 1 })"
+    echo "Ping succeeded!"
+
+    echo "Trying to initiate replicaset.."
+    mongo --eval "rs.initiate()"
+    echo "Replicaset initiation succeeded!"
+
+    # insert root user if not exist
+    echo "Inserting root user.."
+    OUTPUT=$(mongo --quiet <<EOF
+      use admin
+      db.createUser({ user: '$ROOT_USERNAME', pwd: '$ROOT_PASSWORD', roles: ["root"] })
+    EOF
+    ) || true
+    echo "$OUTPUT"
+    echo "Inserting root user has been completed!"
+
+    # upsert application user
+    echo "Inserting spica user.."
+    mongo --quiet <<EOF
+      use admin
+      var user = db.getUser('$SPICA_USERNAME')
+      var roles = [ { role: 'readWrite', db: 'spica' } ]
+      if(user){
+          db.updateUser('$SPICA_USERNAME', { pwd: '$SPICA_PASSWORD', roles: roles })
+      }else{
+          db.createUser({ user: '$SPICA_USERNAME', pwd: '$SPICA_PASSWORD', roles: roles })
+      }
+    EOF
+    echo "Inserted spica user!"
+
+    echo "Killing mongodb process.."
+    kill $PID
+    echo "Mongodb process has been killed!"
+
+    echo "Initializing has been completed successfully."
+
+  init-replica.sh: | 
+    echo "Defining retry command.."
+    retry_command() {
+      local retries=0
+      local max_retries=10
+
+      while true; do
+        "$@" && break  # Break the loop if the command succeeds
+        retries=$((retries+1))
+        if [ $retries -ge $max_retries ]; then
+          echo "Max retries reached. Exiting script."
+          exit 1
+        fi
+        sleep 5
+      done
+    }
+    echo "Defined retry command!"
+
+    # retry until mongodb process is ready
+    echo "Trying to ping.."
+    retry_command mongo --quiet --eval "db.runCommand({ ping: 1 })"
+    echo "Ping succeeded!"
+
+    mongo --authenticationDatabase "admin" -u "$ROOT_USERNAME" -p "$ROOT_PASSWORD" --eval "rs.reconfig({ _id: 'rs0', members: $RS_MEMBERS },{force: true})"

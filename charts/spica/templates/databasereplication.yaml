@@ -33,8 +33,22 @@ spec:
             "false",
             "--nodes",
             {{ template "database.nodes" . }},
-            "--debug"
+            "--username",
+            "$(USERNAME)",
+            "--password",
+            "$(PASSWORD)"
           ]
+          env:
+            - name: USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.rootSecretName }}
+                  key: username
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.rootSecretName }}
+                  key: password
       {{- if .Values.database.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.database.nodeSelector | indent 8 }}
