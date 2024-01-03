@@ -36,6 +36,10 @@ spec:
         configMap:
           name: {{ .Release.Name }}-database
           defaultMode: 0755
+      - name: db-replica-auth-key
+        secret:
+          secretName: {{ .Release.Name }}-database-replica-auth-key
+          defaultMode: 0400
       initContainers:
         - name: init-users
           image: mongo:{{ .Values.database.version }}
@@ -53,12 +57,12 @@ spec:
             - name: SPICA_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Release.Name }}-database
+                  name: {{ .Release.Name }}-database-credentials
                   key: username
             - name: SPICA_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Release.Name }}-database
+                  name: {{ .Release.Name }}-database-credentials
                   key: password
             - name: ROOT_USERNAME
               valueFrom:
@@ -78,9 +82,7 @@ spec:
             - "-c"
           args: 
             - |
-              echo $REPLICA_AUTH_KEY > ./keyfile
-              chmod 400 ./keyfile
-              mongod --replSet rs0 --bind_ip_all --auth --keyFile ./keyfile
+              mongod --replSet rs0 --bind_ip_all --auth --keyFile ./etc/secrets/replica-auth-key
           ports:
             - containerPort: 27017
           {{- if eq (int .Values.database.replicas) 1}}
@@ -100,12 +102,9 @@ spec:
               mountPath: /data/db
             - name: init-db
               mountPath: /scripts
+            - name: db-replica-auth-key
+              mountPath: /etc/secrets
           env:
-            - name: REPLICA_AUTH_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-database
-                  key: replica-auth-key
             - name: ROOT_USERNAME
               valueFrom:
                 secretKeyRef:
