@@ -36,16 +36,17 @@ data:
     echo "Starting mongodb succeeded!"
 
 
-    # retry until mongodb process is ready
+    # Ping until mongodb process is ready
     echo "Trying to ping.."
     retry_command mongo --quiet --eval "db.runCommand({ ping: 1 })"
     echo "Ping succeeded!"
 
+    # Initiate replicaset
     echo "Trying to initiate replicaset.."
     mongo --eval "rs.initiate()"
     echo "Replicaset initiation succeeded!"
 
-    # insert root user if not exist
+    # Insert root user if not exist
     echo "Inserting root user.."
     OUTPUT=$(mongo --quiet <<EOF
       use admin
@@ -55,7 +56,7 @@ data:
     echo "$OUTPUT"
     echo "Inserting root user has been completed!"
 
-    # upsert application user
+    # Upsert application user
     echo "Inserting spica user.."
     mongo --quiet <<EOF
       use admin
