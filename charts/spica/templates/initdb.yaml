@@ -15,7 +15,8 @@ data:
     echo "Defining retry command.."
     retry_command() {
       local retries=0
-      local max_retries=10
+      local max_retries=5
+      local base_delay=5
 
       while true; do
         "$@" && break  # Break the loop if the command succeeds
@@ -24,7 +25,11 @@ data:
           echo "Max retries reached. Exiting script."
           exit 1
         fi
-        sleep 5
+      
+      delay=$((base_delay * (2 ** retries)))
+      echo "Command failed. Retrying in $delay seconds..."
+      sleep $delay
+
       done
     }
 
