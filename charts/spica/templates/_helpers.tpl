@@ -1,5 +1,6 @@
 {{- define "database.connection-uri" -}}
     {{- $uri := "mongodb://" -}}
+    {{- $uri = printf "%s%s:%s@" $uri .Values.database.username .Values.database.password }}
     {{- $namespace := printf "%s-database" .Release.Name -}}
     {{- $ns := .Release.Namespace -}}
     {{- range $index := until (.Values.database.replicas | int) -}}
