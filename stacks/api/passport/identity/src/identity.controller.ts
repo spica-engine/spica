@@ -107,7 +107,7 @@ export class IdentityController {
   }
 
   private hideSecretsExpression(): {[key: string]: 0} {
-    const expression: any = {password: 0, lastPasswords: 0, lastLogin: 0, failedAttempts: 0};
+    const expression: any = {password: 0, lastPasswords: 0};
 
     const authFactorSecretPaths = this.authFactor.getSecretPaths();
     authFactorSecretPaths.forEach(path => {
@@ -312,8 +312,6 @@ export class IdentityController {
   private afterIdentityUpsert(identity: Identity) {
     delete identity.password;
     delete identity.lastPasswords;
-    delete identity.lastLogin;
-    delete identity.failedAttempts;
 
     if (identity.authFactor) {
       this.authFactor.getSecretPaths().map(path => {
@@ -409,7 +407,7 @@ export class IdentityController {
       },
       {
         returnOriginal: false,
-        projection: {password: 0, lastPasswords: 0, lastLogin: 0, failedAttempts: 0}
+        projection: {password: 0, lastPasswords: 0}
       }
     );
   }
@@ -428,7 +426,7 @@ export class IdentityController {
       },
       {
         returnOriginal: false,
-        projection: {password: 0, lastPasswords: 0, lastLogin: 0, failedAttempts: 0}
+        projection: {password: 0, lastPasswords: 0}
       }
     );
   }
