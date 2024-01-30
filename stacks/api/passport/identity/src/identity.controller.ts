@@ -106,7 +106,7 @@ export class IdentityController {
   }
 
   private hideSecretsExpression(): {[key: string]: 0} {
-    const expression: any = {password: 0};
+    const expression: any = {password: 0, lastLogin: 0, failedAttempts: 0};
 
     const authFactorSecretPaths = this.authFactor.getSecretPaths();
     authFactorSecretPaths.forEach(path => {
