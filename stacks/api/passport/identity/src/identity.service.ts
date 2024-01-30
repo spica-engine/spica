@@ -62,6 +62,8 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       return null;
     }
 
+    identity.failedAttempts = identity.failedAttempts || [];
+
     this.checkIdentityIsBlocked(identity);
 
     const matched = await compare(password, identity.password);

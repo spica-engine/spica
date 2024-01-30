@@ -26,10 +26,10 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {Factor, FactorMeta, AuthFactor} from "@spica-server/passport/authfactor";
 import {createIdentityActivity} from "./activity.resource";
-import {hash} from "./hash";
+import {compare, hash} from "./hash";
 import {IdentityService} from "./identity.service";
 import {Identity, PaginationResponse} from "./interface";
-import {POLICY_PROVIDER} from "./options";
+import {IDENTITY_OPTIONS, IdentityOptions, POLICY_PROVIDER} from "./options";
 import {registerPolicyAttacher} from "./utility";
 import {ClassCommander, CommandType} from "@spica-server/replication";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
@@ -56,6 +56,7 @@ export class IdentityController {
 
   constructor(
     private identityService: IdentityService,
+    @Inject(IDENTITY_OPTIONS) private options: IdentityOptions,
     @Inject(POLICY_PROVIDER)
     private identityPolicyResolver: (req: any) => Promise<[{statement: []}]>,
     private authFactor: AuthFactor,
@@ -106,7 +107,7 @@ export class IdentityController {
   }
 
   private hideSecretsExpression(): {[key: string]: 0} {
-    const expression: any = {password: 0, lastLogin: 0, failedAttempts: 0};
+    const expression: any = {password: 0, lastPasswords: 0, lastLogin: 0, failedAttempts: 0};
 
     const authFactorSecretPaths = this.authFactor.getSecretPaths();
     authFactorSecretPaths.forEach(path => {
@@ -294,6 +295,9 @@ export class IdentityController {
   ) {
     identity.password = await hash(identity.password);
     identity.policies = [];
+    identity.lastLogin = null;
+    identity.failedAttempts = [];
+    identity.lastPasswords = [];
 
     return this.identityService
       .insertOne(identity)
@@ -307,6 +311,9 @@ export class IdentityController {
 
   private afterIdentityUpsert(identity: Identity) {
     delete identity.password;
+    delete identity.lastPasswords;
+    delete identity.lastLogin;
+    delete identity.failedAttempts;
 
     if (identity.authFactor) {
       this.authFactor.getSecretPaths().map(path => {
@@ -329,7 +336,33 @@ export class IdentityController {
     identity: Partial<Identity>
   ) {
     if (identity.password) {
-      identity.password = await hash(identity.password);
+      const {password: currentPassword, lastPasswords} = await this.identityService.findOne({
+        identifier: identity.identifier
+      });
+
+      const desiredPassword = await hash(identity.password);
+
+      if (this.options.passwordHistoryUniquenessCount > 0) {
+        identity.lastPasswords = lastPasswords || [];
+
+        identity.lastPasswords.push(currentPassword);
+
+        if (identity.lastPasswords.length == this.options.passwordHistoryUniquenessCount + 1) {
+          identity.lastPasswords.shift();
+        }
+
+        const isOneOfLastPasswords = (await Promise.all(
+          identity.lastPasswords.map(oldPw => compare(identity.password, oldPw))
+        )).includes(true);
+
+        if (isOneOfLastPasswords) {
+          throw new BadRequestException(
+            `New password can't be the one of last ${this.options.passwordHistoryUniquenessCount} passwords.`
+          );
+        }
+      }
+
+      identity.password = desiredPassword;
     }
 
     delete identity.authFactor;
@@ -376,7 +409,7 @@ export class IdentityController {
       },
       {
         returnOriginal: false,
-        projection: {password: 0}
+        projection: {password: 0, lastPasswords: 0, lastLogin: 0, failedAttempts: 0}
       }
     );
   }
@@ -395,7 +428,7 @@ export class IdentityController {
       },
       {
         returnOriginal: false,
-        projection: {password: 0}
+        projection: {password: 0, lastPasswords: 0, lastLogin: 0, failedAttempts: 0}
       }
     );
   }

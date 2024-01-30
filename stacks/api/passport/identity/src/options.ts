@@ -11,8 +11,9 @@ export interface IdentityOptions {
   defaultIdentityPassword?: string;
   defaultIdentityPolicies?: string[];
   entryLimit?: number;
-  blockingOptions:{
-    failedAttemptLimit:number,
-    blockDurationMinutes:number,
-  }
+  blockingOptions: {
+    failedAttemptLimit: number;
+    blockDurationMinutes: number;
+  };
+  passwordHistoryUniquenessCount: number;
 }

@@ -121,10 +121,15 @@ const args = yargs
       description: "Maximum failed login attempt before blocking further attempts.",
       default: 3
     },
-    "passport-identity-block-duration-after-failed-login-attempt-limit": {
+    "passport-identity-block-duration-after-failed-login-attempts": {
       number: true,
       description: "Duration of blocking login attempts in minutes.",
       default: 30
+    },
+    "passport-identity-password-history-uniqueness-count": {
+      number: true,
+      description: "How many of last passwords will be compared with the new password in terms of uniqueness",
+      default: 4
     },
     "passport-identity-token-expiration-seconds-limit": {
       number: true,
@@ -463,8 +468,9 @@ const modules = [
     blockingOptions: {
       failedAttemptLimit: args["passport-identity-failed-login-attempt-limit"],
       blockDurationMinutes:
-        args["passport-identity-block-duration-after-failed-login-attempt-limit"]
-    }
+        args["passport-identity-block-duration-after-failed-login-attempts"]
+    },
+    passwordHistoryUniquenessCount: args["passport-identity-password-history-uniqueness-count"]
   }),
   FunctionModule.forRoot({
     logExpireAfterSeconds: args["common-log-lifespan"],
