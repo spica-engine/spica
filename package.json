@@ -50,6 +50,7 @@
     "archiver": "^5.3.1",
     "aws-sdk": "^2.1206.0",
     "axios": "^0.21.4",
+    "morgan":"^1.10.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.2",
     "bson": "^4.0.1",

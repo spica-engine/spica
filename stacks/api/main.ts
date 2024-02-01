@@ -21,6 +21,7 @@ import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
 import * as yargs from "yargs";
+import * as morgan from "morgan";
 
 const args = yargs
   /* TLS Options */
@@ -128,7 +129,8 @@ const args = yargs
     },
     "passport-identity-password-history-uniqueness-count": {
       number: true,
-      description: "How many of last passwords will be compared with the new password in terms of uniqueness",
+      description:
+        "How many of last passwords will be compared with the new password in terms of uniqueness",
       default: 4
     },
     "passport-identity-token-expiration-seconds-limit": {
@@ -350,6 +352,21 @@ While the 'passport' module will use this url to re-route the user to the Passpo
 Example: http(s)://doomed-d45f1.spica.io/api`
   })
   .demandOption("public-url")
+  .option("access-logs", {
+    boolean: true,
+    description: "Enable/disable http access logs",
+    default: true
+  })
+  .option("access-logs-url-filter", {
+    string: true,
+    description: "Regex to filter access logs by url",
+    default: ".*"
+  })
+  .option("access-logs-statuscode-filter", {
+    string: true,
+    description: "Regex to filter access logs by status code",
+    default: ".*"
+  })
   .check(args => {
     if (!args["passport-identity-token-expiration-seconds-limit"]) {
       args["passport-identity-token-expiration-seconds-limit"] =
@@ -467,8 +484,7 @@ const modules = [
     samlCertificateTTL: args["passport-saml-certificate-ttl"],
     blockingOptions: {
       failedAttemptLimit: args["passport-identity-failed-login-attempt-limit"],
-      blockDurationMinutes:
-        args["passport-identity-block-duration-after-failed-login-attempts"]
+      blockDurationMinutes: args["passport-identity-block-duration-after-failed-login-attempts"]
     },
     passwordHistoryUniquenessCount: args["passport-identity-password-history-uniqueness-count"]
   }),
@@ -554,6 +570,34 @@ NestFactory.create(RootModule, {
       Middlewares.MergePatchJsonParser(args["payload-size-limit"])
     );
     app.enableShutdownHooks();
+
+    if (args["access-logs"]) {
+      morgan.token("accessor", (req, res) => {
+        if (!req.user) {
+          return req.headers.authorization;
+        }
+
+        const fields = ["_id", "identifier", "name"];
+        Object.keys(req.user).forEach(
+          userField => !fields.includes(userField) && delete req.user[userField]
+        );
+
+        return JSON.stringify(req.user);
+      });
+      app.use(
+        morgan(
+          ':remote-addr - :accessor ":method :url HTTP/:http-version" :status [:date[iso]]',
+          {
+            skip: (req, res) => {
+              const urlRegex = new RegExp(args["access-logs-url-filter"]);
+              const statusCodeRegex = new RegExp(args["access-logs-statuscode-filter"]);
+              return !urlRegex.test(req.url) || !statusCodeRegex.test(res.statusCode.toString());
+            }
+          }
+        )
+      );
+    }
+
     return app.listen(args.port);
   })
   .then(() => {
