@@ -15,7 +15,7 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
 import {IndexResult} from "@spica-client/core";
-import {PassportService} from "@spica/client/src/passport/services/passport.service";
+import {PassportService} from "src/passport/services/passport.service";
 import {of} from "rxjs";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {ApiKey} from "../../interfaces/apikey";

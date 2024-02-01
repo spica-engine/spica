@@ -9,14 +9,14 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 # Setup nodejs workspace
 http_archive(
     name = "build_bazel_rules_nodejs",
-    sha256 = "ddb78717b802f8dd5d4c01c340ecdc007c8ced5c1df7db421d0df3d642ea0580",
-    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/4.6.0/rules_nodejs-4.6.0.tar.gz"],
+    sha256 = "ad3e5afa52ef9aac4da426f61e339c054ecbc0e6665cec2109f8846b4c8339e3",
+    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/4.6.3/rules_nodejs-4.6.3.tar.gz"],
 )
 
 load("@build_bazel_rules_nodejs//:index.bzl", "node_repositories", "yarn_install")
 
 node_repositories(
-    node_version = "16.0.0",
+    node_version = "16.11.1",
 )
 
 yarn_install(
@@ -63,7 +63,7 @@ container_pull(
 
 container_pull(
     name = "debian_image",
-    digest = "sha256:1ceec96ca567c40500a2745728f7c19c0801785c8b10187b1d66bcd538694fc2",
+    digest = "sha256:50c6072140eb89a1cd28f8b2660addbdf0dff862ea93e46c5ebafa309d809cc0",
     registry = "index.docker.io",
     repository = "library/debian",
     tag = "buster-slim",

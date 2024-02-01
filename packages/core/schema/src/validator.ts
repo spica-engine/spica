@@ -2,7 +2,7 @@ import {Inject, Injectable, Optional} from "@nestjs/common";
 import {default as Ajv, ValidateFunction} from "ajv";
 import formats from "ajv-formats";
 import {ValidationError} from "ajv/dist/compile/error_classes";
-import * as request from "request-promise-native";
+import axios from "axios";
 import {from, isObservable} from "rxjs";
 import {skip, take, tap} from "rxjs/operators";
 import defaultVocabulary from "./default";
@@ -89,7 +89,7 @@ export class Validator {
         }
       }
     }
-    return request({uri, json: true}).catch(() =>
+    return axios.get(uri).then(r => r.data).catch(() =>
       Promise.reject(new Error(`Could not resolve the schema ${uri}`))
     );
   }

@@ -56,7 +56,7 @@ describe("Webhook Invoker", () => {
     unsubscribeSpy = spyOn(invoker, "unsubscribe" as never).and.callThrough();
     fetchSpy = spyOn(__fetch__, "default").and.returnValue(Promise.resolve(mockHttpResponse));
 
-    await new Promise(resolve => setTimeout(() => resolve(), 2000));
+    await new Promise(resolve => setTimeout(() => resolve(""), 2000));
 
     webhook = {
       title: "wh1",
