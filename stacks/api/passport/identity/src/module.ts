@@ -32,7 +32,10 @@ export class IdentityModule {
       identityService.default({
         identifier: options.defaultIdentityIdentifier,
         password: options.defaultIdentityPassword,
-        policies: options.defaultIdentityPolicies
+        policies: options.defaultIdentityPolicies,
+        failedAttempts: [],
+        lastLogin: undefined,
+        lastPasswords: []
       });
     }
     registerStatusProvider(identityService);

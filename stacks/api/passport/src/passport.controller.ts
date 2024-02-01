@@ -138,7 +138,10 @@ export class PassportController {
         identifier: idenfitifer,
         password: undefined,
         policies: [],
-        attributes: user
+        attributes: user,
+        failedAttempts: [],
+        lastLogin: undefined,
+        lastPasswords: []
       });
     }
 
@@ -178,7 +181,7 @@ export class PassportController {
   async _identify(identifier: string, password: string, state: string, expires: number, res) {
     const catchError = e => {
       if (!res.headerSent) {
-        res.status(e.status || 500).json(e.response || e);
+        res.status(e.status || 500).json(e.response || {message: e.message} || e);
       }
     };
 

@@ -13,7 +13,7 @@
 		"password": {
 			"type": "string",
 			"title": "Password of the identity",
-			"minLength": 3
+			"pattern": "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{12,}$"
 		},
 		"attributes":{
 			"type":"object",

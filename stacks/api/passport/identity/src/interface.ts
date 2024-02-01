@@ -10,6 +10,9 @@ export interface Identity {
     [key: string]: any;
   };
   authFactor?: FactorMeta;
+  lastLogin: Date;
+  failedAttempts: Date[];
+  lastPasswords: string[]
 }
 
 export interface LoginCredentials {

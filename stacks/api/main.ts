@@ -116,6 +116,21 @@ const args = yargs
       description: "Default lifespan of the issued JWT tokens. Unit: second",
       default: 60 * 60 * 24 * 2
     },
+    "passport-identity-failed-login-attempt-limit": {
+      number: true,
+      description: "Maximum failed login attempt before blocking further attempts.",
+      default: 3
+    },
+    "passport-identity-block-duration-after-failed-login-attempts": {
+      number: true,
+      description: "Duration of blocking login attempts in minutes.",
+      default: 30
+    },
+    "passport-identity-password-history-uniqueness-count": {
+      number: true,
+      description: "How many of last passwords will be compared with the new password in terms of uniqueness",
+      default: 4
+    },
     "passport-identity-token-expiration-seconds-limit": {
       number: true,
       description: "Maximum lifespan of the requested JWT token can have. Unit: second"
@@ -375,10 +390,7 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       );
     }
 
-    if (
-      args["storage-strategy"] == "awss3" &&
-      (!args["awss3-bucket-name"])
-    ) {
+    if (args["storage-strategy"] == "awss3" && !args["awss3-bucket-name"]) {
       throw new TypeError(
         "--awss3-bucket-name must be present when --storage-strategy is set to 'awss3'."
       );
@@ -452,7 +464,13 @@ const modules = [
     defaultIdentityIdentifier: args["passport-default-identity-identifier"],
     defaultIdentityPassword: args["passport-default-identity-password"],
     audience: "spica.io",
-    samlCertificateTTL: args["passport-saml-certificate-ttl"]
+    samlCertificateTTL: args["passport-saml-certificate-ttl"],
+    blockingOptions: {
+      failedAttemptLimit: args["passport-identity-failed-login-attempt-limit"],
+      blockDurationMinutes:
+        args["passport-identity-block-duration-after-failed-login-attempts"]
+    },
+    passwordHistoryUniquenessCount: args["passport-identity-password-history-uniqueness-count"]
   }),
   FunctionModule.forRoot({
     logExpireAfterSeconds: args["common-log-lifespan"],
