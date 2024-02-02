@@ -21,6 +21,17 @@
 		},
 		"authFactor": {
 			"$ref": "http://spica.internal/passport/authfactor"
+		},
+		"lastLogin":{
+			"type":["string", "null"],
+			"format": "date-time"
+		},
+		"failedAttempts":{
+			"type":"array",
+			"items": {
+				"type":"string",
+				"format": "date-time"
+			}
 		}
 	},
 	"additionalProperties": false

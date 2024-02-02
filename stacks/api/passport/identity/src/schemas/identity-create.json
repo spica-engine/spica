@@ -20,6 +20,17 @@
 		},
 		"attributes":{
 			"type":"object"
+		},
+		"lastLogin":{
+			"type":["string", "null"],
+			"format": "date-time"
+		},
+		"failedAttempts":{
+			"type":"array",
+			"items": {
+				"type":"string",
+				"format": "date-time"
+			}
 		}
 	},
 	"additionalProperties": false

@@ -31,31 +31,31 @@ docker image tag bazel/stacks/api:image 255353153865.dkr.ecr.eu-central-1.amazon
 echo "Pushing api image to ECR.."
 docker push 255353153865.dkr.ecr.eu-central-1.amazonaws.com/spica-api:$TAG
 
-echo "Building client code.."
-yarn --cwd stacks/spica ng build --prod
+# echo "Building client code.."
+# yarn --cwd stacks/spica ng build --prod
 
-echo "Building client image.."
-$BAZEL run //stacks/spica --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --config=release -- --norun
+# echo "Building client image.."
+# $BAZEL run //stacks/spica --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --config=release -- --norun
 
-docker image tag bazel/stacks/spica:spica 255353153865.dkr.ecr.eu-central-1.amazonaws.com/spica-application:$TAG
+# docker image tag bazel/stacks/spica:spica 255353153865.dkr.ecr.eu-central-1.amazonaws.com/spica-application:$TAG
 
-echo "Pushing client image to ECR.."
-docker push 255353153865.dkr.ecr.eu-central-1.amazonaws.com/spica-application:$TAG
-
-
-echo "Building mongoreplicationcontroller image.."
-$BAZEL run //tools/mongoreplicationcontroller:image --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --config=release -- --norun
-
-docker image tag bazel/tools/mongoreplicationcontroller:image 255353153865.dkr.ecr.eu-central-1.amazonaws.com/mongoreplicationcontroller:$TAG
-
-echo "Pushing mongoreplicationcontroller image to ECR.."
-docker push 255353153865.dkr.ecr.eu-central-1.amazonaws.com/mongoreplicationcontroller:$TAG
+# echo "Pushing client image to ECR.."
+# docker push 255353153865.dkr.ecr.eu-central-1.amazonaws.com/spica-application:$TAG
 
 
-echo "Building migrate image.."
-$BAZEL run //stacks/migrate:image --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --config=release -- --norun
+# echo "Building mongoreplicationcontroller image.."
+# $BAZEL run //tools/mongoreplicationcontroller:image --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --config=release -- --norun
 
-docker image tag bazel/stacks/migrate:image 255353153865.dkr.ecr.eu-central-1.amazonaws.com/migrate:$TAG
+# docker image tag bazel/tools/mongoreplicationcontroller:image 255353153865.dkr.ecr.eu-central-1.amazonaws.com/mongoreplicationcontroller:$TAG
 
-echo "Pushing migrate image to ECR.."
-docker push 255353153865.dkr.ecr.eu-central-1.amazonaws.com/migrate:$TAG
+# echo "Pushing mongoreplicationcontroller image to ECR.."
+# docker push 255353153865.dkr.ecr.eu-central-1.amazonaws.com/mongoreplicationcontroller:$TAG
+
+
+# echo "Building migrate image.."
+# $BAZEL run //stacks/migrate:image --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --config=release -- --norun
+
+# docker image tag bazel/stacks/migrate:image 255353153865.dkr.ecr.eu-central-1.amazonaws.com/migrate:$TAG
+
+# echo "Pushing migrate image to ECR.."
+# docker push 255353153865.dkr.ecr.eu-central-1.amazonaws.com/migrate:$TAG

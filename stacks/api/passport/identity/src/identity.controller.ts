@@ -295,7 +295,7 @@ export class IdentityController {
   ) {
     identity.password = await hash(identity.password);
     identity.policies = [];
-    identity.lastLogin = null;
+    identity.lastLogin = undefined;
     identity.failedAttempts = [];
     identity.lastPasswords = [];
 
