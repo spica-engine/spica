@@ -31,7 +31,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     }
 
     const token = this.jwt.sign(
-      {...identity, password: undefined},
+      {...identity, password: undefined, lastPasswords: []},
       {
         header: {
           identifier: identity.identifier,
@@ -62,7 +62,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       return null;
     }
 
-    identity.failedAttempts = identity.failedAttempts || [];
+    identity.failedAttempts = identity.failedAttempts || [];
 
     this.checkIdentityIsBlocked(identity);
 

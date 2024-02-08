@@ -207,22 +207,6 @@ export class PassportController {
     return res.status(200).json(body);
   }
 
-  @Get("identify")
-  async identify(
-    @Query("identifier") identifier: string,
-    @Query("password") password: string,
-    @Query("state") state: string,
-    @Req() req: any,
-    @Next() next,
-    @Query("expires", NUMBER) expires?: number
-  ) {
-    req.res.append(
-      "Warning",
-      `299 "Identify with 'GET' method has been deprecated. Use 'POST' instead."`
-    );
-    this._identify(identifier, password, state, expires, req.res);
-  }
-
   @Post("identify")
   async identifyWithPost(
     @Body(Schema.validate("http://spica.internal/login"))
