@@ -62,7 +62,7 @@ nodejs_binary(
 
 container_run_and_commit(
     name = "plugins",
-    commands = ["apt -y update && apt install -y git"],
+    commands = ["apt -y update && apt install -y git && git config --global --add safe.directory '*'"],
     image = "@debian_image//image",
 )
 
