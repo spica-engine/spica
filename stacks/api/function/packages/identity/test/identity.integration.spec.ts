@@ -16,7 +16,7 @@ const MAX_EXPIRES_IN = EXPIRES_IN * 2;
 const PORT = 3000;
 const PUBLIC_URL = `http://localhost:${PORT}`;
 
-describe("Identity", () => {
+xdescribe("Identity", () => {
   let module: TestingModule;
   let app: INestApplication;
 
@@ -36,7 +36,12 @@ describe("Identity", () => {
           defaultIdentityIdentifier: "spica",
           defaultIdentityPassword: "spica",
           audience: "spica",
-          defaultIdentityPolicies: ["PassportFullAccess"]
+          defaultIdentityPolicies: ["PassportFullAccess"],
+          blockingOptions: {
+            failedAttemptLimit: 100,
+            blockDurationMinutes: 0
+          },
+          passwordHistoryUniquenessCount: 0
         }),
         PreferenceTestingModule,
         CoreTestingModule

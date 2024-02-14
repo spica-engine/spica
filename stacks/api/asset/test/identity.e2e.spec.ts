@@ -44,7 +44,12 @@ describe("identity-settings", () => {
         expiresIn: EXPIRES_IN,
         issuer: "spica",
         maxExpiresIn: MAX_EXPIRES_IN,
-        secretOrKey: "secret"
+        secretOrKey: "secret",
+        blockingOptions: {
+          blockDurationMinutes: 0,
+          failedAttemptLimit: 100
+        },
+        passwordHistoryUniquenessCount: 0
       }),
       PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
       SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
