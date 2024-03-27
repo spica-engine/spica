@@ -17,7 +17,7 @@
     "dockerode": "^3.2.1",
     "get-port": "^5.0.0",
     "cosmiconfig": "^7.0.0",
-    "axios": "^0.21.0",
+    "axios": "^0.28.0",
     "yaml": "^1.8.3",
     "open": "^7.3.0",
     "jsonpath": "^1.0.2",
