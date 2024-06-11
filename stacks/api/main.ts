@@ -118,6 +118,11 @@ const args = yargs
       description: "Default lifespan of the issued JWT tokens. Unit: second",
       default: 60 * 60 * 24 * 2
     },
+    "passport-identity-refresh-token-expires-in": {
+      number: true,
+      description: "Default lifespan of the issued refresh JWT tokens. Unit: second",
+      default: 60 * 60 * 24 * 3
+    },
     "passport-identity-failed-login-attempt-limit": {
       number: true,
       description: "Maximum failed login attempt before blocking further attempts.",
@@ -476,6 +481,7 @@ const modules = [
     issuer: args["public-url"],
     expiresIn: args["passport-identity-token-expires-in"],
     maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
+    refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
     defaultStrategy: args["passport-default-strategy"],
     entryLimit: args["passport-identity-limit"],
     defaultIdentityPolicies: args["passport-default-identity-policies"],

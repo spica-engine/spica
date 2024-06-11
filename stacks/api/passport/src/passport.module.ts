@@ -57,6 +57,7 @@ export class PassportModule {
         PassportCoreModule.initialize(options),
         IdentityModule.forRoot({
           expiresIn: options.expiresIn,
+          refreshTokenExpiresIn: options.refreshTokenExpiresIn,
           maxExpiresIn: options.maxExpiresIn,
           issuer: options.issuer,
           secretOrKey: options.secretOrKey,

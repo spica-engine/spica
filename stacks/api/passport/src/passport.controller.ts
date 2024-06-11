@@ -43,14 +43,6 @@ import {AuthGuard} from "@spica-server/passport/guard";
 export class PassportController {
   readonly SESSION_TIMEOUT_MS = 60 * 1000;
   assertObservers = new Map<string, Subject<any>>();
-  cookieOptions = {
-    httpOnly: true,
-    secure: false,
-    sameSite: 'Strict',
-    path: '/',
-    overwrite: true,
-    maxAge: 1000 * 60 * 60 * 168, // 7d
-  };
 
   setAssertObservers(id) {
     const subject = new Subject();
@@ -184,7 +176,7 @@ export class PassportController {
   }
 
   async signIdentity(identity: Identity, expiresIn: number, userAgent?: string) {
-    const tokenSchema = this.identityService.sign(identity, expiresIn);
+    const tokenSchema = this.identityService.sign(identity, expiresIn, "access");
     const refreshTokenSchema = await this.identityService.generateRefreshToken(identity, undefined, userAgent);
 
     const id = identity._id.toHexString();
@@ -243,7 +235,7 @@ export class PassportController {
   }
 
   setRefreshTokenToCookie(res: any, token: string){
-    res.cookie('refreshToken', token, this.cookieOptions);
+    res.cookie('refreshToken', token, this.identityService.getCookieOptions());
   }
 
   @Post("identify")

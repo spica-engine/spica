@@ -24,8 +24,8 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     return this.validator.defaults;
   }
 
-  sign(identity: Identity, requestedExpires?: number) {
-    const expiresIn = this.getTokenExpiresIn(requestedExpires);
+  sign(identity: Identity, requestedExpires?: number, variant?: "access" | "refresh") {
+    const expiresIn = this.getTokenExpiresIn(requestedExpires, variant);
     const token = this.jwt.sign(
       {...identity, password: undefined, refreshTokens: undefined, lastPasswords: []},
       {
@@ -44,18 +44,25 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     };
   }
 
-  getTokenExpiresIn(requestedExpires?: number){
-    if (requestedExpires) {
-      return Math.min(requestedExpires, this.identityOptions.maxExpiresIn);
+  getTokenExpiresIn(requestedExpires?: number, variant?: "access" | "refresh"){
+    const variants = {
+      access: () => {
+        if (requestedExpires) {
+          return Math.min(requestedExpires, this.identityOptions.maxExpiresIn);
+        }
+        return this.identityOptions.expiresIn;
+      },
+      refresh: () => this.identityOptions.refreshTokenExpiresIn
     }
-    return this.identityOptions.expiresIn;
+
+    return variants[variant || "access"]();
   }
 
   async generateRefreshToken(identity: Identity, requestedExpires?: number, userAgent?: string){
-    const signRes = this.sign(identity, requestedExpires);
+    const signRes = this.sign(identity, requestedExpires, "refresh");
     
     const {identifier, refreshTokens} = await this.findOne({identifier: identity.identifier});
-    const expiresIn = this.getTokenExpiresIn(requestedExpires);
+    const expiresIn = this.getTokenExpiresIn(requestedExpires, "refresh");
     
     const tokenSchema = {
       token: signRes.token,
@@ -89,6 +96,17 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       {identifier},
       {$set: {refreshTokens}}
     );
+  }
+
+  getCookieOptions(){
+    return {
+      httpOnly: true,
+      secure: false, // !TODO should be true for production mod
+      sameSite: 'Strict',
+      path: '/',
+      overwrite: true,
+      maxAge: this.identityOptions.refreshTokenExpiresIn
+    } 
   }
 
   verify(token: string) {
