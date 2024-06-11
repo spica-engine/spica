@@ -31,7 +31,7 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {STRATEGIES} from "./options";
 import {StrategyTypeServices} from "./strategy/interface";
 import {AuthFactor} from "@spica-server/passport/authfactor";
-import {ClassCommander, CommandType} from "@spica-server/replication";
+import {ClassCommander, CommandType } from "@spica-server/replication";
 
 /**
  * @name passport
@@ -40,6 +40,14 @@ import {ClassCommander, CommandType} from "@spica-server/replication";
 export class PassportController {
   readonly SESSION_TIMEOUT_MS = 60 * 1000;
   assertObservers = new Map<string, Subject<any>>();
+  cookieOptions = {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'Strict',
+    path: '/',
+    overwrite: true,
+    maxAge: 1000 * 60 * 60 * 168, // 7d
+  };
 
   setAssertObservers(id) {
     const subject = new Subject();
@@ -52,6 +60,7 @@ export class PassportController {
   }
 
   identityToken = new Map<string, any>();
+  refreshTokenMap = new Map<string, any>();
 
   setIdentityToken(id, token) {
     this.identityToken.set(id, token);
@@ -59,6 +68,14 @@ export class PassportController {
 
   deleteIdentityToken(id) {
     this.identityToken.delete(id);
+  }
+
+  setRefreshToken(id, token) {
+    this.refreshTokenMap.set(id, token);
+  }
+
+  deleteRefreshToken(id) {
+    this.refreshTokenMap.delete(id);
   }
 
   stateReqs = new Map<string, any>();
@@ -78,6 +95,8 @@ export class PassportController {
           this.completeIdentifyWithState,
           this.setIdentityToken,
           this.deleteIdentityToken,
+          this.setRefreshToken,
+          this.deleteRefreshToken,
           this.setAssertObservers,
           this.deleteAssertObservers
         ],
@@ -94,7 +113,7 @@ export class PassportController {
     return identity;
   }
 
-  async startIdentifyWithState(state: string, expires: number) {
+  async startIdentifyWithState(state: string, expires: number, userAgent: string) {
     let identity: Identity;
 
     if (!this.assertObservers.has(state)) {
@@ -141,44 +160,53 @@ export class PassportController {
         attributes: user,
         failedAttempts: [],
         lastLogin: undefined,
-        lastPasswords: []
+        lastPasswords: [],
+        refreshTokens: []
       });
     }
 
-    this.completeIdentifyWithState(state, identity, expires);
+    this.completeIdentifyWithState(state, identity, expires, userAgent);
   }
 
-  async completeIdentifyWithState(state: string, identity: Identity, expires: number) {
+  async completeIdentifyWithState(state: string, identity: Identity, expires: number, userAgent: string) {
     const res = this.stateReqs.get(state);
     this.stateReqs.delete(state);
     if (!res || res.headerSent) {
       return;
     }
 
-    const body = await this.signIdentity(identity, expires);
-    res.status(200).json(body);
+    const { tokenSchema, refreshTokenSchema } = await this.signIdentity(identity, expires, userAgent);
+    this.setRefreshTokenToCookie(res, refreshTokenSchema.token)
+    res.status(200).json(tokenSchema);
   }
 
-  async signIdentity(identity: Identity, expiresIn: number) {
+  async signIdentity(identity: Identity, expiresIn: number, userAgent?: string) {
     const tokenSchema = this.identityService.sign(identity, expiresIn);
+    const refreshTokenSchema = await this.identityService.generateRefreshToken(identity, undefined, userAgent);
 
     const id = identity._id.toHexString();
     if (this.authFactor.hasFactor(id)) {
       this.setIdentityToken(id, tokenSchema);
-      setTimeout(() => this.deleteIdentityToken(id), this.SESSION_TIMEOUT_MS);
+      this.setRefreshToken(id, refreshTokenSchema);
+      setTimeout(() => {
+        this.deleteIdentityToken(id)
+        this.deleteRefreshToken(id)
+      }, this.SESSION_TIMEOUT_MS);
 
       const challenge = await this.authFactor.start(id);
-
-      return {
+      const factorRes = {
         challenge,
         answerUrl: `passport/identify/${identity._id}/factor-authentication`
-      };
+      }
+      return { factorRes };
     } else {
-      return tokenSchema;
+      return { tokenSchema, refreshTokenSchema };
     }
   }
 
-  async _identify(identifier: string, password: string, state: string, expires: number, res) {
+  async _identify(identifier: string, password: string, state: string, expires: number, req, res) {
+    const userAgent = req.headers['user-agent'];
+
     const catchError = e => {
       if (!res.headerSent) {
         res.status(e.status || 500).json(e.response || {message: e.message} || e);
@@ -188,8 +216,7 @@ export class PassportController {
     if (state) {
       this.stateReqs.set(state, res);
       setTimeout(() => this.stateReqs.delete(state), this.SESSION_TIMEOUT_MS);
-
-      this.startIdentifyWithState(state, expires).catch(catchError);
+      this.startIdentifyWithState(state, expires, userAgent).catch(catchError);
 
       return;
     }
@@ -199,26 +226,36 @@ export class PassportController {
       return;
     }
 
-    const body = await this.signIdentity(identity, expires).catch(catchError);
-    if (!body) {
+    try {
+      const { tokenSchema, refreshTokenSchema, factorRes } = await this.signIdentity(identity, expires, userAgent)
+      if(factorRes){
+        return res.status(200).json(factorRes);
+      }
+      this.setRefreshTokenToCookie(res, refreshTokenSchema.token)
+      return res.status(200).json(tokenSchema);
+    } catch (e) {
+      catchError(e)
       return;
     }
+  }
 
-    return res.status(200).json(body);
+  setRefreshTokenToCookie(res: any, token: string){
+    res.cookie('refreshToken', token, this.cookieOptions);
   }
 
   @Post("identify")
   async identifyWithPost(
     @Body(Schema.validate("http://spica.internal/login"))
     {identifier, password, expires, state}: LoginCredentials,
+    @Req() req: any,
     @Res() res: any,
     @Next() next
   ) {
-    this._identify(identifier, password, state, expires, res);
+    this._identify(identifier, password, state, expires, req, res);
   }
 
   @Post("identify/:id/factor-authentication")
-  async authenticateWithFactor(@Param("id") id: string, @Body() body) {
+  async authenticateWithFactor(@Param("id") id: string, @Body() body, @Res() res: any) {
     const hasFactor = this.authFactor.hasFactor(id);
     const token = this.identityToken.get(id);
 
@@ -234,15 +271,19 @@ export class PassportController {
 
     const isAuthenticated = await this.authFactor.authenticate(id, answer).catch(e => {
       this.deleteIdentityToken(id);
+      this.deleteRefreshToken(id);
       throw new BadRequestException(e);
     });
 
     if (!isAuthenticated) {
       this.deleteIdentityToken(id);
+      this.deleteRefreshToken(id);
       throw new UnauthorizedException();
     }
 
-    return this.identityToken.get(id);
+    const refreshTokenSchema = this.refreshTokenMap.get(id);
+    this.setRefreshTokenToCookie(res, refreshTokenSchema.token)
+    return res.status(200).json(this.identityToken.get(id));
   }
 
   @Get("strategies")

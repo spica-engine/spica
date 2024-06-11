@@ -35,7 +35,8 @@ export class IdentityModule {
         policies: options.defaultIdentityPolicies,
         failedAttempts: [],
         lastLogin: undefined,
-        lastPasswords: []
+        lastPasswords: [],
+        refreshTokens: []
       });
     }
     registerStatusProvider(identityService);

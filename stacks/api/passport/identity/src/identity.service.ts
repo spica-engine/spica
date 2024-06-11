@@ -25,13 +25,9 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
   }
 
   sign(identity: Identity, requestedExpires?: number) {
-    let expiresIn = this.identityOptions.expiresIn;
-    if (requestedExpires) {
-      expiresIn = Math.min(requestedExpires, this.identityOptions.maxExpiresIn);
-    }
-
+    const expiresIn = this.getTokenExpiresIn(requestedExpires);
     const token = this.jwt.sign(
-      {...identity, password: undefined, lastPasswords: []},
+      {...identity, password: undefined, refreshTokens: undefined, lastPasswords: []},
       {
         header: {
           identifier: identity.identifier,
@@ -46,6 +42,32 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       token,
       issuer: "passport/identity"
     };
+  }
+
+  getTokenExpiresIn(requestedExpires?: number){
+    if (requestedExpires) {
+      return Math.min(requestedExpires, this.identityOptions.maxExpiresIn);
+    }
+    return this.identityOptions.expiresIn;
+  }
+
+  async generateRefreshToken(identity: Identity, requestedExpires?: number, userAgent?: string){
+    const signRes = this.sign(identity, requestedExpires);
+    
+    const {identifier, refreshTokens} = await this.findOne({identifier: identity.identifier});
+    const expiresIn = this.getTokenExpiresIn(requestedExpires);
+    
+    const tokenSchema = {
+      token: signRes.token,
+      userAgent,
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + (expiresIn * 1000)),
+    }
+    
+    refreshTokens.push(tokenSchema)
+    
+    await this.findOneAndUpdate({identifier},{$set: {refreshTokens}});
+    return tokenSchema;
   }
 
   verify(token: string) {
@@ -63,6 +85,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     }
 
     identity.failedAttempts = identity.failedAttempts || [];
+    identity.refreshTokens = identity.refreshTokens || [];
 
     this.checkIdentityIsBlocked(identity);
 
