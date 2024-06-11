@@ -22,6 +22,7 @@ import * as https from "https";
 import * as path from "path";
 import * as yargs from "yargs";
 import * as morgan from "morgan";
+import * as cookieParser from "cookie-parser";
 
 const args = yargs
   /* TLS Options */
@@ -596,6 +597,7 @@ NestFactory.create(RootModule, {
           }
         )
       );
+      app.use(cookieParser())
     }
 
     return app.listen(args.port);

@@ -36,6 +36,7 @@ ts_project(
         "@npm//@types/yargs",
         "@npm//morgan",
         "@npm//yargs",
+        "@npm//cookie-parser",
     ],
 )
 
