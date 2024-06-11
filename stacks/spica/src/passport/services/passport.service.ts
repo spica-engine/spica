@@ -21,7 +21,7 @@ export class PassportService {
     localStorage.setItem("access_token", token);
   }
 
-  get decodedToken(): Identity & {exp: number} {
+  get decodedToken(): Identity & {exp: number, iat: number} {
     const decodedToken = this.token.replace(/\w*\s\b/g, "");
     return jwt_decode(decodedToken);
   }
@@ -38,22 +38,45 @@ export class PassportService {
 
   logout(): void {
     localStorage.removeItem("access_token");
+    localStorage.removeItem("next_token_refresh_date");
   }
 
   onTokenRecieved(response) {
     this.token = `${response.scheme} ${response.token}`;
     this._statements = undefined;
+    if(!this.getNextTokenRefreshDate()){
+      this.setNextTokenRefreshDate();
+    }
+  }
+
+  getNextTokenRefreshDate() {
+    return localStorage.getItem("next_token_refresh_date")
+  }
+
+  setNextTokenRefreshDate() {
+    const now = new Date();
+    const minutes = this.getTokenExpMin() - 1;
+    const date = now.setMinutes(now.getMinutes() + minutes)
+    localStorage.setItem("next_token_refresh_date", new Date(date).toString())
+  }
+
+  getTokenExpMin() {
+    const iat = this.decodedToken.iat * 1000;
+    const exp = this.decodedToken.exp * 1000;
+
+    const differenceInMilliseconds = Math.abs(exp - iat);
+    return differenceInMilliseconds / (1000 * 60);
   }
 
   answerAuthFactor(factor, answer) {
     return this.http.post(`api:/${factor.answerUrl}`, {
       answer
-    });
+    },  {withCredentials: true});
   }
 
   identify(identityOrStrategy: IdentifyParams | string, openCallback?: (url: string) => void) {
     if (typeof identityOrStrategy != "string") {
-      return this.http.post<any>("api:/passport/identify", identityOrStrategy);
+      return this.http.post<any>("api:/passport/identify", identityOrStrategy, {withCredentials: true});
     }
 
     return this.http
@@ -66,6 +89,10 @@ export class PassportService {
           return this.http.get(`api:/passport/identify`, {params: {state: res.state}});
         })
       );
+  }
+
+  refreshToken() {
+    return this.http.get<any>("api:/passport/refresh-token", {withCredentials: true});
   }
 
   getStrategies() {
