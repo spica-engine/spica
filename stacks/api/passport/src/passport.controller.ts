@@ -18,7 +18,9 @@ import {
   Inject,
   Res,
   Next,
-  Optional
+  Optional,
+  UseGuards,
+  Headers
 } from "@nestjs/common";
 import {Identity, IdentityService, LoginCredentials} from "@spica-server/passport/identity";
 import {Subject, throwError} from "rxjs";
@@ -32,6 +34,7 @@ import {STRATEGIES} from "./options";
 import {StrategyTypeServices} from "./strategy/interface";
 import {AuthFactor} from "@spica-server/passport/authfactor";
 import {ClassCommander, CommandType } from "@spica-server/replication";
+import {AuthGuard} from "@spica-server/passport/guard";
 
 /**
  * @name passport
@@ -284,6 +287,37 @@ export class PassportController {
     const refreshTokenSchema = this.refreshTokenMap.get(id);
     this.setRefreshTokenToCookie(res, refreshTokenSchema.token)
     return res.status(200).json(this.identityToken.get(id));
+  }
+
+  @Get("refresh-token")
+  @UseGuards(AuthGuard())
+  async refreshToken(
+    @Headers('authorization') accessToken: string,
+    @Req() req: any,
+    @Res() res: any,
+  ) {
+    const {refreshToken} = req.cookies;
+    const userAgent = req.headers['user-agent'];
+
+    if (!refreshToken) {
+      throw new BadRequestException("Refresh token does not exist.");
+    }
+    const {status, identity} = await this.identityService.verifyRefreshToken(accessToken, refreshToken);
+    if(!status){
+      throw new BadRequestException("Invalid refresh token.");
+    }
+
+    try {
+      const { tokenSchema, refreshTokenSchema } = await this.signIdentity(identity, undefined, userAgent)
+      
+      await this.identityService.deleteRefreshToken(refreshToken, identity.identifier)
+  
+      this.setRefreshTokenToCookie(res, refreshTokenSchema.token)
+      return res.status(200).json(tokenSchema);
+    } catch (e) {
+      catchError(e)
+      return;
+    }
   }
 
   @Get("strategies")

@@ -70,6 +70,27 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     return tokenSchema;
   }
 
+  async verifyRefreshToken(accessToken: string, refreshToken:string){
+    const {identifier} = await this.verify(accessToken.split(" ")[1]);
+    const identity = await this.findOne({identifier});
+    const candidateRefreshToken = identity.refreshTokens.find(el => el.token == refreshToken)?.token;
+
+    if(candidateRefreshToken && refreshToken == candidateRefreshToken){
+      return {status: true, identity};
+    }
+
+    return {status: false};
+  }
+
+  async deleteRefreshToken(token: string, identifier: string){
+    const identity = await this.findOne({identifier});
+    const refreshTokens = identity.refreshTokens.filter(t => t.token != token);
+    return this.findOneAndUpdate(
+      {identifier},
+      {$set: {refreshTokens}}
+    );
+  }
+
   verify(token: string) {
     return this.jwt.verifyAsync(token);
   }
