@@ -3,8 +3,8 @@ load("//tools/ts_project:index.bzl", "ts_project")
 package(default_visibility = ["//visibility:public"])
 
 ts_project(
-    name = "identity",
-    package_name = "@spica-server/passport/identity",
+    name = "blacklistedtoken",
+    package_name = "@spica-server/passport/blacklistedtoken",
     srcs = glob([
         "index.ts",
         "src/*.ts",
@@ -22,7 +22,6 @@ ts_project(
         "//stacks/api/passport/authfactor",
         "//stacks/api/passport/guard",
         "//stacks/api/passport/policy",
-        "//stacks/api/passport/blacklistedtoken",
         "//stacks/api/preference/services",
         "//stacks/api/status",
         "@npm//@nestjs/common",
@@ -30,5 +29,6 @@ ts_project(
         "@npm//@nestjs/passport",
         "@npm//bcryptjs",
         "@npm//passport-jwt",
+        "@npm//@nestjs/schedule"
     ],
 )

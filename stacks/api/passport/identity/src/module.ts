@@ -18,6 +18,7 @@ import {AUTH_RESOLVER} from "@spica-server/bucket/common";
 import {registerAssetHandlers} from "./asset";
 import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {BlacklistedTokenService} from "@spica-server/passport/blacklistedtoken";
 
 @Global()
 @Module({})
@@ -76,6 +77,7 @@ export class IdentityModule {
       providers: [
         IdentityService,
         IdentityStrategy,
+        BlacklistedTokenService,
         {
           provide: IDENTITY_OPTIONS,
           useValue: options

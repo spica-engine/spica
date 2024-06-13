@@ -37,6 +37,7 @@ ts_project(
         "@npm//morgan",
         "@npm//yargs",
         "@npm//cookie-parser",
+        "@npm//@nestjs/schedule"
     ],
 )
 

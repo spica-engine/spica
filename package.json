@@ -42,6 +42,7 @@
     "@nestjs/passport": "^7.0.0",
     "@nestjs/platform-express": "^7.0.13",
     "@nestjs/platform-ws": "^7.0.13",
+    "@nestjs/schedule": "^4.0.2",
     "@nestjs/websockets": "^7.0.13",
     "@types/archiver": "^5.3.1",
     "@types/cache-manager": "^3.4.0",

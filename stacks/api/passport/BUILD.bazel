@@ -21,6 +21,7 @@ ts_project(
         "//stacks/api/passport/guard",
         "//stacks/api/passport/identity",
         "//stacks/api/passport/policy",
+        "//stacks/api/passport/blacklistedtoken",
         "//stacks/api/preference/services",
         "//stacks/api/replication",
         "@npm//@nestjs/common",
