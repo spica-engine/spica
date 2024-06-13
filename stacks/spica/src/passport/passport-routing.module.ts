@@ -14,6 +14,8 @@ import {StrategiesComponent} from "./pages/strategies/strategies.component";
 import {StrategiesAddComponent} from "./pages/strategies-add/strategies-add.component";
 import {ApiKeyIndexComponent} from "./pages/apikey-index/apikey-index.component";
 import {ApiKeyAddComponent} from "./pages/apikey-add/apikey-add.component";
+import {BlacklistedTokenIndexComponent} from "./pages/blacklistedtoken-index/blacklistedtoken-index.component";
+import {BlacklistedTokenAddComponent} from "./pages/blacklistedtoken-add/blacklistedtoken-add.component";
 
 const routes: Routes = [
   {path: "passport/identify", component: IdentifyComponent, data: {layout: false}},
@@ -91,6 +93,19 @@ const routes: Routes = [
             data: {action: "show"}
           }
         ]
+      },
+      {
+        path: "blacklistedtoken",
+        canActivateChild: [PolicyGuard],
+        data: {service: "passport:blacklistedtoken"},
+        children: [
+          {path: "", component: BlacklistedTokenIndexComponent, data: {action: "index"}},
+          {
+            path: "add",
+            component: BlacklistedTokenAddComponent,
+            data: {action: "create"}
+          },
+        ]
       }
     ]
   }
@@ -128,6 +143,14 @@ const route: Route[] = [
     path: "/passport/apikey",
     icon: "vpn_key",
     data: {action: "passport:apikey:index"}
+  },
+  {
+    id: "passport.blacklistedtoken",
+    category: RouteCategory.System,
+    display: "Blacklisted Token",
+    icon: "block",
+    path: "/passport/blacklistedtoken",
+    data: {action: "passport:blacklistedtoken:index"}
   },
   {
     id: "passport.settings",

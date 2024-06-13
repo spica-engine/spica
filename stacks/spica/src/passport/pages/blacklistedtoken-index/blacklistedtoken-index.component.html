@@ -1,0 +1,126 @@
+<ng-template #toolbar>
+  <span>
+    <h4>
+      <mat-icon>block</mat-icon>
+      <span>Blacklisted Token</span>
+    </h4>
+    <h6>
+      Blacklisted refresh tokens
+    </h6>
+  </span>
+  <span>
+    <button mat-button [matMenuTriggerFor]="propertiesMenu">
+      <mat-icon>view_column</mat-icon>
+      Columns
+      <mat-menu xPosition="before" #propertiesMenu="matMenu">
+        <button mat-menu-item (click)="$event.stopPropagation()">
+          <mat-checkbox
+            [ngModel]="properties.length == displayedProperties.length"
+            [indeterminate]="
+              displayedProperties.length > 1 && displayedProperties.length < properties.length
+            "
+            (ngModelChange)="toggleDisplayAll($event)"
+          >
+            Display all
+          </mat-checkbox>
+        </button>
+        <mat-divider></mat-divider>
+        <button
+          mat-menu-item
+          disableRipple
+          *ngFor="let property of properties"
+          (click)="$event.stopPropagation()"
+        >
+          <mat-checkbox
+            [ngModel]="displayedProperties.indexOf(property) > -1"
+            (ngModelChange)="toggleProperty(property, $event)"
+          >
+            {{ property }}
+          </mat-checkbox>
+        </button>
+      </mat-menu>
+    </button>
+    <button mat-button canInteract="passport:blacklistedtoken:create" routerLink="/passport/blacklistedtoken/add">
+      <mat-icon>add</mat-icon>
+      Add New
+    </button>
+  </span>
+</ng-template>
+
+<mat-card class="mat-elevation-z25">
+  <mat-card-content>
+    <table mat-table [dataSource]="blacklistedToken$" matSort (matSortChange)="onSortChange($event)">
+      <ng-container matColumnDef="_id">
+        <th
+          mat-header-cell
+          mat-resize-header
+          mat-sort-header
+          persist-header-width="Blacklistedtoken"
+          *matHeaderCellDef
+        >
+          _id
+        </th>
+        <td mat-cell *matCellDef="let blacklistedToken">{{ blacklistedToken._id }}</td>
+      </ng-container>
+      <ng-container matColumnDef="token">
+        <th
+          mat-header-cell
+          mat-resize-header
+          mat-sort-header
+          persist-header-width="Blacklistedtoken"
+          *matHeaderCellDef
+        >
+          Token
+        </th>
+        <td mat-cell *matCellDef="let blacklistedToken">{{ blacklistedToken.token }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="expires_in">
+        <th
+          mat-header-cell
+          mat-resize-header
+          mat-sort-header
+          persist-header-width="Blacklistedtoken"
+          *matHeaderCellDef
+        >
+          Expires In
+        </th>
+        <td mat-cell *matCellDef="let blacklistedToken">{{ blacklistedToken.expires_in }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>
+          Actions
+        </th>
+        <td mat-cell *matCellDef="let blacklistedToken">
+          <button
+            mat-icon-button
+            canInteract="passport:blacklistedtoken:delete"
+            [resource]="blacklistedToken._id"
+            color="warn"
+            (confirm)="deleteBlacklistedToken(blacklistedToken._id)"
+            [matAwareDialog]="{
+              title: 'Confirmation',
+              templateOrDescription: dialogTemplate,
+              answer: blacklistedToken._id
+            }"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedProperties"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedProperties"></tr>
+    </table>
+  </mat-card-content>
+
+  <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+</mat-card>
+
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action will <b>permanently</b> delete this token.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>

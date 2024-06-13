@@ -23,6 +23,7 @@ import {MatTableModule} from "@angular/material/table";
 import {MatTabsModule} from "@angular/material/tabs";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
+import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular-datetime-picker";
 import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
 import {LAYOUT_ACTIONS, ROUTE_FILTERS} from "@spica-client/core";
 import {BUILDLINK_FACTORY} from "@spica-client/core/factories/factory";
@@ -40,6 +41,8 @@ import {StrategyDialogComponent} from "./components/strategy-dialog/strategy-dia
 import {CanInteractDirective} from "./directives/can-interact.directive";
 import {ApiKeyAddComponent} from "./pages/apikey-add/apikey-add.component";
 import {ApiKeyIndexComponent} from "./pages/apikey-index/apikey-index.component";
+import {BlacklistedTokenIndexComponent} from "./pages/blacklistedtoken-index/blacklistedtoken-index.component";
+import {BlacklistedTokenAddComponent} from "./pages/blacklistedtoken-add/blacklistedtoken-add.component";
 import {IdentifyComponent} from "./pages/identify/identify.component";
 import {IdentityAddComponent} from "./pages/identity-add/identity-add.component";
 import {IdentityIndexComponent} from "./pages/identity-index/identity-index.component";
@@ -76,7 +79,9 @@ import {ApiKeyService} from "./services/apikey.service";
     StrategiesAddComponent,
     CanInteractDirective,
     ApiKeyIndexComponent,
+    BlacklistedTokenIndexComponent,
     ApiKeyAddComponent,
+    BlacklistedTokenAddComponent,
     StrategyDialogComponent,
     PolicyResourceAddComponent,
     AccessTokenComponent
@@ -102,6 +107,8 @@ import {ApiKeyService} from "./services/apikey.service";
     MatDialogModule,
     MatSelectModule,
     MatTooltipModule,
+    OwlDateTimeModule,
+    OwlNativeDateTimeModule,
     MatAwareDialogModule,
     MatToolbarModule,
     MatGridListModule,

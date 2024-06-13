@@ -1,0 +1,51 @@
+<ng-template #toolbar>
+  <span>
+    <h4>
+      <mat-icon>block</mat-icon>
+      <span>{{ blacklistedToken._id ? blacklistedToken.token : "Create Blacklisted Token" }}</span>
+    </h4>
+  </span>
+</ng-template>
+<mat-card *ngIf="viewState == 'meta'">
+  <mat-card-content>
+    <form #blacklistedTokenForm="ngForm">
+      <mat-form-field>
+        <textarea
+          matInput
+          name="blacklistedTokenToken"
+          placeholder="Token"
+          [(ngModel)]="blacklistedToken.token"
+          required
+        ></textarea>
+      </mat-form-field>
+      <mat-form-field (click)="picker.open()">
+        <mat-label>Expires In</mat-label>
+          <input
+            matInput
+            type="datetime"
+            ngModelParent
+            [(ngModel)]="blacklistedToken.expires_in"
+            (focus)="dt1.open()"
+            [owlDateTime]="dt1"
+            [owlDateTimeTrigger]="dt1"
+          />
+          <owl-date-time #dt1></owl-date-time>
+      </mat-form-field>
+    </form>
+  </mat-card-content>
+  <mat-card-actions>
+    <button
+      class="save-button"
+      [disabled]="blacklistedTokenForm.invalid"
+      [canInteract]="'passport:blacklistedtoken:create'"
+      [resource]="blacklistedToken._id ? blacklistedToken._id : undefined"
+      mat-button
+      (click)="saveBlacklistedToken()"
+    >
+      <mat-icon>save</mat-icon>
+      <span>
+        Save
+      </span>
+    </button>
+  </mat-card-actions>
+</mat-card>
