@@ -115,7 +115,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
   getCookieOptions(){
     return {
       httpOnly: true,
-      secure: false, // !TODO should be true for production mod
+      secure: true,
       sameSite: 'Strict',
       path: '/',
       overwrite: true,
