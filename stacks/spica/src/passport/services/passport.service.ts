@@ -41,6 +41,10 @@ export class PassportService {
     localStorage.removeItem("next_token_refresh_date");
   }
 
+  unidentify(){
+    return this.http.get<any>("api:/passport/unidentify", {withCredentials: true});
+  }
+
   onTokenRecieved(response) {
     this.token = `${response.scheme} ${response.token}`;
     this._statements = undefined;

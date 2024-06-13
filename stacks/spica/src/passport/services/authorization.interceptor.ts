@@ -10,12 +10,16 @@ import {Observable} from "rxjs";
 import {take, tap} from "rxjs/operators";
 import {PassportService} from "./passport.service";
 import { environment } from "environments/environment";
+import { Router } from "@angular/router";
 
 @Injectable({
   providedIn: "root"
 })
 export class AuthorizationInterceptor implements HttpInterceptor {
-  constructor(private passport: PassportService) {}
+  constructor(
+    private passport: PassportService,
+    private router: Router,
+  ) {}
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     if (this.passport.token && !request.headers.has("X-Not-Api")) {
       this.refreshToken(request.url);
@@ -43,6 +47,10 @@ export class AuthorizationInterceptor implements HttpInterceptor {
         .subscribe(
           r => {
             this.passport.onTokenRecieved(r);
+          },
+          r => {
+            this.passport.logout();
+            this.router.navigate(["passport/identify"]);
           }
         );
       }

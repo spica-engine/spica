@@ -23,6 +23,7 @@ import {
   Headers
 } from "@nestjs/common";
 import {Identity, IdentityService, LoginCredentials} from "@spica-server/passport/identity";
+import {BlacklistedTokenService} from "@spica-server/passport/blacklistedtoken";
 import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
 import {UrlEncodedBodyParser} from "./body";
@@ -77,6 +78,7 @@ export class PassportController {
 
   constructor(
     private identityService: IdentityService,
+    private blacklistedTokenService: BlacklistedTokenService,
     private strategyService: StrategyService,
     private authFactor: AuthFactor,
     @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices,
@@ -176,7 +178,7 @@ export class PassportController {
   }
 
   async signIdentity(identity: Identity, expiresIn: number, userAgent?: string) {
-    const tokenSchema = this.identityService.sign(identity, expiresIn, "access");
+    const tokenSchema = this.identityService.sign(identity, expiresIn);
     const refreshTokenSchema = await this.identityService.generateRefreshToken(identity, undefined, userAgent);
 
     const id = identity._id.toHexString();
@@ -238,6 +240,10 @@ export class PassportController {
     res.cookie('refreshToken', token, this.identityService.getCookieOptions());
   }
 
+  clearRefreshTokenFromCookie(res: any){
+    res.clearCookie('refreshToken');
+  }
+
   @Post("identify")
   async identifyWithPost(
     @Body(Schema.validate("http://spica.internal/login"))
@@ -247,6 +253,30 @@ export class PassportController {
     @Next() next
   ) {
     this._identify(identifier, password, state, expires, req, res);
+  }
+
+  @Get("unidentify")
+  @UseGuards(AuthGuard())
+  async unidentify(
+    @Headers('authorization') accessToken: string,
+    @Req() req: any,
+    @Res() res: any,
+  ) {
+    const {refreshToken} = req.cookies;
+    
+    const {status, identity, decodedRefreshToken} = await this.identityService.verifyRefreshToken(accessToken, refreshToken);
+    if(!status){
+      throw new BadRequestException("Invalid refresh token.");
+    }
+
+    this.identityService.deleteRefreshToken(refreshToken, identity.identifier)
+    this.blacklistedTokenService.insertOne({
+      token: refreshToken,
+      expires_in: new Date(decodedRefreshToken.exp * 1000)
+    })
+
+    this.clearRefreshTokenFromCookie(res);
+    return res.status(200).json({message: "You have been successfully logged out!"})
   }
 
   @Post("identify/:id/factor-authentication")
