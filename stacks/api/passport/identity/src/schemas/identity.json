@@ -48,7 +48,7 @@
 						"type":"string",
 						"format": "date-time"
 					},
-					"expiresAt": {
+					"expiresIn": {
 						"type":"string",
 						"format": "date-time"
 					}

@@ -39,5 +39,5 @@ export interface RefreshToken {
   token: string;
   userAgent: string;
   createdAt: Date;
-  expiresAt: Date;
+  expiresIn: Date;
 }
