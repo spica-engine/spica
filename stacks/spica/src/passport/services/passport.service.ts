@@ -42,6 +42,9 @@ export class PassportService {
 
   onTokenRecieved(response) {
     this.token = `${response.scheme} ${response.token}`;
+  }
+
+  resetStatements(){
     this._statements = undefined;
   }
 

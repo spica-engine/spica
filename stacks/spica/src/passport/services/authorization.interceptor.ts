@@ -6,8 +6,8 @@ import {
   HttpRequest
 } from "@angular/common/http";
 import {Inject, Injectable} from "@angular/core";
-import {Observable} from "rxjs";
-import {take, tap} from "rxjs/operators";
+import {Observable, Subject} from "rxjs";
+import {debounceTime, filter, switchMap, take, tap} from "rxjs/operators";
 import {PassportService} from "./passport.service";
 import {environment} from "environments/environment";
 import {Router} from "@angular/router";
@@ -20,15 +20,27 @@ import { PASSPORT_OPTIONS, PassportOptions } from "../interfaces/passport";
   providedIn: "root"
 })
 export class AuthorizationInterceptor implements HttpInterceptor {
+  private refreshTokenSubject = new Subject<string>();
+  
   constructor(
     private _snackBar: MatSnackBar,
     private passport: PassportService,
     private router: Router,
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions
-  ) {}
+  ) {
+    this.refreshTokenSubject.pipe(
+      debounceTime(3000),
+      filter(requestURL => requestURL !== `${this.options.url}/passport/access-token`),
+      switchMap(() => this.passport.getAccessToken().pipe(take(1)))
+    ).subscribe(
+      token => this.passport.onTokenRecieved(token),
+      error => this.handleRefreshTokenError(error)
+    );
+  }
+  
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     if (this.passport.token && !request.headers.has("X-Not-Api")) {
-      this.refreshToken(request.url);
+      this.refreshTokenSubject.next(request.url);
       request = request.clone({setHeaders: {Authorization: `${this.passport.token}`}});
     }
     return next.handle(request.clone({headers: request.headers.delete("X-Not-Api")})).pipe(
@@ -41,29 +53,17 @@ export class AuthorizationInterceptor implements HttpInterceptor {
       })
     );
   }
-  refreshToken(requestURL: string){
-    if(requestURL != `${this.options.url}/passport/access-token`){
-      this.passport.getAccessToken()
-      .pipe(
-        take(1),
-      )
-      .subscribe(
-        r => {
-          this.passport.onTokenRecieved(r);
-        },
-        r => {
-          this.passport.logout();
-          this.router.navigate(["passport/identify"]);
-          console.error(r)
-          this._snackBar.openFromComponent(SnackbarComponent, {
-            data: {
-              status: r.status,
-              message: "You've been inactive for a while, must log in again.",
-            } as SnackbarError,
-            duration: 5000
-          })
-        }
-      );
-    }
+
+  handleRefreshTokenError(error) {
+    this.passport.logout();
+    this.router.navigate(["passport/identify"]);
+    console.error(error)
+    this._snackBar.openFromComponent(SnackbarComponent, {
+      data: {
+        status: error.status,
+        message: "You've been inactive for a while, must log in again.",
+      } as SnackbarError,
+      duration: 5000
+    })
   }
 }

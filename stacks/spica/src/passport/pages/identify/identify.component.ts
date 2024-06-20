@@ -75,6 +75,7 @@ export class IdentifyComponent implements OnInit {
       .subscribe(
         r => {
           this.passport.onTokenRecieved(r);
+          this.passport.resetStatements();
           return this.router.navigate(["/dashboard"]);
         },
         r => (this.error = r.error.message)
@@ -87,6 +88,7 @@ export class IdentifyComponent implements OnInit {
       .toPromise()
       .then(r => {
         this.passport.onTokenRecieved(r);
+        this.passport.resetStatements();
         return this.router.navigate(["/dashboard"]);
       })
       .catch(response => {
