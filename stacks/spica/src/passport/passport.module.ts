@@ -40,6 +40,7 @@ import {StrategyDialogComponent} from "./components/strategy-dialog/strategy-dia
 import {CanInteractDirective} from "./directives/can-interact.directive";
 import {ApiKeyAddComponent} from "./pages/apikey-add/apikey-add.component";
 import {ApiKeyIndexComponent} from "./pages/apikey-index/apikey-index.component";
+import {RefreshTokenIndexComponent} from "./pages/refreshtoken-index/refreshtoken-index.component";
 import {IdentifyComponent} from "./pages/identify/identify.component";
 import {IdentityAddComponent} from "./pages/identity-add/identity-add.component";
 import {IdentityIndexComponent} from "./pages/identity-index/identity-index.component";
@@ -76,6 +77,7 @@ import {ApiKeyService} from "./services/apikey.service";
     StrategiesAddComponent,
     CanInteractDirective,
     ApiKeyIndexComponent,
+    RefreshTokenIndexComponent,
     ApiKeyAddComponent,
     StrategyDialogComponent,
     PolicyResourceAddComponent,

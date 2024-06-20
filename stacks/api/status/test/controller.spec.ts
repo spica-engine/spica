@@ -135,6 +135,7 @@ describe("Status", () => {
             expiresIn: 1000,
             issuer: "spica",
             maxExpiresIn: 1000,
+            refreshTokenExpiresIn: 1000,
             secretOrKey: "spica",
             entryLimit: 20,
             blockingOptions: {

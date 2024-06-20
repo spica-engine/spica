@@ -18,6 +18,7 @@ import {AUTH_RESOLVER} from "@spica-server/bucket/common";
 import {registerAssetHandlers} from "./asset";
 import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {RefreshTokenService} from "@spica-server/passport/refreshtoken";
 
 @Global()
 @Module({})
@@ -35,7 +36,7 @@ export class IdentityModule {
         policies: options.defaultIdentityPolicies,
         failedAttempts: [],
         lastLogin: undefined,
-        lastPasswords: []
+        lastPasswords: [],
       });
     }
     registerStatusProvider(identityService);
@@ -75,6 +76,7 @@ export class IdentityModule {
       providers: [
         IdentityService,
         IdentityStrategy,
+        RefreshTokenService,
         {
           provide: IDENTITY_OPTIONS,
           useValue: options

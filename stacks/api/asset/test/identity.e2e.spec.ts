@@ -13,6 +13,7 @@ import {PreferenceModule} from "@spica-server/preference";
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
+const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
 
 describe("identity-settings", () => {
   function downloadAsset(asset) {
@@ -42,6 +43,7 @@ describe("identity-settings", () => {
       PolicyModule.forRoot(),
       IdentityModule.forRoot({
         expiresIn: EXPIRES_IN,
+        refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
         issuer: "spica",
         maxExpiresIn: MAX_EXPIRES_IN,
         secretOrKey: "secret",

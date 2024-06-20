@@ -21,7 +21,7 @@ export class PassportService {
     localStorage.setItem("access_token", token);
   }
 
-  get decodedToken(): Identity & {exp: number} {
+  get decodedToken(): Identity & {exp: number, iat: number} {
     const decodedToken = this.token.replace(/\w*\s\b/g, "");
     return jwt_decode(decodedToken);
   }
@@ -48,12 +48,12 @@ export class PassportService {
   answerAuthFactor(factor, answer) {
     return this.http.post(`api:/${factor.answerUrl}`, {
       answer
-    });
+    },  {withCredentials: true});
   }
 
   identify(identityOrStrategy: IdentifyParams | string, openCallback?: (url: string) => void) {
     if (typeof identityOrStrategy != "string") {
-      return this.http.post<any>("api:/passport/identify", identityOrStrategy);
+      return this.http.post<any>("api:/passport/identify", identityOrStrategy, {withCredentials: true});
     }
 
     return this.http
@@ -66,6 +66,10 @@ export class PassportService {
           return this.http.get(`api:/passport/identify`, {params: {state: res.state}});
         })
       );
+  }
+
+  getAccessToken() {
+    return this.http.get<any>("api:/passport/access-token", {withCredentials: true});
   }
 
   getStrategies() {

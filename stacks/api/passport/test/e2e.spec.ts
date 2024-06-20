@@ -17,6 +17,8 @@ const EXPIRES_IN = 60_000;
 
 const TOTP_TIMEOUT = 1000 * 30;
 
+const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
+
 const samlp = require("samlp");
 const xpath = require("xpath");
 
@@ -192,6 +194,7 @@ describe("E2E Tests", () => {
         expiresIn: EXPIRES_IN,
         issuer: "spica",
         maxExpiresIn: EXPIRES_IN,
+        refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
         publicUrl: publicUrl,
         samlCertificateTTL: EXPIRES_IN,
         secretOrKey: "spica",

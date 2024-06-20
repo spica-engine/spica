@@ -4,6 +4,7 @@ export const POLICY_PROVIDER = Symbol.for("POLICY_PROVIDER");
 export interface IdentityOptions {
   expiresIn: number;
   maxExpiresIn: number;
+  refreshTokenExpiresIn: number;
   issuer: string;
   audience?: string;
   secretOrKey: string;

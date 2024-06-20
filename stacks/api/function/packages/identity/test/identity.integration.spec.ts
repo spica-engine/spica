@@ -12,6 +12,7 @@ import jwt_decode from "jwt-decode";
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 20_000;
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
+const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
 
 const PORT = 3000;
 const PUBLIC_URL = `http://localhost:${PORT}`;
@@ -29,6 +30,7 @@ xdescribe("Identity", () => {
           expiresIn: EXPIRES_IN,
           issuer: "spica",
           maxExpiresIn: MAX_EXPIRES_IN,
+          refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
           publicUrl: PUBLIC_URL,
           samlCertificateTTL: EXPIRES_IN,
           secretOrKey: "spica",
