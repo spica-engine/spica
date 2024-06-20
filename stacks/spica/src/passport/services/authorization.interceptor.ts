@@ -5,7 +5,7 @@ import {
   HttpInterceptor,
   HttpRequest
 } from "@angular/common/http";
-import {Injectable} from "@angular/core";
+import {Inject, Injectable} from "@angular/core";
 import {Observable} from "rxjs";
 import {take, tap} from "rxjs/operators";
 import {PassportService} from "./passport.service";
@@ -14,6 +14,7 @@ import {Router} from "@angular/router";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {SnackbarComponent} from "@spica-client/core/layout/snackbar/snackbar.component";
 import {SnackbarError} from "@spica-client/core/layout/snackbar/interface";
+import { PASSPORT_OPTIONS, PassportOptions } from "../interfaces/passport";
 
 @Injectable({
   providedIn: "root"
@@ -23,6 +24,7 @@ export class AuthorizationInterceptor implements HttpInterceptor {
     private _snackBar: MatSnackBar,
     private passport: PassportService,
     private router: Router,
+    @Inject(PASSPORT_OPTIONS) private options: PassportOptions
   ) {}
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     if (this.passport.token && !request.headers.has("X-Not-Api")) {
@@ -40,7 +42,7 @@ export class AuthorizationInterceptor implements HttpInterceptor {
     );
   }
   refreshToken(requestURL: string){
-    if(requestURL != `${environment.api}/passport/access-token`){
+    if(requestURL != `${this.options.url}/passport/access-token`){
       this.passport.getAccessToken()
       .pipe(
         take(1),
