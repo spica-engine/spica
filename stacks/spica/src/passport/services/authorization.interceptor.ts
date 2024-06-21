@@ -6,8 +6,8 @@ import {
   HttpRequest
 } from "@angular/common/http";
 import {Inject, Injectable} from "@angular/core";
-import {Observable, Subject} from "rxjs";
-import {debounceTime, filter, switchMap, take, tap} from "rxjs/operators";
+import {Observable, Subject, of} from "rxjs";
+import {catchError, debounceTime, filter, switchMap, take, tap} from "rxjs/operators";
 import {PassportService} from "./passport.service";
 import {environment} from "environments/environment";
 import {Router} from "@angular/router";
@@ -31,10 +31,18 @@ export class AuthorizationInterceptor implements HttpInterceptor {
     this.refreshTokenSubject.pipe(
       debounceTime(3000),
       filter(requestURL => requestURL !== `${this.options.url}/passport/access-token`),
-      switchMap(() => this.passport.getAccessToken().pipe(take(1)))
+      switchMap(() => this.passport.getAccessToken().pipe(
+        take(1),
+        catchError(error => {
+          this.handleRefreshTokenError(error);
+          return of(null);
+        })
+      ))
     ).subscribe(
-      token => this.passport.onTokenRecieved(token),
-      error => this.handleRefreshTokenError(error)
+      token => {
+        if(!token) return;
+        this.passport.onTokenRecieved(token)
+      }
     );
   }
   
