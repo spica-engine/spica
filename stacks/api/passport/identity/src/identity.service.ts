@@ -106,7 +106,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       sameSite: 'Strict',
       path: '/',
       overwrite: true,
-      maxAge: this.identityOptions.refreshTokenExpiresIn
+      maxAge: this.identityOptions.refreshTokenExpiresIn * 1000
     } 
   }
 
