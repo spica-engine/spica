@@ -287,7 +287,7 @@ export class PassportController {
     @Req() req: any,
     @Res() res: any,
   ) {
-    const {refreshToken} = req.cookies;
+    const {refreshToken} = req.cookies || {};
     
     if (!refreshToken) {
       throw new UnauthorizedException("Refresh token does not exist.");
