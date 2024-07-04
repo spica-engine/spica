@@ -63,6 +63,7 @@
       [language]="function.language"
       [dependencies]="dependencies | async"
       (handlers)="onHandlersEmitted($event)"
+      (debouncedChange)="onDebouncedChangeEmitted()"
     >
     </code-editor>
     <div class="resize-cursor" (mousedown)="onMouseDown()"></div>

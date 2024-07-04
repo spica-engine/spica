@@ -20,16 +20,14 @@ import { PASSPORT_OPTIONS, PassportOptions } from "../interfaces/passport";
   providedIn: "root"
 })
 export class AuthorizationInterceptor implements HttpInterceptor {
-  private refreshTokenSubject = new Subject<string>();
-  
   constructor(
     private _snackBar: MatSnackBar,
     private passport: PassportService,
     private router: Router,
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions
   ) {
-    this.refreshTokenSubject.pipe(
-      debounceTime(3000),
+    this.passport.refreshTokenSubject.pipe(
+      debounceTime(2000),
       filter(requestURL => requestURL !== `${this.options.url}/passport/access-token`),
       switchMap(() => this.passport.getAccessToken().pipe(
         take(1),
@@ -48,7 +46,7 @@ export class AuthorizationInterceptor implements HttpInterceptor {
   
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     if (this.passport.token && !request.headers.has("X-Not-Api")) {
-      this.refreshTokenSubject.next(request.url);
+      this.passport.refreshTokenSubject.next(request.url);
       request = request.clone({setHeaders: {Authorization: `${this.passport.token}`}});
     }
     return next.handle(request.clone({headers: request.headers.delete("X-Not-Api")})).pipe(

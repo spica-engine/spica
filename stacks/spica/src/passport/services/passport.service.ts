@@ -2,7 +2,7 @@ import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import jwt_decode from "jwt-decode";
 import * as matcher from "matcher";
-import {Observable} from "rxjs";
+import {Observable, Subject} from "rxjs";
 import {concatMap, map, shareReplay} from "rxjs/operators";
 import {Identity} from "../interfaces/identity";
 import {Statement} from "../interfaces/statement";
@@ -12,6 +12,8 @@ export type IdentifyParams = {identifier: string; password: string};
 
 @Injectable({providedIn: "root"})
 export class PassportService {
+  refreshTokenSubject = new Subject<string>();
+  
   private _statements: Observable<Statement[]>;
 
   get token(): string {

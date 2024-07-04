@@ -8,20 +8,26 @@ import {
   SimpleChanges
 } from "@angular/core";
 import {BehaviorSubject, merge, Subscription} from "rxjs";
-import {debounceTime, take} from "rxjs/operators";
+import {debounceTime, map, take} from "rxjs/operators";
+
+interface HandlerData {
+  handler: string;
+  index: string;
+}
 
 @Directive({
   selector: "code-editor[language]",
-  host: {"(onInit)": "_editorReady($event)"},
+  host: { "(onInit)": "_editorReady($event)" },
   exportAs: "language"
 })
 export class LanguageDirective implements OnChanges, OnDestroy {
   @Input() language: string;
-  @Input() dependencies: {name: string; version: string; types: {[path: string]: string}}[] = [];
+  @Input() dependencies: { name: string; version: string; types: { [path: string]: string } }[] = [];
 
   @Input("ngModel") index: string = "";
 
   @Output("handlers") handlerEmitter = new EventEmitter<string[]>();
+  @Output("debouncedChange") debouncedChangeEmitter = new EventEmitter<string[]>();
 
   private disposables: Array<any> = [];
 
@@ -90,8 +96,27 @@ export class LanguageDirective implements OnChanges, OnDestroy {
 
     this.onIndexChangeSubs = merge(
       sourceObservable.pipe(take(1)),
-      sourceObservable.pipe(debounceTime(2000))
-    ).subscribe(index => this.emitHandlers(index));
+      sourceObservable.pipe(
+        debounceTime(2000),
+        map(index => ({ handler: 'emitHandlers', index }))
+      ),
+      sourceObservable.pipe(
+        debounceTime(10000),
+        map(index => ({ handler: 'debouncedChange', index }))
+      )
+    ).subscribe((data: string | HandlerData) => {
+      if (typeof data === 'string') {
+        return;
+      }
+      switch (data.handler) {
+        case "emitHandlers":
+          this.emitHandlers(data.index);
+          break;
+        case "debouncedChange":
+          this.debouncedChangeEmitter.emit();
+          break;
+      }
+    });
   }
 
   // https://github.com/Microsoft/monaco-editor/issues/926#issuecomment-398689036
