@@ -147,7 +147,7 @@ export class StorageService {
   }
 
   urlToId(url: string) {
-    const id = url.match(/\/o\/(.*?)\?/)[1];
+    const id = url.match(/\/o\/(.*?)\?/)?.[1];
     const isValidId = /^[a-fA-F0-9]{24}$/.test(id);
     if(isValidId){
       return id;
