@@ -12,7 +12,6 @@ def _database_worker(ctx):
     ctx.actions.run(
         arguments = [args],
         executable = ctx.executable.worker,
-        inputs = [ctx.file.cachebust],
         outputs = [output],
         execution_requirements = {
             "supports-workers": "1",
@@ -35,7 +34,6 @@ database_worker = rule(
     implementation = _database_worker,
     attrs = {
         "type": attr.string(mandatory = True),
-        "cachebust": attr.label(allow_single_file = True),
         "worker": attr.label(
             default = Label("//packages/database/testing:worker"),
             executable = True,
