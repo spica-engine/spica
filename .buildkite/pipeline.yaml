@@ -4,10 +4,10 @@ var_1: &api_test_docker_plugin
         image: "spicaengine/buildkite-node-with-mongodb@sha256:f7cd5ed3576528833a3a47819ab28e38d915094fa1904c39b248f3ee2ff395ce"
         workdir: /spica
         volumes:
-          - "/var/cache/spica:/var/cache/spica"
-          - "/var/cache/spica/node_modules:/spica/node_modules"
-          - "/var/cache/spica/stacks/spica/node_modules:/spica/stacks/spica/node_modules"
-          - "/var/cache/spica/stacks/cli/node_modules:/spica/stacks/cli/node_modules"
+          - "/Library/Caches/spica:/var/cache/spica"
+          - "/Library/Caches/spica/node_modules:/spica/node_modules"
+          - "/Library/Caches/spica/stacks/spica/node_modules:/spica/stacks/spica/node_modules"
+          - "/Library/Caches/spica/stacks/cli/node_modules:/spica/stacks/cli/node_modules"
           - "./.buildkite/bazel.rc:/etc/bazel.bazelrc"
           # This is here to enable us write e2e against docker
           - "/var/run/docker.sock:/var/run/docker.sock"
@@ -18,17 +18,17 @@ var_2: &release_docker_plugin
         image: "spicaengine/buildkite-node-with-mongodb:12"
         workdir: /spica
         volumes:
-          - "/var/cache/spica:/var/cache/spica"
-          - "/var/cache/spica/node_modules:/spica/node_modules"
-          - "/var/cache/spica/stacks/spica/node_modules:/spica/stacks/spica/node_modules"
-          - "/var/cache/spica/stacks/cli/node_modules:/spica/stacks/cli/node_modules"
+          - "/Library/Caches/spica:/var/cache/spica"
+          - "/Library/Caches/spica/node_modules:/spica/node_modules"
+          - "/Library/Caches/spica/stacks/spica/node_modules:/spica/stacks/spica/node_modules"
+          - "/Library/Caches/spica/stacks/cli/node_modules:/spica/stacks/cli/node_modules"
           - "./.buildkite/bazel.rc:/etc/bazel.bazelrc"
           - "/var/run/docker.sock:/var/run/docker.sock"
           - "/etc/ssl/certs:/etc/ssl/certs"
           # These are secrets, which shall not be exposed that are stored in the agent
-          - "/root/service-account.json:/root/service-account.json"
-          - "/root/docker-password:/root/docker-password"
-          - "/root/.npmrc:/root/.npmrc"
+          - "/service-account.json:/root/service-account.json"
+          - "/docker-password:/root/docker-password"
+          - "/.npmrc:/root/.npmrc"
 
 steps:
   - label: ":yarn: Install packages"
