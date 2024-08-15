@@ -6,7 +6,6 @@ load(":worker.bzl", "database_worker")
 
 nodejs_binary(
     name = "worker",
-    configuration_env_vars = ["cache_bust"],
     data = [
         "@npm//@bazel/worker",
         "@npm//mongodb-memory-server-core",
@@ -17,13 +16,11 @@ nodejs_binary(
 
 database_worker(
     name = "replicaset",
-    cachebust = ":cachebust.txt",
     type = "replicaset",
 )
 
 database_worker(
     name = "standalone",
-    cachebust = ":cachebust.txt",
     type = "standalone",
 )
 
