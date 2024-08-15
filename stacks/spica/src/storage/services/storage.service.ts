@@ -147,11 +147,10 @@ export class StorageService {
   }
 
   urlToId(url: string) {
-    // <api_url>/<resource_id>/view
-    const parts = url.split("/");
-    const lastPart = parts.pop();
-    if (lastPart == "view") {
-      return parts.pop();
+    const id = url.match(/\/o\/(.*?)\?/)[1];
+    const isValidId = /^[a-fA-F0-9]{24}$/.test(id);
+    if(isValidId){
+      return id;
     }
     return url;
   }
