@@ -15,7 +15,7 @@ def _database_worker(ctx):
         outputs = [output],
         execution_requirements = {
             "supports-workers": "1",
-            "no-cache": "1",
+            "no-sandbox": "1"
         },
         mnemonic = "DatabaseCompile",
         env = {
