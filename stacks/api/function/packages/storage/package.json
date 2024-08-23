@@ -14,7 +14,7 @@
   "typings": "dist/index.d.ts",
   "sideEffects": false,
   "dependencies": {
-    "axios": "^0.21.1",
+    "axios": "^0.21.3",
     "form-data":"^4.0.0"
   }
 }

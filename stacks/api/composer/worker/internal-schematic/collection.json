@@ -1,9 +1,0 @@
-{
-	"schematics": {
-		"ng-new": {
-			"factory": "./ng-new",
-			"description": "Create an Composer workspace.",
-			"hidden": true
-		}
-	}
-}

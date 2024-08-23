@@ -21,6 +21,8 @@ import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
 import * as yargs from "yargs";
+import * as morgan from "morgan";
+import * as cookieParser from "cookie-parser";
 
 const args = yargs
   /* TLS Options */
@@ -116,6 +118,27 @@ const args = yargs
       description: "Default lifespan of the issued JWT tokens. Unit: second",
       default: 60 * 60 * 24 * 2
     },
+    "passport-identity-refresh-token-expires-in": {
+      number: true,
+      description: "Default lifespan of the issued refresh JWT tokens. Unit: second",
+      default: 60 * 60 * 24 * 3
+    },
+    "passport-identity-failed-login-attempt-limit": {
+      number: true,
+      description: "Maximum failed login attempt before blocking further attempts.",
+      default: 3
+    },
+    "passport-identity-block-duration-after-failed-login-attempts": {
+      number: true,
+      description: "Duration of blocking login attempts in minutes.",
+      default: 30
+    },
+    "passport-identity-password-history-uniqueness-count": {
+      number: true,
+      description:
+        "How many of last passwords will be compared with the new password in terms of uniqueness",
+      default: 4
+    },
     "passport-identity-token-expiration-seconds-limit": {
       number: true,
       description: "Maximum lifespan of the requested JWT token can have. Unit: second"
@@ -154,7 +177,8 @@ const args = yargs
         "PreferenceFullAccess",
         "StatusFullAccess",
         "AssetFullAccess",
-        "VersionControlFullAccess"
+        "VersionControlFullAccess",
+        "RefreshTokenFullAccess"
       ]
     },
     "passport-identity-limit": {
@@ -335,6 +359,21 @@ While the 'passport' module will use this url to re-route the user to the Passpo
 Example: http(s)://doomed-d45f1.spica.io/api`
   })
   .demandOption("public-url")
+  .option("access-logs", {
+    boolean: true,
+    description: "Enable/disable http access logs",
+    default: true
+  })
+  .option("access-logs-url-filter", {
+    string: true,
+    description: "Regex to filter access logs by url",
+    default: ".*"
+  })
+  .option("access-logs-statuscode-filter", {
+    string: true,
+    description: "Regex to filter access logs by status code",
+    default: ".*"
+  })
   .check(args => {
     if (!args["passport-identity-token-expiration-seconds-limit"]) {
       args["passport-identity-token-expiration-seconds-limit"] =
@@ -375,12 +414,9 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       );
     }
 
-    if (
-      args["storage-strategy"] == "awss3" &&
-      (!args["awss3-credentials-path"] || !args["awss3-bucket-name"])
-    ) {
+    if (args["storage-strategy"] == "awss3" && !args["awss3-bucket-name"]) {
       throw new TypeError(
-        "--awss3-credentials-path and --awss3-bucket-name options must be present when --storage-strategy is set to 'awss3'."
+        "--awss3-bucket-name must be present when --storage-strategy is set to 'awss3'."
       );
     }
 
@@ -446,13 +482,19 @@ const modules = [
     issuer: args["public-url"],
     expiresIn: args["passport-identity-token-expires-in"],
     maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
+    refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
     defaultStrategy: args["passport-default-strategy"],
     entryLimit: args["passport-identity-limit"],
     defaultIdentityPolicies: args["passport-default-identity-policies"],
     defaultIdentityIdentifier: args["passport-default-identity-identifier"],
     defaultIdentityPassword: args["passport-default-identity-password"],
     audience: "spica.io",
-    samlCertificateTTL: args["passport-saml-certificate-ttl"]
+    samlCertificateTTL: args["passport-saml-certificate-ttl"],
+    blockingOptions: {
+      failedAttemptLimit: args["passport-identity-failed-login-attempt-limit"],
+      blockDurationMinutes: args["passport-identity-block-duration-after-failed-login-attempts"]
+    },
+    passwordHistoryUniquenessCount: args["passport-identity-password-history-uniqueness-count"]
   }),
   FunctionModule.forRoot({
     logExpireAfterSeconds: args["common-log-lifespan"],
@@ -490,7 +532,12 @@ if (args["status-tracking"]) {
 }
 
 if (args["version-control"]) {
-  modules.push(VersionControlModule.forRoot({persistentPath: args["persistent-path"]}));
+  modules.push(
+    VersionControlModule.forRoot({
+      persistentPath: args["persistent-path"],
+      replicationEnabled: args["replication"]
+    })
+  );
 }
 
 if (args["replication"]) {
@@ -531,6 +578,35 @@ NestFactory.create(RootModule, {
       Middlewares.MergePatchJsonParser(args["payload-size-limit"])
     );
     app.enableShutdownHooks();
+
+    if (args["access-logs"]) {
+      morgan.token("accessor", (req, res) => {
+        if (!req.user) {
+          return req.headers.authorization;
+        }
+
+        const fields = ["_id", "identifier", "name"];
+        Object.keys(req.user).forEach(
+          userField => !fields.includes(userField) && delete req.user[userField]
+        );
+
+        return JSON.stringify(req.user);
+      });
+      app.use(
+        morgan(
+          ':remote-addr - :accessor ":method :url HTTP/:http-version" :status [:date[iso]]',
+          {
+            skip: (req, res) => {
+              const urlRegex = new RegExp(args["access-logs-url-filter"]);
+              const statusCodeRegex = new RegExp(args["access-logs-statuscode-filter"]);
+              return !urlRegex.test(req.url) || !statusCodeRegex.test(res.statusCode.toString());
+            }
+          }
+        )
+      );
+      app.use(cookieParser())
+    }
+
     return app.listen(args.port);
   })
   .then(() => {

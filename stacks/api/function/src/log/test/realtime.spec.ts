@@ -43,7 +43,7 @@ describe("Realtime", () => {
     app.useWebSocketAdapter(new WsAdapter(app));
     await app.listen(wsc.socket);
 
-    await new Promise(resolve => setTimeout(() => resolve(), 2000));
+    await new Promise(resolve => setTimeout(() => resolve(""), 2000));
   });
 
   afterAll(() => app.close());

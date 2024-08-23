@@ -34,7 +34,10 @@ ts_project(
         "@npm//@types/express",
         "@npm//@types/node",
         "@npm//@types/yargs",
+        "@npm//morgan",
         "@npm//yargs",
+        "@npm//cookie-parser",
+        "@npm//@nestjs/schedule"
     ],
 )
 
@@ -61,7 +64,7 @@ nodejs_binary(
 
 container_run_and_commit(
     name = "plugins",
-    commands = ["apt -y update && apt install -y git"],
+    commands = ["apt -y update && apt install -y git && git config --global --add safe.directory '*'"],
     image = "@debian_image//image",
 )
 
@@ -100,7 +103,7 @@ container_push(
     format = "Docker",
     image = ":image",
     registry = "index.docker.io",
-    repository = "spicaengine/api",
-    tag = "{BUILD_SCM_VERSION}",
+    repository = "htuna07/aws-spica-api",
+    tag = "0.9.29",
     tags = ["release-with-spica"],
 )

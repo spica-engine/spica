@@ -1,6 +1,7 @@
 import {Controller, Get, INestApplication, ModuleMetadata, Req, Res} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core/schema";
+import { DATE_TIME } from "@spica-server/core/schema/formats";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportModule} from "@spica-server/passport";
@@ -15,6 +16,8 @@ import {parse} from "url";
 const EXPIRES_IN = 60_000;
 
 const TOTP_TIMEOUT = 1000 * 30;
+
+const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
 
 const samlp = require("samlp");
 const xpath = require("xpath");
@@ -183,23 +186,31 @@ describe("E2E Tests", () => {
   const moduleMetaData: ModuleMetadata = {
     controllers: [SAMLController, OAuthController],
     imports: [
-      SchemaModule.forRoot(),
+      SchemaModule.forRoot({
+        formats:[DATE_TIME]
+      }),
       DatabaseTestingModule.standalone(),
       PassportModule.forRoot({
         expiresIn: EXPIRES_IN,
         issuer: "spica",
         maxExpiresIn: EXPIRES_IN,
+        refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
         publicUrl: publicUrl,
         samlCertificateTTL: EXPIRES_IN,
         secretOrKey: "spica",
         defaultStrategy: "IDENTITY",
         defaultIdentityIdentifier: "spica",
-        defaultIdentityPassword: "spica",
+        defaultIdentityPassword: "asdqwe123456",
         audience: "spica",
-        defaultIdentityPolicies: ["PassportFullAccess"]
+        defaultIdentityPolicies: ["PassportFullAccess"],
+        blockingOptions: {
+          failedAttemptLimit: 100,
+          blockDurationMinutes: 0
+        },
+        passwordHistoryUniquenessCount: 0
       }),
       PreferenceTestingModule,
-      CoreTestingModule
+      CoreTestingModule,
     ]
   };
 
@@ -210,7 +221,7 @@ describe("E2E Tests", () => {
   async function login(identifier, password) {
     const {body} = await req.post("/passport/identify", {
       identifier: "spica",
-      password: "spica"
+      password: "asdqwe123456"
     });
 
     token = body.token;
@@ -333,7 +344,7 @@ describe("E2E Tests", () => {
         const {body: strategies} = await req.get("/passport/strategies");
         const {body: strategy} = await req.get(`/passport/strategy/${strategies[0]._id}/url`);
 
-        const _ = req.get("/passport/identify", {state: strategy.state}).then(async res => {
+        const _ = req.post("/passport/identify", {state: strategy.state}).then(async res => {
           expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
           expect(res.body.scheme).toEqual("IDENTITY");
           expect(res.body.issuer).toEqual("passport/identity");
@@ -448,7 +459,7 @@ describe("E2E Tests", () => {
         const {body: strategies} = await req.get("/passport/strategies");
         const {body: strategy} = await req.get(`/passport/strategy/${strategies[0]._id}/url`);
 
-        const _ = req.get("/passport/identify", {state: strategy.state}).then(async res => {
+        const _ = req.post("/passport/identify", {state: strategy.state}).then(async res => {
           expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
           expect(res.body.scheme).toEqual("IDENTITY");
           expect(res.body.issuer).toEqual("passport/identity");
@@ -515,10 +526,10 @@ describe("E2E Tests", () => {
         identity = await req
           .post(
             "/passport/identity",
-            {identifier: "identityWith2fa", password: "password"},
+            {identifier: "identityWith2fa", password: "asdqwe123456"},
             {Authorization: `IDENTITY ${token}`}
           )
-          .then(r => r.body);
+          .then(r => r.body)
       });
 
       async function startVerification(identity) {
@@ -575,7 +586,7 @@ describe("E2E Tests", () => {
 
           let res = await req.post("/passport/identify", {
             identifier: "identityWith2fa",
-            password: "password"
+            password: "asdqwe123456"
           });
           expect(res.body).toEqual({
             challenge: "Please enter the 6 digit code",
@@ -594,7 +605,7 @@ describe("E2E Tests", () => {
 
           let res = await req.post("/passport/identify", {
             identifier: "identityWith2fa",
-            password: "password"
+            password: "asdqwe123456"
           });
 
           const totp = "000000";
@@ -617,7 +628,7 @@ describe("E2E Tests", () => {
 
           const res = await req.post("/passport/identify", {
             identifier: "identityWith2fa",
-            password: "password"
+            password: "asdqwe123456"
           });
 
           expect(res.statusCode).toEqual(200);
@@ -651,7 +662,7 @@ describe("E2E Tests", () => {
 
           let res = await req.post("/passport/identify", {
             identifier: "identityWith2fa",
-            password: "password"
+            password: "asdqwe123456"
           });
 
           const totp = generateTotp(challenge);

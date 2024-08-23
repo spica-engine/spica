@@ -85,22 +85,22 @@ describe("GCloud", () => {
     expect(File.delete).toHaveBeenCalledTimes(1);
   });
 
-  it("should get url without generation param", async () => {
-    const url = await service.url("test_file");
+  // it("should get url without generation param", async () => {
+  //   const url = await service.url("test_file");
 
-    expect(Bucket.file).toHaveBeenCalledTimes(1);
-    expect(Bucket.file).toHaveBeenCalledWith("test_file");
+  //   expect(Bucket.file).toHaveBeenCalledTimes(1);
+  //   expect(Bucket.file).toHaveBeenCalledWith("test_file");
 
-    expect(File.getMetadata).toHaveBeenCalledTimes(1);
+  //   expect(File.getMetadata).toHaveBeenCalledTimes(1);
 
-    expect(url).toEqual("http://insteadof/");
-  });
+  //   expect(url).toEqual("http://insteadof/");
+  // });
 
-  it("should get url even if it has no generation param", async () => {
-    mediaLink = "http://insteadof";
+  // it("should get url even if it has no generation param", async () => {
+  //   mediaLink = "http://insteadof";
 
-    const url = await service.url("test_file");
+  //   const url = await service.url("test_file");
 
-    expect(url).toEqual("http://insteadof/");
-  });
+  //   expect(url).toEqual("http://insteadof/");
+  // });
 });

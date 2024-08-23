@@ -1,0 +1,161 @@
+<ng-template #toolbar>
+  <span>
+    <h4>
+      <mat-icon>verified_user</mat-icon>
+      <span>Refresh Tokens</span>
+    </h4>
+    <h6>
+      Refresh tokens to get access token.
+    </h6>
+  </span>
+  <span>
+    <button mat-button [matMenuTriggerFor]="filterMenu" [color]="filterer.active ? 'accent' : ''">
+      <mat-icon>filter_alt</mat-icon>
+      Filter
+      <mat-menu
+        class="refreshtoken-filter-menu"
+        #filterMenu="matMenu"
+        (click)="$event.stopPropagation()"
+      >
+        <filter
+          #filterer
+          [filter]="filter"
+          [schema]="filterSchema"
+          (filterChange)="onFilterChange($event ? $event : {})"
+        ></filter>
+      </mat-menu>
+    </button>
+    <button mat-button [matMenuTriggerFor]="propertiesMenu">
+      <mat-icon>view_column</mat-icon>
+      Columns
+      <mat-menu xPosition="before" #propertiesMenu="matMenu">
+        <button mat-menu-item (click)="$event.stopPropagation()">
+          <mat-checkbox
+            [ngModel]="properties.length == displayedProperties.length"
+            [indeterminate]="
+              displayedProperties.length > 1 && displayedProperties.length < properties.length
+            "
+            (ngModelChange)="toggleDisplayAll($event)"
+          >
+            Display all
+          </mat-checkbox>
+        </button>
+        <mat-divider></mat-divider>
+        <button
+          mat-menu-item
+          disableRipple
+          *ngFor="let property of properties"
+          (click)="$event.stopPropagation()"
+        >
+          <mat-checkbox
+            [ngModel]="displayedProperties.indexOf(property) > -1"
+            (ngModelChange)="toggleProperty(property, $event)"
+          >
+            {{ property }}
+          </mat-checkbox>
+        </button>
+      </mat-menu>
+    </button>
+  </span>
+</ng-template>
+
+<mat-card class="mat-elevation-z25">
+  <mat-card-content>
+    <table mat-table [dataSource]="refreshToken$" matSort (matSortChange)="onSortChange($event)">
+      <ng-container matColumnDef="_id">
+        <th
+          mat-header-cell
+          mat-resize-header
+          mat-sort-header
+          persist-header-width="Refreshtoken"
+          *matHeaderCellDef
+        >
+          _id
+        </th>
+        <td mat-cell *matCellDef="let refreshToken">{{ refreshToken._id }}</td>
+      </ng-container>
+      <ng-container matColumnDef="token">
+        <th
+          mat-header-cell
+          mat-resize-header
+          mat-sort-header
+          persist-header-width="Refreshtoken"
+          *matHeaderCellDef
+        >
+          Token
+        </th>
+        <td mat-cell *matCellDef="let refreshToken">{{ refreshToken.token }}</td>
+      </ng-container>
+      <ng-container matColumnDef="created_at">
+        <th
+          mat-header-cell
+          mat-resize-header
+          mat-sort-header
+          persist-header-width="Refreshtoken"
+          *matHeaderCellDef
+        >
+          Created At
+        </th>
+        <td mat-cell *matCellDef="let refreshToken">{{ refreshToken.created_at }}</td>
+      </ng-container>
+      <ng-container matColumnDef="expired_at">
+        <th
+          mat-header-cell
+          mat-resize-header
+          mat-sort-header
+          persist-header-width="Refreshtoken"
+          *matHeaderCellDef
+        >
+          Expired At
+        </th>
+        <td mat-cell *matCellDef="let refreshToken">{{ refreshToken.expired_at }}</td>
+      </ng-container>
+      <ng-container matColumnDef="identity">
+        <th
+          mat-header-cell
+          mat-resize-header
+          mat-sort-header
+          persist-header-width="Refreshtoken"
+          *matHeaderCellDef
+        >
+          Identity
+        </th>
+        <td mat-cell *matCellDef="let refreshToken">{{ refreshToken.identity }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>
+          Actions
+        </th>
+        <td mat-cell *matCellDef="let refreshToken">
+          <button
+            mat-icon-button
+            canInteract="passport:refreshtoken:delete"
+            [resource]="refreshToken._id"
+            color="warn"
+            (confirm)="deleteRefreshToken(refreshToken._id)"
+            [matAwareDialog]="{
+              title: 'Confirmation',
+              templateOrDescription: dialogTemplate,
+              answer: refreshToken._id
+            }"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedProperties"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedProperties"></tr>
+    </table>
+  </mat-card-content>
+
+  <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+</mat-card>
+
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action will <b>permanently</b> delete this token.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>

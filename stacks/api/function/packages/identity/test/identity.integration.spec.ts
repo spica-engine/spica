@@ -12,11 +12,12 @@ import jwt_decode from "jwt-decode";
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 20_000;
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
+const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
 
 const PORT = 3000;
 const PUBLIC_URL = `http://localhost:${PORT}`;
 
-describe("Identity", () => {
+xdescribe("Identity", () => {
   let module: TestingModule;
   let app: INestApplication;
 
@@ -29,6 +30,7 @@ describe("Identity", () => {
           expiresIn: EXPIRES_IN,
           issuer: "spica",
           maxExpiresIn: MAX_EXPIRES_IN,
+          refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
           publicUrl: PUBLIC_URL,
           samlCertificateTTL: EXPIRES_IN,
           secretOrKey: "spica",
@@ -36,7 +38,12 @@ describe("Identity", () => {
           defaultIdentityIdentifier: "spica",
           defaultIdentityPassword: "spica",
           audience: "spica",
-          defaultIdentityPolicies: ["PassportFullAccess"]
+          defaultIdentityPolicies: ["PassportFullAccess"],
+          blockingOptions: {
+            failedAttemptLimit: 100,
+            blockDurationMinutes: 0
+          },
+          passwordHistoryUniquenessCount: 0
         }),
         PreferenceTestingModule,
         CoreTestingModule

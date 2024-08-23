@@ -25,7 +25,7 @@ import {Store, StoreModule} from "@ngrx/store";
 import {EditorModule} from "@spica-client/common/code-editor";
 import {InputModule} from "@spica-client/common/input";
 import {LayoutModule} from "@spica-client/core/layout";
-import {MatSaveModule} from "@spica/client/packages/material";
+import {MatSaveModule} from "packages/material";
 import {of} from "rxjs";
 import {AddComponent} from "../../../function/pages/add/add.component";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
