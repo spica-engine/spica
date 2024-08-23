@@ -26,9 +26,9 @@ var_2: &release_docker_plugin
           - "/var/run/docker.sock:/var/run/docker.sock"
           - "/etc/ssl/certs:/etc/ssl/certs"
           # These are secrets, which shall not be exposed that are stored in the agent
-          - "/var/.secrets/service-account.json:/root/service-account.json"
-          - "/var/.secrets/docker-password:/root/docker-password"
-          - "/var/.secrets/.npmrc:/root/.npmrc"
+          - "/service-account.json:/root/service-account.json"
+          - "/docker-password:/root/docker-password"
+          - "/.npmrc:/root/.npmrc"
 
 steps:
   - label: ":yarn: Install packages"
