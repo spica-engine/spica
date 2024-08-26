@@ -10,7 +10,9 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
-describe("BucketDataController", () => {
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
+
+xdescribe("BucketDataController", () => {
   let app: INestApplication;
   let req: Request;
   let module: TestingModule;

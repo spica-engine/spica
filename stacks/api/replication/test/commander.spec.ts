@@ -3,7 +3,7 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {ClassCommander, CommandType, ReplicationModule} from "@spica-server/replication/src";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
 
 function wait(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));

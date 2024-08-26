@@ -9,6 +9,8 @@ import {PassThrough} from "stream";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5687";
 process.env.DISABLE_LOGGER = "true";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000
+
 describe("Scheduler", () => {
   let scheduler: Scheduler;
   let app: INestApplication;

@@ -8,6 +8,8 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import * as os from "os";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 50000;
+
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:45672";
 
 describe("E2E Tests", () => {
@@ -68,7 +70,7 @@ describe("E2E Tests", () => {
         return true;
       }
     });
-  }, 10_000);
+  });
 
   afterEach(async () => {
     await app.get(DatabaseService).dropDatabase();

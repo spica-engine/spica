@@ -14,6 +14,9 @@ import {PreferenceModule} from "@spica-server/preference";
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+
+
 describe("identity-settings", () => {
   function downloadAsset(asset) {
     return req.post("asset", asset).then(r => r.body);
@@ -67,7 +70,7 @@ describe("identity-settings", () => {
         return true;
       }
     });
-  }, 120_000);
+  });
 
   afterEach(() => app.close());
 

@@ -1,29 +1,46 @@
 import {MongoClient, MongoClientOptions} from "mongodb";
-import {generateDbName} from "mongodb-memory-server-core/lib/util/db_util";
+import {MongoMemoryReplSet, MongoMemoryServer} from "mongodb-memory-server";
+
+let uri;
 
 export async function start(topology: "standalone" | "replset") {
-  const connectionUri = (topology == "standalone"
-    ? require("./standalone.json")
-    : require("./replicaset.json")
-  ).connectionString;
-
-  const options: MongoClientOptions = {
-    useNewUrlParser: true,
-    ["useUnifiedTopology" as string]: true
-  };
+  let mongod: MongoMemoryReplSet | MongoMemoryServer;
+  let options = getOptions();
 
   if (topology == "replset") {
+    mongod = await MongoMemoryReplSet.create({
+      replSet: {count: 1, storageEngine: "wiredTiger"},
+      binary: {version: "5.0.19"}
+    });
+
     options.replicaSet = "testset";
     options.poolSize = Number.MAX_SAFE_INTEGER;
+  } else {
+    mongod = await MongoMemoryServer.create({
+      binary: {version: "5.0.19"}
+    });
   }
 
-  return MongoClient.connect(connectionUri, options);
+  uri = mongod.getUri() + "&retryWrites=false";
+
+  return MongoClient.connect(uri, options);
+}
+
+export async function connect(connectionUri: string) {
+  return MongoClient.connect(connectionUri, getOptions());
 }
 
 export function getConnectionUri() {
-  return Promise.resolve(require("./replicaset.json").connectionString);
+  return uri;
 }
 
 export function getDatabaseName() {
-  return generateDbName();
+  return "test";
+}
+
+function getOptions(): MongoClientOptions {
+  return {
+    useNewUrlParser: true,
+    ["useUnifiedTopology" as string]: true
+  };
 }

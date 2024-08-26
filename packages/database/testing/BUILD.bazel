@@ -1,28 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
 load("//tools/ts_project:index.bzl", "ts_project")
-load("@build_bazel_rules_nodejs//:index.bzl", "nodejs_binary")
-load(":worker.bzl", "database_worker")
-
-nodejs_binary(
-    name = "worker",
-    data = [
-        "@npm//@bazel/worker",
-        "@npm//mongodb-memory-server-core",
-        "@npm//which",
-    ],
-    entry_point = ":worker.js",
-)
-
-database_worker(
-    name = "replicaset",
-    type = "replicaset",
-)
-
-database_worker(
-    name = "standalone",
-    type = "standalone",
-)
 
 ts_project(
     name = "testing",
@@ -33,16 +11,12 @@ ts_project(
         "testing.module.ts",
         "watch-shim.ts",
     ],
-    data = [
-        ":replicaset",
-        ":standalone",
-    ],
     deps = [
         "//packages/database",
         "@npm//@nestjs/common",
         "@npm//@types/mongodb",
         "@npm//@types/node",
         "@npm//mongodb",
-        "@npm//mongodb-memory-server-core",
+        "@npm//mongodb-memory-server",
     ],
 )

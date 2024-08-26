@@ -9,7 +9,7 @@ import * as Identity from "@spica-devkit/identity";
 import Axios from "axios";
 import jwt_decode from "jwt-decode";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 20_000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 50_000;
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
 

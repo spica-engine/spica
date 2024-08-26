@@ -3,7 +3,7 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
 import {SchemaResolver} from "@spica-server/function/webhook/src/schema";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
 describe("Schema Resolver", () => {
   let resolver: SchemaResolver;

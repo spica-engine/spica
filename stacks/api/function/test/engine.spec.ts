@@ -9,6 +9,8 @@ import {TargetChange, ChangeKind} from "@spica-server/function/src/change";
 import {ClassCommander} from "@spica-server/replication";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+
 describe("Engine", () => {
   let engine: FunctionEngine;
   let subscribeSpy: jasmine.Spy;
@@ -249,6 +251,6 @@ describe("Engine", () => {
       const schemaPromise = await engine.getSchema("database");
 
       expect(schemaPromise).toEqual(expectedSchema);
-    }, 10000);
+    });
   });
 });

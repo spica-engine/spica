@@ -10,6 +10,9 @@ import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import * as os from "os";
 import {PreferenceModule} from "@spica-server/preference";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+
+
 describe("Bucket", () => {
   function downloadAsset(asset) {
     return req.post("asset", asset).then(r => r.body);
@@ -59,7 +62,7 @@ describe("Bucket", () => {
         return true;
       }
     });
-  }, 10_000);
+  });
 
   afterEach(() => app.close());
 

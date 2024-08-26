@@ -7,6 +7,8 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {GuardService} from "@spica-server/passport";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+
 describe("Realtime Authorization", () => {
   let wsc: Websocket;
   let app: INestApplication;

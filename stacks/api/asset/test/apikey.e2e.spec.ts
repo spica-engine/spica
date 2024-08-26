@@ -9,6 +9,9 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import * as os from "os";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+
+
 describe("Apikey", () => {
   function downloadAsset(asset) {
     return req.post("asset", asset).then(r => r.body);
@@ -51,7 +54,7 @@ describe("Apikey", () => {
         return true;
       }
     });
-  }, 10_000);
+  });
 
   afterEach(() => app.close());
 
