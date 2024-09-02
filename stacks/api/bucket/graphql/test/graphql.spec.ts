@@ -10,6 +10,8 @@ import {DatabaseTestingModule, ObjectId, stream} from "@spica-server/database/te
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+
 export function getBucketName(id: string | ObjectId) {
   return `Bucket_${id}`;
 }

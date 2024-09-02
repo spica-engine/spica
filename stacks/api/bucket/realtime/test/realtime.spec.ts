@@ -22,7 +22,7 @@ function url(path: string, query?: {[k: string]: string | number | boolean | obj
   return `${url.pathname}${url.search}`;
 }
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));

@@ -106,18 +106,6 @@ describe("Queue shifting", () => {
 
     const connectionUri = getConnectionUri();
     const module2 = await getModuleBuilder(connectionUri).compile();
-    const db2 = module2.get(DatabaseService);
-
-    await db
-      .collection("my_coll")
-      .find()
-      .toArray()
-      .then(console.log);
-    await db2
-      .collection("my_coll")
-      .find()
-      .toArray()
-      .then(console.log);
 
     // put a bit delay to let first replica takes jobs before second replica.
     // because we assume that first replica shifts jobs to the second replica for all test cases

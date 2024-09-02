@@ -499,8 +499,10 @@ describe("realtime database", () => {
           done();
         });
       await wait();
-      await coll.updateOne({_id: insertedIds[2]}, {$set: {test: 1}});
-      await coll.updateOne({_id: insertedIds[0]}, {$set: {test: 3}});
+      await Promise.all([
+        coll.updateOne({_id: insertedIds[2]}, {$set: {test: 1}}),
+        coll.updateOne({_id: insertedIds[0]}, {$set: {test: 3}})
+      ]);
     });
 
     it("should order descending by _id property and limit to 2", async done => {

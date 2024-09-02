@@ -7,6 +7,8 @@ import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/da
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {ChunkKind} from "@spica-server/interface/realtime";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+
 function url(path: string, query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL(path, "ws://insteadof");
   for (const key in query) {

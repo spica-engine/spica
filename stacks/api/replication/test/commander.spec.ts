@@ -1,6 +1,10 @@
 import {Controller} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database/testing";
+import {
+  DatabaseService,
+  DatabaseTestingModule,
+  getConnectionUri
+} from "@spica-server/database/testing";
 import {ClassCommander, CommandType, ReplicationModule} from "@spica-server/replication/src";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
@@ -53,9 +57,14 @@ describe("Commander", () => {
     let ctrl1: SyncController;
     let ctrl2: SyncController;
 
-    function getModuleBuilder(dbName?: string) {
+    function getModuleBuilder(connectionUri?: string) {
       return Test.createTestingModule({
-        imports: [DatabaseTestingModule.replicaSet(dbName), ReplicationModule.forRoot()],
+        imports: [
+          connectionUri
+            ? DatabaseTestingModule.connect(connectionUri)
+            : DatabaseTestingModule.replicaSet(),
+          ReplicationModule.forRoot()
+        ],
         controllers: [SyncController]
       });
     }
@@ -64,8 +73,8 @@ describe("Commander", () => {
       module1 = await getModuleBuilder().compile();
       ctrl1 = module1.get(SyncController);
 
-      const dbName = module1.get(DatabaseService).databaseName;
-      module2 = await getModuleBuilder(dbName).compile();
+      const connectionUri = getConnectionUri();
+      module2 = await getModuleBuilder(connectionUri).compile();
 
       ctrl2 = module2.get(SyncController);
       await wait(5000);
@@ -127,9 +136,14 @@ describe("Commander", () => {
     let ctrl1: ShiftController;
     let ctrl2: ShiftController;
 
-    function getModuleBuilder(dbName?: string) {
+    function getModuleBuilder(connectionUri?: string) {
       return Test.createTestingModule({
-        imports: [DatabaseTestingModule.replicaSet(dbName), ReplicationModule.forRoot()],
+        imports: [
+          connectionUri
+            ? DatabaseTestingModule.connect(connectionUri)
+            : DatabaseTestingModule.replicaSet(),
+          ReplicationModule.forRoot()
+        ],
         controllers: [ShiftController]
       });
     }
@@ -138,8 +152,8 @@ describe("Commander", () => {
       module1 = await getModuleBuilder().compile();
       ctrl1 = module1.get(ShiftController);
 
-      const dbName = module1.get(DatabaseService).databaseName;
-      module2 = await getModuleBuilder(dbName).compile();
+      const connectionUri = getConnectionUri();
+      module2 = await getModuleBuilder(connectionUri).compile();
 
       ctrl2 = module2.get(ShiftController);
       await wait(5000);
