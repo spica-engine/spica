@@ -11,6 +11,7 @@ export interface SchedulingOptions {
   maxConcurrency: number;
   debug: boolean;
   logger: boolean;
+  invocationLogs: boolean;
 }
 
 export const SCHEDULING_OPTIONS = Symbol.for("SCHEDULING_OPTIONS");

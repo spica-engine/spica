@@ -25,6 +25,7 @@ describe("Engine", () => {
     module = await Test.createTestingModule({
       imports: [
         SchedulerModule.forRoot({
+          invocationLogs: false,
           databaseName: undefined,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
