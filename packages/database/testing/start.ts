@@ -3,31 +3,29 @@ import {MongoMemoryReplSet, MongoMemoryServer} from "mongodb-memory-server";
 
 let uri;
 
+const MONGODB_BINARY_VERSION = "5.0.19";
+
 export async function start(topology: "standalone" | "replset") {
   let mongod: MongoMemoryReplSet | MongoMemoryServer;
-  let options = getOptions();
+  let clientOptions: MongoClientOptions;
 
   if (topology == "replset") {
-    mongod = await MongoMemoryReplSet.create({
-      replSet: {count: 1, storageEngine: "wiredTiger"},
-      binary: {version: "5.0.19"}
-    });
-
-    options.replicaSet = "testset";
-    options.poolSize = Number.MAX_SAFE_INTEGER;
+    const serverOptions = getReplicaServerOptions();
+    mongod = await MongoMemoryReplSet.create(serverOptions);
+    clientOptions = getReplicaClientOptions();
   } else {
-    mongod = await MongoMemoryServer.create({
-      binary: {version: "5.0.19"}
-    });
+    const serverOptions = getStandaloneServerOptions();
+    mongod = await MongoMemoryServer.create(serverOptions);
+    clientOptions = getStandaloneClientOptions();
   }
 
   uri = mongod.getUri() + "&retryWrites=false";
 
-  return MongoClient.connect(uri, options);
+  return MongoClient.connect(uri, clientOptions);
 }
 
 export async function connect(connectionUri: string) {
-  return MongoClient.connect(connectionUri, getOptions());
+  return MongoClient.connect(connectionUri, getClientOptions());
 }
 
 export function getConnectionUri() {
@@ -38,9 +36,38 @@ export function getDatabaseName() {
   return "test";
 }
 
-function getOptions(): MongoClientOptions {
+function getClientOptions(): MongoClientOptions {
   return {
     useNewUrlParser: true,
     ["useUnifiedTopology" as string]: true
+  };
+}
+
+function getStandaloneClientOptions(): MongoClientOptions {
+  return getClientOptions();
+}
+
+function getReplicaClientOptions(): MongoClientOptions {
+  return {
+    ...getClientOptions(),
+    replicaSet: "testset",
+    poolSize: Number.MAX_SAFE_INTEGER
+  };
+}
+
+function getServerOptions() {
+  return {
+    binary: {version: MONGODB_BINARY_VERSION}
+  };
+}
+
+function getStandaloneServerOptions(): any {
+  return getServerOptions();
+}
+
+function getReplicaServerOptions(): any {
+  return {
+    ...getServerOptions(),
+    replSet: {count: 1, storageEngine: "wiredTiger"}
   };
 }
