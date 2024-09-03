@@ -1,6 +1,7 @@
 import {VersionManager} from "./interface";
 import {Injectable} from "@nestjs/common";
 import simpleGit, {SimpleGit} from "simple-git";
+import {JobReducer} from "@spica-server/replication";
 
 @Injectable()
 export class Git implements VersionManager {
@@ -51,12 +52,24 @@ export class Git implements VersionManager {
     return map.exec(options);
   }
 
-  constructor(private cwd: string) {
+  constructor(private cwd: string, private jobReducer?: JobReducer) {
     this.git = simpleGit({baseDir: this.cwd, binary: "git", maxConcurrentProcesses: 6});
-    this.git.init().then(() => {
-      this.git.addConfig("user.name", "Spica", false, "worktree");
-      this.git.addConfig("user.email", "Spica", false, "worktree");
-    });
+
+    const gitInit = () => {
+      this.git.init().then(() => {
+        this.git.addConfig("user.name", "Spica", false, "worktree");
+        this.git.addConfig("user.email", "Spica", false, "worktree");
+      });
+    };
+
+    if (jobReducer) {
+      const meta = {
+        _id: "git-init"
+      };
+      jobReducer.do(meta, gitInit);
+    } else {
+      gitInit();
+    }
   }
 
   checkout({args}) {

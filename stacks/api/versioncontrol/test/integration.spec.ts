@@ -63,7 +63,7 @@ describe("Versioning", () => {
           realtimeLogs: false,
           logger: false
         }),
-        VersionControlModule.forRoot({persistentPath: os.tmpdir()})
+        VersionControlModule.forRoot({persistentPath: os.tmpdir(), isReplicationEnabled: false})
       ]
     }).compile();
 
@@ -89,7 +89,7 @@ describe("Versioning", () => {
         imports: [
           DatabaseTestingModule.replicaSet(),
           PreferenceModule.forRoot(),
-          VersionControlModule.forRoot({persistentPath: os.tmpdir()})
+          VersionControlModule.forRoot({persistentPath: os.tmpdir(), isReplicationEnabled: false})
         ]
       }).compile();
 
