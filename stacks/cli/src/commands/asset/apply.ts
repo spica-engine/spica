@@ -6,8 +6,19 @@ import * as path from "path";
 import * as fs from "fs";
 import * as YAML from "yaml";
 
-async function apply({options}: ActionParameters) {
-  const folderPath = (options.path as string) || process.cwd();
+async function apply({options: {path: _path, dryRun}}: ActionParameters) {
+  const folderPath = (_path as string) || process.cwd();
+
+  const filename = path.join(folderPath, "asset.yaml");
+  const rawDocument = fs.readFileSync(filename).toString();
+  const assetMeta = YAML.parseDocument(rawDocument).toJSON();
+
+  console.log("Found Asset:");
+  console.log(` ${assetMeta.name}`);
+
+  
+
+
   const repManager = new RepresentativeManager(folderPath);
   const moduleAndFiles = new Map<string, string[]>();
 
@@ -25,10 +36,15 @@ async function apply({options}: ActionParameters) {
 
   const resourceNameValidator = id => id.match(/^([0-9a-fA-F]{24}$)|identity/);
 
-  const resources = [];
+  const resources: Resource[] = [];
+
+  console.log("");
+  console.log("Found Resources:");
 
   for (let [_module, fileNames] of moduleAndFiles.entries()) {
     let resource: Resource[] = await repManager.read(_module, resourceNameValidator, fileNames);
+    console.log(` - ${_module}: ${resource.length}`);
+
     resource = resource.map(r => {
       r.module = _module;
       return r;
@@ -36,16 +52,16 @@ async function apply({options}: ActionParameters) {
     resources.push(...resource);
   }
 
-  const filename = path.relative(folderPath, "asset.yaml");
-  const rawDocument = fs.readFileSync(filename).toString();
-  const assetMeta = YAML.parseDocument(rawDocument);
-
   const body = {
-    ...assetMeta.toJSON(),
+    ...assetMeta,
     resources
   };
 
   const client = await httpService.createFromCurrentCtx();
+
+  if (dryRun) {
+    return;
+  }
 
   await client.post("/asset", body);
 
@@ -58,5 +74,6 @@ export default function({createCommand}: CreateCommandParameters): Command {
       "--path <path>",
       "Path of the folder that container asset.yaml file and resources of it. Current working directory is the default value."
     )
+    .option("--dry-run", "Shows the changes that will be applied to the target instance.")
     .action((apply as unknown) as Action);
 }
