@@ -11,7 +11,6 @@ import * as os from "os";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
-
 describe("Apikey", () => {
   function downloadAsset(asset) {
     return req.post("asset", asset).then(r => r.body);

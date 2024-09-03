@@ -12,7 +12,6 @@ import {PreferenceModule} from "@spica-server/preference";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
-
 describe("Bucket", () => {
   function downloadAsset(asset) {
     return req.post("asset", asset).then(r => r.body);

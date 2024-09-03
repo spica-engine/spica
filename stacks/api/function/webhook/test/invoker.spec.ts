@@ -9,7 +9,6 @@ const FULL_CHANGE_TEMPLATE = "{{{toJSON this}}}";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 
-
 describe("Webhook Invoker", () => {
   let invoker: WebhookInvoker;
   let module: TestingModule;

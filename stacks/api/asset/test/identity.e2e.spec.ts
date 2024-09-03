@@ -16,7 +16,6 @@ const MAX_EXPIRES_IN = EXPIRES_IN * 2;
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
-
 describe("identity-settings", () => {
   function downloadAsset(asset) {
     return req.post("asset", asset).then(r => r.body);
