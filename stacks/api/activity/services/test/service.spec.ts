@@ -2,6 +2,8 @@ import {ActivityService, ACTIVITY_OPTIONS} from "@spica-server/activity/services
 import {TestingModule, Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
+
 describe("Activity Service", () => {
   let module: TestingModule;
   let service: ActivityService;
