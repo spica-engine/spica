@@ -84,6 +84,7 @@
     "mingo": "^4.4.1",
     "mongodb": "^3.5.8",
     "mongodb-memory-server-core": "^6.9.2",
+    "morgan": "^1.10.0",
     "multimatch": "^3.0.0",
     "nearest-color": "^0.4.4",
     "node-fetch": "<3",
