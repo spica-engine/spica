@@ -80,7 +80,7 @@ const storageResource = {
   source: "api:/storage",
   primary: "name",
   requiredAction: "storage:index",
-  maps: [paginationMap, asteriskMap("url")]
+  maps: [asteriskMap("url")]
 };
 
 const preferenceResource = {
