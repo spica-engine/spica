@@ -45,3 +45,6 @@ yarn-error.log
 # Vim
 *.swp
 *.swo
+
+# Ignore Angular CLI workspace-specific files (cache, etc.)
+.angular/
