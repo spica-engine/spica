@@ -43,8 +43,8 @@ export class EnumSchemaComponent implements OnChanges {
 
     this.schema.enum ? this.schema.enum.push(value) : (this.schema.enum = [value]);
 
-    if (event.input) {
-      event.input.value = "";
+    if (event.chipInput?.inputElement) {
+      event.chipInput.inputElement.value = "";
     }
 
     this.enumCtrl.setValue(null);
