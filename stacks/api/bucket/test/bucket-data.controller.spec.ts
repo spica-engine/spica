@@ -12,7 +12,7 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 
-xdescribe("BucketDataController", () => {
+describe("BucketDataController", () => {
   let app: INestApplication;
   let req: Request;
   let module: TestingModule;
