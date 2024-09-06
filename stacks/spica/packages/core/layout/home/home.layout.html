@@ -15,11 +15,14 @@
         </mat-list-item>
         <mat-list-item
           disableRipple
-          *ngFor="let category of  categories$ | async;"
+          *ngFor="let category of categories$ | async"
           [class.active]="(currentCategory | async).category === category.category"
           (click)="currentCategory.next(category)"
+          (mouseenter)="tooltip.show()"
+          (mouseleave)="tooltip.hide()"
           [matTooltip]="category.category"
           matTooltipPosition="below"
+          #tooltip="matTooltip"
         >
           <mat-icon>{{ category.icon }}</mat-icon>
         </mat-list-item>

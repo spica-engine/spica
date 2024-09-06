@@ -40,58 +40,50 @@ import {RouteModule} from "../route";
 const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
 
 @NgModule({
-  imports: [
-    CommonModule,
-    RouterModule,
-    MatExpansionModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule,
-    MatToolbarModule,
-    MatSidenavModule,
-    MatListModule,
-    MatSlideToggleModule,
-    CdkLayoutModule,
-    RouterModule.forChild(routes),
-    MatSnackBarModule,
-    MatMenuModule,
-    BrowserModule,
-    DragDropModule,
-    MatDialogModule,
-    MatChipsModule,
-    MatInputModule,
-    MatFormFieldModule,
-    FormsModule,
-    MatAwareDialogModule,
-    RouteModule
-  ],
-  providers: [SchemeObserver, Title],
-  declarations: [
-    HomeLayoutComponent,
-    LayoutRouterOutlet,
-    ErrorPageComponent,
-    SchemeSwitcherComponent,
-    SnackbarComponent,
-    ToolbarActionDirective,
-    RouteItemComponent,
-    BasicDrawerComponent,
-    AdvancedDrawerComponent
-  ],
-  exports: [
-    LayoutRouterOutlet,
-    RouterModule,
-    RouteItemComponent,
-    BasicDrawerComponent,
-    AdvancedDrawerComponent
-  ],
-  entryComponents: [
-    HomeLayoutComponent,
-    SchemeSwitcherComponent,
-    SnackbarComponent,
-    RouteItemComponent,
-    BasicDrawerComponent,
-    AdvancedDrawerComponent
-  ]
+    imports: [
+        CommonModule,
+        RouterModule,
+        MatExpansionModule,
+        MatButtonModule,
+        MatIconModule,
+        MatTooltipModule,
+        MatToolbarModule,
+        MatSidenavModule,
+        MatListModule,
+        MatSlideToggleModule,
+        CdkLayoutModule,
+        RouterModule.forChild(routes),
+        MatSnackBarModule,
+        MatMenuModule,
+        BrowserModule,
+        DragDropModule,
+        MatDialogModule,
+        MatChipsModule,
+        MatInputModule,
+        MatFormFieldModule,
+        FormsModule,
+        MatAwareDialogModule,
+        RouteModule
+    ],
+    providers: [SchemeObserver, Title],
+    declarations: [
+        HomeLayoutComponent,
+        LayoutRouterOutlet,
+        ErrorPageComponent,
+        SchemeSwitcherComponent,
+        SnackbarComponent,
+        ToolbarActionDirective,
+        RouteItemComponent,
+        BasicDrawerComponent,
+        AdvancedDrawerComponent
+    ],
+    exports: [
+        LayoutRouterOutlet,
+        RouterModule,
+        RouteItemComponent,
+        BasicDrawerComponent,
+        AdvancedDrawerComponent
+    ]
 })
 export class LayoutModule {
   static forRoot(config: LayoutConfig = {}): ModuleWithProviders<LayoutModule> {
