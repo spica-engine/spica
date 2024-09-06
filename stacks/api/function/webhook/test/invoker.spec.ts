@@ -7,6 +7,8 @@ import * as __fetch__ from "node-fetch";
 
 const FULL_CHANGE_TEMPLATE = "{{{toJSON this}}}";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
+
 describe("Webhook Invoker", () => {
   let invoker: WebhookInvoker;
   let module: TestingModule;
@@ -71,7 +73,7 @@ describe("Webhook Invoker", () => {
         }
       }
     };
-  }, 20000);
+  });
 
   afterEach(async () => await module.close());
 

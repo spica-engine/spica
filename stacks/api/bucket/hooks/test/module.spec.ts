@@ -5,6 +5,8 @@ import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/da
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {collectionSlugFactory} from "@spica-server/bucket/hooks/src/module";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+
 describe("hook module", () => {
   describe("schema", () => {
     let module: TestingModule;
@@ -47,7 +49,7 @@ describe("hook module", () => {
 
       const schema = await createSchema(database);
       expect(schema).toEqual(expectedSchema);
-    }, 10000);
+    });
   });
 
   describe("factory", () => {

@@ -5,6 +5,8 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7911";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+
 const spyScheduler = jasmine
   .createSpy("schedulerSpy")
   .and.returnValue({enqueuer: null, queue: null});
@@ -67,5 +69,5 @@ describe("Scheduler Injection", () => {
 
     expect(addQueueSpy).toHaveBeenCalledTimes(1);
     expect(addQueueSpy).toHaveBeenCalledWith(null);
-  }, 20000);
+  });
 });

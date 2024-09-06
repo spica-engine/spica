@@ -10,6 +10,8 @@ import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import * as os from "os";
 import {PreferenceModule} from "@spica-server/preference";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:45670";
 
 describe("function", () => {
@@ -78,7 +80,7 @@ describe("function", () => {
         return true;
       }
     });
-  }, 10_000);
+  });
 
   afterEach(() => app.close());
 

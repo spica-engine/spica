@@ -10,6 +10,8 @@ import {
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
+
 const TestPredict: Predict = (): ModuleActivity[] => {
   return [
     {

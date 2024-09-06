@@ -1,7 +1,7 @@
 var_1: &api_test_docker_plugin
   plugins:
     - docker#v3.5.0:
-        image: "spicaengine/buildkite-node-with-mongodb@sha256:f7cd5ed3576528833a3a47819ab28e38d915094fa1904c39b248f3ee2ff395ce"
+        image: "spicaengine/buildkite-node-with-mongodb:12.22.0-buster"
         workdir: /spica
         volumes:
           - "/var/cache/spica:/var/cache/spica"
@@ -15,7 +15,7 @@ var_1: &api_test_docker_plugin
 var_2: &release_docker_plugin
   plugins:
     - docker#v3.5.0:
-        image: "spicaengine/buildkite-node-with-mongodb:12"
+        image: "spicaengine/buildkite-node-with-mongodb:12.22.0-buster"
         workdir: /spica
         volumes:
           - "/var/cache/spica:/var/cache/spica"

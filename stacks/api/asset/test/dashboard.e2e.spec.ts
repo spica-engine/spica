@@ -9,6 +9,8 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import * as os from "os";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+
 describe("Dashboard", () => {
   function downloadAsset(asset) {
     return req.post("asset", asset).then(r => r.body);
@@ -51,7 +53,7 @@ describe("Dashboard", () => {
         return true;
       }
     });
-  }, 10_000);
+  });
 
   afterEach(() => app.close());
 

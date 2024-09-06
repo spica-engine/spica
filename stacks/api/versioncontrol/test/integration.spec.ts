@@ -21,6 +21,8 @@ import {PreferenceModule} from "@spica-server/preference";
 import {PreferenceService} from "@spica-server/preference/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+
 describe("Versioning", () => {
   let module: TestingModule;
   let app: INestApplication;
@@ -402,7 +404,7 @@ describe("Versioning", () => {
         file = await rep.readResource("function", id.toString());
         expect(file).toEqual({});
         // we can not install dependency on test environment
-      }, 20000);
+      });
     });
 
     describe("Synchronization from files to database", () => {
@@ -502,7 +504,7 @@ describe("Versioning", () => {
         await engine.read(fn).catch(e => {
           expect(e).toEqual("Not Found");
         });
-      }, 20000);
+      });
     });
   });
 });

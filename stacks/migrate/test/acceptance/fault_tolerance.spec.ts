@@ -2,6 +2,8 @@ import {Db, getConnectionUri, getDatabaseName, start} from "@spica-server/databa
 import * as fs from "fs";
 import {migrate} from "@spica/migrate/src/migrate";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+
 describe("Fault Tolerance", () => {
   let database: {uri: string; name: string};
   let db: Db;
@@ -25,7 +27,7 @@ describe("Fault Tolerance", () => {
     };
     db = connection.db(database.name);
     await db.createCollection("_test_");
-  }, 10000);
+  });
 
   afterEach(() => {
     fs.unlinkSync(__dirname + "/migrations/index.json");

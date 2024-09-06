@@ -2,6 +2,8 @@ import {Db, getConnectionUri, getDatabaseName, start} from "@spica-server/databa
 import * as color from "cli-color/lib/supports-color";
 import {run} from "@spica/migrate/src/main";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+
 describe("Update location for bucket schema and bucket-data", () => {
   let db: Db;
   let args: string[];

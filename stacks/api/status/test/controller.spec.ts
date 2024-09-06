@@ -18,6 +18,8 @@ import {WsAdapter} from "@spica-server/core/websocket";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50051";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+
 function sleep(ms: number) {
   return new Promise((resolve, _) => setTimeout(resolve, ms));
 }

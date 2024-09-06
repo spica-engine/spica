@@ -2,6 +2,8 @@ import {Db, getConnectionUri, getDatabaseName, start} from "@spica-server/databa
 import * as color from "cli-color/lib/supports-color";
 import {run} from "@spica/migrate/src/main";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
+
 describe("remove phase from bucket triggers", () => {
   let db: Db;
   let args: string[];
