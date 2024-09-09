@@ -139,13 +139,13 @@ describe("StorageComponent", () => {
       fixture.componentInstance.value = "http://example/test.png";
       fixture.detectChanges(false);
 
-      expect(fixture.debugElement.query(By.css("mat-mdc-progress-bar"))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css("mat-progress-bar"))).toBeTruthy();
 
       //@ts-ignore
       fixture.componentInstance.progress$ = undefined;
       fixture.detectChanges();
 
-      expect(fixture.debugElement.query(By.css("mat-mdc-progress-bar"))).not.toBeTruthy();
+      expect(fixture.debugElement.query(By.css("mat-progress-bar"))).not.toBeTruthy();
     });
   });
 

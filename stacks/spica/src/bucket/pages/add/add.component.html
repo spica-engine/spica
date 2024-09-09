@@ -13,6 +13,7 @@
 
   <span class="space-between"></span>
   <button
+    id="historyButton"
     *ngIf="histories$ | async; let histories"
     mat-icon-button
     [matBadge]="histories.length"
@@ -111,7 +112,7 @@
       (click)="saveBucketRow()"
       [ngSwitch]="state"
     >
-      <mat-icon *ngSwitchDefault>save</mat-icon>
+      <mat-icon id="matIcon" *ngSwitchDefault>save</mat-icon>
       <mat-progress-spinner
         *ngSwitchCase="'saving'"
         [diameter]="18"
@@ -120,7 +121,7 @@
       ></mat-progress-spinner>
       <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
       <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
-      <span>{{ (!state ? "save" : state) | titlecase }}</span>
+      <span id="save">{{ (!state ? "save" : state) | titlecase }}</span>
     </button>
   </mat-card-actions>
 </mat-card>

@@ -1,5 +1,5 @@
 <ng-container *ngIf="schema$ | async; let schema">
-  <section>
+  <section id="section">
     <button
       *ngIf="!value || value.length == 0"
       mat-button
@@ -11,9 +11,9 @@
     </button>
     <div>
       <button
+        id="relation"
         *ngFor="let row of _oneToManyRelation ? value : value ? [value] : []"
         mat-button
-        mat-flat-button
         [matTooltip]="schema.primary + ' of the row'"
         [routerLink]="['/bucket', schema._id, row._id || row]"
       >
@@ -22,20 +22,15 @@
     </div>
 
     <ng-container *ngIf="value && value.length != 0">
-      <button
-        mat-icon-button
-        mat-flat-button
-        [matMenuTriggerFor]="selector"
-        (click)="refresh.next()"
-      >
+      <button mat-icon-button [matMenuTriggerFor]="selector" (click)="refresh.next()">
         <mat-icon>edit</mat-icon>
       </button>
-      <button mat-icon-button mat-flat-button matTooltip="Clear selected rows" (click)="clear()">
+      <button mat-icon-button matTooltip="Clear selected rows" (click)="clear()">
         <mat-icon>clear_all</mat-icon>
       </button>
     </ng-container>
   </section>
-  <mat-hint>{{ _schema.description }}</mat-hint>
+  <mat-hint id="matHint">{{ _schema.description }}</mat-hint>
 </ng-container>
 
 <mat-menu #selector class="mat-mdc-elevation-z24 relation-picker">
@@ -83,6 +78,7 @@
           <mat-header-cell *matHeaderCellDef></mat-header-cell>
           <mat-cell *matCellDef="let row">
             <button
+              id="checkButton"
               mat-icon-button
               (click)="_selectRow(row); _oneToManyRelation ? $event.stopPropagation() : undefined"
               [class.selected]="

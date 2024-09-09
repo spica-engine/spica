@@ -2,9 +2,7 @@
   "name": "@spica/client",
   "version": "0.0.0",
   "private": true,
-  "scripts": {
-    "postinstall": "ngcc"
-  },
+  "scripts": {},
   "dependencies": {
     "@angular/animations": "^16.2.5",
     "@angular/cdk": "^16.2.4",

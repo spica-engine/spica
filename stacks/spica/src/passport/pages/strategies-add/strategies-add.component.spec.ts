@@ -90,55 +90,55 @@ describe("Strategies Add Component", () => {
     it("should show properties of strategy", () => {
       expect(
         fixture.debugElement
-          .query(By.css("mat-mdc-card-content mat-form-field:nth-child(1) input"))
+          .query(By.css("mat-card-content mat-form-field:nth-child(1) input"))
           .injector.get(NgModel).value
       ).toBe("strategy callbackUrl", "should show strategy callback url value");
 
       expect(
         fixture.debugElement
-          .query(By.css("mat-mdc-card-content mat-form-field:nth-child(2) input"))
+          .query(By.css("mat-card-content mat-form-field:nth-child(2) input"))
           .injector.get(NgModel).value
       ).toBe("strategy name", "should show strategy name value");
 
       expect(
         fixture.debugElement
-          .query(By.css("mat-mdc-card-content mat-form-field:nth-child(3) input"))
+          .query(By.css("mat-card-content mat-form-field:nth-child(3) input"))
           .injector.get(NgModel).value
       ).toBe("strategy title", "should show strategy title value");
 
       expect(
         fixture.debugElement
-          .query(By.css("mat-mdc-card-content mat-form-field:nth-child(4) mat-select"))
+          .query(By.css("mat-card-content mat-form-field:nth-child(4) mat-select"))
           .injector.get(NgModel).value
       ).toBe("saml", "should show strategy type value");
 
       expect(
         fixture.debugElement
-          .query(By.css("mat-mdc-card-content mat-form-field:nth-child(5) input"))
+          .query(By.css("mat-card-content mat-form-field:nth-child(5) input"))
           .injector.get(NgModel).value
       ).toBe("login url", "should show strategy options ip login url value");
 
       expect(
         fixture.debugElement
-          .query(By.css("mat-mdc-card-content mat-form-field:nth-child(6) input"))
+          .query(By.css("mat-card-content mat-form-field:nth-child(6) input"))
           .injector.get(NgModel).value
       ).toBe("logout url", "should show strategy options ip logout url value");
 
       expect(
         fixture.debugElement
-          .query(By.css("mat-mdc-card-content mat-form-field:nth-child(7) textarea"))
+          .query(By.css("mat-card-content mat-form-field:nth-child(7) textarea"))
           .injector.get(NgModel).value
       ).toBe("ip certificate", "should show strategy options ip certifivate value");
 
       expect(
         fixture.debugElement
-          .query(By.css("mat-mdc-accordion mat-form-field:nth-child(1) textarea"))
+          .query(By.css("mat-accordion mat-form-field:nth-child(1) textarea"))
           .injector.get(NgModel).value
       ).toBe("sp certificate", "should show strategy options sp certificate value");
 
       expect(
         fixture.debugElement
-          .query(By.css("mat-mdc-accordion mat-form-field:nth-child(2) textarea"))
+          .query(By.css("mat-accordion mat-form-field:nth-child(2) textarea"))
           .injector.get(NgModel).value
       ).toBe("private key", "should show strategy options sp private key value");
     });
@@ -148,27 +148,27 @@ describe("Strategies Add Component", () => {
     it("should update strategy", fakeAsync(() => {
       //update certificate
       fixture.debugElement
-        .query(By.css("mat-mdc-card-content mat-form-field:nth-child(2) input"))
+        .query(By.css("mat-card-content mat-form-field:nth-child(2) input"))
         .injector.get(NgModel)
         .control.setValue("new name");
 
       fixture.debugElement
-        .query(By.css("mat-mdc-card-content mat-form-field:nth-child(3) input"))
+        .query(By.css("mat-card-content mat-form-field:nth-child(3) input"))
         .injector.get(NgModel)
         .control.setValue("new title");
 
       fixture.debugElement
-        .query(By.css("mat-mdc-card-content mat-form-field:nth-child(5) input"))
+        .query(By.css("mat-card-content mat-form-field:nth-child(5) input"))
         .injector.get(NgModel)
         .control.setValue("new login url");
 
       fixture.debugElement
-        .query(By.css("mat-mdc-card-content mat-form-field:nth-child(6) input"))
+        .query(By.css("mat-card-content mat-form-field:nth-child(6) input"))
         .injector.get(NgModel)
         .control.setValue("new logout url");
 
       fixture.debugElement
-        .query(By.css("mat-mdc-card-content mat-form-field:nth-child(7) textarea"))
+        .query(By.css("mat-card-content mat-form-field:nth-child(7) textarea"))
         .injector.get(NgModel)
         .control.setValue("new ip certificate");
 
@@ -177,7 +177,7 @@ describe("Strategies Add Component", () => {
         "updateStrategy"
       ).and.returnValue(of(null));
 
-      fixture.debugElement.query(By.css("mat-mdc-card-actions button")).nativeElement.click();
+      fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
       tick();
       fixture.detectChanges();
 

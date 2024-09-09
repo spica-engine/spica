@@ -133,16 +133,16 @@ describe("SettingsComponent", () => {
     fixture.detectChanges();
 
     expect(
-      fixture.debugElement.query(By.css("mat-mdc-list mat-list-item:first-of-type h4"))
-        .nativeElement.textContent
+      fixture.debugElement.query(By.css("mat-list mat-list-item:first-of-type h4")).nativeElement
+        .textContent
     ).toBe("Afrikaans (af)");
     expect(
-      fixture.debugElement.query(By.css("mat-mdc-list mat-list-item:first-of-type mat-icon"))
+      fixture.debugElement.query(By.css("mat-list mat-list-item:first-of-type mat-icon"))
         .nativeElement.classList
-    ).not.toContain("mat-mdc-warn");
+    ).not.toContain("mat-warn");
     expect(
       fixture.debugElement
-        .query(By.css("mat-mdc-list mat-list-item:first-of-type mat-icon"))
+        .query(By.css("mat-list mat-list-item:first-of-type mat-icon"))
         .injector.get(MatTooltip).disabled
     ).toBe(true);
   });

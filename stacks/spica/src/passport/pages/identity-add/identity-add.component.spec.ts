@@ -290,9 +290,7 @@ describe("Identity Add Component", () => {
         of({...identity, _id: "1"})
       );
 
-      fixture.debugElement
-        .query(By.css("mat-mdc-card mat-card-actions button"))
-        .nativeElement.click();
+      fixture.debugElement.query(By.css("mat-card mat-card-actions button")).nativeElement.click();
       tick();
 
       expect(insertSpy).toHaveBeenCalledTimes(1);

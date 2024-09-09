@@ -69,15 +69,13 @@ describe("PolicyIndexComponent", () => {
     });
 
     it("should render correctly", () => {
-      const headerCells = fixture.debugElement.queryAll(
-        By.css(".mat-mdc-table mat-header-row mat-header-cell")
-      );
+      const headerCells = fixture.debugElement.queryAll(By.css("#matHeaderRow"));
       expect(headerCells[0].nativeElement.textContent).toBe(" # ");
       expect(headerCells[1].nativeElement.textContent).toBe("Name");
       expect(headerCells[2].nativeElement.textContent).toBe("Description");
       expect(headerCells[3].nativeElement.textContent).toBe("Actions");
 
-      const cells = fixture.debugElement.queryAll(By.css(".mat-mdc-table mat-row mat-cell"));
+      const cells = fixture.debugElement.queryAll(By.css("#matRow"));
 
       expect(cells[0].nativeElement.textContent).toBe("1");
       expect(cells[1].nativeElement.textContent).toBe("Test");
@@ -86,7 +84,7 @@ describe("PolicyIndexComponent", () => {
 
     it("should render actions correctly", () => {
       const lastCell = fixture.debugElement.query(
-        By.css(".mat-mdc-table mat-row mat-cell:last-of-type")
+        By.css(".mat-table mat-row mat-cell:last-of-type")
       );
       const [editButton, deleteButton] = lastCell.queryAll(By.css("button"));
       expect(editButton.nativeElement.textContent).toBe("edit");
@@ -95,7 +93,7 @@ describe("PolicyIndexComponent", () => {
 
     it("should render actions correctly for predefined policies", () => {
       const lastCell = fixture.debugElement.query(
-        By.css(".mat-mdc-table mat-row:last-of-type mat-cell:last-of-type")
+        By.css(".mat-table mat-row:last-of-type mat-cell:last-of-type")
       );
       const [editButton, deleteButton] = lastCell.queryAll(By.css("button"));
       expect(editButton.nativeElement.textContent).toBe("file_copy");

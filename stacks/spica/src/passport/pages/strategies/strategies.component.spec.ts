@@ -69,7 +69,7 @@ describe("StrategiesComponent", () => {
       expect(headerCells[1].nativeElement.textContent).toBe("Title");
       expect(headerCells[2].nativeElement.textContent).toBe("Actions");
 
-      const cells = fixture.debugElement.queryAll(By.css("mat-mdc-table mat-row mat-cell"));
+      const cells = fixture.debugElement.queryAll(By.css("mat-table mat-row mat-cell"));
 
       expect(cells[0].nativeElement.textContent).toBe("test Test ");
       expect(cells[1].nativeElement.textContent).toBe("Test title");

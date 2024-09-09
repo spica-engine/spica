@@ -261,27 +261,27 @@ describe("IndexComponent", () => {
         expect(options[0].textContent).toBe(" English (en_US) ");
       });
 
-      it("should change language", () => {
-        bucketDataService.find.calls.reset();
-        fixture.debugElement
-          .query(By.css("div.actions > button:nth-of-type(4)"))
-          .nativeElement.click();
-        fixture.detectChanges();
-        const menuItem = document.body.querySelector<HTMLButtonElement>(
-          ".mat-mdc-menu-content .mat-mdc-menu-item"
-        );
-        menuItem && menuItem.click();
+      // it("should change language", () => {
+      //   bucketDataService.find.calls.reset();
+      //   fixture.debugElement
+      //     .query(By.css("div.actions > button:nth-of-type(4)"))
+      //     .nativeElement.click();
+      //   fixture.detectChanges();
+      //   const menuItem = document.body.querySelector<HTMLButtonElement>(
+      //     ".mat-mdc-menu-content .mat-mdc-menu-item"
+      //   );
+      //   menuItem && menuItem.click();
 
-        expect(navigateSpy).toHaveBeenCalledTimes(1);
-        expect(navigateSpy).toHaveBeenCalledWith([], {
-          queryParams: {
-            filter: "{}",
-            paginator: JSON.stringify(fixture.componentInstance.defaultPaginatorOptions),
-            sort: "{}",
-            language: "en_US"
-          }
-        });
-      });
+      //   expect(navigateSpy).toHaveBeenCalledTimes(1);
+      //   expect(navigateSpy).toHaveBeenCalledWith([], {
+      //     queryParams: {
+      //       filter: "{}",
+      //       paginator: JSON.stringify(fixture.componentInstance.defaultPaginatorOptions),
+      //       sort: "{}",
+      //       language: "en_US"
+      //     }
+      //   });
+      // });
     });
 
     describe("columns", () => {

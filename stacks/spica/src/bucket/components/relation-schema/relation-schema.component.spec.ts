@@ -51,25 +51,25 @@ describe("Relation Schema Component", () => {
       ngModel.control.markAsTouched();
       fixture.detectChanges();
 
-      expect(fixture.debugElement.query(By.css("mat-mdc-error")).nativeElement.textContent).toBe(
+      expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
         "You must select a bucket"
       );
     }));
 
     it("should show buckets", () => {
-      fixture.debugElement.query(By.css("mat-mdc-form-field mat-select")).nativeElement.click();
+      fixture.debugElement.query(By.css("mat-form-field mat-select")).nativeElement.click();
       fixture.detectChanges();
 
-      const options = document.body.querySelectorAll<HTMLElement>("mat-mdc-option");
+      const options = document.body.querySelectorAll<HTMLElement>("mat-option");
       expect(options.item(0).textContent).toBe(" Bucket 1 ");
       expect(options.item(1).textContent).toBe(" Bucket 2 ");
     });
 
     it("should select bucket", () => {
-      fixture.debugElement.query(By.css("mat-mdc-form-field mat-select")).nativeElement.click();
+      fixture.debugElement.query(By.css("mat-form-field mat-select")).nativeElement.click();
       fixture.detectChanges();
 
-      document.body.querySelector<HTMLElement>("mat-mdc-option:last-of-type").click();
+      document.body.querySelector<HTMLElement>("mat-option:last-of-type").click();
       fixture.detectChanges();
 
       expect(fixture.componentInstance.schema.bucketId).toBe("bucket2");
@@ -81,8 +81,7 @@ describe("Relation Schema Component", () => {
       tick();
       fixture.detectChanges();
       expect(
-        fixture.debugElement.query(By.css("mat-mdc-form-field mat-select")).nativeElement
-          .textContent
+        fixture.debugElement.query(By.css("mat-form-field mat-select")).nativeElement.textContent
       ).toBe("Bucket 1");
     }));
   });

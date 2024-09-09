@@ -12,7 +12,7 @@
     Add custom properties to store additional data on Identities
   </p>
   <mat-card-content>
-    <mat-list-item>
+    <mat-mdc-list-item>
       <mat-accordion #propertyStepper cdkDropList (cdkDropListDropped)="cardDrop($event)">
         <mat-expansion-panel
           class="identity-settings"
@@ -120,7 +120,7 @@
           </div>
         </mat-expansion-panel>
       </mat-accordion>
-    </mat-list-item>
+    </mat-mdc-list-item>
 
     <mat-list-item class="property">
       <mat-form-field>

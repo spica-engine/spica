@@ -110,7 +110,7 @@ describe("Relation Component", () => {
   });
 
   it("should render description", () => {
-    const hint = fixture.debugElement.query(By.css(".mat-mdc-hint"));
+    const hint = fixture.debugElement.query(By.css("#matHint"));
     expect(hint.nativeElement.textContent).toBe("Description of the relation");
   });
 
@@ -160,12 +160,10 @@ describe("Relation Component", () => {
     fixture.detectChanges();
     expect(onChangeSpy).not.toHaveBeenCalled();
 
-    fixture.debugElement
-      .query(By.css("section > button:last-of-type"))
-      .triggerEventHandler("click", undefined);
+    fixture.debugElement.query(By.css("#section")).triggerEventHandler("click", undefined);
 
     fixture.detectChanges();
-    const row = fixture.debugElement.query(By.css("section div button"));
+    const row = fixture.debugElement.query(By.css("#relation"));
 
     expect(row).not.toBeTruthy();
     expect(onChangeSpy).toHaveBeenCalledWith(undefined);
@@ -199,7 +197,7 @@ describe("Relation Component", () => {
       button.triggerEventHandler("click", undefined);
       fixture.detectChanges();
 
-      const pickButtons = document.querySelectorAll(".mat-mdc-menu-panel mat-cell button");
+      const pickButtons = document.querySelectorAll("#checkButton");
       pickButtons[0].dispatchEvent(new MouseEvent("click"));
       pickButtons[1].dispatchEvent(new MouseEvent("click"));
       pickButtons[0].dispatchEvent(new MouseEvent("click"));

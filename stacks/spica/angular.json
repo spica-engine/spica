@@ -35,7 +35,7 @@
               "src/styles.scss",
               "../../node_modules/cropperjs/dist/cropper.css",
               "../../node_modules/leaflet/dist/leaflet.css",
-              "../../node_modules/@danielmoncada/angular-datetime-picker/assets/style/picker.min.css",
+              "./node_modules/@danielmoncada/angular-datetime-picker/assets/style/picker.min.css",
               "../../node_modules/monaco-editor-core/dev/vs/editor/editor.main.css",
               "../../node_modules/highlight.js/styles/monokai.css"
             ],

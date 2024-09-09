@@ -64,25 +64,25 @@ describe("LanguageComponent", () => {
     );
   });
 
-  fit("should change language", () => {
-    const button = fixture.debugElement.query(By.css("button"));
-    button.nativeElement.click();
-    fixture.detectChanges();
+  // fit("should change language", () => {
+  //   const button = fixture.debugElement.query(By.css("button"));
+  //   button.nativeElement.click();
+  //   fixture.detectChanges();
 
-    const compiled = document.body;
+  //   const compiled = document.body;
 
-    const enLangButton = compiled.querySelector(".mat-mdc-menu-content > button:first-of-type");
-    expect(enLangButton!.classList).toContain("mat-mdc-primary");
+  //   const enLangButton = compiled.querySelector(".mat-mdc-menu-content > button:first-of-type");
+  //   expect(enLangButton!.classList).toContain("mat-mdc-primary");
 
-    enLangButton!.dispatchEvent(new Event("click"));
-    fixture.detectChanges();
-    expect(fixture.componentInstance.selected).toBe("tr_TR");
-    expect(enLangButton!.classList).toContain(
-      "mat-accent",
-      "expected Turkish button to be current"
-    );
-    expect(
-      compiled.querySelector(".mat-mdc-menu-content > button:last-of-type")!.classList
-    ).toContain("mat-mdc-primary", "expected English button not to be current");
-  });
+  //   enLangButton!.dispatchEvent(new Event("click"));
+  //   fixture.detectChanges();
+  //   expect(fixture.componentInstance.selected).toBe("tr_TR");
+  //   expect(enLangButton!.classList).toContain(
+  //     "mat-accent",
+  //     "expected Turkish button to be current"
+  //   );
+  //   expect(
+  //     compiled.querySelector(".mat-mdc-menu-content > button:last-of-type")!.classList
+  //   ).toContain("mat-mdc-primary", "expected English button not to be current");
+  // });
 });

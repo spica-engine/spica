@@ -114,18 +114,19 @@ describe("Identity Setting Component", () => {
 
   describe("basic behaviours", () => {
     it("should show title and button", () => {
-      expect(
-        fixture.debugElement.query(
-          By.css(
-            "mat-mdc-list-item:first-of-type mat-expansion-panel:first-of-type mat-panel-title span"
-          )
-        ).nativeElement.textContent
-      ).toBe("Title");
+      // Query for mat-expansion-panel and its title
+      const panelTitleElement = fixture.debugElement.query(
+        By.css("mat-expansion-panel mat-panel-title span")
+      );
+      expect(panelTitleElement).toBeTruthy();
+      expect(panelTitleElement.nativeElement.textContent.trim()).toBe("Title");
 
-      expect(
-        fixture.debugElement.query(By.css("mat-mdc-list-item.property button")).nativeElement
-          .disabled
-      ).toBe(true);
+      // Query for the property button inside mat-list-item
+      const propertyButtonElement = fixture.debugElement.query(
+        By.css("mat-list-item.property button")
+      );
+      expect(propertyButtonElement).toBeTruthy();
+      expect(propertyButtonElement.nativeElement.disabled).toBe(true);
     });
 
     it("should show settings of prop1", fakeAsync(() => {
@@ -174,9 +175,7 @@ describe("Identity Setting Component", () => {
       matSelect.nativeElement.click();
       fixture.detectChanges();
 
-      expect(document.body.querySelector("mat-mdc-option:last-of-type").textContent).toBe(
-        " keyword1 "
-      );
+      expect(document.body.querySelector("mat-option:last-of-type").textContent).toBe(" keyword1 ");
     });
   });
 
@@ -188,7 +187,7 @@ describe("Identity Setting Component", () => {
 
       fixture.detectChanges(false);
 
-      (document.body.querySelector("mat-mdc-option:last-of-type") as HTMLButtonElement).click();
+      (document.body.querySelector("mat-option:last-of-type") as HTMLButtonElement).click();
       fixture.detectChanges(false);
 
       expect(
@@ -200,14 +199,14 @@ describe("Identity Setting Component", () => {
 
     it("should add property", () => {
       const input = fixture.debugElement
-        .query(By.css("mat-mdc-list-item.property mat-form-field input"))
+        .query(By.css("mat-list-item.property mat-form-field input"))
         .injector.get(NgModel).control;
       input.setValue("new value");
       input.markAsTouched();
 
       fixture.detectChanges();
 
-      fixture.debugElement.query(By.css("mat-mdc-list-item.property button")).nativeElement.click();
+      fixture.debugElement.query(By.css("mat-list-item.property button")).nativeElement.click();
 
       fixture.detectChanges();
 
@@ -223,9 +222,7 @@ describe("Identity Setting Component", () => {
 
     it("should delete prop2", () => {
       fixture.debugElement
-        .query(
-          By.css("mat-mdc-expansion-panel:nth-child(2) mat-panel-description button:last-of-type")
-        )
+        .query(By.css("mat-expansion-panel:nth-child(2) mat-panel-description button:last-of-type"))
         .nativeElement.click();
       fixture.detectChanges();
 
@@ -246,7 +243,7 @@ describe("Identity Setting Component", () => {
       ).and.returnValue(of(null));
       const navigateSpy = spyOn(fixture.componentInstance["router"], "navigate");
 
-      fixture.debugElement.query(By.css("mat-mdc-card-actions button")).nativeElement.click();
+      fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
       tick();
       fixture.detectChanges();
 
