@@ -25,7 +25,7 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
       schema.items = map(schema.items as JSONSchema7);
     }
 
-    switch (schema.type) {
+    switch (schema.type as any) {
       case "objectid":
         schema.type = "string";
         schema.format = "objectid";

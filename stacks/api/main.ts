@@ -440,7 +440,7 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   .env()
   .parse();
 
-const modules = [
+const modules: any[] = [
   DashboardModule.forRoot(),
   PreferenceModule.forRoot(),
   AssetModule.forRoot({persistentPath: args["persistent-path"]}),

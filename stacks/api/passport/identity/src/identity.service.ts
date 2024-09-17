@@ -35,7 +35,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
         header: {
           identifier: identity.identifier,
           policies: identity.policies
-        },
+        } as any,
         expiresIn
       }
     );

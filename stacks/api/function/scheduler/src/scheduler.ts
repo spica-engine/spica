@@ -317,7 +317,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.print(`lost a worker ${id}`);
 
     if (!this.workers.size) {
-      this.onLastWorkerLost.next();
+      this.onLastWorkerLost.next("");
     }
   }
 

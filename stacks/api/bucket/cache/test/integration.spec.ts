@@ -7,7 +7,7 @@ import {
 } from "@spica-server/bucket/cache";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {Test} from "@nestjs/testing";
-import {Store} from "cache-manager";
+import {Cache, Store} from "cache-manager";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 
 @Controller("bucket/:bucketId/data")

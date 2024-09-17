@@ -1,6 +1,4 @@
 import {
-  CacheInterceptor,
-  CACHE_MANAGER,
   CallHandler,
   ExecutionContext,
   Inject,
@@ -9,12 +7,15 @@ import {
   Optional,
   Type
 } from "@nestjs/common";
+import {CacheInterceptor, CACHE_MANAGER} from "@nestjs/cache-manager";
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {BucketCacheService} from "./service";
+import {Cache} from "cache-manager";
+import {Reflector} from "@nestjs/core";
 
 class BucketCacheInterceptor extends CacheInterceptor {
-  constructor(@Optional() @Inject(CACHE_MANAGER) cacheManager: any, reflector: any) {
+  constructor(@Optional() @Inject(CACHE_MANAGER) cacheManager: Cache, reflector: Reflector) {
     super(cacheManager, reflector);
   }
 
@@ -35,7 +36,7 @@ class BucketCacheInterceptor extends CacheInterceptor {
 
 class BucketCacheInvalidationInterceptor implements NestInterceptor {
   constructor(
-    @Optional() @Inject(CACHE_MANAGER) private cacheManager: any,
+    @Optional() @Inject(CACHE_MANAGER) private cacheManager: Cache,
     @Optional() private bucketCacheService: BucketCacheService
   ) {}
 

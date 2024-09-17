@@ -1,11 +1,9 @@
 import * as peg from "pegjs";
 import * as fs from "fs";
-const runfiles = require(process.env.BAZEL_NODE_RUNFILES_HELPER);
+import * as path from "path";
 
 const grammar = fs
-  .readFileSync(runfiles.resolve("spica/stacks/api/bucket/expression/src/grammar.pegjs"), {
-    encoding: "utf8"
-  })
+  .readFileSync(path.join(__dirname, "grammar.pegjs"), {encoding: "utf8"})
   .toString();
 
 const parser = peg.generate(grammar, {

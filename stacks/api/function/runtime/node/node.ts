@@ -16,8 +16,11 @@ class NodeWorker extends Worker {
     this._process = child_process.spawn(
       `node`,
       [
-        "--es-module-specifier-resolution=node",
-        path.join(__dirname, "runtime", "entrypoint", "bootstrap")
+        path.join(
+          __dirname,
+          "bootstrap",
+          "entrypoint"
+        )
       ],
       {
         stdio: ["ignore", "pipe", "pipe"],
@@ -25,13 +28,14 @@ class NodeWorker extends Worker {
           PATH: process.env.PATH,
           HOME: process.env.HOME,
           FUNCTION_GRPC_ADDRESS: process.env.FUNCTION_GRPC_ADDRESS,
-          ENTRYPOINT: "index",
+          ENTRYPOINT: "index.mjs",
           RUNTIME: "node",
           WORKER_ID: options.id,
           ...options.env
         }
       }
     );
+
     this._process.once("exit", () => (this._quit = true));
     Object.assign(this, this._process);
   }

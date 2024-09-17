@@ -1,5 +1,5 @@
-import {CACHE_MANAGER, Inject, Injectable} from "@nestjs/common";
-import {Cache} from "cache-manager";
+import {Inject, Injectable} from "@nestjs/common";
+import {Cache, CACHE_MANAGER} from "@nestjs/cache-manager";
 import {DatabaseService} from "@spica-server/database";
 import * as cron from "cron";
 
@@ -56,7 +56,7 @@ export class BucketCacheService {
 
     const keys: string[] = await this.cacheManager.store.keys();
     const targets = keys.filter(key => key.startsWith(`/bucket/${bucketId}`));
-    await this.cacheManager.store.del(...targets);
+    await Promise.all(targets.map(target => this.cacheManager.del(target)));
     this.invalidatedBucketIds.delete(bucketId);
   }
 }

@@ -1,6 +1,4 @@
 {
-  "exclude": ["dist", "bazel-*", "./stacks/spica/*", "**/**.spec.ts"],
-
   "compilerOptions": {
     "module": "CommonJS",
     "declaration": true,
@@ -12,10 +10,9 @@
     "resolveJsonModule": true,
     "target": "es2020",
     "sourceMap": true,
+    "outDir": "./dist",
     "baseUrl": "./",
-    "outDir": "./out-tsc/worker",
-    "lib": ["es2018", "webworker"],
-    "types": []
-  },
-  "include": ["src/**/*.worker.ts", "packages/**/*.worker.ts"]
+    "lib": ["es2018", "dom"],
+    "allowJs": true
+  }
 }

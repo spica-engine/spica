@@ -1,4 +1,4 @@
-import {Global, Module} from "@nestjs/common";
+import {Global, Module, ModuleMetadata} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
 import {AssetController} from "./controller";
 import {AssetService} from "./service";
@@ -48,10 +48,10 @@ export class AssetModule {
         },
         {
           provide: INSTALLATION_STRATEGIES,
-          useValue: installationStrategies
+          useValue: installationStrategies,
         }
       ],
       exports: [ASSET_REP_MANAGER]
-    };
+    } as ModuleMetadata;
   }
 }

@@ -14,14 +14,18 @@
     "baseUrl": "./",
     "lib": ["es2018", "dom"],
     "paths": {
-      "@spica-server/*": [
-        "./packages/*",
-        "./stacks/api/*"
-      ],
-      "@spica/*": [
-        "./stacks/*"
-      ]
-    }
+      "@spica-server/*": ["./packages/*", "./stacks/api/*", "./migrate/*"],
+      "@spica-devkit/*": ["./stacks/api/function/packages/"]
+    },
+
   },
-  "exclude": ["dist", "bazel-*"]
+  "exclude": [
+    "dist",
+    "bazel-*",
+    "./stacks/spica/*",
+    "**/**.spec.ts",
+    "./tools/*",
+    "./stacks/migrate/*",
+    "./stacks/api/function/runtime/node/bootstrap/*"
+  ]
 }

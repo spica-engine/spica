@@ -1,6 +1,12 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
     "outDir": "../../dist/out-tsc",
     "moduleResolution": "node",
     "target": "es2015",
@@ -8,18 +14,12 @@
     "baseUrl": "./",
     "lib": ["es2018", "dom"],
     "paths": {
-      "@spica-client/*": [
-        "./packages/*",
-        "./src/*", 
-      ]
+      "@spica-client/*": ["./packages/*", "./src/*"]
     },
     "resolveJsonModule": true,
-    "esModuleInterop": true,
+    "esModuleInterop": true
   },
-  "files": [
-    "src/main.ts",
-    "src/polyfills.ts"
-  ],
+  "files": ["src/main.ts", "src/polyfills.ts"],
   "exclude": ["src/**/*.worker.ts"],
   "include": ["src/**/*.d.ts"]
 }

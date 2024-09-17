@@ -6,17 +6,6 @@ import * as path from "path";
 import {Observable} from "rxjs";
 import {glob} from "glob";
 
-function getNpmPath() {
-  let npmPath: string = "npm";
-
-  // See: https://github.com/bazelbuild/rules_nodejs/issues/2197
-  if (process.platform == "darwin") {
-    const runfiles = require(process.env.BAZEL_NODE_RUNFILES_HELPER);
-    npmPath = runfiles.resolve("nodejs_darwin_amd64/bin/npm");
-  }
-
-  return npmPath;
-}
 
 export class Npm extends PackageManager {
   private readonly MAX_DEP_TYPE_SIZE_MB = 5;
@@ -25,7 +14,7 @@ export class Npm extends PackageManager {
     qualifiedNames = Array.isArray(qualifiedNames) ? qualifiedNames : [qualifiedNames];
     return new Observable(observer => {
       const proc = child_process.spawn(
-        getNpmPath(),
+        "npm",
         ["install", ...qualifiedNames, "--no-audit", "--loglevel", "timing"],
         {cwd}
       );
@@ -66,7 +55,7 @@ export class Npm extends PackageManager {
   uninstall(cwd: string, name: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const proc = child_process.spawn(
-        getNpmPath(),
+        "npm",
         [
           "uninstall",
           name,
