@@ -35,14 +35,14 @@ export class RefreshTokenIndexComponent implements OnInit {
       identity: {
         type: "string",
         title: "Identity"
-      },
+      }
     }
   };
 
   sort: {[key: string]: number} = {_id: -1};
 
   filterSchema: FilterSchema = {properties: {}};
-  
+
   filter: {[key: string]: any} = {};
 
   constructor(private refreshTokenService: RefreshTokenService) {}
@@ -84,17 +84,30 @@ export class RefreshTokenIndexComponent implements OnInit {
       (a, b) => this.properties.indexOf(a) - this.properties.indexOf(b)
     );
 
-    localStorage.setItem("Refreshtoken-displayedProperties", JSON.stringify(this.displayedProperties));
+    localStorage.setItem(
+      "Refreshtoken-displayedProperties",
+      JSON.stringify(this.displayedProperties)
+    );
   }
 
   toggleDisplayAll(display: boolean) {
     if (display) {
       this.displayedProperties = JSON.parse(JSON.stringify(this.properties));
     } else {
-      this.displayedProperties = ["_id", "token", "created_at", "expired_at", "identity", "actions"];
+      this.displayedProperties = [
+        "_id",
+        "token",
+        "created_at",
+        "expired_at",
+        "identity",
+        "actions"
+      ];
     }
 
-    localStorage.setItem("Refreshtoken-displayedProperties", JSON.stringify(this.displayedProperties));
+    localStorage.setItem(
+      "Refreshtoken-displayedProperties",
+      JSON.stringify(this.displayedProperties)
+    );
   }
 
   onSortChange(sort) {

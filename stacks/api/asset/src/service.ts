@@ -19,7 +19,7 @@ export class AssetService extends BaseCollection<Asset>("asset") {
       stream.on("change", () => emitAssets());
 
       return () => {
-        if (!stream.isClosed()) {
+        if (!stream.closed) {
           stream.close();
         }
       };

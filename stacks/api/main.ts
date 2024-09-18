@@ -447,9 +447,8 @@ const modules: any[] = [
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
-    poolSize: args["database-pool-size"],
-    appname: "spica",
-    useNewUrlParser: true,
+    maxPoolSize: args["database-pool-size"],
+    appName: "spica",
     ["useUnifiedTopology" as any]: true
   }),
   SchemaModule.forRoot({
@@ -593,18 +592,15 @@ NestFactory.create(RootModule, {
         return JSON.stringify(req.user);
       });
       app.use(
-        morgan(
-          ':remote-addr - :accessor ":method :url HTTP/:http-version" :status [:date[iso]]',
-          {
-            skip: (req, res) => {
-              const urlRegex = new RegExp(args["access-logs-url-filter"]);
-              const statusCodeRegex = new RegExp(args["access-logs-statuscode-filter"]);
-              return !urlRegex.test(req.url) || !statusCodeRegex.test(res.statusCode.toString());
-            }
+        morgan(':remote-addr - :accessor ":method :url HTTP/:http-version" :status [:date[iso]]', {
+          skip: (req, res) => {
+            const urlRegex = new RegExp(args["access-logs-url-filter"]);
+            const statusCodeRegex = new RegExp(args["access-logs-statuscode-filter"]);
+            return !urlRegex.test(req.url) || !statusCodeRegex.test(res.statusCode.toString());
           }
-        )
+        })
       );
-      app.use(cookieParser())
+      app.use(cookieParser());
     }
 
     return app.listen(args.port);

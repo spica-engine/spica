@@ -85,7 +85,7 @@ export class BucketPipelineBuilder extends PipelineBuilder {
     return this;
   }
 
-  async filterByUserRequest(filterByUserRequest: string | object):Promise<Awaited<this>> {
+  async filterByUserRequest(filterByUserRequest: string | object): Promise<Awaited<this>> {
     let filterPropertyMap: string[][] = [];
     let filterRelationMap: object[] = [];
     // filter
@@ -122,7 +122,7 @@ export class BucketPipelineBuilder extends PipelineBuilder {
 
       this.isFilterApplied = true;
     }
-    return Promise.resolve(this)
+    return Promise.resolve(this);
   }
 
   async resolveRelationPath(

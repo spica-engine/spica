@@ -43,7 +43,7 @@ export class PreferenceService extends BaseCollection("preferences") {
         }
       });
       return () => {
-        if (!watcher.isClosed()) {
+        if (!watcher.closed) {
           watcher.close();
         }
       };

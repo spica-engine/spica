@@ -1,4 +1,4 @@
-import {FilterQuery, ObjectId} from "mongodb";
+import {Filter, ObjectId} from "mongodb";
 
 interface Document {
   _id: ObjectId;
@@ -26,17 +26,15 @@ export interface DatabaseChange<T extends Document> {
       [key: string]: any;
     };
     removedFields?: string[];
-    truncatedArrays?: [
-      {
-        [key: string]: any;
-      }
-    ];
+    truncatedArrays?: {
+      [key: string]: any;
+    }[];
   };
   fullDocument?: T;
 }
 
 export interface FindOptions<T> {
-  filter?: FilterQuery<T>;
+  filter?: Filter<T>;
   sort?: {
     [index: string]: -1 | 1;
   };

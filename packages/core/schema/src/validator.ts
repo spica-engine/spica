@@ -89,9 +89,10 @@ export class Validator {
         }
       }
     }
-    return axios.get(uri).then(r => r.data).catch(() =>
-      Promise.reject(new Error(`Could not resolve the schema ${uri}`))
-    );
+    return axios
+      .get(uri)
+      .then(r => r.data)
+      .catch(() => Promise.reject(new Error(`Could not resolve the schema ${uri}`)));
   }
 
   registerUriResolver(uriResolver: UriResolver) {

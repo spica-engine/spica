@@ -1,5 +1,10 @@
 import {MongoClient, MongoClientOptions} from "mongodb";
-import {generateDbName} from "mongodb-memory-server-core/lib/util/db_util";
+
+function generateDbName(): string {
+  return `test_${Math.random()
+    .toString(36)
+    .substring(2, 10)}`;
+}
 
 export async function start(topology: "standalone" | "replset") {
   const connectionUri = (topology == "standalone"
@@ -8,13 +13,12 @@ export async function start(topology: "standalone" | "replset") {
   ).connectionString;
 
   const options: MongoClientOptions = {
-    useNewUrlParser: true,
     ["useUnifiedTopology" as string]: true
   };
 
   if (topology == "replset") {
     options.replicaSet = "testset";
-    options.poolSize = Number.MAX_SAFE_INTEGER;
+    options.maxPoolSize = Number.MAX_SAFE_INTEGER;
   }
 
   return MongoClient.connect(connectionUri, options);

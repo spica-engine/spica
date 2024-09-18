@@ -4,10 +4,10 @@ import {
   BaseCollection,
   Collection,
   DatabaseService,
-  FilterQuery,
-  FindOneAndReplaceOption,
-  IndexOptions,
-  ObjectId
+  Filter,
+  FindOneAndReplaceOptions,
+  ObjectId,
+  IndexInformationOptions
 } from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference/services";
 import {BehaviorSubject, Observable} from "rxjs";
@@ -19,7 +19,7 @@ export interface IndexDefinition {
   definition: {
     [key: string]: any;
   };
-  options?: IndexOptions;
+  options?: IndexInformationOptions;
 }
 
 interface ExistingIndex {
@@ -96,9 +96,9 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
   }
 
   findOneAndReplace(
-    filter: FilterQuery<{_id: string}>,
+    filter: Filter<{_id: string}>,
     doc: Bucket,
-    options?: FindOneAndReplaceOption
+    options?: FindOneAndReplaceOptions
   ): Promise<Bucket> {
     return super
       .findOneAndReplace(filter, doc, options)
@@ -155,7 +155,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
       );
       stream.on("change", change => observer.next(change.fullDocument));
       return () => {
-        if (!stream.isClosed()) {
+        if (!stream.closed) {
           stream.close();
         }
       };

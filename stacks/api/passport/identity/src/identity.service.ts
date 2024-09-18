@@ -47,7 +47,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     };
   }
 
-  getTokenExpiresIn(requestedExpires?: number, variant: "access" | "refresh" = "access"){
+  getTokenExpiresIn(requestedExpires?: number, variant: "access" | "refresh" = "access") {
     const variants = {
       access: () => {
         if (requestedExpires) {
@@ -56,58 +56,58 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
         return this.identityOptions.expiresIn;
       },
       refresh: () => this.identityOptions.refreshTokenExpiresIn
-    }
+    };
 
     return variants[variant]();
   }
 
-  async generateRefreshToken(identity: Identity, requestedExpires?: number){
+  async generateRefreshToken(identity: Identity, requestedExpires?: number) {
     const {identifier} = identity;
     const expiresIn = this.getTokenExpiresIn(requestedExpires, "refresh");
-    const token = this.jwt.sign({identifier}, {expiresIn})
+    const token = this.jwt.sign({identifier}, {expiresIn});
 
     const tokenSchema = {
       token,
       identity: String(identity._id),
       created_at: new Date(),
-      expired_at: new Date(Date.now() + (expiresIn * 1000)),
-    }
-    
-    await this.refreshtoken.insertOne(tokenSchema)
-  
+      expired_at: new Date(Date.now() + expiresIn * 1000)
+    };
+
+    await this.refreshtoken.insertOne(tokenSchema);
+
     return tokenSchema;
   }
 
-  async verifyRefreshToken(accessToken: string, refreshToken:string){
+  async verifyRefreshToken(accessToken: string, refreshToken: string) {
     const decodedRefreshToken = await this.verify(refreshToken).catch(console.error);
-    if(!decodedRefreshToken){
+    if (!decodedRefreshToken) {
       return;
     }
-    
+
     const refreshTokenData = await this.refreshtoken.findOne({token: refreshToken});
-    if(!refreshTokenData){
+    if (!refreshTokenData) {
       return;
     }
 
     const {identifier} = await this.verify(accessToken.split(" ")[1]);
     const identity = await this.findOne({identifier});
 
-    if(refreshTokenData.identity !== String(identity._id)){
+    if (refreshTokenData.identity !== String(identity._id)) {
       return;
     }
 
     return identity;
   }
 
-  getCookieOptions(){
+  getCookieOptions() {
     return {
       httpOnly: true,
       secure: true,
-      sameSite: 'Strict',
-      path: '/',
+      sameSite: "Strict",
+      path: "/",
       overwrite: true,
       maxAge: this.identityOptions.refreshTokenExpiresIn * 1000
-    } 
+    };
   }
 
   verify(token: string) {

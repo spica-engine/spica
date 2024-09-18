@@ -73,7 +73,7 @@ export class PassportModule {
         PolicyModule.forRoot(),
         ApiKeyModule.forRoot(),
         RefreshTokenModule.forRoot({
-          refreshTokenExpiresIn: options.refreshTokenExpiresIn,
+          refreshTokenExpiresIn: options.refreshTokenExpiresIn
         }),
         AuthFactorModule
       ],

@@ -6,7 +6,6 @@ import * as path from "path";
 import {Observable} from "rxjs";
 import {glob} from "glob";
 
-
 export class Npm extends PackageManager {
   private readonly MAX_DEP_TYPE_SIZE_MB = 5;
 

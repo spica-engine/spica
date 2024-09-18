@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
+import {BaseCollection, DatabaseService, ObjectId, ReturnDocument} from "@spica-server/database";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {StorageObject, StorageObjectMeta} from "./body";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
@@ -138,9 +138,11 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       throw new Error(`Storage object ${_id} could not be found`);
     }
 
-    return this._coll
-      .findOneAndUpdate({_id}, {$set: {name}}, {returnOriginal: false})
-      .then(r => r.value);
+    return this._coll.findOneAndUpdate(
+      {_id},
+      {$set: {name}},
+      {returnDocument: ReturnDocument.AFTER}
+    );
   }
 
   async update(
@@ -174,9 +176,11 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     await this.validateTotalStorageSize(schemas.reduce((sum, curr) => sum + curr.content.size, 0));
 
-    const insertedObjects = await this._coll
-      .insertMany(schemas)
-      .then(result => result.ops as StorageObjectMeta[]);
+    const result = await this._coll.insertMany(schemas);
+    const insertedObjects = schemas.map((schema, index) => ({
+      ...schema,
+      _id: result.insertedIds[index]
+    }));
 
     for (const [i, object] of insertedObjects.entries()) {
       try {

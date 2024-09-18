@@ -17,12 +17,12 @@ interface HandlerData {
 
 @Directive({
   selector: "code-editor[language]",
-  host: { "(onInit)": "_editorReady($event)" },
+  host: {"(onInit)": "_editorReady($event)"},
   exportAs: "language"
 })
 export class LanguageDirective implements OnChanges, OnDestroy {
   @Input() language: string;
-  @Input() dependencies: { name: string; version: string; types: { [path: string]: string } }[] = [];
+  @Input() dependencies: {name: string; version: string; types: {[path: string]: string}}[] = [];
 
   @Input("ngModel") index: string = "";
 
@@ -98,14 +98,14 @@ export class LanguageDirective implements OnChanges, OnDestroy {
       sourceObservable.pipe(take(1)),
       sourceObservable.pipe(
         debounceTime(2000),
-        map(index => ({ handler: 'emitHandlers', index }))
+        map(index => ({handler: "emitHandlers", index}))
       ),
       sourceObservable.pipe(
         debounceTime(10000),
-        map(index => ({ handler: 'debouncedChange', index }))
+        map(index => ({handler: "debouncedChange", index}))
       )
     ).subscribe((data: string | HandlerData) => {
-      if (typeof data === 'string') {
+      if (typeof data === "string") {
         return;
       }
       switch (data.handler) {

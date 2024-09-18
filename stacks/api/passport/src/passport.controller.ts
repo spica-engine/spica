@@ -34,7 +34,7 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {STRATEGIES} from "./options";
 import {StrategyTypeServices} from "./strategy/interface";
 import {AuthFactor} from "@spica-server/passport/authfactor";
-import {ClassCommander, CommandType } from "@spica-server/replication";
+import {ClassCommander, CommandType} from "@spica-server/replication";
 import {AuthGuard} from "@spica-server/passport/guard";
 
 /**
@@ -171,8 +171,8 @@ export class PassportController {
       return;
     }
 
-    const { tokenSchema, refreshTokenSchema } = await this.signIdentity(identity, expires);
-    this.setRefreshTokenToCookie(res, refreshTokenSchema.token)
+    const {tokenSchema, refreshTokenSchema} = await this.signIdentity(identity, expires);
+    this.setRefreshTokenToCookie(res, refreshTokenSchema.token);
     res.status(200).json(tokenSchema);
   }
 
@@ -185,18 +185,18 @@ export class PassportController {
       this.setIdentityToken(id, tokenSchema);
       this.setRefreshToken(id, refreshTokenSchema);
       setTimeout(() => {
-        this.deleteIdentityToken(id)
-        this.deleteRefreshToken(id)
+        this.deleteIdentityToken(id);
+        this.deleteRefreshToken(id);
       }, this.SESSION_TIMEOUT_MS);
 
       const challenge = await this.authFactor.start(id);
       const factorRes = {
         challenge,
         answerUrl: `passport/identify/${identity._id}/factor-authentication`
-      }
-      return { factorRes };
+      };
+      return {factorRes};
     } else {
-      return { tokenSchema, refreshTokenSchema };
+      return {tokenSchema, refreshTokenSchema};
     }
   }
 
@@ -221,21 +221,21 @@ export class PassportController {
     }
 
     const identifyResult = await this.signIdentity(identity, expires).catch(catchError);
-    if(!identifyResult){
+    if (!identifyResult) {
       return;
     }
 
     const {refreshTokenSchema, factorRes, tokenSchema} = identifyResult;
-    if(factorRes){
-      return res.status(200).json(factorRes)
+    if (factorRes) {
+      return res.status(200).json(factorRes);
     }
 
-    this.setRefreshTokenToCookie(res, refreshTokenSchema.token)
+    this.setRefreshTokenToCookie(res, refreshTokenSchema.token);
     return res.status(200).json(tokenSchema);
   }
 
-  setRefreshTokenToCookie(res: any, token: string){
-    res.cookie('refreshToken', token, this.identityService.getCookieOptions());
+  setRefreshTokenToCookie(res: any, token: string) {
+    res.cookie("refreshToken", token, this.identityService.getCookieOptions());
   }
 
   @Post("identify")
@@ -276,28 +276,28 @@ export class PassportController {
     }
 
     const refreshTokenSchema = this.refreshTokenMap.get(id);
-    this.setRefreshTokenToCookie(res, refreshTokenSchema.token)
+    this.setRefreshTokenToCookie(res, refreshTokenSchema.token);
     return res.status(200).json(this.identityToken.get(id));
   }
 
   @Get("access-token")
   @UseGuards(AuthGuard())
   async refreshToken(
-    @Headers('authorization') accessToken: string,
+    @Headers("authorization") accessToken: string,
     @Req() req: any,
-    @Res() res: any,
+    @Res() res: any
   ) {
     const {refreshToken} = req.cookies || {};
-    
+
     if (!refreshToken) {
       throw new UnauthorizedException("Refresh token does not exist.");
     }
     const identity = await this.identityService.verifyRefreshToken(accessToken, refreshToken);
-    if(!identity){
+    if (!identity) {
       throw new UnauthorizedException("Invalid refresh token.");
     }
 
-    const tokenSchema = this.identityService.sign(identity)
+    const tokenSchema = this.identityService.sign(identity);
     res.status(200).json(tokenSchema);
   }
 

@@ -1,7 +1,7 @@
 import {Controller, Get, INestApplication, ModuleMetadata, Req, Res} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core/schema";
-import { DATE_TIME } from "@spica-server/core/schema/formats";
+import {DATE_TIME} from "@spica-server/core/schema/formats";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportModule} from "@spica-server/passport";
@@ -187,7 +187,7 @@ describe("E2E Tests", () => {
     controllers: [SAMLController, OAuthController],
     imports: [
       SchemaModule.forRoot({
-        formats:[DATE_TIME]
+        formats: [DATE_TIME]
       }),
       DatabaseTestingModule.standalone(),
       PassportModule.forRoot({
@@ -210,7 +210,7 @@ describe("E2E Tests", () => {
         passwordHistoryUniquenessCount: 0
       }),
       PreferenceTestingModule,
-      CoreTestingModule,
+      CoreTestingModule
     ]
   };
 
@@ -529,7 +529,7 @@ describe("E2E Tests", () => {
             {identifier: "identityWith2fa", password: "asdqwe123456"},
             {Authorization: `IDENTITY ${token}`}
           )
-          .then(r => r.body)
+          .then(r => r.body);
       });
 
       async function startVerification(identity) {

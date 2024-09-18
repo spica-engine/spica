@@ -13,7 +13,7 @@ export type IdentifyParams = {identifier: string; password: string};
 @Injectable({providedIn: "root"})
 export class PassportService {
   refreshTokenSubject = new Subject<string>();
-  
+
   private _statements: Observable<Statement[]>;
 
   get token(): string {
@@ -23,7 +23,7 @@ export class PassportService {
     localStorage.setItem("access_token", token);
   }
 
-  get decodedToken(): Identity & {exp: number, iat: number} {
+  get decodedToken(): Identity & {exp: number; iat: number} {
     const decodedToken = this.token.replace(/\w*\s\b/g, "");
     return jwt_decode(decodedToken);
   }
@@ -46,19 +46,25 @@ export class PassportService {
     this.token = `${response.scheme} ${response.token}`;
   }
 
-  resetStatements(){
+  resetStatements() {
     this._statements = undefined;
   }
 
   answerAuthFactor(factor, answer) {
-    return this.http.post(`api:/${factor.answerUrl}`, {
-      answer
-    },  {withCredentials: true});
+    return this.http.post(
+      `api:/${factor.answerUrl}`,
+      {
+        answer
+      },
+      {withCredentials: true}
+    );
   }
 
   identify(identityOrStrategy: IdentifyParams | string, openCallback?: (url: string) => void) {
     if (typeof identityOrStrategy != "string") {
-      return this.http.post<any>("api:/passport/identify", identityOrStrategy, {withCredentials: true});
+      return this.http.post<any>("api:/passport/identify", identityOrStrategy, {
+        withCredentials: true
+      });
     }
 
     return this.http

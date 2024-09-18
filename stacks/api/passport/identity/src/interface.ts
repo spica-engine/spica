@@ -12,7 +12,7 @@ export interface Identity {
   authFactor?: FactorMeta;
   lastLogin: Date;
   failedAttempts: Date[];
-  lastPasswords: string[]
+  lastPasswords: string[];
 }
 
 export interface LoginCredentials {

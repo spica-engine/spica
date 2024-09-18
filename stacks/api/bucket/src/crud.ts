@@ -1,7 +1,7 @@
 import {schemaDiff, ChangeKind} from "@spica-server/core/differ";
 import {findRelations} from "@spica-server/bucket/common";
 import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/services";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {HistoryService} from "@spica-server/bucket/history";
 import * as expression from "@spica-server/bucket/expression";
 import {BadRequestException} from "@nestjs/common";
@@ -35,7 +35,7 @@ export async function replace(
   const previousSchema = await bs.findOne({_id});
 
   const currentSchema = await bs.findOneAndReplace({_id}, bucket, {
-    returnOriginal: false
+    returnDocument: ReturnDocument.AFTER
   });
 
   await updateDocumentsOnChange(bds, previousSchema, currentSchema);

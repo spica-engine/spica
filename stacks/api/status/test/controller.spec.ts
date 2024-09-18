@@ -145,7 +145,7 @@ describe("Status", () => {
             passwordHistoryUniquenessCount: 0
           }),
           SchemaModule.forRoot({
-            formats:[DATE_TIME]
+            formats: [DATE_TIME]
           })
         ]
       }).compile();
@@ -158,10 +158,13 @@ describe("Status", () => {
 
     it("should return status of identity module", async () => {
       // insert identities
-      await req.post("/passport/identity", {
-        identifier: "Naya",
-        password: "somethingsecret123456"
-      }).then(console.log).catch(console.log);
+      await req
+        .post("/passport/identity", {
+          identifier: "Naya",
+          password: "somethingsecret123456"
+        })
+        .then(console.log)
+        .catch(console.log);
       await req.post("/passport/identity", {
         identifier: "xavier",
         password: "verysecret123456"

@@ -126,7 +126,7 @@ export class PassportModule {
       ngModule: PassportModule,
       providers: [
         {
-          provide: HTTP_INTERCEPTORS, 
+          provide: HTTP_INTERCEPTORS,
           useClass: AuthorizationInterceptor,
           multi: true
         },

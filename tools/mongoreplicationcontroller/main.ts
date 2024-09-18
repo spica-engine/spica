@@ -4,6 +4,8 @@ import * as os from "os";
 import * as util from "util";
 import * as yargs from "yargs";
 
+// https://www.mongodb.com/docs/v6.0/release-notes/6.0-compatibility/#rs.reconfig-cluster-wide-write-concern-validation
+
 const options = yargs
   .option("username", {
     type: "string",

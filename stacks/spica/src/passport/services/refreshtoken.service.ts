@@ -22,7 +22,13 @@ export class RefreshTokenService {
     filter?: object,
     paginate?: true
   ): Observable<IndexResult<RefreshToken>>;
-  getAll(limit = 0, skip = 0, sort = {_id: -1}, filter = {}, paginate = false): Observable<unknown> {
+  getAll(
+    limit = 0,
+    skip = 0,
+    sort = {_id: -1},
+    filter = {},
+    paginate = false
+  ): Observable<unknown> {
     return this.http.get<any>("api:/passport/refreshtoken", {
       params: {
         limit: String(limit),

@@ -23,6 +23,7 @@ import {IAuthResolver} from "./interface";
 import {categorizePropertyMap} from "./helpers";
 import {BucketPipelineBuilder} from "./pipeline.builder";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {ReturnDocument} from "mongodb";
 
 interface CrudOptions<Paginate> {
   localize?: boolean;
@@ -228,7 +229,7 @@ export async function replaceDocument(
 
   return collection
     .findOneAndReplace({_id: documentId}, document, {
-      returnOriginal: options.returnOriginal
+      returnDocument: options.returnOriginal ? ReturnDocument.BEFORE : ReturnDocument.AFTER
     })
     .catch(handleWriteErrors);
 }
@@ -266,7 +267,7 @@ export async function patchDocument(
 
   return collection
     .findOneAndUpdate({_id: document._id}, updateQuery, {
-      returnOriginal: options.returnOriginal
+      returnDocument: options.returnOriginal ? ReturnDocument.BEFORE : ReturnDocument.AFTER
     })
     .catch(handleWriteErrors);
 }
