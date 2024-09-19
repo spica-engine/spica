@@ -171,7 +171,7 @@ export class FunctionController {
     const patchedFn = applyPatch(previousFn, patch);
     delete patchedFn._id;
 
-    return this.fs.findOneAndReplace({_id: id}, patchedFn, {returnOriginal: false});
+    return this.fs.findOneAndReplace({_id: id}, patchedFn, {returnDocument: "after"});
   }
 
   /**

@@ -38,7 +38,7 @@ export function registerAssetHandlers(
       delete apikey._id;
 
       return as.findOneAndReplace({_id}, apikey, {
-        returnOriginal: false
+        returnDocument: "after"
       });
     },
 

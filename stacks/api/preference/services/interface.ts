@@ -1,5 +1,5 @@
 export interface Preference {
-  _id?: string;
+  _id?: any;
   scope: string;
   [key: string]: any;
 }

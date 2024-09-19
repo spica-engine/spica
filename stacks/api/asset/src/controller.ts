@@ -16,7 +16,7 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {AssetService} from "./service";
-import {OBJECT_ID, ObjectId} from "@spica-server/database";
+import {OBJECT_ID, ObjectId, OptionalId} from "@spica-server/database";
 import {Asset, Config, ExportMeta, Resource} from "@spica-server/interface/asset";
 import {exporters, operators, validators} from "./registration";
 import {putConfiguration} from "./helpers";
@@ -125,7 +125,7 @@ export class AssetController {
     {configs}: {configs: Config[]},
     @Query("preview", BOOLEAN) preview: boolean
   ) {
-    let asset = await this.service.findOne({_id: id});
+    let asset: OptionalId<Asset> = await this.service.findOne({_id: id});
     if (!asset) {
       throw new NotFoundException();
     }

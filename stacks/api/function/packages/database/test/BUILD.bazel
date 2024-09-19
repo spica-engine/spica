@@ -1,0 +1,50 @@
+load("//tools/ts_project:index.bzl", "ts_project")
+
+package(default_visibility = ["//visibility:public"])
+
+load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
+
+ts_project(
+    name = "test_lib",
+    srcs = glob(
+        include = ["*.spec.ts"],
+        exclude = ["*.e2e.spec.ts"],
+    ),
+    tsconfig = "//stacks/api/function/packages:tsconfig",
+    deps = [
+        "//stacks/api/function/packages/database",
+        "@npm//@types/jasmine",
+        "@npm//@types/mongodb",
+        "@npm//@types/node",
+        "@npm//mongodb",
+    ],
+)
+
+jasmine_node_test(
+    name = "test",
+    srcs = [":test_lib"],
+)
+
+ts_project(
+    name = "e2e_test_lib",
+    srcs = glob(["database.e2e.spec.ts"]),
+    tsconfig = "//stacks/api/function/packages:tsconfig",
+    deps = [
+        "//packages/database/testing",
+        "//stacks/api/function/packages/database",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//@types/mongodb",
+        "@npm//@types/node",
+        "@npm//mongodb",
+    ],
+)
+
+jasmine_node_test(
+    name = "e2e_test",
+    srcs = [":e2e_test_lib"],
+    tags = [
+        "e2e",
+        "integration",
+    ],
+)

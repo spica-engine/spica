@@ -55,6 +55,6 @@ export class PreferenceController {
     delete preference._id;
     preference.scope = scope;
 
-    return this.preference.replace({scope}, preference, {upsert: true, returnOriginal: false});
+    return this.preference.replace({scope}, preference, {upsert: true, returnDocument: "after"});
   }
 }

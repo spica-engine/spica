@@ -117,7 +117,7 @@ export class Emitter<T extends { _id: ObjectId }> {
         }
       });
 
-      this.changeStream.pipe(this.passThrough);
+      this.changeStream.stream().pipe(this.passThrough);
 
       return this.getTearDownLogic();
     };
@@ -164,7 +164,7 @@ export class Emitter<T extends { _id: ObjectId }> {
       this.collection
         .aggregate(pipeline)
         .toArray()
-        .then(documents => {
+        .then((documents:T[]) => {
           for (const document of documents) {
             subscriber.next({ kind: ChunkKind.Initial, document: document });
             this.ids.add(document._id.toString());
@@ -209,7 +209,7 @@ export class Emitter<T extends { _id: ObjectId }> {
       }
 
       if (!this.changeStream.closed) {
-        this.changeStream.unpipe(this.passThrough);
+        this.changeStream.stream().unpipe(this.passThrough);
       }
 
       this.passThrough.removeAllListeners();

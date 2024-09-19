@@ -12,7 +12,11 @@ import {
   UpdateResult,
   ObjectId,
   UpdateFilter,
-  UpdateOptions
+  UpdateOptions,
+  OptionalUnlessRequiredId,
+  WithId,
+  Document,
+  OptionalId
 } from "mongodb";
 import {DatabaseService} from "./database.service";
 
@@ -22,7 +26,7 @@ export interface InitializeOptions {
   afterInit?: (...args: any[]) => any;
 }
 
-export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
+export type _OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
 
 export class _MixinCollection<T> {
   _coll: Collection<T>;
@@ -82,14 +86,15 @@ export class _MixinCollection<T> {
   }
 
   // Insert
-  async insertOne(doc: T): Promise<T> {
+  async insertOne(doc: OptionalUnlessRequiredId<T>): Promise<WithId<T>> {
     await this.documentCountLimitValidation(1);
 
     const result: InsertOneResult<T> = await this._coll.insertOne(doc);
-    return doc; // Return the inserted document
+    doc._id = result.insertedId;
+    return doc as WithId<T>;
   }
 
-  async insertMany(docs: Array<T>): Promise<ObjectId[]> {
+  async insertMany(docs: Array<OptionalUnlessRequiredId<T>>): Promise<ObjectId[]> {
     await this.documentCountLimitValidation(docs.length);
 
     const result: InsertManyResult<T> = await this._coll.insertMany(docs);
@@ -97,16 +102,16 @@ export class _MixinCollection<T> {
   }
 
   // Find
-  findOne(filter: Filter<T>, options?: FindOptions): Promise<T | null> {
+  findOne(filter: Filter<T>, options?: FindOptions): Promise<WithId<T>> {
     return this._coll.findOne(filter, options);
   }
 
-  find(filter?: Filter<T>, options?: FindOptions): Promise<T[]> {
+  find(filter?: Filter<T>, options?: FindOptions): Promise<WithId<T>[]> {
     return this._coll.find(filter, options).toArray();
   }
 
   // Delete
-  findOneAndDelete(filter: Filter<T>, options?: FindOneAndDeleteOptions): Promise<T | null> {
+  findOneAndDelete(filter: Filter<T>, options?: FindOneAndDeleteOptions): Promise<WithId<T>> {
     return this._coll.findOneAndDelete(filter, options);
   }
 
@@ -123,7 +128,7 @@ export class _MixinCollection<T> {
     filter: Filter<T>,
     doc: T,
     options?: FindOneAndReplaceOptions
-  ): Promise<T | null> {
+  ): Promise<WithId<T>> {
     return this._coll.findOneAndReplace(filter, doc, options);
   }
 
@@ -152,7 +157,7 @@ export class _MixinCollection<T> {
     filter: Filter<T>,
     update: UpdateFilter<T> | T,
     options?: FindOneAndUpdateOptions
-  ): Promise<T | null> {
+  ): Promise<WithId<T>> {
     return this._coll.findOneAndUpdate(filter, update, options);
   }
 
@@ -161,7 +166,7 @@ export class _MixinCollection<T> {
     return this._coll
       .listIndexes()
       .toArray()
-      .then(indexes => {
+      .then<string | Document>(indexes => {
         const ttlIndex = indexes.find(index => index.name == "created_at_1");
 
         if (!ttlIndex) {
@@ -185,7 +190,7 @@ export class _MixinCollection<T> {
 
 export type BaseCollection<T> = _MixinCollection<T>;
 
-export function BaseCollection<T extends OptionalId<T>>(collection?: string) {
+export function BaseCollection<T extends _OptionalId<T>>(collection?: string) {
   return class extends _MixinCollection<T> {
     constructor(db: DatabaseService, options?: InitializeOptions) {
       super(db, collection, options);

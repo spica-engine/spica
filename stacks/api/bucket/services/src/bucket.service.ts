@@ -7,7 +7,9 @@ import {
   Filter,
   FindOneAndReplaceOptions,
   ObjectId,
-  IndexInformationOptions
+  WithId,
+  OptionalId,
+  CreateIndexesOptions
 } from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference/services";
 import {BehaviorSubject, Observable} from "rxjs";
@@ -19,7 +21,7 @@ export interface IndexDefinition {
   definition: {
     [key: string]: any;
   };
-  options?: IndexInformationOptions;
+  options?: CreateIndexesOptions;
 }
 
 interface ExistingIndex {
@@ -96,13 +98,13 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
   }
 
   findOneAndReplace(
-    filter: Filter<{_id: string}>,
+    filter: Filter<OptionalId<Bucket>>,
     doc: Bucket,
     options?: FindOneAndReplaceOptions
-  ): Promise<Bucket> {
+  ): Promise<WithId<Bucket>> {
     return super
       .findOneAndReplace(filter, doc, options)
-      .then(r => this.updateIndexes({...doc, _id: filter._id}).then(() => r));
+      .then(r => this.updateIndexes({...doc, _id: r._id}).then(() => r));
   }
 
   async updateIndexes(bucket: Bucket): Promise<void> {
@@ -153,7 +155,14 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
           fullDocument: "updateLookup"
         }
       );
-      stream.on("change", change => observer.next(change.fullDocument));
+      stream.on("change", (change: any) => {
+        const knownOperationTypes = ["insert", "update", "replace", "delete"];
+        if (knownOperationTypes.includes(change.operationType)) {
+          return change.fullDocument || change.fullDocumentBeforeChange;
+        } else {
+          console.warn("Unknown operation type received: ", change.operationType);
+        }
+      });
       return () => {
         if (!stream.closed) {
           stream.close();

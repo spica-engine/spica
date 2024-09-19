@@ -448,8 +448,7 @@ const modules: any[] = [
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
     maxPoolSize: args["database-pool-size"],
-    appName: "spica",
-    ["useUnifiedTopology" as any]: true
+    appName: "spica"
   }),
   SchemaModule.forRoot({
     formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],

@@ -48,7 +48,9 @@ if (!process.env.WORKER_ID) {
   const pop = new event.Pop({
     id: process.env.WORKER_ID
   });
-  await initialize();
+  console.time("init")
+  // await initialize();
+  console.timeEnd("init")
   let ev;
   while (
     (ev = await queue.pop(pop).catch(e => {
@@ -205,9 +207,11 @@ async function _process(ev, queue) {
 
   globalThis.require = createRequire(path.join(process.cwd(), "node_modules"));
 
+  // console.time("importing")
   let module = await import(
     path.join(process.cwd(), ".build", process.env.ENTRYPOINT) + "?event=" + ev.id
   );
+  // console.timeEnd("importing")
 
   if ("default" in module && module.default.__esModule) {
     module = module.default; // Do not ask me why

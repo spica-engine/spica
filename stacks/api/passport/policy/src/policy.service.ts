@@ -1,11 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {
-  Collection,
   DatabaseService,
   ObjectId,
-  InsertOneWriteOpResult,
-  FilterQuery,
-  FindOneAndReplaceOption,
   BaseCollection
 } from "@spica-server/database";
 import {Policy} from "./interface";

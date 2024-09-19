@@ -27,6 +27,7 @@
     "build": "yarn build-api && yarn build-entrypoint && yarn copy-nonts-files",
     "start:dev": "yarn build && FUNCTION_GRPC_ADDRESS='0.0.0.0:5688' node ./dist/stacks/api/main --database-name=spica --database-uri=mongodb://localhost:27017 --passport-secret=secret --public-url=http://localhost --port=4300",
     "start": "node ./dist/stacks/api/main",
+    "start-client": "cd stacks/spica && export NODE_OPTIONS=--openssl-legacy-provider && ng serve",
     "bazel:format": "find . -type f \\( -name \"*.bzl\" -or -name WORKSPACE -or -name BUILD -or -name BUILD.bazel \\) ! -path \"*/node_modules/*\" | xargs buildifier -v --warnings=attr-cfg,attr-license,attr-non-empty,attr-output-default,attr-single-file,constant-glob,ctx-args,depset-iteration,depset-union,dict-concatenation,duplicated-name,filetype,git-repository,http-archive,integer-division,load,load-on-top,native-build,native-package,output-group,package-name,package-on-top,positional-args,redefined-variable,repository-name,same-origin-load,string-iteration,unused-variable",
     "code:format": "yarn prettier --write 'packages/**/*.{css,scss,ts,js,html}' 'stacks/**/*.{css,scss,ts,js,html}' '!stacks/api/function/packages/database/src/mongo.ts'",
     "code:format-check": "yarn prettier --check 'packages/**/*.{css,scss,ts,js,html}' 'stacks/**/*.{css,scss,ts,js,html}' '!stacks/api/function/packages/database/src/mongo.ts'",
@@ -34,11 +35,7 @@
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "bazel": "bazelisk",
     "run-api": "bazel run //stacks/api:bin",
-    "run-cli": "bazel run //stacks/cli:bin",
-    "copy-files": "cp ./stacks/api/bucket/expression/src/grammar.pegjs ./dist/stacks/api/bucket/expression/src/grammar.pegjs",
-    "build": "nest build; yarn copy-files",
-    "start": "yarn build; FUNCTION_GRPC_ADDRESS=0.0.0.0:5688 DATABASE_URI=mongodb://localhost:27017 REPLICA_SET=infra DATABASE_NAME=spica PUBLIC_HOST=http://localhost:4300 PORT=4300 PERSISTENT_PATH=/tmp SECRET=2b10shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C DEFAULT_PASSWORD=spica BUCKET_HOOKS=true BUCKET_HISTORY=true ACTIVITY_STREAM=true EXPERIMENTAL_BUCKET_REALTIME=true FUNCTION_GRPC_ADDRESS=0.0.0.0:5688 FUNCTION_POOL_SIZE=1 node dist/stacks/api/main.js",
-    "start-client": "cd stacks/spica && export NODE_OPTIONS=--openssl-legacy-provider && ng serve"
+    "run-cli": "bazel run //stacks/cli:bin"
   },
   "dependencies": {
     "@google-cloud/storage": "^5.0.1",

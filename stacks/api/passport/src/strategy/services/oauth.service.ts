@@ -77,7 +77,7 @@ export class OAuthService implements StrategyTypeService {
           "options.access_token.params.redirect_uri": redirectUri
         }
       },
-      {returnOriginal: false}
+      {returnDocument: "after"}
     );
   }
 

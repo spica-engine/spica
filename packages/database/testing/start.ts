@@ -12,9 +12,7 @@ export async function start(topology: "standalone" | "replset") {
     : require("./replicaset.json")
   ).connectionString;
 
-  const options: MongoClientOptions = {
-    ["useUnifiedTopology" as string]: true
-  };
+  const options: MongoClientOptions = {};
 
   if (topology == "replset") {
     options.replicaSet = "testset";

@@ -366,7 +366,7 @@ export class IdentityController {
     delete identity.authFactor;
 
     return this.identityService
-      .findOneAndUpdate({_id: id}, {$set: identity}, {returnOriginal: false})
+      .findOneAndUpdate({_id: id}, {$set: identity}, {returnDocument: "after"})
       .then(updatedIdentity => this.afterIdentityUpsert(updatedIdentity))
       .catch(exception => {
         throw new BadRequestException(
@@ -406,7 +406,7 @@ export class IdentityController {
         $addToSet: {policies: policyId}
       },
       {
-        returnOriginal: false,
+        returnDocument: "after",
         projection: {password: 0, lastPasswords: 0}
       }
     );
@@ -425,7 +425,7 @@ export class IdentityController {
         $pull: {policies: policyId}
       },
       {
-        returnOriginal: false,
+        returnDocument: "after",
         projection: {password: 0, lastPasswords: 0}
       }
     );

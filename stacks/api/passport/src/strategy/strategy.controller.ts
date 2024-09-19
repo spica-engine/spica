@@ -87,7 +87,7 @@ export class StrategyController {
     }
 
     let updatedStrategy = await this.strategy.findOneAndReplace({_id: id}, strategy, {
-      returnOriginal: false
+        returnDocument: "after"
     });
 
     if (service.afterInsert) {

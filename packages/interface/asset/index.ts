@@ -1,5 +1,4 @@
-export interface Asset {
-  _id?: any;
+export type Asset<OptionalId extends boolean = true> = {
   name: string;
   description: string;
   resources: Resource[];
@@ -7,7 +6,7 @@ export interface Asset {
   configs: Config[];
   url: string;
   icon: string;
-}
+} & (OptionalId extends true ? {_id?: any} : {_id: any});
 
 export type Status = "downloaded" | "installed" | "partially_installed";
 

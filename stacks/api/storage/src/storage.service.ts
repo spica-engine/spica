@@ -1,7 +1,13 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService, ObjectId, ReturnDocument} from "@spica-server/database";
+import {
+  BaseCollection,
+  DatabaseService,
+  ObjectId,
+  ReturnDocument,
+  WithId
+} from "@spica-server/database";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
-import {StorageObject, StorageObjectMeta} from "./body";
+import {StorageObject, StorageObjectContent, StorageObjectMeta} from "./body";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {Strategy} from "./strategy/strategy";
 import * as fs from "fs";
@@ -114,12 +120,12 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     return Promise.all(urlPromises).then(() => objects);
   }
 
-  async get(id: ObjectId): Promise<StorageObject<Buffer>> {
-    const object: StorageObject<Buffer> = await this._coll.findOne({_id: new ObjectId(id)});
+  async get(id: ObjectId): Promise<WithId<StorageObject<Buffer>>> {
+    const object = await this._coll.findOne({_id: new ObjectId(id)});
     if (!object) return null;
 
-    object.content.data = await this.service.read(id.toHexString());
-    return object;
+    (object as StorageObject<Buffer>).content.data = await this.service.read(id.toHexString());
+    return object as WithId<StorageObject<Buffer>>;
   }
 
   async delete(id: ObjectId): Promise<void> {

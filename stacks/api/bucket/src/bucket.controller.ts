@@ -182,7 +182,7 @@ export class BucketController {
     const patchedBucket = applyPatch(previousBucket, patch);
     delete patchedBucket._id;
 
-    return this.bs.findOneAndReplace({_id: id}, patchedBucket, {returnOriginal: false});
+    return this.bs.findOneAndReplace({_id: id}, patchedBucket, {returnDocument: "after"});
   }
 
   @Delete("cache")

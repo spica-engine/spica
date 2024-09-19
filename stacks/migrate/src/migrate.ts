@@ -46,7 +46,6 @@ export async function migrate(options: Options) {
   const mongo = await mongodb.connect(options.database.uri, {
     appname: "spicaengine/migrate",
     useNewUrlParser: true,
-    useUnifiedTopology: true
   } as mongodb.MongoClientOptions);
   const db = mongo.db(options.database.name);
 
