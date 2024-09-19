@@ -33,8 +33,7 @@ const API_FULL_URL = environment.api.startsWith("http")
     HammerModule,
     BrowserAnimationsModule,
     RouterModule.forRoot([], {
-      paramsInheritanceStrategy: "always",
-      relativeLinkResolution: "legacy"
+      paramsInheritanceStrategy: "always"
     }),
     HttpClientModule,
     BaseUrlInterceptorModule.forRoot({api: API_FULL_URL}),

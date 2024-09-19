@@ -12,7 +12,7 @@
 ::ng-deep {
   .cdk-drag-preview {
     route-item {
-      .mat-list-item-content {
+      .mat-mdc-list-item-content {
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -59,7 +59,8 @@
       width: 100%;
       display: flex;
       justify-content: flex-end;
-      .mat-button-wrapper {
+
+      .mat-mdc-button-wrapper {
         display: flex;
         align-items: center;
         mat-icon {
@@ -72,10 +73,12 @@
       flex-direction: column;
       gap: 5px;
       margin-top: 24px;
-      mat-chip-list {
-        .mat-chip-list-wrapper {
+
+      mat-chip-listbox {
+        .mat-mdc-chip-list-wrapper {
           flex-direction: column;
-          mat-chip {
+
+          mat-chip-option {
             width: 100%;
             cursor: pointer;
           }

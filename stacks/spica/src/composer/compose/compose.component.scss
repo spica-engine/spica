@@ -1,8 +1,8 @@
 ::ng-deep {
   .font-menu {
-    .mat-menu-content {
+    .mat-mdc-menu-content {
       max-height: 270px;
-      .mat-menu-item {
+      .mat-mdc-menu-item {
         height: auto;
         padding: 5px 0px;
         border-bottom: 1px solid var(--accent);
@@ -23,10 +23,10 @@
   }
 
   .palette-menu {
-    .mat-menu-content {
+    .mat-mdc-menu-content {
       max-height: 270px;
       width: 250px;
-      .mat-menu-item {
+      .mat-mdc-menu-item {
         width: 100%;
         height: auto;
         padding: 5px 0px;
@@ -71,11 +71,11 @@
 
   .settings-menu {
     max-width: unset !important;
-    .mat-menu-content {
+    .mat-mdc-menu-content {
       margin: 15px;
       mat-form-field {
         width: 100% !important;
-        .mat-form-field {
+        .mat-mdc-form-field {
           &-underline {
             position: relative;
             bottom: auto;
@@ -86,15 +86,16 @@
         }
       }
 
-      .mat-list-item {
+      .mat-mdc-list-item {
         height: auto;
       }
-      .mat-list-item-content,
-      .mat-subheader {
+
+      .mat-mdc-list-item-content,
+      .mat-mdc-subheader {
         padding: 0 !important;
       }
 
-      .mat-list-item-content {
+      .mat-mdc-list-item-content {
         justify-content: space-between;
       }
 
@@ -115,7 +116,7 @@
   }
 
   .add-page-menu {
-    .mat-menu-content {
+    .mat-mdc-menu-content {
       padding: 1.3em;
       padding-top: 1em !important;
 
@@ -128,10 +129,11 @@
   }
 
   .dot-menu {
-    &.mat-menu-above {
+    &.mat-mdc-menu-above {
       transform: translateY(-7px);
     }
-    &.mat-menu-below {
+
+    &.mat-mdc-menu-below {
       transform: translateY(7px);
     }
   }
@@ -140,6 +142,7 @@
     height: 100%;
     max-width: unset !important;
     border-radius: 0px;
+
     mat-dialog-container {
       border-radius: unset !important;
     }
@@ -376,6 +379,7 @@
             height: 125px;
             width: 180px;
             cursor: pointer;
+
             mat-card-title {
               margin-top: 5px;
               text-transform: capitalize;
@@ -407,10 +411,12 @@
               }
             }
           }
+
           mat-card:hover {
             [animate] {
               opacity: 0.6;
             }
+
             mat-card-title {
               position: absolute;
               left: 0;

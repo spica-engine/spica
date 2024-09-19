@@ -95,7 +95,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.dispose.next();
+    this.dispose.next(null);
   }
 
   onDisable() {

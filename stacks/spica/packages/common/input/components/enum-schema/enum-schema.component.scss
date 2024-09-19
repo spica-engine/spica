@@ -11,9 +11,9 @@
       flex: 1;
       ::ng-deep .input-placer-input {
         width: 100%;
-        .mat-form-field {
-          .mat-form-field-wrapper {
-            .mat-form-field-subscript-wrapper {
+        .mat-mdc-form-field {
+          .mat-mdc-form-field-wrapper {
+            .mat-mdc-form-field-subscript-wrapper {
               display: none;
             }
           }

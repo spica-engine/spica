@@ -20,7 +20,6 @@ import {MatAwareDialogDirective} from "./aware-dialog.directive";
     MatIconModule
   ],
   declarations: [MatAwareDialogComponent, MatAwareDialogDirective],
-  entryComponents: [MatAwareDialogComponent],
   exports: [MatAwareDialogComponent, MatAwareDialogDirective]
 })
 export class MatAwareDialogModule {}

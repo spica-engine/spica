@@ -23,8 +23,7 @@ class TestComponent {
 }
 
 @NgModule({
-  declarations: [TestComponent, SnackbarComponent],
-  entryComponents: [TestComponent, SnackbarComponent]
+  declarations: [TestComponent, SnackbarComponent]
 })
 class TestModule {}
 

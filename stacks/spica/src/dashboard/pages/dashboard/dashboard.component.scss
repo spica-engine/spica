@@ -16,10 +16,12 @@
   mat-card {
     height: 320px;
     margin: 30px;
+
     mat-card-content {
       display: flex;
       align-items: center;
       height: 100%;
+
       mat-list.quicklinks {
         flex: 1;
         a {
@@ -91,6 +93,7 @@
       margin: 0px;
       height: unset;
       width: calc(50% - 15px);
+
       mat-list {
         width: 100%;
 
@@ -102,9 +105,11 @@
           position: relative;
           margin: 0 16px;
           width: unset;
-          ::ng-deep div.mat-list-item-content {
+
+          ::ng-deep div.mat-mdc-list-item-content {
             padding: 0px !important;
           }
+
           mat-progress-bar + span {
             position: absolute;
             top: 40px;
@@ -120,20 +125,18 @@
       }
 
       ::ng-deep {
-        .low .mat-progress-bar-fill::after {
+        .low .mat-mdc-progress-bar-fill::after {
           background-color: #28a745;
         }
 
-        .medium .mat-progress-bar-fill::after {
+        .medium .mat-mdc-progress-bar-fill::after {
           background-color: #f1cd00;
         }
-
-        .high .mat-progress-bar-fill::after {
+        .high .mat-mdc-progress-bar-fill::after {
           background-color: #c91e1e;
         }
       }
-
-      ::ng-deep .mat-progress-bar-buffer {
+      ::ng-deep .mat-mdc-progress-bar-buffer {
         background: #e9ecef;
       }
     }
@@ -141,8 +144,10 @@
 
   div.api-container {
     width: 100%;
+
     mat-card {
       height: 1000px;
+
       mat-card-content {
         display: flex;
         column-gap: 20px;

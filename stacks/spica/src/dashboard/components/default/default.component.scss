@@ -2,7 +2,8 @@
   mat-card-header {
     align-items: center;
     justify-content: center;
-    ::ng-deep .mat-card-header-text {
+
+    ::ng-deep .mat-mdc-card-header-text {
       margin: 0;
       text-align: center;
       display: flex;

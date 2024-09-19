@@ -1,6 +1,5 @@
 {
   "version": 1,
-  "defaultProject": "spica-client",
   "projects": {
     "spica-client": {
       "root": "",
@@ -10,7 +9,6 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "aot": true,
             "outputPath": "../../dist/spica",
             "index": "src/index.html",
             "main": "src/main.ts",
@@ -42,7 +40,13 @@
               "./node_modules/highlight.js/styles/monokai.css"
             ],
             "scripts": ["./node_modules/cropperjs/dist/cropper.js"],
-            "webWorkerTsConfig": "tsconfig.worker.json"
+            "webWorkerTsConfig": "tsconfig.worker.json",
+            "vendorChunk": true,
+            "extractLicenses": false,
+            "buildOptimizer": false,
+            "sourceMap": true,
+            "optimization": false,
+            "namedChunks": true
           },
           "configurations": {
             "production": {
@@ -55,10 +59,7 @@
               "optimization": true,
               "outputHashing": "all",
               "sourceMap": false,
-              "namedChunks": true,
-              "aot": true,
               "extractLicenses": true,
-              "vendorChunk": true,
               "buildOptimizer": true,
               "fileReplacements": [
                 {
@@ -66,19 +67,23 @@
                   "with": "environments/environment.prod.ts"
                 }
               ]
-            }
-          }
+            },
+            "development": {}
+          },
+          "defaultConfiguration": "production"
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
-          "options": {
-            "browserTarget": "spica-client:build"
-          },
+          "options": {},
           "configurations": {
             "production": {
               "browserTarget": "spica-client:build:production"
+            },
+            "development": {
+              "browserTarget": "spica-client:build:development"
             }
-          }
+          },
+          "defaultConfiguration": "development"
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
@@ -100,7 +105,10 @@
   },
   "cli": {
     "packageManager": "yarn",
-    "analytics": false
+    "analytics": false,
+    "cache": {
+      "enabled": false
+    }
   },
   "schematics": {
     "@schematics/angular:component": {

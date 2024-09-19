@@ -92,16 +92,25 @@ export class EditorComponent implements ControlValueAccessor {
     window["MonacoEnvironment"] = {
       getWorker: function(_, label) {
         if (label === "typescript" || label === "javascript") {
-          return new Worker("./workers/ts.worker", {type: "module", name: "js/ts-worker"});
+          return new Worker(new URL("./workers/ts.worker", import.meta.url), {
+            type: "module",
+            name: "js/ts-worker"
+          });
         } else if (label === "json") {
-          return new Worker("./workers/json.worker", {type: "module", name: "json-worker"});
+          return new Worker(new URL("./workers/json.worker", import.meta.url), {
+            type: "module",
+            name: "json-worker"
+          });
         } else if (label === "handlebars") {
-          return new Worker("./workers/handlebars.worker", {
+          return new Worker(new URL("./workers/handlebars.worker", import.meta.url), {
             type: "module",
             name: "handlebars-worker"
           });
         }
-        return new Worker("./workers/ts.worker", {type: "module", name: "editor-worker"});
+        return new Worker(new URL("./workers/ts.worker", import.meta.url), {
+          type: "module",
+          name: "editor-worker"
+        });
       }
     };
   }
@@ -120,7 +129,7 @@ export class EditorComponent implements ControlValueAccessor {
           (<any>window).require.config({paths: {vs: "./assets/monaco/min/vs"}});
           (<any>window).require(["vs/editor/editor.main"], () => {
             this.initMonaco(this.options);
-            resolve("");
+            resolve();
           });
         };
 

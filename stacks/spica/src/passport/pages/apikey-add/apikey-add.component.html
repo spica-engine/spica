@@ -7,16 +7,20 @@
   </span>
 </ng-template>
 <div class="actions" *ngIf="apiKey._id">
-  <button mat-button (click)="viewState = 'meta'" [class.mat-flat-button]="viewState == 'meta'">
+  <button mat-button (click)="viewState = 'meta'" [class.mat-mdc-flat-button]="viewState == 'meta'">
     <mat-icon>view_module</mat-icon>
     Credentials
   </button>
-  <button mat-button (click)="viewState = 'policy'" [class.mat-flat-button]="viewState == 'policy'">
+  <button
+    mat-button
+    (click)="viewState = 'policy'"
+    [class.mat-mdc-flat-button]="viewState == 'policy'"
+  >
     <mat-icon>layers</mat-icon>
     Policies
   </button>
 </div>
-<mat-card *ngIf="viewState == 'meta'">
+<mat-card appearance="outlined" *ngIf="viewState == 'meta'">
   <mat-card-content>
     <form #apiKeyForm="ngForm">
       <div class="status" *ngIf="apiKey._id">
@@ -73,7 +77,7 @@
   </mat-card-actions>
 </mat-card>
 
-<mat-card *ngIf="viewState == 'policy'">
+<mat-card appearance="outlined" *ngIf="viewState == 'policy'">
   <mat-card-content>
     <div class="policies" *ngIf="apiKey._id">
       <mat-list>

@@ -1,5 +1,5 @@
 import {BreakpointObserver} from "@angular/cdk/layout";
-import {ANALYZE_FOR_ENTRY_COMPONENTS, Component, ComponentFactoryResolver} from "@angular/core";
+import {Component, ComponentFactoryResolver} from "@angular/core";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {MatIconModule} from "@angular/material/icon";
 import {MatListModule} from "@angular/material/list";
@@ -226,7 +226,7 @@ describe("Home Layout", () => {
     });
 
     it("should render closed sidenav", fakeAsync(() => {
-      const sideNav = fixture.debugElement.nativeElement.querySelector("mat-sidenav");
+      const sideNav = fixture.debugElement.nativeElement.querySelector("mat-mdc-sidenav");
       expect(sideNav.getAttribute("ng-reflect-opened")).toBe("false");
       expect(sideNav.getAttribute("ng-reflect-mode")).toBe("over");
       expect(sideNav.getAttribute("role")).toBe("dialog");
@@ -240,12 +240,12 @@ describe("Home Layout", () => {
         ])
       );
       const toolbarButton = fixture.debugElement.nativeElement.querySelector(
-        "mat-toolbar > button"
+        "mat-mdc-toolbar > button"
       );
       toolbarButton.click();
       tick(200);
       fixture.detectChanges();
-      const sideNav = fixture.debugElement.nativeElement.querySelector("mat-sidenav");
+      const sideNav = fixture.debugElement.nativeElement.querySelector("mat-mdc-sidenav");
       expect(sideNav.getAttribute("style")).not.toContain("visibility:hidden");
     }));
   });
@@ -286,7 +286,7 @@ describe("Home Layout", () => {
     });
 
     it("should render opened sidenav", fakeAsync(() => {
-      const sideNav = fixture.debugElement.nativeElement.querySelector("mat-sidenav");
+      const sideNav = fixture.debugElement.nativeElement.querySelector("mat-mdc-sidenav");
       expect(sideNav.getAttribute("ng-reflect-opened")).toBe("true");
       expect(sideNav.getAttribute("ng-reflect-mode")).toBe("side");
       expect(sideNav.getAttribute("role")).toBe("navigation");
@@ -324,11 +324,6 @@ describe("Home Layout", () => {
         providers: [
           {
             provide: LAYOUT_ACTIONS,
-            useValue: DummyAction,
-            multi: true
-          },
-          {
-            provide: ANALYZE_FOR_ENTRY_COMPONENTS,
             useValue: DummyAction,
             multi: true
           }

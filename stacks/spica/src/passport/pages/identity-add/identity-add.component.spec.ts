@@ -11,7 +11,7 @@ import {MatTooltipModule} from "@angular/material/tooltip";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute, Router} from "@angular/router";
-import {PassportService} from "src/passport/services/passport.service";
+import {PassportService} from "@spica/client/src/passport/services/passport.service";
 import {of, throwError} from "rxjs";
 import {InputModule} from "../../../../packages/common/input/input.module";
 import {PreferencesService} from "../../../../packages/core/preferences/preferences.service";
@@ -290,7 +290,9 @@ describe("Identity Add Component", () => {
         of({...identity, _id: "1"})
       );
 
-      fixture.debugElement.query(By.css("mat-card mat-card-actions button")).nativeElement.click();
+      fixture.debugElement
+        .query(By.css("mat-mdc-card mat-card-actions button"))
+        .nativeElement.click();
       tick();
 
       expect(insertSpy).toHaveBeenCalledTimes(1);

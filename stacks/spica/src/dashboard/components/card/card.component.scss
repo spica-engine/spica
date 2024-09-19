@@ -2,6 +2,7 @@
   .card {
     justify-content: start;
   }
+
   mat-card-header {
     align-items: center;
     justify-content: center;
@@ -10,6 +11,7 @@
   mat-card-content {
     text-align: center;
   }
+
   mat-card-content {
     > span,
     button {
@@ -21,7 +23,8 @@
         width: 100%;
       }
     }
-    ::ng-deep .mat-form-field-wrapper {
+
+    ::ng-deep .mat-mdc-form-field-wrapper {
       padding: 0 !important;
       width: 100% !important;
     }
@@ -38,6 +41,7 @@
       padding: 0 !important;
     }
   }
+
   mat-card-actions {
     justify-content: center;
   }

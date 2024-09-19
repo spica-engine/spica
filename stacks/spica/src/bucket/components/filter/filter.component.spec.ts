@@ -219,7 +219,7 @@ describe("FilterComponent", () => {
     it("should render properties", () => {
       fixture.debugElement.query(By.css("mat-select")).nativeElement.click();
       fixture.detectChanges();
-      const properties = document.body.querySelectorAll(".mat-select-panel > mat-option");
+      const properties = document.body.querySelectorAll(".mat-mdc-select-panel > mat-option");
       expect(properties[0].textContent).toBe(" description ");
       expect(properties[1].textContent).toBe(" test ");
       expect(properties[2].textContent).toBe(" test1 ");
@@ -237,7 +237,7 @@ describe("FilterComponent", () => {
       fixture.debugElement.query(By.css("mat-select")).nativeElement.click();
       fixture.detectChanges();
       const property = document.body.querySelectorAll(
-        ".mat-select-panel > mat-option"
+        ".mat-mdc-select-panel > mat-option"
       )[1] as HTMLElement;
       property.click();
       fixture.detectChanges();
@@ -387,9 +387,9 @@ describe("FilterComponent", () => {
       fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
       fixture.detectChanges();
 
-      expect(fixture.debugElement.query(By.css("p.mat-error")).nativeElement.textContent).toContain(
-        "SyntaxError"
-      );
+      expect(
+        fixture.debugElement.query(By.css("p.mat-mdc-error")).nativeElement.textContent
+      ).toContain("SyntaxError");
 
       expect(fixture.componentInstance.filter).toEqual(undefined);
       expect(fixture.componentInstance.mongodbHistory).toEqual([]);
@@ -403,7 +403,7 @@ describe("FilterComponent", () => {
       tick(3001);
       fixture.detectChanges();
 
-      expect(fixture.debugElement.query(By.css("p.mat-error"))).toEqual(null);
+      expect(fixture.debugElement.query(By.css("p.mat-mdc-error"))).toEqual(null);
     }), 10000);
   });
 

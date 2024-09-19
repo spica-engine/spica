@@ -36,7 +36,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   updates: Map<string, number> = new Map<string, number>();
 
-  refresh: Subject<string> = new BehaviorSubject("");
+  refresh: Subject<string> = new BehaviorSubject(null);
   sorter: any = {_id: -1};
   cols: number = 5;
 
@@ -155,7 +155,7 @@ export class IndexComponent implements OnInit, OnDestroy {
             this.progress = Math.round((100 * event.loaded) / event.total);
           } else if (event.type === HttpEventType.Response) {
             this.progress = undefined;
-            this.refresh.next();
+            this.refresh.next(null);
           }
         },
         err => {
@@ -181,7 +181,7 @@ export class IndexComponent implements OnInit, OnDestroy {
             this.updates.set(storage._id, progress);
           } else if (event.type === HttpEventType.Response) {
             this.updates.delete(storage._id);
-            this.refresh.next();
+            this.refresh.next(null);
           }
         },
         err => {
@@ -195,7 +195,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   clearLastUpdates() {
     this.lastUpdates.clear();
-    this.refresh.next();
+    this.refresh.next(null);
   }
 
   delete(id: string) {
@@ -204,7 +204,7 @@ export class IndexComponent implements OnInit, OnDestroy {
       .toPromise()
       .then(() => {
         this.currentNode = this.currentNode.parent;
-        this.refresh.next();
+        this.refresh.next(null);
       });
   }
 
@@ -253,13 +253,13 @@ export class IndexComponent implements OnInit, OnDestroy {
     await Promise.all(
       Array.from(idsWillBeDeleted).map(id => this.storageService.delete(id).toPromise())
     );
-    this.refresh.next();
+    this.refresh.next(null);
   }
 
   sortStorage(value) {
     value.direction = value.direction === "asc" ? 1 : -1;
     this.sorter = {[value.name]: value.direction};
-    this.refresh.next();
+    this.refresh.next(null);
   }
 
   openEdit(storage: Storage): void {
@@ -272,7 +272,7 @@ export class IndexComponent implements OnInit, OnDestroy {
       })
       .afterClosed()
       .toPromise()
-      .then(() => this.refresh.next());
+      .then(() => this.refresh.next(null));
   }
 
   addDirectory(name: string) {
@@ -280,7 +280,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     return this.storageService
       .insertMany([dir] as any)
       .toPromise()
-      .then(() => this.refresh.next());
+      .then(() => this.refresh.next(null));
   }
 
   onNodeHighlighted(node: StorageNode) {
@@ -461,7 +461,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
     return this.updateStorageName(node, oldFullName, newFullName).then(() => {
       this.onRenameCancelled();
-      this.refresh.next();
+      this.refresh.next(null);
     });
   }
 
@@ -487,7 +487,9 @@ export class IndexComponent implements OnInit, OnDestroy {
 
     this.updateDDLists(event);
 
-    return this.updateStorageName(node, oldFullName, newFullName).then(() => this.refresh.next());
+    return this.updateStorageName(node, oldFullName, newFullName).then(() =>
+      this.refresh.next(null)
+    );
   }
 
   updateDDLists(event: CdkDragDrop<StorageNode[]>) {

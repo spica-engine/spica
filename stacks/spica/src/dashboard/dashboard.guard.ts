@@ -1,12 +1,5 @@
 import {Injectable} from "@angular/core";
-import {
-  ActivatedRouteSnapshot,
-  CanActivate,
-  CanDeactivate,
-  Router,
-  RouterStateSnapshot,
-  UrlTree
-} from "@angular/router";
+import {ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree} from "@angular/router";
 import {select, Store} from "@ngrx/store";
 import {first, map, switchMap, take} from "rxjs/operators";
 import {DashboardService} from "./services/dashboard.service";
@@ -19,7 +12,7 @@ import {getEmptyDashboard} from "./interfaces";
 import isEqual from "lodash-es/isEqual";
 
 @Injectable({providedIn: "root"})
-export class DashboardIndexGuard implements CanActivate {
+export class DashboardIndexGuard {
   constructor(
     private store: Store<fromDashboard.State>,
     private ds: DashboardService,
@@ -43,7 +36,7 @@ export class DashboardIndexGuard implements CanActivate {
 }
 
 @Injectable()
-export class DashboardCanDeactivate implements CanDeactivate<AddComponent> {
+export class DashboardCanDeactivate {
   awareDialogData = {
     icon: "help",
     title: "Confirmation",

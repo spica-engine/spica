@@ -364,7 +364,7 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   onDebouncedChangeEmitted() {
-    this.passport.refreshTokenSubject.next();
+    this.passport.refreshTokenSubject.next(null);
   }
 
   // FULLSCREEN CODE EDITOR
@@ -386,7 +386,7 @@ export class AddComponent implements OnInit, OnDestroy {
         this.changeDetector.detectChanges();
       }
 
-      const content = document.getElementsByClassName("mat-sidenav-content").item(0);
+      const content = document.getElementsByClassName("mat-mdc-sidenav-content").item(0);
 
       try {
         this.setBrowserDefaults();
@@ -412,7 +412,7 @@ export class AddComponent implements OnInit, OnDestroy {
     const codeActions = document.getElementsByClassName("code-actions").item(0);
     const codeEditor = document.getElementsByClassName("editor").item(0);
     const logs = document.getElementsByClassName("sidecar-log-view").item(0);
-    const content = document.getElementsByClassName("mat-sidenav-content").item(0);
+    const content = document.getElementsByClassName("mat-mdc-sidenav-content").item(0);
 
     return {codeActions, codeEditor, logs, content};
   }

@@ -5,7 +5,7 @@ $border-color: #e9eced;
   html.cdk-global-scrollblock {
     overflow: unset;
   }
-  .cdk-overlay-pane.builder .mat-dialog-container {
+  .cdk-overlay-pane.builder .mat-mdc-dialog-container {
     padding: 0;
     border-radius: 0;
   }
@@ -81,6 +81,7 @@ $border-color: #e9eced;
         &.add-for-of {
           mat-form-field {
             width: 100%;
+
             mat-select {
               mat-select-trigger > * {
                 vertical-align: middle;

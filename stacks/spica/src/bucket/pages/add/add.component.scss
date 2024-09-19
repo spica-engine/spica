@@ -3,7 +3,7 @@
   overflow: unset !important;
   width: 40px;
   border-radius: 25px !important;
-  .mat-menu-content {
+  .mat-mdc-menu-content {
     padding: 0 !important;
     button:not(:first-child) {
       margin-top: 4px;
@@ -27,10 +27,12 @@
         span {
           margin-left: 5px;
         }
-        mat-chip-list {
+
+        mat-chip-listbox {
           display: inline-block;
           margin-left: 10px;
-          mat-chip {
+
+          mat-chip-option {
             font-size: 11px;
             padding: 7px 10px;
             min-height: 20px;
@@ -53,8 +55,9 @@
     width: calc(100% - 60px);
     margin: 30px;
     margin-top: -85px;
+
     mat-card-content {
-      &.handset form {
+      x &.handset form {
         flex-flow: column;
       }
       form {

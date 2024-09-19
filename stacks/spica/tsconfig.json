@@ -9,7 +9,6 @@
     "sourceMap": true,
     "outDir": "../../dist/out-tsc",
     "moduleResolution": "node",
-    "target": "es2015",
     "module": "esnext",
     "baseUrl": "./",
     "lib": ["es2018", "dom"],
@@ -17,7 +16,8 @@
       "@spica-client/*": ["./packages/*", "./src/*"]
     },
     "resolveJsonModule": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "useDefineForClassFields": false
   },
   "files": ["src/main.ts", "src/polyfills.ts"],
   "exclude": ["src/**/*.worker.ts"],

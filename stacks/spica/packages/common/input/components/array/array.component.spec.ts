@@ -1,5 +1,5 @@
 import {CdkDragDrop, DragDropModule} from "@angular/cdk/drag-drop";
-import {ANALYZE_FOR_ENTRY_COMPONENTS, Component, forwardRef} from "@angular/core";
+import {Component, forwardRef} from "@angular/core";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {ControlValueAccessor, FormsModule, NgModel, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
@@ -28,7 +28,7 @@ function createEvent<T>(previousIndex: number, currentIndex: number): CdkDragDro
     previousContainer: undefined,
     isPointerOverContainer: true,
     distance: {x: 0, y: 0}
-  };
+  } as any;
 }
 
 @Component({
@@ -111,11 +111,6 @@ describe("Common#array", () => {
         {
           provide: InputResolver,
           useValue: inputResolver
-        },
-        {
-          provide: ANALYZE_FOR_ENTRY_COMPONENTS,
-          multi: true,
-          useValue: StringPlacer
         }
       ]
     }).compileComponents();
@@ -130,17 +125,17 @@ describe("Common#array", () => {
     it("should show title", () => {
       const title = (fixture.componentInstance.schema.title = "my title");
       fixture.detectChanges();
-      expect(fixture.debugElement.query(By.css("mat-card-title")).nativeElement.textContent).toBe(
-        title
-      );
+      expect(
+        fixture.debugElement.query(By.css("mat-mdc-card-title")).nativeElement.textContent
+      ).toBe(title);
     });
 
     it("should show description if provided", () => {
-      expect(fixture.debugElement.query(By.css("mat-card-subtitle"))).toBeNull();
+      expect(fixture.debugElement.query(By.css("mat-mdc-card-subtitle"))).toBeNull();
       const description = (fixture.componentInstance.schema.description = "my long description");
       fixture.detectChanges();
       expect(
-        fixture.debugElement.query(By.css("mat-card-subtitle")).nativeElement.textContent
+        fixture.debugElement.query(By.css("mat-mdc-card-subtitle")).nativeElement.textContent
       ).toBe(description);
     });
 
@@ -170,7 +165,7 @@ describe("Common#array", () => {
         By.css("div:first-of-type > button:not(:last-of-type)")
       );
       expect(buttons.map(b => b.nativeElement.textContent)).toEqual([" 1 X", " 2 X"]);
-      expect(buttons[0].nativeElement.classList).toContain("mat-primary");
+      expect(buttons[0].nativeElement.classList).toContain("mat-mdc-primary");
 
       expect(fixture.componentInstance._activeIndex).toBe(0);
       expect(
@@ -190,7 +185,7 @@ describe("Common#array", () => {
       fixture.detectChanges();
       tick();
 
-      expect(lastItemButton.nativeElement.classList).toContain("mat-primary");
+      expect(lastItemButton.nativeElement.classList).toContain("mat-mdc-primary");
       expect(placer.componentInstance.writeValue).toHaveBeenCalledTimes(3);
       expect(placer.componentInstance.writeValue).toHaveBeenCalledWith("test2");
 
@@ -234,7 +229,7 @@ describe("Common#array", () => {
       const itemButton = fixture.debugElement.query(
         By.css("div:first-of-type > button:first-of-type")
       );
-      expect(itemButton.nativeElement.classList).toContain("mat-primary");
+      expect(itemButton.nativeElement.classList).toContain("mat-mdc-primary");
       expect(fixture.componentInstance._values).toEqual([undefined]);
       expect(inputResolver.coerce).toHaveBeenCalledWith("string");
     });
@@ -271,7 +266,7 @@ describe("Common#array", () => {
         fixture.componentInstance.schema.uniqueItems = true;
         fixture.componentInstance.writeValue(["test2", "test1"]);
         fixture.detectChanges(false);
-        expect(fixture.debugElement.query(By.css("mat-error"))).toBeNull();
+        expect(fixture.debugElement.query(By.css("mat-mdc-error"))).toBeNull();
       });
 
       it("should show errors", fakeAsync(() => {
@@ -280,7 +275,7 @@ describe("Common#array", () => {
         fixture.detectChanges();
         tick();
         fixture.detectChanges();
-        expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
+        expect(fixture.debugElement.query(By.css("mat-mdc-error")).nativeElement.textContent).toBe(
           " All items in this property must be filled. "
         );
       }));
@@ -290,7 +285,7 @@ describe("Common#array", () => {
         fixture.componentInstance.schema.uniqueItems = true;
         fixture.componentInstance.writeValue(["test", "test1"]);
         fixture.detectChanges();
-        expect(fixture.debugElement.query(By.css("mat-error"))).toBeNull();
+        expect(fixture.debugElement.query(By.css("mat-mdc-error"))).toBeNull();
       });
 
       it("should show errors", fakeAsync(() => {
@@ -299,7 +294,7 @@ describe("Common#array", () => {
         fixture.detectChanges();
         tick();
         fixture.detectChanges();
-        expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
+        expect(fixture.debugElement.query(By.css("mat-mdc-error")).nativeElement.textContent).toBe(
           " All items in this property must be unique. "
         );
       }));
@@ -310,7 +305,7 @@ describe("Common#array", () => {
         fixture.componentInstance.schema.minItems = 2;
         fixture.componentInstance.writeValue(["test", "test1"]);
         fixture.detectChanges();
-        expect(fixture.debugElement.query(By.css("mat-error"))).toBeNull();
+        expect(fixture.debugElement.query(By.css("mat-mdc-error"))).toBeNull();
       });
 
       it("should show errors", fakeAsync(() => {
@@ -319,7 +314,7 @@ describe("Common#array", () => {
         fixture.detectChanges();
         tick();
         fixture.detectChanges();
-        expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
+        expect(fixture.debugElement.query(By.css("mat-mdc-error")).nativeElement.textContent).toBe(
           " This property must have at least 2 items. "
         );
       }));
@@ -330,7 +325,7 @@ describe("Common#array", () => {
         fixture.componentInstance.schema.maxItems = 2;
         fixture.componentInstance.writeValue(["test", "test"]);
         fixture.detectChanges();
-        expect(fixture.debugElement.query(By.css("mat-error"))).toBeNull();
+        expect(fixture.debugElement.query(By.css("mat-mdc-error"))).toBeNull();
       });
 
       it("should show errors", fakeAsync(() => {
@@ -339,7 +334,7 @@ describe("Common#array", () => {
         fixture.detectChanges();
         tick();
         fixture.detectChanges();
-        expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
+        expect(fixture.debugElement.query(By.css("mat-mdc-error")).nativeElement.textContent).toBe(
           " This property can have maximum 2 items. "
         );
       }));

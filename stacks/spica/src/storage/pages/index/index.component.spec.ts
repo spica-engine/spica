@@ -545,7 +545,7 @@ describe("Storage/IndexComponent", () => {
 
     it("should create parameter to sort descend by name", () => {
       (document.body.querySelector(
-        "div.mat-menu-content button:nth-child(1)"
+        "div.mat-mdc-menu-content button:nth-child(1)"
       ) as HTMLButtonElement).click();
       fixture.detectChanges();
 
@@ -556,7 +556,7 @@ describe("Storage/IndexComponent", () => {
 
     it("should create parameter to sort ascend by name", () => {
       (document.body.querySelector(
-        "div.mat-menu-content button:nth-child(2)"
+        "div.mat-mdc-menu-content button:nth-child(2)"
       ) as HTMLButtonElement).click();
       fixture.detectChanges();
 
@@ -567,7 +567,7 @@ describe("Storage/IndexComponent", () => {
 
     it("should create parameter to sort descend by date", () => {
       (document.body.querySelector(
-        "div.mat-menu-content button:nth-child(3)"
+        "div.mat-mdc-menu-content button:nth-child(3)"
       ) as HTMLButtonElement).click();
       fixture.detectChanges();
 
@@ -578,7 +578,7 @@ describe("Storage/IndexComponent", () => {
 
     it("should create parameter to sort ascend by name", () => {
       (document.body.querySelector(
-        "div.mat-menu-content button:nth-child(4)"
+        "div.mat-mdc-menu-content button:nth-child(4)"
       ) as HTMLButtonElement).click();
       fixture.detectChanges();
 

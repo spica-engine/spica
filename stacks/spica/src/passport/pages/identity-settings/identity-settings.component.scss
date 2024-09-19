@@ -45,17 +45,18 @@
         margin-right: 10px;
       }
     }
-    .mat-subheader {
+    .mat-mdc-subheader {
       padding: 0 !important;
     }
-    .mat-expansion-indicator {
+    .mat-mdc-expansion-indicator {
       height: 23px;
     }
+
     mat-list-item.validation {
       margin: 0 !important;
       padding: 0 !important;
     }
-    .mat-expansion-panel-header-description {
+    .mat-mdc-expansion-panel-header-description {
       flex-grow: initial !important;
     }
     .drag-box {

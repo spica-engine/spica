@@ -1,6 +1,7 @@
 :host {
   display: inline-block;
   border-radius: 5px;
+
   mat-slide-toggle {
     height: unset;
   }
@@ -15,7 +16,7 @@
 
   &.minimal-input-placer {
     mat-slide-toggle {
-      ::ng-deep span.mat-slide-toggle-content {
+      ::ng-deep span.mat-mdc-slide-toggle-content {
         display: none;
       }
     }

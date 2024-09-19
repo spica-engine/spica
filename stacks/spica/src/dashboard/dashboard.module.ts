@@ -15,7 +15,7 @@ import {BrowserModule} from "@angular/platform-browser";
 import {StoreModule} from "@ngrx/store";
 import {InputModule} from "@spica-client/common";
 import {BUILDLINK_FACTORY, LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
-import {ChartsModule} from "ng2-charts";
+import {NgChartsModule} from "ng2-charts";
 import {PassportService, PassportModule} from "../passport";
 import {DashboardRoutingModule} from "./dashboard-routing.module";
 import {DashboardViewComponent} from "./pages/dashboard-view/dashboard-view.component";
@@ -49,7 +49,6 @@ import {VersionControlComponent} from "./pages/versioncontrol/versioncontrol.com
 import {MatExpansionModule} from "@angular/material/expansion";
 import {provideAssetFactory, provideAssetConfigExporter, listResources} from "./providers/asset";
 import {ASSET_CONFIG_EXPORTER, ASSET_RESOURCE_LISTER} from "@spica-client/asset/interfaces";
-import {MuuriModule} from "muuri-angular";
 
 @NgModule({
   imports: [
@@ -61,7 +60,7 @@ import {MuuriModule} from "muuri-angular";
     DashboardRoutingModule,
     MatToolbarModule,
     MatIconModule,
-    ChartsModule,
+    NgChartsModule,
     MatPaginatorModule,
     MatFormFieldModule,
     MatInputModule,
@@ -85,8 +84,7 @@ import {MuuriModule} from "muuri-angular";
     MatProgressSpinnerModule,
     MatProgressBarModule,
     MatDividerModule,
-    MatExpansionModule,
-    MuuriModule
+    MatExpansionModule
   ],
   declarations: [
     DashboardComponent,
