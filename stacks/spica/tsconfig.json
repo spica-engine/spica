@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "target":"ES2022",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
