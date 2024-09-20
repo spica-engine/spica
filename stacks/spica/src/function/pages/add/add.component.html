@@ -124,7 +124,7 @@
                 </div>
               </ng-container>
             </div>
-            <mat-list-item class="triggers" [class.hidden]="!triggersEditMode[i]">
+            <div class="triggers" [class.hidden]="!triggersEditMode[i]">
               <ng-container *ngIf="information | async; let information">
                 <mat-form-field>
                   <mat-label>Handler</mat-label>
@@ -211,7 +211,7 @@
                   </span>
                 </ng-container>
               </ng-container>
-            </mat-list-item>
+            </div>
           </ng-container>
           <button type="button" mat-button class="new-trigger" (click)="addTrigger()">
             <mat-icon>add</mat-icon>Add New Trigger
