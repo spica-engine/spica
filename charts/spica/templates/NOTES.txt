@@ -1,0 +1,14 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+Web Controller is open at {{ .Values.application.publicHost }}{{ .Values.application.webBaseUrl }}
+
+Credentials are:
+  # Username: spica
+  # Password: {{ .Values.application.defaultPassword }}
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}

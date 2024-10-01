@@ -1,0 +1,45 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-application
+  namespace: {{.Release.Namespace}}
+  annotations:
+{{ toYaml .Values.ingress.annotations | indent 4 }}
+{{ if semverCompare "<1.18-0" .Capabilities.KubeVersion.GitVersion }}
+    kubernetes.io/ingress.class: {{ .Values.ingress.ingressClassName }}
+{{ end }}
+  labels:
+    app.kubernetes.io/name: application-ingress
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    app.kubernetes.io/managed-by: helm
+spec:
+{{ if semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion }}
+  ingressClassName: {{ .Values.ingress.ingressClassName }}
+{{ end }}
+  tls:
+{{ toYaml .Values.ingress.tls | indent 4 }}
+  rules:
+      {{ if .Values.ingress.host }}
+    - host: {{.Values.ingress.host}}
+      http:
+      {{ else }}
+    - http:
+      {{ end }}
+        paths:
+          - path: {{ .Values.application.webBaseUrl }}?(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Release.Name }}-application
+                port:
+                  number: 80
+          - path: {{ .Values.application.apiBaseUrl }}?(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Release.Name }}-application
+                port:
+                  number: 4300
