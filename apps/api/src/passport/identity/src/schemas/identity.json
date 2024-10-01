@@ -1,0 +1,27 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "http://spica.internal/passport/identity",
+	"type": "object",
+	"title": "The identity schema",
+	"required": [ "identifier" ],
+	"properties": {
+		"identifier": {
+			"type": "string",
+			"title": "Identifier of the identity",
+			"minLength": 3
+		},
+		"password": {
+			"type": "string",
+			"title": "Password of the identity",
+			"minLength": 3
+		},
+		"attributes":{
+			"type":"object",
+			"title": "Custom attributes of the identity"
+		},
+		"authFactor": {
+			"$ref": "http://spica.internal/passport/authfactor"
+		}
+	},
+	"additionalProperties": false
+}

@@ -1,0 +1,33 @@
+{
+  "$id": "http://spica.internal/function/enqueuer/http",
+  "title": "Http",
+  "description": "Http enqueuer for functions",
+  "type": "object",
+  "required": ["path", "method"],
+  "properties": {
+    "method": {
+      "title": "Method",
+      "type": "string",
+      "enum": ["All", "Get", "Post", "Put", "Delete", "Patch", "Head"],
+      "default": "Get"
+    },
+    "path": {
+      "title": "Path",
+      "type": "string",
+      "examples": [
+        "/v1/books",
+        "/v2/books",
+        "/v2beta1/books",
+        "/v1/authorize",
+        "/v2/authorize"
+      ],
+      "default": "/"
+    },
+    "preflight": {
+      "title": "Preflight (CORS)",
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "additionalProperties": false
+}
