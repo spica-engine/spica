@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "rootDir": ".",
     "module": "CommonJS",
     "declaration": true,
     "removeComments": true,
@@ -14,14 +15,10 @@
     "baseUrl": "./",
     "lib": ["es2018", "dom"],
     "paths": {
-      "@spica-server/*": [
-        "./packages/*",
-        "./stacks/api/*"
-      ],
-      "@spica/*": [
-        "./stacks/*"
-      ]
+      "@spica-server/*": ["libs/*", "apps/api/src/*"],
+      "@spica/*": ["apps/*"],
+      "@spica-devkit/*": ["apps/api/src/function/packages/*"]
     }
   },
-  "exclude": ["dist", "bazel-*"]
+  "exclude": ["node_modules", "tmp", "dist"]
 }

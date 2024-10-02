@@ -11,27 +11,10 @@
     "type": "git",
     "url": "https://github.com/spica-engine/spica.git"
   },
-  "workspaces": {
-    "packages": [
-      "stacks/api",
-      "stacks/migrate",
-      "stacks/spica"
-    ],
-    "nohoist": [
-      "*"
-    ]
-  },
-  "scripts": {
-    "bazel:format": "find . -type f \\( -name \"*.bzl\" -or -name WORKSPACE -or -name BUILD -or -name BUILD.bazel \\) ! -path \"*/node_modules/*\" | xargs buildifier -v --warnings=attr-cfg,attr-license,attr-non-empty,attr-output-default,attr-single-file,constant-glob,ctx-args,depset-iteration,depset-union,dict-concatenation,duplicated-name,filetype,git-repository,http-archive,integer-division,load,load-on-top,native-build,native-package,output-group,package-name,package-on-top,positional-args,redefined-variable,repository-name,same-origin-load,string-iteration,unused-variable",
-    "code:format": "yarn prettier --write 'packages/**/*.{css,scss,ts,js,html}' 'stacks/**/*.{css,scss,ts,js,html}' '!stacks/api/function/packages/database/src/mongo.ts'",
-    "code:format-check": "yarn prettier --check 'packages/**/*.{css,scss,ts,js,html}' 'stacks/**/*.{css,scss,ts,js,html}' '!stacks/api/function/packages/database/src/mongo.ts'",
-    "commit:format": "yarn code:format && yarn bazel:format",
-    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
-    "bazel": "bazelisk",
-    "postinstall": "patch-package",
-    "run-api": "bazel run //stacks/api:bin",
-    "run-cli": "bazel run //stacks/cli:bin"
-  },
+  "workspaces": [
+    "libs/*",
+    "apps/*"
+  ],
   "dependencies": {
     "@google-cloud/storage": "^5.0.1",
     "@graphql-tools/merge": "^8.2.1",
@@ -125,15 +108,9 @@
     "yargs": "15.3.1"
   },
   "devDependencies": {
-    "@bazel/bazelisk": "^1.11.0",
-    "@bazel/buildifier": "^4.2.4",
-    "@bazel/buildozer": "^4.2.4",
-    "@bazel/ibazel": "^0.15.10",
-    "@bazel/jasmine": "^4.6.0",
-    "@bazel/rollup": "^4.6.0",
-    "@bazel/typescript": "^4.6.0",
-    "@bazel/worker": "^4.6.0",
     "@nestjs/testing": "^7.0.13",
+    "@nx/node": "^19.8.2",
+    "@nx/webpack": "^19.8.2",
     "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^10.0.0",
@@ -166,6 +143,7 @@
     "jsqr": "^1.4.0",
     "jwt-decode": "^3.1.2",
     "mdast-util-toc": "^4.2.0",
+    "nx": "19.8.2",
     "pngjs": "^6.0.0",
     "prettier": "1.18.2",
     "remark": "^10.0.1",
