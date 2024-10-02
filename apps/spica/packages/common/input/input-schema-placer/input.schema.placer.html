@@ -1,0 +1,39 @@
+<mat-form-field *ngIf="!advancedOnly">
+  <mat-select
+    name="type"
+    placeholder="Select type"
+    #typeModel="ngModel"
+    [(ngModel)]="schema.type"
+    (ngModelChange)="onChangeFn(schema)"
+    required
+  >
+    <mat-option *ngFor="let inputType of inputTypes" [value]="inputType">
+      {{ inputType }}
+    </mat-option>
+  </mat-select>
+  <mat-error *ngIf="typeModel?.errors?.required">This field is required.</mat-error>
+</mat-form-field>
+<mat-form-field *ngIf="!advancedOnly">
+  <input
+    matInput
+    name="title"
+    placeholder="Title"
+    #titleModel="ngModel"
+    [(ngModel)]="schema.title"
+    (ngModelChange)="onChangeFn(schema)"
+  />
+</mat-form-field>
+<mat-form-field *ngIf="!advancedOnly">
+  <textarea
+    matInput
+    name="description"
+    placeholder="Description"
+    rows="1"
+    #descriptionModel="ngModel"
+    [(ngModel)]="schema.description"
+    (ngModelChange)="onChangeFn(schema)"
+  ></textarea>
+  <mat-hint align="end">{{ descriptionModel.value?.length || 0 }} / 50</mat-hint>
+</mat-form-field>
+<ng-content></ng-content>
+<ng-container *ngComponentOutlet="placer; injector: injector"></ng-container>

@@ -1,0 +1,18 @@
+:host {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-flow: column;
+  svg {
+    height: 100px;
+    width: 100px;
+  }
+  span {
+    h2,
+    h3 {
+      display: inline;
+      vertical-align: middle;
+    }
+  }
+}

@@ -1,0 +1,153 @@
+<h3>Edit Action</h3>
+<mat-divider></mat-divider>
+<div class="seperated-content">
+  <div class="includeds">
+    <mat-label>Included Resources</mat-label>
+    <form
+      (keydown.enter)="$event.preventDefault(); !includeForm.invalid && addInclude()"
+      name="includeForm"
+      #includeForm="ngForm"
+    >
+      <div
+        class="resource"
+        *ngFor="
+          let included of data.currentAction.resource.include;
+          index as resIndex;
+          trackBy: trackByFn
+        "
+      >
+        <ng-container *ngFor="let subResource of resource; index as subResIndex; last as isLast">
+          <mat-form-field *ngIf="subResource.source | async; let values">
+            <mat-label>{{ subResource.title }}</mat-label>
+            <mat-select
+              [name]="'includedResourceSelection' + resIndex + '' + subResIndex"
+              [ngModel]="selectionValue('include', resIndex, subResIndex, values)"
+              (ngModelChange)="onSubResourceChange('include', resIndex, subResIndex, $event._id)"
+              required
+              [disabled]="!!data.currentAction.resource.exclude?.length && isLast"
+            >
+              <mat-option *ngFor="let value of values" class="mat-accent" [value]="value">{{
+                value[subResource.primary] || value._id
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field *ngIf="!subResource.source">
+            <mat-label>{{ subResource.title }}</mat-label>
+            <input
+              matInput
+              required
+              [name]="'includedResourceInput' + resIndex + '' + subResIndex"
+              #includedResource="ngModel"
+              [ngModel]="data.currentAction.resource.include[resIndex]?.split('/')[subResIndex]"
+              (ngModelChange)="onSubResourceChange('include', resIndex, subResIndex, $event)"
+              [disabled]="data.currentAction.resource.exclude?.length && isLast"
+            />
+          </mat-form-field>
+        </ng-container>
+        <div class="delete-button">
+          <button
+            mat-button
+            [disabled]="data.currentAction.resource.include.length == 1"
+            color="warn"
+            (click)="data.currentAction.resource.include.splice(resIndex, 1)"
+          >
+            <mat-icon>
+              delete
+            </mat-icon>
+          </button>
+        </div>
+      </div>
+      <button
+        type="submit"
+        [disabled]="includeForm.invalid"
+        class="add-resource-button"
+        mat-button
+        (click)="addInclude()"
+      >
+        Add resource <mat-icon>add</mat-icon>
+      </button>
+    </form>
+  </div>
+  <div class="excludeds">
+    <mat-label>Excluded Resources</mat-label>
+    <form
+      (keydown.enter)="$event.preventDefault(); !excludeForm.invalid && addExclude()"
+      name="excludeForm"
+      #excludeForm="ngForm"
+    >
+      <div
+        class="resource"
+        *ngFor="
+          let excluded of data.currentAction.resource.exclude;
+          index as resIndex;
+          trackBy: trackByFn
+        "
+      >
+        <ng-container *ngFor="let subResource of resource; index as subResIndex">
+          <mat-form-field *ngIf="subResource.source | async; let values">
+            <mat-label>{{ subResource.title }}</mat-label>
+            <mat-select
+              required
+              [name]="'excludedResourceSelection' + resIndex + '' + subResIndex"
+              [ngModel]="selectionValue('exclude', resIndex, subResIndex, values)"
+              (ngModelChange)="onSubResourceChange('exclude', resIndex, subResIndex, $event._id)"
+            >
+              <mat-option *ngFor="let value of values" class="mat-accent" [value]="value">{{
+                value[subResource.primary] || value._id
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field *ngIf="!subResource.source">
+            <mat-label>{{ subResource.title }}</mat-label>
+            <input
+              matInput
+              required
+              [name]="'excludedResource' + resIndex + '' + subResIndex"
+              #excludedResource="ngModel"
+              [ngModel]="data.currentAction.resource.exclude[resIndex].split('/')[subResIndex]"
+              (ngModelChange)="onSubResourceChange('exclude', resIndex, subResIndex, $event)"
+            />
+          </mat-form-field>
+        </ng-container>
+        <div class="delete-button">
+          <button
+            mat-button
+            [disabled]="data.currentAction.resource.exclude.length == 1"
+            color="warn"
+            (click)="data.currentAction.resource.exclude.splice(resIndex, 1)"
+          >
+            <mat-icon>
+              delete
+            </mat-icon>
+          </button>
+        </div>
+      </div>
+      <button
+        type="submit"
+        [disabled]="excludeForm.invalid"
+        class="add-resource-button"
+        mat-button
+        (click)="addExclude()"
+      >
+        Add resource <mat-icon>add</mat-icon>
+      </button>
+    </form>
+  </div>
+</div>
+<mat-divider></mat-divider>
+<div class="action-buttons">
+  <button
+    mat-button
+    [disabled]="includeForm.invalid || excludeForm.invalid"
+    (click)="copyResources()"
+  >
+    Copy Resources To All Actions
+  </button>
+  <button
+    mat-button
+    [disabled]="includeForm.invalid || excludeForm.invalid"
+    (click)="dialogRef.close()"
+  >
+    Save
+  </button>
+</div>

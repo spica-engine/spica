@@ -1,0 +1,26 @@
+<mat-form-field>
+  <mat-label>{{ schema.title }}</mat-label>
+  <input
+    matInput
+    type="number"
+    inputmode="numeric"
+    [name]="schema.$name"
+    [disabled]="disabled"
+    [required]="schema.$required"
+    [min]="schema.minimum"
+    [max]="schema.maximum"
+    ngModelParent
+    #model="ngModel"
+    [ngModel]="value"
+    (ngModelChange)="_onChangeFn($event)"
+    (blur)="_onTouchedFn()"
+  />
+  <mat-hint *ngIf="schema.description">{{ schema.description }}</mat-hint>
+  <mat-error *ngIf="model?.errors?.required">This property is required.</mat-error>
+  <mat-error *ngIf="model?.errors?.min">
+    This property must be greater than {{ model.errors.min.min }}.
+  </mat-error>
+  <mat-error *ngIf="model?.errors?.max">
+    This property must be less than {{ model.errors.max.max }}.
+  </mat-error>
+</mat-form-field>

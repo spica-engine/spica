@@ -1,0 +1,19 @@
+<button
+  mat-icon-button
+  [class.mat-flat-button]="dark$ | async"
+  [matMenuTriggerFor]="identityMenu"
+  [matTooltip]="identity.identifier"
+>
+  <mat-icon>person</mat-icon>
+  <mat-menu #identityMenu="matMenu" class="mat-elevation-z25">
+    <div mat-menu-item>
+      <ng-container *ngComponentOutlet="schemeSwitcherComponent"> </ng-container>
+    </div>
+    <mat-divider></mat-divider>
+
+    <button mat-menu-item [routerLink]="['passport', 'identity', identity._id, 'edit']">
+      Profile
+    </button>
+    <button mat-menu-item (click)="unidentify()">Logout</button>
+  </mat-menu>
+</button>

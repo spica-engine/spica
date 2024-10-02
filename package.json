@@ -114,6 +114,7 @@
     "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^10.0.0",
+    "@types/babel__traverse": "7.18.2",
     "@types/css-tree": "^1.0.0",
     "@types/deep-diff": "^1.0.0",
     "@types/diff-match-patch": "^1.0.32",

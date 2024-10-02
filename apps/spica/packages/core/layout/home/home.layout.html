@@ -1,0 +1,118 @@
+<mat-sidenav-container>
+  <mat-sidenav
+    #drawer
+    [disableClose]="(isHandset$ | async) ? 'false' : 'true'"
+    class="sidenav route-side-nav"
+    fixedInViewport="true"
+    [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+    [mode]="(isHandset$ | async) ? 'over' : 'side'"
+    [opened]="!(isHandset$ | async)"
+  >
+    <section class="routes">
+      <mat-nav-list class="iconlist">
+        <mat-list-item class="logo" disableRipple>
+          <img src="assets/astro-composer.svg" />
+        </mat-list-item>
+        <mat-list-item
+          disableRipple
+          *ngFor="let category of  categories$ | async;"
+          [class.active]="(currentCategory | async).category === category.category"
+          (click)="currentCategory.next(category)"
+          [matTooltip]="category.category"
+          matTooltipPosition="below"
+        >
+          <mat-icon>{{ category.icon }}</mat-icon>
+        </mat-list-item>
+
+        <mat-list-item disableRipple *ngIf="!(isHandset$ | async)" (click)="toggle()">
+          <mat-icon *ngIf="isSidebarReady">{{expanded ? 'chevron_left': 'chevron_right'}}</mat-icon>
+        </mat-list-item>
+
+        <mat-list-item disableRipple class="iconlist-below">
+          <mat-nav-list class="iconlist_sub" *ngIf="isSidebarReady">
+            <mat-list-item
+              matTooltip="Version Control"
+              [routerLink]="['/versioncontrol']"
+              disableRipple
+            >
+              <mat-icon>account_tree</mat-icon>
+            </mat-list-item>
+          </mat-nav-list>
+        </mat-list-item>
+      </mat-nav-list>
+      <mat-nav-list class="routerlist" *ngIf="currentCategory | async as currentCategory">
+        <h4>
+          {{ currentCategory.category }}
+          <div *ngIf="currentCategory.children.items" class="subcategory-items">
+            <button
+              *ngFor="let subCategory of filterArrayByDisplay(currentCategory.children.items,'row')"
+              mat-icon-button
+              [routerLink]="subCategory.path"
+              routerLinkActive="active"
+              canInteract="subCategory.data?.action"
+              [matTooltip]="subCategory.display"
+            >
+              <mat-icon>{{subCategory.icon}}</mat-icon>
+            </button>
+
+            <ng-container
+              *ngIf="filterArrayByDisplay(currentCategory.children.items,'menu').length>1"
+            >
+              <button mat-icon-button [matMenuTriggerFor]="menu">
+                <mat-icon>{{currentCategory.children.icon}}</mat-icon>
+              </button>
+              <mat-menu #menu="matMenu">
+                <button
+                  mat-menu-item
+                  *ngFor="let subCategory of filterArrayByDisplay(currentCategory.children.items,'menu')"
+                  [routerLink]="subCategory.path"
+                  routerLinkActive="active"
+                  canInteract="subCategory.data.action"
+                >
+                  {{subCategory.display}}
+                </button>
+              </mat-menu>
+            </ng-container>
+          </div>
+        </h4>
+
+        <ng-container #placeholder></ng-container>
+      </mat-nav-list>
+    </section>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <mat-toolbar>
+      <button
+        type="button"
+        mat-icon-button
+        (click)="drawer.toggle(); expanded = true"
+        *ngIf="isHandset$ | async"
+      >
+        <mat-icon>sort</mat-icon>
+      </button>
+      <span></span>
+      <toolbar-action></toolbar-action>
+      <div class="toolbar" *ngIf="components">
+        <div>
+          <ng-container
+            [ngTemplateOutlet]="drawComponents"
+            [ngTemplateOutletContext]="{components:filterComponentsByPosition('left')}"
+          ></ng-container>
+        </div>
+        <div>
+          <ng-container
+            [ngTemplateOutlet]="drawComponents"
+            [ngTemplateOutletContext]="{components:filterComponentsByPosition('right')}"
+          ></ng-container>
+        </div>
+
+        <ng-template #drawComponents let-components="components">
+          <ng-container *ngFor="let item of components">
+            <ng-container *ngComponentOutlet="item.component"></ng-container>
+          </ng-container>
+        </ng-template>
+      </div>
+    </mat-toolbar>
+    <div class="slot" slot="content"></div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

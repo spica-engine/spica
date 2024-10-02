@@ -1,0 +1,280 @@
+::ng-deep .bucket-filter-menu {
+  overflow: unset !important;
+  max-width: unset !important;
+  width: 700px;
+  .mat-menu-content {
+    padding: 10px 18px;
+  }
+}
+
+:host {
+  div.actions-line {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 0px 16px;
+    .filters {
+      display: flex;
+    }
+    span:first-of-type {
+      h6 {
+        margin: 0px;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        line-height: 60px;
+        .mat-icon {
+          font-size: 17px;
+        }
+        mat-chip-list {
+          margin-right: 10px;
+          mat-chip {
+            font-size: 11px;
+            padding: 7px 10px;
+            min-height: 20px;
+            height: 22px;
+            line-height: normal;
+          }
+        }
+      }
+    }
+    mat-form-field {
+      margin-top: -0.65em;
+      margin-bottom: -1.34375em;
+    }
+  }
+  ::ng-deep div.monaco-editor {
+    display: none;
+  }
+  div.data-guide {
+    a,
+    button {
+      border-color: var(--primary-400);
+    }
+    .guide {
+      z-index: 10;
+      transition: all 1s;
+      position: absolute;
+      left: 0px;
+      top: 0px;
+      height: 100vh;
+      width: 100%;
+      min-width: 300px;
+      display: flex;
+      transform: translateX(0%);
+      .title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        button {
+          margin-left: 10px;
+        }
+      }
+      .input {
+        display: flex;
+        flex-direction: row-reverse;
+        align-items: flex-start;
+        padding: 10px 20px;
+        a {
+          margin-right: 30px;
+        }
+      }
+      .backdrop {
+        transition: all 1s;
+        flex: 1;
+        background-color: rgba(0, 0, 0, 0.4);
+        transform: translateX(0%);
+        z-index: 1;
+      }
+      &.hide {
+        left: 0px;
+        transform: translateX(100%);
+        .backdrop {
+          transform: translateX(100%);
+        }
+      }
+      .content {
+        z-index: 5;
+        width: 70%;
+        min-width: 300px;
+        display: flex;
+        flex-direction: column;
+        background: var(--primary-800);
+        color: var(--primary-100);
+        height: 100%;
+        overflow: auto;
+        .item {
+          border-bottom: 1px solid var(--primary-400);
+          padding: 20px;
+        }
+
+        ::ng-deep mat-form-field {
+          * {
+            color: var(--primary-100);
+          }
+          .mat-form-field-outline {
+            background: transparent;
+          }
+        }
+      }
+      .guide-link {
+        display: block;
+        margin-bottom: 10px;
+        .description {
+          line-height: 1.5rem;
+        }
+        .link {
+          line-height: 1.5em;
+          margin: 0px;
+          font-size: 0.95rem;
+          code {
+            border-radius: 4px;
+          }
+        }
+      }
+      pre.guide-response {
+        font-size: 0.95rem;
+        border-radius: 4px;
+        line-height: 1.5em;
+        margin: 0px;
+      }
+    }
+    mat-card {
+      overflow: auto;
+      border: 16px solid transparent;
+      padding: 0px;
+      margin: 0px 16px;
+      table {
+        width: 100%;
+        overflow: auto;
+        .select {
+          width: 75px;
+          min-width: 75px;
+        }
+        .mat-column---spicainternal_id {
+          left: 75px !important;
+        }
+        th:not(.select):not(:last-of-type) {
+          position: relative;
+          padding-left: 5px;
+          &:not(.mat-column---spicainternal_id) {
+            &:after {
+              content: "||";
+              position: absolute;
+              right: 2px;
+              top: 10px;
+              opacity: 0;
+            }
+            &:hover::after {
+              opacity: 1;
+            }
+          }
+          button {
+            position: absolute;
+            right: 6px;
+            top: -4px;
+          }
+        }
+        tr {
+          height: 40px !important;
+          > th:last-of-type {
+            padding-right: 0;
+            width: 200px;
+            > div {
+              color: var(--foreground-text);
+              display: flex;
+              align-items: center;
+              min-width: 100px;
+              justify-content: center;
+              cursor: pointer !important;
+              > mat-icon {
+                font-size: 1.4rem;
+                width: 1.4rem;
+                height: 1.4rem;
+                margin-right: 5px;
+              }
+            }
+          }
+          > *:last-of-type {
+            text-align: right;
+          }
+          &:hover {
+            td.mat-column---spicainternal_select {
+              button {
+                opacity: 1;
+              }
+            }
+          }
+        }
+        th {
+          mat-icon {
+            width: 16px;
+            height: 16px;
+            font-size: 16px;
+            margin-right: 8px;
+          }
+        }
+
+        td.mat-cell {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          .cell {
+            padding-right: 5px;
+            padding-left: 5px;
+          }
+          &.mat-column---spicainternal_id {
+            padding-left: 5px;
+            padding-right: 5px;
+            border-right: 1px solid var(--foreground-divider);
+            width: 200px;
+            min-width: 200px;
+          }
+          &.mat-column---spicainternal_new_property {
+            border-left: 1px solid var(--foreground-divider);
+            padding: 0px 10px;
+            border-bottom-color: transparent;
+            background-color: var(--background-card) !important;
+          }
+          &.mat-column---spicainternal_select {
+            button {
+              margin-left: 8px;
+              opacity: 0;
+              transition: opacity 0.3s ease;
+            }
+          }
+        }
+        td.mat-cell:not(.mat-column---spicainternal_select) {
+          max-width: 0;
+          &.editable {
+            cursor: pointer;
+            &:hover {
+              border: 1px solid var(--accent-900);
+            }
+          }
+
+          .cell {
+            display: inline-flex;
+            width: 100%;
+          }
+
+          .input-placer {
+            display: inline-block;
+            width: 100%;
+            ::ng-deep {
+              ng-component {
+                width: 100%;
+                display: inline-block;
+                mat-form-field {
+                  margin-top: -0.45em;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

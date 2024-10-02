@@ -1,0 +1,46 @@
+@import url(https://cdn.jsdelivr.net/npm/firacode@3.1.0/distr/fira_code.min.css);
+
+:root:not(.dark) :host ::ng-deep {
+  .mtk20,
+  .mtk23 {
+    color: #dd6546;
+  }
+
+  .mtk1 {
+    color: #625666;
+  }
+  .mtk6 {
+    color: #4a91e2;
+  }
+  .monaco-editor .view-overlays .current-line {
+    border: 2px solid #eeeeee;
+  }
+}
+
+:host ::ng-deep {
+  display: block;
+  min-height: 100px;
+  width: 100%;
+  .overflow-guard {
+    border-radius: 5px;
+  }
+
+  .line-numbers {
+    color: --primary-50;
+  }
+
+  .monaco-editor,
+  .monaco-editor-background,
+  .monaco-editor .inputarea.ime-input,
+  .monaco-editor .margin {
+    background-color: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
+  }
+
+  .monaco-editor .view-overlays .current-line {
+    border: 2px solid var(--primary-A700);
+  }
+  .monaco-editor .curent-line {
+    color: red;
+    background-color: red;
+  }
+}

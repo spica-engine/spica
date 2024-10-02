@@ -1,0 +1,111 @@
+<ng-container *ngIf="schema$ | async; let schema">
+  <section>
+    <button
+      *ngIf="!value || value.length == 0"
+      mat-button
+      [matMenuTriggerFor]="selector"
+      (click)="refresh.next()"
+    >
+      <mat-icon>{{ schema?.icon }}</mat-icon>
+      Select from {{ schema?.title }}
+    </button>
+    <div>
+      <button
+        *ngFor="let row of _oneToManyRelation ? value : value ? [value] : []"
+        mat-button
+        mat-flat-button
+        [matTooltip]="schema.primary + ' of the row'"
+        [routerLink]="['/bucket', schema._id, row._id || row]"
+      >
+        <mat-icon>{{ schema.icon }}</mat-icon> {{ row[schema.primary] || row }}
+      </button>
+    </div>
+
+    <ng-container *ngIf="value && value.length != 0">
+      <button
+        mat-icon-button
+        mat-flat-button
+        [matMenuTriggerFor]="selector"
+        (click)="refresh.next()"
+      >
+        <mat-icon>edit</mat-icon>
+      </button>
+      <button mat-icon-button mat-flat-button matTooltip="Clear selected rows" (click)="clear()">
+        <mat-icon>clear_all</mat-icon>
+      </button>
+    </ng-container>
+  </section>
+  <mat-hint>{{ _schema.description }}</mat-hint>
+</ng-container>
+
+<mat-menu #selector class="mat-elevation-z24 relation-picker">
+  <mat-card class="mat-elevation-z0">
+    <mat-card-subtitle>
+      <span>Select {{ _oneToManyRelation ? "some" : "a" }} {{ (schema$ | async)?.title }}</span>
+      <button
+        mat-icon-button
+        matTooltip="Filter data"
+        [matMenuTriggerFor]="filterMenu"
+        [color]="filterer.active ? 'accent' : ''"
+        (click)="$event.stopPropagation()"
+      >
+        <mat-icon>filter_list</mat-icon>
+        <mat-menu #filterMenu="matMenu">
+          <bucket-filter
+            #filterer
+            [filter]="filter"
+            [schema]="schema$ | async"
+            (click)="$event.stopPropagation()"
+            (filterChange)="
+              this.filter = $event || {}; refresh.next(this.filter); filterMenu.close.emit()
+            "
+          ></bucket-filter>
+        </mat-menu>
+      </button>
+    </mat-card-subtitle>
+    <mat-card-content>
+      <mat-spinner *ngIf="isDataPending" color="accent" diameter="25"></mat-spinner>
+      <mat-table
+        [style.display]="isDataPending ? 'none' : 'initial'"
+        [dataSource]="data$"
+        (click)="$event.stopPropagation()"
+      >
+        <ng-container
+          *ngFor="let property of (schema$ | async)?.properties | keyvalue"
+          [matColumnDef]="property.key"
+        >
+          <mat-header-cell *matHeaderCellDef>
+            {{ property.value.title }}
+          </mat-header-cell>
+          <mat-cell *matCellDef="let row"> {{ row[property.key] }} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef></mat-header-cell>
+          <mat-cell *matCellDef="let row">
+            <button
+              mat-icon-button
+              (click)="_selectRow(row); _oneToManyRelation ? $event.stopPropagation() : undefined"
+              [class.selected]="
+                _oneToManyRelation
+                  ? (value | map: '_id').indexOf(row._id) > -1
+                  : value?._id == row._id
+              "
+            >
+              <mat-icon>check</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedProperties"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedProperties"></mat-row>
+      </mat-table>
+    </mat-card-content>
+    <mat-card-footer>
+      <mat-paginator
+        [pageSize]="10"
+        [pageSizeOptions]="[5, 10, 25, 100]"
+        (click)="$event.stopPropagation()"
+      ></mat-paginator>
+    </mat-card-footer>
+  </mat-card>
+</mat-menu>

@@ -1,0 +1,23 @@
+<mat-form-field>
+  <mat-label>{{ schema.title }}</mat-label>
+  <mat-select
+    [name]="schema.$name"
+    [disabled]="disabled"
+    (blur)="_onTouchedFn()"
+    [(ngModel)]="_value"
+    (ngModelChange)="_onChangeFn($event)"
+    multiple
+    [maxItems]="schema.maxItems"
+  >
+    <mat-option
+      #option
+      [disabled]="schema.maxItems && _value?.length == schema.maxItems && !option.selected"
+      class="mat-accent"
+      *ngFor="let item of schema.items.enum"
+      [value]="item"
+    >
+      {{ item }}
+    </mat-option>
+  </mat-select>
+  <mat-hint *ngIf="schema.description">{{ schema.description }}</mat-hint>
+</mat-form-field>

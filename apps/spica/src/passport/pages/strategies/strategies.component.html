@@ -1,0 +1,72 @@
+<ng-template #toolbar>
+  <span>
+    <h4>
+      <mat-icon>linear_scale</mat-icon>
+      <span>Strategies</span>
+    </h4>
+    <h6>
+      A strategy helps you to enable a single-sign on authentication to Spica. Once you create a
+      strategy, your users will be able to login via a 3rd party service.
+    </h6>
+  </span>
+  <button mat-button canInteract="passport:strategy:update" routerLink="/passport/strategies/add">
+    <mat-icon>add</mat-icon>
+    Add New
+  </button>
+</ng-template>
+
+<mat-card class="mat-elevation-z25">
+  <mat-card-content>
+    <mat-table [dataSource]="strategies$">
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+        <mat-cell *matCellDef="let strategy">
+          <mat-icon>{{ strategy.icon }}</mat-icon> {{ strategy.name }}
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="title">
+        <mat-header-cell *matHeaderCellDef>Title</mat-header-cell>
+        <mat-cell *matCellDef="let strategy">{{ strategy.title }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell *matCellDef="let strategy">
+          <button
+            mat-icon-button
+            canInteract="passport:strategy:update"
+            [resource]="strategy._id"
+            [routerLink]="[strategy._id, 'edit']"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            canInteract="passport:strategy:delete"
+            [resource]="strategy._id"
+            color="warn"
+            [matAwareDialog]="{
+              title: 'Confirmation',
+              templateOrDescription: dialogTemplate,
+              answer: strategy.name
+            }"
+            (confirm)="delete(strategy._id)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    </mat-table>
+  </mat-card-content>
+</mat-card>
+
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action will <b>permanently</b> delete this strategy.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>

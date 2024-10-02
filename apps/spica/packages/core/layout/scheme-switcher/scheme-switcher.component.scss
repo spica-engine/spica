@@ -1,0 +1,44 @@
+:host {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  > div {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    .switcher {
+      position: relative;
+      height: 22px;
+      width: 44px;
+      border-radius: 100px;
+      margin-left: 10px;
+    }
+    mat-icon {
+      margin: 0;
+      border-radius: 100%;
+      color: white !important;
+      font-size: 1.3rem;
+      padding: 2px;
+      position: absolute;
+      z-index: 2;
+      transition: all 0.3s ease;
+    }
+    &.Light {
+      mat-icon {
+        left: 3px;
+      }
+      .switcher {
+        background: var(--primary-400);
+      }
+    }
+    &.Dark {
+      .switcher {
+        background: var(--accent-A200);
+      }
+      mat-icon {
+        left: 16px;
+        transform: rotateY(180deg);
+      }
+    }
+  }
+}

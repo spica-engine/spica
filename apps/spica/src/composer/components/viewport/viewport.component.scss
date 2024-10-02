@@ -1,0 +1,10 @@
+:host {
+  display: block;
+  iframe {
+    display: block;
+    width: 100%;
+    border: none;
+    will-change: height;
+    transition: height 1s ease-in-out;
+  }
+}

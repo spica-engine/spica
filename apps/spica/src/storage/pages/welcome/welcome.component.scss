@@ -1,0 +1,14 @@
+:host {
+  display: block;
+  mat-toolbar {
+    height: 300px;
+    padding: 0 10%;
+    justify-content: center;
+    mat-toolbar-row {
+      height: auto;
+    }
+    h4 {
+      font-size: 14px;
+    }
+  }
+}

@@ -1,0 +1,382 @@
+<div menu class="mat-elevation-z1" [class.visibility-menu]="menuVisibility">
+  <!--   [ngStyle]="{
+    '--compose-color': currentPalette?.colors.primary
+  }" -->
+  <div branding>
+    <mat-icon>view_carousel</mat-icon>
+  </div>
+  <div pages>
+    <button
+      [disabled]="state < ComposerState.Ready"
+      *ngFor="let page of $pages | async"
+      mat-icon-button
+      [class.current]="route == page.path"
+      (click)="route = page.path; source = page.source"
+      [matTooltip]="page.component"
+      matTooltipPosition="right"
+      matTooltipShowDelay="700"
+    >
+      <mat-icon>view_agenda</mat-icon>
+      <span
+        (click)="deleteOpenDialog()"
+        *ngIf="route == page.path && route.path != ''"
+        class="delete-sub-page"
+        ><mat-icon>clear</mat-icon></span
+      >
+    </button>
+    <button
+      [disabled]="state < ComposerState.Ready"
+      mat-icon-button
+      mat-stroked-button
+      [matMenuTriggerFor]="addPageMenu"
+      matTooltip="Add new"
+      matTooltipPosition="right"
+    >
+      <mat-icon>add</mat-icon>
+    </button>
+    <mat-menu #addPageMenu="matMenu" class="add-page-menu mat-elevation-z1">
+      <form #addPageForm="ngForm" (click)="$event.stopPropagation()">
+        <mat-form-field>
+          <input
+            matInput
+            ngModel
+            #nameField="ngModel"
+            name="name"
+            placeholder="Page name"
+            required
+            minlength="3"
+            maxlength="30"
+          />
+          <mat-error *ngIf="nameField?.errors?.required">Name is required.</mat-error>
+          <mat-error *ngIf="nameField?.errors?.minlength"
+            >Name must be greater than
+            {{ nameField?.errors.minlength.requiredLength }}
+            characters.</mat-error
+          >
+          <mat-error *ngIf="nameField?.errors?.maxlength"
+            >Name must be less than
+            {{ nameField?.errors.maxlength.requiredLength }}
+            characters.</mat-error
+          >
+        </mat-form-field>
+        <mat-form-field>
+          <input matInput ngModel #routeField="ngModel" name="route" placeholder="Route" />
+          <mat-hint>If empty it will be shown as main page.</mat-hint>
+        </mat-form-field>
+
+        <button
+          [disabled]="addPageForm.invalid"
+          mat-button
+          (click)="
+            addPage(nameField.value, routeField.value); nameField.reset(); routeField.reset()
+          "
+        >
+          Add <mat-icon>chevron_right</mat-icon>
+        </button>
+      </form>
+    </mat-menu>
+  </div>
+
+  <div actions>
+    <button
+      [disabled]="state != ComposerState.Started"
+      mat-icon-button
+      (click)="menuVisibility = !menuVisibility"
+    >
+      <mat-icon>visibility</mat-icon>
+    </button>
+
+    <button
+      [disabled]="state != ComposerState.Started"
+      mat-icon-button
+      matTooltip="Publish"
+      matTooltipPosition="right"
+      [matMenuTriggerFor]="publishMenu"
+    >
+      <mat-icon>publish</mat-icon>
+      <mat-menu
+        #publishMenu="matMenu"
+        backdropClass="publish-menu"
+        overlapTrigger="false"
+        xPosition="after"
+        yPosition="above"
+      >
+        <button (click)="openBuildDialog()" mat-menu-item><mat-icon>web</mat-icon> Web</button>
+        <button disabled mat-menu-item><mat-icon>mobile_screen_share</mat-icon> Mobile</button>
+      </mat-menu>
+    </button>
+
+    <button
+      mat-icon-button
+      [matMenuTriggerFor]="fontMenu"
+      [disabled]="state != ComposerState.Started"
+    >
+      <mat-icon>font_download</mat-icon>
+      <mat-menu #fontMenu="matMenu" class="font-menu" yPosition="above">
+        <div mat-menu-item *ngFor="let f of fonts" [style.font-family]="f.name" (click)="font = f">
+          <link [attr.href]="sanitizer.bypassSecurityTrustResourceUrl(f.src)" rel="stylesheet" />
+          <h4>{{ f.name }}</h4>
+          <h5>
+            <span>{{ alphabet | lowercase }}</span>
+            <span>{{ alphabet | uppercase }}</span>
+          </h5>
+        </div>
+      </mat-menu>
+    </button>
+
+    <button
+      [disabled]="state != ComposerState.Started"
+      mat-icon-button
+      [matMenuTriggerFor]="paletteMenu"
+    >
+      <mat-icon>color_lens</mat-icon>
+      <mat-menu #paletteMenu="matMenu" class="palette-menu" overlapTrigger="false">
+        <ng-template matMenuContent let-target="target">
+          <div mat-menu-item>
+            <h5>Custom</h5>
+            <div class="custom-circles">
+              <div style="background-color:red" class="circle"></div>
+              <div style="background-color:red" class="circle"></div>
+              <div style="background-color:red" class="circle"></div>
+              <div style="background-color:red" class="circle"></div>
+              <div style="background-color:red" class="circle"></div>
+            </div>
+          </div>
+          <div
+            mat-menu-item
+            *ngFor="let palette of $palettes"
+            (click)="applyPalette(palette, target)"
+          >
+            <h5>
+              {{ palette.names?.primary }}, {{ palette.names?.secondary }},
+              {{ palette.names["primary-text"] }}
+            </h5>
+            <div class="circles">
+              <div [style.backgroundColor]="palette.colors?.primary"></div>
+              <div [style.backgroundColor]="palette.colors?.secondary"></div>
+              <div [style.backgroundColor]="palette.colors['primary-text']"></div>
+            </div>
+          </div>
+        </ng-template>
+      </mat-menu>
+    </button>
+
+    <button
+      mat-icon-button
+      [disabled]="state != ComposerState.Started"
+      matTooltip="Clean"
+      matTooltipPosition="right"
+    >
+      <mat-icon>clear_all</mat-icon>
+    </button>
+
+    <!-- [disabled]="state != ComposerState.Started" -->
+    <button
+      mat-icon-button
+      matTooltip="Settings"
+      matTooltipPosition="right"
+      [matMenuTriggerFor]="settingsMenu"
+    >
+      <mat-icon>settings</mat-icon>
+      <mat-menu
+        #settingsMenu="matMenu"
+        class="settings-menu"
+        overlapTrigger="false"
+        xPosition="after"
+        yPosition="above"
+      >
+        <form class="settings-menu-form" #settingsForm="ngForm" (click)="$event.stopPropagation()">
+          <app-image-picker
+            #iconModel="ngModel"
+            [ngModel]="undefined"
+            name="icon"
+          ></app-image-picker>
+          <mat-error *ngIf="iconModel?.errors?.width">
+            Image width must be <b>{{ iconModel?.errors?.width.expected }}px</b>, got
+            <b>{{ iconModel?.errors?.width.actual }}px</b>.
+          </mat-error>
+          <mat-error *ngIf="iconModel?.errors?.height">
+            Image height must be <b>{{ iconModel?.errors?.height.expected }}px</b>, got
+            <b>{{ iconModel?.errors?.height.actual }}px</b>.
+          </mat-error>
+          <mat-error *ngIf="iconModel?.errors?.size">
+            Image size must be less than
+            <b>{{ iconModel?.errors?.size.expected / 1024 / 1024 | number: "1.1-" }}MB</b>, got
+            <b>{{ iconModel?.errors?.size.actual }}</b
+            >.
+          </mat-error>
+          <mat-form-field>
+            <input matInput placeholder="Name" />
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Short Name" />
+          </mat-form-field>
+        </form>
+
+        <mat-list (click)="$event.stopPropagation()">
+          <h3 mat-subheader><mat-icon>radio_button_checked</mat-icon> Collections</h3>
+          <ng-container *ngFor="let collection of $collections | async; let last = last">
+            <mat-list-item>
+              <h4 name>{{ collection.name }}</h4>
+              <p version>{{ collection.version }}</p>
+            </mat-list-item>
+            <mat-divider *ngIf="!last"></mat-divider>
+          </ng-container>
+
+          <mat-list-item>
+            <mat-form-field fieldName>
+              <input
+                mat-line
+                matInput
+                ngModel
+                #specModel="ngModel"
+                placeholder="Add new collection"
+                required
+                (keyup.enter)="addCollection(specModel)"
+              />
+              <mat-spinner matSuffix diameter="20" *ngIf="isCollectionInstallPending"></mat-spinner>
+              <mat-hint>Adding new collection will take a while.</mat-hint>
+              <mat-error *ngIf="specModel.errors?.required">You must type something.</mat-error>
+              <mat-error *ngIf="specModel.errors?.error">{{ specModel.errors?.error }}</mat-error>
+            </mat-form-field>
+          </mat-list-item>
+
+          <h3 mat-subheader class="customCode">
+            <span>
+              <mat-icon>code</mat-icon>
+              <span>Custom code</span>
+            </span>
+
+            <button
+              mat-icon-button
+              matTooltip="Save"
+              (click)="updateCustomCode(customCodeModel.value)"
+            >
+              <mat-icon>check</mat-icon>
+            </button>
+          </h3>
+          <mat-list-item>
+            <mat-form-field>
+              <textarea
+                matInput
+                #customCodeModel="ngModel"
+                [ngModel]="$customCode | async"
+              ></textarea>
+              <mat-hint>Useful if you want to add analytics scripts or something similar.</mat-hint>
+            </mat-form-field>
+          </mat-list-item>
+        </mat-list>
+      </mat-menu>
+    </button>
+  </div>
+</div>
+
+<div container [style.display]="state == ComposerState.Started ? 'block' : 'none'">
+  <div iframe>
+    <composer-viewport
+      #viewport
+      [font]="font"
+      [base]="base"
+      [(route)]="route"
+      (routeChange)="routeChange($event)"
+      (error)="state = ComposerState.Error; error = $event"
+    ></composer-viewport>
+
+    <button
+      mat-mini-fab
+      dotButton
+      color="primary"
+      [matMenuTriggerFor]="dotMenu"
+      [style.left.px]="
+        viewport.target?.element?.getBoundingClientRect().left +
+        viewport.target?.element?.getBoundingClientRect()?.width
+      "
+      [style.top.px]="
+        viewport.target?.element?.getBoundingClientRect().top +
+        viewport.target?.element?.getBoundingClientRect()?.height
+      "
+    >
+      <mat-icon>more_horiz</mat-icon>
+      <mat-menu #dotMenu="matMenu" class="dot-menu" xPosition="before" yPosition="above">
+        <button
+          mat-menu-item
+          [disabled]="viewport.target?.first"
+          (click)="moveElement(viewport.target, 'up')"
+        >
+          Move Up
+        </button>
+        <button
+          mat-menu-item
+          [disabled]="viewport.target?.last"
+          (click)="moveElement(viewport.target, 'down')"
+        >
+          Move Down
+        </button>
+        <button
+          mat-menu-item
+          *ngIf="viewport.target?.expandable"
+          (click)="editElement(viewport.target)"
+        >
+          Edit
+        </button>
+        <button
+          mat-menu-item
+          [matMenuTriggerFor]="paletteMenu"
+          [matMenuTriggerData]="{target: viewport.target}"
+        >
+          Palette
+        </button>
+        <button mat-menu-item (click)="removeElement(viewport.target)">Remove</button>
+        <button
+          mat-menu-item
+          (click)="viewport.expand(viewport.target)"
+          *ngIf="viewport.target?.expandable"
+        >
+          {{ viewport.target?.expanded ? "Collapse" : "Expand" }}
+        </button>
+        <button
+          mat-menu-item
+          (click)="childStart(viewport.target); elements.scrollIntoView()"
+          *ngIf="viewport.target?.hasprojection"
+        >
+          Add
+        </button>
+      </mat-menu>
+    </button>
+  </div>
+  <!-- [attr.style]="sanitizer.bypassSecurityTrustStyle('--compose-palette:' + currentPalette?.colors?.primary)" -->
+  <div #elements components>
+    <div category>
+      <div title>
+        What Would You Like to Add Next?
+        <span sub-title>
+          Add your next website block. Once you're finished creating you can publish or download
+          your website.
+        </span>
+      </div>
+      <div category-container>
+        <div
+          *ngFor="let element of $elements | async"
+          list-items
+          (click)="addElement(element.name)"
+        >
+          <div list-icon>
+            <mat-icon>{{ element.icon || "stop" }}</mat-icon>
+          </div>
+          <span>{{ element.title || element.name }}</span>
+          <mat-hint>{{ element.description }}</mat-hint>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div overlay [style.visibility]="state == ComposerState.Started ? 'hidden' : 'visible'">
+  <div progress>
+    <mat-progress-spinner [value]="progress" [strokeWidth]="2"> </mat-progress-spinner>
+    <mat-icon>view_carousel</mat-icon>
+  </div>
+  <ng-container *ngIf="error">
+    <span>{{ error.toString() }}</span>
+  </ng-container>
+</div>

@@ -1,0 +1,114 @@
+<ng-template #toolbar>
+  <span>
+    <h4>
+      <mat-icon>layers</mat-icon>
+      <span>Policy List</span>
+    </h4>
+    <h6>
+      A Policy is a collection of statements. A statement is an access level for an action.
+    </h6>
+  </span>
+  <span>
+    <button
+      mat-button
+      (click)="filterPolicies()"
+      [color]="currentPolicyState != 'all' ? 'accent' : ''"
+    >
+      <mat-icon>filter_alt</mat-icon>
+      Show
+      {{
+        currentPolicyState == "all"
+          ? "custom"
+          : currentPolicyState == "custom"
+          ? "predefined"
+          : "all"
+      }}
+      policies
+    </button>
+    <button mat-button canInteract="passport:policy:create" routerLink="/passport/policy/add">
+      <mat-icon>add</mat-icon>
+      Add New
+    </button>
+  </span>
+</ng-template>
+
+<mat-card class="mat-elevation-z25">
+  <mat-card-content>
+    <mat-table class="striped" [dataSource]="policies$">
+      <ng-container matColumnDef="id">
+        <mat-header-cell *matHeaderCellDef> # </mat-header-cell>
+        <mat-cell *matCellDef="let policy">{{ policy._id }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+        <mat-cell *matCellDef="let policy">{{ policy.name }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="description">
+        <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
+        <mat-cell *matCellDef="let policy">{{ policy.description }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell *matCellDef="let policy">
+          <button
+            canInteract="passport:policy:update"
+            [resource]="policy._id"
+            mat-icon-button
+            [routerLink]="policy._id + '/edit'"
+            *ngIf="policy.system !== true"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button
+            canInteract="passport:policy:delete"
+            [resource]="policy._id"
+            mat-icon-button
+            color="warn"
+            [matAwareDialog]="{
+              title: 'Confirmation',
+              templateOrDescription: dialogTemplate,
+              answer: policy.name
+            }"
+            (confirm)="delete(policy._id)"
+            *ngIf="policy.system !== true"
+          >
+            <mat-icon delete-button>delete</mat-icon>
+          </button>
+          <button
+            canInteract="passport:policy:create"
+            mat-icon-button
+            (click)="copyPolicy(policy)"
+            *ngIf="policy.system"
+            matTooltip="Create new from this predifined policy."
+          >
+            <mat-icon>file_copy</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            *ngIf="policy.system"
+            matTooltip="You can't edit predefined policies."
+          >
+            <mat-icon>lock</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    </mat-table>
+  </mat-card-content>
+
+  <mat-card-footer>
+    <mat-paginator [pageSize]="100" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+  </mat-card-footer>
+</mat-card>
+
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action will <b>permanently</b> delete this policy.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>

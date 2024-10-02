@@ -1,0 +1,8 @@
+<iframe
+  title="Login"
+  [style.opacity]="loaded ? 1 : 0"
+  [src]="url"
+  (load)="loaded = true"
+  loading="lazy"
+></iframe>
+<mat-progress-spinner *ngIf="!loaded" mode="indeterminate"></mat-progress-spinner>

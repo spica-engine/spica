@@ -1,0 +1,45 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  div.seperated-content {
+    display: flex;
+    div.includeds,
+    div.excludeds {
+      flex: 1;
+      form {
+        margin-top: 10px;
+      }
+
+      div.resource {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        column-gap: 10px;
+        > mat-form-field {
+          flex: 4;
+        }
+        > div.delete-button {
+          flex: 1;
+          text-align: center;
+          > button {
+            width: 64px;
+          }
+        }
+      }
+    }
+  }
+  mat-divider {
+    margin: 15px 0px;
+  }
+  .action-buttons {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .add-resource-button {
+    border: 1px dashed rgba(0, 0, 0, 0.08);
+    width: 90%;
+    padding: 20px;
+    margin-top: 10px;
+  }
+}

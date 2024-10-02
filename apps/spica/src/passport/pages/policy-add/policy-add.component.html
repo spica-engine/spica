@@ -1,0 +1,138 @@
+<ng-template #toolbar>
+  <span>
+    <h4>
+      <mat-icon>layers</mat-icon>
+      <span>{{ originalPolicy._id ? originalPolicy.name : "Add Policy" }}</span>
+    </h4>
+  </span>
+</ng-template>
+
+<mat-card>
+  <mat-card-content>
+    <form #policyForm="ngForm">
+      <mat-form-field>
+        <input
+          matInput
+          placeholder="Policy Name"
+          name="policyName"
+          [(ngModel)]="originalPolicy.name"
+          #nameModel="ngModel"
+          required
+        />
+        <mat-error *ngIf="nameModel?.errors?.required">
+          This field is required.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field>
+        <textarea
+          matInput
+          placeholder="Description"
+          name="policyDescription"
+          [(ngModel)]="originalPolicy.description"
+          #descriptionModel="ngModel"
+          required
+        ></textarea>
+        <mat-error *ngIf="descriptionModel?.errors?.required">
+          This field is required.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-accordion>
+        <mat-expansion-panel
+          class="mat-elevation-z1"
+          *ngFor="let statement of displayedStatements; let statementIndex = index"
+        >
+          <mat-expansion-panel-header>
+            <mat-panel-title
+              ><b>Statement:&nbsp;</b>
+              {{ services[statement.module]?.title }}
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="statement">
+            <mat-form-field>
+              <mat-select
+                placeholder="Module"
+                [name]="statement.module + 'name'"
+                (ngModelChange)="onModuleChange(statement)"
+                [(ngModel)]="statement.module"
+                required
+              >
+                <mat-option
+                  *ngFor="let service of services | keyvalue"
+                  [value]="service.key"
+                  [disabled]="isServiceUsed(service.key)"
+                >
+                  {{ service.value.title }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <div class="actions">
+              <div
+                *ngFor="let action of services[statement.module]?.actions | keyvalue"
+                class="action-card"
+                (click)="toggleAction(statement, action.key)"
+                [class.active]="isActionActive(statement, action.key)"
+              >
+                <div class="title">
+                  {{ action.key.replace(statement.module + ":", "").replace(":", " ") | titlecase }}
+                  <span
+                    *ngIf="acceptsResource(statement, action.key)"
+                    (click)="editResources(statement, action.key); $event.stopPropagation()"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </span>
+                </div>
+                <div class="resources" (click)="$event.stopPropagation()">
+                  <ng-container
+                    *ngIf="
+                      isActionActive(statement, action.key) &&
+                      acceptsResource(statement, action.key)
+                    "
+                  >
+                    <div class="resource">
+                      <b>Include:&nbsp;</b>
+                      <span *ngFor="let include of getResource(statement, action.key).include"
+                        >{{ include }}
+                      </span>
+                    </div>
+                    <ng-container *ngIf="getResource(statement, action.key).exclude.length">
+                      <div class="resource">
+                        <b>Exclude:&nbsp;</b>
+                        <span *ngFor="let exclude of getResource(statement, action.key).exclude"
+                          >{{ exclude }}
+                        </span>
+                      </div>
+                    </ng-container>
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+
+            <mat-action-row>
+              <button mat-button color="warn" (click)="removeStatement(statementIndex)">
+                Remove Statement
+              </button>
+            </mat-action-row>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+      <button class="add-statement-button" mat-button (click)="addStatement()">
+        Add Statement <mat-icon>add</mat-icon>
+      </button>
+    </form>
+  </mat-card-content>
+  <mat-card-actions>
+    <button
+      class="save-button"
+      mat-button
+      [disabled]="policyForm.invalid || noResourceInserted()"
+      [canInteract]="originalPolicy._id ? 'passport:policy:update' : 'passport:policy:create'"
+      [resource]="originalPolicy._id ? originalPolicy._id : undefined"
+      (click)="savePolicy()"
+    >
+      <mat-icon>save</mat-icon>
+      <span>Save</span>
+    </button>
+  </mat-card-actions>
+</mat-card>

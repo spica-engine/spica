@@ -1,0 +1,180 @@
+<mat-toolbar>
+  <div class="left">
+    <h4 class="mat-h4">
+      <mat-icon>bug_report</mat-icon>
+      <span>Function Logs</span>
+    </h4>
+  </div>
+  <div class="right">
+    <button mat-button (click)="resetScroll(); refresh.next(null)">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+    <button mat-button canInteract="function:logs:delete" (click)="clearLogs()">
+      <mat-icon>clear_all</mat-icon>
+      Clear
+    </button>
+  </div>
+</mat-toolbar>
+
+<mat-card class="mat-elevation-z25">
+  <div class="header">
+    <span class="start">
+      <mat-form-field *ngIf="!realtimeToggle?.checked">
+        <mat-label>Select a date range</mat-label>
+        <mat-date-range-input [max]="maxDate" [rangePicker]="picker">
+          <input
+            matStartDate
+            placeholder="Start date"
+            #begin="ngModel"
+            [ngModel]="(queryParams | async)?.begin"
+          />
+
+          <input
+            matEndDate
+            placeholder="End date"
+            #end="ngModel"
+            [ngModel]="(queryParams | async)?.end"
+          />
+        </mat-date-range-input>
+
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-date-range-picker
+          #picker
+          (closed)="
+            next(
+              formatHours({
+                begin: begin.value,
+                end: end.value
+              })
+            )
+          "
+        ></mat-date-range-picker>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Functions</mat-label>
+        <mat-select
+          multiple
+          [ngModel]="(queryParams | async)?.function"
+          (ngModelChange)="next({function: $event})"
+        >
+          <mat-option
+            class="mat-accent"
+            *ngFor="let function of functions$ | async"
+            [value]="function._id"
+          >
+            {{ function.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Levels</mat-label>
+        <mat-select
+          [ngModel]="(queryParams | async)?.params"
+          (ngModelChange)="next({levels: $event})"
+          multiple
+        >
+          <mat-option class="mat-accent" value="0">
+            Debug
+          </mat-option>
+          <mat-option class="mat-accent" value="1">
+            Log
+          </mat-option>
+          <mat-option class="mat-accent" value="2">
+            Info
+          </mat-option>
+          <mat-option class="mat-accent" value="3">
+            Warning
+          </mat-option>
+          <mat-option class="mat-accent" value="4">
+            Error
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </span>
+    <span class="end">
+      <mat-slide-toggle
+        *ngIf="realtimeConnectivity"
+        #realtimeToggle
+        [checked]="(queryParams | async)?.realtime"
+        (change)="next({realtime: $event.checked ? true : false})"
+      >
+        Live Logs
+      </mat-slide-toggle>
+    </span>
+  </div>
+
+  <mat-card-content>
+    <mat-accordion>
+      <cdk-virtual-scroll-viewport
+        [itemSize]="itemSize"
+        [minBufferPx]="bufferSize"
+        [maxBufferPx]="bufferSize * 1.1"
+        class="log-viewport"
+        (scrolledIndexChange)="!realtimeToggle?.checked && onScroll($event)"
+      >
+        <div class="header">
+          <span>Level</span>
+          <span>Timestamp</span>
+          <span>Name</span>
+          <span>Content</span>
+        </div>
+        <ng-container *ngIf="logs$ | async; let logs">
+          <span class="empty-list" *ngIf="!(logs.length || isPending)">
+            Couldn't find any log to show.
+          </span>
+          <mat-expansion-panel
+            (opened)="onExpand(content.offsetHeight)"
+            *cdkVirtualFor="let log of logs"
+          >
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <span>
+                  <ng-container [ngSwitch]="log.level">
+                    <mat-icon class="debug" *ngSwitchCase="0">
+                      bug_report
+                    </mat-icon>
+                    <mat-icon class="log" *ngSwitchCase="1">
+                      emergency
+                    </mat-icon>
+                    <mat-icon class="info" *ngSwitchCase="2">
+                      info
+                    </mat-icon>
+                    <mat-icon class="warning" *ngSwitchCase="3">
+                      error
+                    </mat-icon>
+                    <mat-icon class="error" *ngSwitchCase="4">
+                      crisis_alert
+                    </mat-icon>
+                  </ng-container>
+                </span>
+                <span>
+                  {{ log.created_at | date: "MM/dd/yyyy HH:mm:ss" }}
+                </span>
+                <span
+                  [routerLink]="[]"
+                  [queryParams]="{function: log.function._id}"
+                  queryParamsHandling="merge"
+                  routerLinkActive="active"
+                >
+                  {{ log.function.name }} <mat-icon>filter_alt</mat-icon>
+                </span>
+                <span>
+                  {{ log.content }}
+                </span>
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <pre #content>{{ log.content }}</pre>
+          </mat-expansion-panel>
+          <mat-progress-spinner
+            *ngIf="isPending"
+            [diameter]="35"
+            color="primary"
+            mode="indeterminate"
+          >
+          </mat-progress-spinner>
+        </ng-container>
+      </cdk-virtual-scroll-viewport>
+    </mat-accordion>
+  </mat-card-content>
+</mat-card>

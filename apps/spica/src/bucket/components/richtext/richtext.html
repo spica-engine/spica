@@ -1,0 +1,215 @@
+<section class="toolbar">
+  <header>
+    <span>
+      <h5 class="mat-h5 mat-hint">{{ schema.title | titlecase }}</h5>
+      <small class="mat-hint" *ngIf="schema.description">{{ schema.description }}</small>
+    </span>
+    <span class="fill"></span>
+  </header>
+  <div class="actions">
+    <span>
+      <mat-form-field (mousedown)="$event.preventDefault()" matTooltip="Font">
+        <mat-label>Font</mat-label>
+        <mat-select [(ngModel)]="currentFont" (ngModelChange)="execute('fontName',$event)">
+          <mat-option
+            *ngFor="let font of fonts"
+            [value]="font"
+            (mousedown)="$event.preventDefault()"
+            [style.fontFamily]="font"
+          >
+            {{ font }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field (mousedown)="$event.preventDefault()" matTooltip="Formatting">
+        <mat-label>Formatting</mat-label>
+        <mat-select [(ngModel)]="block" (ngModelChange)="execute('formatBlock',$event)">
+          <mat-option
+            *ngFor="let format of formatting"
+            [value]="format.value"
+            (mousedown)="$event.preventDefault()"
+            [innerHTML]="getFormatHTML(format)"
+          >
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field (mousedown)="$event.preventDefault()" matTooltip="Font Size">
+        <mat-label>Font Size</mat-label>
+        <mat-select
+          [(ngModel)]="fontSize"
+          (ngModelChange)="execute('fontSize',fontSize.toString())"
+        >
+          <mat-option
+            *ngFor="let size of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]"
+            [value]="size"
+            (mousedown)="$event.preventDefault()"
+          >
+            {{ size }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </span>
+
+    <mat-divider [vertical]="true"></mat-divider>
+
+    <span>
+      <button mat-icon-button (click)="textColor.click()" matTooltip="Text Color">
+        <input
+          #textColor
+          style="display: none"
+          type="color"
+          (change)="execute('foreColor',$event.target.value)"
+        />
+        <mat-icon>format_color_text</mat-icon>
+      </button>
+      <button mat-icon-button (click)="backgroundColor.click()" matTooltip="Background Color">
+        <input
+          #backgroundColor
+          style="display: none"
+          type="color"
+          (change)="execute('hiliteColor',$event.target.value)"
+        />
+        <mat-icon>format_color_fill</mat-icon>
+      </button>
+    </span>
+
+    <mat-divider [vertical]="true"></mat-divider>
+
+    <span>
+      <button
+        mat-icon-button
+        matTooltip="Bold"
+        class="text-editor-button"
+        (click)="execute('bold')"
+      >
+        <mat-icon>format_bold</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Italic" (click)="execute('italic')">
+        <mat-icon>format_italic</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Underline" (click)="execute('underline')">
+        <mat-icon>format_underlined</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Strikethrough" (click)="execute('strikeThrough')">
+        <mat-icon>format_strikethrough</mat-icon>
+      </button>
+    </span>
+
+    <mat-divider [vertical]="true"></mat-divider>
+
+    <span>
+      <button mat-icon-button matTooltip="Justify Left" (click)="execute('justifyLeft')">
+        <mat-icon>format_align_left</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Justify Center" (click)="execute('justifyCenter')">
+        <mat-icon>format_align_center</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Justify Right" (click)="execute('justifyRight')">
+        <mat-icon>format_align_right</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Justify Full" (click)="execute('justifyFull')">
+        <mat-icon>format_align_justify</mat-icon>
+      </button>
+    </span>
+
+    <mat-divider [vertical]="true"></mat-divider>
+
+    <span>
+      <button mat-icon-button matTooltip="Undo" (click)="execute('undo')">
+        <mat-icon>undo</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Redo" (click)="execute('redo')">
+        <mat-icon>redo</mat-icon>
+      </button>
+    </span>
+
+    <mat-divider [vertical]="true"></mat-divider>
+
+    <span>
+      <button mat-icon-button matTooltip="Indent" (click)="execute('indent')">
+        <mat-icon>format_indent_increase</mat-icon>
+      </button>
+
+      <button mat-icon-button matTooltip="Outdent" (click)="execute('outdent')">
+        <mat-icon>format_indent_decrease</mat-icon>
+      </button>
+    </span>
+
+    <mat-divider [vertical]="true"></mat-divider>
+
+    <span>
+      <button mat-icon-button (click)="insertUrl()" matTooltip="Insert Link">
+        <mat-icon>insert_link</mat-icon>
+      </button>
+      <button mat-icon-button (click)="execute('unlink')" matTooltip="Unlink">
+        <mat-icon>link_off</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        (mousedown)="$event.preventDefault()"
+        storagePicker
+        ngModel
+        (ngModelChange)="addImage($event)"
+      >
+        <mat-icon>image</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        matTooltip="Horizontal Line"
+        (click)="execute('insertHorizontalRule')"
+      >
+        <mat-icon>remove</mat-icon>
+      </button>
+    </span>
+
+    <mat-divider [vertical]="true"></mat-divider>
+
+    <span>
+      <button mat-icon-button matTooltip="Unordered List" (click)="execute('insertUnorderedList')">
+        <mat-icon>format_list_bulleted</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Ordered List" (click)="execute('insertOrderedList')">
+        <mat-icon>format_list_numbered</mat-icon>
+      </button>
+    </span>
+
+    <mat-divider [vertical]="true"></mat-divider>
+
+    <span>
+      <button mat-icon-button (click)="execute('selectAll')" matTooltip="Select all">
+        <mat-icon>select_all</mat-icon>
+      </button>
+      <button mat-icon-button (click)="execute('copy')" matTooltip="Copy">
+        <mat-icon>content_copy</mat-icon>
+      </button>
+      <button mat-icon-button (click)="execute('cut')" matTooltip="Cut">
+        <mat-icon>content_cut</mat-icon>
+      </button>
+      <button mat-icon-button (click)="execute('paste')" matTooltip="Paste">
+        <mat-icon>content_paste</mat-icon>
+      </button>
+      <button mat-icon-button (click)="execute('delete')" matTooltip="Delete">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </span>
+
+    <mat-divider [vertical]="true"></mat-divider>
+
+    <button
+      mat-icon-button
+      matTooltip="Clear Formatting"
+      (click)="execute('removeFormat');
+        block = undefined;
+        fontSize = undefined;
+        currentFont = undefined"
+    >
+      <mat-icon>clear</mat-icon>
+    </button>
+  </div>
+</section>
+<div
+  [attr.contenteditable]="!disabled"
+  [innerHTML]="value"
+  (input)="onChangeFn($event.target.innerHTML)"
+  (blur)="onTouchedFn()"
+></div>

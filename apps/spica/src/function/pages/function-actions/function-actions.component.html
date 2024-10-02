@@ -1,0 +1,39 @@
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action will <b>permanently</b> delete this function.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>
+
+<ng-container *ngIf="route">
+  <button mat-menu-item canInteract="function:update" [resource]="route.id" (click)="editFn()">
+    <mat-icon>edit</mat-icon>
+    Edit
+  </button>
+  <button
+    canInteract="function:logs:index"
+    [routerLink]="['function/logs']"
+    [queryParams]="{function: route.id}"
+    mat-menu-item
+    [resource]="route.id"
+  >
+    <mat-icon>bug_report</mat-icon>
+    Logs
+  </button>
+  <mat-divider> </mat-divider>
+  <button
+    mat-menu-item
+    canInteract="function:delete"
+    [resource]="route.id"
+    color="warn"
+    [matAwareDialog]="{
+      title: 'Confirmation',
+      templateOrDescription: dialogTemplate,
+      answer: route.display
+    }"
+    (confirm)="delete(route.id)"
+  >
+    <mat-icon color="warn">delete</mat-icon>
+    Delete
+  </button>
+</ng-container>
