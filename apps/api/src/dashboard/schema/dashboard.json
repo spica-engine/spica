@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/dashboard",
+  "type": "object",
+  "required": ["name"],
+  "properties": {
+    "_id": {
+      "type": "string",
+      "format": "objectid",
+      "description": "Unique objectid id of schema."
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of this dashboard that will be placed on the dashboard list pages"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Name of this dashboard that will be placed on the dashboard list pages. Currently all material icons are supported"
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "url", "type"],
+        "description": "Components of the dashboard page which renders the response of the get request of the url",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Title of this component"
+          },
+          "url": {
+            "type": "string",
+            "description": "Url address that will return the content of this component"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of this component"
+          },
+          "ratio": {
+            "type": "string",
+            "description": "Aspect/ratio of the component like 1/1, 2/2 etc.",
+            "default": "2/2"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

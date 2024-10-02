@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/storage/body",
+  "anyOf": [
+    {
+      "$schema": "http://json-schema.org/draft-07/schema",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "http://spica.internal/storage/body/multipart/object"
+      }
+    },
+    {
+      "$schema": "http://json-schema.org/draft-07/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["content"],
+      "properties": {
+        "content": {
+          "type": "array",
+          "title": "Content of the storage object",
+          "items": {
+            "$ref": "http://spica.internal/storage/body/bson/object"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    {
+      "$id": "http://spica.internal/storage/body/json",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "http://spica.internal/storage/body/json/object"
+      }
+    }
+  ]
+}
