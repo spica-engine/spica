@@ -85,21 +85,29 @@ export class BucketPipelineBuilder extends PipelineBuilder {
     return this;
   }
 
-  async filter(filter: string | object) {
+  async filterByUserRequest(filterByUserRequest: string | object) {
     let filterPropertyMap: string[][] = [];
     let filterRelationMap: object[] = [];
     // filter
-    if (filter) {
+    if (filterByUserRequest) {
       let filterExpression: object;
 
-      if (typeof filter == "object" && !Array.isArray(filter) && Object.keys(filter).length) {
-        filter = await constructFilterValues(filter, this.schema, this.factories.schema);
+      if (
+        typeof filterByUserRequest == "object" &&
+        !Array.isArray(filterByUserRequest) &&
+        Object.keys(filterByUserRequest).length
+      ) {
+        filterByUserRequest = await constructFilterValues(
+          filterByUserRequest,
+          this.schema,
+          this.factories.schema
+        );
 
-        filterPropertyMap = extractFilterPropertyMap(filter);
-        filterExpression = filter;
-      } else if (typeof filter == "string") {
-        filterPropertyMap = expression.extractPropertyMap(filter);
-        filterExpression = expression.aggregate(filter, {});
+        filterPropertyMap = extractFilterPropertyMap(filterByUserRequest);
+        filterExpression = filterByUserRequest;
+      } else if (typeof filterByUserRequest == "string") {
+        filterPropertyMap = expression.extractPropertyMap(filterByUserRequest);
+        filterExpression = expression.aggregate(filterByUserRequest, {});
       }
 
       filterRelationMap = await this.buildRelationMap(filterPropertyMap);
