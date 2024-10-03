@@ -22,7 +22,7 @@ export class PipelineBuilder implements IPipelineBuilder {
     return this;
   }
 
-  filterByUserRequest(filter: object) {
+  async filterByUserRequest(filter: object) {
     this.isFilterApplied = this.isValidObject(filter);
     this.attachToPipeline(this.isFilterApplied, {$match: filter});
     return Promise.resolve(this);

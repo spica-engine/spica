@@ -1,0 +1,76 @@
+<mat-toolbar>
+  <h4 class="mat-h4">
+    <mat-icon>settings</mat-icon>
+    Settings
+  </h4>
+</mat-toolbar>
+
+<mat-card *ngIf="settings" class="mat-elevation-z25">
+  <h4>Available languages</h4>
+  <mat-card-content>
+    <mat-list>
+      <mat-list-item *ngFor="let languageKv of settings?.language.available | keyvalue">
+        <mat-icon
+          mat-list-icon
+          [color]="settings?.language.default == languageKv.key ? 'warn' : 'primary'"
+          matTooltip="This is default language"
+          [matTooltipDisabled]="settings?.language.default != languageKv.key"
+          >language
+        </mat-icon>
+        <h4 mat-line>{{ languageKv.value }} ({{ languageKv.key }})</h4>
+        <button
+          [disabled]="settings?.language.default == languageKv.key"
+          mat-icon-button
+          [matAwareDialog]="{
+            title: 'Confirmation',
+            templateOrDescription: deleteLanguageDialog,
+            answer: '',
+            noAnswer: true
+          }"
+          (confirm)="remove(languageKv.key)"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-list-item>
+    </mat-list>
+
+    <form ngForm #addForm="ngForm">
+      <div class="hint-message"></div>
+      <mat-form-field>
+        <mat-label>Choose Language</mat-label>
+        <mat-select ngModel #selectedLanguage="ngModel" name="lang">
+          <mat-option *ngFor="let language of languages" [value]="language.code">
+            {{ language.name }} ({{ language.code }})
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button
+        mat-button
+        [disabled]="addForm.invalid || settings.language.available[selectedLanguage.value]"
+        (click)="addLanguage(selectedLanguage.value)"
+      >
+        <mat-icon>add</mat-icon> Add new language to buckets
+      </button>
+    </form>
+  </mat-card-content>
+  <mat-card-actions>
+    <button
+      class="save-button"
+      canInteract="preference:update"
+      resource="bucket"
+      mat-button
+      (click)="updateSettings()"
+    >
+      <mat-icon>save</mat-icon><span>Save</span>
+    </button>
+  </mat-card-actions>
+</mat-card>
+
+<ng-template #deleteLanguageDialog let-answer="answer">
+  <p>
+    This action will remove the language from bucket entries.
+  </p>
+  <p>
+    Please confirm this action to continue.
+  </p>
+</ng-template>

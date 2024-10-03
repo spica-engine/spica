@@ -1,0 +1,67 @@
+:host {
+  mat-list-item.property {
+    text-align: center;
+    mat-form-field {
+      margin-top: 1em;
+      margin-right: 10px;
+    }
+    mat-form-field input {
+      text-transform: lowercase;
+    }
+  }
+
+  mat-expansion-panel {
+    box-shadow: none;
+    margin-top: 10px;
+    .input-placer-area {
+      display: flex;
+    }
+  }
+
+  mat-card > p {
+    font-size: 13px;
+  }
+
+  mat-card-content {
+    margin-bottom: 0px;
+  }
+
+  mat-expansion-panel.identity-settings {
+    mat-panel-title {
+      padding-top: 10px;
+    }
+    box-shadow: none;
+    margin-top: 10px;
+    mat-panel-description {
+      button {
+        flex: unset;
+        padding: 0;
+        min-width: 0;
+        width: auto;
+        height: auto;
+        flex-shrink: 0;
+        line-height: 0px;
+        border-radius: 50%;
+        margin-right: 10px;
+      }
+    }
+    .mat-subheader {
+      padding: 0 !important;
+    }
+    .mat-expansion-indicator {
+      height: 23px;
+    }
+    mat-list-item.validation {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    .mat-expansion-panel-header-description {
+      flex-grow: initial !important;
+    }
+    .drag-box {
+      cursor: move;
+      flex: unset;
+      padding-top: 2px;
+    }
+  }
+}

@@ -1,0 +1,55 @@
+<div class="dashboard-component" [ngClass]="!isSmall ? 'table-dashboard' : null">
+  <ng-container *ngIf="componentData$ | async; let componentData">
+    <mat-card-header>
+      <mat-card-title>
+        {{ componentData.title }}
+      </mat-card-title>
+    </mat-card-header>
+    <button
+      *ngIf="refresh"
+      class="dashboard-component-refresh-button"
+      mat-icon-button
+      matTooltip="Refresh data"
+      (click)="onUpdate.next(componentData.filters)"
+    >
+      <mat-icon>refresh</mat-icon>
+    </button>
+    <div class="filters" *ngIf="!isSmall">
+      <ng-container *ngFor="let filter of componentData.filters">
+        <span
+          [name]="filter.key"
+          [inputPlacer]="filter"
+          [(ngModel)]="filter.value"
+          (keyup.enter)="onUpdate.next(componentData.filters)"
+        >
+        </span>
+      </ng-container>
+    </div>
+  </ng-container>
+  <div [ngClass]="isSmall ? 'dashboard-component-content' : 'table-container'">
+    <button mat-stroked-button *ngIf="isSmall" (click)="onShowTableClicked()">
+      Show
+    </button>
+    <mat-card
+      class="table-scroll mat-elevation-z0"
+      [ngClass]="
+        isSmall
+          ? showTable
+            ? 'dashboard-hidden-component dashboard-visible-component-container'
+            : 'dashboard-hidden-component dashboard-hidden-component-container'
+          : ''
+      "
+    >
+      <mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+        <ng-container *ngFor="let c of displayedColumns" [matColumnDef]="c">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>{{ c }}</mat-header-cell>
+          <mat-cell *matCellDef="let element">{{ element[c] }}</mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+      </mat-table>
+      <mat-paginator></mat-paginator>
+    </mat-card>
+  </div>
+</div>

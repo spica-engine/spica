@@ -1,0 +1,116 @@
+<mat-toolbar>
+  <h4 class="mat-h4">
+    <mat-icon>webhook</mat-icon>
+    <span>{{ webhook._id ? "Edit Webhook" : "New Webhook" }}</span>
+  </h4>
+</mat-toolbar>
+<mat-card class="mat-elevation-z25">
+  <mat-card-content>
+    <form #form="ngForm">
+      <mat-list>
+        <mat-list-item>
+          <mat-form-field>
+            <input [(ngModel)]="webhook.title" matInput name="title" placeholder="Title" required />
+            <mat-hint>
+              Give your webhook a title.
+            </mat-hint>
+          </mat-form-field>
+        </mat-list-item>
+        <mat-list-item>
+          <mat-form-field url>
+            <input
+              matInput
+              type="url"
+              name="url"
+              placeholder="Url"
+              #urlModel="ngModel"
+              [(ngModel)]="webhook.url"
+              required
+              pattern="^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?|^((http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
+            />
+            <mat-hint>
+              When this webhook triggered, Spica will send a POST request to the URL above.
+            </mat-hint>
+            <mat-error *ngIf="urlModel.errors?.pattern">Enter a valid url.</mat-error>
+            <mat-error *ngIf="urlModel.errors?.required">Url is required.</mat-error>
+          </mat-form-field>
+        </mat-list-item>
+        <h4>Body</h4>
+        <mat-list-item>
+          <code-editor
+            matInput
+            [(ngModel)]="webhook.body"
+            #bodyModel="ngModel"
+            required
+            name="body"
+            [options]="{language: 'handlebars', minimap: {enabled: false}}"
+          ></code-editor>
+          <mat-error *ngIf="bodyModel.errors?.required">Body mapping is required</mat-error>
+        </mat-list-item>
+        <h4>
+          Trigger
+        </h4>
+        <mat-list-item class="triggers">
+          <mat-form-field>
+            <mat-label>Collection</mat-label>
+            <mat-select
+              name="collection"
+              [(ngModel)]="webhook.trigger.options.collection"
+              #collectionModel="ngModel"
+              required
+            >
+              <mat-option *ngFor="let collection of collections$ | async" [value]="collection.id">
+                {{ collection.slug }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="collectionModel.errors?.required">Collection is required.</mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Type</mat-label>
+            <mat-select
+              name="type"
+              [(ngModel)]="webhook.trigger.options.type"
+              #typeModel="ngModel"
+              required
+            >
+              <mat-option value="INSERT">INSERT</mat-option>
+              <mat-option value="UPDATE">UPDATE</mat-option>
+              <mat-option value="REPLACE">REPLACE</mat-option>
+              <mat-option value="DELETE">DELETE</mat-option>
+            </mat-select>
+            <mat-error *ngIf="typeModel.errors?.required">Type is required.</mat-error>
+          </mat-form-field>
+          <span>
+            <mat-label>
+              {{ webhook.trigger.active ? "Active" : "Deactive" }}
+            </mat-label>
+            <mat-slide-toggle name="status" [(ngModel)]="webhook.trigger.active"></mat-slide-toggle>
+          </span>
+        </mat-list-item>
+      </mat-list>
+    </form>
+  </mat-card-content>
+  <mat-card-actions>
+    <button
+      class="save-button"
+      [canInteract]="webhook._id ? 'webhook:update' : 'webhook:create'"
+      [resource]="webhook._id ? webhook._id : undefined"
+      mat-button
+      *matSave="$save | async; let state"
+      [ngSwitch]="state"
+      [disabled]="form.invalid || !!state"
+      (click)="save()"
+    >
+      <mat-icon *ngSwitchDefault>save</mat-icon>
+      <mat-progress-spinner
+        *ngSwitchCase="'saving'"
+        [diameter]="18"
+        color="primary"
+        mode="indeterminate"
+      ></mat-progress-spinner>
+      <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
+      <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
+      <span>{{ (!state ? "save" : state) | titlecase }}</span>
+    </button>
+  </mat-card-actions>
+</mat-card>

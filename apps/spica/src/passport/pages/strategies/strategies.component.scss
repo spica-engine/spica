@@ -1,0 +1,7 @@
+:host {
+  mat-header-cell:last-of-type,
+  mat-cell:last-of-type {
+    justify-content: flex-end;
+    width: 150px;
+  }
+}

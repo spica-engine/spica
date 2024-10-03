@@ -1,0 +1,112 @@
+<mat-toolbar>
+  <h4 class="mat-h4">
+    <mat-icon>pest_control</mat-icon>
+    <span>Webhook Logs</span>
+  </h4>
+  <div class="actions">
+    <button mat-button (click)="applyFilter()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+    <button mat-button canInteract="webhook:logs:delete" (click)="clearLogs()">
+      <mat-icon>clear_all</mat-icon>
+      Clear
+    </button>
+  </div>
+</mat-toolbar>
+<mat-card class="mat-elevation-z25">
+  <mat-form-field>
+    <mat-label>Select webhook id</mat-label>
+    <mat-select [(ngModel)]="filter.webhooks" multiple>
+      <mat-option class="mat-accent" *ngFor="let webhook of webhooks" [value]="webhook">
+        {{ webhook }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>
+      Select status
+    </mat-label>
+    <mat-select [(ngModel)]="filter.succeed">
+      <mat-option value="true">
+        Succeeded
+      </mat-option>
+      <mat-option value="false">
+        Failed
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Enter a date range</mat-label>
+    <mat-date-range-input [rangePicker]="picker">
+      <input matStartDate placeholder="Start date" #begin="ngModel" [ngModel]="filter.date.begin" />
+      <input matEndDate placeholder="End date" #end="ngModel" [ngModel]="filter.date.end" />
+    </mat-date-range-input>
+
+    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-date-range-picker #picker (closed)="setDate(begin.value, end.value)">
+    </mat-date-range-picker>
+  </mat-form-field>
+
+  <button mat-button (click)="applyFilter()">
+    Apply
+  </button>
+  <button mat-button color="warn" (click)="clearFilter()">
+    Clear
+  </button>
+  <mat-card-content>
+    <mat-accordion>
+      <cdk-virtual-scroll-viewport itemSize="50" class="example-viewport">
+        <div>
+          <span>Id</span>
+          <span>Webhook Id</span>
+          <span>Status</span>
+          <span>Execution Time</span>
+        </div>
+        <span class="emptyList" *ngIf="!logs.length && !isPending">
+          Couldn't find any log to show.
+        </span>
+        <mat-expansion-panel *cdkVirtualFor="let log of dataSource">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <span>
+                {{ log._id }}
+              </span>
+              <span>
+                {{ log.webhook }}
+              </span>
+              <span [style.color]="log.succeed ? 'green' : 'red'">
+                {{ log.succeed ? "SUCCEEDED" : "FAILED" }}
+              </span>
+              <span>{{ log.created_at | date: "MM/dd/yyyy HH:mm:ss" }}</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <ng-container *ngIf="log.content.error; else elseBlock">
+            <h3>
+              Message
+            </h3>
+            <pre>{{ log.content.error }}</pre>
+          </ng-container>
+          <ng-template #elseBlock>
+            <h3>
+              Request
+            </h3>
+            <pre>{{ log.content.request | json }}</pre>
+            <h3>
+              Response
+            </h3>
+            <pre>{{ log.content.response | json }}</pre>
+          </ng-template>
+        </mat-expansion-panel>
+        <mat-progress-spinner
+          *ngIf="isPending"
+          [diameter]="35"
+          color="primary"
+          mode="indeterminate"
+        >
+        </mat-progress-spinner>
+      </cdk-virtual-scroll-viewport>
+    </mat-accordion>
+  </mat-card-content>
+</mat-card>

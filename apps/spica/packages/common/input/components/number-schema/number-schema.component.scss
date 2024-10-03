@@ -1,0 +1,12 @@
+:host {
+  display: inline;
+  padding-left: 2%;
+  .inputs {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    mat-form-field {
+      width: 45% !important;
+    }
+  }
+}

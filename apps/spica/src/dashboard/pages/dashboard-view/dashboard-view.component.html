@@ -1,0 +1,16 @@
+<div class="dashboard-container">
+  <div *ngIf="dashboard$ | async; let dashboard">
+    <mat-toolbar>
+      <h1>
+        <mat-icon> {{ dashboard.icon }} </mat-icon>
+        <span> {{ dashboard.name }}</span>
+      </h1>
+    </mat-toolbar>
+    <dashboard-layout
+      [refreshSubjects$]="refreshSubjects$"
+      [refresh]="true"
+      [componentData$]="componentData$"
+      [dashboard]="dashboard"
+    ></dashboard-layout>
+  </div>
+</div>

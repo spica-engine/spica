@@ -1,0 +1,20 @@
+<mat-form-field>
+  <mat-select [ngModel]="schema.items.type" (ngModelChange)="onTypeChange($event)">
+    <mat-option *ngFor="let type of availableTypes" [value]="type">
+      {{ type }}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
+<mat-form-field>
+  <input
+    matInput
+    type="number"
+    placeholder="Maximum items"
+    [ngModel]="schema.maxItems"
+    (ngModelChange)="onChange($event, 'maxItems')"
+  />
+  <button mat-icon-button matSuffix matTooltip="Maximum item count that this array can have.">
+    <mat-icon>info</mat-icon>
+  </button>
+</mat-form-field>
+<enum-schema [schema]="schema.items"></enum-schema>

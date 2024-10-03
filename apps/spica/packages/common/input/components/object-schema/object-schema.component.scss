@@ -1,0 +1,78 @@
+::ng-deep  {
+  .mat-menu-panel.validators {
+    .mat-menu-item {
+      &[role="menuitem"] {
+        height: 70px;
+        padding-top: 15px;
+      }
+
+      button {
+        margin-left: 10px;
+        mat-icon {
+          margin-right: 0;
+        }
+      }
+    }
+  }
+}
+
+:host {
+  margin-left: 15px;
+  display: block;
+  .indent {
+    border-left: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  .property {
+    padding-left: 10px;
+    border-radius: 4px;
+    border-bottom: unset !important;
+    .meta-info {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      &:before {
+        content: "";
+        position: absolute;
+        left: -10px;
+        top: 50%;
+        width: 15px;
+        height: 1px;
+        background: rgba(0, 0, 0, 0.08);
+      }
+    }
+    > span {
+      padding-left: 10px;
+    }
+  }
+
+  button.add-new-property {
+    width: 100%;
+    padding: 5px;
+    border: 1px dashed rgba(0, 0, 0, 0.08);
+    margin-top: 15px;
+  }
+
+  .object-field {
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+    .icon {
+      border-radius: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px;
+      mat-icon {
+        color: white;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+      }
+      margin-right: 10px;
+    }
+  }
+}

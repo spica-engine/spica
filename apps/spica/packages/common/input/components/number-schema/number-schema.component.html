@@ -1,0 +1,42 @@
+<div class="min-max">
+  <div class="inputs">
+    <mat-form-field>
+      <mat-label>Minimum (Optional)</mat-label>
+      <input
+        matInput
+        type="number"
+        [ngModel]="schema.minimum"
+        (ngModelChange)="onChange($event, 'minimum')"
+      />
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Maximum (Optional)</mat-label>
+      <input
+        matInput
+        type="number"
+        [ngModel]="schema.maximum"
+        (ngModelChange)="onChange($event, 'maximum')"
+      />
+    </mat-form-field>
+  </div>
+</div>
+<div class="default">
+  <mat-label>Default value:</mat-label>
+  <mat-form-field>
+    <input
+      matInput
+      type="number"
+      [ngModel]="schema.default"
+      (ngModelChange)="onChange($event, 'default')"
+    />
+  </mat-form-field>
+</div>
+<div class="enum">
+  <mat-slide-toggle
+    [ngModel]="schema.enum?.length > 0"
+    (ngModelChange)="$event ? (schema.enum = []) : removeEnum()"
+  >
+    Make field enumerated
+  </mat-slide-toggle>
+  <enum-schema *ngIf="schema.enum?.length != undefined"></enum-schema>
+</div>

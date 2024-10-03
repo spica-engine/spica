@@ -1,0 +1,110 @@
+<mat-card class="add-new-bucket-modal mat-elevation-z0">
+  <mat-card-header>
+    <mat-card-title>
+      {{ bucket._id ? "Update bucket" : "Add new bucket" }}
+    </mat-card-title>
+  </mat-card-header>
+  <mat-divider></mat-divider>
+  <mat-card-content>
+    <form #titleForm="ngForm">
+      <mat-form-field>
+        <input
+          matInput
+          name="title"
+          placeholder="Title"
+          #tm="ngModel"
+          [(ngModel)]="bucket.title"
+          required
+          minlength="4"
+          maxlength="100"
+          (keyup.enter)="titleForm.valid && saveBucket()"
+        />
+        <mat-hint align="end">{{ tm.value?.length || 0 }} / 100</mat-hint>
+        <mat-error *ngIf="tm?.errors?.required">This field is required.</mat-error>
+        <mat-error *ngIf="tm?.errors?.minlength">
+          Length of the name must be greater than
+          {{ tm?.errors?.minlength?.requiredLength }} character.
+        </mat-error>
+        <mat-error *ngIf="tm?.errors?.maxlength">
+          Length of the name must be less than
+          {{ tm?.errors?.maxlength?.requiredLength }} character.
+        </mat-error>
+        <span matPrefix>
+          <button
+            type="button"
+            mat-icon-button
+            menu-icon
+            class="mat-elevation-z25"
+            matTooltip="You can select a icon by clicking here."
+            [matMenuTriggerFor]="iconSelector"
+          >
+            <mat-icon>{{ bucket?.icon }}</mat-icon>
+            <mat-menu #iconSelector="matMenu">
+              <ng-container matMenuContent>
+                <div class="icon-container">
+                  <mat-form-field class="search-icon" (click)="$event.stopPropagation()">
+                    <mat-icon matPrefix>search</mat-icon>
+                    <input
+                      type="text"
+                      matInput
+                      placeholder="Search an icon.."
+                      [(ngModel)]="searchIconText"
+                      (ngModelChange)="setIcons()"
+                    />
+                  </mat-form-field>
+                  <button
+                    *ngFor="let icon of visibleIcons"
+                    mat-icon-button
+                    mat-flat-button
+                    [matTooltip]="icon"
+                    (click)="bucket.icon = icon; searchIconText = ''; setIcons()"
+                  >
+                    <mat-icon>{{ icon }}</mat-icon>
+                  </button>
+                  <mat-paginator
+                    (page)="setIcons($event)"
+                    (click)="$event.stopPropagation()"
+                    [length]="icons.length"
+                    [pageSize]="iconPageSize"
+                  >
+                  </mat-paginator>
+                </div>
+              </ng-container>
+            </mat-menu>
+          </button>
+        </span>
+      </mat-form-field>
+    </form>
+  </mat-card-content>
+  <mat-card-actions>
+    <button
+      class="save-button"
+      mat-button
+      [canInteract]="bucket._id ? 'bucket:update' : 'bucket:create'"
+      [resource]="bucket._id ? bucket._id : undefined"
+      form="titleForm"
+      *matSave="$save | async; let state"
+      [disabled]="
+        titleForm.invalid ||
+        (bucket.properties | keyvalue)?.length < 1 ||
+        bucket.primary == undefined ||
+        (bucket.documentSettings && bucket.documentSettings.countLimit < 1) ||
+        !!state
+      "
+      (click)="saveBucket()"
+      [ngSwitch]="state"
+    >
+      <mat-icon *ngSwitchDefault>save</mat-icon>
+      <mat-progress-spinner
+        *ngSwitchCase="'saving'"
+        [diameter]="18"
+        color="primary"
+        mode="indeterminate"
+      >
+      </mat-progress-spinner>
+      <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
+      <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
+      <span>{{ (!state ? "save" : state) | titlecase }}</span>
+    </button>
+  </mat-card-actions>
+</mat-card>

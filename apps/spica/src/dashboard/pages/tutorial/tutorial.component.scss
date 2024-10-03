@@ -1,0 +1,121 @@
+:host {
+  mat-form-field {
+    margin-right: 10px;
+  }
+
+  div.content-container {
+    display: flex;
+    align-items: center;
+    div.logo {
+      flex: 3;
+      text-align: center;
+      svg {
+        max-width: 300px;
+      }
+    }
+    div.content {
+      flex: 7;
+    }
+  }
+
+  div.title {
+    h5 {
+      color: rgba(0, 0, 0, 0.54);
+      font-size: 2rem;
+    }
+    margin: 0px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  h4:first-of-type {
+    margin-bottom: 30px;
+    font-weight: normal;
+  }
+
+  div.row {
+    margin-top: 10px;
+  }
+
+  div.actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    > button:first-of-type {
+      margin: 10px 0px;
+      border-style: dashed;
+      width: 418px;
+      height: 50px;
+    }
+  }
+
+  div.placers {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    margin: 5px 0px;
+  }
+
+  span.placer {
+    width: 48% !important;
+    margin: 5px 0px;
+  }
+
+  div.result {
+    display: flex;
+    margin: 10px 0px;
+    > div:nth-child(1),
+    div:nth-child(3) {
+      flex: 1;
+      div {
+        width: 100%;
+        text-align: center;
+      }
+    }
+    > mat-divider {
+      margin: 0px 20px;
+    }
+    pre {
+      padding: 10px;
+      border-radius: 5px;
+      background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
+      overflow-y: auto;
+      word-break: break-word;
+      white-space: pre-wrap;
+      margin: 10px 0px;
+    }
+    div.example {
+      display: flex;
+      flex-direction: column;
+      button {
+        width: max-content;
+        align-self: center;
+      }
+    }
+  }
+
+  .dismiss-button {
+    float: right;
+  }
+}
+
+::ng-deep span.placer > *:first-of-type {
+  width: 100% !important;
+}
+
+::ng-deep .mat-snack-bar-container {
+  color: white !important;
+}
+::ng-deep snack-bar-container {
+  width: 250px !important;
+  padding: 20px !important;
+  border-radius: 8px !important;
+  background: #62c362 !important;
+  span {
+    line-height: 22px !important;
+    font-size: 16px !important;
+  }
+}

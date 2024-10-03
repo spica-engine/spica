@@ -1,0 +1,32 @@
+<mat-form-field>
+  <mat-label>{{ schema.title }}</mat-label>
+  <input
+    matInput
+    type="datetime"
+    [name]="schema.$name"
+    [disabled]="_disabled"
+    #model="ngModel"
+    ngModelParent
+    [(ngModel)]="_value"
+    (ngModelChange)="_onChangeFn(_value)"
+    (keyup)="keyPress($event)"
+    (blur)="_onTouchedFn()"
+    (focus)="dt1.open()"
+    [owlDateTime]="dt1"
+    [owlDateTimeTrigger]="dt1"
+    [date]="schema.$required"
+  />
+  <owl-date-time #dt1></owl-date-time>
+  <mat-hint *ngIf="schema.description">{{ schema.description }}</mat-hint>
+  <mat-hint
+    align="end"
+    *ngIf="_value && _value.toISOString"
+    matTooltip="This is the actual date that will be stored in the API server."
+  >
+    {{ _value | date: "medium":"GMT" }}
+    <mat-icon>help</mat-icon>
+  </mat-hint>
+  <mat-error *ngIf="model.errors?.date || model.errors?.owlDateTimeParse">
+    Must be a valid date-time
+  </mat-error>
+</mat-form-field>

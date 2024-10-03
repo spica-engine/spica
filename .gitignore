@@ -47,3 +47,5 @@ yarn-error.log
 .nx/cache
 .nx/workspace-data
 
+# Ignore Angular CLI workspace-specific files (cache, etc.)
+.angular/

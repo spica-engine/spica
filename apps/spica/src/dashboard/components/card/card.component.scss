@@ -1,0 +1,44 @@
+:host {
+  .card {
+    justify-content: start;
+  }
+  mat-card-header {
+    align-items: center;
+    justify-content: center;
+  }
+
+  mat-card-content {
+    text-align: center;
+  }
+  mat-card-content {
+    > span,
+    button {
+      margin-right: 5px;
+    }
+    span {
+      flex: 1;
+      ::ng-deep .string {
+        width: 100%;
+      }
+    }
+    ::ng-deep .mat-form-field-wrapper {
+      padding: 0 !important;
+      width: 100% !important;
+    }
+
+    button.file-selector {
+      height: 44px;
+      width: 200px;
+
+      overflow-x: hidden;
+      text-overflow: ellipsis;
+      display: inline-block;
+    }
+    mat-form-field-wrapper {
+      padding: 0 !important;
+    }
+  }
+  mat-card-actions {
+    justify-content: center;
+  }
+}
