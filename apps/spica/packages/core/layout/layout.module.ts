@@ -83,14 +83,6 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     RouteItemComponent,
     BasicDrawerComponent,
     AdvancedDrawerComponent
-  ],
-  entryComponents: [
-    HomeLayoutComponent,
-    SchemeSwitcherComponent,
-    SnackbarComponent,
-    RouteItemComponent,
-    BasicDrawerComponent,
-    AdvancedDrawerComponent
   ]
 })
 export class LayoutModule {

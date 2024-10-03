@@ -114,8 +114,7 @@ import {ApiKeyService} from "./services/apikey.service";
     MatFormFieldModule,
     MatClipboardModule
   ],
-  exports: [CanInteractDirective],
-  entryComponents: [IdentityBadgeComponent, StrategyDialogComponent, HomeBadgeComponent]
+  exports: [CanInteractDirective]
 })
 export class PassportModule {
   static forRoot(): ModuleWithProviders<PassportModule> {

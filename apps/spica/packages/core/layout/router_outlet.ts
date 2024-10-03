@@ -7,7 +7,8 @@ import {
   Directive,
   Inject,
   Renderer2,
-  ViewContainerRef
+  ViewContainerRef,
+  EnvironmentInjector
 } from "@angular/core";
 import {ActivatedRoute, ChildrenOutletContexts, RouterOutlet} from "@angular/router";
 import {DEFAULT_LAYOUT} from "./config";
@@ -26,9 +27,10 @@ export class LayoutRouterOutlet extends RouterOutlet {
     @Inject(DEFAULT_LAYOUT) private defaultLayout: any,
     renderer: Renderer2,
     schemeObserver: SchemeObserver,
-    @Inject(DOCUMENT) private document: any
+    @Inject(DOCUMENT) private document: any,
+    injector: EnvironmentInjector
   ) {
-    super(_parentContexts, _location, _resolver, _name, _changeDetector);
+    super(_parentContexts, _location, _name, _changeDetector, injector);
     // We did not unsubscribe this because our app has only one outlet
     // TODO(thesayyn): reconsider this
     schemeObserver.observe(Scheme.Dark).subscribe(isDark => {

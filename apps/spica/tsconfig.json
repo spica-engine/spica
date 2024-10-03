@@ -3,23 +3,17 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "moduleResolution": "node",
-    "target": "es2015",
+    "target": "es2020",
     "module": "esnext",
     "baseUrl": "./",
     "lib": ["es2018", "dom"],
     "paths": {
-      "@spica-client/*": [
-        "./packages/*",
-        "./src/*", 
-      ]
+      "@spica-client/*": ["./packages/*", "./src/*"]
     },
     "resolveJsonModule": true,
-    "esModuleInterop": true,
+    "esModuleInterop": true
   },
-  "files": [
-    "src/main.ts",
-    "src/polyfills.ts"
-  ],
+  "files": ["src/main.ts", "src/polyfills.ts"],
   "exclude": ["src/**/*.worker.ts"],
   "include": ["src/**/*.d.ts"]
 }

@@ -6,17 +6,14 @@
     "rootDir": ".",
     "moduleResolution": "node",
     "module": "esnext",
-    "target": "es2015",
+    "target": "es2020",
     "lib": ["es2018", "dom"],
     "paths": {
-      "@spica-client/*": [
-        "./packages/*",
-        "./src/*", 
-      ]
+      "@spica-client/*": ["./packages/*", "./src/*"]
     },
     "resolveJsonModule": true,
-    "esModuleInterop": true,
+    "esModuleInterop": true
   },
   "files": ["test.ts", "src/polyfills.ts"],
-  "include": ["./packages/**/*.spec.ts", "./src/**/*.spec.ts","./src/**/*.d.ts"]
+  "include": ["./packages/**/*.spec.ts", "./src/**/*.spec.ts", "./src/**/*.d.ts"]
 }

@@ -1,12 +1,12 @@
-@import "~@angular/material/theming";
-@include mat-core();
+@use '@angular/material' as mat;
+@include mat.core();
 
-$primary: mat-palette($mat-gray, 900, 500, 700);
-$primary-for-dark: mat-palette($mat-gray, 900, 100, 700, 100);
-$accent: mat-palette($mat-amber, A200, A100, A400);
+$primary: mat.define-palette(mat.$gray-palette, 900, 500, 700);
+$primary-for-dark: mat.define-palette(mat.$gray-palette, 900, 100, 700, 100);
+$accent: mat.define-palette(mat.$amber-palette, A200, A100, A400);
 
-$app-light-theme: mat-light-theme($primary, $accent);
-$app-dark-theme: mat-dark-theme($primary-for-dark, $accent);
+$app-light-theme: mat.define-light-theme($primary, $accent);
+$app-dark-theme: mat.define-dark-theme($primary-for-dark, $accent);
 
 @mixin vars($theme, $tone) {
   --tone-diff: #{$tone};
@@ -52,11 +52,11 @@ body {
 
 :root {
   &:not(.dark) {
-    @include angular-material-theme($app-light-theme);
+    @include mat.all-component-themes($app-light-theme);
     @include vars($app-light-theme, 0.6);
   }
   &.dark {
-    @include angular-material-theme($app-dark-theme);
+    @include mat.all-component-themes($app-dark-theme);
     @include vars($app-dark-theme, 0);
     .mat-input-element {
       color: white;
@@ -110,12 +110,12 @@ mat-form-field {
   }
 }
 
-$custom-typography: mat-typography-config(
-  $subheading-2: mat-typography-level(1rem, 1.5rem, 700),
-  $body-1: mat-typography-level(1rem, 1.5rem, 500)
+$custom-typography: mat.define-typography-config(
+  $subheading-2: mat.define-typography-level(1rem, 1.5rem, 700),
+  $body-1: mat.define-typography-level(1rem, 1.5rem, 500)
 );
 
-@include mat-core($custom-typography);
+@include mat.core($custom-typography);
 
 .ng-tooltip {
   position: absolute;

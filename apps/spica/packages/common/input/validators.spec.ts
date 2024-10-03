@@ -1,5 +1,5 @@
 import {SimpleChange} from "@angular/core";
-import {FormControl} from "@angular/forms";
+import {UntypedFormControl} from "@angular/forms";
 import {
   MaxItemsValidator,
   MaxValidator,
@@ -17,16 +17,18 @@ describe("Validators", () => {
     });
 
     it("should not return errors", () => {
-      expect(validator.validate(new FormControl(["ab", "cd"]))).toBeNull();
+      expect(validator.validate(new UntypedFormControl(["ab", "cd"]))).toBeNull();
     });
 
     it("should return errors", () => {
-      expect(validator.validate(new FormControl(["ab", "ab"]))).toEqual({uniqueItems: [0, 1]});
+      expect(validator.validate(new UntypedFormControl(["ab", "ab"]))).toEqual({
+        uniqueItems: [0, 1]
+      });
     });
 
     it("should not return errors when disabled", () => {
       validator.uniqueItems = false;
-      expect(validator.validate(new FormControl(["ab", "ab"]))).toBeNull();
+      expect(validator.validate(new UntypedFormControl(["ab", "ab"]))).toBeNull();
     });
   });
 
@@ -36,14 +38,14 @@ describe("Validators", () => {
     it("should not return errors", () => {
       validator.min = 2;
       validator.ngOnChanges({min: new SimpleChange(undefined, 2, true)});
-      expect(validator.validate(new FormControl(2))).toBeNull();
-      expect(validator.validate(new FormControl(100))).toBeNull();
+      expect(validator.validate(new UntypedFormControl(2))).toBeNull();
+      expect(validator.validate(new UntypedFormControl(100))).toBeNull();
     });
 
     it("should return errors", () => {
       validator.min = 2;
       validator.ngOnChanges({min: new SimpleChange(undefined, 2, true)});
-      expect(validator.validate(new FormControl(1))).toEqual({min: {min: 2, actual: 1}});
+      expect(validator.validate(new UntypedFormControl(1))).toEqual({min: {min: 2, actual: 1}});
     });
   });
 
@@ -54,14 +56,14 @@ describe("Validators", () => {
     it("should not return errors", () => {
       validator.max = 3;
       validator.ngOnChanges({max: new SimpleChange(undefined, 3, true)});
-      expect(validator.validate(new FormControl(3))).toBeNull();
-      expect(validator.validate(new FormControl(2))).toBeNull();
+      expect(validator.validate(new UntypedFormControl(3))).toBeNull();
+      expect(validator.validate(new UntypedFormControl(2))).toBeNull();
     });
 
     it("should return errors", () => {
       validator.max = 3;
       validator.ngOnChanges({max: new SimpleChange(undefined, 3, true)});
-      expect(validator.validate(new FormControl(4))).toEqual({max: {max: 3, actual: 4}});
+      expect(validator.validate(new UntypedFormControl(4))).toEqual({max: {max: 3, actual: 4}});
     });
   });
 
@@ -71,12 +73,12 @@ describe("Validators", () => {
 
     it("should not return errors", () => {
       validator.maxItems = 3;
-      expect(validator.validate(new FormControl(["12", "213", "213"]))).toBeNull();
+      expect(validator.validate(new UntypedFormControl(["12", "213", "213"]))).toBeNull();
     });
 
     it("should return errors", () => {
       validator.maxItems = 3;
-      expect(validator.validate(new FormControl(["12", "213", "213", "123"]))).toEqual({
+      expect(validator.validate(new UntypedFormControl(["12", "213", "213", "123"]))).toEqual({
         maxItems: {max: 3, actual: 4}
       });
     });
@@ -88,12 +90,14 @@ describe("Validators", () => {
 
     it("should not return errors", () => {
       validator.minItems = 2;
-      expect(validator.validate(new FormControl(["12", "213"]))).toBeNull();
+      expect(validator.validate(new UntypedFormControl(["12", "213"]))).toBeNull();
     });
 
     it("should return errors", () => {
       validator.minItems = 2;
-      expect(validator.validate(new FormControl(["12"]))).toEqual({minItems: {min: 2, actual: 1}});
+      expect(validator.validate(new UntypedFormControl(["12"]))).toEqual({
+        minItems: {min: 2, actual: 1}
+      });
     });
   });
 });
