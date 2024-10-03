@@ -24,7 +24,7 @@
         ],
         "styles": ["apps/spica/src/styles.scss"],
         "scripts": [],
-        "webWorkerTsConfig": "tsconfig.worker.json",
+        "webWorkerTsConfig": "apps/spica/tsconfig.worker.json",
         "vendorChunk": true,
         "extractLicenses": false,
         "buildOptimizer": false,
@@ -57,7 +57,7 @@
           "namedChunks": true
         }
       },
-      "defaultConfiguration": "production"
+      "defaultConfiguration": "development"
     },
     "serve": {
       "executor": "@angular-devkit/build-angular:dev-server",
