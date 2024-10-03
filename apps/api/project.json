@@ -42,6 +42,14 @@
           }
         ]
       }
+    },
+    "build-worker": {
+      "executor": "@nx/webpack:webpack",
+      "options": {
+        "outputPath": "dist/apps/worker",
+        "main": "apps/api/src/function/runtime/node/entrypoint.js",
+        "webpackConfig": "apps/api/webpack.worker.config.js"
+      }
     }
   }
 }
