@@ -110,7 +110,7 @@ export async function findDocuments<T>(
   // Reset those relations which have been requested by acl rules.
   const filtersAppliedPipeline = await rulesAppliedPipeline
     .attachToPipeline(!!ruleResetStage, ruleResetStage)
-    .filterByUserRequest(params.filter);
+    .filterByUserRequest(params.filter as object); // Fix: Cast params.filter to object
 
   const seekingPipeline = seekingPipelineBuilder
     .sort(params.sort)
