@@ -15,9 +15,10 @@
     "baseUrl": "./",
     "lib": ["es2018", "dom"],
     "paths": {
+      "@spica-devkit/*": ["apps/api/src/function/packages/*"],
       "@spica-server/*": ["libs/*", "apps/api/src/*"],
       "@spica/*": ["apps/*"],
-      "@spica-devkit/*": ["apps/api/src/function/packages/*"]
+      "@spica/cli": ["apps/cli/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp", "dist"]

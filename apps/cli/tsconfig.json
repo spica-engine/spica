@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "types": ["node"],
+    "emitDecoratorMetadata": true,
+    "target": "es2020",
+    "sourceMap": true,
+    "esModuleInterop": false,
+    "paths": {
+      "@spica-server/*": ["libs/*"]
+    }
+  },
+  "exclude": ["apps/test/*"],
+  "include": ["apps/cli/**/*.ts", "libs/interface/**/*.ts"]
+}
