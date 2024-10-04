@@ -110,10 +110,13 @@
   "devDependencies": {
     "@nestjs/testing": "^7.0.13",
     "@nx/node": "^19.8.2",
+    "@nx/rollup": "19.8.2",
     "@nx/webpack": "^19.8.2",
+    "@rollup/plugin-alias": "^5.1.0",
     "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^10.0.0",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@types/css-tree": "^1.0.0",
     "@types/deep-diff": "^1.0.0",
     "@types/diff-match-patch": "^1.0.32",

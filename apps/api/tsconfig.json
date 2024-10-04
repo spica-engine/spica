@@ -6,8 +6,7 @@
     "types": ["node"],
     "emitDecoratorMetadata": true,
     "target": "es2020",
-    "sourceMap": true,
-    "esModuleInterop": false
+    "sourceMap": true
   },
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts", "/**/testing.module.ts"],
   "include": ["src/**/*.ts"]

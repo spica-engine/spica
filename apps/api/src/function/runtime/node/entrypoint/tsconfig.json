@@ -1,0 +1,11 @@
+{
+  "extends": "../../../../../tsconfig.json",
+  "compilerOptions": {
+    "resolveJsonModule": false,
+    "moduleResolution": "node",
+    "module": "CommonJS",
+    "sourceMap": true,
+    "noImplicitUseStrict": false,
+    "strict": false
+  }
+}

@@ -42,6 +42,15 @@
           }
         ]
       }
+    },
+    "build-worker": {
+      "executor": "@nx/rollup:rollup",
+      "options": {
+        "outputPath": "dist/apps/worker",
+        "tsConfig": "apps/api/src/function/runtime/node/entrypoint/tsconfig.json",
+        "main": "apps/api/src/function/runtime/node/entrypoint/src/entrypoint.js",
+        "rollupConfig": "apps/api/src/function/runtime/node/entrypoint/rollup.config.cjs"
+      }
     }
   }
 }
