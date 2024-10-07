@@ -1,4 +1,4 @@
-const qs = require("qs");
+import * as qs from "qs";
 
 export function parseBody(raw: Uint8Array, contentTypeHeader: string | string[] = "") {
   if (contentTypeHeader == "application/json") {
