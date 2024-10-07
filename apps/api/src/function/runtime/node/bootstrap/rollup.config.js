@@ -43,7 +43,8 @@ module.exports = {
     typescript({
       module: "esnext",
       outDir: "./dist/apps/worker",
-      sourceMap: true
+      sourceMap: true,
+      declaration: false
     }),
     json(),
     commonjs({

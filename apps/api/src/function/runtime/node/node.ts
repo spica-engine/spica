@@ -3,6 +3,11 @@ import * as child_process from "child_process";
 import * as path from "path";
 import {Writable} from "stream";
 
+/**
+ * TODO: reconsider using the 'loader.mjs' because
+ * `--experimental-loader` (--loader) may be removed in the future; instead use `register()`:
+ */
+
 class NodeWorker extends Worker {
   private _process: child_process.ChildProcess;
   private _quit = false;
@@ -15,7 +20,11 @@ class NodeWorker extends Worker {
     super();
     this._process = child_process.spawn(
       `node`,
-      [path.join(__dirname, "..", "worker", "entrypoint")],
+      [
+        "--loader",
+        path.join(__dirname, "loader.mjs"),
+        path.join(__dirname, "..", "worker", "entrypoint")
+      ],
       {
         env: {
           PATH: process.env.PATH,

@@ -39,6 +39,11 @@
             "input": "apps/api/src/bucket/expression/src",
             "glob": "*.pegjs",
             "output": "./"
+          },
+          {
+            "input": "apps/api/src/function/runtime/node",
+            "glob": "loader.mjs",
+            "output": "./"
           }
         ]
       }
