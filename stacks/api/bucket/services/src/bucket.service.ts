@@ -158,7 +158,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
       stream.on("change", (change: any) => {
         const knownOperationTypes = ["insert", "update", "replace", "delete"];
         if (knownOperationTypes.includes(change.operationType)) {
-          return change.fullDocument || change.fullDocumentBeforeChange;
+          observer.next(change.fullDocument || change.fullDocumentBeforeChange);
         } else {
           console.warn("Unknown operation type received: ", change.operationType);
         }
