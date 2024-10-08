@@ -20,11 +20,7 @@ class NodeWorker extends Worker {
     super();
     this._process = child_process.spawn(
       `node`,
-      [
-        "--loader",
-        path.join(__dirname, "loader.mjs"),
-        path.join(__dirname, "..", "worker", "entrypoint")
-      ],
+      ["--import=extensionless/register", path.join(__dirname, "..", "worker", "entrypoint")],
       {
         env: {
           PATH: process.env.PATH,
