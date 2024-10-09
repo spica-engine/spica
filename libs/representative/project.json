@@ -1,0 +1,17 @@
+{
+  "name": "@spica-server/representative",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/representative",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build-lib": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "dist/libs/representative",
+        "main": "apps/libs/representative/index.ts",
+        "tsConfig": "apps/api/tsconfig.json"
+      }
+    }
+  }
+}
