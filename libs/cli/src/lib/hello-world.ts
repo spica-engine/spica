@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const {program} = require("@caporal/core");
+import {program} from "@caporal/core";
 
 program
   .argument("<name>", "Name to greet")
@@ -8,7 +8,7 @@ program
     default: "Hello"
   })
   .action(({logger, args, options}) => {
-    logger.info("%s, %s!", options.greeting, args.name);
+    logger.info("%s, %s!", options["greeting"], args["name"]);
   });
 
 program.run();

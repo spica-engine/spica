@@ -17,7 +17,8 @@
     "paths": {
       "@spica-server/*": ["libs/*", "apps/api/src/*"],
       "@spica/*": ["apps/*"],
-      "@spica-devkit/*": ["apps/api/src/function/packages/*"]
+      "@spica-devkit/*": ["apps/api/src/function/packages/*"],
+      "@mavliutfolziev/cli": ["libs/cli/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp", "dist"]
