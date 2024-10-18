@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [ ! -f WORKSPACE ]; then
+if [ ! -f nx.json ]; then
     echo "###########################################"
     echo "Please run this script from workspace root."
     echo "###########################################"

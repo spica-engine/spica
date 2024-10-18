@@ -1,0 +1,47 @@
+{
+  "name": "api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/api/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "args": [
+          "--database-name=spica",
+          "--database-uri=mongodb://localhost:27017",
+          "--passport-secret=secret",
+          "--public-url=http://localhost",
+          "--port=4300"
+        ]
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "api:build:development"
+        },
+        "production": {
+          "buildTarget": "api:build:production"
+        }
+      }
+    },
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "options": {
+        "outputPath": "dist/apps/api",
+        "main": "apps/api/src/main.ts",
+        "tsConfig": "apps/api/tsconfig.json",
+        "webpackConfig": "apps/api/webpack.config.js",
+        "assets": [
+          {
+            "input": "apps/api/src/bucket/expression/src",
+            "glob": "*.pegjs",
+            "output": "./"
+          }
+        ]
+      }
+    }
+  }
+}

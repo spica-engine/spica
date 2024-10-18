@@ -1,4 +1,0 @@
-#!/usr/bin/env node
-process.title = "spica cli";
-const {run} = require("../index");
-run();
