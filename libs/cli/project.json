@@ -1,7 +1,7 @@
 {
-  "name": "@mavliutfozliev/cli",
+  "name": "@spica/cli",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/cli/src",
+  "sourceRoot": "libs/cli",
   "projectType": "library",
   "release": {
     "version": {
@@ -18,9 +18,9 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/cli",
-        "main": "libs/cli/src/index.ts",
+        "main": "libs/cli/index.ts",
         "tsConfig": "libs/cli/tsconfig.lib.json",
-        "assets": ["libs/cli/*.md"]
+        "assets": ["libs/cli/*.md", "libs/cli/bin/*"]
       }
     },
     "nx-release-publish": {
