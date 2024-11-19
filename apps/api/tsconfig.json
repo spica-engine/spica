@@ -18,6 +18,7 @@
   "references": [
     {"path": "../../libs/filter"},
     {"path": "../../libs/representative"},
+    {"path": "../../libs/core"},
     {"path": "../../libs/interface"},
     {"path": "../../libs/database"}
   ]
