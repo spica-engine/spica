@@ -9,7 +9,8 @@
         "outputPath": "libs/filter/dist",
         "main": "libs/filter/src/index.ts",
         "tsConfig": "libs/filter/tsconfig.lib.json"
-      }
+      },
+      "dependsOn": ["^build"]
     }
   }
 }
