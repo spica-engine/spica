@@ -27,5 +27,12 @@
       }
     }
   ],
+  "targetDefaults": {
+    "@nx/js:tsc": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
+    }
+  },
   "nxCloudId": "66fba1edf5b0be5c19ad179e"
 }
