@@ -9,5 +9,6 @@
     "types": ["node", "jest"]
   },
   "include": ["src/**/*.ts"],
-  "references": []
+  "exclude": ["src/**/*.spec.ts"],
+  "references": [{"path": "../interface/tsconfig.lib.json"}]
 }
