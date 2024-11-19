@@ -3,7 +3,7 @@ import {RealtimeConnection, RealtimeConnectionOne} from "./interface";
 import {tap, delayWhen, map, debounceTime, retryWhen, filter, takeWhile} from "rxjs/operators";
 import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
-import {isPlatformBrowser} from "@spica-devkit/internal_common";
+import {isPlatformBrowser} from "../../internal_common";
 
 export class IterableSet<T> implements Iterable<T> {
   ids = new Array<string>();

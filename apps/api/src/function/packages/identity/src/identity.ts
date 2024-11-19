@@ -17,7 +17,7 @@ import {
   checkInitialized,
   HttpService,
   Axios
-} from "@spica-devkit/internal_common";
+} from "../../internal_common";
 import {Strategy} from "./interface";
 import {Observable} from "rxjs";
 import {deepCopyJSON} from "@spica/core";

@@ -3,7 +3,7 @@ import {
   checkInitialized,
   isPlatformBrowser,
   HttpService
-} from "@spica-devkit/internal_common";
+} from "../../internal_common";
 import {
   StorageObject,
   BufferWithMeta,

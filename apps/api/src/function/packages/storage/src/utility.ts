@@ -1,4 +1,4 @@
-import {isPlatformBrowser} from "@spica-devkit/internal_common";
+import {isPlatformBrowser} from "../../internal_common";
 import {BufferWithMeta} from "./interface";
 
 function importFormData() {

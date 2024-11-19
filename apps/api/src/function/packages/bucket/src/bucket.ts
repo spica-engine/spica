@@ -12,7 +12,7 @@ import {
   checkInitialized,
   buildUrl,
   HttpService
-} from "@spica-devkit/internal_common";
+} from "../../internal_common";
 import {getWsObs} from "./operators";
 
 // do not remove these unused imports
