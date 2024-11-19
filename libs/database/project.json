@@ -1,0 +1,15 @@
+{
+  "name": "database",
+  "sourceRoot": "libs/database/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "libs/database/dist",
+        "main": "libs/database/src/index.ts",
+        "tsConfig": "libs/database/tsconfig.lib.json"
+      }
+    }
+  }
+}
