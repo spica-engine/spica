@@ -16,7 +16,7 @@ import {
   Synchronizer,
   VC_REP_MANAGER
 } from "@spica-server/versioncontrol";
-import {RepresentativeManager} from "@spica-server/representative";
+import {RepresentativeManager} from "@spica/representative";
 import {PreferenceModule} from "@spica-server/preference";
 import {PreferenceService} from "@spica-server/preference/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
