@@ -4,7 +4,7 @@ import {SyncProvider} from "@spica-server/versioncontrol";
 import {FunctionEngine} from "../engine";
 import {LogService} from "@spica-server/function/src/log/src/log.service";
 import * as CRUD from "../crud";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica/interface";
 
 export function schemaSyncProviders(
   fs: FunctionService,

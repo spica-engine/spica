@@ -5,8 +5,8 @@ import {LogService} from "@spica-server/function/src/log";
 import {dependecySyncProviders} from "./dependency";
 import {indexSyncProviders} from "./fnindex";
 import {schemaSyncProviders} from "./schema";
-import {Dependency} from "@spica-server/interface/function";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {Dependency} from "@spica/interface";
+import {IRepresentativeManager} from "@spica/interface";
 
 export const getSyncProviders = (
   service: FunctionService,

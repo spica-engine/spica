@@ -1,18 +1,14 @@
 import {registrar} from "@spica-server/asset";
-import {Resource} from "@spica-server/interface/asset";
+import {Resource} from "@spica/interface";
 import {Schema, Validator} from "@spica-server/core/schema";
-import {
-  Function,
-  FunctionContents,
-  FunctionWithDependencies
-} from "@spica-server/interface/function";
+import {Function, FunctionContents, FunctionWithDependencies} from "@spica/interface";
 import {generate} from "./schema/enqueuer.resolver";
 import * as CRUD from "./crud";
 import {FunctionService} from "@spica-server/function/services";
 import {FunctionEngine} from "./engine";
 import {LogService} from "@spica-server/function/src/log";
 import {ObjectId} from "@spica-server/database";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica/interface";
 
 const _module = "function";
 

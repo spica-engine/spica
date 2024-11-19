@@ -7,7 +7,7 @@ import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing"
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {FunctionModule} from "@spica-server/function";
-import {Function} from "@spica-server/interface/function";
+import {Function} from "@spica/interface";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as os from "os";

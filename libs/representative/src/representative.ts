@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as YAML from "yaml";
 import * as dotenv from "dotenv";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica/interface";
 
 @Injectable()
 export class RepresentativeManager implements IRepresentativeManager {

@@ -1,4 +1,4 @@
-import {ExportMeta} from "@spica-server/interface/asset";
+import {ExportMeta} from "@spica/interface";
 import {RepresentativeManager} from "@spica-server/representative";
 import * as archiver from "archiver";
 import * as fs from "fs";

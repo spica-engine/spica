@@ -16,7 +16,7 @@ import {
   COLL_SLUG,
   CollectionSlug
 } from "@spica-server/function/services";
-import {Function} from "@spica-server/interface/function";
+import {Function} from "@spica/interface";
 
 import {ChangeKind, TargetChange} from "./change";
 import {SCHEMA, SchemaWithName} from "./schema/schema";

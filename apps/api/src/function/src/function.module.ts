@@ -24,7 +24,7 @@ import {
 } from "@spica-server/versioncontrol";
 import {getSyncProviders} from "./versioncontrol";
 import {registerAssetHandlers} from "./asset";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica/interface";
 import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
 
 @Module({})

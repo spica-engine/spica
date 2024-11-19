@@ -17,7 +17,7 @@ import {AuthResolver} from "./relation";
 import {AUTH_RESOLVER} from "@spica-server/bucket/common";
 import {registerAssetHandlers} from "./asset";
 import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica/interface";
 
 @Global()
 @Module({})

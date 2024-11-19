@@ -10,7 +10,7 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
-import {ChunkKind} from "@spica-server/interface/realtime";
+import {ChunkKind} from "@spica/interface";
 
 function url(path: string, query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL(path, "ws://insteadof");
