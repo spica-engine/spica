@@ -37,7 +37,7 @@
           {
             "input": "apps/api/src/bucket/expression/src",
             "glob": "*.pegjs",
-            "output": "./"
+            "output": "src/bucket/expression/src"
           }
         ]
       },
