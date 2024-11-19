@@ -1,6 +1,6 @@
 import {Controller, Get, INestApplication, Post} from "@nestjs/common";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {Middlewares} from "@spica-server/core";
+import {CoreTestingModule, Request} from "@spica/core";
+import {Middlewares} from "@spica/core";
 import {StatusModule} from "@spica-server/status";
 import {Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica/database";

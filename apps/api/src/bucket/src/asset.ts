@@ -2,7 +2,7 @@ import {registrar} from "@spica-server/asset";
 import {Resource} from "@spica/interface";
 import {HistoryService} from "@spica-server/bucket/history";
 import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/services";
-import {Schema, Validator} from "@spica-server/core/schema";
+import {Schema, Validator} from "@spica/core";
 import * as CRUD from "./crud";
 import {IRepresentativeManager} from "@spica/interface";
 import {ObjectId} from "@spica/database";

@@ -8,7 +8,7 @@ import {
   InsertOneWriteOpResult,
   ObjectId
 } from "@spica/database";
-import {ChangePaths, ChangeKind, diff, schemaDiff} from "@spica-server/core/differ";
+import {ChangePaths, ChangeKind, diff, schemaDiff} from "@spica/core";
 import {History} from "./interfaces";
 
 @Injectable()

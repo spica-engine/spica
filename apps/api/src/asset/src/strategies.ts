@@ -1,4 +1,4 @@
-import {compareResourceGroups} from "@spica-server/core/differ";
+import {compareResourceGroups} from "@spica/core";
 import {Asset, Resource} from "@spica/interface";
 import {IInstallationStrategy} from "./interface";
 

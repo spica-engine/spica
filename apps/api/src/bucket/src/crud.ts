@@ -1,4 +1,4 @@
-import {schemaDiff, ChangeKind} from "@spica-server/core/differ";
+import {schemaDiff, ChangeKind} from "@spica/core";
 import {findRelations} from "@spica-server/bucket/common";
 import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica/database";

@@ -1,6 +1,6 @@
 import {Module, Global, DynamicModule, Inject, Optional} from "@nestjs/common";
 import {SchemaResolver, provideSchemaResolver} from "./schema.resolver";
-import {Validator, SchemaModule} from "@spica-server/core/schema";
+import {Validator, SchemaModule} from "@spica/core";
 import {PreferenceService, IDENTITY_SETTINGS_FINALIZER} from "@spica-server/preference/services";
 import {JwtModule} from "@nestjs/jwt";
 import {IdentityOptions, IDENTITY_OPTIONS, POLICY_PROVIDER} from "./options";

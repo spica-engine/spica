@@ -1,7 +1,7 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {SchemaModule} from "@spica-server/core/schema";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {SchemaModule} from "@spica/core";
+import {CoreTestingModule, Request} from "@spica/core";
 import {DatabaseService, DatabaseTestingModule} from "@spica/database";
 import {Webhook, WebhookService} from "@spica-server/function/webhook";
 import {SchemaResolver} from "@spica-server/function/webhook/src/schema";

@@ -5,7 +5,7 @@ import {
   BucketService
 } from "@spica-server/bucket/services";
 import * as locale from "locale";
-import {ChangeKind, diff} from "@spica-server/core/differ";
+import {ChangeKind, diff} from "@spica/core";
 import {BucketCacheService} from "@spica-server/bucket/cache";
 
 export function buildI18nAggregation(property: any, locale: string, fallback: string) {

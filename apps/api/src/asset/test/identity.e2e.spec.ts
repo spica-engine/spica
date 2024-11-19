@@ -1,11 +1,11 @@
 import {INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {CoreTestingModule, Request} from "@spica/core";
 import {DatabaseTestingModule} from "@spica/database";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {AssetModule} from "@spica-server/asset";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {SchemaModule} from "@spica/core";
+import {OBJECTID_STRING, OBJECT_ID} from "@spica/core";
 import * as os from "os";
 import {IdentityModule} from "@spica-server/passport/identity";
 import {PolicyModule} from "@spica-server/passport/policy";

@@ -21,14 +21,14 @@ import {
 import {activity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/services";
-import {Schema, Validator} from "@spica-server/core/schema";
+import {Schema, Validator} from "@spica/core";
 import {ObjectId, OBJECT_ID} from "@spica/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {createBucketActivity} from "@spica-server/bucket/common";
 import * as expression from "@spica-server/bucket/expression";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket/cache";
 import * as CRUD from "./crud";
-import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core/patch";
+import {applyPatch, getUpdateQueryForPatch} from "@spica/core";
 /**
  * All APIs related to bucket schemas.
  * @name bucket

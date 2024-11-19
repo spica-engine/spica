@@ -12,7 +12,7 @@ import {
   RelationMap,
   resetNonOverlappingPathsInRelationMap
 } from "./relation";
-import {getUpdateQueryForPatch} from "@spica-server/core/patch";
+import {getUpdateQueryForPatch} from "@spica/core";
 import {
   ACLSyntaxException,
   BadRequestException,

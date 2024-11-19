@@ -19,8 +19,8 @@ import {
   Patch
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
+import {BOOLEAN, JSONP, NUMBER} from "@spica/core";
+import {Schema} from "@spica/core";
 import {ObjectId, OBJECT_ID} from "@spica/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as etag from "etag";

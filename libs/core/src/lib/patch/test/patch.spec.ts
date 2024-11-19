@@ -1,4 +1,4 @@
-import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core/patch";
+import {applyPatch, getUpdateQueryForPatch} from "@spica/core";
 
 describe("Merge/Patch", () => {
   it("should get patched document", () => {

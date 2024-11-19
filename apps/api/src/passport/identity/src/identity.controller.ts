@@ -20,8 +20,8 @@ import {
   Optional
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
+import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica/core";
+import {Schema} from "@spica/core";
 import {ObjectId, OBJECT_ID} from "@spica/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {Factor, FactorMeta, AuthFactor} from "@spica-server/passport/authfactor";

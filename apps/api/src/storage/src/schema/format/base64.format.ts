@@ -1,4 +1,4 @@
-import {Format} from "@spica-server/core/schema";
+import {Format} from "@spica/core";
 
 export const BASE_64: Format = {
   name: "base64",

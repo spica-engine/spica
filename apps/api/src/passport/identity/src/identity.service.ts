@@ -1,7 +1,7 @@
 import {Injectable, Inject} from "@nestjs/common";
 import {BaseCollection, DatabaseService} from "@spica/database";
 import {Identity} from "./interface";
-import {Validator, Default} from "@spica-server/core/schema";
+import {Validator, Default} from "@spica/core";
 import {hash, compare} from "./hash";
 import {JwtService} from "@nestjs/jwt";
 import {IDENTITY_OPTIONS, IdentityOptions} from "./options";
