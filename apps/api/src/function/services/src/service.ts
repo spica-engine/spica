@@ -1,6 +1,6 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {BaseCollection, DatabaseService} from "@spica-server/database";
-import {Function} from "@spica-server/interface/function";
+import {Function} from "@spica/interface";
 import {FunctionOptions, FUNCTION_OPTIONS} from "./options";
 
 @Injectable()

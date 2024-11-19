@@ -1,4 +1,4 @@
-import {ChunkKind, Sequence, SequenceKind} from "@spica-server/interface/realtime";
+import {ChunkKind, Sequence, SequenceKind} from "@spica/interface";
 import {RealtimeConnection, RealtimeConnectionOne} from "./interface";
 import {tap, delayWhen, map, debounceTime, retryWhen, filter, takeWhile} from "rxjs/operators";
 import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";

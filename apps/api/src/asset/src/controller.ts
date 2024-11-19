@@ -17,7 +17,7 @@ import {
 } from "@nestjs/common";
 import {AssetService} from "./service";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
-import {Asset, Config, ExportMeta, Resource} from "@spica-server/interface/asset";
+import {Asset, Config, ExportMeta, Resource} from "@spica/interface";
 import {exporters, operators, validators} from "./registration";
 import {putConfiguration} from "./helpers";
 import {BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";

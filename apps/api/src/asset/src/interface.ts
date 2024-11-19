@@ -1,4 +1,4 @@
-import {Asset, Resource} from "@spica-server/interface/asset";
+import {Asset, Resource} from "@spica/interface";
 
 export const ASSET_REP_MANAGER = Symbol.for("ASSET_REP_MANAGER");
 

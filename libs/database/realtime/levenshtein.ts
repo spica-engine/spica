@@ -1,4 +1,4 @@
-import {Sequence, SequenceKind} from "@spica-server/interface/realtime";
+import {Sequence, SequenceKind} from "@spica/interface";
 
 export function levenshtein(
   a: Set<string> | Array<string>,

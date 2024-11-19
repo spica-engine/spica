@@ -1,7 +1,7 @@
 import {Validator, Schema} from "@spica-server/core/schema";
 import {Dashboard, DashboardService} from "@spica-server/dashboard";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {Resource} from "@spica-server/interface/asset";
+import {IRepresentativeManager} from "@spica/interface";
+import {Resource} from "@spica/interface";
 import {registrar} from "@spica-server/asset";
 import {ObjectId} from "@spica-server/database";
 

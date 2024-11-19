@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
-import {Asset} from "@spica-server/interface/asset";
+import {Asset} from "@spica/interface";
 import {Observable} from "rxjs";
 
 @Injectable()

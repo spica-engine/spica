@@ -4,7 +4,7 @@ import {
   Function,
   FunctionRepresentative,
   FunctionWithDependencies
-} from "@spica-server/interface/function";
+} from "@spica/interface";
 import {ChangeKind, changesFromTriggers, createTargetChanges, hasContextChange} from "./change";
 import {ObjectId} from "@spica-server/database";
 import {FunctionEngine} from "./engine";
