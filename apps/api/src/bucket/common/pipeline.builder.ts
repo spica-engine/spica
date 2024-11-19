@@ -12,7 +12,7 @@ import {
 import {constructFilterValues} from "@spica-server/bucket/common";
 import {categorizePropertyMap} from "./helpers";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
-import {extractFilterPropertyMap} from "@spica-server/filter";
+import {extractFilterPropertyMap} from "@spica/filter";
 
 export class BucketPipelineBuilder extends PipelineBuilder {
   private schema: Bucket;

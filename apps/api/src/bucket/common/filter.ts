@@ -7,7 +7,7 @@ import {
   replaceFilter,
   replaceFilterObjectIds,
   ValueConstructor
-} from "@spica-server/filter";
+} from "@spica/filter";
 
 // this reviver should be kept for backward compatibility and in case the filter is complex and our replacer can't detect the value that should be constructed
 export function filterReviver(k: string, v: string) {
