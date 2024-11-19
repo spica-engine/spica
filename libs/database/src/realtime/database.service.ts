@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {ChangeStream, DatabaseService, Document} from "@spica-server/database";
+import {ChangeStream, DatabaseService, Document} from "@spica/database";
 import {StreamChunk} from "@spica/interface";
 import {Observable} from "rxjs";
 import {FindOptions} from "./interface";

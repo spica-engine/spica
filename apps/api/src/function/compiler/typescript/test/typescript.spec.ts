@@ -42,7 +42,7 @@ describe("Typescript", () => {
 
   it("should report diagnostics", async () => {
     compilation.cwd = FunctionTestBed.initialize(`
-    import {database} from '@spica-server/database';
+    import {database} from '@spica/database';
     export default function() {
     const a;
     }
@@ -51,7 +51,7 @@ describe("Typescript", () => {
       Object({
         code: 2307,
         category: 1,
-        text: "Cannot find module '@spica-server/database' or its corresponding type declarations.",
+        text: "Cannot find module '@spica/database' or its corresponding type declarations.",
         start: Object({line: 2, column: 28}),
         end: Object({line: 2, column: 52})
       }),

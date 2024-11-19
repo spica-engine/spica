@@ -7,7 +7,7 @@ import * as CRUD from "./crud";
 import {FunctionService} from "@spica-server/function/services";
 import {FunctionEngine} from "./engine";
 import {LogService} from "@spica-server/function/src/log";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {IRepresentativeManager} from "@spica/interface";
 
 const _module = "function";

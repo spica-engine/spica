@@ -1,4 +1,4 @@
-import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
+import {BaseCollection, DatabaseService, ObjectId} from "@spica/database";
 import {Activity, ACTIVITY_OPTIONS, ActivityOptions, ModuleActivity} from "./interface";
 import {Injectable, Inject} from "@nestjs/common";
 

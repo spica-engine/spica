@@ -1,6 +1,6 @@
 import {HistoryService} from "@spica-server/bucket/history";
 import {BucketDataService, BucketService} from "@spica-server/bucket/services";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {IRepresentativeManager} from "@spica/interface";
 import {SyncProvider} from "@spica-server/versioncontrol";
 import * as CRUD from "../crud";

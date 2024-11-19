@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {OAuthRequestDetails, OAuthStrategy, Strategy, StrategyTypeService} from "../interface";
 import {StrategyService} from "./strategy.service";
 import {PassportOptions, PASSPORT_OPTIONS, RequestService, REQUEST_SERVICE} from "../../options";

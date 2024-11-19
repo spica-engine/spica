@@ -11,7 +11,7 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ObjectId, OBJECT_ID} from "@spica/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {PassportOptions, PASSPORT_OPTIONS, STRATEGIES} from "../options";
 import {Strategy, StrategyTypeService} from "./interface";

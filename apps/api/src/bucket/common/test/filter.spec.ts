@@ -1,5 +1,5 @@
 import {replaceFilterDates} from "@spica-server/bucket/common";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 
 describe("Bucket data filter", () => {
   describe("filter", () => {

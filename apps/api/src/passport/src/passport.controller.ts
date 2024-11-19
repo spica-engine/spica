@@ -27,7 +27,7 @@ import {UrlEncodedBodyParser} from "./body";
 import {StrategyService} from "./strategy/services/strategy.service";
 import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ObjectId, OBJECT_ID} from "@spica/database";
 import {STRATEGIES} from "./options";
 import {StrategyTypeServices} from "./strategy/interface";
 import {AuthFactor} from "@spica-server/passport/authfactor";

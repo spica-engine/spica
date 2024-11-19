@@ -1,7 +1,7 @@
 import * as func from "./func";
 import {convert} from "./convert";
 import {compile} from "./compile";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 
 export const has: func.Func = context => {
   const fnName = "has";

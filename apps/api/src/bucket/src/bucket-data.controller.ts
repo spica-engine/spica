@@ -35,7 +35,7 @@ import {
   EXPRESSION
 } from "@spica-server/core";
 import {Schema, Validator} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ObjectId, OBJECT_ID} from "@spica/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {invalidateCache, registerCache} from "@spica-server/bucket/cache";
 import {

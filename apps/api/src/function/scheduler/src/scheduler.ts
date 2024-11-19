@@ -1,6 +1,6 @@
 import {Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
 import {APP_INTERCEPTOR, HttpAdapterHost} from "@nestjs/core";
-import {DatabaseService} from "@spica-server/database";
+import {DatabaseService} from "@spica/database";
 import {Language} from "@spica-server/function/compiler";
 import {Javascript} from "@spica-server/function/compiler/javascript";
 import {Typescript} from "@spica-server/function/compiler/typescript";

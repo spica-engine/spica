@@ -3,7 +3,7 @@ import {Test} from "@nestjs/testing";
 import {ActivityModule} from "@spica-server/activity";
 import {Action, ActivityService} from "@spica-server/activity/services";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica/database";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
 describe("Activity Acceptance", () => {

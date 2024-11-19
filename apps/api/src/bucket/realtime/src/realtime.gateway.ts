@@ -33,8 +33,8 @@ import {
 } from "@spica-server/bucket/services";
 import {applyPatch, deepCopy} from "@spica-server/core/patch";
 import {Schema, Validator} from "@spica-server/core/schema";
-import {ObjectId} from "@spica-server/database";
-import {FindOptions, RealtimeDatabaseService} from "@spica-server/database/realtime";
+import {ObjectId} from "@spica/database";
+import {FindOptions, RealtimeDatabaseService} from "@spica/database";
 import {ChunkKind} from "@spica/interface";
 import {GuardService} from "@spica-server/passport";
 import {resourceFilterFunction} from "@spica-server/passport/guard";

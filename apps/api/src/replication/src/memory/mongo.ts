@@ -1,4 +1,4 @@
-import {BaseCollection} from "@spica-server/database";
+import {BaseCollection} from "@spica/database";
 import {ChangeStream} from "mongodb";
 import {PartialObserver} from "rxjs";
 import {MemoryOptions, IPubSub} from "@spica-server/replication";

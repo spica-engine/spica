@@ -22,7 +22,7 @@ import {
 import {activity} from "@spica-server/activity/services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ObjectId, OBJECT_ID} from "@spica/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {Factor, FactorMeta, AuthFactor} from "@spica-server/passport/authfactor";
 import {createIdentityActivity} from "./activity.resource";
@@ -32,7 +32,7 @@ import {Identity, PaginationResponse} from "./interface";
 import {POLICY_PROVIDER} from "./options";
 import {registerPolicyAttacher} from "./utility";
 import {ClassCommander, CommandType} from "@spica-server/replication";
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {PipelineBuilder} from "@spica/database";
 
 @Controller("passport/identity")
 export class IdentityController {

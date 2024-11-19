@@ -5,7 +5,7 @@ import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/ser
 import {Schema, Validator} from "@spica-server/core/schema";
 import * as CRUD from "./crud";
 import {IRepresentativeManager} from "@spica/interface";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 
 const _module = "bucket";
 

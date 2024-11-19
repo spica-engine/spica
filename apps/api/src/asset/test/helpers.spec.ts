@@ -1,5 +1,5 @@
 import {eliminateNonConfigurables, putConfiguration, replaceValue} from "@spica-server/asset";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {Asset, Config} from "@spica/interface";
 
 describe("Helpers", () => {

@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {Bucket} from "@spica-server/bucket/services";
 import * as Relation from "./relation";
 import {getPropertyByPath} from "./schema";

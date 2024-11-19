@@ -1,5 +1,5 @@
 import {Injectable, Inject} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService} from "@spica/database";
 import {Identity} from "./interface";
 import {Validator, Default} from "@spica-server/core/schema";
 import {hash, compare} from "./hash";

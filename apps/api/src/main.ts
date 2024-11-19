@@ -8,7 +8,7 @@ import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
 import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DashboardModule} from "@spica-server/dashboard";
-import {DatabaseModule} from "@spica-server/database";
+import {DatabaseModule} from "@spica/database";
 import {FunctionModule} from "@spica-server/function";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";

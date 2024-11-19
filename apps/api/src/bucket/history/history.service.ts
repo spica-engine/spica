@@ -7,7 +7,7 @@ import {
   FilterQuery,
   InsertOneWriteOpResult,
   ObjectId
-} from "@spica-server/database";
+} from "@spica/database";
 import {ChangePaths, ChangeKind, diff, schemaDiff} from "@spica-server/core/differ";
 import {History} from "./interfaces";
 

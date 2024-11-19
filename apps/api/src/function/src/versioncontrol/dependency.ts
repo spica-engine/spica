@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {FunctionService} from "@spica-server/function/services";
 import {SyncProvider} from "@spica-server/versioncontrol";
 import {FunctionEngine} from "../engine";

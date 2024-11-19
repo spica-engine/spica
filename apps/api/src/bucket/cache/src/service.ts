@@ -1,6 +1,6 @@
 import {CACHE_MANAGER, Inject, Injectable} from "@nestjs/common";
 import {Cache} from "cache-manager";
-import {DatabaseService} from "@spica-server/database";
+import {DatabaseService} from "@spica/database";
 import * as cron from "cron";
 
 @Injectable()
