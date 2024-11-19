@@ -39,7 +39,8 @@
             "glob": "*.pegjs",
             "output": "src/bucket/expression/src"
           }
-        ]
+        ],
+        "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
       },
       "dependsOn": ["^build"]
     }

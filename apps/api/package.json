@@ -1,7 +1,9 @@
 {
   "name": "@spica/api",
   "version": "0.0.0-PLACEHOLDER",
-  "devDependencies": {},
+  "devDependencies": {
+    "typescript-transform-paths": "^3.5.2"
+  },
   "dependencies": {},
   "type": "commonjs",
   "main": "./dist/src/index.js",
