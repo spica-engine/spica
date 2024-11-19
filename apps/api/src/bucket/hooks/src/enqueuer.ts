@@ -1,11 +1,11 @@
-import {Description, Enqueuer} from "@spica/api/src/function/enqueuer";
-import {EventQueue} from "@spica/api/src/function/queue";
-import {event} from "@spica/api/src/function/queue/proto";
-import {hooks} from "@spica/api/src/bucket/hooks/proto";
+import {Description, Enqueuer} from "@spica-server/function/enqueuer";
+import {EventQueue} from "@spica-server/function/queue";
+import {event} from "@spica-server/function/queue/proto";
+import {hooks} from "@spica-server/bucket/hooks/proto";
 import {ChangeQueue} from "./queue";
 import {ChangeEmitter, changeKey} from "./emitter";
 import uniqid = require("uniqid");
-import {ClassCommander, CommandType, JobReducer} from "@spica/api/src/replication";
+import {ClassCommander, CommandType, JobReducer} from "@spica-server/replication";
 
 export interface ChangeOptions {
   bucket: string;

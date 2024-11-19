@@ -1,4 +1,4 @@
-import {event} from "@spica/api/src/function/queue/proto";
+import {event} from "@spica-server/function/queue/proto";
 
 export interface Description {
   name: string;

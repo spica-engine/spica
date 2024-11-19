@@ -1,4 +1,4 @@
-import {parser} from "@spica/api/src/bucket/expression/src/parser";
+import {parser} from "@spica-server/bucket/expression/src/parser";
 
 export function expressionFilterParser(exp) {
   const tree = parser.parse(exp);

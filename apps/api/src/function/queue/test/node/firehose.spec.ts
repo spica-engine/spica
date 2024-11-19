@@ -1,5 +1,5 @@
-import {FirehosePool, FirehoseSocket, Message} from "@spica/api/src/function/queue/node";
-import {Firehose} from "@spica/api/src/function/queue/proto";
+import {FirehosePool, FirehoseSocket, Message} from "@spica-server/function/queue/node";
+import {Firehose} from "@spica-server/function/queue/proto";
 
 describe("Firehose", () => {
   describe("Message", () => {

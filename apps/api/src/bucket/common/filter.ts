@@ -1,5 +1,5 @@
 import {ObjectId} from "@spica/database";
-import {Bucket} from "@spica/api/src/bucket/services";
+import {Bucket} from "@spica-server/bucket/services";
 import * as Relation from "./relation";
 import {getPropertyByPath} from "./schema";
 import {

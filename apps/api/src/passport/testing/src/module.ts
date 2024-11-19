@@ -1,8 +1,8 @@
 import {DynamicModule, Global, Inject, Module, Optional} from "@nestjs/common";
 import {PassportModule} from "@nestjs/passport";
-import {GuardService} from "@spica/api/src/passport";
-import {AuthFactor} from "@spica/api/src/passport/authfactor";
-import {PreferenceService} from "@spica/api/src/preference/services";
+import {GuardService} from "@spica-server/passport";
+import {AuthFactor} from "@spica-server/passport/authfactor";
+import {PreferenceService} from "@spica-server/preference/services";
 import {TestingOptions} from "./interface";
 import {NoopStrategy} from "./noop.strategy";
 

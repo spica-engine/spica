@@ -1,6 +1,6 @@
-import {Enqueuer} from "@spica/api/src/function/enqueuer";
-import {EventQueue, Queue} from "@spica/api/src/function/queue";
-import {ClassCommander, JobReducer} from "@spica/api/src/replication";
+import {Enqueuer} from "@spica-server/function/enqueuer";
+import {EventQueue, Queue} from "@spica-server/function/queue";
+import {ClassCommander, JobReducer} from "@spica-server/replication";
 
 export const ENQUEUER = Symbol.for("SCHEDULER_ENQUEUER");
 

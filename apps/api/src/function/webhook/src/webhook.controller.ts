@@ -17,8 +17,8 @@ import {
 import {DEFAULT, JSONP, NUMBER} from "@spica/core";
 import {Schema} from "@spica/core";
 import {DatabaseService, ObjectId, OBJECT_ID} from "@spica/database";
-import {CollectionSlug, COLL_SLUG} from "@spica/api/src/function/services";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica/api/src/passport/guard";
+import {CollectionSlug, COLL_SLUG} from "@spica-server/function/services";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {Webhook} from "./interface";
 import {WebhookInvoker} from "./invoker";
 import {WebhookService} from "./webhook.service";

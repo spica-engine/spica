@@ -7,7 +7,7 @@ import {
   RelationType,
   createRelationMap,
   getRelationResolvedBucketSchema
-} from "@spica/api/src/bucket/common";
+} from "@spica-server/bucket/common";
 import {deepCopy} from "@spica/core";
 
 describe("Relation", () => {

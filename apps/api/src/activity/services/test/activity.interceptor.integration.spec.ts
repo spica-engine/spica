@@ -6,7 +6,7 @@ import {
   Predict,
   ModuleActivity,
   ACTIVITY_OPTIONS
-} from "@spica/api/src/activity/services";
+} from "@spica-server/activity/services";
 import {CoreTestingModule, Request} from "@spica/core";
 import {DatabaseTestingModule} from "@spica/database";
 

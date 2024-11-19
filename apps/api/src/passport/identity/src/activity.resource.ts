@@ -1,4 +1,4 @@
-import {Action, PreActivity, ModuleActivity} from "@spica/api/src/activity/services";
+import {Action, PreActivity, ModuleActivity} from "@spica-server/activity/services";
 
 export function createIdentityActivity(
   preActivity: PreActivity,

@@ -1,14 +1,14 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {ActivityModule} from "@spica/api/src/activity";
-import {BucketModule} from "@spica/api/src/bucket";
+import {ActivityModule} from "@spica-server/activity";
+import {BucketModule} from "@spica-server/bucket";
 import {SchemaModule} from "@spica/core";
 import {CREATED_AT, UPDATED_AT} from "@spica/core";
 import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica/core";
 import {CoreTestingModule, Request} from "@spica/core";
 import {DatabaseTestingModule, ObjectId, stream} from "@spica/database";
-import {PassportTestingModule} from "@spica/api/src/passport/testing";
-import {PreferenceTestingModule} from "@spica/api/src/preference/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 export function getBucketName(id: string | ObjectId) {
   return `Bucket_${id}`;

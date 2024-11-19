@@ -1,4 +1,4 @@
-import {SyncDirection, Synchronizer, SyncProvider} from "@spica/api/src/versioncontrol";
+import {SyncDirection, Synchronizer, SyncProvider} from "@spica-server/versioncontrol";
 
 describe("Synchronizer", () => {
   let synchronizer: Synchronizer;

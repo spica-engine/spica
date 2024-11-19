@@ -5,8 +5,8 @@ import {
   SubscribeMessage,
   WebSocketGateway
 } from "@nestjs/websockets";
-import {Action, ActivityService} from "@spica/api/src/activity/services";
-import {BucketCacheService} from "@spica/api/src/bucket/cache";
+import {Action, ActivityService} from "@spica-server/activity/services";
+import {BucketCacheService} from "@spica-server/bucket/cache";
 import {
   insertDocument,
   insertActivity,
@@ -20,24 +20,24 @@ import {
   IAuthResolver,
   filterReviver,
   constructFilterValues
-} from "@spica/api/src/bucket/common";
-import * as expression from "@spica/api/src/bucket/expression";
-import {aggregate} from "@spica/api/src/bucket/expression";
-import {HistoryService} from "@spica/api/src/bucket/history";
-import {ChangeEmitter} from "@spica/api/src/bucket/hooks";
+} from "@spica-server/bucket/common";
+import * as expression from "@spica-server/bucket/expression";
+import {aggregate} from "@spica-server/bucket/expression";
+import {HistoryService} from "@spica-server/bucket/history";
+import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {
   BucketService,
   getBucketDataCollection,
   BucketDataService,
   BucketDocument
-} from "@spica/api/src/bucket/services";
+} from "@spica-server/bucket/services";
 import {applyPatch, deepCopy} from "@spica/core";
 import {Schema, Validator} from "@spica/core";
 import {ObjectId} from "@spica/database";
 import {FindOptions, RealtimeDatabaseService} from "@spica/database";
 import {ChunkKind} from "@spica/interface";
-import {GuardService} from "@spica/api/src/passport";
-import {resourceFilterFunction} from "@spica/api/src/passport/guard";
+import {GuardService} from "@spica-server/passport";
+import {resourceFilterFunction} from "@spica-server/passport/guard";
 import {fromEvent, of} from "rxjs";
 import {takeUntil, catchError} from "rxjs/operators";
 import {MessageKind} from "./interface";

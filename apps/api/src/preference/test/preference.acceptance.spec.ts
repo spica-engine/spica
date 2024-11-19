@@ -2,8 +2,8 @@ import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica/core";
 import {DatabaseService, DatabaseTestingModule} from "@spica/database";
-import {PassportTestingModule} from "@spica/api/src/passport/testing";
-import {PreferenceModule} from "@spica/api/src/preference";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceModule} from "@spica-server/preference";
 
 describe("PreferenceController", () => {
   let module: TestingModule;

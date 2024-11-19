@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule, stream} from "@spica/database";
-import {ChangeKind, Webhook, WebhookService} from "@spica/api/src/function/webhook";
+import {ChangeKind, Webhook, WebhookService} from "@spica-server/function/webhook";
 import {bufferCount, bufferTime, take} from "rxjs/operators";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;

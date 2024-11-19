@@ -1,5 +1,5 @@
-import {Request, Response} from "@spica/api/src/function/queue/node";
-import {Http} from "@spica/api/src/function/queue/proto";
+import {Request, Response} from "@spica-server/function/queue/node";
+import {Http} from "@spica-server/function/queue/proto";
 
 describe("Http", () => {
   describe("Request", () => {

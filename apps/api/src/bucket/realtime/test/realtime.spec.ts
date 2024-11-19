@@ -1,12 +1,12 @@
 import {ForbiddenException, INestApplication, UnauthorizedException} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {BucketModule} from "@spica/api/src/bucket/src";
+import {BucketModule} from "@spica-server/bucket/src";
 import {CoreTestingModule, Request, Websocket} from "@spica/core";
 import {WsAdapter} from "@spica/core";
 import {DatabaseTestingModule, stream} from "@spica/database";
-import {GuardService} from "@spica/api/src/passport";
-import {PassportTestingModule} from "@spica/api/src/passport/testing";
-import {PreferenceTestingModule} from "@spica/api/src/preference/testing";
+import {GuardService} from "@spica-server/passport";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica/core";
 import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica/core";
 import {CREATED_AT, UPDATED_AT} from "@spica/core";

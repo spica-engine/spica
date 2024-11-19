@@ -1,5 +1,5 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
-import {BucketDocument, Bucket, LimitExceedBehaviours} from "@spica/api/src/bucket/services/src";
+import {BucketDocument, Bucket, LimitExceedBehaviours} from "@spica-server/bucket/services/src";
 import {BaseCollection, DatabaseService, ObjectId} from "@spica/database";
 import {BUCKET_DATA_LIMIT} from "./options";
 

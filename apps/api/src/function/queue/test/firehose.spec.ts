@@ -1,5 +1,5 @@
-import {EventQueue, FirehoseQueue} from "@spica/api/src/function/queue";
-import {Firehose} from "@spica/api/src/function/queue/proto";
+import {EventQueue, FirehoseQueue} from "@spica-server/function/queue";
+import {Firehose} from "@spica-server/function/queue/proto";
 import {credentials} from "@grpc/grpc-js";
 
 describe("FirehoseQueue", () => {

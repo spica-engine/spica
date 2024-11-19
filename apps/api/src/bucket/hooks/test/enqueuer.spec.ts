@@ -1,7 +1,7 @@
-import {EventQueue} from "@spica/api/src/function/queue";
-import {event} from "@spica/api/src/function/queue/proto";
-import {ChangeEnqueuer} from "@spica/api/src/bucket/hooks/src/enqueuer";
-import {ChangeEmitter} from "@spica/api/src/bucket/hooks/src/emitter";
+import {EventQueue} from "@spica-server/function/queue";
+import {event} from "@spica-server/function/queue/proto";
+import {ChangeEnqueuer} from "@spica-server/bucket/hooks/src/enqueuer";
+import {ChangeEmitter} from "@spica-server/bucket/hooks/src/emitter";
 
 describe("ChangeEnqueuer", () => {
   let changeEnqeuer: ChangeEnqueuer;

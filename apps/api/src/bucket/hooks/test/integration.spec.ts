@@ -1,15 +1,15 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {BucketModule} from "@spica/api/src/bucket";
-import {Bucket, BucketDocument} from "@spica/api/src/bucket/services";
+import {BucketModule} from "@spica-server/bucket";
+import {Bucket, BucketDocument} from "@spica-server/bucket/services";
 import {Middlewares} from "@spica/core";
 import {CoreTestingModule, Request, Websocket} from "@spica/core";
 import {WsAdapter} from "@spica/core";
 import {DatabaseTestingModule} from "@spica/database";
-import {FunctionModule} from "@spica/api/src/function";
+import {FunctionModule} from "@spica-server/function";
 import {Function} from "@spica/interface";
-import {PassportTestingModule} from "@spica/api/src/passport/testing";
-import {PreferenceTestingModule} from "@spica/api/src/preference/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as os from "os";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7681";

@@ -3,7 +3,7 @@ import {
   ChangeKind,
   createTargetChanges,
   changesFromTriggers
-} from "@spica/api/src/function/src/change";
+} from "@spica-server/function/src/change";
 
 describe("Change", () => {
   let fn: Function;

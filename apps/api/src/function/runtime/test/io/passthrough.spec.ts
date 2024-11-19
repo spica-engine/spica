@@ -1,4 +1,4 @@
-import {PassThroughOutput} from "@spica/api/src/function/runtime/io";
+import {PassThroughOutput} from "@spica-server/function/runtime/io";
 
 describe("IO Passthrough", () => {
   let io: PassThroughOutput;

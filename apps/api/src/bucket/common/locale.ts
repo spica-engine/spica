@@ -3,10 +3,10 @@ import {
   BucketDataService,
   BucketPreferences,
   BucketService
-} from "@spica/api/src/bucket/services";
+} from "@spica-server/bucket/services";
 import * as locale from "locale";
 import {ChangeKind, diff} from "@spica/core";
-import {BucketCacheService} from "@spica/api/src/bucket/cache";
+import {BucketCacheService} from "@spica-server/bucket/cache";
 
 export function buildI18nAggregation(property: any, locale: string, fallback: string) {
   return {

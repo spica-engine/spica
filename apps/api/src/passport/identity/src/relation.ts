@@ -1,8 +1,8 @@
 import {Injectable} from "@nestjs/common";
-import {PreferenceService} from "@spica/api/src/preference/services";
+import {PreferenceService} from "@spica-server/preference/services";
 import {IdentityService} from "./identity.service";
 import {Identity} from "./interface";
-import {IAuthResolver} from "@spica/api/src/bucket/common";
+import {IAuthResolver} from "@spica-server/bucket/common";
 
 @Injectable()
 export class AuthResolver implements IAuthResolver {

@@ -1,6 +1,6 @@
 import {ObjectId} from "@spica/database";
-import {FunctionService} from "@spica/api/src/function/services";
-import {SyncProvider} from "@spica/api/src/versioncontrol";
+import {FunctionService} from "@spica-server/function/services";
+import {SyncProvider} from "@spica-server/versioncontrol";
 import {FunctionEngine} from "../engine";
 import * as CRUD from "../crud";
 import {IRepresentativeManager} from "@spica/interface";

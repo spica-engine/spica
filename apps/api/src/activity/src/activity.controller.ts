@@ -9,10 +9,10 @@ import {
   Query,
   UseGuards
 } from "@nestjs/common";
-import {Activity, ActivityService} from "@spica/api/src/activity/services";
+import {Activity, ActivityService} from "@spica-server/activity/services";
 import {DATE, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica/core";
 import {FilterQuery, ObjectId, OBJECT_ID} from "@spica/database";
-import {ActionGuard, AuthGuard} from "@spica/api/src/passport";
+import {ActionGuard, AuthGuard} from "@spica-server/passport";
 
 @Controller("activity")
 export class ActivityController {

@@ -1,10 +1,10 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica/database";
-import {StorageService} from "@spica/api/src/storage";
-import {StorageObject} from "@spica/api/src/storage/src/body";
-import {Default} from "@spica/api/src/storage/src/strategy/default";
-import {Strategy} from "@spica/api/src/storage/src/strategy/strategy";
-import {STORAGE_OPTIONS} from "@spica/api/src/storage/src/options";
+import {StorageService} from "@spica-server/storage";
+import {StorageObject} from "@spica-server/storage/src/body";
+import {Default} from "@spica-server/storage/src/strategy/default";
+import {Strategy} from "@spica-server/storage/src/strategy/strategy";
+import {STORAGE_OPTIONS} from "@spica-server/storage/src/options";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 

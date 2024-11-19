@@ -6,7 +6,7 @@ import {
   DeleteWriteOpResultObject,
   InsertOneWriteOpResult
 } from "@spica/database";
-import {HistoryService} from "@spica/api/src/bucket/history";
+import {HistoryService} from "@spica-server/bucket/history";
 import {diff} from "@spica/core";
 
 describe("History Service", () => {

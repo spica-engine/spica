@@ -5,7 +5,7 @@ import {
   requestedFieldsFromExpression,
   requestedFieldsFromInfo,
   validateBuckets
-} from "@spica/api/src/bucket/graphql";
+} from "@spica-server/bucket/graphql";
 
 export function format(text: string) {
   return _format(text, {parser: "graphql"});

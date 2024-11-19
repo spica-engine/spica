@@ -1,4 +1,4 @@
-import {Compilation, Description, Language} from "@spica/api/src/function/compiler";
+import {Compilation, Description, Language} from "@spica-server/function/compiler";
 import * as fs from "fs";
 import * as path from "path";
 import {fromEvent, Observable, of, throwError} from "rxjs";

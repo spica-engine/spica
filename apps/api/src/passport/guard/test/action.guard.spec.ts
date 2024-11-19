@@ -1,5 +1,5 @@
 import {ExecutionContext} from "@nestjs/common";
-import {ActionGuard, PolicyResolver} from "@spica/api/src/passport/guard";
+import {ActionGuard, PolicyResolver} from "@spica-server/passport/guard";
 
 describe("ActionGuard", () => {
   function createGuardAndRequest(options: {

@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {BucketDocument, Bucket} from "@spica/api/src/bucket/services";
+import {BucketDocument, Bucket} from "@spica-server/bucket/services";
 import {
   Collection,
   DatabaseService,

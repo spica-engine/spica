@@ -1,5 +1,5 @@
-import {EventQueue} from "@spica/api/src/function/queue";
-import {event} from "@spica/api/src/function/queue/proto";
+import {EventQueue} from "@spica-server/function/queue";
+import {event} from "@spica-server/function/queue/proto";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5847";
 

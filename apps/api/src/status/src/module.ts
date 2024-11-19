@@ -5,7 +5,7 @@ import {
   StatusInterceptor,
   StatusOptions,
   StatusService
-} from "@spica/api/src/status/services";
+} from "@spica-server/status/services";
 import {APP_INTERCEPTOR} from "@nestjs/core";
 import {registerStatusProvider} from "./status";
 

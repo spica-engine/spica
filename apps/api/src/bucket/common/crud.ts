@@ -1,11 +1,11 @@
 import {BaseCollection, ObjectId} from "@spica/database";
-import * as expression from "@spica/api/src/bucket/expression";
+import * as expression from "@spica-server/bucket/expression";
 import {
   Bucket,
   BucketDocument,
   BucketPreferences,
   LimitExceedBehaviours
-} from "@spica/api/src/bucket/services";
+} from "@spica-server/bucket/services";
 import {
   createRelationMap,
   getRelationPipeline,

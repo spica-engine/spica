@@ -1,15 +1,15 @@
 import {Global, Module} from "@nestjs/common";
-import {BucketService, ServicesModule} from "@spica/api/src/bucket/services";
+import {BucketService, ServicesModule} from "@spica-server/bucket/services";
 import {DatabaseService, ObjectId} from "@spica/database";
-import {SCHEMA} from "@spica/api/src/function";
-import {COLL_SLUG} from "@spica/api/src/function/services";
-import {EventQueue} from "@spica/api/src/function/queue";
-import {ENQUEUER} from "@spica/api/src/function/scheduler";
+import {SCHEMA} from "@spica-server/function";
+import {COLL_SLUG} from "@spica-server/function/services";
+import {EventQueue} from "@spica-server/function/queue";
+import {ENQUEUER} from "@spica-server/function/scheduler";
 import {JSONSchema7} from "json-schema";
 import {ChangeEmitter} from "./emitter";
 import {ChangeEnqueuer} from "./enqueuer";
 import {ChangeQueue} from "./queue";
-import {ClassCommander, JobReducer} from "@spica/api/src/replication";
+import {ClassCommander, JobReducer} from "@spica-server/replication";
 
 export function createSchema(db: DatabaseService): Promise<JSONSchema7> {
   const slugs = new Map<string, string>();

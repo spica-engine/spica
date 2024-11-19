@@ -1,5 +1,5 @@
-import * as expression from "@spica/api/src/bucket/expression";
-import {Bucket} from "@spica/api/src/bucket/services";
+import * as expression from "@spica-server/bucket/expression";
+import {Bucket} from "@spica-server/bucket/services";
 import {CrudFactories} from "./crud";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
 import {deepCopy} from "@spica/core";
@@ -9,7 +9,7 @@ import {
   getRelationPipeline,
   RelationMap
 } from "./relation";
-import {constructFilterValues} from "@spica/api/src/bucket/common";
+import {constructFilterValues} from "@spica-server/bucket/common";
 import {categorizePropertyMap} from "./helpers";
 import {PipelineBuilder} from "@spica/database";
 import {extractFilterPropertyMap} from "@spica/filter";

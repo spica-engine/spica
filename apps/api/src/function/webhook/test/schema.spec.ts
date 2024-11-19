@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica/core";
 import {DatabaseService, DatabaseTestingModule} from "@spica/database";
-import {SchemaResolver} from "@spica/api/src/function/webhook/src/schema";
+import {SchemaResolver} from "@spica-server/function/webhook/src/schema";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 

@@ -9,10 +9,10 @@ import {
   IndexOptions,
   ObjectId
 } from "@spica/database";
-import {PreferenceService} from "@spica/api/src/preference/services";
+import {PreferenceService} from "@spica-server/preference/services";
 import {BehaviorSubject, Observable} from "rxjs";
 import {Bucket, BucketPreferences} from "./bucket";
-import {getBucketDataCollection} from "@spica/api/src/bucket/services";
+import {getBucketDataCollection} from "@spica-server/bucket/services";
 import {BUCKET_DATA_LIMIT} from "./options";
 
 export interface IndexDefinition {

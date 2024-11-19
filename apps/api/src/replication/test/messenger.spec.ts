@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {CommandMessage, CommandMessenger, Command} from "@spica/api/src/replication/src";
-import {ReplicationTestingModule} from "@spica/api/src/replication/testing";
+import {CommandMessage, CommandMessenger, Command} from "@spica-server/replication/src";
+import {ReplicationTestingModule} from "@spica-server/replication/testing";
 
 function wait(ms) {
   return Promise.resolve((resolve, _) => resolve(ms));

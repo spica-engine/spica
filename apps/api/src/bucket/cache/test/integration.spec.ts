@@ -4,7 +4,7 @@ import {
   BucketCacheService,
   invalidateCache,
   registerCache
-} from "@spica/api/src/bucket/cache";
+} from "@spica-server/bucket/cache";
 import {CoreTestingModule, Request} from "@spica/core";
 import {Test} from "@nestjs/testing";
 import {Store} from "cache-manager";

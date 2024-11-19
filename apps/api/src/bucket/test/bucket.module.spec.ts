@@ -1,11 +1,11 @@
 import {Test} from "@nestjs/testing";
-import {BucketModule} from "@spica/api/src/bucket";
-import {HistoryModule} from "@spica/api/src/bucket/history";
-import {HookModule} from "@spica/api/src/bucket/hooks";
+import {BucketModule} from "@spica-server/bucket";
+import {HistoryModule} from "@spica-server/bucket/history";
+import {HookModule} from "@spica-server/bucket/hooks";
 import {DatabaseTestingModule} from "@spica/database";
-import {PassportTestingModule} from "@spica/api/src/passport/testing";
-import {PreferenceTestingModule} from "@spica/api/src/preference/testing";
-import {BucketCacheModule} from "@spica/api/src/bucket/cache";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {BucketCacheModule} from "@spica-server/bucket/cache";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 12000;
 

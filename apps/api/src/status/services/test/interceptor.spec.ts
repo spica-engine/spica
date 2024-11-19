@@ -1,10 +1,10 @@
 import {Controller, Get, INestApplication, Post} from "@nestjs/common";
 import {CoreTestingModule, Request} from "@spica/core";
 import {Middlewares} from "@spica/core";
-import {StatusModule} from "@spica/api/src/status";
+import {StatusModule} from "@spica-server/status";
 import {Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica/database";
-import {PassportTestingModule} from "@spica/api/src/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
 
 const MbInKb = 1000 * 1000;
 

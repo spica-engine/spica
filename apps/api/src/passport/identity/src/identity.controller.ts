@@ -19,19 +19,19 @@ import {
   InternalServerErrorException,
   Optional
 } from "@nestjs/common";
-import {activity} from "@spica/api/src/activity/services";
+import {activity} from "@spica-server/activity/services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica/core";
 import {Schema} from "@spica/core";
 import {ObjectId, OBJECT_ID} from "@spica/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica/api/src/passport/guard";
-import {Factor, FactorMeta, AuthFactor} from "@spica/api/src/passport/authfactor";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {Factor, FactorMeta, AuthFactor} from "@spica-server/passport/authfactor";
 import {createIdentityActivity} from "./activity.resource";
 import {hash} from "./hash";
 import {IdentityService} from "./identity.service";
 import {Identity, PaginationResponse} from "./interface";
 import {POLICY_PROVIDER} from "./options";
 import {registerPolicyAttacher} from "./utility";
-import {ClassCommander, CommandType} from "@spica/api/src/replication";
+import {ClassCommander, CommandType} from "@spica-server/replication";
 import {PipelineBuilder} from "@spica/database";
 
 @Controller("passport/identity")

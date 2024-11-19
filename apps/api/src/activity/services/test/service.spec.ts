@@ -1,4 +1,4 @@
-import {ActivityService, ACTIVITY_OPTIONS} from "@spica/api/src/activity/services";
+import {ActivityService, ACTIVITY_OPTIONS} from "@spica-server/activity/services";
 import {TestingModule, Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica/database";
 

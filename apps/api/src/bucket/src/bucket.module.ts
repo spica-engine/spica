@@ -1,11 +1,11 @@
 import {DynamicModule, Global, Inject, Module, Optional, Type} from "@nestjs/common";
-import {HistoryModule, HistoryService} from "@spica/api/src/bucket/history";
-import {HookModule} from "@spica/api/src/bucket/hooks";
-import {RealtimeModule} from "@spica/api/src/bucket/realtime";
-import {BucketService, BucketDataService, ServicesModule} from "@spica/api/src/bucket/services";
+import {HistoryModule, HistoryService} from "@spica-server/bucket/history";
+import {HookModule} from "@spica-server/bucket/hooks";
+import {RealtimeModule} from "@spica-server/bucket/realtime";
+import {BucketService, BucketDataService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica/core";
-import {BUCKET_LANGUAGE_FINALIZER, PreferenceService} from "@spica/api/src/preference/services";
-import {BucketCacheModule} from "@spica/api/src/bucket/cache";
+import {BUCKET_LANGUAGE_FINALIZER, PreferenceService} from "@spica-server/preference/services";
+import {BucketCacheModule} from "@spica-server/bucket/cache";
 import {BucketDataController} from "./bucket-data.controller";
 import {BucketController} from "./bucket.controller";
 import {
@@ -13,8 +13,8 @@ import {
   bucketSpecificDefault,
   provideBucketSchemaResolver
 } from "./bucket.schema.resolver";
-import {GraphQLModule} from "@spica/api/src/bucket/graphql";
-import {provideLanguageFinalizer} from "@spica/api/src/bucket/common";
+import {GraphQLModule} from "@spica-server/bucket/graphql";
+import {provideLanguageFinalizer} from "@spica-server/bucket/common";
 import {registerStatusProvider} from "./status";
 import BucketSchema = require("./schemas/bucket.schema.json");
 import BucketsSchema = require("./schemas/buckets.schema.json");
@@ -22,11 +22,11 @@ import {
   RegisterSyncProvider,
   REGISTER_VC_SYNC_PROVIDER,
   VC_REP_MANAGER
-} from "@spica/api/src/versioncontrol";
+} from "@spica-server/versioncontrol";
 import {getSyncProvider} from "./versioncontrol/schema";
 import {registerAssetHandlers} from "./asset";
 import {IRepresentativeManager} from "@spica/interface";
-import {ASSET_REP_MANAGER} from "@spica/api/src/asset/src/interface";
+import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
 
 @Module({})
 export class BucketModule {

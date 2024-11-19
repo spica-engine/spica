@@ -1,9 +1,9 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Websocket} from "@spica/core";
-import {FirehoseEnqueuer} from "@spica/api/src/function/enqueuer";
-import {EventQueue, FirehoseQueue} from "@spica/api/src/function/queue";
-import {event, Firehose} from "@spica/api/src/function/queue/proto";
+import {FirehoseEnqueuer} from "@spica-server/function/enqueuer";
+import {EventQueue, FirehoseQueue} from "@spica-server/function/queue";
+import {event, Firehose} from "@spica-server/function/queue/proto";
 
 describe("FirehoseEnqueuer", () => {
   let eventQueue: jasmine.SpyObj<EventQueue>;

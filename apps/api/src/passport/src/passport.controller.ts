@@ -20,7 +20,7 @@ import {
   Next,
   Optional
 } from "@nestjs/common";
-import {Identity, IdentityService, LoginCredentials} from "@spica/api/src/passport/identity";
+import {Identity, IdentityService, LoginCredentials} from "@spica-server/passport/identity";
 import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
 import {UrlEncodedBodyParser} from "./body";
@@ -30,8 +30,8 @@ import {Schema} from "@spica/core";
 import {ObjectId, OBJECT_ID} from "@spica/database";
 import {STRATEGIES} from "./options";
 import {StrategyTypeServices} from "./strategy/interface";
-import {AuthFactor} from "@spica/api/src/passport/authfactor";
-import {ClassCommander, CommandType} from "@spica/api/src/replication";
+import {AuthFactor} from "@spica-server/passport/authfactor";
+import {ClassCommander, CommandType} from "@spica-server/replication";
 
 /**
  * @name passport

@@ -1,5 +1,5 @@
 import {Test} from "@nestjs/testing";
-import {BucketCacheModule, BucketCacheService} from "@spica/api/src/bucket/cache";
+import {BucketCacheModule, BucketCacheService} from "@spica-server/bucket/cache";
 import {DatabaseTestingModule, ObjectId} from "@spica/database";
 import {Cache} from "cache-manager";
 

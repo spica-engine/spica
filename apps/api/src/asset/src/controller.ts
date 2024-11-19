@@ -22,7 +22,7 @@ import {exporters, operators, validators} from "./registration";
 import {putConfiguration} from "./helpers";
 import {BOOLEAN, DEFAULT, JSONP} from "@spica/core";
 import {Schema} from "@spica/core";
-import {ActionGuard, AuthGuard} from "@spica/api/src/passport/guard";
+import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {
   ASSET_REP_MANAGER,
   IInstallationStrategy,

@@ -1,6 +1,6 @@
 import {ObjectId} from "@spica/database";
-import {PreferenceService} from "@spica/api/src/preference/services";
-import {SyncProvider} from "@spica/api/src/versioncontrol";
+import {PreferenceService} from "@spica-server/preference/services";
+import {SyncProvider} from "@spica-server/versioncontrol";
 import {IRepresentativeManager} from "@spica/interface";
 
 export const getSyncProvider = (

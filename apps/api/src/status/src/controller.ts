@@ -1,6 +1,6 @@
 import {BadRequestException, Controller, Get, Param, Query, UseGuards} from "@nestjs/common";
 import {DATE} from "@spica/core";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica/api/src/passport/guard";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {StatusProvider} from "./interface";
 
 export const providers = new Set<StatusProvider>();

@@ -1,5 +1,5 @@
-import * as Bucket from "@spica/api/src/bucket/hooks/proto/node";
-import {hooks as BucketHooks} from "@spica/api/src/bucket/hooks/proto";
+import * as Bucket from "@spica-server/bucket/hooks/proto/node";
+import {hooks as BucketHooks} from "@spica-server/bucket/hooks/proto";
 import {
   Change,
   DatabaseQueue,
@@ -11,11 +11,11 @@ import {
   Message,
   Request,
   Response
-} from "@spica/api/src/function/queue/node";
-import {Database, event, Firehose, Http} from "@spica/api/src/function/queue/proto";
+} from "@spica-server/function/queue/node";
+import {Database, event, Firehose, Http} from "@spica-server/function/queue/proto";
 import {createRequire} from "module";
 import * as path from "path";
-import {getLoggerConsole} from "@spica/api/src/function/runtime/logger";
+import {getLoggerConsole} from "@spica-server/function/runtime/logger";
 
 if (process.env.LOGGER) {
   console = getLoggerConsole();

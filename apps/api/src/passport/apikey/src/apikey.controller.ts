@@ -11,11 +11,11 @@ import {
   UseGuards,
   UseInterceptors
 } from "@nestjs/common";
-import {activity} from "@spica/api/src/activity/services";
+import {activity} from "@spica-server/activity/services";
 import {DEFAULT, JSONP, NUMBER} from "@spica/core";
 import {Schema} from "@spica/core";
 import {ObjectId, OBJECT_ID} from "@spica/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica/api/src/passport/guard";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as uniqid from "uniqid";
 import {createApikeyActivity} from "./activity.resource";
 import {ApiKeyService} from "./apikey.service";

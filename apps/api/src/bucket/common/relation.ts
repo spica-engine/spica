@@ -3,7 +3,7 @@ import {
   BucketService,
   getBucketDataCollection,
   BucketDocument
-} from "@spica/api/src/bucket/services";
+} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica/database";
 import {buildI18nAggregation, Locale} from "./locale";
 import {deepCopy} from "@spica/core";

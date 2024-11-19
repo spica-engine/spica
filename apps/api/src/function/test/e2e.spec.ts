@@ -1,17 +1,17 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {FunctionModule} from "@spica/api/src/function";
+import {FunctionModule} from "@spica-server/function";
 import * as os from "os";
 import {DatabaseService, DatabaseTestingModule, stream} from "@spica/database";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request} from "@spica/core";
 import {SchemaModule} from "@spica/core";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica/core";
-import {PassportTestingModule} from "@spica/api/src/passport/testing";
-import {PreferenceTestingModule} from "@spica/api/src/preference/testing";
-import {Scheduler} from "@spica/api/src/function/scheduler";
-import {event} from "@spica/api/src/function/queue/proto";
-import {JobReducer, ReplicationModule} from "@spica/api/src/replication";
-import {BucketModule} from "@spica/api/src/bucket";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {Scheduler} from "@spica-server/function/scheduler";
+import {event} from "@spica-server/function/queue/proto";
+import {JobReducer, ReplicationModule} from "@spica-server/replication";
+import {BucketModule} from "@spica-server/bucket";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 15_000;
 

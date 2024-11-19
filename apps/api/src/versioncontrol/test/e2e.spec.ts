@@ -1,15 +1,15 @@
 import {INestApplication} from "@nestjs/common";
 import {TestingModule, Test} from "@nestjs/testing";
-import {BucketModule} from "@spica/api/src/bucket";
+import {BucketModule} from "@spica-server/bucket";
 import {SchemaModule} from "@spica/core";
 import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica/core";
 import {CoreTestingModule, Request} from "@spica/core";
 import {WsAdapter} from "@spica/core";
 import {DatabaseTestingModule} from "@spica/database";
-import {FunctionModule} from "@spica/api/src/function";
-import {PassportTestingModule} from "@spica/api/src/passport/testing";
-import {PreferenceTestingModule} from "@spica/api/src/preference/testing";
-import {VersionControlModule, RepresentativeManager} from "@spica/api/src/versioncontrol";
+import {FunctionModule} from "@spica-server/function";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {VersionControlModule, RepresentativeManager} from "@spica-server/versioncontrol";
 
 import * as os from "os";
 

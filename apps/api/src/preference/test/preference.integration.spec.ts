@@ -1,13 +1,13 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica/database";
-import {PassportTestingModule} from "@spica/api/src/passport/testing";
-import {PreferenceModule} from "@spica/api/src/preference";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceModule} from "@spica-server/preference";
 import {CoreTestingModule, Request} from "@spica/core";
-import {IdentityModule} from "@spica/api/src/passport/identity";
+import {IdentityModule} from "@spica-server/passport/identity";
 import {INestApplication} from "@nestjs/common";
-import {BucketModule, BucketCoreModule} from "@spica/api/src/bucket";
-import {PolicyModule} from "@spica/api/src/passport/policy";
-import {PreferenceService} from "@spica/api/src/preference/services";
+import {BucketModule, BucketCoreModule} from "@spica-server/bucket";
+import {PolicyModule} from "@spica-server/passport/policy";
+import {PreferenceService} from "@spica-server/preference/services";
 import {SchemaModule} from "@spica/core";
 import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica/core";
 

@@ -1,4 +1,4 @@
-import {Action, ModuleActivity, PreActivity} from "@spica/api/src/activity/services";
+import {Action, ModuleActivity, PreActivity} from "@spica-server/activity/services";
 
 export function createStorageActivity(
   preActivity: PreActivity,

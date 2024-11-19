@@ -1,6 +1,6 @@
 import {Factor, FactorMeta, AuthFactorSchemaProvider} from "./interface";
 import {Inject, Injectable, Optional} from "@nestjs/common";
-import {ClassCommander, CommandType} from "@spica/api/src/replication";
+import {ClassCommander, CommandType} from "@spica-server/replication";
 
 @Injectable()
 export class AuthFactor {

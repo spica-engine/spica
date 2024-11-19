@@ -1,4 +1,4 @@
-import {Description, Runtime, SpawnOptions, Worker} from "@spica/api/src/function/runtime";
+import {Description, Runtime, SpawnOptions, Worker} from "@spica-server/function/runtime";
 import * as child_process from "child_process";
 import * as path from "path";
 import {Writable} from "stream";

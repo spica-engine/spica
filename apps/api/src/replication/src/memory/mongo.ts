@@ -1,7 +1,7 @@
 import {BaseCollection} from "@spica/database";
 import {ChangeStream} from "mongodb";
 import {PartialObserver} from "rxjs";
-import {MemoryOptions, IPubSub} from "@spica/api/src/replication";
+import {MemoryOptions, IPubSub} from "@spica-server/replication";
 
 export class MongoMemory<T> implements IPubSub<T> {
   private _changeStream: ChangeStream;

@@ -1,4 +1,4 @@
-import {Http} from "@spica/api/src/function/queue/proto";
+import {Http} from "@spica-server/function/queue/proto";
 import * as grpc from "@grpc/grpc-js";
 import {parseBody} from "./parser";
 

@@ -1,5 +1,5 @@
-import {EventQueue, FirehoseQueue} from "@spica/api/src/function/queue";
-import {event, Firehose} from "@spica/api/src/function/queue/proto";
+import {EventQueue, FirehoseQueue} from "@spica-server/function/queue";
+import {event, Firehose} from "@spica-server/function/queue/proto";
 import * as url from "url";
 import * as ws from "ws";
 import {Description, Enqueuer} from "./enqueuer";
