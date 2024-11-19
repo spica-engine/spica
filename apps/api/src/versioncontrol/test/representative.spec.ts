@@ -1,4 +1,4 @@
-import {RepresentativeManager} from "@spica-server/representative";
+import {RepresentativeManager} from "@spica/representative";
 import * as fs from "fs";
 import * as path from "path";
 

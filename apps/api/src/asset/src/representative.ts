@@ -1,5 +1,5 @@
 import {ExportMeta} from "@spica/interface";
-import {RepresentativeManager} from "@spica-server/representative";
+import {RepresentativeManager} from "@spica/representative";
 import * as archiver from "archiver";
 import * as fs from "fs";
 import * as path from "path";
