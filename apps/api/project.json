@@ -40,7 +40,9 @@
             "output": "./"
           }
         ]
-      }
+      },
+      "dependsOn": ["^build"]
     }
-  }
+  },
+  "implicitDependencies": ["interface"]
 }
