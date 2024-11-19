@@ -9,7 +9,8 @@
         "outputPath": "libs/database/dist",
         "main": "libs/database/src/index.ts",
         "tsConfig": "libs/database/tsconfig.lib.json"
-      }
+      },
+      "dependsOn": ["^build"]
     }
   }
 }
