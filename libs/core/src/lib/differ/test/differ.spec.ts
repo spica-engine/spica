@@ -1,4 +1,4 @@
-import {ChangeKind, diff} from "@spica-server/core/differ";
+import {ChangeKind, diff} from "@spica/core";
 
 describe("differ", () => {
   it("should return no difference", () => {

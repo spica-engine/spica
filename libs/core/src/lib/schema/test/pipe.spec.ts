@@ -1,4 +1,4 @@
-import {Schema, Validator} from "@spica-server/core/schema";
+import {Schema, Validator} from "@spica/core";
 
 describe("schema pipe", () => {
   it("should reject with ref", async () => {

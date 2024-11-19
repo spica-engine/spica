@@ -1,5 +1,5 @@
 import {Global, Module} from "@nestjs/common";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule} from "@spica/core";
 import {AssetController} from "./controller";
 import {AssetService} from "./service";
 

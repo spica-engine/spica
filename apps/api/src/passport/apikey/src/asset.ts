@@ -1,4 +1,4 @@
-import {Validator, Schema} from "@spica-server/core/schema";
+import {Validator, Schema} from "@spica/core";
 import {ApiKeyService} from "@spica-server/passport/apikey/src/apikey.service";
 import {ApiKey} from "@spica-server/passport/apikey/src/interface";
 import {IRepresentativeManager} from "@spica/interface";

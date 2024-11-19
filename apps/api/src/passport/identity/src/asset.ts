@@ -1,6 +1,6 @@
 import {registrar} from "@spica-server/asset";
 import {Resource} from "@spica/interface";
-import {Schema, Validator} from "@spica-server/core/schema";
+import {Schema, Validator} from "@spica/core";
 import {PreferenceService} from "@spica-server/preference/services";
 import {IRepresentativeManager} from "@spica/interface";
 

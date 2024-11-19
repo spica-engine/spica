@@ -1,15 +1,5 @@
 import {HttpException} from "@nestjs/common";
-import {
-  ARRAY,
-  BOOLEAN,
-  DATE,
-  DEFAULT,
-  JSONP,
-  JSONPR,
-  NUMBER,
-  OR,
-  BooleanCheck
-} from "@spica-server/core/src/pipes";
+import {ARRAY, BOOLEAN, DATE, DEFAULT, JSONP, JSONPR, NUMBER, OR, BooleanCheck} from "@spica/core";
 
 describe("core pipes", () => {
   describe("NUMBER pipe", () => {

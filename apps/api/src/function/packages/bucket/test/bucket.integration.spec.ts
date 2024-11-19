@@ -1,15 +1,15 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
-import {SchemaModule} from "@spica-server/core/schema";
-import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {SchemaModule} from "@spica/core";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica/core";
 import {DatabaseTestingModule} from "@spica/database";
-import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
+import {CoreTestingModule, Websocket} from "@spica/core";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as Bucket from "@spica-devkit/bucket";
 import {bufferCount, take} from "rxjs/operators";
-import {WsAdapter} from "@spica-server/core/websocket";
+import {WsAdapter} from "@spica/core";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 

@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {compareResourceGroups} from "@spica-server/core/differ";
+import {compareResourceGroups} from "@spica/core";
 import {Provider, SyncDirection, SyncLog, SyncProvider} from "./interface";
 
 @Injectable()

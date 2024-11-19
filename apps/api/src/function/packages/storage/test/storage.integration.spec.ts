@@ -1,8 +1,8 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule} from "@spica/core";
 import {DatabaseTestingModule} from "@spica/database";
-import {CoreTestingModule} from "@spica-server/core/testing";
+import {CoreTestingModule} from "@spica/core";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {StorageModule} from "@spica-server/storage";
 import * as Storage from "@spica-devkit/storage";

@@ -1,5 +1,5 @@
 import {DynamicModule, Global, Inject, Module, Optional} from "@nestjs/common";
-import {SchemaModule, Validator} from "@spica-server/core/schema";
+import {SchemaModule, Validator} from "@spica/core";
 import {ApiKeyController} from "./apikey.controller";
 import {ApiKeyService} from "./apikey.service";
 import {ApiKeyStrategy} from "./apikey.strategy";

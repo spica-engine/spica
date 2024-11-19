@@ -1,5 +1,5 @@
-import {Format} from "@spica-server/core/schema/src/interface";
-import {Validator} from "@spica-server/core/schema/src/validator";
+import {Format} from "@spica/core";
+import {Validator} from "@spica/core";
 import {JSONSchema7} from "json-schema";
 import {BehaviorSubject} from "rxjs";
 

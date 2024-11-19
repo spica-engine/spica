@@ -2,7 +2,7 @@ import * as expression from "@spica-server/bucket/expression";
 import {Bucket} from "@spica-server/bucket/services";
 import {CrudFactories} from "./crud";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
-import {deepCopy} from "@spica-server/core/patch";
+import {deepCopy} from "@spica/core";
 import {
   compareAndUpdateRelations,
   createRelationMap,

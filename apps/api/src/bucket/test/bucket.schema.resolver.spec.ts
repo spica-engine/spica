@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketService} from "@spica-server/bucket/services";
 import {BucketSchemaResolver} from "@spica-server/bucket/src/bucket.schema.resolver";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule} from "@spica/core";
 import {DatabaseTestingModule, ObjectId} from "@spica/database";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {Observable, Subject} from "rxjs";

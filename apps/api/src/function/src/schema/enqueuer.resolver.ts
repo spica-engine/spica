@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {Validator} from "@spica-server/core/schema";
+import {Validator} from "@spica/core";
 import {FunctionEngine} from "../engine";
 import {Function} from "@spica/interface";
 

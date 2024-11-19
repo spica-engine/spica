@@ -1,4 +1,4 @@
-import {Validator} from "@spica-server/core/schema";
+import {Validator} from "@spica/core";
 import {PreferenceService} from "@spica-server/preference/services";
 
 export class SchemaResolver {
