@@ -1,5 +1,7 @@
 import {Injectable} from "@nestjs/common";
-import {ChangeStream, DatabaseService, Document} from "@spica/database";
+import {Document} from "../interface";
+import {ChangeStream} from "mongodb";
+import {DatabaseService} from "../database.service";
 import {StreamChunk} from "@spica/interface";
 import {Observable} from "rxjs";
 import {FindOptions} from "./interface";

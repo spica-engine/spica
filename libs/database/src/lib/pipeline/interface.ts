@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica/database";
+import {ObjectId} from "bson";
 
 export interface IPipelineBuilder {
   attachToPipeline(condition: any, ...attachedObject: object[]): this;
