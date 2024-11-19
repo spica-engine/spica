@@ -1,11 +1,11 @@
 {
-  "name": "@org/interface",
+  "name": "@spica/interface",
   "version": "0.0.1",
   "dependencies": {
     "tslib": "^2.3.0"
   },
   "type": "commonjs",
-  "main": "./dist/index.js",
-  "typings": "./dist/index.d.ts",
+  "main": "./dist/src/index.js",
+  "typings": "./dist/src/index.d.ts",
   "private": true
 }
