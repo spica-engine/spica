@@ -1,0 +1,16 @@
+{
+  "name": "representative",
+  "sourceRoot": "libs/representative/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "libs/representative/dist",
+        "main": "libs/representative/src/index.ts",
+        "tsConfig": "libs/representative/tsconfig.lib.json"
+      },
+      "dependsOn": ["^build"]
+    }
+  }
+}
