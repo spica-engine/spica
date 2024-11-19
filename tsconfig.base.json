@@ -12,11 +12,11 @@
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "target": "es2020",
+    "target": "es2022",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
-    "lib": ["es2018", "dom"]
+    "lib": ["es2022", "dom"]
   },
   "exclude": ["node_modules", "tmp", "dist"]
 }
