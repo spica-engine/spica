@@ -1,4 +1,4 @@
-import {FunctionService} from "@spica-server/function/services";
+import {FunctionService} from "@spica/api/src/function/services";
 import {
   Dependency,
   Function,
@@ -8,7 +8,7 @@ import {
 import {ChangeKind, changesFromTriggers, createTargetChanges, hasContextChange} from "./change";
 import {ObjectId} from "@spica/database";
 import {FunctionEngine} from "./engine";
-import {LogService} from "@spica-server/function/src/log";
+import {LogService} from "@spica/api/src/function/src/log";
 import {NotFoundException} from "@nestjs/common";
 
 export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Function) {

@@ -1,4 +1,4 @@
-import {eliminateNonConfigurables, putConfiguration, replaceValue} from "@spica-server/asset";
+import {eliminateNonConfigurables, putConfiguration, replaceValue} from "@spica/api/src/asset";
 import {ObjectId} from "@spica/database";
 import {Asset, Config} from "@spica/interface";
 

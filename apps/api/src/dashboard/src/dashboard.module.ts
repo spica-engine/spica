@@ -3,7 +3,7 @@ import {DashboardController} from "./dashboard.controller";
 import {DashboardService} from "./dashboard.service";
 import {SchemaModule, Validator} from "@spica/core";
 import DashboardSchema = require("../schema/dashboard.json");
-import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
+import {ASSET_REP_MANAGER} from "@spica/api/src/asset/src/interface";
 import {IRepresentativeManager} from "@spica/interface";
 import {registerAssetHandlers} from "./asset";
 

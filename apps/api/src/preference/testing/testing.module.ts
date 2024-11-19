@@ -1,5 +1,5 @@
 import {Global, Module} from "@nestjs/common";
-import {PreferenceService} from "@spica-server/preference/services";
+import {PreferenceService} from "@spica/api/src/preference/services";
 import {Observable} from "rxjs";
 
 class PartialPreferenceService {

@@ -13,8 +13,8 @@ import {
   equal,
   regex,
   length
-} from "@spica-server/bucket/expression/src/builtin_funcs";
-import {parser} from "@spica-server/bucket/expression/src/parser";
+} from "@spica/api/src/bucket/expression/src/builtin_funcs";
+import {parser} from "@spica/api/src/bucket/expression/src/parser";
 
 describe("macros", () => {
   describe("validation", () => {

@@ -1,6 +1,6 @@
-import {Compilation} from "@spica-server/function/compiler";
-import {Typescript} from "@spica-server/function/compiler/typescript";
-import {FunctionTestBed} from "@spica-server/function/runtime/testing";
+import {Compilation} from "@spica/api/src/function/compiler";
+import {Typescript} from "@spica/api/src/function/compiler/typescript";
+import {FunctionTestBed} from "@spica/api/src/function/runtime/testing";
 import * as fs from "fs";
 import * as path from "path";
 

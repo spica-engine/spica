@@ -1,4 +1,4 @@
-import {event} from "@spica-server/function/queue/proto";
+import {event} from "@spica/api/src/function/queue/proto";
 import * as grpc from "@grpc/grpc-js";
 
 export class EventQueue {

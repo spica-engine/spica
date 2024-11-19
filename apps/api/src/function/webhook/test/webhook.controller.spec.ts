@@ -3,13 +3,13 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica/core";
 import {CoreTestingModule, Request} from "@spica/core";
 import {DatabaseService, DatabaseTestingModule} from "@spica/database";
-import {Webhook, WebhookService} from "@spica-server/function/webhook";
-import {SchemaResolver} from "@spica-server/function/webhook/src/schema";
-import {WebhookController} from "@spica-server/function/webhook/src/webhook.controller";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
-import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
-import {WEBHOOK_OPTIONS} from "@spica-server/function/webhook";
+import {Webhook, WebhookService} from "@spica/api/src/function/webhook";
+import {SchemaResolver} from "@spica/api/src/function/webhook/src/schema";
+import {WebhookController} from "@spica/api/src/function/webhook/src/webhook.controller";
+import {PassportTestingModule} from "@spica/api/src/passport/testing";
+import {WebhookInvoker} from "@spica/api/src/function/webhook/src/invoker";
+import {WebhookLogService} from "@spica/api/src/function/webhook/src/log.service";
+import {WEBHOOK_OPTIONS} from "@spica/api/src/function/webhook";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 

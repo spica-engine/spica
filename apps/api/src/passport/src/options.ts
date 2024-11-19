@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import {IdentityOptions} from "@spica-server/passport/identity";
+import {IdentityOptions} from "@spica/api/src/passport/identity";
 
 export const PASSPORT_OPTIONS = Symbol.for("PASSPORT_OPTIONS");
 export const STRATEGIES = Symbol.for("STRATEGIES");

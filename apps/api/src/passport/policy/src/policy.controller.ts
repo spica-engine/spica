@@ -13,11 +13,11 @@ import {
   Inject,
   BadRequestException
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
+import {activity} from "@spica/api/src/activity/services";
 import {NUMBER, DEFAULT, JSONP} from "@spica/core";
 import {Schema} from "@spica/core";
 import {ObjectId, OBJECT_ID} from "@spica/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica/api/src/passport/guard";
 import {createPolicyActivity} from "./activity.resource";
 import {
   Policy,

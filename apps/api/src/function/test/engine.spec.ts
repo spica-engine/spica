@@ -1,12 +1,12 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService} from "@spica/database";
 import {DatabaseTestingModule, stream} from "@spica/database";
-import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
-import {FunctionEngine} from "@spica-server/function/src/engine";
-import {FunctionService} from "@spica-server/function/services";
+import {Scheduler, SchedulerModule} from "@spica/api/src/function/scheduler";
+import {FunctionEngine} from "@spica/api/src/function/src/engine";
+import {FunctionService} from "@spica/api/src/function/services";
 import {INestApplication} from "@nestjs/common";
-import {TargetChange, ChangeKind} from "@spica-server/function/src/change";
-import {ClassCommander} from "@spica-server/replication";
+import {TargetChange, ChangeKind} from "@spica/api/src/function/src/change";
+import {ClassCommander} from "@spica/api/src/replication";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
 describe("Engine", () => {

@@ -1,4 +1,4 @@
-import {Compilation, Language, Description} from "@spica-server/function/compiler";
+import {Compilation, Language, Description} from "@spica/api/src/function/compiler";
 import * as fs from "fs";
 import * as path from "path";
 

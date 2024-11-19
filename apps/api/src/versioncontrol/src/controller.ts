@@ -9,7 +9,7 @@ import {
   InternalServerErrorException,
   Param
 } from "@nestjs/common";
-import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard} from "@spica/api/src/passport/guard";
 import {SyncDirection, VersionManager} from "./interface";
 import {Synchronizer} from "./synchronizer";
 

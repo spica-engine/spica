@@ -4,7 +4,7 @@ import {
   ModuleActivity,
   createActivity,
   ActivityService
-} from "@spica-server/activity/services";
+} from "@spica/api/src/activity/services";
 import {deepCopy} from "@spica/core";
 
 export function createBucketActivity(

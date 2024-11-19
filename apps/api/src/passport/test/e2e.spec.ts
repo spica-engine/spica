@@ -3,9 +3,9 @@ import {Test} from "@nestjs/testing";
 import {SchemaModule} from "@spica/core";
 import {CoreTestingModule, Request} from "@spica/core";
 import {DatabaseTestingModule} from "@spica/database";
-import {PassportModule} from "@spica-server/passport";
-import {REQUEST_SERVICE} from "@spica-server/passport/src/options";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PassportModule} from "@spica/api/src/passport";
+import {REQUEST_SERVICE} from "@spica/api/src/passport/src/options";
+import {PreferenceTestingModule} from "@spica/api/src/preference/testing";
 
 import jsQR from "jsqr";
 import {PNG} from "pngjs";

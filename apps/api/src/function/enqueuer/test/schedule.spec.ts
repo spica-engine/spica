@@ -1,7 +1,7 @@
 import {Test} from "@nestjs/testing";
-import {ScheduleEnqueuer} from "@spica-server/function/enqueuer";
-import {EventQueue} from "@spica-server/function/queue";
-import {event} from "@spica-server/function/queue/proto";
+import {ScheduleEnqueuer} from "@spica/api/src/function/enqueuer";
+import {EventQueue} from "@spica/api/src/function/queue";
+import {event} from "@spica/api/src/function/queue/proto";
 
 function createTarget(cwd?: string, handler?: string) {
   const target = new event.Target();

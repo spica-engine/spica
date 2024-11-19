@@ -21,20 +21,20 @@ import {
   UseInterceptors,
   Headers
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
+import {activity} from "@spica/api/src/activity/services";
 import {ARRAY, BOOLEAN, DEFAULT} from "@spica/core";
 import {Schema} from "@spica/core";
 import {ObjectId, OBJECT_ID} from "@spica/database";
-import {Scheduler} from "@spica-server/function/scheduler";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {Scheduler} from "@spica/api/src/function/scheduler";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica/api/src/passport/guard";
 import * as os from "os";
 import {of, OperatorFunction} from "rxjs";
 import {catchError, finalize, last, map, tap} from "rxjs/operators";
 import {createFunctionActivity} from "./activity.resource";
 import {FunctionEngine} from "./engine";
-import {FunctionService, FUNCTION_OPTIONS, Options} from "@spica-server/function/services";
+import {FunctionService, FUNCTION_OPTIONS, Options} from "@spica/api/src/function/services";
 import {Function} from "@spica/interface";
-import {LogService} from "@spica-server/function/src/log/src/log.service";
+import {LogService} from "@spica/api/src/function/src/log/src/log.service";
 import {generate} from "./schema/enqueuer.resolver";
 import {applyPatch} from "@spica/core";
 import * as CRUD from "./crud";

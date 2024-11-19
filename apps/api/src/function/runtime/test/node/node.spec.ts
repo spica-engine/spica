@@ -1,4 +1,4 @@
-import {Node} from "@spica-server/function/runtime/node";
+import {Node} from "@spica/api/src/function/runtime/node";
 
 describe("Node", () => {
   let node: Node;

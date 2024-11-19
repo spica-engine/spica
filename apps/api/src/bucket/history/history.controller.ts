@@ -1,7 +1,7 @@
 import {Controller, Get, Param, UseGuards, Delete, HttpCode, HttpStatus} from "@nestjs/common";
-import {BucketService, compile} from "@spica-server/bucket/services";
+import {BucketService, compile} from "@spica/api/src/bucket/services";
 import {ObjectId, OBJECT_ID} from "@spica/database";
-import {AuthGuard} from "@spica-server/passport";
+import {AuthGuard} from "@spica/api/src/passport";
 import {applyPatch} from "./differ";
 import {HistoryService} from "./history.service";
 

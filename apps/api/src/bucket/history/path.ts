@@ -1,4 +1,4 @@
-import {BucketDocument} from "@spica-server/bucket/services";
+import {BucketDocument} from "@spica/api/src/bucket/services";
 import {JSONSchema7, JSONSchema7TypeName} from "json-schema";
 
 export namespace Path {

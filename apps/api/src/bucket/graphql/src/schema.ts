@@ -1,4 +1,4 @@
-import {Bucket} from "@spica-server/bucket/services";
+import {Bucket} from "@spica/api/src/bucket/services";
 import {ObjectId} from "@spica/database";
 import {GraphQLResolveInfo} from "graphql";
 

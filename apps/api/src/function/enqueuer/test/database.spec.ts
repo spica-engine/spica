@@ -1,8 +1,8 @@
 import {Test} from "@nestjs/testing";
 import {ChangeStream, DatabaseService, DatabaseTestingModule, stream} from "@spica/database";
-import {DatabaseEnqueuer} from "@spica-server/function/enqueuer";
-import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
-import {Database, event} from "@spica-server/function/queue/proto";
+import {DatabaseEnqueuer} from "@spica/api/src/function/enqueuer";
+import {DatabaseQueue, EventQueue} from "@spica/api/src/function/queue";
+import {Database, event} from "@spica/api/src/function/queue/proto";
 
 function createTarget(cwd?: string, handler?: string) {
   const target = new event.Target();

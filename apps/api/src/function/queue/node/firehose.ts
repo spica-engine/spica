@@ -1,4 +1,4 @@
-import {Firehose} from "@spica-server/function/queue/proto";
+import {Firehose} from "@spica/api/src/function/queue/proto";
 import * as grpc from "@grpc/grpc-js";
 
 export class FirehoseQueue {

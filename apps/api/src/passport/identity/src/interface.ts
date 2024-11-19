@@ -1,5 +1,5 @@
 import {ObjectId} from "@spica/database";
-import {FactorMeta} from "@spica-server/passport/authfactor";
+import {FactorMeta} from "@spica/api/src/passport/authfactor";
 
 export interface Identity {
   _id?: ObjectId;

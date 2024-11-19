@@ -1,8 +1,8 @@
 import {Test} from "@nestjs/testing";
 import {DatabaseService} from "@spica/database";
 import {DatabaseTestingModule, stream} from "@spica/database";
-import {DatabaseOutput} from "@spica-server/function/runtime/io";
-import {generateLog, getLoggerConsole, LogLevels} from "@spica-server/function/runtime/logger";
+import {DatabaseOutput} from "@spica/api/src/function/runtime/io";
+import {generateLog, getLoggerConsole, LogLevels} from "@spica/api/src/function/runtime/logger";
 
 describe("IO Database", () => {
   let db: DatabaseService;

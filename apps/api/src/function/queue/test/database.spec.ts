@@ -1,5 +1,5 @@
-import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
-import {Database} from "@spica-server/function/queue/proto";
+import {DatabaseQueue, EventQueue} from "@spica/api/src/function/queue";
+import {Database} from "@spica/api/src/function/queue/proto";
 import {credentials} from "@grpc/grpc-js";
 
 describe("DatabaseQueue", () => {

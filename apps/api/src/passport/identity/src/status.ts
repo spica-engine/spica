@@ -1,4 +1,4 @@
-import {register} from "@spica-server/status";
+import {register} from "@spica/api/src/status";
 import {IdentityService} from "./identity.service";
 
 export async function registerStatusProvider(service: IdentityService) {

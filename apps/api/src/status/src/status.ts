@@ -1,5 +1,5 @@
-import {register} from "@spica-server/status";
-import {StatusService} from "@spica-server/status/services";
+import {register} from "@spica/api/src/status";
+import {StatusService} from "@spica/api/src/status/services";
 
 export function registerStatusProvider(service: StatusService) {
   const provide = async (begin: Date, end: Date) => {

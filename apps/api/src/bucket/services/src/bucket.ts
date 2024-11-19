@@ -1,5 +1,5 @@
 import {ObjectId} from "@spica/database";
-import {Preference} from "@spica-server/preference/services";
+import {Preference} from "@spica/api/src/preference/services";
 import {JSONSchema7, JSONSchema7TypeName} from "json-schema";
 
 export interface Bucket {

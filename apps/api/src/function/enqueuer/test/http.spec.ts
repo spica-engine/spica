@@ -1,9 +1,9 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica/core";
-import {HttpEnqueuer, HttpMethod} from "@spica-server/function/enqueuer";
-import {EventQueue, HttpQueue} from "@spica-server/function/queue";
-import {event} from "@spica-server/function/queue/proto";
+import {HttpEnqueuer, HttpMethod} from "@spica/api/src/function/enqueuer";
+import {EventQueue, HttpQueue} from "@spica/api/src/function/queue";
+import {event} from "@spica/api/src/function/queue/proto";
 
 /**
  * TODO: Provide some tests for req.query, req.headers and req.params

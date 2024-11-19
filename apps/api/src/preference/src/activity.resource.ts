@@ -1,4 +1,4 @@
-import {ModuleActivity, PreActivity} from "@spica-server/activity/services";
+import {ModuleActivity, PreActivity} from "@spica/api/src/activity/services";
 
 export function createPreferenceActivity(
   preActivity: PreActivity,

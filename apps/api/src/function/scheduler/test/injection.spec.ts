@@ -1,6 +1,6 @@
 import {Global, INestApplication, Module} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {ENQUEUER, Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
+import {ENQUEUER, Scheduler, SchedulerModule} from "@spica/api/src/function/scheduler";
 import {DatabaseTestingModule} from "@spica/database";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7911";

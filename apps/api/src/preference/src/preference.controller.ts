@@ -9,15 +9,15 @@ import {
   Optional,
   Inject
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
-import {AuthGuard, ActionGuard} from "@spica-server/passport";
+import {activity} from "@spica/api/src/activity/services";
+import {AuthGuard, ActionGuard} from "@spica/api/src/passport";
 import {
   Preference,
   PreferenceService,
   BUCKET_LANGUAGE_FINALIZER,
   changeFactory,
   IDENTITY_SETTINGS_FINALIZER
-} from "@spica-server/preference/services";
+} from "@spica/api/src/preference/services";
 import {createPreferenceActivity} from "./activity.resource";
 
 @Controller("preference")

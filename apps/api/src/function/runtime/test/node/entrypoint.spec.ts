@@ -1,10 +1,10 @@
-import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
-import {Database, event, Firehose, Http} from "@spica-server/function/queue/proto";
-import {Compilation, Language} from "@spica-server/function/compiler";
-import {Javascript} from "@spica-server/function/compiler/javascript";
-import {Typescript} from "@spica-server/function/compiler/typescript";
-import {Node} from "@spica-server/function/runtime/node";
-import {FunctionTestBed} from "@spica-server/function/runtime/testing";
+import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica/api/src/function/queue";
+import {Database, event, Firehose, Http} from "@spica/api/src/function/queue/proto";
+import {Compilation, Language} from "@spica/api/src/function/compiler";
+import {Javascript} from "@spica/api/src/function/compiler/javascript";
+import {Typescript} from "@spica/api/src/function/compiler/typescript";
+import {Node} from "@spica/api/src/function/runtime/node";
+import {FunctionTestBed} from "@spica/api/src/function/runtime/testing";
 import * as os from "os";
 import {PassThrough, Writable} from "stream";
 

@@ -1,8 +1,8 @@
-import {Policy} from "@spica-server/passport/policy";
+import {Policy} from "@spica/api/src/passport/policy";
 import {
   getDuplicatedActionMaps,
   createDuplicatedActionsErrorMessage
-} from "@spica-server/passport/policy/src/utility";
+} from "@spica/api/src/passport/policy/src/utility";
 
 const policy: Policy = {
   _id: "test",

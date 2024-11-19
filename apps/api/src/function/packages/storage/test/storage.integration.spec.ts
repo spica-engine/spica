@@ -3,8 +3,8 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica/core";
 import {DatabaseTestingModule} from "@spica/database";
 import {CoreTestingModule} from "@spica/core";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {StorageModule} from "@spica-server/storage";
+import {PassportTestingModule} from "@spica/api/src/passport/testing";
+import {StorageModule} from "@spica/api/src/storage";
 import * as Storage from "@spica-devkit/storage";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 20_000;

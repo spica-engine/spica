@@ -1,9 +1,9 @@
 import {Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
 import {APP_INTERCEPTOR, HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica/database";
-import {Language} from "@spica-server/function/compiler";
-import {Javascript} from "@spica-server/function/compiler/javascript";
-import {Typescript} from "@spica-server/function/compiler/typescript";
+import {Language} from "@spica/api/src/function/compiler";
+import {Javascript} from "@spica/api/src/function/compiler/javascript";
+import {Typescript} from "@spica/api/src/function/compiler/typescript";
 import {
   DatabaseEnqueuer,
   Enqueuer,
@@ -11,17 +11,17 @@ import {
   HttpEnqueuer,
   ScheduleEnqueuer,
   SystemEnqueuer
-} from "@spica-server/function/enqueuer";
-import {PackageManager} from "@spica-server/function/pkgmanager";
-import {Npm} from "@spica-server/function/pkgmanager/node";
-import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
-import {event} from "@spica-server/function/queue/proto";
-import {Runtime, Worker} from "@spica-server/function/runtime";
-import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
-import {generateLog, LogLevels} from "@spica-server/function/runtime/logger";
-import {Node} from "@spica-server/function/runtime/node";
-import {ClassCommander, CommandType, JobReducer} from "@spica-server/replication";
-import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/status/services";
+} from "@spica/api/src/function/enqueuer";
+import {PackageManager} from "@spica/api/src/function/pkgmanager";
+import {Npm} from "@spica/api/src/function/pkgmanager/node";
+import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica/api/src/function/queue";
+import {event} from "@spica/api/src/function/queue/proto";
+import {Runtime, Worker} from "@spica/api/src/function/runtime";
+import {DatabaseOutput, StandartStream} from "@spica/api/src/function/runtime/io";
+import {generateLog, LogLevels} from "@spica/api/src/function/runtime/logger";
+import {Node} from "@spica/api/src/function/runtime/node";
+import {ClassCommander, CommandType, JobReducer} from "@spica/api/src/replication";
+import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica/api/src/status/services";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";

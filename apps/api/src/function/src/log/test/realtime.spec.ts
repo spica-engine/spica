@@ -1,10 +1,10 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {LogModule} from "@spica-server/function/src/log";
+import {LogModule} from "@spica/api/src/function/src/log";
 import {CoreTestingModule, Websocket} from "@spica/core";
 import {WsAdapter} from "@spica/core";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica/database";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica/api/src/passport/testing";
 import {ChunkKind} from "@spica/interface";
 
 function url(path: string, query?: {[k: string]: string | number | boolean | object}) {

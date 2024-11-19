@@ -1,8 +1,8 @@
 import {Inject, Injectable, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {DatabaseService, MongoClient} from "@spica/database";
-import {Scheduler} from "@spica-server/function/scheduler";
-import {Package, PackageManager} from "@spica-server/function/pkgmanager";
-import {event} from "@spica-server/function/queue/proto";
+import {Scheduler} from "@spica/api/src/function/scheduler";
+import {Package, PackageManager} from "@spica/api/src/function/pkgmanager";
+import {event} from "@spica/api/src/function/queue/proto";
 import * as fs from "fs";
 import {JSONSchema7} from "json-schema";
 import * as path from "path";
@@ -15,7 +15,7 @@ import {
   Options,
   COLL_SLUG,
   CollectionSlug
-} from "@spica-server/function/services";
+} from "@spica/api/src/function/services";
 import {Function} from "@spica/interface";
 
 import {ChangeKind, TargetChange} from "./change";
@@ -26,7 +26,7 @@ import HttpSchema = require("./schema/http.json");
 import ScheduleSchema = require("./schema/schedule.json");
 import FirehoseSchema = require("./schema/firehose.json");
 import SystemSchema = require("./schema/system.json");
-import {ClassCommander, CommandType} from "@spica-server/replication";
+import {ClassCommander, CommandType} from "@spica/api/src/replication";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {

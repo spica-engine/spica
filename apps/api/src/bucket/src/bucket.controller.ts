@@ -18,15 +18,15 @@ import {
   UseGuards,
   UseInterceptors
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
-import {HistoryService} from "@spica-server/bucket/history";
-import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/services";
+import {activity} from "@spica/api/src/activity/services";
+import {HistoryService} from "@spica/api/src/bucket/history";
+import {Bucket, BucketDataService, BucketService} from "@spica/api/src/bucket/services";
 import {Schema, Validator} from "@spica/core";
 import {ObjectId, OBJECT_ID} from "@spica/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {createBucketActivity} from "@spica-server/bucket/common";
-import * as expression from "@spica-server/bucket/expression";
-import {BucketCacheService, invalidateCache} from "@spica-server/bucket/cache";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica/api/src/passport/guard";
+import {createBucketActivity} from "@spica/api/src/bucket/common";
+import * as expression from "@spica/api/src/bucket/expression";
+import {BucketCacheService, invalidateCache} from "@spica/api/src/bucket/cache";
 import * as CRUD from "./crud";
 import {applyPatch, getUpdateQueryForPatch} from "@spica/core";
 /**

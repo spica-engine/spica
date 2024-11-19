@@ -1,9 +1,9 @@
 import {ChangeStream, DatabaseService} from "@spica/database";
-import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
-import {Database, event} from "@spica-server/function/queue/proto";
-import {CommandType, JobReducer} from "@spica-server/replication";
+import {DatabaseQueue, EventQueue} from "@spica/api/src/function/queue";
+import {Database, event} from "@spica/api/src/function/queue/proto";
+import {CommandType, JobReducer} from "@spica/api/src/replication";
 import {Description, Enqueuer} from "./enqueuer";
-import {ClassCommander} from "@spica-server/replication";
+import {ClassCommander} from "@spica/api/src/replication";
 import uniqid = require("uniqid");
 
 interface DatabaseOptions {

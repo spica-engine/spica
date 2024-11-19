@@ -9,7 +9,7 @@ import {
   CommandMemory,
   JobService,
   JobReducer
-} from "@spica-server/replication";
+} from "@spica/api/src/replication";
 import {MockJobReducer, MockMemoryService} from "./utilities";
 
 const memoryService = new MockMemoryService();

@@ -1,10 +1,10 @@
 import {Test} from "@nestjs/testing";
-import {StorageModule} from "@spica-server/storage";
-import {Strategy} from "@spica-server/storage/src/strategy/strategy";
-import {Default} from "@spica-server/storage/src/strategy/default";
-import {GCloud} from "@spica-server/storage/src/strategy/gcloud";
+import {StorageModule} from "@spica/api/src/storage";
+import {Strategy} from "@spica/api/src/storage/src/strategy/strategy";
+import {Default} from "@spica/api/src/storage/src/strategy/default";
+import {GCloud} from "@spica/api/src/storage/src/strategy/gcloud";
 import {DatabaseTestingModule} from "@spica/database";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica/api/src/passport/testing";
 
 describe("Strategy", () => {
   it("should create the default strategy", async () => {

@@ -1,9 +1,9 @@
 import {schemaDiff, ChangeKind} from "@spica/core";
-import {findRelations} from "@spica-server/bucket/common";
-import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/services";
+import {findRelations} from "@spica/api/src/bucket/common";
+import {Bucket, BucketDataService, BucketService} from "@spica/api/src/bucket/services";
 import {ObjectId} from "@spica/database";
-import {HistoryService} from "@spica-server/bucket/history";
-import * as expression from "@spica-server/bucket/expression";
+import {HistoryService} from "@spica/api/src/bucket/history";
+import * as expression from "@spica/api/src/bucket/expression";
 import {BadRequestException} from "@nestjs/common";
 
 export async function insert(bs: BucketService, bucket: Bucket) {

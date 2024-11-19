@@ -7,14 +7,14 @@ import {
   PipeTransform
 } from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
-import {Action, ActivityService} from "@spica-server/activity/services";
-import {HistoryService} from "@spica-server/bucket/history";
-import {ChangeEmitter} from "@spica-server/bucket/hooks";
-import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/services";
+import {Action, ActivityService} from "@spica/api/src/activity/services";
+import {HistoryService} from "@spica/api/src/bucket/history";
+import {ChangeEmitter} from "@spica/api/src/bucket/hooks";
+import {Bucket, BucketDocument, BucketService} from "@spica/api/src/bucket/services";
 import {Schema, Validator} from "@spica/core";
 import {ObjectID, ObjectId} from "@spica/database";
-import {GuardService} from "@spica-server/passport";
-import {resourceFilterFunction} from "@spica-server/passport/guard";
+import {GuardService} from "@spica/api/src/passport";
+import {resourceFilterFunction} from "@spica/api/src/passport/guard";
 import {graphqlHTTP} from "express-graphql";
 import {
   GraphQLError,
@@ -25,7 +25,7 @@ import {
 } from "graphql";
 import {makeExecutableSchema} from "@graphql-tools/schema";
 import {mergeResolvers, mergeTypeDefs} from "@graphql-tools/merge";
-import {BucketDataService} from "@spica-server/bucket/services";
+import {BucketDataService} from "@spica/api/src/bucket/services";
 import {
   deleteDocument,
   findDocuments,
@@ -38,7 +38,7 @@ import {
   insertActivity,
   AUTH_RESOLVER,
   IAuthResolver
-} from "@spica-server/bucket/common";
+} from "@spica/api/src/bucket/common";
 
 import {
   createSchema,

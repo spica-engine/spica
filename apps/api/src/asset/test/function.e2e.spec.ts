@@ -2,13 +2,13 @@ import {INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica/core";
 import {DatabaseTestingModule, ObjectId} from "@spica/database";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {AssetModule} from "@spica-server/asset";
-import {FunctionModule} from "@spica-server/function";
+import {PassportTestingModule} from "@spica/api/src/passport/testing";
+import {AssetModule} from "@spica/api/src/asset";
+import {FunctionModule} from "@spica/api/src/function";
 import {SchemaModule} from "@spica/core";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica/core";
 import * as os from "os";
-import {PreferenceModule} from "@spica-server/preference";
+import {PreferenceModule} from "@spica/api/src/preference";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:45670";
 

@@ -1,5 +1,5 @@
 import {Injectable, NotFoundException} from "@nestjs/common";
-import {Bucket, BucketPreferences, BucketService, compile} from "@spica-server/bucket/services";
+import {Bucket, BucketPreferences, BucketService, compile} from "@spica/api/src/bucket/services";
 import {CodeKeywordDefinition, KeywordCxt, Validator, _} from "@spica/core";
 import {ObjectId} from "@spica/database";
 import {combineLatest, Observable} from "rxjs";

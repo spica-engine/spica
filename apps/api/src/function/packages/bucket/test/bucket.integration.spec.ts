@@ -1,12 +1,12 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {BucketModule} from "@spica-server/bucket";
+import {BucketModule} from "@spica/api/src/bucket";
 import {SchemaModule} from "@spica/core";
 import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica/core";
 import {DatabaseTestingModule} from "@spica/database";
 import {CoreTestingModule, Websocket} from "@spica/core";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PassportTestingModule} from "@spica/api/src/passport/testing";
+import {PreferenceTestingModule} from "@spica/api/src/preference/testing";
 import * as Bucket from "@spica-devkit/bucket";
 import {bufferCount, take} from "rxjs/operators";
 import {WsAdapter} from "@spica/core";
