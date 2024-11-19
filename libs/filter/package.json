@@ -1,0 +1,9 @@
+{
+  "name": "@spica/filter",
+  "version": "0.0.1",
+  "dependencies": {},
+  "type": "commonjs",
+  "main": "./dist/src/index.js",
+  "typings": "./dist/src/index.d.ts",
+  "private": true
+}

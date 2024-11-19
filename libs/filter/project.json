@@ -1,0 +1,15 @@
+{
+  "name": "filter",
+  "sourceRoot": "libs/filter/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "libs/filter/dist",
+        "main": "libs/filter/src/index.ts",
+        "tsConfig": "libs/filter/tsconfig.lib.json"
+      }
+    }
+  }
+}
