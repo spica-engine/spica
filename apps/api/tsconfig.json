@@ -14,5 +14,6 @@
     "esModuleInterop": false
   },
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts", "/**/testing.module.ts"],
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "references": []
 }
