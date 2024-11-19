@@ -6,7 +6,7 @@ import {
   FunctionWithDependencies
 } from "@spica/interface";
 import {ChangeKind, changesFromTriggers, createTargetChanges, hasContextChange} from "./change";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {FunctionEngine} from "./engine";
 import {LogService} from "@spica-server/function/src/log";
 import {NotFoundException} from "@nestjs/common";

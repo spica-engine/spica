@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica/database";
 import {JobReducer, JobService, REPLICATION_SERVICE_OPTIONS} from "@spica-server/replication";
 import {replicationServiceOptions} from "@spica-server/replication/testing";
 

@@ -7,7 +7,7 @@ import {
   FilterQuery,
   FindOneAndReplaceOption,
   BaseCollection
-} from "@spica-server/database";
+} from "@spica/database";
 import {Policy} from "./interface";
 import managedPolicies from "./policies";
 

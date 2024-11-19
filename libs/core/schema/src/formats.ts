@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {Format} from "./interface";
 
 export const OBJECT_ID: Format = {

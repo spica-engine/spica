@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule, stream} from "@spica/database";
 import {Webhook, WebhookService, WEBHOOK_OPTIONS} from "@spica-server/function/webhook";
 import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
 import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";

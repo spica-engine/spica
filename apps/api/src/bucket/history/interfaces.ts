@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {Change} from "@spica-server/core/differ";
 
 export interface History {

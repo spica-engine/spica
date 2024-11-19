@@ -11,7 +11,7 @@ import {
 } from "./relation";
 import {constructFilterValues} from "@spica-server/bucket/common";
 import {categorizePropertyMap} from "./helpers";
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {PipelineBuilder} from "@spica/database";
 import {extractFilterPropertyMap} from "@spica/filter";
 
 export class BucketPipelineBuilder extends PipelineBuilder {

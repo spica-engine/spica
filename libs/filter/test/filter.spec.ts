@@ -4,7 +4,7 @@ import {
   LogicalExtractor,
   replaceFilterObjectIds
 } from "@spica/filter";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 
 describe("filter", () => {
   let filter;

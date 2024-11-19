@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService} from "@spica/database";
 import {ApiKey} from "./interface";
 
 @Injectable()

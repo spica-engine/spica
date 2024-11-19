@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {createSchema} from "@spica-server/bucket/hooks/src/module";
 import {BucketService, ServicesModule} from "@spica-server/bucket/services";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica/database";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {collectionSlugFactory} from "@spica-server/bucket/hooks/src/module";
 

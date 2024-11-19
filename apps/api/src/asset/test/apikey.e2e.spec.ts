@@ -2,7 +2,7 @@ import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {ApiKeyModule} from "@spica-server/passport/apikey";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica/database";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {AssetModule} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core/schema";

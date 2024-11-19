@@ -3,7 +3,7 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {Middlewares} from "@spica-server/core";
 import {StatusModule} from "@spica-server/status";
 import {Test} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica/database";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
 const MbInKb = 1000 * 1000;

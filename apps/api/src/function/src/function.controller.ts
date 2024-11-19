@@ -24,7 +24,7 @@ import {
 import {activity} from "@spica-server/activity/services";
 import {ARRAY, BOOLEAN, DEFAULT} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ObjectId, OBJECT_ID} from "@spica/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as os from "os";

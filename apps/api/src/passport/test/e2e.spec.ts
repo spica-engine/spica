@@ -2,7 +2,7 @@ import {Controller, Get, INestApplication, ModuleMetadata, Req, Res} from "@nest
 import {Test} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica/database";
 import {PassportModule} from "@spica-server/passport";
 import {REQUEST_SERVICE} from "@spica-server/passport/src/options";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";

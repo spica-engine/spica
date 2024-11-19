@@ -8,7 +8,7 @@ import {
   mixin,
   Type
 } from "@nestjs/common";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {raw, json} from "body-parser";
 import {deserialize} from "bson";
 import {Observable, OperatorFunction, PartialObserver, Subscriber, TeardownLogic} from "rxjs";

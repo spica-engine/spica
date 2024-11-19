@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {Expression, Extractor, KeyValidator, ValueConstructor} from "./interface";
 
 export const DefaultExtractor: Extractor = {

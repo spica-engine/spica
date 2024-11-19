@@ -1,4 +1,4 @@
-import {Db, MongoClient} from "@spica-server/database";
+import {Db, MongoClient} from "@spica/database";
 import {ChangeStream} from "mongodb";
 
 const originalCollection = Db.prototype.collection;

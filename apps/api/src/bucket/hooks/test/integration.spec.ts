@@ -5,7 +5,7 @@ import {Bucket, BucketDocument} from "@spica-server/bucket/services";
 import {Middlewares} from "@spica-server/core";
 import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica/database";
 import {FunctionModule} from "@spica-server/function";
 import {Function} from "@spica/interface";
 import {PassportTestingModule} from "@spica-server/passport/testing";

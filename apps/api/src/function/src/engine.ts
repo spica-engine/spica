@@ -1,5 +1,5 @@
 import {Inject, Injectable, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
-import {DatabaseService, MongoClient} from "@spica-server/database";
+import {DatabaseService, MongoClient} from "@spica/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {Package, PackageManager} from "@spica-server/function/pkgmanager";
 import {event} from "@spica-server/function/queue/proto";

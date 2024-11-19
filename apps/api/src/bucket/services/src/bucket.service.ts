@@ -8,7 +8,7 @@ import {
   FindOneAndReplaceOption,
   IndexOptions,
   ObjectId
-} from "@spica-server/database";
+} from "@spica/database";
 import {PreferenceService} from "@spica-server/preference/services";
 import {BehaviorSubject, Observable} from "rxjs";
 import {Bucket, BucketPreferences} from "./bucket";

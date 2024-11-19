@@ -1,6 +1,6 @@
 import {Global, Module} from "@nestjs/common";
 import {BucketService, ServicesModule} from "@spica-server/bucket/services";
-import {DatabaseService, ObjectId} from "@spica-server/database";
+import {DatabaseService, ObjectId} from "@spica/database";
 import {SCHEMA} from "@spica-server/function";
 import {COLL_SLUG} from "@spica-server/function/services";
 import {EventQueue} from "@spica-server/function/queue";

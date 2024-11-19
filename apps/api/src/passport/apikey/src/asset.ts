@@ -4,7 +4,7 @@ import {ApiKey} from "@spica-server/passport/apikey/src/interface";
 import {IRepresentativeManager} from "@spica/interface";
 import {Resource} from "@spica/interface";
 import {registrar} from "@spica-server/asset";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import * as uniqid from "uniqid";
 import ApiKeySchema = require("./schemas/apikey.json");
 

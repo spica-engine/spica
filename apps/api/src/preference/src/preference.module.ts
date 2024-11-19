@@ -1,5 +1,5 @@
 import {Global, Inject, Module, Optional} from "@nestjs/common";
-import {DatabaseModule} from "@spica-server/database";
+import {DatabaseModule} from "@spica/database";
 import {IRepresentativeManager} from "@spica/interface";
 import {PreferenceService} from "@spica-server/preference/services";
 import {

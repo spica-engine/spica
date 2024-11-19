@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 
 export interface ApiKey {
   _id?: ObjectId;
