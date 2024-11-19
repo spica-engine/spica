@@ -127,6 +127,7 @@
     "@types/express": "*",
     "@types/got": "^9.6.11",
     "@types/jasmine": "^3.3.13",
+    "@types/jest": "^29.5.14",
     "@types/json-schema": "^7.0.3",
     "@types/lodash": "^4.14.178",
     "@types/matcher": "^2.0.0",
