@@ -2,19 +2,6 @@
   "name": "database",
   "sourceRoot": "libs/database/src",
   "targets": {
-    "serve": {
-      "executor": "@nx/js:node",
-      "defaultConfiguration": "development",
-      "dependsOn": ["build"],
-      "configurations": {
-        "development": {
-          "buildTarget": "database:build:development"
-        },
-        "production": {
-          "buildTarget": "database:build:production"
-        }
-      }
-    },
     "build": {
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
