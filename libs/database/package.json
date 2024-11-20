@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "dependencies": {},
   "type": "commonjs",
-  "main": "./src/index.js",
+  "main": "./dist/src/index.js",
   "typings": "./dist/src/index.d.ts",
   "private": true
 }
