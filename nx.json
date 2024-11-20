@@ -25,6 +25,12 @@
           "configName": "tsconfig.lib.json"
         }
       }
+    },
+    {
+      "plugin": "@nx/rollup/plugin",
+      "options": {
+        "buildTargetName": "build"
+      }
     }
   ],
   "targetDefaults": {
