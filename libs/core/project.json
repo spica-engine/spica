@@ -8,7 +8,8 @@
       "options": {
         "outputPath": "libs/core/dist",
         "main": "libs/core/src/index.ts",
-        "tsConfig": "libs/core/tsconfig.lib.json"
+        "tsConfig": "libs/core/tsconfig.lib.json",
+        "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
       },
       "dependsOn": ["^build"]
     }

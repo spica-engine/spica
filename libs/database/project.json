@@ -2,13 +2,27 @@
   "name": "database",
   "sourceRoot": "libs/database/src",
   "targets": {
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "configurations": {
+        "development": {
+          "buildTarget": "database:build:development"
+        },
+        "production": {
+          "buildTarget": "database:build:production"
+        }
+      }
+    },
     "build": {
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "libs/database/dist",
         "main": "libs/database/src/index.ts",
-        "tsConfig": "libs/database/tsconfig.lib.json"
+        "tsConfig": "libs/database/tsconfig.lib.json",
+        "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
       },
       "dependsOn": ["^build"]
     }
