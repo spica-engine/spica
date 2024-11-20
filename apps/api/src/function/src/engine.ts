@@ -22,10 +22,10 @@ import {ChangeKind, TargetChange} from "./change";
 import {SCHEMA, SchemaWithName} from "./schema/schema";
 import {createTargetChanges} from "./change";
 
-import HttpSchema = require("./schema/http.json");
-import ScheduleSchema = require("./schema/schedule.json");
-import FirehoseSchema = require("./schema/firehose.json");
-import SystemSchema = require("./schema/system.json");
+import * as HttpSchema from "./schema/http.json";
+import * as ScheduleSchema from "./schema/schedule.json";
+import * as FirehoseSchema from "./schema/firehose.json";
+import * as SystemSchema from "./schema/system.json";
 import {ClassCommander, CommandType} from "@spica-server/replication";
 
 @Injectable()

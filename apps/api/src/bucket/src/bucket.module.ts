@@ -16,8 +16,8 @@ import {
 import {GraphQLModule} from "@spica-server/bucket/graphql";
 import {provideLanguageFinalizer} from "@spica-server/bucket/common";
 import {registerStatusProvider} from "./status";
-import BucketSchema = require("./schemas/bucket.schema.json");
-import BucketsSchema = require("./schemas/buckets.schema.json");
+import * as BucketSchema from "./schemas/bucket.schema.json";
+import * as BucketsSchema from "./schemas/buckets.schema.json";
 import {
   RegisterSyncProvider,
   REGISTER_VC_SYNC_PROVIDER,

@@ -3,7 +3,7 @@ import {event, Firehose} from "@spica-server/function/queue/proto";
 import * as url from "url";
 import * as ws from "ws";
 import {Description, Enqueuer} from "./enqueuer";
-import express = require("express");
+import * as express from "express";
 
 interface FirehoseOptions {
   event: "*" | "**" | "connection" | "close" | string;

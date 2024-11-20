@@ -11,9 +11,9 @@ import {
 } from "./interface";
 import * as fs from "fs";
 
-import AssetSchema = require("../schema/asset.json");
-import ConfigsSchema = require("../schema/configs.json");
-import ExportSchema = require("../schema/export.json");
+import * as AssetSchema from "../schema/asset.json";
+import * as ConfigsSchema from "../schema/configs.json";
+import * as ExportSchema from "../schema/export.json";
 import {AssetRepManager} from "./representative";
 import {installationStrategies} from "./strategies";
 

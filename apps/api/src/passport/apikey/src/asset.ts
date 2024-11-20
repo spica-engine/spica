@@ -6,7 +6,7 @@ import {Resource} from "@spica/interface";
 import {registrar} from "@spica-server/asset";
 import {ObjectId} from "@spica/database";
 import * as uniqid from "uniqid";
-import ApiKeySchema = require("./schemas/apikey.json");
+import * as ApiKeySchema from "./schemas/apikey.json";
 
 const _module = "apikey";
 

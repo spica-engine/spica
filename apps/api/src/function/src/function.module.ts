@@ -16,7 +16,7 @@ import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/en
 import {Http} from "./services/interface";
 import {Axios} from "./services/axios";
 import {registerStatusProvider} from "./status";
-import FunctionSchema = require("./schema/function.json");
+import * as FunctionSchema from "./schema/function.json";
 import {
   RegisterSyncProvider,
   REGISTER_VC_SYNC_PROVIDER,
