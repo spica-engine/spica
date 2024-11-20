@@ -51,6 +51,15 @@
         "main": "apps/api/src/function/runtime/node/entrypoint.js",
         "webpackConfig": "apps/api/webpack.config.js"
       }
+    },
+    "build-rol": {
+      "executor": "@nx/rollup:rollup",
+      "options": {
+        "outputPath": "apps/api/dist/src/function/runtime/node/entrypoint",
+        "main": "apps/api/src/function/runtime/node/entrypoint.js",
+        "tsConfig": "apps/api/tsconfig.json",
+        "rollupConfig": "apps/api/src/function/runtime/node/rollup.config.cjs"
+      }
     }
   }
 }

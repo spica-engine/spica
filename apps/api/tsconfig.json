@@ -12,6 +12,7 @@
     "target": "es2020",
     "sourceMap": true,
     "esModuleInterop": false,
+    "declarationMap": true,
     "paths": {
       "@spica-server/*": ["./src/*"]
     }

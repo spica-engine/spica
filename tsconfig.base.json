@@ -12,6 +12,7 @@
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "moduleResolution": "node",
     "target": "es2020",
     "sourceMap": true,
     "outDir": "./dist",
