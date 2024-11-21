@@ -6,7 +6,7 @@
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "libs/database/dist",
+        "outputPath": "dist/libs/database",
         "main": "libs/database/src/index.ts",
         "tsConfig": "libs/database/tsconfig.lib.json"
       },
