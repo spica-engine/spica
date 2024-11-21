@@ -14,5 +14,5 @@ module.exports = {
     }),
     terser()
   ],
-  external: ["path"],
+  external: ["path", "@spica-devkit/database", "@grpc/grpc-js"], 
 };

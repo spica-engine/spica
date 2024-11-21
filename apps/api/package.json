@@ -2,9 +2,13 @@
   "name": "@spica/api",
   "version": "0.0.0-PLACEHOLDER",
   "devDependencies": {
+    "@rollup/plugin-json": "^4.1.0",
     "typescript-transform-paths": "^3.5.2"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@grpc/grpc-js": "1.1.1",
+    "rollup-plugin-terser": "^7.0.2"
+  },
   "type": "commonjs",
   "main": "./dist/src/index.js",
   "typings": "./dist/src/index.d.ts",

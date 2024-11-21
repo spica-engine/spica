@@ -55,9 +55,9 @@
     "build-rol": {
       "executor": "@nx/rollup:rollup",
       "options": {
-        "outputPath": "apps/api/dist/src/function/runtime/node/entrypoint",
+        "outputPath": "apps/worker",
         "main": "apps/api/src/function/runtime/node/entrypoint.js",
-        "tsConfig": "apps/api/tsconfig.json",
+        "tsConfig": "apps/api/tsconfig.worker.json",
         "rollupConfig": "apps/api/src/function/runtime/node/rollup.config.cjs"
       }
     }

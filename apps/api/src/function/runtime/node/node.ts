@@ -17,7 +17,17 @@ class NodeWorker extends Worker {
       `node`,
       [
         "--es-module-specifier-resolution=node",
-        path.join(__dirname, "runtime", "entrypoint", "bootstrap")
+        path.join(
+          __dirname,
+          "../",
+          "../",
+          "../",
+          "../",
+          "../",
+          "../",
+          "worker",
+          "entrypoint.cjs.js"
+        )
       ],
       {
         stdio: ["ignore", "pipe", "pipe"],
