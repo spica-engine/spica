@@ -5,10 +5,19 @@
   "references": [
     {"path": "./libs/representative"},
     {"path": "./libs/interface"},
-    {"path": "./libs/database"},
     {"path": "./libs/filter"},
     {"path": "./apps/spica"},
     {"path": "./apps/api"},
-    {"path": "./libs/core"}
+    {"path": "./libs/database/pipeline"},
+    {"path": "./libs/database/realtime"},
+    {"path": "./libs/database/testing"},
+    {"path": "./libs/core/websocket"},
+    {"path": "./libs/database/core"},
+    {"path": "./libs/core/helpers"},
+    {"path": "./libs/core/testing"},
+    {"path": "./libs/core/differ"},
+    {"path": "./libs/core/schema"},
+    {"path": "./libs/core/patch"},
+    {"path": "./libs/core/copy"}
   ]
 }

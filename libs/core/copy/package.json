@@ -1,5 +1,5 @@
 {
-  "name": "@spica/representative",
+  "name": "@spica/core/copy",
   "type": "commonjs",
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",

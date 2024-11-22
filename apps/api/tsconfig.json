@@ -17,8 +17,9 @@
   "include": ["src/**/*.ts"],
   "references": [
     {"path": "../../libs/filter"},
+    {"path": "../../libs/database/core"},
+    {"path": "../../libs/database/pipeline"},
     {"path": "../../libs/representative"},
-    {"path": "../../libs/interface"},
-    {"path": "../../libs/database"}
+    {"path": "../../libs/interface"}
   ]
 }

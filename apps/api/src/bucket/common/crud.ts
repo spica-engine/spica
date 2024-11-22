@@ -22,7 +22,7 @@ import {
 import {IAuthResolver} from "./interface";
 import {categorizePropertyMap} from "./helpers";
 import {BucketPipelineBuilder} from "./pipeline.builder";
-import {PipelineBuilder} from "@spica/database";
+import {PipelineBuilder} from "@spica/database/pipeline";
 
 interface CrudOptions<Paginate> {
   localize?: boolean;

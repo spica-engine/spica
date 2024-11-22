@@ -1,5 +1,5 @@
 {
-  "name": "@spica/representative",
+  "name": "@spica/core/helpers",
   "type": "commonjs",
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",
