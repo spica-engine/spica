@@ -1,1 +1,1 @@
-export * from "./lib/representative";
+export * from "./lib";
