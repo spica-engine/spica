@@ -1,4 +1,4 @@
-import {ObjectId} from "bson";
+import {ObjectId} from "@spica/database";
 import {IPipelineBuilder} from "./interface";
 
 export class PipelineBuilder implements IPipelineBuilder {

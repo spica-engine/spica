@@ -1,4 +1,4 @@
-import {levenshtein} from "./levenshtein";
+import {levenshtein} from "@spica/database";
 import {SequenceKind} from "@spica/interface";
 
 describe("levenstein", () => {
