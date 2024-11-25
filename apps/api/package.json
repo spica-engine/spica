@@ -4,7 +4,7 @@
   "devDependencies": {},
   "dependencies": {},
   "type": "commonjs",
-  "main": "./dist/src/index.js",
-  "typings": "./dist/src/index.d.ts",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
   "private": true
 }

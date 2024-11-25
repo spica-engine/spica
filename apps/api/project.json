@@ -30,9 +30,9 @@
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "outputPath": "apps/api/dist",
+        "outputPath": "dist/apps/api",
         "main": "apps/api/src/main.ts",
-        "tsConfig": "apps/api/tsconfig.json",
+        "tsConfig": "apps/api/tsconfig.app.json",
         "assets": [
           {
             "input": "apps/api/src/bucket/expression/src",
