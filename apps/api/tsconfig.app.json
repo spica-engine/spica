@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "src",
+    "emitDeclarationOnly": false,
+    "types": ["node"],
+    "module": "commonjs",
+    "emitDecoratorMetadata": true,
+    "target": "es2020",
+    "sourceMap": true,
+    "esModuleInterop": false
+  },
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts", "/**/testing.module.ts"],
+  "include": ["src/**/*.ts"],
+  "references": [
+    {"path": "../../libs/filter/tsconfig.lib.json"},
+    {"path": "../../libs/database/core/tsconfig.lib.json"},
+    {"path": "../../libs/database/pipeline/tsconfig.lib.json"},
+    {"path": "../../libs/representative/tsconfig.lib.json"},
+    {"path": "../../libs/interface/tsconfig.lib.json"}
+  ]
+}
