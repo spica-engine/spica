@@ -15,6 +15,12 @@
     "libs/*",
     "apps/*"
   ],
+  "scripts": {
+    "build": "yarn nx run-many -t build",
+    "graph": "yarn nx graph",
+    "reset": "yarn nx reset",
+    "sync": "yarn nx sync"
+  },
   "dependencies": {
     "@google-cloud/storage": "^5.0.1",
     "@graphql-tools/merge": "^8.2.1",
