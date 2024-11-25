@@ -5,7 +5,7 @@ import {SamlStrategy, StrategyTypeService} from "../interface";
 import {PassportOptions, PASSPORT_OPTIONS} from "../../options";
 import {StrategyService} from "./strategy.service";
 import * as forge from "node-forge";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 
 @Injectable()
 export class SamlService implements StrategyTypeService {

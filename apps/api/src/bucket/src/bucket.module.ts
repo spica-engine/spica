@@ -3,7 +3,7 @@ import {HistoryModule, HistoryService} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {BucketService, BucketDataService, ServicesModule} from "@spica-server/bucket/services";
-import {SchemaModule, Validator} from "@spica-server/core/schema";
+import {SchemaModule, Validator} from "@spica/core";
 import {BUCKET_LANGUAGE_FINALIZER, PreferenceService} from "@spica-server/preference/services";
 import {BucketCacheModule} from "@spica-server/bucket/cache";
 import {BucketDataController} from "./bucket-data.controller";
@@ -25,7 +25,7 @@ import {
 } from "@spica-server/versioncontrol";
 import {getSyncProvider} from "./versioncontrol/schema";
 import {registerAssetHandlers} from "./asset";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica/interface";
 import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
 
 @Module({})

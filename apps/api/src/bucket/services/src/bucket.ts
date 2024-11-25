@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {Preference} from "@spica-server/preference/services";
 import {JSONSchema7, JSONSchema7TypeName} from "json-schema";
 

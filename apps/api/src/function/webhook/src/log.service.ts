@@ -1,5 +1,5 @@
 import {Injectable, Inject} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService} from "@spica/database";
 import {Log, WEBHOOK_OPTIONS, WebhookOptions} from "./interface";
 
 @Injectable()

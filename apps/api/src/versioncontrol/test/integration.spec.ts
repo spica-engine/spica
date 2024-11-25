@@ -2,8 +2,8 @@ import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {BucketService} from "@spica-server/bucket/services";
-import {CoreTestingModule} from "@spica-server/core/testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {CoreTestingModule} from "@spica/core";
+import {DatabaseTestingModule, ObjectId} from "@spica/database";
 import {FunctionModule} from "@spica-server/function";
 import {FunctionService} from "@spica-server/function/services";
 import {FunctionEngine} from "@spica-server/function/src/engine";
@@ -16,7 +16,7 @@ import {
   Synchronizer,
   VC_REP_MANAGER
 } from "@spica-server/versioncontrol";
-import {RepresentativeManager} from "@spica-server/representative";
+import {RepresentativeManager} from "@spica/representative";
 import {PreferenceModule} from "@spica-server/preference";
 import {PreferenceService} from "@spica-server/preference/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";

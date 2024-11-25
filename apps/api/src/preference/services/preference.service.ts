@@ -6,7 +6,7 @@ import {
   FilterQuery,
   FindOneAndReplaceOption,
   OptionalId
-} from "@spica-server/database";
+} from "@spica/database";
 import {Preference} from "./interface";
 import {Observable} from "rxjs";
 

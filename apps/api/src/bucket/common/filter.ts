@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {Bucket} from "@spica-server/bucket/services";
 import * as Relation from "./relation";
 import {getPropertyByPath} from "./schema";
@@ -7,7 +7,7 @@ import {
   replaceFilter,
   replaceFilterObjectIds,
   ValueConstructor
-} from "@spica-server/filter";
+} from "@spica/filter";
 
 // this reviver should be kept for backward compatibility and in case the filter is complex and our replacer can't detect the value that should be constructed
 export function filterReviver(k: string, v: string) {

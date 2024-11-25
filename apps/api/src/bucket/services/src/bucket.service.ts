@@ -1,5 +1,5 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
-import {Default, Validator} from "@spica-server/core/schema";
+import {Default, Validator} from "@spica/core";
 import {
   BaseCollection,
   Collection,
@@ -8,7 +8,7 @@ import {
   FindOneAndReplaceOption,
   IndexOptions,
   ObjectId
-} from "@spica-server/database";
+} from "@spica/database";
 import {PreferenceService} from "@spica-server/preference/services";
 import {BehaviorSubject, Observable} from "rxjs";
 import {Bucket, BucketPreferences} from "./bucket";

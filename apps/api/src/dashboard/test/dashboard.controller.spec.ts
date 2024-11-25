@@ -1,11 +1,11 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {CoreTestingModule, Request} from "@spica/core";
 import {DashboardModule} from "@spica-server/dashboard";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import {DatabaseTestingModule} from "@spica/database";
+import {SchemaModule} from "@spica/core";
+import {OBJECT_ID} from "@spica/core";
 
 describe("DashboardController", () => {
   let request: Request;

@@ -1,4 +1,4 @@
-import {BaseCollection, ObjectId} from "@spica-server/database";
+import {BaseCollection, ObjectId} from "@spica/database";
 import * as expression from "@spica-server/bucket/expression";
 import {
   Bucket,
@@ -12,7 +12,7 @@ import {
   RelationMap,
   resetNonOverlappingPathsInRelationMap
 } from "./relation";
-import {getUpdateQueryForPatch} from "@spica-server/core/patch";
+import {getUpdateQueryForPatch} from "@spica/core";
 import {
   ACLSyntaxException,
   BadRequestException,
@@ -22,7 +22,7 @@ import {
 import {IAuthResolver} from "./interface";
 import {categorizePropertyMap} from "./helpers";
 import {BucketPipelineBuilder} from "./pipeline.builder";
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {PipelineBuilder} from "@spica/database/pipeline";
 
 interface CrudOptions<Paginate> {
   localize?: boolean;

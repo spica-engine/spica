@@ -1,10 +1,10 @@
-import {Middlewares} from "@spica-server/core";
+import {Middlewares} from "@spica/core";
 import {EventQueue, HttpQueue} from "@spica-server/function/queue";
 import {event, Http} from "@spica-server/function/queue/proto";
 import {Description, Enqueuer} from "./enqueuer";
 import express = require("express");
 import bodyParser = require("body-parser");
-import {CorsOptions} from "@spica-server/core";
+import {CorsOptions} from "@spica/core";
 import {AttachStatusTracker} from "@spica-server/status/services";
 
 export class HttpEnqueuer extends Enqueuer<HttpOptions> {

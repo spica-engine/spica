@@ -1,7 +1,7 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {CoreTestingModule, Request} from "@spica/core";
+import {DatabaseTestingModule, ObjectId} from "@spica/database";
 import {WebhookLogController} from "@spica-server/function/webhook/src/log.controller";
 import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
 import {PassportTestingModule} from "@spica-server/passport/testing";

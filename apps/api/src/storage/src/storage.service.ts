@@ -1,6 +1,6 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {BaseCollection, DatabaseService, ObjectId} from "@spica/database";
+import {PipelineBuilder} from "@spica/database";
 import {StorageObject, StorageObjectMeta} from "./body";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {Strategy} from "./strategy/strategy";

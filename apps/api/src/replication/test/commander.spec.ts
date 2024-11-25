@@ -1,6 +1,6 @@
 import {Controller} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule, stream} from "@spica/database";
 import {ClassCommander, CommandType, ReplicationModule} from "@spica-server/replication/src";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;

@@ -1,7 +1,7 @@
 import {INestApplication, NestApplicationOptions} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {CoreTestingModule, Request} from "@spica/core";
+import {DatabaseTestingModule} from "@spica/database";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {StorageModule} from "@spica-server/storage";
 import * as BSON from "bson";

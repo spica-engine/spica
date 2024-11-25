@@ -1,0 +1,16 @@
+{
+  "name": "core/differ",
+  "sourceRoot": "libs/core/differ/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/core/differ",
+        "main": "libs/core/differ/src/index.ts",
+        "tsConfig": "libs/core/differ/tsconfig.lib.json"
+      },
+      "dependsOn": ["^build"]
+    }
+  }
+}

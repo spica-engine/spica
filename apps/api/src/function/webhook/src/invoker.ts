@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {ChangeStream, DatabaseService} from "@spica-server/database";
+import {ChangeStream, DatabaseService} from "@spica/database";
 import fetch from "node-fetch";
 import {Webhook} from "./interface";
 import {WebhookLogService} from "./log.service";

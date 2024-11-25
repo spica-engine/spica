@@ -1,5 +1,5 @@
-import {Triggers, Function, Environment} from "@spica-server/interface/function";
-import {diff} from "@spica-server/core/differ";
+import {Triggers, Function, Environment} from "@spica/interface";
+import {diff} from "@spica/core";
 
 export function changesFromTriggers(previousFn: Function, currentFn: Function) {
   const targetChanges: TargetChange[] = [];

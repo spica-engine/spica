@@ -1,5 +1,5 @@
 import {Bucket} from "@spica-server/bucket/services";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {GraphQLResolveInfo} from "graphql";
 
 const locationTypes = ["Point"];

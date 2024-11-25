@@ -22,9 +22,9 @@ import {
   Headers
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {ARRAY, BOOLEAN, DEFAULT} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ARRAY, BOOLEAN, DEFAULT} from "@spica/core";
+import {Schema} from "@spica/core";
+import {ObjectId, OBJECT_ID} from "@spica/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as os from "os";
@@ -33,10 +33,10 @@ import {catchError, finalize, last, map, tap} from "rxjs/operators";
 import {createFunctionActivity} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService, FUNCTION_OPTIONS, Options} from "@spica-server/function/services";
-import {Function} from "@spica-server/interface/function";
+import {Function} from "@spica/interface";
 import {LogService} from "@spica-server/function/src/log/src/log.service";
 import {generate} from "./schema/enqueuer.resolver";
-import {applyPatch} from "@spica-server/core/patch";
+import {applyPatch} from "@spica/core";
 import * as CRUD from "./crud";
 
 /**

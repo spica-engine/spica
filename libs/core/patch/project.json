@@ -1,0 +1,16 @@
+{
+  "name": "core/patch",
+  "sourceRoot": "libs/core/patch/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/core/patch",
+        "main": "libs/core/patch/src/index.ts",
+        "tsConfig": "libs/core/patch/tsconfig.lib.json"
+      },
+      "dependsOn": ["^build"]
+    }
+  }
+}

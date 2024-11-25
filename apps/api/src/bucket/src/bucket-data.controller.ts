@@ -33,9 +33,9 @@ import {
   NUMBER,
   OR,
   EXPRESSION
-} from "@spica-server/core";
-import {Schema, Validator} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+} from "@spica/core";
+import {Schema, Validator} from "@spica/core";
+import {ObjectId, OBJECT_ID} from "@spica/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {invalidateCache, registerCache} from "@spica-server/bucket/cache";
 import {
@@ -57,7 +57,7 @@ import {
   getDependents,
   createBucketDataActivity
 } from "@spica-server/bucket/common";
-import {applyPatch} from "@spica-server/core/patch";
+import {applyPatch} from "@spica/core";
 
 /**
  * All APIs related to bucket documents.

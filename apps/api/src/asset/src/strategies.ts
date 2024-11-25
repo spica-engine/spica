@@ -1,5 +1,5 @@
-import {compareResourceGroups} from "@spica-server/core/differ";
-import {Asset, Resource} from "@spica-server/interface/asset";
+import {compareResourceGroups} from "@spica/core";
+import {Asset, Resource} from "@spica/interface";
 import {IInstallationStrategy} from "./interface";
 
 export abstract class InstallationStrategy implements IInstallationStrategy {

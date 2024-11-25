@@ -1,5 +1,5 @@
 import {OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway} from "@nestjs/websockets";
-import {RealtimeDatabaseService} from "@spica-server/database/realtime";
+import {RealtimeDatabaseService} from "@spica/database";
 import {GuardService} from "@spica-server/passport";
 import {fromEvent, of} from "rxjs";
 import {catchError, takeUntil} from "rxjs/operators";

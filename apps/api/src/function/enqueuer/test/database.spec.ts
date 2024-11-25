@@ -1,10 +1,5 @@
 import {Test} from "@nestjs/testing";
-import {
-  ChangeStream,
-  DatabaseService,
-  DatabaseTestingModule,
-  stream
-} from "@spica-server/database/testing";
+import {ChangeStream, DatabaseService, DatabaseTestingModule, stream} from "@spica/database";
 import {DatabaseEnqueuer} from "@spica-server/function/enqueuer";
 import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
 import {Database, event} from "@spica-server/function/queue/proto";

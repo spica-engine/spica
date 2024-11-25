@@ -14,9 +14,9 @@ import {
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {DashboardService} from "./dashboard.service";
 import {Dashboard} from "./dashboard";
-import {Schema} from "@spica-server/core/schema";
+import {Schema} from "@spica/core";
 import {ResourceFilter} from "@spica-server/passport/guard";
-import {OBJECT_ID, ObjectId} from "@spica-server/database";
+import {OBJECT_ID, ObjectId} from "@spica/database";
 
 @Controller("dashboard")
 export class DashboardController {

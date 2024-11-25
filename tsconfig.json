@@ -1,24 +1,23 @@
 {
-  "compilerOptions": {
-    "rootDir": ".",
-    "module": "CommonJS",
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "noFallthroughCasesInSwitch": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "target": "es2020",
-    "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "lib": ["es2018", "dom"],
-    "paths": {
-      "@spica-server/*": ["libs/*", "apps/api/src/*"],
-      "@spica/*": ["apps/*"],
-      "@spica-devkit/*": ["apps/api/src/function/packages/*"]
-    }
-  },
-  "exclude": ["node_modules", "tmp", "dist"]
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {"path": "./libs/representative"},
+    {"path": "./libs/interface"},
+    {"path": "./libs/filter"},
+    {"path": "./apps/spica"},
+    {"path": "./apps/api"},
+    {"path": "./libs/database/pipeline"},
+    {"path": "./libs/database/realtime"},
+    {"path": "./libs/database/testing"},
+    {"path": "./libs/core/websocket"},
+    {"path": "./libs/database/core"},
+    {"path": "./libs/core/helpers"},
+    {"path": "./libs/core/testing"},
+    {"path": "./libs/core/differ"},
+    {"path": "./libs/core/schema"},
+    {"path": "./libs/core/patch"},
+    {"path": "./libs/core/copy"}
+  ]
 }

@@ -1,8 +1,8 @@
 import {registrar} from "@spica-server/asset";
-import {Resource} from "@spica-server/interface/asset";
-import {Schema, Validator} from "@spica-server/core/schema";
+import {Resource} from "@spica/interface";
+import {Schema, Validator} from "@spica/core";
 import {PreferenceService} from "@spica-server/preference/services";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica/interface";
 
 /**
  * Preference has 2 sub modules named bucket(not yet) and identity

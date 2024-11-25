@@ -7,8 +7,8 @@ import {
   ModuleActivity,
   ACTIVITY_OPTIONS
 } from "@spica-server/activity/services";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {CoreTestingModule, Request} from "@spica/core";
+import {DatabaseTestingModule} from "@spica/database";
 
 const TestPredict: Predict = (): ModuleActivity[] => {
   return [

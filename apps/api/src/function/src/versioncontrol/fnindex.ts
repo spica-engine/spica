@@ -1,9 +1,9 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {FunctionService} from "@spica-server/function/services";
 import {SyncProvider} from "@spica-server/versioncontrol";
 import {FunctionEngine} from "../engine";
 import * as CRUD from "../crud";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica/interface";
 
 export function indexSyncProviders(
   fs: FunctionService,

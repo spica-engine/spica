@@ -3,8 +3,8 @@ import {
   extractFilterPropertyMap,
   LogicalExtractor,
   replaceFilterObjectIds
-} from "@spica-server/filter";
-import {ObjectId} from "@spica-server/database";
+} from "@spica/filter";
+import {ObjectId} from "@spica/database/core";
 
 describe("filter", () => {
   let filter;

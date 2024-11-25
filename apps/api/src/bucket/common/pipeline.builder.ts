@@ -2,7 +2,7 @@ import * as expression from "@spica-server/bucket/expression";
 import {Bucket} from "@spica-server/bucket/services";
 import {CrudFactories} from "./crud";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
-import {deepCopy} from "@spica-server/core/patch";
+import {deepCopy} from "@spica/core";
 import {
   compareAndUpdateRelations,
   createRelationMap,
@@ -11,8 +11,8 @@ import {
 } from "./relation";
 import {constructFilterValues} from "@spica-server/bucket/common";
 import {categorizePropertyMap} from "./helpers";
-import {PipelineBuilder} from "@spica-server/database/pipeline";
-import {extractFilterPropertyMap} from "@spica-server/filter";
+import {PipelineBuilder} from "@spica/database";
+import {extractFilterPropertyMap} from "@spica/filter";
 
 export class BucketPipelineBuilder extends PipelineBuilder {
   private schema: Bucket;

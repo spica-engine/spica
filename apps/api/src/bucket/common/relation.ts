@@ -4,9 +4,9 @@ import {
   getBucketDataCollection,
   BucketDocument
 } from "@spica-server/bucket/services";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import {buildI18nAggregation, Locale} from "./locale";
-import {deepCopy} from "@spica-server/core/patch";
+import {deepCopy} from "@spica/core";
 import {setPropertyByPath} from "./schema";
 
 export function findRelations(

@@ -3,7 +3,7 @@ import {StorageModule} from "@spica-server/storage";
 import {Strategy} from "@spica-server/storage/src/strategy/strategy";
 import {Default} from "@spica-server/storage/src/strategy/default";
 import {GCloud} from "@spica-server/storage/src/strategy/gcloud";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica/database";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
 describe("Strategy", () => {

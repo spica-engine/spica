@@ -1,10 +1,10 @@
-import {Validator, Schema} from "@spica-server/core/schema";
+import {Validator, Schema} from "@spica/core";
 import {ApiKeyService} from "@spica-server/passport/apikey/src/apikey.service";
 import {ApiKey} from "@spica-server/passport/apikey/src/interface";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {Resource} from "@spica-server/interface/asset";
+import {IRepresentativeManager} from "@spica/interface";
+import {Resource} from "@spica/interface";
 import {registrar} from "@spica-server/asset";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "@spica/database";
 import * as uniqid from "uniqid";
 import ApiKeySchema = require("./schemas/apikey.json");
 

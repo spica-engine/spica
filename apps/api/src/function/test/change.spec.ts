@@ -1,4 +1,4 @@
-import {Function} from "@spica-server/interface/function";
+import {Function} from "@spica/interface";
 import {
   ChangeKind,
   createTargetChanges,

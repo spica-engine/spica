@@ -1,0 +1,16 @@
+{
+  "name": "database/testing",
+  "sourceRoot": "libs/database/testing/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/database/testing",
+        "main": "libs/database/testing/src/index.ts",
+        "tsConfig": "libs/database/testing/tsconfig.lib.json"
+      },
+      "dependsOn": ["^build"]
+    }
+  }
+}

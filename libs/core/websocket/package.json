@@ -1,0 +1,7 @@
+{
+  "name": "@spica/core/websocket",
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "private": true
+}

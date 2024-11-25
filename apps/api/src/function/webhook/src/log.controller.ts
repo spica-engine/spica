@@ -9,8 +9,8 @@ import {
   Query,
   UseGuards
 } from "@nestjs/common";
-import {ARRAY, DATE, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
-import {FilterQuery, ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ARRAY, DATE, DEFAULT, JSONP, NUMBER} from "@spica/core";
+import {FilterQuery, ObjectId, OBJECT_ID} from "@spica/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {Log} from "./interface";
 import {WebhookLogService} from "./log.service";

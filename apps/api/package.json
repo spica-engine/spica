@@ -1,6 +1,10 @@
 {
-  "name": "@spica/server",
+  "name": "@spica/api",
   "version": "0.0.0-PLACEHOLDER",
   "devDependencies": {},
-  "dependencies": {}
+  "dependencies": {},
+  "type": "commonjs",
+  "main": "./dist/src/index.js",
+  "typings": "./dist/src/index.d.ts",
+  "private": true
 }

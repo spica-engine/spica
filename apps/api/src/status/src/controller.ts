@@ -1,5 +1,5 @@
 import {BadRequestException, Controller, Get, Param, Query, UseGuards} from "@nestjs/common";
-import {DATE} from "@spica-server/core";
+import {DATE} from "@spica/core";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {StatusProvider} from "./interface";
 

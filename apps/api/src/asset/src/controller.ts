@@ -16,12 +16,12 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {AssetService} from "./service";
-import {OBJECT_ID, ObjectId} from "@spica-server/database";
-import {Asset, Config, ExportMeta, Resource} from "@spica-server/interface/asset";
+import {OBJECT_ID, ObjectId} from "@spica/database";
+import {Asset, Config, ExportMeta, Resource} from "@spica/interface";
 import {exporters, operators, validators} from "./registration";
 import {putConfiguration} from "./helpers";
-import {BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
+import {BOOLEAN, DEFAULT, JSONP} from "@spica/core";
+import {Schema} from "@spica/core";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {
   ASSET_REP_MANAGER,
