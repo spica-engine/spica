@@ -7,5 +7,5 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "references": [{"path": "../database/core/tsconfig.lib.json"}]
+  "references": []
 }

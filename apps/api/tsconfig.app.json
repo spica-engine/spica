@@ -15,9 +15,6 @@
   "include": ["src/**/*.ts"],
   "references": [
     {"path": "../../libs/filter/tsconfig.lib.json"},
-    {"path": "../../libs/database/core/tsconfig.lib.json"},
-    {"path": "../../libs/database/pipeline/tsconfig.lib.json"},
-    {"path": "../../libs/representative/tsconfig.lib.json"},
     {"path": "../../libs/interface/tsconfig.lib.json"}
   ]
 }

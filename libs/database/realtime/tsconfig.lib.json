@@ -8,9 +8,5 @@
   },
   "include": ["src/**/*.ts"],
   "exclude": ["src/**/*.spec.ts"],
-  "references": [
-    {"path": "../../interface/tsconfig.lib.json"},
-    {"path": "../testing/tsconfig.lib.json"},
-    {"path": "../core/tsconfig.lib.json"}
-  ]
+  "references": [{"path": "../../interface/tsconfig.lib.json"}]
 }
