@@ -1,5 +1,5 @@
-import {Middlewares, getMatchedValue} from "@spica/core";
-import {CorsOptions} from "@spica/core";
+import {Middlewares, getMatchedValue} from "@spica/core/helpers";
+import {CorsOptions} from "@spica/core/helpers";
 
 describe("MiddleWare", () => {
   describe("Preflight", () => {
