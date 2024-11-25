@@ -2,9 +2,5 @@
   "extends": "../../tsconfig.base.json",
   "files": [],
   "include": [],
-  "references": [
-    {"path": "../database/pipeline"},
-    {"path": "../database/core"},
-    {"path": "./tsconfig.lib.json"}
-  ]
+  "references": [{"path": "../database/core"}, {"path": "./tsconfig.lib.json"}]
 }

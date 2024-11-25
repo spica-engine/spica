@@ -7,8 +7,5 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "references": [
-    {"path": "../database/pipeline/tsconfig.lib.json"},
-    {"path": "../database/core/tsconfig.lib.json"}
-  ]
+  "references": [{"path": "../database/core/tsconfig.lib.json"}]
 }
