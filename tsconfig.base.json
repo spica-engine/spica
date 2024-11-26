@@ -18,9 +18,9 @@
     "baseUrl": "./",
     "lib": ["es2018", "dom"],
     "paths": {
-      "@spica/interface": ["libs/interface/src/index.ts"],
+      "@spica/core/schema": ["libs/core/schema/src/index.ts"],
       "@spica/database/core": ["libs/database/core/src/index.ts"],
-      "@spica/core/schema": ["libs/core/schema/src/index.ts"]
+      "@spica/interface": ["libs/interface/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp", "dist"]

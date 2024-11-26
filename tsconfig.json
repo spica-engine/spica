@@ -1,5 +1,23 @@
 {
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
-  "files": []
+  "files": [],
+  "references": [
+    {"path": "./libs/database/pipeline"},
+    {"path": "./libs/database/realtime"},
+    {"path": "./libs/database/testing"},
+    {"path": "./libs/core/websocket"},
+    {"path": "./libs/representative"},
+    {"path": "./libs/database/core"},
+    {"path": "./libs/core/helpers"},
+    {"path": "./libs/core/testing"},
+    {"path": "./libs/core/differ"},
+    {"path": "./libs/core/schema"},
+    {"path": "./libs/core/patch"},
+    {"path": "./libs/core/copy"},
+    {"path": "./libs/interface"},
+    {"path": "./libs/filter"},
+    {"path": "./apps/spica"},
+    {"path": "./apps/api"}
+  ]
 }
