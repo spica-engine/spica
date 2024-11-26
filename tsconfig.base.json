@@ -16,7 +16,10 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
-    "lib": ["es2018", "dom"]
+    "lib": ["es2018", "dom"],
+    "paths": {
+      "@spica/interface": ["libs/interface/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp", "dist"]
 }
