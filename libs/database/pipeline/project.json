@@ -1,16 +1,5 @@
 {
   "name": "database/pipeline",
   "sourceRoot": "libs/database/pipeline/src",
-  "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/libs/database/pipeline",
-        "main": "libs/database/pipeline/src/index.ts",
-        "tsConfig": "libs/database/pipeline/tsconfig.lib.json"
-      },
-      "dependsOn": ["^build"]
-    }
-  }
+  "projectType": "library"
 }

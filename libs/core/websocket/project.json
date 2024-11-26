@@ -1,16 +1,5 @@
 {
   "name": "core/websocket",
   "sourceRoot": "libs/core/websocket/src",
-  "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/libs/core/websocket",
-        "main": "libs/core/websocket/src/index.ts",
-        "tsConfig": "libs/core/websocket/tsconfig.lib.json"
-      },
-      "dependsOn": ["^build"]
-    }
-  }
+  "projectType": "library"
 }

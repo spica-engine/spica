@@ -1,6 +1,5 @@
 {
   "name": "representative",
   "projectType": "library",
-  "sourceRoot": "libs/representative/src",
-  "targets": {}
+  "sourceRoot": "libs/representative/src"
 }

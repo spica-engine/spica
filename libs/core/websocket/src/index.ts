@@ -1,1 +1,1 @@
-export * from "./lib";
+export {WsAdapter} from "./lib/adapter";

@@ -1,16 +1,5 @@
 {
   "name": "database/realtime",
   "sourceRoot": "libs/database/realtime/src",
-  "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/libs/database/realtime",
-        "main": "libs/database/realtime/src/index.ts",
-        "tsConfig": "libs/database/realtime/tsconfig.lib.json"
-      },
-      "dependsOn": ["^build"]
-    }
-  }
+  "projectType": "library"
 }

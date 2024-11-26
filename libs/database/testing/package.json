@@ -1,8 +1,0 @@
-{
-  "name": "@spica/database/testing",
-  "version": "0.0.1",
-  "type": "commonjs",
-  "main": "./src/index.js",
-  "typings": "./src/index.d.ts",
-  "private": true
-}
