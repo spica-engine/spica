@@ -1,10 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
   "include": [],
-  "references": [
-    {"path": "../../libs/database/core"},
-    {"path": "../../libs/filter"},
-    {"path": "../../libs/interface"},
-    {"path": "./tsconfig.app.json"}
-  ]
+  "references": [{"path": "../../libs/interface"}, {"path": "./tsconfig.app.json"}]
 }

@@ -2,5 +2,8 @@
   "extends": "./tsconfig.json",
   "exclude": ["**/*.spec.ts"],
   "include": ["**/*.ts", "../core/**/*.ts", "../../interface/**/*.ts"],
-  "references": [{"path": "../../interface/tsconfig.lib.json"}]
+  "references": [
+    {"path": "../../interface/tsconfig.lib.json"},
+    {"path": "../core/tsconfig.lib.json"}
+  ]
 }
