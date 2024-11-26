@@ -18,6 +18,7 @@
     "baseUrl": "./",
     "lib": ["es2018", "dom"],
     "paths": {
+      "@spica/core/helpers": ["libs/core/helpers/src/index.ts"],
       "@spica/core/schema": ["libs/core/schema/src/index.ts"],
       "@spica/database/core": ["libs/database/core/src/index.ts"],
       "@spica/interface": ["libs/interface/src/index.ts"]

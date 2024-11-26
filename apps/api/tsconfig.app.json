@@ -11,10 +11,13 @@
     "sourceMap": true,
     "esModuleInterop": false,
     "paths": {
-      "spica-server/*": ["./src/*"]
+      "@spica-server/*": ["./src/*"]
     }
   },
-  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts", "/**/testing.module.ts"],
-  "include": ["src/**/*.ts"],
-  "references": [{"path": "../../libs/interface/tsconfig.lib.json"}]
+  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts", "**/testing.module.ts"],
+  "include": ["**/*.ts", "../../libs/core/helpers/src/**/*.ts"],
+  "references": [
+    {"path": "../../libs/core/helpers/tsconfig.lib.json"},
+    {"path": "../../libs/interface/tsconfig.lib.json"}
+  ]
 }

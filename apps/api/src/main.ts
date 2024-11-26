@@ -2,7 +2,7 @@ import {Module} from "@nestjs/common";
 import {NestFactory} from "@nestjs/core";
 import {ActivityModule} from "@spica-server/activity";
 import {BucketModule} from "@spica-server/bucket";
-import {Middlewares} from "@spica/core";
+import {Middlewares} from "@spica/core/helpers";
 import {SchemaModule} from "@spica/core";
 import {CREATED_AT, UPDATED_AT} from "@spica/core";
 import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica/core";
