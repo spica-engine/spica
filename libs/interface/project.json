@@ -1,15 +1,5 @@
 {
   "name": "interface",
   "sourceRoot": "libs/interface/src",
-  "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/libs/interface",
-        "main": "libs/interface/src/index.ts",
-        "tsConfig": "libs/interface/tsconfig.lib.json"
-      }
-    }
-  }
+  "projectType": "library"
 }

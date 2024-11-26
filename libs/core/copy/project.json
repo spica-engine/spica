@@ -1,16 +1,5 @@
 {
   "name": "core/copy",
   "sourceRoot": "libs/core/copy/src",
-  "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/libs/core/copy",
-        "main": "libs/core/copy/src/index.ts",
-        "tsConfig": "libs/core/copy/tsconfig.lib.json"
-      },
-      "dependsOn": ["^build"]
-    }
-  }
+  "projectType": "library"
 }

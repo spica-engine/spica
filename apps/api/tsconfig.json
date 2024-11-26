@@ -2,10 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "include": [],
   "references": [
-    {"path": "../../libs/filter"},
     {"path": "../../libs/database/core"},
-    {"path": "../../libs/database/pipeline"},
-    {"path": "../../libs/representative"},
+    {"path": "../../libs/filter"},
     {"path": "../../libs/interface"},
     {"path": "./tsconfig.app.json"}
   ]

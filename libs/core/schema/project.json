@@ -1,16 +1,5 @@
 {
   "name": "core/schema",
   "sourceRoot": "libs/core/schema/src",
-  "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/libs/core/schema",
-        "main": "libs/core/schema/src/index.ts",
-        "tsConfig": "libs/core/schema/tsconfig.lib.json"
-      },
-      "dependsOn": ["^build"]
-    }
-  }
+  "projectType": "library"
 }

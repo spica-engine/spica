@@ -1,16 +1,5 @@
 {
   "name": "core/testing",
   "sourceRoot": "libs/core/testing/src",
-  "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/libs/core/testing",
-        "main": "libs/core/testing/src/index.ts",
-        "tsConfig": "libs/core/testing/tsconfig.lib.json"
-      },
-      "dependsOn": ["^build"]
-    }
-  }
+  "projectType": "library"
 }

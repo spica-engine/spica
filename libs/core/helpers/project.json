@@ -1,16 +1,5 @@
 {
   "name": "core/helpers",
   "sourceRoot": "libs/core/helpers/src",
-  "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/libs/core/helpers",
-        "main": "libs/core/helpers/src/index.ts",
-        "tsConfig": "libs/core/helpers/tsconfig.lib.json"
-      },
-      "dependsOn": ["^build"]
-    }
-  }
+  "projectType": "library"
 }
