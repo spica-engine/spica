@@ -23,7 +23,7 @@
       "@spica/core/websocket": ["libs/core/websocket/src/index.ts"],
       "@spica/database/core": ["libs/database/core/src/index.ts"],
       "@spica/interface": ["libs/interface/src/index.ts"],
-      "@spica/api/*": ["apps/api/src/*"]
+      "@spica-server/*": ["apps/api/src/*"]
     }
   },
   "exclude": ["node_modules", "tmp", "dist"]
