@@ -1,7 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "include": [],
+  "compilerOptions": {},
   "references": [
+    {"path": "../../libs/database/core"},
+    {"path": "../../libs/core/schema"},
     {"path": "../../libs/core/helpers"},
     {"path": "../../libs/interface"},
     {"path": "./tsconfig.app.json"}

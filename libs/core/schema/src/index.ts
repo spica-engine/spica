@@ -9,3 +9,5 @@ export {
   KeywordCxt
 } from "./lib/validator";
 export {Default, Format, Keyword} from "./lib/interface";
+export * from "./lib/defaults";
+export * from "./lib/formats";

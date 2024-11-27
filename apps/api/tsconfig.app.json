@@ -1,7 +1,6 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "rootDir": "src",
     "emitDeclarationOnly": false,
     "types": ["node"],
@@ -9,14 +8,19 @@
     "emitDecoratorMetadata": true,
     "target": "es2020",
     "sourceMap": true,
-    "esModuleInterop": false,
-    "paths": {
-      "@spica-server/*": ["./src/*"]
-    }
+    "esModuleInterop": false
   },
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts", "**/testing.module.ts"],
-  "include": ["**/*.ts", "../../libs/core/helpers/src/**/*.ts"],
+  "include": [
+    "**/*.ts",
+    "**/*.json",
+    "../../libs/core/helpers/src/**/*.ts",
+    "../../libs/core/schema/src/**/*.ts",
+    "../../libs/core/websocket/src/**/*.ts"
+  ],
   "references": [
+    {"path": "../../libs/database/core/tsconfig.lib.json"},
+    {"path": "../../libs/core/schema/tsconfig.lib.json"},
     {"path": "../../libs/core/helpers/tsconfig.lib.json"},
     {"path": "../../libs/interface/tsconfig.lib.json"}
   ]

@@ -1,12 +1,12 @@
 import {Module} from "@nestjs/common";
 import {NestFactory} from "@nestjs/core";
-import {ActivityModule} from "@spica-server/activity";
-import {BucketModule} from "@spica-server/bucket";
+import {ActivityModule} from "@spica/api/activity";
+import {BucketModule} from "@spica/api/bucket";
 import {Middlewares} from "@spica/core/helpers";
-import {SchemaModule} from "@spica/core";
-import {CREATED_AT, UPDATED_AT} from "@spica/core";
-import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica/core";
-import {WsAdapter} from "@spica/core";
+import {SchemaModule} from "@spica/core/schema";
+import {CREATED_AT, UPDATED_AT} from "@spica/core/schema";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica/core/schema";
+import {WsAdapter} from "@spica/core/websocket";
 import {DashboardModule} from "@spica-server/dashboard";
 import {DatabaseModule} from "@spica/database";
 import {FunctionModule} from "@spica-server/function";
