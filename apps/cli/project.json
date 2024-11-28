@@ -1,8 +1,8 @@
 {
-  "name": "@spica/cli",
+  "name": "cli",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/cli",
-  "projectType": "library",
+  "sourceRoot": "apps/cli",
+  "projectType": "application",
   "release": {
     "version": {
       "generatorOptions": {
@@ -13,14 +13,38 @@
   },
   "tags": [],
   "targets": {
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "args": ["--bucket-cache=true"]
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "api:build:development"
+        },
+        "production": {
+          "buildTarget": "api:build:production"
+        }
+      }
+    },
     "build": {
-      "executor": "@nx/js:swc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/libs/cli",
-        "main": "libs/cli/index.ts",
-        "tsConfig": "libs/cli/tsconfig.lib.json",
-        "assets": ["libs/cli/*.md", "libs/cli/bin/*"]
+        "outputPath": "dist/apps/cli",
+        "main": "apps/cli/index.ts",
+        "tsConfig": "apps/cli/tsconfig.app.json",
+        "assets": ["apps/cli/*.md", "apps/cli/bin/*"]
+      }
+    },
+    "build-tsc": {
+      "executor": "nx:run-script",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "script": "tsc --build tsconfig.app.json",
+        "assets": ["apps/cli/README.md", "apps/cli/bin/spica"]
       }
     },
     "nx-release-publish": {
