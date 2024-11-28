@@ -1,5 +1,5 @@
 import {ActionParameters, CreateCommandParameters, Command} from "@caporal/core";
-import {Function, Triggers, Trigger} from "@interface/function";
+import {Function, Triggers, Trigger} from "@spica-server/interface/function";
 import axios from "axios";
 import * as path from "path";
 import * as fs from "fs";
