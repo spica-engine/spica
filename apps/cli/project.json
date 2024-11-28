@@ -17,15 +17,12 @@
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
       "dependsOn": ["build"],
-      "options": {
-        "args": ["--bucket-cache=true"]
-      },
       "configurations": {
         "development": {
-          "buildTarget": "api:build:development"
+          "buildTarget": "cli:build:development"
         },
         "production": {
-          "buildTarget": "api:build:production"
+          "buildTarget": "cli:build:production"
         }
       }
     },
