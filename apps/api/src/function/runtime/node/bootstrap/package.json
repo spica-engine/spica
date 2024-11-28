@@ -1,8 +1,3 @@
 {
-  "type": "module",
-  "extensionless": {
-    "lookFor": [
-      "mjs"
-    ]
-  }
+  "type": "module"
 }

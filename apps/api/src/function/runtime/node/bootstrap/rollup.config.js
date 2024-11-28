@@ -4,6 +4,7 @@ import resolve, {nodeResolve} from "@rollup/plugin-node-resolve";
 import {terser} from "rollup-plugin-terser";
 import typescript from "@rollup/plugin-typescript";
 import alias from "@rollup/plugin-alias";
+import copy from "rollup-plugin-copy";
 import * as path from "path";
 
 module.exports = {
@@ -50,7 +51,15 @@ module.exports = {
     commonjs({
       ignore: ["mongodb"]
     }),
-    terser()
+    terser(),
+    copy({
+      targets: [
+        {
+          src: "./apps/api/src/function/runtime/node/bootstrap/package.json",
+          dest: "./dist/apps/worker"
+        }
+      ]
+    })
   ],
   external: ["path"]
 };

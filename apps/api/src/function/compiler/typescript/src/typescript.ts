@@ -22,6 +22,7 @@ export class Typescript extends Language {
   }
 
   async compile(compilation: Compilation): Promise<void> {
+    // does not emit if there is no change
     if (!this.worker) {
       this.worker = new worker_threads.Worker(path.join(__dirname, "typescript_worker.js"));
       this.worker.once("exit", exitCode => {
