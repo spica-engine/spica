@@ -13,19 +13,6 @@
   },
   "tags": [],
   "targets": {
-    "serve": {
-      "executor": "@nx/js:node",
-      "defaultConfiguration": "development",
-      "dependsOn": ["build"],
-      "configurations": {
-        "development": {
-          "buildTarget": "cli:build:development"
-        },
-        "production": {
-          "buildTarget": "cli:build:production"
-        }
-      }
-    },
     "build": {
       "executor": "@nx/webpack:webpack",
       "outputs": ["{options.outputPath}"],
