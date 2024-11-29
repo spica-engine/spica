@@ -23,6 +23,6 @@ module.exports = {
     })
   ],
   resolve: {
-    extensions: [".ts", ".js"] // Ensure TypeScript files are resolved
+    extensions: [".ts", ".js"]
   }
 };
