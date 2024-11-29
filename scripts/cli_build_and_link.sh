@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 
-if [ ! -f WORKSPACE ]; then
+if [ ! -f nx.json ]; then
     echo "###########################################"
     echo "Please run this script from workspace root."
     echo "###########################################"
     exit 1;
 fi
 
-yarn bazel build //stacks/cli:package --config=release
+yarn nx build cli
 
-yarn global add "$(pwd)/bazel-bin/stacks/cli/package"
+yarn global add "$(pwd)/dist/apps/cli"
+
 
 echo "###########################################"
 echo "Linking was completed successfully."
