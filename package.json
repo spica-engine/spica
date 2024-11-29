@@ -98,6 +98,7 @@
     "simple-git": "^3.5.0",
     "speakeasy": "^2.0.0",
     "symlink-dir": "^3.1.2",
+    "tslib": "^2.3.0",
     "type-is": "^1.6.18",
     "typescript": "4.8.4",
     "uniqid": "^5.2.0",
@@ -162,5 +163,8 @@
     "rollup": "4.21.2",
     "rollup-plugin-terser": "^7.0.2",
     "which": "^2.0.2"
+  },
+  "nx": {
+    "includedScripts": []
   }
 }
