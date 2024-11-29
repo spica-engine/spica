@@ -3,7 +3,8 @@ import {
   ActionParameters,
   CaporalValidator,
   Command,
-  CreateCommandParameters
+  CreateCommandParameters,
+  Program
 } from "@caporal/core";
 import * as getport from "get-port";
 import * as open from "open";
@@ -432,8 +433,9 @@ Password: ${password}
   }
 }
 
-export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand("Start a project on your local machine.")
+export default function(program: Program): Command {
+  return program
+    .command("project start", "Start a project on your local machine.")
     .argument("<name>", "Name of the project.", {validator: projectName})
     .option(
       "-p, --port",

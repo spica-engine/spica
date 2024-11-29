@@ -1,32 +1,39 @@
 import {program} from "@caporal/core";
-import * as fs from "fs";
-import * as path from "path";
 import "./src/console";
-
-// See: https://github.com/mattallty/Caporal.js/issues/197
-function cleanUpDts(dir: string) {
-  for (const item of fs.readdirSync(dir)) {
-    if (fs.statSync(path.join(dir, item)).isDirectory()) {
-      cleanUpDts(path.join(dir, item));
-    } else {
-      if (item.endsWith(".d.ts")) {
-        fs.unlinkSync(path.join(dir, item));
-      }
-    }
-  }
-}
+import assetApply from "./src/commands/asset/apply";
+import assetDelete from "./src/commands/asset/delete";
+import bucketOrm from "./src/commands/bucket/orm";
+import contextLs from "./src/commands/context/ls";
+import contextRemove from "./src/commands/context/remove";
+import contextSet from "./src/commands/context/set";
+import contextSwitch from "./src/commands/context/switch";
+import functionOrm from "./src/commands/function/orm";
+import projectLs from "./src/commands/project/ls";
+import projectRemove from "./src/commands/project/remove";
+import projectStart from "./src/commands/project/start";
+import projectSync from "./src/commands/project/sync";
+import projectUpgrade from "./src/commands/project/upgrade";
 
 export function run(argv?: string[]) {
-  const commandPath = path.join(__dirname, "src", "commands");
-
-  cleanUpDts(commandPath);
-
   program
     .version("0.0.0-PLACEHOLDER")
     .name("spica")
     .bin("spica")
-    .description("Command line interface for spica.")
-    .discover(commandPath);
+    .description("Command line interface for spica.");
+
+  assetApply(program);
+  assetDelete(program);
+  bucketOrm(program);
+  contextLs(program);
+  contextRemove(program);
+  contextSet(program);
+  contextSwitch(program);
+  functionOrm(program);
+  projectLs(program);
+  projectRemove(program);
+  projectStart(program);
+  projectSync(program);
+  projectUpgrade(program);
 
   return program.run(argv);
 }

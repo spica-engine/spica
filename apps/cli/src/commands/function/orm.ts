@@ -1,4 +1,4 @@
-import {ActionParameters, CreateCommandParameters, Command} from "@caporal/core";
+import {ActionParameters, CreateCommandParameters, Command, Program} from "@caporal/core";
 import {Function, Triggers, Trigger} from "@spica-server/interface/function";
 import axios from "axios";
 import * as path from "path";
@@ -67,10 +67,12 @@ async function orm({options}: ActionParameters) {
   });
 }
 
-export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand(
-    "Create object relational mapping applied files to interact with Spica Cloud Functions"
-  )
+export default function(program: Program): Command {
+  return program
+    .command(
+      "function orm",
+      "Create object relational mapping applied files to interact with Spica Cloud Functions"
+    )
     .option(
       "--path <path>",
       "Full URL of the destination folder that the files will be created into. The current directory will be used as default"

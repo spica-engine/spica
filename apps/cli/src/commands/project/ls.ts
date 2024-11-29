@@ -1,4 +1,4 @@
-import {Command, CreateCommandParameters} from "@caporal/core";
+import {Command, CreateCommandParameters, Program} from "@caporal/core";
 import * as docker from "dockerode";
 import * as duration from "pretty-ms";
 
@@ -78,8 +78,6 @@ async function list() {
   console.table(instances, ["NAMESPACE", "AGE", "STATUS", "VERSION", "PORT", "DESCRIPTION"]);
 }
 
-export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand("List local projects.")
-    .default()
-    .action(list);
+export default function(program: Program): Command {
+  return program.command("project ls", "List local projects.").action(list);
 }

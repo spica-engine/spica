@@ -1,4 +1,10 @@
-import {ActionParameters, CaporalValidator, Command, CreateCommandParameters} from "@caporal/core";
+import {
+  ActionParameters,
+  CaporalValidator,
+  Command,
+  CreateCommandParameters,
+  Program
+} from "@caporal/core";
 import {spin} from "../../console";
 import {httpService} from "../../http";
 import {availableSyncModules, validateSyncModules} from "../../validator";
@@ -87,15 +93,17 @@ async function sync({
   }
 }
 
-export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand(
-    `Synchronize selected module objects between two spica instances(local or remote).
+export default function(program: Program): Command {
+  return program
+    .command(
+      "project sync",
+      `Synchronize selected module objects between two spica instances(local or remote).
 ${red(
   "ATTENTION"
 )}: Source and target instance versions must be minimum v0.9.19 and for the best results both instance versions should be the same. 
 Also this command will perform adding, overwriting and removing actions of the target instance and it's irreversible. 
 We highly recommend you to use --dry-run=true and check the changes that will be applied before start.`
-  )
+    )
     .option("--source-url", "API address of the instance where objects will be synchronized from", {
       required: true,
       validator: CaporalValidator.STRING

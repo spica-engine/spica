@@ -1,4 +1,4 @@
-import {Action, ActionParameters, Command, CreateCommandParameters} from "@caporal/core";
+import {Action, ActionParameters, Command, CreateCommandParameters, Program} from "@caporal/core";
 import {httpService} from "../../http";
 import * as fs from "fs";
 import * as YAML from "yaml";
@@ -28,8 +28,9 @@ async function _delete({options}: ActionParameters) {
   return console.info("Asset ${assetMeta.name} has been deleted successfully");
 }
 
-export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand("Delete objects of the API.")
+export default function(program: Program): Command {
+  return program
+    .command("asset delete", "Delete objects of the API.")
     .option(
       "--path <path>",
       "Path of the folder that container asset.yaml file and resources of it. Current working directory is the default value."

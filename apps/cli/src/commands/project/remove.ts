@@ -1,4 +1,4 @@
-import {Action, ActionParameters, Command, CreateCommandParameters} from "@caporal/core";
+import {Action, ActionParameters, Command, CreateCommandParameters, Program} from "@caporal/core";
 import * as docker from "dockerode";
 import {spin} from "../../console";
 import {projectName} from "../../validator";
@@ -93,8 +93,9 @@ async function remove({args, options}: ActionParameters) {
   console.info(`Spica ${name} was successfully deleted.`);
 }
 
-export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand("Stop and remove a local project.")
+export default function(program: Program): Command {
+  return program
+    .command("project remove", "Stop and remove a local project.")
     .argument("<name>", "Name of the project to remove.", {validator: projectName})
     .option("--retain-volumes", "When false, the data will be removed along with the containers.", {
       default: true

@@ -1,4 +1,4 @@
-import {Command, CreateCommandParameters} from "@caporal/core";
+import {Command, CreateCommandParameters, Program} from "@caporal/core";
 
 import {context} from "../../context";
 import {config} from "../../config";
@@ -26,6 +26,6 @@ async function listContexts() {
   console.table(contexts, ["name", "url", "authorization"]);
 }
 
-export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand("List contexts").action(listContexts);
+export default function(program: Program): Command {
+  return program.command("context ls", "List contexts").action(listContexts);
 }

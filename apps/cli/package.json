@@ -10,7 +10,6 @@
     "spica": "bin/spica"
   },
   "dependencies": {
-    "@swc/helpers": "~0.5.11",
     "colorette": "^1.2.1",
     "ora": "^5.1.0",
     "pretty-ms": "^7.0.1",

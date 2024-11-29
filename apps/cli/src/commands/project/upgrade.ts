@@ -1,4 +1,10 @@
-import {ActionParameters, CaporalValidator, Command, CreateCommandParameters} from "@caporal/core";
+import {
+  ActionParameters,
+  CaporalValidator,
+  Command,
+  CreateCommandParameters,
+  Program
+} from "@caporal/core";
 import {projectName} from "../../validator";
 import {spin} from "../../console";
 import {DockerMachine, isVersionUpgrade, version} from "../../project";
@@ -201,8 +207,9 @@ async function upgrade({args, options}: ActionParameters) {
   console.info(`Project '${name}' version has been set to the version ${desiredVersion}.`);
 }
 
-export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand("Upgrade the version of existing local project.")
+export default function(program: Program): Command {
+  return program
+    .command("project upgrade", "Upgrade the version of existing local project.")
     .argument("<name>", "Name of the project.", {validator: projectName})
     .argument("<to>", "Version of the spica.")
     .option("--restart", "Restart failed containers if exits unexpectedly.", {

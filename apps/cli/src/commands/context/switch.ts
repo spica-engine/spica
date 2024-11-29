@@ -1,4 +1,4 @@
-import {ActionParameters, Command, CreateCommandParameters} from "@caporal/core";
+import {ActionParameters, Command, CreateCommandParameters, Program} from "@caporal/core";
 import {context} from "../../context";
 import {config} from "../../config";
 
@@ -19,8 +19,9 @@ async function switchContext({args}: ActionParameters) {
   console.info(`Context has been changed to "${name}".`);
 }
 
-export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand("Switch context")
+export default function(program: Program): Command {
+  return program
+    .command("context switch", "Switch context")
     .argument("<name>", "Name of the context.")
     .action(switchContext);
 }

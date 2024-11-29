@@ -1,4 +1,4 @@
-import {ActionParameters, Command, CreateCommandParameters} from "@caporal/core";
+import {ActionParameters, Command, CreateCommandParameters, Program} from "@caporal/core";
 import * as fs from "fs";
 import * as path from "path";
 import {config} from "../../config";
@@ -41,8 +41,12 @@ async function orm({options}: ActionParameters) {
   });
 }
 
-export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand("Create object relational mapping applied version of @spica-devkit/bucket")
+export default function(program: Program): Command {
+  return program
+    .command(
+      "bucket orm",
+      "Create object relational mapping applied version of @spica-devkit/bucket"
+    )
     .option(
       "--path <path>",
       "Full URL of the destination folder that the file will be created into. The current directory will be used as default"

@@ -1,4 +1,4 @@
-import {ActionParameters, Command, CreateCommandParameters} from "@caporal/core";
+import {ActionParameters, Command, CreateCommandParameters, Program} from "@caporal/core";
 
 import {context} from "../../context";
 
@@ -12,8 +12,9 @@ async function removeContext({args}: ActionParameters) {
   console.info(`Context "${name}" has been deleted.`);
 }
 
-export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand("Remove context")
+export default function(program: Program): Command {
+  return program
+    .command("context remove", "Remove context")
     .argument("<name>", "Name of the context.")
     .action(removeContext);
 }

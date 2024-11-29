@@ -1,4 +1,4 @@
-import {ActionParameters, Command, CreateCommandParameters} from "@caporal/core";
+import {ActionParameters, Command, CreateCommandParameters, Program} from "@caporal/core";
 import axios from "axios";
 import {context} from "../../context";
 
@@ -35,8 +35,9 @@ async function addContext({options}: ActionParameters) {
   }
 }
 
-export default function({createCommand}: CreateCommandParameters): Command {
-  return createCommand("Set context")
+export default function(program: Program): Command {
+  return program
+    .command("context set", "Set context")
     .option("--name <name>", "Name of the context.")
     .option("--url <url>", "Url of the API.", {required: true})
     .option("-a <apikey>, --apikey <apikey>", "Authorize via an API Key.", {required: true})
