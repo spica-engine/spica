@@ -3,11 +3,6 @@ import * as child_process from "child_process";
 import * as path from "path";
 import {Writable} from "stream";
 
-/**
- * TODO: reconsider using the 'loader.mjs' because
- * `--experimental-loader` (--loader) may be removed in the future; instead use `register()`:
- */
-
 class NodeWorker extends Worker {
   private _process: child_process.ChildProcess;
   private _quit = false;
