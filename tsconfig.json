@@ -1,11 +1,24 @@
 {
-  "extends": "./tsconfig.base.json",
-  "files": [],
-  "references": [
-    {"path": "./apps/spica"},
-    {"path": "./apps/api"},
-    {"path": "./apps/cli"},
-    {"path": "./libs/interface/function"},
-    {"path": "./libs/interface/asset"}
-  ]
+  "compilerOptions": {
+    "rootDir": ".",
+    "module": "CommonJS",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "target": "es2020",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "lib": ["es2018", "dom"],
+    "paths": {
+      "@spica-server/*": ["libs/*", "apps/api/src/*"],
+      "@spica/*": ["apps/*"],
+      "@spica-devkit/*": ["apps/api/src/function/packages/*"]
+    }
+  },
+  "exclude": ["node_modules", "tmp", "dist"]
 }

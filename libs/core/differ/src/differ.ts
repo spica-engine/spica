@@ -102,6 +102,7 @@ export interface Change {
 export function createPatch(previous: string, current: string): Patch[] {
   const differ = new diffMatchPatch.diff_match_patch();
   const patches = differ.patch_make(String(previous), String(current));
+  //@ts-ignore
   return patches.map(patch => ({...patch}));
 }
 
