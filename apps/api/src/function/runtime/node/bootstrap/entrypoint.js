@@ -1,6 +1,12 @@
-import * as Bucket from "@spica-server/bucket/hooks/proto/node";
-import {hooks as BucketHooks} from "@spica-server/bucket/hooks/proto";
-import {
+import * as BucketHooksProtoNode from "@spica-server/bucket/hooks/proto/node";
+const {ChangeQueue: BucketChangeQueue, Change: BucketChange} = BucketHooksProtoNode;
+
+import * as BucketHooksProto from "@spica-server/bucket/hooks/proto";
+const {hooks: BucketHooks} = BucketHooksProto;
+
+import * as FnQueueNode from "@spica-server/function/queue/node";
+
+const {
   Change,
   DatabaseQueue,
   EventQueue,
@@ -11,11 +17,16 @@ import {
   Message,
   Request,
   Response
-} from "@spica-server/function/queue/node";
-import {Database, event, Firehose, Http} from "@spica-server/function/queue/proto";
+} = FnQueueNode;
+
+import * as FnQueueProto from "@spica-server/function/queue/proto";
+const {Database, event, Firehose, Http} = FnQueueProto;
+
 import {createRequire} from "module";
 import * as path from "path";
-import {getLoggerConsole} from "@spica-server/function/runtime/logger";
+
+import * as Logger from "@spica-server/function/runtime/logger";
+const {getLoggerConsole} = Logger;
 
 if (process.env.LOGGER) {
   console = getLoggerConsole();
@@ -56,7 +67,7 @@ async function initialize() {
   if (process.env.__EXPERIMENTAL_DEVKIT_DATABASE_CACHE) {
     const _require = globalThis.require;
     globalThis.require = createRequire(path.join(process.cwd(), "external/npm/node_modules"));
-    await import("./experimental_database");
+    await import("./experimental_database.js");
     globalThis.require = _require;
   }
 }
@@ -72,7 +83,7 @@ async function _process(ev, queue) {
 
   const callArguments = [];
 
-  let callback = async () => {};
+  let callback = async arg => {};
 
   switch (ev.type) {
     case event.Type.HTTP:
@@ -180,13 +191,13 @@ async function _process(ev, queue) {
       // NO OP
       break;
     case event.Type.BUCKET:
-      const changeQueue = new Bucket.ChangeQueue();
+      const changeQueue = new BucketChangeQueue();
       const bucketChange = await changeQueue.pop(
         new BucketHooks.Pop({
           id: ev.id
         })
       );
-      callArguments[0] = new Bucket.Change(bucketChange);
+      callArguments[0] = new BucketChange(bucketChange);
       break;
     default:
       exitAbnormally(`Invalid event type received. (${ev.type})`);
