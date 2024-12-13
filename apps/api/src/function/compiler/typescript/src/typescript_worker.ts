@@ -98,8 +98,8 @@ function build(compilation: Compilation) {
   if (rootTsConfig.references.findIndex(ref => ref.path == refPath) == -1) {
     const options = {
       moduleResolution: "node",
-      module: "commonjs",
-      target: "ES2020",
+      module: "ES2022",
+      target: "ES2022",
       typeRoots: [path.join(compilation.cwd, "node_modules", "@types")],
       sourceMap: true,
       alwaysStrict: true,

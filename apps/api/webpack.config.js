@@ -2,8 +2,13 @@ const {NxAppWebpackPlugin} = require("@nx/webpack/app-plugin");
 const {join} = require("path");
 
 module.exports = {
+  entry: {
+    main: join(__dirname, "/src/main.ts"),
+    typescript_worker: join(__dirname, "/src/function/compiler/typescript/src/typescript_worker.ts")
+  },
   output: {
-    path: join(__dirname, "../../dist/apps/api")
+    path: join(__dirname, "../../dist/apps/api"),
+    filename: "[name].js"
   },
   plugins: [
     new NxAppWebpackPlugin({
@@ -16,5 +21,8 @@ module.exports = {
       generatePackageJson: true,
       sourceMap: true
     })
-  ]
+  ],
+  resolve: {
+    extensions: [".ts", ".js"]
+  }
 };

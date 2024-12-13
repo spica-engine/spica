@@ -8,7 +8,7 @@
     "serve": {
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
-      "dependsOn": ["build"],
+      "dependsOn": ["build", "build-workers"],
       "options": {
         "args": [
           "--database-name=spica",
@@ -42,6 +42,9 @@
           }
         ]
       }
+    },
+    "build-workers": {
+      "command": "rollup -c './apps/api/src/function/runtime/node/bootstrap/rollup.config.js' --bundleConfigAsCjs"
     }
   }
 }
