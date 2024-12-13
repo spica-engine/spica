@@ -8,7 +8,7 @@
     "serve": {
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
-      "dependsOn": ["build"],
+      "dependsOn": ["build", "build-workers"],
       "options": {
         "args": [
           "--database-name=spica",
