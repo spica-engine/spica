@@ -15,17 +15,13 @@ class NodeWorker extends Worker {
     super();
     this._process = child_process.spawn(
       `node`,
-      [
-        "--es-module-specifier-resolution=node",
-        path.join(__dirname, "runtime", "entrypoint", "bootstrap")
-      ],
+      [path.join(__dirname, "..", "worker", "entrypoint.js")],
       {
-        stdio: ["ignore", "pipe", "pipe"],
         env: {
           PATH: process.env.PATH,
           HOME: process.env.HOME,
           FUNCTION_GRPC_ADDRESS: process.env.FUNCTION_GRPC_ADDRESS,
-          ENTRYPOINT: "index",
+          ENTRYPOINT: "index.js",
           RUNTIME: "node",
           WORKER_ID: options.id,
           ...options.env
