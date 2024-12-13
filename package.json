@@ -150,6 +150,7 @@
     "jsqr": "^1.4.0",
     "jwt-decode": "^3.1.2",
     "mdast-util-toc": "^4.2.0",
+    "nodemon": "^3.1.9",
     "nx": "19.8.2",
     "pngjs": "^6.0.0",
     "prettier": "1.18.2",
@@ -160,6 +161,7 @@
     "remark-slug": "^5.1.2",
     "rollup": "^2.33.3",
     "rollup-plugin-terser": "^7.0.2",
+    "wait-on": "^8.0.1",
     "which": "^2.0.2"
   }
 }

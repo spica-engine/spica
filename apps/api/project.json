@@ -6,9 +6,7 @@
   "tags": [],
   "targets": {
     "serve": {
-      "executor": "@nx/js:node",
-      "defaultConfiguration": "development",
-      "dependsOn": ["build", "build-workers"],
+      "executor": "nx:run-commands",
       "options": {
         "args": [
           "--database-name=spica",
@@ -16,15 +14,16 @@
           "--passport-secret=secret",
           "--public-url=http://localhost",
           "--port=4300"
-        ]
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "api:build:development"
-        },
-        "production": {
-          "buildTarget": "api:build:production"
-        }
+        ],
+        "commands": [
+          {
+            "command": "nx build api"
+          },
+          {
+            "command": "wait-on dist/apps/api/main.js && nodemon dist/apps/api/main.js"
+          }
+        ],
+        "parallel": true
       }
     },
     "build": {
