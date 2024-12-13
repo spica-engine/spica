@@ -1,0 +1,33 @@
+{
+  "name": "cli",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cli",
+  "projectType": "application",
+  "release": {
+    "version": {
+      "generatorOptions": {
+        "packageRoot": "dist/{projectRoot}",
+        "currentVersionResolver": "git-tag"
+      }
+    }
+  },
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/cli",
+        "main": "apps/cli/index.ts",
+        "tsConfig": "apps/cli/tsconfig.app.json",
+        "assets": ["apps/cli/README.md", "apps/cli/bin/spica"],
+        "webpackConfig": "apps/cli/webpack.config.js"
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    }
+  }
+}
