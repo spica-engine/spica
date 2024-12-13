@@ -15,5 +15,10 @@
       }
     }
   ],
-  "nxCloudId": "66fba1edf5b0be5c19ad179e"
+  "nxCloudId": "66fba1edf5b0be5c19ad179e",
+  "release": {
+    "version": {
+      "preVersionCommand": "yarn nx run-many -t build"
+    }
+  }
 }
