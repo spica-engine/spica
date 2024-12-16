@@ -17,10 +17,13 @@
         ],
         "commands": [
           {
+            "command": "nx build-workers api"
+          },
+          {
             "command": "nx build api"
           },
           {
-            "command": "wait-on dist/apps/api/main.js && nodemon dist/apps/api/main.js"
+            "command": "wait-on dist/apps/api/main.js dist/apps/worker/entrypoint.js && nodemon dist/apps/api/main.js"
           }
         ]
       }
