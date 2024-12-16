@@ -1,0 +1,17 @@
+{
+  "name": "migrate",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/migrate/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "dist/apps/migrate",
+        "main": "apps/migrate/src/main.ts",
+        "tsConfig": "apps/migrate/tsconfig.json"
+      }
+    }
+  }
+}
