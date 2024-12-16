@@ -22,8 +22,7 @@
           {
             "command": "wait-on dist/apps/api/main.js && nodemon dist/apps/api/main.js"
           }
-        ],
-        "parallel": true
+        ]
       }
     },
     "build": {
