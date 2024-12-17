@@ -13,7 +13,7 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
-# build app to to nodejs image
+# build app to nodejs image
 FROM base as build 
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -29,4 +29,4 @@ FROM tools as runner
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
-CMD [ "node", "/dist/apps/mongoreplicationcontroller"]
+ENTRYPOINT ["node","./dist/apps/mongoreplicationcontroller"]
