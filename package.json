@@ -20,8 +20,6 @@
     "@nestjs/core": "^7.0.13",
     "@nestjs/platform-express": "^7.0.13",
     "@nestjs/platform-ws": "^7.0.13",
-    "@rollup/plugin-alias": "^5.1.1",
-    "@rollup/plugin-typescript": "^12.1.1",
     "ajv": "^7.0.0-beta.7",
     "ajv-formats": "^0.5.0",
     "axios": "^0.21.0",
@@ -39,9 +37,7 @@
     "mongodb-memory-server-core": "^6.9.2",
     "path-to-regexp": "^3.0.0",
     "request-promise-native": "^1.0.8",
-    "resolve": "^1.22.8",
     "rimraf": "^3.0.2",
-    "rollup-plugin-copy": "^3.5.0",
     "rxjs": "^6.6.3",
     "type-is": "^1.6.18",
     "typescript": "4.8.4",
@@ -56,9 +52,6 @@
     "@nestjs/testing": "^7.0.13",
     "@nx/node": "^19.8.2",
     "@nx/webpack": "^19.8.2",
-    "@rollup/plugin-commonjs": "^16.0.0",
-    "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^10.0.0",
     "@types/babel__traverse": "7.18.2",
     "@types/deep-diff": "^1.0.0",
     "@types/diff-match-patch": "^1.0.32",
@@ -85,8 +78,6 @@
     "remark-highlight.js": "^5.1.1",
     "remark-html": "^9.0.1",
     "remark-slug": "^5.1.2",
-    "rollup": "^2.33.3",
-    "rollup-plugin-terser": "^7.0.2",
     "which": "^2.0.2"
   }
 }
