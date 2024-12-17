@@ -14,7 +14,7 @@
       }
     },
     "build-image": {
-      "command": "docker build ."
+      "command": "docker build . -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:latest"
     }
   }
 }
