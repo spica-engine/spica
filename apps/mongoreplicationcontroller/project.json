@@ -1,0 +1,20 @@
+{
+  "name": "mongoreplicationcontroller",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/mongoreplicationcontroller/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "dist/apps/mongoreplicationcontroller",
+        "main": "apps/mongoreplicationcontroller/src/main.ts",
+        "tsConfig": "apps/mongoreplicationcontroller/tsconfig.json"
+      }
+    },
+    "build-image": {
+      "command": "docker build . -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:latest"
+    }
+  }
+}
