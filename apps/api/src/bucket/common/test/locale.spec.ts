@@ -1,31 +1,31 @@
 import {provideLanguageFinalizer} from "@spica-server/bucket/common";
 
 describe("provideLanguageChangeUpdater", () => {
-  let childrenSpy: jasmine.Spy;
+  let childrenSpy: jest.Mock;
   const translatableBuckets = [
     {_id: "bucket1", properties: {title: {}, description: {}}},
     {_id: "bucket2", properties: {name: {}}}
   ];
 
   const bucketDataService: any = {
-    updateMany: jasmine.createSpy("updateMany").and.returnValue(Promise.resolve()),
+    updateMany: jest.fn(() => Promise.resolve()),
     children: schema => bucketDataService
   };
 
   const bucketService: any = {
-    aggregate: jasmine.createSpy("aggregate").and.returnValue({
+    aggregate: jest.fn(() => ({
       toArray: () => Promise.resolve(translatableBuckets)
-    })
+    }))
   };
 
   const updaterFactory = provideLanguageFinalizer(bucketService, bucketDataService);
 
   beforeAll(() => {
-    childrenSpy = spyOn(bucketDataService, "children").and.callThrough();
+    childrenSpy = jest.spyOn(bucketDataService, "children");
   });
 
   afterEach(() => {
-    childrenSpy.calls.reset();
+    childrenSpy.mockReset();
   });
 
   it("should return updater function", () => {
@@ -109,13 +109,13 @@ describe("provideLanguageChangeUpdater", () => {
     ]);
 
     expect(childrenSpy).toHaveBeenCalledTimes(2);
-    expect(childrenSpy.calls.allArgs()).toEqual([
+    expect(childrenSpy.mock.calls).toEqual([
       [translatableBuckets[0]],
       [translatableBuckets[1]]
     ]);
 
     expect(bucketDataService.updateMany).toHaveBeenCalledTimes(2);
-    expect(bucketDataService.updateMany.calls.allArgs()).toEqual([
+    expect(bucketDataService.updateMany.mock.calls).toEqual([
       [{}, {$unset: {"title.fr": "", "title.de": "", "description.fr": "", "description.de": ""}}],
       [{}, {$unset: {"name.fr": "", "name.de": ""}}]
     ]);

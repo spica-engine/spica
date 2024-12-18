@@ -74,7 +74,7 @@ describe("schema validator", () => {
   });
 
   it("previous value should be passed correctly", async () => {
-    const dynamicValueSpy = jasmine.createSpy().and.callFake(() => "dynamicvalue");
+    const dynamicValueSpy = jest.fn(() => "dynamicvalue");
     validator.registerDefault({match: "created_at", type: "string", create: dynamicValueSpy});
     const schema: JSONSchema7 = {
       type: "object",
@@ -83,18 +83,18 @@ describe("schema validator", () => {
     await expectAsync(validator.validate(schema, {})).toBeResolved(true);
     await expectAsync(validator.validate(schema, {prop: "prevvalue"})).toBeResolved(true);
     expect(dynamicValueSpy).toHaveBeenCalledTimes(2);
-    expect(dynamicValueSpy.calls.first().args[0]).toBe(undefined);
-    expect(dynamicValueSpy.calls.mostRecent().args[0]).toBe("prevvalue");
+    expect(dynamicValueSpy.calls.first()[0]).toBe(undefined);
+    expect(dynamicValueSpy.mock.calls[dynamicValueSpy.mock.calls.length - 1][0]).toBe("prevvalue");
   });
 
   it("should call uri resolver", done => {
-    const resolver = jasmine.createSpy();
+    const resolver = jest.fn();
     validator.registerUriResolver(resolver);
     validator.validate({$ref: "unknown-schema"}, {}).then(
       () => done.fail(),
       () => {
         expect(resolver).toHaveBeenCalledTimes(1);
-        expect(resolver.calls.first().args[0]).toBe("unknown-schema");
+        expect(resolver.calls.first()[0]).toBe("unknown-schema");
         done();
       }
     );
@@ -111,7 +111,7 @@ describe("schema validator", () => {
       }
     });
     const validatedSchema = {$id: "testing", $ref: "http://spica.internal/schema"};
-    const resolver = jasmine.createSpy().and.callFake(() => schema);
+    const resolver = jest.fn(() => schema);
     validator.registerUriResolver(resolver);
 
     await expectAsync(validator.validate(validatedSchema, {prop: ""})).toBeResolved();
@@ -145,12 +145,12 @@ describe("schema validator", () => {
       }
     };
     const subschema: JSONSchema7 = {type: "string", default: "default"};
-    const resolver = jasmine.createSpy().and.returnValue(Promise.resolve(subschema));
+    const resolver = jest.fn(() => Promise.resolve(subschema));
     validator.registerUriResolver(resolver);
 
     await expectAsync(validator.validate(schema, data)).toBeResolved();
     expect(resolver).toHaveBeenCalled();
-    expect(resolver.calls.mostRecent().args[0]).toBe("http://spica.internal/schema");
+    expect(resolver.mock.calls[resolver.mock.calls.length - 1][0]).toBe("http://spica.internal/schema");
     expect(data.property1).toBe("default");
     expect(data.property2).toBeUndefined();
   });
@@ -172,10 +172,10 @@ describe("schema validator", () => {
       }
     };
 
-    let spy: jasmine.Spy;
+    let spy: jest.Mock;
 
     beforeEach(() => {
-      spy = jasmine.createSpy("validatefn").and.callFake(data => {
+      spy = jest.fn(data => {
         return data == "formatted";
       });
 
@@ -204,13 +204,13 @@ describe("schema validator", () => {
     it("should pass validation", async () => {
       await expectAsync(validator.validate(schema, {test: "formatted"})).toBeResolved();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy.calls.mostRecent().args[0]).toBe("formatted");
+      expect(spy.mock.calls[spy.mock.calls.length - 1][0]).toBe("formatted");
     });
 
     it("should not pass validation", async () => {
       await expectAsync(validator.validate(schema, {test: "nastyformatted"})).toBeRejected();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy.calls.mostRecent().args[0]).toBe("nastyformatted");
+      expect(spy.mock.calls[spy.mock.calls.length - 1][0]).toBe("nastyformatted");
     });
 
     it("should not do any operation if format type does not match with schema", () => {
@@ -232,7 +232,7 @@ describe("schema validator", () => {
 
     describe("and coercing", () => {
       it("should not coerce custom format", async () => {
-        const spy = jasmine.createSpy("validatefn").and.callFake(data => data == "formatted");
+        const spy = jest.fn(data => data == "formatted");
         const format: Format = {
           name: "myformat",
           type: "string",
@@ -256,14 +256,12 @@ describe("schema validator", () => {
         await expectAsync(validator.validate(schema, data)).toBeResolved();
         expect(data.test).toBe("formatted");
         expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy.calls.mostRecent().args[0]).toBe("formatted");
+        expect(spy.mock.calls[spy.mock.calls.length - 1][0]).toBe("formatted");
       });
 
       it("should coerce custom format", async () => {
-        const coerceSpy = jasmine.createSpy("coerce function").and.callFake(val => "test " + val);
-        const validateSpy = jasmine
-          .createSpy("validate function")
-          .and.callFake(data => data == "formatted");
+        const coerceSpy = jest.fn(val => "test " + val);
+        const validateSpy = jest.fn(data => data == "formatted");
         const format: Format = {
           name: "myformat",
           type: "string",
@@ -286,9 +284,9 @@ describe("schema validator", () => {
         await expectAsync(validator.validate(schema, data)).toBeResolved();
         expect(data.test).toBe("test formatted");
         expect(coerceSpy).toHaveBeenCalledTimes(1);
-        expect(coerceSpy.calls.mostRecent().args[0]).toBe("formatted");
+        expect(coerceSpy.mock.calls[coerceSpy.mock.calls.length - 1][0]).toBe("formatted");
         expect(validateSpy).toHaveBeenCalledTimes(1);
-        expect(validateSpy.calls.mostRecent().args[0]).toBe("formatted");
+        expect(validateSpy.mock.calls[validateSpy.mock.calls.length - 1][0]).toBe("formatted");
       });
     });
   });

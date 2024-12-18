@@ -35,7 +35,7 @@ describe("Version range", () => {
   });
 
   it("should show versions", async () => {
-    const info = spyOn(console, "info");
+    const info = jest.spyOn(console, "info");
     await migrate({
       database,
       console,
@@ -48,7 +48,7 @@ describe("Version range", () => {
   });
 
   it("should not include starting version", async () => {
-    const info = spyOn(console, "info");
+    const info = jest.spyOn(console, "info");
     await migrate({
       database,
       console,
@@ -65,7 +65,7 @@ describe("Version range", () => {
   });
 
   it("should include ending version", async () => {
-    const info = spyOn(console, "info");
+    const info = jest.spyOn(console, "info");
     await migrate({
       database,
       console,

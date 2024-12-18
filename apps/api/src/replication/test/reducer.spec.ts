@@ -7,7 +7,7 @@ describe("Commander", () => {
   let module: TestingModule;
   let reducer: JobReducer;
   let meta;
-  let job = jasmine.createSpy();
+  let job = jest.fn();
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -21,7 +21,7 @@ describe("Commander", () => {
 
     reducer = module.get(JobReducer);
 
-    job.calls.reset();
+    job.mockReset();
     meta = {_id: "1", user: "user66", age: 2, type: "insert"};
   });
 

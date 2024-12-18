@@ -5,9 +5,10 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7911";
 
-const spyScheduler = jasmine
-  .createSpy("schedulerSpy")
-  .and.returnValue({enqueuer: null, queue: null});
+const spyScheduler = jest.fn(() => ({
+  enqueuer: null,
+  queue: null
+}));
 
 @Global()
 @Module({
@@ -26,8 +27,8 @@ describe("Scheduler Injection", () => {
   let scheduler: Scheduler;
   let app: INestApplication;
 
-  let addQueueSpy: jasmine.Spy;
-  let addEnqueuerSpy: jasmine.Spy;
+  let addQueueSpy: jest.Mock;
+  let addEnqueuerSpy: jest.Mock;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -54,8 +55,8 @@ describe("Scheduler Injection", () => {
     }).compile();
     app = module.createNestApplication();
     scheduler = module.get(Scheduler);
-    addQueueSpy = spyOn(scheduler["queue"], "addQueue");
-    addEnqueuerSpy = spyOn(scheduler.enqueuers, "add");
+    addQueueSpy = jest.spyOn(scheduler["queue"], "addQueue");
+    addEnqueuerSpy = jest.spyOn(scheduler.enqueuers, "add");
   });
 
   afterEach(() => module.close());

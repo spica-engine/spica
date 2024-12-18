@@ -88,13 +88,13 @@ describe("Realtime", () => {
   afterEach(async () => await app.close());
 
   describe("authorization", () => {
-    let authGuardCheck: jasmine.Spy<typeof GuardService.prototype.checkAuthorization>;
-    let actionGuardCheck: jasmine.Spy<typeof GuardService.prototype.checkAction>;
+    let authGuardCheck: jest.Mock<typeof GuardService.prototype.checkAuthorization>;
+    let actionGuardCheck: jest.Mock<typeof GuardService.prototype.checkAction>;
 
     beforeEach(() => {
       const guardService = app.get(GuardService);
-      authGuardCheck = spyOn(guardService, "checkAuthorization");
-      actionGuardCheck = spyOn(guardService, "checkAction").and.callFake(({request}) => {
+      authGuardCheck = jest.spyOn(guardService, "checkAuthorization");
+      actionGuardCheck = jest.spyOn(guardService, "checkAction").mockImplementation(({request}) => {
         request.resourceFilter = {
           include: [],
           exclude: []
@@ -119,7 +119,7 @@ describe("Realtime", () => {
     });
 
     it("should show error messages", async done => {
-      authGuardCheck.and.callFake(() => {
+      authGuardCheck.mockImplementation(() => {
         throw new UnauthorizedException();
       });
       const ws = wsc.get(`/bucket/${bucket._id}/data`, {
@@ -134,7 +134,7 @@ describe("Realtime", () => {
     });
 
     it("should the action error message", done => {
-      actionGuardCheck.and.callFake(() => {
+      actionGuardCheck.mockImplementation(() => {
         throw new ForbiddenException("You do not have sufficient permissions to do this action.");
       });
       const ws = wsc.get(`/bucket/${bucket._id}/data`, {
@@ -152,7 +152,7 @@ describe("Realtime", () => {
   });
 
   describe("documents", () => {
-    const messageSpy = jasmine.createSpy();
+    const messageSpy = jest.fn();
 
     beforeEach(async () => {
       rows = [
@@ -164,7 +164,7 @@ describe("Realtime", () => {
         })
       ];
 
-      messageSpy.calls.reset();
+      messageSpy.mockReset();
     });
 
     describe("initial sync", () => {
@@ -177,7 +177,7 @@ describe("Realtime", () => {
           messageSpy(JSON.parse(e.data as string));
 
           if (e.data == lastMessage) {
-            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+            expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
               {kind: ChunkKind.Initial, document: rows[0]},
               {kind: ChunkKind.Initial, document: rows[1]},
               {kind: ChunkKind.EndOfInitial}
@@ -198,7 +198,7 @@ describe("Realtime", () => {
           messageSpy(JSON.parse(e.data as string));
 
           if (e.data == lastMessage) {
-            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+            expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
               {kind: ChunkKind.Initial, document: rows[1]},
               {kind: ChunkKind.EndOfInitial}
             ]);
@@ -220,7 +220,7 @@ describe("Realtime", () => {
           messageSpy(JSON.parse(e.data as string));
 
           if (e.data == lastMessage) {
-            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+            expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
               {kind: ChunkKind.Initial, document: rows[0]},
               {kind: ChunkKind.EndOfInitial}
             ]);
@@ -240,7 +240,7 @@ describe("Realtime", () => {
           messageSpy(JSON.parse(e.data as string));
 
           if (e.data == lastMessage) {
-            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+            expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
               {kind: ChunkKind.Initial, document: rows[0]},
               {kind: ChunkKind.EndOfInitial}
             ]);
@@ -260,7 +260,7 @@ describe("Realtime", () => {
           messageSpy(JSON.parse(e.data as string));
 
           if (e.data == lastMessage) {
-            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+            expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
               {kind: ChunkKind.Initial, document: rows[1]},
               {kind: ChunkKind.EndOfInitial}
             ]);
@@ -289,7 +289,7 @@ describe("Realtime", () => {
           messageSpy(JSON.parse(e.data as string));
 
           if (e.data == lastMessage) {
-            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+            expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
               {kind: ChunkKind.Initial, document: rows[1]},
               {kind: ChunkKind.Initial, document: newRows[0]},
 
@@ -311,7 +311,7 @@ describe("Realtime", () => {
           messageSpy(JSON.parse(e.data as string));
 
           if (e.data == lastMessage) {
-            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+            expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
               {kind: ChunkKind.Initial, document: rows[1]},
               {kind: ChunkKind.Initial, document: rows[0]},
               {kind: ChunkKind.EndOfInitial}
@@ -335,7 +335,7 @@ describe("Realtime", () => {
           messageSpy(message);
 
           if (message.kind == ChunkKind.Insert) {
-            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+            expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
               {kind: ChunkKind.Initial, document: rows[0]},
               {kind: ChunkKind.Initial, document: rows[1]},
               {kind: ChunkKind.EndOfInitial},
@@ -363,7 +363,7 @@ describe("Realtime", () => {
           messageSpy(message);
 
           if (message.kind == ChunkKind.Replace) {
-            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+            expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
               {kind: ChunkKind.Initial, document: rows[0]},
               {kind: ChunkKind.Initial, document: rows[1]},
               {kind: ChunkKind.EndOfInitial},
@@ -391,7 +391,7 @@ describe("Realtime", () => {
           messageSpy(message);
 
           if (message.kind == ChunkKind.Update) {
-            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+            expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
               {kind: ChunkKind.Initial, document: rows[0]},
               {kind: ChunkKind.Initial, document: rows[1]},
               {kind: ChunkKind.EndOfInitial},
@@ -419,7 +419,7 @@ describe("Realtime", () => {
           messageSpy(message);
 
           if (message.kind == ChunkKind.Delete) {
-            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+            expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
               {kind: ChunkKind.Initial, document: rows[0]},
               {kind: ChunkKind.Initial, document: rows[1]},
               {kind: ChunkKind.EndOfInitial},
@@ -466,7 +466,7 @@ describe("Realtime", () => {
             messageSpy(message);
 
             if (message.kind == lastMessageKind) {
-              expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
                 {kind: ChunkKind.EndOfInitial},
                 {
                   kind: ChunkKind.Response,
@@ -511,7 +511,7 @@ describe("Realtime", () => {
             messageSpy(message);
 
             if (message.kind == lastMessageKind) {
-              expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
                 {kind: ChunkKind.EndOfInitial},
                 {
                   kind: ChunkKind.Response,

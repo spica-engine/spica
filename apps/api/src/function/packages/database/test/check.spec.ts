@@ -2,9 +2,9 @@ import {checkDocument, checkDocuments} from "@spica-devkit/database/src/check";
 import {ObjectId} from "mongodb";
 
 describe("Checks", () => {
-  let emitWarning: jasmine.Spy<typeof process.emitWarning>;
+  let emitWarning: jest.Mock<typeof process.emitWarning>;
   beforeEach(() => {
-    emitWarning = spyOn(process, "emitWarning");
+    emitWarning = jest.spyOn(process, "emitWarning");
   });
 
   describe("checkDocument", () => {

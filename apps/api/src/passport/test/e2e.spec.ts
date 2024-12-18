@@ -639,7 +639,7 @@ describe("E2E Tests", () => {
           const totp = generateTotp(challenge);
 
           const thirtySecondsLater = new Date(Date.now() + TOTP_TIMEOUT);
-          jasmine.clock().mockDate(thirtySecondsLater);
+          jest.setSystemTime(thirtySecondsLater);
 
           const res = await completeVerification(totp, answerUrl);
           expect(res.statusCode).toEqual(401);
@@ -657,7 +657,7 @@ describe("E2E Tests", () => {
           const totp = generateTotp(challenge);
 
           const afterServerTimeouted = new Date(Date.now() + TOTP_TIMEOUT + 1);
-          jasmine.clock().mockDate(afterServerTimeouted);
+          jest.setSystemTime(afterServerTimeouted);
 
           res = await req.post(res.body.answerUrl, {answer: totp});
           expect(res.statusCode).toEqual(401);

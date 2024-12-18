@@ -33,21 +33,21 @@ describe("Synchronizer", () => {
       parents: 0,
       name: "bucket",
       representative: {
-        insert: jasmine.createSpy().and.callFake(d => Promise.resolve(d)),
-        update: jasmine.createSpy().and.callFake(() => Promise.resolve()),
-        delete: jasmine.createSpy().and.callFake(() => Promise.resolve()),
+        insert: jest.fn(d => Promise.resolve(d)),
+        update: jest.fn(() => Promise.resolve()),
+        delete: jest.fn(() => Promise.resolve()),
 
-        getAll: jasmine.createSpy().and.callFake(() => {
+        getAll: jest.fn(() => {
           return Promise.resolve(reps);
         })
       },
 
       document: {
-        insert: jasmine.createSpy().and.callFake(() => Promise.resolve()),
-        update: jasmine.createSpy().and.callFake(() => Promise.resolve()),
-        delete: jasmine.createSpy().and.callFake(() => Promise.resolve()),
+        insert: jest.fn(() => Promise.resolve()),
+        update: jest.fn(() => Promise.resolve()),
+        delete: jest.fn(() => Promise.resolve()),
 
-        getAll: jasmine.createSpy().and.callFake(() => {
+        getAll: jest.fn(() => {
           return Promise.resolve(docs);
         })
       }
@@ -57,7 +57,7 @@ describe("Synchronizer", () => {
 
     synchronizer.register(syncProvider);
 
-    jasmine.clock().mockDate(now);
+    jest.setSystemTime(now);
   });
 
   it("should get last sync", async () => {

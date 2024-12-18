@@ -51,7 +51,7 @@ describe("DRY Run", () => {
   });
 
   it("should complete and report to console", async () => {
-    const info = spyOn(console, "info");
+    const info = jest.spyOn(console, "info");
     await migrate({
       database,
       console,
