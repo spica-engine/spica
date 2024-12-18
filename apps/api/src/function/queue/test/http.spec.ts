@@ -58,7 +58,7 @@ describe("HttpQueue", () => {
     pop.id = "3";
 
     const response = {end: () => {}} as any;
-    spyOn(response, "end").and.callFake(cb => cb());
+    jest.spyOn(response, "end").mockImplementation(cb => cb());
 
     httpQueue.enqueue(pop.id, new Http.Request(), response);
 

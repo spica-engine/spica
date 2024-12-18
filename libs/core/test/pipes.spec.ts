@@ -42,7 +42,7 @@ describe("core pipes", () => {
 
   describe("JSONPR pipe", () => {
     it("should pass the reviver", () => {
-      const reviver = jasmine.createSpy("reviver").and.callFake((k, v) => {
+      const reviver = jest.fn((k, v) => {
         if (v == "supersecret") {
           return "**REDACTED**";
         }
@@ -54,7 +54,7 @@ describe("core pipes", () => {
     });
 
     it("should  forward errors thrown by reviver", () => {
-      const reviver = jasmine.createSpy("reviver").and.callFake((k, v) => {
+      const reviver = jest.fn((k, v) => {
         if (v == "__throw__") {
           throw new Error(`thrown __throw__`);
         }

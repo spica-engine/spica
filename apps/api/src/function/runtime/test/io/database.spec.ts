@@ -32,7 +32,7 @@ describe("IO Database", () => {
           .collection("function_logs")
           .findOne({})
           .then(log => {
-            expect(log.created_at).toEqual(jasmine.any(Date));
+            expect(log.created_at).toEqual(expect.any(Date));
             delete log.created_at;
             return log;
           })
@@ -59,7 +59,7 @@ describe("IO Database", () => {
           .collection("function_logs")
           .findOne({})
           .then(log => {
-            expect(log.created_at).toEqual(jasmine.any(Date));
+            expect(log.created_at).toEqual(expect.any(Date));
             delete log.created_at;
             return log;
           })
@@ -98,7 +98,7 @@ describe("IO Database", () => {
             .find()
             .toArray()
             .then(logs => {
-              logs.forEach(log => expect(log.created_at).toEqual(jasmine.any(Date)));
+              logs.forEach(log => expect(log.created_at).toEqual(expect.any(Date)));
               logs.forEach(log => delete log.created_at);
               return logs;
             })
@@ -148,7 +148,7 @@ describe("IO Database", () => {
             .find()
             .toArray()
             .then(logs => {
-              logs.forEach(log => expect(log.created_at).toEqual(jasmine.any(Date)));
+              logs.forEach(log => expect(log.created_at).toEqual(expect.any(Date)));
               logs.forEach(log => delete log.created_at);
               return logs;
             })

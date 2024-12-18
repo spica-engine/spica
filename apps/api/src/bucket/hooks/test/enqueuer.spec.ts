@@ -7,12 +7,17 @@ describe("ChangeEnqueuer", () => {
   let changeEnqeuer: ChangeEnqueuer;
   let noopTarget: event.Target;
   let noopTarget2: event.Target;
-  let eventQueue: jasmine.SpyObj<EventQueue>;
-  let changeEmitter: jasmine.SpyObj<ChangeEmitter>;
+  let eventQueue: jest.Mocked<EventQueue>;
+  let changeEmitter: jest.Mocked<ChangeEmitter>;
 
   beforeEach(() => {
-    eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
-    changeEmitter = jasmine.createSpyObj("dispatch", ["on", "off"]);
+    eventQueue = {
+      'enqueue': jest.fn()
+    };
+    changeEmitter = {
+      'on': jest.fn(),
+      'off': jest.fn()
+    };
 
     changeEnqeuer = new ChangeEnqueuer(eventQueue, null, changeEmitter);
 
@@ -42,7 +47,7 @@ describe("ChangeEnqueuer", () => {
 
     expect(changeEmitter.on).toHaveBeenCalledTimes(1);
 
-    expect(changeEmitter.on.calls.first().args[0]).toEqual("test_collection_insert");
+    expect(changeEmitter.on.calls.first()[0]).toEqual("test_collection_insert");
   });
 
   it("should remove the target from changeTargets and call the 'of' method of emitter", () => {
@@ -70,6 +75,6 @@ describe("ChangeEnqueuer", () => {
 
     expect(changeEmitter.off).toHaveBeenCalledTimes(1);
 
-    expect(changeEmitter.off.calls.first().args[0]).toEqual("test_collection_insert");
+    expect(changeEmitter.off.calls.first()[0]).toEqual("test_collection_insert");
   });
 });

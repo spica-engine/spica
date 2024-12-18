@@ -18,8 +18,8 @@ describe("Entrypoint", () => {
 
   let runtime: Node;
   let language: Language;
-  let enqueueSpy: jasmine.Spy;
-  let popSpy: jasmine.Spy;
+  let enqueueSpy: jest.Mock;
+  let popSpy: jest.Mock;
   let compilation: Compilation = {
     cwd: undefined,
     entrypoint: undefined
@@ -75,12 +75,12 @@ describe("Entrypoint", () => {
       }
     }
 
-    popSpy = jasmine.createSpy("pop").and.callFake((_, sc) => {
+    popSpy = jest.fn((_, sc) => {
       schedule = sc;
       process();
     });
 
-    enqueueSpy = jasmine.createSpy("enqueue").and.callFake(e => {
+    enqueueSpy = jest.fn(e => {
       queueSize++;
       event = e;
       process();
@@ -123,9 +123,9 @@ describe("Entrypoint", () => {
 
   it("should exit abnormally when worker id was not set", async () => {
     const stream = new PassThrough();
-    const writeSpy = spyOn(stream, "write").and.callThrough();
+    const writeSpy = jest.spyOn(stream, "write");
     expect(await spawn(stream, "").catch(e => e)).toBe(126);
-    expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
+    expect(writeSpy.mock.calls.map(args => args[0].toString())).toEqual([
       "Environment variable WORKER_ID was not set.\n"
     ]);
   });
@@ -135,9 +135,9 @@ describe("Entrypoint", () => {
     delete process.env.FUNCTION_GRPC_ADDRESS;
 
     const stream = new PassThrough();
-    const writeSpy = spyOn(stream, "write").and.callThrough();
+    const writeSpy = jest.spyOn(stream, "write");
     expect(await spawn(stream, "").catch(e => e)).toBe(126);
-    expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
+    expect(writeSpy.mock.calls.map(args => args[0].toString())).toEqual([
       "Environment variable FUNCTION_GRPC_ADDRESS was not set.\n"
     ]);
 
@@ -161,10 +161,10 @@ describe("Entrypoint", () => {
     queue.enqueue(ev);
 
     const stream = new PassThrough();
-    const writeSpy = spyOn(stream, "write").and.callThrough();
+    const writeSpy = jest.spyOn(stream, "write");
 
     await expectAsync(spawn(stream)).toBeRejectedWith(126);
-    expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
+    expect(writeSpy.mock.calls.map(args => args[0].toString())).toEqual([
       "This function does not export any symbol named 'shouldhaveexisted'.\n"
     ]);
   });
@@ -186,10 +186,10 @@ describe("Entrypoint", () => {
     queue.enqueue(ev);
 
     const stream = new PassThrough();
-    const writeSpy = spyOn(stream, "write").and.callThrough();
+    const writeSpy = jest.spyOn(stream, "write");
 
     await expectAsync(spawn(stream)).toBeRejectedWith(126);
-    expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
+    expect(writeSpy.mock.calls.map(args => args[0].toString())).toEqual([
       "This function does export a symbol named 'notafunction' but it is not a function.\n"
     ]);
   });
@@ -202,13 +202,13 @@ describe("Entrypoint", () => {
 
     const stream = new PassThrough();
 
-    const writeSpy = spyOn(stream, "write").and.callThrough();
+    const writeSpy = jest.spyOn(stream, "write");
 
     spawn(stream);
 
     queue["_complete"] = () => {
       expect(writeSpy).toHaveBeenCalledTimes(2);
-      expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
+      expect(writeSpy.mock.calls.map(args => args[0].toString())).toEqual([
         "this should appear in the logs\n",
         "this also should appear in the logs\n"
       ]);
@@ -471,8 +471,8 @@ describe("Entrypoint", () => {
       });
 
       const serverResponse = {
-        writeHead: jasmine.createSpy("writeHead"),
-        end: jasmine.createSpy("end").and.callFake((_, __, callback) => {
+        writeHead: jest.fn(),
+        end: jest.fn((_, __, callback) => {
           callback();
           expect(serverResponse.end).toHaveBeenCalledTimes(1);
           done();
@@ -503,8 +503,8 @@ describe("Entrypoint", () => {
       });
 
       const serverResponse = {
-        writeHead: jasmine.createSpy("writeHead"),
-        end: jasmine.createSpy("end").and.callFake((_, __, callback) => {
+        writeHead: jest.fn(),
+        end: jest.fn((_, __, callback) => {
           callback();
           expect(serverResponse.end).toHaveBeenCalledTimes(1);
           done();
@@ -535,12 +535,12 @@ describe("Entrypoint", () => {
       });
 
       const serverResponse = {
-        writeHead: jasmine.createSpy("writeHead"),
-        end: jasmine.createSpy("end").and.callFake((_, __, callback) => callback())
+        writeHead: jest.fn(),
+        end: jest.fn((_, __, callback) => callback())
       };
 
       queue["_complete"] = () => {
-        expect(serverResponse.end.calls.allArgs().map(args => args[0].toString())).toEqual([
+        expect(serverResponse.end.mock.calls.map(args => args[0].toString())).toEqual([
           JSON.stringify({worksViaReturn: true})
         ]);
         done();
@@ -571,10 +571,10 @@ describe("Entrypoint", () => {
       });
 
       const serverResponse = {
-        writeHead: jasmine.createSpy("writeHead"),
-        end: jasmine.createSpy("end").and.callFake((_, __, callback) => {
+        writeHead: jest.fn(),
+        end: jest.fn((_, __, callback) => {
           callback();
-          expect(serverResponse.end.calls.allArgs().map(args => args[0].toString())).toEqual([
+          expect(serverResponse.end.mock.calls.map(args => args[0].toString())).toEqual([
             JSON.stringify({hasBeenSentViaSend: true})
           ]);
           done();
@@ -733,13 +733,15 @@ describe("Entrypoint", () => {
 
       queue["_complete"] = () => {
         expect(socketSpy.send).toHaveBeenCalledTimes(1);
-        expect(socketSpy.send.calls.argsFor(0)[0]).toBe(`{"name":"test","data":"thisisthedata"}`);
+        expect(socketSpy.send.mock.calls[0][0]).toBe(`{"name":"test","data":"thisisthedata"}`);
         done();
       };
 
       queue.enqueue(ev);
 
-      const socketSpy = jasmine.createSpyObj("Socket", ["send"]);
+      const socketSpy = {
+        'send': jest.fn()
+      };
       socketSpy.readyState = 1;
 
       firehoseQueue.enqueue(
@@ -782,7 +784,9 @@ describe("Entrypoint", () => {
 
       queue.enqueue(ev);
 
-      const socketSpy = jasmine.createSpyObj("Socket", ["close"]);
+      const socketSpy = {
+        'close': jest.fn()
+      };
       socketSpy.readyState = 1;
 
       firehoseQueue.enqueue(
@@ -820,9 +824,9 @@ describe("Entrypoint", () => {
 
       queue["_complete"] = () => {
         expect(firstSocket.send).toHaveBeenCalledTimes(1);
-        expect(firstSocket.send.calls.argsFor(0)[0]).toBe(`{"name":"test","data":"thisisthedata"}`);
+        expect(firstSocket.send.mock.calls[0][0]).toBe(`{"name":"test","data":"thisisthedata"}`);
         expect(secondSocket.send).toHaveBeenCalledTimes(1);
-        expect(secondSocket.send.calls.argsFor(0)[0]).toBe(
+        expect(secondSocket.send.mock.calls[0][0]).toBe(
           `{"name":"test","data":"thisisthedata"}`
         );
         done();
@@ -833,7 +837,9 @@ describe("Entrypoint", () => {
       const pool = new Firehose.PoolDescription({size: 21}),
         message = new Firehose.Message({name: "connection"});
 
-      const firstSocket = jasmine.createSpyObj("firstSocket", ["send"]);
+      const firstSocket = {
+        'send': jest.fn()
+      };
       firstSocket.readyState = 1; /* OPEN */
 
       firehoseQueue.enqueue(
@@ -849,7 +855,9 @@ describe("Entrypoint", () => {
         firstSocket
       );
 
-      const secondSocket = jasmine.createSpyObj("secondSocket", ["send"]);
+      const secondSocket = {
+        'send': jest.fn()
+      };
       secondSocket.readyState = 1; /* OPEN */
 
       firehoseQueue.enqueue(

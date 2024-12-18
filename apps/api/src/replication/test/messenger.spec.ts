@@ -52,7 +52,7 @@ describe("Command Messenger", () => {
   });
 
   it("should publish message", done => {
-    const api1Observer = jasmine.createSpy();
+    const api1Observer = jest.fn();
 
     api1Messenger.subscribe({
       next: api1Observer

@@ -13,9 +13,9 @@ describe("Webhook Invoker", () => {
   let service: WebhookService;
   let db: DatabaseService;
 
-  let subscribeSpy: jasmine.Spy<typeof invoker["subscribe"]>;
-  let unsubscribeSpy: jasmine.Spy<typeof invoker["unsubscribe"]>;
-  let fetchSpy: jasmine.Spy<typeof __fetch__.default>;
+  let subscribeSpy: jest.Mock<typeof invoker["subscribe"]>;
+  let unsubscribeSpy: jest.Mock<typeof invoker["unsubscribe"]>;
+  let fetchSpy: jest.Mock<typeof __fetch__.default>;
 
   let mockHttpResponse = {
     headers: {
@@ -52,9 +52,9 @@ describe("Webhook Invoker", () => {
     invoker = module.get(WebhookInvoker);
     await stream.wait();
 
-    subscribeSpy = spyOn(invoker, "subscribe" as never).and.callThrough();
-    unsubscribeSpy = spyOn(invoker, "unsubscribe" as never).and.callThrough();
-    fetchSpy = spyOn(__fetch__, "default").and.returnValue(Promise.resolve(mockHttpResponse));
+    subscribeSpy = jest.spyOn(invoker, "subscribe" as never);
+    unsubscribeSpy = jest.spyOn(invoker, "unsubscribe" as never);
+    fetchSpy = jest.spyOn(__fetch__, "default").mockReturnValue(Promise.resolve(mockHttpResponse));
 
     await new Promise(resolve => setTimeout(() => resolve(), 2000));
 
@@ -148,7 +148,7 @@ describe("Webhook Invoker", () => {
   });
 
   it("should insert a log when hook has been invoked", async () => {
-    const insertLog = spyOn(invoker["logService"], "insertOne");
+    const insertLog = jest.spyOn(invoker["logService"], "insertOne");
     const hook = await service.insertOne(webhook);
     await stream.change.wait();
     stream.change.next();
@@ -157,8 +157,8 @@ describe("Webhook Invoker", () => {
 
     expect(insertLog).toHaveBeenCalledTimes(1);
 
-    let expectedArg: any = insertLog.calls.argsFor(0)[0];
-    expect(expectedArg.created_at).toEqual(jasmine.any(Date));
+    let expectedArg: any = insertLog.mock.calls[0][0];
+    expect(expectedArg.created_at).toEqual(expect.any(Date));
 
     delete expectedArg.created_at;
     expect(expectedArg).toEqual({
@@ -189,7 +189,7 @@ describe("Webhook Invoker", () => {
 
   it("should insert log when webhook body compilation failed", async () => {
     webhook.body = "{{{document.title}}}";
-    const insertLog = spyOn(invoker["logService"], "insertOne");
+    const insertLog = jest.spyOn(invoker["logService"], "insertOne");
     const hook = await service.insertOne(webhook);
     await stream.change.wait();
     stream.change.next();
@@ -198,8 +198,8 @@ describe("Webhook Invoker", () => {
 
     expect(insertLog).toHaveBeenCalledTimes(1);
 
-    let expectedArg: any = insertLog.calls.argsFor(0)[0];
-    expect(expectedArg.created_at).toEqual(jasmine.any(Date));
+    let expectedArg: any = insertLog.mock.calls[0][0];
+    expect(expectedArg.created_at).toEqual(expect.any(Date));
 
     delete expectedArg.created_at;
     expect(expectedArg).toEqual({

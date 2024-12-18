@@ -5,12 +5,12 @@ process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5847";
 
 describe("EventQueue", () => {
   let eventQueue: EventQueue;
-  let enqueueSpy: jasmine.Spy;
-  let popSpy: jasmine.Spy;
+  let enqueueSpy: jest.Mock;
+  let popSpy: jest.Mock;
 
   beforeEach(() => {
-    enqueueSpy = jasmine.createSpy("enqueue");
-    popSpy = jasmine.createSpy("pop");
+    enqueueSpy = jest.fn();
+    popSpy = jest.fn();
     eventQueue = new EventQueue(() => {}, enqueueSpy, popSpy, () => {});
   });
 

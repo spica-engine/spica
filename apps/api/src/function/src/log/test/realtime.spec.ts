@@ -81,11 +81,11 @@ describe("Realtime", () => {
 
   it("should do the initial sync", async () => {
     const ws = wsc.get(url(`/function-logs?begin=${created_at.toString()}`));
-    const message = jasmine.createSpy();
+    const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
     await ws.close();
-    expect(message.calls.allArgs().map(c => c[0])).toEqual([
+    expect(message.mock.calls.map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[0]},
       {kind: ChunkKind.Initial, document: rows[1]},
       {kind: ChunkKind.EndOfInitial}
@@ -94,11 +94,11 @@ describe("Realtime", () => {
 
   it("should do the initial sync with filter", async () => {
     const ws = wsc.get(url(`/function-logs?functions=${fn1}&begin=${created_at.toString()}`));
-    const message = jasmine.createSpy();
+    const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
     await ws.close();
-    expect(message.calls.allArgs().map(c => c[0])).toEqual([
+    expect(message.mock.calls.map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[0]},
       {kind: ChunkKind.EndOfInitial}
     ]);
@@ -108,11 +108,11 @@ describe("Realtime", () => {
     const ws = wsc.get(
       url(`/function-logs?functions=${fn1}&functions=${fn2}&begin=${created_at.toString()}`)
     );
-    const message = jasmine.createSpy();
+    const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
     await ws.close();
-    expect(message.calls.allArgs().map(c => c[0])).toEqual([
+    expect(message.mock.calls.map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[0]},
       {kind: ChunkKind.Initial, document: rows[1]},
       {kind: ChunkKind.EndOfInitial}
@@ -121,11 +121,11 @@ describe("Realtime", () => {
 
   it("should do the initial sync with limit", async () => {
     const ws = wsc.get(url(`/function-logs?begin=${created_at.toString()}`, {limit: 1}));
-    const message = jasmine.createSpy();
+    const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
     await ws.close();
-    expect(message.calls.allArgs().map(c => c[0])).toEqual([
+    expect(message.mock.calls.map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[0]},
       {kind: ChunkKind.EndOfInitial}
     ]);
@@ -133,11 +133,11 @@ describe("Realtime", () => {
 
   it("should do the initial sync with skip", async () => {
     const ws = wsc.get(url(`/function-logs?begin=${created_at.toString()}`, {skip: 1}));
-    const message = jasmine.createSpy();
+    const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
     await ws.close();
-    expect(message.calls.allArgs().map(c => c[0])).toEqual([
+    expect(message.mock.calls.map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[1]},
       {kind: ChunkKind.EndOfInitial}
     ]);
@@ -160,11 +160,11 @@ describe("Realtime", () => {
         }))
       );
     const ws = wsc.get(url(`/function-logs?begin=${created_at.toString()}`, {skip: 1, limit: 2}));
-    const message = jasmine.createSpy();
+    const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
     await ws.close();
-    expect(message.calls.allArgs().map(c => c[0])).toEqual([
+    expect(message.mock.calls.map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[1]},
       {kind: ChunkKind.Initial, document: newRows[0]},
       {kind: ChunkKind.EndOfInitial}
@@ -173,11 +173,11 @@ describe("Realtime", () => {
 
   it("should do the initial sync with sort", async () => {
     const ws = wsc.get(url(`/function-logs?begin=${created_at.toString()}`, {sort: {_id: -1}}));
-    const message = jasmine.createSpy();
+    const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
     await ws.close();
-    expect(message.calls.allArgs().map(c => c[0])).toEqual([
+    expect(message.mock.calls.map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[1]},
       {kind: ChunkKind.Initial, document: rows[0]},
       {kind: ChunkKind.EndOfInitial}
@@ -192,11 +192,11 @@ describe("Realtime", () => {
       created_at: new Date(new Date().getTime() - 1000 * 60 * 60 * 24)
     });
     const ws = wsc.get(url(`/function-logs?begin=${created_at.toString()}`));
-    const message = jasmine.createSpy();
+    const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
     await ws.close();
-    expect(message.calls.allArgs().map(c => c[0])).toEqual([
+    expect(message.mock.calls.map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[0]},
       {kind: ChunkKind.Initial, document: rows[1]},
       {kind: ChunkKind.EndOfInitial}

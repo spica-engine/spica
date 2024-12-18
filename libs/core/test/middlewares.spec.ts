@@ -23,10 +23,10 @@ describe("MiddleWare", () => {
         }
       },
       headers: {},
-      end: jasmine.createSpy()
+      end: jest.fn()
     };
 
-    let next: jasmine.Spy = jasmine.createSpy();
+    let next: jest.Mock = jest.fn();
 
     let options: CorsOptions = {
       allowCredentials: undefined,
@@ -41,8 +41,8 @@ describe("MiddleWare", () => {
     });
 
     afterEach(() => {
-      next.calls.reset();
-      res.end.calls.reset();
+      next.mockReset();
+      res.end.mockReset();
     });
 
     describe("Origin", () => {

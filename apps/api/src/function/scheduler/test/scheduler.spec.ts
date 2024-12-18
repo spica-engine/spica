@@ -12,7 +12,7 @@ process.env.DISABLE_LOGGER = "true";
 describe("Scheduler", () => {
   let scheduler: Scheduler;
   let app: INestApplication;
-  let spawnSpy: jasmine.Spy;
+  let spawnSpy: jest.Mock;
   let schedulerOptions = {
     databaseUri: undefined,
     databaseName: undefined,
@@ -89,7 +89,7 @@ describe("Scheduler", () => {
       triggerGotWorker();
     };
 
-    spawnSpy = spyOn(scheduler.runtimes.get("node"), "spawn").and.callThrough();
+    spawnSpy = jest.spyOn(scheduler.runtimes.get("node"), "spawn");
 
     app = module.createNestApplication();
 
@@ -112,7 +112,7 @@ describe("Scheduler", () => {
     scheduler.kill();
     await app.close();
     clock.uninstall();
-    spawnSpy.calls.reset();
+    spawnSpy.mockReset();
   });
 
   it("should spawn on module init", () => {
@@ -120,14 +120,14 @@ describe("Scheduler", () => {
   });
 
   it("should not spawn if there is one worker available", () => {
-    spawnSpy.calls.reset();
+    spawnSpy.mockReset();
     scheduler["scaleWorkers"]();
     expect(spawnSpy).toHaveBeenCalledTimes(0);
   });
 
   it("should attach outputs when the event is enqueued", () => {
     const [[id, worker]] = freeWorkers();
-    const attachSpy = spyOn(worker, "attach").and.callThrough();
+    const attachSpy = jest.spyOn(worker, "attach");
 
     const ev = new event.Event({
       target: new event.Target({
@@ -162,12 +162,12 @@ describe("Scheduler", () => {
 
   it("should kill the worker when the execution is timed out", () => {
     const [[id, worker]] = freeWorkers();
-    const kill = spyOn(worker, "kill");
+    const kill = jest.spyOn(worker, "kill");
 
     const stream = new PassThrough();
-    spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
+    jest.spyOn(scheduler["output"], "create").mockReturnValue([stream, stream]);
 
-    const write = spyOn(stream, "write");
+    const write = jest.spyOn(stream, "write");
 
     const ev = new event.Event({
       target: new event.Target({
@@ -192,12 +192,12 @@ describe("Scheduler", () => {
 
   it("should pick the minimum timeout value when scheduling", () => {
     const [[id, worker]] = freeWorkers();
-    const kill = spyOn(worker, "kill");
+    const kill = jest.spyOn(worker, "kill");
 
     const stream = new PassThrough();
-    spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
+    jest.spyOn(scheduler["output"], "create").mockReturnValue([stream, stream]);
 
-    const write = spyOn(stream, "write");
+    const write = jest.spyOn(stream, "write");
 
     const ev = new event.Event({
       target: new event.Target({

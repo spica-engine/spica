@@ -116,7 +116,7 @@ describe("Versioning e2e", () => {
 
     await app.listen(req.socket);
 
-    jasmine.clock().mockDate(now);
+    jest.setSystemTime(now);
   });
 
   afterEach(async () => {

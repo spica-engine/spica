@@ -7,7 +7,7 @@ describe("Utilities", () => {
       }
     };
 
-    const updateManySpy = spyOn(ApikeyService, "updateMany");
+    const updateManySpy = jest.spyOn(ApikeyService, "updateMany");
 
     const factoryFunction = providePolicyFinalizer(ApikeyService);
     await factoryFunction("my_policy");

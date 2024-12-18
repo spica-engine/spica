@@ -657,7 +657,7 @@ describe("E2E Tests", () => {
       it("should only install failed resources", async () => {
         await installAsset(asset._id);
 
-        const insertSpy = spyOn(operator, "insert").and.callFake(res => {
+        const insertSpy = jest.spyOn(operator, "insert").mockImplementation(res => {
           // somehow method toHaveBeenCalledWith displays the wrong result
           expect(res).toEqual({
             _id: "1",

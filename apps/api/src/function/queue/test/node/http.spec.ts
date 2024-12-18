@@ -62,22 +62,22 @@ describe("Http", () => {
   });
 
   describe("Response", () => {
-    let writeHeadSpy: jasmine.Spy;
-    let writeSpy: jasmine.Spy;
-    let endSpy: jasmine.Spy;
+    let writeHeadSpy: jest.Mock;
+    let writeSpy: jest.Mock;
+    let endSpy: jest.Mock;
     let response: Response;
 
     beforeEach(() => {
-      writeHeadSpy = jasmine.createSpy("writeHeadSpy");
-      writeSpy = jasmine.createSpy("writeHeadSpy");
-      endSpy = jasmine.createSpy("end");
+      writeHeadSpy = jest.fn();
+      writeSpy = jest.fn();
+      endSpy = jest.fn();
       response = new Response(writeHeadSpy, writeSpy, endSpy);
     });
 
     it("should write", async () => {
       await response.write("test");
       expect(writeSpy).toHaveBeenCalledTimes(1);
-      const [write] = writeSpy.calls.mostRecent().args as [Http.Write];
+      const [write] = writeSpy.mock.calls[writeSpy.mock.calls.length - 1].args as [Http.Write];
       expect(write.data instanceof Uint8Array).toBe(true);
       expect(write.encoding).toBe(undefined);
     });
@@ -86,7 +86,7 @@ describe("Http", () => {
       it("should assign to statusCode and statusMessage optionally", async () => {
         await response.status(201, "Created").send({});
         expect(writeHeadSpy).toHaveBeenCalledTimes(1);
-        const [write] = writeHeadSpy.calls.mostRecent().args as [Http.WriteHead];
+        const [write] = writeHeadSpy.mock.calls[writeHeadSpy.mock.calls.length - 1].args as [Http.WriteHead];
         expect(write.statusCode).toBe(201);
         expect(write.statusMessage).toBe("Created");
       });
@@ -96,7 +96,7 @@ describe("Http", () => {
       it("should call the callback", async () => {
         await response.writeHead(200, "OK");
         expect(writeHeadSpy).toHaveBeenCalledTimes(1);
-        const [writeHead] = writeHeadSpy.calls.mostRecent().args as [Http.WriteHead];
+        const [writeHead] = writeHeadSpy.mock.calls[writeHeadSpy.mock.calls.length - 1].args as [Http.WriteHead];
         expect(writeHead.statusCode).toBe(200);
         expect(writeHead.statusMessage).toBe("OK");
       });
@@ -112,8 +112,8 @@ describe("Http", () => {
 
     describe("send", () => {
       it("should send boolean as string", async () => {
-        const writeHeadSpy = spyOn(response, "writeHead").and.callThrough();
-        const endSpy = spyOn(response, "end").and.callThrough();
+        const writeHeadSpy = jest.spyOn(response, "writeHead");
+        const endSpy = jest.spyOn(response, "end");
         await response.send(true);
 
         expect(writeHeadSpy).toHaveBeenCalledTimes(1);
@@ -122,14 +122,14 @@ describe("Http", () => {
           "Content-length": "4"
         });
         expect(endSpy).toHaveBeenCalledTimes(1);
-        const [bodyBuffer, encoding] = endSpy.calls.argsFor(0);
+        const [bodyBuffer, encoding] = endSpy.mock.calls[0];
         expect(bodyBuffer.toString()).toBe("true");
         expect(encoding).toBe("utf-8");
       });
 
       it("should send number as string", async () => {
-        const writeHeadSpy = spyOn(response, "writeHead").and.callThrough();
-        const endSpy = spyOn(response, "end").and.callThrough();
+        const writeHeadSpy = jest.spyOn(response, "writeHead");
+        const endSpy = jest.spyOn(response, "end");
         await response.send(12345);
 
         expect(writeHeadSpy).toHaveBeenCalledTimes(1);
@@ -138,14 +138,14 @@ describe("Http", () => {
           "Content-length": "5"
         });
         expect(endSpy).toHaveBeenCalledTimes(1);
-        const [bodyBuffer, encoding] = endSpy.calls.argsFor(0);
+        const [bodyBuffer, encoding] = endSpy.mock.calls[0];
         expect(bodyBuffer.toString()).toBe("12345");
         expect(encoding).toBe("utf-8");
       });
 
       it("should send object as json", async () => {
-        const writeHeadSpy = spyOn(response, "writeHead").and.callThrough();
-        const endSpy = spyOn(response, "end").and.callThrough();
+        const writeHeadSpy = jest.spyOn(response, "writeHead");
+        const endSpy = jest.spyOn(response, "end");
         await response.send({
           "some.key": 1,
           subobject: {}
@@ -157,14 +157,14 @@ describe("Http", () => {
           "Content-length": "29"
         });
         expect(endSpy).toHaveBeenCalledTimes(1);
-        const [bodyBuffer, encoding] = endSpy.calls.argsFor(0);
+        const [bodyBuffer, encoding] = endSpy.mock.calls[0];
         expect(bodyBuffer.toString()).toBe(`{"some.key":1,"subobject":{}}`);
         expect(encoding).toBe("utf-8");
       });
 
       it("should send array as json", async () => {
-        const writeHeadSpy = spyOn(response, "writeHead").and.callThrough();
-        const endSpy = spyOn(response, "end").and.callThrough();
+        const writeHeadSpy = jest.spyOn(response, "writeHead");
+        const endSpy = jest.spyOn(response, "end");
         await response.send([
           {
             test: 1
@@ -179,14 +179,14 @@ describe("Http", () => {
           "Content-length": "24"
         });
         expect(endSpy).toHaveBeenCalledTimes(1);
-        const [bodyBuffer, encoding] = endSpy.calls.argsFor(0);
+        const [bodyBuffer, encoding] = endSpy.mock.calls[0];
         expect(bodyBuffer.toString()).toBe(`[{"test":1},true,"test"]`);
         expect(encoding).toBe("utf-8");
       });
 
       it("should send buffer as octet-stream", async () => {
-        const writeHeadSpy = spyOn(response, "writeHead").and.callThrough();
-        const endSpy = spyOn(response, "end").and.callThrough();
+        const writeHeadSpy = jest.spyOn(response, "writeHead");
+        const endSpy = jest.spyOn(response, "end");
         await response.send(Buffer.from("test"));
 
         expect(writeHeadSpy).toHaveBeenCalledTimes(1);
@@ -195,7 +195,7 @@ describe("Http", () => {
           "Content-length": "4"
         });
         expect(endSpy).toHaveBeenCalledTimes(1);
-        const [bodyBuffer, encoding] = endSpy.calls.argsFor(0);
+        const [bodyBuffer, encoding] = endSpy.mock.calls[0];
         expect(bodyBuffer.toString()).toBe(`test`);
         expect(encoding).toBe("utf-8");
       });

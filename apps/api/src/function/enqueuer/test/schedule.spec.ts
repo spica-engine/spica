@@ -11,17 +11,19 @@ function createTarget(cwd?: string, handler?: string) {
 }
 
 describe("ScheduleEnqueuer", () => {
-  let eventQueue: jasmine.SpyObj<EventQueue>;
+  let eventQueue: jest.Mocked<EventQueue>;
   let enqueuer: ScheduleEnqueuer;
   let noopTarget: event.Target;
   let clock: jasmine.Clock;
 
-  let schedulerUnsubscriptionSpy: jasmine.Spy;
+  let schedulerUnsubscriptionSpy: jest.Mock;
 
   beforeEach(async () => {
-    eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
+    eventQueue = {
+      'enqueue': jest.fn()
+    };
 
-    schedulerUnsubscriptionSpy = jasmine.createSpy("unsubscription", () => {});
+    schedulerUnsubscriptionSpy = jest.fn();
 
     enqueuer = new ScheduleEnqueuer(eventQueue, schedulerUnsubscriptionSpy);
 
@@ -67,7 +69,7 @@ describe("ScheduleEnqueuer", () => {
     });
 
     let jobs = Array.from(enqueuer["jobs"]) as {stop: Function; target: event.Target}[];
-    const stopSpies = jobs.map(j => spyOn(j, "stop"));
+    const stopSpies = jobs.map(j => jest.spyOn(j, "stop"));
 
     enqueuer.unsubscribe(target1);
 

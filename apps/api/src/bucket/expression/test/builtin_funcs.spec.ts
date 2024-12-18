@@ -232,7 +232,7 @@ Function 'macro' arg[2] must be property access chain.`
         const nowFn = now(context);
 
         it("should return unixtime stamp of now", () => {
-          jasmine.clock().mockDate(time);
+          jest.setSystemTime(time);
           const request = {};
 
           const result = nowFn(request);
@@ -250,7 +250,7 @@ Function 'macro' arg[2] must be property access chain.`
         const nowFn = now(context);
 
         it("should return aggregation", () => {
-          jasmine.clock().mockDate(time);
+          jest.setSystemTime(time);
           const request = {};
 
           const result = nowFn(request);
