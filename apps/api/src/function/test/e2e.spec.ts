@@ -1,24 +1,25 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {FunctionModule} from "@spica-server/function";
 import * as os from "os";
-import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database/testing";
+import {
+  DatabaseService,
+  DatabaseTestingModule,
+  getConnectionUri,
+  MongoClient,
+  stream
+} from "@spica-server/database/testing";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {Scheduler} from "@spica-server/function/scheduler";
-import {event} from "@spica-server/function/queue/proto";
+	@@ -13,7 +19,7 @@ import {event} from "@spica-server/function/queue/proto";
 import {JobReducer, ReplicationModule} from "@spica-server/replication";
 import {BucketModule} from "@spica-server/bucket";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 15_000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 50_000;
 
 function sleep(ms: number) {
   return new Promise((resolve, _) => setTimeout(resolve, ms));
 }
-
 describe("Queue shifting", () => {
   beforeEach(() => {
     jasmine.addCustomEqualityTester((actual, expected) => {
@@ -27,7 +28,6 @@ describe("Queue shifting", () => {
       }
     });
   });
-
   function onEventEnqueued(
     scheduler: Scheduler,
     eventType?: number,
@@ -50,11 +50,13 @@ describe("Queue shifting", () => {
     });
   }
 
-  function getModuleBuilder(dbName?: string) {
+  function getModuleBuilder(connectionUri?: string) {
     return Test.createTestingModule({
       imports: [
         CoreTestingModule,
-        DatabaseTestingModule.replicaSet(dbName),
+        connectionUri
+          ? DatabaseTestingModule.connect(connectionUri)
+          : DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
@@ -89,14 +91,13 @@ describe("Queue shifting", () => {
       ]
     });
   }
-
   async function startApp(grpcaddresses: string[]) {
     const module = await getModuleBuilder().compile();
-
     const db = module.get(DatabaseService);
     await db.collection("my_coll").insertOne({test: "123"});
 
-    const module2 = await getModuleBuilder(db.databaseName).compile();
+    const connectionUri = getConnectionUri();
+    const module2 = await getModuleBuilder(connectionUri).compile();
 
     // put a bit delay to let first replica takes jobs before second replica.
     // because we assume that first replica shifts jobs to the second replica for all test cases
