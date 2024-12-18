@@ -8,22 +8,14 @@ import {InputPlacerComponent} from "./input.placer";
 import {InputResolver} from "./input.resolver";
 
 abstract class TestPlacer implements ControlValueAccessor {
-  writeValue = jasmine.createSpy("writeValue");
-  setDisabledState = jasmine.createSpy("setDisabledState");
+  writeValue = jest.fn();
+  setDisabledState = jest.fn();
 
   _change: Function;
-  registerOnChange = jasmine
-    .createSpy("registerOnChange", fn => {
-      this._change = fn;
-    })
-    .and.callThrough();
+  registerOnChange = jest.fn();
 
   _touch: Function;
-  registerOnTouched = jasmine
-    .createSpy("registerOnChange", fn => {
-      this._touch = fn;
-    })
-    .and.callThrough();
+  registerOnTouched = jest.fn();
 }
 
 @Component({
@@ -74,7 +66,7 @@ class InputPlacerTestComponent {
   };
 
   model: string;
-  modelChange = jasmine.createSpy("modelChange");
+  modelChange = jest.fn();
 }
 
 @Component({
@@ -91,7 +83,7 @@ class InputPlacerTestComponent2 {
   };
 
   model: string;
-  modelChange = jasmine.createSpy("modelChange");
+  modelChange = jest.fn();
 }
 
 describe("InputPlacer", () => {
@@ -108,7 +100,7 @@ describe("InputPlacer", () => {
     }
   };
   let resolverSpy = {
-    resolve: jasmine.createSpy("resolve").and.callFake(t => types[t])
+    resolve: jest.fn(t => types[t])
   };
 
   let fixture: ComponentFixture<InputPlacerTestComponent>;

@@ -20,13 +20,13 @@ describe("IndexComponent", () => {
   let component: IndexComponent;
   let fixture: ComponentFixture<IndexComponent>;
 
-  let matDialog: jasmine.SpyObj<Pick<MatDialog, "open">>;
+  let matDialog: jest.Mocked<Pick<MatDialog, "open">>;
 
   let afterClosed: Subject<any>;
 
   let assets: Asset[] = [];
 
-  let assetService: jasmine.SpyObj<Pick<AssetService, "find" | "install" | "remove">>;
+  let assetService: jest.Mocked<Pick<AssetService, "find" | "install" | "remove">>;
 
   let onAssetsChange: BehaviorSubject<Asset[]>;
 
@@ -68,8 +68,8 @@ describe("IndexComponent", () => {
     afterClosed = new Subject();
 
     assetService = {
-      find: jasmine.createSpy("find").and.returnValue(onAssetsChange.asObservable()),
-      install: jasmine.createSpy("install").and.callFake((_id, configs, preview) => {
+      find: jest.fn(() => onAssetsChange.asObservable()),
+      install: jest.fn((_id, configs, preview) => {
         const index = assets.findIndex(a => a._id == _id);
         assets[index].status = "installed";
 
@@ -77,7 +77,7 @@ describe("IndexComponent", () => {
 
         return of(null);
       }),
-      remove: jasmine.createSpy("remove").and.callFake((_id, type: "soft" | "hard") => {
+      remove: jest.fn((_id, type: "soft" | "hard") => {
         const index = assets.findIndex(a => a._id == _id);
 
         if (type == "soft") {
@@ -94,9 +94,9 @@ describe("IndexComponent", () => {
     };
 
     matDialog = {
-      open: jasmine.createSpy("open").and.returnValue({
+      open: jest.fn(() => ({
         afterClosed: () => afterClosed.asObservable()
-      })
+      }))
     };
 
     await TestBed.configureTestingModule({
@@ -171,7 +171,7 @@ describe("IndexComponent", () => {
     installButton.click();
 
     expect(matDialog.open).toHaveBeenCalledTimes(1);
-    expect(matDialog.open.calls.first().args[1].data).toEqual({asset: assets[0]});
+    expect(matDialog.open.calls.first()[1].data).toEqual({asset: assets[0]});
 
     afterClosed.next(assets[0]);
     afterClosed.complete();
@@ -207,7 +207,7 @@ describe("IndexComponent", () => {
     stopButton.click();
 
     expect(matDialog.open).toHaveBeenCalledTimes(1);
-    expect((matDialog.open.calls.first().args[1].data as any).answer).toEqual("Asset 2");
+    expect((matDialog.open.calls.first()[1].data as any).answer).toEqual("Asset 2");
 
     afterClosed.next(true);
     afterClosed.complete();
@@ -239,7 +239,7 @@ describe("IndexComponent", () => {
     deleteButton.click();
 
     expect(matDialog.open).toHaveBeenCalledTimes(1);
-    expect((matDialog.open.calls.first().args[1].data as any).answer).toEqual("Asset 3");
+    expect((matDialog.open.calls.first()[1].data as any).answer).toEqual("Asset 3");
 
     afterClosed.next(true);
     afterClosed.complete();

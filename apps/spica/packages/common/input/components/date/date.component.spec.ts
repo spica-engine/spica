@@ -94,7 +94,7 @@ describe("Common#date", () => {
 
     it("should progpagate undefined when the date is not valid", () => {
       const input = fixture.debugElement.query(By.css("input"));
-      const changeSpy = spyOn(fixture.componentInstance, "_onChangeFn");
+      const changeSpy = jest.spyOn(fixture.componentInstance, "_onChangeFn");
       expect(changeSpy).not.toHaveBeenCalled();
       input.triggerEventHandler("keyup", {
         keyCode: 8

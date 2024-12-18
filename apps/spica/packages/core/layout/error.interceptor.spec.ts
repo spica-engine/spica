@@ -11,8 +11,12 @@ describe("Error Interceptor", () => {
   let service: HttpClient;
   let httpTesting: HttpTestingController;
 
-  let mockRouter = jasmine.createSpyObj("Router", ["navigate"]);
-  let mockSnackbar = jasmine.createSpyObj("MatSnackBar", ["openFromComponent"]);
+  let mockRouter = {
+    'navigate': jest.fn()
+  };
+  let mockSnackbar = {
+    'openFromComponent': jest.fn()
+  };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -58,7 +62,7 @@ describe("Error Interceptor", () => {
       .catch(() => {
         expect(mockRouter.navigate).toHaveBeenCalledWith(["/error"], routerData);
         expect(mockRouter.navigate).toHaveBeenCalledTimes(1);
-        mockRouter.navigate.calls.reset();
+        mockRouter.navigate.mockReset();
       });
     httpTesting
       .expectOne("testurl")
@@ -82,6 +86,6 @@ describe("Error Interceptor", () => {
       },
       duration: 3000
     });
-    mockRouter.navigate.calls.reset();
+    mockRouter.navigate.mockReset();
   }));
 });

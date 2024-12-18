@@ -31,7 +31,7 @@ class ToolbarCmp {
 describe("PolicyIndexComponent", () => {
   let fixture: ComponentFixture<PolicyIndexComponent>;
   const rows = new Subject<Partial<Policy>[]>();
-  let policyService: jasmine.SpyObj<Pick<IdentityService, "find">>;
+  let policyService: jest.Mocked<Pick<IdentityService, "find">>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -50,9 +50,7 @@ describe("PolicyIndexComponent", () => {
       declarations: [PolicyIndexComponent, ToolbarCmp, CanInteractDirectiveTest]
     });
     policyService = {
-      find: jasmine
-        .createSpy("find")
-        .and.returnValue(rows.pipe(map(r => ({meta: {total: r.length}, data: r}))))
+      find: jest.fn(() => rows.pipe(map(r => ({meta: {total: r.length}, data: r}))))
     };
     TestBed.overrideProvider(PolicyService, {useValue: policyService});
     fixture = TestBed.createComponent(PolicyIndexComponent);
@@ -117,19 +115,19 @@ describe("PolicyIndexComponent", () => {
     });
 
     it("should change page", () => {
-      policyService.find.calls.reset();
+      policyService.find.mockReset();
       paginator.nextPage();
       expect(policyService.find).toHaveBeenCalledTimes(1);
-      expect(policyService.find.calls.mostRecent().args[0]).toBe(100);
-      expect(policyService.find.calls.mostRecent().args[1]).toBe(100);
+      expect(policyService.find.mock.calls[policyService.find.mock.calls.length - 1][0]).toBe(100);
+      expect(policyService.find.mock.calls[policyService.find.mock.calls.length - 1][1]).toBe(100);
     });
 
     it("should handle pageSize changes", () => {
-      policyService.find.calls.reset();
+      policyService.find.mockReset();
       paginator._changePageSize(5);
       expect(policyService.find).toHaveBeenCalledTimes(1);
-      expect(policyService.find.calls.mostRecent().args[0]).toBe(5);
-      expect(policyService.find.calls.mostRecent().args[1]).toBe(0);
+      expect(policyService.find.mock.calls[policyService.find.mock.calls.length - 1][0]).toBe(5);
+      expect(policyService.find.mock.calls[policyService.find.mock.calls.length - 1][1]).toBe(0);
     });
   });
 });

@@ -211,7 +211,7 @@ describe("Home Layout", () => {
           {
             provide: BreakpointObserver,
             useValue: {
-              observe: jasmine.createSpy("observe").and.returnValue(of({matches: true}))
+              observe: jest.fn(() => of({matches: true}))
             }
           }
         ]
@@ -271,7 +271,7 @@ describe("Home Layout", () => {
           {
             provide: BreakpointObserver,
             useValue: {
-              observe: jasmine.createSpy("observe").and.returnValue(of({matches: false}))
+              observe: jest.fn(() => of({matches: false}))
             }
           }
         ]
@@ -348,7 +348,7 @@ describe("Home Layout", () => {
     let component: HomeLayoutComponent;
     let fixture: ComponentFixture<HomeLayoutComponent>;
 
-    let spy = jasmine.createSpy("test");
+    let spy = jest.fn();
 
     beforeEach(() => {
       TestBed.configureTestingModule({

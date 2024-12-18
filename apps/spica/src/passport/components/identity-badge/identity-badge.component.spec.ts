@@ -13,10 +13,9 @@ import {IdentityBadgeComponent} from "./identity-badge.component";
 
 describe("IdentityBadgeComponent", () => {
   let fixture: ComponentFixture<IdentityBadgeComponent>;
-  let passportService: jasmine.SpyObj<Partial<PassportService>> = jasmine.createSpyObj(
-    "passportService",
-    ["logout"]
-  );
+  let passportService: jest.Mocked<Partial<PassportService>> = {
+    'logout': jest.fn()
+  };
   let router: Router;
 
   beforeEach(() => {
@@ -47,7 +46,7 @@ describe("IdentityBadgeComponent", () => {
 
     router = TestBed.get(Router);
 
-    router.navigate = jasmine.createSpy("navigate", router.navigate);
+    router.navigate = jest.fn();
 
     fixture = TestBed.createComponent(IdentityBadgeComponent);
     fixture.detectChanges();

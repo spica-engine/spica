@@ -70,7 +70,7 @@ describe("Common#color", () => {
     }));
 
     it("should emit input events", fakeAsync(() => {
-      const ngModelChange = jasmine.createSpy("ngModelChange");
+      const ngModelChange = jest.fn();
       fixture.componentInstance.registerOnChange(ngModelChange);
       fixture.detectChanges();
 

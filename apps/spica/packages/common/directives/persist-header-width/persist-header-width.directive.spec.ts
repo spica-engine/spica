@@ -54,7 +54,7 @@ describe("PersistHeaderWidth", () => {
   });
 
   it("should change the columns width to persisted value", () => {
-    let resizeSpy = spyOn(fixture.componentInstance.directive._resize, "emit");
+    let resizeSpy = jest.spyOn(fixture.componentInstance.directive._resize, "emit");
     fixture.componentInstance.bucketId = undefined;
     fixture.detectChanges();
     setPersistedWidth(100);

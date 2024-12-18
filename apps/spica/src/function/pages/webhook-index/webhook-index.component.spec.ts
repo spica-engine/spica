@@ -22,11 +22,14 @@ import {FormsModule} from "@angular/forms";
 
 describe("Webhook Index", () => {
   let fixture: ComponentFixture<WebhookIndexComponent>;
-  let webhookService: jasmine.SpyObj<WebhookService>;
+  let webhookService: jest.Mocked<WebhookService>;
 
   beforeEach(async () => {
-    webhookService = jasmine.createSpyObj("WebhookService", ["getAll", "delete"]);
-    webhookService.getAll.and.callFake((limit, skip) => {
+    webhookService = {
+      'getAll': jest.fn(),
+      'delete': jest.fn()
+    };
+    webhookService.getAll.mockImplementation((limit, skip) => {
       let data = new Array(20).fill(null).map(
         (_, i) =>
           ({
@@ -101,7 +104,7 @@ describe("Webhook Index", () => {
     fixture.detectChanges();
 
     expect(webhookService.getAll).toHaveBeenCalledTimes(2);
-    expect(webhookService.getAll.calls.argsFor(1)).toEqual([10, 10, {_id: -1}]);
+    expect(webhookService.getAll.mock.calls[1]).toEqual([10, 10, {_id: -1}]);
 
     const id = fixture.debugElement.query(By.css("table td:nth-of-type(1)"));
     const title = fixture.debugElement.query(By.css("table td:nth-of-type(2)"));
@@ -113,7 +116,7 @@ describe("Webhook Index", () => {
   });
 
   it("should delete webhook", fakeAsync(() => {
-    webhookService.delete.and.returnValue(of(null));
+    webhookService.delete.mockReturnValue(of(null));
     fixture.componentInstance.delete("0");
     tick();
     expect(webhookService.getAll).toHaveBeenCalledTimes(2);

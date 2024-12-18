@@ -16,7 +16,7 @@ class TestComponent {
   action = "passport:identity:create";
   id = undefined;
 
-  onclick = jasmine.createSpy();
+  onclick = jest.fn();
 }
 
 class TestPassportService {
@@ -47,7 +47,7 @@ describe("CanInteract", () => {
   });
 
   afterEach(() => {
-    component.onclick.calls.reset();
+    component.onclick.mockReset();
   });
 
   it("should set button disable and show tooltip when hovered", () => {

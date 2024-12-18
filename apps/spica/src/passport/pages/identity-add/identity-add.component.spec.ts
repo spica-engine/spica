@@ -42,19 +42,19 @@ describe("Identity Add Component", () => {
     }
   };
 
-  let identityService: jasmine.SpyObj<Partial<IdentityService>>,
-    policyService: jasmine.SpyObj<Partial<PolicyService>>,
-    passportService: jasmine.SpyObj<Partial<PassportService>>,
-    router: jasmine.SpyObj<Partial<Router>>;
+  let identityService: jest.Mocked<Partial<IdentityService>>,
+    policyService: jest.Mocked<Partial<PolicyService>>,
+    passportService: jest.Mocked<Partial<PassportService>>,
+    router: jest.Mocked<Partial<Router>>;
 
   beforeEach(async () => {
     router = {
-      navigate: jasmine.createSpy("navigate")
+      navigate: jest.fn()
     };
 
     identityService = {
-      findOne: jasmine.createSpy("findOne").and.returnValue(
-        of({
+      findOne: jest.fn(
+        () => of({
           _id: "1",
           identifier: "identifier",
           password: "password",
@@ -67,16 +67,16 @@ describe("Identity Add Component", () => {
       ),
       updateOne: null,
       insertOne: null,
-      getAuthFactorSchemas: jasmine.createSpy("getAuthFactorSchemas").and.returnValue(of([]))
+      getAuthFactorSchemas: jest.fn(() => of([]))
     };
 
     passportService = {
-      checkAllowed: jasmine.createSpy("checkAllowed").and.returnValue(of(true))
+      checkAllowed: jest.fn(() => of(true))
     };
 
     policyService = {
-      find: jasmine.createSpy("find").and.returnValue(
-        of({
+      find: jest.fn(
+        () => of({
           meta: {total: 2},
           data: [
             {
@@ -136,7 +136,7 @@ describe("Identity Add Component", () => {
         {
           provide: PreferencesService,
           useValue: {
-            get: jasmine.createSpy("get").and.returnValue(of(preferencesMeta))
+            get: jest.fn(() => of(preferencesMeta))
           }
         },
         {
@@ -205,7 +205,7 @@ describe("Identity Add Component", () => {
 
   describe("actions", () => {
     it("should attach policy", fakeAsync(() => {
-      const attachSpy = spyOn(policyService, "attachPolicy").and.returnValue(
+      const attachSpy = jest.spyOn(policyService, "attachPolicy").mockReturnValue(
         of({
           ...fixture.componentInstance.identity,
           policies: ["bucket", "function"]
@@ -239,7 +239,7 @@ describe("Identity Add Component", () => {
     }));
 
     it("should detach policy", fakeAsync(() => {
-      const detachSpy = spyOn(policyService, "detachPolicy").and.returnValue(
+      const detachSpy = jest.spyOn(policyService, "detachPolicy").mockReturnValue(
         of({...fixture.componentInstance.identity, policies: []})
       );
 
@@ -286,7 +286,7 @@ describe("Identity Add Component", () => {
       tick();
       fixture.detectChanges();
 
-      const insertSpy = spyOn(identityService, "insertOne").and.returnValue(
+      const insertSpy = jest.spyOn(identityService, "insertOne").mockReturnValue(
         of({...identity, _id: "1"})
       );
 
@@ -350,7 +350,7 @@ describe("Identity Add Component", () => {
 
     it("should show error about inserting new credential", fakeAsync(() => {
       fixture.componentInstance.identity._id = undefined;
-      const insertOneSpy = spyOn(identityService, "insertOne").and.returnValue(
+      const insertOneSpy = jest.spyOn(identityService, "insertOne").mockReturnValue(
         throwError({error: {message: "Error from service."}})
       );
 

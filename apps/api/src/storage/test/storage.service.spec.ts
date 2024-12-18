@@ -102,7 +102,7 @@ describe("Storage Service", () => {
         }
       }
     ];
-    spyOn(strategyInstance, "write").and.callFake((id: string, data: Buffer) => {
+    jest.spyOn(strategyInstance, "write").mockImplementation((id: string, data: Buffer) => {
       if (id == "failId") {
         return Promise.reject("Upload failed for Item");
       }

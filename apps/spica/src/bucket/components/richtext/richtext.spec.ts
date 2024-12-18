@@ -14,7 +14,7 @@ import {MatDividerModule} from "@angular/material/divider";
 
 describe("RichTextEditorComponent", () => {
   let fixture: ComponentFixture<RichTextEditorComponent>;
-  let executeSpy: jasmine.Spy<any>;
+  let executeSpy: jest.Mock<any>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -38,7 +38,7 @@ describe("RichTextEditorComponent", () => {
         {
           provide: MatDialog,
           useValue: {
-            open: jasmine.createSpy("open")
+            open: jest.fn()
           }
         }
       ],
@@ -48,7 +48,7 @@ describe("RichTextEditorComponent", () => {
 
     fixture.detectChanges();
 
-    executeSpy = spyOn(fixture.componentInstance, "execute");
+    executeSpy = jest.spyOn(fixture.componentInstance, "execute");
   });
 
   it("should select text color ", () => {

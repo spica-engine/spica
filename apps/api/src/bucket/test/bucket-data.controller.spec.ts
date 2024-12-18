@@ -1863,8 +1863,8 @@ describe("BucketDataController", () => {
     it("should put default values if field does not exist on document", async () => {
       const insertedDocument = (await req.post(`/bucket/${bucketId}/data`)).body;
 
-      expect(new Date(insertedDocument.created_at)).toEqual(jasmine.any(Date));
-      expect(new Date(insertedDocument.created_at_readonly)).toEqual(jasmine.any(Date));
+      expect(new Date(insertedDocument.created_at)).toEqual(expect.any(Date));
+      expect(new Date(insertedDocument.created_at_readonly)).toEqual(expect.any(Date));
     });
   });
 

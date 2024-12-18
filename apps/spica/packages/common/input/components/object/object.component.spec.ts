@@ -21,33 +21,25 @@ import {ObjectComponent} from "./object.component";
   ]
 })
 class StringPlacer implements ControlValueAccessor {
-  writeValue = jasmine.createSpy("writeValue");
-  setDisabledState = jasmine.createSpy("setDisabledState");
+  writeValue = jest.fn();
+  setDisabledState = jest.fn();
 
   _change: Function;
-  registerOnChange = jasmine
-    .createSpy("registerOnChange", fn => {
-      this._change = fn;
-    })
-    .and.callThrough();
+  registerOnChange = jest.fn();
 
   _touch: Function;
-  registerOnTouched = jasmine
-    .createSpy("registerOnChange", fn => {
-      this._touch = fn;
-    })
-    .and.callThrough();
+  registerOnTouched = jest.fn();
 }
 
 describe("Common#object", () => {
   let fixture: ComponentFixture<ObjectComponent>;
-  let changeSpy: jasmine.Spy;
+  let changeSpy: jest.Mock;
   const inputResolver = {
-    resolve: jasmine.createSpy("resolve").and.returnValue({
+    resolve: jest.fn(() => ({
       origin: "string",
       type: "string",
       placer: StringPlacer
-    })
+    }))
   };
 
   beforeEach(() => {
@@ -86,7 +78,7 @@ describe("Common#object", () => {
       .compileComponents();
     fixture = TestBed.createComponent(ObjectComponent);
     fixture.detectChanges(false);
-    changeSpy = jasmine.createSpy("ngModelChange");
+    changeSpy = jest.fn();
     fixture.componentInstance.registerOnChange(changeSpy);
   });
 

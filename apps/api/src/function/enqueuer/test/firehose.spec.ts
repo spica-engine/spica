@@ -6,18 +6,22 @@ import {EventQueue, FirehoseQueue} from "@spica-server/function/queue";
 import {event, Firehose} from "@spica-server/function/queue/proto";
 
 describe("FirehoseEnqueuer", () => {
-  let eventQueue: jasmine.SpyObj<EventQueue>;
-  let firehoseQueue: jasmine.SpyObj<FirehoseQueue>;
+  let eventQueue: jest.Mocked<EventQueue>;
+  let firehoseQueue: jest.Mocked<FirehoseQueue>;
   let noopTarget: event.Target;
   let firehoseEnqueuer: FirehoseEnqueuer;
   let app: INestApplication;
   let wsc: Websocket;
 
-  let schedulerUnsubscriptionSpy: jasmine.Spy;
+  let schedulerUnsubscriptionSpy: jest.Mock;
 
   beforeEach(async () => {
-    eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
-    firehoseQueue = jasmine.createSpyObj("firehoseQueue", ["enqueue"]);
+    eventQueue = {
+      'enqueue': jest.fn()
+    };
+    firehoseQueue = {
+      'enqueue': jest.fn()
+    };
 
     noopTarget = new event.Target();
     noopTarget.cwd = "/tmp/fn1";
@@ -30,7 +34,7 @@ describe("FirehoseEnqueuer", () => {
     wsc = module.get(Websocket);
     await app.listen(wsc.socket);
 
-    schedulerUnsubscriptionSpy = jasmine.createSpy("unsubscription", () => {});
+    schedulerUnsubscriptionSpy = jest.fn();
     firehoseEnqueuer = new FirehoseEnqueuer(
       eventQueue,
       firehoseQueue,
@@ -83,7 +87,7 @@ describe("FirehoseEnqueuer", () => {
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
     expect(firehoseQueue.enqueue).toHaveBeenCalledTimes(1);
 
-    const connection = firehoseQueue.enqueue.calls.mostRecent().args[1];
+    const connection = firehoseQueue.enqueue.mock.calls[firehoseQueue.enqueue.mock.calls.length - 1][1];
 
     expect(connection instanceof Firehose.Message.Incoming).toBe(true);
     expect(connection.client.id).toBeTruthy();
@@ -99,7 +103,7 @@ describe("FirehoseEnqueuer", () => {
 
     await ws.connect;
 
-    const connection = firehoseQueue.enqueue.calls.mostRecent().args[1];
+    const connection = firehoseQueue.enqueue.mock.calls[firehoseQueue.enqueue.mock.calls.length - 1][1];
 
     expect(connection instanceof Firehose.Message.Incoming).toBe(true);
     expect(connection.pool instanceof Firehose.PoolDescription).toBe(true);
@@ -113,7 +117,7 @@ describe("FirehoseEnqueuer", () => {
 
     await ws.connect;
 
-    const connection = firehoseQueue.enqueue.calls.mostRecent().args[1];
+    const connection = firehoseQueue.enqueue.mock.calls[firehoseQueue.enqueue.mock.calls.length - 1][1];
 
     expect(connection instanceof Firehose.Message.Incoming).toBe(true);
     expect(connection.message instanceof Firehose.Message).toBe(true);
@@ -130,7 +134,7 @@ describe("FirehoseEnqueuer", () => {
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
     expect(firehoseQueue.enqueue).toHaveBeenCalledTimes(1);
 
-    const connection = firehoseQueue.enqueue.calls.mostRecent().args[1];
+    const connection = firehoseQueue.enqueue.mock.calls[firehoseQueue.enqueue.mock.calls.length - 1][1];
 
     expect(connection instanceof Firehose.Message.Incoming).toBe(true);
     expect(connection.message.name).toBe("connection");
@@ -139,7 +143,7 @@ describe("FirehoseEnqueuer", () => {
 
     await ws.close();
 
-    const close = firehoseQueue.enqueue.calls.mostRecent().args[1];
+    const close = firehoseQueue.enqueue.mock.calls[firehoseQueue.enqueue.mock.calls.length - 1][1];
 
     expect(close instanceof Firehose.Message.Incoming).toBe(true);
     expect(close.client.id).toBe(connection.client.id);
@@ -157,7 +161,7 @@ describe("FirehoseEnqueuer", () => {
 
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(3);
     expect(firehoseQueue.enqueue).toHaveBeenCalledTimes(3);
-    expect(firehoseQueue.enqueue.calls.argsFor(1)[1].message.toObject()).toEqual({
+    expect(firehoseQueue.enqueue.mock.calls[1][1].message.toObject()).toEqual({
       name: "customevent",
       data: '"mydata"'
     });
@@ -174,7 +178,7 @@ describe("FirehoseEnqueuer", () => {
 
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
     expect(firehoseQueue.enqueue).toHaveBeenCalledTimes(1);
-    expect(firehoseQueue.enqueue.calls.argsFor(0)[1].message.toObject()).toEqual({
+    expect(firehoseQueue.enqueue.mock.calls[0][1].message.toObject()).toEqual({
       name: "customevent",
       data: '"mydata"'
     });

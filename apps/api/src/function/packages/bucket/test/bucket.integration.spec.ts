@@ -300,7 +300,7 @@ describe("Bucket", () => {
       });
 
       it("should insert document via realtime connection", done => {
-        const callbackSpy = jasmine.createSpy();
+        const callbackSpy = jest.fn();
 
         const subject = Bucket.data.realtime.getAll(bucketid, {}, callbackSpy);
 
@@ -319,7 +319,7 @@ describe("Bucket", () => {
       });
 
       it("should patch document via realtime connection", async done => {
-        const callbackSpy = jasmine.createSpy();
+        const callbackSpy = jest.fn();
 
         const bucketData = {
           title: "title1",
@@ -356,7 +356,7 @@ describe("Bucket", () => {
       });
 
       it("should replace document via realtime connection", async done => {
-        const callbackSpy = jasmine.createSpy();
+        const callbackSpy = jest.fn();
 
         const bucketData = {
           title: "title1",
@@ -394,7 +394,7 @@ describe("Bucket", () => {
       });
 
       it("should delete document via realtime connection", async done => {
-        const callbackSpy = jasmine.createSpy();
+        const callbackSpy = jest.fn();
 
         const bucketData = {
           title: "title1",

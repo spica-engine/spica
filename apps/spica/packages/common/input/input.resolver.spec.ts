@@ -54,7 +54,9 @@ describe("InputResolver", () => {
   });
 
   it("should call coerce function", () => {
-    const coerceSpy = jasmine.createSpy().and.returnValue({test: 123});
+    const coerceSpy = jest.fn(() => ({
+      test: 123
+    }));
     const resolver = new InputResolver([
       {
         color: "#fff",

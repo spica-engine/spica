@@ -19,8 +19,8 @@ import {MatMenuModule} from "@angular/material/menu";
 
 describe("StorageComponent", () => {
   let fixture: ComponentFixture<PickerComponent>;
-  let diaglogRef: jasmine.SpyObj<Partial<MatDialogRef<PickerComponent>>>;
-  let storageService: jasmine.SpyObj<Partial<StorageService>>;
+  let diaglogRef: jest.Mocked<Partial<MatDialogRef<PickerComponent>>>;
+  let storageService: jest.Mocked<Partial<StorageService>>;
   let objects = new Subject<Storage[]>();
 
   beforeEach(() => {
@@ -40,16 +40,14 @@ describe("StorageComponent", () => {
       providers: [
         {
           provide: MatDialogRef,
-          useFactory: () => (diaglogRef = {close: jasmine.createSpy("close")})
+          useFactory: () => (diaglogRef = {close: jest.fn()})
         }
       ]
     });
     TestBed.overrideProvider(StorageService, {
       useFactory: () =>
         (storageService = {
-          getAll: jasmine
-            .createSpy("getAll")
-            .and.returnValue(objects.pipe(map(r => ({data: r, meta: {total: r.length}}))))
+          getAll: jest.fn(() => objects.pipe(map(r => ({data: r, meta: {total: r.length}}))))
         })
     });
     fixture = TestBed.createComponent(PickerComponent);
@@ -100,7 +98,7 @@ describe("StorageComponent", () => {
     let paginator: MatPaginator;
 
     beforeEach(() => {
-      storageService.getAll.calls.reset();
+      storageService.getAll.mockReset();
       objects.next(
         new Array(20).fill({
           name: "test",

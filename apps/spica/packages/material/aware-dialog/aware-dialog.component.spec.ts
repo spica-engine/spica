@@ -10,7 +10,9 @@ import {MatAwareDialogComponent} from "./aware-dialog.component";
 
 describe("Aware Dialog Component", () => {
   describe("should work with basic matdialogdata", () => {
-    let dialogRef = jasmine.createSpyObj<MatDialogRef<any, any>>("DialogRef", ["close"]);
+    let dialogRef: jest.Mocked<MatDialogRef<any, any>> = {
+      'close': jest.fn()
+    };
     let fixture: ComponentFixture<MatAwareDialogComponent>;
     beforeEach(async () => {
       TestBed.configureTestingModule({

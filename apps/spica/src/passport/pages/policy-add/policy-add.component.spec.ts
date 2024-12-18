@@ -70,7 +70,7 @@ describe("Policy Add Component", () => {
                   }
                 };
               },
-              createPolicy: jasmine.createSpy("createPolicy").and.returnValue(of())
+              createPolicy: jest.fn(() => of())
             }
           }
         ],
@@ -205,7 +205,7 @@ describe("Policy Add Component", () => {
     });
 
     it("should open dialog", () => {
-      const openSpy = spyOn(fixture.componentInstance["dialog"], "open").and.returnValue(undefined);
+      const openSpy = jest.spyOn(fixture.componentInstance["dialog"], "open").mockReturnValue(undefined);
 
       const statement = {
         module: "bucket",
@@ -223,7 +223,7 @@ describe("Policy Add Component", () => {
       fixture.componentInstance.editResources(statement, "bucket:delete");
 
       expect(openSpy).toHaveBeenCalledTimes(1);
-      expect(openSpy.calls.first().args[1].data).toEqual(
+      expect(openSpy.calls.first()[1].data).toEqual(
         {
           services: fixture.componentInstance.services,
           statement: statement,
@@ -240,8 +240,8 @@ describe("Policy Add Component", () => {
     });
 
     it("should not open dialog, but toggle action on", () => {
-      const openSpy = spyOn(fixture.componentInstance["dialog"], "open").and.returnValue(undefined);
-      const toggleSpy = spyOn(fixture.componentInstance, "toggleAction").and.returnValue(undefined);
+      const openSpy = jest.spyOn(fixture.componentInstance["dialog"], "open").mockReturnValue(undefined);
+      const toggleSpy = jest.spyOn(fixture.componentInstance, "toggleAction").mockReturnValue(undefined);
 
       const statement = {
         module: "bucket",
@@ -391,10 +391,10 @@ describe("Policy Add Component", () => {
 
       fixture.componentInstance.savePolicy();
 
-      const createSpy = fixture.componentInstance["policyService"].createPolicy as jasmine.Spy;
+      const createSpy = fixture.componentInstance["policyService"].createPolicy as jest.Mock;
 
       expect(createSpy).toHaveBeenCalledTimes(1);
-      expect(createSpy.calls.first().args[0]).toEqual({
+      expect(createSpy.calls.first()[0]).toEqual({
         name: "test",
         description: "test",
         statement: [

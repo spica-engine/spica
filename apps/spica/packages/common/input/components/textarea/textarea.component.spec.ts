@@ -67,7 +67,7 @@ describe("Common#textarea", () => {
     }));
 
     it("should emit input events", fakeAsync(() => {
-      const ngModelChange = jasmine.createSpy("ngModelChange");
+      const ngModelChange = jest.fn();
       fixture.componentInstance.registerOnChange(ngModelChange);
       fixture.detectChanges();
       const inputElem = fixture.debugElement.query(By.css("textarea")).nativeElement;
@@ -81,7 +81,7 @@ describe("Common#textarea", () => {
     describe("default", () => {
       it("should default to default value if undefined", fakeAsync(() => {
         const inputElem = fixture.debugElement.query(By.css("textarea")).nativeElement;
-        const ngModelChange = jasmine.createSpy("ngModelChange");
+        const ngModelChange = jest.fn();
         fixture.componentInstance.registerOnChange(ngModelChange);
 
         fixture.componentInstance.schema.default = "123";

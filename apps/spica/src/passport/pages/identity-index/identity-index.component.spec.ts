@@ -34,9 +34,9 @@ class ToolbarCmp {
 describe("IdentityIndexComponent", () => {
   let fixture: ComponentFixture<IdentityIndexComponent>;
   const rows = new Subject<Partial<Identity>[]>();
-  let identityService: jasmine.SpyObj<Pick<IdentityService, "find">>;
-  let preferenceService: jasmine.SpyObj<Pick<PreferencesService, "get">>;
-  let policyService: jasmine.SpyObj<Pick<PolicyService, "find">>;
+  let identityService: jest.Mocked<Pick<IdentityService, "find">>;
+  let preferenceService: jest.Mocked<Pick<PreferencesService, "get">>;
+  let policyService: jest.Mocked<Pick<PolicyService, "find">>;
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
@@ -58,20 +58,16 @@ describe("IdentityIndexComponent", () => {
     });
 
     identityService = {
-      find: jasmine
-        .createSpy("find")
-        .and.returnValue(rows.pipe(map(r => ({meta: {total: r.length}, data: r}))))
+      find: jest.fn(() => rows.pipe(map(r => ({meta: {total: r.length}, data: r}))))
     };
     preferenceService = {
-      get: jasmine
-        .createSpy("get")
-        .and.returnValue(
-          of({identity: {attributes: {properties: {age: {type: "number", title: "Age"}}}}})
+      get: jest.fn(
+          () => of({identity: {attributes: {properties: {age: {type: "number", title: "Age"}}}}})
         )
     };
     policyService = {
-      find: jasmine.createSpy("find").and.returnValue(
-        of({
+      find: jest.fn(
+        () => of({
           meta: {total: 2},
           data: [
             {_id: "PassportFullAccess", name: "Passport Full Access"},
@@ -155,19 +151,19 @@ describe("IdentityIndexComponent", () => {
     });
 
     it("should change page", () => {
-      identityService.find.calls.reset();
+      identityService.find.mockReset();
       paginator.nextPage();
       expect(identityService.find).toHaveBeenCalledTimes(1);
-      expect(identityService.find.calls.mostRecent().args[0]).toBe(10);
-      expect(identityService.find.calls.mostRecent().args[1]).toBe(10);
+      expect(identityService.find.mock.calls[identityService.find.mock.calls.length - 1][0]).toBe(10);
+      expect(identityService.find.mock.calls[identityService.find.mock.calls.length - 1][1]).toBe(10);
     });
 
     it("should handle pageSize changes", () => {
-      identityService.find.calls.reset();
+      identityService.find.mockReset();
       paginator._changePageSize(5);
       expect(identityService.find).toHaveBeenCalledTimes(1);
-      expect(identityService.find.calls.mostRecent().args[0]).toBe(5);
-      expect(identityService.find.calls.mostRecent().args[1]).toBe(0);
+      expect(identityService.find.mock.calls[identityService.find.mock.calls.length - 1][0]).toBe(5);
+      expect(identityService.find.mock.calls[identityService.find.mock.calls.length - 1][1]).toBe(0);
     });
   });
 });

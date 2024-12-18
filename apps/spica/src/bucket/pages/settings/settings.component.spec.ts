@@ -22,8 +22,8 @@ describe("SettingsComponent", () => {
 
   beforeEach(() => {
     preferenceService = {
-      get: jasmine.createSpy("get").and.returnValue(
-        of({
+      get: jest.fn(
+        () => of({
           language: {
             available: {
               tr_TR: "Turkish",
@@ -33,7 +33,7 @@ describe("SettingsComponent", () => {
           }
         })
       ),
-      replaceOne: jasmine.createSpy("replaceOne").and.returnValue(of(null))
+      replaceOne: jest.fn(() => of(null))
     };
     TestBed.configureTestingModule({
       imports: [

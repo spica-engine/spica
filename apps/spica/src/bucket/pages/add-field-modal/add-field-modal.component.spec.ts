@@ -97,11 +97,9 @@ describe("Add Field Component", () => {
         {
           provide: BucketService,
           useValue: {
-            getPredefinedDefaults: jasmine
-              .createSpy("getPredefinedDefaults")
-              .and.returnValues(
-                of([{keyword: "keyword", type: "type"}, {keyword: "keyword2", type: "date"}])
-              )
+            getPredefinedDefaults: jest.spyOn().mockReturnValue(
+              of([{keyword: "keyword", type: "type"}, {keyword: "keyword2", type: "date"}])
+            )
           }
         },
         {

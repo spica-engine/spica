@@ -42,8 +42,8 @@ import {MatResizeHeader} from "./resize.directive";
   `
 })
 class TestComponent {
-  positionColumnResize = jasmine.createSpy("positionColumnResize");
-  positionColumnResizeEnd = jasmine.createSpy("positionColumnResizeEnd");
+  positionColumnResize = jest.fn();
+  positionColumnResizeEnd = jest.fn();
 }
 
 function getElementScreenXForSize(elem: DebugElement, size: number) {

@@ -44,34 +44,26 @@ function createEvent<T>(previousIndex: number, currentIndex: number): CdkDragDro
   ]
 })
 class StringPlacer implements ControlValueAccessor {
-  writeValue = jasmine.createSpy("writeValue");
-  setDisabledState = jasmine.createSpy("setDisabledState");
+  writeValue = jest.fn();
+  setDisabledState = jest.fn();
 
   _change: Function;
-  registerOnChange = jasmine
-    .createSpy("registerOnChange", fn => {
-      this._change = fn;
-    })
-    .and.callThrough();
+  registerOnChange = jest.fn();
 
   _touch: Function;
-  registerOnTouched = jasmine
-    .createSpy("registerOnChange", fn => {
-      this._touch = fn;
-    })
-    .and.callThrough();
+  registerOnTouched = jest.fn();
 }
 
 describe("Common#array", () => {
   let fixture: ComponentFixture<ArrayComponent>;
-  let changeSpy: jasmine.Spy;
+  let changeSpy: jest.Mock;
   const inputResolver = {
-    coerce: jasmine.createSpy("coerce").and.returnValue(undefined),
-    resolve: jasmine.createSpy("resolve").and.returnValue({
+    coerce: jest.fn(() => undefined),
+    resolve: jest.fn(() => ({
       origin: "string",
       type: "string",
       placer: StringPlacer
-    })
+    }))
   };
 
   let loader: HarnessLoader;
@@ -122,7 +114,7 @@ describe("Common#array", () => {
     fixture = TestBed.createComponent(ArrayComponent);
     fixture.detectChanges();
     loader = TestbedHarnessEnvironment.loader(fixture);
-    changeSpy = jasmine.createSpy("ngModelChange");
+    changeSpy = jest.fn();
     fixture.componentInstance.registerOnChange(changeSpy);
   });
 
@@ -215,7 +207,7 @@ describe("Common#array", () => {
       tick();
 
       const placer = fixture.debugElement.query(By.directive(StringPlacer));
-      placer.componentInstance.writeValue.calls.reset();
+      placer.componentInstance.writeValue.mockReset();
 
       fixture.componentInstance.move(createEvent(0, 1));
       fixture.detectChanges();

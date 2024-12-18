@@ -21,11 +21,11 @@ describe("EditComponent", () => {
   let component: EditComponent;
   let fixture: ComponentFixture<EditComponent>;
 
-  let assetService: jasmine.SpyObj<Pick<AssetService, "findById" | "install">>;
+  let assetService: jest.Mocked<Pick<AssetService, "findById" | "install">>;
 
   let asset: Asset;
 
-  let activatedRoute: jasmine.SpyObj<Pick<ActivatedRoute, "params">>;
+  let activatedRoute: jest.Mocked<Pick<ActivatedRoute, "params">>;
 
   beforeEach(async () => {
     asset = {
@@ -40,8 +40,8 @@ describe("EditComponent", () => {
     };
 
     assetService = {
-      findById: jasmine.createSpy("findById").and.returnValue(of(asset)),
-      install: jasmine.createSpy("install").and.callFake((id, configs, preview) => {
+      findById: jest.fn(() => of(asset)),
+      install: jest.fn((id, configs, preview) => {
         if (preview) {
           return of({
             insertions: [
@@ -86,7 +86,7 @@ describe("EditComponent", () => {
     };
 
     activatedRoute = {
-      params: jasmine.createSpy("params").and.returnValue(of({id: "1"})) as any
+      params: jest.fn(() => of({id: "1"})) as any
     };
 
     await TestBed.configureTestingModule({

@@ -17,7 +17,7 @@ import {IdentifyComponent} from "./identify.component";
 describe("Identify Component", () => {
   let fixture: ComponentFixture<IdentifyComponent>;
   let routerSpy;
-  let identifySpy: jasmine.Spy<typeof fixture.componentInstance.passport.identify>;
+  let identifySpy: jest.Mock<typeof fixture.componentInstance.passport.identify>;
 
   const strategies = [
     {
@@ -69,8 +69,8 @@ describe("Identify Component", () => {
 
     fixture = TestBed.createComponent(IdentifyComponent);
 
-    spyOn(fixture.componentInstance.passport, "getStrategies").and.returnValue(of(strategies));
-    identifySpy = spyOn(fixture.componentInstance.passport, "identify").and.callFake(
+    jest.spyOn(fixture.componentInstance.passport, "getStrategies").mockReturnValue(of(strategies));
+    identifySpy = jest.spyOn(fixture.componentInstance.passport, "identify").mockImplementation(
       idOrStrategy => {
         if (typeof idOrStrategy != "string") {
           return of({});
@@ -81,13 +81,13 @@ describe("Identify Component", () => {
       }
     );
 
-    routerSpy = spyOn(fixture.componentInstance.router, "navigate");
+    routerSpy = jest.spyOn(fixture.componentInstance.router, "navigate");
     fixture.detectChanges();
   });
 
   describe("login", () => {
     it("should login if user has been identified already", () => {
-      spyOnProperty(fixture.componentInstance.passport, "identified", "get").and.returnValue(true);
+      jest.spyOn(fixture.componentInstance.passport, "identified", "get").mockReturnValue(true);
 
       activatedRoute.queryParams.next({});
 
@@ -96,7 +96,7 @@ describe("Identify Component", () => {
     });
 
     it("should not login if user has not been identified and there is no provided token", () => {
-      spyOnProperty(fixture.componentInstance.passport, "identified", "get").and.returnValue(false);
+      jest.spyOn(fixture.componentInstance.passport, "identified", "get").mockReturnValue(false);
 
       activatedRoute.queryParams.next({});
 
@@ -104,7 +104,7 @@ describe("Identify Component", () => {
     });
 
     it("should set token but should not navigate to the home page if it's not valid", () => {
-      spyOnProperty(fixture.componentInstance.passport, "identified", "get").and.returnValue(false);
+      jest.spyOn(fixture.componentInstance.passport, "identified", "get").mockReturnValue(false);
 
       activatedRoute.queryParams.next({token: "TEST_TOKEN"});
 
@@ -114,7 +114,7 @@ describe("Identify Component", () => {
     });
 
     it("should set token and navigate to the home page if it's valid", () => {
-      spyOnProperty(fixture.componentInstance.passport, "identified", "get").and.returnValue(true);
+      jest.spyOn(fixture.componentInstance.passport, "identified", "get").mockReturnValue(true);
 
       activatedRoute.queryParams.next({token: "TEST_TOKEN"});
 
@@ -151,7 +151,7 @@ describe("Identify Component", () => {
 
   describe("actions", () => {
     beforeEach(() => {
-      routerSpy.calls.reset();
+      routerSpy.mockReset();
     });
     it("should identify successfully when clicked first strategy", fakeAsync(() => {
       fixture.debugElement.query(By.css("button:nth-of-type(2)")).nativeElement.click();
@@ -185,7 +185,7 @@ describe("Identify Component", () => {
 
   describe("errors", () => {
     beforeEach(() => {
-      routerSpy.calls.reset();
+      routerSpy.mockReset();
     });
     it("should show error", fakeAsync(() => {
       fixture.debugElement.query(By.css("button:last-of-type")).nativeElement.click();
@@ -203,8 +203,8 @@ describe("Identify Component", () => {
       activatedRoute.queryParams.next({strategy: "name"});
       tick();
       expect(identifySpy).toHaveBeenCalled();
-      expect(identifySpy.calls.mostRecent().args[0]).toBe("name");
-      expect(typeof identifySpy.calls.mostRecent().args[1]).toBe("function");
+      expect(identifySpy.mock.calls[identifySpy.mock.calls.length - 1][0]).toBe("name");
+      expect(typeof identifySpy.mock.calls[identifySpy.mock.calls.length - 1][1]).toBe("function");
     }));
   });
 });

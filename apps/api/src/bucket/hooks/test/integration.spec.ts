@@ -327,7 +327,7 @@ xdescribe("Hooks Integration", () => {
       await updateIndex(`export const stream = () => ({username: "test"});`);
       const ws = wsc.get(`/bucket/${bucket._id}/data`);
       ws.onclose = done;
-      const message = jasmine.createSpy();
+      const message = jest.fn();
       ws.onmessage = e => {
         const data = JSON.parse(e.data as string);
         if (data.kind == 1) {
@@ -344,7 +344,7 @@ xdescribe("Hooks Integration", () => {
         return {};
       }`);
       const ws = wsc.get(`/bucket/${bucket._id}/data`);
-      const message = jasmine.createSpy();
+      const message = jest.fn();
       ws.onmessage = e => {
         const data = JSON.parse(e.data as string);
         message(data);
@@ -353,7 +353,7 @@ xdescribe("Hooks Integration", () => {
         }
       };
       ws.onclose = () => {
-        expect(message.calls.allArgs().map(([a]) => a)).toEqual([
+        expect(message.mock.calls.map(([a]) => a)).toEqual([
           {kind: 0, document: user1},
           {kind: 0, document: user2},
           {kind: 1}
@@ -371,7 +371,7 @@ xdescribe("Hooks Integration", () => {
           user: user1.username
         }
       });
-      const message = jasmine.createSpy();
+      const message = jest.fn();
       ws.onmessage = e => {
         const data = JSON.parse(e.data as string);
         message(data);
@@ -380,7 +380,7 @@ xdescribe("Hooks Integration", () => {
         }
       };
       ws.onclose = () => {
-        expect(message.calls.allArgs().map(([a]) => a)).toEqual([
+        expect(message.mock.calls.map(([a]) => a)).toEqual([
           {kind: 0, document: user1},
           {kind: 1}
         ]);

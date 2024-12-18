@@ -25,7 +25,7 @@ import {MatDividerModule} from "@angular/material/divider";
 describe("IndexComponent", () => {
   let component: IndexComponent;
   let fixture: ComponentFixture<IndexComponent>;
-  let filterNextSpy: jasmine.Spy;
+  let filterNextSpy: jest.Mock;
 
   let filters = {
     identifier: "test_identifier",
@@ -97,7 +97,7 @@ describe("IndexComponent", () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    filterNextSpy = spyOn(component.filters$, "next").and.callThrough();
+    filterNextSpy = jest.spyOn(component.filters$, "next");
   });
 
   it("should set buckets$ ", async () => {
@@ -106,7 +106,7 @@ describe("IndexComponent", () => {
   });
 
   it("should set buckets$ as empty array if user doesn't have bucket:index access", async () => {
-    spyOn(component, "checkAllowed").and.returnValue(of(false));
+    jest.spyOn(component, "checkAllowed").mockReturnValue(of(false));
     component.ngOnInit();
 
     let buckets = await component.buckets$.toPromise();
@@ -156,7 +156,7 @@ describe("IndexComponent", () => {
   });
 
   it("should get documentIds of selected module which has a group and should set resource filters", fakeAsync(async () => {
-    const getDocumentIds = spyOn(component["activityService"], "getDocumentIds").and.returnValue(
+    const getDocumentIds = jest.spyOn(component["activityService"], "getDocumentIds").mockReturnValue(
       of(["doc_1", "doc_2"])
     );
     component.onModuleSelectionChange({
@@ -177,7 +177,7 @@ describe("IndexComponent", () => {
   }));
 
   it("should get documentIds of selected module which doesn't have a group and should set resource filters", fakeAsync(async () => {
-    const getDocumentIds = spyOn(component["activityService"], "getDocumentIds").and.returnValue(
+    const getDocumentIds = jest.spyOn(component["activityService"], "getDocumentIds").mockReturnValue(
       of(["doc_1", "doc_2"])
     );
     component.onModuleSelectionChange({

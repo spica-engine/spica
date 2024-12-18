@@ -6,22 +6,22 @@ import {of} from "rxjs";
 jasmine.getEnv().allowRespy(true);
 
 describe("@spica-devkit/bucket", () => {
-  let getSpy: jasmine.SpyObj<any>;
-  let postSpy: jasmine.SpyObj<any>;
-  let putSpy: jasmine.SpyObj<any>;
-  let deleteSpy: jasmine.SpyObj<any>;
-  let wsSpy: jasmine.SpyObj<any>;
+  let getSpy: jest.Mocked<any>;
+  let postSpy: jest.Mocked<any>;
+  let putSpy: jest.Mocked<any>;
+  let deleteSpy: jest.Mocked<any>;
+  let wsSpy: jest.Mocked<any>;
 
   beforeEach(() => {
-    getSpy = spyOn(Axios.prototype, "get").and.returnValue(Promise.resolve());
-    postSpy = spyOn(Axios.prototype, "post").and.returnValue(Promise.resolve());
-    putSpy = spyOn(Axios.prototype, "put").and.returnValue(Promise.resolve());
-    deleteSpy = spyOn(Axios.prototype, "delete").and.returnValue(Promise.resolve());
+    getSpy = jest.spyOn(Axios.prototype, "get").mockReturnValue(Promise.resolve());
+    postSpy = jest.spyOn(Axios.prototype, "post").mockReturnValue(Promise.resolve());
+    putSpy = jest.spyOn(Axios.prototype, "put").mockReturnValue(Promise.resolve());
+    deleteSpy = jest.spyOn(Axios.prototype, "delete").mockReturnValue(Promise.resolve());
 
     process.env.__INTERNAL__SPICA__PUBLIC_URL__ = "http://test";
     Bucket.initialize({apikey: "TEST_APIKEY"});
 
-    wsSpy = spyOn(Operators, "getWsObs").and.returnValue(of() as any);
+    wsSpy = jest.spyOn(Operators, "getWsObs").mockReturnValue(of() as any);
   });
 
   describe("errors", () => {

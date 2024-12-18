@@ -19,9 +19,9 @@ describe("Scheme Switcher Component", () => {
             {
               provide: SchemeObserver,
               useValue: {
-                observe: jasmine.createSpy("observe").and.returnValue(of(true)),
-                setScheme: jasmine.createSpy("setScheme"),
-                isMatched: jasmine.createSpy("isMatched").and.returnValue(true)
+                observe: jest.fn(() => of(true)),
+                setScheme: jest.fn(),
+                isMatched: jest.fn(() => true)
               }
             }
           ]
@@ -64,9 +64,9 @@ describe("Scheme Switcher Component", () => {
             {
               provide: SchemeObserver,
               useValue: {
-                observe: jasmine.createSpy("observe").and.returnValue(of(false)),
-                setScheme: jasmine.createSpy("setScheme"),
-                isMatched: jasmine.createSpy("isMatched").and.returnValue(false)
+                observe: jest.fn(() => of(false)),
+                setScheme: jest.fn(),
+                isMatched: jest.fn(() => false)
               }
             }
           ]

@@ -50,7 +50,7 @@ describe("PreferenceService", () => {
 
   it("should return default value when there is no value on db", async () => {
     const originalGet = service["http"]["get"];
-    const spy = (service["http"]["get"] = jasmine.createSpy("GET").and.returnValue(of(null)));
+    const spy = (service["http"]["get"] = jest.fn(() => of(null)));
     expect(await service.get("scope", preferences).toPromise()).toBe(preferences);
     expect(spy).toHaveBeenCalledTimes(1);
     service["http"]["get"] = originalGet;

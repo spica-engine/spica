@@ -29,8 +29,8 @@ import {Filters} from "../../helpers";
 
 describe("Storage/IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
-  let storageService: jasmine.SpyObj<Partial<StorageService>>;
-  let rootDirService: jasmine.SpyObj<Partial<RootDirService>>;
+  let storageService: jest.Mocked<Partial<StorageService>>;
+  let rootDirService: jest.Mocked<Partial<RootDirService>>;
   let storageObjects: Storage[];
 
   beforeEach(async () => {
@@ -82,7 +82,7 @@ describe("Storage/IndexComponent", () => {
       }
     ];
     storageService = {
-      getAll: jasmine.createSpy("getAll").and.callFake(params => {
+      getAll: jest.fn(params => {
         let result = storageObjects;
 
         const {filter, sort} = params;
@@ -95,15 +95,13 @@ describe("Storage/IndexComponent", () => {
       }),
       insertMany: (() => {}) as any,
       delete: (() => {}) as any,
-      listSubResources: jasmine.createSpy("listSubResources").and.callFake(fullname => {
+      listSubResources: jest.fn(fullname => {
         return of(storageObjects.filter(o => o.name.startsWith(fullname))).toPromise();
       })
     };
     rootDirService = {
-      findAll: jasmine
-        .createSpy("findAll")
-        .and.returnValue(
-          of(storageObjects.filter(s => Filters.ListRootDirs.name.$regex.match(s.name)))
+      findAll: jest.fn(
+          () => of(storageObjects.filter(s => Filters.ListRootDirs.name.$regex.match(s.name)))
         )
     };
     TestBed.configureTestingModule({
@@ -129,20 +127,16 @@ describe("Storage/IndexComponent", () => {
         {
           provide: MatDialog,
           useValue: {
-            open: jasmine.createSpy("open").and.returnValue({
-              afterClosed: jasmine.createSpy("afterClosed").and.returnValue(of(null))
-            })
+            open: jest.fn(() => ({
+              afterClosed: jest.fn(() => of(null))
+            }))
           }
         },
         {
           provide: BreakpointObserver,
           useValue: {
-            observe: jasmine.createSpy("observe").and.returnValue(of(null)),
-            isMatched: jasmine
-              .createSpy("isMatched", (arg: any) => {
-                return arg == Breakpoints.Medium ? true : false;
-              })
-              .and.callThrough()
+            observe: jest.fn(() => of(null)),
+            isMatched: jest.fn()
           }
         },
         {
@@ -372,10 +366,10 @@ describe("Storage/IndexComponent", () => {
     });
 
     it("should upload file to the docs folder", fakeAsync(() => {
-      const insertManySpy = spyOn(
+      const insertManySpy = jest.spyOn(
         fixture.componentInstance["storageService"],
         "insertMany"
-      ).and.returnValue(of());
+      ).mockReturnValue(of());
 
       const files: any = [new File([], "myfile.png")];
       fixture.componentInstance.uploadStorageMany(files);
@@ -411,10 +405,10 @@ describe("Storage/IndexComponent", () => {
       });
 
       it("should upload to the files directory", fakeAsync(() => {
-        const insertManySpy = spyOn(
+        const insertManySpy = jest.spyOn(
           fixture.componentInstance["storageService"],
           "insertMany"
-        ).and.returnValue(of());
+        ).mockReturnValue(of());
 
         const files: any = [new File([], "myfile.png")];
         fixture.componentInstance.uploadStorageMany(files);
@@ -433,10 +427,10 @@ describe("Storage/IndexComponent", () => {
       loaded: 10,
       total: 100
     };
-    const insertSpy = spyOn(
+    const insertSpy = jest.spyOn(
       fixture.componentInstance["storageService"],
       "insertMany"
-    ).and.returnValue(of(event));
+    ).mockReturnValue(of(event));
     fixture.componentInstance.uploadStorageMany({length: 1} as any);
     fixture.detectChanges();
 
@@ -449,11 +443,11 @@ describe("Storage/IndexComponent", () => {
   });
 
   it("should complete upload progress", () => {
-    const refreshSpy = spyOn(fixture.componentInstance.refresh, "next");
-    const insertSpy = spyOn(
+    const refreshSpy = jest.spyOn(fixture.componentInstance.refresh, "next");
+    const insertSpy = jest.spyOn(
       fixture.componentInstance["storageService"],
       "insertMany"
-    ).and.returnValue(of({type: HttpEventType.Response} as any));
+    ).mockReturnValue(of({type: HttpEventType.Response} as any));
 
     fixture.componentInstance.uploadStorageMany({length: 1} as any);
     fixture.detectChanges();
@@ -470,12 +464,12 @@ describe("Storage/IndexComponent", () => {
   });
 
   it("should delete data", fakeAsync(() => {
-    const deleleteSpy = spyOn(
+    const deleleteSpy = jest.spyOn(
       fixture.componentInstance["storageService"],
       "delete"
-    ).and.returnValue(of());
+    ).mockReturnValue(of());
 
-    const refreshSpy = spyOn(fixture.componentInstance.refresh, "next");
+    const refreshSpy = jest.spyOn(fixture.componentInstance.refresh, "next");
 
     fixture.componentInstance.delete("1");
     tick(500);
@@ -488,10 +482,10 @@ describe("Storage/IndexComponent", () => {
   }));
 
   it("should delete docs directory and its subresources", fakeAsync(() => {
-    const deleleteSpy = spyOn(
+    const deleleteSpy = jest.spyOn(
       fixture.componentInstance["storageService"],
       "delete"
-    ).and.returnValue(of());
+    ).mockReturnValue(of());
 
     fixture.componentInstance.deleteMany(["files/docs/"]);
     tick(500);
@@ -501,14 +495,14 @@ describe("Storage/IndexComponent", () => {
     expect(storageService.listSubResources).toHaveBeenCalledWith("files/docs/", true);
 
     expect(deleleteSpy).toHaveBeenCalledTimes(2);
-    expect(deleleteSpy.calls.allArgs()).toEqual([["3"], ["4"]]);
+    expect(deleleteSpy.mock.calls).toEqual([["3"], ["4"]]);
   }));
 
   it("should insert files to the current directory", fakeAsync(() => {
-    const insertManySpy = spyOn(
+    const insertManySpy = jest.spyOn(
       fixture.componentInstance["storageService"],
       "insertMany"
-    ).and.returnValue(of());
+    ).mockReturnValue(of());
 
     const files: any = [new File([], "myfile.png")];
     fixture.componentInstance.uploadStorageMany(files);

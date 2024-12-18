@@ -23,13 +23,13 @@ import {IdentitySettingsComponent} from "./identity-settings.component";
 describe("Identity Setting Component", () => {
   let fixture: ComponentFixture<IdentitySettingsComponent>;
 
-  let preferencesService: jasmine.SpyObj<Partial<PreferencesService>>,
-    identityService: jasmine.SpyObj<Partial<IdentityService>>;
+  let preferencesService: jest.Mocked<Partial<PreferencesService>>,
+    identityService: jest.Mocked<Partial<IdentityService>>;
 
   beforeEach(async () => {
     identityService = {
-      getPredefinedDefaults: jasmine.createSpy("getPredefinedDefaults").and.returnValue(
-        of([
+      getPredefinedDefaults: jest.fn(
+        () => of([
           {
             type: "string",
             match: "keyword1"
@@ -42,8 +42,8 @@ describe("Identity Setting Component", () => {
       )
     };
     preferencesService = {
-      get: jasmine.createSpy("get").and.returnValue(
-        of({
+      get: jest.fn(
+        () => of({
           _id: "123",
           scope: "scope",
           identity: {
@@ -229,11 +229,11 @@ describe("Identity Setting Component", () => {
     });
 
     it("should save identity", fakeAsync(() => {
-      const replaceOneSpy = spyOn(
+      const replaceOneSpy = jest.spyOn(
         fixture.componentInstance["preferencesService"],
         "replaceOne"
-      ).and.returnValue(of(null));
-      const navigateSpy = spyOn(fixture.componentInstance["router"], "navigate");
+      ).mockReturnValue(of(null));
+      const navigateSpy = jest.spyOn(fixture.componentInstance["router"], "navigate");
 
       fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
       tick();

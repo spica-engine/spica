@@ -49,14 +49,12 @@ describe("IndexComponent", () => {
   let bucket = new Subject<Partial<Bucket>>();
   let rows = new Subject<BucketRow[]>();
   let bucketDataService = {
-    find: jasmine
-      .createSpy("find")
-      .and.returnValue(rows.pipe(map(r => ({meta: {total: r.length}, data: r}))))
+    find: jest.fn(() => rows.pipe(map(r => ({meta: {total: r.length}, data: r}))))
   };
   let bucketService = {
-    getBucket: jasmine.createSpy("getBucket").and.returnValue(bucket),
-    getPreferences: jasmine.createSpy("getPreferences").and.returnValue(
-      of({
+    getBucket: jest.fn(() => bucket),
+    getPreferences: jest.fn(
+      () => of({
         language: {
           available: {
             tr_TR: "Turkish",
@@ -72,10 +70,10 @@ describe("IndexComponent", () => {
     queryParams: of()
   };
 
-  let getItem: jasmine.Spy;
-  let setItem: jasmine.Spy;
+  let getItem: jest.Mock;
+  let setItem: jest.Mock;
 
-  let navigateSpy: jasmine.Spy;
+  let navigateSpy: jest.Mock;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -138,16 +136,16 @@ describe("IndexComponent", () => {
       ]
     }).compileComponents();
 
-    getItem = spyOn(localStorage, "getItem").and.callFake(() => null);
-    setItem = spyOn(localStorage, "setItem");
+    getItem = jest.spyOn(localStorage, "getItem").mockImplementation(() => null);
+    setItem = jest.spyOn(localStorage, "setItem");
 
     fixture = TestBed.createComponent(IndexComponent);
     fixture.componentInstance["sanitizer"].bypassSecurityTrustHtml = v => v;
     fixture.detectChanges(false);
 
-    bucketDataService.find.calls.reset();
-    bucketService.getBucket.calls.reset();
-    navigateSpy = spyOn(fixture.componentInstance["router"], "navigate");
+    bucketDataService.find.mockReset();
+    bucketService.getBucket.mockReset();
+    navigateSpy = jest.spyOn(fixture.componentInstance["router"], "navigate");
 
     activatedRoute.params.next({id: 1});
     fixture.detectChanges();
@@ -261,7 +259,7 @@ describe("IndexComponent", () => {
       });
 
       it("should change language", () => {
-        bucketDataService.find.calls.reset();
+        bucketDataService.find.mockReset();
         fixture.debugElement
           .query(By.css("div.actions > button:nth-of-type(4)"))
           .nativeElement.click();
@@ -297,7 +295,7 @@ describe("IndexComponent", () => {
       });
 
       it("should set displayed properties from local storage", async () => {
-        getItem.and.returnValue(JSON.stringify(["test"]));
+        getItem.mockReturnValue(JSON.stringify(["test"]));
 
         bucket.next({
           _id: "1",
@@ -379,7 +377,7 @@ describe("IndexComponent", () => {
     });
 
     it("should refresh", () => {
-      bucketDataService.find.calls.reset();
+      bucketDataService.find.mockReset();
       fixture.debugElement
         .query(By.css("div.actions > button:nth-of-type(2)"))
         .nativeElement.click();
@@ -621,10 +619,10 @@ describe("IndexComponent", () => {
     });
 
     it("should use existing value instead of creating new one", () => {
-      const createTemplateSpy = spyOn(
+      const createTemplateSpy = jest.spyOn(
         fixture.componentInstance["sanitizer"],
         "bypassSecurityTrustHtml"
-      ).and.callThrough();
+      );
 
       const template = fixture.componentInstance.buildTemplate(
         "test_url",
@@ -649,10 +647,10 @@ describe("IndexComponent", () => {
     });
 
     it("should create new template for new values", () => {
-      const createTemplateSpy = spyOn(
+      const createTemplateSpy = jest.spyOn(
         fixture.componentInstance["sanitizer"],
         "bypassSecurityTrustHtml"
-      ).and.callThrough();
+      );
 
       const template = fixture.componentInstance.buildTemplate(
         "test_url",
@@ -822,7 +820,7 @@ describe("IndexComponent", () => {
         }
       });
       fixture.detectChanges();
-      bucketDataService.find.calls.reset();
+      bucketDataService.find.mockReset();
     });
 
     it("should sort ascending", () => {
@@ -883,7 +881,7 @@ describe("IndexComponent", () => {
       rows.next(new Array(40).fill({_id: "1", test: "123"}));
       fixture.detectChanges();
       paginator = fixture.debugElement.query(By.directive(MatPaginator)).injector.get(MatPaginator);
-      bucketDataService.find.calls.reset();
+      bucketDataService.find.mockReset();
     });
 
     it("should assign total count", () => {

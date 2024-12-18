@@ -19,8 +19,8 @@ describe("LanguageComponent", () => {
         {
           provide: BucketService,
           useValue: {
-            getPreferences: jasmine.createSpy("getPreferences").and.returnValue(
-              of({
+            getPreferences: jest.fn(
+              () => of({
                 language: {
                   available: {
                     tr_TR: "Turkish",

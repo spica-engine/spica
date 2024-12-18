@@ -7,8 +7,8 @@ describe("Scheme Observer Test Suit", () => {
   describe("Dark Theme Default", () => {
     let schemeObserver: SchemeObserver;
     let breakpointObserver = {
-      observe: jasmine.createSpy("observe").and.returnValue(of({matches: true})),
-      isMatched: jasmine.createSpy("isMatched").and.returnValue(true)
+      observe: jest.fn(() => of({matches: true})),
+      isMatched: jest.fn(() => true)
     };
     beforeEach(() => {
       TestBed.configureTestingModule({
@@ -41,8 +41,8 @@ describe("Scheme Observer Test Suit", () => {
   describe("Light Theme Default", () => {
     let schemeObserver: SchemeObserver;
     let breakpointObserver = {
-      observe: jasmine.createSpy("observe").and.returnValue(of({matches: false})),
-      isMatched: jasmine.createSpy("isMatched").and.returnValue(false)
+      observe: jest.fn(() => of({matches: false})),
+      isMatched: jest.fn(() => false)
     };
     beforeEach(() => {
       TestBed.configureTestingModule({

@@ -15,9 +15,9 @@ describe("Common#schema-placer", () => {
   let fixture: ComponentFixture<InputSchemaPlacer>;
   let injector: Injector;
   const inputResolver = {
-    coerce: jasmine.createSpy("coerce").and.returnValue(undefined),
-    resolve: jasmine.createSpy("resolve").and.returnValue({}),
-    entries: jasmine.createSpy("entries").and.returnValue([])
+    coerce: jest.fn(() => undefined),
+    resolve: jest.fn(() => ({})),
+    entries: jest.fn(() => [])
   };
   beforeEach(async () => {
     TestBed.configureTestingModule({

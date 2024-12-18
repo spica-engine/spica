@@ -23,13 +23,13 @@ import {MatAwareDialogModule} from "./aware-dialog.module";
   `
 })
 class TestAwareDialogComponent {
-  confirm = jasmine.createSpy("confirm");
-  cancel = jasmine.createSpy("cancel");
+  confirm = jest.fn();
+  cancel = jest.fn();
 }
 
 describe("Aware Dialog Directive", () => {
   let fixture: ComponentFixture<TestAwareDialogComponent>;
-  let spy: jasmine.Spy;
+  let spy: jest.Mock;
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [MatAwareDialogModule, NoopAnimationsModule],
@@ -39,7 +39,7 @@ describe("Aware Dialog Directive", () => {
 
     fixture = TestBed.createComponent(TestAwareDialogComponent);
     fixture.detectChanges();
-    spy = spyOn(TestBed.get(MatDialog), "open").and.callThrough();
+    spy = jest.spyOn(TestBed.get(MatDialog), "open");
   });
 
   it("should create directive", () => {
@@ -97,13 +97,13 @@ describe("Aware Dialog Directive", () => {
   `
 })
 class TestAwareDialogComponentDisabled {
-  confirm = jasmine.createSpy("confirm");
-  cancel = jasmine.createSpy("cancel");
+  confirm = jest.fn();
+  cancel = jest.fn();
 }
 
 describe("Aware Dialog Directive Disabled", () => {
   let fixture: ComponentFixture<TestAwareDialogComponentDisabled>;
-  let spy: jasmine.Spy;
+  let spy: jest.Mock;
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [MatAwareDialogModule, NoopAnimationsModule],
@@ -113,7 +113,7 @@ describe("Aware Dialog Directive Disabled", () => {
 
     fixture = TestBed.createComponent(TestAwareDialogComponentDisabled);
     fixture.detectChanges();
-    spy = spyOn(TestBed.get(MatDialog), "open").and.callThrough();
+    spy = jest.spyOn(TestBed.get(MatDialog), "open");
   });
 
   it("should emit confirm if directive disabled", fakeAsync(() => {

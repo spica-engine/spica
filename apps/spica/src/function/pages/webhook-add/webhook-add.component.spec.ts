@@ -27,17 +27,17 @@ import {StoreModule} from "@ngrx/store";
 
 describe("Webhook", () => {
   let fixture: ComponentFixture<WebhookAddComponent>;
-  let navigateSpy: jasmine.Spy;
-  let webhookService: jasmine.SpyObj<WebhookService>;
+  let navigateSpy: jest.Mock;
+  let webhookService: jest.Mocked<WebhookService>;
   let activatedRoute: Subject<unknown>;
 
   beforeEach(async () => {
-    webhookService = jasmine.createSpyObj("WebhookService", [
-      "getCollections",
-      "get",
-      "add",
-      "update"
-    ]);
+    webhookService = {
+      'getCollections': jest.fn(),
+      'get': jest.fn(),
+      'add': jest.fn(),
+      'update': jest.fn()
+    };
     activatedRoute = new Subject();
 
     TestBed.configureTestingModule({
@@ -78,7 +78,7 @@ describe("Webhook", () => {
 
     fixture = TestBed.createComponent(WebhookAddComponent);
 
-    navigateSpy = spyOn(fixture.componentInstance["router"], "navigate");
+    navigateSpy = jest.spyOn(fixture.componentInstance["router"], "navigate");
 
     fixture.detectChanges();
   });
@@ -118,7 +118,7 @@ describe("Webhook", () => {
       };
       fixture.detectChanges(false);
 
-      webhookService.add.and.returnValue(of({...fixture.componentInstance.webhook, _id: "1"}));
+      webhookService.add.mockReturnValue(of({...fixture.componentInstance.webhook, _id: "1"}));
       const addButton = fixture.debugElement.query(By.css("mat-card mat-card-actions button"));
       addButton.triggerEventHandler("click", {});
 
@@ -151,7 +151,7 @@ describe("Webhook", () => {
     };
 
     beforeEach(() => {
-      webhookService.get.and.returnValue(of(hook));
+      webhookService.get.mockReturnValue(of(hook));
       activatedRoute.next({id: "1"});
     });
 
@@ -162,7 +162,7 @@ describe("Webhook", () => {
     });
 
     it("should update webhook", fakeAsync(() => {
-      webhookService.update.and.returnValue(
+      webhookService.update.mockReturnValue(
         of({
           _id: "1",
           body: "",

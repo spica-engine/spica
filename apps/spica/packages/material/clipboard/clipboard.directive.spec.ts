@@ -75,7 +75,7 @@ describe("ClipboardDirective", () => {
     it("should copy value on given element to clipboard", () => {
       const input = component.directive.prepareElement("test1");
 
-      const copySpy = spyOn(document, "execCommand").and.callThrough();
+      const copySpy = jest.spyOn(document, "execCommand");
 
       fixture.componentInstance.directive.copyToClipBoard(input);
 

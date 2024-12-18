@@ -40,9 +40,9 @@ describe("AddComponent", () => {
   let history: Subject<BucketRow>;
 
   let bucketService = {
-    getBucket: jasmine.createSpy("getBucket").and.callFake(() => bucket),
-    getPreferences: jasmine.createSpy("getPreferences").and.returnValue(
-      of({
+    getBucket: jest.fn(() => bucket),
+    getPreferences: jest.fn(
+      () => of({
         language: {
           available: {
             tr_TR: "Turkish",
@@ -54,11 +54,11 @@ describe("AddComponent", () => {
     )
   };
   let bucketDataService = {
-    findOne: jasmine.createSpy("findOne").and.callFake(() => row)
+    findOne: jest.fn(() => row)
   };
   let bucketHistoryService = {
-    historyList: jasmine.createSpy("historyList").and.callFake(() => historyList),
-    revertTo: jasmine.createSpy("revertTo").and.callFake(() => history)
+    historyList: jest.fn(() => historyList),
+    revertTo: jest.fn(() => history)
   };
   let activatedRoute: {
     params: Subject<any>;
@@ -122,9 +122,9 @@ describe("AddComponent", () => {
     fixture = TestBed.createComponent(AddComponent);
     fixture.detectChanges();
 
-    bucketHistoryService.historyList.calls.reset();
-    bucketDataService.findOne.calls.reset();
-    bucketService.getBucket.calls.reset();
+    bucketHistoryService.historyList.mockReset();
+    bucketDataService.findOne.mockReset();
+    bucketService.getBucket.mockReset();
 
     activatedRoute.params.next({id: 1});
     fixture.detectChanges();

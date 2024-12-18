@@ -58,7 +58,9 @@ describe("FirehoseQueue", () => {
   });
 
   it("should send message to socket", done => {
-    const socket = jasmine.createSpyObj("Websocket", ["send"]);
+    const socket = {
+      'send': jest.fn()
+    };
     socket.readyState = 1;
 
     const client = new Firehose.ClientDescription({
@@ -93,7 +95,9 @@ describe("FirehoseQueue", () => {
   });
 
   it("should send message to all OPEN sockets", done => {
-    const firstSocket = jasmine.createSpyObj("Websocket", ["send"]);
+    const firstSocket = {
+      'send': jest.fn()
+    };
     firstSocket.readyState = 1; /* https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState */
 
     firehoseQueue.enqueue(
@@ -109,7 +113,9 @@ describe("FirehoseQueue", () => {
       firstSocket
     );
 
-    const secondSocket = jasmine.createSpyObj("Websocket", ["send"]);
+    const secondSocket = {
+      'send': jest.fn()
+    };
     secondSocket.readyState = 2; /* https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState */
 
     firehoseQueue.enqueue(
@@ -142,7 +148,9 @@ describe("FirehoseQueue", () => {
   });
 
   it("should close socket", done => {
-    const socket = jasmine.createSpyObj("Websocket", ["close"]);
+    const socket = {
+      'close': jest.fn()
+    };
     socket.readyState = 1; /* https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState */
     const client = new Firehose.ClientDescription({
       id: "1"

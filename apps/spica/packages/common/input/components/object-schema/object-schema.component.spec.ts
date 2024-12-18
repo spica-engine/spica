@@ -17,8 +17,8 @@ describe("Common#object-schema", () => {
   let component: ObjectSchemaComponent;
   let fixture: ComponentFixture<ObjectSchemaComponent>;
   const inputResolver = {
-    resolve: jasmine.createSpy("resolve").and.returnValue({}),
-    entries: jasmine.createSpy("entries").and.returnValue([])
+    resolve: jest.fn(() => ({})),
+    entries: jest.fn(() => [])
   };
 
   beforeEach(

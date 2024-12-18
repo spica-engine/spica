@@ -10,11 +10,11 @@ import {BucketIndexGuard} from "./index.guard";
 describe("BucketIndexGuard", () => {
   let guard: BucketIndexGuard;
   let store: Store<State>;
-  let bucketService: jasmine.SpyObj<{retrieve: Function}>;
+  let bucketService: jest.Mocked<{retrieve: Function}>;
 
   beforeEach(() => {
     bucketService = {
-      retrieve: jasmine.createSpy("retrieve").and.returnValue(of(null))
+      retrieve: jest.fn(() => of(null))
     };
 
     TestBed.configureTestingModule({

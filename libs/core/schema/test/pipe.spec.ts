@@ -62,11 +62,13 @@ describe("schema pipe", () => {
   });
 
   describe("validation with dynamic schema", () => {
-    let dynamicSchema: jasmine.Spy;
+    let dynamicSchema: jest.Mock;
     let pipe;
 
     beforeEach(() => {
-      dynamicSchema = jasmine.createSpy("dynamicSchema").and.returnValue({type: "string"});
+      dynamicSchema = jest.fn(() => ({
+        type: "string"
+      }));
       const validatorMixin = Schema.validate(dynamicSchema);
       pipe = new validatorMixin(new Validator(), {});
     });
@@ -74,27 +76,25 @@ describe("schema pipe", () => {
     it("should pass validation", async () => {
       await expectAsync(pipe.transform("")).toBeResolved();
       expect(dynamicSchema).toHaveBeenCalledTimes(1);
-      expect(dynamicSchema.calls.first().args[0]).toEqual({});
+      expect(dynamicSchema.calls.first()[0]).toEqual({});
     });
 
     it("should not pass validation", async () => {
       await expectAsync(pipe.transform(true)).toBeRejected();
       expect(dynamicSchema).toHaveBeenCalledTimes(1);
-      expect(dynamicSchema.calls.first().args[0]).toEqual({});
+      expect(dynamicSchema.calls.first()[0]).toEqual({});
     });
   });
 
   describe("validation with dynamic uri", () => {
     let pipe;
-    let uriResolver: jasmine.Spy;
-    let dynamicUri: jasmine.Spy;
+    let uriResolver: jest.Mock;
+    let dynamicUri: jest.Mock;
     const req: any = {};
 
     beforeEach(() => {
-      dynamicUri = jasmine.createSpy("dynamic-uri").and.returnValue("schema-uri");
-      uriResolver = jasmine
-        .createSpy("uri-resolver")
-        .and.returnValue(Promise.resolve({type: "string"}));
+      dynamicUri = jest.fn(() => "schema-uri");
+      uriResolver = jest.fn(() => Promise.resolve({type: "string"}));
       const validatorMixin = Schema.validate(dynamicUri);
       const validator = new Validator();
       validator.registerUriResolver(uriResolver);
@@ -112,13 +112,13 @@ describe("schema pipe", () => {
     it("should call dynamic uri function", async () => {
       await expectAsync(pipe.transform({})).toBeRejected();
       expect(dynamicUri).toHaveBeenCalled();
-      expect(dynamicUri.calls.mostRecent().args[0]).toBe(req);
+      expect(dynamicUri.mock.calls[dynamicUri.mock.calls.length - 1][0]).toBe(req);
     });
 
     it("it should have called uri-resolver", async () => {
       await expectAsync(pipe.transform({})).toBeRejected();
       expect(uriResolver).toHaveBeenCalled();
-      expect(uriResolver.calls.mostRecent().args[0]).toBe("schema-uri");
+      expect(uriResolver.mock.calls[uriResolver.mock.calls.length - 1][0]).toBe("schema-uri");
     });
   });
 });

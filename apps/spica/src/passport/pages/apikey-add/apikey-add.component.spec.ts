@@ -155,7 +155,7 @@ describe("ApiKeyAddComponent", () => {
       active: true
     };
 
-    const routeSpy = spyOn(component["router"], "navigate");
+    const routeSpy = jest.spyOn(component["router"], "navigate");
 
     component.saveApiKey();
 
@@ -182,7 +182,7 @@ describe("ApiKeyAddComponent", () => {
       active: true
     };
 
-    const routeSpy = spyOn(component["router"], "navigate");
+    const routeSpy = jest.spyOn(component["router"], "navigate");
 
     component.saveApiKey();
 

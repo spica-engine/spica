@@ -18,10 +18,10 @@ describe("Common#array-schema", () => {
   let component: ArraySchemaComponent;
   let fixture: ComponentFixture<ArraySchemaComponent>;
   const inputResolver = {
-    coerce: jasmine.createSpy("coerce").and.returnValue(undefined),
-    resolve: jasmine.createSpy("resolve").and.returnValue({}),
-    getOriginByType: jasmine.createSpy("getOriginByType").and.returnValue({}),
-    entries: jasmine.createSpy("entries").and.returnValue([])
+    coerce: jest.fn(() => undefined),
+    resolve: jest.fn(() => ({})),
+    getOriginByType: jest.fn(() => ({})),
+    entries: jest.fn(() => [])
   };
 
   beforeEach(

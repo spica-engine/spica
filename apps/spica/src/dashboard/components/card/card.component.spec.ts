@@ -93,7 +93,7 @@ describe("CardComponent", () => {
     expect(form.action).toEqual(window.location.origin + "/dummy_url");
     expect(form.method).toEqual("get");
 
-    const submitSpy = spyOn(form, "submit");
+    const submitSpy = jest.spyOn(form, "submit");
 
     fixture.debugElement.nativeElement.querySelector("mat-card-actions > button").click();
 
@@ -113,7 +113,7 @@ describe("CardComponent", () => {
     expect(form.method).toEqual("post");
     expect(form.enctype).toEqual("multipart/form-data");
 
-    const submitSpy = spyOn(form, "submit");
+    const submitSpy = jest.spyOn(form, "submit");
 
     fixture.debugElement.nativeElement.querySelector("mat-card-actions > button").click();
 

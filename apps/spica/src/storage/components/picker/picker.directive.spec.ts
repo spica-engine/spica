@@ -26,7 +26,7 @@ import {PickerDirective} from "./picker.directive";
   `
 })
 class TestCmp {
-  change = jasmine.createSpy("ngModelChange");
+  change = jest.fn();
 }
 
 describe("StoragePicker", () => {
@@ -62,9 +62,7 @@ describe("StoragePicker", () => {
 
     TestBed.overrideProvider(StorageService, {
       useValue: {
-        getAll: jasmine
-          .createSpy("getAll")
-          .and.returnValue(objects.pipe(map(r => ({data: r, meta: {total: r.length}}))))
+        getAll: jest.fn(() => objects.pipe(map(r => ({data: r, meta: {total: r.length}}))))
       }
     });
 

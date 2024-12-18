@@ -151,7 +151,7 @@ describe("StorageComponent", () => {
 
   describe("picker", () => {
     it("should emit the changes from picker", () => {
-      const ngModelChange = jasmine.createSpy("ngModelChange");
+      const ngModelChange = jest.fn();
       fixture.componentInstance.registerOnChange(ngModelChange);
 
       fixture.debugElement
@@ -173,7 +173,7 @@ describe("StorageComponent", () => {
     let httpTestingController: HttpTestingController;
     const file = new File([], "test.png", {type: "image/png"});
     let findParams: HttpParams;
-    let preventDefaultSpy = jasmine.createSpy();
+    let preventDefaultSpy = jest.fn();
 
     beforeEach(async () => {
       httpTestingController = TestBed.get(HttpTestingController);
@@ -198,7 +198,7 @@ describe("StorageComponent", () => {
     });
 
     afterEach(() => {
-      preventDefaultSpy.calls.reset();
+      preventDefaultSpy.mockReset();
     });
 
     it("should handle drop", async () => {

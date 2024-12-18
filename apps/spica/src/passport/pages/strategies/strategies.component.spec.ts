@@ -29,7 +29,7 @@ class ToolbarCmp {
 describe("StrategiesComponent", () => {
   let fixture: ComponentFixture<StrategiesComponent>;
   const rows = new Subject<Partial<Strategy>[]>();
-  let strategyService: jasmine.SpyObj<Pick<StrategyService, "getStrategies">>;
+  let strategyService: jest.Mocked<Pick<StrategyService, "getStrategies">>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -48,7 +48,7 @@ describe("StrategiesComponent", () => {
       declarations: [StrategiesComponent, ToolbarCmp, CanInteractDirectiveTest]
     });
     strategyService = {
-      getStrategies: jasmine.createSpy("getStrategies").and.returnValue(rows)
+      getStrategies: jest.fn(() => rows)
     };
     TestBed.overrideProvider(StrategyService, {useValue: strategyService});
     fixture = TestBed.createComponent(StrategiesComponent);

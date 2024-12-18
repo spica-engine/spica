@@ -89,8 +89,8 @@ describe("Bucket Schema Resolver", () => {
     }).compile();
     bs = module.get(BucketService);
     schemaResolver = new BucketSchemaResolver(bs);
-    spyOn(bs, "findOne").and.returnValue(Promise.resolve({...bucket}) as any);
-    spyOn(bs, "getPreferences").and.returnValue(Promise.resolve(preference) as any);
+    jest.spyOn(bs, "findOne").mockReturnValue(Promise.resolve({...bucket}) as any);
+    jest.spyOn(bs, "getPreferences").mockReturnValue(Promise.resolve(preference) as any);
   });
 
   afterEach(async () => await module.close());

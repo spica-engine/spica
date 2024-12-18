@@ -12,9 +12,9 @@ function createTarget(cwd?: string, handler?: string) {
 describe("SystemEnqueuer", () => {
   const noopTarget = createTarget();
   let enqueuer: SystemEnqueuer;
-  let eventQueue: jasmine.SpyObj<EventQueue>;
-  let nextSpy: jasmine.Spy;
-  let invokerSpy: jasmine.Spy;
+  let eventQueue: jest.Mocked<EventQueue>;
+  let nextSpy: jest.Mock;
+  let invokerSpy: jest.Mock;
 
   const clock = jasmine.clock();
 
@@ -23,11 +23,11 @@ describe("SystemEnqueuer", () => {
 
   beforeEach(() => {
     eventQueue = {
-      enqueue: jasmine.createSpy("enqueue")
-    } as jasmine.SpyObj<EventQueue>;
+      enqueue: jest.fn()
+    } as jest.Mocked<EventQueue>;
     enqueuer = new SystemEnqueuer(eventQueue);
-    nextSpy = spyOn(enqueuer["subscriptionSubject"], "next").and.callThrough();
-    invokerSpy = spyOn(enqueuer, "invokeReadyEventTargets" as never).and.callThrough();
+    nextSpy = jest.spyOn(enqueuer["subscriptionSubject"], "next");
+    invokerSpy = jest.spyOn(enqueuer, "invokeReadyEventTargets" as never);
   });
 
   it("should subscribe", () => {
@@ -72,7 +72,7 @@ describe("SystemEnqueuer", () => {
 
     expect(invokerSpy).toHaveBeenCalledTimes(1);
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
-    const [ev] = eventQueue.enqueue.calls.argsFor(0);
+    const [ev] = eventQueue.enqueue.mock.calls[0];
     expect(ev.target).toBe(noopTarget);
     expect(ev.type).toBe(event.Type.SYSTEM);
   });

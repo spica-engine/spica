@@ -19,7 +19,7 @@ import {of} from "rxjs";
 describe("WebhookLogViewComponent", () => {
   let component: WebhookLogViewComponent;
   let fixture: ComponentFixture<WebhookLogViewComponent>;
-  let filterNextSpy: jasmine.Spy;
+  let filterNextSpy: jest.Mock;
 
   let filter = {
     webhooks: ["test_webhook"],
@@ -81,7 +81,7 @@ describe("WebhookLogViewComponent", () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    filterNextSpy = spyOn(component.filter$, "next").and.callThrough();
+    filterNextSpy = jest.spyOn(component.filter$, "next");
   });
 
   it("should apply filter", () => {

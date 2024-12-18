@@ -11,7 +11,9 @@ import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {MatDividerModule} from "@angular/material/divider";
 
 describe("Policy Resource Add Component", () => {
-  let dialogRef = jasmine.createSpyObj<MatDialogRef<any, any>>("DialogRef", ["close"]);
+  let dialogRef: jest.Mocked<MatDialogRef<any, any>> = {
+    'close': jest.fn()
+  };
   let fixture: ComponentFixture<PolicyResourceAddComponent>;
 
   beforeEach(() => {

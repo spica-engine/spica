@@ -37,7 +37,7 @@ describe("Common#boolean", () => {
     }));
 
     it("should propagate true on click if the start value is false", () => {
-      const changeSpy = jasmine.createSpy("ngModelChange");
+      const changeSpy = jest.fn();
       fixture.componentInstance.registerOnChange(changeSpy);
       fixture.componentInstance.writeValue(false);
 
@@ -48,7 +48,7 @@ describe("Common#boolean", () => {
     });
 
     it("should propagate false on click if the start value is true", () => {
-      const changeSpy = jasmine.createSpy("ngModelChange");
+      const changeSpy = jest.fn();
       fixture.componentInstance.registerOnChange(changeSpy);
       fixture.componentInstance.writeValue(true);
 
@@ -60,7 +60,7 @@ describe("Common#boolean", () => {
 
     describe("default", () => {
       it("should default to default value if undefined", () => {
-        const ngModelChange = jasmine.createSpy("ngModelChange");
+        const ngModelChange = jest.fn();
         fixture.componentInstance.registerOnChange(ngModelChange);
 
         fixture.componentInstance.schema.default = false;

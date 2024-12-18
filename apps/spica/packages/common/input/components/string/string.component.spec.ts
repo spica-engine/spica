@@ -91,7 +91,7 @@ describe("Common#string", () => {
     }));
 
     it("should emit input events", fakeAsync(() => {
-      const ngModelChange = jasmine.createSpy("ngModelChange");
+      const ngModelChange = jest.fn();
       fixture.componentInstance.registerOnChange(ngModelChange);
       fixture.detectChanges();
       const inputElem = fixture.debugElement.query(By.css("input")).nativeElement;
@@ -104,7 +104,7 @@ describe("Common#string", () => {
 
     describe("default", () => {
       it("should default to default value if undefined", fakeAsync(() => {
-        const ngModelChange = jasmine.createSpy("ngModelChange");
+        const ngModelChange = jest.fn();
         fixture.componentInstance.registerOnChange(ngModelChange);
 
         fixture.componentInstance.schema.default = "test";

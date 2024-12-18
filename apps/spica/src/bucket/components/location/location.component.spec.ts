@@ -115,10 +115,10 @@ describe("LocationComponent", () => {
 
   describe("through location", () => {
     let fixture: ComponentFixture<LocationComponent>;
-    let coordinateSpy: jasmine.Spy;
+    let coordinateSpy: jest.Mock;
 
     beforeEach(() => {
-      coordinateSpy = spyOn(navigator.geolocation, "getCurrentPosition").and.callFake(
+      coordinateSpy = jest.spyOn(navigator.geolocation, "getCurrentPosition").mockImplementation(
         (callback: Function) => callback({coords: {latitude: 32, longitude: 33}})
       );
       fixture = TestBed.createComponent(LocationComponent);
@@ -143,7 +143,7 @@ describe("LocationComponent", () => {
     it("should show disabled my location button", () => {
       let button = fixture.debugElement.query(By.css("button:last-of-type"));
       expect(button.nativeElement.disabled).toBe(false);
-      spyOnProperty(fixture.componentInstance, "isGeolocationSupported", "get").and.returnValue(
+      jest.spyOn(fixture.componentInstance, "isGeolocationSupported", "get").mockReturnValue(
         false
       );
       fixture.componentRef.injector.get(ChangeDetectorRef).detectChanges();

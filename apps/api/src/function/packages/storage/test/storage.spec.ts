@@ -13,19 +13,19 @@ function getValueOfFormField(form, field) {
 }
 
 describe("@spica-devkit/Storage", () => {
-  let getSpy: jasmine.Spy<any>;
-  let postSpy: jasmine.Spy<any>;
-  let putSpy: jasmine.Spy<any>;
-  let deleteSpy: jasmine.Spy<any>;
+  let getSpy: jest.Mock<any>;
+  let postSpy: jest.Mock<any>;
+  let putSpy: jest.Mock<any>;
+  let deleteSpy: jest.Mock<any>;
 
   const onUploadProgress = () => {};
   const onDownloadProgress = () => {};
 
   beforeEach(() => {
-    getSpy = spyOn(Axios.prototype, "get").and.returnValue(Promise.resolve());
-    postSpy = spyOn(Axios.prototype, "post").and.returnValue(Promise.resolve([]));
-    putSpy = spyOn(Axios.prototype, "put").and.returnValue(Promise.resolve());
-    deleteSpy = spyOn(Axios.prototype, "delete").and.returnValue(Promise.resolve());
+    getSpy = jest.spyOn(Axios.prototype, "get").mockReturnValue(Promise.resolve());
+    postSpy = jest.spyOn(Axios.prototype, "post").mockReturnValue(Promise.resolve([]));
+    putSpy = jest.spyOn(Axios.prototype, "put").mockReturnValue(Promise.resolve());
+    deleteSpy = jest.spyOn(Axios.prototype, "delete").mockReturnValue(Promise.resolve());
 
     process.env.__INTERNAL__SPICA__PUBLIC_URL__ = "http://test";
     Storage.initialize({apikey: "TEST_APIKEY"});
@@ -43,7 +43,7 @@ describe("@spica-devkit/Storage", () => {
         await Storage.insert(storageObject, onUploadProgress);
 
         expect(postSpy).toHaveBeenCalledTimes(1);
-        const [path, formData, options] = postSpy.calls.allArgs()[0];
+        const [path, formData, options] = postSpy.mock.calls[0];
         expect(path).toEqual("storage");
 
         expect(getValueOfFormField(formData, "my_text.txt").includes("spica")).toEqual(true);
@@ -63,7 +63,7 @@ describe("@spica-devkit/Storage", () => {
         await Storage.insertMany([storageObject, storageObject2], onUploadProgress);
 
         expect(postSpy).toHaveBeenCalledTimes(1);
-        const [path, formData, options] = postSpy.calls.allArgs()[0];
+        const [path, formData, options] = postSpy.mock.calls[0];
         expect(path).toEqual("storage");
 
         expect(getValueOfFormField(formData, "my_text.txt").includes("spica")).toEqual(true);
@@ -82,7 +82,7 @@ describe("@spica-devkit/Storage", () => {
 
         expect(putSpy).toHaveBeenCalledTimes(1);
 
-        const [path, formData, options] = putSpy.calls.allArgs()[0];
+        const [path, formData, options] = putSpy.mock.calls[0];
         expect(path).toEqual("storage/storage_object_id");
 
         expect(getValueOfFormField(formData, "my_text.txt").includes("spica")).toEqual(true);

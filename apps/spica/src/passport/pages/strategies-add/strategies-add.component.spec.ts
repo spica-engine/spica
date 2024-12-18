@@ -20,13 +20,13 @@ import {MatSelectModule} from "@angular/material/select";
 
 describe("Strategies Add Component", () => {
   let fixture: ComponentFixture<StrategiesAddComponent>;
-  let strategiesService: jasmine.SpyObj<Partial<StrategyService>>;
+  let strategiesService: jest.Mocked<Partial<StrategyService>>;
   let navigateSpy;
 
   beforeEach(fakeAsync(() => {
     strategiesService = {
-      getStrategy: jasmine.createSpy("getStrategies").and.returnValue(
-        of({
+      getStrategy: jest.fn(
+        () => of({
           _id: "1",
           type: "saml",
           name: "strategy name",
@@ -79,7 +79,7 @@ describe("Strategies Add Component", () => {
 
     fixture = TestBed.createComponent(StrategiesAddComponent);
 
-    navigateSpy = spyOn(fixture.componentInstance["router"], "navigate");
+    navigateSpy = jest.spyOn(fixture.componentInstance["router"], "navigate");
 
     fixture.detectChanges();
     tick();
@@ -172,10 +172,10 @@ describe("Strategies Add Component", () => {
         .injector.get(NgModel)
         .control.setValue("new ip certificate");
 
-      const updateSpy = spyOn(
+      const updateSpy = jest.spyOn(
         fixture.componentInstance["strategyService"],
         "updateStrategy"
-      ).and.returnValue(of(null));
+      ).mockReturnValue(of(null));
 
       fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
       tick();

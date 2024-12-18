@@ -22,7 +22,7 @@ import {FormsModule} from "@angular/forms";
 describe("TutorialComponent", () => {
   let fixture: ComponentFixture<TutorialComponent>;
 
-  let nextSpy: jasmine.Spy;
+  let nextSpy: jest.Mock;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -79,7 +79,7 @@ describe("TutorialComponent", () => {
     environment.api = "public_host/api";
     fixture = TestBed.createComponent(TutorialComponent);
     fixture.detectChanges();
-    nextSpy = spyOn(fixture.componentInstance["stepper"], "next").and.callThrough();
+    nextSpy = jest.spyOn(fixture.componentInstance["stepper"], "next");
   });
 
   it("should show available types", () => {
@@ -137,7 +137,7 @@ describe("TutorialComponent", () => {
   });
 
   it("should emit emitter to hide tutorial", () => {
-    let emitSpy = spyOn(fixture.componentInstance.onDisable, "next");
+    let emitSpy = jest.spyOn(fixture.componentInstance.onDisable, "next");
     fixture.componentInstance.hideTutorial();
     expect(emitSpy).toHaveBeenCalledTimes(1);
   });
@@ -162,10 +162,10 @@ describe("TutorialComponent", () => {
   });
 
   it("should save bucket schema", fakeAsync(() => {
-    let bucketInsert = spyOn(
+    let bucketInsert = jest.spyOn(
       fixture.componentInstance["bucketService"],
       "insertOne"
-    ).and.callThrough();
+    );
 
     fixture.componentInstance.properties[0].key = "test";
     fixture.componentInstance.properties[0].type = "number";
@@ -215,16 +215,16 @@ describe("TutorialComponent", () => {
 
     flush();
 
-    let apikeyInsert = spyOn(fixture.componentInstance["apikeyService"], "insertOne").and.callFake(
+    let apikeyInsert = jest.spyOn(fixture.componentInstance["apikeyService"], "insertOne").mockImplementation(
       (apikey: any) => {
         return of({...apikey, _id: "apikey_id"});
       }
     );
 
-    let apikeyAttach = spyOn(
+    let apikeyAttach = jest.spyOn(
       fixture.componentInstance["apikeyService"],
       "attachPolicy"
-    ).and.callFake((policyId: string, apikeyId: string) => {
+    ).mockImplementation((policyId: string, apikeyId: string) => {
       return of({
         active: true,
         name: "tutorial",
@@ -234,10 +234,10 @@ describe("TutorialComponent", () => {
       });
     });
 
-    let bucketDataInsert = spyOn(
+    let bucketDataInsert = jest.spyOn(
       fixture.componentInstance["bucketDataService"],
       "insertOne"
-    ).and.callThrough();
+    );
 
     fixture.componentInstance.entry = {
       _id: "bucketdata_id",

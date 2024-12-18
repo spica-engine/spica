@@ -11,8 +11,8 @@ process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
 describe("Engine", () => {
   let engine: FunctionEngine;
-  let subscribeSpy: jasmine.Spy;
-  let unsubscribeSpy: jasmine.Spy;
+  let subscribeSpy: jest.Mock;
+  let unsubscribeSpy: jest.Mock;
 
   let scheduler: Scheduler;
   let database: DatabaseService;
@@ -65,13 +65,13 @@ describe("Engine", () => {
 
     await app.init();
 
-    subscribeSpy = spyOn<any>(engine, "subscribe").and.returnValue(undefined);
-    unsubscribeSpy = spyOn<any>(engine, "unsubscribe").and.returnValue(undefined);
+    subscribeSpy = jest.spyOn<any>(engine, "subscribe").mockReturnValue(undefined);
+    unsubscribeSpy = jest.spyOn<any>(engine, "unsubscribe").mockReturnValue(undefined);
   });
 
   afterEach(async () => {
-    subscribeSpy.calls.reset();
-    unsubscribeSpy.calls.reset();
+    subscribeSpy.mockReset();
+    unsubscribeSpy.mockReset();
     await module.close();
     return app.close();
   });
@@ -173,10 +173,10 @@ describe("Engine", () => {
     const httpEnqueuer = Array.from(scheduler.enqueuers).find(
       enqueuer => enqueuer.description.name == "http"
     );
-    const httpSubscribe = spyOn(httpEnqueuer, "subscribe");
-    subscribeSpy.and.callThrough();
+    const httpSubscribe = jest.spyOn(httpEnqueuer, "subscribe");
+    subscribeSpy.mockRestore();
     engine["categorizeChanges"]([changes]);
-    expect(httpSubscribe.calls.mostRecent().args[0].toObject()).toEqual({
+    expect(httpSubscribe.mock.calls[httpSubscribe.mock.calls.length - 1][0].toObject()).toEqual({
       id: "test_id",
       cwd: "test_root/test_id",
       handler: "test_handler",

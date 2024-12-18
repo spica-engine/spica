@@ -44,7 +44,7 @@ describe("Interceptor with a proper activity handler", () => {
   let request: Request;
   let app: INestApplication;
   let service: ActivityService;
-  let insertSpy: jasmine.Spy;
+  let insertSpy: jest.Mock;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -65,11 +65,11 @@ describe("Interceptor with a proper activity handler", () => {
     request = module.get(Request);
     app = module.createNestApplication();
     await app.listen(request.socket);
-    insertSpy = spyOn(service, "insertMany");
+    insertSpy = jest.spyOn(service, "insertMany");
   });
 
   beforeEach(() => {
-    insertSpy.calls.reset();
+    insertSpy.mockReset();
   });
 
   afterAll(async () => await app.close());
@@ -86,8 +86,8 @@ describe("Interceptor with a proper activity handler", () => {
   it("should insert an activity", async () => {
     await request.post("/test/withuser");
 
-    let expectedArg = insertSpy.calls.argsFor(0)[0][0];
-    expect(expectedArg.created_at).toEqual(jasmine.any(Date));
+    let expectedArg = insertSpy.mock.calls[0][0][0];
+    expect(expectedArg.created_at).toEqual(expect.any(Date));
 
     delete expectedArg.created_at;
 

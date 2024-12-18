@@ -28,12 +28,12 @@ import {StoreModule} from "@ngrx/store";
   ]
 })
 class NoopPlacer implements ControlValueAccessor {
-  writeValue = jasmine.createSpy("writeValue");
+  writeValue = jest.fn();
   _change: Function;
-  registerOnChange = jasmine.createSpy("registerOnChange").and.callFake(fn => {
+  registerOnChange = jest.fn(fn => {
     this._change = fn;
   });
-  registerOnTouched = jasmine.createSpy("registerOnTouched");
+  registerOnTouched = jest.fn();
 }
 
 describe("FilterComponent", () => {
@@ -429,7 +429,7 @@ describe("FilterComponent", () => {
   });
 
   describe("apply and clear", () => {
-    const changeSpy = jasmine.createSpy("changeSpy");
+    const changeSpy = jest.fn();
 
     beforeEach(() => {
       fixture.componentInstance.resetInputs();
@@ -451,7 +451,7 @@ describe("FilterComponent", () => {
     });
 
     it("should clear filter and emit", () => {
-      changeSpy.calls.reset();
+      changeSpy.mockReset();
       fixture.debugElement.query(By.css(clearButtonSelector)).nativeElement.click();
       fixture.detectChanges();
       expect(fixture.componentInstance.filter).toBeUndefined();

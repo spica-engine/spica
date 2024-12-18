@@ -134,7 +134,7 @@ describe("LogViewComponent", () => {
   });
 
   it("should clear logs", () => {
-    let clearSpy = spyOn(fixture.componentInstance["fs"], "clearLogs").and.callThrough();
+    let clearSpy = jest.spyOn(fixture.componentInstance["fs"], "clearLogs");
     fixture.componentInstance.clearLogs();
     expect(clearSpy).toHaveBeenCalledTimes(1);
     expect(clearSpy).toHaveBeenCalledWith("fn_id", {
@@ -146,7 +146,7 @@ describe("LogViewComponent", () => {
   });
 
   it("should navigate with new filter params", fakeAsync(async () => {
-    let navigateSpy = spyOn(fixture.componentInstance.router, "navigate");
+    let navigateSpy = jest.spyOn(fixture.componentInstance.router, "navigate");
     fixture.componentInstance.next({showErrors: true});
     expect(navigateSpy).toHaveBeenCalledTimes(1);
     expect(navigateSpy).toHaveBeenCalledWith([], {

@@ -30,13 +30,17 @@ class DummyBucketFilterComponent {
 
 describe("Relation Component", () => {
   let fixture: ComponentFixture<RelationComponent>;
-  let bucketDataService: jasmine.SpyObj<BucketDataService>;
-  let bucketService: jasmine.SpyObj<BucketService>;
-  let onChangeSpy: jasmine.Spy<typeof fixture.componentInstance.onChangeFn>;
+  let bucketDataService: jest.Mocked<BucketDataService>;
+  let bucketService: jest.Mocked<BucketService>;
+  let onChangeSpy: jest.Mock<typeof fixture.componentInstance.onChangeFn>;
 
   beforeEach(() => {
-    bucketDataService = jasmine.createSpyObj("BucketDataService", ["find"]);
-    bucketService = jasmine.createSpyObj("BucketService", ["getBucket"]);
+    bucketDataService = {
+      'find': jest.fn()
+    };
+    bucketService = {
+      'getBucket': jest.fn()
+    };
     TestBed.configureTestingModule({
       imports: [
         NoopAnimationsModule,
@@ -73,8 +77,8 @@ describe("Relation Component", () => {
       declarations: [RelationComponent, DummyBucketFilterComponent, MapPipe]
     });
     fixture = TestBed.createComponent(RelationComponent);
-    onChangeSpy = spyOn(fixture.componentInstance, "onChangeFn");
-    bucketService.getBucket.and.returnValue(
+    onChangeSpy = jest.spyOn(fixture.componentInstance, "onChangeFn");
+    bucketService.getBucket.mockReturnValue(
       of({
         _id: "",
         primary: "name",
@@ -88,7 +92,7 @@ describe("Relation Component", () => {
         }
       })
     );
-    bucketDataService.find.and.callFake((_, options) => {
+    bucketDataService.find.mockImplementation((_, options) => {
       const rows = [
         {
           _id: "1",
