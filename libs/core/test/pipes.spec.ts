@@ -36,7 +36,9 @@ describe("core pipes", () => {
     it("should throw BadRequestException when given json is invalid", () => {
       expect(() => {
         JSONP.transform('*{"key":"value"}', undefined);
-      }).toThrow(new HttpException("Unexpected token * in JSON at position 0", 400));
+      }).toThrow(
+        new HttpException('Unexpected token \'*\', "*{"key":"value"}" is not valid JSON', 400)
+      );
     });
   });
 
