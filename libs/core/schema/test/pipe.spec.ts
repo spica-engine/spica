@@ -21,7 +21,7 @@ describe("schema pipe", () => {
     );
     const data: object = {evil: "hahah"};
 
-    await expectAsync(pipe.transform(data, undefined)).toBeRejectedWith(
+    await expect(pipe.transform(data, undefined)).rejects.toThrow(
       new Error("should NOT have additional properties 'evil'")
     );
   });
@@ -34,11 +34,11 @@ describe("schema pipe", () => {
     });
 
     it("should fail with validation errors", async () => {
-      await expectAsync(pipe.transform({})).toBeRejected();
+      await expect(pipe.transform({})).rejects.toBeDefined();
     });
 
     it("should pass the validation", async () => {
-      await expectAsync(pipe.transform("")).toBeResolvedTo("");
+      await expect(pipe.transform("")).resolves.toEqual("");
     });
   });
 
@@ -53,11 +53,11 @@ describe("schema pipe", () => {
     });
 
     it("should fail with validation errors", async () => {
-      await expectAsync(pipe.transform({})).toBeRejected();
+      await expect(pipe.transform({})).rejects.toBeDefined();
     });
 
     it("should pass the validation", async () => {
-      await expectAsync(pipe.transform("")).toBeResolvedTo("");
+      await expect(pipe.transform("")).resolves.toEqual("");
     });
   });
 
@@ -74,15 +74,15 @@ describe("schema pipe", () => {
     });
 
     it("should pass validation", async () => {
-      await expectAsync(pipe.transform("")).toBeResolved();
+      await expect(pipe.transform("")).resolves.toBeDefined();
       expect(dynamicSchema).toHaveBeenCalledTimes(1);
-      expect(dynamicSchema.calls.first()[0]).toEqual({});
+      expect(dynamicSchema.mock.calls[0][0]).toEqual({});
     });
 
     it("should not pass validation", async () => {
-      await expectAsync(pipe.transform(true)).toBeRejected();
+      await expect(pipe.transform(true)).rejects.toBeDefined();
       expect(dynamicSchema).toHaveBeenCalledTimes(1);
-      expect(dynamicSchema.calls.first()[0]).toEqual({});
+      expect(dynamicSchema.mock.calls[0][0]).toEqual({});
     });
   });
 
@@ -102,21 +102,21 @@ describe("schema pipe", () => {
     });
 
     it("should fail with validation errors", async () => {
-      await expectAsync(pipe.transform({})).toBeRejected();
+      await expect(pipe.transform({})).rejects.toBeDefined();
     });
 
     it("should pass the validation", async () => {
-      await expectAsync(pipe.transform("")).toBeResolvedTo("");
+      await expect(pipe.transform("")).resolves.toEqual("");
     });
 
     it("should call dynamic uri function", async () => {
-      await expectAsync(pipe.transform({})).toBeRejected();
+      await expect(pipe.transform({})).rejects.toBeDefined();
       expect(dynamicUri).toHaveBeenCalled();
       expect(dynamicUri.mock.calls[dynamicUri.mock.calls.length - 1][0]).toBe(req);
     });
 
     it("it should have called uri-resolver", async () => {
-      await expectAsync(pipe.transform({})).toBeRejected();
+      await expect(pipe.transform({})).rejects.toBeDefined();
       expect(uriResolver).toHaveBeenCalled();
       expect(uriResolver.mock.calls[uriResolver.mock.calls.length - 1][0]).toBe("schema-uri");
     });

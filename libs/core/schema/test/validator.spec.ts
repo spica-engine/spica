@@ -12,7 +12,7 @@ describe("schema validator", () => {
 
   it("should fail with invalid format", async () => {
     const schema: JSONSchema7 = {type: "string", format: "unknownformat"};
-    await expectAsync(validator.validate(schema, {})).toBeRejected();
+    await expect(validator.validate(schema, {})).rejects.toBeDefined();
   });
 
   it("should fail if additional exists", async () => {
@@ -42,8 +42,7 @@ describe("schema validator", () => {
       properties: {prop: {type: "string", default: "schema_default"}},
       additionalProperties: true
     };
-
-    await expectAsync(validator.validate(schema, data)).toBeResolved(true);
+    await expect(validator.validate(schema, data)).resolves.toBeUndefined();
     expect(data.prop_should_be_accepted).toBe("i am evil");
   });
 
@@ -53,7 +52,7 @@ describe("schema validator", () => {
       type: "object",
       properties: {prop: {type: "string", default: "schema_default"}}
     };
-    await expectAsync(validator.validate(schema, data)).toBeResolved(true);
+    await expect(validator.validate(schema, data)).resolves.toBeUndefined();
     expect(data.prop).toBe("schema_default");
   });
 
@@ -69,22 +68,25 @@ describe("schema validator", () => {
       type: "object",
       properties: {prop: {type: "string", default: "dynamicdefault"}}
     };
-    await expectAsync(validator.validate(schema, data)).toBeResolved(true);
+    await expect(validator.validate(schema, data)).resolves.toBeUndefined();
     expect(data.prop).toBe("dynamicvalue");
   });
 
   it("previous value should be passed correctly", async () => {
     const dynamicValueSpy = jest.fn(() => "dynamicvalue");
     validator.registerDefault({match: "created_at", type: "string", create: dynamicValueSpy});
+
     const schema: JSONSchema7 = {
       type: "object",
       properties: {prop: {type: "string", default: "created_at"}}
     };
-    await expectAsync(validator.validate(schema, {})).toBeResolved(true);
-    await expectAsync(validator.validate(schema, {prop: "prevvalue"})).toBeResolved(true);
+
+    await expect(validator.validate(schema, {})).resolves.toBeUndefined();
+    await expect(validator.validate(schema, {prop: "prevvalue"})).resolves.toBeUndefined();
+
     expect(dynamicValueSpy).toHaveBeenCalledTimes(2);
-    expect(dynamicValueSpy.calls.first()[0]).toBe(undefined);
-    expect(dynamicValueSpy.mock.calls[dynamicValueSpy.mock.calls.length - 1][0]).toBe("prevvalue");
+    expect(dynamicValueSpy.mock.calls[0]).toEqual([undefined]);
+    expect(dynamicValueSpy.mock.calls[1]).toEqual(["prevvalue"]);
   });
 
   it("should call uri resolver", done => {
@@ -94,7 +96,7 @@ describe("schema validator", () => {
       () => done.fail(),
       () => {
         expect(resolver).toHaveBeenCalledTimes(1);
-        expect(resolver.calls.first()[0]).toBe("unknown-schema");
+        expect(resolver.mock.calls[0][0]).toBe("unknown-schema");
         done();
       }
     );
@@ -114,7 +116,7 @@ describe("schema validator", () => {
     const resolver = jest.fn(() => schema);
     validator.registerUriResolver(resolver);
 
-    await expectAsync(validator.validate(validatedSchema, {prop: ""})).toBeResolved();
+    await expect(validator.validate(validatedSchema, {prop: ""})).resolves.toBeUndefined();
 
     schema.next({
       $id: "http://spica.internal/schema",
@@ -128,11 +130,10 @@ describe("schema validator", () => {
 
     validator.removeSchema("testing");
 
-    await expectAsync(
+    await expect(
       validator.validate(validatedSchema, {prop: "notatextanymore"})
-    ).toBeRejected();
-
-    await expectAsync(validator.validate(validatedSchema, {prop: 2})).toBeResolved();
+    ).rejects.toBeDefined();
+    await expect(validator.validate(validatedSchema, {prop: 2})).resolves.toBeUndefined();
   });
 
   it("should resolve referenced schema and validate", async () => {
@@ -148,16 +149,18 @@ describe("schema validator", () => {
     const resolver = jest.fn(() => Promise.resolve(subschema));
     validator.registerUriResolver(resolver);
 
-    await expectAsync(validator.validate(schema, data)).toBeResolved();
+    await expect(validator.validate(schema, data)).resolves.toBeUndefined();
     expect(resolver).toHaveBeenCalled();
-    expect(resolver.mock.calls[resolver.mock.calls.length - 1][0]).toBe("http://spica.internal/schema");
+    expect(resolver.mock.calls[resolver.mock.calls.length - 1]).toEqual([
+      "http://spica.internal/schema"
+    ]);
     expect(data.property1).toBe("default");
     expect(data.property2).toBeUndefined();
   });
 
   it("should fail when trying to resolve unknown schema", async () => {
-    await expectAsync(validator.validate({$ref: "unknown-schema"}, {})).toBeRejected(
-      "unknown-schema"
+    await expect(validator.validate({$ref: "unknown-schema"}, {})).rejects.toThrow(
+      "Could not resolve the schema unknown-schema"
     );
   });
 
@@ -196,25 +199,25 @@ describe("schema validator", () => {
     });
 
     it("should work with regex formats", () => {
-      return expectAsync(
+      return expect(
         validator.validate({type: "string", format: "date-time"}, "1963-06-19T08:30:06.283185Z")
-      ).toBeResolved();
+      ).resolves.toBeUndefined();
     });
 
     it("should pass validation", async () => {
-      await expectAsync(validator.validate(schema, {test: "formatted"})).toBeResolved();
+      await expect(validator.validate(schema, {test: "formatted"})).resolves.toBeUndefined();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy.mock.calls[spy.mock.calls.length - 1][0]).toBe("formatted");
+      expect(spy.mock.calls[0][0]).toBe("formatted");
     });
 
     it("should not pass validation", async () => {
-      await expectAsync(validator.validate(schema, {test: "nastyformatted"})).toBeRejected();
+      await expect(validator.validate(schema, {test: "nastyformatted"})).rejects.toBeDefined();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy.mock.calls[spy.mock.calls.length - 1][0]).toBe("nastyformatted");
+      expect(spy.mock.calls[0][0]).toBe("nastyformatted");
     });
 
     it("should not do any operation if format type does not match with schema", () => {
-      return expectAsync(
+      return expect(
         validator.validate(
           {
             type: "object",
@@ -227,7 +230,7 @@ describe("schema validator", () => {
           },
           {test: 123}
         )
-      ).toBeResolved();
+      ).resolves.toBeUndefined();
     });
 
     describe("and coercing", () => {
@@ -253,10 +256,10 @@ describe("schema validator", () => {
           test: "formatted"
         };
 
-        await expectAsync(validator.validate(schema, data)).toBeResolved();
+        await expect(validator.validate(schema, data)).resolves.toBeUndefined();
         expect(data.test).toBe("formatted");
         expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy.mock.calls[spy.mock.calls.length - 1][0]).toBe("formatted");
+        expect(spy.mock.calls[0][0]).toBe("formatted");
       });
 
       it("should coerce custom format", async () => {
@@ -281,12 +284,12 @@ describe("schema validator", () => {
             }
           }
         };
-        await expectAsync(validator.validate(schema, data)).toBeResolved();
+        await expect(validator.validate(schema, data)).resolves.toBeUndefined();
         expect(data.test).toBe("test formatted");
         expect(coerceSpy).toHaveBeenCalledTimes(1);
-        expect(coerceSpy.mock.calls[coerceSpy.mock.calls.length - 1][0]).toBe("formatted");
+        expect(coerceSpy.mock.calls[0][0]).toBe("formatted");
         expect(validateSpy).toHaveBeenCalledTimes(1);
-        expect(validateSpy.mock.calls[validateSpy.mock.calls.length - 1][0]).toBe("formatted");
+        expect(validateSpy.mock.calls[0][0]).toBe("formatted");
       });
     });
   });
