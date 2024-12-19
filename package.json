@@ -34,7 +34,7 @@
     "matcher": "^3.0.0",
     "mingo": "^4.4.1",
     "mongodb": "^3.5.8",
-    "mongodb-memory-server-core": "^6.9.2",
+    "mongodb-memory-server": "~7.0.0",
     "path-to-regexp": "^3.0.0",
     "request-promise-native": "^1.0.8",
     "rimraf": "^3.0.2",

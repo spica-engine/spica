@@ -172,11 +172,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     if (this.bucketCacheService) {
-      await this.bucketCacheService.invalidate(schema._id.toString());
+      this.bucketCacheService.invalidate(schema._id.toString());
     }
 
     if (this.activity) {
-      await insertActivity(
+      insertActivity(
         client.upgradeReq,
         Action.POST,
         schema._id.toString(),
@@ -249,18 +249,18 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     if (this.bucketCacheService) {
-      await this.bucketCacheService.invalidate(schema._id.toString());
+      this.bucketCacheService.invalidate(schema._id.toString());
     }
 
     if (this.history && schema.history) {
-      await this.history.createHistory(schema._id, previousDocument, {
+      this.history.createHistory(schema._id, previousDocument, {
         ...document,
         _id: documentId
       });
     }
 
     if (this.activity) {
-      await insertActivity(
+      insertActivity(
         client.upgradeReq,
         Action.PUT,
         schema._id.toString(),
@@ -350,15 +350,15 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     if (this.bucketCacheService) {
-      await this.bucketCacheService.invalidate(schema._id.toString());
+      this.bucketCacheService.invalidate(schema._id.toString());
     }
 
     if (this.history && schema.history) {
-      await this.history.createHistory(schema._id, previousDocument, currentDocument);
+      this.history.createHistory(schema._id, previousDocument, currentDocument);
     }
 
     if (this.activity) {
-      await insertActivity(
+      insertActivity(
         client.upgradeReq,
         Action.PUT,
         schema._id.toString(),
@@ -423,17 +423,17 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     if (this.bucketCacheService) {
-      await this.bucketCacheService.invalidate(schema._id.toString());
+      this.bucketCacheService.invalidate(schema._id.toString());
     }
 
     if (this.history) {
-      await this.history.deleteMany({
+      this.history.deleteMany({
         document_id: new ObjectId(document._id)
       });
     }
 
     if (this.activity) {
-      await insertActivity(
+      insertActivity(
         client.upgradeReq,
         Action.DELETE,
         schema._id.toString(),
@@ -441,8 +441,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         this.activity
       );
     }
-
-    await clearRelations(this.bucketService, schema._id, document._id);
+    clearRelations(this.bucketService, schema._id, document._id);
 
     const dependents = getDependents(schema, deletedDocument);
 
@@ -459,7 +458,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
           _id: targetDocId
         };
 
-        await this.delete(targetClient, targetDoc);
+        this.delete(targetClient, targetDoc);
       }
     }
     return this.send(client, ChunkKind.Response, 204, "No Content");
