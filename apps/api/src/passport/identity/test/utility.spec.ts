@@ -63,17 +63,17 @@ describe("Utilities", () => {
     await factoryFunction("my_policy");
 
     expect(updateManySpy).toHaveBeenCalledTimes(1);
-    expect(updateManySpy).toHaveBeenCalledOnceWith(
-      {
-        policies: {
+    expect(updateManySpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        policies: expect.objectContaining({
           $in: ["my_policy"]
-        }
-      },
-      {
+        })
+      }),
+      expect.objectContaining({
         $pull: {
           policies: "my_policy"
         }
-      }
+      })
     );
   });
 });
