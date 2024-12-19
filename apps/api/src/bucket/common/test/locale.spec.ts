@@ -1,7 +1,7 @@
 import {provideLanguageFinalizer} from "@spica-server/bucket/common";
 
 describe("provideLanguageChangeUpdater", () => {
-  let childrenSpy: jest.Mock;
+  let childrenSpy: jest.SpyInstance | jest.Mock;
   const translatableBuckets = [
     {_id: "bucket1", properties: {title: {}, description: {}}},
     {_id: "bucket2", properties: {name: {}}}
@@ -109,10 +109,7 @@ describe("provideLanguageChangeUpdater", () => {
     ]);
 
     expect(childrenSpy).toHaveBeenCalledTimes(2);
-    expect(childrenSpy.mock.calls).toEqual([
-      [translatableBuckets[0]],
-      [translatableBuckets[1]]
-    ]);
+    expect(childrenSpy.mock.calls).toEqual([[translatableBuckets[0]], [translatableBuckets[1]]]);
 
     expect(bucketDataService.updateMany).toHaveBeenCalledTimes(2);
     expect(bucketDataService.updateMany.mock.calls).toEqual([
