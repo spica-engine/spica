@@ -16,6 +16,8 @@ import {
 } from "@spica-server/bucket/expression/src/builtin_funcs";
 import {parser} from "@spica-server/bucket/expression/src/parser";
 
+jest.useFakeTimers();
+
 describe("macros", () => {
   describe("validation", () => {
     const fnName = "macro";
