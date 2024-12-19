@@ -64,16 +64,16 @@ describe("Utilities", () => {
 
     expect(updateManySpy).toHaveBeenCalledTimes(1);
     expect(updateManySpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        policies: expect.objectContaining({
+      {
+        policies: {
           $in: ["my_policy"]
-        })
-      }),
-      expect.objectContaining({
+        }
+      },
+      {
         $pull: {
           policies: "my_policy"
         }
-      })
+      }
     );
   });
 });
