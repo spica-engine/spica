@@ -11,7 +11,7 @@ describe("npm", () => {
 
   beforeEach(() => {
     npm = new Npm();
-    cwd = path.join(process.env.TEST_TMPDIR, fs.mkdtempSync("__test__"));
+    cwd = path.join(process.env.TEST_TMPDIR, "__test__");
     fs.mkdirSync(cwd, {recursive: true});
     fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({name: "__testing__"}));
   });
@@ -23,7 +23,7 @@ describe("npm", () => {
       {
         name: "debug",
         version: "^4.1.1",
-        types: []
+        types: expect.any(Object)
       }
     ]);
   });
@@ -35,7 +35,7 @@ describe("npm", () => {
       {
         name: "rxjs",
         version: "^6.0.0",
-        types: []
+        types: expect.any(Object)
       }
     ]);
     await npm.uninstall(cwd, "rxjs");
@@ -56,11 +56,10 @@ describe("npm", () => {
       .toPromise()
       .catch(_catch);
     expect(_catch).toHaveBeenCalled();
-    console.log("LOG: ", _catch.mock.calls);
-    // const errorMessage = _catch.mock.calls[0][0];
-    // expect(errorMessage).toContain("npm ERR! code ETARGET");
-    // expect(errorMessage).toContain("No matching version found for rxjs@couldnotexist");
-    // expect(errorMessage).toContain("npm install has failed. code: 1");
+    const errorMessage = _catch.mock.calls[0][0 as any];
+    expect(errorMessage).toContain("npm error code ETARGET");
+    expect(errorMessage).toContain("No matching version found for rxjs@couldnotexist");
+    expect(errorMessage).toContain("npm install has failed. code: 1");
   });
 
   it("should report progress", done => {
@@ -69,7 +68,9 @@ describe("npm", () => {
       .install(cwd, "debug")
       .pipe(distinctUntilChanged())
       .subscribe({
-        next: p => progress.push(p),
+        next: p => {
+          progress.push(p);
+        },
         complete: () => {
           // prettier-ignore
           expect(progress).toEqual([
