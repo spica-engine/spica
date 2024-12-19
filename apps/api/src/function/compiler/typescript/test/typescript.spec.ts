@@ -4,7 +4,7 @@ import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import * as fs from "fs";
 import * as path from "path";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+jest.setTimeout(20000);
 
 describe("Typescript", () => {
   let language: Typescript;
@@ -47,7 +47,7 @@ describe("Typescript", () => {
     const a;
     }
     `);
-    await expectAsync(language.compile(compilation)).toBeRejectedWith([
+    await expect(language.compile(compilation)).rejects.toEqual([
       Object({
         code: 2307,
         category: 1,
