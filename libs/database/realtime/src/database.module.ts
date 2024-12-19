@@ -1,5 +1,5 @@
 import {Module} from "@nestjs/common";
-import {RealtimeDatabaseService} from "./database.service";
+import {RealtimeDatabaseService} from "../database.service";
 
 @Module({
   providers: [RealtimeDatabaseService],
