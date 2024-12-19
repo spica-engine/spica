@@ -1,3 +1,3 @@
-export {RealtimeDatabaseModule} from "./database.module";
-export {RealtimeDatabaseService} from "./database.service";
-export {FindOptions} from "./interface";
+export {RealtimeDatabaseModule} from "./src/database.module";
+export {RealtimeDatabaseService} from "./src/database.service";
+export {FindOptions} from "./src/interface";
