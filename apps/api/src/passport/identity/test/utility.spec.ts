@@ -63,7 +63,7 @@ describe("Utilities", () => {
     await factoryFunction("my_policy");
 
     expect(updateManySpy).toHaveBeenCalledTimes(1);
-    expect(updateManySpy).toHaveBeenCalledOnceWith(
+    expect(updateManySpy).toHaveBeenCalledWith(
       {
         policies: {
           $in: ["my_policy"]
