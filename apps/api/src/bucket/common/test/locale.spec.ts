@@ -1,7 +1,7 @@
 import {provideLanguageFinalizer} from "@spica-server/bucket/common";
 
 describe("provideLanguageChangeUpdater", () => {
-  let childrenSpy: jest.SpyInstance | jest.Mock;
+  let childrenSpy: jest.SpyInstance;
   const translatableBuckets = [
     {_id: "bucket1", properties: {title: {}, description: {}}},
     {_id: "bucket2", properties: {name: {}}}
