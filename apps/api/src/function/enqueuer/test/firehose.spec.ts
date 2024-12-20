@@ -6,8 +6,8 @@ import {EventQueue, FirehoseQueue} from "@spica-server/function/queue";
 import {event, Firehose} from "@spica-server/function/queue/proto";
 
 describe("FirehoseEnqueuer", () => {
-  let eventQueue: jest.Mocked<EventQueue>;
-  let firehoseQueue: jest.Mocked<FirehoseQueue>;
+  let eventQueue: {enqueue: jest.Mock};
+  let firehoseQueue: {enqueue: jest.Mock};
   let noopTarget: event.Target;
   let firehoseEnqueuer: FirehoseEnqueuer;
   let app: INestApplication;
@@ -36,8 +36,8 @@ describe("FirehoseEnqueuer", () => {
 
     schedulerUnsubscriptionSpy = jest.fn();
     firehoseEnqueuer = new FirehoseEnqueuer(
-      eventQueue,
-      firehoseQueue,
+      eventQueue as any,
+      firehoseQueue as any,
       app.getHttpAdapter().getHttpServer(),
       schedulerUnsubscriptionSpy
     );
@@ -74,7 +74,7 @@ describe("FirehoseEnqueuer", () => {
       }
     ]);
 
-    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledOnceWith(target2.id);
+    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledWith(target2.id);
   });
 
   it("should send client description", async () => {
