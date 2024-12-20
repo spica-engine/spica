@@ -134,6 +134,7 @@ describe("Bucket Cache Integration", () => {
       expect(cachedKeys.length).toEqual(1);
 
       const oneMinLater = new Date(Date.now() + 60 * 1000);
+      jest.useFakeTimers();
       jest.setSystemTime(oneMinLater);
 
       // it will clear cache right after same request received
