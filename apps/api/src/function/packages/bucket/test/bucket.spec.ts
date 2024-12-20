@@ -3,8 +3,6 @@ import * as Operators from "@spica-devkit/bucket/src/operators";
 import {Axios} from "@spica-devkit/internal_common";
 import {of} from "rxjs";
 
-jasmine.getEnv().allowRespy(true);
-
 describe("@spica-devkit/bucket", () => {
   let getSpy: jest.Mocked<any>;
   let postSpy: jest.Mocked<any>;
@@ -22,6 +20,15 @@ describe("@spica-devkit/bucket", () => {
     Bucket.initialize({apikey: "TEST_APIKEY"});
 
     wsSpy = jest.spyOn(Operators, "getWsObs").mockReturnValue(of() as any);
+  });
+
+  afterEach(() => {
+    getSpy.mockClear();
+    postSpy.mockClear();
+    putSpy.mockClear();
+    deleteSpy.mockClear();
+    deleteSpy.mockClear();
+    wsSpy.mockClear();
   });
 
   describe("errors", () => {
