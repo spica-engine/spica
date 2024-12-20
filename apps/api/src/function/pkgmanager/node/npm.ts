@@ -65,7 +65,7 @@ export class Npm extends PackageManager {
           name,
           "--no-audit",
           "--cache",
-          path.join(os.tmpdir(), fs.mkdtempSync("_npm_cache_"))
+          fs.mkdtempSync(path.join(os.tmpdir(), "_npm_cache_"))
         ],
         {cwd}
       );
