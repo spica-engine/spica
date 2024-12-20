@@ -69,7 +69,7 @@ describe("ActionGuard", () => {
           }
         ]
       });
-      await expectAsync(guard()).toBeRejectedWith(
+      await expect(guard()).rejects.toThrow(
         new Error(
           'Policy "Testing" contains a statement [0] whose resource does not match the resource definition. Expected 2 arguments.'
         )
@@ -95,7 +95,7 @@ describe("ActionGuard", () => {
           }
         ]
       });
-      await expectAsync(guard()).toBeRejectedWith(
+      await expect(guard()).rejects.toThrow(
         new Error(
           'Policy "Testing" contains a statement [0] whose resource does not match the resource definition. Expected 2 arguments.'
         )
@@ -117,7 +117,7 @@ describe("ActionGuard", () => {
           }
         ]
       });
-      await expectAsync(guard()).toBeRejectedWith(
+      await expect(guard()).rejects.toThrow(
         new Error(
           'Policy "Testing" contains a statement [0] whose resource does not match the resource definition. Expected 2 arguments.'
         )
@@ -246,7 +246,7 @@ describe("ActionGuard", () => {
           resourceFilter: true
         });
 
-        await expectAsync(guard()).toBeRejectedWith(
+        await expect(guard()).rejects.toThrow(
           new Error(
             "You do not have sufficient permissions to do bucket:data:index on resource bucket1"
           )
@@ -349,7 +349,7 @@ describe("ActionGuard", () => {
           resourceFilter: true
         });
 
-        await expectAsync(guard()).toBeRejectedWith(
+        await expect(guard()).rejects.toThrow(
           new Error(
             "You do not have sufficient permissions to do bucket:data:index on resource bucket1"
           )
@@ -376,7 +376,7 @@ describe("ActionGuard", () => {
           ]
         });
 
-        await expectAsync(guard()).toBeRejectedWith(
+        await expect(guard()).rejects.toThrow(
           new Error(
             "You do not have sufficient permissions to do bucket:data:show on resource bucket1/row1"
           )
@@ -403,7 +403,7 @@ describe("ActionGuard", () => {
           ]
         });
 
-        await expectAsync(guard()).toBeRejectedWith(
+        await expect(guard()).rejects.toThrow(
           new Error(
             "You do not have sufficient permissions to do bucket:data:show on resource bucket1/row2"
           )
@@ -431,7 +431,7 @@ describe("ActionGuard", () => {
         ]
       });
 
-      await expectAsync(guard()).toBeRejectedWith(
+      await expect(guard()).rejects.toThrow(
         new Error("You do not have sufficient permissions to do custom on resource bucket1/row1")
       );
     });
