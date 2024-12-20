@@ -25,7 +25,7 @@ describe("provideLanguageChangeUpdater", () => {
   });
 
   afterEach(() => {
-    childrenSpy.mockReset();
+    childrenSpy.mockClear();
   });
 
   it("should return updater function", () => {
