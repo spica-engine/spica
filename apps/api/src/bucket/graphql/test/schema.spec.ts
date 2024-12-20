@@ -332,8 +332,7 @@ describe("Schema", () => {
             roles : Bucket_id_roles
           }
         `
-        ),
-        "should work if duplicated value removed"
+        )
       );
     });
 
