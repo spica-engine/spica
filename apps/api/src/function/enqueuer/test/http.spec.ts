@@ -23,8 +23,8 @@ describe("http enqueuer", () => {
   let httpEnqueuer: HttpEnqueuer;
   let noopTarget: event.Target;
 
-  let eventQueue: jest.Mocked<EventQueue>;
-  let httpQueue: jest.Mocked<HttpQueue>;
+  let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
+  let httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
 
   let schedulerUnsubscriptionSpy: jest.Mock;
 
@@ -45,20 +45,20 @@ describe("http enqueuer", () => {
     req = module.get(Request);
 
     eventQueue = {
-      'enqueue': jest.fn(),
-      'dequeue': jest.fn()
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
     };
     httpQueue = {
-      'enqueue': jest.fn(),
-      'dequeue': jest.fn()
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
     };
 
     await app.listen(req.socket);
 
     schedulerUnsubscriptionSpy = jest.fn();
     httpEnqueuer = new HttpEnqueuer(
-      eventQueue,
-      httpQueue,
+      eventQueue as any,
+      httpQueue as any,
       app.getHttpAdapter().getInstance(),
       corsOptions,
       schedulerUnsubscriptionSpy
@@ -122,7 +122,7 @@ describe("http enqueuer", () => {
     expect(routes.map(r => r.stack[0].method).includes("put")).toEqual(true);
     expect(routes.map(r => r.stack[0].method).includes("delete")).toEqual(true);
 
-    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledOnceWith(target1.id);
+    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledWith(target1.id);
   });
 
   it("should not handle preflight requests on indistinct paths", async () => {
@@ -215,7 +215,7 @@ describe("http enqueuer", () => {
     expect(spy).toHaveBeenCalledTimes(1);
 
     // Reset calls
-    spy.mockReset();
+    spy.mockClear();
 
     // POST
     const postTarget = new event.Target();
@@ -237,7 +237,7 @@ describe("http enqueuer", () => {
     expect(spy).toHaveBeenCalledTimes(1);
 
     // Reset calls
-    spy.mockReset();
+    spy.mockClear();
 
     // Remove post target and test if we still have the preflight route
     httpEnqueuer.unsubscribe(postTarget);
@@ -310,18 +310,9 @@ describe("http enqueuer", () => {
     });
     await req.post("/fn-execute/test", {test: 1}, {"Content-type": "application/json"});
     expect(httpQueue.enqueue).toHaveBeenCalledTimes(1);
-    expect(Array.from(httpQueue.enqueue.mock.calls[httpQueue.enqueue.mock.calls.length - 1][1].body)).toEqual([
-      123,
-      34,
-      116,
-      101,
-      115,
-      116,
-      34,
-      58,
-      49,
-      125
-    ]);
+    expect(
+      Array.from(httpQueue.enqueue.mock.calls[httpQueue.enqueue.mock.calls.length - 1][1].body)
+    ).toEqual([123, 34, 116, 101, 115, 116, 34, 58, 49, 125]);
   });
 
   it("should dequeue when connection is closed", done => {

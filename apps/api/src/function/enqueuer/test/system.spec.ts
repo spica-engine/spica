@@ -12,20 +12,18 @@ function createTarget(cwd?: string, handler?: string) {
 describe("SystemEnqueuer", () => {
   const noopTarget = createTarget();
   let enqueuer: SystemEnqueuer;
-  let eventQueue: jest.Mocked<EventQueue>;
-  let nextSpy: jest.Mock;
-  let invokerSpy: jest.Mock;
+  let eventQueue: {enqueue: jest.Mock};
+  let nextSpy: jest.SpyInstance;
+  let invokerSpy: jest.SpyInstance;
 
-  const clock = jasmine.clock();
-
-  beforeAll(() => clock.install());
-  afterAll(() => clock.uninstall());
+  beforeAll(() => jest.useFakeTimers());
+  afterAll(() => jest.useRealTimers());
 
   beforeEach(() => {
     eventQueue = {
       enqueue: jest.fn()
-    } as jest.Mocked<EventQueue>;
-    enqueuer = new SystemEnqueuer(eventQueue);
+    };
+    enqueuer = new SystemEnqueuer(eventQueue as any);
     nextSpy = jest.spyOn(enqueuer["subscriptionSubject"], "next");
     invokerSpy = jest.spyOn(enqueuer, "invokeReadyEventTargets" as never);
   });
@@ -68,7 +66,7 @@ describe("SystemEnqueuer", () => {
     expect(nextSpy).toHaveBeenCalledWith(noopTarget);
     expect(invokerSpy).not.toHaveBeenCalled();
 
-    clock.tick(1500);
+    jest.advanceTimersByTime(1500);
 
     expect(invokerSpy).toHaveBeenCalledTimes(1);
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
@@ -81,14 +79,14 @@ describe("SystemEnqueuer", () => {
     expect(invokerSpy).not.toHaveBeenCalled();
 
     enqueuer.subscribe(noopTarget, {name: "READY"});
-    clock.tick(500);
+    jest.advanceTimersByTime(500);
     expect(invokerSpy).not.toHaveBeenCalled();
 
     enqueuer.subscribe(noopTarget, {name: "READY"});
-    clock.tick(500);
+    jest.advanceTimersByTime(500);
     expect(invokerSpy).not.toHaveBeenCalled();
 
-    clock.tick(1500);
+    jest.advanceTimersByTime(1500);
 
     expect(invokerSpy).toHaveBeenCalledTimes(1);
   });
@@ -97,15 +95,15 @@ describe("SystemEnqueuer", () => {
     expect(invokerSpy).not.toHaveBeenCalled();
 
     enqueuer.subscribe(noopTarget, {name: "READY"});
-    clock.tick(1500);
+    jest.advanceTimersByTime(1500);
     expect(invokerSpy).toHaveBeenCalledTimes(1);
 
     enqueuer.subscribe(noopTarget, {name: "READY"});
-    clock.tick(500);
+    jest.advanceTimersByTime(500);
     enqueuer.subscribe(noopTarget, {name: "READY"});
-    clock.tick(500);
+    jest.advanceTimersByTime(500);
 
-    clock.tick(1500);
+    jest.advanceTimersByTime(1500);
     expect(invokerSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -114,10 +112,10 @@ describe("SystemEnqueuer", () => {
 
     enqueuer.subscribe(noopTarget, {name: "READY"});
     expect(nextSpy).toHaveBeenCalledWith(noopTarget);
-    clock.tick(500);
+    jest.advanceTimersByTime(500);
 
     enqueuer.unsubscribe(noopTarget);
-    clock.tick(1500);
+    jest.advanceTimersByTime(1500);
 
     expect(invokerSpy).toHaveBeenCalledTimes(1);
     expect(eventQueue.enqueue).not.toHaveBeenCalled();

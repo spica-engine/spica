@@ -17,8 +17,8 @@ function createTarget(cwd?: string, handler?: string) {
 }
 
 describe("DatabaseEnqueuer", () => {
-  let eventQueue: jest.Mocked<EventQueue>;
-  let databaseQueue: jest.Mocked<DatabaseQueue>;
+  let eventQueue: {enqueue: jest.Mock};
+  let databaseQueue: {enqueue: jest.Mock};
   let noopTarget: event.Target;
   let databaseEnqueuer: DatabaseEnqueuer;
   let database: DatabaseService;
@@ -35,16 +35,16 @@ describe("DatabaseEnqueuer", () => {
     noopTarget = createTarget();
 
     eventQueue = {
-      'enqueue': jest.fn()
+      enqueue: jest.fn()
     };
     databaseQueue = {
-      'enqueue': jest.fn()
+      enqueue: jest.fn()
     };
 
     schedulerUnsubscriptionSpy = jest.fn();
     databaseEnqueuer = new DatabaseEnqueuer(
-      eventQueue,
-      databaseQueue,
+      eventQueue as any,
+      databaseQueue as any,
       database,
       schedulerUnsubscriptionSpy
     );
@@ -92,7 +92,7 @@ describe("DatabaseEnqueuer", () => {
 
     expect(target1Stream.isClosed()).toEqual(true);
 
-    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledOnceWith(target1.id);
+    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledWith(target1.id);
   });
 
   it("should enqueue INSERT events", async () => {
