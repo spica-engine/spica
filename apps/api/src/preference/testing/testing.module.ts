@@ -10,8 +10,6 @@ class PartialPreferenceService {
     this.defaults.set("passport", {identity: {attributes: {}}});
   }
 
-  // TODO: uncomment and fix when switching to jest
-
   default = jest.fn<typeof PreferenceService.prototype.default>((preference: any) => {
     this.defaults.set(preference.scope, preference);
   });
