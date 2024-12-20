@@ -1,4 +1,4 @@
-import {Path} from "@spica-server/bucket/history/path";
+import {Path} from "@spica-server/bucket/history/src/path";
 import {JSONSchema7} from "json-schema";
 
 describe("Path", () => {
