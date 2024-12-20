@@ -7,7 +7,7 @@ import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {BucketCacheModule} from "@spica-server/bucket/cache";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 12000;
+jest.setTimeout(12000);
 
 describe("Bucket Module", () => {
   it("should import hook module", async () => {

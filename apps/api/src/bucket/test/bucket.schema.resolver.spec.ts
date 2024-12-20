@@ -79,7 +79,11 @@ describe("Bucket Schema Resolver", () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create(), PreferenceTestingModule, SchemaModule.forChild()],
+      imports: [
+        DatabaseTestingModule.standalone(),
+        PreferenceTestingModule,
+        SchemaModule.forChild()
+      ],
       providers: [
         {
           provide: BucketService,
@@ -109,7 +113,7 @@ describe("Bucket Schema Resolver", () => {
     delete updatedBucket.properties.text;
     bs["onBucketUpdated"].next(updatedBucket);
 
-    expectAsync(
+    expect(
       schemaResolver
         .resolve(bucket._id.toHexString())
         .pipe(
@@ -117,7 +121,7 @@ describe("Bucket Schema Resolver", () => {
           bufferCount(3)
         )
         .toPromise()
-    ).toBeResolvedTo([
+    ).resolves.toEqual([
       //initial schema
       {
         $schema: "http://spica.internal/bucket/schema",
