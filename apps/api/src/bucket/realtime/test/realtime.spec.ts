@@ -3,7 +3,7 @@ import {Test} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket/src";
 import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
-import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {GuardService} from "@spica-server/passport";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
@@ -20,12 +20,6 @@ function url(path: string, query?: {[k: string]: string | number | boolean | obj
       : JSON.stringify(query[key])) as string);
   }
   return `${url.pathname}${url.search}`;
-}
-
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
-
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 describe("Realtime", () => {
@@ -58,7 +52,9 @@ describe("Realtime", () => {
           cache: false,
           graphql: false
         }),
-        PassportTestingModule.initialize()
+        PassportTestingModule.initialize({
+          overriddenStrategyType: "APIKEY"
+        })
       ]
     }).compile();
     wsc = module.get(Websocket);
@@ -77,19 +73,36 @@ describe("Realtime", () => {
       }
     });
     bucket = bkt;
-
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__objectid__" && typeof actual == typeof expected) {
-        return true;
-      }
-    });
   });
 
   afterEach(async () => await app.close());
 
   describe("authorization", () => {
-    let authGuardCheck: jest.Mock<typeof GuardService.prototype.checkAuthorization>;
-    let actionGuardCheck: jest.Mock<typeof GuardService.prototype.checkAction>;
+    let authGuardCheck: jest.SpyInstance<
+      Promise<boolean>,
+      [
+        {
+          request: any;
+          response: any;
+          type?: string;
+        }
+      ],
+      any
+    >;
+    let actionGuardCheck: jest.SpyInstance<
+      Promise<boolean>,
+      [
+        {
+          request: any;
+          response: any;
+          actions: string | string[];
+          options?: {
+            resourceFilter: boolean;
+          };
+        }
+      ],
+      any
+    >;
 
     beforeEach(() => {
       const guardService = app.get(GuardService);
@@ -103,22 +116,21 @@ describe("Realtime", () => {
       });
     });
 
-    it("should authorize and do the initial sync", async done => {
+    it("should authorize and do the initial sync", done => {
       const ws = wsc.get(`/bucket/${bucket._id}/data`, {
         headers: {
           Authorization: "APIKEY test"
         }
       });
 
-      ws.onmessage = async e => {
+      ws.onmessage = e => {
         expect(e.data).toEqual(`{"kind":1}`);
-        await ws.close();
-        done();
+        ws.close().then(() => done());
       };
-      await ws.connect;
+      ws.connect;
     });
 
-    it("should show error messages", async done => {
+    it("should show error messages", done => {
       authGuardCheck.mockImplementation(() => {
         throw new UnauthorizedException();
       });
@@ -127,7 +139,7 @@ describe("Realtime", () => {
           Authorization: "APIKEY test"
         }
       });
-      ws.onclose = done;
+      ws.onclose = () => done();
       ws.onmessage = e => {
         expect(e.data).toEqual(`{"kind":-1,"status":401,"message":"Unauthorized"}`);
       };
@@ -142,7 +154,7 @@ describe("Realtime", () => {
           Authorization: "APIKEY test"
         }
       });
-      ws.onclose = done;
+      ws.onclose = () => done();
       ws.onmessage = e => {
         expect(e.data).toEqual(
           `{"kind":-1,"status":403,"message":"You do not have sufficient permissions to do this action."}`
@@ -164,13 +176,13 @@ describe("Realtime", () => {
         })
       ];
 
-      messageSpy.mockReset();
+      messageSpy.mockClear();
     });
 
     describe("initial sync", () => {
       const lastMessage = JSON.stringify({kind: ChunkKind.EndOfInitial});
 
-      it("should do the initial sync", async done => {
+      it("should do the initial sync", done => {
         const ws = wsc.get(`/bucket/${bucket._id}/data`);
 
         ws.onmessage = async e => {
@@ -188,10 +200,10 @@ describe("Realtime", () => {
           }
         };
 
-        await ws.connect;
+        ws.connect;
       });
 
-      it("should do the initial sync with filter", async done => {
+      it("should do the initial sync with filter", done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {filter: `title == "second"`}));
 
         ws.onmessage = async e => {
@@ -208,10 +220,10 @@ describe("Realtime", () => {
           }
         };
 
-        await ws.connect;
+        ws.connect;
       });
 
-      it("should do the initial sync with _id filter", async done => {
+      it("should do the initial sync with _id filter", done => {
         const ws = wsc.get(
           url(`/bucket/${bucket._id}/data`, {filter: `document._id == "${rows[0]["_id"]}"`})
         );
@@ -230,10 +242,10 @@ describe("Realtime", () => {
           }
         };
 
-        await ws.connect;
+        ws.connect;
       });
 
-      it("should do the initial sync with limit", async done => {
+      it("should do the initial sync with limit", done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {limit: 1}));
 
         ws.onmessage = async e => {
@@ -250,10 +262,10 @@ describe("Realtime", () => {
           }
         };
 
-        await ws.connect;
+        ws.connect;
       });
 
-      it("should do the initial sync with skip", async done => {
+      it("should do the initial sync with skip", done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {skip: 1}));
 
         ws.onmessage = async e => {
@@ -270,41 +282,42 @@ describe("Realtime", () => {
           }
         };
 
-        await ws.connect;
+        ws.connect;
       });
 
-      it("should do the initial sync with skip and limit", async done => {
-        const newRows = [
-          await insertRow({
+      it("should do the initial sync with skip and limit", done => {
+        Promise.all([
+          insertRow({
             title: "third"
           }),
-          await insertRow({
+          insertRow({
             title: "fourth"
           })
-        ];
+        ]).then(newRows => {
+          const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {skip: 1, limit: 2}));
 
-        const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {skip: 1, limit: 2}));
+          ws.onmessage = async e => {
+            messageSpy(JSON.parse(e.data as string));
 
-        ws.onmessage = async e => {
-          messageSpy(JSON.parse(e.data as string));
+            if (e.data == lastMessage) {
+              console.log(messageSpy.mock.calls.map(c => c[0]));
+              expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
+                {kind: ChunkKind.Initial, document: rows[1]},
+                {kind: ChunkKind.Initial, document: newRows[0]},
 
-          if (e.data == lastMessage) {
-            expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
-              {kind: ChunkKind.Initial, document: rows[1]},
-              {kind: ChunkKind.Initial, document: newRows[0]},
+                {kind: ChunkKind.EndOfInitial}
+              ]);
 
-              {kind: ChunkKind.EndOfInitial}
-            ]);
+              await ws.close();
+              done();
+            }
+          };
 
-            await ws.close();
-            done();
-          }
-        };
-
-        await ws.connect;
+          ws.connect;
+        });
       });
 
-      it("should do the initial sync with sort", async done => {
+      it("should do the initial sync with sort", done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {sort: {_id: -1}}));
 
         ws.onmessage = async e => {
@@ -322,12 +335,12 @@ describe("Realtime", () => {
           }
         };
 
-        await ws.connect;
+        ws.connect;
       });
     });
 
     describe("sending message", () => {
-      it("should perform insert action and send changes to the clients", async done => {
+      it("should perform insert action and send changes to the clients", done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
 
         ws.onmessage = async e => {
@@ -335,14 +348,18 @@ describe("Realtime", () => {
           messageSpy(message);
 
           if (message.kind == ChunkKind.Insert) {
-            expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
+            const messages = messageSpy.mock.calls.map(c => c[0]);
+            const insertedId = messages[4].document._id;
+
+            expect(ObjectId.isValid(insertedId)).toEqual(true);
+            expect(messages).toEqual([
               {kind: ChunkKind.Initial, document: rows[0]},
               {kind: ChunkKind.Initial, document: rows[1]},
               {kind: ChunkKind.EndOfInitial},
               {kind: ChunkKind.Response, status: 201, message: "Created"},
               {
                 kind: ChunkKind.Insert,
-                document: {_id: "__objectid__", title: "hey"}
+                document: {_id: insertedId, title: "hey"}
               }
             ]);
             await ws.close();
@@ -350,12 +367,10 @@ describe("Realtime", () => {
           }
         };
 
-        await ws.connect;
-
-        await ws.send(JSON.stringify({event: "insert", data: {title: "hey"}}));
+        ws.connect.then(() => ws.send(JSON.stringify({event: "insert", data: {title: "hey"}})));
       });
 
-      it("should perform replace action and send changes to the clients", async done => {
+      it("should perform replace action and send changes to the clients", done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
 
         ws.onmessage = async e => {
@@ -378,12 +393,12 @@ describe("Realtime", () => {
           }
         };
 
-        await ws.connect;
-
-        await ws.send(JSON.stringify({event: "replace", data: {_id: rows[0]._id, title: "hello"}}));
+        ws.connect.then(() =>
+          ws.send(JSON.stringify({event: "replace", data: {_id: rows[0]._id, title: "hello"}}))
+        );
       });
 
-      it("should perform patch action and send changes to the clients", async done => {
+      it("should perform patch action and send changes to the clients", done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
 
         ws.onmessage = async e => {
@@ -406,12 +421,12 @@ describe("Realtime", () => {
           }
         };
 
-        await ws.connect;
-
-        await ws.send(JSON.stringify({event: "patch", data: {_id: rows[0]._id, title: null}}));
+        ws.connect.then(() =>
+          ws.send(JSON.stringify({event: "patch", data: {_id: rows[0]._id, title: null}}))
+        );
       });
 
-      it("should perform delete action and send changes to the clients", async done => {
+      it("should perform delete action and send changes to the clients", done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
 
         ws.onmessage = async e => {
@@ -434,9 +449,7 @@ describe("Realtime", () => {
           }
         };
 
-        await ws.connect;
-
-        await ws.send(JSON.stringify({event: "delete", data: {_id: rows[0]._id}}));
+        ws.connect.then(() => ws.send(JSON.stringify({event: "delete", data: {_id: rows[0]._id}})));
       });
     });
 
@@ -458,7 +471,7 @@ describe("Realtime", () => {
           await req.post("/bucket", validationBucket).then(res => (validationBucket = res.body));
         });
 
-        it("should reject operation and send errors to the client", async done => {
+        it("should reject operation and send errors to the client", done => {
           const ws = wsc.get(url(`/bucket/${validationBucket._id}/data`));
 
           ws.onmessage = async e => {
@@ -479,9 +492,7 @@ describe("Realtime", () => {
             }
           };
 
-          await ws.connect;
-
-          await ws.send(JSON.stringify({event: "insert", data: {}}));
+          ws.connect.then(() => ws.send(JSON.stringify({event: "insert", data: {}})));
         });
       });
 
@@ -503,7 +514,7 @@ describe("Realtime", () => {
           await req.post("/bucket", ruleBucket).then(res => (ruleBucket = res.body));
         });
 
-        it("should reject operation cause of rule", async done => {
+        it("should reject operation cause of rule", done => {
           const ws = wsc.get(url(`/bucket/${ruleBucket._id}/data`));
 
           ws.onmessage = async e => {
@@ -524,9 +535,9 @@ describe("Realtime", () => {
             }
           };
 
-          await ws.connect;
-
-          await ws.send(JSON.stringify({event: "insert", data: {title: "reject_me"}}));
+          ws.connect.then(() =>
+            ws.send(JSON.stringify({event: "insert", data: {title: "reject_me"}}))
+          );
         });
       });
     });
