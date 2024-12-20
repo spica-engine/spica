@@ -13,9 +13,9 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as os from "os";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7681";
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+jest.setTimeout(20000);
 
-xdescribe("Hooks Integration", () => {
+describe("Hooks Integration", () => {
   let app: INestApplication;
   let req: Request;
   let wsc: Websocket;
@@ -34,11 +34,6 @@ xdescribe("Hooks Integration", () => {
   }
 
   beforeEach(async () => {
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__skip__" && typeof actual == typeof expected) {
-        return true;
-      }
-    });
     module = await Test.createTestingModule({
       imports: [
         DatabaseTestingModule.replicaSet(),
@@ -193,7 +188,7 @@ xdescribe("Hooks Integration", () => {
   afterEach(() => app.close());
 
   describe("GET", () => {
-    it("should not change the behaviour of bucket-data endpoint", async () => {
+    fit("should not change the behaviour of bucket-data endpoint", async () => {
       await updateIndex(`export function get() { return []; }`);
       const {body: document} = await req.get(
         `/bucket/${bucket._id}/data/${user1._id}`,
@@ -380,10 +375,7 @@ xdescribe("Hooks Integration", () => {
         }
       };
       ws.onclose = () => {
-        expect(message.mock.calls.map(([a]) => a)).toEqual([
-          {kind: 0, document: user1},
-          {kind: 1}
-        ]);
+        expect(message.mock.calls.map(([a]) => a)).toEqual([{kind: 0, document: user1}, {kind: 1}]);
         done();
       };
     });
