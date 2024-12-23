@@ -2,8 +2,6 @@ import * as Storage from "@spica-devkit/storage";
 import {Axios} from "@spica-devkit/internal_common";
 import * as BSON from "bson";
 
-jasmine.getEnv().allowRespy(true);
-
 function getValueOfFormField(form, field) {
   return form
     .getBuffer()
@@ -13,10 +11,10 @@ function getValueOfFormField(form, field) {
 }
 
 describe("@spica-devkit/Storage", () => {
-  let getSpy: jest.Mock<any>;
-  let postSpy: jest.Mock<any>;
-  let putSpy: jest.Mock<any>;
-  let deleteSpy: jest.Mock<any>;
+  let getSpy: jest.SpyInstance;
+  let postSpy: jest.SpyInstance;
+  let putSpy: jest.SpyInstance;
+  let deleteSpy: jest.SpyInstance;
 
   const onUploadProgress = () => {};
   const onDownloadProgress = () => {};
@@ -29,6 +27,13 @@ describe("@spica-devkit/Storage", () => {
 
     process.env.__INTERNAL__SPICA__PUBLIC_URL__ = "http://test";
     Storage.initialize({apikey: "TEST_APIKEY"});
+  });
+
+  afterEach(() => {
+    getSpy.mockClear();
+    postSpy.mockClear();
+    putSpy.mockClear();
+    deleteSpy.mockClear();
   });
 
   describe("Storage", () => {
@@ -116,7 +121,7 @@ describe("@spica-devkit/Storage", () => {
         delete global.window;
       });
 
-      // we can't write tests for insert and update caseson test environment(NodeJS)
+      // we can't write tests for insert and update cases on test environment(NodeJS)
       // because we don't have native FormData library(built-in package for browsers)
 
       it("should download storage object", () => {

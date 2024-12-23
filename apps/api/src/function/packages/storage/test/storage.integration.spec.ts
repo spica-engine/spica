@@ -1,15 +1,11 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core/schema";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {CoreTestingModule} from "@spica-server/core/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {StorageModule} from "@spica-server/storage";
 import * as Storage from "@spica-devkit/storage";
-
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 20_000;
-
-jasmine.getEnv().allowRespy(true);
 
 const PORT = 3001;
 const PUBLIC_URL = `http://localhost:${PORT}`;
@@ -44,12 +40,6 @@ describe("Storage", () => {
     };
 
     Storage.initialize({identity: "token", publicUrl: PUBLIC_URL});
-
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__objectid__" && typeof actual == typeof expected) {
-        return true;
-      }
-    });
   });
 
   afterEach(async () => {
@@ -62,7 +52,7 @@ describe("Storage", () => {
     const getAllResponse = await Storage.getAll();
     expect(getAllResponse).toEqual([
       {
-        _id: "__objectid__",
+        _id: getAllResponse[0]._id,
         name: "test.txt",
         url: `${PUBLIC_URL}/storage/${getAllResponse[0]._id}/view`,
         content: {
@@ -81,7 +71,7 @@ describe("Storage", () => {
       meta: {total: 1},
       data: [
         {
-          _id: "__objectid__",
+          _id: getAllResponse.data[0]._id,
           name: "test.txt",
           url: `${PUBLIC_URL}/storage/${getAllResponse.data[0]._id}/view`,
           content: {
@@ -98,7 +88,7 @@ describe("Storage", () => {
 
     const getResponse = await Storage.get(storageObj._id);
     expect(getResponse).toEqual({
-      _id: "__objectid__",
+      _id: getResponse._id,
       name: "test.txt",
       url: `${PUBLIC_URL}/storage/${storageObj._id}/view`,
       content: {
@@ -120,6 +110,7 @@ describe("Storage", () => {
         type: "text/plain"
       }
     };
+    expect(ObjectId.isValid(insertedObject._id)).toEqual(true);
     expect(insertedObject).toEqual(expectedObj);
 
     const existing = await Storage.get(insertedObject._id);
@@ -211,16 +202,16 @@ describe("Storage", () => {
     expect(existings).toEqual([]);
   });
 
-  it("should download", async done => {
-    const insertedObj = await Storage.insert(storageObject);
-
-    const obj: any = await Storage.download(insertedObj._id);
-
-    const chunks = [];
-    obj.on("data", chunk => chunks.push(chunk));
-    obj.on("end", () => {
-      expect(chunks.toString()).toEqual("spica");
-      done();
-    });
+  it("should download", done => {
+    Storage.insert(storageObject).then(insertedObj =>
+      Storage.download(insertedObj._id).then((obj: any) => {
+        const chunks = [];
+        obj.on("data", chunk => chunks.push(chunk));
+        obj.on("end", () => {
+          expect(chunks.toString()).toEqual("spica");
+          done();
+        });
+      })
+    );
   });
 });
