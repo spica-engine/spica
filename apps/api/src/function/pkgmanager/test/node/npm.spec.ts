@@ -23,7 +23,7 @@ describe("npm", () => {
       {
         name: "debug",
         version: "^4.1.1",
-        types: expect.any(Object)
+        types: {}
       }
     ]);
   });
