@@ -7,8 +7,6 @@ import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {BucketCacheModule} from "@spica-server/bucket/cache";
 
-jest.setTimeout(12000);
-
 describe("Bucket Module", () => {
   it("should import hook module", async () => {
     const module = await Test.createTestingModule({

@@ -10,8 +10,6 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
-jest.setTimeout(10000);
-
 describe("BucketController", () => {
   let app: INestApplication;
   let req: Request;
