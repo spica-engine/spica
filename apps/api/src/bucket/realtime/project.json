@@ -1,0 +1,5 @@
+{
+  "name": "api/bucket/realtime",
+  "sourceRoot": "apps/api/src/bucket/realtime",
+  "projectType": "application"
+}
