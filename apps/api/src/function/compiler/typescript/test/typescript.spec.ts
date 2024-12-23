@@ -4,8 +4,6 @@ import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import * as fs from "fs";
 import * as path from "path";
 
-jest.setTimeout(20000);
-
 describe("Typescript", () => {
   let language: Typescript;
 

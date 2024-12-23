@@ -78,7 +78,7 @@ export class Typescript extends Language {
   }
 
   private initiateWorker() {
-    const isTestEnv = process.env.JEST_WORKER_ID !== undefined;
+    const isTestEnv = process.env.NODE_ENV === "test";
 
     const getWorkerFilePath = (extension: "ts" | "js") =>
       path.join(__dirname, `typescript_worker.${extension}`);
