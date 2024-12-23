@@ -68,9 +68,7 @@ describe("npm", () => {
       .install(cwd, "debug")
       .pipe(distinctUntilChanged())
       .subscribe({
-        next: p => {
-          progress.push(p);
-        },
+        next: p => progress.push(p),
         complete: () => {
           // prettier-ignore
           expect(progress).toEqual([
