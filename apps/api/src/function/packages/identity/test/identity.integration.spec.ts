@@ -1,7 +1,7 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core/schema";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {CoreTestingModule} from "@spica-server/core/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {PassportModule} from "@spica-server/passport";
@@ -9,7 +9,6 @@ import * as Identity from "@spica-devkit/identity";
 import Axios from "axios";
 import jwt_decode from "jwt-decode";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 20_000;
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
 
@@ -54,12 +53,6 @@ describe("Identity", () => {
     }).then(r => r.data.token);
 
     Identity.initialize({identity: token, publicUrl: PUBLIC_URL});
-
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__objectid__" && typeof actual == typeof expected) {
-        return true;
-      }
-    });
   });
 
   afterEach(async () => await app.close());
@@ -110,7 +103,7 @@ describe("Identity", () => {
     it("should get all", async () => {
       const identities = await Identity.getAll();
       expect(identities).toEqual([
-        {identifier: "spica", _id: "__objectid__", policies: ["PassportFullAccess"]}
+        {identifier: "spica", _id: identities[0]._id, policies: ["PassportFullAccess"]}
       ]);
     });
 
@@ -120,7 +113,7 @@ describe("Identity", () => {
 
         const spica = await Identity.get(identities[0]._id);
         expect(spica).toEqual({
-          _id: "__objectid__",
+          _id: spica._id,
           identifier: "spica",
           policies: ["PassportFullAccess"]
         });
@@ -130,7 +123,9 @@ describe("Identity", () => {
         const identities = await Identity.getAll({paginate: true});
         expect(identities).toEqual({
           meta: {total: 1},
-          data: [{identifier: "spica", _id: "__objectid__", policies: ["PassportFullAccess"]}]
+          data: [
+            {identifier: "spica", _id: identities.data[0]._id, policies: ["PassportFullAccess"]}
+          ]
         });
       });
 
@@ -139,7 +134,7 @@ describe("Identity", () => {
         const identities = await Identity.getAll({limit: 1});
         expect(identities).toEqual([
           {
-            _id: "__objectid__",
+            _id: identities[0]._id,
             identifier: "spica",
             policies: ["PassportFullAccess"]
           }
@@ -151,7 +146,7 @@ describe("Identity", () => {
         const identities = await Identity.getAll({skip: 1});
         expect(identities).toEqual([
           {
-            _id: "__objectid__",
+            _id: identities[0]._id,
             identifier: "user",
             policies: []
           }
@@ -167,12 +162,12 @@ describe("Identity", () => {
         });
         expect(identities).toEqual([
           {
-            _id: "__objectid__",
+            _id: identities[0]._id,
             identifier: "user",
             policies: []
           },
           {
-            _id: "__objectid__",
+            _id: identities[1]._id,
             identifier: "spica",
             policies: ["PassportFullAccess"]
           }
@@ -186,7 +181,7 @@ describe("Identity", () => {
             identifier: "user"
           }
         });
-        expect(identities).toEqual([{_id: "__objectid__", identifier: "user", policies: []}]);
+        expect(identities).toEqual([{_id: identities[0]._id, identifier: "user", policies: []}]);
       });
     });
 
@@ -197,8 +192,9 @@ describe("Identity", () => {
         policies: ["BucketFullAccess"]
       });
 
+      expect(ObjectId.isValid(identity._id)).toEqual(true);
       expect(identity).toEqual({
-        _id: "__objectid__",
+        _id: identity._id,
         identifier: "user1",
         policies: ["BucketFullAccess"]
       });
@@ -254,7 +250,7 @@ describe("Identity", () => {
       const identities = await Identity.getAll();
 
       expect(identities).toEqual([
-        {identifier: "spica", _id: "__objectid__", policies: ["PassportFullAccess"]}
+        {identifier: "spica", _id: identities[0]._id, policies: ["PassportFullAccess"]}
       ]);
     });
 
@@ -270,7 +266,7 @@ describe("Identity", () => {
 
         identity = await Identity.get(identity._id);
         expect(identity).toEqual({
-          _id: "__objectid__",
+          _id: identity._id,
           identifier: "user",
           policies: ["FunctionFullAccess"]
         });
@@ -287,7 +283,7 @@ describe("Identity", () => {
 
         identity = await Identity.get(identity._id);
         expect(identity).toEqual({
-          _id: "__objectid__",
+          _id: identity._id,
           identifier: "user",
           policies: []
         });
