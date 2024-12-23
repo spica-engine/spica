@@ -1,2 +1,2 @@
-export {HistoryModule} from "./history.module";
-export {HistoryService} from "./history.service";
+export {HistoryModule} from "./src/history.module";
+export {HistoryService} from "./src/history.service";
