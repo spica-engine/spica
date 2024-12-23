@@ -92,14 +92,13 @@ describe("database", () => {
     expect(db).toBeTruthy();
   });
 
-  xit("should show a warning message when watch is used", async () => {
+  it("should show a warning message when watch is used", async () => {
     setEnvironment();
     const db = await database();
     const coll = db.collection("test");
     coll.watch();
-    console.dir(emitWarningSpy.mock.calls,{depth:5});
     expect(emitWarningSpy.mock.calls[emitWarningSpy.mock.calls.length - 1][0]).toEqual(
-      "It is not advised to use 'watch' under spica/functions environment. I hope that you know what you are doing."
+      "DeprecationWarning: It is not advised to use 'watch' under spica/functions environment. I hope that you know what you are doing."
     );
   });
 

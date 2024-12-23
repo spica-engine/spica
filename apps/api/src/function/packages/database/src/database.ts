@@ -69,10 +69,14 @@ export async function database(): Promise<_mongodb.Db> {
 
   db.collection = (...args) => {
     const coll: _mongodb.Collection = collection.call(db, ...args);
-    coll.watch = util.deprecate(
-      coll.watch,
-      `It is not advised to use 'watch' under spica/functions environment. I hope that you know what you are doing.`
-    );
+
+    const watch = coll.watch;
+    coll.watch = (...args) => {
+      process.emitWarning(
+        "DeprecationWarning: It is not advised to use 'watch' under spica/functions environment. I hope that you know what you are doing."
+      );
+      return watch.bind(coll)(...args);
+    };
 
     const findById = coll.findOne;
     coll["findById"] = (id, ...args) => {
