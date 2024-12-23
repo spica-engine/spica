@@ -37,7 +37,8 @@ describe("Typescript", () => {
 
     const stat = await fs.promises.readFile(path.join(compilation.cwd, ".build", "index.js"));
 
-    expect(stat.toString()).toContain("exports.default = default_1");
+    expect(stat.toString()).toContain(`export default function () { }
+//# sourceMappingURL=index.js.map`);
   });
 
   it("should report diagnostics", async () => {
@@ -128,7 +129,7 @@ describe("Typescript", () => {
         code: 2582,
         category: 1,
         text:
-          "Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i @types/jest` or `npm i @types/mocha`.",
+          "Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.",
         start: {line: 1, column: 1},
         end: {line: 1, column: 5}
       }
