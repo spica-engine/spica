@@ -1,0 +1,5 @@
+{
+  "name": "api/function/packages/identity",
+  "sourceRoot": "apps/api/src/function/packages/identity",
+  "projectType": "library"
+}

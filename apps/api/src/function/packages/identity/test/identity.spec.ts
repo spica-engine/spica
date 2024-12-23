@@ -1,8 +1,6 @@
 import * as Identity from "@spica-devkit/identity";
 import {Axios} from "@spica-devkit/internal_common";
 
-jasmine.getEnv().allowRespy(true);
-
 describe("@spica-devkit/identity", () => {
   let getSpy: jest.Mocked<any>;
   let postSpy: jest.Mocked<any>;
@@ -11,14 +9,21 @@ describe("@spica-devkit/identity", () => {
 
   beforeEach(() => {
     getSpy = jest.spyOn(Axios.prototype, "get").mockReturnValue(Promise.resolve());
-    postSpy = jest.spyOn(Axios.prototype, "post").mockReturnValue(
-      Promise.resolve({_id: "identity_id", identifier: "test"})
-    );
+    postSpy = jest
+      .spyOn(Axios.prototype, "post")
+      .mockReturnValue(Promise.resolve({_id: "identity_id", identifier: "test"}));
     putSpy = jest.spyOn(Axios.prototype, "put").mockReturnValue(Promise.resolve());
     deleteSpy = jest.spyOn(Axios.prototype, "delete").mockReturnValue(Promise.resolve());
 
     process.env.__INTERNAL__SPICA__PUBLIC_URL__ = "http://test";
     Identity.initialize({apikey: "TEST_APIKEY"});
+  });
+
+  afterEach(() => {
+    getSpy.mockClear();
+    postSpy.mockClear();
+    putSpy.mockClear();
+    deleteSpy.mockClear();
   });
 
   describe("errors", () => {
@@ -46,10 +51,7 @@ describe("@spica-devkit/identity", () => {
         password: "test"
       });
 
-      expect(identity).toEqual(
-        {identifier: "test", password: "test", policies: []},
-        "should fail if original identity modified"
-      );
+      expect(identity).toEqual({identifier: "test", password: "test", policies: []});
     });
 
     it("should insert identity with policies", async () => {
@@ -66,10 +68,7 @@ describe("@spica-devkit/identity", () => {
       expect(putSpy).toHaveBeenCalledTimes(1);
       expect(putSpy).toHaveBeenCalledWith("passport/identity/identity_id/policy/policy_id", {});
 
-      expect(identity).toEqual(
-        {identifier: "test", password: "test", policies: []},
-        "should fail if original identity modified"
-      );
+      expect(identity).toEqual({identifier: "test", password: "test", policies: []});
     });
 
     it("should get all identities", () => {
