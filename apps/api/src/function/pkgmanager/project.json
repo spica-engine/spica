@@ -1,0 +1,5 @@
+{
+  "name": "api/function/pkgmanager",
+  "sourceRoot": "apps/api/src/function/pkgmanager",
+  "projectType": "application"
+}

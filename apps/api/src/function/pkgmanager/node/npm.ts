@@ -8,13 +8,6 @@ import {glob} from "glob";
 
 function getNpmPath() {
   let npmPath: string = "npm";
-
-  // See: https://github.com/bazelbuild/rules_nodejs/issues/2197
-  if (process.platform == "darwin") {
-    const runfiles = require(process.env.BAZEL_NODE_RUNFILES_HELPER);
-    npmPath = runfiles.resolve("nodejs_darwin_amd64/bin/npm");
-  }
-
   return npmPath;
 }
 
@@ -72,7 +65,7 @@ export class Npm extends PackageManager {
           name,
           "--no-audit",
           "--cache",
-          path.join(os.tmpdir(), fs.mkdtempSync("_npm_cache_"))
+          fs.mkdtempSync(path.join(os.tmpdir(), "_npm_cache_"))
         ],
         {cwd}
       );
