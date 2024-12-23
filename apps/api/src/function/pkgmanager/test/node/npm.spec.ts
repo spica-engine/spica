@@ -3,8 +3,6 @@ import * as fs from "fs";
 import * as path from "path";
 import {distinctUntilChanged} from "rxjs/operators";
 
-jest.setTimeout(120000);
-
 describe("npm", () => {
   let npm: Npm;
   let cwd: string;
