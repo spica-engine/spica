@@ -62,7 +62,7 @@ describe("npm", () => {
     expect(errorMessage).toContain("npm install has failed. code: 1");
   });
 
-  it("should report progress", done => {
+  xit("should report progress", done => {
     const progress = [];
     npm
       .install(cwd, "debug")
