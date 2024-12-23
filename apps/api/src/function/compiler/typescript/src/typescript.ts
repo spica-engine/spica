@@ -23,7 +23,8 @@ export class Typescript extends Language {
 
   async compile(compilation: Compilation): Promise<void> {
     if (!this.worker) {
-      this.worker = new worker_threads.Worker(path.join(__dirname, "typescript_worker.js"));
+      this.worker = this.initiateWorker();
+
       this.worker.once("exit", exitCode => {
         this.worker = undefined;
         if (exitCode != 0) {
@@ -74,5 +75,21 @@ export class Typescript extends Language {
       return this.worker.terminate().then(() => {});
     }
     return Promise.resolve();
+  }
+
+  private initiateWorker() {
+    const isTestEnv = process.env.NODE_ENV === "test";
+
+    const getWorkerFilePath = (extension: "ts" | "js") =>
+      path.join(__dirname, `typescript_worker.${extension}`);
+
+    const code = `
+require('ts-node/register'); 
+require('${getWorkerFilePath("ts")}');
+`;
+
+    const filename = isTestEnv ? code : getWorkerFilePath("js");
+
+    return new worker_threads.Worker(filename, {eval: isTestEnv});
   }
 }
