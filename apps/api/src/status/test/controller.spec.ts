@@ -245,12 +245,13 @@ describe("Status", () => {
 
     afterEach(async () => await app.close());
 
-    it("should return status of function module", async () => {
+    fit("should return status of function module", async () => {
       // wait until worker spawned
       await sleep(2000);
 
       let res = await req.get("/status/function");
       expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
+      console.log("🚀 ~ expect ~ res.body:", res.body);
       expect(res.body).toEqual({
         module: "function",
         status: {
