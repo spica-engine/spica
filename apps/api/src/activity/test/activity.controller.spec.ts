@@ -1,7 +1,7 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {ActivityModule} from "@spica-server/activity";
-import {Action, ActivityService} from "@spica-server/activity/services";
+import {Action, ActivityService, activity} from "@spica-server/activity/services";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
@@ -45,22 +45,6 @@ describe("Activity Acceptance", () => {
         user2Id = res.insertedIds[1];
       });
 
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "object_id" && typeof actual == typeof expected && ObjectId.isValid(actual)) {
-        return true;
-      }
-    });
-
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (
-        expected == "created_at" &&
-        typeof actual == typeof expected &&
-        typeof new Date(actual).getTime() == "number"
-      ) {
-        return true;
-      }
-    });
-
     insertedActivityIds = await service.insert([
       {
         action: Action.DELETE,
@@ -86,53 +70,71 @@ describe("Activity Acceptance", () => {
 
   it("should return all activities", async () => {
     const {body: activities} = await request.get("/activity", {});
+
+    activities.forEach(activity => {
+      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(typeof new Date(activity.created_at).getTime()).toBe("number");
+    });
+
     expect(activities).toEqual([
       {
-        _id: "object_id",
+        _id: activities[0]._id,
         action: Action.PUT,
         identifier: "user2",
         resource: ["test_module", "test_id3"],
-        created_at: "created_at"
+        created_at: activities[0].created_at
       },
       {
-        _id: "object_id",
+        _id: activities[1]._id,
         action: Action.POST,
         identifier: "user2",
         resource: ["test_module", "test_id2"],
-        created_at: "created_at"
+        created_at: activities[1].created_at
       },
       {
-        _id: "object_id",
+        _id: activities[2]._id,
         action: Action.DELETE,
         identifier: "user1",
         resource: ["test_module", "test_id1"],
-        created_at: "created_at"
+        created_at: activities[2].created_at
       }
     ]);
   });
 
   it("should filter activities by identifier", async () => {
     const {body: activities} = await request.get("/activity", {identifier: "user1"});
+
+    activities.forEach(activity => {
+      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(typeof new Date(activity.created_at).getTime()).toBe("number");
+    });
+
     expect(activities).toEqual([
       {
-        _id: "object_id",
+        _id: activities[0]._id,
         action: Action.DELETE,
         identifier: "user1",
         resource: ["test_module", "test_id1"],
-        created_at: "created_at"
+        created_at: activities[0].created_at
       }
     ]);
   });
 
   it("should filter activities by action", async () => {
     const {body: activities} = await request.get("/activity", {action: Action.POST});
+
+    activities.forEach(activity => {
+      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(typeof new Date(activity.created_at).getTime()).toBe("number");
+    });
+
     expect(activities).toEqual([
       {
-        _id: "object_id",
+        _id: activities[0]._id,
         action: Action.POST,
         identifier: "user2",
         resource: ["test_module", "test_id2"],
-        created_at: "created_at"
+        created_at: activities[0].created_at
       }
     ]);
   });
@@ -141,20 +143,26 @@ describe("Activity Acceptance", () => {
     const {body: activities} = await request.get("/activity", {
       action: [Action.POST, Action.DELETE]
     });
+
+    activities.forEach(activity => {
+      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(typeof new Date(activity.created_at).getTime()).toBe("number");
+    });
+
     expect(activities).toEqual([
       {
-        _id: "object_id",
+        _id: activities[0]._id,
         action: Action.POST,
         identifier: "user2",
         resource: ["test_module", "test_id2"],
-        created_at: "created_at"
+        created_at: activities[0].created_at
       },
       {
-        _id: "object_id",
+        _id: activities[1]._id,
         action: Action.DELETE,
         identifier: "user1",
         resource: ["test_module", "test_id1"],
-        created_at: "created_at"
+        created_at: activities[1].created_at
       }
     ]);
   });
@@ -163,20 +171,26 @@ describe("Activity Acceptance", () => {
     const {body: activities} = await request.get("/activity", {
       resource: JSON.stringify({$all: ["test_module"], $in: ["test_id1", "test_id3"]})
     });
+
+    activities.forEach(activity => {
+      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(typeof new Date(activity.created_at).getTime()).toBe("number");
+    });
+
     expect(activities).toEqual([
       {
-        _id: "object_id",
+        _id: activities[0]._id,
         action: Action.PUT,
         identifier: "user2",
         resource: ["test_module", "test_id3"],
-        created_at: "created_at"
+        created_at: activities[0].created_at
       },
       {
-        _id: "object_id",
+        _id: activities[1]._id,
         action: Action.DELETE,
         identifier: "user1",
         resource: ["test_module", "test_id1"],
-        created_at: "created_at"
+        created_at: activities[1].created_at
       }
     ]);
   });
@@ -186,13 +200,19 @@ describe("Activity Acceptance", () => {
       skip: 2,
       limit: 1
     });
+
+    activities.forEach(activity => {
+      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(typeof new Date(activity.created_at).getTime()).toBe("number");
+    });
+
     expect(activities).toEqual([
       {
-        _id: "object_id",
+        _id: activities[0]._id,
         action: Action.DELETE,
         identifier: "user1",
         resource: ["test_module", "test_id1"],
-        created_at: "created_at"
+        created_at: activities[0].created_at
       }
     ]);
   });
@@ -204,20 +224,25 @@ describe("Activity Acceptance", () => {
 
     const {body: activities} = await request.get("/activity");
 
+    activities.forEach(activity => {
+      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(typeof new Date(activity.created_at).getTime()).toBe("number");
+    });
+
     expect(activities).toEqual([
       {
-        _id: "object_id",
+        _id: activities[0]._id,
         action: Action.POST,
         identifier: "user2",
         resource: ["test_module", "test_id2"],
-        created_at: "created_at"
+        created_at: activities[0].created_at
       },
       {
-        _id: "object_id",
+        _id: activities[1]._id,
         action: Action.DELETE,
         identifier: "user1",
         resource: ["test_module", "test_id1"],
-        created_at: "created_at"
+        created_at: activities[1].created_at
       }
     ]);
   });
