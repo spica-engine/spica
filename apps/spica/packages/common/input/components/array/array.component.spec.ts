@@ -26,6 +26,8 @@ function createEvent<T>(previousIndex: number, currentIndex: number): CdkDragDro
     item: undefined,
     container: undefined,
     previousContainer: undefined,
+    dropPoint: undefined,
+    event: undefined,
     isPointerOverContainer: true,
     distance: {x: 0, y: 0}
   };

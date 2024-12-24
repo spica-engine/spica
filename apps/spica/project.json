@@ -92,10 +92,11 @@
       "executor": "@nx/eslint:lint"
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "executor": "@angular-devkit/build-angular:karma",
       "options": {
-        "jestConfig": "apps/spica/jest.config.ts"
+        "main": "apps/spica/test.ts",
+        "karmaConfig": "apps/spica/karma.conf.js",
+        "tsConfig": "apps/spica/tsconfig.spec.json"
       }
     },
     "serve-static": {
