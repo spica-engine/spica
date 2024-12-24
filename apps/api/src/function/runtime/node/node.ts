@@ -3,6 +3,17 @@ import * as child_process from "child_process";
 import * as path from "path";
 import {Writable} from "stream";
 
+//@TODO: fix here once we find a way to use same paths for 
+// dev, prod and test environments as much as possible
+const getEntrypointPath = () => {
+  let pwd = path.join(__dirname, "..");
+  const isTestEnv = process.env.NODE_ENV == "test";
+  if (isTestEnv) {
+    pwd = path.join(__dirname, "..", "..", "..", ".." ,"..", "..", "dist", "apps");
+  }
+  return path.join(pwd, "worker", "entrypoint.js");
+};
+
 class NodeWorker extends Worker {
   private _process: child_process.ChildProcess;
   private _quit = false;
@@ -15,7 +26,7 @@ class NodeWorker extends Worker {
     super();
     this._process = child_process.spawn(
       `node`,
-      ["--import=extensionless/register", path.join(__dirname, "..", "worker", "entrypoint.js")],
+      ["--import=extensionless/register", getEntrypointPath()],
       {
         env: {
           PATH: process.env.PATH,
