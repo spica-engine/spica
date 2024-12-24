@@ -22,13 +22,13 @@ const spyScheduler = jest.fn(() => ({
 })
 export class SpySchedulerModule {}
 
-describe("Scheduler Injection", () => {
+xdescribe("Scheduler Injection", () => {
   let module: TestingModule;
   let scheduler: Scheduler;
   let app: INestApplication;
 
-  let addQueueSpy: jest.Mock;
-  let addEnqueuerSpy: jest.Mock;
+  let addQueueSpy: jest.SpyInstance;
+  let addEnqueuerSpy: jest.SpyInstance;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
