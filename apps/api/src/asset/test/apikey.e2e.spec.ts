@@ -45,12 +45,6 @@ describe("Apikey", () => {
     req = module.get(Request);
 
     await app.listen(req.socket);
-
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__skip__" && typeof actual == typeof expected) {
-        return true;
-      }
-    });
   }, 10_000);
 
   afterEach(() => app.close());

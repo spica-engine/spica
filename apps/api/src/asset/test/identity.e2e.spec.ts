@@ -61,12 +61,6 @@ describe("identity-settings", () => {
     await app.listen(req.socket);
 
     await new Promise((resolve, _) => setTimeout(resolve, 3000));
-
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__skip__" && typeof actual == typeof expected) {
-        return true;
-      }
-    });
   }, 120_000);
 
   afterEach(() => app.close());
@@ -155,7 +149,7 @@ describe("identity-settings", () => {
 
     identitySettings = await getIdentitySettings();
     expect(identitySettings).toEqual({
-      _id: "__skip__",
+      _id: identitySettings._id,
       scope: "passport",
       identity: identitySettingsV1
     });
@@ -178,7 +172,7 @@ describe("identity-settings", () => {
 
     identitySettings = await getIdentitySettings();
     expect(identitySettings).toEqual({
-      _id: "__skip__",
+      _id: identitySettings._id,
       scope: "passport",
       identity: identitySettingsV1
     });
@@ -194,7 +188,7 @@ describe("identity-settings", () => {
 
     identitySettings = await getIdentitySettings();
     expect(identitySettings).toEqual({
-      _id: "__skip__",
+      _id: identitySettings._id,
       scope: "passport",
       identity: identitySettingsV2
     });
@@ -224,7 +218,7 @@ describe("identity-settings", () => {
 
     identitySettings = await getIdentitySettings();
     expect(identitySettings).toEqual({
-      _id: "__skip__",
+      _id: identitySettings._id,
       scope: "passport",
       identity: identitySettingsV2
     });
@@ -243,7 +237,7 @@ describe("identity-settings", () => {
 
     identitySettings = await getIdentitySettings();
     expect(identitySettings).toEqual({
-      _id: "__skip__",
+      _id: identitySettings._id,
       scope: "passport",
       identity: {attributes: {}}
     });

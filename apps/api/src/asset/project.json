@@ -1,0 +1,5 @@
+{
+  "name": "api/asset",
+  "sourceRoot": "apps/api/src/asset",
+  "projectType": "application"
+}
