@@ -3,15 +3,14 @@ import * as child_process from "child_process";
 import * as path from "path";
 import {Writable} from "stream";
 
-//@TODO: fix here once we find a way to use same paths for 
-// dev, prod and test environments as much as possible
+//@TODO: fix here once we find a better way to set the base path for dev, prod and test environments 
 const getEntrypointPath = () => {
-  let pwd = path.join(__dirname, "..");
+  let basePath = path.join(__dirname, "..");
   const isTestEnv = process.env.NODE_ENV == "test";
   if (isTestEnv) {
-    pwd = path.join(__dirname, "..", "..", "..", ".." ,"..", "..", "dist", "apps");
+    basePath = path.join(basePath, "..", "..", ".." ,"..", "..", "dist", "apps");
   }
-  return path.join(pwd, "worker", "entrypoint.js");
+  return path.join(basePath, "worker", "entrypoint.js");
 };
 
 class NodeWorker extends Worker {
