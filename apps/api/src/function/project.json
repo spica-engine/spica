@@ -1,5 +1,19 @@
 {
   "name": "api/function",
   "sourceRoot": "apps/api/src/function",
-  "projectType": "application"
+  "projectType": "application",
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/api/src/function/jest.config.ts"
+      },
+      "dependsOn": [
+        {
+          "projects": ["api"],
+          "target": "build-workers"
+        }
+      ]
+    }
+  }
 }
