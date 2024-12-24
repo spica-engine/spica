@@ -62,12 +62,6 @@ describe("E2E Tests", () => {
       .post("/passport/identify", {identifier: "spica", password: "spica"})
       .then(r => r.body.token);
     req.setDefaultHeaders({Authorization: `IDENTITY ${token}`});
-
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__skip__" && typeof actual == typeof expected) {
-        return true;
-      }
-    });
   }, 10_000);
 
   afterEach(async () => {
@@ -139,37 +133,32 @@ describe("E2E Tests", () => {
         const assets = await req
           .get("asset", {filter: JSON.stringify({status: "downloaded"})})
           .then(r => r.body);
-        expect(assets).toEqual(
-          [
-            {
-              _id: downloaded._id,
-              name: "asset1",
-              description: "description1",
-              resources: [],
-              configs: [],
-              status: "downloaded",
-              url: "1",
-              icon: "check_circle_outline"
-            },
-            {
-              _id: failed._id,
-              name: "asset3",
-              description: "description3",
-              resources: [
-                {
-                  module: "non_exist_module"
-                }
-              ],
-              configs: [],
-              url: "3",
-              status: "downloaded",
-              icon: "check_circle_outline"
-            }
-          ],
-          `if installation was failed because of the asset definition(not resource,
-          which means installation fails before start), 
-          status should be downloaded.`
-        );
+        expect(assets).toEqual([
+          {
+            _id: downloaded._id,
+            name: "asset1",
+            description: "description1",
+            resources: [],
+            configs: [],
+            status: "downloaded",
+            url: "1",
+            icon: "check_circle_outline"
+          },
+          {
+            _id: failed._id,
+            name: "asset3",
+            description: "description3",
+            resources: [
+              {
+                module: "non_exist_module"
+              }
+            ],
+            configs: [],
+            url: "3",
+            status: "downloaded",
+            icon: "check_circle_outline"
+          }
+        ]);
       });
 
       it("should get installed assets", async () => {
@@ -209,7 +198,7 @@ describe("E2E Tests", () => {
 
         expect(res.statusCode).toEqual(201);
         expect(res.body).toEqual({
-          _id: "__skip__",
+          _id: res.body._id,
           name: "asset1",
           description: "desc1",
           resources: [],
@@ -266,7 +255,7 @@ describe("E2E Tests", () => {
 
         expect(res.statusCode).toEqual(201);
         expect(res.body).toEqual({
-          _id: "__skip__",
+          _id: res.body._id,
           name: "asset1",
           description: "desc1",
           resources: [],
@@ -289,7 +278,7 @@ describe("E2E Tests", () => {
 
         asset = await getAsset(asset._id);
         expect(asset).toEqual({
-          _id: "__skip__",
+          _id: asset._id,
           name: "asset1",
           description: "desc1",
           resources: [],
@@ -434,7 +423,7 @@ describe("E2E Tests", () => {
 
         asset = await getAsset(asset._id);
         expect(asset).toEqual({
-          _id: "__skip__",
+          _id: asset._id,
           name: "asset",
           description: "desc",
           resources: [],
