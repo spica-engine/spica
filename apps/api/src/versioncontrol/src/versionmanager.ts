@@ -39,7 +39,7 @@ export class Git implements VersionManager {
   ];
 
   availables() {
-    return this.maps.map(m => m.name);
+    return this.maps.map(m => m.name).sort();
   }
 
   exec(name: string, options: any): Promise<any> {

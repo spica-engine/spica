@@ -57,7 +57,7 @@ describe("Synchronizer", () => {
 
     synchronizer.register(syncProvider);
 
-    jest.setSystemTime(now);
+    jest.useFakeTimers().setSystemTime(now);
   });
 
   it("should get last sync", async () => {
@@ -134,8 +134,7 @@ describe("Synchronizer", () => {
           }
         ],
         date: now.toISOString()
-      },
-      "should work if submodule synchronized last because it has a parent"
+      }
     );
   });
 });
