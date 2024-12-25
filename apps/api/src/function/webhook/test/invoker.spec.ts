@@ -5,11 +5,14 @@ import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
 import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
 import * as __fetch__ from "node-fetch";
 
-xdescribe("Webhook Invoker", () => {
+jest.setTimeout(60_000);
+
+describe("Webhook Invoker", () => {
   let invoker: WebhookInvoker;
   let module: TestingModule;
   let service: WebhookService;
   let db: DatabaseService;
+  let logService: WebhookLogService;
 
   let subscribeSpy: jest.SpyInstance;
   let unsubscribeSpy: jest.SpyInstance;
@@ -47,14 +50,14 @@ xdescribe("Webhook Invoker", () => {
 
     service = module.get(WebhookService);
     db = module.get(DatabaseService);
-
+    logService = module.get(WebhookLogService);
     invoker = module.get(WebhookInvoker);
     await stream.wait();
 
     subscribeSpy = jest.spyOn(invoker, "subscribe" as never);
     unsubscribeSpy = jest.spyOn(invoker, "unsubscribe" as never);
     fetchSpy = jest.spyOn(__fetch__, "default").mockReturnValue(Promise.resolve(mockHttpResponse));
-    insertLogSpy = jest.spyOn(invoker["logService"], "insertOne");
+    insertLogSpy = jest.spyOn(logService, "insertOne" as never).mockImplementation();
 
     await new Promise(resolve => setTimeout(() => resolve(""), 2000));
 
@@ -154,7 +157,7 @@ xdescribe("Webhook Invoker", () => {
     });
   });
 
-  xit("should insert a log when hook has been invoked", async () => {
+  it("should insert a log when hook has been invoked", async () => {
     const hook = await service.insertOne(webhook);
     await stream.change.wait();
     stream.change.next();
@@ -190,9 +193,9 @@ xdescribe("Webhook Invoker", () => {
       webhook: hook._id.toHexString(),
       succeed: false
     } as any);
-  });
+  }, 60_000);
 
-  xit("should insert log when webhook body compilation failed", async () => {
+  it("should insert log when webhook body compilation failed", async () => {
     webhook.body = "{{{document.title}}}";
     const hook = await service.insertOne(webhook);
     await stream.change.wait();
