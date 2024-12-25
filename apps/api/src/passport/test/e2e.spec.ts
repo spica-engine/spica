@@ -511,10 +511,6 @@ describe("E2E Tests", () => {
       await login("spica", "spica");
     }, 20_000);
 
-    afterEach(() => {
-      jest.useRealTimers();
-    });
-
     describe("Activating 2fa", () => {
       beforeEach(async () => {
         identity = await req
@@ -549,6 +545,10 @@ describe("E2E Tests", () => {
       }
 
       describe("TOTP", () => {
+        afterEach(() => {
+          jest.useRealTimers();
+        });
+
         it("should activate 2fa", async () => {
           const {answerUrl, challenge} = await startVerification(identity);
           const totp = generateTotp(challenge);
