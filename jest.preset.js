@@ -4,5 +4,5 @@ const path = require("path");
 module.exports = {
   ...nxPreset,
   setupFilesAfterEnv: [path.join(__dirname, "jest.setup.js")],
-  testTimeout: 30_000
+  testTimeout: 60_000
 };

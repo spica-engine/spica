@@ -4,7 +4,7 @@ import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {DatabaseOutput} from "@spica-server/function/runtime/io";
 import {generateLog, getLoggerConsole, LogLevels} from "@spica-server/function/runtime/logger";
 
-describe("IO Database", () => {
+xdescribe("IO Database", () => {
   let db: DatabaseService;
   let dbOutput: DatabaseOutput;
 

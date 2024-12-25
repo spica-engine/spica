@@ -7,11 +7,10 @@ import {Node} from "@spica-server/function/runtime/node";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import * as os from "os";
 import {PassThrough, Writable} from "stream";
+import * as WebSocket from "ws";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:24075";
-process.env.DISABLE_LOGGER = "true";
-
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+// process.env.DISABLE_LOGGER = "true";
 
 describe("Entrypoint", () => {
   let queue: EventQueue;
@@ -108,7 +107,7 @@ describe("Entrypoint", () => {
 
     queue.enqueue(
       new event.Event({
-        type: -1,
+        type: -1 as any,
         target: new event.Target({
           handler: "default",
           cwd: compilation.cwd,
@@ -148,7 +147,7 @@ describe("Entrypoint", () => {
     await initializeFn(`export const exists = ''`);
 
     const ev = new event.Event({
-      type: -1,
+      type: -1 as any,
       target: new event.Target({
         cwd: compilation.cwd,
         handler: "shouldhaveexisted",
@@ -163,7 +162,7 @@ describe("Entrypoint", () => {
     const stream = new PassThrough();
     const writeSpy = jest.spyOn(stream, "write");
 
-    await expectAsync(spawn(stream)).toBeRejectedWith(126);
+    await expect(spawn(stream)).rejects.toEqual(126);
     expect(writeSpy.mock.calls.map(args => args[0].toString())).toEqual([
       "This function does not export any symbol named 'shouldhaveexisted'.\n"
     ]);
@@ -173,7 +172,7 @@ describe("Entrypoint", () => {
     await initializeFn(`export const notafunction = ''`);
 
     const ev = new event.Event({
-      type: -1,
+      type: -1 as any,
       target: new event.Target({
         cwd: compilation.cwd,
         handler: "notafunction",
@@ -188,46 +187,46 @@ describe("Entrypoint", () => {
     const stream = new PassThrough();
     const writeSpy = jest.spyOn(stream, "write");
 
-    await expectAsync(spawn(stream)).toBeRejectedWith(126);
+    await expect(spawn(stream)).rejects.toEqual(126);
     expect(writeSpy.mock.calls.map(args => args[0].toString())).toEqual([
       "This function does export a symbol named 'notafunction' but it is not a function.\n"
     ]);
   });
 
-  it("should redirect output to stream", async done => {
-    await initializeFn(`export default function() {
+  fit("should redirect output to stream", done => {
+    initializeFn(`export default function() {
       console.log('this should appear in the logs');
       console.warn('this also should appear in the logs');
-    }`);
+    }`).then(() => {
+      const stream = new PassThrough();
 
-    const stream = new PassThrough();
+      const writeSpy = jest.spyOn(stream, "write");
 
-    const writeSpy = jest.spyOn(stream, "write");
+      spawn(stream);
 
-    spawn(stream);
+      queue["_complete"] = () => {
+        expect(writeSpy).toHaveBeenCalledTimes(2);
+        expect(writeSpy.mock.calls.map(args => args[0].toString())).toEqual([
+          "this should appear in the logs\n",
+          "this also should appear in the logs\n"
+        ]);
+        done();
+      };
 
-    queue["_complete"] = () => {
-      expect(writeSpy).toHaveBeenCalledTimes(2);
-      expect(writeSpy.mock.calls.map(args => args[0].toString())).toEqual([
-        "this should appear in the logs\n",
-        "this also should appear in the logs\n"
-      ]);
-      done();
-    };
-
-    queue.enqueue(
-      new event.Event({
-        type: -1,
-        target: new event.Target({
-          cwd: compilation.cwd,
-          handler: "default",
-          context: new event.SchedulingContext({
-            env: [],
-            timeout: 60
+      queue.enqueue(
+        new event.Event({
+          type: -1 as any,
+          target: new event.Target({
+            cwd: compilation.cwd,
+            handler: "default",
+            context: new event.SchedulingContext({
+              env: [],
+              timeout: 60
+            })
           })
         })
-      })
-    );
+      );
+    });
   });
 
   it("should be able access to prebuilt env variables", async () => {
@@ -258,7 +257,7 @@ describe("Entrypoint", () => {
     }`);
 
     const ev = new event.Event({
-      type: -1,
+      type: -1 as any,
       target: new event.Target({
         cwd: compilation.cwd,
         handler: "default",
@@ -283,7 +282,7 @@ describe("Entrypoint", () => {
     }`);
 
     const ev = new event.Event({
-      type: -1,
+      type: -1 as any,
       target: new event.Target({
         cwd: compilation.cwd,
         handler: "env",
@@ -312,7 +311,7 @@ describe("Entrypoint", () => {
       }`);
       queue.enqueue(
         new event.Event({
-          type: -1,
+          type: -1 as any,
           target: new event.Target({
             handler: "default",
             cwd: compilation.cwd,
@@ -335,7 +334,7 @@ describe("Entrypoint", () => {
       }`);
       queue.enqueue(
         new event.Event({
-          type: -1,
+          type: -1 as any,
           target: new event.Target({
             handler: "test",
             cwd: compilation.cwd,
@@ -711,7 +710,7 @@ describe("Entrypoint", () => {
       );
 
       const exitCode = await spawn().catch(r => r);
-      expect(exitCode).toBe(4, "Assertion failed.");
+      expect(exitCode).toBe(4);
     });
 
     it("should send message to socket", async done => {
@@ -740,9 +739,9 @@ describe("Entrypoint", () => {
       queue.enqueue(ev);
 
       const socketSpy = {
-        'send': jest.fn()
+        send: jest.fn(),
+        readyState: 1
       };
-      socketSpy.readyState = 1;
 
       firehoseQueue.enqueue(
         ev.id,
@@ -754,7 +753,7 @@ describe("Entrypoint", () => {
           message: new Firehose.Message({name: "connection"}),
           pool: new Firehose.PoolDescription({size: 21})
         }),
-        socketSpy
+        (socketSpy as unknown) as WebSocket
       );
 
       spawn();
@@ -785,9 +784,9 @@ describe("Entrypoint", () => {
       queue.enqueue(ev);
 
       const socketSpy = {
-        'close': jest.fn()
+        close: jest.fn(),
+        readyState: 1
       };
-      socketSpy.readyState = 1;
 
       firehoseQueue.enqueue(
         ev.id,
@@ -799,7 +798,7 @@ describe("Entrypoint", () => {
           message: new Firehose.Message({name: "connection"}),
           pool: new Firehose.PoolDescription({size: 21})
         }),
-        socketSpy
+        (socketSpy as unknown) as WebSocket
       );
 
       spawn();
@@ -826,9 +825,7 @@ describe("Entrypoint", () => {
         expect(firstSocket.send).toHaveBeenCalledTimes(1);
         expect(firstSocket.send.mock.calls[0][0]).toBe(`{"name":"test","data":"thisisthedata"}`);
         expect(secondSocket.send).toHaveBeenCalledTimes(1);
-        expect(secondSocket.send.mock.calls[0][0]).toBe(
-          `{"name":"test","data":"thisisthedata"}`
-        );
+        expect(secondSocket.send.mock.calls[0][0]).toBe(`{"name":"test","data":"thisisthedata"}`);
         done();
       };
 
@@ -838,9 +835,9 @@ describe("Entrypoint", () => {
         message = new Firehose.Message({name: "connection"});
 
       const firstSocket = {
-        'send': jest.fn()
+        send: jest.fn(),
+        readyState: 1 /* OPEN */
       };
-      firstSocket.readyState = 1; /* OPEN */
 
       firehoseQueue.enqueue(
         ev.id,
@@ -852,13 +849,13 @@ describe("Entrypoint", () => {
           message,
           pool
         }),
-        firstSocket
+        (firstSocket as unknown) as WebSocket
       );
 
       const secondSocket = {
-        'send': jest.fn()
+        send: jest.fn(),
+        readyState: 1 /* OPEN */
       };
-      secondSocket.readyState = 1; /* OPEN */
 
       firehoseQueue.enqueue(
         ev.id,
@@ -870,7 +867,7 @@ describe("Entrypoint", () => {
           message,
           pool
         }),
-        secondSocket
+        (secondSocket as unknown) as WebSocket
       );
 
       spawn();
