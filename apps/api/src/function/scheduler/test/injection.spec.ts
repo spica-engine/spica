@@ -22,7 +22,7 @@ const spyScheduler = jest.fn(() => ({
 })
 export class SpySchedulerModule {}
 
-xdescribe("Scheduler Injection", () => {
+describe("Scheduler Injection", () => {
   let module: TestingModule;
   let scheduler: Scheduler;
   let app: INestApplication;
