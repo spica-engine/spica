@@ -44,7 +44,7 @@ describe("Interceptor with a proper activity handler", () => {
   let request: Request;
   let app: INestApplication;
   let service: ActivityService;
-  let insertSpy: jest.Mock;
+  let insertSpy: jest.SpyInstance;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
