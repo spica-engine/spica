@@ -2,6 +2,8 @@ import {EventQueue, HttpQueue} from "@spica-server/function/queue";
 import {Http} from "@spica-server/function/queue/proto";
 import {credentials} from "@grpc/grpc-js";
 
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5840";
+
 describe("HttpQueue", () => {
   let queue: EventQueue;
   let httpQueue: HttpQueue;
@@ -58,7 +60,7 @@ describe("HttpQueue", () => {
     pop.id = "3";
 
     const response = {end: () => {}} as any;
-    jest.spyOn(response, "end").mockImplementation(cb => cb());
+    jest.spyOn(response, "end").mockImplementation((cb:Function) => cb());
 
     httpQueue.enqueue(pop.id, new Http.Request(), response);
 

@@ -74,10 +74,16 @@ describe("Http", () => {
       response = new Response(writeHeadSpy, writeSpy, endSpy);
     });
 
+    afterEach(() => {
+      writeHeadSpy.mockClear();
+      writeSpy.mockClear();
+      endSpy.mockClear();
+    });
+
     it("should write", async () => {
       await response.write("test");
       expect(writeSpy).toHaveBeenCalledTimes(1);
-      const [write] = writeSpy.mock.calls[writeSpy.mock.calls.length - 1].args as [Http.Write];
+      const [write] = writeSpy.mock.calls[0] as [Http.Write];
       expect(write.data instanceof Uint8Array).toBe(true);
       expect(write.encoding).toBe(undefined);
     });
@@ -86,7 +92,7 @@ describe("Http", () => {
       it("should assign to statusCode and statusMessage optionally", async () => {
         await response.status(201, "Created").send({});
         expect(writeHeadSpy).toHaveBeenCalledTimes(1);
-        const [write] = writeHeadSpy.mock.calls[writeHeadSpy.mock.calls.length - 1].args as [Http.WriteHead];
+        const [write] = writeHeadSpy.mock.calls[0] as [Http.WriteHead];
         expect(write.statusCode).toBe(201);
         expect(write.statusMessage).toBe("Created");
       });
@@ -96,7 +102,9 @@ describe("Http", () => {
       it("should call the callback", async () => {
         await response.writeHead(200, "OK");
         expect(writeHeadSpy).toHaveBeenCalledTimes(1);
-        const [writeHead] = writeHeadSpy.mock.calls[writeHeadSpy.mock.calls.length - 1].args as [Http.WriteHead];
+        const [writeHead] = writeHeadSpy.mock.calls[0] as [
+          Http.WriteHead
+        ];
         expect(writeHead.statusCode).toBe(200);
         expect(writeHead.statusMessage).toBe("OK");
       });
@@ -104,7 +112,7 @@ describe("Http", () => {
       it("should throw an error if it was called already", async () => {
         await response.writeHead(200, "OK", {"Content-type": "application/bson"});
         expect(writeHeadSpy).toHaveBeenCalledTimes(1);
-        await expectAsync(response.writeHead(200, "OK")).toBeRejectedWith(
+        await expect(response.writeHead(200, "OK")).rejects.toEqual(
           new Error("Headers already sent")
         );
       });
