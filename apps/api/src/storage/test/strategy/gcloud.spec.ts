@@ -39,7 +39,7 @@ describe("GCloud", () => {
 
   afterEach(() => {
     for (const spy of Object.values({...File, ...Bucket})) {
-      spy.mockReset();
+      spy.mockClear();
     }
   });
 

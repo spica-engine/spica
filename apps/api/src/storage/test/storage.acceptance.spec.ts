@@ -1,7 +1,7 @@
 import {INestApplication, NestApplicationOptions} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {StorageModule} from "@spica-server/storage";
 import * as BSON from "bson";
@@ -42,6 +42,8 @@ describe("Storage Acceptance", () => {
     });
   }
 
+  const urlRegex = /http:\/\/insteadof\/storage\/.*?\/view/;
+
   async function initModule(options: NestApplicationOptions) {
     const module = await Test.createTestingModule({
       imports: [
@@ -61,16 +63,6 @@ describe("Storage Acceptance", () => {
     await app.listen(req.socket);
 
     await addTextObjects();
-
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__skip__" && typeof actual == typeof expected) {
-        return true;
-      }
-      if (expected == "__skip_if_valid_url__" && typeof actual == typeof expected) {
-        return /http:\/\/insteadof\/storage\/.*?\/view/.test(actual);
-      }
-      return undefined;
-    });
   }
 
   beforeEach(async () => {
@@ -85,9 +77,10 @@ describe("Storage Acceptance", () => {
         sort: JSON.stringify({_id: -1})
       });
 
+      expect(ObjectId.isValid(body[0]._id)).toEqual(true);
       expect(body).toEqual([
         {
-          _id: "__skip__",
+          _id: body[0]._id,
           name: "third.txt",
           url: `http://insteadof/storage/${body[0]._id}/view`,
           content: {
@@ -106,9 +99,10 @@ describe("Storage Acceptance", () => {
       });
 
       expect(body.meta).toEqual({total: 3});
+      expect(ObjectId.isValid(body.data[0]._id)).toEqual(true);
       expect(body.data).toEqual([
         {
-          _id: "__skip__",
+          _id: body.data[0]._id,
           name: "third.txt",
           url: `http://insteadof/storage/${body.data[0]._id}/view`,
           content: {
@@ -145,9 +139,10 @@ describe("Storage Acceptance", () => {
         filter: JSON.stringify({name: "third.txt"})
       });
 
+      expect(ObjectId.isValid(body[0]._id)).toEqual(true);
       expect(body).toEqual([
         {
-          _id: "__skip__",
+          _id: body[0]._id,
           name: "third.txt",
           url: `http://insteadof/storage/${body[0]._id}/view`,
           content: {
@@ -166,9 +161,10 @@ describe("Storage Acceptance", () => {
       } = await req.get("/storage", {paginate: true, limit: "1", sort: JSON.stringify({_id: -1})});
 
       expect(meta.total).toBe(3);
+      expect(ObjectId.isValid(data[0]._id)).toEqual(true);
       expect(data).toEqual([
         {
-          _id: "__skip__",
+          _id: data[0]._id,
           name: "third.txt",
           url: `http://insteadof/storage/${data[0]._id}/view`,
           content: {
@@ -185,9 +181,11 @@ describe("Storage Acceptance", () => {
       } = await req.get("/storage", {paginate: true, skip: "1", sort: JSON.stringify({_id: -1})});
 
       expect(meta.total).toBe(3);
+      expect(ObjectId.isValid(data[0]._id)).toEqual(true);
+      expect(ObjectId.isValid(data[1]._id)).toEqual(true);
       expect(data).toEqual([
         {
-          _id: "__skip__",
+          _id: data[0]._id,
           name: "second.txt",
           url: `http://insteadof/storage/${data[0]._id}/view`,
           content: {
@@ -196,7 +194,7 @@ describe("Storage Acceptance", () => {
           }
         },
         {
-          _id: "__skip__",
+          _id: data[1]._id,
           name: "first.txt",
           url: `http://insteadof/storage/${data[1]._id}/view`,
           content: {
@@ -218,9 +216,10 @@ describe("Storage Acceptance", () => {
       });
 
       expect(meta.total).toBe(3);
+      expect(ObjectId.isValid(data[0]._id)).toEqual(true);
       expect(data).toEqual([
         {
-          _id: "__skip__",
+          _id: data[0]._id,
           name: "second.txt",
           url: `http://insteadof/storage/${data[0]._id}/view`,
           content: {
@@ -241,9 +240,12 @@ describe("Storage Acceptance", () => {
         });
 
         expect(meta.total).toBe(3);
+        expect(ObjectId.isValid(data[0]._id)).toEqual(true);
+        expect(ObjectId.isValid(data[1]._id)).toEqual(true);
+        expect(ObjectId.isValid(data[2]._id)).toEqual(true);
         expect(data).toEqual([
           {
-            _id: "__skip__",
+            _id: data[0]._id,
             name: "first.txt",
             url: `http://insteadof/storage/${data[0]._id}/view`,
             content: {
@@ -252,7 +254,7 @@ describe("Storage Acceptance", () => {
             }
           },
           {
-            _id: "__skip__",
+            _id: data[1]._id,
             name: "second.txt",
             url: `http://insteadof/storage/${data[1]._id}/view`,
             content: {
@@ -261,7 +263,7 @@ describe("Storage Acceptance", () => {
             }
           },
           {
-            _id: "__skip__",
+            _id: data[2]._id,
             name: "third.txt",
             url: `http://insteadof/storage/${data[2]._id}/view`,
             content: {
@@ -281,9 +283,12 @@ describe("Storage Acceptance", () => {
         });
 
         expect(meta.total).toBe(3);
+        expect(ObjectId.isValid(data[0]._id)).toEqual(true);
+        expect(ObjectId.isValid(data[1]._id)).toEqual(true);
+        expect(ObjectId.isValid(data[2]._id)).toEqual(true);
         expect(data).toEqual([
           {
-            _id: "__skip__",
+            _id: data[0]._id,
             name: "third.txt",
             url: `http://insteadof/storage/${data[0]._id}/view`,
             content: {
@@ -292,7 +297,7 @@ describe("Storage Acceptance", () => {
             }
           },
           {
-            _id: "__skip__",
+            _id: data[1]._id,
             name: "second.txt",
             url: `http://insteadof/storage/${data[1]._id}/view`,
             content: {
@@ -301,7 +306,7 @@ describe("Storage Acceptance", () => {
             }
           },
           {
-            _id: "__skip__",
+            _id: data[2]._id,
             name: "first.txt",
             url: `http://insteadof/storage/${data[2]._id}/view`,
             content: {
@@ -446,7 +451,7 @@ describe("Storage Acceptance", () => {
 
       let res = await req.patch(`/storage/${first._id}`, {name: "updated_first.txt"});
       const expectedObject = {
-        _id: "__skip__",
+        _id: res.body._id,
         name: "updated_first.txt",
         url: `http://insteadof/storage/${first._id}/view`,
         content: {
@@ -454,11 +459,13 @@ describe("Storage Acceptance", () => {
           size: 5
         }
       };
+      expect(ObjectId.isValid(res.body._id)).toEqual(true);
       expect(res.body).toEqual(expectedObject);
 
       res = await req.get(`storage/${first._id}`);
+      expect(ObjectId.isValid(res.body._id)).toEqual(true);
       expect(res.body).toEqual({
-        _id: "__skip__",
+        _id: res.body._id,
         name: "updated_first.txt",
         url: `http://insteadof/storage/${first._id}/view`,
         content: {
@@ -486,11 +493,13 @@ describe("Storage Acceptance", () => {
         }
       );
 
+      expect(ObjectId.isValid(body[0]._id)).toEqual(true);
+      expect(urlRegex.test(body[0].url)).toEqual(true);
       expect(body).toEqual([
         {
-          _id: "__skip__",
+          _id: body[0]._id,
           name: "remoteconfig.json",
-          url: "__skip_if_valid_url__",
+          url: body[0].url,
           content: {
             type: "application/json",
             size: 2
@@ -526,20 +535,26 @@ describe("Storage Acceptance", () => {
         }
       );
 
+      expect(ObjectId.isValid(body[0]._id)).toEqual(true);
+      expect(ObjectId.isValid(body[1]._id)).toEqual(true);
+
+      expect(urlRegex.test(body[0].url)).toEqual(true);
+      expect(urlRegex.test(body[1].url)).toEqual(true);
+
       expect(body).toEqual([
         {
-          _id: "__skip__",
+          _id: body[0]._id,
           name: "remote config.json",
-          url: "__skip_if_valid_url__",
+          url: body[0].url,
           content: {
             size: 2,
             type: "application/json"
           }
         },
         {
-          _id: "__skip__",
+          _id: body[1]._id,
           name: "remote config backup.json",
-          url: "__skip_if_valid_url__",
+          url: body[1].url,
           content: {
             size: 2,
             type: "application/json"
@@ -640,11 +655,14 @@ describe("Storage Acceptance", () => {
       };
       const {body, statusCode, statusText} = await req.post("/storage", [object]);
 
+      expect(ObjectId.isValid(body[0]._id)).toEqual(true);
+      expect(urlRegex.test(body[0].url)).toEqual(true);
+
       expect(body).toEqual([
         {
-          _id: "__skip__",
+          _id: body[0]._id,
           name: "remoteconfig.json",
-          url: "__skip_if_valid_url__",
+          url: body[0].url,
           content: {
             type: "application/json",
             size: 2
@@ -735,6 +753,7 @@ describe("Storage Acceptance", () => {
 
       body += `--${boundary}--\r\n`;
 
+      console.log("🚀 ~ describe ~ body:", body);
       return {
         body: Buffer.from(body),
         headers: headers
@@ -751,20 +770,27 @@ describe("Storage Acceptance", () => {
       );
       const {body: resBody, statusCode, statusText} = await req.post("/storage", body, headers);
 
+      expect(ObjectId.isValid(resBody[0]._id)).toEqual(true);
+      expect(ObjectId.isValid(resBody[1]._id)).toEqual(true);
+
+      expect(urlRegex.test(resBody[0].url)).toEqual(true);
+      expect(urlRegex.test(resBody[1].url)).toEqual(true);
+
+      console.log("🚀 ~ it ~ resBody:", resBody);
       expect(resBody).toEqual([
         {
-          _id: "__skip__",
+          _id: resBody[0]._id,
           name: "data.json",
-          url: "__skip_if_valid_url__",
+          url: resBody[0].url,
           content: {
             type: "application/json",
             size: 2
           }
         },
         {
-          _id: "__skip__",
+          _id: resBody[1]._id,
           name: "test.txt",
-          url: "__skip_if_valid_url__",
+          url: resBody[1].url,
           content: {
             type: "text/plain",
             size: 5

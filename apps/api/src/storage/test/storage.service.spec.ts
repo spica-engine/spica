@@ -6,8 +6,6 @@ import {Default} from "@spica-server/storage/src/strategy/default";
 import {Strategy} from "@spica-server/storage/src/strategy/strategy";
 import {STORAGE_OPTIONS} from "@spica-server/storage/src/options";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
-
 describe("Storage Service", () => {
   let module: TestingModule;
 
@@ -50,7 +48,7 @@ describe("Storage Service", () => {
   afterEach(() => module.close());
 
   it("should add storage objects", async () => {
-    await expectAsync(
+    await expect(
       storageService.insert(
         Array.from(new Array(3), (val, index) => ({
           name: "name" + index,
@@ -60,8 +58,8 @@ describe("Storage Service", () => {
           }
         }))
       )
-    ).toBeResolved();
-    return await expectAsync(
+    ).resolves.not.toThrow();
+    return await expect(
       storageService.getAll(resourceFilter, undefined, true, 30, 0, {_id: -1}).then(result => {
         Array.from(result.data).forEach((val, index) => {
           expect(val.name).toBe("name" + (result.data.length - 1 - index));
@@ -109,7 +107,7 @@ describe("Storage Service", () => {
       return Promise.resolve();
     });
 
-    await expectAsync(storageService.insert(storageObjects)).toBeRejectedWithError(
+    await expect(storageService.insert(storageObjects)).rejects.toThrow(
       "Error: Failed to write object name2 to storage. Reason: Upload failed for Item"
     );
 
@@ -127,7 +125,7 @@ describe("Storage Service", () => {
   });
 
   it("should update storage object", async () => {
-    await expectAsync(storageService.insert([storageObject])).toBeResolved();
+    await expect(storageService.insert([storageObject])).resolves.not.toThrow();
 
     const updatedData = {
       _id: storageObjectId,
@@ -139,9 +137,9 @@ describe("Storage Service", () => {
         size: 10
       }
     };
-    await expectAsync(storageService.update(storageObjectId, updatedData)).toBeResolved();
+    await expect(storageService.update(storageObjectId, updatedData)).resolves.not.toThrow();
 
-    return await expectAsync(
+    return await expect(
       storageService.get(storageObjectId).then(result => {
         expect(result).toEqual({
           _id: storageObjectId,
@@ -155,13 +153,13 @@ describe("Storage Service", () => {
         });
         return result;
       })
-    ).toBeResolved();
+    ).resolves.not.toThrow();
   });
 
   it("should delete single storage object", async () => {
-    await expectAsync(storageService.insert([storageObject])).toBeResolved();
-    await expectAsync(storageService.delete(storageObjectId)).toBeResolved();
-    return await expectAsync(storageService.get(storageObjectId)).toBeResolvedTo(null);
+    await expect(storageService.insert([storageObject])).resolves.not.toThrow();
+    await expect(storageService.delete(storageObjectId)).resolves.not.toThrow();
+    return await expect(storageService.get(storageObjectId)).resolves.toBeNull();
   });
 
   describe("filter", () => {
@@ -243,44 +241,44 @@ describe("Storage Service", () => {
       await storageService.insertMany(storageObjects);
     });
     it("should sort storage objects descend by name", async () => {
-      return await expectAsync(
+      return await expect(
         storageService.getAll(resourceFilter, undefined, true, 3, 0, {name: -1}).then(result => {
           expect(result.data[0].name).toBe("name2");
           expect(result.data[1].name).toBe("name1");
           expect(result.data[2].name).toBe("name0");
           return result;
         })
-      ).toBeResolved();
+      ).resolves.not.toThrow();
     });
     it("should sort storage objects ascend by name", async () => {
-      return await expectAsync(
+      return await expect(
         storageService.getAll(resourceFilter, undefined, true, 3, 0, {name: 1}).then(result => {
           expect(result.data[0].name).toBe("name0");
           expect(result.data[1].name).toBe("name1");
           expect(result.data[2].name).toBe("name2");
           return result;
         })
-      ).toBeResolved();
+      ).resolves.not.toThrow();
     });
     it("should sort storage objects descend by date", async () => {
-      return await expectAsync(
+      return await expect(
         storageService.getAll(resourceFilter, undefined, true, 3, 0, {_id: -1}).then(result => {
           expect(result.data[0].name).toBe("name0");
           expect(result.data[1].name).toBe("name1");
           expect(result.data[2].name).toBe("name2");
           return result;
         })
-      ).toBeResolved();
+      ).resolves.not.toThrow();
     });
     it("should sort storage objects ascend by date", async () => {
-      return await expectAsync(
+      return await expect(
         storageService.getAll(resourceFilter, undefined, true, 3, 0, {_id: 1}).then(result => {
           expect(result.data[0].name).toBe("name2");
           expect(result.data[1].name).toBe("name1");
           expect(result.data[2].name).toBe("name0");
           return result;
         })
-      ).toBeResolved();
+      ).resolves.not.toThrow();
     });
   });
 
