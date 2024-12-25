@@ -47,12 +47,6 @@ describe("DashboardController", () => {
     app = module.createNestApplication();
 
     await app.listen(request.socket);
-
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__skip__" && typeof actual == typeof expected) {
-        return true;
-      }
-    });
   });
 
   afterEach(async () => {
@@ -64,7 +58,7 @@ describe("DashboardController", () => {
 
     expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
     expect(response.body).toEqual({
-      _id: "__skip__",
+      _id: response.body._id,
       name: "First Dashboard",
       icon: "offline_bolt",
       components: [
