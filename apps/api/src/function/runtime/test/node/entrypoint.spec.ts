@@ -193,7 +193,7 @@ describe("Entrypoint", () => {
     ]);
   });
 
-  fit("should redirect output to stream", done => {
+  it("should redirect output to stream", done => {
     initializeFn(`export default function() {
       console.log('this should appear in the logs');
       console.warn('this also should appear in the logs');
