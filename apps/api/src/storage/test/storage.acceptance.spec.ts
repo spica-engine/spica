@@ -753,7 +753,6 @@ describe("Storage Acceptance", () => {
 
       body += `--${boundary}--\r\n`;
 
-      console.log("🚀 ~ describe ~ body:", body);
       return {
         body: Buffer.from(body),
         headers: headers
@@ -776,7 +775,6 @@ describe("Storage Acceptance", () => {
       expect(urlRegex.test(resBody[0].url)).toEqual(true);
       expect(urlRegex.test(resBody[1].url)).toEqual(true);
 
-      console.log("🚀 ~ it ~ resBody:", resBody);
       expect(resBody).toEqual([
         {
           _id: resBody[0]._id,
