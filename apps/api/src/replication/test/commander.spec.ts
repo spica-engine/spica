@@ -7,8 +7,6 @@ import {
 } from "@spica-server/database/testing";
 import {ClassCommander, CommandType, ReplicationModule} from "@spica-server/replication/src";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
-
 function wait(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
