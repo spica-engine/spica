@@ -245,7 +245,7 @@ describe("Status", () => {
 
     afterEach(async () => await app.close());
 
-    fit("should return status of function module", async () => {
+    it("should return status of function module", async () => {
       // wait until worker spawned
       await sleep(2000);
 
