@@ -17,7 +17,9 @@ export abstract class ActivityInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     if (!this.service) {
-      !process.env.TEST_TARGET &&
+      const isTestEnv = process.env.NODE_ENV === "test";
+
+      !isTestEnv &&
         console.log(
           `In order to use "Activity", please, ensure to import ActivityModule in each place where activity() is being used. Otherwise, activity won't work correctly.`
         );

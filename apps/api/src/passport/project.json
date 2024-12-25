@@ -1,0 +1,5 @@
+{
+  "name": "api/passport",
+  "sourceRoot": "apps/api/src/passport",
+  "projectType": "application"
+}
