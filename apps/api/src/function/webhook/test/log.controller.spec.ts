@@ -7,8 +7,6 @@ import {WebhookLogService} from "@spica-server/function/webhook/src/log.service"
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {WEBHOOK_OPTIONS} from "@spica-server/function/webhook";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
-
 describe("Activity Controller", () => {
   let request: Request;
   let app: INestApplication;
@@ -22,7 +20,7 @@ describe("Activity Controller", () => {
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.create(),
+        DatabaseTestingModule.standalone(),
         CoreTestingModule,
         PassportTestingModule.initialize()
       ],
@@ -46,7 +44,7 @@ describe("Activity Controller", () => {
 
     service = module.get(WebhookLogService);
 
-    await new Promise(resolve => setTimeout(() => resolve(), 2000));
+    await new Promise(resolve => setTimeout(() => resolve(""), 2000));
   });
 
   beforeEach(async () => {
