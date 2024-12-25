@@ -11,8 +11,8 @@ process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
 describe("Engine", () => {
   let engine: FunctionEngine;
-  let subscribeSpy: jest.Mock;
-  let unsubscribeSpy: jest.Mock;
+  let subscribeSpy: jest.SpyInstance;
+  let unsubscribeSpy: jest.SpyInstance;
 
   let scheduler: Scheduler;
   let database: DatabaseService;
@@ -65,8 +65,8 @@ describe("Engine", () => {
 
     await app.init();
 
-    subscribeSpy = jest.spyOn<any>(engine, "subscribe").mockReturnValue(undefined);
-    unsubscribeSpy = jest.spyOn<any>(engine, "unsubscribe").mockReturnValue(undefined);
+    subscribeSpy = jest.spyOn(engine, "subscribe" as any).mockReturnValue(undefined);
+    unsubscribeSpy = jest.spyOn(engine, "unsubscribe" as any).mockReturnValue(undefined);
   });
 
   afterEach(async () => {

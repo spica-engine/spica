@@ -19,19 +19,10 @@ import {event} from "@spica-server/function/queue/proto";
 import {JobReducer, ReplicationModule} from "@spica-server/replication";
 import {BucketModule} from "@spica-server/bucket";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 50_000;
-
 function sleep(ms: number) {
   return new Promise((resolve, _) => setTimeout(resolve, ms));
 }
 describe("Queue shifting", () => {
-  beforeEach(() => {
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__skip__") {
-        return true;
-      }
-    });
-  });
   function onEventEnqueued(
     scheduler: Scheduler,
     eventType?: number,
