@@ -5,17 +5,19 @@ import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
 import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
 import * as __fetch__ from "node-fetch";
 
-const FULL_CHANGE_TEMPLATE = "{{{toJSON this}}}";
+jest.setTimeout(60_000);
 
 describe("Webhook Invoker", () => {
   let invoker: WebhookInvoker;
   let module: TestingModule;
   let service: WebhookService;
   let db: DatabaseService;
+  let logService: WebhookLogService;
 
-  let subscribeSpy: jest.Mock<typeof invoker["subscribe"]>;
-  let unsubscribeSpy: jest.Mock<typeof invoker["unsubscribe"]>;
-  let fetchSpy: jest.Mock<typeof __fetch__.default>;
+  let subscribeSpy: jest.SpyInstance;
+  let unsubscribeSpy: jest.SpyInstance;
+  let fetchSpy: jest.SpyInstance;
+  let insertLogSpy: jest.SpyInstance;
 
   let mockHttpResponse = {
     headers: {
@@ -48,15 +50,16 @@ describe("Webhook Invoker", () => {
 
     service = module.get(WebhookService);
     db = module.get(DatabaseService);
-
+    logService = module.get(WebhookLogService);
     invoker = module.get(WebhookInvoker);
     await stream.wait();
 
     subscribeSpy = jest.spyOn(invoker, "subscribe" as never);
     unsubscribeSpy = jest.spyOn(invoker, "unsubscribe" as never);
     fetchSpy = jest.spyOn(__fetch__, "default").mockReturnValue(Promise.resolve(mockHttpResponse));
+    insertLogSpy = jest.spyOn(logService, "insertOne" as never).mockImplementation();
 
-    await new Promise(resolve => setTimeout(() => resolve(), 2000));
+    await new Promise(resolve => setTimeout(() => resolve(""), 2000));
 
     webhook = {
       title: "wh1",
@@ -73,7 +76,14 @@ describe("Webhook Invoker", () => {
     };
   }, 20000);
 
-  afterEach(async () => await module.close());
+  afterEach(async () => {
+    subscribeSpy.mockClear();
+    unsubscribeSpy.mockClear();
+    fetchSpy.mockClear();
+    insertLogSpy.mockClear();
+
+    await module.close();
+  });
 
   it("should subscribe and open a change stream against the collection", async () => {
     const {_id, ...hook} = await service.insertOne(webhook);
@@ -148,18 +158,16 @@ describe("Webhook Invoker", () => {
   });
 
   it("should insert a log when hook has been invoked", async () => {
-    const insertLog = jest.spyOn(invoker["logService"], "insertOne");
     const hook = await service.insertOne(webhook);
     await stream.change.wait();
     stream.change.next();
     const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
     await stream.change.wait();
 
-    expect(insertLog).toHaveBeenCalledTimes(1);
+    expect(insertLogSpy).toHaveBeenCalledTimes(1);
 
-    let expectedArg: any = insertLog.mock.calls[0][0];
+    let expectedArg: any = insertLogSpy.mock.calls[0][0];
     expect(expectedArg.created_at).toEqual(expect.any(Date));
-
     delete expectedArg.created_at;
     expect(expectedArg).toEqual({
       content: {
@@ -189,18 +197,16 @@ describe("Webhook Invoker", () => {
 
   it("should insert log when webhook body compilation failed", async () => {
     webhook.body = "{{{document.title}}}";
-    const insertLog = jest.spyOn(invoker["logService"], "insertOne");
     const hook = await service.insertOne(webhook);
     await stream.change.wait();
     stream.change.next();
     const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
     await stream.change.wait();
 
-    expect(insertLog).toHaveBeenCalledTimes(1);
+    expect(insertLogSpy).toHaveBeenCalledTimes(1);
 
-    let expectedArg: any = insertLog.mock.calls[0][0];
+    let expectedArg: any = insertLogSpy.mock.calls[0][0];
     expect(expectedArg.created_at).toEqual(expect.any(Date));
-
     delete expectedArg.created_at;
     expect(expectedArg).toEqual({
       content: {

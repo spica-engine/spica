@@ -2,7 +2,7 @@ import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {Webhook, WebhookService} from "@spica-server/function/webhook";
 import {SchemaResolver} from "@spica-server/function/webhook/src/schema";
 import {WebhookController} from "@spica-server/function/webhook/src/webhook.controller";
@@ -10,8 +10,6 @@ import {PassportTestingModule} from "@spica-server/passport/testing";
 import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
 import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
 import {WEBHOOK_OPTIONS} from "@spica-server/function/webhook";
-
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 describe("Webhook Controller", () => {
   let app: INestApplication;
@@ -45,12 +43,6 @@ describe("Webhook Controller", () => {
     await db.createCollection("coll1");
     await db.createCollection("coll2");
 
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__skip__" && typeof actual == typeof expected) {
-        return true;
-      }
-    });
-
     webhook = {
       title: "wh1",
       url: "https://spica.internal",
@@ -80,10 +72,11 @@ describe("Webhook Controller", () => {
 
     const expected = {
       ...webhook,
-      _id: "__skip__"
+      _id: hook._id
     };
     expected.trigger.active = true;
 
+    expect(ObjectId.isValid(expected._id)).toEqual(true);
     expect(hook).toEqual(expected);
   });
 

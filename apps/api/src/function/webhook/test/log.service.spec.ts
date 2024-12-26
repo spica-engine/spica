@@ -8,7 +8,7 @@ describe("Webhook Log Service", () => {
   let logService: WebhookLogService;
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create()],
+      imports: [DatabaseTestingModule.standalone()],
       providers: [
         WebhookLogService,
         {
@@ -20,7 +20,7 @@ describe("Webhook Log Service", () => {
       ]
     }).compile();
     logService = module.get(WebhookLogService);
-    await new Promise(resolve => setTimeout(() => resolve(), 2000));
+    await new Promise(resolve => setTimeout(() => resolve(""), 2000));
   }, 10000);
 
   afterEach(async () => {
