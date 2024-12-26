@@ -15,5 +15,10 @@
   },
   "files": ["src/main.ts", "src/polyfills.ts"],
   "exclude": ["src/**/*.worker.ts"],
-  "include": ["src/**/*.d.ts"]
+  "include": ["src/**/*.d.ts"],
+  "references": [
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
 }
