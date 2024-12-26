@@ -1,0 +1,5 @@
+{
+  "name": "api/function/scheduler",
+  "sourceRoot": "apps/api/src/function/scheduler",
+  "projectType": "application"
+}

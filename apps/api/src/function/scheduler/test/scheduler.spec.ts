@@ -12,7 +12,7 @@ process.env.DISABLE_LOGGER = "true";
 describe("Scheduler", () => {
   let scheduler: Scheduler;
   let app: INestApplication;
-  let spawnSpy: jest.Mock;
+  let spawnSpy: jest.SpyInstance;
   let schedulerOptions = {
     databaseUri: undefined,
     databaseName: undefined,
@@ -44,8 +44,6 @@ describe("Scheduler", () => {
   }
 
   const now = new Date(2015, 1, 1, 1, 1, 31, 0);
-
-  let clock: jasmine.Clock;
 
   const compilation = {
     cwd: undefined,
@@ -93,9 +91,8 @@ describe("Scheduler", () => {
 
     app = module.createNestApplication();
 
-    clock = jasmine.clock();
-    clock.mockDate(now);
-    clock.install();
+    jest.useFakeTimers({doNotFake: ["setImmediate"]});
+    jest.setSystemTime(now);
 
     await app.init();
 
@@ -111,7 +108,7 @@ describe("Scheduler", () => {
   afterEach(async () => {
     scheduler.kill();
     await app.close();
-    clock.uninstall();
+    jest.useRealTimers();
     spawnSpy.mockReset();
   });
 
@@ -135,7 +132,7 @@ describe("Scheduler", () => {
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
-      type: -1
+      type: -1 as any
     });
 
     scheduler.enqueue(ev);
@@ -150,7 +147,7 @@ describe("Scheduler", () => {
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
-      type: -1
+      type: -1 as any
     });
 
     scheduler.enqueue(ev);
@@ -175,14 +172,14 @@ describe("Scheduler", () => {
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
-      type: -1
+      type: -1 as any
     });
     scheduler.enqueue(ev);
 
     expect(kill).not.toHaveBeenCalled();
     expect(write).not.toHaveBeenCalled();
 
-    clock.tick(schedulerOptions.timeout * 1000);
+    jest.advanceTimersByTime(schedulerOptions.timeout * 1000);
 
     expect(kill).toHaveBeenCalledTimes(1);
     expect(write).toHaveBeenCalledWith(
@@ -205,14 +202,14 @@ describe("Scheduler", () => {
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: 10})
       }),
-      type: -1
+      type: -1 as any
     });
     scheduler.enqueue(ev);
 
     expect(kill).not.toHaveBeenCalled();
     expect(write).not.toHaveBeenCalled();
 
-    clock.tick(10 * 1000);
+    jest.advanceTimersByTime(10 * 1000);
 
     expect(kill).toHaveBeenCalledTimes(1);
     expect(write).toHaveBeenCalledWith(
@@ -228,7 +225,7 @@ describe("Scheduler", () => {
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
-      type: -1
+      type: -1 as any
     });
 
     scheduler.enqueue(ev1);
@@ -251,7 +248,7 @@ describe("Scheduler", () => {
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
-      type: -1
+      type: -1 as any
     });
 
     const ev2 = new event.Event({
@@ -261,7 +258,7 @@ describe("Scheduler", () => {
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
-      type: -1
+      type: -1 as any
     });
 
     scheduler.enqueue(ev1);
@@ -287,7 +284,7 @@ describe("Scheduler", () => {
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
-      type: -1
+      type: -1 as any
     });
 
     scheduler.enqueue(ev1);
@@ -299,7 +296,7 @@ describe("Scheduler", () => {
 
     const activateds = activatedWorkers();
     expect(activateds.length).toEqual(2);
-    expect(activateds.every(([_, worker]) => worker.target.id == "1")).toBeTrue();
+    expect(activateds.every(([_, worker]) => worker.target.id == "1")).toBe(true);
 
     expect(freeWorkers().length).toEqual(1);
   });
@@ -312,7 +309,7 @@ describe("Scheduler", () => {
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
-      type: -1
+      type: -1 as any
     });
 
     scheduler.enqueue(ev1);
@@ -326,7 +323,7 @@ describe("Scheduler", () => {
 
     let activateds = activatedWorkers();
     expect(activateds.length).toEqual(2);
-    expect(activateds.every(([_, worker]) => worker.target.id == "1")).toBeTrue();
+    expect(activateds.every(([_, worker]) => worker.target.id == "1")).toBe(true);
 
     expect(freeWorkers().length).toEqual(1);
 
@@ -339,7 +336,7 @@ describe("Scheduler", () => {
 
     activateds = activatedWorkers();
     expect(activateds.length).toEqual(2);
-    expect(activateds.every(([_, worker]) => worker.target.id == "1")).toBeTrue();
+    expect(activateds.every(([_, worker]) => worker.target.id == "1")).toBe(true);
 
     expect(freeWorkers().length).toEqual(1);
   });
@@ -353,7 +350,7 @@ describe("Scheduler", () => {
           handler: "default",
           context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
         }),
-        type: -1
+        type: -1 as any
       });
     }
 
@@ -409,7 +406,7 @@ describe("Scheduler", () => {
       onFreeWorkersAreKilled().then(() => {
         // to be sure this promise has resolved before module close
         done = copyDone;
-        expect(activatedWorkers().length).toEqual(1, "should keep the busy worker");
+        expect(activatedWorkers().length).toEqual(1);
         expect(freeWorkers().length).toEqual(0);
         triggerLostWorker("1");
       });
@@ -424,7 +421,8 @@ describe("Scheduler", () => {
       const copyDone = done;
       done = undefined;
 
-      clock.uninstall();
+      jest.useRealTimers();
+
       const ev1 = getEvent("1");
 
       scheduler.enqueue(ev1);

@@ -6,7 +6,9 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7911";
 
 const spyScheduler = jest.fn(() => ({
-  enqueuer: null,
+  enqueuer: {
+    onEventsAreDrained: () => {}
+  },
   queue: null
 }));
 
@@ -27,8 +29,8 @@ describe("Scheduler Injection", () => {
   let scheduler: Scheduler;
   let app: INestApplication;
 
-  let addQueueSpy: jest.Mock;
-  let addEnqueuerSpy: jest.Mock;
+  let addQueueSpy: jest.SpyInstance;
+  let addEnqueuerSpy: jest.SpyInstance;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
