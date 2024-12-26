@@ -251,7 +251,6 @@ describe("Status", () => {
 
       let res = await req.get("/status/function");
       expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
-      console.log("🚀 ~ expect ~ res.body:", res.body);
       expect(res.body).toEqual({
         module: "function",
         status: {
