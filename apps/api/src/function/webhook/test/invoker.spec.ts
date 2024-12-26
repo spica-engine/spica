@@ -193,7 +193,7 @@ describe("Webhook Invoker", () => {
       webhook: hook._id.toHexString(),
       succeed: false
     } as any);
-  }, 60_000);
+  });
 
   it("should insert log when webhook body compilation failed", async () => {
     webhook.body = "{{{document.title}}}";
