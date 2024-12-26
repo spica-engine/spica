@@ -1,5 +1,6 @@
 {
   "name": "spica",
+  "version": 1,
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "prefix": "app",
