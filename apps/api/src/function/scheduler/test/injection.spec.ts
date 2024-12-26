@@ -6,7 +6,9 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7911";
 
 const spyScheduler = jest.fn(() => ({
-  enqueuer: null,
+  enqueuer: {
+    onEventsAreDrained: () => {}
+  },
   queue: null
 }));
 
