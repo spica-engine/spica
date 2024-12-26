@@ -28,6 +28,7 @@ import {FilterComponent} from "@spica-client/bucket/components/filter/filter.com
 import {MatDialog} from "@angular/material/dialog";
 import {AddFieldModalComponent} from "../add-field-modal/add-field-modal.component";
 import {InputResolver} from "@spica-client/common";
+import {StorageService} from "@spica-client/storage";
 
 @Component({
   selector: "bucket-data-index",
@@ -114,6 +115,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     private scheme: SchemeObserver,
     private dialog: MatDialog,
     public inputResolver: InputResolver,
+    private storage: StorageService,
     @Inject(BUCKET_OPTIONS) private options: BucketOptions
   ) {
     this.scheme
@@ -280,7 +282,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.dispose.next();
+    this.dispose.next(null);
   }
 
   getDependents(schema: Bucket, entries: BucketEntry[]) {
@@ -410,21 +412,21 @@ export class IndexComponent implements OnInit, OnDestroy {
     return this.bds
       .patchOne(bucketid, documentid, patch)
       .toPromise()
-      .finally(() => this.refresh.next());
+      .finally(() => this.refresh.next(null));
   }
 
   delete(id: string): void {
     this.bds
       .delete(this.bucketId, id)
       .toPromise()
-      .then(() => this.refresh.next());
+      .then(() => this.refresh.next(null));
   }
 
   deleteSelectedItems() {
     this.bds
       .deleteMany(this.bucketId, this.selectedItems.map(i => i._id))
       .toPromise()
-      .then(() => this.refresh.next());
+      .then(() => this.refresh.next(null));
   }
 
   guideRequest(url: string, key: string) {
@@ -504,26 +506,33 @@ export class IndexComponent implements OnInit, OnDestroy {
         break;
 
       case "storage":
+        defs = this.getDefaulHtmlDefs(value);
+        result = this.buildHtml(defs);
+
         if (!this.isValidValue(value)) {
-          defs = this.getDefaulHtmlDefs(value);
+          break;
+        }
 
-          result = this.buildHtml(defs);
-        } else {
-          style = {
-            width: "100px",
-            height: "100px",
-            margin: "10px",
-            "border-radius": "3px"
-          };
+        style = {
+          width: "100px",
+          height: "100px",
+          margin: "10px",
+          "border-radius": "3px"
+        };
 
+        const url = value + "?timestamp=" + new Date().getTime();
+
+        this.storage.download(url, false).then(r => {
           props = {
-            src: value + "?timestamp=" + new Date().getTime(),
+            src: URL.createObjectURL(r),
             alt: value,
             onerror: this.onImageError
           };
 
           result = this.buildHtml({name: "img", style, props, noEndTag: true});
-        }
+
+          this.templateMap.set(key, result);
+        });
 
         break;
 
@@ -640,7 +649,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       const el = document.getElementById(this.getEditingCellId(id, key));
       if (el) {
-        const input = el.querySelector(".mat-input-element") as HTMLElement;
+        const input = el.querySelector(".mat-mdc-input-element") as HTMLElement;
         if (input) {
           input.focus();
         }

@@ -10,6 +10,7 @@
       }
     }
   }
+
   mat-card {
     margin: 30px;
     margin-top: -125px;
@@ -18,14 +19,18 @@
     > h4 {
       margin-bottom: 10px;
     }
+
     mat-card-content {
       margin-bottom: 10px;
+
       mat-list {
         width: max-content;
         padding-top: 0px;
+
         mat-list-item {
           display: flex;
-          ::ng-deep .mat-list-item-content {
+
+          ::ng-deep .mat-mdc-list-item-content {
             width: 100%;
             padding: 0px;
           }

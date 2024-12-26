@@ -33,11 +33,10 @@ const API_FULL_URL = environment.api.startsWith("http")
     HammerModule,
     BrowserAnimationsModule,
     RouterModule.forRoot([], {
-      paramsInheritanceStrategy: "always",
-      relativeLinkResolution: "legacy"
+      paramsInheritanceStrategy: "always"
     }),
     HttpClientModule,
-    BaseUrlInterceptorModule.forRoot({api: environment.api}),
+    BaseUrlInterceptorModule.forRoot({api: API_FULL_URL}),
     RouteModule.forRoot(),
     LayoutModule.forRoot(),
     StoreModule.forRoot([]),
@@ -46,7 +45,7 @@ const API_FULL_URL = environment.api.startsWith("http")
      */
     DashboardModule,
     ActivityModule,
-    PassportModule.forRoot(),
+    PassportModule.forRoot({url: API_FULL_URL}),
     BucketModule.forRoot({url: API_FULL_URL}),
     StorageModule.forRoot(),
     FunctionModule.forRoot({url: API_FULL_URL}),

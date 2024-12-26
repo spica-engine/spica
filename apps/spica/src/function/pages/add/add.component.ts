@@ -45,6 +45,7 @@ import {
 import {MatDialog} from "@angular/material/dialog";
 import {ExampleComponent} from "@spica-client/common/example";
 import {ConfigurationComponent} from "../../components/configuration/configuration.component";
+import {PassportService} from "@spica-client/passport";
 
 @Component({
   selector: "functions-add",
@@ -110,6 +111,7 @@ export class AddComponent implements OnInit, OnDestroy {
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private functionService: FunctionService,
+    private passport: PassportService,
     private http: HttpClient,
     public dialog: MatDialog,
     public renderer: Renderer2,
@@ -361,6 +363,10 @@ export class AddComponent implements OnInit, OnDestroy {
     this.handlers = handlers;
   }
 
+  onDebouncedChangeEmitted() {
+    this.passport.refreshTokenSubject.next(null);
+  }
+
   // FULLSCREEN CODE EDITOR
   enableLogView: boolean = false;
   enableInfoView: boolean = true;
@@ -380,7 +386,7 @@ export class AddComponent implements OnInit, OnDestroy {
         this.changeDetector.detectChanges();
       }
 
-      const content = document.getElementsByClassName("mat-sidenav-content").item(0);
+      const content = document.getElementsByClassName("mat-mdc-sidenav-content").item(0);
 
       try {
         this.setBrowserDefaults();
@@ -406,7 +412,7 @@ export class AddComponent implements OnInit, OnDestroy {
     const codeActions = document.getElementsByClassName("code-actions").item(0);
     const codeEditor = document.getElementsByClassName("editor").item(0);
     const logs = document.getElementsByClassName("sidecar-log-view").item(0);
-    const content = document.getElementsByClassName("mat-sidenav-content").item(0);
+    const content = document.getElementsByClassName("mat-mdc-sidenav-content").item(0);
 
     return {codeActions, codeEditor, logs, content};
   }

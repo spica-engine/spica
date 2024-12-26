@@ -38,8 +38,8 @@
   <mat-hint>{{ _schema.description }}</mat-hint>
 </ng-container>
 
-<mat-menu #selector class="mat-elevation-z24 relation-picker">
-  <mat-card class="mat-elevation-z0">
+<mat-menu #selector class="mat-mdc-elevation-z24 relation-picker">
+  <mat-card appearance="outlined" class="mat-mdc-elevation-z0">
     <mat-card-subtitle>
       <span>Select {{ _oneToManyRelation ? "some" : "a" }} {{ (schema$ | async)?.title }}</span>
       <button

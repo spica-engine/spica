@@ -1,5 +1,5 @@
 import {HttpClientTestingModule} from "@angular/common/http/testing";
-import {ANALYZE_FOR_ENTRY_COMPONENTS, Component} from "@angular/core";
+import {Component} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
 import {MatCardModule} from "@angular/material/card";
@@ -51,13 +51,7 @@ describe("StoragePicker", () => {
         MatMenuModule
       ],
       declarations: [TestCmp, PickerDirective, PickerComponent, StorageViewComponent],
-      providers: [
-        {
-          provide: ANALYZE_FOR_ENTRY_COMPONENTS,
-          multi: true,
-          useValue: PickerComponent
-        }
-      ]
+      providers: []
     });
 
     TestBed.overrideProvider(StorageService, {

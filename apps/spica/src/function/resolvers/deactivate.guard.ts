@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
-import {CanDeactivate, UrlTree} from "@angular/router";
+import {UrlTree} from "@angular/router";
 import {Observable} from "rxjs";
 import {first} from "rxjs/operators";
 import {AddComponent} from "../pages/add/add.component";
@@ -18,7 +18,7 @@ const awareDialogData = {
 };
 
 @Injectable()
-export class FunctionCanDeactivate implements CanDeactivate<AddComponent> {
+export class FunctionCanDeactivate {
   constructor(public matDialog: MatDialog) {}
 
   openDialog() {

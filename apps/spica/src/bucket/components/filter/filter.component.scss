@@ -24,7 +24,7 @@
   }
 
   ::ng-deep {
-    .mat-form-field-infix {
+    .mat-mdc-form-field-infix {
       width: unset;
     }
   }
@@ -100,14 +100,16 @@
         align-items: center;
         justify-content: center;
       }
-      mat-chip-list {
+
+      mat-chip-listbox {
         margin-top: 15px;
-        ::ng-deep .mat-chip-list-wrapper {
+
+        ::ng-deep .mat-mdc-chip-list-wrapper {
           justify-content: center;
         }
       }
 
-      mat-chip {
+      mat-chip-option {
         width: 80%;
         display: flex;
         align-items: center;
@@ -116,7 +118,7 @@
     }
   }
 
-  p.mat-error {
+  p.mat-mdc-form-field-error {
     text-align: center;
   }
 }

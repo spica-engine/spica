@@ -3,7 +3,7 @@ import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {MatAwareDialogOptions} from "./options";
 
 @Component({
-  selector: "mat-aware-dialog",
+  selector: "mat-mdc-aware-dialog",
   templateUrl: "./aware-dialog.component.html",
   styleUrls: ["./aware-dialog.component.scss"]
 })

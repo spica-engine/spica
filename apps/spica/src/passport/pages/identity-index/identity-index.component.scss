@@ -1,14 +1,13 @@
 ::ng-deep .identity-filter-menu {
   max-width: unset !important;
   width: 380px;
-  .mat-menu-content {
+  .mat-mdc-menu-content {
     width: 100%;
     padding: 30px 0 20px !important;
     mat-form-field {
       width: 80%;
       margin: 0 10%;
-
-      .mat-form-field-infix {
+      .mat-mdc-form-field-infix {
         width: 300px;
       }
     }
@@ -25,7 +24,6 @@
     display: inline-block;
     width: calc(100% - 60px);
     margin: 30px;
-    margin-top: -85px;
     overflow: auto;
 
     table {
@@ -53,7 +51,7 @@
         }
       }
 
-      td.mat-cell {
+      td.mat-mdc-cell {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

@@ -31,7 +31,7 @@ import {AssetInitializer} from "./services/asset.initializer";
 import {AssetInstallDialog} from "./components/install/install.component";
 import {EditComponent} from "./pages/edit/edit.component";
 import {MatTreeModule} from "@angular/material/tree";
-import {CommonModule as SpicaCommon} from "@spica/client/packages/common";
+import {CommonModule as SpicaCommon} from "packages/common";
 import {PreviewComponent} from "./components/preview/preview.component";
 import {AssetStoreComponent} from "./pages/asset-store/asset-store.component";
 import {ExportComponent} from "./components/export/export.component";

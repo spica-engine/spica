@@ -2,7 +2,7 @@
   overflow: unset !important;
   max-width: unset !important;
   width: 700px;
-  .mat-menu-content {
+  .mat-mdc-menu-content {
     padding: 10px 18px;
   }
 }
@@ -25,12 +25,14 @@
         display: flex;
         align-items: center;
         line-height: 60px;
-        .mat-icon {
+        .mat-mdc-icon {
           font-size: 17px;
         }
-        mat-chip-list {
+
+        mat-chip-listbox {
           margin-right: 10px;
-          mat-chip {
+
+          mat-chip-option {
             font-size: 11px;
             padding: 7px 10px;
             min-height: 20px;
@@ -114,7 +116,8 @@
           * {
             color: var(--primary-100);
           }
-          .mat-form-field-outline {
+
+          .mat-mdc-form-field-outline {
             background: transparent;
           }
         }
@@ -141,6 +144,7 @@
         margin: 0px;
       }
     }
+
     mat-card {
       overflow: auto;
       border: 16px solid transparent;
@@ -153,13 +157,13 @@
           width: 75px;
           min-width: 75px;
         }
-        .mat-column---spicainternal_id {
+        .mat-mdc-column---spicainternal_id {
           left: 75px !important;
         }
         th:not(.select):not(:last-of-type) {
           position: relative;
           padding-left: 5px;
-          &:not(.mat-column---spicainternal_id) {
+          &:not(.mat-mdc-column---spicainternal_id) {
             &:after {
               content: "||";
               position: absolute;
@@ -201,7 +205,7 @@
             text-align: right;
           }
           &:hover {
-            td.mat-column---spicainternal_select {
+            td.mat-mdc-column---spicainternal_select {
               button {
                 opacity: 1;
               }
@@ -217,7 +221,7 @@
           }
         }
 
-        td.mat-cell {
+        td.mat-mdc-cell {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -225,20 +229,20 @@
             padding-right: 5px;
             padding-left: 5px;
           }
-          &.mat-column---spicainternal_id {
+          &.mat-mdc-column---spicainternal_id {
             padding-left: 5px;
             padding-right: 5px;
             border-right: 1px solid var(--foreground-divider);
             width: 200px;
             min-width: 200px;
           }
-          &.mat-column---spicainternal_new_property {
+          &.mat-mdc-column---spicainternal_new_property {
             border-left: 1px solid var(--foreground-divider);
             padding: 0px 10px;
             border-bottom-color: transparent;
             background-color: var(--background-card) !important;
           }
-          &.mat-column---spicainternal_select {
+          &.mat-mdc-column---spicainternal_select {
             button {
               margin-left: 8px;
               opacity: 0;
@@ -246,7 +250,7 @@
             }
           }
         }
-        td.mat-cell:not(.mat-column---spicainternal_select) {
+        td.mat-mdc-cell:not(.mat-mdc-column---spicainternal_select) {
           max-width: 0;
           &.editable {
             cursor: pointer;

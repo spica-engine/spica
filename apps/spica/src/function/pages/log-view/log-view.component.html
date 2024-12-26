@@ -1,6 +1,6 @@
 <mat-toolbar>
   <div class="left">
-    <h4 class="mat-h4">
+    <h4 class="mat-mdc-h4">
       <mat-icon>bug_report</mat-icon>
       <span>Function Logs</span>
     </h4>
@@ -17,7 +17,7 @@
   </div>
 </mat-toolbar>
 
-<mat-card class="mat-elevation-z25">
+<mat-card appearance="outlined" class="mat-mdc-elevation-z25">
   <div class="header">
     <span class="start">
       <mat-form-field *ngIf="!realtimeToggle?.checked">
@@ -59,7 +59,7 @@
           (ngModelChange)="next({function: $event})"
         >
           <mat-option
-            class="mat-accent"
+            class="mat-mdc-accent"
             *ngFor="let function of functions$ | async"
             [value]="function._id"
           >
@@ -74,19 +74,19 @@
           (ngModelChange)="next({levels: $event})"
           multiple
         >
-          <mat-option class="mat-accent" value="0">
+          <mat-option class="mat-mdc-accent" value="0">
             Debug
           </mat-option>
-          <mat-option class="mat-accent" value="1">
+          <mat-option class="mat-mdc-accent" value="1">
             Log
           </mat-option>
-          <mat-option class="mat-accent" value="2">
+          <mat-option class="mat-mdc-accent" value="2">
             Info
           </mat-option>
-          <mat-option class="mat-accent" value="3">
+          <mat-option class="mat-mdc-accent" value="3">
             Warning
           </mat-option>
-          <mat-option class="mat-accent" value="4">
+          <mat-option class="mat-mdc-accent" value="4">
             Error
           </mat-option>
         </mat-select>

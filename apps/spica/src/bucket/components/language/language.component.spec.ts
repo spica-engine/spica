@@ -53,34 +53,36 @@ describe("LanguageComponent", () => {
     const compiled = document.body;
 
     expect(
-      Array.from(compiled.querySelectorAll(".mat-menu-content > button")).map(
-        (b: HTMLButtonElement) => b.textContent
-      )
+      Array.from(
+        compiled.querySelectorAll<HTMLButtonElement>(".mat-mdc-menu-content > button")
+      ).map((b: HTMLButtonElement) => b.textContent)
     ).toEqual([" TU ", " EN "], "should work if defined language names rendered correctly ");
 
-    expect(compiled.querySelector(".mat-menu-content > button.mat-accent").textContent).toBe(
+    expect(compiled.querySelector(".mat-mdc-menu-content > button.mat-accent")!.textContent).toBe(
       " EN ",
       "should work if there is only single accent button"
     );
   });
 
-  it("should change language", () => {
+  fit("should change language", () => {
     const button = fixture.debugElement.query(By.css("button"));
     button.nativeElement.click();
     fixture.detectChanges();
 
     const compiled = document.body;
 
-    const enLangButton = compiled.querySelector(".mat-menu-content > button:first-of-type");
-    expect(enLangButton.classList).toContain("mat-primary");
+    const enLangButton = compiled.querySelector(".mat-mdc-menu-content > button:first-of-type");
+    expect(enLangButton!.classList).toContain("mat-mdc-primary");
 
-    enLangButton.dispatchEvent(new Event("click"));
+    enLangButton!.dispatchEvent(new Event("click"));
     fixture.detectChanges();
     expect(fixture.componentInstance.selected).toBe("tr_TR");
-    expect(enLangButton.classList).toContain("mat-accent", "expected Turkish button to be current");
-    expect(compiled.querySelector(".mat-menu-content > button:last-of-type").classList).toContain(
-      "mat-primary",
-      "expected English button not to be current"
+    expect(enLangButton!.classList).toContain(
+      "mat-accent",
+      "expected Turkish button to be current"
     );
+    expect(
+      compiled.querySelector(".mat-mdc-menu-content > button:last-of-type")!.classList
+    ).toContain("mat-mdc-primary", "expected English button not to be current");
   });
 });

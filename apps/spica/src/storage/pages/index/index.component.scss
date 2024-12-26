@@ -6,13 +6,13 @@
   .preview-object,
   .edit-object {
     position: relative !important;
-    .mat-dialog-container {
+    .mat-mdc-dialog-container {
       height: unset;
       padding: unset;
     }
   }
 
-  .mat-menu-content {
+  .mat-mdc-menu-content {
     button.active {
       color: var(--accent-300) !important;
     }

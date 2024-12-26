@@ -3,8 +3,9 @@
     padding: 0 !important;
     align-items: flex-start;
     flex-direction: column;
+
     mat-card-header {
-      .mat-card-header-text {
+      .mat-mdc-card-header-text {
         margin: 0;
       }
     }
@@ -17,7 +18,7 @@
       mat-form-field {
         width: 100%;
         ::ng-deep {
-          .mat-form-field-prefix {
+          .mat-mdc-form-field-prefix {
             top: 0.35rem;
           }
         }

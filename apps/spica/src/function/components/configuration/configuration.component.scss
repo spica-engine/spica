@@ -1,7 +1,7 @@
 :host {
   mat-list-item {
     ::ng-deep {
-      .mat-list-item-content {
+      .mat-mdc-list-item-content {
         padding: 0;
       }
     }
@@ -9,6 +9,7 @@
 
   form {
     min-width: 520px;
+
     mat-list {
       height: 100%;
 
@@ -57,7 +58,7 @@
 
         &.trigger,
         &.trigger-details {
-          ::ng-deep .mat-list-item-content {
+          ::ng-deep .mat-mdc-list-item-content {
             display: block;
           }
 

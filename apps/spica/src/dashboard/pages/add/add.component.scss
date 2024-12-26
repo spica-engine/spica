@@ -1,5 +1,5 @@
 :host {
-  ::ng-deep .mat-list-item-content {
+  ::ng-deep .mat-mdc-list-item-content {
     padding: 0px !important;
   }
 
@@ -19,15 +19,18 @@
   mat-card {
     margin: 30px;
     margin-top: -85px;
+
     mat-list {
       padding-top: 0px;
+
       mat-list-item {
         margin-top: 10px;
         height: auto !important;
         &:nth-child(1) {
           margin-top: 0px;
           padding-top: 0px !important;
-          ::ng-deep .mat-list-item-content {
+
+          ::ng-deep .mat-mdc-list-item-content {
             display: flex;
             mat-form-field {
               flex: 1;
@@ -39,13 +42,13 @@
         }
 
         &:not(:first-of-type) {
-          ::ng-deep .mat-list-item-content {
+          ::ng-deep .mat-mdc-list-item-content {
             display: flex;
           }
         }
 
         &:not(:nth-child(1)) {
-          ::ng-deep .mat-list-item-content {
+          ::ng-deep .mat-mdc-list-item-content {
             display: flex;
             justify-content: space-around;
             align-items: baseline;

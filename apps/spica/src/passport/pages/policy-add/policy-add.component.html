@@ -7,7 +7,7 @@
   </span>
 </ng-template>
 
-<mat-card>
+<mat-card appearance="outlined">
   <mat-card-content>
     <form #policyForm="ngForm">
       <mat-form-field>
@@ -40,7 +40,7 @@
 
       <mat-accordion>
         <mat-expansion-panel
-          class="mat-elevation-z1"
+          class="mat-mdc-elevation-z1"
           *ngFor="let statement of displayedStatements; let statementIndex = index"
         >
           <mat-expansion-panel-header>

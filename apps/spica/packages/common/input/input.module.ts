@@ -1,13 +1,6 @@
 import {DragDropModule} from "@angular/cdk/drag-drop";
 import {CommonModule} from "@angular/common";
-import {
-  ANALYZE_FOR_ENTRY_COMPONENTS,
-  Inject,
-  InjectionToken,
-  ModuleWithProviders,
-  NgModule,
-  Optional
-} from "@angular/core";
+import {Inject, InjectionToken, ModuleWithProviders, NgModule, Optional} from "@angular/core";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MatBadgeModule} from "@angular/material/badge";
 import {MatButtonModule} from "@angular/material/button";
@@ -219,8 +212,5 @@ export function provideInputResolver(placers: InputPlacerWithMetaPlacer[]) {
 }
 
 export function providePlacers(placers: InputPlacerWithMetaPlacer[]): any {
-  return [
-    {provide: ANALYZE_FOR_ENTRY_COMPONENTS, multi: true, useValue: placers},
-    {provide: INPUT_PLACERS, multi: true, useValue: placers}
-  ];
+  return [{provide: INPUT_PLACERS, multi: true, useValue: placers}];
 }

@@ -5,6 +5,7 @@
       vertical-align: middle;
     }
   }
+
   mat-dialog-actions {
     float: right;
   }
@@ -19,7 +20,8 @@
     }
     mat-form-field {
       width: 100%;
-      .mat-form-field-wrapper {
+
+      .mat-mdc-form-field-wrapper {
         padding-bottom: unset;
       }
     }

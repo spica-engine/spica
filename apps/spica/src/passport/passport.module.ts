@@ -59,6 +59,8 @@ import {PolicyResourceAddComponent} from "./components/policy-resource-add/polic
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {ASSET_CONFIG_EXPORTER, ASSET_RESOURCE_LISTER} from "@spica-client/asset/interfaces";
 import {ApiKeyService} from "./services/apikey.service";
+import {RefreshTokenIndexComponent} from "./pages/refreshtoken-index/refreshtoken-index.component";
+import {PassportOptions, PASSPORT_OPTIONS} from "./interfaces/passport";
 
 @NgModule({
   declarations: [
@@ -77,6 +79,7 @@ import {ApiKeyService} from "./services/apikey.service";
     CanInteractDirective,
     ApiKeyIndexComponent,
     ApiKeyAddComponent,
+    RefreshTokenIndexComponent,
     StrategyDialogComponent,
     PolicyResourceAddComponent,
     AccessTokenComponent
@@ -117,11 +120,15 @@ import {ApiKeyService} from "./services/apikey.service";
   exports: [CanInteractDirective]
 })
 export class PassportModule {
-  static forRoot(): ModuleWithProviders<PassportModule> {
+  static forRoot(options: PassportOptions): ModuleWithProviders<PassportModule> {
     return {
       ngModule: PassportModule,
       providers: [
         {provide: HTTP_INTERCEPTORS, useClass: AuthorizationInterceptor, multi: true},
+        {
+          provide: PASSPORT_OPTIONS,
+          useValue: options
+        },
         {
           provide: LAYOUT_ACTIONS,
           useValue: {component: HomeBadgeComponent, position: "right"},

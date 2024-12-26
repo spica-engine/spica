@@ -14,6 +14,7 @@ import {StrategiesComponent} from "./pages/strategies/strategies.component";
 import {StrategiesAddComponent} from "./pages/strategies-add/strategies-add.component";
 import {ApiKeyIndexComponent} from "./pages/apikey-index/apikey-index.component";
 import {ApiKeyAddComponent} from "./pages/apikey-add/apikey-add.component";
+import {RefreshTokenIndexComponent} from "./pages/refreshtoken-index/refreshtoken-index.component";
 
 const routes: Routes = [
   {path: "passport/identify", component: IdentifyComponent, data: {layout: false}},
@@ -91,6 +92,18 @@ const routes: Routes = [
             data: {action: "show"}
           }
         ]
+      },
+      {
+        path: "refreshtoken",
+        canActivateChild: [PolicyGuard],
+        data: {service: "passport:refreshtoken"},
+        children: [
+          {
+            path: "",
+            component: RefreshTokenIndexComponent,
+            data: {action: "index"}
+          }
+        ]
       }
     ]
   }
@@ -128,6 +141,14 @@ const route: Route[] = [
     path: "/passport/apikey",
     icon: "vpn_key",
     data: {action: "passport:apikey:index"}
+  },
+  {
+    id: "passport.refreshtoken",
+    category: RouteCategory.System,
+    display: "Refresh Tokens",
+    icon: "verified_user",
+    path: "/passport/refreshtoken",
+    data: {action: "passport:refreshtoken:index"}
   },
   {
     id: "passport.settings",
