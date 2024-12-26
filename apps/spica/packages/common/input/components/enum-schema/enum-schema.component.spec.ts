@@ -29,34 +29,34 @@ describe("Common#enum-schema", () => {
   });
 
   it("add button should be working", () => {
-    const mockChipListEvent = {input: {value: "test"}, value: "test"};
+    const mockChipListEvent = {chipInput: {inputElement: {value: "test"}}, value: "test"};
     component.addItem(mockChipListEvent as any);
     expect(component.schema.enum).toEqual(["test"]);
-    expect(mockChipListEvent.input.value).toEqual("");
+    expect(mockChipListEvent.chipInput.inputElement.value).toEqual("");
   });
 
   it("should cast input value to number", () => {
     component.schema.type = "number";
-    const mockChipListEvent = {input: {value: "0"}, value: "0"};
+    const mockChipListEvent = {chipInput: {inputElement: {value: "0"}}, value: "0"};
     component.addItem(mockChipListEvent as any);
     expect(component.schema.enum).toEqual([0]);
-    expect(mockChipListEvent.input.value).toEqual("");
+    expect(mockChipListEvent.chipInput.inputElement.value).toEqual("");
   });
 
   it("should not cast input value to number", () => {
     component.schema.type = "string";
-    const mockChipListEvent = {input: {value: "0"}, value: "0"};
+    const mockChipListEvent = {chipInput: {inputElement: {value: "0"}}, value: "0"};
     component.addItem(mockChipListEvent as any);
     expect(component.schema.enum).toEqual(["0"]);
-    expect(mockChipListEvent.input.value).toEqual("");
+    expect(mockChipListEvent.chipInput.inputElement.value).toEqual("");
   });
 
   it("should not add value and show the error for numbers", () => {
     component.schema.type = "number";
-    const mockChipListEvent = {input: {value: "test"}, value: "test"};
+    const mockChipListEvent = {chipInput: {inputElement: {value: "test"}}, value: "test"};
     component.addItem(mockChipListEvent as any);
     expect(component.schema.enum).toEqual(undefined);
-    expect(mockChipListEvent.input.value).toEqual("test");
+    expect(mockChipListEvent.chipInput.inputElement.value).toEqual("test");
 
     fixture.detectChanges();
 
@@ -67,10 +67,10 @@ describe("Common#enum-schema", () => {
 
   it("should not add value and show the error for string", () => {
     component.schema.type = "string";
-    const mockChipListEvent = {input: {value: ""}, value: ""};
+    const mockChipListEvent = {chipInput: {inputElement: {value: ""}}, value: ""};
     component.addItem(mockChipListEvent as any);
     expect(component.schema.enum).toEqual(undefined);
-    expect(mockChipListEvent.input.value).toEqual("");
+    expect(mockChipListEvent.chipInput.inputElement.value).toEqual("");
 
     fixture.detectChanges();
 
