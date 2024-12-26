@@ -62,7 +62,7 @@
         }
       }
 
-      @keyframes shake {
+      @keyframes app-creator_shake {
         0% {
           transform: translate(1px, 1px) rotate(0deg);
         }
@@ -98,7 +98,7 @@
         }
       }
 
-      @keyframes coming {
+      @keyframes app-creator_coming {
         0% {
           transform: translateY(50px);
           opacity: 0;
@@ -107,7 +107,7 @@
           opacity: 0;
         }
       }
-      @keyframes hover {
+      @keyframes app-creator_hover {
         0% {
           transform: translateY(0px);
           opacity: 1;
@@ -119,12 +119,12 @@
           opacity: 1;
         }
       }
-      @keyframes coming-big {
+      @keyframes app-creator_coming-big {
         0% {
           transform: translateY(500px);
         }
       }
-      @keyframes item-coming {
+      @keyframes app-creator_item-coming {
         0% {
           opacity: 0;
           transform: translateY(100px);
