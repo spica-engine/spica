@@ -94,7 +94,7 @@ describe("Scheduler", () => {
     jest.useFakeTimers({doNotFake: ["setImmediate"]});
     jest.setSystemTime(now);
 
-    const rere = await app.init();
+    await app.init();
 
     compilation.cwd = FunctionTestBed.initialize(
       `export default function() {}`,
@@ -103,7 +103,7 @@ describe("Scheduler", () => {
     await scheduler.languages.get("javascript").compile(compilation);
 
     triggerGotWorker();
-  }, 5000);
+  });
 
   afterEach(async () => {
     scheduler.kill();
