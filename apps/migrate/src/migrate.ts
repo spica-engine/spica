@@ -10,15 +10,21 @@ export type MigrationManifest = {
   [k: string]: string[];
 };
 
+function getManifestDir() {
+  let manifestDir = "./";
+  const isTestEnv = process.env.NODE_ENV == "test";
+  if (isTestEnv) {
+    manifestDir = process.env.TESTONLY_MIGRATION_LOOKUP_DIR;
+  }
+  return manifestDir;
+}
+
 export function loadMigrations(): MigrationManifest {
+  const manifestDir = getManifestDir();
   try {
-    console.log("reading from manifest : " + process.env.TESTONLY_MIGRATION_LOOKUP_DIR);
+    console.log("reading from manifest : " + manifestDir);
     return JSON.parse(
-      fs
-        .readFileSync(
-          path.join(process.env.TESTONLY_MIGRATION_LOOKUP_DIR, "migrations", "index.json")
-        )
-        .toString()
+      fs.readFileSync(path.join(manifestDir, "migrations", "index.json")).toString()
     );
   } catch (e) {
     console.log(e);
@@ -36,7 +42,7 @@ export function migrationVersions(from: string, to: string): string[] {
 
 export function getMigrations(version: string): string[] {
   return loadMigrations()[version].map(script =>
-    path.isAbsolute(script) ? script : path.join("migrations", script)
+    path.isAbsolute(script) ? script : path.join(getManifestDir(), "migrations", script)
   );
 }
 
@@ -66,7 +72,7 @@ export async function migrate(options: Options) {
     for (const script of getMigrations(version)) {
       ctx.console.log(`${color.green("APPLYING:")} ${script}`);
       try {
-        const module = await import(`./${script}`);
+        const module = await import(script);
         await module.default(ctx);
         ctx.console.log(`${color.green("SUCCESS:")} ${script}`);
       } catch (e) {

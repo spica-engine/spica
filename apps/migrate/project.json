@@ -12,6 +12,22 @@
         "main": "apps/migrate/src/main.ts",
         "tsConfig": "apps/migrate/tsconfig.json"
       }
+    },
+    "build-test": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "dist/apps/migrate",
+        "main": "apps/migrate/test/acceptance/migrations/main.ts",
+        "tsConfig": "apps/migrate/tsconfig.test.json"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/migrate/jest.config.ts",
+        "runInBand": true
+      },
+      "dependsOn": ["build", "build-test"]
     }
   }
 }
