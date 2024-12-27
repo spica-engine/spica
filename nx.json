@@ -34,14 +34,4 @@
       "preVersionCommand": "yarn nx run-many -t build"
     }
   },
-  "targetDefaults": {
-    "test": {
-      "dependsOn": [
-        {
-          "projects": ["api"],
-          "target": "build-workers"
-        }
-      ]
-    }
-  }
 }
