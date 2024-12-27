@@ -33,5 +33,5 @@
     "version": {
       "preVersionCommand": "yarn nx run-many -t build"
     }
-  },
+  }
 }
