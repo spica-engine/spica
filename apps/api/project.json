@@ -8,6 +8,13 @@
     "serve": {
       "executor": "nx:run-commands",
       "options": {
+        "args": [
+          "--database-name=spica",
+          "--database-uri=mongodb://localhost:27017",
+          "--passport-secret=secret",
+          "--public-url=http://localhost",
+          "--port=4300"
+        ],
         "commands": [
           {
             "command": "nx build-workers api"
