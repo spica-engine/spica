@@ -27,6 +27,10 @@ describe("Entrypoint", () => {
 
   let queueSize = 0;
 
+  let writeSpy: jest.SpyInstance;
+
+  let stream: PassThrough;
+
   function initializeFn(index: string) {
     compilation.entrypoint = `index.${language.description.extension}`;
     compilation.cwd = FunctionTestBed.initialize(index, compilation.entrypoint);
@@ -89,9 +93,14 @@ describe("Entrypoint", () => {
     await queue.listen();
     runtime = new Node();
     language = new Javascript();
+
+    stream = new PassThrough();
+    writeSpy = jest.spyOn(stream, "write");
   });
 
   afterEach(() => {
+    writeSpy.mockClear();
+    queueSize = 0;
     queue["kill"]();
   });
 
@@ -121,8 +130,6 @@ describe("Entrypoint", () => {
   });
 
   it("should exit abnormally when worker id was not set", async () => {
-    const stream = new PassThrough();
-    const writeSpy = jest.spyOn(stream, "write");
     expect(await spawn(stream, "").catch(e => e)).toBe(126);
     expect(writeSpy.mock.calls.map(args => args[0].toString())).toEqual([
       "Environment variable WORKER_ID was not set.\n"
@@ -133,8 +140,6 @@ describe("Entrypoint", () => {
     const address = process.env.FUNCTION_GRPC_ADDRESS;
     delete process.env.FUNCTION_GRPC_ADDRESS;
 
-    const stream = new PassThrough();
-    const writeSpy = jest.spyOn(stream, "write");
     expect(await spawn(stream, "").catch(e => e)).toBe(126);
     expect(writeSpy.mock.calls.map(args => args[0].toString())).toEqual([
       "Environment variable FUNCTION_GRPC_ADDRESS was not set.\n"
@@ -145,7 +150,6 @@ describe("Entrypoint", () => {
 
   it("should exit abnormally if it can not find the exported handler", async () => {
     await initializeFn(`export const exists = ''`);
-    console.log("🚀 ~ fit ~ compilation.cwd:", compilation.cwd);
 
     const ev = new event.Event({
       type: -1 as any,
@@ -160,16 +164,10 @@ describe("Entrypoint", () => {
     });
     queue.enqueue(ev);
 
-    const stream = new PassThrough();
-    const writeSpy = jest.spyOn(stream, "write");
-
     await expect(spawn(stream)).rejects.toEqual(126);
-    expect(
-      writeSpy.mock.calls.map(args => {
-        args.forEach((arg, i) => console.log("ARGS: ", i, arg.toString()));
-        return args[0].toString();
-      })
-    ).toEqual(["This function does not export any symbol named 'shouldhaveexisted'.\n"]);
+    expect(writeSpy.mock.calls.map(args => args[0].toString())).toEqual([
+      "This function does not export any symbol named 'shouldhaveexisted'.\n"
+    ]);
   });
 
   it("should exit abnormally if the exported symbol is not a function", async () => {
@@ -188,9 +186,6 @@ describe("Entrypoint", () => {
     });
     queue.enqueue(ev);
 
-    const stream = new PassThrough();
-    const writeSpy = jest.spyOn(stream, "write");
-
     await expect(spawn(stream)).rejects.toEqual(126);
     expect(writeSpy.mock.calls.map(args => args[0].toString())).toEqual([
       "This function does export a symbol named 'notafunction' but it is not a function.\n"
@@ -202,10 +197,6 @@ describe("Entrypoint", () => {
       console.log('this should appear in the logs');
       console.warn('this also should appear in the logs');
     }`).then(() => {
-      const stream = new PassThrough();
-
-      const writeSpy = jest.spyOn(stream, "write");
-
       spawn(stream);
 
       queue["_complete"] = () => {
@@ -281,12 +272,14 @@ describe("Entrypoint", () => {
   });
 
   it("should set env variables from scheduling context", async () => {
+    console.time("initFn");
     await initializeFn(`
     export function env() {
       if (process.env.SET_FROM_CTX == "true" && process.env.TIMEOUT == "60") {
         process.exit(4);
       }
     }`);
+    console.timeEnd("initFn");
 
     const ev = new event.Event({
       type: -1 as any,
@@ -301,7 +294,10 @@ describe("Entrypoint", () => {
     });
     queue.enqueue(ev);
 
+    console.time("spawn");
     const exitCode = await spawn().catch(e => e);
+    console.timeEnd("spawn");
+
     expect(exitCode).toBe(4);
   });
 
@@ -387,7 +383,6 @@ describe("Entrypoint", () => {
 
         expect(httpQueue.size).toBe(1);
         expect(queueSize).toBe(1);
-        console.log("🚀 ~ initializeFn ~ queueSize:", queueSize);
 
         queue["_complete"] = () => {
           // It gets deleted after the response is completed

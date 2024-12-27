@@ -1,6 +1,6 @@
 import {Node} from "@spica-server/function/runtime/node";
 
-xdescribe("Node", () => {
+describe("Node", () => {
   let node: Node;
 
   beforeEach(async () => {

@@ -1,6 +1,6 @@
 import {PassThroughOutput} from "@spica-server/function/runtime/io";
 
-xdescribe("IO Passthrough", () => {
+describe("IO Passthrough", () => {
   let io: PassThroughOutput;
 
   beforeEach(() => {
