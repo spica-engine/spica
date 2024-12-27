@@ -272,14 +272,12 @@ describe("Entrypoint", () => {
   });
 
   it("should set env variables from scheduling context", async () => {
-    console.time("initFn");
     await initializeFn(`
     export function env() {
       if (process.env.SET_FROM_CTX == "true" && process.env.TIMEOUT == "60") {
         process.exit(4);
       }
     }`);
-    console.timeEnd("initFn");
 
     const ev = new event.Event({
       type: -1 as any,
@@ -294,9 +292,7 @@ describe("Entrypoint", () => {
     });
     queue.enqueue(ev);
 
-    console.time("spawn");
     const exitCode = await spawn().catch(e => e);
-    console.timeEnd("spawn");
 
     expect(exitCode).toBe(4);
   });
