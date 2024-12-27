@@ -1,8 +1,12 @@
 import {Test} from "@nestjs/testing";
-import {DatabaseService} from "@spica-server/database";
+import {DatabaseService, ObjectId} from "@spica-server/database";
 import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {DatabaseOutput} from "@spica-server/function/runtime/io";
 import {generateLog, getLoggerConsole, LogLevels} from "@spica-server/function/runtime/logger";
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 describe("IO Database", () => {
   let db: DatabaseService;
@@ -14,30 +18,29 @@ describe("IO Database", () => {
     }).compile();
     db = module.get(DatabaseService);
     dbOutput = new DatabaseOutput(db);
-    jasmine.addCustomEqualityTester((first, second) => {
-      if (first == "__skip" || second == "__skip") {
-        return true;
-      }
-    });
+  });
+
+  afterEach(async () => {
+    await db.collection("function_logs").drop();
   });
 
   it("should write stdout to collection", done => {
     const [stdout] = dbOutput.create({eventId: "event", functionId: "1"});
     stdout.write(Buffer.from("this is my message"), async err => {
-      await stream.wait();
-
-      expect(err).toBeUndefined();
+      await sleep(5000);
+      expect(err).toEqual(null);
       expect(
-        await db
+        db
           .collection("function_logs")
           .findOne({})
           .then(log => {
             expect(log.created_at).toEqual(expect.any(Date));
+            expect(ObjectId.isValid(log._id)).toBe(true);
             delete log.created_at;
+            delete log._id;
             return log;
           })
-      ).toEqual({
-        _id: "__skip",
+      ).resolves.toEqual({
         content: "this is my message",
         channel: "stdout",
         event_id: "event",
@@ -51,20 +54,21 @@ describe("IO Database", () => {
   it("should write stderr to collection", done => {
     const [, stderr] = dbOutput.create({eventId: "event", functionId: "1"});
     stderr.write(Buffer.from("this is my message"), async err => {
-      await stream.wait();
+      await sleep(5000);
 
-      expect(err).toBeUndefined();
+      expect(err).toEqual(null);
       expect(
         await db
           .collection("function_logs")
           .findOne({})
           .then(log => {
             expect(log.created_at).toEqual(expect.any(Date));
+            expect(ObjectId.isValid(log._id)).toBe(true);
             delete log.created_at;
+            delete log._id;
             return log;
           })
       ).toEqual({
-        _id: "__skip",
         content: "this is my message",
         channel: "stderr",
         event_id: "event",
@@ -82,47 +86,107 @@ describe("IO Database", () => {
       logger = getLoggerConsole();
     });
 
-    it("should write successfull logs to the database with log level", done => {
+    it("should write debug message", done => {
       const [stdout] = dbOutput.create({eventId: "event", functionId: "1"});
       const debug = generateLog("This is a debug message", LogLevels.DEBUG);
-      const log = generateLog("This is a log message", LogLevels.LOG);
-      const info = generateLog("This is an info message", LogLevels.INFO);
 
-      stdout.write(Buffer.from(`${debug}\n${log}\n${info}`), async err => {
-        await stream.wait();
+      stdout.write(Buffer.from(debug), async err => {
+        await sleep(5000);
 
-        expect(err).toBeUndefined();
+        expect(err).toEqual(null);
         expect(
           await db
             .collection("function_logs")
             .find()
             .toArray()
             .then(logs => {
-              logs.forEach(log => expect(log.created_at).toEqual(expect.any(Date)));
-              logs.forEach(log => delete log.created_at);
+              logs.forEach(log => {
+                expect(log.created_at).toEqual(expect.any(Date));
+                expect(ObjectId.isValid(log._id)).toBe(true);
+              });
+              logs.forEach(log => {
+                delete log.created_at;
+                delete log._id;
+              });
               return logs;
             })
         ).toEqual([
           {
-            _id: "__skip",
             content: "This is a debug message",
             channel: "stdout",
             event_id: "event",
             function: "1",
             level: 0
-          },
+          }
+        ]);
+        done();
+      });
+    });
+
+    it("should write log message", done => {
+      const [stdout] = dbOutput.create({eventId: "event", functionId: "1"});
+      const log = generateLog("This is a log message", LogLevels.LOG);
+
+      stdout.write(Buffer.from(log), async err => {
+        await sleep(5000);
+
+        expect(err).toEqual(null);
+        expect(
+          await db
+            .collection("function_logs")
+            .find()
+            .toArray()
+            .then(logs => {
+              logs.forEach(log => {
+                expect(log.created_at).toEqual(expect.any(Date));
+                expect(ObjectId.isValid(log._id)).toBe(true);
+              });
+              logs.forEach(log => {
+                delete log.created_at;
+                delete log._id;
+              });
+              return logs;
+            })
+        ).toEqual([
           {
-            _id: "__skip",
             content: "This is a log message",
             channel: "stdout",
             event_id: "event",
             function: "1",
-
             level: 1
-          },
+          }
+        ]);
+        done();
+      });
+    });
+
+    it("should write info message", done => {
+      const [stdout] = dbOutput.create({eventId: "event", functionId: "1"});
+      const info = generateLog("This is a info message", LogLevels.INFO);
+
+      stdout.write(Buffer.from(info), async err => {
+        await sleep(5000);
+
+        expect(err).toEqual(null);
+        expect(
+          await db
+            .collection("function_logs")
+            .find()
+            .toArray()
+            .then(logs => {
+              logs.forEach(log => {
+                expect(log.created_at).toEqual(expect.any(Date));
+                expect(ObjectId.isValid(log._id)).toBe(true);
+              });
+              logs.forEach(log => {
+                delete log.created_at;
+                delete log._id;
+              });
+              return logs;
+            })
+        ).toEqual([
           {
-            _id: "__skip",
-            content: "This is an info message",
+            content: "This is a info message",
             channel: "stdout",
             event_id: "event",
             function: "1",
@@ -131,48 +195,80 @@ describe("IO Database", () => {
         ]);
         done();
       });
-    }, 10000);
+    });
 
-    it("should write error logs to the database with log level", done => {
+    it("should write warn message", done => {
       const [, stderr] = dbOutput.create({eventId: "event", functionId: "1"});
       const warning = generateLog("This is a warning message", LogLevels.WARN);
-      const error = generateLog("This is an error message", LogLevels.ERROR);
 
-      stderr.write(Buffer.from(`${warning}\n${error}`), async err => {
-        await stream.wait();
+      stderr.write(Buffer.from(warning), async err => {
+        await sleep(5000);
 
-        expect(err).toBeUndefined();
+        expect(err).toEqual(null);
         expect(
           await db
             .collection("function_logs")
             .find()
             .toArray()
             .then(logs => {
-              logs.forEach(log => expect(log.created_at).toEqual(expect.any(Date)));
-              logs.forEach(log => delete log.created_at);
+              logs.forEach(log => {
+                expect(log.created_at).toEqual(expect.any(Date));
+                expect(ObjectId.isValid(log._id)).toBe(true);
+              });
+              logs.forEach(log => {
+                delete log.created_at;
+                delete log._id;
+              });
               return logs;
             })
         ).toEqual([
           {
-            _id: "__skip",
             content: "This is a warning message",
             channel: "stderr",
             event_id: "event",
             function: "1",
             level: 3
-          },
+          }
+        ]);
+        done();
+      });
+    });
+
+    it("should write error message", done => {
+      const [, stderr] = dbOutput.create({eventId: "event", functionId: "1"});
+      const error = generateLog("This is an error message", LogLevels.ERROR);
+
+      stderr.write(Buffer.from(error), async err => {
+        await sleep(5000);
+
+        expect(err).toEqual(null);
+        expect(
+          await db
+            .collection("function_logs")
+            .find()
+            .toArray()
+            .then(logs => {
+              logs.forEach(log => {
+                expect(log.created_at).toEqual(expect.any(Date));
+                expect(ObjectId.isValid(log._id)).toBe(true);
+              });
+              logs.forEach(log => {
+                delete log.created_at;
+                delete log._id;
+              });
+              return logs;
+            })
+        ).toEqual([
           {
-            _id: "__skip",
             content: "This is an error message",
             channel: "stderr",
             event_id: "event",
             function: "1",
-
             level: 4
           }
         ]);
         done();
       });
-    }, 10000);
+    });
   });
 });
