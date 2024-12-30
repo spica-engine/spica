@@ -43,12 +43,14 @@
   .bucket-settings-menu-modal {
     padding: 0;
     min-width: 40vw;
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
     mat-card-title {
       display: flex;
       mat-icon {
         margin-right: 10px;
       }
     }
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
     mat-card-content {
       margin-top: 20px;
     }
@@ -93,6 +95,7 @@
           justify-content: unset;
           padding: 5px;
           background: rgba(var(--background-app-bar-rgb), 0.5);
+          /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
           mat-card {
             width: 100%;
             padding: 12px;

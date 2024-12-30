@@ -55,7 +55,7 @@
   </button>
 </mat-toolbar>
 
-<mat-card *ngIf="bucket$ | async; let bucket" class="mat-elevation-z25" @smooth>
+<mat-card appearance="outlined" *ngIf="bucket$ | async; let bucket" class="mat-elevation-z25" @smooth>
   <mat-card-content [class.handset]="isHandset$ | async">
     <form #form="ngForm">
       <div *ngFor="let layout of layouts" [class]="layout">

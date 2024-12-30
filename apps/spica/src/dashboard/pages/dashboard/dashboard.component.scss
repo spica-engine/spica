@@ -12,10 +12,12 @@
   mat-toolbar + mat-card {
     margin-top: -85px;
   }
-
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
   mat-card {
     height: 320px;
     margin: 30px;
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
     mat-card-content {
       display: flex;
       align-items: center;
@@ -141,8 +143,11 @@
 
   div.api-container {
     width: 100%;
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
     mat-card {
       height: 1000px;
+      /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
       mat-card-content {
         display: flex;
         column-gap: 20px;

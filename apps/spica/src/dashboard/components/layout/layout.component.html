@@ -11,7 +11,7 @@
     [ngStyle]="muuriItemStyles[i]"
     [attr.id]="'chart' + i"
   >
-    <mat-card class="item-content">
+    <mat-card appearance="outlined" class="item-content">
       <div class="drag-cursor"></div>
       <div class="content" [style.visibility]="arePendings[i] ? 'hidden' : 'visible'">
         <dashboard-default

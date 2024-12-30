@@ -1,5 +1,5 @@
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
-import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
+import {MatCardModule} from "@angular/material/card";
 import {MatIconModule} from "@angular/material/icon";
 import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
 import {MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";

@@ -2,7 +2,7 @@ import {ComponentFixture, TestBed, waitForAsync} from "@angular/core/testing";
 import {WebhookLogViewComponent} from "./webhook-log-view.component";
 import {WebhookService} from "../../services";
 import {MatButtonModule} from "@angular/material/button";
-import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
+import {MatCardModule} from "@angular/material/card";
 import {MatNativeDateModule} from "@angular/material/core";
 import {MatLegacyOptionModule as MatOptionModule} from "@angular/material/legacy-core";
 import {MatIconModule} from "@angular/material/icon";
