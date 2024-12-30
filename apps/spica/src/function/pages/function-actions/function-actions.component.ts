@@ -5,7 +5,7 @@ import {filter, takeUntil} from "rxjs/operators";
 import {FunctionService} from "../../services";
 import {Function} from "../../interface";
 import {Route, RouteCategory} from "@spica-client/core/route";
-import {MatDialog} from "@angular/material/dialog";
+import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
 import {ConfigurationComponent} from "@spica-client/function/components/configuration/configuration.component";
 import {Router} from "@angular/router";
 

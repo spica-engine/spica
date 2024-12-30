@@ -1,12 +1,12 @@
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule, NgForm, NgModel} from "@angular/forms";
-import {MatCardModule} from "@angular/material/card";
-import {MatDialogModule} from "@angular/material/dialog";
-import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
+import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy-dialog";
+import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
 import {MatIconModule} from "@angular/material/icon";
-import {MatInputModule} from "@angular/material/input";
-import {MatTooltipModule} from "@angular/material/tooltip";
+import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
+import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";

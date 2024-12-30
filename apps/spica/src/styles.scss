@@ -1,5 +1,14 @@
 @use '@angular/material' as mat;
-@include mat.core();
+// TODO(v15): As of v15 mat.legacy-core no longer includes default typography styles.
+//  The following line adds:
+//    1. Default typography styles for all components
+//    2. Styles for typography hierarchy classes (e.g. .mat-headline-1)
+//  If you specify typography styles for the components you use elsewhere, you should delete this line.
+//  If you don't need the default component typographies but still want the hierarchy styles,
+//  you can delete this line and instead use:
+//    `@include mat.legacy-typography-hierarchy(mat.define-legacy-typography-config());`
+@include mat.all-legacy-component-typographies();
+@include mat.legacy-core();
 
 $primary: mat.define-palette(mat.$gray-palette, 900, 500, 700);
 $primary-for-dark: mat.define-palette(mat.$gray-palette, 900, 100, 700, 100);
@@ -52,11 +61,11 @@ body {
 
 :root {
   &:not(.dark) {
-    @include mat.all-component-themes($app-light-theme);
+    @include mat.all-legacy-component-themes($app-light-theme);
     @include vars($app-light-theme, 0.6);
   }
   &.dark {
-    @include mat.all-component-themes($app-dark-theme);
+    @include mat.all-legacy-component-themes($app-dark-theme);
     @include vars($app-dark-theme, 0);
     .mat-input-element {
       color: white;
@@ -110,12 +119,21 @@ mat-form-field {
   }
 }
 
-$custom-typography: mat.define-typography-config(
+$custom-typography: mat.define-legacy-typography-config(
   $subheading-2: mat.define-typography-level(1rem, 1.5rem, 700),
   $body-1: mat.define-typography-level(1rem, 1.5rem, 500)
 );
 
-@include mat.core($custom-typography);
+// TODO(v15): As of v15 mat.legacy-core no longer includes default typography styles.
+//  The following line adds:
+//    1. Default typography styles for all components
+//    2. Styles for typography hierarchy classes (e.g. .mat-headline-1)
+//  If you specify typography styles for the components you use elsewhere, you should delete this line.
+//  If you don't need the default component typographies but still want the hierarchy styles,
+//  you can delete this line and instead use:
+//    `@include mat.legacy-typography-hierarchy($custom-typography);`
+@include mat.all-legacy-component-typographies($custom-typography);
+@include mat.legacy-core();
 
 .ng-tooltip {
   position: absolute;

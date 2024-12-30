@@ -12,7 +12,7 @@ import {first, map, switchMap, take} from "rxjs/operators";
 import {DashboardService} from "./services/dashboard.service";
 import * as fromDashboard from "./state/dashboard.reducer";
 import {AddComponent} from "./pages/add/add.component";
-import {MatDialog} from "@angular/material/dialog";
+import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
 import {MatAwareDialogComponent} from "@spica-client/material";
 import {Observable, of} from "rxjs";
 import {getEmptyDashboard} from "./interfaces";

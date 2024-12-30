@@ -1,6 +1,6 @@
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
-import {MAT_DIALOG_DATA} from "@angular/material/dialog";
+import {MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA} from "@angular/material/legacy-dialog";
 import {MatIconModule} from "@angular/material/icon";
 import {StorageViewComponent} from "../storage-view/storage-view.component";
 import {StorageDialogOverviewDialog} from "./storage-dialog-overview";

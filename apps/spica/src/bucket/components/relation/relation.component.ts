@@ -1,6 +1,6 @@
 import {Component, forwardRef, HostListener, Inject, OnInit, ViewChild} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {MatPaginator} from "@angular/material/paginator";
+import {MatLegacyPaginator as MatPaginator} from "@angular/material/legacy-paginator";
 import {INPUT_SCHEMA} from "@spica-client/common";
 import {BehaviorSubject, merge, Observable, of, Subject} from "rxjs";
 import {map, share, shareReplay, switchMap, tap} from "rxjs/operators";

@@ -1,8 +1,8 @@
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {of} from "rxjs";
-import {MatCardModule} from "@angular/material/card";
+import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
 import {MatIconModule} from "@angular/material/icon";
-import {MatButtonModule} from "@angular/material/button";
+import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
 import {InputModule} from "@spica-client/common";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {CardComponent} from "./card.component";

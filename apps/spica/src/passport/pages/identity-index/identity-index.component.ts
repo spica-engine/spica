@@ -1,5 +1,5 @@
 import {Component, OnInit, TemplateRef, ViewChild} from "@angular/core";
-import {MatPaginator} from "@angular/material/paginator";
+import {MatLegacyPaginator as MatPaginator} from "@angular/material/legacy-paginator";
 import {merge, Observable, of, Subject} from "rxjs";
 import {map, switchMap, tap, take} from "rxjs/operators";
 import {Identity, IdentitySchema, FilterSchema} from "../../interfaces/identity";

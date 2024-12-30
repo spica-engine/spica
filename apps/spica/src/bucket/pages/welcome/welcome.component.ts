@@ -1,5 +1,5 @@
 import {Component, OnInit} from "@angular/core";
-import {MatDialog} from "@angular/material/dialog";
+import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
 import {AddBucketComponent} from "@spica-client/bucket/components/add-bucket/add-bucket.component";
 
 @Component({

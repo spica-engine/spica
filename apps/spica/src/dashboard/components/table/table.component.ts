@@ -9,8 +9,8 @@ import {
   SimpleChanges
 } from "@angular/core";
 import {MatSort} from "@angular/material/sort";
-import {MatTableDataSource} from "@angular/material/table";
-import {MatPaginator} from "@angular/material/paginator";
+import {MatLegacyTableDataSource as MatTableDataSource} from "@angular/material/legacy-table";
+import {MatLegacyPaginator as MatPaginator} from "@angular/material/legacy-paginator";
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {isSmallComponent, Ratio} from "@spica-client/dashboard/interfaces";

@@ -2,13 +2,13 @@ import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing"
 import {AssetService} from "../../services/asset.service";
 import {Asset} from "../../interfaces";
 import {IndexComponent} from "./index.component";
-import {MatDialog, MatDialogConfig, MatDialogModule, MatDialogRef} from "@angular/material/dialog";
+import {MatLegacyDialog as MatDialog, MatLegacyDialogConfig as MatDialogConfig, MatLegacyDialogModule as MatDialogModule, MatLegacyDialogRef as MatDialogRef} from "@angular/material/legacy-dialog";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatIconModule} from "@angular/material/icon";
-import {MatCardModule} from "@angular/material/card";
-import {MatTableModule} from "@angular/material/table";
+import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
+import {MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {MatButtonModule} from "@angular/material/button";
+import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {BrowserModule, By} from "@angular/platform-browser";
 import {CommonModule} from "@angular/common";

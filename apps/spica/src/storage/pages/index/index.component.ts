@@ -2,8 +2,8 @@ import {CdkDragDrop, moveItemInArray, transferArrayItem} from "@angular/cdk/drag
 import {BreakpointObserver, Breakpoints, BreakpointState} from "@angular/cdk/layout";
 import {HttpEventType} from "@angular/common/http";
 import {Component, OnDestroy, OnInit, ViewChild} from "@angular/core";
-import {MatDialog} from "@angular/material/dialog";
-import {MatPaginator} from "@angular/material/paginator";
+import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
+import {MatLegacyPaginator as MatPaginator} from "@angular/material/legacy-paginator";
 import {ActivatedRoute, Router} from "@angular/router";
 import {AddDirectoryDialog} from "@spica-client/storage/components/add-directory-dialog/add-directory-dialog.component";
 import {

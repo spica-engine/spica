@@ -19,7 +19,7 @@ import {
   ViewContainerRef
 } from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {MatSuffix} from "@angular/material/form-field";
+import {MatLegacySuffix as MatSuffix} from "@angular/material/legacy-form-field";
 import {InputSchema, INPUT_SCHEMA} from "./input";
 import {InputResolver} from "./input.resolver";
 

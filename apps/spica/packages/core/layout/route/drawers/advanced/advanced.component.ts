@@ -9,7 +9,7 @@ import {
   SimpleChanges,
   OnDestroy
 } from "@angular/core";
-import {MatDialog, MatDialogRef} from "@angular/material/dialog";
+import {MatLegacyDialog as MatDialog, MatLegacyDialogRef as MatDialogRef} from "@angular/material/legacy-dialog";
 import {BehaviorSubject, Observable, Subscription} from "rxjs";
 import {Route} from "@spica-client/core/route";
 import {CategoryService, CategorizedRoutes, CategoryOrder} from "@spica-client/core/route/category";

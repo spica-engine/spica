@@ -1,14 +1,14 @@
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule, NgModel} from "@angular/forms";
-import {MatCardModule} from "@angular/material/card";
+import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
 import {MatExpansionModule} from "@angular/material/expansion";
-import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
 import {MatIconModule} from "@angular/material/icon";
-import {MatInputModule} from "@angular/material/input";
-import {MatMenuModule} from "@angular/material/menu";
+import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
+import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
 import {MatToolbarModule} from "@angular/material/toolbar";
-import {MatTooltipModule} from "@angular/material/tooltip";
-import {MatPaginatorModule} from "@angular/material/paginator";
+import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
+import {MatLegacyPaginatorModule as MatPaginatorModule} from "@angular/material/legacy-paginator";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
@@ -16,7 +16,7 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {of, throwError} from "rxjs";
 import {StrategyService} from "../../services/strategy.service";
 import {StrategiesAddComponent} from "./strategies-add.component";
-import {MatSelectModule} from "@angular/material/select";
+import {MatLegacySelectModule as MatSelectModule} from "@angular/material/legacy-select";
 
 describe("Strategies Add Component", () => {
   let fixture: ComponentFixture<StrategiesAddComponent>;

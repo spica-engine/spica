@@ -5,7 +5,7 @@ import {DashboardService} from "@spica-client/dashboard/services/dashboard.servi
 import {switchMap, tap} from "rxjs/operators";
 import {of, Subject} from "rxjs";
 import {ICONS} from "@spica-client/material";
-import {MatDialog} from "@angular/material/dialog";
+import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
 import {ExampleComponent} from "@spica-client/common/example";
 import {deepCopy} from "@spica-client/core";
 import {Observable, BehaviorSubject} from "rxjs";

@@ -1,8 +1,8 @@
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
-import {MatCardModule} from "@angular/material/card";
+import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
 import {MatIconModule} from "@angular/material/icon";
-import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
-import {MatTableModule} from "@angular/material/table";
+import {MatLegacyPaginator as MatPaginator, MatLegacyPaginatorModule as MatPaginatorModule} from "@angular/material/legacy-paginator";
+import {MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
@@ -13,10 +13,10 @@ import {of} from "rxjs";
 import {Webhook} from "../../interface";
 import {WebhookService} from "../../services";
 import {WebhookIndexComponent} from "../webhook-index/webhook-index.component";
-import {MatButtonModule} from "@angular/material/button";
+import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
-import {MatMenuModule} from "@angular/material/menu";
-import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
+import {MatLegacyCheckboxModule as MatCheckboxModule} from "@angular/material/legacy-checkbox";
 import {MatDividerModule} from "@angular/material/divider";
 import {FormsModule} from "@angular/forms";
 

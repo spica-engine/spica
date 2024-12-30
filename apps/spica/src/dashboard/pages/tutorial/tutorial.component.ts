@@ -8,7 +8,7 @@ import {ApiKeyService} from "@spica-client/passport/services/apikey.service";
 import {switchMap, map} from "rxjs/operators";
 import {BucketEntry} from "@spica-client/bucket/interfaces/bucket-entry";
 import {emptyApiKey} from "@spica-client/passport/interfaces/apikey";
-import {MatSnackBar} from "@angular/material/snack-bar";
+import {MatLegacySnackBar as MatSnackBar} from "@angular/material/legacy-snack-bar";
 
 @Component({
   selector: "tutorial",
