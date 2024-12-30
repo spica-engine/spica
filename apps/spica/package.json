@@ -21,7 +21,7 @@
     "@ngrx/entity": "^10.0.1",
     "@ngrx/store": "^10.0.1",
     "@types/lodash": "^4.14.168",
-    "angular-cropperjs": "^1.0.2",
+    "angular-cropperjs": "^14.0.0",
     "chart.js": "^2.9.3",
     "core-js": "^3.6.5",
     "cropperjs": "^1.5.7",
