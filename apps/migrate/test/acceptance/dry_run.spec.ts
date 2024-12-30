@@ -6,19 +6,19 @@ import {migrate} from "@spica/migrate/src/migrate";
 describe("DRY Run", () => {
   let database: {uri: string; name: string};
   let db: Db;
+  const indexJsonPath = process.env.TESTONLY_MIGRATION_LOOKUP_DIR + "/migrations/index.json";
 
   beforeAll(() => {
-    process.env.TESTONLY_MIGRATION_LOOKUP_DIR = __dirname;
     color.disableColor();
   });
 
   beforeEach(async () => {
     fs.writeFileSync(
-      __dirname + "/migrations/index.json",
+      indexJsonPath,
       JSON.stringify({
         "1.0.0": [
-          __dirname + "/migrations/insert_an_item",
-          __dirname + "/migrations/modify_an_item"
+          process.env.TESTONLY_MIGRATION_LOOKUP_DIR + "/migrations/insert_an_item",
+          process.env.TESTONLY_MIGRATION_LOOKUP_DIR + "/migrations/modify_an_item"
         ]
       })
     );
@@ -29,10 +29,12 @@ describe("DRY Run", () => {
     };
     db = connection.db(database.name);
     await db.createCollection("_test_");
-  }, 10000);
+  });
 
   afterEach(() => {
-    fs.unlinkSync(__dirname + "/migrations/index.json");
+    if (fs.existsSync(indexJsonPath)) {
+      fs.unlinkSync(indexJsonPath);
+    }
   });
 
   it("should complete the migration but not commit anything", async () => {

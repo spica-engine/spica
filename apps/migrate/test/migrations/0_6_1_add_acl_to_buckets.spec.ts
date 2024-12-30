@@ -1,6 +1,9 @@
 import {Db, getConnectionUri, getDatabaseName, start} from "@spica-server/database/testing";
 import * as color from "cli-color/lib/supports-color";
 import {run} from "@spica/migrate/src/main";
+import path = require("path");
+
+process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(process.cwd(), "dist/apps/migrate/src");
 
 describe("Add acl to buckets", () => {
   let db: Db;

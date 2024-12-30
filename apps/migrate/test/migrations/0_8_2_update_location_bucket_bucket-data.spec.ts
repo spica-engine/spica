@@ -1,6 +1,9 @@
 import {Db, getConnectionUri, getDatabaseName, start} from "@spica-server/database/testing";
 import * as color from "cli-color/lib/supports-color";
 import {run} from "@spica/migrate/src/main";
+import path = require("path");
+
+process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(process.cwd(), "dist/apps/migrate/src");
 
 describe("Update location for bucket schema and bucket-data", () => {
   let db: Db;
@@ -155,8 +158,7 @@ describe("Update location for bucket schema and bucket-data", () => {
             }
           }
         }
-      ],
-      "should work if locationType inserted to location fields"
+      ]
     );
 
     const bucket1Docs = await db
@@ -191,8 +193,7 @@ describe("Update location for bucket schema and bucket-data", () => {
           },
           description: "some desc"
         }
-      ],
-      "should work if locations converted successfully."
+      ]
     );
 
     const bucket2Docs = await db
@@ -220,8 +221,7 @@ describe("Update location for bucket schema and bucket-data", () => {
             coordinates: [131, 130]
           }
         }
-      ],
-      "should work if latitude longitude does not exist or have wrong order"
+      ]
     );
 
     const bucket3Docs = await db
@@ -240,8 +240,7 @@ describe("Update location for bucket schema and bucket-data", () => {
         {
           title: "test"
         }
-      ],
-      "should work if migration does not affect to non-location fields"
+      ]
     );
   });
 });
