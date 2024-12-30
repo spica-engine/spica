@@ -4,7 +4,7 @@ import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-car
 import {MatLegacyDialogRef as MatDialogRef} from "@angular/material/legacy-dialog";
 import {MatGridListModule} from "@angular/material/grid-list";
 import {MatIconModule} from "@angular/material/icon";
-import {MatLegacyPaginator as MatPaginator, MatLegacyPaginatorModule as MatPaginatorModule} from "@angular/material/legacy-paginator";
+import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
 import {MatLegacyProgressBarModule as MatProgressBarModule} from "@angular/material/legacy-progress-bar";
 import {MatLegacyTabsModule as MatTabsModule} from "@angular/material/legacy-tabs";
 import {By} from "@angular/platform-browser";

@@ -7,7 +7,7 @@ import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-car
 import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
-import {MatLegacyPaginatorModule as MatPaginatorModule} from "@angular/material/legacy-paginator";
+import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";
 import {MatLegacyTooltip as MatTooltip, MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
 import {By} from "@angular/platform-browser";

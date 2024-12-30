@@ -3,7 +3,7 @@ import {ComponentFixture, TestBed, tick} from "@angular/core/testing";
 import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
 import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
 import {MatIconModule} from "@angular/material/icon";
-import {MatLegacyPaginator as MatPaginator, MatLegacyPaginatorModule as MatPaginatorModule} from "@angular/material/legacy-paginator";
+import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
 import {MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {By} from "@angular/platform-browser";

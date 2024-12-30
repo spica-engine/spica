@@ -61,22 +61,25 @@ body {
 
 :root {
   &:not(.dark) {
-    @include mat.all-legacy-component-themes($app-light-theme);
+    @include mat.all-component-themes($app-light-theme);
     @include vars($app-light-theme, 0.6);
   }
   &.dark {
-    @include mat.all-legacy-component-themes($app-dark-theme);
+    @include mat.all-component-themes($app-dark-theme);
     @include vars($app-dark-theme, 0);
-    .mat-input-element {
+    .mat-mdc-input-element {
       color: white;
     }
   }
 }
 
+/* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
+/* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
 mat-card {
   &.mat-elevation-z25 {
     box-shadow: 0 4px 16px rgba(var(--primary-default-rgb), 0.07);
   }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
   mat-card-actions {
     margin: 0px !important;
     padding: 0px !important;
@@ -164,11 +167,12 @@ $custom-typography: mat.define-legacy-typography-config(
   opacity: 0.3 !important;
 
   // remove hover effect
+  /* TODO(mdc-migration): The following rule targets internal classes of button that may no longer apply for the MDC version.*/
   span.mat-button-focus-overlay {
     background: unset !important;
   }
 }
-.mat-menu-item[color="warn"] {
+.mat-mdc-menu-item[color="warn"] {
   color: var(--warn-500) !important;
 }
 
@@ -183,16 +187,18 @@ table.striped tr:nth-child(even) td {
 mat-table.striped mat-row:nth-child(even) {
   background-color: rgba(var(--background-background-rgb), 1) !important;
 }
-.mat-menu-panel {
+.mat-mdc-menu-panel {
   min-width: 180px !important;
 }
 
 .minimal-input-placer {
   > mat-form-field {
+    /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
+    /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
     .mat-form-field-wrapper {
       padding: 0px !important;
       margin: 0px !important;
-
+      /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
       .mat-form-field-hint-wrapper,
       .mat-form-field-label {
         display: none;

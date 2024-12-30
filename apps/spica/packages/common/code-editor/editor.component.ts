@@ -22,16 +22,16 @@ let loadPromise: Promise<void>;
   template: '<div class="editor-container" #editorContainer></div>',
   styles: [
     `
-      :host {
-        display: block;
-      }
-
-      .editor-container {
-        width: 100%;
-        height: 100%;
-        min-height: 100px;
-      }
-    `
+          :host {
+            display: block;
+          }
+    
+          .editor-container {
+            width: 100%;
+            height: 100%;
+            min-height: 100px;
+          }
+        `
   ],
   styleUrls: ["./editor.component.scss"],
   providers: [
