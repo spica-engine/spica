@@ -9,7 +9,7 @@ import {MatExpansionModule} from "@angular/material/expansion";
 import {MatIconModule} from "@angular/material/icon";
 import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
 import {MatLegacyListModule as MatListModule} from "@angular/material/legacy-list";
-import {MatLegacyPaginatorModule as MatPaginatorModule} from "@angular/material/legacy-paginator";
+import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatLegacyProgressSpinnerModule as MatProgressSpinnerModule} from "@angular/material/legacy-progress-spinner";
 import {MatLegacySelectModule as MatSelectModule} from "@angular/material/legacy-select";
 import {MatLegacySlideToggleModule as MatSlideToggleModule} from "@angular/material/legacy-slide-toggle";

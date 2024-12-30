@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import {MatSort} from "@angular/material/sort";
 import {MatLegacyTableDataSource as MatTableDataSource} from "@angular/material/legacy-table";
-import {MatLegacyPaginator as MatPaginator} from "@angular/material/legacy-paginator";
+import {MatPaginator} from "@angular/material/paginator";
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {isSmallComponent, Ratio} from "@spica-client/dashboard/interfaces";

@@ -3,7 +3,7 @@ import {BreakpointObserver, Breakpoints, BreakpointState} from "@angular/cdk/lay
 import {HttpEventType} from "@angular/common/http";
 import {Component, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
-import {MatLegacyPaginator as MatPaginator} from "@angular/material/legacy-paginator";
+import {MatPaginator} from "@angular/material/paginator";
 import {ActivatedRoute, Router} from "@angular/router";
 import {AddDirectoryDialog} from "@spica-client/storage/components/add-directory-dialog/add-directory-dialog.component";
 import {

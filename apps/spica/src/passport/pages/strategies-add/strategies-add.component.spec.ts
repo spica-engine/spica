@@ -8,7 +8,7 @@ import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-i
 import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
-import {MatLegacyPaginatorModule as MatPaginatorModule} from "@angular/material/legacy-paginator";
+import {MatPaginatorModule} from "@angular/material/paginator";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";

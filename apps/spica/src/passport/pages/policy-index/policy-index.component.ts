@@ -1,5 +1,5 @@
 import {Component, OnInit, TemplateRef, ViewChild} from "@angular/core";
-import {MatLegacyPaginator as MatPaginator} from "@angular/material/legacy-paginator";
+import {MatPaginator} from "@angular/material/paginator";
 import {Router} from "@angular/router";
 import {merge, Observable, of, Subject} from "rxjs";
 import {map, switchMap} from "rxjs/operators";
