@@ -35,7 +35,8 @@ const routes: Routes = [
         data: {action: "show"},
         canDeactivate: [FunctionCanDeactivate]
       }
-    ]
+    ],
+    title: "Function"
   }
 ];
 

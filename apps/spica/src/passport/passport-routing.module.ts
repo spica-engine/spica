@@ -16,7 +16,12 @@ import {ApiKeyIndexComponent} from "./pages/apikey-index/apikey-index.component"
 import {ApiKeyAddComponent} from "./pages/apikey-add/apikey-add.component";
 
 const routes: Routes = [
-  {path: "passport/identify", component: IdentifyComponent, data: {layout: false}},
+  {
+    path: "passport/identify",
+    component: IdentifyComponent,
+    data: {layout: false},
+    title: "PassportIdentify"
+  },
   {
     path: "passport",
     component: TabsComponent,
@@ -92,7 +97,8 @@ const routes: Routes = [
           }
         ]
       }
-    ]
+    ],
+    title: "Passport"
   }
 ];
 

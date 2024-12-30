@@ -13,12 +13,14 @@ const routes: Routes = [
     children: [
       {path: "welcome", component: WelcomeComponent, data: {action: "create"}},
       {path: ":name", component: IndexComponent, data: {action: "index"}}
-    ]
+    ],
+    title: "Storage"
   },
   {
     path: "storages",
     canActivateChild: [IdentityGuard, PolicyGuard],
-    children: [{path: "", component: IndexComponent, data: {action: "index"}}]
+    children: [{path: "", component: IndexComponent, data: {action: "index"}}],
+    title: "Storages"
   }
 ];
 const route: Route[] = [];

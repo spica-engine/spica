@@ -53,7 +53,8 @@ const routes: Routes = [
           action: "show"
         }
       }
-    ]
+    ],
+    title: "Bucket"
   }
 ];
 

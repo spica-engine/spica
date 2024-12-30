@@ -37,7 +37,9 @@ import {FormsModule} from "@angular/forms";
 import {MatAwareDialogModule} from "@spica-client/material";
 import {RouteModule} from "../route";
 
-const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
+const routes: Routes = [
+  {path: "error", component: ErrorPageComponent, data: {layout: false}, title: "Error"}
+];
 
 @NgModule({
   imports: [

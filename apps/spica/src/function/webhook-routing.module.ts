@@ -12,7 +12,8 @@ const routes: Routes = [
     canActivate: [IdentityGuard, PolicyGuard],
     path: "webhook/logs",
     data: {service: "webhook"},
-    children: [{path: "", component: WebhookLogViewComponent, data: {action: "index"}}]
+    children: [{path: "", component: WebhookLogViewComponent, data: {action: "index"}}],
+    title: "WebhookLogs"
   },
   {
     canActivate: [IdentityGuard, PolicyGuard],
@@ -36,7 +37,8 @@ const routes: Routes = [
         component: WebhookAddComponent,
         data: {action: "show"}
       }
-    ]
+    ],
+    title: "Webhook"
   }
 ];
 

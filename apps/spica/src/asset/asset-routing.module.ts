@@ -7,19 +7,21 @@ import {IndexComponent} from "./pages/index/index.component";
 import {AssetStoreComponent} from "./pages/asset-store/asset-store.component";
 
 const routes: Routes = [
-  {path: "assetstore", component: AssetStoreComponent},
+  {path: "assetstore", component: AssetStoreComponent, title: "AssetStore"},
   {
     path: "assets",
     canActivate: [IdentityGuard, PolicyGuard],
     component: IndexComponent,
-    data: {service: "asset", action: "index"}
+    data: {service: "asset", action: "index"},
+    title: "Assets"
   },
   {
     path: "assets/:id",
     component: EditComponent,
     data: {
       action: "show"
-    }
+    },
+    title: "AssetsId"
   }
 ];
 
