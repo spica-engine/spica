@@ -35,6 +35,7 @@ html {
 }
 body {
   @include mat.all-component-typographies($custom-typography);
+  @include mat.typography-hierarchy($custom-typography);
 
   margin: 0;
   padding: 0;
