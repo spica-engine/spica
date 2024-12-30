@@ -2337,12 +2337,12 @@
     enabled "2.0.x"
     kuler "^2.0.0"
 
-"@danielmoncada/angular-datetime-picker@^10.1.0":
-  version "10.2.0"
-  resolved "https://registry.yarnpkg.com/@danielmoncada/angular-datetime-picker/-/angular-datetime-picker-10.2.0.tgz#69e94623851ffeb383e360a1443d2d6eed2c3198"
-  integrity sha512-P+QKaVp3Mh72zFSO0XYNHAUIkGTzQhMkQH/uTwyxa2qAQFTMNzeLT7FoKvmStmlJKTZDS6jMisZWuWeXYUVUTA==
+"@danielmoncada/angular-datetime-picker@^16.0.0":
+  version "16.1.0"
+  resolved "https://registry.yarnpkg.com/@danielmoncada/angular-datetime-picker/-/angular-datetime-picker-16.1.0.tgz#83a5d336fe9d4a885ad57f858eeba18bf53dcddd"
+  integrity sha512-zxBZcwKceuOSHbmtVRIoFPDO1cH4QmXaQxGVOq+hyQ4ll5H23K2QvqQvwxcJYrC8DloiLBdAENKSWVv5BCjRvw==
   dependencies:
-    tslib "^2.0.0"
+    tslib "^2.3.1"
 
 "@discoveryjs/json-ext@0.5.7":
   version "0.5.7"
@@ -15430,6 +15430,11 @@ tslib@^2.0.3, tslib@^2.1.0, tslib@^2.3.0, tslib@^2.4.0:
   version "2.7.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.7.0.tgz#d9b40c5c40ab59e8738f297df3087bf1a2690c01"
   integrity sha512-gLXCKdN1/j47AiHiOkJN69hJmcbGTHI0ImLmbYLHykhgeN0jVGola9yVjFgzCUklsZQMW55o+dW7IXv3RCXDzA==
+
+tslib@^2.3.1:
+  version "2.8.1"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.8.1.tgz#612efe4ed235d567e8aba5f2a5fab70280ade83f"
+  integrity sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==
 
 tsscmp@1.0.6:
   version "1.0.6"

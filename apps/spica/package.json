@@ -17,7 +17,7 @@
     "@angular/platform-browser-dynamic": "^14.3.0",
     "@angular/router": "^14.3.0",
     "@asymmetrik/ngx-leaflet": "^7.0.1",
-    "@danielmoncada/angular-datetime-picker": "^10.1.0",
+    "@danielmoncada/angular-datetime-picker": "^16.0.0",
     "@ngrx/entity": "^10.0.1",
     "@ngrx/store": "^10.0.1",
     "@types/lodash": "^4.14.168",
