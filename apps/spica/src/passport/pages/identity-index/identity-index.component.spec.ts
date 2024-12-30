@@ -1,6 +1,6 @@
 import {Component, TemplateRef} from "@angular/core";
 import {ComponentFixture, TestBed, tick} from "@angular/core/testing";
-import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
+import {MatButtonModule} from "@angular/material/button";
 import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
 import {MatIconModule} from "@angular/material/icon";
 import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";

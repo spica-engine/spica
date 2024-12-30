@@ -4,7 +4,7 @@ import {AssetRoutingModule} from "./asset-routing.module";
 import {IndexComponent} from "./pages/index/index.component";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {FormsModule} from "@angular/forms";
-import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
+import {MatButtonModule} from "@angular/material/button";
 import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
 import {MatDividerModule} from "@angular/material/divider";
 import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";

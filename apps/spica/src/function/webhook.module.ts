@@ -2,7 +2,7 @@ import {ScrollingModule} from "@angular/cdk/scrolling";
 import {CommonModule} from "@angular/common";
 import {NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
+import {MatButtonModule} from "@angular/material/button";
 import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
 import {MatDatepickerModule} from "@angular/material/datepicker";
 import {MatExpansionModule} from "@angular/material/expansion";

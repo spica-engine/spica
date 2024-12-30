@@ -1,6 +1,6 @@
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {FormsModule, NgModel} from "@angular/forms";
-import {MatLegacyButtonModule as MatButtonModule, MatLegacyButton as MatButton} from "@angular/material/legacy-button";
+import {MatButtonModule, MatButton} from "@angular/material/button";
 import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
 import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
 import {MatIconModule} from "@angular/material/icon";

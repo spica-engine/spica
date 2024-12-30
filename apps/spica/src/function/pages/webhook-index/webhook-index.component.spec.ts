@@ -13,7 +13,7 @@ import {of} from "rxjs";
 import {Webhook} from "../../interface";
 import {WebhookService} from "../../services";
 import {WebhookIndexComponent} from "../webhook-index/webhook-index.component";
-import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
+import {MatButtonModule} from "@angular/material/button";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
 import {MatLegacyCheckboxModule as MatCheckboxModule} from "@angular/material/legacy-checkbox";

@@ -1,5 +1,5 @@
 import {ComponentFixture, TestBed} from "@angular/core/testing";
-import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
+import {MatButtonModule} from "@angular/material/button";
 import {MatIconModule} from "@angular/material/icon";
 import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
 import {By} from "@angular/platform-browser";

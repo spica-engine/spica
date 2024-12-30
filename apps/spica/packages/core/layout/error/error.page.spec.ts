@@ -1,5 +1,5 @@
 import {TestBed, ComponentFixture, tick, fakeAsync} from "@angular/core/testing";
-import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
+import {MatButtonModule} from "@angular/material/button";
 import {ErrorPageComponent} from "./error.page";
 import {ActivatedRoute} from "@angular/router";
 import {of} from "rxjs";

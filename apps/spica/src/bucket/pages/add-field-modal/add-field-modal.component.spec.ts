@@ -16,7 +16,7 @@ import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/lega
 import {PropertyKvPipe} from "@spica-client/common/pipes";
 import {InputModule} from "@spica-client/common";
 import {MatSaveModule} from "@spica-client/material";
-import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
+import {MatButtonModule} from "@angular/material/button";
 
 import {BucketService} from "src/bucket/services/bucket.service";
 import {AddFieldModalComponent} from "./add-field-modal.component";
