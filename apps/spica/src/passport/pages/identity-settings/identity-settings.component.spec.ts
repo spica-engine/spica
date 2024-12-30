@@ -1,7 +1,7 @@
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule, NgModel} from "@angular/forms";
 import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
-import {MatLegacyCheckboxModule as MatCheckboxModule} from "@angular/material/legacy-checkbox";
+import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
 import {MatIconModule} from "@angular/material/icon";
