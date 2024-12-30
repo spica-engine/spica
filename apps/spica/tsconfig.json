@@ -1,19 +1,12 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "moduleResolution": "node",
     "module": "esnext",
     "baseUrl": "./",
-    "lib": [
-      "es2018",
-      "dom"
-    ],
+    "lib": ["es2018", "dom"],
     "paths": {
-      "@spica-client/*": [
-        "./packages/*",
-        "./src/*"
-      ]
+      "@spica-client/*": ["./packages/*", "./src/*"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true,
