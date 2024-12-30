@@ -1,6 +1,6 @@
 import {animate, style, transition, trigger} from "@angular/animations";
 import {Component, Inject, OnDestroy, OnInit, SecurityContext, ViewChild} from "@angular/core";
-import {MatLegacyPaginator as MatPaginator, LegacyPageEvent as PageEvent} from "@angular/material/legacy-paginator";
+import {MatPaginator, PageEvent} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute, Router} from "@angular/router";
 import {merge, Observable, Subject} from "rxjs";
