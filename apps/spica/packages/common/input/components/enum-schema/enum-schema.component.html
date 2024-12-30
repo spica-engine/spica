@@ -1,13 +1,13 @@
 <div>
   <mat-form-field>
-    <mat-chip-list #chipList aria-label="Enum values">
-      <mat-chip
+    <mat-chip-grid #chipList aria-label="Enum values">
+      <mat-chip-row
         *ngFor="let value of schema.enum; let index = index; trackBy: _trackBy"
         (removed)="removeItem(index)"
       >
         {{ schema.enum[index] }}
         <mat-icon matChipRemove>cancel</mat-icon>
-      </mat-chip>
+      </mat-chip-row>
       <input
         placeholder="Enter a value then press enter..."
         [formControl]="enumCtrl"
@@ -18,6 +18,6 @@
       <mat-error *ngIf="enumCtrl.errors?.invalidType"
         >Enum value must be a valid {{ schema.type }}</mat-error
       >
-    </mat-chip-list>
+    </mat-chip-grid>
   </mat-form-field>
 </div>

@@ -22,7 +22,7 @@ import {SchemeObserver} from "./scheme.observer";
 import {SnackbarComponent} from "./snackbar/snackbar.component";
 import {MatLegacySnackBarModule as MatSnackBarModule} from "@angular/material/legacy-snack-bar";
 import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy-dialog";
-import {MatLegacyChipsModule as MatChipsModule} from "@angular/material/legacy-chips";
+import {MatChipsModule} from "@angular/material/chips";
 
 import {ToolbarActionDirective} from "./toolbar-action";
 import {MAT_LEGACY_FORM_FIELD_DEFAULT_OPTIONS as MAT_FORM_FIELD_DEFAULT_OPTIONS} from "@angular/material/legacy-form-field";

@@ -8,7 +8,7 @@ import {
   ViewChild
 } from "@angular/core";
 import {UntypedFormControl} from "@angular/forms";
-import {MatLegacyChipInputEvent as MatChipInputEvent} from "@angular/material/legacy-chips";
+import {MatChipInputEvent} from "@angular/material/chips";
 import {InputSchema, INPUT_SCHEMA} from "../../input";
 import {COMMA, ENTER} from "@angular/cdk/keycodes";
 

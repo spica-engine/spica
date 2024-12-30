@@ -4,7 +4,7 @@ import {MatBadgeModule} from "@angular/material/badge";
 import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
 import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
 import {MatLegacyCheckboxModule as MatCheckboxModule} from "@angular/material/legacy-checkbox";
-import {MatLegacyChipsModule as MatChipsModule} from "@angular/material/legacy-chips";
+import {MatChipsModule} from "@angular/material/chips";
 import {MatDividerModule} from "@angular/material/divider";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {MatIconModule} from "@angular/material/icon";
