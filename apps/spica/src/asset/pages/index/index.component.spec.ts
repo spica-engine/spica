@@ -8,7 +8,7 @@ import {MatIconModule} from "@angular/material/icon";
 import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
 import {MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
+import {MatButtonModule} from "@angular/material/button";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {BrowserModule, By} from "@angular/platform-browser";
 import {CommonModule} from "@angular/common";

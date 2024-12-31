@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MatBadgeModule} from "@angular/material/badge";
-import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
+import {MatButtonModule} from "@angular/material/button";
 import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatChipsModule} from "@angular/material/chips";

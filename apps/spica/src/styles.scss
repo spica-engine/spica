@@ -152,6 +152,7 @@ mat-form-field {
 
   // remove hover effect
   /* TODO(mdc-migration): The following rule targets internal classes of button that may no longer apply for the MDC version.*/
+  /* TODO(mdc-migration): The following rule targets internal classes of button that may no longer apply for the MDC version.*/
   span.mat-button-focus-overlay {
     background: unset !important;
   }
@@ -245,6 +246,25 @@ div.dashboard-component-content {
     padding: 10px;
     opacity: 1;
   }
+}
+
+button[mat-icon-button] {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  padding: 0 !important;
+
+  letter-spacing: normal !important;
+}
+
+::ng-deep .mat-button,
+::ng-deep .mat-icon-button {
+  flex-direction: row-reverse;
+}
+
+button[mat-icon-button] mat-icon {
+  vertical-align: middle;
 }
 
 @include mat.checkbox-density(-1);

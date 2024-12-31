@@ -1,7 +1,7 @@
 import {ScrollingModule} from "@angular/cdk/scrolling";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
-import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
+import {MatButtonModule} from "@angular/material/button";
 import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
 import {MatNativeDateModule} from "@angular/material/core";
 import {MatLegacyOptionModule as MatOptionModule} from "@angular/material/legacy-core";
