@@ -17,7 +17,7 @@ import {Identity} from "../../interfaces/identity";
 import {IdentityService} from "../../services/identity.service";
 import {IdentityIndexComponent} from "./identity-index.component";
 import {PreferencesService} from "@spica-client/core";
-import {MatLegacyCheckboxModule as MatCheckboxModule} from "@angular/material/legacy-checkbox";
+import {MatCheckboxModule} from "@angular/material/checkbox";
 import {FormsModule} from "@angular/forms";
 import {PolicyService} from "../../services/policy.service";
 import {MatDividerModule} from "@angular/material/divider";

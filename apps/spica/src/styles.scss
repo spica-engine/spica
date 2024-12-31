@@ -246,3 +246,5 @@ div.dashboard-component-content {
     opacity: 1;
   }
 }
+
+@include mat.checkbox-density(-1);
