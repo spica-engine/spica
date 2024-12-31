@@ -2,7 +2,7 @@ import {CommonModule} from "@angular/common";
 import {ModuleWithProviders, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
-import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
+import {MatCardModule} from "@angular/material/card";
 import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy-dialog";
 import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
 import {MatGridListModule} from "@angular/material/grid-list";

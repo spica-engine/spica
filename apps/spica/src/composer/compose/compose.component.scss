@@ -366,7 +366,8 @@
           max-height: 450px;
           margin: auto;
           overflow: hidden;
-
+          /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+          /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
           mat-card {
             display: inline-block;
             user-select: none;
@@ -376,6 +377,7 @@
             height: 125px;
             width: 180px;
             cursor: pointer;
+            /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
             mat-card-title {
               margin-top: 5px;
               text-transform: capitalize;
@@ -407,10 +409,13 @@
               }
             }
           }
+          /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+          /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
           mat-card:hover {
             [animate] {
               opacity: 0.6;
             }
+            /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
             mat-card-title {
               position: absolute;
               left: 0;

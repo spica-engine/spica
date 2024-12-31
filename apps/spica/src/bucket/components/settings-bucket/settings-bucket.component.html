@@ -169,7 +169,7 @@
 </mat-menu>
 
 <ng-template #ruleTemplate>
-  <mat-card class="bucket-settings-menu-modal mat-elevation-z0">
+  <mat-card appearance="outlined" class="bucket-settings-menu-modal mat-elevation-z0">
     <mat-card-header>
       <mat-card-title> <mat-icon>gavel</mat-icon> Access Control Rules</mat-card-title>
     </mat-card-header>
@@ -249,7 +249,7 @@
 </ng-template>
 
 <ng-template #viewTemplate>
-  <mat-card class="bucket-settings-menu-modal mat-elevation-z0">
+  <mat-card appearance="outlined" class="bucket-settings-menu-modal mat-elevation-z0">
     <mat-card-header>
       <mat-card-title> <mat-icon>view_module</mat-icon> View</mat-card-title>
     </mat-card-header>
@@ -266,6 +266,7 @@
           (cdkDropListDropped)="setPosition($event, 'left')"
         >
           <mat-card
+            appearance="outlined"
             class="mat-elevation-z0 view-conf-item"
             *ngFor="let propertyKv of propertyPositionMap.left"
             cdkDrag
@@ -285,6 +286,7 @@
           (cdkDropListDropped)="setPosition($event, 'right')"
         >
           <mat-card
+            appearance="outlined"
             class="mat-elevation-z0"
             *ngFor="let propertyKv of propertyPositionMap.right"
             cdkDrag
@@ -304,6 +306,7 @@
           (cdkDropListDropped)="setPosition($event, 'bottom')"
         >
           <mat-card
+            appearance="outlined"
             class="mat-elevation-z0"
             *ngFor="let propertyKv of propertyPositionMap.bottom"
             cdkDrag

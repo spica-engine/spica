@@ -4,8 +4,11 @@
 :host {
   --opacity: 1;
   display: inline-block;
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
   mat-card {
     padding: 0;
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
     mat-card-header {
       border-top-left-radius: 4px;
       border-top-right-radius: 4px;
@@ -22,6 +25,7 @@
         flex: 1 1 auto;
       }
     }
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
     mat-card-content {
       padding: 10px;
       display: flex;
@@ -93,6 +97,7 @@
   }
 
   &.minimal-input-placer {
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
     mat-card-header {
       display: none;
     }

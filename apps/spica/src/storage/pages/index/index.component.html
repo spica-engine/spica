@@ -130,7 +130,7 @@
     </ng-container>
   </div>
 </mat-toolbar>
-<mat-card>
+<mat-card appearance="outlined">
   <div class="directory-view" *ngIf="nodes.length && nodes[0].children.length > 0">
     <ng-container *ngTemplateOutlet="column; context: {nodes: nodes[0].children}"></ng-container>
     <mat-progress-spinner

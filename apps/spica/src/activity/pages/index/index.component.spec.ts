@@ -2,7 +2,7 @@ import {ScrollingModule} from "@angular/cdk/scrolling";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
-import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
+import {MatCardModule} from "@angular/material/card";
 import {MatNativeDateModule} from "@angular/material/core";
 import {MatLegacyOptionModule as MatOptionModule} from "@angular/material/legacy-core";
 import {MatDatepickerModule} from "@angular/material/datepicker";

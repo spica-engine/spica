@@ -3,7 +3,7 @@ import {HttpEvent, HttpEventType} from "@angular/common/http";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
-import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
+import {MatCardModule} from "@angular/material/card";
 import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
 import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
 import {MatGridListModule} from "@angular/material/grid-list";

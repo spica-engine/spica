@@ -1,13 +1,16 @@
 import {TestBed, ComponentFixture, tick, fakeAsync} from "@angular/core/testing";
-import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
 import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatCardModule} from "@angular/material/card";
 import {MatLegacyOptionModule as MatOptionModule} from "@angular/material/legacy-core";
 import {MatDividerModule} from "@angular/material/divider";
 import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
 import {MatLegacyListModule as MatListModule} from "@angular/material/legacy-list";
-import {MatLegacyMenuModule as MatMenuModule, _MatLegacyMenuDirectivesModule as _MatMenuDirectivesModule} from "@angular/material/legacy-menu";
+import {
+  MatLegacyMenuModule as MatMenuModule,
+  _MatLegacyMenuDirectivesModule as _MatMenuDirectivesModule
+} from "@angular/material/legacy-menu";
 import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatLegacySelectModule as MatSelectModule} from "@angular/material/legacy-select";
 import {MatLegacySlideToggleModule as MatSlideToggleModule} from "@angular/material/legacy-slide-toggle";
@@ -24,7 +27,11 @@ import {AddFieldModalComponent} from "./add-field-modal.component";
 import {of} from "rxjs";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
-import {MatLegacyDialogModule as MatDialogModule, MatLegacyDialogRef as MatDialogRef, MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA} from "@angular/material/legacy-dialog";
+import {
+  MatLegacyDialogModule as MatDialogModule,
+  MatLegacyDialogRef as MatDialogRef,
+  MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA
+} from "@angular/material/legacy-dialog";
 import {FormsModule} from "@angular/forms";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 
