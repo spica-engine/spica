@@ -10,7 +10,7 @@ import {InputModule} from "@spica-client/common";
 import {OwlDateTimeModule, OwlDateTimeInputDirective} from "@danielmoncada/angular-datetime-picker";
 import {FilterComponent} from "./filter.component";
 import {EditorModule} from "@spica-client/common/code-editor";
-import {MatLegacyChipsModule as MatChipsModule} from "@angular/material/legacy-chips";
+import {MatChipsModule} from "@angular/material/chips";
 import {MatIconModule} from "@angular/material/icon";
 import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
 import {StoreModule} from "@ngrx/store";
