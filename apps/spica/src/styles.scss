@@ -266,3 +266,5 @@ button[mat-icon-button] {
 button[mat-icon-button] mat-icon {
   vertical-align: middle;
 }
+
+@include mat.checkbox-density(-1);

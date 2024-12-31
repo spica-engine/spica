@@ -16,7 +16,7 @@ import {WebhookIndexComponent} from "../webhook-index/webhook-index.component";
 import {MatButtonModule} from "@angular/material/button";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
-import {MatLegacyCheckboxModule as MatCheckboxModule} from "@angular/material/legacy-checkbox";
+import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatDividerModule} from "@angular/material/divider";
 import {FormsModule} from "@angular/forms";
 

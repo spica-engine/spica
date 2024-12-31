@@ -37,7 +37,7 @@ import {AssetStoreComponent} from "./pages/asset-store/asset-store.component";
 import {ExportComponent} from "./components/export/export.component";
 import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy-dialog";
 import {MatLegacySlideToggleModule as MatSlideToggleModule} from "@angular/material/legacy-slide-toggle";
-import {MatLegacyCheckboxModule as MatCheckboxModule} from "@angular/material/legacy-checkbox";
+import {MatCheckboxModule} from "@angular/material/checkbox";
 import {ResourcesComponent} from "./components/resources/resources.component";
 import {MatRippleModule} from "@angular/material/core";
 

@@ -26,7 +26,7 @@ import {WebhookWelcomeComponent} from "./pages/webhook-welcome/webhook-welcome.c
 import {WebhookRoutingModule} from "./webhook-routing.module";
 import {MatResizeHeaderModule} from "@spica-client/material/resize";
 import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
-import {MatLegacyCheckboxModule as MatCheckboxModule} from "@angular/material/legacy-checkbox";
+import {MatCheckboxModule} from "@angular/material/checkbox";
 import {CommonModule as SpicaCommon} from "@spica-client/common";
 import {MatSortModule} from "@angular/material/sort";
 
