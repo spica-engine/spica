@@ -1,5 +1,5 @@
 import {Directive, EventEmitter, HostListener, Input, Output} from "@angular/core";
-import {MatDialog} from "@angular/material/dialog";
+import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
 
 import {MatAwareDialogComponent} from "./aware-dialog.component";
 import {MatAwareDialogOptions} from "./options";

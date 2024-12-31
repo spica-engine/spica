@@ -4,8 +4,8 @@ import {ActivityService} from "@spica-client/activity/services/activity.service"
 import {Observable, BehaviorSubject, Subscription, of} from "rxjs";
 import {DataSource, CollectionViewer} from "@angular/cdk/collections";
 import {map, mergeMap, switchMap} from "rxjs/operators";
-import {MatOption} from "@angular/material/core";
-import {MatSelectChange} from "@angular/material/select";
+import {MatLegacyOption as MatOption} from "@angular/material/legacy-core";
+import {MatLegacySelectChange as MatSelectChange} from "@angular/material/legacy-select";
 
 @Component({
   selector: "activity-index",

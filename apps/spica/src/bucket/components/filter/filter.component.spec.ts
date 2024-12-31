@@ -2,8 +2,8 @@ import {CommonModule} from "@angular/common";
 import {Component, forwardRef, SimpleChange} from "@angular/core";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {MatInputModule} from "@angular/material/input";
-import {MatSelectModule} from "@angular/material/select";
+import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
+import {MatLegacySelectModule as MatSelectModule} from "@angular/material/legacy-select";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {InputModule} from "@spica-client/common";
@@ -12,7 +12,7 @@ import {FilterComponent} from "./filter.component";
 import {EditorModule} from "@spica-client/common/code-editor";
 import {MatChipsModule} from "@angular/material/chips";
 import {MatIconModule} from "@angular/material/icon";
-import {MatTooltipModule} from "@angular/material/tooltip";
+import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
 import {StoreModule} from "@ngrx/store";
 
 @Component({

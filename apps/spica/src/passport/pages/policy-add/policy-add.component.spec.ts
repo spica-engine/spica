@@ -3,10 +3,10 @@ import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
 import {MatCardModule} from "@angular/material/card";
 import {MatExpansionModule} from "@angular/material/expansion";
-import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
 import {MatIconModule} from "@angular/material/icon";
-import {MatInputModule} from "@angular/material/input";
-import {MatSelectModule} from "@angular/material/select";
+import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
+import {MatLegacySelectModule as MatSelectModule} from "@angular/material/legacy-select";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute, RouterModule} from "@angular/router";
@@ -14,7 +14,7 @@ import {of} from "rxjs";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {PolicyService} from "../../services/policy.service";
 import {PolicyAddComponent} from "./policy-add.component";
-import {MatDialogModule} from "@angular/material/dialog";
+import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy-dialog";
 import {RouterTestingModule} from "@angular/router/testing";
 
 describe("Policy Add Component", () => {
@@ -24,15 +24,12 @@ describe("Policy Add Component", () => {
     beforeEach(() => {
       TestBed.configureTestingModule({
         imports: [
-          RouterTestingModule.withRoutes(
-            [
-              {
-                path: "passport/policy",
-                component: PolicyAddComponent
-              }
-            ],
-            {relativeLinkResolution: "legacy"}
-          ),
+          RouterTestingModule.withRoutes([
+            {
+              path: "passport/policy",
+              component: PolicyAddComponent
+            }
+          ]),
           MatIconModule,
           MatToolbarModule,
           MatFormFieldModule,
@@ -450,7 +447,7 @@ describe("Policy Add Component", () => {
       beforeEach(() => {
         TestBed.configureTestingModule({
           imports: [
-            RouterModule.forRoot([], {relativeLinkResolution: "legacy"}),
+            RouterModule.forRoot([]),
             MatIconModule,
             MatToolbarModule,
             MatFormFieldModule,
@@ -601,7 +598,7 @@ describe("Policy Add Component", () => {
       beforeEach(async () => {
         TestBed.configureTestingModule({
           imports: [
-            RouterModule.forRoot([], {relativeLinkResolution: "legacy"}),
+            RouterModule.forRoot([]),
             MatIconModule,
             MatToolbarModule,
             MatFormFieldModule,

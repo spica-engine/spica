@@ -6,17 +6,17 @@ import {ApiKeyService} from "@spica-client/passport/services/apikey.service";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {MatStepperModule} from "@angular/material/stepper";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {MatFormFieldModule} from "@angular/material/form-field";
-import {MatInputModule} from "@angular/material/input";
-import {MatSelectModule} from "@angular/material/select";
-import {MatTabsModule} from "@angular/material/tabs";
+import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
+import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
+import {MatLegacySelectModule as MatSelectModule} from "@angular/material/legacy-select";
+import {MatLegacyTabsModule as MatTabsModule} from "@angular/material/legacy-tabs";
 import {MatDividerModule} from "@angular/material/divider";
 import {of} from "rxjs";
 import {environment} from "environments/environment";
-import {MatSnackBarModule} from "@angular/material/snack-bar";
+import {MatLegacySnackBarModule as MatSnackBarModule} from "@angular/material/legacy-snack-bar";
 import {MatClipboardModule} from "@spica-client/material";
 import {MatIconModule} from "@angular/material/icon";
-import {MatTooltipModule} from "@angular/material/tooltip";
+import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
 import {FormsModule} from "@angular/forms";
 
 describe("TutorialComponent", () => {

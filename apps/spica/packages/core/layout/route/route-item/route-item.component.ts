@@ -7,7 +7,7 @@ import {
   ViewChild,
   ViewContainerRef
 } from "@angular/core";
-import {MatDialog} from "@angular/material/dialog";
+import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
 import {Title} from "@angular/platform-browser";
 import {Route} from "@spica-client/core/route";
 import {BehaviorSubject} from "rxjs";

@@ -6,11 +6,11 @@ import {ModuleWithProviders, NgModule} from "@angular/core";
 import {MatButtonModule} from "@angular/material/button";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {MatIconModule} from "@angular/material/icon";
-import {MatListModule} from "@angular/material/list";
+import {MatLegacyListModule as MatListModule} from "@angular/material/legacy-list";
 import {MatSidenavModule} from "@angular/material/sidenav";
-import {MatSlideToggleModule} from "@angular/material/slide-toggle";
+import {MatLegacySlideToggleModule as MatSlideToggleModule} from "@angular/material/legacy-slide-toggle";
 import {MatToolbarModule} from "@angular/material/toolbar";
-import {MatTooltipModule} from "@angular/material/tooltip";
+import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
 import {RouterModule, Routes} from "@angular/router";
 import {DEFAULT_LAYOUT, IGNORE_HTTP_ERRORS, LayoutConfig, LAYOUT_ACTIONS} from "./config";
 import {ErrorInterceptor} from "./error.interceptor";
@@ -20,24 +20,26 @@ import {LayoutRouterOutlet} from "./router_outlet";
 import {SchemeSwitcherComponent} from "./scheme-switcher/scheme-switcher.component";
 import {SchemeObserver} from "./scheme.observer";
 import {SnackbarComponent} from "./snackbar/snackbar.component";
-import {MatSnackBarModule} from "@angular/material/snack-bar";
-import {MatDialogModule} from "@angular/material/dialog";
+import {MatLegacySnackBarModule as MatSnackBarModule} from "@angular/material/legacy-snack-bar";
+import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy-dialog";
 import {MatChipsModule} from "@angular/material/chips";
 
 import {ToolbarActionDirective} from "./toolbar-action";
-import {MAT_FORM_FIELD_DEFAULT_OPTIONS} from "@angular/material/form-field";
-import {MatMenuModule} from "@angular/material/menu";
+import {MAT_LEGACY_FORM_FIELD_DEFAULT_OPTIONS as MAT_FORM_FIELD_DEFAULT_OPTIONS} from "@angular/material/legacy-form-field";
+import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
 import {DragDropModule} from "@angular/cdk/drag-drop";
 import {RouteItemComponent} from "./route/route-item/route-item.component";
 import {BasicDrawerComponent} from "./route/drawers/basic/basic.component";
 import {AdvancedDrawerComponent} from "./route/drawers/advanced/advanced.component";
-import {MatInputModule} from "@angular/material/input";
-import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
+import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
 import {FormsModule} from "@angular/forms";
 import {MatAwareDialogModule} from "@spica-client/material";
 import {RouteModule} from "../route";
 
-const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
+const routes: Routes = [
+  {path: "error", component: ErrorPageComponent, data: {layout: false}, title: "Error"}
+];
 
 @NgModule({
   imports: [

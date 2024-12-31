@@ -1,5 +1,5 @@
 import {Component, Inject, OnInit} from "@angular/core";
-import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
+import {MatLegacyDialogRef as MatDialogRef, MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA} from "@angular/material/legacy-dialog";
 import {Router} from "@angular/router";
 import {Bucket, emptyBucket} from "@spica-client/bucket/interfaces/bucket";
 import {BucketService} from "@spica-client/bucket/services/bucket.service";

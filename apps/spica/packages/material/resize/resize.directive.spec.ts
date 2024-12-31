@@ -1,7 +1,7 @@
 import {Component, DebugElement} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {MatSortHeader, MatSortModule} from "@angular/material/sort";
-import {MatHeaderCell, MatTableModule} from "@angular/material/table";
+import {MatLegacyHeaderCell as MatHeaderCell, MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {MatResizeHeader} from "./resize.directive";

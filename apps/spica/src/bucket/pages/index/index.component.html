@@ -36,9 +36,9 @@
       </div>
       <span>
         <h6>
-          <mat-chip-list *ngIf="schema.readOnly">
-            <mat-chip disableRipple>Read Only</mat-chip>
-          </mat-chip-list>
+          <mat-chip-listbox *ngIf="schema.readOnly">
+            <mat-chip-option disableRipple>Read Only</mat-chip-option>
+          </mat-chip-listbox>
           Bucket ID: {{ schema._id }}
           <button
             mat-icon-button
@@ -167,7 +167,7 @@
       </div>
     </div>
   </ng-container>
-  <mat-card class="mat-elevation-z25">
+  <mat-card appearance="outlined" class="mat-elevation-z25">
     <mat-card-content>
       <table class="striped" mat-table #rowtable [dataSource]="data$ | async">
         <ng-container matColumnDef="$$spicainternal_select" sticky>

@@ -1,6 +1,6 @@
 import {Directive, forwardRef, HostListener, Input, OnDestroy} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {MatDialog, MatDialogRef} from "@angular/material/dialog";
+import {MatLegacyDialog as MatDialog, MatLegacyDialogRef as MatDialogRef} from "@angular/material/legacy-dialog";
 import {Storage} from "../../interfaces/storage";
 import {PickerOptions} from "./interfaces";
 import {PickerComponent} from "./picker.component";

@@ -61,7 +61,7 @@
     opacity: 0.5;
     pointer-events: none;
   }
-
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
   mat-card {
     margin-top: -85px;
     height: calc(100vh - 250px);
@@ -142,7 +142,7 @@
     .content {
       display: flex;
       align-items: center;
-
+      /* TODO(mdc-migration): The following rule targets internal classes of checkbox that may no longer apply for the MDC version. */
       mat-checkbox {
         width: 24px;
         height: 24px;

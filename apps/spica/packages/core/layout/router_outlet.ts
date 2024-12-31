@@ -30,7 +30,7 @@ export class LayoutRouterOutlet extends RouterOutlet {
     @Inject(DOCUMENT) private document: any,
     injector: EnvironmentInjector
   ) {
-    super(_parentContexts, _location, _name, _changeDetector, injector);
+    super();
     // We did not unsubscribe this because our app has only one outlet
     // TODO(thesayyn): reconsider this
     schemeObserver.observe(Scheme.Dark).subscribe(isDark => {

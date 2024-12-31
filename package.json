@@ -46,8 +46,8 @@
     "yargs": "15.3.1"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^14.2.13",
-    "@angular/compiler-cli": "^14.3.0",
+    "@angular-devkit/build-angular": "^15.0.0",
+    "@angular/compiler-cli": "^15.0.0",
     "@nestjs/testing": "^7.0.13",
     "@nx/node": "^19.8.2",
     "@nx/webpack": "^19.8.2",

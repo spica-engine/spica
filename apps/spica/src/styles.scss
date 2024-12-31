@@ -1,5 +1,4 @@
 @use '@angular/material' as mat;
-@include mat.core();
 
 $primary: mat.define-palette(mat.$gray-palette, 900, 500, 700);
 $primary-for-dark: mat.define-palette(mat.$gray-palette, 900, 100, 700, 100);
@@ -7,6 +6,9 @@ $accent: mat.define-palette(mat.$amber-palette, A200, A100, A400);
 
 $app-light-theme: mat.define-light-theme($primary, $accent);
 $app-dark-theme: mat.define-dark-theme($primary-for-dark, $accent);
+
+@include mat.all-component-themes($app-light-theme);
+@include mat.all-component-themes($app-dark-theme);
 
 @mixin vars($theme, $tone) {
   --tone-diff: #{$tone};
@@ -23,10 +25,18 @@ $app-dark-theme: mat.define-dark-theme($primary-for-dark, $accent);
   }
 }
 
+$custom-typography: mat.define-typography-config(
+  $subtitle-2: mat.define-typography-level(1rem, 1.5rem, 700),
+  $body-1: mat.define-typography-level(1rem, 1.5rem, 500)
+);
+
 html {
   font-size: 14px;
 }
 body {
+  @include mat.all-component-typographies($custom-typography);
+  @include mat.typography-hierarchy($custom-typography);
+
   margin: 0;
   padding: 0;
   font-family: "Roboto", sans-serif;
@@ -58,7 +68,7 @@ body {
   &.dark {
     @include mat.all-component-themes($app-dark-theme);
     @include vars($app-dark-theme, 0);
-    .mat-input-element {
+    .mat-mdc-input-element {
       color: white;
     }
   }
@@ -68,6 +78,8 @@ mat-card {
   &.mat-elevation-z25 {
     box-shadow: 0 4px 16px rgba(var(--primary-default-rgb), 0.07);
   }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
   mat-card-actions {
     margin: 0px !important;
     padding: 0px !important;
@@ -86,7 +98,7 @@ mat-card {
 }
 
 mat-form-field {
-  .mat-form-field-outline {
+  .mdc-form-field__outline {
     background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
     border-radius: 5px;
     top: 0.75em !important;
@@ -94,11 +106,11 @@ mat-form-field {
       visibility: hidden;
     }
   }
-  .mat-form-field-label {
+  .mdc-form-field__label {
     top: 2.14375em !important;
   }
-  &.mat-form-field-appearance-outline.mat-form-field-can-float.mat-form-field-should-float {
-    .mat-form-field-label {
+  &.mdc-form-field--outlined.mdc-form-field--can-float.mdc-form-field--should-float {
+    .mdc-form-field__label {
       transform: translateY(-1.89375em) scale(0.75) !important;
     }
   }
@@ -109,13 +121,6 @@ mat-form-field {
     background-color: #fafafa !important;
   }
 }
-
-$custom-typography: mat.define-typography-config(
-  $subheading-2: mat.define-typography-level(1rem, 1.5rem, 700),
-  $body-1: mat.define-typography-level(1rem, 1.5rem, 500)
-);
-
-@include mat.core($custom-typography);
 
 .ng-tooltip {
   position: absolute;
@@ -146,11 +151,13 @@ $custom-typography: mat.define-typography-config(
   opacity: 0.3 !important;
 
   // remove hover effect
+  /* TODO(mdc-migration): The following rule targets internal classes of button that may no longer apply for the MDC version.*/
+  /* TODO(mdc-migration): The following rule targets internal classes of button that may no longer apply for the MDC version.*/
   span.mat-button-focus-overlay {
     background: unset !important;
   }
 }
-.mat-menu-item[color="warn"] {
+.mat-mdc-menu-item[color="warn"] {
   color: var(--warn-500) !important;
 }
 
@@ -165,16 +172,18 @@ table.striped tr:nth-child(even) td {
 mat-table.striped mat-row:nth-child(even) {
   background-color: rgba(var(--background-background-rgb), 1) !important;
 }
-.mat-menu-panel {
+.mat-mdc-menu-panel {
   min-width: 180px !important;
 }
 
 .minimal-input-placer {
   > mat-form-field {
+    /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
+    /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
     .mat-form-field-wrapper {
       padding: 0px !important;
       margin: 0px !important;
-
+      /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
       .mat-form-field-hint-wrapper,
       .mat-form-field-label {
         display: none;
@@ -238,3 +247,24 @@ div.dashboard-component-content {
     opacity: 1;
   }
 }
+
+button[mat-icon-button] {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  padding: 0 !important;
+
+  letter-spacing: normal !important;
+}
+
+::ng-deep .mat-button,
+::ng-deep .mat-icon-button {
+  flex-direction: row-reverse;
+}
+
+button[mat-icon-button] mat-icon {
+  vertical-align: middle;
+}
+
+@include mat.checkbox-density(-1);

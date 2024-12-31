@@ -1,6 +1,6 @@
 import {Component} from "@angular/core";
 import {ComponentFixture, fakeAsync, flush, TestBed, tick} from "@angular/core/testing";
-import {MatDialog} from "@angular/material/dialog";
+import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {MatAwareDialogComponent} from "./aware-dialog.component";

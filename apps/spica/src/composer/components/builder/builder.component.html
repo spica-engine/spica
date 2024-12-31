@@ -82,11 +82,11 @@
         <mat-form-field>
           <input matInput [(ngModel)]="routerLink" type="text" />
         </mat-form-field>
-        <mat-chip-list>
-          <mat-chip *ngFor="let propertyPair of (context | async)?.properties | keyvalue">
+        <mat-chip-listbox>
+          <mat-chip-option *ngFor="let propertyPair of (context | async)?.properties | keyvalue">
             {{ propertyPair.value.title }}
-          </mat-chip>
-        </mat-chip-list>
+          </mat-chip-option>
+        </mat-chip-listbox>
       </mat-expansion-panel>
     </mat-accordion>
 
@@ -96,14 +96,14 @@
       [(ngModel)]="properties[property.key]"
       [name]="property.key"
     >
-      <mat-chip-list slot="after">
-        <mat-chip
+      <mat-chip-listbox slot="after">
+        <mat-chip-option
           *ngFor="let propertyPair of (context | async)?.properties | keyvalue"
           (click)="properties[property.key] = 'context.$implicit.' + propertyPair.key"
         >
           {{ propertyPair.value.title }}
-        </mat-chip>
-      </mat-chip-list>
+        </mat-chip-option>
+      </mat-chip-listbox>
     </span>
   </div>
 </div>

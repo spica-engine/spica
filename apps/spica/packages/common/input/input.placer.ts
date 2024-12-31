@@ -6,7 +6,6 @@ import {
   ContentChildren,
   ElementRef,
   forwardRef,
-  InjectFlags,
   Injector,
   Input,
   OnChanges,
@@ -19,7 +18,7 @@ import {
   ViewContainerRef
 } from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {MatSuffix} from "@angular/material/form-field";
+import {MatLegacySuffix as MatSuffix} from "@angular/material/legacy-form-field";
 import {InputSchema, INPUT_SCHEMA} from "./input";
 import {InputResolver} from "./input.resolver";
 
@@ -122,7 +121,7 @@ export class InputPlacerComponent
       ]);
 
       this._accessors = this._placerRef.injector
-        .get<ControlValueAccessor[]>(NG_VALUE_ACCESSOR, [], InjectFlags.Optional & InjectFlags.Self)
+        .get<ControlValueAccessor[]>(NG_VALUE_ACCESSOR, [], {optional: true, self: true})
         .filter(ac => ac != this);
 
       if (!changes.schema.firstChange) {

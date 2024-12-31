@@ -1,10 +1,10 @@
 import {TestBed, ComponentFixture} from "@angular/core/testing";
 import {RichTextEditorComponent} from "./richtext";
-import {MatOptionModule} from "@angular/material/core";
-import {MatDialog} from "@angular/material/dialog";
+import {MatLegacyOptionModule as MatOptionModule} from "@angular/material/legacy-core";
+import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
 import {MatIconModule} from "@angular/material/icon";
-import {MatSelectModule} from "@angular/material/select";
-import {MatTooltipModule, MatTooltip} from "@angular/material/tooltip";
+import {MatLegacySelectModule as MatSelectModule} from "@angular/material/legacy-select";
+import {MatLegacyTooltipModule as MatTooltipModule, MatLegacyTooltip as MatTooltip} from "@angular/material/legacy-tooltip";
 import {FormsModule, NgModel} from "@angular/forms";
 import {PickerDirective} from "src/storage/components/picker/picker.directive";
 import {INPUT_SCHEMA} from "@spica-client/common";

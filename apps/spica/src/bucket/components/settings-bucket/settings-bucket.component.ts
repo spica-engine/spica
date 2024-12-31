@@ -1,6 +1,6 @@
 import {CdkDragDrop} from "@angular/cdk/drag-drop";
 import {Component, Input, OnInit} from "@angular/core";
-import {MatDialog, MatDialogRef} from "@angular/material/dialog";
+import {MatLegacyDialog as MatDialog, MatLegacyDialogRef as MatDialogRef} from "@angular/material/legacy-dialog";
 import {Bucket, LimitExceedBehaviour} from "@spica-client/bucket/interfaces/bucket";
 import {BucketHistoryService} from "@spica-client/bucket/services/bucket-history.service";
 import {BucketService} from "@spica-client/bucket/services/bucket.service";

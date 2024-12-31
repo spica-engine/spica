@@ -12,7 +12,8 @@ const routes: Routes = [
     data: {
       service: "activity",
       action: "index"
-    }
+    },
+    title: "Activity"
   }
 ];
 

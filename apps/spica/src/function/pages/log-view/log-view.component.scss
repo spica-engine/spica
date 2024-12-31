@@ -10,7 +10,7 @@
     height: 750px;
     width: 100%;
   }
-
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
   mat-card {
     width: calc(100% - 60px);
     margin: 30px;
@@ -30,7 +30,7 @@
     }
   }
 
-  .mat-card-content {
+  .mat-mdc-card-content {
     height: 100%;
     .empty-list {
       display: flex;

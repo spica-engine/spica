@@ -2,12 +2,15 @@ import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {FormsModule, NgModel} from "@angular/forms";
 import {MatButtonModule, MatButton} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
-import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
 import {MatIconModule} from "@angular/material/icon";
-import {MatListModule} from "@angular/material/list";
-import {MatSelectModule} from "@angular/material/select";
+import {MatLegacyListModule as MatListModule} from "@angular/material/legacy-list";
+import {MatLegacySelectModule as MatSelectModule} from "@angular/material/legacy-select";
 import {MatToolbarModule} from "@angular/material/toolbar";
-import {MatTooltip, MatTooltipModule} from "@angular/material/tooltip";
+import {
+  MatLegacyTooltip as MatTooltip,
+  MatLegacyTooltipModule as MatTooltipModule
+} from "@angular/material/legacy-tooltip";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterTestingModule} from "@angular/router/testing";

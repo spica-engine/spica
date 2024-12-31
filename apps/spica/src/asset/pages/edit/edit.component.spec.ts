@@ -3,8 +3,8 @@ import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing"
 import {FormsModule} from "@angular/forms";
 import {MatCardModule} from "@angular/material/card";
 import {MatDividerModule} from "@angular/material/divider";
-import {MatFormFieldModule} from "@angular/material/form-field";
-import {MatInputModule} from "@angular/material/input";
+import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
+import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTreeModule} from "@angular/material/tree";
 import {BrowserModule} from "@angular/platform-browser";
@@ -15,7 +15,7 @@ import {of} from "rxjs";
 import {Asset} from "../../interfaces";
 import {AssetService} from "../../services/asset.service";
 import {EditComponent} from "./edit.component";
-import {MatListModule} from "@angular/material/list";
+import {MatLegacyListModule as MatListModule} from "@angular/material/legacy-list";
 
 describe("EditComponent", () => {
   let component: EditComponent;
