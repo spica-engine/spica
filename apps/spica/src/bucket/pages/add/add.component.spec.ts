@@ -4,7 +4,7 @@ import {FormsModule, NgForm, NgModel} from "@angular/forms";
 import {MatBadge, MatBadgeModule} from "@angular/material/badge";
 import {MatLegacyButtonModule as MatButtonModule} from "@angular/material/legacy-button";
 import {MatLegacyCardModule as MatCardModule} from "@angular/material/legacy-card";
-import {MatLegacyChipsModule as MatChipsModule} from "@angular/material/legacy-chips";
+import {MatChipsModule} from "@angular/material/chips";
 import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";

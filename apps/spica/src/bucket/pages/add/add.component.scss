@@ -27,9 +27,12 @@
         span {
           margin-left: 5px;
         }
+        /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version.*/
+        /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version.*/
         mat-chip-list {
           display: inline-block;
           margin-left: 10px;
+          /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version.*/
           mat-chip {
             font-size: 11px;
             padding: 7px 10px;
