@@ -8,7 +8,7 @@ import {MatCardModule} from "@angular/material/card";
 import {MatNativeDateModule} from "@angular/material/core";
 import {MatLegacyOptionModule as MatOptionModule} from "@angular/material/legacy-core";
 import {MatDatepickerModule} from "@angular/material/datepicker";
-import {MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA} from "@angular/material/legacy-dialog";
+import {MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
 import {MatIconModule} from "@angular/material/icon";

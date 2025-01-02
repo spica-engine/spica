@@ -35,7 +35,7 @@ import {CommonModule as SpicaCommon} from "@spica/client/packages/common";
 import {PreviewComponent} from "./components/preview/preview.component";
 import {AssetStoreComponent} from "./pages/asset-store/asset-store.component";
 import {ExportComponent} from "./components/export/export.component";
-import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy-dialog";
+import {MatDialogModule} from "@angular/material/dialog";
 import {MatLegacySlideToggleModule as MatSlideToggleModule} from "@angular/material/legacy-slide-toggle";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {ResourcesComponent} from "./components/resources/resources.component";

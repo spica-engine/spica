@@ -1,5 +1,5 @@
 import {Component, Inject} from "@angular/core";
-import {MatLegacyDialogRef as MatDialogRef, MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA} from "@angular/material/legacy-dialog";
+import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {Asset, InstallationPreviewByModules} from "@spica-client/asset/interfaces";
 import {separatePreviewResourcesByModule} from "@spica-client/asset/helpers";
 import {AssetService} from "@spica-client/asset/services/asset.service";

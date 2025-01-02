@@ -25,7 +25,7 @@ import {NgModel} from "@angular/forms";
 import {Scheme, SchemeObserver} from "@spica-client/core";
 import {guides} from "./guides";
 import {FilterComponent} from "@spica-client/bucket/components/filter/filter.component";
-import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
+import {MatDialog} from "@angular/material/dialog";
 import {AddFieldModalComponent} from "../add-field-modal/add-field-modal.component";
 import {InputResolver} from "@spica-client/common";
 

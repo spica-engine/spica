@@ -3,7 +3,7 @@ import {ANALYZE_FOR_ENTRY_COMPONENTS, Component} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
 import {MatCardModule} from "@angular/material/card";
-import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy-dialog";
+import {MatDialogModule} from "@angular/material/dialog";
 import {MatGridListModule} from "@angular/material/grid-list";
 import {MatIconModule} from "@angular/material/icon";
 import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";

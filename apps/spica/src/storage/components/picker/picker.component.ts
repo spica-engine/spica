@@ -1,5 +1,5 @@
 import {Component, OnInit, ViewChild} from "@angular/core";
-import {MatLegacyDialogRef as MatDialogRef} from "@angular/material/legacy-dialog";
+import {MatDialogRef} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
 import {Filters} from "@spica-client/storage/helpers";
 import {BehaviorSubject, merge, Observable} from "rxjs";

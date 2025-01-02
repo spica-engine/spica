@@ -2,7 +2,7 @@ import {Component, OnInit} from "@angular/core";
 import {AssetService} from "@spica-client/asset/services/asset.service";
 import {Asset} from "@spica-client/asset/interfaces";
 import {Observable} from "rxjs";
-import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
+import {MatDialog} from "@angular/material/dialog";
 import {AssetInstallDialog} from "@spica-client/asset/components/install/install.component";
 import {filter, switchMap, tap} from "rxjs/operators";
 import {MatAwareDialogComponent} from "@spica-client/material";

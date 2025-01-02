@@ -6,7 +6,7 @@ import {Services} from "../../interfaces/service";
 import {Statement, DisplayedStatement} from "../../interfaces/statement";
 import {PolicyService} from "../../services/policy.service";
 import {merge} from "rxjs";
-import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
+import {MatDialog} from "@angular/material/dialog";
 import {PolicyResourceAddComponent} from "@spica-client/passport/components/policy-resource-add/policy-resource-add.component";
 
 @Component({

@@ -2,7 +2,7 @@ import {ComponentFixture, fakeAsync, TestBed, tick, waitForAsync} from "@angular
 import {FormsModule} from "@angular/forms";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatLegacyOptionModule as MatOptionModule} from "@angular/material/legacy-core";
-import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy-dialog";
+import {MatDialogModule} from "@angular/material/dialog";
 import {MatIconModule} from "@angular/material/icon";
 import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
 import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";

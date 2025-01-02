@@ -1,6 +1,6 @@
 import {moveItemInArray} from "@angular/cdk/drag-drop";
 import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
-import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
+import {MatDialog} from "@angular/material/dialog";
 import {MatLegacySnackBar as MatSnackBar} from "@angular/material/legacy-snack-bar";
 import {Sort} from "@angular/material/sort";
 import {Bucket} from "@spica-client/bucket/interfaces/bucket";

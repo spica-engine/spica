@@ -1,7 +1,7 @@
 import {TestBed, ComponentFixture} from "@angular/core/testing";
 import {RichTextEditorComponent} from "./richtext";
 import {MatLegacyOptionModule as MatOptionModule} from "@angular/material/legacy-core";
-import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
+import {MatDialog} from "@angular/material/dialog";
 import {MatIconModule} from "@angular/material/icon";
 import {MatLegacySelectModule as MatSelectModule} from "@angular/material/legacy-select";
 import {MatLegacyTooltipModule as MatTooltipModule, MatLegacyTooltip as MatTooltip} from "@angular/material/legacy-tooltip";

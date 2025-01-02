@@ -48,7 +48,7 @@ import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
 import * as fromWebhook from "./reducers/webhook.reducer";
 import {WebhookModule} from "./webhook.module";
-import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy-dialog";
+import {MatDialogModule} from "@angular/material/dialog";
 import {WebhookService} from "./services";
 import {ASSET_CONFIG_EXPORTER, ASSET_RESOURCE_LISTER} from "@spica-client/asset/interfaces";
 import {assetConfigExporter, listResources} from "./asset";

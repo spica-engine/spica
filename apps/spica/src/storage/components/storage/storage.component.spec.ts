@@ -2,7 +2,7 @@ import {HttpEventType, HttpParams, HttpResponse} from "@angular/common/http";
 import {HttpClientTestingModule, HttpTestingController} from "@angular/common/http/testing";
 import {Component, Directive, EventEmitter, Input, Output} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
-import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy-dialog";
+import {MatDialogModule} from "@angular/material/dialog";
 import {MatIconModule} from "@angular/material/icon";
 import {MatLegacyProgressBarModule as MatProgressBarModule} from "@angular/material/legacy-progress-bar";
 import {MatLegacyProgressSpinner as MatProgressSpinner, MatLegacyProgressSpinnerModule as MatProgressSpinnerModule} from "@angular/material/legacy-progress-spinner";

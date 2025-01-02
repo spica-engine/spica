@@ -42,7 +42,7 @@ import {
   normalizeFunction,
   Trigger
 } from "../../interface";
-import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
+import {MatDialog} from "@angular/material/dialog";
 import {ExampleComponent} from "@spica-client/common/example";
 import {ConfigurationComponent} from "../../components/configuration/configuration.component";
 

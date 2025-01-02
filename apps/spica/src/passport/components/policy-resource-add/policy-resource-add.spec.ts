@@ -7,7 +7,7 @@ import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-i
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {PolicyResourceAddComponent} from "./policy-resource-add.component";
-import {MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA, MatLegacyDialogRef as MatDialogRef} from "@angular/material/legacy-dialog";
+import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {MatDividerModule} from "@angular/material/divider";
 
 describe("Policy Resource Add Component", () => {
