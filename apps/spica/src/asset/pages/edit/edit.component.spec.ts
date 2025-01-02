@@ -15,7 +15,7 @@ import {of} from "rxjs";
 import {Asset} from "../../interfaces";
 import {AssetService} from "../../services/asset.service";
 import {EditComponent} from "./edit.component";
-import {MatLegacyListModule as MatListModule} from "@angular/material/legacy-list";
+import {MatListModule} from "@angular/material/list";
 
 describe("EditComponent", () => {
   let component: EditComponent;

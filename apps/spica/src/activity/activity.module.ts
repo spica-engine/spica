@@ -8,7 +8,7 @@ import {MatLegacyOptionModule as MatOptionModule} from "@angular/material/legacy
 import {MatDatepickerModule} from "@angular/material/datepicker";
 import {MatIconModule} from "@angular/material/icon";
 import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
-import {MatLegacyListModule as MatListModule} from "@angular/material/legacy-list";
+import {MatListModule} from "@angular/material/list";
 import {MatLegacyProgressSpinnerModule as MatProgressSpinnerModule} from "@angular/material/legacy-progress-spinner";
 import {MatLegacySelectModule as MatSelectModule} from "@angular/material/legacy-select";
 import {MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";

@@ -4,7 +4,7 @@ import {MatButtonModule, MatButton} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
 import {MatIconModule} from "@angular/material/icon";
-import {MatLegacyListModule as MatListModule} from "@angular/material/legacy-list";
+import {MatListModule} from "@angular/material/list";
 import {MatLegacySelectModule as MatSelectModule} from "@angular/material/legacy-select";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {

@@ -22,7 +22,7 @@
   textarea {
     height: 22px;
   }
-
+  /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
   .mat-list-item-content {
     height: 85px !important;
   }

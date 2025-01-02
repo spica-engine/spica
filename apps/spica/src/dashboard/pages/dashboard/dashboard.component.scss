@@ -22,6 +22,7 @@
       display: flex;
       align-items: center;
       height: 100%;
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
       mat-list.quicklinks {
         flex: 1;
         a {
@@ -46,7 +47,7 @@
       mat-divider {
         height: 100%;
       }
-
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
       mat-list.tutorial-videos {
         flex: 1;
         display: flex;
@@ -93,17 +94,22 @@
       margin: 0px;
       height: unset;
       width: calc(50% - 15px);
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
       mat-list {
         width: 100%;
 
         h3 {
           text-align: center;
         }
-
+        /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+        /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
         mat-list-item.progress {
           position: relative;
           margin: 0 16px;
           width: unset;
+          /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
           ::ng-deep div.mat-list-item-content {
             padding: 0px !important;
           }

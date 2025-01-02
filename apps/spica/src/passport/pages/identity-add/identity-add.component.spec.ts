@@ -5,7 +5,7 @@ import {MatCardModule} from "@angular/material/card";
 import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
-import {MatLegacyListModule as MatListModule} from "@angular/material/legacy-list";
+import {MatListModule} from "@angular/material/list";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
 import {By} from "@angular/platform-browser";

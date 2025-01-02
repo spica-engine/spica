@@ -28,7 +28,7 @@
 
     .mat-mdc-card-content {
       .cdk-virtual-scroll-viewport {
-        .mat-list {
+        .mat-mdc-list {
           .emptyList {
             display: flex;
             justify-content: center;
@@ -45,7 +45,7 @@
       width: 100%;
     }
 
-    .mat-list-item {
+    .mat-mdc-list-item {
       height: 45px;
       width: 100%;
       span.info {
