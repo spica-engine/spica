@@ -32,7 +32,7 @@ import {MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-t
 import {MatClipboardModule, MatAwareDialogModule} from "@spica-client/material";
 import {AddComponent} from "./pages/add/add.component";
 import {IndexComponent} from "./pages/index/index.component";
-import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
+import {MatMenuModule} from "@angular/material/menu";
 import {CommonModule as SpicaCommon} from "@spica-client/common";
 import {DefaultComponent} from "./components/default/default.component";
 import {TableComponent} from "./components/table/table.component";

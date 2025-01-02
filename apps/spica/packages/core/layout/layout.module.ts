@@ -26,7 +26,7 @@ import {MatChipsModule} from "@angular/material/chips";
 
 import {ToolbarActionDirective} from "./toolbar-action";
 import {MAT_FORM_FIELD_DEFAULT_OPTIONS} from "@angular/material/form-field";
-import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
+import {MatMenuModule} from "@angular/material/menu";
 import {DragDropModule} from "@angular/cdk/drag-drop";
 import {RouteItemComponent} from "./route/route-item/route-item.component";
 import {BasicDrawerComponent} from "./route/drawers/basic/basic.component";
