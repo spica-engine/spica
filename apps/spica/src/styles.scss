@@ -7,9 +7,6 @@ $accent: mat.define-palette(mat.$amber-palette, A200, A100, A400);
 $app-light-theme: mat.define-light-theme($primary, $accent);
 $app-dark-theme: mat.define-dark-theme($primary-for-dark, $accent);
 
-@include mat.all-component-themes($app-light-theme);
-@include mat.all-component-themes($app-dark-theme);
-
 @mixin vars($theme, $tone) {
   --tone-diff: #{$tone};
   @each $colorName, $colorMap in $theme {
@@ -68,7 +65,8 @@ body {
   &.dark {
     @include mat.all-component-themes($app-dark-theme);
     @include vars($app-dark-theme, 0);
-    .mat-mdc-input-element {
+    body,
+    p {
       color: white;
     }
   }
@@ -268,3 +266,21 @@ button[mat-icon-button] mat-icon {
 }
 
 @include mat.checkbox-density(-1);
+
+.mat-mdc-dialog-surface {
+  padding: 24px;
+}
+
+.mat-mdc-dialog-title {
+  padding: 0 !important;
+}
+.mdc-dialog__title::before {
+  height: initial;
+}
+
+.mat-mdc-dialog-content {
+  padding: 0 !important;
+}
+.mat-mdc-dialog-actions {
+  padding: 0 !important;
+}
