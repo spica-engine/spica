@@ -7,7 +7,7 @@ import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatListModule} from "@angular/material/list";
 import {MatInputModule} from "@angular/material/input";
-import {MatLegacySlideToggleModule as MatSlideToggleModule} from "@angular/material/legacy-slide-toggle";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
 import {By} from "@angular/platform-browser";

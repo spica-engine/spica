@@ -21,7 +21,7 @@ import {MatLegacyProgressBarModule as MatProgressBarModule} from "@angular/mater
 import {MatLegacyProgressSpinnerModule as MatProgressSpinnerModule} from "@angular/material/legacy-progress-spinner";
 import {MatLegacyRadioModule as MatRadioModule} from "@angular/material/legacy-radio";
 import {MatSelectModule} from "@angular/material/select";
-import {MatLegacySlideToggleModule as MatSlideToggleModule} from "@angular/material/legacy-slide-toggle";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatLegacySliderModule as MatSliderModule} from "@angular/material/legacy-slider";
 import {MatSortModule} from "@angular/material/sort";
 import {MatStepperModule} from "@angular/material/stepper";
