@@ -5,8 +5,8 @@ import {MatOptionModule} from "@angular/material/core";
 import {MatDividerModule} from "@angular/material/divider";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
+import {MatListModule} from "@angular/material/list";
 import {MatInputModule} from "@angular/material/input";
-import {MatLegacyListModule as MatListModule} from "@angular/material/legacy-list";
 import {
   MatLegacyMenuModule as MatMenuModule,
   _MatLegacyMenuDirectivesModule as _MatMenuDirectivesModule

@@ -2,7 +2,7 @@ import {BreakpointObserver} from "@angular/cdk/layout";
 import {ANALYZE_FOR_ENTRY_COMPONENTS, Component, ComponentFactoryResolver} from "@angular/core";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {MatIconModule} from "@angular/material/icon";
-import {MatLegacyListModule as MatListModule} from "@angular/material/legacy-list";
+import {MatListModule} from "@angular/material/list";
 import {MatSidenavModule} from "@angular/material/sidenav";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {By} from "@angular/platform-browser";

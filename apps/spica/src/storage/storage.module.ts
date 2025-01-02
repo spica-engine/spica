@@ -7,8 +7,8 @@ import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatGridListModule} from "@angular/material/grid-list";
 import {MatIconModule} from "@angular/material/icon";
+import {MatListModule} from "@angular/material/list";
 import {MatInputModule} from "@angular/material/input";
-import {MatLegacyListModule as MatListModule} from "@angular/material/legacy-list";
 import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
 import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatLegacyProgressBarModule as MatProgressBarModule} from "@angular/material/legacy-progress-bar";

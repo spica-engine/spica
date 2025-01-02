@@ -127,7 +127,9 @@
       }
     }
   }
-
+  /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+  /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+  /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
   mat-list {
     padding-top: 10px;
     border-left: 1px solid rgba(var(--foreground-base-rgb), 0.1);
@@ -164,7 +166,8 @@
         margin-left: 10px;
       }
     }
-
+    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
     mat-list-item {
       height: auto !important;
       mat-form-field {
@@ -175,7 +178,7 @@
           }
         }
       }
-
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
       ::ng-deep .mat-list-item-content {
         display: block !important;
         padding-bottom: 15px !important;
@@ -231,6 +234,7 @@
       }
 
       &.dependency {
+        /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
         ::ng-deep .mat-list-item-content {
           display: flex !important;
           justify-content: space-between;
@@ -244,6 +248,7 @@
       }
 
       &.add-dependency {
+        /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
         ::ng-deep .mat-list-item-content {
           padding-top: 0px !important;
           padding-bottom: 0px !important;
@@ -319,6 +324,7 @@
       }
 
       &.environment {
+        /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
         ::ng-deep .mat-list-item-content {
           margin: 0px 16px !important;
           padding: 12px 0px !important;
