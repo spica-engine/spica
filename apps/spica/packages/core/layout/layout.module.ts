@@ -25,14 +25,14 @@ import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy
 import {MatChipsModule} from "@angular/material/chips";
 
 import {ToolbarActionDirective} from "./toolbar-action";
-import {MAT_LEGACY_FORM_FIELD_DEFAULT_OPTIONS as MAT_FORM_FIELD_DEFAULT_OPTIONS} from "@angular/material/legacy-form-field";
+import {MAT_FORM_FIELD_DEFAULT_OPTIONS} from "@angular/material/form-field";
 import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
 import {DragDropModule} from "@angular/cdk/drag-drop";
 import {RouteItemComponent} from "./route/route-item/route-item.component";
 import {BasicDrawerComponent} from "./route/drawers/basic/basic.component";
 import {AdvancedDrawerComponent} from "./route/drawers/advanced/advanced.component";
-import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
-import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
+import {MatInputModule} from "@angular/material/input";
+import {MatFormFieldModule} from "@angular/material/form-field";
 import {FormsModule} from "@angular/forms";
 import {MatAwareDialogModule} from "@spica-client/material";
 import {RouteModule} from "../route";

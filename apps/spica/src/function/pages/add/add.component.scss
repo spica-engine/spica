@@ -217,7 +217,10 @@
             width: 100%;
           }
         }
+        /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
+        /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
         mat-select {
+          /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
           mat-select-trigger {
             > * {
               vertical-align: middle;
@@ -290,7 +293,10 @@
         }
         mat-form-field {
           width: 100%;
+          /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
+          /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
           mat-select {
+            /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
             mat-select-trigger {
               & > * {
                 vertical-align: middle;
@@ -346,7 +352,7 @@
 
           form > mat-form-field {
             width: 100%;
-
+            /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
             ::ng-deep .mat-form-field-wrapper {
               padding-bottom: 0px !important;
             }
@@ -435,6 +441,7 @@
         min-height: unset;
         justify-content: flex-start;
       }
+      /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
       .mat-form-field-wrapper {
         margin-bottom: -1.25em;
       }
