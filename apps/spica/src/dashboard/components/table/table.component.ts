@@ -9,7 +9,7 @@ import {
   SimpleChanges
 } from "@angular/core";
 import {MatSort} from "@angular/material/sort";
-import {MatLegacyTableDataSource as MatTableDataSource} from "@angular/material/legacy-table";
+import {MatTableDataSource} from "@angular/material/table";
 import {MatPaginator} from "@angular/material/paginator";
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";

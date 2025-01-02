@@ -1,5 +1,5 @@
 import {Directive, Input, OnChanges, SimpleChanges, EventEmitter, Output} from "@angular/core";
-import {MatLegacyColumnDef as MatColumnDef} from "@angular/material/legacy-table";
+import {MatColumnDef} from "@angular/material/table";
 
 @Directive({
   selector: "[persist-header-width]",

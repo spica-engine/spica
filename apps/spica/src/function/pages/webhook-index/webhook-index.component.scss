@@ -71,14 +71,14 @@
         }
       }
 
-      td.mat-cell {
+      td.mat-mdc-cell {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         max-width: 0;
       }
 
-      td.mat-cell:last-of-type {
+      td.mat-mdc-cell:last-of-type {
         text-overflow: unset;
       }
     }

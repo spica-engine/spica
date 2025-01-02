@@ -6,7 +6,7 @@ import {MatDialog, MatDialogConfig, MatDialogModule, MatDialogRef} from "@angula
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatIconModule} from "@angular/material/icon";
 import {MatCardModule} from "@angular/material/card";
-import {MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";
+import {MatTableModule} from "@angular/material/table";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {MatButtonModule} from "@angular/material/button";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
