@@ -1,4 +1,4 @@
 <mat-toolbar>
-  <ng-container *ngTemplateOutlet="outlet?.component?.toolbar"></ng-container>
+  <ng-container *ngTemplateOutlet="toolbarTemplate$ | async"></ng-container>
 </mat-toolbar>
 <router-outlet #outlet="outlet"></router-outlet>

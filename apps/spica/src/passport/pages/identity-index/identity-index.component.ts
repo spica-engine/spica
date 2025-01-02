@@ -8,6 +8,7 @@ import {PreferencesService} from "@spica-client/core";
 import {DomSanitizer} from "@angular/platform-browser";
 import {Sort} from "@angular/material/sort";
 import {PolicyService} from "@spica-client/passport/services/policy.service";
+import {ToolbarService} from "../../services/toolbar.service";
 
 @Component({
   selector: "function-identity-index",
@@ -57,7 +58,8 @@ export class IdentityIndexComponent implements OnInit {
     private sanitizer: DomSanitizer,
     public identity: IdentityService,
     public preference: PreferencesService,
-    public policyService: PolicyService
+    public policyService: PolicyService,
+    private toolbarService: ToolbarService
   ) {}
 
   ngOnInit() {
@@ -65,6 +67,7 @@ export class IdentityIndexComponent implements OnInit {
       .get("passport")
       .pipe(
         tap(pref => {
+          this.toolbarService.toolbarTemplate.next(this.toolbar);
           this.filterSchema = {properties: {...this.schema.properties}};
           if (
             pref &&
