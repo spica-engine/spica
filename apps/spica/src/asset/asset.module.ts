@@ -36,7 +36,7 @@ import {PreviewComponent} from "./components/preview/preview.component";
 import {AssetStoreComponent} from "./pages/asset-store/asset-store.component";
 import {ExportComponent} from "./components/export/export.component";
 import {MatDialogModule} from "@angular/material/dialog";
-import {MatLegacySlideToggleModule as MatSlideToggleModule} from "@angular/material/legacy-slide-toggle";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {ResourcesComponent} from "./components/resources/resources.component";
 import {MatRippleModule} from "@angular/material/core";
