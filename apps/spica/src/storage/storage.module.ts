@@ -11,7 +11,7 @@ import {MatListModule} from "@angular/material/list";
 import {MatInputModule} from "@angular/material/input";
 import {MatMenuModule} from "@angular/material/menu";
 import {MatPaginatorModule} from "@angular/material/paginator";
-import {MatLegacyProgressBarModule as MatProgressBarModule} from "@angular/material/legacy-progress-bar";
+import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatLegacyProgressSpinnerModule as MatProgressSpinnerModule} from "@angular/material/legacy-progress-spinner";
 import {MatSelectModule} from "@angular/material/select";
 import {MatLegacySliderModule as MatSliderModule} from "@angular/material/legacy-slider";

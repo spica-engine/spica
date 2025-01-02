@@ -5,7 +5,7 @@ import {MatDialogRef} from "@angular/material/dialog";
 import {MatGridListModule} from "@angular/material/grid-list";
 import {MatIconModule} from "@angular/material/icon";
 import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
-import {MatLegacyProgressBarModule as MatProgressBarModule} from "@angular/material/legacy-progress-bar";
+import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatLegacyTabsModule as MatTabsModule} from "@angular/material/legacy-tabs";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";

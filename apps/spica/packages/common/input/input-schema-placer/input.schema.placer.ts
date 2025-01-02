@@ -24,20 +24,20 @@ import {PresetLoader, presets, STRING_PRESET_LOADER} from "./predefineds";
   ],
   styles: [
     `
-                      :host {
-                        display: block;
-                      }
-                    `,
+                          :host {
+                            display: block;
+                          }
+                        `,
     `
-                      :host > mat-form-field:not(:first-of-type) {
-                        margin: 0px 5px;
-                      }
-                    `,
+                          :host > mat-form-field:not(:first-of-type) {
+                            margin: 0px 5px;
+                          }
+                        `,
     `
-                      :host > mat-form-field:first-of-type {
-                        margin-right: 5px;
-                      }
-                    `
+                          :host > mat-form-field:first-of-type {
+                            margin-right: 5px;
+                          }
+                        `
   ]
 })
 export class InputSchemaPlacer implements OnChanges, ControlValueAccessor {
