@@ -6,7 +6,7 @@ import {MatDialogModule} from "@angular/material/dialog";
 import {MatIconModule} from "@angular/material/icon";
 import {MatLegacyProgressBarModule as MatProgressBarModule} from "@angular/material/legacy-progress-bar";
 import {MatLegacyProgressSpinner as MatProgressSpinner, MatLegacyProgressSpinnerModule as MatProgressSpinnerModule} from "@angular/material/legacy-progress-spinner";
-import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {By} from "@angular/platform-browser";
 import {INPUT_SCHEMA} from "@spica-client/common";
 import {Filters} from "../../helpers";

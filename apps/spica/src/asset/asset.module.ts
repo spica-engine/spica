@@ -17,7 +17,7 @@ import {MatLegacyProgressSpinnerModule as MatProgressSpinnerModule} from "@angul
 import {MatSelectModule} from "@angular/material/select";
 import {MatSortModule} from "@angular/material/sort";
 import {MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";
-import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {BrowserModule} from "@angular/platform-browser";
 import {StoreModule} from "@ngrx/store";
 import {InputModule} from "@spica-client/common";

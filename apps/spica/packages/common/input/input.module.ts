@@ -24,7 +24,7 @@ import {MatInputModule} from "@angular/material/input";
 import {MatMenuModule} from "@angular/material/menu";
 import {MatSelectModule} from "@angular/material/select";
 import {MatLegacySlideToggleModule as MatSlideToggleModule} from "@angular/material/legacy-slide-toggle";
-import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular-datetime-picker";
 import {ArraySchemaComponent} from "./components/array-schema/array-schema.component";
 import {ArrayComponent} from "./components/array/array.component";

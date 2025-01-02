@@ -16,7 +16,7 @@ import {environment} from "environments/environment";
 import {MatLegacySnackBarModule as MatSnackBarModule} from "@angular/material/legacy-snack-bar";
 import {MatClipboardModule} from "@spica-client/material";
 import {MatIconModule} from "@angular/material/icon";
-import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {FormsModule} from "@angular/forms";
 
 describe("TutorialComponent", () => {

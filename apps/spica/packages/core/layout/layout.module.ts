@@ -10,7 +10,7 @@ import {MatListModule} from "@angular/material/list";
 import {MatSidenavModule} from "@angular/material/sidenav";
 import {MatLegacySlideToggleModule as MatSlideToggleModule} from "@angular/material/legacy-slide-toggle";
 import {MatToolbarModule} from "@angular/material/toolbar";
-import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {RouterModule, Routes} from "@angular/router";
 import {DEFAULT_LAYOUT, IGNORE_HTTP_ERRORS, LayoutConfig, LAYOUT_ACTIONS} from "./config";
 import {ErrorInterceptor} from "./error.interceptor";

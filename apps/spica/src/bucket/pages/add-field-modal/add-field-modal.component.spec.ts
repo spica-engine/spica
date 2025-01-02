@@ -15,7 +15,7 @@ import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatSelectModule} from "@angular/material/select";
 import {MatLegacySlideToggleModule as MatSlideToggleModule} from "@angular/material/legacy-slide-toggle";
 import {MatToolbarModule} from "@angular/material/toolbar";
-import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {PropertyKvPipe} from "@spica-client/common/pipes";
 import {InputModule} from "@spica-client/common";
 import {MatSaveModule} from "@spica-client/material";

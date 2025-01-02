@@ -28,7 +28,7 @@ import {MatStepperModule} from "@angular/material/stepper";
 import {MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";
 import {MatLegacyTabsModule as MatTabsModule} from "@angular/material/legacy-tabs";
 import {MatToolbarModule} from "@angular/material/toolbar";
-import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {LeafletModule} from "@asymmetrik/ngx-leaflet";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular-datetime-picker";
 import {StoreModule} from "@ngrx/store";

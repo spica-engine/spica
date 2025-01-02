@@ -13,7 +13,7 @@ import {MatLegacyProgressSpinnerModule as MatProgressSpinnerModule} from "@angul
 import {MatSelectModule} from "@angular/material/select";
 import {MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";
 import {MatToolbarModule} from "@angular/material/toolbar";
-import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterTestingModule} from "@angular/router/testing";
 import {BuildLinkPipe} from "@spica-client/common/pipes";
