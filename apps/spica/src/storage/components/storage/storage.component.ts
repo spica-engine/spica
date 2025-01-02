@@ -1,7 +1,7 @@
 import {HttpEventType} from "@angular/common/http";
 import {Component, forwardRef, HostListener, Inject} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
+import {MatDialog} from "@angular/material/dialog";
 import {INPUT_SCHEMA, InternalPropertySchema} from "@spica-client/common";
 import {Filters} from "@spica-client/storage/helpers";
 import {RootDirService} from "@spica-client/storage/services/root.dir.service";

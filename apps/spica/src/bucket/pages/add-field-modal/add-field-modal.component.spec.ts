@@ -28,10 +28,10 @@ import {of} from "rxjs";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
 import {
-  MatLegacyDialogModule as MatDialogModule,
-  MatLegacyDialogRef as MatDialogRef,
-  MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA
-} from "@angular/material/legacy-dialog";
+  MatDialogModule,
+  MatDialogRef,
+  MAT_DIALOG_DATA
+} from "@angular/material/dialog";
 import {FormsModule} from "@angular/forms";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 

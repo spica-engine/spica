@@ -1,7 +1,7 @@
 import {HttpClientTestingModule, HttpTestingController} from "@angular/common/http/testing";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {MatCardModule} from "@angular/material/card";
-import {MatLegacyDialogRef as MatDialogRef} from "@angular/material/legacy-dialog";
+import {MatDialogRef} from "@angular/material/dialog";
 import {MatGridListModule} from "@angular/material/grid-list";
 import {MatIconModule} from "@angular/material/icon";
 import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";

@@ -21,7 +21,7 @@ import {SchemeSwitcherComponent} from "./scheme-switcher/scheme-switcher.compone
 import {SchemeObserver} from "./scheme.observer";
 import {SnackbarComponent} from "./snackbar/snackbar.component";
 import {MatLegacySnackBarModule as MatSnackBarModule} from "@angular/material/legacy-snack-bar";
-import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy-dialog";
+import {MatDialogModule} from "@angular/material/dialog";
 import {MatChipsModule} from "@angular/material/chips";
 
 import {ToolbarActionDirective} from "./toolbar-action";

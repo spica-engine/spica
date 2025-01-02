@@ -1,5 +1,5 @@
 import {Component, Inject} from "@angular/core";
-import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
+import {MatDialog} from "@angular/material/dialog";
 import {AddFieldModalComponent} from "@spica-client/bucket/pages/add-field-modal/add-field-modal.component";
 import {InputPlacerWithMetaPlacer, InputSchema, INPUT_SCHEMA} from "../../input";
 import {InputResolver} from "../../input.resolver";

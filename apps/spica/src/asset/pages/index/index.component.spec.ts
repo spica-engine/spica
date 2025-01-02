@@ -2,7 +2,7 @@ import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing"
 import {AssetService} from "../../services/asset.service";
 import {Asset} from "../../interfaces";
 import {IndexComponent} from "./index.component";
-import {MatLegacyDialog as MatDialog, MatLegacyDialogConfig as MatDialogConfig, MatLegacyDialogModule as MatDialogModule, MatLegacyDialogRef as MatDialogRef} from "@angular/material/legacy-dialog";
+import {MatDialog, MatDialogConfig, MatDialogModule, MatDialogRef} from "@angular/material/dialog";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatIconModule} from "@angular/material/icon";
 import {MatCardModule} from "@angular/material/card";

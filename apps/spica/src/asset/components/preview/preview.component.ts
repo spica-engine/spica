@@ -1,5 +1,5 @@
 import {Component, Input, OnInit} from "@angular/core";
-import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
+import {MatDialog} from "@angular/material/dialog";
 import {displayPreview} from "@spica-client/asset/helpers";
 import {InstallationPreviewByModules, Resource} from "../../interfaces";
 

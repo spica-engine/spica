@@ -4,7 +4,7 @@ import {BucketService} from "../../services/bucket.service";
 import {filter, takeUntil} from "rxjs/operators";
 import {Router} from "@angular/router";
 import {Route} from "@spica-client/core";
-import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
+import {MatDialog} from "@angular/material/dialog";
 import {AddBucketComponent} from "@spica-client/bucket/components/add-bucket/add-bucket.component";
 import {Bucket} from "@spica-client/bucket/interfaces/bucket";
 

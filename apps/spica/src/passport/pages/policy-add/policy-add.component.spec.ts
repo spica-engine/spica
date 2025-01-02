@@ -14,7 +14,7 @@ import {of} from "rxjs";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {PolicyService} from "../../services/policy.service";
 import {PolicyAddComponent} from "./policy-add.component";
-import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy-dialog";
+import {MatDialogModule} from "@angular/material/dialog";
 import {RouterTestingModule} from "@angular/router/testing";
 
 describe("Policy Add Component", () => {

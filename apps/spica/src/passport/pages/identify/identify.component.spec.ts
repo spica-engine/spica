@@ -2,7 +2,7 @@ import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule, NgForm, NgModel} from "@angular/forms";
 import {MatCardModule} from "@angular/material/card";
-import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy-dialog";
+import {MatDialogModule} from "@angular/material/dialog";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";

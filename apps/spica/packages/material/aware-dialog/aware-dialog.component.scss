@@ -1,10 +1,12 @@
 :host {
   h4[mat-dialog-title] {
+    margin-bottom: 20px;
     font-size: inherit;
     & > * {
       vertical-align: middle;
     }
   }
+  /* TODO(mdc-migration): The following rule targets internal classes of dialog that may no longer apply for the MDC version. */
   mat-dialog-actions {
     float: right;
   }

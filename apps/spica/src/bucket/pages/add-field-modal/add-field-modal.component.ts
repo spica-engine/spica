@@ -1,5 +1,5 @@
 import {Component, Inject, OnInit} from "@angular/core";
-import {MatLegacyDialogRef as MatDialogRef, MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA} from "@angular/material/legacy-dialog";
+import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {PredefinedDefault} from "@spica-client/bucket/interfaces/predefined-default";
 import {BucketService} from "@spica-client/bucket/services/bucket.service";
 import {InputPlacerWithMetaPlacer} from "@spica-client/common";
