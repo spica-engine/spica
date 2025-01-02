@@ -15,7 +15,7 @@ import {Storage} from "../../interfaces/storage";
 import {StorageService} from "../../services/storage.service";
 import {StorageViewComponent} from "../storage-view/storage-view.component";
 import {PickerComponent} from "./picker.component";
-import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
+import {MatMenuModule} from "@angular/material/menu";
 
 describe("StorageComponent", () => {
   let fixture: ComponentFixture<PickerComponent>;

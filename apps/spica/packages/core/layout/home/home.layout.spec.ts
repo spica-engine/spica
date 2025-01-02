@@ -17,7 +17,7 @@ import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
 import {ToolbarActionDirective} from "../toolbar-action";
 import {HomeLayoutComponent} from "./home.layout";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
-import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
+import {MatMenuModule} from "@angular/material/menu";
 import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
 import {BasicDrawerComponent} from "../route/drawers/basic/basic.component";
 import {AdvancedDrawerComponent} from "../route/drawers/advanced/advanced.component";
