@@ -1,11 +1,11 @@
 import {ComponentFixture, fakeAsync, TestBed, tick, waitForAsync} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
 import {MatCheckboxModule} from "@angular/material/checkbox";
-import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
+import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
-import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
+import {MatInputModule} from "@angular/material/input";
 import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
-import {MatLegacySelectModule as MatSelectModule} from "@angular/material/legacy-select";
+import {MatSelectModule} from "@angular/material/select";
 import {MatLegacySlideToggle as MatSlideToggle, MatLegacySlideToggleModule as MatSlideToggleModule} from "@angular/material/legacy-slide-toggle";
 import {By} from "@angular/platform-browser";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";

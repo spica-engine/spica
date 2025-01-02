@@ -11,8 +11,11 @@
       flex: 1;
       ::ng-deep .input-placer-input {
         width: 100%;
-        .mat-form-field {
+        .mat-mdc-form-field {
+          /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
+          /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
           .mat-form-field-wrapper {
+            /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
             .mat-form-field-subscript-wrapper {
               display: none;
             }

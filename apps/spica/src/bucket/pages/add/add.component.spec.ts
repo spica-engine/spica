@@ -5,7 +5,7 @@ import {MatBadge, MatBadgeModule} from "@angular/material/badge";
 import {MatButtonModule} from "@angular/material/button";
 import {MatChipsModule} from "@angular/material/chips";
 import {MatCardModule} from "@angular/material/card";
-import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
+import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
 import {MatLegacyProgressSpinnerModule as MatProgressSpinnerModule} from "@angular/material/legacy-progress-spinner";
