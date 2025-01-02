@@ -1,7 +1,7 @@
 import {ANALYZE_FOR_ENTRY_COMPONENTS, Component, DebugElement, forwardRef} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {ControlValueAccessor, FormsModule, NgModel, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
+import {MatFormFieldModule} from "@angular/material/form-field";
 import {By} from "@angular/platform-browser";
 import {InputSchema} from "./input";
 import {InputPlacerComponent} from "./input.placer";

@@ -11,12 +11,12 @@ import {MatLegacyDialogModule as MatDialogModule} from "@angular/material/legacy
 import {MatDividerModule} from "@angular/material/divider";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {MatIconModule} from "@angular/material/icon";
-import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
+import {MatInputModule} from "@angular/material/input";
 import {MatLegacyListModule as MatListModule} from "@angular/material/legacy-list";
 import {MatLegacyMenuModule as MatMenuModule} from "@angular/material/legacy-menu";
 import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatLegacyProgressSpinnerModule as MatProgressSpinnerModule} from "@angular/material/legacy-progress-spinner";
-import {MatLegacySelectModule as MatSelectModule} from "@angular/material/legacy-select";
+import {MatSelectModule} from "@angular/material/select";
 import {MatLegacySlideToggleModule as MatSlideToggleModule} from "@angular/material/legacy-slide-toggle";
 import {MatStepperModule} from "@angular/material/stepper";
 import {MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";
@@ -56,7 +56,7 @@ import {MatResizeHeaderModule} from "@spica-client/material/resize";
 import {MatSortModule} from "@angular/material/sort";
 import {FilterComponent} from "./components/filter/filter.component";
 import {PolicyResourceAddComponent} from "./components/policy-resource-add/policy-resource-add.component";
-import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
+import {MatFormFieldModule} from "@angular/material/form-field";
 import {ASSET_CONFIG_EXPORTER, ASSET_RESOURCE_LISTER} from "@spica-client/asset/interfaces";
 import {ApiKeyService} from "./services/apikey.service";
 
