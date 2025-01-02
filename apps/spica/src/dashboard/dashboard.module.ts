@@ -41,7 +41,7 @@ import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {CardComponent} from "./components/card/card.component";
 import {DashboardLayout} from "./components/layout/layout.component";
 import {DragDropModule} from "@angular/cdk/drag-drop";
-import {MatLegacyProgressSpinnerModule as MatProgressSpinnerModule} from "@angular/material/legacy-progress-spinner";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatDividerModule} from "@angular/material/divider";
 import {StatisticComponent} from "./components/statistic/statistic.component";
