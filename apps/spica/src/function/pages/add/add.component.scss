@@ -378,6 +378,7 @@
           margin-bottom: 15px;
         }
         .setting {
+          /* TODO(mdc-migration): The following rule targets internal classes of slide-toggle that may no longer apply for the MDC version. */
           mat-slide-toggle {
             margin-bottom: 20px;
           }
@@ -458,6 +459,7 @@
       mat-form-field {
         width: 25% !important;
       }
+      /* TODO(mdc-migration): The following rule targets internal classes of slide-toggle that may no longer apply for the MDC version. */
       mat-slide-toggle,
       mat-card-content {
         margin: 10px 0px 0px 0px !important;

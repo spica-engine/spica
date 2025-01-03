@@ -1,6 +1,6 @@
 import {ComponentFixture, TestBed, tick, fakeAsync, waitForAsync} from "@angular/core/testing";
 import {StrategyDialogComponent} from "./strategy-dialog.component";
-import {MatLegacyProgressSpinnerModule as MatProgressSpinnerModule} from "@angular/material/legacy-progress-spinner";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {By} from "@angular/platform-browser";
 
