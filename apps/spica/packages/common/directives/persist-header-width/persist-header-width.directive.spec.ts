@@ -1,6 +1,6 @@
 import {Component, DebugElement, ViewChild} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
-import {MatLegacyHeaderCell as MatHeaderCell, MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";
+import {MatHeaderCell, MatTableModule} from "@angular/material/table";
 import {By} from "@angular/platform-browser";
 import {PersistHeaderWidthDirective} from "./persist-header-width.directive";
 

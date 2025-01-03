@@ -8,7 +8,7 @@ import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatMenuModule} from "@angular/material/menu";
 import {MatPaginatorModule} from "@angular/material/paginator";
-import {MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";
+import {MatTableModule} from "@angular/material/table";
 import {
   MatTooltip,
   MatTooltipModule

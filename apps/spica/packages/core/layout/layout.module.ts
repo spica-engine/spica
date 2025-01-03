@@ -8,7 +8,7 @@ import {MatExpansionModule} from "@angular/material/expansion";
 import {MatIconModule} from "@angular/material/icon";
 import {MatListModule} from "@angular/material/list";
 import {MatSidenavModule} from "@angular/material/sidenav";
-import {MatLegacySlideToggleModule as MatSlideToggleModule} from "@angular/material/legacy-slide-toggle";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {RouterModule, Routes} from "@angular/router";
@@ -20,7 +20,7 @@ import {LayoutRouterOutlet} from "./router_outlet";
 import {SchemeSwitcherComponent} from "./scheme-switcher/scheme-switcher.component";
 import {SchemeObserver} from "./scheme.observer";
 import {SnackbarComponent} from "./snackbar/snackbar.component";
-import {MatLegacySnackBarModule as MatSnackBarModule} from "@angular/material/legacy-snack-bar";
+import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {MatDialogModule} from "@angular/material/dialog";
 import {MatChipsModule} from "@angular/material/chips";
 

@@ -11,10 +11,10 @@ import {MatListModule} from "@angular/material/list";
 import {MatInputModule} from "@angular/material/input";
 import {MatMenuModule} from "@angular/material/menu";
 import {MatPaginatorModule} from "@angular/material/paginator";
-import {MatLegacyProgressBarModule as MatProgressBarModule} from "@angular/material/legacy-progress-bar";
-import {MatLegacyProgressSpinnerModule as MatProgressSpinnerModule} from "@angular/material/legacy-progress-spinner";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatSelectModule} from "@angular/material/select";
-import {MatLegacySliderModule as MatSliderModule} from "@angular/material/legacy-slider";
+import {MatSliderModule} from "@angular/material/slider";
 import {MatLegacyTabsModule as MatTabsModule} from "@angular/material/legacy-tabs";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
@@ -46,7 +46,7 @@ import {TextViewerComponent} from "./components/text-viewer/text-viewer.componen
 import {PdfViewerComponent} from "./components/pdf-viewer/pdf-viewer.component";
 import {ZipViewerComponent} from "./components/zip-viewer/zip-viewer.component";
 import {TableViewerComponent} from "./components/table-viewer/table-viewer.component";
-import {MatLegacyTableModule as MatTableModule} from "@angular/material/legacy-table";
+import {MatTableModule} from "@angular/material/table";
 
 @NgModule({
   imports: [

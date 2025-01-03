@@ -13,7 +13,7 @@ import {
 } from "@angular/material/menu";
 import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatSelectModule} from "@angular/material/select";
-import {MatLegacySlideToggleModule as MatSlideToggleModule} from "@angular/material/legacy-slide-toggle";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {PropertyKvPipe} from "@spica-client/common/pipes";

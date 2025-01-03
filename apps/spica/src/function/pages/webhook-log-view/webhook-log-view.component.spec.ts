@@ -7,7 +7,7 @@ import {MatNativeDateModule} from "@angular/material/core";
 import {MatOptionModule} from "@angular/material/core";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
-import {MatLegacyProgressSpinnerModule as MatProgressSpinnerModule} from "@angular/material/legacy-progress-spinner";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSelectModule} from "@angular/material/select";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatDatepickerModule} from "@angular/material/datepicker";
