@@ -222,7 +222,7 @@
           }
         }
 
-        td.mat-cell {
+        td.mat-mdc-cell {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -251,7 +251,7 @@
             }
           }
         }
-        td.mat-cell:not(.mat-column---spicainternal_select) {
+        td.mat-mdc-cell:not(.mat-column---spicainternal_select) {
           max-width: 0;
           &.editable {
             cursor: pointer;
