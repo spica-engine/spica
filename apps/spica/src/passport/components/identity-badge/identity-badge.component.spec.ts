@@ -2,7 +2,7 @@ import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {MatButtonModule} from "@angular/material/button";
 import {MatIconModule} from "@angular/material/icon";
 import {MatMenuModule} from "@angular/material/menu";
-import {MatLegacyTooltip as MatTooltip, MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
+import {MatTooltip, MatTooltipModule} from "@angular/material/tooltip";
 import {By} from "@angular/platform-browser";
 import {Router} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";

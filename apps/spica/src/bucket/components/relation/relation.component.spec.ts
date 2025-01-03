@@ -10,9 +10,9 @@ import {MatMenuModule} from "@angular/material/menu";
 import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatTableModule} from "@angular/material/table";
 import {
-  MatLegacyTooltip as MatTooltip,
-  MatLegacyTooltipModule as MatTooltipModule
-} from "@angular/material/legacy-tooltip";
+  MatTooltip,
+  MatTooltipModule
+} from "@angular/material/tooltip";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterTestingModule} from "@angular/router/testing";

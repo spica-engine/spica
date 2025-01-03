@@ -4,7 +4,7 @@ import {MatDialog} from "@angular/material/dialog";
 import {MatOptionModule} from "@angular/material/core";
 import {MatIconModule} from "@angular/material/icon";
 import {MatSelectModule} from "@angular/material/select";
-import {MatLegacyTooltipModule as MatTooltipModule, MatLegacyTooltip as MatTooltip} from "@angular/material/legacy-tooltip";
+import {MatTooltipModule, MatTooltip} from "@angular/material/tooltip";
 import {FormsModule, NgModel} from "@angular/forms";
 import {PickerDirective} from "src/storage/components/picker/picker.directive";
 import {INPUT_SCHEMA} from "@spica-client/common";

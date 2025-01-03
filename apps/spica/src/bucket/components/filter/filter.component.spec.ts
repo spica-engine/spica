@@ -12,7 +12,7 @@ import {FilterComponent} from "./filter.component";
 import {EditorModule} from "@spica-client/common/code-editor";
 import {MatChipsModule} from "@angular/material/chips";
 import {MatIconModule} from "@angular/material/icon";
-import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {StoreModule} from "@ngrx/store";
 
 @Component({

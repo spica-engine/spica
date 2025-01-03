@@ -13,7 +13,7 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSelectModule} from "@angular/material/select";
 import {MatTableModule} from "@angular/material/table";
 import {MatToolbarModule} from "@angular/material/toolbar";
-import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {ActivityRoutingModule} from "@spica-client/activity/activity-routing.module";
 import {IndexComponent} from "@spica-client/activity/pages/index/index.component";
 import {CommonModule as SpicaCommon} from "@spica-client/common";

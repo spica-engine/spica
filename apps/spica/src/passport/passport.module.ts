@@ -22,7 +22,7 @@ import {MatStepperModule} from "@angular/material/stepper";
 import {MatTableModule} from "@angular/material/table";
 import {MatLegacyTabsModule as MatTabsModule} from "@angular/material/legacy-tabs";
 import {MatToolbarModule} from "@angular/material/toolbar";
-import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
 import {LAYOUT_ACTIONS, ROUTE_FILTERS} from "@spica-client/core";
 import {BUILDLINK_FACTORY} from "@spica-client/core/factories/factory";

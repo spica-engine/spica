@@ -1,6 +1,6 @@
 import {SchemeSwitcherComponent} from "./scheme-switcher.component";
 import {ComponentFixture, TestBed, waitForAsync} from "@angular/core/testing";
-import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {MatIconModule} from "@angular/material/icon";
 import {SchemeObserver, Scheme} from "../scheme.observer";
 import {of} from "rxjs";
