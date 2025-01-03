@@ -1,7 +1,7 @@
 import {moveItemInArray} from "@angular/cdk/drag-drop";
 import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
-import {MatLegacySnackBar as MatSnackBar} from "@angular/material/legacy-snack-bar";
+import {MatSnackBar} from "@angular/material/snack-bar";
 import {Sort} from "@angular/material/sort";
 import {Bucket} from "@spica-client/bucket/interfaces/bucket";
 import {AddFieldModalComponent} from "@spica-client/bucket/pages/add-field-modal/add-field-modal.component";
