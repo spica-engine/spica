@@ -13,7 +13,7 @@ import {MatLegacyTabsModule as MatTabsModule} from "@angular/material/legacy-tab
 import {MatDividerModule} from "@angular/material/divider";
 import {of} from "rxjs";
 import {environment} from "environments/environment";
-import {MatLegacySnackBarModule as MatSnackBarModule} from "@angular/material/legacy-snack-bar";
+import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {MatClipboardModule} from "@spica-client/material";
 import {MatIconModule} from "@angular/material/icon";
 import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
