@@ -1,4 +1,4 @@
-<mat-card>
+<mat-card appearance="outlined">
   <mat-card-actions>
     <button mat-icon-button (click)="zoom('positive')" title="Zoom In">
       <mat-icon>zoom_in</mat-icon>
@@ -29,7 +29,7 @@
 
     <span class="scaleSlider">
       <mat-label>Scale Percentage</mat-label>
-      <mat-slider [thumbLabel]="true" [(ngModel)]="scale" [max]="150" [color]="'warn'">
+      <mat-slider [thumbLabel]="true" [(ngModel)]="scale" [max]="150" [color]="'warn'"><input matSliderThumb />
       </mat-slider>
       <mat-hint>{{ cropperRes?.width }}px x {{ cropperRes?.height }}px</mat-hint>
     </span>

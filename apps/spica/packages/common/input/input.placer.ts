@@ -6,7 +6,6 @@ import {
   ContentChildren,
   ElementRef,
   forwardRef,
-  InjectFlags,
   Injector,
   Input,
   OnChanges,
@@ -122,7 +121,7 @@ export class InputPlacerComponent
       ]);
 
       this._accessors = this._placerRef.injector
-        .get<ControlValueAccessor[]>(NG_VALUE_ACCESSOR, [], InjectFlags.Optional & InjectFlags.Self)
+        .get<ControlValueAccessor[]>(NG_VALUE_ACCESSOR, [], {optional: true, self: true})
         .filter(ac => ac != this);
 
       if (!changes.schema.firstChange) {

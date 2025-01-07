@@ -49,8 +49,8 @@
   "devDependencies": {
     "@swc/core":"^1.10.4",
     "@swc-node/register":"^1.10.9",
-    "@angular-devkit/build-angular": "^14.2.13",
-    "@angular/compiler-cli": "^14.3.0",
+    "@angular-devkit/build-angular": "^15.0.0",
+    "@angular/compiler-cli": "^15.0.0",
     "@nestjs/testing": "^7.0.13",
     "@nx/jest": "19.8.2",
     "@nx/node": "^19.8.2",

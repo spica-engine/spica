@@ -11,21 +11,21 @@
         autocomplete="off"
       />
       <div class="select-input">
-        <mat-chip-list>
-          <mat-chip
+        <mat-chip-listbox>
+          <mat-chip-option
             *ngFor="let category of getCategoryByName(newCategory); let index = index"
             (click)="onCategorySelect(category.name, addToCategoryModalRef)"
           >
             {{ category.name }}
-          </mat-chip>
-          <mat-chip
+          </mat-chip-option>
+          <mat-chip-option
             color="accent"
             (click)="onCategorySelect(newCategory, addToCategoryModalRef)"
             *ngIf="isCategoryNameUnique(newCategory)"
           >
-            + Add "{{ newCategory }}" as new category</mat-chip
+            + Add "{{ newCategory }}" as new category</mat-chip-option
           >
-        </mat-chip-list>
+        </mat-chip-listbox>
       </div>
       <mat-icon matSuffix>arrow_drop_down</mat-icon>
     </mat-form-field>

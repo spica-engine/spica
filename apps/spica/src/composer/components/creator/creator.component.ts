@@ -1,11 +1,12 @@
-import {Component, Inject, Input, OnInit} from "@angular/core";
+import {Component, Inject, Input, OnInit, ViewEncapsulation} from "@angular/core";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {DomSanitizer} from "@angular/platform-browser";
 
 @Component({
   selector: "app-creator",
   templateUrl: "./creator.component.html",
-  styleUrls: ["./creator.component.scss"]
+  styleUrls: ["./creator.component.scss"],
+  encapsulation: ViewEncapsulation.None
 })
 export class CreatorComponent implements OnInit {
   [x: string]: any;

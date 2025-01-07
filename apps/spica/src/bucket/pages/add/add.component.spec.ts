@@ -3,8 +3,8 @@ import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing"
 import {FormsModule, NgForm, NgModel} from "@angular/forms";
 import {MatBadge, MatBadgeModule} from "@angular/material/badge";
 import {MatButtonModule} from "@angular/material/button";
-import {MatCardModule} from "@angular/material/card";
 import {MatChipsModule} from "@angular/material/chips";
+import {MatCardModule} from "@angular/material/card";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatMenuModule} from "@angular/material/menu";

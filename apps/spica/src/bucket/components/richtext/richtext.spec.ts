@@ -1,7 +1,7 @@
 import {TestBed, ComponentFixture} from "@angular/core/testing";
 import {RichTextEditorComponent} from "./richtext";
-import {MatOptionModule} from "@angular/material/core";
 import {MatDialog} from "@angular/material/dialog";
+import {MatOptionModule} from "@angular/material/core";
 import {MatIconModule} from "@angular/material/icon";
 import {MatSelectModule} from "@angular/material/select";
 import {MatTooltipModule, MatTooltip} from "@angular/material/tooltip";

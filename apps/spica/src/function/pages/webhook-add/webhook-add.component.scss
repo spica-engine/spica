@@ -1,4 +1,5 @@
 :host {
+  /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
   ::ng-deep .mat-list-item-content {
     padding: 0px !important;
   }
@@ -15,13 +16,18 @@
       }
     }
   }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
   mat-card {
     margin: 30px;
     margin-top: -85px;
     overflow: hidden;
-
+    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
     mat-list {
       padding-top: 0px;
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
       mat-list-item {
         margin-top: 10px;
         height: auto !important;
@@ -29,6 +35,7 @@
         &:nth-child(2) {
           margin-top: 0px;
           padding-top: 0px !important;
+          /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
           ::ng-deep .mat-list-item-content {
             display: flex;
             mat-form-field {

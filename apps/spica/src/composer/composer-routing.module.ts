@@ -3,7 +3,9 @@ import {RouterModule, Routes} from "@angular/router";
 import {Route, RouteCategory, RouteModule} from "@spica-client/core";
 import {ComposeComponent} from "./compose/compose.component";
 
-const routes: Routes = [{path: "composer", component: ComposeComponent, data: {layout: false}}];
+const routes: Routes = [
+  {path: "composer", component: ComposeComponent, data: {layout: false}, title: "Composer"}
+];
 
 const route: Route[] = [
   {

@@ -11,16 +11,18 @@ import {DashboardIndexGuard} from "./dashboard.guard";
 import {VersionControlComponent} from "./pages/versioncontrol/versioncontrol.component";
 
 const routes: Routes = [
-  {pathMatch: "full", path: "", redirectTo: "dashboard"},
+  {pathMatch: "full", path: "", redirectTo: "dashboard", title: "Home"},
   {
     path: "dashboard",
     canActivate: [IdentityGuard],
-    component: DashboardComponent
+    component: DashboardComponent,
+    title: "Dashboard"
   },
   {
     path: "dashboard/:id",
     canActivate: [IdentityGuard],
-    component: DashboardViewComponent
+    component: DashboardViewComponent,
+    title: "DashboardId"
   },
   {
     path: "dashboards",
@@ -45,7 +47,8 @@ const routes: Routes = [
         component: AddComponent,
         data: {service: "dashboard", action: "show"}
       }
-    ]
+    ],
+    title: "Dashboards"
   },
   {
     path: "versioncontrol",
@@ -54,7 +57,8 @@ const routes: Routes = [
     data: {
       service: "versioncontrol",
       action: "update"
-    }
+    },
+    title: "VersionControl"
   }
 ];
 

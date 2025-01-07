@@ -4,9 +4,9 @@
       <mat-icon>{{ bucket.icon }}</mat-icon>
       <span>{{ bucket.title }}</span>
 
-      <mat-chip-list *ngIf="bucket.readOnly">
-        <mat-chip disableRipple>Read Only</mat-chip>
-      </mat-chip-list>
+      <mat-chip-listbox *ngIf="bucket.readOnly">
+        <mat-chip-option disableRipple>Read Only</mat-chip-option>
+      </mat-chip-listbox>
     </h4>
     <h6>{{ bucket.description }}</h6>
   </span>
@@ -55,7 +55,7 @@
   </button>
 </mat-toolbar>
 
-<mat-card *ngIf="bucket$ | async; let bucket" class="mat-elevation-z25" @smooth>
+<mat-card appearance="outlined" *ngIf="bucket$ | async; let bucket" class="mat-elevation-z25" @smooth>
   <mat-card-content [class.handset]="isHandset$ | async">
     <form #form="ngForm">
       <div *ngFor="let layout of layouts" [class]="layout">

@@ -1,8 +1,8 @@
 ::ng-deep {
   .font-menu {
-    .mat-menu-content {
+    .mat-mdc-menu-content {
       max-height: 270px;
-      .mat-menu-item {
+      .mat-mdc-menu-item {
         height: auto;
         padding: 5px 0px;
         border-bottom: 1px solid var(--accent);
@@ -23,10 +23,10 @@
   }
 
   .palette-menu {
-    .mat-menu-content {
+    .mat-mdc-menu-content {
       max-height: 270px;
       width: 250px;
-      .mat-menu-item {
+      .mat-mdc-menu-item {
         width: 100%;
         height: auto;
         padding: 5px 0px;
@@ -71,11 +71,11 @@
 
   .settings-menu {
     max-width: unset !important;
-    .mat-menu-content {
+    .mat-mdc-menu-content {
       margin: 15px;
       mat-form-field {
         width: 100% !important;
-        .mat-form-field {
+        .mat-mdc-form-field {
           &-underline {
             position: relative;
             bottom: auto;
@@ -86,14 +86,15 @@
         }
       }
 
-      .mat-list-item {
+      .mat-mdc-list-item {
         height: auto;
       }
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
       .mat-list-item-content,
-      .mat-subheader {
+      .mat-mdc-subheader {
         padding: 0 !important;
       }
-
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
       .mat-list-item-content {
         justify-content: space-between;
       }
@@ -115,7 +116,7 @@
   }
 
   .add-page-menu {
-    .mat-menu-content {
+    .mat-mdc-menu-content {
       padding: 1.3em;
       padding-top: 1em !important;
 
@@ -128,9 +129,11 @@
   }
 
   .dot-menu {
+    /* TODO(mdc-migration): The following rule targets internal classes of menu that may no longer apply for the MDC version. */
     &.mat-menu-above {
       transform: translateY(-7px);
     }
+    /* TODO(mdc-migration): The following rule targets internal classes of menu that may no longer apply for the MDC version. */
     &.mat-menu-below {
       transform: translateY(7px);
     }
@@ -140,6 +143,7 @@
     height: 100%;
     max-width: unset !important;
     border-radius: 0px;
+    /* TODO(mdc-migration): The following rule targets internal classes of dialog that may no longer apply for the MDC version. */
     mat-dialog-container {
       border-radius: unset !important;
     }
@@ -366,7 +370,8 @@
           max-height: 450px;
           margin: auto;
           overflow: hidden;
-
+          /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+          /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
           mat-card {
             display: inline-block;
             user-select: none;
@@ -376,6 +381,7 @@
             height: 125px;
             width: 180px;
             cursor: pointer;
+            /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
             mat-card-title {
               margin-top: 5px;
               text-transform: capitalize;
@@ -407,10 +413,13 @@
               }
             }
           }
+          /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+          /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
           mat-card:hover {
             [animate] {
               opacity: 0.6;
             }
+            /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
             mat-card-title {
               position: absolute;
               left: 0;

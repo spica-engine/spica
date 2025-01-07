@@ -1,12 +1,12 @@
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule, NgModel} from "@angular/forms";
-import {MatCardModule} from "@angular/material/card";
 import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatCardModule} from "@angular/material/card";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
-import {MatInputModule} from "@angular/material/input";
 import {MatListModule} from "@angular/material/list";
+import {MatInputModule} from "@angular/material/input";
 import {MatMenuModule} from "@angular/material/menu";
 import {MatSelectModule} from "@angular/material/select";
 import {MatToolbarModule} from "@angular/material/toolbar";
@@ -70,7 +70,7 @@ describe("Identity Setting Component", () => {
     };
     TestBed.configureTestingModule({
       imports: [
-        RouterModule.forRoot([], {relativeLinkResolution: "legacy"}),
+        RouterModule.forRoot([]),
         MatIconModule,
         MatToolbarModule,
         MatMenuModule,

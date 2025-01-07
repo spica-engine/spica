@@ -127,7 +127,9 @@
       }
     }
   }
-
+  /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+  /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+  /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
   mat-list {
     padding-top: 10px;
     border-left: 1px solid rgba(var(--foreground-base-rgb), 0.1);
@@ -164,7 +166,8 @@
         margin-left: 10px;
       }
     }
-
+    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
     mat-list-item {
       height: auto !important;
       mat-form-field {
@@ -175,7 +178,7 @@
           }
         }
       }
-
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
       ::ng-deep .mat-list-item-content {
         display: block !important;
         padding-bottom: 15px !important;
@@ -210,11 +213,15 @@
         }
         .timeout {
           width: 100%;
+          /* TODO(mdc-migration): The following rule targets internal classes of slider that may no longer apply for the MDC version. */
           mat-slider {
             width: 100%;
           }
         }
+        /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
+        /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
         mat-select {
+          /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
           mat-select-trigger {
             > * {
               vertical-align: middle;
@@ -228,6 +235,7 @@
       }
 
       &.dependency {
+        /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
         ::ng-deep .mat-list-item-content {
           display: flex !important;
           justify-content: space-between;
@@ -241,6 +249,7 @@
       }
 
       &.add-dependency {
+        /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
         ::ng-deep .mat-list-item-content {
           padding-top: 0px !important;
           padding-bottom: 0px !important;
@@ -285,7 +294,10 @@
         }
         mat-form-field {
           width: 100%;
+          /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
+          /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
           mat-select {
+            /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
             mat-select-trigger {
               & > * {
                 vertical-align: middle;
@@ -313,6 +325,7 @@
       }
 
       &.environment {
+        /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
         ::ng-deep .mat-list-item-content {
           margin: 0px 16px !important;
           padding: 12px 0px !important;
@@ -340,7 +353,7 @@
 
           form > mat-form-field {
             width: 100%;
-
+            /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
             ::ng-deep .mat-form-field-wrapper {
               padding-bottom: 0px !important;
             }
@@ -365,6 +378,7 @@
           margin-bottom: 15px;
         }
         .setting {
+          /* TODO(mdc-migration): The following rule targets internal classes of slide-toggle that may no longer apply for the MDC version. */
           mat-slide-toggle {
             margin-bottom: 20px;
           }
@@ -429,12 +443,14 @@
         min-height: unset;
         justify-content: flex-start;
       }
+      /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
       .mat-form-field-wrapper {
         margin-bottom: -1.25em;
       }
       .log-viewport {
         height: 290px;
       }
+      /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
       mat-card {
         margin: unset;
         width: 100% !important;
@@ -443,6 +459,7 @@
       mat-form-field {
         width: 25% !important;
       }
+      /* TODO(mdc-migration): The following rule targets internal classes of slide-toggle that may no longer apply for the MDC version. */
       mat-slide-toggle,
       mat-card-content {
         margin: 10px 0px 0px 0px !important;

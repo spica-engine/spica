@@ -9,7 +9,7 @@ import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular
 import {INPUT_SCHEMA} from "../../input";
 import {DateComponent} from "./date.component";
 import {DateValidatorDirective} from "./date.validator";
-import {MatFormFieldHarness} from "@angular/material/form-field/testing";
+import {MatLegacyFormFieldHarness as MatFormFieldHarness} from "@angular/material/legacy-form-field/testing";
 import {HarnessLoader} from "@angular/cdk/testing";
 import {TestbedHarnessEnvironment} from "@angular/cdk/testing/testbed";
 import {MatIconModule} from "@angular/material/icon";

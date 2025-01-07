@@ -65,7 +65,7 @@ export const initialState: RouteState = adapter.getInitialState({});
 export function reducer(state: RouteState = initialState, action: RouteAction): RouteState {
   switch (action.type) {
     case RouteActionTypes.RETRIEVE:
-      return adapter.addAll(action.routes, state);
+      return adapter.setAll(action.routes, state);
     case RouteActionTypes.ADD:
       return adapter.addOne(action.route, state);
     case RouteActionTypes.REMOVE:

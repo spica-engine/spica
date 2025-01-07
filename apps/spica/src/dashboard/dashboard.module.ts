@@ -27,7 +27,7 @@ import * as fromDashboard from "./state/dashboard.reducer";
 import {TutorialComponent} from "./pages/tutorial/tutorial.component";
 import {MatStepperModule} from "@angular/material/stepper";
 import {MatSelectModule} from "@angular/material/select";
-import {MatTabsModule} from "@angular/material/tabs";
+import {MatLegacyTabsModule as MatTabsModule} from "@angular/material/legacy-tabs";
 import {MatTableModule} from "@angular/material/table";
 import {MatClipboardModule, MatAwareDialogModule} from "@spica-client/material";
 import {AddComponent} from "./pages/add/add.component";
