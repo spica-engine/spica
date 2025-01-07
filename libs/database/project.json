@@ -1,13 +1,13 @@
 {
-  "name": "database/realtime",
-  "sourceRoot": "libs/database/realtime/src",
+  "name": "database",
+  "sourceRoot": "libs/database/src",
   "projectType": "library",
   "build": {
     "executor": "@nx/js:tsc",
     "options": {
       "outputPath": "dist",
-      "main": "libs/database/realtime/index.ts",
-      "tsConfig": "libs/database/realtime/tsconfig.json",
+      "main": "libs/database/index.ts",
+      "tsConfig": "libs/database/tsconfig.json",
       "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
     }
   }
