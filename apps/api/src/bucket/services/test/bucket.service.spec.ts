@@ -23,7 +23,7 @@ describe("Bucket Service", () => {
       bs = module.get(BucketService);
       bds = module.get(BucketDataService);
 
-      await bs.createCollection("buckets");
+      await bs.db.createCollection("buckets");
     });
 
     afterEach(() => module.close());
@@ -325,10 +325,7 @@ describe("Bucket Service", () => {
         .then((r: any) => {
           return [r.executionStats.executionStages.stage, r.executionStats.totalDocsExamined];
         });
-      expect(standartQueryStage).toEqual(
-        ["COLLSCAN", 4],
-        "if it has searched whole collection to find document"
-      );
+      expect(standartQueryStage).toEqual(["COLLSCAN", 4]);
 
       const indexedQueryStage = await bucketData._coll
         .find({title: 1})
@@ -339,10 +336,7 @@ describe("Bucket Service", () => {
             r.executionStats.totalDocsExamined
           ];
         });
-      expect(indexedQueryStage).toEqual(
-        ["IXSCAN", 1],
-        "if it has found the document from the collection making use of index"
-      );
+      expect(indexedQueryStage).toEqual(["IXSCAN", 1]);
     });
   });
 });

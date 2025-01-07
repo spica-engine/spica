@@ -15,23 +15,17 @@ describe("GCloud", () => {
   const buff = Buffer.alloc(5, "spica");
 
   const File = {
-    download: jasmine
-      .createSpy("download")
-      .and.callFake((options?: DownloadOptions) => Promise.resolve([buff])),
+    download: jest.fn((options?: DownloadOptions) => Promise.resolve([buff])),
 
-    save: jasmine
-      .createSpy("save")
-      .and.callFake((data: any, options?: SaveOptions) => Promise.resolve()),
+    save: jest.fn((data: any, options?: SaveOptions) => Promise.resolve()),
 
-    delete: jasmine.createSpy("delete").and.callFake((options?: object) => Promise.resolve()),
+    delete: jest.fn((options?: object) => Promise.resolve()),
 
-    getMetadata: jasmine
-      .createSpy("getMetadata")
-      .and.callFake((options?: object) => Promise.resolve([{mediaLink}]))
+    getMetadata: jest.fn((options?: object) => Promise.resolve([{mediaLink}]))
   };
 
   const Bucket = {
-    file: jasmine.createSpy("file").and.callFake((name: string, options?: FileOptions) => File)
+    file: jest.fn((name: string, options?: FileOptions) => File)
   };
 
   beforeEach(() => {
@@ -45,7 +39,7 @@ describe("GCloud", () => {
 
   afterEach(() => {
     for (const spy of Object.values({...File, ...Bucket})) {
-      spy.calls.reset();
+      spy.mockClear();
     }
   });
 

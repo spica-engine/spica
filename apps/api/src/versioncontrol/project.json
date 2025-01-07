@@ -1,0 +1,5 @@
+{
+  "name": "api/versioncontrol",
+  "sourceRoot": "apps/api/src/versioncontrol",
+  "projectType": "application"
+}

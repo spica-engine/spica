@@ -44,12 +44,6 @@ describe("GraphQLController", () => {
     req = module.get(Request);
     req.reject = true; /* Reject for non 2xx response codes */
     await app.listen(req.socket);
-
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__skip__" && typeof actual == typeof expected) {
-        return true;
-      }
-    });
   });
 
   afterEach(() => app.close());
@@ -1440,13 +1434,15 @@ describe("GraphQLController", () => {
 
         const {body} = await req.post("/graphql", insertBody);
 
+        // we can't predict the mongodb object id
+        insertedId = body.data[`insert${bucketName}`]._id;
+        expect(ObjectId.isValid(insertedId)).toEqual(true);
+
         expect(body).toEqual({
           data: {
-            [`insert${bucketName}`]: {_id: "__skip__", name: "James", age: 66}
+            [`insert${bucketName}`]: {_id: insertedId, name: "James", age: 66}
           }
         });
-
-        insertedId = body.data[`insert${bucketName}`]._id;
 
         //check document
         const params = {
@@ -1503,7 +1499,7 @@ describe("GraphQLController", () => {
         const {body: replaceBody} = await req.post("/graphql", requestBody);
         expect(replaceBody).toEqual({
           data: {
-            [`replace${bucketName}`]: {_id: "__skip__", name: "John", age: 12}
+            [`replace${bucketName}`]: {_id: insertedId, name: "John", age: 12}
           }
         });
         //check document
@@ -1559,7 +1555,7 @@ describe("GraphQLController", () => {
         const {body} = await req.post("/graphql", requestBody);
         expect(body).toEqual({
           data: {
-            [`patch${bucketName}`]: {_id: "__skip__", name: "John", age: 66}
+            [`patch${bucketName}`]: {_id: insertedId, name: "John", age: 66}
           }
         });
         //check document

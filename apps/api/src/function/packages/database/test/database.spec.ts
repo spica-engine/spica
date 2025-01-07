@@ -13,56 +13,68 @@ function setEnvironment() {
 }
 
 describe("database", () => {
-  let connectSpy: jasmine.Spy<typeof mongodb.MongoClient.prototype.connect>;
-  let closeSpy: jasmine.Spy<typeof mongodb.MongoClient.prototype.close>;
-  let isConnectedSpy: jasmine.Spy<typeof mongodb.MongoClient.prototype.isConnected>;
-  let dbSpy: jasmine.Spy<typeof mongodb.MongoClient.prototype.db>;
-  let collectionSpy: jasmine.Spy<typeof mongodb.Db.prototype.collection>;
-  let watchSpy: jasmine.Spy<mongodb.Collection["watch"]>;
-  let emitWarningSpy: jasmine.Spy<typeof process.emitWarning>;
+  let connectSpy: jest.SpyInstance<void, [callback: mongodb.MongoCallback<mongodb.MongoClient>], any>;
+  let closeSpy: jest.SpyInstance<void, [force: boolean, callback: mongodb.MongoCallback<void>], any>;
+  let isConnectedSpy: jest.SpyInstance<boolean, [options?: mongodb.MongoClientCommonOption], any>
+  let dbSpy: jest.SpyInstance<mongodb.Db, [dbName?: string, options?: mongodb.MongoClientCommonOption], any>;
+  let collectionSpy: jest.SpyInstance<any>;
+  let watchSpy: jest.Mock<mongodb.Collection["watch"]>;
+  let emitWarningSpy: jest.SpyInstance<void, [warning: string | Error, options?: NodeJS.EmitWarningOptions], any>
 
   beforeEach(() => {
     let connected = false;
-    emitWarningSpy = spyOn(process, "emitWarning");
-    connectSpy = spyOn(mongodb.MongoClient.prototype, "connect").and.callFake(async () => {
-      connected = true;
-      return undefined;
-    });
-    isConnectedSpy = spyOn(mongodb.MongoClient.prototype, "isConnected").and.callFake(
-      () => connected
-    );
-    closeSpy = spyOn(mongodb.MongoClient.prototype, "close").and.callFake(async () => {
+    emitWarningSpy = jest.spyOn(process, "emitWarning");
+    connectSpy = jest
+      .spyOn(mongodb.MongoClient.prototype, "connect")
+      .mockImplementation(async () => {
+        connected = true;
+        return undefined;
+      });
+    isConnectedSpy = jest
+      .spyOn(mongodb.MongoClient.prototype, "isConnected")
+      .mockImplementation(() => connected);
+    closeSpy = jest.spyOn(mongodb.MongoClient.prototype, "close").mockImplementation(async () => {
       connected = false;
       return undefined;
     });
-    dbSpy = spyOn(mongodb.MongoClient.prototype, "db").and.callFake(() => {
+    dbSpy = jest.spyOn(mongodb.MongoClient.prototype, "db").mockImplementation(() => {
       return ({collection: collectionSpy} as unknown) as mongodb.Db;
     });
 
-    collectionSpy = spyOn(mongodb.Db.prototype, "collection").and.callFake(() => {
+    collectionSpy = jest.spyOn(mongodb.Db.prototype, "collection").mockImplementation(() => {
       return ({
         watch: watchSpy,
-        find: jasmine.createSpy(),
-        findOne: jasmine.createSpy(),
-        findOneAndUpdate: jasmine.createSpy(),
-        findOneAndReplace: jasmine.createSpy(),
-        findOneAndDelete: jasmine.createSpy(),
-        insertOne: jasmine.createSpy(),
-        insertMany: jasmine.createSpy(),
-        updateOne: jasmine.createSpy(),
-        updateMany: jasmine.createSpy(),
-        deleteOne: jasmine.createSpy(),
-        deleteMany: jasmine.createSpy()
+        find: jest.fn(),
+        findOne: jest.fn(),
+        findOneAndUpdate: jest.fn(),
+        findOneAndReplace: jest.fn(),
+        findOneAndDelete: jest.fn(),
+        insertOne: jest.fn(),
+        insertMany: jest.fn(),
+        updateOne: jest.fn(),
+        updateMany: jest.fn(),
+        deleteOne: jest.fn(),
+        deleteMany: jest.fn()
       } as unknown) as mongodb.Collection;
     });
 
-    watchSpy = jasmine.createSpy("watch");
+    watchSpy = jest.fn();
 
     resetEnvironment();
   });
 
+  afterEach( () => {
+    emitWarningSpy.mockClear();
+    connectSpy.mockClear();
+    isConnectedSpy.mockClear();
+    closeSpy.mockClear();
+    dbSpy.mockClear();
+    collectionSpy.mockClear();
+    watchSpy.mockClear();
+  })
+
   it("it should throw an error if environment variables is missing", async () => {
-    await expectAsync(database()).toBeRejectedWith(
+    await expect(database()).rejects.toEqual(
       new Error(
         "The <__INTERNAL__SPICA__MONGOURL__> or <__INTERNAL__SPICA__MONGODBNAME__> variables was not given."
       )
@@ -85,9 +97,8 @@ describe("database", () => {
     const db = await database();
     const coll = db.collection("test");
     coll.watch();
-
-    expect(emitWarningSpy.calls.mostRecent().args[0]).toBe(
-      "It is not advised to use 'watch' under spica/functions environment. I hope that you know what you are doing."
+    expect(emitWarningSpy.mock.calls[emitWarningSpy.mock.calls.length - 1][0]).toEqual(
+      "DeprecationWarning: It is not advised to use 'watch' under spica/functions environment. I hope that you know what you are doing."
     );
   });
 

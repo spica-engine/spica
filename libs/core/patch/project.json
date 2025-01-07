@@ -1,0 +1,5 @@
+{
+  "name": "core/patch",
+  "sourceRoot": "libs/core/patch/src",
+  "projectType": "library"
+}

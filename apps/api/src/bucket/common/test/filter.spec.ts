@@ -1,5 +1,4 @@
 import {replaceFilterDates} from "@spica-server/bucket/common";
-import {ObjectId} from "@spica-server/database";
 
 describe("Bucket data filter", () => {
   describe("filter", () => {
@@ -16,8 +15,8 @@ describe("Bucket data filter", () => {
     });
 
     describe("Date", () => {
-      let dueDate1 = new Date(2000, 0, 1, 0, 0, 0, 0);
-      let dueDate2 = new Date(2000, 0, 2, 0, 0, 0, 0);
+      let dueDate1 = new Date(Date.UTC(2000, 0, 1, 0, 0, 0, 0));
+      let dueDate2 = new Date(Date.UTC(2000, 0, 2, 0, 0, 0, 0));
 
       let dueString1 = "2000-01-01T00:00:00.000Z";
       let dueString2 = "2000-01-02T00:00:00.000Z";

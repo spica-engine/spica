@@ -36,13 +36,15 @@ describe("core pipes", () => {
     it("should throw BadRequestException when given json is invalid", () => {
       expect(() => {
         JSONP.transform('*{"key":"value"}', undefined);
-      }).toThrow(new HttpException("Unexpected token * in JSON at position 0", 400));
+      }).toThrow(
+        new HttpException('Unexpected token \'*\', "*{"key":"value"}" is not valid JSON', 400)
+      );
     });
   });
 
   describe("JSONPR pipe", () => {
     it("should pass the reviver", () => {
-      const reviver = jasmine.createSpy("reviver").and.callFake((k, v) => {
+      const reviver = jest.fn((k, v) => {
         if (v == "supersecret") {
           return "**REDACTED**";
         }
@@ -54,7 +56,7 @@ describe("core pipes", () => {
     });
 
     it("should  forward errors thrown by reviver", () => {
-      const reviver = jasmine.createSpy("reviver").and.callFake((k, v) => {
+      const reviver = jest.fn((k, v) => {
         if (v == "__throw__") {
           throw new Error(`thrown __throw__`);
         }

@@ -72,12 +72,6 @@ describe("function", () => {
     await app.listen(req.socket);
 
     await new Promise((resolve, _) => setTimeout(resolve, 3000));
-
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__skip__" && typeof actual == typeof expected) {
-        return true;
-      }
-    });
   }, 10_000);
 
   afterEach(() => app.close());

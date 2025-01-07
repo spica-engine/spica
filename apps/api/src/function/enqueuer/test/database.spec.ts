@@ -17,13 +17,13 @@ function createTarget(cwd?: string, handler?: string) {
 }
 
 describe("DatabaseEnqueuer", () => {
-  let eventQueue: jasmine.SpyObj<EventQueue>;
-  let databaseQueue: jasmine.SpyObj<DatabaseQueue>;
+  let eventQueue: {enqueue: jest.Mock};
+  let databaseQueue: {enqueue: jest.Mock};
   let noopTarget: event.Target;
   let databaseEnqueuer: DatabaseEnqueuer;
   let database: DatabaseService;
 
-  let schedulerUnsubscriptionSpy: jasmine.Spy;
+  let schedulerUnsubscriptionSpy: jest.Mock;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -34,13 +34,17 @@ describe("DatabaseEnqueuer", () => {
 
     noopTarget = createTarget();
 
-    eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
-    databaseQueue = jasmine.createSpyObj("databaseQueue", ["enqueue"]);
+    eventQueue = {
+      enqueue: jest.fn()
+    };
+    databaseQueue = {
+      enqueue: jest.fn()
+    };
 
-    schedulerUnsubscriptionSpy = jasmine.createSpy("unsubscription", () => {});
+    schedulerUnsubscriptionSpy = jest.fn();
     databaseEnqueuer = new DatabaseEnqueuer(
-      eventQueue,
-      databaseQueue,
+      eventQueue as any,
+      databaseQueue as any,
       database,
       schedulerUnsubscriptionSpy
     );
@@ -88,7 +92,7 @@ describe("DatabaseEnqueuer", () => {
 
     expect(target1Stream.isClosed()).toEqual(true);
 
-    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledOnceWith(target1.id);
+    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledWith(target1.id);
   });
 
   it("should enqueue INSERT events", async () => {
@@ -99,7 +103,7 @@ describe("DatabaseEnqueuer", () => {
     await stream.change.wait();
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
     expect(databaseQueue.enqueue).toHaveBeenCalledTimes(1);
-    const change = databaseQueue.enqueue.calls.mostRecent().args[1];
+    const change = databaseQueue.enqueue.mock.calls[databaseQueue.enqueue.mock.calls.length - 1][1];
     expect(change.collection).toBe("test_collection");
     expect(change.kind).toBe(Database.Change.Kind.INSERT);
   });
@@ -116,7 +120,7 @@ describe("DatabaseEnqueuer", () => {
 
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
     expect(databaseQueue.enqueue).toHaveBeenCalledTimes(1);
-    const change = databaseQueue.enqueue.calls.mostRecent().args[1];
+    const change = databaseQueue.enqueue.mock.calls[databaseQueue.enqueue.mock.calls.length - 1][1];
     expect(change.collection).toBe("test_collection");
     expect(change.documentKey).toBe(insertedId.toHexString());
     expect(change.kind).toBe(Database.Change.Kind.UPDATE);
@@ -136,7 +140,7 @@ describe("DatabaseEnqueuer", () => {
 
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
     expect(databaseQueue.enqueue).toHaveBeenCalledTimes(1);
-    const change = databaseQueue.enqueue.calls.mostRecent().args[1];
+    const change = databaseQueue.enqueue.mock.calls[databaseQueue.enqueue.mock.calls.length - 1][1];
     expect(change.collection).toBe("test_collection");
     expect(change.documentKey).toBe(insertedId.toHexString());
     expect(change.kind).toBe(Database.Change.Kind.DELETE);

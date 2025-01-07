@@ -1,0 +1,5 @@
+{
+  "name": "api/function/packages/storage",
+  "sourceRoot": "apps/api/src/function/packages/storage",
+  "projectType": "library"
+}

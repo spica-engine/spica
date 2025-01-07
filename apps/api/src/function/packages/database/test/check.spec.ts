@@ -2,10 +2,12 @@ import {checkDocument, checkDocuments} from "@spica-devkit/database/src/check";
 import {ObjectId} from "mongodb";
 
 describe("Checks", () => {
-  let emitWarning: jasmine.Spy<typeof process.emitWarning>;
+  let emitWarning: jest.SpyInstance<void, [warning: string | Error, options?: NodeJS.EmitWarningOptions], any>;
   beforeEach(() => {
-    emitWarning = spyOn(process, "emitWarning");
+    emitWarning = jest.spyOn(process, "emitWarning");
   });
+
+  afterEach( () => emitWarning.mockClear())
 
   describe("checkDocument", () => {
     it("should not emit a warning when _id property contains an objectid", () => {

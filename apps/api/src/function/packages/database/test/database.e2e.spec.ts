@@ -4,7 +4,7 @@ import {Db} from "mongodb";
 
 describe("Database e2e", () => {
   beforeEach(async () => {
-    const db = await start("standalone");
+    await start("standalone");
     process.env.__INTERNAL__SPICA__MONGOURL__ = await getConnectionUri();
     process.env.__INTERNAL__SPICA__MONGODBNAME__ = getDatabaseName();
   });

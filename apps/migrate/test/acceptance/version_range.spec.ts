@@ -1,4 +1,10 @@
-import {Db, getConnectionUri, getDatabaseName, start} from "@spica-server/database/testing";
+import {
+  Db,
+  getConnectionUri,
+  getDatabaseName,
+  MongoClient,
+  start
+} from "@spica-server/database/testing";
 import * as color from "cli-color/lib/supports-color";
 import * as fs from "fs";
 import {migrate} from "@spica/migrate/src/migrate";
@@ -6,19 +12,20 @@ import {migrate} from "@spica/migrate/src/migrate";
 describe("Version range", () => {
   let database: {uri: string; name: string};
   let db: Db;
+  let infoSpy: jest.SpyInstance;
+  const indexJsonPath = process.env.TESTONLY_MIGRATION_LOOKUP_DIR + "/migrations/index.json";
 
   beforeAll(() => {
-    process.env.TESTONLY_MIGRATION_LOOKUP_DIR = __dirname;
     color.disableColor();
   });
 
   beforeEach(async () => {
     fs.writeFileSync(
-      __dirname + "/migrations/index.json",
+      indexJsonPath,
       JSON.stringify({
-        "1.0.0": [__dirname + "/migrations/insert_an_item"],
-        "1.5.0": [__dirname + "/migrations/insert_an_item"],
-        "2.0.0": [__dirname + "/migrations/insert_an_item"]
+        "1.0.0": [process.env.TESTONLY_MIGRATION_LOOKUP_DIR + "/migrations/insert_an_item"],
+        "1.5.0": [process.env.TESTONLY_MIGRATION_LOOKUP_DIR + "/migrations/insert_an_item"],
+        "2.0.0": [process.env.TESTONLY_MIGRATION_LOOKUP_DIR + "/migrations/insert_an_item"]
       })
     );
     const connection = await start("replset");
@@ -28,27 +35,31 @@ describe("Version range", () => {
     };
     db = connection.db(database.name);
     await db.createCollection("_test_");
-  }, 10000);
+
+    infoSpy = jest.spyOn(console, "info");
+  });
 
   afterEach(() => {
-    fs.unlinkSync(__dirname + "/migrations/index.json");
+    if (fs.existsSync(indexJsonPath)) {
+      fs.unlinkSync(indexJsonPath);
+    }
+
+    infoSpy.mockClear()
   });
 
   it("should show versions", async () => {
-    const info = spyOn(console, "info");
     await migrate({
       database,
       console,
       from: "0.0.1",
       to: "2.0.0"
     });
-    expect(info).toHaveBeenCalledWith("VERSION: 1.0.0");
-    expect(info).toHaveBeenCalledWith("VERSION: 1.5.0");
-    expect(info).toHaveBeenCalledWith("VERSION: 2.0.0");
+    expect(infoSpy).toHaveBeenCalledWith("VERSION: 1.0.0");
+    expect(infoSpy).toHaveBeenCalledWith("VERSION: 1.5.0");
+    expect(infoSpy).toHaveBeenCalledWith("VERSION: 2.0.0");
   });
 
   it("should not include starting version", async () => {
-    const info = spyOn(console, "info");
     await migrate({
       database,
       console,
@@ -61,11 +72,10 @@ describe("Version range", () => {
         .find()
         .toArray()).length
     ).toEqual(2);
-    expect(info).not.toHaveBeenCalledWith("VERSION: 1.0.0");
+    expect(infoSpy).not.toHaveBeenCalledWith("VERSION: 1.0.0");
   });
 
   it("should include ending version", async () => {
-    const info = spyOn(console, "info");
     await migrate({
       database,
       console,
@@ -78,6 +88,6 @@ describe("Version range", () => {
         .find()
         .toArray()).length
     ).toEqual(2);
-    expect(info).toHaveBeenCalledWith("VERSION: 2.0.0");
+    expect(infoSpy).toHaveBeenCalledWith("VERSION: 2.0.0");
   });
 });

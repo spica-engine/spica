@@ -39,12 +39,6 @@ describe("BucketDataController", () => {
     req = module.get(Request);
     req.reject = true; /* Reject for non 2xx response codes */
     await app.listen(req.socket);
-
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__skip__" && typeof actual == typeof expected) {
-        return true;
-      }
-    });
   });
 
   afterEach(() => app.close());
@@ -91,12 +85,13 @@ describe("BucketDataController", () => {
 
     it("should have created the bucket and the rows", () => {
       expect(bucket._id).toBeTruthy();
+
       expect(rows).toEqual([
-        {_id: "__skip__", name: "Jim", age: 20},
-        {_id: "__skip__", name: "Michael", age: 22},
-        {_id: "__skip__", name: "Kevin", age: 25},
-        {_id: "__skip__", name: "Dwight", age: 38},
-        {_id: "__skip__", name: "Toby", age: 30}
+        {_id: rows[0]._id, name: "Jim", age: 20},
+        {_id: rows[1]._id, name: "Michael", age: 22},
+        {_id: rows[2]._id, name: "Kevin", age: 25},
+        {_id: rows[3]._id, name: "Dwight", age: 38},
+        {_id: rows[4]._id, name: "Toby", age: 30}
       ]);
     });
 
@@ -106,11 +101,11 @@ describe("BucketDataController", () => {
         expect(documents.length).toEqual(5);
 
         expect(documents).toEqual([
-          {_id: "__skip__", name: "Jim", age: 20},
-          {_id: "__skip__", name: "Michael", age: 22},
-          {_id: "__skip__", name: "Kevin", age: 25},
-          {_id: "__skip__", name: "Dwight", age: 38},
-          {_id: "__skip__", name: "Toby", age: 30}
+          {_id: documents[0]._id, name: "Jim", age: 20},
+          {_id: documents[1]._id, name: "Michael", age: 22},
+          {_id: documents[2]._id, name: "Kevin", age: 25},
+          {_id: documents[3]._id, name: "Dwight", age: 38},
+          {_id: documents[4]._id, name: "Toby", age: 30}
         ]);
       });
 
@@ -118,9 +113,9 @@ describe("BucketDataController", () => {
         const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {limit: "3"});
         expect(documents.length).toEqual(3);
         expect(documents).toEqual([
-          {_id: "__skip__", name: "Jim", age: 20},
-          {_id: "__skip__", name: "Michael", age: 22},
-          {_id: "__skip__", name: "Kevin", age: 25}
+          {_id: documents[0]._id, name: "Jim", age: 20},
+          {_id: documents[1]._id, name: "Michael", age: 22},
+          {_id: documents[2]._id, name: "Kevin", age: 25}
         ]);
       });
 
@@ -128,9 +123,9 @@ describe("BucketDataController", () => {
         const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {skip: "2"});
         expect(documents.length).toEqual(3);
         expect(documents).toEqual([
-          {_id: "__skip__", name: "Kevin", age: 25},
-          {_id: "__skip__", name: "Dwight", age: 38},
-          {_id: "__skip__", name: "Toby", age: 30}
+          {_id: documents[0]._id, name: "Kevin", age: 25},
+          {_id: documents[1]._id, name: "Dwight", age: 38},
+          {_id: documents[2]._id, name: "Toby", age: 30}
         ]);
       });
 
@@ -141,8 +136,8 @@ describe("BucketDataController", () => {
         });
         expect(documents.length).toEqual(2);
         expect(documents).toEqual([
-          {_id: "__skip__", name: "Michael", age: 22},
-          {_id: "__skip__", name: "Kevin", age: 25}
+          {_id: documents[0]._id, name: "Michael", age: 22},
+          {_id: documents[1]._id, name: "Kevin", age: 25}
         ]);
       });
     });
@@ -156,11 +151,11 @@ describe("BucketDataController", () => {
         expect(documents.length).toBe(5);
 
         expect(documents).toEqual([
-          {_id: "__skip__", name: "Dwight", age: 38},
-          {_id: "__skip__", name: "Jim", age: 20},
-          {_id: "__skip__", name: "Kevin", age: 25},
-          {_id: "__skip__", name: "Michael", age: 22},
-          {_id: "__skip__", name: "Toby", age: 30}
+          {_id: documents[0]._id, name: "Dwight", age: 38},
+          {_id: documents[1]._id, name: "Jim", age: 20},
+          {_id: documents[2]._id, name: "Kevin", age: 25},
+          {_id: documents[3]._id, name: "Michael", age: 22},
+          {_id: documents[4]._id, name: "Toby", age: 30}
         ]);
       });
 
@@ -172,11 +167,11 @@ describe("BucketDataController", () => {
         expect(documents.length).toBe(5);
 
         expect(documents).toEqual([
-          {_id: "__skip__", name: "Toby", age: 30},
-          {_id: "__skip__", name: "Michael", age: 22},
-          {_id: "__skip__", name: "Kevin", age: 25},
-          {_id: "__skip__", name: "Jim", age: 20},
-          {_id: "__skip__", name: "Dwight", age: 38}
+          {_id: documents[0]._id, name: "Toby", age: 30},
+          {_id: documents[1]._id, name: "Michael", age: 22},
+          {_id: documents[2]._id, name: "Kevin", age: 25},
+          {_id: documents[3]._id, name: "Jim", age: 20},
+          {_id: documents[4]._id, name: "Dwight", age: 38}
         ]);
       });
 
@@ -187,11 +182,11 @@ describe("BucketDataController", () => {
 
         expect(documents.length).toBe(5);
         expect(documents).toEqual([
-          {_id: "__skip__", name: "Jim", age: 20},
-          {_id: "__skip__", name: "Michael", age: 22},
-          {_id: "__skip__", name: "Kevin", age: 25},
-          {_id: "__skip__", name: "Toby", age: 30},
-          {_id: "__skip__", name: "Dwight", age: 38}
+          {_id: documents[0]._id, name: "Jim", age: 20},
+          {_id: documents[1]._id, name: "Michael", age: 22},
+          {_id: documents[2]._id, name: "Kevin", age: 25},
+          {_id: documents[3]._id, name: "Toby", age: 30},
+          {_id: documents[4]._id, name: "Dwight", age: 38}
         ]);
       });
 
@@ -202,11 +197,11 @@ describe("BucketDataController", () => {
 
         expect(documents.length).toBe(5);
         expect(documents).toEqual([
-          {_id: "__skip__", name: "Dwight", age: 38},
-          {_id: "__skip__", name: "Toby", age: 30},
-          {_id: "__skip__", name: "Kevin", age: 25},
-          {_id: "__skip__", name: "Michael", age: 22},
-          {_id: "__skip__", name: "Jim", age: 20}
+          {_id: documents[0]._id, name: "Dwight", age: 38},
+          {_id: documents[1]._id, name: "Toby", age: 30},
+          {_id: documents[2]._id, name: "Kevin", age: 25},
+          {_id: documents[3]._id, name: "Michael", age: 22},
+          {_id: documents[4]._id, name: "Jim", age: 20}
         ]);
       });
     });
@@ -218,11 +213,11 @@ describe("BucketDataController", () => {
         expect(response.data.length).toBe(5);
 
         expect(response.data).toEqual([
-          {_id: "__skip__", name: "Jim", age: 20},
-          {_id: "__skip__", name: "Michael", age: 22},
-          {_id: "__skip__", name: "Kevin", age: 25},
-          {_id: "__skip__", name: "Dwight", age: 38},
-          {_id: "__skip__", name: "Toby", age: 30}
+          {_id: response.data[0]._id, name: "Jim", age: 20},
+          {_id: response.data[1]._id, name: "Michael", age: 22},
+          {_id: response.data[2]._id, name: "Kevin", age: 25},
+          {_id: response.data[3]._id, name: "Dwight", age: 38},
+          {_id: response.data[4]._id, name: "Toby", age: 30}
         ]);
       });
 
@@ -234,8 +229,8 @@ describe("BucketDataController", () => {
         expect(response.meta.total).toBe(5);
         expect(response.data.length).toBe(2);
         expect(response.data).toEqual([
-          {_id: "__skip__", name: "Jim", age: 20},
-          {_id: "__skip__", name: "Michael", age: 22}
+          {_id: response.data[0]._id, name: "Jim", age: 20},
+          {_id: response.data[1]._id, name: "Michael", age: 22}
         ]);
       });
 
@@ -248,8 +243,8 @@ describe("BucketDataController", () => {
         expect(response.data.length).toBe(2);
 
         expect(response.data).toEqual([
-          {_id: "__skip__", name: "Dwight", age: 38},
-          {_id: "__skip__", name: "Toby", age: 30}
+          {_id: response.data[0]._id, name: "Dwight", age: 38},
+          {_id: response.data[1]._id, name: "Toby", age: 30}
         ]);
       });
 
@@ -263,9 +258,9 @@ describe("BucketDataController", () => {
         expect(response.data.length).toBe(3);
 
         expect(response.data).toEqual([
-          {_id: "__skip__", name: "Kevin", age: 25},
-          {_id: "__skip__", name: "Dwight", age: 38},
-          {_id: "__skip__", name: "Toby", age: 30}
+          {_id: response.data[0]._id, name: "Kevin", age: 25},
+          {_id: response.data[1]._id, name: "Dwight", age: 38},
+          {_id: response.data[2]._id, name: "Toby", age: 30}
         ]);
       });
     });
@@ -278,10 +273,10 @@ describe("BucketDataController", () => {
 
         expect(response.length).toBe(4);
         expect(response).toEqual([
-          {_id: "__skip__", name: "Jim", age: 20},
-          {_id: "__skip__", name: "Michael", age: 22},
-          {_id: "__skip__", name: "Kevin", age: 25},
-          {_id: "__skip__", name: "Dwight", age: 38}
+          {_id: response[0]._id, name: "Jim", age: 20},
+          {_id: response[1]._id, name: "Michael", age: 22},
+          {_id: response[2]._id, name: "Kevin", age: 25},
+          {_id: response[3]._id, name: "Dwight", age: 38}
         ]);
       });
 
@@ -291,7 +286,7 @@ describe("BucketDataController", () => {
         });
 
         expect(documents.length).toBe(1);
-        expect(documents).toEqual([{_id: "__skip__", name: "Jim", age: 20}]);
+        expect(documents).toEqual([{_id: documents[0]._id, name: "Jim", age: 20}]);
       });
 
       it("should return the persons whose name is Jim (Expression)", async () => {
@@ -300,7 +295,7 @@ describe("BucketDataController", () => {
         });
 
         expect(documents.length).toBe(1);
-        expect(documents).toEqual([{_id: "__skip__", name: "Jim", age: 20}]);
+        expect(documents).toEqual([{_id: documents[0]._id, name: "Jim", age: 20}]);
       });
 
       it("should return the persons whose age is 38", async () => {
@@ -309,7 +304,7 @@ describe("BucketDataController", () => {
         });
 
         expect(documents.length).toBe(1);
-        expect(documents).toEqual([{_id: "__skip__", name: "Dwight", age: 38}]);
+        expect(documents).toEqual([{_id: documents[0]._id, name: "Dwight", age: 38}]);
       });
 
       it("should return the persons whose age is 38 (Expression)", async () => {
@@ -318,7 +313,7 @@ describe("BucketDataController", () => {
         });
 
         expect(documents.length).toBe(1);
-        expect(documents).toEqual([{_id: "__skip__", name: "Dwight", age: 38}]);
+        expect(documents).toEqual([{_id: documents[0]._id, name: "Dwight", age: 38}]);
       });
 
       it("should return the persons who is older than 22", async () => {
@@ -328,9 +323,9 @@ describe("BucketDataController", () => {
 
         expect(documents.length).toBe(3);
         expect(documents).toEqual([
-          {_id: "__skip__", name: "Kevin", age: 25},
-          {_id: "__skip__", name: "Dwight", age: 38},
-          {_id: "__skip__", name: "Toby", age: 30}
+          {_id: documents[0]._id, name: "Kevin", age: 25},
+          {_id: documents[1]._id, name: "Dwight", age: 38},
+          {_id: documents[2]._id, name: "Toby", age: 30}
         ]);
       });
 
@@ -341,9 +336,9 @@ describe("BucketDataController", () => {
 
         expect(documents.length).toBe(3);
         expect(documents).toEqual([
-          {_id: "__skip__", name: "Kevin", age: 25},
-          {_id: "__skip__", name: "Dwight", age: 38},
-          {_id: "__skip__", name: "Toby", age: 30}
+          {_id: documents[0]._id, name: "Kevin", age: 25},
+          {_id: documents[1]._id, name: "Dwight", age: 38},
+          {_id: documents[2]._id, name: "Toby", age: 30}
         ]);
       });
 
@@ -354,8 +349,8 @@ describe("BucketDataController", () => {
 
         expect(documents.length).toBe(2);
         expect(documents).toEqual([
-          {_id: "__skip__", name: "Jim", age: 20},
-          {_id: "__skip__", name: "Michael", age: 22}
+          {_id: documents[0]._id, name: "Jim", age: 20},
+          {_id: documents[1]._id, name: "Michael", age: 22}
         ]);
       });
 
@@ -366,8 +361,8 @@ describe("BucketDataController", () => {
 
         expect(documents.length).toBe(2);
         expect(documents).toEqual([
-          {_id: "__skip__", name: "Jim", age: 20},
-          {_id: "__skip__", name: "Michael", age: 22}
+          {_id: documents[0]._id, name: "Jim", age: 20},
+          {_id: documents[1]._id, name: "Michael", age: 22}
         ]);
       });
 
@@ -399,7 +394,12 @@ describe("BucketDataController", () => {
           });
 
           expect(documents).toEqual([
-            {_id: "__skip__", name: "Sherlock", age: 28, created_at: "2020-04-20T10:00:00.000Z"}
+            {
+              _id: documents[0]._id,
+              name: "Sherlock",
+              age: 28,
+              created_at: "2020-04-20T10:00:00.000Z"
+            }
           ]);
         });
 
@@ -413,7 +413,12 @@ describe("BucketDataController", () => {
           });
 
           expect(documents).toEqual([
-            {_id: "__skip__", name: "Doctor Who", age: 25, created_at: "2020-05-20T10:00:00.000Z"}
+            {
+              _id: documents[0]._id,
+              name: "Doctor Who",
+              age: 25,
+              created_at: "2020-05-20T10:00:00.000Z"
+            }
           ]);
         });
 
@@ -488,9 +493,9 @@ describe("BucketDataController", () => {
             "accept-language": "en_US"
           });
           expect(documents).toEqual([
-            {_id: "__skip__", title: "english words", description: "description"},
-            {_id: "__skip__", title: "new english words", description: "description"},
-            {_id: "__skip__", title: "only english words", description: "description"}
+            {_id: documents[0]._id, title: "english words", description: "description"},
+            {_id: documents[1]._id, title: "new english words", description: "description"},
+            {_id: documents[2]._id, title: "only english words", description: "description"}
           ]);
         });
 
@@ -500,9 +505,9 @@ describe("BucketDataController", () => {
           });
 
           expect(documents).toEqual([
-            {_id: "__skip__", title: "türkçe kelimeler", description: "description"},
-            {_id: "__skip__", title: "yeni türkçe kelimeler", description: "description"},
-            {_id: "__skip__", title: "only english words", description: "description"}
+            {_id: documents[0]._id, title: "türkçe kelimeler", description: "description"},
+            {_id: documents[1]._id, title: "yeni türkçe kelimeler", description: "description"},
+            {_id: documents[2]._id, title: "only english words", description: "description"}
           ]);
         });
 
@@ -515,17 +520,17 @@ describe("BucketDataController", () => {
 
           expect(documents).toEqual([
             {
-              _id: "__skip__",
+              _id: documents[0]._id,
               title: {en_US: "english words", tr_TR: "türkçe kelimeler"},
               description: "description"
             },
             {
-              _id: "__skip__",
+              _id: documents[1]._id,
               title: {en_US: "new english words", tr_TR: "yeni türkçe kelimeler"},
               description: "description"
             },
             {
-              _id: "__skip__",
+              _id: documents[2]._id,
               title: {en_US: "only english words"},
               description: "description"
             }
@@ -537,9 +542,9 @@ describe("BucketDataController", () => {
             "accept-language": "fr_FR"
           });
           expect(documents).toEqual([
-            {_id: "__skip__", title: "english words", description: "description"},
-            {_id: "__skip__", title: "new english words", description: "description"},
-            {_id: "__skip__", title: "only english words", description: "description"}
+            {_id: documents[0]._id, title: "english words", description: "description"},
+            {_id: documents[1]._id, title: "new english words", description: "description"},
+            {_id: documents[2]._id, title: "only english words", description: "description"}
           ]);
         });
       });
@@ -552,7 +557,7 @@ describe("BucketDataController", () => {
             {"accept-language": "en_US"}
           );
           expect(document).toEqual({
-            _id: "__skip__",
+            _id: document._id,
             title: "english words",
             description: "description"
           });
@@ -565,7 +570,7 @@ describe("BucketDataController", () => {
             {"accept-language": "tr_TR"}
           );
           expect(document).toEqual({
-            _id: "__skip__",
+            _id: document._id,
             title: "türkçe kelimeler",
             description: "description"
           });
@@ -578,7 +583,7 @@ describe("BucketDataController", () => {
             {"accept-language": "tr_TR"}
           );
           expect(document).toEqual({
-            _id: "__skip__",
+            _id: document._id,
             title: {en_US: "english words", tr_TR: "türkçe kelimeler"},
             description: "description"
           });
@@ -591,7 +596,7 @@ describe("BucketDataController", () => {
             {"accept-language": "tr_TR"}
           );
           expect(document).toEqual({
-            _id: "__skip__",
+            _id: document._id,
             title: "only english words",
             description: "description"
           });
@@ -739,12 +744,15 @@ describe("BucketDataController", () => {
         it("should return users with wallets", async () => {
           const {body: users} = await req.get(`/bucket/${usersBucket._id}/data`, {relation: true});
           expect(users).toEqual([
-            {_id: "__skip__", name: "user66", wallet: []},
-            {_id: "__skip__", name: "user33", wallet: []},
+            {_id: users[0]._id, name: "user66", wallet: []},
+            {_id: users[1]._id, name: "user33", wallet: []},
             {
-              _id: "__skip__",
+              _id: users[2]._id,
               name: "wealthy user",
-              wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+              wallet: [
+                {_id: users[2].wallet[0]._id, name: "GNB"},
+                {_id: users[2].wallet[1]._id, name: "FNB"}
+              ]
             }
           ]);
         });
@@ -756,9 +764,12 @@ describe("BucketDataController", () => {
           });
           expect(users).toEqual([
             {
-              _id: "__skip__",
+              _id: users[0]._id,
               name: "wealthy user",
-              wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+              wallet: [
+                {_id: users[0].wallet[0]._id, name: "GNB"},
+                {_id: users[0].wallet[1]._id, name: "FNB"}
+              ]
             }
           ]);
         });
@@ -769,36 +780,36 @@ describe("BucketDataController", () => {
           });
           expect(documents).toEqual([
             {
-              _id: "__skip__",
+              _id: documents[0]._id,
               user: {
-                _id: "__skip__",
+                _id: documents[0].user._id,
                 name: "user66"
               },
               achievement: {
-                _id: "__skip__",
+                _id: documents[0].achievement._id,
                 name: "do something until something else happens"
               }
             },
             {
-              _id: "__skip__",
+              _id: documents[1]._id,
               user: {
-                _id: "__skip__",
+                _id: documents[1].user._id,
                 name: "user33"
               },
               achievement: {
-                _id: "__skip__",
+                _id: documents[1].achievement._id,
                 name: "do something until something else happens"
               }
             },
             {
-              _id: "__skip__",
+              _id: documents[2]._id,
               user: {
-                _id: "__skip__",
+                _id: documents[2].user._id,
                 name: "wealthy user",
                 wallet: wallets.map(w => w._id)
               },
               achievement: {
-                _id: "__skip__",
+                _id: documents[2].achievement._id,
                 name: "do something until something else happens"
               }
             }
@@ -811,38 +822,41 @@ describe("BucketDataController", () => {
           });
           expect(documents).toEqual([
             {
-              _id: "__skip__",
+              _id: documents[0]._id,
               user: {
-                _id: "__skip__",
+                _id: documents[0].user._id,
                 name: "user66",
                 wallet: []
               },
               achievement: {
-                _id: "__skip__",
+                _id: documents[0].achievement._id,
                 name: "do something until something else happens"
               }
             },
             {
-              _id: "__skip__",
+              _id: documents[1]._id,
               user: {
-                _id: "__skip__",
+                _id: documents[1].user._id,
                 name: "user33",
                 wallet: []
               },
               achievement: {
-                _id: "__skip__",
+                _id: documents[1].achievement._id,
                 name: "do something until something else happens"
               }
             },
             {
-              _id: "__skip__",
+              _id: documents[2]._id,
               user: {
-                _id: "__skip__",
+                _id: documents[2].user._id,
                 name: "wealthy user",
-                wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+                wallet: [
+                  {_id: documents[2].user.wallet[0]._id, name: "GNB"},
+                  {_id: documents[2].user.wallet[1]._id, name: "FNB"}
+                ]
               },
               achievement: {
-                _id: "__skip__",
+                _id: documents[2].achievement._id,
                 name: "do something until something else happens"
               }
             }
@@ -856,14 +870,17 @@ describe("BucketDataController", () => {
           });
           expect(documents).toEqual([
             {
-              _id: "__skip__",
+              _id: documents[0]._id,
               user: {
-                _id: "__skip__",
+                _id: documents[0].user._id,
                 name: "wealthy user",
-                wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+                wallet: [
+                  {_id: documents[0].user.wallet[0]._id, name: "GNB"},
+                  {_id: documents[0].user.wallet[1]._id, name: "FNB"}
+                ]
               },
               achievement: {
-                _id: "__skip__",
+                _id: documents[0].achievement._id,
                 name: "do something until something else happens"
               }
             }
@@ -877,17 +894,17 @@ describe("BucketDataController", () => {
 
           expect(documents).toEqual([
             {
-              _id: "__skip__",
+              _id: documents[0]._id,
               user: user._id,
               achievement: achievement._id
             },
             {
-              _id: "__skip__",
+              _id: documents[1]._id,
               user: anotherUser._id,
               achievement: achievement._id
             },
             {
-              _id: "__skip__",
+              _id: documents[2]._id,
               user: userWithWallet._id,
               achievement: achievement._id
             }
@@ -901,36 +918,36 @@ describe("BucketDataController", () => {
           });
           expect(documents).toEqual([
             {
-              _id: "__skip__",
+              _id: documents[0]._id,
               user: {
-                _id: "__skip__",
+                _id: documents[0].user._id,
                 name: "user66"
               },
               achievement: {
-                _id: "__skip__",
+                _id: documents[0].achievement._id,
                 name: "do something until something else happens"
               }
             },
             {
-              _id: "__skip__",
+              _id: documents[1]._id,
               user: {
-                _id: "__skip__",
+                _id: documents[1].user._id,
                 name: "user33"
               },
               achievement: {
-                _id: "__skip__",
+                _id: documents[1].achievement._id,
                 name: "do something until something else happens"
               }
             },
             {
-              _id: "__skip__",
+              _id: documents[2]._id,
               user: {
-                _id: "__skip__",
+                _id: documents[2].user._id,
                 name: "wealthy user",
                 wallet: wallets.map(w => w._id)
               },
               achievement: {
-                _id: "__skip__",
+                _id: documents[2].achievement._id,
                 name: "do something until something else happens"
               }
             },
@@ -948,13 +965,13 @@ describe("BucketDataController", () => {
 
           expect(documents).toEqual([
             {
-              _id: "__skip__",
+              _id: documents[0]._id,
               user: {
-                _id: "__skip__",
+                _id: documents[0].user._id,
                 name: "user33"
               },
               achievement: {
-                _id: "__skip__",
+                _id: documents[0].achievement._id,
                 name: "do something until something else happens"
               }
             }
@@ -968,7 +985,7 @@ describe("BucketDataController", () => {
 
           expect(documents).toEqual([
             {
-              _id: "__skip__",
+              _id: documents[0]._id,
               user: anotherUser._id,
               achievement: achievement._id
             }
@@ -1007,7 +1024,7 @@ describe("BucketDataController", () => {
 
             expect(documents).toEqual([
               {
-                _id: "__skip__",
+                _id: documents[0]._id,
                 user: user._id,
                 achievement: achievement._id
               }
@@ -1025,14 +1042,17 @@ describe("BucketDataController", () => {
 
             expect(documents).toEqual([
               {
-                _id: "__skip__",
+                _id: documents[0]._id,
                 user: {
-                  _id: "__skip__",
+                  _id: documents[0].user._id,
                   name: "wealthy user",
-                  wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+                  wallet: [
+                    {_id: documents[0].user.wallet[0]._id, name: "GNB"},
+                    {_id: documents[0].user.wallet[1]._id, name: "FNB"}
+                  ]
                 },
                 achievement: {
-                  _id: "__skip__",
+                  _id: documents[0].achievement._id,
                   name: "do something until something else happens"
                 }
               }
@@ -1050,14 +1070,14 @@ describe("BucketDataController", () => {
             }
           );
           expect(document).toEqual({
-            _id: "__skip__",
+            _id: document._id,
             user: {
-              _id: "__skip__",
+              _id: document.user._id,
               name: "wealthy user",
               wallet: wallets.map(w => w._id)
             },
             achievement: {
-              _id: "__skip__",
+              _id: document.achievement._id,
               name: "do something until something else happens"
             }
           });
@@ -1071,7 +1091,7 @@ describe("BucketDataController", () => {
             }
           );
           expect(document).toEqual({
-            _id: "__skip__",
+            _id: document._id,
             user: userWithWallet._id,
             achievement: achievement._id
           });
@@ -1084,18 +1104,18 @@ describe("BucketDataController", () => {
               relation: ["user.wallet"]
             }
           );
-          expect(document).toEqual(
-            {
-              _id: "__skip__",
-              user: {
-                _id: "__skip__",
-                name: "wealthy user",
-                wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
-              },
-              achievement: achievement._id
+          expect(document).toEqual({
+            _id: document._id,
+            user: {
+              _id: document.user._id,
+              name: "wealthy user",
+              wallet: [
+                {_id: document.user.wallet[0]._id, name: "GNB"},
+                {_id: document.user.wallet[1]._id, name: "FNB"}
+              ]
             },
-            "should not resolve the achievement relation"
-          );
+            achievement: achievement._id
+          });
         });
       });
     });
@@ -1248,7 +1268,7 @@ describe("BucketDataController", () => {
         );
         expect(bucketDocument).toEqual(updatedDocument);
         expect(updatedDocument).toEqual({
-          _id: "__skip__",
+          _id: updatedDocument._id,
           title: "updated title",
           description: "first description"
         });
@@ -1369,7 +1389,7 @@ describe("BucketDataController", () => {
         });
 
         expect(document1).toEqual({
-          _id: "__skip__",
+          _id: document1._id,
           title: "first title",
           description: "first description"
         });
@@ -1397,7 +1417,7 @@ describe("BucketDataController", () => {
         });
 
         expect(document1).toEqual({
-          _id: "__skip__",
+          _id: document1._id,
           title: "first title",
           description: "first description"
         });
@@ -1408,7 +1428,7 @@ describe("BucketDataController", () => {
         });
 
         expect(document2).toEqual({
-          _id: "__skip__",
+          _id: document2._id,
           title: "second title",
           description: "second description"
         });
@@ -1455,7 +1475,7 @@ describe("BucketDataController", () => {
         });
 
         expect(document1).toEqual({
-          _id: "__skip__",
+          _id: document1._id,
           title: "first title",
           description: "first description"
         });
@@ -1466,7 +1486,7 @@ describe("BucketDataController", () => {
         });
 
         expect(document2).toEqual({
-          _id: "__skip__",
+          _id: document2._id,
           title: "second title",
           description: "second description"
         });
@@ -1474,7 +1494,7 @@ describe("BucketDataController", () => {
         const {body: documents} = await req.get(`/bucket/${bucketId}/data`);
         expect(documents).toEqual([
           {
-            _id: "__skip__",
+            _id: documents[0]._id,
             title: "second title",
             description: "second description"
           }
@@ -1491,7 +1511,7 @@ describe("BucketDataController", () => {
         });
 
         expect(document1).toEqual({
-          _id: "__skip__",
+          _id: document1._id,
           title: "first title",
           description: "first description"
         });
@@ -1502,7 +1522,7 @@ describe("BucketDataController", () => {
         });
 
         expect(document2).toEqual({
-          _id: "__skip__",
+          _id: document2._id,
           title: "second title",
           description: "second description"
         });
@@ -1510,12 +1530,12 @@ describe("BucketDataController", () => {
         const {body: documents} = await req.get(`/bucket/${bucketId}/data`);
         expect(documents).toEqual([
           {
-            _id: "__skip__",
+            _id: documents[0]._id,
             title: "first title",
             description: "first description"
           },
           {
-            _id: "__skip__",
+            _id: documents[1]._id,
             title: "second title",
             description: "second description"
           }
@@ -1667,12 +1687,12 @@ describe("BucketDataController", () => {
 
         expect(users).toEqual([
           {
-            _id: "__skip__",
+            _id: users[0]._id,
             name: "first",
             tickets: []
           },
           {
-            _id: "__skip__",
+            _id: users[1]._id,
             name: "second",
             tickets: [secondTicket._id]
           }
@@ -1704,11 +1724,11 @@ describe("BucketDataController", () => {
 
         expect(tickets).toEqual([
           {
-            _id: "__skip__",
+            _id: tickets[0]._id,
             place: {seat_number: 1}
           },
           {
-            _id: "__skip__",
+            _id: tickets[1]._id,
             place: {seat_number: 2}
           }
         ]);
@@ -1850,21 +1870,15 @@ describe("BucketDataController", () => {
       };
       const insertedDocument = (await req.post(`/bucket/${bucketId}/data`, document)).body;
 
-      expect(new Date(insertedDocument.created_at)).toEqual(
-        date,
-        "should be equal if document value inserted"
-      );
-      expect(new Date(insertedDocument.created_at_readonly)).not.toEqual(
-        date,
-        "should not be equal if document value ignored"
-      );
+      expect(new Date(insertedDocument.created_at)).toEqual(date);
+      expect(new Date(insertedDocument.created_at_readonly)).not.toEqual(date);
     });
 
     it("should put default values if field does not exist on document", async () => {
       const insertedDocument = (await req.post(`/bucket/${bucketId}/data`)).body;
 
-      expect(new Date(insertedDocument.created_at)).toEqual(jasmine.any(Date));
-      expect(new Date(insertedDocument.created_at_readonly)).toEqual(jasmine.any(Date));
+      expect(new Date(insertedDocument.created_at)).toEqual(expect.any(Date));
+      expect(new Date(insertedDocument.created_at_readonly)).toEqual(expect.any(Date));
     });
   });
 

@@ -57,13 +57,13 @@ describe("Utilities", () => {
       }
     };
 
-    const updateManySpy = spyOn(IdentityService, "updateMany");
+    const updateManySpy = jest.spyOn(IdentityService, "updateMany");
 
     const factoryFunction = providePolicyFinalizer(IdentityService);
     await factoryFunction("my_policy");
 
     expect(updateManySpy).toHaveBeenCalledTimes(1);
-    expect(updateManySpy).toHaveBeenCalledOnceWith(
+    expect(updateManySpy).toHaveBeenCalledWith(
       {
         policies: {
           $in: ["my_policy"]

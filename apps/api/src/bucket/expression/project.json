@@ -1,0 +1,5 @@
+{
+  "name": "api/bucket/expression",
+  "sourceRoot": "apps/api/src/bucket/expression/src",
+  "projectType": "application"
+}

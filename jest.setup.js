@@ -1,0 +1,19 @@
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
+
+// directory for all tests
+const testTmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "jest-"));
+process.env.TEST_TMPDIR = testTmpDir;
+
+// directory for migration tests
+process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(
+  process.cwd(),
+  "dist/apps/migrate/test/acceptance"
+);
+
+afterAll(() => {
+  if (fs.existsSync(testTmpDir)) {
+    fs.rmSync(testTmpDir, {recursive: true, force: true});
+  }
+});

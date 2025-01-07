@@ -23,10 +23,10 @@ describe("http enqueuer", () => {
   let httpEnqueuer: HttpEnqueuer;
   let noopTarget: event.Target;
 
-  let eventQueue: jasmine.SpyObj<EventQueue>;
-  let httpQueue: jasmine.SpyObj<HttpQueue>;
+  let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
+  let httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
 
-  let schedulerUnsubscriptionSpy: jasmine.Spy;
+  let schedulerUnsubscriptionSpy: jest.Mock;
 
   let corsOptions = {
     allowCredentials: true,
@@ -44,15 +44,21 @@ describe("http enqueuer", () => {
     app = module.createNestApplication();
     req = module.get(Request);
 
-    eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue", "dequeue"]);
-    httpQueue = jasmine.createSpyObj("httpQueue", ["enqueue", "dequeue"]);
+    eventQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
+    httpQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
 
     await app.listen(req.socket);
 
-    schedulerUnsubscriptionSpy = jasmine.createSpy("unsubscription", () => {});
+    schedulerUnsubscriptionSpy = jest.fn();
     httpEnqueuer = new HttpEnqueuer(
-      eventQueue,
-      httpQueue,
+      eventQueue as any,
+      httpQueue as any,
       app.getHttpAdapter().getInstance(),
       corsOptions,
       schedulerUnsubscriptionSpy
@@ -116,7 +122,7 @@ describe("http enqueuer", () => {
     expect(routes.map(r => r.stack[0].method).includes("put")).toEqual(true);
     expect(routes.map(r => r.stack[0].method).includes("delete")).toEqual(true);
 
-    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledOnceWith(target1.id);
+    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledWith(target1.id);
   });
 
   it("should not handle preflight requests on indistinct paths", async () => {
@@ -135,7 +141,7 @@ describe("http enqueuer", () => {
   });
 
   it("should not handle preflight requests but route", async () => {
-    const spy = httpQueue.enqueue.and.callFake((id, req, res) => {
+    const spy = httpQueue.enqueue.mockImplementation((id, req, res) => {
       res.writeHead(200, undefined, {"Content-type": "application/json"});
       res.end(JSON.stringify({response: "back"}));
     });
@@ -167,7 +173,7 @@ describe("http enqueuer", () => {
   });
 
   it("should handle preflight requests on route", async () => {
-    httpQueue.enqueue.and.callFake((_, __, res) => {
+    httpQueue.enqueue.mockImplementation((_, __, res) => {
       res.writeHead(200, undefined, {"Content-type": "application/json"});
       res.end(JSON.stringify({}));
     });
@@ -183,7 +189,7 @@ describe("http enqueuer", () => {
   });
 
   it("should handle preflight and route conflicts gracefully", async () => {
-    const spy = httpQueue.enqueue.and.callFake((id, req, res) => {
+    const spy = httpQueue.enqueue.mockImplementation((id, req, res) => {
       res.writeHead(200, undefined, {"Content-type": "application/json"});
       res.end(JSON.stringify({method: req.method}));
     });
@@ -209,7 +215,7 @@ describe("http enqueuer", () => {
     expect(spy).toHaveBeenCalledTimes(1);
 
     // Reset calls
-    spy.calls.reset();
+    spy.mockClear();
 
     // POST
     const postTarget = new event.Target();
@@ -231,7 +237,7 @@ describe("http enqueuer", () => {
     expect(spy).toHaveBeenCalledTimes(1);
 
     // Reset calls
-    spy.calls.reset();
+    spy.mockClear();
 
     // Remove post target and test if we still have the preflight route
     httpEnqueuer.unsubscribe(postTarget);
@@ -295,7 +301,7 @@ describe("http enqueuer", () => {
 
   it("should forward body", async () => {
     // End the request immediately.
-    httpQueue.enqueue.and.callFake((id, req, res) => res.end());
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
 
     httpEnqueuer.subscribe(noopTarget, {
       method: HttpMethod.Post,
@@ -304,22 +310,13 @@ describe("http enqueuer", () => {
     });
     await req.post("/fn-execute/test", {test: 1}, {"Content-type": "application/json"});
     expect(httpQueue.enqueue).toHaveBeenCalledTimes(1);
-    expect(Array.from(httpQueue.enqueue.calls.mostRecent().args[1].body)).toEqual([
-      123,
-      34,
-      116,
-      101,
-      115,
-      116,
-      34,
-      58,
-      49,
-      125
-    ]);
+    expect(
+      Array.from(httpQueue.enqueue.mock.calls[httpQueue.enqueue.mock.calls.length - 1][1].body)
+    ).toEqual([123, 34, 116, 101, 115, 116, 34, 58, 49, 125]);
   });
 
   it("should dequeue when connection is closed", done => {
-    httpQueue.enqueue.and.callFake((id, req, res) => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => {
       res.connection.destroy();
     });
     httpEnqueuer.subscribe(noopTarget, {

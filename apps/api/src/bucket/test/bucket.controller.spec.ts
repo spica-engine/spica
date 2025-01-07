@@ -10,8 +10,6 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
-
 describe("BucketController", () => {
   let app: INestApplication;
   let req: Request;
@@ -43,12 +41,6 @@ describe("BucketController", () => {
     req = module.get(Request);
     app.use(Middlewares.MergePatchJsonParser(10));
     await app.listen(req.socket);
-
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__skip__" && typeof actual == typeof expected) {
-        return true;
-      }
-    });
 
     bucket = {
       _id: new ObjectId().toHexString(),
@@ -140,12 +132,16 @@ describe("BucketController", () => {
     it("should add new bucket and create object id if it's not provided", async () => {
       delete bucket._id;
       const {body: inserted} = await req.post("/bucket", bucket);
-      expect(inserted).toEqual({...bucket, _id: "__skip__"});
+
+      expect(ObjectId.isValid(inserted._id)).toEqual(true);
+      expect(inserted).toEqual({...bucket, _id: inserted._id});
 
       const {body: buckets} = await req.get("/bucket");
 
       expect(buckets.length).toBe(1);
-      expect(buckets[0]).toEqual({...bucket, _id: "__skip__"});
+
+      expect(ObjectId.isValid(buckets[0]._id)).toEqual(true);
+      expect(buckets[0]).toEqual({...bucket, _id: buckets[0]._id});
     });
 
     it("should replace a single bucket", async () => {
@@ -235,12 +231,12 @@ describe("BucketController", () => {
       const secondInsertedBucket = (await req.post("/bucket", bucket2)).body;
 
       let {body: insertedDocument} = await req.post(`/bucket/${secondInsertedBucket._id}/data`, {
-        title: "title",
-        description: "description"
+        name: "name",
+        age: 18
       });
 
       let {body: bucketDocuments} = await req.get(`/bucket/${secondInsertedBucket._id}/data`, {});
-      expect(bucketDocuments).toBeDefined([insertedDocument]);
+      expect(bucketDocuments).toEqual([insertedDocument]);
 
       let deleteResponse = await req.delete(`/bucket/${secondInsertedBucket._id}`);
       expect([deleteResponse.statusCode, deleteResponse.statusText]).toEqual([204, "No Content"]);

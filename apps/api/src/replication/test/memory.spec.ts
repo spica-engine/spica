@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId, stream} from "@spica-server/database/testing";
 import {
   CommandMemory,
   CommandService,
@@ -24,17 +24,11 @@ describe("Memory", () => {
       }).compile();
 
       memory = module.get(CommandMemory);
-
-      jasmine.addCustomEqualityTester((actual, expected) => {
-        if (expected == "__skip__" && !!actual) {
-          return true;
-        }
-      });
     });
 
     afterEach(async () => await module.close());
 
-    it("should publish command on insert", async done => {
+    it("should publish command on insert", done => {
       const command = {
         handler: "doSomething",
         class: "Class1",
@@ -42,8 +36,9 @@ describe("Memory", () => {
       };
       memory.subscribe({
         next: msg => {
+          expect(ObjectId.isValid(msg._id)).toEqual(true);
           expect(msg).toEqual({
-            _id: "__skip__",
+            _id: msg._id,
             source: {
               id: "replica1",
               command
@@ -57,17 +52,18 @@ describe("Memory", () => {
         }
       });
 
-      await stream.wait();
-      await memory.publish({
-        source: {
-          id: "replica1",
-          command
-        },
-        target: {
-          commands: [command],
-          id: "replica2"
-        }
-      });
+      stream.wait().then(() =>
+        memory.publish({
+          source: {
+            id: "replica1",
+            command
+          },
+          target: {
+            commands: [command],
+            id: "replica2"
+          }
+        })
+      );
     });
   });
 });

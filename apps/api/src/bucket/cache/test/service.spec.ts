@@ -77,13 +77,14 @@ describe("Bucket Cache Service", () => {
     await cacheManager.set(`/bucket/bucket1/data`, [{title: "test1"}]);
     await cacheManager.set(`/bucket/bucket2/data`, [{title: "test2"}]);
 
-    const clock = jasmine.clock();
-    clock.install();
-    clock.mockDate(new Date(2020, 1, 1, 23, 59, 59, 0));
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2020, 1, 1, 23, 59, 59, 0));
 
-    clock.tick(1000);
+    jest.advanceTimersByTime(1000);
 
     const cacheKeys = await cacheManager.store.keys();
     expect(cacheKeys).toEqual([]);
+
+    jest.useRealTimers();
   });
 });

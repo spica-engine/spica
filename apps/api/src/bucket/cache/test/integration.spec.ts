@@ -12,7 +12,7 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 
 @Controller("bucket/:bucketId/data")
 export class TestController {
-  getSpy = jasmine.createSpy("getSpy");
+  getSpy = jest.fn();
 
   @UseInterceptors(registerCache())
   @Get()
@@ -37,7 +37,7 @@ describe("Bucket Cache Integration", () => {
     let req: Request;
     let app: INestApplication;
     let service: BucketCacheService;
-    let getSpy: jasmine.Spy;
+    let getSpy: jest.Mock;
     let store: Store;
 
     beforeEach(async () => {
@@ -134,7 +134,8 @@ describe("Bucket Cache Integration", () => {
       expect(cachedKeys.length).toEqual(1);
 
       const oneMinLater = new Date(Date.now() + 60 * 1000);
-      jasmine.clock().mockDate(oneMinLater);
+      jest.useFakeTimers();
+      jest.setSystemTime(oneMinLater);
 
       // it will clear cache right after same request received
       await req.get("bucket/bucket_id/data");
@@ -149,7 +150,7 @@ describe("Bucket Cache Integration", () => {
   describe("without cache module", () => {
     let req: Request;
     let app: INestApplication;
-    let getSpy: jasmine.Spy;
+    let getSpy: jest.Mock;
 
     beforeEach(async () => {
       const module = await Test.createTestingModule({

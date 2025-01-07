@@ -1,0 +1,5 @@
+{
+  "name": "api/bucket/cache",
+  "sourceRoot": "apps/api/src/bucket/cache",
+  "projectType": "application"
+}

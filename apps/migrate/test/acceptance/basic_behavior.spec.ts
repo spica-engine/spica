@@ -6,31 +6,33 @@ import {run} from "@spica/migrate/src/main";
 describe("Basic behavior", () => {
   let db: Db;
   let args: string[];
+  const indexJsonPath = process.env.TESTONLY_MIGRATION_LOOKUP_DIR + "/migrations/index.json";
 
   beforeAll(() => {
-    process.env.TESTONLY_MIGRATION_LOOKUP_DIR = __dirname;
     color.disableColor();
   });
 
   beforeEach(async () => {
     fs.writeFileSync(
-      __dirname + "/migrations/index.json",
+      indexJsonPath,
       JSON.stringify({
         "1.0.0": [
-          __dirname + "/migrations/insert_an_item",
-          __dirname + "/migrations/modify_an_item"
+          process.env.TESTONLY_MIGRATION_LOOKUP_DIR + "/migrations/insert_an_item",
+          process.env.TESTONLY_MIGRATION_LOOKUP_DIR + "/migrations/modify_an_item"
         ],
-        "2.0.0": [__dirname + "/migrations/add_description"]
+        "2.0.0": [process.env.TESTONLY_MIGRATION_LOOKUP_DIR + "/migrations/add_description"]
       })
     );
     const connection = await start("replset");
     args = ["--database-uri", await getConnectionUri(), "--database-name", getDatabaseName()];
     db = connection.db(args[3]);
     await db.createCollection("_test_");
-  }, 10000);
+  });
 
   afterEach(() => {
-    fs.unlinkSync(__dirname + "/migrations/index.json");
+    if (fs.existsSync(indexJsonPath)) {
+      fs.unlinkSync(indexJsonPath);
+    }
   });
 
   it("should throw an error when --to is not valid", async () => {

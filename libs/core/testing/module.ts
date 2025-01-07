@@ -10,11 +10,7 @@ import * as path from "path";
     Websocket,
     {
       provide: "SOCKET",
-      useFactory: () =>
-        path.join(
-          path.relative(process.cwd(), process.env.TEST_TMPDIR),
-          fs.mkdtempSync("test-") + ".sock"
-        )
+      useFactory: () => fs.mkdtempSync(path.join(process.env.TEST_TMPDIR, "test-")) + ".sock"
     }
   ],
   exports: [Request, Websocket]

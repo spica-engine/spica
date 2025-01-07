@@ -1,6 +1,6 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
 import {DatabaseService, MongoClient} from "@spica-server/database";
-import {start, getDatabaseName} from "./start";
+import {start, connect, getDatabaseName} from "./start";
 
 @Global()
 @Module({})
@@ -14,7 +14,6 @@ export class DatabaseTestingModule {
     );
     return DatabaseTestingModule.standalone();
   }
-
   static standalone(dbName?: string): DynamicModule {
     return {
       module: DatabaseTestingModule,
@@ -39,6 +38,24 @@ export class DatabaseTestingModule {
         {
           provide: MongoClient,
           useFactory: async () => start("replset")
+        },
+        {
+          provide: DatabaseService,
+          useFactory: async (client: MongoClient) => client.db(dbName || getDatabaseName()),
+          inject: [MongoClient]
+        }
+      ],
+      exports: [MongoClient, DatabaseService]
+    };
+  }
+
+  static connect(connectionUri: string, dbName?: string) {
+    return {
+      module: DatabaseTestingModule,
+      providers: [
+        {
+          provide: MongoClient,
+          useFactory: async () => connect(connectionUri)
         },
         {
           provide: DatabaseService,

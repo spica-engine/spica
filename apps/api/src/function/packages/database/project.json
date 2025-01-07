@@ -1,0 +1,5 @@
+{
+  "name": "api/function/packages/database",
+  "sourceRoot": "apps/api/src/function/packages/database",
+  "projectType": "library"
+}

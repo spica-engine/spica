@@ -302,7 +302,7 @@ describe("Relation", () => {
         };
         expect(relationResolvedMainSchema).toEqual(expectedSchema);
 
-        expect(mainSchema).toEqual(mainSchemaBefore, "it should not modify the original schema");
+        expect(mainSchema).toEqual(mainSchemaBefore);
       });
 
       it("should resolve user and wallets of user relation of main schema", async () => {
@@ -334,7 +334,7 @@ describe("Relation", () => {
         };
         expect(relationResolvedMainSchema).toEqual(expectedSchema);
 
-        expect(mainSchema).toEqual(mainSchemaBefore, "it should not modify the original schema");
+        expect(mainSchema).toEqual(mainSchemaBefore);
       });
 
       it("should resolve user inside of the userWithMeta object of main schema", async () => {
@@ -368,7 +368,7 @@ describe("Relation", () => {
         };
         expect(relationResolvedMainSchema).toEqual(expectedSchema);
 
-        expect(mainSchema).toEqual(mainSchemaBefore, "it should not modify the original schema");
+        expect(mainSchema).toEqual(mainSchemaBefore);
       });
     });
   });

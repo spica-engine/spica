@@ -9,7 +9,8 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {FunctionModule} from "@spica-server/function";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {VersionControlModule, RepresentativeManager} from "@spica-server/versioncontrol";
+import {RepresentativeManager} from "@spica-server/representative";
+import {VC_REP_MANAGER, VersionControlModule} from "@spica-server/versioncontrol";
 
 import * as os from "os";
 
@@ -20,54 +21,6 @@ describe("Versioning e2e", () => {
   let app: INestApplication;
   let req: Request;
   let rep: RepresentativeManager;
-
-  const now = new Date();
-
-  function getEmptyBucket() {
-    return {
-      title: "bucket1",
-      description: "Description of bucket1",
-      history: false,
-      icon: "view_stream",
-      properties: {
-        title: {
-          type: "string",
-          options: {position: "bottom"}
-        }
-      },
-      acl: {read: "true==true", write: "true==true"},
-      primary: "title"
-    };
-  }
-
-  function getEmptyFunction() {
-    return {
-      name: "fn1",
-      env: {},
-      language: "javascript",
-      timeout: 100,
-      triggers: {
-        default: {
-          type: "http",
-          active: true,
-          options: {method: "Get", path: "/test", preflight: true}
-        }
-      },
-      memoryLimit: 100
-    };
-  }
-
-  function insertBucket(bucket) {
-    return req.post("/bucket", bucket).then(r => r.body);
-  }
-
-  function insertFunction(fn) {
-    return req.post("/function", fn).then(r => r.body);
-  }
-
-  function insertFunctionIndex(id, index) {
-    return req.post(`/function/${id}/index`, {index});
-  }
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -110,13 +63,11 @@ describe("Versioning e2e", () => {
 
     app = module.createNestApplication();
     req = module.get(Request);
-    rep = module.get(RepresentativeManager);
+    rep = module.get(VC_REP_MANAGER);
 
     app.useWebSocketAdapter(new WsAdapter(app));
 
     await app.listen(req.socket);
-
-    jasmine.clock().mockDate(now);
   });
 
   afterEach(async () => {
@@ -133,21 +84,22 @@ describe("Versioning e2e", () => {
         200,
         "OK",
         [
-          "reset",
           "add",
-          "commit",
-          "tag",
-          "stash",
-          "checkout",
           "branch",
+          "checkout",
+          "clean",
+          "commit",
+          "diff",
           "fetch",
+          "log",
+          "merge",
           "pull",
           "push",
-          "merge",
           "rebase",
           "remote",
-          "diff",
-          "log"
+          "reset",
+          "stash",
+          "tag"
         ]
       ]);
     });

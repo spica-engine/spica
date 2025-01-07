@@ -1,6 +1,8 @@
 const {NxAppWebpackPlugin} = require("@nx/webpack/app-plugin");
 const {join} = require("path");
 
+const isServeTarget = process.env.NX_TASK_TARGET_TARGET === "serve";
+
 module.exports = {
   entry: {
     main: join(__dirname, "/src/main.ts"),
@@ -25,7 +27,7 @@ module.exports = {
   resolve: {
     extensions: [".ts", ".js"]
   },
-  watch: true,
+  watch: isServeTarget,
   watchOptions: {
     ignored: /node_modules/,
     aggregateTimeout: 300,

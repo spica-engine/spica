@@ -3,15 +3,13 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {SchemaModule} from "@spica-server/core/schema";
 import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as Bucket from "@spica-devkit/bucket";
 import {bufferCount, take} from "rxjs/operators";
 import {WsAdapter} from "@spica-server/core/websocket";
-
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
 const PORT = 3002;
 const PUBLIC_URL = `http://localhost:${PORT}`;
@@ -62,12 +60,6 @@ describe("Bucket", () => {
       icon: "view_stream"
     };
 
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "__objectid__" && typeof actual == typeof expected) {
-        return true;
-      }
-    });
-
     Bucket.initialize({identity: "token", publicUrl: PUBLIC_URL});
   });
 
@@ -76,7 +68,8 @@ describe("Bucket", () => {
   describe("Bucket", () => {
     it("should create bucket", async () => {
       const insertedBucket = await Bucket.insert(bucket);
-      expect(insertedBucket).toEqual({...bucket, _id: "__objectid__"});
+      expect(ObjectId.isValid(insertedBucket._id)).toEqual(true);
+      expect(insertedBucket).toEqual({...bucket, _id: insertedBucket._id});
     });
 
     it("should update bucket", async () => {
@@ -107,15 +100,12 @@ describe("Bucket", () => {
       const bucket1 = bucket;
       const bucket2 = {...bucket, icon: "bookmark"};
 
-      await Bucket.insert(bucket1);
-      await Bucket.insert(bucket2);
+      const bucket1Id = await Bucket.insert(bucket1).then(r => r._id);
+      const bucket2Id = await Bucket.insert(bucket2).then(r => r._id);
 
       const existingBuckets = await Bucket.getAll();
 
-      expect(existingBuckets).toEqual([
-        {...bucket1, _id: "__objectid__"},
-        {...bucket2, _id: "__objectid__"}
-      ]);
+      expect(existingBuckets).toEqual([{...bucket1, _id: bucket1Id}, {...bucket2, _id: bucket2Id}]);
     });
   });
 
@@ -128,9 +118,15 @@ describe("Bucket", () => {
     });
 
     it("should insert", async () => {
-      const expectedData = {_id: "__objectid__", title: "hello", description: "hi"};
+      const expectedData = {_id: undefined, title: "hello", description: "hi"};
 
-      const insertedData = await Bucket.data.insert(bucketid, {title: "hello", description: "hi"});
+      const insertedData = await Bucket.data.insert<any>(bucketid, {
+        title: "hello",
+        description: "hi"
+      });
+      expect(ObjectId.isValid(insertedData._id)).toEqual(true);
+
+      expectedData._id = insertedData._id;
       expect(insertedData).toEqual(expectedData);
 
       const existingData = await Bucket.data.getAll<any>(bucketid);
@@ -147,7 +143,7 @@ describe("Bucket", () => {
         description: "hi"
       });
 
-      const expectedData = {title: "hi", description: "hi", _id: "__objectid__"};
+      const expectedData = {title: "hi", description: "hi", _id: insertedData._id};
 
       expect(updatedData).toEqual(expectedData);
 
@@ -164,7 +160,7 @@ describe("Bucket", () => {
         title: null
       });
 
-      const expectedData = {description: "hi", _id: "__objectid__"};
+      const expectedData = {description: "hi", _id: insertedData._id};
 
       expect(pacthedData).toEqual(expectedData);
 
@@ -190,36 +186,41 @@ describe("Bucket", () => {
       });
 
       const existingData = await Bucket.data.get(bucketid, insertedData._id);
-      expect(existingData).toEqual({_id: "__objectid__", title: "hello", description: "hi"});
+      expect(existingData).toEqual({_id: insertedData._id, title: "hello", description: "hi"});
     });
 
     it("should getAll", async () => {
-      await Bucket.data.insert<any>(bucketid, {
-        title: "hello",
-        description: "hi"
-      });
+      const insertedId = await Bucket.data
+        .insert<any>(bucketid, {
+          title: "hello",
+          description: "hi"
+        })
+        .then(r => r._id);
 
       const existingData = await Bucket.data.getAll(bucketid);
-      expect(existingData).toEqual([{_id: "__objectid__", title: "hello", description: "hi"}]);
+      expect(existingData).toEqual([{_id: insertedId, title: "hello", description: "hi"}]);
     });
 
     // suggestion: test them separately
     it("should getAll with query params", async () => {
       // we should make sure that this one was inserted first
-      await Bucket.data.insert<any>(bucketid, {
-        title: "doc1",
-        description: "desc1"
-      });
+      await Bucket.data
+        .insert<any>(bucketid, {
+          title: "doc1",
+          description: "desc1"
+        })
+        .then(r => r._id);
 
-      await Promise.all([
-        Bucket.data.insert<any>(bucketid, {
+      const expectedId = await Bucket.data
+        .insert<any>(bucketid, {
           title: "doc1",
           description: "desc2"
-        }),
-        Bucket.data.insert<any>(bucketid, {
-          title: "doc2"
         })
-      ]);
+        .then(r => r._id);
+
+      await Bucket.data.insert<any>(bucketid, {
+        title: "doc2"
+      });
 
       const existingData = await Bucket.data.getAll(bucketid, {
         queryParams: {paginate: true, limit: 1, skip: 1, filter: {title: "doc1"}}
@@ -228,7 +229,7 @@ describe("Bucket", () => {
         meta: {total: 2},
         data: [
           {
-            _id: "__objectid__",
+            _id: expectedId,
             title: "doc1",
             description: "desc2"
           }
@@ -238,6 +239,7 @@ describe("Bucket", () => {
 
     describe("realtime", () => {
       it("should get changes in realtime", done => {
+        let insertedId;
         const subject = Bucket.data.realtime.getAll(bucketid);
         subject
           .pipe(
@@ -250,183 +252,195 @@ describe("Bucket", () => {
                 // initial docs
                 [],
                 // docs after changes
-                [{_id: "__objectid__", title: "hey", description: "it's me"}]
+                [{_id: insertedId, title: "hey", description: "it's me"}]
               ]);
               done();
             }
           });
 
         setTimeout(
-          () => Bucket.data.insert(bucketid, {title: "hey", description: "it's me"}),
+          () =>
+            Bucket.data
+              .insert<any>(bucketid, {title: "hey", description: "it's me"})
+              .then(r => (insertedId = r._id)),
           1000
         );
       });
 
-      it("should get changes in realtime for single document", async done => {
+      it("should get changes in realtime for single document", done => {
         const bucketData = {
           title: "title1",
           description: "description1"
         };
 
-        const bucketDataid = await Bucket.data.insert<any>(bucketid, bucketData).then(r => r._id);
+        Bucket.data.insert<any>(bucketid, bucketData).then(r => {
+          const bucketDataid = r._id;
+          const subject = Bucket.data.realtime.get(bucketid, bucketDataid);
+          subject
+            .pipe(
+              bufferCount(2),
+              take(1)
+            )
+            .subscribe(messages => {
+              expect(messages).toEqual([
+                {
+                  _id: bucketDataid,
+                  title: "title1",
+                  description: "description1"
+                },
+                {
+                  _id: bucketDataid,
+                  title: "updated_title1",
+                  description: "description1"
+                }
+              ]);
+              done();
+            });
 
-        const subject = Bucket.data.realtime.get(bucketid, bucketDataid);
-        subject
-          .pipe(
-            bufferCount(2),
-            take(1)
-          )
-          .subscribe(messages => {
-            expect(messages).toEqual([
-              {
-                _id: bucketDataid,
-                title: "title1",
-                description: "description1"
-              },
-              {
-                _id: bucketDataid,
-                title: "updated_title1",
-                description: "description1"
-              }
-            ]);
-            done();
-          });
-
-        setTimeout(() => {
-          // this insert should not be passed to the realtime changes
-          Bucket.data.insert(bucketid, {title: "unrelated_document"});
-          Bucket.data.patch(bucketid, bucketDataid, {title: "updated_title1"});
-        }, 1000);
+          setTimeout(() => {
+            // this insert should not be passed to the realtime changes
+            Bucket.data.insert(bucketid, {title: "unrelated_document"});
+            Bucket.data.patch(bucketid, bucketDataid, {title: "updated_title1"});
+          }, 1000);
+        });
       });
 
       it("should insert document via realtime connection", done => {
-        const callbackSpy = jasmine.createSpy();
+        const callbackSpy = jest.fn();
 
         const subject = Bucket.data.realtime.getAll(bucketid, {}, callbackSpy);
-
         subject
           .pipe(
             bufferCount(2),
             take(1)
           )
           .subscribe(messages => {
-            expect(messages).toEqual([[], [{_id: "__objectid__", title: "new doc"}]]);
-            expect(callbackSpy).toHaveBeenCalledOnceWith({status: 201, message: "Created"});
+            const documentId = messages[1][0]["_id"];
+            expect(ObjectId.isValid(documentId)).toBe(true);
+            expect(messages).toEqual([[], [{_id: documentId, title: "new doc"}]]);
+            expect(callbackSpy).toHaveBeenCalledWith({status: 201, message: "Created"});
             done();
           });
 
         setTimeout(() => subject.insert({title: "new doc"}), 1000);
       });
 
-      it("should patch document via realtime connection", async done => {
-        const callbackSpy = jasmine.createSpy();
+      it("should patch document via realtime connection", done => {
+        const callbackSpy = jest.fn();
 
         const bucketData = {
           title: "title1",
           description: "description1"
         };
 
-        const bucketDataid = await Bucket.data.insert<any>(bucketid, bucketData).then(r => r._id);
-
-        const subject = Bucket.data.realtime.get(bucketid, bucketDataid, callbackSpy);
-        subject
-          .pipe(
-            bufferCount(2),
-            take(1)
-          )
-          .subscribe(messages => {
-            expect(messages).toEqual([
-              {
-                _id: bucketDataid,
-                title: "title1",
-                description: "description1"
-              },
-              {
-                _id: bucketDataid,
-                description: "description1"
-              }
-            ]);
-            expect(callbackSpy).toHaveBeenCalledOnceWith({status: 204, message: "No Content"});
-            done();
-          });
-
-        setTimeout(() => {
-          subject.patch({_id: bucketDataid, title: null});
-        }, 1000);
-      });
-
-      it("should replace document via realtime connection", async done => {
-        const callbackSpy = jasmine.createSpy();
-
-        const bucketData = {
-          title: "title1",
-          description: "description1"
-        };
-
-        const bucketDataid = await Bucket.data.insert<any>(bucketid, bucketData).then(r => r._id);
-
-        const subject = Bucket.data.realtime.get(bucketid, bucketDataid, callbackSpy);
-        subject
-          .pipe(
-            bufferCount(2),
-            take(1)
-          )
-          .subscribe(messages => {
-            expect(messages).toEqual([
-              {
-                _id: bucketDataid,
-                title: "title1",
-                description: "description1"
-              },
-              {
-                _id: bucketDataid,
-                title: "updated_title",
-                description: "description1"
-              }
-            ]);
-            expect(callbackSpy).toHaveBeenCalledOnceWith({status: 200, message: "OK"});
-            done();
-          });
-
-        setTimeout(() => {
-          subject.replace({_id: bucketDataid, title: "updated_title", description: "description1"});
-        }, 1000);
-      });
-
-      it("should delete document via realtime connection", async done => {
-        const callbackSpy = jasmine.createSpy();
-
-        const bucketData = {
-          title: "title1",
-          description: "description1"
-        };
-
-        const bucketDataid = await Bucket.data.insert<any>(bucketid, bucketData).then(r => r._id);
-
-        const subject = Bucket.data.realtime.getAll(bucketid, {}, callbackSpy);
-        subject
-          .pipe(
-            bufferCount(2),
-            take(1)
-          )
-          .subscribe(messages => {
-            expect(messages).toEqual([
-              [
+        Bucket.data.insert<any>(bucketid, bucketData).then(r => {
+          const bucketDataid = r._id;
+          const subject = Bucket.data.realtime.get(bucketid, bucketDataid, callbackSpy);
+          subject
+            .pipe(
+              bufferCount(2),
+              take(1)
+            )
+            .subscribe(messages => {
+              expect(messages).toEqual([
                 {
                   _id: bucketDataid,
                   title: "title1",
                   description: "description1"
+                },
+                {
+                  _id: bucketDataid,
+                  description: "description1"
                 }
-              ],
-              []
-            ]);
-            expect(callbackSpy).toHaveBeenCalledOnceWith({status: 204, message: "No Content"});
-            done();
-          });
+              ]);
+              expect(callbackSpy).toHaveBeenCalledWith({status: 204, message: "No Content"});
+              done();
+            });
 
-        setTimeout(() => {
-          subject.remove({_id: bucketDataid});
-        }, 1000);
+          setTimeout(() => {
+            subject.patch({_id: bucketDataid, title: null});
+          }, 1000);
+        });
+      });
+
+      it("should replace document via realtime connection", done => {
+        const callbackSpy = jest.fn();
+
+        const bucketData = {
+          title: "title1",
+          description: "description1"
+        };
+
+        Bucket.data.insert<any>(bucketid, bucketData).then(r => {
+          const bucketDataid = r._id;
+          const subject = Bucket.data.realtime.get(bucketid, bucketDataid, callbackSpy);
+          subject
+            .pipe(
+              bufferCount(2),
+              take(1)
+            )
+            .subscribe(messages => {
+              expect(messages).toEqual([
+                {
+                  _id: bucketDataid,
+                  title: "title1",
+                  description: "description1"
+                },
+                {
+                  _id: bucketDataid,
+                  title: "updated_title",
+                  description: "description1"
+                }
+              ]);
+              expect(callbackSpy).toHaveBeenCalledWith({status: 200, message: "OK"});
+              done();
+            });
+
+          setTimeout(() => {
+            subject.replace({
+              _id: bucketDataid,
+              title: "updated_title",
+              description: "description1"
+            });
+          }, 1000);
+        });
+      });
+
+      it("should delete document via realtime connection", done => {
+        const callbackSpy = jest.fn();
+
+        const bucketData = {
+          title: "title1",
+          description: "description1"
+        };
+
+        Bucket.data.insert<any>(bucketid, bucketData).then(r => {
+          const bucketDataid = r._id;
+          const subject = Bucket.data.realtime.getAll(bucketid, {}, callbackSpy);
+          subject
+            .pipe(
+              bufferCount(2),
+              take(1)
+            )
+            .subscribe(messages => {
+              expect(messages).toEqual([
+                [
+                  {
+                    _id: bucketDataid,
+                    title: "title1",
+                    description: "description1"
+                  }
+                ],
+                []
+              ]);
+              expect(callbackSpy).toHaveBeenCalledWith({status: 204, message: "No Content"});
+              done();
+            });
+
+          setTimeout(() => {
+            subject.remove({_id: bucketDataid});
+          }, 1000);
+        });
       });
     });
   });

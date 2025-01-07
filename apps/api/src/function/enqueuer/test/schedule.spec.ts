@@ -11,29 +11,29 @@ function createTarget(cwd?: string, handler?: string) {
 }
 
 describe("ScheduleEnqueuer", () => {
-  let eventQueue: jasmine.SpyObj<EventQueue>;
+  let eventQueue: {enqueue: jest.Mock};
   let enqueuer: ScheduleEnqueuer;
   let noopTarget: event.Target;
-  let clock: jasmine.Clock;
 
-  let schedulerUnsubscriptionSpy: jasmine.Spy;
+  let schedulerUnsubscriptionSpy: jest.Mock;
 
   beforeEach(async () => {
-    eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
+    eventQueue = {
+      enqueue: jest.fn()
+    };
 
-    schedulerUnsubscriptionSpy = jasmine.createSpy("unsubscription", () => {});
+    schedulerUnsubscriptionSpy = jest.fn();
 
-    enqueuer = new ScheduleEnqueuer(eventQueue, schedulerUnsubscriptionSpy);
+    enqueuer = new ScheduleEnqueuer(eventQueue as any, schedulerUnsubscriptionSpy);
 
     noopTarget = createTarget();
-
-    clock = jasmine.clock();
-    clock.mockDate(new Date(2015, 1, 1, 1, 1, 31, 0));
-    clock.install();
+    
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2015, 1, 1, 1, 1, 31, 0));
   });
 
   afterEach(() => {
-    clock.uninstall();
+    jest.useRealTimers();
   });
 
   it("should subscribe", () => {
@@ -66,8 +66,8 @@ describe("ScheduleEnqueuer", () => {
       frequency: "* * * * *"
     });
 
-    let jobs = Array.from(enqueuer["jobs"]) as {stop: Function; target: event.Target}[];
-    const stopSpies = jobs.map(j => spyOn(j, "stop"));
+    let jobs = Array.from(enqueuer["jobs"]);
+    const stopSpies = jobs.map(j => jest.spyOn(j, "stop"));
 
     enqueuer.unsubscribe(target1);
 
@@ -75,7 +75,7 @@ describe("ScheduleEnqueuer", () => {
     expect(stopSpies[1]).toHaveBeenCalledTimes(0);
     expect(stopSpies[2]).toHaveBeenCalledTimes(0);
 
-    jobs = Array.from(enqueuer["jobs"]) as {stop: Function; target: event.Target}[];
+    jobs = Array.from(enqueuer["jobs"]);
 
     expect(jobs.length).toEqual(2);
 
@@ -84,7 +84,7 @@ describe("ScheduleEnqueuer", () => {
       ["/tmp/fn2", "handler1"]
     ]);
 
-    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledOnceWith(target1.id);
+    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledWith(target1.id);
   });
 
   it("should schedule the job", () => {
@@ -93,7 +93,7 @@ describe("ScheduleEnqueuer", () => {
       timezone: undefined,
       frequency: "* * * * *"
     });
-    clock.tick(1000 * 60 * 2);
+    jest.advanceTimersByTime(1000 * 60 * 2);
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(2);
   });
 });

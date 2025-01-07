@@ -31,7 +31,7 @@ describe("Javascript", () => {
     await language.compile(compilation);
 
     const builtFileContent = await fs.promises.readFile(
-      path.join(compilation.cwd, ".build", "index.mjs")
+      path.join(compilation.cwd, ".build", "index.js")
     );
 
     expect(builtFileContent.toString()).toContain(content);

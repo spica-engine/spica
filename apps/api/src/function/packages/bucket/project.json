@@ -1,0 +1,5 @@
+{
+  "name": "api/function/packages/bucket",
+  "sourceRoot": "apps/api/src/function/packages/bucket",
+  "projectType": "library"
+}

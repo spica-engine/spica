@@ -2,15 +2,17 @@ import {EventQueue, FirehoseQueue} from "@spica-server/function/queue";
 import {Firehose} from "@spica-server/function/queue/proto";
 import {credentials} from "@grpc/grpc-js";
 
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:8594";
+
 describe("FirehoseQueue", () => {
   let queue: EventQueue;
   let firehoseQueue: FirehoseQueue;
   let firehoseQueueClient: any;
 
-  beforeEach(() => {
+  beforeAll(() => {
     queue = new EventQueue(() => {}, () => {}, () => {}, () => {});
     firehoseQueue = new FirehoseQueue();
-    queue.addQueue(firehoseQueue);
+    queue.addQueue(firehoseQueue as any);
     queue.listen();
     firehoseQueueClient = new Firehose.QueueClient(
       process.env.FUNCTION_GRPC_ADDRESS,
@@ -19,6 +21,10 @@ describe("FirehoseQueue", () => {
   });
 
   afterEach(() => {
+    firehoseQueue["sockets"].clear();
+  });
+
+  afterAll(() => {
     queue.kill();
   });
 
@@ -58,7 +64,9 @@ describe("FirehoseQueue", () => {
   });
 
   it("should send message to socket", done => {
-    const socket = jasmine.createSpyObj("Websocket", ["send"]);
+    const socket: any = {
+      send: jest.fn()
+    };
     socket.readyState = 1;
 
     const client = new Firehose.ClientDescription({
@@ -93,7 +101,9 @@ describe("FirehoseQueue", () => {
   });
 
   it("should send message to all OPEN sockets", done => {
-    const firstSocket = jasmine.createSpyObj("Websocket", ["send"]);
+    const firstSocket: any = {
+      send: jest.fn()
+    };
     firstSocket.readyState = 1; /* https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState */
 
     firehoseQueue.enqueue(
@@ -109,7 +119,9 @@ describe("FirehoseQueue", () => {
       firstSocket
     );
 
-    const secondSocket = jasmine.createSpyObj("Websocket", ["send"]);
+    const secondSocket: any = {
+      send: jest.fn()
+    };
     secondSocket.readyState = 2; /* https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState */
 
     firehoseQueue.enqueue(
@@ -142,7 +154,9 @@ describe("FirehoseQueue", () => {
   });
 
   it("should close socket", done => {
-    const socket = jasmine.createSpyObj("Websocket", ["close"]);
+    const socket: any = {
+      close: jest.fn()
+    };
     socket.readyState = 1; /* https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState */
     const client = new Firehose.ClientDescription({
       id: "1"
