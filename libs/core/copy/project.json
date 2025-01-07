@@ -1,13 +1,13 @@
 {
-  "name": "core",
-  "sourceRoot": "libs/core/src",
+  "name": "core/copy",
+  "sourceRoot": "libs/core/copy/src",
   "projectType": "library",
   "build": {
     "executor": "@nx/js:tsc",
     "options": {
       "outputPath": "dist",
-      "main": "libs/core/index.ts",
-      "tsConfig": "libs/core/tsconfig.json",
+      "main": "libs/core/copy/index.ts",
+      "tsConfig": "libs/core/copy/tsconfig.json",
       "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
     }
   }

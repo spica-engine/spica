@@ -1,5 +1,14 @@
 {
   "name": "core/schema",
   "sourceRoot": "libs/core/schema/src",
-  "projectType": "library"
+  "projectType": "library",
+  "build": {
+    "executor": "@nx/js:tsc",
+    "options": {
+      "outputPath": "dist",
+      "main": "libs/core/schema/index.ts",
+      "tsConfig": "libs/core/schema/tsconfig.json",
+      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
+    }
+  }
 }

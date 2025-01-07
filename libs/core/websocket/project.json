@@ -1,13 +1,13 @@
 {
-  "name": "core",
-  "sourceRoot": "libs/core/src",
+  "name": "core/websocket",
+  "sourceRoot": "libs/core/websocket/src",
   "projectType": "library",
   "build": {
     "executor": "@nx/js:tsc",
     "options": {
       "outputPath": "dist",
-      "main": "libs/core/index.ts",
-      "tsConfig": "libs/core/tsconfig.json",
+      "main": "libs/core/websocket/index.ts",
+      "tsConfig": "libs/core/websocket/tsconfig.json",
       "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
     }
   }

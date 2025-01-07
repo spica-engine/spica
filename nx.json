@@ -55,5 +55,8 @@
         }
       ]
     }
+  },
+  "sync": {
+    "applyChanges": false
   }
 }

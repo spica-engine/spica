@@ -1,13 +1,13 @@
 {
-  "name": "core",
-  "sourceRoot": "libs/core/src",
+  "name": "core/testing",
+  "sourceRoot": "libs/core/testing/src",
   "projectType": "library",
   "build": {
     "executor": "@nx/js:tsc",
     "options": {
       "outputPath": "dist",
-      "main": "libs/core/index.ts",
-      "tsConfig": "libs/core/tsconfig.json",
+      "main": "libs/core/testing/index.ts",
+      "tsConfig": "libs/core/testing/tsconfig.json",
       "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
     }
   }

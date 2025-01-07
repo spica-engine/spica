@@ -15,7 +15,6 @@
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "clean": false,
         "outputPath": "dist",
         "outputFileName": "apps/api/src/main.js",
         "main": "apps/api/src/main.ts",
