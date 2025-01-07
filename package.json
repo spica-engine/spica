@@ -80,6 +80,7 @@
     "remark-highlight.js": "^5.1.1",
     "remark-html": "^9.0.1",
     "remark-slug": "^5.1.2",
+    "typescript-transform-paths": "^3.5.3",
     "which": "^2.0.2"
   }
 }

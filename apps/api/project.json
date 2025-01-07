@@ -6,35 +6,29 @@
   "tags": [],
   "targets": {
     "serve": {
-      "executor": "nx:run-commands",
+      "executor": "@nx/js:node",
+      "dependsOn": ["build", "build-workers"],
       "options": {
-        "commands": [
-          {
-            "command": "nx build-workers api"
-          },
-          {
-            "command": "nx build api"
-          },
-          {
-            "command": "wait-on dist/apps/api/main.js dist/apps/worker/entrypoint.js && nodemon dist/apps/api/main.js"
-          }
-        ]
+        "buildTarget": "api:build"
       }
     },
     "build": {
-      "executor": "@nx/webpack:webpack",
+      "executor": "@nx/js:tsc",
       "options": {
-        "outputPath": "dist/apps/api",
+        "clean": false,
+        "outputPath": "dist",
+        "outputFileName": "apps/api/src/main.js",
         "main": "apps/api/src/main.ts",
         "tsConfig": "apps/api/tsconfig.json",
-        "webpackConfig": "apps/api/webpack.config.js",
+        "rootDir": ".",
         "assets": [
           {
             "input": "apps/api/src/bucket/expression/src",
             "glob": "*.pegjs",
-            "output": "./"
+            "output": "apps/api/src/bucket/expression/src"
           }
-        ]
+        ],
+        "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
       }
     },
     "build-workers": {
