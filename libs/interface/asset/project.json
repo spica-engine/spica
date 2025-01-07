@@ -1,0 +1,14 @@
+{
+  "name": "interface/asset",
+  "sourceRoot": "libs/interface/asset/src",
+  "projectType": "library",
+  "build": {
+    "executor": "@nx/js:tsc",
+    "options": {
+      "outputPath": "dist",
+      "main": "libs/interface/asset/index.ts",
+      "tsConfig": "libs/interface/asset/tsconfig.json",
+      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
+    }
+  }
+}

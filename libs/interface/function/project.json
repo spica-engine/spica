@@ -1,0 +1,14 @@
+{
+  "name": "interface/function",
+  "sourceRoot": "libs/interface/function/src",
+  "projectType": "library",
+  "build": {
+    "executor": "@nx/js:tsc",
+    "options": {
+      "outputPath": "dist",
+      "main": "libs/interface/function/index.ts",
+      "tsConfig": "libs/interface/function/tsconfig.json",
+      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
+    }
+  }
+}
