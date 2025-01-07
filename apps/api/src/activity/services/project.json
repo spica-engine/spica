@@ -1,5 +1,14 @@
 {
   "name": "api/activity/services",
   "sourceRoot": "apps/api/src/activity/services",
-  "projectType": "application"
+  "projectType": "application",
+  "build": {
+    "executor": "@nx/js:tsc",
+    "options": {
+      "outputPath": "dist",
+      "main": "apps/api/activity/services/index.ts",
+      "tsConfig": "apps/api/activity/services/tsconfig.json",
+      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
+    }
+  }
 }
