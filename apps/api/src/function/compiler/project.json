@@ -1,5 +1,14 @@
 {
   "name": "api/function/compiler",
   "sourceRoot": "apps/api/src/function/compiler",
-  "projectType": "application"
+  "projectType": "application",
+  "build": {
+    "executor": "@nx/js:tsc",
+    "options": {
+      "outputPath": "dist",
+      "main": "apps/api/function/compiler/index.ts",
+      "tsConfig": "apps/api/function/compiler/tsconfig.json",
+      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
+    }
+  }
 }
