@@ -1,5 +1,14 @@
 {
   "name": "api/dashboard",
   "sourceRoot": "apps/api/src/dashboard",
-  "projectType": "application"
+  "projectType": "application",
+  "build": {
+    "executor": "@nx/js:tsc",
+    "options": {
+      "outputPath": "dist",
+      "main": "apps/api/dashboard/index.ts",
+      "tsConfig": "apps/api/dashboard/tsconfig.json",
+      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
+    }
+  }
 }
