@@ -11,7 +11,7 @@ import {
 } from "@nestjs/common";
 import {ObjectId} from "@spica-server/database";
 import * as matcher from "matcher";
-import {compile, Key, parse} from "path-to-regexp";
+import {Key, parse} from "path-to-regexp";
 import {PolicyResolver, POLICY_RESOLVER} from "./action.resolver";
 
 export interface Statement {
