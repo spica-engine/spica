@@ -1,14 +1,5 @@
 {
   "name": "database/pipeline",
   "sourceRoot": "libs/database/pipeline/src",
-  "projectType": "library",
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist",
-      "main": "libs/database/pipeline/index.ts",
-      "tsConfig": "libs/database/pipeline/tsconfig.json",
-      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
-    }
-  }
+  "projectType": "library"
 }

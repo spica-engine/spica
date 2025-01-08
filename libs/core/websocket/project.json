@@ -1,14 +1,5 @@
 {
   "name": "core/websocket",
   "sourceRoot": "libs/core/websocket/src",
-  "projectType": "library",
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist",
-      "main": "libs/core/websocket/index.ts",
-      "tsConfig": "libs/core/websocket/tsconfig.json",
-      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
-    }
-  }
+  "projectType": "library"
 }

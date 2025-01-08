@@ -1,14 +1,5 @@
 {
   "name": "api/bucket/common",
   "sourceRoot": "apps/api/src/bucket/common",
-  "projectType": "application",
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist",
-      "main": "apps/api/bucket/common/index.ts",
-      "tsConfig": "apps/api/bucket/common/tsconfig.json",
-      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
-    }
-  }
+  "projectType": "application"
 }

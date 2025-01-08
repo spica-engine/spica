@@ -1,14 +1,5 @@
 {
   "name": "filter",
   "sourceRoot": "libs/filter/src",
-  "projectType": "library",
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist",
-      "main": "libs/filter/index.ts",
-      "tsConfig": "libs/filter/tsconfig.json",
-      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
-    }
-  }
+  "projectType": "library"
 }

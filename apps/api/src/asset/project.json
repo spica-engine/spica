@@ -1,14 +1,5 @@
 {
   "name": "api/asset",
   "sourceRoot": "apps/api/src/asset",
-  "projectType": "application",
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist",
-      "main": "apps/api/asset/index.ts",
-      "tsConfig": "apps/api/asset/tsconfig.json",
-      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
-    }
-  }
+  "projectType": "application"
 }

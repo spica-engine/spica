@@ -1,14 +1,5 @@
 {
   "name": "interface/realtime",
   "sourceRoot": "libs/interface/realtime/src",
-  "projectType": "library",
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist",
-      "main": "libs/interface/realtime/index.ts",
-      "tsConfig": "libs/interface/realtime/tsconfig.json",
-      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
-    }
-  }
+  "projectType": "library"
 }

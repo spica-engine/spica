@@ -1,14 +1,5 @@
 {
   "name": "core/differ",
   "sourceRoot": "libs/core/differ/src",
-  "projectType": "library",
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist",
-      "main": "libs/core/differ/index.ts",
-      "tsConfig": "libs/core/differ/tsconfig.json",
-      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
-    }
-  }
+  "projectType": "library"
 }

@@ -1,14 +1,5 @@
 {
   "name": "core/patch",
   "sourceRoot": "libs/core/patch/src",
-  "projectType": "library",
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist",
-      "main": "libs/core/patch/index.ts",
-      "tsConfig": "libs/core/patch/tsconfig.json",
-      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
-    }
-  }
+  "projectType": "library"
 }
