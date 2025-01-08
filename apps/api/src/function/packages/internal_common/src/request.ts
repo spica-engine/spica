@@ -27,7 +27,11 @@ export class Axios implements HttpService {
 
   private readonly interceptors = {
     request: {
-      onFulfilled: (request: AxiosRequestConfig) => {
+      onFulfilled: (
+        request: Omit<AxiosRequestConfig, "headers"> & {
+          headers: any; // headers type from axios 0.x.x
+        }
+      ) => {
         request.maxBodyLength = Number.MAX_SAFE_INTEGER;
         request.maxContentLength = Number.MAX_SAFE_INTEGER;
 
