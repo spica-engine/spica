@@ -1,7 +1,7 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
 import {default as Ajv, ValidateFunction} from "ajv";
 import formats from "ajv-formats";
-import {ValidationError} from "ajv/dist/compile/error_classes";
+import ValidationError from "ajv/dist/runtime/validation_error";
 import * as request from "request-promise-native";
 import {from, isObservable} from "rxjs";
 import {skip, take, tap} from "rxjs/operators";
@@ -17,7 +17,7 @@ import {
   UriResolver
 } from "./interface";
 export {CodeKeywordDefinition, ErrorObject, KeywordCxt, _} from "ajv";
-export {ValidationError} from "ajv/dist/compile/error_classes";
+export {default as ValidationError} from "ajv/dist/runtime/validation_error";
 
 @Injectable()
 export class Validator {
@@ -49,6 +49,7 @@ export class Validator {
         }, {}),
       schemas: new Array().concat(local.schemas || []).concat(global.schemas || []),
       strict: true,
+      allowUnionTypes: true,
       ["defaults" as any]: this._defaults
     });
 
