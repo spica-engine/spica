@@ -12,6 +12,11 @@
     ],
     "sharedGlobals": []
   },
+  "pluginsConfig": {
+    "@nx/js": {
+      "analyzeSourceFiles": false
+    }
+  },
   "plugins": [
     {
       "plugin": "@nx/js/typescript",
