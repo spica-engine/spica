@@ -22,7 +22,7 @@
     "@nestjs/platform-ws": "^7.0.13",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
-    "axios": "^0.21.0",
+    "axios": "^1.7.9",
     "body-parser": "^1.18.2",
     "bson": "^4.0.1",
     "cli-color": "^2.0.0",
