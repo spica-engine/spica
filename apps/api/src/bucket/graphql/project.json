@@ -1,5 +1,14 @@
 {
   "name": "api/bucket/graphql",
   "sourceRoot": "apps/api/src/bucket/graphql",
-  "projectType": "application"
+  "projectType": "application",
+  "build": {
+    "executor": "@nx/js:tsc",
+    "options": {
+      "outputPath": "dist",
+      "main": "apps/api/bucket/graphql/index.ts",
+      "tsConfig": "apps/api/bucket/graphql/tsconfig.json",
+      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
+    }
+  }
 }

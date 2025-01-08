@@ -1,5 +1,14 @@
 {
   "name": "api/bucket/realtime",
   "sourceRoot": "apps/api/src/bucket/realtime",
-  "projectType": "application"
+  "projectType": "application",
+  "build": {
+    "executor": "@nx/js:tsc",
+    "options": {
+      "outputPath": "dist",
+      "main": "apps/api/bucket/realtime/index.ts",
+      "tsConfig": "apps/api/bucket/realtime/tsconfig.json",
+      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
+    }
+  }
 }

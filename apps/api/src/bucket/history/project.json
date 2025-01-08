@@ -1,5 +1,14 @@
 {
   "name": "api/bucket/history",
   "sourceRoot": "apps/api/src/bucket/history",
-  "projectType": "application"
+  "projectType": "application",
+  "build": {
+    "executor": "@nx/js:tsc",
+    "options": {
+      "outputPath": "dist",
+      "main": "apps/api/bucket/history/index.ts",
+      "tsConfig": "apps/api/bucket/history/tsconfig.json",
+      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
+    }
+  }
 }
