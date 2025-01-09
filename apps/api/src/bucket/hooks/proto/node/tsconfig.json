@@ -3,10 +3,7 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../hooks"
-    },
-    {
-      "path": "../history"
+      "path": "../"
     }
   ]
 }
