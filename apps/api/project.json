@@ -12,24 +12,6 @@
         "buildTarget": "api:build"
       }
     },
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "outputPath": "dist",
-        "outputFileName": "apps/api/src/main.js",
-        "main": "apps/api/src/main.ts",
-        "tsConfig": "apps/api/tsconfig.json",
-        "rootDir": ".",
-        "assets": [
-          {
-            "input": "apps/api/src/bucket/expression/src",
-            "glob": "*.pegjs",
-            "output": "apps/api/src/bucket/expression/src"
-          }
-        ],
-        "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
-      }
-    },
     "build-workers": {
       "command": "rollup -c './apps/api/src/function/runtime/node/bootstrap/rollup.config.js' --bundleConfigAsCjs"
     }

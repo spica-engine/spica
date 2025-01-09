@@ -9,6 +9,49 @@
     "sourceMap": true,
     "esModuleInterop": false
   },
-  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts", "/**/testing.module.ts"],
-  "include": ["src/**/*.ts"]
+  "include": ["src/main.ts"],
+  "references": [
+    {
+      "path": "./src/activity"
+    },
+    {
+      "path": "./src/bucket"
+    },
+    {
+      "path": "./src/dashboard"
+    },
+    {
+      "path": "./src/function"
+    },
+    {
+      "path": "./src/passport"
+    },
+    {
+      "path": "./src/preference"
+    },
+    {
+      "path": "./src/status"
+    },
+    {
+      "path": "./src/storage"
+    },
+    {
+      "path": "./src/versioncontrol"
+    },
+    {
+      "path": "./src/replication"
+    },
+    {
+      "path": "./src/asset"
+    },
+    {
+      "path": "../../libs/core"
+    },
+    {
+      "path": "../../libs/core/schema"
+    },
+    {
+      "path": "../../libs/core/websocket"
+    }
+  ]
 }
