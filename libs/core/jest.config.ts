@@ -5,6 +5,5 @@ export default {
   preset: "../../jest.preset.js",
   testEnvironment: "node",
   coverageDirectory: path.join(workspaceRoot, "coverage/libs/core"),
-  testMatch: ["<rootDir>/test/**/*.spec.ts"],
-  transformIgnorePatterns: [path.join(workspaceRoot, "node_modules/(?!matcher).*/")]
+  testMatch: ["<rootDir>/test/**/*.spec.ts"]
 };
