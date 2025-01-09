@@ -33,7 +33,7 @@
     "pegjs": "^0.10.0",
     "qrcode": "^1.5.0",
     "qs": "^6.10.3",
-    "path-to-regexp": "^8.2.0",
+    "path-to-regexp": "^3.0.0",
     "request": "^2.88.2",
     "rollup-plugin-copy": "^3.5.0",
     "saml2-js": "^2.0.3",
