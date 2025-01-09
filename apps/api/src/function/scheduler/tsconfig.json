@@ -1,4 +1,24 @@
 {
   "extends": "../../../../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts"]
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../runtime/node"
+    },
+    {
+      "path": "../runtime/io"
+    },
+    {
+      "path": "../pkgmanager/node"
+    },
+    {
+      "path": "../compiler/javascript"
+    },
+    {
+      "path": "../compiler/typescript"
+    },
+    {
+      "path": "../enqueuer"
+    }
+  ]
 }

@@ -1,1 +1,1 @@
-export {Npm} from "./npm";
+export {Npm} from "./src/npm";

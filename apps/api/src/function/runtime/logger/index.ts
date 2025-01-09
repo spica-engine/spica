@@ -1,2 +1,2 @@
-export * from "./logger";
-export * from "./interface";
+export * from "./src/logger";
+export * from "./src/interface";

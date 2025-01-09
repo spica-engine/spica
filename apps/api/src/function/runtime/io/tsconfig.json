@@ -3,7 +3,10 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../"
+      "path": "../../../../../../libs/database"
+    },
+    {
+      "path": "../logger"
     }
   ]
 }

@@ -5,7 +5,7 @@ import {WebhookModule} from "@spica-server/function/webhook";
 import * as path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
-import {LogModule, LogService} from "@spica-server/function/src/log";
+import {LogModule, LogService} from "@spica-server/function/log";
 import {
   FunctionOptions,
   FUNCTION_OPTIONS,

@@ -3,7 +3,10 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "./proto"
+      "path": "../../../../../libs/database"
+    },
+    {
+      "path": "../../../../../libs/interface/function"
     }
   ]
 }
