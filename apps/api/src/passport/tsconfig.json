@@ -1,4 +1,12 @@
 {
   "extends": "../../../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts"]
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {"path": "./guard"},
+    {"path": "./identity"},
+    {"path": "./apikey"},
+    {"path": "./authfactor"}
+
+
+  ]
 }
