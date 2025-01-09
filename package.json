@@ -37,7 +37,7 @@
     "mongodb": "^3.5.8",
     "mongodb-memory-server": "~7.0.0",
     "path-to-regexp": "^8.2.0",
-    "rimraf": "^3.0.2",
+    "rimraf": "^6.0.1",
     "rxjs": "^6.6.3",
     "ts-jest": "^29.2.5",
     "type-is": "^1.6.18",

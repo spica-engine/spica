@@ -6,7 +6,7 @@ import {event} from "@spica-server/function/queue/proto";
 import * as fs from "fs";
 import {JSONSchema7} from "json-schema";
 import * as path from "path";
-import * as rimraf from "rimraf";
+import {rimraf} from "rimraf";
 import {Observable, Subject} from "rxjs";
 import * as util from "util";
 import {
@@ -146,7 +146,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   deleteFunction(fn: Function) {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    return util.promisify(rimraf)(functionRoot);
+    rimraf(functionRoot);
   }
 
   compile(fn: Function) {
