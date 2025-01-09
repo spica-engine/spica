@@ -1,4 +1,15 @@
 {
   "extends": "../../../../tsconfig.json",
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "../../../../libs/core/schema"
+    },
+    {
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../asset"
+    },
+  ]
 }
