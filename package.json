@@ -16,10 +16,10 @@
     "apps/*"
   ],
   "dependencies": {
-    "@nestjs/common": "^7.0.13",
-    "@nestjs/core": "^7.0.13",
-    "@nestjs/platform-express": "^7.0.13",
-    "@nestjs/platform-ws": "^7.0.13",
+    "@nestjs/common": "^8.0.0",
+    "@nestjs/core": "^8.0.0",
+    "@nestjs/platform-express": "^8.0.0",
+    "@nestjs/platform-ws": "^8.0.0",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "axios": "^1.7.9",
@@ -49,7 +49,7 @@
   "devDependencies": {
     "@angular-devkit/build-angular": "^15.0.0",
     "@angular/compiler-cli": "^15.0.0",
-    "@nestjs/testing": "^7.0.13",
+    "@nestjs/testing": "^8.0.0",
     "@nx/jest": "^20.3.1",
     "@nx/node": "^20.3.1",
     "@nx/webpack": "^20.3.1",
