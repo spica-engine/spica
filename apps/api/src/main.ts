@@ -511,6 +511,17 @@ if (args["cert-file"] && args["key-file"]) {
   };
 }
 
+async function getPort(args: object | Promise<object>): Promise<number | undefined> {
+  let resolvedArgs;
+
+  if (args instanceof Promise) {
+    resolvedArgs = await args;
+  } else {
+    resolvedArgs = args;
+  }
+  return resolvedArgs["port"];
+}
+
 NestFactory.create(RootModule, {
   httpsOptions,
   bodyParser: false
@@ -531,8 +542,11 @@ NestFactory.create(RootModule, {
       Middlewares.MergePatchJsonParser(args["payload-size-limit"])
     );
     app.enableShutdownHooks();
-    return app.listen(args.port);
+
+    return getPort(args).then(port => app.listen(port));
   })
   .then(() => {
-    console.log(`: APIs are ready on port ${args.port}`);
+    getPort(args).then(port => {
+      console.log(`: APIs are ready on port ${port}`);
+    });
   });

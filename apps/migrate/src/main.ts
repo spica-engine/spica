@@ -57,14 +57,28 @@ export async function run(arg?: string | readonly string[]) {
     .exitProcess(!arg)
     .parse(arg);
 
+  function resolveArgs(args: object | Promise<object>): {[key: string]: any} {
+    let resolvedArgs;
+
+    if (args instanceof Promise) {
+      args.then(args => (resolvedArgs = args));
+    } else {
+      resolvedArgs = args;
+    }
+
+    return resolvedArgs;
+  }
+
+  const resolvedArgs = resolveArgs(args);
+
   return migrate({
-    from: args.from.toString(),
-    to: args.to.toString(),
-    dryRun: args["dry-run"],
+    from: resolvedArgs.from.toString(),
+    to: resolvedArgs.to.toString(),
+    dryRun: resolvedArgs["dry-run"],
     console: _console,
     database: {
-      name: args["database-name"],
-      uri: args["database-uri"]
+      name: resolvedArgs["database-name"],
+      uri: resolvedArgs["database-uri"]
     }
   });
 }
