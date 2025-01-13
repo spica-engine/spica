@@ -158,10 +158,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     return lastWorkerHasAlreadLost
       ? Promise.resolve()
-      : this.onLastWorkerLost
-          .asObservable()
-          .pipe(take(1))
-          .toPromise();
+      : this.onLastWorkerLost.asObservable().pipe(take(1)).toPromise();
   }
 
   killLanguages() {
@@ -317,7 +314,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.print(`lost a worker ${id}`);
 
     if (!this.workers.size) {
-      this.onLastWorkerLost.next();
+      this.onLastWorkerLost.next("");
     }
   }
 
