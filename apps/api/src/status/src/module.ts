@@ -1,4 +1,4 @@
-import {Module} from "@nestjs/common";
+import {DynamicModule, Module} from "@nestjs/common";
 import {StatusController} from "./controller";
 import {
   CoreStatusServiceModule,
@@ -15,7 +15,7 @@ export class StatusModule {
     registerStatusProvider(service);
   }
 
-  static forRoot(options: StatusOptions) {
+  static forRoot(options: StatusOptions): DynamicModule {
     return {
       module: StatusModule,
       controllers: [StatusController],
