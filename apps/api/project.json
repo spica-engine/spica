@@ -7,13 +7,24 @@
   "targets": {
     "serve": {
       "executor": "@nx/js:node",
-      "dependsOn": ["build", "build-workers"],
+      "dependsOn": ["build-workers", "transform-paths", "*:build-assets"],
       "options": {
-        "buildTarget": "api:build"
+        "buildTarget": "api:build",
+        "buildTargetOptions": {
+          "outputPath": "dist/apps/api/src",
+          "outputFileName": "main.js"
+        }
+      }
+    },
+    "transform-paths": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "resolve-tspaths"
       }
     },
     "build-workers": {
-      "command": "rollup -c './apps/api/src/function/runtime/node/bootstrap/rollup.config.js' --bundleConfigAsCjs"
+      "command": "rollup -c './apps/api/src/function/runtime/node/bootstrap/rollup.config.js' --bundleConfigAsCjs",
+      "cache": true
     }
   }
 }
