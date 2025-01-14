@@ -17,7 +17,7 @@ export async function start(topology: "standalone" | "replset") {
   } else {
     const serverOptions = getStandaloneServerOptions();
     mongod = await MongoMemoryServer.create(serverOptions);
-    clientOptions = getStandaloneClientOptions();
+    clientOptions = {};
   }
 
   uri = mongod.getUri() + "&retryWrites=false";
@@ -26,7 +26,7 @@ export async function start(topology: "standalone" | "replset") {
 }
 
 export async function connect(connectionUri: string) {
-  return MongoClient.connect(connectionUri, getClientOptions());
+  return MongoClient.connect(connectionUri);
 }
 
 export function getConnectionUri() {
@@ -37,17 +37,8 @@ export function getDatabaseName() {
   return "test";
 }
 
-function getClientOptions(): MongoClientOptions {
-  return {};
-}
-
-function getStandaloneClientOptions(): MongoClientOptions {
-  return getClientOptions();
-}
-
 function getReplicaClientOptions(): MongoClientOptions {
   return {
-    ...getClientOptions(),
     replicaSet: "testset",
     maxPoolSize: Number.MAX_SAFE_INTEGER
   };
