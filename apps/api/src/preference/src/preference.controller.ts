@@ -19,7 +19,7 @@ import {
   IDENTITY_SETTINGS_FINALIZER
 } from "@spica-server/preference/services";
 import {createPreferenceActivity} from "./activity.resource";
-import {ReturnDocument} from "mongodb";
+import {ReturnDocument} from "@spica-server/database";
 
 @Controller("preference")
 export class PreferenceController {
