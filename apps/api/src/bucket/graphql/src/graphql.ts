@@ -12,7 +12,7 @@ import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {Schema, Validator} from "@spica-server/core/schema";
-import {ObjectId, ReturnDocument} from "@spica-server/database";
+import {ObjectId} from "@spica-server/database";
 import {GuardService} from "@spica-server/passport";
 import {resourceFilterFunction} from "@spica-server/passport/guard";
 import {graphqlHTTP} from "express-graphql";
