@@ -14,7 +14,8 @@ import {
   UpdateOptions,
   OptionalUnlessRequiredId,
   WithId,
-  Document
+  Document,
+  AggregateOptions
 } from "mongodb";
 import {DatabaseService} from "./database.service";
 
@@ -24,7 +25,7 @@ export interface InitializeOptions {
   afterInit?: (...args: any[]) => any;
 }
 
-export type _OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
+export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
 
 export class _MixinCollection<T> {
   _coll: Collection<T>;
@@ -68,7 +69,7 @@ export class _MixinCollection<T> {
 
   aggregate<ResponseType>(
     pipeline?: object[],
-    options: {allowDiskUse?: boolean} = {allowDiskUse: true}
+    options: AggregateOptions = {allowDiskUse: true}
   ): AggregationCursor<ResponseType> {
     return this._coll.aggregate(pipeline, options);
   }
@@ -95,8 +96,7 @@ export class _MixinCollection<T> {
   async insertMany(docs: Array<OptionalUnlessRequiredId<T>>): Promise<ObjectId[]> {
     await this.documentCountLimitValidation(docs.length);
 
-    const result: InsertManyResult<T> = await this._coll.insertMany(docs);
-    return Object.values(result.insertedIds);
+    return this._coll.insertMany(docs).then(t => Object.values(t.insertedIds));
   }
 
   // Find
@@ -114,11 +114,11 @@ export class _MixinCollection<T> {
   }
 
   deleteOne(filter: Filter<T>, options?: FindOptions): Promise<number> {
-    return this._coll.deleteOne(filter, options).then(r => r.deletedCount || 0);
+    return this._coll.deleteOne(filter, options).then(r => r.deletedCount);
   }
 
   deleteMany(filter: Filter<T>, options?: FindOptions): Promise<number> {
-    return this._coll.deleteMany(filter, options).then(r => r.deletedCount || 0);
+    return this._coll.deleteMany(filter, options).then(r => r.deletedCount);
   }
 
   // Replace
@@ -188,7 +188,7 @@ export class _MixinCollection<T> {
 
 export type BaseCollection<T> = _MixinCollection<T>;
 
-export function BaseCollection<T extends _OptionalId<T>>(collection?: string) {
+export function BaseCollection<T extends OptionalId<T>>(collection?: string) {
   return class extends _MixinCollection<T> {
     constructor(db: DatabaseService, options?: InitializeOptions) {
       super(db, collection, options);
