@@ -12,7 +12,7 @@ import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {Schema, Validator} from "@spica-server/core/schema";
-import {ObjectID, ObjectId} from "@spica-server/database";
+import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {GuardService} from "@spica-server/passport";
 import {resourceFilterFunction} from "@spica-server/passport/guard";
 import {graphqlHTTP} from "express-graphql";
@@ -65,7 +65,7 @@ export class GraphqlController implements OnModuleInit {
 
     scalar JSON
 
-    scalar ObjectID
+    scalar ObjectId
     
     type Meta{
       total: Int
@@ -97,20 +97,20 @@ export class GraphqlController implements OnModuleInit {
       description: "JavaScript Object Notation."
     }),
 
-    ObjectID: new GraphQLScalarType({
-      name: "ObjectID",
+    ObjectId: new GraphQLScalarType({
+      name: "ObjectId",
       description:
         "BSON ObjectId type. Can be a 24 byte hex string, 12 byte binary string or a Number.",
       parseValue(value) {
-        return new ObjectID(value);
+        return new ObjectId(value);
       },
       serialize(value) {
         return value.toString();
       },
       parseLiteral(ast: ValueNode) {
         const value = ast["value"];
-        if (ObjectID.isValid(value)) {
-          return new ObjectID(value);
+        if (ObjectId.isValid(value)) {
+          return new ObjectId(value);
         }
         return null;
       }
@@ -199,7 +199,11 @@ export class GraphqlController implements OnModuleInit {
 
   getSchema(buckets: Bucket[]): GraphQLSchema {
     const typeDefs = buckets.map(bucket =>
-      createSchema(bucket, this.staticTypes, this.buckets.map(b => b._id.toString()))
+      createSchema(
+        bucket,
+        this.staticTypes,
+        this.buckets.map(b => b._id.toString())
+      )
     );
     const resolvers = buckets.map(bucket => this.createResolver(bucket, this.staticResolvers));
 
