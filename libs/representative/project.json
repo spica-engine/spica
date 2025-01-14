@@ -1,14 +1,5 @@
 {
   "name": "representative",
   "sourceRoot": "libs/representative/src",
-  "projectType": "library",
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist",
-      "main": "libs/representative/index.ts",
-      "tsConfig": "libs/representative/tsconfig.json",
-      "transformers": [{"name": "typescript-transform-paths/nx-transformer"}]
-    }
-  }
+  "projectType": "library"
 }

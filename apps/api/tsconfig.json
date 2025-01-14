@@ -1,11 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
     "types": ["node"],
-    "emitDecoratorMetadata": true,
-    "target": "es2020",
-    "sourceMap": true,
     "esModuleInterop": false
   },
   "include": ["src/main.ts"],
