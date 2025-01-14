@@ -3,8 +3,8 @@ import {mongodb, _mongodb} from "./mongo";
 import {ObjectId} from "./objectid";
 
 process.once("SIGTERM", () => {
-  close(false);
-  process.exit();
+  const closeRes = close(false);
+  closeRes instanceof Promise ? closeRes.then(() => process.exit()) : process.exit();
 });
 
 let connection: _mongodb.MongoClient = globalThis[Symbol.for("kDatabaseDevkitConn")];
