@@ -52,8 +52,5 @@
         }
       ]
     }
-  },
-  "sync": {
-    "applyChanges": false
   }
 }
