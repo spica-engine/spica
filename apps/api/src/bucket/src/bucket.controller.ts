@@ -22,7 +22,7 @@ import {activity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {Schema, Validator} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {createBucketActivity} from "@spica-server/bucket/common";
 import * as expression from "@spica-server/bucket/expression";
@@ -182,7 +182,9 @@ export class BucketController {
     const patchedBucket = applyPatch(previousBucket, patch);
     delete patchedBucket._id;
 
-    return this.bs.findOneAndReplace({_id: id}, patchedBucket, {returnOriginal: false});
+    return this.bs.findOneAndReplace({_id: id}, patchedBucket, {
+      returnDocument: ReturnDocument.AFTER
+    });
   }
 
   @Delete("cache")

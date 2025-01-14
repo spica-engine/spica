@@ -1,4 +1,4 @@
-import {hooks} from "@spica-server/bucket/hooks/proto";
+import {hooks} from "../hooks";
 
 function getChangeKind(kind: hooks.Change.Kind) {
   switch (kind) {
@@ -21,9 +21,17 @@ export class Change<T = unknown> {
   current?: Partial<T>;
 
   constructor(change: hooks.Change) {
-    this.kind = getChangeKind(change.kind);
-    this.bucket = change.bucket;
-    this.documentKey = change.documentKey;
+    if (change.kind) {
+      this.kind = getChangeKind(change.kind);
+    }
+
+    if (change.bucket) {
+      this.bucket = change.bucket;
+    }
+
+    if (change.documentKey) {
+      this.documentKey = change.documentKey;
+    }
 
     if (change.previous) {
       this.previous = JSON.parse(change.previous);

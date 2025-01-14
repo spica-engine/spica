@@ -4,7 +4,7 @@ export class TypeError extends Error {
 
   constructor({message, column, line}: {line?: number; column?: number; message: string}) {
     super(message);
-    this.column = column;
-    this.line = line;
+    this.column = column || 0;
+    this.line = line || 0;
   }
 }

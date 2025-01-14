@@ -19,6 +19,7 @@ import {
   IDENTITY_SETTINGS_FINALIZER
 } from "@spica-server/preference/services";
 import {createPreferenceActivity} from "./activity.resource";
+import {ReturnDocument} from "mongodb";
 
 @Controller("preference")
 export class PreferenceController {
@@ -55,6 +56,9 @@ export class PreferenceController {
     delete preference._id;
     preference.scope = scope;
 
-    return this.preference.replace({scope}, preference, {upsert: true, returnOriginal: false});
+    return this.preference.replace({scope}, preference, {
+      upsert: true,
+      returnDocument: ReturnDocument.AFTER
+    });
   }
 }

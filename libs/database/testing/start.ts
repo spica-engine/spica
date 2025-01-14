@@ -38,10 +38,7 @@ export function getDatabaseName() {
 }
 
 function getClientOptions(): MongoClientOptions {
-  return {
-    useNewUrlParser: true,
-    ["useUnifiedTopology" as string]: true
-  };
+  return {};
 }
 
 function getStandaloneClientOptions(): MongoClientOptions {
@@ -52,7 +49,7 @@ function getReplicaClientOptions(): MongoClientOptions {
   return {
     ...getClientOptions(),
     replicaSet: "testset",
-    poolSize: Number.MAX_SAFE_INTEGER
+    maxPoolSize: Number.MAX_SAFE_INTEGER
   };
 }
 

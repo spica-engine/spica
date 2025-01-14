@@ -35,7 +35,7 @@ import {
   EXPRESSION
 } from "@spica-server/core";
 import {Schema, Validator} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {invalidateCache, registerCache} from "@spica-server/bucket/cache";
 import {
@@ -384,7 +384,7 @@ export class BucketDataController {
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
         authResolver: this.authResolver
       },
-      {returnOriginal: false}
+      {returnDocument: ReturnDocument.AFTER}
     ).catch(this.errorHandler);
 
     if (!currentDocument) {

@@ -3,9 +3,9 @@ import {BucketDocument, Bucket} from "@spica-server/bucket/services";
 import {
   Collection,
   DatabaseService,
-  DeleteWriteOpResultObject,
-  FilterQuery,
-  InsertOneWriteOpResult,
+  DeleteResult,
+  Filter,
+  InsertOneResult,
   ObjectId
 } from "@spica-server/database";
 import {ChangePaths, ChangeKind, diff, schemaDiff} from "@spica-server/core/differ";
@@ -68,7 +68,7 @@ export class HistoryService {
       .toArray();
   }
 
-  find(filter: FilterQuery<History>) {
+  find(filter: Filter<History>) {
     return this.collection
       .aggregate([
         {
@@ -89,7 +89,7 @@ export class HistoryService {
       .toArray();
   }
 
-  getHistory(filter: FilterQuery<History>): Promise<History> {
+  getHistory(filter: Filter<History>): Promise<History> {
     return this.collection.findOne(filter);
   }
 
@@ -114,11 +114,11 @@ export class HistoryService {
     return this.collection.deleteMany({changes: {$size: 0}});
   }
 
-  deleteMany(filter: FilterQuery<History>): Promise<DeleteWriteOpResultObject> {
+  deleteMany(filter: Filter<History>): Promise<DeleteResult> {
     return this.collection.deleteMany(filter);
   }
 
-  async insertOne(history: History): Promise<InsertOneWriteOpResult> {
+  async insertOne(history: History): Promise<InsertOneResult> {
     const recordCount = await this.collection
       .find({$and: [{bucket_id: history.bucket_id}, {document_id: history.document_id}]})
       .count();

@@ -1,11 +1,11 @@
-import {hooks} from "@spica-server/bucket/hooks/proto";
+import {hooks} from "../hooks";
 import * as grpc from "@grpc/grpc-js";
 
 export class ChangeQueue {
   private client: hooks.ChangeQueueClient;
   constructor() {
     this.client = new hooks.ChangeQueueClient(
-      process.env.FUNCTION_GRPC_ADDRESS,
+      process.env.FUNCTION_GRPC_ADDRESS!,
       grpc.credentials.createInsecure()
     );
   }
