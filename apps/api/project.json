@@ -7,17 +7,24 @@
   "targets": {
     "serve": {
       "executor": "@nx/js:node",
-      "dependsOn": ["build-workers", "transform-paths", "*:build-assets"],
+      "dependsOn": ["build-dev"],
       "options": {
-        "buildTarget": "api:build",
+        "buildTarget": "api:build-dev",
         "buildTargetOptions": {
           "outputPath": "dist/apps/api/src",
           "outputFileName": "main.js"
         }
       }
     },
+    "build-dev": {
+      "dependsOn": ["transform-paths", "build-assets", "build-workers"]
+    },
+    "build-assets": {
+      "dependsOn": ["api/bucket/expression:build-assets"]
+    },
     "transform-paths": {
       "executor": "nx:run-commands",
+      "dependsOn": ["build"],
       "options": {
         "command": "resolve-tspaths"
       }

@@ -3,7 +3,7 @@
   "sourceRoot": "apps/api/src/bucket/expression/src",
   "projectType": "application",
   "targets": {
-    "copy-assets": {
+    "build-assets": {
       "executor": "nx:run-commands",
       "options": {
         "command": "mkdir -p ./dist/apps/api/src/bucket/expression/src && cp ./apps/api/src/bucket/expression/src/grammar.pegjs ./dist/apps/api/src/bucket/expression/src/grammar.pegjs"
