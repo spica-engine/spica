@@ -20,7 +20,7 @@ describe("Database e2e", () => {
     const _ = await database();
     expect(!!connection).toBe(true);
     await close();
-    expect(!!connection).toBe(false);
+    expect(!connection).toBe(false);
   });
 
   it("should write to database", async () => {

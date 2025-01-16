@@ -107,7 +107,7 @@ describe("database", () => {
     const _ = await database();
     expect(!!connection).toBe(true);
     await close();
-    expect(!!connection).toBe(false);
+    expect(!connection).toBe(false);
   });
 
   describe("presence of objectid", () => {
