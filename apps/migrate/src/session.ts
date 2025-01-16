@@ -10,20 +10,20 @@ export function setSession(session: mongodb.ClientSession) {
   _session = session;
 }
 
-Object.defineProperty(operation.OperationBase.prototype, "_options", {
+Object.defineProperty(operation.AbstractOperation.prototype, "_options", {
   writable: true
 });
 
-Object.defineProperty(operation.OperationBase.prototype, "options", {
+Object.defineProperty(operation.AbstractOperation.prototype, "options", {
   enumerable: true,
   configurable: false,
-  set: function(options) {
+  set: function (options) {
     this._options = Object.assign({}, options);
     if (!this._options.session) {
       this._options.session = getSession();
     }
   },
-  get: function() {
+  get: function () {
     return this._options;
   }
 });

@@ -10,7 +10,7 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {ARRAY, DATE, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
-import {FilterQuery, ObjectId, OBJECT_ID} from "@spica-server/database";
+import {Filter, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {Log} from "./interface";
 import {WebhookLogService} from "./log.service";
@@ -29,7 +29,7 @@ export class WebhookLogController {
     @Query("skip", NUMBER) skip: number,
     @Query("limit", NUMBER) limit: number
   ) {
-    let filter: FilterQuery<Log> = {};
+    let filter: Filter<Log> = {};
 
     if (!isNaN(begin.getTime()) && !isNaN(end.getTime())) {
       filter._id = {

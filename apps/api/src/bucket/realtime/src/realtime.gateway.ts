@@ -33,7 +33,7 @@ import {
 } from "@spica-server/bucket/services";
 import {applyPatch, deepCopy} from "@spica-server/core/patch";
 import {Schema, Validator} from "@spica-server/core/schema";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {FindOptions, RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {ChunkKind} from "@spica-server/interface/realtime";
 import {GuardService} from "@spica-server/passport";
@@ -322,7 +322,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
           schema: this.getBucketResolver(),
           authResolver: this.authResolver
         },
-        {returnOriginal: false}
+        {returnDocument: ReturnDocument.AFTER}
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);

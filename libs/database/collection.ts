@@ -1,23 +1,28 @@
 import {
   AggregationCursor,
   Collection,
-  CollectionAggregationOptions,
-  FilterQuery,
-  FindOneAndDeleteOption,
-  FindOneAndReplaceOption,
-  FindOneAndUpdateOption,
-  FindOneOptions,
+  CollectionOptions,
+  Filter,
+  FindOptions,
+  FindOneAndDeleteOptions,
+  FindOneAndReplaceOptions,
+  FindOneAndUpdateOptions,
+  InsertOneResult,
+  InsertManyResult,
   ObjectId,
-  UpdateManyOptions,
-  UpdateQuery,
-  CollectionCreateOptions
+  UpdateFilter,
+  UpdateOptions,
+  OptionalUnlessRequiredId,
+  WithId,
+  Document,
+  AggregateOptions
 } from "mongodb";
 import {DatabaseService} from "./database.service";
 
 export interface InitializeOptions {
   entryLimit?: number;
-  collectionCreateOptions?: CollectionCreateOptions;
-  afterInit?: (...args) => any;
+  collectionOptions?: CollectionOptions;
+  afterInit?: (...args: any[]) => any;
 }
 
 export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
@@ -37,13 +42,13 @@ export class _MixinCollection<T> {
     this.options = this._options;
 
     if (this.options.afterInit) {
-      this.initCollection().then(() => this.options.afterInit());
+      this.initCollection().then(() => this.options.afterInit!());
     }
   }
 
   initCollection() {
-    return this.db.createCollection(this._collection).catch(e => {
-      if (e.codeName == "NamespaceExists") {
+    return this.db.createCollection(this._collection, this.options.collectionOptions).catch(e => {
+      if (e.codeName === "NamespaceExists") {
         return;
       }
       throw e;
@@ -64,7 +69,7 @@ export class _MixinCollection<T> {
 
   aggregate<ResponseType>(
     pipeline?: object[],
-    options: CollectionAggregationOptions = {allowDiskUse: true}
+    options: AggregateOptions = {allowDiskUse: true}
   ): AggregationCursor<ResponseType> {
     return this._coll.aggregate(pipeline, options);
   }
@@ -80,80 +85,86 @@ export class _MixinCollection<T> {
   }
 
   // Insert
-  async insertOne(doc: T): Promise<T> {
+  async insertOne(doc: OptionalUnlessRequiredId<T>): Promise<WithId<T>> {
     await this.documentCountLimitValidation(1);
 
-    return this._coll.insertOne(doc).then(t => t.ops[0]);
+    const result: InsertOneResult<T> = await this._coll.insertOne(doc);
+    doc._id = result.insertedId;
+    return doc as WithId<T>;
   }
 
-  async insertMany(docs: Array<T>): Promise<ObjectId[]> {
+  async insertMany(docs: Array<OptionalUnlessRequiredId<T>>): Promise<ObjectId[]> {
     await this.documentCountLimitValidation(docs.length);
 
     return this._coll.insertMany(docs).then(t => Object.values(t.insertedIds));
   }
 
   // Find
-  findOne(filter: FilterQuery<T>, options?: FindOneOptions): Promise<T> {
+  findOne(filter: Filter<T>, options?: FindOptions): Promise<WithId<T>> {
     return this._coll.findOne(filter, options);
   }
 
-  find(filter?: FilterQuery<T>, options?: FindOneOptions): Promise<T[]> {
+  find(filter?: Filter<T>, options?: FindOptions): Promise<WithId<T>[]> {
     return this._coll.find(filter, options).toArray();
   }
 
   // Delete
-  findOneAndDelete(filter: FilterQuery<T>, options?: FindOneAndDeleteOption): Promise<T> {
-    return this._coll.findOneAndDelete(filter, options).then(r => r.value);
+  findOneAndDelete(filter: Filter<T>, options?: FindOneAndDeleteOptions): Promise<WithId<T>> {
+    return this._coll.findOneAndDelete(filter, options);
   }
 
-  deleteOne(filter: FilterQuery<T>, options?: FindOneAndDeleteOption): Promise<number> {
+  deleteOne(filter: Filter<T>, options?: FindOptions): Promise<number> {
     return this._coll.deleteOne(filter, options).then(r => r.deletedCount);
   }
 
-  deleteMany(filter: FilterQuery<T>, options?: FindOneAndDeleteOption): Promise<number> {
+  deleteMany(filter: Filter<T>, options?: FindOptions): Promise<number> {
     return this._coll.deleteMany(filter, options).then(r => r.deletedCount);
   }
 
   // Replace
-  findOneAndReplace(filter: FilterQuery<T>, doc: T, options?: FindOneAndReplaceOption): Promise<T> {
-    return this._coll.findOneAndReplace(filter, Object(doc), options).then(r => r.value);
+  findOneAndReplace(
+    filter: Filter<T>,
+    doc: T,
+    options?: FindOneAndReplaceOptions
+  ): Promise<WithId<T>> {
+    return this._coll.findOneAndReplace(filter, doc, options);
   }
 
-  replaceOne(filter: FilterQuery<T>, doc: T, options?: FindOneAndReplaceOption): Promise<number> {
+  replaceOne(filter: Filter<T>, doc: T, options?: UpdateOptions): Promise<number> {
     return this._coll.replaceOne(filter, doc, options).then(r => r.modifiedCount);
   }
 
   // Update
   updateMany(
-    filter: FilterQuery<T>,
-    update: T | UpdateQuery<T>,
-    options?: UpdateManyOptions
+    filter: Filter<T>,
+    update: UpdateFilter<T> | T,
+    options?: UpdateOptions
   ): Promise<number> {
-    return this._coll.updateMany(filter, update, options).then(r => r.result.nModified);
+    return this._coll.updateMany(filter, update, options).then(r => r.modifiedCount);
   }
 
   updateOne(
-    filter: FilterQuery<T>,
-    update: T | UpdateQuery<T>,
-    options?: UpdateManyOptions
+    filter: Filter<T>,
+    update: UpdateFilter<T> | T,
+    options?: UpdateOptions
   ): Promise<number> {
-    return this._coll.updateOne(filter, update, options).then(r => r.result.nModified);
+    return this._coll.updateOne(filter, update, options).then(r => r.modifiedCount);
   }
 
   findOneAndUpdate(
-    filter: FilterQuery<T>,
-    update: T | UpdateQuery<T>,
-    options?: FindOneAndUpdateOption
-  ): Promise<T> {
-    return this._coll.findOneAndUpdate(filter, update, options).then(r => r.value);
+    filter: Filter<T>,
+    update: UpdateFilter<T> | T,
+    options?: FindOneAndUpdateOptions
+  ): Promise<WithId<T>> {
+    return this._coll.findOneAndUpdate(filter, update, options);
   }
 
-  //Time to live index
+  // Time to live index
   upsertTTLIndex(expireAfterSeconds: number) {
     return this._coll
       .listIndexes()
       .toArray()
-      .then(indexes => {
+      .then<string | Document>(indexes => {
         const ttlIndex = indexes.find(index => index.name == "created_at_1");
 
         if (!ttlIndex) {

@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
+import {BaseCollection, DatabaseService, ObjectId, ReturnDocument} from "@spica-server/database";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {StorageObject, StorageObjectMeta} from "./body";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
@@ -75,17 +75,11 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       .filterResources(resourceFilter)
       .filterByUserRequest(filter);
 
-    const seeking = new PipelineBuilder()
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .result();
+    const seeking = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
 
-    const pipeline = (await pipelineBuilder.paginate(
-      paginate,
-      seeking,
-      this.estimatedDocumentCount()
-    )).result();
+    const pipeline = (
+      await pipelineBuilder.paginate(paginate, seeking, this.estimatedDocumentCount())
+    ).result();
 
     if (paginate) {
       return this._coll
@@ -139,7 +133,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     }
 
     return this._coll
-      .findOneAndUpdate({_id}, {$set: {name}}, {returnOriginal: false})
+      .findOneAndUpdate({_id}, {$set: {name}}, {returnDocument: ReturnDocument.AFTER})
       .then(r => r.value);
   }
 
@@ -174,9 +168,9 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     await this.validateTotalStorageSize(schemas.reduce((sum, curr) => sum + curr.content.size, 0));
 
-    const insertedObjects = await this._coll
+    const insertedObjects: StorageObjectMeta[] = await this._coll
       .insertMany(schemas)
-      .then(result => result.ops as StorageObjectMeta[]);
+      .then(result => schemas.map((s, i) => ({...s, _id: result.insertedIds[i]})));
 
     for (const [i, object] of insertedObjects.entries()) {
       try {
