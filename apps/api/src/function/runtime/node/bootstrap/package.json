@@ -1,4 +1,4 @@
 {
-  "name": "function-workers-entrypoint",
+  "name": "function-node-entrypoint",
   "type": "module"
 }

@@ -17,7 +17,7 @@
       }
     },
     "compile": {
-      "dependsOn": ["transform-paths", "build-assets", "build-workers"]
+      "dependsOn": ["transform-paths", "build-assets", "build-function-node-entrypoint"]
     },
     "build-assets": {
       "dependsOn": ["api/bucket/expression:build-assets"]
@@ -29,7 +29,7 @@
         "command": "resolve-tspaths"
       }
     },
-    "build-workers": {
+    "build-function-node-entrypoint": {
       "executor": "nx:run-commands",
       "options": {
         "command": "rollup -c './apps/api/src/function/runtime/node/bootstrap/rollup.config.js' --bundleConfigAsCjs"

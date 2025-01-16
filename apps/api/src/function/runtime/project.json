@@ -11,7 +11,7 @@
       "dependsOn": [
         {
           "projects": ["api"],
-          "target": "build-workers"
+          "target": "build-function-node-entrypoint"
         }
       ]
     }
