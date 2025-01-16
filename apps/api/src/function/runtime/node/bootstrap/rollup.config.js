@@ -10,7 +10,7 @@ import * as path from "path";
 module.exports = {
   input: "./apps/api/src/function/runtime/node/bootstrap/entrypoint.js",
   output: {
-    dir: "./dist/apps/worker",
+    dir: "./dist/apps/api/src/function/runtime/node/bootstrap",
     format: "esm",
     sourcemap: true
   },
@@ -42,10 +42,8 @@ module.exports = {
       preferBuiltins: true
     }),
     typescript({
-      module: "esnext",
-      outDir: "./dist/apps/worker",
-      sourceMap: true,
-      declaration: false
+      outDir: "./dist/apps/api/src/function/runtime/node/bootstrap",
+      tsconfig: "./apps/api/src/function/runtime/node/bootstrap/tsconfig.json",
     }),
     json(),
     commonjs({
@@ -56,7 +54,7 @@ module.exports = {
       targets: [
         {
           src: "./apps/api/src/function/runtime/node/bootstrap/package.json",
-          dest: "./dist/apps/worker"
+          dest: "./dist/apps/api/src/function/runtime/node/bootstrap"
         }
       ]
     })
