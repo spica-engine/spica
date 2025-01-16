@@ -14,7 +14,7 @@ import {
 import {activity} from "@spica-server/activity/services";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as uniqid from "uniqid";
 import {createApikeyActivity} from "./activity.resource";
@@ -95,7 +95,7 @@ export class ApiKeyController {
     delete apiKey.key;
     // We can't perform a replace operation on this endpoint because the "key" key is not present on this endpoint.
     return this.apiKeyService
-      .findOneAndUpdate({_id: id}, {$set: apiKey}, {returnOriginal: false})
+      .findOneAndUpdate({_id: id}, {$set: apiKey}, {returnDocument: ReturnDocument.AFTER})
       .then(result => {
         if (!result) throw new NotFoundException();
         return result;
@@ -130,7 +130,7 @@ export class ApiKeyController {
         $addToSet: {policies: policyId}
       },
       {
-        returnOriginal: false
+        returnDocument: ReturnDocument.AFTER
       }
     );
   }
@@ -152,7 +152,7 @@ export class ApiKeyController {
         $pull: {policies: policyId}
       },
       {
-        returnOriginal: false
+        returnDocument: ReturnDocument.AFTER
       }
     );
   }

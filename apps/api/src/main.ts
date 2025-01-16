@@ -411,10 +411,8 @@ const modules = [
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
-    poolSize: args["database-pool-size"],
-    appname: "spica",
-    useNewUrlParser: true,
-    ["useUnifiedTopology" as any]: true
+    maxPoolSize: args["database-pool-size"],
+    appName: "spica"
   }),
   SchemaModule.forRoot({
     formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],

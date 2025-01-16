@@ -11,7 +11,7 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {PassportOptions, PASSPORT_OPTIONS, STRATEGIES} from "../options";
 import {Strategy, StrategyTypeService} from "./interface";
@@ -35,9 +35,8 @@ export class StrategyController {
   @UseGuards(AuthGuard(), ActionGuard("passport:strategy:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.strategy.findOne({_id: id}).then(strategy => {
-      strategy[
-        "callbackUrl"
-      ] = `${this.options.publicUrl}/passport/strategy/${strategy._id}/complete`;
+      strategy["callbackUrl"] =
+        `${this.options.publicUrl}/passport/strategy/${strategy._id}/complete`;
       return strategy;
     });
   }
@@ -87,7 +86,7 @@ export class StrategyController {
     }
 
     let updatedStrategy = await this.strategy.findOneAndReplace({_id: id}, strategy, {
-      returnOriginal: false
+      returnDocument: ReturnDocument.AFTER
     });
 
     if (service.afterInsert) {

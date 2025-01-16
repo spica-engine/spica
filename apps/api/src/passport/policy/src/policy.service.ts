@@ -1,13 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {
-  Collection,
-  DatabaseService,
-  ObjectId,
-  InsertOneWriteOpResult,
-  FilterQuery,
-  FindOneAndReplaceOption,
-  BaseCollection
-} from "@spica-server/database";
+import {Collection, DatabaseService, ObjectId, BaseCollection} from "@spica-server/database";
 import {Policy} from "./interface";
 import managedPolicies from "./policies";
 
@@ -22,7 +14,7 @@ export class PolicyService extends BaseCollection("policies") {
 
   constructor(db: DatabaseService) {
     super(db);
-    this.managedPolicies = managedPolicies.map(p => ({...p, system: true} as PolicyWithType));
+    this.managedPolicies = managedPolicies.map(p => ({...p, system: true}) as PolicyWithType);
   }
 
   _findAll(): Promise<Policy[]> {

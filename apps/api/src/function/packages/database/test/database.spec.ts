@@ -13,13 +13,12 @@ function setEnvironment() {
 }
 
 describe("database", () => {
-  let connectSpy: jest.SpyInstance<void, [callback: mongodb.MongoCallback<mongodb.MongoClient>], any>;
-  let closeSpy: jest.SpyInstance<void, [force: boolean, callback: mongodb.MongoCallback<void>], any>;
-  let isConnectedSpy: jest.SpyInstance<boolean, [options?: mongodb.MongoClientCommonOption], any>
-  let dbSpy: jest.SpyInstance<mongodb.Db, [dbName?: string, options?: mongodb.MongoClientCommonOption], any>;
-  let collectionSpy: jest.SpyInstance<any>;
+  let connectSpy: jest.SpyInstance<typeof mongodb.MongoClient.prototype.connect>;
+  let closeSpy: jest.SpyInstance<typeof mongodb.MongoClient.prototype.close>;
+  let dbSpy: jest.SpyInstance<typeof mongodb.MongoClient.prototype.db>;
+  let collectionSpy: jest.SpyInstance<typeof mongodb.Db.prototype.collection>;
   let watchSpy: jest.Mock<mongodb.Collection["watch"]>;
-  let emitWarningSpy: jest.SpyInstance<void, [warning: string | Error, options?: NodeJS.EmitWarningOptions], any>
+  let emitWarningSpy: jest.SpyInstance<typeof process.emitWarning>;
 
   beforeEach(() => {
     let connected = false;
@@ -30,19 +29,16 @@ describe("database", () => {
         connected = true;
         return undefined;
       });
-    isConnectedSpy = jest
-      .spyOn(mongodb.MongoClient.prototype, "isConnected")
-      .mockImplementation(() => connected);
     closeSpy = jest.spyOn(mongodb.MongoClient.prototype, "close").mockImplementation(async () => {
       connected = false;
       return undefined;
     });
     dbSpy = jest.spyOn(mongodb.MongoClient.prototype, "db").mockImplementation(() => {
-      return ({collection: collectionSpy} as unknown) as mongodb.Db;
+      return {collection: collectionSpy} as unknown as mongodb.Db;
     });
 
     collectionSpy = jest.spyOn(mongodb.Db.prototype, "collection").mockImplementation(() => {
-      return ({
+      return {
         watch: watchSpy,
         find: jest.fn(),
         findOne: jest.fn(),
@@ -55,7 +51,7 @@ describe("database", () => {
         updateMany: jest.fn(),
         deleteOne: jest.fn(),
         deleteMany: jest.fn()
-      } as unknown) as mongodb.Collection;
+      } as unknown as mongodb.Collection;
     });
 
     watchSpy = jest.fn();
@@ -63,15 +59,14 @@ describe("database", () => {
     resetEnvironment();
   });
 
-  afterEach( () => {
+  afterEach(() => {
     emitWarningSpy.mockClear();
     connectSpy.mockClear();
-    isConnectedSpy.mockClear();
     closeSpy.mockClear();
     dbSpy.mockClear();
     collectionSpy.mockClear();
     watchSpy.mockClear();
-  })
+  });
 
   it("it should throw an error if environment variables is missing", async () => {
     await expect(database()).rejects.toEqual(
@@ -86,7 +81,6 @@ describe("database", () => {
     setEnvironment();
     const db = await database();
     expect(connectSpy).toHaveBeenCalledTimes(1);
-    expect(isConnectedSpy).toHaveBeenCalled();
     expect(dbSpy).toHaveBeenCalledTimes(1);
     expect(dbSpy).toHaveBeenCalledWith("testingdb");
     expect(db).toBeTruthy();
