@@ -1,6 +1,4 @@
 import {
-  CacheInterceptor,
-  CACHE_MANAGER,
   CallHandler,
   ExecutionContext,
   Inject,
@@ -12,6 +10,7 @@ import {
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {BucketCacheService} from "./service";
+import {CacheInterceptor, CACHE_MANAGER} from "@nestjs/cache-manager";
 
 class BucketCacheInterceptor extends CacheInterceptor {
   constructor(@Optional() @Inject(CACHE_MANAGER) cacheManager: any, reflector: any) {
