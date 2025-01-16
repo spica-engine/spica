@@ -1,5 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
-  "files": [],
-  "include": [],
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../"
+    },
+    {
+      "path": "../../interface/realtime"
+    }
+  ]
 }

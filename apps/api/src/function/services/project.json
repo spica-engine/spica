@@ -1,0 +1,5 @@
+{
+  "name": "api/function/services",
+  "sourceRoot": "apps/api/src/function/services",
+  "projectType": "application"
+}

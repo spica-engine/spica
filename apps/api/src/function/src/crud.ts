@@ -8,7 +8,7 @@ import {
 import {ChangeKind, changesFromTriggers, createTargetChanges, hasContextChange} from "./change";
 import {ObjectId} from "@spica-server/database";
 import {FunctionEngine} from "./engine";
-import {LogService} from "@spica-server/function/src/log";
+import {LogService} from "@spica-server/function/log";
 import {NotFoundException} from "@nestjs/common";
 
 export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Function) {

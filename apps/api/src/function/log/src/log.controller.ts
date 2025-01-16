@@ -10,7 +10,7 @@ import {
 } from "@nestjs/common";
 import {ARRAY, DATE, DEFAULT, NUMBER} from "@spica-server/core";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {LogService} from "./log.service";
 
 @Controller("function-logs")

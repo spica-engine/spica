@@ -1,2 +1,2 @@
-export {ChangeQueue} from "./queue";
-export {Change} from "./change";
+export {ChangeQueue} from "./src/queue";
+export {Change} from "./src/change";

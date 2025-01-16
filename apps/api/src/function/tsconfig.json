@@ -1,10 +1,21 @@
 {
   "extends": "../../../../tsconfig.json",
-  "files": [],
-  "include": [],
+  "include": ["src/**/*.ts", "index.ts","src/**/*.json"],
   "references": [
     {
-      "path": "./tsconfig.spec.json"
-    }
+      "path": "../versioncontrol"
+    },
+    {
+      "path": "./webhook"
+    },
+    {
+      "path": "./scheduler"
+    },
+    {
+      "path": "./log"
+    },
+    {
+      "path": "../asset"
+    },
   ]
 }

@@ -1,6 +1,6 @@
 import {INestApplication, UnauthorizedException} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {LogModule} from "@spica-server/function/src/log";
+import {LogModule} from "@spica-server/function/log";
 import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule} from "@spica-server/database/testing";

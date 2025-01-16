@@ -1,10 +1,30 @@
 {
   "extends": "../../../../tsconfig.json",
-  "files": [],
-  "include": [],
+  "include": ["src/**/*.ts", "schema/*.json" , "index.ts"],
   "references": [
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../../../../libs/database"
+    },
+    {
+      "path": "../../../../libs/interface/asset"
+    },
+    {
+      "path": "../../../../libs/interface/representative"
+    },
+    {
+      "path": "../../../../libs/core/differ"
+    },
+    {
+      "path": "../../../../libs/core"
+    },
+    {
+      "path": "../../../../libs/core/schema"
+    },
+    {
+      "path": "../../../../libs/representative"
+    },
+    {
+      "path": "../../src/passport/guard"
     }
   ]
 }

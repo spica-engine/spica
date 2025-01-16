@@ -6,35 +6,10 @@
   "tags": [],
   "targets": {
     "serve": {
-      "executor": "nx:run-commands",
+      "executor": "@nx/js:node",
+      "dependsOn": ["build", "build-workers"],
       "options": {
-        "commands": [
-          {
-            "command": "nx build-workers api"
-          },
-          {
-            "command": "nx build api"
-          },
-          {
-            "command": "wait-on dist/apps/api/main.js dist/apps/worker/entrypoint.js && nodemon dist/apps/api/main.js"
-          }
-        ]
-      }
-    },
-    "build": {
-      "executor": "@nx/webpack:webpack",
-      "options": {
-        "outputPath": "dist/apps/api",
-        "main": "apps/api/src/main.ts",
-        "tsConfig": "apps/api/tsconfig.json",
-        "webpackConfig": "apps/api/webpack.config.js",
-        "assets": [
-          {
-            "input": "apps/api/src/bucket/expression/src",
-            "glob": "*.pegjs",
-            "output": "./"
-          }
-        ]
+        "buildTarget": "api:build"
       }
     },
     "build-workers": {

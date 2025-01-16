@@ -3,7 +3,13 @@ import {Asset, Resource} from "@spica-server/interface/asset";
 import {IInstallationStrategy} from "./interface";
 
 export abstract class InstallationStrategy implements IInstallationStrategy {
-  asset: Asset;
+  private _asset: Asset;
+  public get asset(): Asset {
+    return this._asset;
+  }
+  public set asset(value: Asset) {
+    this._asset = value;
+  }
   previousAsset: Asset;
   changes: {
     insertions: Resource<object>[];

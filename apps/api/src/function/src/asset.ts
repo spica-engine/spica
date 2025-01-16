@@ -10,7 +10,7 @@ import {generate} from "./schema/enqueuer.resolver";
 import * as CRUD from "./crud";
 import {FunctionService} from "@spica-server/function/services";
 import {FunctionEngine} from "./engine";
-import {LogService} from "@spica-server/function/src/log";
+import {LogService} from "@spica-server/function/log";
 import {ObjectId} from "@spica-server/database";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 
