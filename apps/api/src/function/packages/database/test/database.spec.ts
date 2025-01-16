@@ -1,4 +1,4 @@
-import {close, connection, database} from "@spica-devkit/database";
+import {close, isConnected, database} from "@spica-devkit/database";
 import * as mongodb from "mongodb";
 import {ObjectId} from "mongodb";
 
@@ -105,9 +105,9 @@ describe("database", () => {
   it("should close the connection", async () => {
     setEnvironment();
     const _ = await database();
-    expect(!!connection).toBe(true);
+    expect(isConnected()).toBe(true);
     await close();
-    expect(!connection).toBe(false);
+    expect(isConnected()).toBe(false);
   });
 
   describe("presence of objectid", () => {

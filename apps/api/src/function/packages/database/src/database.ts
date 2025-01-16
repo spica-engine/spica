@@ -7,7 +7,7 @@ process.once("SIGTERM", () => {
   close(false, () => process.exit());
 });
 
-export let connection: _mongodb.MongoClient = globalThis[Symbol.for("kDatabaseDevkitConn")];
+let connection: _mongodb.MongoClient = globalThis[Symbol.for("kDatabaseDevkitConn")];
 
 function ignoreWarnings() {
   return "NO_DEVKIT_DATABASE_WARNING" in process.env;
@@ -170,6 +170,6 @@ export function close(force?: boolean, cb?: (...args: any) => void): Promise<voi
   return typeof cb == "function" ? cb() : Promise.resolve();
 }
 
-export function connected() {
-  return connection && connection.isConnected();
+export function isConnected() {
+  return !!connection;
 }

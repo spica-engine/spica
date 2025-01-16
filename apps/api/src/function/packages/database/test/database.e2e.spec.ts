@@ -1,4 +1,4 @@
-import {database, connection, close} from "@spica-devkit/database";
+import {database, isConnected, close} from "@spica-devkit/database";
 import {start, getConnectionUri, getDatabaseName} from "@spica-server/database/testing";
 import {Db} from "mongodb";
 
@@ -13,14 +13,14 @@ describe("Database e2e", () => {
     const db = await database();
 
     expect(db instanceof Db).toBe(true);
-    expect(!!connection).toBe(true);
+    expect(isConnected()).toBe(true);
   });
 
   it("should close the connection to the database", async () => {
     const _ = await database();
-    expect(!!connection).toBe(true);
+    expect(isConnected()).toBe(true);
     await close();
-    expect(!connection).toBe(false);
+    expect(isConnected()).toBe(false);
   });
 
   it("should write to database", async () => {
