@@ -32,10 +32,12 @@ function checkEnvironment() {
 }
 
 async function connect(): Promise<_mongodb.MongoClient> {
-  connection = new mongodb.MongoClient(process.env.__INTERNAL__SPICA__MONGOURL__, {
-    replicaSet: process.env.__INTERNAL__SPICA__MONGOREPL__,
-    appName: `Functions on ${process.env.RUNTIME || "unknown"} runtime.`
-  });
+  if (!connection) {
+    connection = new mongodb.MongoClient(process.env.__INTERNAL__SPICA__MONGOURL__, {
+      replicaSet: process.env.__INTERNAL__SPICA__MONGOREPL__,
+      appName: `Functions on ${process.env.RUNTIME || "unknown"} runtime.`
+    });
+  }
   await connection.connect();
   return connection;
 }
