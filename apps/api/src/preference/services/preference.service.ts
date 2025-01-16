@@ -62,16 +62,13 @@ export class PreferenceService extends BaseCollection("preferences") {
     preference: T,
     options?: FindOneAndReplaceOptions
   ) {
-    return this._coll
-      .findOneAndReplace(filter, preference, options)
-      .then(preference => preference.value);
+    return this._coll.findOneAndReplace(filter, preference, options).then(preference => preference);
   }
 
   insertOne<T extends OptionalId<Preference>>(preference: T): Promise<WithId<Preference>> {
-    return this._coll.insertOne(preference).then(r => {
-      preference._id = r.insertedId;
-      return preference as WithId<Preference>;
-    });
+    return this._coll
+      .insertOne(preference)
+      .then(result => ({_id: result.insertedId, ...preference}));
   }
 
   default<T extends Preference>(preference: T) {

@@ -1,5 +1,11 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService, ObjectId, ReturnDocument} from "@spica-server/database";
+import {
+  BaseCollection,
+  DatabaseService,
+  ObjectId,
+  ReturnDocument,
+  WithId
+} from "@spica-server/database";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {StorageObject, StorageObjectMeta} from "./body";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
@@ -108,12 +114,14 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     return Promise.all(urlPromises).then(() => objects);
   }
 
-  async get(id: ObjectId): Promise<StorageObject<Buffer>> {
-    const object: StorageObject<Buffer> = await this._coll.findOne({_id: new ObjectId(id)});
+  async get(id: ObjectId): Promise<WithId<StorageObject<Buffer>>> {
+    const object = await this._coll.findOne({_id: new ObjectId(id)});
     if (!object) return null;
 
-    object.content.data = await this.service.read(id.toHexString());
-    return object;
+    const objectWithData = object as WithId<StorageObject<Buffer>>;
+
+    objectWithData.content.data = await this.service.read(id.toHexString());
+    return objectWithData;
   }
 
   async delete(id: ObjectId): Promise<void> {
@@ -132,9 +140,11 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       throw new Error(`Storage object ${_id} could not be found`);
     }
 
-    return this._coll
-      .findOneAndUpdate({_id}, {$set: {name}}, {returnDocument: ReturnDocument.AFTER})
-      .then(r => r.value);
+    return this._coll.findOneAndUpdate(
+      {_id},
+      {$set: {name}},
+      {returnDocument: ReturnDocument.AFTER}
+    );
   }
 
   async update(
