@@ -32,15 +32,11 @@ function checkEnvironment() {
 }
 
 async function connect(): Promise<_mongodb.MongoClient> {
-  if (!connected()) {
-    connection = new mongodb.MongoClient(process.env.__INTERNAL__SPICA__MONGOURL__, {
-      replicaSet: process.env.__INTERNAL__SPICA__MONGOREPL__,
-      appName: `Functions on ${process.env.RUNTIME || "unknown"} runtime.`
-    });
-  }
-  if (!connection) {
-    await connection.connect();
-  }
+  connection = new mongodb.MongoClient(process.env.__INTERNAL__SPICA__MONGOURL__, {
+    replicaSet: process.env.__INTERNAL__SPICA__MONGOREPL__,
+    appName: `Functions on ${process.env.RUNTIME || "unknown"} runtime.`
+  });
+  await connection.connect();
   return connection;
 }
 
@@ -162,8 +158,4 @@ export function close(force?: boolean): Promise<void> | void {
     return connection.close(force);
   }
   return Promise.resolve();
-}
-
-export function connected() {
-  return connection;
 }
