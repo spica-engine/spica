@@ -74,7 +74,7 @@ export class Validator {
     for (const interceptor of this._resolvers) {
       const result = interceptor(uri);
       if (!!result) {
-        if (isObservable<Object>(result)) {
+        if (isObservable(result)) {
           result
             .pipe(
               skip(1),

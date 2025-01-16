@@ -1,4 +1,4 @@
-import {Global, Module} from "@nestjs/common";
+import {DynamicModule, Global, Module} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
 import {AssetController} from "./controller";
 import {AssetService} from "./service";
@@ -20,7 +20,7 @@ import {installationStrategies} from "./strategies";
 @Global()
 @Module({})
 export class AssetModule {
-  static forRoot(options: AssetOptions) {
+  static forRoot(options: AssetOptions): DynamicModule {
     return {
       module: AssetModule,
       imports: [
