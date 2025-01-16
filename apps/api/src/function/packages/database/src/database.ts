@@ -7,7 +7,7 @@ process.once("SIGTERM", () => {
   close(false, () => process.exit());
 });
 
-let connection: _mongodb.MongoClient = globalThis[Symbol.for("kDatabaseDevkitConn")];
+export let connection: _mongodb.MongoClient = globalThis[Symbol.for("kDatabaseDevkitConn")];
 
 function ignoreWarnings() {
   return "NO_DEVKIT_DATABASE_WARNING" in process.env;
