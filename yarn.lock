@@ -11856,10 +11856,10 @@ mimic-response@^3.1.0:
   resolved "https://registry.npmjs.org/mimic-response/-/mimic-response-3.1.0.tgz"
   integrity sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==
 
-mingo@^4.4.1:
-  version "4.4.1"
-  resolved "https://registry.npmjs.org/mingo/-/mingo-4.4.1.tgz"
-  integrity sha512-aig/3anjeJ8VcXLqDQmB/iO8Z8BVzln2BeWcyeI5NtOiLMAQ5xX00QHX9piy8OBAC9pSDYWErY8MHoh8nlCHig==
+mingo@^6.5.1:
+  version "6.5.1"
+  resolved "https://registry.yarnpkg.com/mingo/-/mingo-6.5.1.tgz#c4443ccfef1fe4e1462308474719b6ab93b0b39c"
+  integrity sha512-txCqo2abwgA+oG5QyzPdvv/lYdN8rptMbvVqN87Ao73vA8r2xG0XT3Rj4R5o+YeQ4hImq4PsLzqsRQ/qVyXBPw==
 
 mini-css-extract-plugin@2.7.2:
   version "2.7.2"
