@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {OAuthRequestDetails, OAuthStrategy, Strategy, StrategyTypeService} from "../interface";
 import {StrategyService} from "./strategy.service";
 import {PassportOptions, PASSPORT_OPTIONS, RequestService, REQUEST_SERVICE} from "../../options";
@@ -77,7 +77,7 @@ export class OAuthService implements StrategyTypeService {
           "options.access_token.params.redirect_uri": redirectUri
         }
       },
-      {returnOriginal: false}
+      {returnDocument: ReturnDocument.AFTER}
     );
   }
 

@@ -1,4 +1,4 @@
-import {Global, Module} from "@nestjs/common";
+import {DynamicModule, Global, Module} from "@nestjs/common";
 import {attachStatusTrackerFactory, StatusInterceptor} from "./interceptor";
 import {StatusOptions, STATUS_OPTIONS, ATTACH_STATUS_TRACKER} from "./interface";
 import {StatusService} from "./service";
@@ -6,7 +6,7 @@ import {StatusService} from "./service";
 @Global()
 @Module({})
 export class CoreStatusServiceModule {
-  static forRoot(options: StatusOptions) {
+  static forRoot(options: StatusOptions): DynamicModule {
     return {
       module: CoreStatusServiceModule,
       providers: [

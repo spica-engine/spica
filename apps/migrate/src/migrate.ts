@@ -49,11 +49,12 @@ export function getMigrations(version: string): string[] {
 export async function migrate(options: Options) {
   const versions = migrationVersions(options.from, options.to);
   console.log(`${color.green("VERSIONS:")} ${versions.join(", ") || "None"}`);
-  const mongo = await mongodb.connect(options.database.uri, {
-    appname: "spicaengine/migrate",
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  } as mongodb.MongoClientOptions);
+
+  const mongo = new mongodb.MongoClient(options.database.uri, {
+    appName: "spicaengine/migrate"
+  });
+  await mongo.connect();
+
   const db = mongo.db(options.database.name);
 
   const ctx: Context = {

@@ -24,7 +24,7 @@ import {
 import {activity} from "@spica-server/activity/services";
 import {ARRAY, BOOLEAN, DEFAULT} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as os from "os";
@@ -171,7 +171,7 @@ export class FunctionController {
     const patchedFn = applyPatch(previousFn, patch);
     delete patchedFn._id;
 
-    return this.fs.findOneAndReplace({_id: id}, patchedFn, {returnOriginal: false});
+    return this.fs.findOneAndReplace({_id: id}, patchedFn, {returnDocument: ReturnDocument.AFTER});
   }
 
   /**
@@ -282,7 +282,10 @@ export class FunctionController {
         tap(response => res.write(`${JSON.stringify(response)}${os.EOL}`))
       );
     }
-    operators.push(last(), finalize(() => res.end()));
+    operators.push(
+      last(),
+      finalize(() => res.end())
+    );
 
     return (this.engine.addPackage(fn, name) as any).pipe(...operators);
   }

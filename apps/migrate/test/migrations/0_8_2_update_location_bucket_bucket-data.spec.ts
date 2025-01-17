@@ -123,47 +123,45 @@ describe("Update location for bucket schema and bucket-data", () => {
       })
       .toArray();
 
-    expect(buckets).toEqual(
-      [
-        {
-          title: "New Bucket",
-          properties: {
-            market: {
-              type: "location",
-              locationType: "Point"
-            },
-            description: {
-              type: "string"
-            },
-            shop: {
-              type: "location",
-              locationType: "Point"
-            }
-          }
-        },
-        {
-          title: "New Bucket2",
-          properties: {
-            home: {
-              type: "location",
-              locationType: "Point"
-            }
-          }
-        },
-        {
-          title: "New Bucket3",
-          properties: {
-            title: {
-              type: "string"
-            }
+    expect(buckets).toEqual([
+      {
+        title: "New Bucket",
+        properties: {
+          market: {
+            type: "location",
+            locationType: "Point"
+          },
+          description: {
+            type: "string"
+          },
+          shop: {
+            type: "location",
+            locationType: "Point"
           }
         }
-      ]
-    );
+      },
+      {
+        title: "New Bucket2",
+        properties: {
+          home: {
+            type: "location",
+            locationType: "Point"
+          }
+        }
+      },
+      {
+        title: "New Bucket3",
+        properties: {
+          title: {
+            type: "string"
+          }
+        }
+      }
+    ]);
 
     const bucket1Docs = await db
       .collection(`bucket_${bucket1Id}`)
-      .find<any>()
+      .find()
       .toArray()
       .then(docs =>
         docs.map(doc => {
@@ -172,33 +170,31 @@ describe("Update location for bucket schema and bucket-data", () => {
         })
       );
 
-    expect(bucket1Docs).toEqual(
-      [
-        {
-          market: {
-            type: "Point",
-            // longitude first
-            coordinates: [50, 51]
-          },
-          description: "some desc",
-          shop: {
-            type: "Point",
-            coordinates: [100, 101]
-          }
+    expect(bucket1Docs).toEqual([
+      {
+        market: {
+          type: "Point",
+          // longitude first
+          coordinates: [50, 51]
         },
-        {
-          market: {
-            type: "Point",
-            coordinates: [120, 121]
-          },
-          description: "some desc"
+        description: "some desc",
+        shop: {
+          type: "Point",
+          coordinates: [100, 101]
         }
-      ]
-    );
+      },
+      {
+        market: {
+          type: "Point",
+          coordinates: [120, 121]
+        },
+        description: "some desc"
+      }
+    ]);
 
     const bucket2Docs = await db
       .collection(`bucket_${bucket2Id}`)
-      .find<any>()
+      .find()
       .toArray()
       .then(docs =>
         docs.map(doc => {
@@ -207,26 +203,24 @@ describe("Update location for bucket schema and bucket-data", () => {
         })
       );
 
-    expect(bucket2Docs).toEqual(
-      [
-        {
-          home: {
-            type: "Point",
-            coordinates: [null, null]
-          }
-        },
-        {
-          home: {
-            type: "Point",
-            coordinates: [131, 130]
-          }
+    expect(bucket2Docs).toEqual([
+      {
+        home: {
+          type: "Point",
+          coordinates: [null, null]
         }
-      ]
-    );
+      },
+      {
+        home: {
+          type: "Point",
+          coordinates: [131, 130]
+        }
+      }
+    ]);
 
     const bucket3Docs = await db
       .collection(`bucket_${bucket3Id}`)
-      .find<any>()
+      .find()
       .toArray()
       .then(docs =>
         docs.map(doc => {
@@ -235,12 +229,10 @@ describe("Update location for bucket schema and bucket-data", () => {
         })
       );
 
-    expect(bucket3Docs).toEqual(
-      [
-        {
-          title: "test"
-        }
-      ]
-    );
+    expect(bucket3Docs).toEqual([
+      {
+        title: "test"
+      }
+    ]);
   });
 });

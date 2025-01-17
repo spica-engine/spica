@@ -1,10 +1,10 @@
-import * as util from "util";
 import {checkDocument, checkDocuments} from "./check";
 import {mongodb, _mongodb} from "./mongo";
 import {ObjectId} from "./objectid";
 
 process.once("SIGTERM", () => {
-  close(false, () => process.exit());
+  const closeRes = close(false);
+  closeRes instanceof Promise ? closeRes.then(() => process.exit()) : process.exit();
 });
 
 let connection: _mongodb.MongoClient = globalThis[Symbol.for("kDatabaseDevkitConn")];
@@ -21,10 +21,8 @@ function checkEnvironment() {
     );
   }
 
-  const {
-    __INTERNAL__SPICA__MONGOURL__: url,
-    __INTERNAL__SPICA__MONGODBNAME__: dbName
-  } = process.env;
+  const {__INTERNAL__SPICA__MONGOURL__: url, __INTERNAL__SPICA__MONGODBNAME__: dbName} =
+    process.env;
 
   if (!url || !dbName) {
     throw new Error(
@@ -34,18 +32,13 @@ function checkEnvironment() {
 }
 
 async function connect(): Promise<_mongodb.MongoClient> {
-  if (!connected()) {
+  if (!connection) {
     connection = new mongodb.MongoClient(process.env.__INTERNAL__SPICA__MONGOURL__, {
       replicaSet: process.env.__INTERNAL__SPICA__MONGOREPL__,
-      appname: `Functions on ${process.env.RUNTIME || "unknown"} runtime.`,
-      useNewUrlParser: true,
-      // @ts-ignore
-      useUnifiedTopology: true
+      appName: `Functions on ${process.env.RUNTIME || "unknown"} runtime.`
     });
   }
-  if (!connection.isConnected()) {
-    await connection.connect();
-  }
+  await connection.connect();
   return connection;
 }
 
@@ -68,7 +61,7 @@ export async function database(): Promise<_mongodb.Db> {
   const collection = db.collection;
 
   db.collection = (...args) => {
-    const coll: _mongodb.Collection = collection.call(db, ...args);
+    const coll: _mongodb.Collection<any> = collection.call(db, ...args);
 
     const watch = coll.watch;
     coll.watch = (...args) => {
@@ -77,7 +70,6 @@ export async function database(): Promise<_mongodb.Db> {
       );
       return watch.bind(coll)(...args);
     };
-
     const findById = coll.findOne;
     coll["findById"] = (id, ...args) => {
       const objectId = new ObjectId(id);
@@ -85,12 +77,12 @@ export async function database(): Promise<_mongodb.Db> {
     };
 
     const findOne = coll.findOne;
-    coll.findOne = (filter, ...args) => {
+    coll.findOne = (filter?, ...args) => {
       validateDocs(filter);
       return findOne.bind(coll)(filter, ...args);
     };
     const find = coll.find;
-    coll.find = (filter, ...args) => {
+    coll.find = (filter?, ...args) => {
       validateDocs(filter);
       return find.bind(coll)(filter, ...args);
     };
@@ -162,12 +154,12 @@ function validateDocs(doc: object | object[]) {
   }
 }
 
-export function close(force?: boolean, cb?: (...args: any) => void): Promise<void> | void {
+export function close(force?: boolean): Promise<void> | void {
   if (connection) {
     globalThis[Symbol.for("kDatabaseDevkitConn")] = undefined;
-    return connection.close(force, cb);
+    return connection.close(force);
   }
-  return typeof cb == "function" ? cb() : Promise.resolve();
+    return Promise.resolve();
 }
 
 export function isConnected() {

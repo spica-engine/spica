@@ -22,7 +22,7 @@ import {
 import {activity} from "@spica-server/activity/services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {Factor, FactorMeta, AuthFactor} from "@spica-server/passport/authfactor";
 import {createIdentityActivity} from "./activity.resource";
@@ -137,11 +137,13 @@ export class IdentityController {
       .setVisibilityOfFields(this.hideSecretsExpression())
       .result();
 
-    const pipeline = (await pipelineBuilder.paginate(
-      paginate,
-      seekingPipeline,
-      this.identityService.estimatedDocumentCount()
-    )).result();
+    const pipeline = (
+      await pipelineBuilder.paginate(
+        paginate,
+        seekingPipeline,
+        this.identityService.estimatedDocumentCount()
+      )
+    ).result();
 
     if (paginate) {
       return this.identityService
@@ -217,9 +219,12 @@ export class IdentityController {
     const factor = this.setIdentityFactor(id, meta);
 
     // to keep this global value clear
-    setTimeout(() => {
-      this.deleteIdentityFactor(id);
-    }, 1000 * 60 * 5);
+    setTimeout(
+      () => {
+        this.deleteIdentityFactor(id);
+      },
+      1000 * 60 * 5
+    );
 
     const challenge = await factor.start();
 
@@ -335,7 +340,7 @@ export class IdentityController {
     delete identity.authFactor;
 
     return this.identityService
-      .findOneAndUpdate({_id: id}, {$set: identity}, {returnOriginal: false})
+      .findOneAndUpdate({_id: id}, {$set: identity}, {returnDocument: ReturnDocument.AFTER})
       .then(updatedIdentity => this.afterIdentityUpsert(updatedIdentity))
       .catch(exception => {
         throw new BadRequestException(
@@ -375,7 +380,7 @@ export class IdentityController {
         $addToSet: {policies: policyId}
       },
       {
-        returnOriginal: false,
+        returnDocument: ReturnDocument.AFTER,
         projection: {password: 0}
       }
     );
@@ -394,7 +399,7 @@ export class IdentityController {
         $pull: {policies: policyId}
       },
       {
-        returnOriginal: false,
+        returnDocument: ReturnDocument.AFTER,
         projection: {password: 0}
       }
     );

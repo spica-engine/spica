@@ -17,7 +17,7 @@ function visit(node) {
 }
 
 function visitItems(args: unknown[]): unknown[] {
-  const finalResult = [];
+  const finalResult: unknown[] = [];
   for (const arg of args) {
     if (Array.isArray(arg)) {
       const extracteds = visitItems(arg);
@@ -73,7 +73,7 @@ function visitNode(node) {
   }
   const left = visit(node.left);
   const right = visit(node.right);
-  const result = [];
+  const result: unknown[] = [];
 
   if (left) {
     if (Array.isArray(left)) {

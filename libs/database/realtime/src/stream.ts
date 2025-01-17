@@ -209,7 +209,7 @@ export class Emitter<T extends {_id: ObjectId}> {
         this.sortSubscription.unsubscribe();
       }
 
-      if (!this.changeStream.isClosed()) {
+      if (!this.changeStream.closed) {
         this.changeStream.unpipe(this.passThrough);
       }
 

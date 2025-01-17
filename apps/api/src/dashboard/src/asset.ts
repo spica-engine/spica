@@ -3,7 +3,7 @@ import {Dashboard, DashboardService} from "@spica-server/dashboard";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {Resource} from "@spica-server/interface/asset";
 import {registrar} from "@spica-server/asset";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId, ReturnDocument} from "@spica-server/database";
 
 const _module = "dashboard";
 
@@ -31,7 +31,7 @@ export function registerAssetHandlers(
       const _id = new ObjectId(dashboard._id);
       delete dashboard._id;
       return ds.findOneAndReplace({_id}, dashboard, {
-        returnOriginal: false
+        returnDocument: ReturnDocument.AFTER
       });
     },
 
