@@ -3,8 +3,7 @@ import {MongoMemoryReplSet, MongoMemoryServer} from "mongodb-memory-server";
 
 let uri;
 
-//@TODO: update it after the mongodb upgrade task
-const MONGODB_BINARY_VERSION = "5.0.19";
+const MONGODB_BINARY_VERSION = "7.0.14";
 
 export async function start(topology: "standalone" | "replset") {
   let mongod: MongoMemoryReplSet | MongoMemoryServer;

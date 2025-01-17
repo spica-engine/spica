@@ -10,7 +10,7 @@ import {PassportTestingModule} from "@spica-server/passport/testing";
 describe("Realtime Authorization", () => {
   let wsc: Websocket;
   let app: INestApplication;
-  let authGuardCheck: jest.Mock<typeof GuardService.prototype.checkAuthorization>;
+  let authGuardCheck: jest.SpyInstance<Promise<boolean>>;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({

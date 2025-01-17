@@ -1,4 +1,4 @@
-import {close, connected, database} from "@spica-devkit/database";
+import {close, isConnected, database} from "@spica-devkit/database";
 import * as mongodb from "mongodb";
 import {ObjectId} from "mongodb";
 
@@ -13,12 +13,15 @@ function setEnvironment() {
 }
 
 describe("database", () => {
-  let connectSpy: jest.SpyInstance<typeof mongodb.MongoClient.prototype.connect>;
-  let closeSpy: jest.SpyInstance<typeof mongodb.MongoClient.prototype.close>;
-  let dbSpy: jest.SpyInstance<typeof mongodb.MongoClient.prototype.db>;
-  let collectionSpy: jest.SpyInstance<typeof mongodb.Db.prototype.collection>;
+  let connectSpy: jest.SpyInstance<Promise<mongodb.MongoClient>>;
+  let closeSpy: jest.SpyInstance<Promise<void>, [force?: boolean]>;
+  let dbSpy: jest.SpyInstance<mongodb.Db, [dbName?: string, options?: mongodb.DbOptions]>;
+  let collectionSpy: jest.SpyInstance<mongodb.Collection<mongodb.BSON.Document>>;
   let watchSpy: jest.Mock<mongodb.Collection["watch"]>;
-  let emitWarningSpy: jest.SpyInstance<typeof process.emitWarning>;
+  let emitWarningSpy: jest.SpyInstance<
+    void,
+    [warning: string | Error, options?: NodeJS.EmitWarningOptions]
+  >;
 
   beforeEach(() => {
     let connected = false;
@@ -99,9 +102,9 @@ describe("database", () => {
   it("should close the connection", async () => {
     setEnvironment();
     const _ = await database();
-    expect(connected()).toBe(true);
+    expect(isConnected()).toBe(true);
     await close();
-    expect(connected()).toBe(false);
+    expect(isConnected()).toBe(false);
   });
 
   describe("presence of objectid", () => {
