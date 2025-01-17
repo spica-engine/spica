@@ -44,7 +44,7 @@
     "ts-jest": "^29.2.5",
     "type-is": "^1.6.18",
     "typescript": "^5.7.3",
-    "ws": "^7.1.2",
+    "ws": "^8.18.0",
     "yaml": "^2.7.0",
     "yargs": "^17.7.2"
   },
@@ -65,8 +65,8 @@
     "@types/json-schema": "^7.0.15",
     "@types/lodash": "^4.17.14",
     "@types/matcher": "^2.0.0",
+    "@types/ws": "^8.5.13",
     "@types/node": "^22.10.7",
-    "@types/ws": "^6.0.3",
     "@types/yargs": "^17.0.33",
     "dgeni": "^0.4.14",
     "dgeni-packages": "^0.30.0",
