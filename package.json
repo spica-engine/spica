@@ -35,7 +35,7 @@
     "json-merge-patch": "^1.0.2",
     "lodash": "^4.17.21",
     "matcher": "^3.0.0",
-    "mingo": "^4.4.1",
+    "mingo": "^6.5.1",
     "mongodb": "^5.0.0",
     "mongodb-memory-server": "~7.0.0",
     "path-to-regexp": "^8.2.0",
