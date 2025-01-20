@@ -4,32 +4,32 @@ export abstract class FunctionDeclarationModifier {
   static modifierName: string;
 
   modifiers: ts.Modifier[];
-  name: ts.Identifier;
-  asteriksToken: ts.AsteriskToken;
-  typeParameters: ts.TypeParameterDeclaration[];
-  type: ts.TypeNode;
+  name: ts.Identifier | undefined;
+  asteriksToken: ts.AsteriskToken | undefined;
+  typeParameters: ts.TypeParameterDeclaration[] | undefined;
+  type: ts.TypeNode | undefined;
 
-  body: ts.FunctionBody;
+  body: ts.FunctionBody | undefined;
   parameters: ts.ParameterDeclaration[];
-  decorators: ts.Decorator[];
+  decorators: ts.Decorator[] | undefined;
 
   constructor(private node: ts.FunctionDeclaration) {}
 
-  abstract setBody(): ts.FunctionBody;
+  abstract setBody(): ts.FunctionBody | undefined;
 
   abstract setParameters(): ts.ParameterDeclaration[];
 
-  abstract setDecorators(): ts.Decorator[];
+  abstract setDecorators(): ts.Decorator[] | undefined;
 
-  abstract setAsteriksToken(): ts.AsteriskToken;
+  abstract setAsteriksToken(): ts.AsteriskToken | undefined;
 
-  abstract setTypeParameters(): ts.TypeParameterDeclaration[];
+  abstract setTypeParameters(): ts.TypeParameterDeclaration[] | undefined;
 
-  abstract setType(): ts.TypeNode;
+  abstract setType(): ts.TypeNode | undefined;
 
   abstract setModifiers(): ts.Modifier[];
 
-  abstract setName(): ts.Identifier;
+  abstract setName(): ts.Identifier | undefined;
 
   abstract getExtraFunctionDeclarations(): ts.FunctionDeclaration[];
 
@@ -53,7 +53,6 @@ export abstract class FunctionDeclarationModifier {
 
     return ts.factory.updateFunctionDeclaration(
       this.node,
-      this.decorators,
       this.modifiers,
       this.asteriksToken,
       this.name,
@@ -72,7 +71,7 @@ export class SpicaFunctionModifier extends FunctionDeclarationModifier {
     return undefined;
   }
   setParameters() {
-    return [];
+    return [] as ts.ParameterDeclaration[];
   }
 
   setDecorators() {

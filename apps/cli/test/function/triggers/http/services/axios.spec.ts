@@ -19,7 +19,6 @@ describe("Axios", () => {
   beforeEach(() => {
     emptyFn = ts.factory.createFunctionDeclaration(
       [],
-      [],
       undefined,
       "test",
       [],

@@ -126,15 +126,15 @@ describe("Synchronize", () => {
       };
 
       beforeEach(() => {
-        sourceService.get.calls.reset();
-        sourceService.put.calls.reset();
-        sourceService.post.calls.reset();
-        sourceService.delete.calls.reset();
+        sourceService.get.mockClear();
+        sourceService.put.mockClear();
+        sourceService.post.mockClear();
+        sourceService.delete.mockClear();
 
-        targetService.get.calls.reset();
-        targetService.put.calls.reset();
-        targetService.post.calls.reset();
-        targetService.delete.calls.reset();
+        targetService.get.mockClear();
+        targetService.put.mockClear();
+        targetService.post.mockClear();
+        targetService.delete.mockClear();
       });
 
       describe("BucketSynchronizer", () => {
@@ -150,11 +150,11 @@ describe("Synchronize", () => {
           expect(synchronizer.updations).toEqual([{_id: "2", prop: "update_me"}]);
           expect(synchronizer.deletions).toEqual([{_id: "4", prop: "delete_me"}]);
 
-          expect(sourceService.get).toHaveBeenCalledOnceWith("bucket");
+          expect(sourceService.get).toHaveBeenCalledWith("bucket");
           expect(sourceService.put).not.toHaveBeenCalled();
           expect(sourceService.post).not.toHaveBeenCalled();
 
-          expect(targetService.get).toHaveBeenCalledOnceWith("bucket");
+          expect(targetService.get).toHaveBeenCalledWith("bucket");
           expect(targetService.put).not.toHaveBeenCalled();
           expect(targetService.post).not.toHaveBeenCalled();
         });
@@ -167,15 +167,15 @@ describe("Synchronize", () => {
           expect(sourceService.post).not.toHaveBeenCalled();
           expect(sourceService.delete).not.toHaveBeenCalled();
 
-          expect(targetService.put).toHaveBeenCalledOnceWith("bucket/2", {
+          expect(targetService.put).toHaveBeenCalledWith("bucket/2", {
             _id: "2",
             prop: "update_me"
           });
-          expect(targetService.post).toHaveBeenCalledOnceWith("bucket", {
+          expect(targetService.post).toHaveBeenCalledWith("bucket", {
             _id: "3",
             prop: "insert_me"
           });
-          expect(targetService.delete).toHaveBeenCalledOnceWith("bucket/4");
+          expect(targetService.delete).toHaveBeenCalledWith("bucket/4");
         });
       });
 
@@ -194,11 +194,11 @@ describe("Synchronize", () => {
           expect(synchronizer.updations).toEqual([{_id: "2", prop: "update_me"}]);
           expect(synchronizer.deletions).toEqual([{_id: "4", prop: "delete_me"}]);
 
-          expect(sourceService.get).toHaveBeenCalledOnceWith("function");
+          expect(sourceService.get).toHaveBeenCalledWith("function");
           expect(sourceService.put).not.toHaveBeenCalled();
           expect(sourceService.post).not.toHaveBeenCalled();
 
-          expect(targetService.get).toHaveBeenCalledOnceWith("function");
+          expect(targetService.get).toHaveBeenCalledWith("function");
           expect(targetService.put).not.toHaveBeenCalled();
           expect(targetService.post).not.toHaveBeenCalled();
         });
@@ -211,15 +211,15 @@ describe("Synchronize", () => {
           expect(sourceService.post).not.toHaveBeenCalled();
           expect(sourceService.delete).not.toHaveBeenCalled();
 
-          expect(targetService.put).toHaveBeenCalledOnceWith("function/2", {
+          expect(targetService.put).toHaveBeenCalledWith("function/2", {
             _id: "2",
             prop: "update_me"
           });
-          expect(targetService.post).toHaveBeenCalledOnceWith("function", {
+          expect(targetService.post).toHaveBeenCalledWith("function", {
             _id: "3",
             prop: "insert_me"
           });
-          expect(targetService.delete).toHaveBeenCalledOnceWith("function/4");
+          expect(targetService.delete).toHaveBeenCalledWith("function/4");
         });
       });
     });
@@ -265,15 +265,15 @@ describe("Synchronize", () => {
       };
 
       beforeEach(() => {
-        sourceService.get.calls.reset();
-        sourceService.put.calls.reset();
-        sourceService.post.calls.reset();
-        sourceService.delete.calls.reset();
+        sourceService.get.mockClear();
+        sourceService.put.mockClear();
+        sourceService.post.mockClear();
+        sourceService.delete.mockClear();
 
-        targetService.get.calls.reset();
-        targetService.put.calls.reset();
-        targetService.post.calls.reset();
-        targetService.delete.calls.reset();
+        targetService.get.mockClear();
+        targetService.put.mockClear();
+        targetService.post.mockClear();
+        targetService.delete.mockClear();
       });
 
       const synchronizer = new ApikeySynchronizer(sourceService as any, targetService as any);
@@ -292,11 +292,11 @@ describe("Synchronize", () => {
         expect(synchronizer.updations).toEqual(expecteds.updations);
         expect(synchronizer.deletions).toEqual(expecteds.deletions);
 
-        expect(sourceService.get).toHaveBeenCalledOnceWith("passport/apikey");
+        expect(sourceService.get).toHaveBeenCalledWith("passport/apikey");
         expect(sourceService.put).not.toHaveBeenCalled();
         expect(sourceService.post).not.toHaveBeenCalled();
 
-        expect(targetService.get).toHaveBeenCalledOnceWith("passport/apikey");
+        expect(targetService.get).toHaveBeenCalledWith("passport/apikey");
         expect(targetService.put).not.toHaveBeenCalled();
         expect(targetService.post).not.toHaveBeenCalled();
       });
@@ -310,7 +310,7 @@ describe("Synchronize", () => {
         expect(sourceService.delete).not.toHaveBeenCalled();
 
         expect(targetService.post).toHaveBeenCalledTimes(2);
-        expect(targetService.post.calls.allArgs()).toEqual([
+        expect(targetService.post.mock.calls).toEqual([
           [
             "passport/apikey",
             {
@@ -330,13 +330,13 @@ describe("Synchronize", () => {
         ]);
 
         expect(targetService.put).toHaveBeenCalledTimes(2);
-        expect(targetService.put.calls.allArgs()).toEqual([
+        expect(targetService.put.mock.calls).toEqual([
           ["passport/apikey/3/policy/brand_new_policy_id"],
           ["passport/apikey/2/policy/new_policy_id"]
         ]);
 
         expect(targetService.delete).toHaveBeenCalledTimes(2);
-        expect(targetService.delete.calls.allArgs()).toEqual([
+        expect(targetService.delete.mock.calls).toEqual([
           ["passport/apikey/2"],
           ["passport/apikey/4"]
         ]);
@@ -384,15 +384,15 @@ describe("Synchronize", () => {
       };
 
       beforeEach(() => {
-        sourceService.get.calls.reset();
-        sourceService.put.calls.reset();
-        sourceService.post.calls.reset();
-        sourceService.delete.calls.reset();
+        sourceService.get.mockClear();
+        sourceService.put.mockClear();
+        sourceService.post.mockClear();
+        sourceService.delete.mockClear();
 
-        targetService.get.calls.reset();
-        targetService.put.calls.reset();
-        targetService.post.calls.reset();
-        targetService.delete.calls.reset();
+        targetService.get.mockClear();
+        targetService.put.mockClear();
+        targetService.post.mockClear();
+        targetService.delete.mockClear();
       });
 
       const synchronizer = new PolicySynchronizer(sourceService as any, targetService as any);
@@ -411,11 +411,11 @@ describe("Synchronize", () => {
         expect(synchronizer.updations).toEqual(expecteds.updations);
         expect(synchronizer.deletions).toEqual(expecteds.deletions);
 
-        expect(sourceService.get).toHaveBeenCalledOnceWith("passport/policy");
+        expect(sourceService.get).toHaveBeenCalledWith("passport/policy");
         expect(sourceService.put).not.toHaveBeenCalled();
         expect(sourceService.post).not.toHaveBeenCalled();
 
-        expect(targetService.get).toHaveBeenCalledOnceWith("passport/policy");
+        expect(targetService.get).toHaveBeenCalledWith("passport/policy");
         expect(targetService.put).not.toHaveBeenCalled();
         expect(targetService.post).not.toHaveBeenCalled();
       });
@@ -428,17 +428,17 @@ describe("Synchronize", () => {
         expect(sourceService.post).not.toHaveBeenCalled();
         expect(sourceService.delete).not.toHaveBeenCalled();
 
-        expect(targetService.put).toHaveBeenCalledOnceWith("passport/policy/2", {
+        expect(targetService.put).toHaveBeenCalledWith("passport/policy/2", {
           _id: "2",
           name: "update_me",
           statements: []
         });
-        expect(targetService.post).toHaveBeenCalledOnceWith("passport/policy", {
+        expect(targetService.post).toHaveBeenCalledWith("passport/policy", {
           _id: "3",
           name: "insert_me",
           statements: []
         });
-        expect(targetService.delete).toHaveBeenCalledOnceWith("passport/policy/4");
+        expect(targetService.delete).toHaveBeenCalledWith("passport/policy/4");
       });
     });
   });
@@ -479,13 +479,13 @@ describe("Synchronize", () => {
       );
 
       beforeEach(() => {
-        sourceService.get.calls.reset();
-        sourceService.post.calls.reset();
-        sourceService.delete.calls.reset();
+        sourceService.get.mockClear();
+        sourceService.post.mockClear();
+        sourceService.delete.mockClear();
 
-        targetService.get.calls.reset();
-        targetService.post.calls.reset();
-        targetService.delete.calls.reset();
+        targetService.get.mockClear();
+        targetService.post.mockClear();
+        targetService.delete.mockClear();
       });
 
       it("should analyze dependencies", async () => {
@@ -499,11 +499,11 @@ describe("Synchronize", () => {
         expect(synchronizer.updations).toEqual([{name: "bucket", version: "^2"}]);
         expect(synchronizer.deletions).toEqual([{name: "identity", version: "^1"}]);
 
-        expect(sourceService.get).toHaveBeenCalledOnceWith("function/1/dependencies");
+        expect(sourceService.get).toHaveBeenCalledWith("function/1/dependencies");
         expect(sourceService.post).not.toHaveBeenCalled();
         expect(sourceService.delete).not.toHaveBeenCalled();
 
-        expect(targetService.get).toHaveBeenCalledOnceWith("function/1/dependencies");
+        expect(targetService.get).toHaveBeenCalledWith("function/1/dependencies");
         expect(sourceService.post).not.toHaveBeenCalled();
         expect(targetService.post).not.toHaveBeenCalled();
       });
@@ -516,14 +516,18 @@ describe("Synchronize", () => {
         expect(sourceService.delete).not.toHaveBeenCalled();
 
         // there is no put endpoint for dependencies
-        expect(targetService.post).toHaveBeenCalledOnceWith("function/1/dependencies", {
+        expect(targetService.post).toHaveBeenCalledWith("function/1/dependencies", {
           name: ["storage@1", "bucket@2"]
         });
-        expect(targetService.delete).toHaveBeenCalledOnceWith("function/1/dependencies/identity");
+        expect(targetService.delete).toHaveBeenCalledWith("function/1/dependencies/identity");
       });
     });
     describe("FunctionIndex", () => {
-      const sourceFns = [{_id: "1", name: "fn1"}, {_id: "2", name: "fn2"}, {_id: "3", name: "fn3"}];
+      const sourceFns = [
+        {_id: "1", name: "fn1"},
+        {_id: "2", name: "fn2"},
+        {_id: "3", name: "fn3"}
+      ];
       const sourceObjects = [
         {
           _id: "1",
@@ -585,13 +589,13 @@ describe("Synchronize", () => {
       );
 
       beforeEach(() => {
-        sourceService.get.calls.reset();
-        sourceService.post.calls.reset();
-        sourceService.delete.calls.reset();
+        sourceService.get.mockClear();
+        sourceService.post.mockClear();
+        sourceService.delete.mockClear();
 
-        targetService.get.calls.reset();
-        targetService.post.calls.reset();
-        targetService.delete.calls.reset();
+        targetService.get.mockClear();
+        targetService.post.mockClear();
+        targetService.delete.mockClear();
       });
 
       it("should analyze indexes", async () => {
@@ -622,7 +626,7 @@ describe("Synchronize", () => {
         expect(synchronizer.deletions).toEqual([]);
 
         expect(sourceService.get).toHaveBeenCalledTimes(4);
-        expect(sourceService.get.calls.allArgs()).toEqual([
+        expect(sourceService.get.mock.calls).toEqual([
           ["function"],
           ["function/1/index"],
           ["function/2/index"],
@@ -632,7 +636,7 @@ describe("Synchronize", () => {
         expect(sourceService.delete).not.toHaveBeenCalled();
 
         expect(targetService.get).toHaveBeenCalledTimes(3);
-        expect(targetService.get.calls.allArgs()).toEqual([
+        expect(targetService.get.mock.calls).toEqual([
           ["function/1/index"],
           ["function/2/index"],
           ["function/3/index"]
@@ -648,7 +652,7 @@ describe("Synchronize", () => {
         expect(sourceService.post).not.toHaveBeenCalled();
         expect(sourceService.delete).not.toHaveBeenCalled();
 
-        expect(targetService.post.calls.allArgs()).toEqual([
+        expect(targetService.post.mock.calls).toEqual([
           [
             "function/3/index",
             {
@@ -708,15 +712,15 @@ describe("Synchronize", () => {
       });
 
       beforeEach(() => {
-        sourceService.get.calls.reset();
-        sourceService.post.calls.reset();
-        sourceService.put.calls.reset();
-        sourceService.delete.calls.reset();
+        sourceService.get.mockClear();
+        sourceService.put.mockClear();
+        sourceService.post.mockClear();
+        sourceService.delete.mockClear();
 
-        targetService.get.calls.reset();
-        targetService.post.calls.reset();
-        targetService.put.calls.reset();
-        targetService.delete.calls.reset();
+        targetService.get.mockClear();
+        targetService.put.mockClear();
+        targetService.post.mockClear();
+        targetService.delete.mockClear();
       });
 
       it("should analyze bucket-data", async () => {
@@ -738,14 +742,14 @@ describe("Synchronize", () => {
         expect(synchronizer.updations).toEqual(expectations.updations);
         expect(synchronizer.deletions).toEqual(expectations.deletions);
 
-        expect(sourceService.get).toHaveBeenCalledOnceWith("bucket/bucket_id/data", {
+        expect(sourceService.get).toHaveBeenCalledWith("bucket/bucket_id/data", {
           params: {localize: false}
         });
         expect(sourceService.post).not.toHaveBeenCalled();
         expect(sourceService.put).not.toHaveBeenCalled();
         expect(sourceService.delete).not.toHaveBeenCalled();
 
-        expect(targetService.get).toHaveBeenCalledOnceWith("bucket/bucket_id/data", {
+        expect(targetService.get).toHaveBeenCalledWith("bucket/bucket_id/data", {
           params: {localize: false}
         });
         expect(sourceService.post).not.toHaveBeenCalled();
@@ -761,18 +765,18 @@ describe("Synchronize", () => {
         expect(sourceService.put).not.toHaveBeenCalled();
         expect(sourceService.delete).not.toHaveBeenCalled();
 
-        expect(targetService.post).toHaveBeenCalledOnceWith("bucket/bucket_id/data", {
+        expect(targetService.post).toHaveBeenCalledWith("bucket/bucket_id/data", {
           _id: "dataid4",
           title: "added_title4",
           description: "added_description4"
         });
-        expect(targetService.put).toHaveBeenCalledOnceWith("bucket/bucket_id/data/dataid2", {
+        expect(targetService.put).toHaveBeenCalledWith("bucket/bucket_id/data/dataid2", {
           _id: "dataid2",
           title: "updated_title2",
           description: "updated_description2"
         });
 
-        expect(targetService.delete).toHaveBeenCalledOnceWith("bucket/bucket_id/data/dataid1");
+        expect(targetService.delete).toHaveBeenCalledWith("bucket/bucket_id/data/dataid1");
       });
     });
   });
