@@ -17,7 +17,14 @@
       }
     },
     "compile": {
-      "dependsOn": ["transform-paths", "build-assets", "build-function-node-entrypoint"]
+      "dependsOn": [
+        "transform-paths",
+        "build-assets",
+        {
+          "projects": ["api/function/runtime/node/bootstrap"],
+          "target": "build"
+        }
+      ]
     },
     "build-assets": {
       "dependsOn": ["api/bucket/expression:build-assets"]
@@ -28,13 +35,6 @@
       "options": {
         "command": "resolve-tspaths"
       }
-    },
-    "build-function-node-entrypoint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "rollup -c './apps/api/src/function/runtime/node/bootstrap/rollup.config.js' --bundleConfigAsCjs"
-      },
-      "cache": true
     }
   }
 }
