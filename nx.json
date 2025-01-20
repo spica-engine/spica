@@ -47,8 +47,8 @@
     "test": {
       "dependsOn": [
         {
-          "projects": ["api"],
-          "target": "build-function-node-entrypoint"
+          "projects": ["api/function/runtime/node/bootstrap"],
+          "target": "build"
         }
       ]
     }
