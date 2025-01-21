@@ -3,7 +3,7 @@ import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {Identity} from "./interface";
 import {Validator, Default} from "@spica-server/core/schema";
 import {hash, compare} from "./hash";
-import {JwtService} from "@nestjs/jwt";
+import {JwtService, JwtSignOptions} from "@nestjs/jwt";
 import {IDENTITY_OPTIONS, IdentityOptions} from "./options";
 
 @Injectable()
@@ -30,13 +30,18 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       expiresIn = Math.min(requestedExpires, this.identityOptions.maxExpiresIn);
     }
 
+    type CustomJwtHeader = JwtSignOptions["header"] & {
+      identifier?: string;
+      policies?: string[];
+    };
+
     const token = this.jwt.sign(
       {...identity, password: undefined},
       {
         header: {
           identifier: identity.identifier,
           policies: identity.policies
-        },
+        } as CustomJwtHeader,
         expiresIn
       }
     );
