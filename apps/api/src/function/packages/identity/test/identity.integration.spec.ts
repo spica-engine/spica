@@ -7,7 +7,7 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {PassportModule} from "@spica-server/passport";
 import * as Identity from "@spica-devkit/identity";
 import Axios from "axios";
-import jwt_decode from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
@@ -60,7 +60,7 @@ describe("Identity", () => {
   describe("login", () => {
     it("should login", async () => {
       const token = await Identity.login("spica", "spica");
-      const {identifier, iat, exp, iss} = jwt_decode<any>(token);
+      const {identifier, iat, exp, iss} = jwtDecode<any>(token);
 
       expect([identifier, iss]).toEqual(["spica", "spica"]);
 
@@ -72,7 +72,7 @@ describe("Identity", () => {
       const oneDay = 60 * 60 * 24;
       const token = await Identity.login("spica", "spica", oneDay);
 
-      const {iat, exp} = jwt_decode<any>(token);
+      const {iat, exp} = jwtDecode<any>(token);
 
       const tokenLifeSpan = exp - iat;
       expect(tokenLifeSpan).toEqual(oneDay);
@@ -81,7 +81,7 @@ describe("Identity", () => {
     it("should verify token with success", async () => {
       const token = await Identity.login("spica", "spica");
 
-      const decodedToken = jwt_decode<any>(token);
+      const decodedToken = jwtDecode<any>(token);
 
       const result = await Identity.verifyToken(token);
       expect(result).toEqual(decodedToken);
@@ -200,7 +200,7 @@ describe("Identity", () => {
       });
 
       const token = await Identity.login("user1", "pass1");
-      const {identifier, policies} = jwt_decode<any>(token);
+      const {identifier, policies} = jwtDecode<any>(token);
 
       expect(identifier).toEqual("user1");
       expect(policies).toEqual(["BucketFullAccess"]);
@@ -229,7 +229,7 @@ describe("Identity", () => {
 
       const token = await Identity.login("user1", "pass2");
 
-      const {identifier, policies} = jwt_decode<any>(token);
+      const {identifier, policies} = jwtDecode<any>(token);
 
       expect(identifier).toEqual("user1");
       expect(policies.sort((a, b) => a.localeCompare(b))).toEqual([

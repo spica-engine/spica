@@ -16,7 +16,7 @@ export class BucketCacheService {
     private db: DatabaseService
   ) {
     if (!this.invalidateJob) {
-      this.invalidateJob = new cron.CronJob({
+      this.invalidateJob = cron.CronJob.from({
         cronTime: "0 0 0 * * *",
         start: true,
         onTick: () => this.reset()

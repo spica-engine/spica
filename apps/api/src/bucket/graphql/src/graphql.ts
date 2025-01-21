@@ -187,7 +187,7 @@ export class GraphqlController implements OnModuleInit {
           graphiql: true,
           customFormatErrorFn: err => {
             if (err.extensions && err.extensions.statusCode) {
-              response.statusCode = err.extensions.statusCode;
+              response.statusCode = err.extensions.statusCode as number;
               delete err.extensions.statusCode;
             }
             return err;

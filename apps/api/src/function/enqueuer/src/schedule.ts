@@ -35,7 +35,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
   }
 
   subscribe(target: event.Target, options: ScheduleOptions): void {
-    const job = new cron.CronJob({
+    const job = cron.CronJob.from({
       cronTime: options.frequency,
       onTick: () => this.onTickHandler(target, options),
       start: true,
