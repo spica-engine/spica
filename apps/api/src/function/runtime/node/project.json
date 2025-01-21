@@ -1,0 +1,5 @@
+{
+  "name": "api/function/runtime/node",
+  "sourceRoot": "apps/api/src/function/runtime/node",
+  "projectType": "application"
+}

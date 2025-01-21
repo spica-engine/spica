@@ -1,0 +1,5 @@
+{
+  "name": "api/function/runtime/logger",
+  "sourceRoot": "apps/api/src/function/runtime/logger",
+  "projectType": "application"
+}

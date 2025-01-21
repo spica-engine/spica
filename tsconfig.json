@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "composite": true,
     "rootDir": ".",
     "module": "CommonJS",
     "declaration": true,
@@ -20,5 +21,226 @@
       "@spica/*": ["apps/*"]
     }
   },
-  "exclude": ["node_modules", "tmp", "dist"]
+  "exclude": ["node_modules", "tmp", "dist"],
+  "references": [
+    {
+      "path": "./apps/api/src/function/compiler/javascript"
+    },
+    {
+      "path": "./apps/api/src/function/compiler/typescript"
+    },
+    {
+      "path": "./apps/api/src/function/packages/database"
+    },
+    {
+      "path": "./apps/api/src/function/packages/identity"
+    },
+    {
+      "path": "./apps/api/src/function/packages/storage"
+    },
+    {
+      "path": "./apps/api/src/function/packages/bucket"
+    },
+    {
+      "path": "./apps/api/src/function/pkgmanager/node"
+    },
+    {
+      "path": "./apps/api/src/bucket/hooks/proto/node"
+    },
+    {
+      "path": "./apps/api/src/function/runtime/logger"
+    },
+    {
+      "path": "./apps/api/src/function/runtime/node"
+    },
+    {
+      "path": "./apps/api/src/function/queue/proto"
+    },
+    {
+      "path": "./apps/api/src/function/pkgmanager"
+    },
+    {
+      "path": "./apps/api/src/function/queue/node"
+    },
+    {
+      "path": "./apps/api/src/function/runtime/io"
+    },
+    {
+      "path": "./apps/api/src/passport/authfactor"
+    },
+    {
+      "path": "./apps/api/src/preference/services"
+    },
+    {
+      "path": "./apps/api/src/bucket/hooks/proto"
+    },
+    {
+      "path": "./apps/api/src/function/scheduler"
+    },
+    {
+      "path": "./apps/mongoreplicationcontroller"
+    },
+    {
+      "path": "./apps/api/src/activity/services"
+    },
+    {
+      "path": "./apps/api/src/bucket/expression"
+    },
+    {
+      "path": "./apps/api/src/function/compiler"
+    },
+    {
+      "path": "./apps/api/src/function/enqueuer"
+    },
+    {
+      "path": "./apps/api/src/function/services"
+    },
+    {
+      "path": "./apps/api/src/passport/identity"
+    },
+    {
+      "path": "./apps/api/src/function/runtime"
+    },
+    {
+      "path": "./apps/api/src/function/webhook"
+    },
+    {
+      "path": "./apps/api/src/passport/testing"
+    },
+    {
+      "path": "./libs/interface/representative"
+    },
+    {
+      "path": "./apps/api/src/bucket/realtime"
+    },
+    {
+      "path": "./apps/api/src/bucket/services"
+    },
+    {
+      "path": "./apps/api/src/passport/apikey"
+    },
+    {
+      "path": "./apps/api/src/passport/policy"
+    },
+    {
+      "path": "./apps/api/src/status/services"
+    },
+    {
+      "path": "./apps/api/src/bucket/graphql"
+    },
+    {
+      "path": "./apps/api/src/bucket/history"
+    },
+    {
+      "path": "./apps/api/src/function/queue"
+    },
+    {
+      "path": "./apps/api/src/passport/guard"
+    },
+    {
+      "path": "./apps/api/src/versioncontrol"
+    },
+    {
+      "path": "./apps/api/src/bucket/common"
+    },
+    {
+      "path": "./apps/api/src/bucket/cache"
+    },
+    {
+      "path": "./apps/api/src/bucket/hooks"
+    },
+    {
+      "path": "./apps/api/src/function/log"
+    },
+    {
+      "path": "./apps/api/src/replication"
+    },
+    {
+      "path": "./apps/api/src/preference"
+    },
+    {
+      "path": "./libs/interface/function"
+    },
+    {
+      "path": "./libs/interface/realtime"
+    },
+    {
+      "path": "./apps/api/src/dashboard"
+    },
+    {
+      "path": "./libs/database/pipeline"
+    },
+    {
+      "path": "./libs/database/realtime"
+    },
+    {
+      "path": "./apps/api/src/activity"
+    },
+    {
+      "path": "./apps/api/src/function"
+    },
+    {
+      "path": "./apps/api/src/passport"
+    },
+    {
+      "path": "./libs/database/testing"
+    },
+    {
+      "path": "./apps/api/src/storage"
+    },
+    {
+      "path": "./libs/interface/asset"
+    },
+    {
+      "path": "./apps/api/src/bucket"
+    },
+    {
+      "path": "./apps/api/src/status"
+    },
+    {
+      "path": "./libs/core/websocket"
+    },
+    {
+      "path": "./libs/representative"
+    },
+    {
+      "path": "./apps/api/src/asset"
+    },
+    {
+      "path": "./libs/core/testing"
+    },
+    {
+      "path": "./libs/core/differ"
+    },
+    {
+      "path": "./libs/core/schema"
+    },
+    {
+      "path": "./libs/core/patch"
+    },
+    {
+      "path": "./libs/core/copy"
+    },
+    {
+      "path": "./libs/database"
+    },
+    {
+      "path": "./apps/migrate"
+    },
+    {
+      "path": "./libs/filter"
+    },
+    {
+      "path": "./apps/spica"
+    },
+    {
+      "path": "./libs/core"
+    },
+    {
+      "path": "./apps/api"
+    },
+    {
+      "path": "./apps/cli"
+    }
+  ]
 }

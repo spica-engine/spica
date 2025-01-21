@@ -11,7 +11,7 @@ import {
   Post,
   BadRequestException
 } from "@nestjs/common";
-import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {DashboardService} from "./dashboard.service";
 import {Dashboard} from "./dashboard";
 import {Schema} from "@spica-server/core/schema";

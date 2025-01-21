@@ -5,7 +5,7 @@ export function getFunctionName(node: ts.FunctionDeclaration) {
     return node.name.escapedText as string;
   }
 
-  const isDefault = node.modifiers.findIndex(m => m.kind == ts.SyntaxKind.DefaultKeyword) != -1;
+  const isDefault = node.modifiers?.findIndex(m => m.kind == ts.SyntaxKind.DefaultKeyword) != -1;
   if (isDefault) {
     return "default";
   }

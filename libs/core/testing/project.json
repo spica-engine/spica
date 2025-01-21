@@ -1,0 +1,5 @@
+{
+  "name": "core/testing",
+  "sourceRoot": "libs/core/testing/src",
+  "projectType": "library"
+}

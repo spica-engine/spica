@@ -12,13 +12,22 @@
     ],
     "sharedGlobals": []
   },
+  "pluginsConfig": {
+    "@nx/js": {
+      "analyzeSourceFiles": false
+    }
+  },
   "plugins": [
     {
-      "plugin": "@nx/webpack/plugin",
+      "plugin": "@nx/js/typescript",
       "options": {
-        "buildTargetName": "build",
-        "serveTargetName": "serve",
-        "previewTargetName": "preview"
+        "typecheck": {
+          "targetName": "typecheck"
+        },
+        "build": {
+          "targetName": "build",
+          "configName": "tsconfig.json"
+        }
       }
     },
     {
@@ -39,7 +48,7 @@
       "dependsOn": [
         {
           "projects": ["api"],
-          "target": "build-workers"
+          "target": "build-function-node-entrypoint"
         }
       ]
     }

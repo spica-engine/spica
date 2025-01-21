@@ -1,0 +1,5 @@
+{
+  "name": "api/function/log",
+  "sourceRoot": "apps/api/src/function/log",
+  "projectType": "application"
+}

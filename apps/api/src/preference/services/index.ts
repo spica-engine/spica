@@ -1,2 +1,2 @@
-export * from "./interface";
-export {PreferenceService} from "./preference.service";
+export * from "./src/interface";
+export {PreferenceService} from "./src/preference.service";

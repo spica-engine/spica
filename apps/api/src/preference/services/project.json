@@ -1,0 +1,5 @@
+{
+  "name": "api/preference/services",
+  "sourceRoot": "apps/api/src/preference/services",
+  "projectType": "application"
+}

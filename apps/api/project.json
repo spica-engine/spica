@@ -6,39 +6,35 @@
   "tags": [],
   "targets": {
     "serve": {
+      "executor": "@nx/js:node",
+      "dependsOn": ["compile"],
+      "options": {
+        "buildTarget": "api:compile",
+        "buildTargetOptions": {
+          "outputPath": "dist/apps/api/src",
+          "outputFileName": "main.js"
+        }
+      }
+    },
+    "compile": {
+      "dependsOn": ["transform-paths", "build-assets", "build-function-node-entrypoint"]
+    },
+    "build-assets": {
+      "dependsOn": ["api/bucket/expression:build-assets"]
+    },
+    "transform-paths": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "resolve-tspaths"
+      }
+    },
+    "build-function-node-entrypoint": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          {
-            "command": "nx build-workers api"
-          },
-          {
-            "command": "nx build api"
-          },
-          {
-            "command": "wait-on dist/apps/api/main.js dist/apps/worker/entrypoint.js && nodemon dist/apps/api/main.js"
-          }
-        ]
-      }
-    },
-    "build": {
-      "executor": "@nx/webpack:webpack",
-      "options": {
-        "outputPath": "dist/apps/api",
-        "main": "apps/api/src/main.ts",
-        "tsConfig": "apps/api/tsconfig.json",
-        "webpackConfig": "apps/api/webpack.config.js",
-        "assets": [
-          {
-            "input": "apps/api/src/bucket/expression/src",
-            "glob": "*.pegjs",
-            "output": "./"
-          }
-        ]
-      }
-    },
-    "build-workers": {
-      "command": "rollup -c './apps/api/src/function/runtime/node/bootstrap/rollup.config.js' --bundleConfigAsCjs"
+        "command": "rollup -c './apps/api/src/function/runtime/node/bootstrap/rollup.config.js' --bundleConfigAsCjs"
+      },
+      "cache": true
     }
   }
 }

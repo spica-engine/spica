@@ -1,10 +1,12 @@
 {
-  "extends": "../../../../../tsconfig.json",
-  "files": [],
-  "include": [],
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../hooks"
+    },
+    {
+      "path": "../history"
     }
   ]
 }

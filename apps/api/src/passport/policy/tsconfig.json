@@ -1,10 +1,18 @@
 {
-  "extends": "../../../../../tsconfig.json",
-  "files": [],
-  "include": [],
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts","src/**/*.json"],
   "references": [
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../guard"
+    },
+    {
+      "path": "../../../../../libs/core"
+    },
+    {
+      "path": "../../../../../libs/core/schema"
+    },
+    {
+      "path": "../../activity/services"
     }
   ]
 }

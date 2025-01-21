@@ -63,6 +63,7 @@
     "pngjs": "^6.0.0",
     "rollup": "^2.33.3",
     "rollup-plugin-terser": "^7.0.2",
-    "wait-on": "^8.0.1"
+    "wait-on": "^8.0.1",
+    "resolve-tspaths": "^0.8.23"
   }
 }
