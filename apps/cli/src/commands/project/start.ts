@@ -7,7 +7,7 @@ import {
   Program
 } from "@caporal/core";
 import * as getport from "get-port";
-import * as open from "open";
+import open from "open";
 import {Stream} from "stream";
 import {spin} from "../../console";
 import {projectName} from "../../validator";
