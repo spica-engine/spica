@@ -26,7 +26,6 @@ export class Axios extends SpicaFunctionModifier {
     for (const factory of this.validators) {
       const emptyFn = ts.factory.createFunctionDeclaration(
         [],
-        [],
         undefined,
         undefined,
         [],
@@ -52,7 +51,6 @@ export class Axios extends SpicaFunctionModifier {
     );
     const importDeclaration = ts.factory.createImportDeclaration(
       undefined,
-      undefined,
       importClause,
       ts.factory.createStringLiteral("axios")
     );
@@ -62,7 +60,6 @@ export class Axios extends SpicaFunctionModifier {
   setParameters() {
     return [
       ts.factory.createParameterDeclaration(
-        undefined,
         undefined,
         undefined,
         ts.factory.createIdentifier("config"),
@@ -113,7 +110,6 @@ export class Axios extends SpicaFunctionModifier {
 
     const thenParams = [
       ts.factory.createParameterDeclaration(
-        undefined,
         undefined,
         undefined,
         ts.factory.createIdentifier("r"),
@@ -188,7 +184,6 @@ export class AxiosWriteValidator extends FunctionDeclarationModifier {
   setParameters() {
     return [
       ts.factory.createParameterDeclaration(
-        undefined,
         undefined,
         undefined,
         ts.factory.createIdentifier("config")
@@ -289,7 +284,6 @@ export class AxiosReadValidator extends FunctionDeclarationModifier {
   setParameters() {
     return [
       ts.factory.createParameterDeclaration(
-        undefined,
         undefined,
         undefined,
         ts.factory.createIdentifier("config")

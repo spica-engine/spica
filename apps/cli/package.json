@@ -26,8 +26,6 @@
   "devDependencies": {
     "@types/dockerode": "^3.3.1",
     "@types/json-schema": "^7.0.9",
-    "@types/node": "^17.0.8",
-    "@types/jasmine": "^3.10.3",
     "@types/semver": "^7.2.0"
   }
 }
