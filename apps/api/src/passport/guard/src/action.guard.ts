@@ -11,7 +11,7 @@ import {
 } from "@nestjs/common";
 import {ObjectId} from "@spica-server/database";
 import * as matcher from "matcher";
-import {compile, Key, parse} from "path-to-regexp";
+import {Text, Parameter, parse} from "path-to-regexp";
 import {PolicyResolver, POLICY_RESOLVER} from "./action.resolver";
 
 export interface Statement {
@@ -88,13 +88,18 @@ function buildResourceAndModuleName(path: string, params: object, format?: strin
   if (format) {
     path = format;
   }
-  const segments = parse(path);
+  const segments = parse(path).tokens;
+
   const resourceSegments = segments
-    .filter(s => typeof s == "string")
-    .map((s: string) => s.replace(/^\//g, ""))
+    .filter(s => s.type == "text")
+    .map((s: Text) => s.value.replace(/\//g, ""))
     .join("/")
     .split("/");
-  const paramSegments = segments.filter(s => typeof s == "object").map((s: Key) => params[s.name]);
+
+  const paramSegments = segments
+    .filter(s => s.type == "param")
+    .map((s: Parameter) => params[s.name]);
+
   return {
     module: resourceSegments.join(":"),
     resource: paramSegments
