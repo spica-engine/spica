@@ -56,20 +56,8 @@ export async function run(arg?: string | readonly string[]) {
     // Prevent from exiting when testing
     .exitProcess(!arg)
     .parse(arg);
-
-  function resolveArgs(args: object | Promise<object>): {[key: string]: any} {
-    let resolvedArgs;
-
-    if (args instanceof Promise) {
-      args.then(args => (resolvedArgs = args));
-    } else {
-      resolvedArgs = args;
-    }
-
-    return resolvedArgs;
-  }
-
-  const resolvedArgs = resolveArgs(args);
+  
+  const resolvedArgs = await args;
 
   return migrate({
     from: resolvedArgs.from.toString(),

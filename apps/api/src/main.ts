@@ -509,22 +509,11 @@ if (args["cert-file"] && args["key-file"]) {
   };
 }
 
-async function getPort(args: object | Promise<object>): Promise<number | undefined> {
-  let resolvedArgs;
-
-  if (args instanceof Promise) {
-    resolvedArgs = await args;
-  } else {
-    resolvedArgs = args;
-  }
-  return resolvedArgs["port"];
-}
-
 NestFactory.create(RootModule, {
   httpsOptions,
   bodyParser: false
 })
-  .then(app => {
+  .then(async app => {
     app.useWebSocketAdapter(new WsAdapter(app));
     app.use(
       Middlewares.Preflight({
@@ -541,10 +530,8 @@ NestFactory.create(RootModule, {
     );
     app.enableShutdownHooks();
 
-    return getPort(args).then(port => app.listen(port));
+    const {port} = await args;
+    await app.listen(port);
+    console.log(`: APIs are ready on port ${port}`);
   })
-  .then(() => {
-    getPort(args).then(port => {
-      console.log(`: APIs are ready on port ${port}`);
-    });
-  });
+  

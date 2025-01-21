@@ -146,7 +146,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   deleteFunction(fn: Function) {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    rimraf(functionRoot);
+    return rimraf(functionRoot);
   }
 
   compile(fn: Function) {
