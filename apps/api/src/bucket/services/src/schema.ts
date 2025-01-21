@@ -2,6 +2,18 @@ import {JSONSchema7, JSONSchema7Definition} from "json-schema";
 import {Bucket, BucketPreferences} from "./bucket";
 import {BadRequestException} from "@nestjs/common";
 
+type ExtendedJSONSchema7Type =
+  | JSONSchema7["type"]
+  | "objectid"
+  | "storage"
+  | "richtext"
+  | "textarea"
+  | "color"
+  | "multiselect"
+  | "relation"
+  | "date"
+  | "location";
+
 function addIdField(bucket) {
   bucket.properties._id = {
     type: "objectid"
@@ -25,7 +37,7 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
       schema.items = map(schema.items as JSONSchema7);
     }
 
-    switch (schema.type) {
+    switch (schema.type as ExtendedJSONSchema7Type) {
       case "objectid":
         schema.type = "string";
         schema.format = "objectid";

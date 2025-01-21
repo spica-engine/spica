@@ -1,5 +1,5 @@
 import {WsAdapter as BaseAdapter} from "@nestjs/platform-ws";
-import * as pathtoregexp from "path-to-regexp";
+import {pathToRegexp} from "path-to-regexp";
 import * as ws from "ws";
 
 export class WsAdapter extends BaseAdapter {
@@ -40,8 +40,7 @@ export class WsAdapter extends BaseAdapter {
       req.route = {
         path: options.path
       };
-      const keys: pathtoregexp.Key[] = [];
-      const path = pathtoregexp(options.path, keys);
+      const {regexp: path, keys} = pathToRegexp(options.path);
       const result = (path.exec(url.pathname) || []).slice(1);
       for (const [index, key] of keys.entries()) {
         req.params[key.name] = result[index];
@@ -54,7 +53,8 @@ export class WsAdapter extends BaseAdapter {
       let matched = false;
       for (const [path, server] of this.paths.entries()) {
         const url = new URL(request.url, "http://insteadof");
-        if (pathtoregexp(path).test(url.pathname)) {
+        const {regexp} = pathToRegexp(path);
+        if (regexp.test(url.pathname)) {
           matched = true;
           server.handleUpgrade(request, socket, head, (ws: any) => {
             ws.upgradeReq = request;

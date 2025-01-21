@@ -1,4 +1,4 @@
-import {BaseCollection, ObjectId} from "@spica-server/database";
+import {BaseCollection, ObjectId, ReturnDocument} from "@spica-server/database";
 import * as expression from "@spica-server/bucket/expression";
 import {
   Bucket,
@@ -131,11 +131,13 @@ export async function findDocuments<T>(
 
   const seeking = seekingPipeline.result();
 
-  const pipeline = (await relationPathResolvedPipeline.paginate(
-    options.paginate,
-    seeking,
-    collection.estimatedDocumentCount()
-  )).result();
+  const pipeline = (
+    await relationPathResolvedPipeline.paginate(
+      options.paginate,
+      seeking,
+      collection.estimatedDocumentCount()
+    )
+  ).result();
 
   if (options.paginate) {
     const result = await collection
@@ -209,8 +211,8 @@ export async function replaceDocument(
     authResolver: IAuthResolver;
   },
   options: {
-    returnOriginal: boolean;
-  } = {returnOriginal: true}
+    returnDocument: ReturnDocument;
+  } = {returnDocument: ReturnDocument.BEFORE}
 ) {
   const collection = factories.collection(schema);
 
@@ -228,7 +230,7 @@ export async function replaceDocument(
 
   return collection
     .findOneAndReplace({_id: documentId}, document, {
-      returnOriginal: options.returnOriginal
+      returnDocument: options.returnDocument
     })
     .catch(handleWriteErrors);
 }
@@ -246,8 +248,8 @@ export async function patchDocument(
     authResolver: IAuthResolver;
   },
   options: {
-    returnOriginal: boolean;
-  } = {returnOriginal: true}
+    returnDocument: ReturnDocument;
+  } = {returnDocument: ReturnDocument.BEFORE}
 ) {
   const collection = factories.collection(schema);
 
@@ -266,7 +268,7 @@ export async function patchDocument(
 
   return collection
     .findOneAndUpdate({_id: document._id}, updateQuery, {
-      returnOriginal: options.returnOriginal
+      returnDocument: options.returnDocument
     })
     .catch(handleWriteErrors);
 }

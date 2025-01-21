@@ -3,8 +3,8 @@ import {
   DatabaseTestingModule,
   DatabaseService,
   ObjectId,
-  DeleteWriteOpResultObject,
-  InsertOneWriteOpResult
+  DeleteResult,
+  InsertOneResult
 } from "@spica-server/database/testing";
 import {HistoryService} from "@spica-server/bucket/history";
 import {diff} from "@spica-server/core/differ";
@@ -21,14 +21,8 @@ describe("History Service", () => {
     historyService = module.get(HistoryService);
 
     //insert bucket and document
-    await module
-      .get(DatabaseService)
-      .collection("buckets")
-      .insertOne(bucket);
-    await module
-      .get(DatabaseService)
-      .collection(`bucket_${bucket._id}`)
-      .insertOne(bucketDocument);
+    await module.get(DatabaseService).collection("buckets").insertOne(bucket);
+    await module.get(DatabaseService).collection(`bucket_${bucket._id}`).insertOne(bucketDocument);
 
     //update bucket
     let updatedBucket = bucket;
@@ -87,10 +81,7 @@ describe("History Service", () => {
       description: "test description"
     };
     beforeAll(async () => {
-      await module
-        .get(DatabaseService)
-        .collection("buckets")
-        .insertOne(bucket);
+      await module.get(DatabaseService).collection("buckets").insertOne(bucket);
 
       await module
         .get(DatabaseService)
@@ -99,16 +90,8 @@ describe("History Service", () => {
     });
 
     afterAll(async () => {
-      await module
-        .get(DatabaseService)
-        .collection("buckets")
-        .deleteMany({})
-        .catch();
-      await module
-        .get(DatabaseService)
-        .collection(`bucket_${bucket._id}`)
-        .deleteMany({})
-        .catch();
+      await module.get(DatabaseService).collection("buckets").deleteMany({}).catch();
+      await module.get(DatabaseService).collection(`bucket_${bucket._id}`).deleteMany({}).catch();
     });
 
     it("should get bucket document", async () => {
@@ -300,7 +283,7 @@ describe("History Service", () => {
       });
 
       it("should delete specific bucket document histories", async () => {
-        const response: DeleteWriteOpResultObject = await historyService.deleteMany({
+        const response: DeleteResult = await historyService.deleteMany({
           $and: [{bucket_id: bucketId}, {document_id: documentId}]
         });
         expect(response.deletedCount).toBe(2);
@@ -326,14 +309,14 @@ describe("History Service", () => {
       });
 
       it("shouldn't delete anything", async () => {
-        const response: DeleteWriteOpResultObject = await historyService.deleteMany({
+        const response: DeleteResult = await historyService.deleteMany({
           document_id: new ObjectId()
         });
         expect(response.deletedCount).toBe(0);
       });
 
       it("should delete all of them", async () => {
-        const response: DeleteWriteOpResultObject = await historyService.deleteMany({});
+        const response: DeleteResult = await historyService.deleteMany({});
         expect(response.deletedCount).toBe(3);
       });
 
@@ -376,12 +359,12 @@ describe("History Service", () => {
         await historyService.collection.insertMany(histories);
 
         //add history
-        const response: InsertOneWriteOpResult = await historyService.insertOne({
+        const response: InsertOneResult = await historyService.insertOne({
           bucket_id: bucketId,
           document_id: documentId,
           title: "add me"
         });
-        expect(response.insertedCount).toBe(1);
+        expect(response.acknowledged).toBe(true);
 
         const historyTitles = (await historyService.collection.find({}).toArray()).map(
           history => history.title
@@ -402,7 +385,7 @@ describe("History Service", () => {
       });
 
       it("should add new history", async () => {
-        const response: InsertOneWriteOpResult = await historyService.createHistory(
+        const response: InsertOneResult = await historyService.createHistory(
           bucketId,
           {
             _id: documentId,
@@ -413,7 +396,7 @@ describe("History Service", () => {
             name: "updated name"
           }
         );
-        expect(response.insertedCount).toBe(1);
+        expect(response.acknowledged).toBe(true);
 
         const histories = await historyService.getHistory({
           _id: response.insertedId
@@ -436,7 +419,7 @@ describe("History Service", () => {
       });
 
       it("should update histories", async () => {
-        const response: InsertOneWriteOpResult = await historyService.createHistory(
+        const response: InsertOneResult = await historyService.createHistory(
           bucketId,
           {
             _id: documentId,

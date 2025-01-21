@@ -76,7 +76,7 @@ export class UpgradePartiallyInstalledAsset extends InstallationStrategy {
 
 export class UpgradeInstalledAsset extends InstallationStrategy {
   isMyTask(currentAsset: Asset, allVersions: Asset[]) {
-    super.asset = currentAsset;
+    this.asset = currentAsset;
     this.previousAsset = allVersions
       .filter(asset => asset._id.toString() != currentAsset._id.toString())
       .find(asset => asset.status == "installed");
