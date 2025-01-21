@@ -45,6 +45,9 @@
     }
   },
   "targetDefaults": {
+    "build":{
+      "cache": false
+    },
     "test": {
       "cache": true,
       "dependsOn": [
