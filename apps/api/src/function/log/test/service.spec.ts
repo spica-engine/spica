@@ -20,7 +20,7 @@ describe("Function Log Service", () => {
       ]
     }).compile();
     logService = module.get(LogService);
-    await new Promise(resolve => setTimeout(() => resolve(), 2000));
+    await new Promise<void>(resolve => setTimeout(() => resolve(), 2000));
   }, 10000);
 
   afterEach(async () => {

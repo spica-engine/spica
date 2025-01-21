@@ -16,7 +16,7 @@ import {DashboardService} from "./dashboard.service";
 import {Dashboard} from "./dashboard";
 import {Schema} from "@spica-server/core/schema";
 import {ResourceFilter} from "@spica-server/passport/guard";
-import {OBJECT_ID, ObjectId} from "@spica-server/database";
+import {OBJECT_ID, ObjectId, ReturnDocument} from "@spica-server/database";
 
 @Controller("dashboard")
 export class DashboardController {
@@ -49,7 +49,9 @@ export class DashboardController {
     @Body(Schema.validate("http://spica.internal/dashboard"))
     dashboard: Dashboard
   ) {
-    return this.dashboardService.findOneAndReplace({_id: id}, dashboard, {returnOriginal: false});
+    return this.dashboardService.findOneAndReplace({_id: id}, dashboard, {
+      returnDocument: ReturnDocument.AFTER
+    });
   }
 
   @Delete(":id")

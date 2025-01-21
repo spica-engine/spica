@@ -3,10 +3,10 @@ import {ChangeStream} from "mongodb";
 
 const originalCollection = Db.prototype.collection;
 
-Db.prototype.collection = function(name: string) {
+Db.prototype.collection = function (name: string) {
   const coll = originalCollection.bind(this)(...arguments);
   const originalWatch = coll.watch;
-  coll.watch = function() {
+  coll.watch = function () {
     _prepare();
     const stream = originalWatch.bind(this)(...arguments);
     stream.on("ready", () => {
@@ -22,7 +22,7 @@ Db.prototype.collection = function(name: string) {
 
 const originalWatch = MongoClient.prototype.watch;
 
-MongoClient.prototype.watch = function() {
+MongoClient.prototype.watch = function () {
   _prepare();
   const stream = originalWatch.bind(this)(...arguments);
   stream.on("ready", () => {
@@ -48,9 +48,9 @@ function _poll(stream: ChangeStream) {
     }
   });
   const i = setInterval(() => {
-    if (stream["cursor"] && stream["cursor"].cursorState.cursorId) {
+    if (stream["cursor"]) {
       clearInterval(i);
-      stream.emit("ready" as any, stream["cursor"].cursorState.cursorId.toString());
+      stream.emit("ready" as any);
     }
   }, 1);
 }

@@ -90,7 +90,7 @@ describe("DatabaseEnqueuer", () => {
       "handler1"
     ]);
 
-    expect(target1Stream.isClosed()).toEqual(true);
+    expect(target1Stream.closed).toEqual(true);
 
     expect(schedulerUnsubscriptionSpy).toHaveBeenCalledWith(target1.id);
   });

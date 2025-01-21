@@ -1709,7 +1709,7 @@ describe("GraphQLController", () => {
           expect(error.statusCode).toEqual(400);
           expect(error.statusText).toEqual("Bad Request");
           expect(error.body.errors[0].message).toEqual(
-            ".name should be equal to one of the allowed values"
+            ".name must be equal to one of the allowed values"
           );
         });
       });

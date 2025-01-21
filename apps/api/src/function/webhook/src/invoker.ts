@@ -52,10 +52,10 @@ export class WebhookInvoker {
       ],
       {fullDocument: "updateLookup"}
     );
-    stream.on("change", rawChange => {
+    stream.on("change", (rawChange: any) => {
       const change = {
         type: rawChange.operationType,
-        document: rawChange.fullDocument,
+        document: rawChange.fullDocument || rawChange.fullDocumentBeforeChange,
         documentKey: rawChange.documentKey._id.toString()
       };
 

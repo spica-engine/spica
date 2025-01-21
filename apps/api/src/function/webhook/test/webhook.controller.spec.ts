@@ -130,7 +130,7 @@ describe("Webhook Controller", () => {
       expect(validationErrors.statusCode).toBe(400);
       expect(validationErrors.error).toBe("validation failed");
       expect(validationErrors.message).toBe(
-        ".trigger.options.collection should be equal to one of the allowed values"
+        ".trigger.options.collection must be equal to one of the allowed values"
       );
     });
 
@@ -140,7 +140,7 @@ describe("Webhook Controller", () => {
       const {body: validationErrors} = await req.post("/webhook", webhook).catch(e => e);
       expect(validationErrors.statusCode).toBe(400);
       expect(validationErrors.error).toBe("validation failed");
-      expect(validationErrors.message).toBe(" should have required property 'body'");
+      expect(validationErrors.message).toBe(" must have required property 'body'");
     });
 
     it("should report if compilation failed for insert", async () => {

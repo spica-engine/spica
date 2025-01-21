@@ -14,7 +14,7 @@ export function applyPatch<T>(changes: Change[], document: T, schema: JSONSchema
       case ChangeKind.Edit:
         const type = Path.type(change.path, schema);
         let val: string | number | boolean = patcher.patch_apply(
-          change.patches,
+          change.patches as unknown as (new () => diffMatchPatch.patch_obj)[], // patch_apply function type and implementation do not match
           String(Path.get(change.path, document))
         )[0];
         switch (type) {

@@ -177,7 +177,7 @@ describe("Schema", () => {
 
     scalar JSON
 
-    scalar ObjectID
+    scalar ObjectId
     
     type Meta{
       total: Int
@@ -206,14 +206,14 @@ describe("Schema", () => {
 
     type Query{
       FindBucket_id(limit: Int, skip: Int, sort: JSON, language: String, query: JSON): Bucket_idFindResponse
-      FindByBucket_idId(_id: ObjectID!, language: String):Bucket_id
+      FindByBucket_idId(_id: ObjectId!, language: String):Bucket_id
     }
 
     type Mutation{
       insertBucket_id(input: Bucket_idInput): Bucket_id
-      replaceBucket_id(_id: ObjectID!, input: Bucket_idInput): Bucket_id
-      patchBucket_id(_id: ObjectID!, input: JSON): Bucket_id
-      deleteBucket_id(_id: ObjectID!): String
+      replaceBucket_id(_id: ObjectId!, input: Bucket_idInput): Bucket_id
+      patchBucket_id(_id: ObjectId!, input: JSON): Bucket_id
+      deleteBucket_id(_id: ObjectId!): String
     }
 `;
 
@@ -243,7 +243,7 @@ describe("Schema", () => {
           ${commonDefinitions}
 
           type Bucket_id{
-            _id: ObjectID
+            _id: ObjectId
             title : String
             description : String
           }
@@ -276,7 +276,7 @@ describe("Schema", () => {
           ${commonDefinitions}
 
           type Bucket_id{
-            _id: ObjectID
+            _id: ObjectId
             nested_object : Bucket_id_nested_object
           }
   
@@ -318,7 +318,7 @@ describe("Schema", () => {
           ${commonDefinitions}
 
           type Bucket_id{
-            _id: ObjectID
+            _id: ObjectId
             roles : Bucket_id_roles
           }
   
@@ -357,7 +357,7 @@ describe("Schema", () => {
           ${commonDefinitions}
 
           type Bucket_id{
-            _id: ObjectID
+            _id: ObjectId
             onetoone: Bucket_otherid
             onetomany: [Bucket_anotherid]
           }
@@ -409,7 +409,7 @@ describe("Schema", () => {
         ${commonDefinitions}
 
         type Bucket_id{
-          _id: ObjectID
+          _id: ObjectId
           location : PointLocation
           date: Date
           boolean: Boolean

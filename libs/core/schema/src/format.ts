@@ -6,7 +6,7 @@ import {
   KeywordErrorDefinition,
   ErrorObject
 } from "ajv/dist/types";
-import KeywordCxt from "ajv/dist/compile/context";
+import {KeywordCxt} from "ajv/dist/compile/validate/index";
 import {_, str, nil, or, Code, getProperty} from "ajv/dist/compile/codegen";
 
 type FormatValidate =

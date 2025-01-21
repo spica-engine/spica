@@ -411,10 +411,8 @@ const modules = [
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
-    poolSize: args["database-pool-size"],
-    appname: "spica",
-    useNewUrlParser: true,
-    ["useUnifiedTopology" as any]: true
+    maxPoolSize: args["database-pool-size"],
+    appName: "spica"
   }),
   SchemaModule.forRoot({
     formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
@@ -515,7 +513,7 @@ NestFactory.create(RootModule, {
   httpsOptions,
   bodyParser: false
 })
-  .then(app => {
+  .then(async app => {
     app.useWebSocketAdapter(new WsAdapter(app));
     app.use(
       Middlewares.Preflight({
@@ -531,8 +529,9 @@ NestFactory.create(RootModule, {
       Middlewares.MergePatchJsonParser(args["payload-size-limit"])
     );
     app.enableShutdownHooks();
-    return app.listen(args.port);
+
+    const {port} = await args;
+    await app.listen(port);
+    console.log(`: APIs are ready on port ${port}`);
   })
-  .then(() => {
-    console.log(`: APIs are ready on port ${args.port}`);
-  });
+  

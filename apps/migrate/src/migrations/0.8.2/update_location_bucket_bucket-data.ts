@@ -1,9 +1,9 @@
 import {Context} from "../../migrate";
 
-export default async function(ctx: Context) {
+export default async function (ctx: Context) {
   // BUCKET MIGRATION
   const coll = ctx.database.collection("buckets");
-  const buckets = await coll.find<any>().toArray();
+  const buckets = await coll.find().toArray();
   for (const bucket of buckets) {
     const update: any = {};
     let hasKey = false;

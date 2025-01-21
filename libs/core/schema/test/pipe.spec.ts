@@ -22,7 +22,7 @@ describe("schema pipe", () => {
     const data: object = {evil: "hahah"};
 
     await expect(pipe.transform(data, undefined)).rejects.toThrow(
-      new Error("should NOT have additional properties 'evil'")
+      new Error("must NOT have additional properties 'evil'")
     );
   });
 

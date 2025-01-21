@@ -1,5 +1,5 @@
 import {_} from "ajv/dist/compile/codegen";
-import KeywordCxt from "ajv/dist/compile/context";
+import {KeywordCxt} from "ajv/dist/compile/validate/index";
 import {CodeKeywordDefinition} from "ajv/dist/types";
 
 const def: CodeKeywordDefinition = {

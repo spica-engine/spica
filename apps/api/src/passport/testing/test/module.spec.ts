@@ -42,7 +42,7 @@ describe("Passport testing", () => {
     }).compile();
     req = module.get(Request);
     app = module.createNestApplication();
-    await app.listenAsync(req.socket);
+    await app.listen(req.socket);
   });
 
   afterEach(async () => {

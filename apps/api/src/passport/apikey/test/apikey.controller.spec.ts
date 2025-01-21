@@ -165,7 +165,7 @@ describe("ApiKey", () => {
         .catch(r => r);
       expect(statusCode).toBe(400);
       expect(body.error).toBe("validation failed");
-      expect(body.message).toBe(" should have required property 'name'");
+      expect(body.message).toBe(" must have required property 'name'");
     });
   });
 

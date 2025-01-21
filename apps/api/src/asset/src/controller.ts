@@ -31,6 +31,7 @@ import {
 } from "./interface";
 import {AssetRepManager} from "./representative";
 import {createReadStream} from "fs";
+import {OptionalId} from "@spica-server/database";
 
 @Controller("asset")
 export class AssetController {
@@ -125,7 +126,7 @@ export class AssetController {
     {configs}: {configs: Config[]},
     @Query("preview", BOOLEAN) preview: boolean
   ) {
-    let asset = await this.service.findOne({_id: id});
+    let asset: OptionalId<Asset> = await this.service.findOne({_id: id});
     if (!asset) {
       throw new NotFoundException();
     }

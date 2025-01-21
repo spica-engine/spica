@@ -1,8 +1,8 @@
 import {Context} from "../../../src/migrate";
 
-export default async function(ctx: Context) {
+export default async function (ctx: Context) {
   const coll = ctx.database.collection("function");
-  const functions = await coll.find<any>().toArray();
+  const functions = await coll.find().toArray();
   for (const fn of functions) {
     const update: any = {};
     let hasKey = false;

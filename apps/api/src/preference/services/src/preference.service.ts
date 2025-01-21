@@ -3,9 +3,10 @@ import {
   BaseCollection,
   Collection,
   DatabaseService,
-  FilterQuery,
-  FindOneAndReplaceOption,
-  OptionalId
+  Filter,
+  FindOneAndReplaceOptions,
+  OptionalId,
+  WithId
 } from "@spica-server/database";
 import {Preference} from "./interface";
 import {Observable} from "rxjs";
@@ -43,7 +44,7 @@ export class PreferenceService extends BaseCollection("preferences") {
         }
       });
       return () => {
-        if (!watcher.isClosed()) {
+        if (!watcher.closed) {
           watcher.close();
         }
       };
@@ -57,17 +58,17 @@ export class PreferenceService extends BaseCollection("preferences") {
   }
 
   replace<T extends Preference>(
-    filter: FilterQuery<Preference>,
+    filter: Filter<Preference>,
     preference: T,
-    options?: FindOneAndReplaceOption
+    options?: FindOneAndReplaceOptions
   ) {
-    return this._coll
-      .findOneAndReplace(filter, preference, options)
-      .then(preference => preference.value);
+    return this._coll.findOneAndReplace(filter, preference, options);
   }
 
-  insertOne<T extends OptionalId<Preference>>(preference: T): Promise<Preference> {
-    return this._coll.insertOne(preference).then(result => result.ops[0]);
+  insertOne<T extends OptionalId<Preference>>(preference: T): Promise<WithId<Preference>> {
+    return this._coll
+      .insertOne(preference)
+      .then(result => ({_id: result.insertedId, ...preference}));
   }
 
   default<T extends Preference>(preference: T) {

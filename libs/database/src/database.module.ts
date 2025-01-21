@@ -15,7 +15,7 @@ export class DatabaseModule {
         useFactory: async () => {
           const opts = {...options};
           delete opts.database;
-          return MongoClient.connect(uri, {...opts, useNewUrlParser: true});
+          return MongoClient.connect(uri, opts);
         }
       },
       {
