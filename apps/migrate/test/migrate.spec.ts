@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import {loadMigrations, migrationVersions, getMigrations} from "@spica/migrate/src/migrate";
+import {loadMigrations, migrationVersions, getMigrations} from "@spica/migrate";
 import path = require("path");
 
 function updateMigrationManifest(migrations: any) {

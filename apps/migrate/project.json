@@ -3,31 +3,66 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/migrate/src",
   "projectType": "application",
-  "tags": [],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
+      "inputs": [
+        "{workspaceRoot}/tsconfig.json",
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/index.ts",
+        "{projectRoot}/project.json",
+        "{projectRoot}/tsconfig.json"
+      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/migrate",
         "main": "apps/migrate/src/main.ts",
         "tsConfig": "apps/migrate/tsconfig.json"
-      }
+      },
+      "cache": true
     },
     "build-test": {
       "executor": "@nx/js:tsc",
+      "inputs": [
+        "{workspaceRoot}/tsconfig.json",
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/index.ts",
+        "{projectRoot}/project.json",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/test/**/*.ts",
+        "{projectRoot}/tsconfig.test.json",
+        "{projectRoot}/jest.config.ts",
+        "!{projectRoot}/test/**/*.spec.ts"
+      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/migrate",
         "main": "apps/migrate/test/acceptance/migrations/main.ts",
         "tsConfig": "apps/migrate/tsconfig.test.json"
-      }
+      },
+      "cache": true
     },
     "test": {
       "executor": "@nx/jest:jest",
+      "inputs": [
+        "{workspaceRoot}/tsconfig.json",
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/index.ts",
+        "{projectRoot}/project.json",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/test/**/*.ts",
+        "{projectRoot}/tsconfig.test.json",
+        "{projectRoot}/jest.config.ts",
+        "!{projectRoot}/test/**/*.spec.ts",
+        "{projectRoot}/test/**/*.spec.ts",
+        "{projectRoot}/tsconfig.spec.json"
+      ],
       "options": {
         "jestConfig": "apps/migrate/jest.config.ts",
         "runInBand": true
       },
-      "dependsOn": ["build", "build-test"]
+      "dependsOn": ["build-test"],
+      "cache": true
     }
   }
 }
