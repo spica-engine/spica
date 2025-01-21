@@ -7,14 +7,30 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
+      "inputs": [
+        "{workspaceRoot}/tsconfig.json",
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/project.json"
+      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/mongoreplicationcontroller",
         "main": "apps/mongoreplicationcontroller/src/main.ts",
         "tsConfig": "apps/mongoreplicationcontroller/tsconfig.json"
-      }
+      },
+      "cache": true
     },
     "build-image": {
-      "command": "docker build . -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:latest"
+      "inputs": [
+        "{workspaceRoot}/tsconfig.json",
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/project.json",
+        "{projectRoot}/Dockerfile"
+      ],
+      "command": "docker build . -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:latest",
+      "cache": true
     }
   }
 }
