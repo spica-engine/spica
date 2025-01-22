@@ -1,31 +1,29 @@
-FROM node:20-buster as base
+FROM node:22-bookworm AS base
 
 # install tools to nodejs image
-FROM base as tools
+FROM base AS tools
 RUN apt-get install gnupg
-RUN wget -qO - https://www.mongodb.org/static/pgp/server-4.2.asc | apt-key add -
-RUN echo "deb http://repo.mongodb.org/apt/debian buster/mongodb-org/4.2 main" | tee /etc/apt/sources.list.d/mongodb-org-4.2.list
-RUN apt-get update && apt-get install -y mongodb-org-shell
+FROM mongodb/mongodb-community-server:7.0.12-ubi9 AS mongo
 
 # install app deps to nodejs image
-FROM base as deps
+FROM base AS deps
 WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
 # build app to nodejs image
-FROM base as build 
+FROM deps AS build 
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/mongoreplicationcontroller ./apps/mongoreplicationcontroller
 COPY nx.json ./
 COPY package.json ./
 COPY tsconfig.json ./
-RUN yarn nx build mongoreplicationcontroller
+RUN yarn nx build mongoreplicationcontroller --verbose
 
 # start app from tools, because app executes many mongodb commands
 # copy deps and build
-FROM tools as runner
+FROM tools AS runner
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
