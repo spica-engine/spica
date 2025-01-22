@@ -14,7 +14,7 @@
     "timezone": {
       "type": "string",
       "title": "Timezone",
-      "description":"Timezone value that the frequency is based on",
+      "description": "Timezone value that the frequency is based on",
       "enum": [
         "Africa/Abidjan",
         "Africa/Accra",

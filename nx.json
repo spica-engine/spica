@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "defaultBase": "nx-monorepo",
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
@@ -45,7 +46,7 @@
     }
   },
   "targetDefaults": {
-    "build":{
+    "build": {
       "cache": false
     },
     "test": {

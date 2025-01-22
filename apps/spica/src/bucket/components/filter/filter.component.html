@@ -44,7 +44,7 @@
               *ngIf="operators.hasOwnProperty(properties[property[i]]?.type); else defaultOperator"
             >
               <mat-option
-                *ngFor="let operatorKv of operators[(properties[property[i]]?.type)] | keyvalue"
+                *ngFor="let operatorKv of operators[properties[property[i]]?.type] | keyvalue"
                 [value]="operatorKv.key"
               >
                 {{
@@ -55,9 +55,7 @@
               </mat-option>
             </ng-container>
             <ng-template #defaultOperator>
-              <mat-option value="equals">
-                Equals
-              </mat-option>
+              <mat-option value="equals"> Equals </mat-option>
             </ng-template>
           </mat-select>
           <div class="separator"></div>
@@ -96,9 +94,7 @@
         </mat-form-field>
       </div>
       <button color="warn" mat-button (click)="removeBasicFilter(i)">
-        <mat-icon>
-          delete
-        </mat-icon>
+        <mat-icon> delete </mat-icon>
       </button>
     </div>
     <div class="add-basic-filter-container">

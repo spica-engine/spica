@@ -10,7 +10,10 @@ import {catchError, takeUntil} from "rxjs/operators";
 export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
   readonly COLLECTION = "function_logs";
 
-  constructor(private realtime: RealtimeDatabaseService, private guardService: GuardService) {}
+  constructor(
+    private realtime: RealtimeDatabaseService,
+    private guardService: GuardService
+  ) {}
 
   async handleDisconnect(client: any) {
     const options = await this.prepareOptions(client, client.upgradeReq);

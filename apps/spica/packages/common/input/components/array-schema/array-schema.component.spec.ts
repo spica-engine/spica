@@ -24,38 +24,36 @@ describe("Common#array-schema", () => {
     entries: jasmine.createSpy("entries").and.returnValue([])
   };
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [
-          FormsModule,
-          MatIconModule,
-          MatCheckboxModule,
-          MatSelectModule,
-          MatFormFieldModule,
-          MatMenuModule,
-          MatSlideToggleModule,
-          MatInputModule,
-          BrowserAnimationsModule
-        ],
-        declarations: [ArraySchemaComponent, InputSchemaPlacer],
-        providers: [
-          {
-            provide: INPUT_SCHEMA,
-            useValue: {
-              type: "array"
-            }
-          },
-          {
-            provide: InputResolver,
-            useValue: inputResolver
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      imports: [
+        FormsModule,
+        MatIconModule,
+        MatCheckboxModule,
+        MatSelectModule,
+        MatFormFieldModule,
+        MatMenuModule,
+        MatSlideToggleModule,
+        MatInputModule,
+        BrowserAnimationsModule
+      ],
+      declarations: [ArraySchemaComponent, InputSchemaPlacer],
+      providers: [
+        {
+          provide: INPUT_SCHEMA,
+          useValue: {
+            type: "array"
           }
-        ]
-      }).compileComponents();
-      fixture = TestBed.createComponent(ArraySchemaComponent);
-      component = fixture.componentInstance;
-    })
-  );
+        },
+        {
+          provide: InputResolver,
+          useValue: inputResolver
+        }
+      ]
+    }).compileComponents();
+    fixture = TestBed.createComponent(ArraySchemaComponent);
+    component = fixture.componentInstance;
+  }));
 
   it("should not show inputs ", () => {
     component.origin = undefined;

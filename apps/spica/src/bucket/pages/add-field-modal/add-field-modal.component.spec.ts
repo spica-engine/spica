@@ -7,10 +7,7 @@ import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatListModule} from "@angular/material/list";
 import {MatInputModule} from "@angular/material/input";
-import {
-  MatMenuModule,
-  _MatMenuDirectivesModule
-} from "@angular/material/menu";
+import {MatMenuModule, _MatMenuDirectivesModule} from "@angular/material/menu";
 import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatSelectModule} from "@angular/material/select";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
@@ -27,11 +24,7 @@ import {AddFieldModalComponent} from "./add-field-modal.component";
 import {of} from "rxjs";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
-import {
-  MatDialogModule,
-  MatDialogRef,
-  MAT_DIALOG_DATA
-} from "@angular/material/dialog";
+import {MatDialogModule, MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {FormsModule} from "@angular/forms";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 
@@ -104,11 +97,12 @@ describe("Add Field Component", () => {
         {
           provide: BucketService,
           useValue: {
-            getPredefinedDefaults: jasmine
-              .createSpy("getPredefinedDefaults")
-              .and.returnValues(
-                of([{keyword: "keyword", type: "type"}, {keyword: "keyword2", type: "date"}])
-              )
+            getPredefinedDefaults: jasmine.createSpy("getPredefinedDefaults").and.returnValues(
+              of([
+                {keyword: "keyword", type: "type"},
+                {keyword: "keyword2", type: "date"}
+              ])
+            )
           }
         },
         {

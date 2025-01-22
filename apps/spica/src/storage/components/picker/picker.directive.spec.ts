@@ -21,9 +21,7 @@ import {PickerComponent} from "./picker.component";
 import {PickerDirective} from "./picker.directive";
 
 @Component({
-  template: `
-    <button storagePicker ngModel (ngModelChange)="change($event)"></button>
-  `
+  template: ` <button storagePicker ngModel (ngModelChange)="change($event)"></button> `
 })
 class TestCmp {
   change = jasmine.createSpy("ngModelChange");

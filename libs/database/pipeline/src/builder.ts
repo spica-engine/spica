@@ -2,7 +2,6 @@ import {ObjectId} from "@spica-server/database";
 import {IPipelineBuilder} from "./interface";
 
 export class PipelineBuilder implements IPipelineBuilder {
-  
   protected pipeline: object[] = [];
   protected isFilterApplied = false;
 

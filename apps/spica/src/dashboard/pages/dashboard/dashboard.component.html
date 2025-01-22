@@ -1,8 +1,6 @@
 <mat-toolbar>
   <h4 class="mat-h4">
-    <span>
-      Welcome to Spica!
-    </span>
+    <span> Welcome to Spica! </span>
   </h4>
 </mat-toolbar>
 <mat-card appearance="outlined" class="mat-elevation-z25 dashboard">
@@ -45,9 +43,7 @@
             (click)="onDisable()"
             matTooltip="Don't show this again"
           >
-            <mat-icon>
-              visibility_off
-            </mat-icon>
+            <mat-icon> visibility_off </mat-icon>
           </button>
         </div>
         <div class="iframe-container" mat-list-item>
@@ -64,9 +60,7 @@
   </mat-card-content>
 </mat-card>
 <ng-container *ngIf="apiChart">
-  <h2 class="status-header">
-    Instance Usages
-  </h2>
+  <h2 class="status-header">Instance Usages</h2>
   <div class="api-container">
     <mat-card appearance="outlined" class="mat-elevation-z25">
       <mat-card-content>

@@ -1,6 +1,5 @@
 {
-    "name": "api/passport/authfactor",
-    "sourceRoot": "apps/api/src/passport/authfactor",
-    "projectType": "application"
-  }
-  
+  "name": "api/passport/authfactor",
+  "sourceRoot": "apps/api/src/passport/authfactor",
+  "projectType": "application"
+}

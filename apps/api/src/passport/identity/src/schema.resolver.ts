@@ -2,7 +2,10 @@ import {Validator} from "@spica-server/core/schema";
 import {PreferenceService} from "@spica-server/preference/services";
 
 export class SchemaResolver {
-  constructor(validator: Validator, private pref: PreferenceService) {
+  constructor(
+    validator: Validator,
+    private pref: PreferenceService
+  ) {
     pref.watch("passport").subscribe(() => {
       validator.removeSchema("http://spica.internal/passport/update-identity-with-attributes");
       validator.removeSchema("http://spica.internal/passport/create-identity-with-attributes");

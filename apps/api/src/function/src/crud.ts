@@ -121,7 +121,11 @@ export namespace dependencies {
       }
     }
 
-    await dependencies.uninstall(engine, fn, oldDependencies.map(d => d.name));
+    await dependencies.uninstall(
+      engine,
+      fn,
+      oldDependencies.map(d => d.name)
+    );
     await dependencies.install(engine, fn, newDependencies);
 
     return fn;

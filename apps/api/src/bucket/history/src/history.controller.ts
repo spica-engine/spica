@@ -7,7 +7,10 @@ import {HistoryService} from "./history.service";
 
 @Controller("bucket/:bucketId/history")
 export class HistoryController {
-  constructor(private historyService: HistoryService, private bucketService: BucketService) {}
+  constructor(
+    private historyService: HistoryService,
+    private bucketService: BucketService
+  ) {}
 
   @Get(":documentId")
   @UseGuards(AuthGuard())

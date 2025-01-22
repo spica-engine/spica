@@ -101,7 +101,11 @@ describe("History Acceptance", () => {
               path: ["title"],
               patches: [
                 {
-                  diffs: [[-1, "updated"], [1, "initial"], [0, " tit"]],
+                  diffs: [
+                    [-1, "updated"],
+                    [1, "initial"],
+                    [0, " tit"]
+                  ],
                   start1: 0,
                   start2: 0,
                   length1: 11,
@@ -114,7 +118,11 @@ describe("History Acceptance", () => {
               path: ["description"],
               patches: [
                 {
-                  diffs: [[-1, "updated"], [1, "initial"], [0, " des"]],
+                  diffs: [
+                    [-1, "updated"],
+                    [1, "initial"],
+                    [0, " des"]
+                  ],
                   start1: 0,
                   start2: 0,
                   length1: 11,
@@ -134,7 +142,10 @@ describe("History Acceptance", () => {
               path: ["title"],
               patches: [
                 {
-                  diffs: [[-1, "last "], [0, "upda"]],
+                  diffs: [
+                    [-1, "last "],
+                    [0, "upda"]
+                  ],
                   start1: 0,
                   start2: 0,
                   length1: 9,
@@ -147,7 +158,10 @@ describe("History Acceptance", () => {
               path: ["description"],
               patches: [
                 {
-                  diffs: [[-1, "last "], [0, "upda"]],
+                  diffs: [
+                    [-1, "last "],
+                    [0, "upda"]
+                  ],
                   start1: 0,
                   start2: 0,
                   length1: 9,
@@ -167,18 +181,9 @@ describe("History Acceptance", () => {
   }, 120000);
 
   afterEach(async () => {
-    await app
-      .get(DatabaseService)
-      .collection("buckets")
-      .deleteMany({});
-    await app
-      .get(DatabaseService)
-      .collection(`bucket_${bucketId}`)
-      .deleteMany({});
-    await app
-      .get(DatabaseService)
-      .collection("history")
-      .deleteMany({});
+    await app.get(DatabaseService).collection("buckets").deleteMany({});
+    await app.get(DatabaseService).collection(`bucket_${bucketId}`).deleteMany({});
+    await app.get(DatabaseService).collection("history").deleteMany({});
 
     await app.close();
   });

@@ -14,9 +14,7 @@ class TestClipBoardComponent {
 }
 
 @Component({
-  template: `
-    <button #clipboard="matClipboard" [matClipboard]>{{ clipboard.icon }}</button>
-  `
+  template: ` <button #clipboard="matClipboard" [matClipboard]>{{ clipboard.icon }}</button> `
 })
 class TestClipBoardComponentNull {
   @ViewChild(MatClipboardDirective, {static: true}) directive: MatClipboardDirective;

@@ -14,9 +14,7 @@
       (keyup.enter)="!nameModel.invalid && dialogRef.close(name)"
       pattern="^[^\/\ \.]+"
     />
-    <mat-error *ngIf="nameModel?.errors?.nameExists">
-      This name already exists.
-    </mat-error>
+    <mat-error *ngIf="nameModel?.errors?.nameExists"> This name already exists. </mat-error>
     <mat-error *ngIf="nameModel?.errors?.pattern">
       Name must not include slash, space or dot characters.
     </mat-error>

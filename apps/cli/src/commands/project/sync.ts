@@ -93,7 +93,7 @@ async function sync({
   }
 }
 
-export default function(program: Program): Command {
+export default function (program: Program): Command {
   return program
     .command(
       "project sync",
@@ -298,37 +298,40 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
 
   async synchronize() {
     console.log();
-    const insertPromiseFactories = this.insertions.map(fn => () =>
-      this.targetService.post("function", fn).catch(e =>
-        handleRejection({
-          action: "insert",
-          e,
-          objectName: this.moduleName + " " + fn.name
-        })
-      )
+    const insertPromiseFactories = this.insertions.map(
+      fn => () =>
+        this.targetService.post("function", fn).catch(e =>
+          handleRejection({
+            action: "insert",
+            e,
+            objectName: this.moduleName + " " + fn.name
+          })
+        )
     );
 
     await spinUntilPromiseEnd(insertPromiseFactories, "Inserting functions to the target instance");
 
-    const updatePromiseFactories = this.updations.map(fn => () =>
-      this.targetService.put(`function/${fn._id}`, fn).catch(e =>
-        handleRejection({
-          action: "update",
-          e,
-          objectName: this.moduleName + " " + fn.name
-        })
-      )
+    const updatePromiseFactories = this.updations.map(
+      fn => () =>
+        this.targetService.put(`function/${fn._id}`, fn).catch(e =>
+          handleRejection({
+            action: "update",
+            e,
+            objectName: this.moduleName + " " + fn.name
+          })
+        )
     );
     await spinUntilPromiseEnd(updatePromiseFactories, "Updating target instance functions");
 
-    const deletePromiseFactories = this.deletions.map(fn => () =>
-      this.targetService.delete(`function/${fn._id}`).catch(e =>
-        handleRejection({
-          action: "delete",
-          objectName: this.moduleName + " " + fn.name,
-          e
-        })
-      )
+    const deletePromiseFactories = this.deletions.map(
+      fn => () =>
+        this.targetService.delete(`function/${fn._id}`).catch(e =>
+          handleRejection({
+            action: "delete",
+            objectName: this.moduleName + " " + fn.name,
+            e
+          })
+        )
     );
     await spinUntilPromiseEnd(deletePromiseFactories, "Deleting target instance functions");
   }
@@ -415,14 +418,15 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
       );
     }
 
-    const deletePromiseFactories = this.deletions.map(dep => () =>
-      this.targetService.delete(`function/${this.fn._id}/dependencies/${dep.name}`).catch(e =>
-        handleRejection({
-          action: "update",
-          e,
-          objectName: this.getDisplayableModuleName()
-        })
-      )
+    const deletePromiseFactories = this.deletions.map(
+      dep => () =>
+        this.targetService.delete(`function/${this.fn._id}/dependencies/${dep.name}`).catch(e =>
+          handleRejection({
+            action: "update",
+            e,
+            objectName: this.getDisplayableModuleName()
+          })
+        )
     );
 
     if (deletePromiseFactories.length) {
@@ -508,14 +512,15 @@ export class FunctionIndexSynchronizer implements ModuleSynchronizer {
 
   synchronize() {
     // except others, we don't need to remove any function index because they are supposed to be deleted with function module synchronization
-    const promiseFactories = [...this.insertions, ...this.updations].map(fn => () =>
-      this.targetService.post(`function/${fn._id}/index`, {index: fn.index}).catch(e =>
-        handleRejection({
-          action: "insert",
-          objectName: this.getDisplayableModuleName() + " " + fn.name,
-          e
-        })
-      )
+    const promiseFactories = [...this.insertions, ...this.updations].map(
+      fn => () =>
+        this.targetService.post(`function/${fn._id}/index`, {index: fn.index}).catch(e =>
+          handleRejection({
+            action: "insert",
+            objectName: this.getDisplayableModuleName() + " " + fn.name,
+            e
+          })
+        )
     );
 
     return spinUntilPromiseEnd(
@@ -582,42 +587,45 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
 
   async synchronize(): Promise<any> {
     console.log();
-    const insertPromiseFactories = this.insertions.map(data => () =>
-      this.targetService.post(`bucket/${this.bucket._id}/data`, data).catch(e =>
-        handleRejection({
-          action: "insert",
-          objectName: this.getDisplayableModuleName() + " " + data[this.primaryField],
-          e
-        })
-      )
+    const insertPromiseFactories = this.insertions.map(
+      data => () =>
+        this.targetService.post(`bucket/${this.bucket._id}/data`, data).catch(e =>
+          handleRejection({
+            action: "insert",
+            objectName: this.getDisplayableModuleName() + " " + data[this.primaryField],
+            e
+          })
+        )
     );
     await spinUntilPromiseEnd(
       insertPromiseFactories,
       `Inserting bucket ${this.bucket.title} data to the target instance`
     );
 
-    const updatePromiseFactories = this.updations.map(data => () =>
-      this.targetService.put(`bucket/${this.bucket._id}/data/${data._id}`, data).catch(e =>
-        handleRejection({
-          action: "update",
-          e,
-          objectName: this.getDisplayableModuleName() + " " + data[this.primaryField]
-        })
-      )
+    const updatePromiseFactories = this.updations.map(
+      data => () =>
+        this.targetService.put(`bucket/${this.bucket._id}/data/${data._id}`, data).catch(e =>
+          handleRejection({
+            action: "update",
+            e,
+            objectName: this.getDisplayableModuleName() + " " + data[this.primaryField]
+          })
+        )
     );
     await spinUntilPromiseEnd(
       updatePromiseFactories,
       `Updating bucket ${this.bucket.title} data on the target instance`
     );
 
-    const deletePromiseFactories = this.deletions.map(data => () =>
-      this.targetService.delete(`bucket/${this.bucket._id}/data/${data._id}`).catch(e =>
-        handleRejection({
-          action: "delete",
-          objectName: this.getDisplayableModuleName() + " " + data[this.primaryField],
-          e
-        })
-      )
+    const deletePromiseFactories = this.deletions.map(
+      data => () =>
+        this.targetService.delete(`bucket/${this.bucket._id}/data/${data._id}`).catch(e =>
+          handleRejection({
+            action: "delete",
+            objectName: this.getDisplayableModuleName() + " " + data[this.primaryField],
+            e
+          })
+        )
     );
     await spinUntilPromiseEnd(
       deletePromiseFactories,
@@ -681,36 +689,39 @@ export class BucketSynchronizer implements ModuleSynchronizer {
 
   async synchronize() {
     console.log();
-    const insertPromiseFactories = this.insertions.map(bucket => () =>
-      this.targetService.post("bucket", bucket).catch(e =>
-        handleRejection({
-          action: "insert",
-          objectName: this.getDisplayableModuleName() + " " + bucket.title,
-          e
-        })
-      )
+    const insertPromiseFactories = this.insertions.map(
+      bucket => () =>
+        this.targetService.post("bucket", bucket).catch(e =>
+          handleRejection({
+            action: "insert",
+            objectName: this.getDisplayableModuleName() + " " + bucket.title,
+            e
+          })
+        )
     );
     await spinUntilPromiseEnd(insertPromiseFactories, "Inserting buckets to the target instance");
 
-    const updatePromiseFactories = this.updations.map(bucket => () =>
-      this.targetService.put(`bucket/${bucket._id}`, bucket).catch(e =>
-        handleRejection({
-          action: "update",
-          objectName: this.getDisplayableModuleName() + " " + bucket.title,
-          e
-        })
-      )
+    const updatePromiseFactories = this.updations.map(
+      bucket => () =>
+        this.targetService.put(`bucket/${bucket._id}`, bucket).catch(e =>
+          handleRejection({
+            action: "update",
+            objectName: this.getDisplayableModuleName() + " " + bucket.title,
+            e
+          })
+        )
     );
     await spinUntilPromiseEnd(updatePromiseFactories, "Updating buckets on the target instance");
 
-    const deletePromiseFactories = this.deletions.map(bucket => () =>
-      this.targetService.delete(`bucket/${bucket._id}`).catch(e =>
-        handleRejection({
-          action: "delete",
-          objectName: bucket.title,
-          e
-        })
-      )
+    const deletePromiseFactories = this.deletions.map(
+      bucket => () =>
+        this.targetService.delete(`bucket/${bucket._id}`).catch(e =>
+          handleRejection({
+            action: "delete",
+            objectName: bucket.title,
+            e
+          })
+        )
     );
     await spinUntilPromiseEnd(deletePromiseFactories, "Deleting bucket from the target instance");
   }
@@ -820,14 +831,15 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
     });
     await spinUntilPromiseEnd(updatePromiseFactories, "Updating apikeys on the target instance");
 
-    const deletePromiseFactories = this.deletions.map(apikey => () =>
-      this.targetService.delete(`passport/apikey/${apikey._id}`).catch(e =>
-        handleRejection({
-          action: "delete",
-          objectName: apikey.name,
-          e
-        })
-      )
+    const deletePromiseFactories = this.deletions.map(
+      apikey => () =>
+        this.targetService.delete(`passport/apikey/${apikey._id}`).catch(e =>
+          handleRejection({
+            action: "delete",
+            objectName: apikey.name,
+            e
+          })
+        )
     );
     await spinUntilPromiseEnd(deletePromiseFactories, "Deleting apikeys from the target instance");
   }
@@ -887,36 +899,39 @@ export class PolicySynchronizer implements ModuleSynchronizer {
 
   async synchronize() {
     console.log();
-    const insertPromiseFactories = this.insertions.map(policy => () =>
-      this.targetService.post("passport/policy", policy).catch(e =>
-        handleRejection({
-          action: "insert",
-          objectName: this.getDisplayableModuleName() + " " + policy.name,
-          e
-        })
-      )
+    const insertPromiseFactories = this.insertions.map(
+      policy => () =>
+        this.targetService.post("passport/policy", policy).catch(e =>
+          handleRejection({
+            action: "insert",
+            objectName: this.getDisplayableModuleName() + " " + policy.name,
+            e
+          })
+        )
     );
     await spinUntilPromiseEnd(insertPromiseFactories, "Inserting policies to the target instance");
 
-    const updatePromiseFactories = this.updations.map(policy => () =>
-      this.targetService.put(`passport/policy/${policy._id}`, policy).catch(e =>
-        handleRejection({
-          action: "update",
-          objectName: this.getDisplayableModuleName() + " " + policy.name,
-          e
-        })
-      )
+    const updatePromiseFactories = this.updations.map(
+      policy => () =>
+        this.targetService.put(`passport/policy/${policy._id}`, policy).catch(e =>
+          handleRejection({
+            action: "update",
+            objectName: this.getDisplayableModuleName() + " " + policy.name,
+            e
+          })
+        )
     );
     await spinUntilPromiseEnd(updatePromiseFactories, "Updating policies on the target instance");
 
-    const deletePromiseFactories = this.deletions.map(policy => () =>
-      this.targetService.delete(`passport/policy/${policy._id}`).catch(e =>
-        handleRejection({
-          action: "delete",
-          objectName: policy.name,
-          e
-        })
-      )
+    const deletePromiseFactories = this.deletions.map(
+      policy => () =>
+        this.targetService.delete(`passport/policy/${policy._id}`).catch(e =>
+          handleRejection({
+            action: "delete",
+            objectName: policy.name,
+            e
+          })
+        )
     );
     await spinUntilPromiseEnd(deletePromiseFactories, "Deleting policies from the target instance");
   }

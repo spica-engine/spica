@@ -32,9 +32,8 @@ export class PolicyResourceAddComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
-    const actualResource = this.data.services[this.data.statement.module].actions[
-      this.data.currentAction.name
-    ];
+    const actualResource =
+      this.data.services[this.data.statement.module].actions[this.data.currentAction.name];
 
     for (const subResource of actualResource) {
       const copySubResource = this.deepCopy(subResource);
@@ -98,9 +97,8 @@ export class PolicyResourceAddComponent implements OnInit {
 
   copyResources() {
     for (const action of this.data.statement.actions) {
-      const targetResourceParts = this.data.services[this.data.statement.module].actions[
-        action.name
-      ];
+      const targetResourceParts =
+        this.data.services[this.data.statement.module].actions[action.name];
 
       if (targetResourceParts.length != this.resource.length) {
         continue;

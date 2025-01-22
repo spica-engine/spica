@@ -14,7 +14,10 @@ export class SettingsComponent implements OnInit {
   settings: BucketSettings;
   languages = languages;
 
-  constructor(private router: Router, private pref: PreferencesService) {}
+  constructor(
+    private router: Router,
+    private pref: PreferencesService
+  ) {}
 
   ngOnInit(): void {
     this.pref

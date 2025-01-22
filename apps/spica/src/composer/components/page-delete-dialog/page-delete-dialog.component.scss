@@ -11,7 +11,9 @@
     width: 460px;
     border-radius: 3px;
     background: #f7f9fa;
-    box-shadow: 0 3px 20px rgba(0, 0, 0, 0.08), 0 45.4px 70px -20.4px rgba(0, 0, 0, 0.12);
+    box-shadow:
+      0 3px 20px rgba(0, 0, 0, 0.08),
+      0 45.4px 70px -20.4px rgba(0, 0, 0, 0.12);
     overflow-y: auto;
     max-height: calc(100vh - 150px);
     -webkit-overflow-scrolling: touch;
@@ -37,12 +39,16 @@
       padding: 20px 30px;
       text-align: right;
       button {
-        box-shadow: 0 2px 5px 0 rgba(49, 49, 93, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.08);
+        box-shadow:
+          0 2px 5px 0 rgba(49, 49, 93, 0.1),
+          0 1px 2px 0 rgba(0, 0, 0, 0.08);
         text-align: center;
         padding: 10px 20px;
         text-decoration: none;
         color: #fff;
-        transition: box-shadow 0.15s ease, transform 0.1s ease;
+        transition:
+          box-shadow 0.15s ease,
+          transform 0.1s ease;
         min-width: 70px;
         border-radius: 3px;
         display: inline-block;

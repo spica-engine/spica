@@ -39,12 +39,7 @@ describe("Fault Tolerance", () => {
       from: "0.0.1",
       to: "1.0.0"
     }).catch(e => e);
-    expect(
-      await db
-        .collection("_test_")
-        .find()
-        .toArray()
-    ).toEqual([]);
+    expect(await db.collection("_test_").find().toArray()).toEqual([]);
   });
 
   it("should report the error", async () => {

@@ -13,10 +13,7 @@ export const assetConfigExporter = (ps: PreferencesService) => {
     ]);
 
   const propertyLoader = async () => {
-    const pref = await ps
-      .get("passport")
-      .pipe(take(1))
-      .toPromise();
+    const pref = await ps.get("passport").pipe(take(1)).toPromise();
 
     const copy = JSON.parse(JSON.stringify(pref));
     delete copy.scope;

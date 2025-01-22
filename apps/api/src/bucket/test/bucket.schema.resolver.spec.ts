@@ -114,13 +114,7 @@ describe("Bucket Schema Resolver", () => {
     bs["onBucketUpdated"].next(updatedBucket);
 
     expect(
-      schemaResolver
-        .resolve(bucket._id.toHexString())
-        .pipe(
-          take(3),
-          bufferCount(3)
-        )
-        .toPromise()
+      schemaResolver.resolve(bucket._id.toHexString()).pipe(take(3), bufferCount(3)).toPromise()
     ).resolves.toEqual([
       //initial schema
       {

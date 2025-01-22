@@ -74,21 +74,11 @@
           (ngModelChange)="next({levels: $event})"
           multiple
         >
-          <mat-option class="mat-accent" value="0">
-            Debug
-          </mat-option>
-          <mat-option class="mat-accent" value="1">
-            Log
-          </mat-option>
-          <mat-option class="mat-accent" value="2">
-            Info
-          </mat-option>
-          <mat-option class="mat-accent" value="3">
-            Warning
-          </mat-option>
-          <mat-option class="mat-accent" value="4">
-            Error
-          </mat-option>
+          <mat-option class="mat-accent" value="0"> Debug </mat-option>
+          <mat-option class="mat-accent" value="1"> Log </mat-option>
+          <mat-option class="mat-accent" value="2"> Info </mat-option>
+          <mat-option class="mat-accent" value="3"> Warning </mat-option>
+          <mat-option class="mat-accent" value="4"> Error </mat-option>
         </mat-select>
       </mat-form-field>
     </span>
@@ -131,21 +121,11 @@
               <mat-panel-title>
                 <span>
                   <ng-container [ngSwitch]="log.level">
-                    <mat-icon class="debug" *ngSwitchCase="0">
-                      bug_report
-                    </mat-icon>
-                    <mat-icon class="log" *ngSwitchCase="1">
-                      emergency
-                    </mat-icon>
-                    <mat-icon class="info" *ngSwitchCase="2">
-                      info
-                    </mat-icon>
-                    <mat-icon class="warning" *ngSwitchCase="3">
-                      error
-                    </mat-icon>
-                    <mat-icon class="error" *ngSwitchCase="4">
-                      crisis_alert
-                    </mat-icon>
+                    <mat-icon class="debug" *ngSwitchCase="0"> bug_report </mat-icon>
+                    <mat-icon class="log" *ngSwitchCase="1"> emergency </mat-icon>
+                    <mat-icon class="info" *ngSwitchCase="2"> info </mat-icon>
+                    <mat-icon class="warning" *ngSwitchCase="3"> error </mat-icon>
+                    <mat-icon class="error" *ngSwitchCase="4"> crisis_alert </mat-icon>
                   </ng-container>
                 </span>
                 <span>

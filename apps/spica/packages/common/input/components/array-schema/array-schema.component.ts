@@ -10,7 +10,10 @@ import {SchemaComponent} from "../schema.component";
 export class ArraySchemaComponent extends SchemaComponent {
   public origin: string;
 
-  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema, private resolver: InputResolver) {
+  constructor(
+    @Inject(INPUT_SCHEMA) public schema: InputSchema,
+    private resolver: InputResolver
+  ) {
     super(schema);
     this.schema.items = this.schema.items || getDefaultArrayItems();
     this.getOrigin();

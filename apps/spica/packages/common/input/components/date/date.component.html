@@ -23,7 +23,7 @@
     *ngIf="_value && _value.toISOString"
     matTooltip="This is the actual date that will be stored in the API server."
   >
-    {{ _value | date: "medium":"GMT" }}
+    {{ _value | date: "medium" : "GMT" }}
     <mat-icon>help</mat-icon>
   </mat-hint>
   <mat-error *ngIf="model.errors?.date || model.errors?.owlDateTimeParse">

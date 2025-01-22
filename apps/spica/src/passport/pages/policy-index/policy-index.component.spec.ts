@@ -20,9 +20,7 @@ import {PolicyIndexComponent} from "./policy-index.component";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 
 @Component({
-  template: `
-    <ng-container *ngTemplateOutlet="outlet"></ng-container>
-  `
+  template: ` <ng-container *ngTemplateOutlet="outlet"></ng-container> `
 })
 class ToolbarCmp {
   outlet: TemplateRef<any>;

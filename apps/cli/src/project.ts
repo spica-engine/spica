@@ -22,7 +22,7 @@ export class DockerMachine extends docker {
 
   pullImage(image: string, tag: string) {
     return new Promise((resolve, reject) =>
-      machine.pull(`${image}:${tag}`, {}, function(err, stream) {
+      machine.pull(`${image}:${tag}`, {}, function (err, stream) {
         if (err) {
           if (err.message && err.message.indexOf(`manifest for ${image}`)) {
             reject(new ImageNotFoundError(image, tag));

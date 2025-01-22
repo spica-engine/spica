@@ -1,4 +1,4 @@
-@use '@angular/material' as mat;
+@use "@angular/material" as mat;
 
 $primary: mat.define-palette(mat.$gray-palette, 900, 500, 700);
 $primary-for-dark: mat.define-palette(mat.$gray-palette, 900, 100, 700, 100);

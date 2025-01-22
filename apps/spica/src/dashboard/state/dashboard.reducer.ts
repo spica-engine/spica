@@ -55,22 +55,14 @@ export function reducer(state: State = initialState, action: DashboardAction): S
 
 export const dashboardFeatureSelector = createFeatureSelector<State>("dashboard");
 
-export const {selectIds, selectEntities, selectAll, selectTotal} = adapter.getSelectors(
-  dashboardFeatureSelector
-);
+export const {selectIds, selectEntities, selectAll, selectTotal} =
+  adapter.getSelectors(dashboardFeatureSelector);
 
-export const selectLoaded = createSelector(
-  dashboardFeatureSelector,
-  state => state.loaded
-);
+export const selectLoaded = createSelector(dashboardFeatureSelector, state => state.loaded);
 
-export const selectEmpty = createSelector(
-  dashboardFeatureSelector,
-  selectTotal,
-  (state, total) => {
-    return state.loaded && total == 0;
-  }
-);
+export const selectEmpty = createSelector(dashboardFeatureSelector, selectTotal, (state, total) => {
+  return state.loaded && total == 0;
+});
 
 export const selectName = (id: string) =>
   createSelector(
@@ -79,7 +71,4 @@ export const selectName = (id: string) =>
   );
 
 export const selectEntity = (id: string) =>
-  createSelector(
-    selectEntities,
-    state => state && state[id]
-  );
+  createSelector(selectEntities, state => state && state[id]);

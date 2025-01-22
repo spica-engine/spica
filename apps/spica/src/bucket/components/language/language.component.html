@@ -8,7 +8,7 @@
     [color]="selected == language.code ? 'accent' : 'primary'"
     (click)="selected = language.code; $event.stopPropagation(); onLanguageChange()"
   >
-    {{ language.name | slice: 0:2 | uppercase }}
+    {{ language.name | slice: 0 : 2 | uppercase }}
   </button>
 </mat-menu>
 <button mat-icon-button mat-stroked-button color="primary" [matMenuTriggerFor]="languageMenu">

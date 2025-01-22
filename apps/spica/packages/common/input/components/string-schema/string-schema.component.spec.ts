@@ -32,39 +32,37 @@ describe("Common#string-schema", () => {
   };
   let presets: Preset[] = [ratings, username];
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [
-          MatFormFieldModule,
-          MatInputModule,
-          MatSlideToggleModule,
-          FormsModule,
-          MatIconModule,
-          InputModule,
-          BrowserAnimationsModule
-        ],
-        providers: [
-          {
-            provide: INPUT_SCHEMA,
-            useValue: {
-              type: "string"
-            }
-          },
-          {
-            provide: STRING_PRESET_LOADER,
-            useFactory: () => {
-              const loader = new PresetLoader();
-              loader.add(presets);
-              return loader;
-            }
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      imports: [
+        MatFormFieldModule,
+        MatInputModule,
+        MatSlideToggleModule,
+        FormsModule,
+        MatIconModule,
+        InputModule,
+        BrowserAnimationsModule
+      ],
+      providers: [
+        {
+          provide: INPUT_SCHEMA,
+          useValue: {
+            type: "string"
           }
-        ]
-      }).compileComponents();
-      fixture = TestBed.createComponent(StringSchemaComponent);
-      component = fixture.componentInstance;
-    })
-  );
+        },
+        {
+          provide: STRING_PRESET_LOADER,
+          useFactory: () => {
+            const loader = new PresetLoader();
+            loader.add(presets);
+            return loader;
+          }
+        }
+      ]
+    }).compileComponents();
+    fixture = TestBed.createComponent(StringSchemaComponent);
+    component = fixture.componentInstance;
+  }));
 
   it("should be working inputs", fakeAsync(() => {
     component.schema.default = "test";

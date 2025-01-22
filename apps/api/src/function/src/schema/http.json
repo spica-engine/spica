@@ -14,13 +14,7 @@
     "path": {
       "title": "Path",
       "type": "string",
-      "examples": [
-        "/v1/books",
-        "/v2/books",
-        "/v2beta1/books",
-        "/v1/authorize",
-        "/v2/authorize"
-      ],
+      "examples": ["/v1/books", "/v2/books", "/v2beta1/books", "/v1/authorize", "/v2/authorize"],
       "default": "/"
     },
     "preflight": {

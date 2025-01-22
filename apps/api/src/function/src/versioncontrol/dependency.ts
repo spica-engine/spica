@@ -43,7 +43,11 @@ export function dependecySyncProviders(
 
   const uninstall = async fn => {
     const deps = await engine.getPackages(fn);
-    return CRUD.dependencies.uninstall(engine, fn, deps.map(d => d.name));
+    return CRUD.dependencies.uninstall(
+      engine,
+      fn,
+      deps.map(d => d.name)
+    );
   };
 
   const document = {

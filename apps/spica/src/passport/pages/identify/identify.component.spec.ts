@@ -165,13 +165,10 @@ describe("Identify Component", () => {
 
     it("should identify successfully when clicked login button after filled form", fakeAsync(async () => {
       await fixture.whenStable();
-      fixture.debugElement
-        .query(By.css("form"))
-        .injector.get(NgForm)
-        .setValue({
-          identifier: "identifier",
-          password: "password"
-        });
+      fixture.debugElement.query(By.css("form")).injector.get(NgForm).setValue({
+        identifier: "identifier",
+        password: "password"
+      });
       await fixture.debugElement.query(By.css("button:first-of-type")).nativeElement.click();
 
       expect(fixture.componentInstance.identity).toEqual({

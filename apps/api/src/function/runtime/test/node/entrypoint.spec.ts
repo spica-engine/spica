@@ -89,7 +89,12 @@ describe("Entrypoint", () => {
       process();
     });
 
-    queue = new EventQueue(popSpy, enqueueSpy, () => {}, () => {});
+    queue = new EventQueue(
+      popSpy,
+      enqueueSpy,
+      () => {},
+      () => {}
+    );
     await queue.listen();
     runtime = new Node();
     language = new Javascript();
@@ -751,7 +756,7 @@ describe("Entrypoint", () => {
             message: new Firehose.Message({name: "connection"}),
             pool: new Firehose.PoolDescription({size: 21})
           }),
-          (socketSpy as unknown) as WebSocket
+          socketSpy as unknown as WebSocket
         );
 
         spawn();
@@ -796,7 +801,7 @@ describe("Entrypoint", () => {
             message: new Firehose.Message({name: "connection"}),
             pool: new Firehose.PoolDescription({size: 21})
           }),
-          (socketSpy as unknown) as WebSocket
+          socketSpy as unknown as WebSocket
         );
 
         spawn();
@@ -847,7 +852,7 @@ describe("Entrypoint", () => {
             message,
             pool
           }),
-          (firstSocket as unknown) as WebSocket
+          firstSocket as unknown as WebSocket
         );
 
         const secondSocket = {
@@ -865,7 +870,7 @@ describe("Entrypoint", () => {
             message,
             pool
           }),
-          (secondSocket as unknown) as WebSocket
+          secondSocket as unknown as WebSocket
         );
 
         spawn();

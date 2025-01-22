@@ -5,6 +5,5 @@
     {"path": "../passport/guard"},
     {"path": "../../../../libs/representative"},
     {"path": "../../../../libs/core/differ"}
-
   ]
 }

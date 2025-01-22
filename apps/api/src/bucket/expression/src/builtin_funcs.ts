@@ -344,7 +344,8 @@ function objectIdReplacer(field: string, value: any[]) {
   if (
     typeof field == "string" &&
     (field == "_id" || field.endsWith("._id")) &&
-    (typeof value == "object" && Array.isArray(value))
+    typeof value == "object" &&
+    Array.isArray(value)
   ) {
     return value.map(v => new ObjectId(v));
   }

@@ -67,7 +67,10 @@ export class LocationComponent implements ControlValueAccessor, OnDestroy, OnIni
     return navigator.geolocation;
   }
 
-  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema, private cd: ChangeDetectorRef) {
+  constructor(
+    @Inject(INPUT_SCHEMA) public schema: InputSchema,
+    private cd: ChangeDetectorRef
+  ) {
     this._marker.on("move", this.onMoveMarker.bind(this));
   }
 

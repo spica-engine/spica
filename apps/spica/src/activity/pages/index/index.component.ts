@@ -25,7 +25,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
 
   private subscription = new Subscription();
 
-  private dataStream = new BehaviorSubject<(Activity)[]>(this.activities);
+  private dataStream = new BehaviorSubject<Activity[]>(this.activities);
 
   private lastPage = 0;
 
@@ -35,7 +35,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
 
   private defaultLimit = 20;
 
-  connect(collectionViewer: CollectionViewer): Observable<(Activity)[]> {
+  connect(collectionViewer: CollectionViewer): Observable<Activity[]> {
     this.subscription.add(
       collectionViewer.viewChange.subscribe(range => {
         if (!this.pageSize) {

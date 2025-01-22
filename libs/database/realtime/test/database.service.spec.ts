@@ -31,22 +31,12 @@ describe("realtime database", () => {
     await database.collection("test21").insertMany([{stars: 3}, {stars: 4}, {stars: 5}]);
     const source = realtime.find("test21", {filter: {stars: {$gt: 3}}});
 
-    let [first, second, endofinitial] = await source
-      .pipe(
-        bufferCount(3),
-        take(1)
-      )
-      .toPromise();
+    let [first, second, endofinitial] = await source.pipe(bufferCount(3), take(1)).toPromise();
     expect(first.document.stars).toBe(4);
     expect(second.document.stars).toBe(5);
     expect(endofinitial).toEqual({kind: ChunkKind.EndOfInitial});
 
-    [first, second, endofinitial] = await source
-      .pipe(
-        bufferCount(3),
-        take(1)
-      )
-      .toPromise();
+    [first, second, endofinitial] = await source.pipe(bufferCount(3), take(1)).toPromise();
     expect(first.document.stars).toBe(4);
     expect(second.document.stars).toBe(5);
     expect(endofinitial).toEqual({kind: ChunkKind.EndOfInitial});
@@ -59,11 +49,12 @@ describe("realtime database", () => {
       .then(() => {
         realtime
           .find("willbedropped")
-          .pipe(
-            delay(100),
-            take(1)
-          )
-          .subscribe(() => database.dropCollection("willbedropped"), undefined, () => done());
+          .pipe(delay(100), take(1))
+          .subscribe(
+            () => database.dropCollection("willbedropped"),
+            undefined,
+            () => done()
+          );
       });
   });
 
@@ -81,10 +72,7 @@ describe("realtime database", () => {
     it("should return added document", done => {
       realtime
         .find("test1")
-        .pipe(
-          skip(1),
-          take(1)
-        )
+        .pipe(skip(1), take(1))
         .subscribe(data => {
           expect(data.kind).toBe(ChunkKind.Insert);
           expect(data.document.test).toBe(1);
@@ -98,10 +86,7 @@ describe("realtime database", () => {
       coll.insertOne({test: 1}).then(() => {
         realtime
           .find("test2")
-          .pipe(
-            take(4),
-            bufferCount(4)
-          )
+          .pipe(take(4), bufferCount(4))
           .subscribe(([initial, endofinitial, firstInsert, secondInsert]) => {
             expect(initial.kind).toBe(ChunkKind.Initial);
             expect(initial.document.test).toBe(1);
@@ -121,10 +106,7 @@ describe("realtime database", () => {
       coll.insertMany([{test: 2}, {test: 3}]).then(inserted => {
         realtime
           .find("test3")
-          .pipe(
-            skip(3),
-            take(1)
-          )
+          .pipe(skip(3), take(1))
           .subscribe(deleted => {
             expect(deleted.kind).toBe(ChunkKind.Delete);
             expect(inserted.insertedIds[1].equals(deleted.document._id)).toBeTruthy();
@@ -139,10 +121,7 @@ describe("realtime database", () => {
       coll.insertOne({test: 2}).then(() => {
         realtime
           .find("test4")
-          .pipe(
-            skip(2),
-            take(1)
-          )
+          .pipe(skip(2), take(1))
           .subscribe(updated => {
             expect(updated.kind).toBe(ChunkKind.Update);
             expect(updated.document.test).toBe(4);
@@ -204,10 +183,7 @@ describe("realtime database", () => {
         .then(inserted => {
           realtime
             .find("test7", {filter: {has_star: true}})
-            .pipe(
-              skip(3),
-              take(1)
-            )
+            .pipe(skip(3), take(1))
             .subscribe(deleted => {
               expect(deleted.kind).toBe(ChunkKind.Delete);
               expect(inserted.insertedIds[1].equals(deleted.document._id)).toBeTruthy();
@@ -226,10 +202,7 @@ describe("realtime database", () => {
       coll.insertOne({test: 2, subfilter: true}).then(() => {
         realtime
           .find("test8", {filter: {subfilter: true}})
-          .pipe(
-            skip(2),
-            take(1)
-          )
+          .pipe(skip(2), take(1))
           .subscribe(updated => {
             expect(updated.kind).toBe(ChunkKind.Update);
             expect(updated.document.test).toBe(4);
@@ -247,10 +220,7 @@ describe("realtime database", () => {
         .then(id => {
           realtime
             .find("test9", {filter: {subfilter: true}})
-            .pipe(
-              skip(2),
-              take(1)
-            )
+            .pipe(skip(2), take(1))
             .subscribe(updated => {
               expect(updated).toEqual({kind: ChunkKind.Expunge, document: {_id: id}});
               done();
@@ -267,10 +237,7 @@ describe("realtime database", () => {
         .then(id => {
           realtime
             .find("test22", {filter: {status: "active"}})
-            .pipe(
-              skip(2),
-              take(1)
-            )
+            .pipe(skip(2), take(1))
             .subscribe(updated => {
               expect(updated).toEqual({kind: ChunkKind.Expunge, document: {_id: id}});
               done();
@@ -287,10 +254,7 @@ describe("realtime database", () => {
         .then(id => {
           realtime
             .find("test10", {filter: {subfilter: true, test: 2}})
-            .pipe(
-              skip(2),
-              take(1)
-            )
+            .pipe(skip(2), take(1))
             .subscribe(updated => {
               expect(updated).toEqual({kind: ChunkKind.Expunge, document: {_id: id}});
               done();

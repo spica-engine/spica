@@ -253,7 +253,10 @@ describe("Relation", () => {
 
       it("should create relation map if multiple relations requested", async () => {
         const relationMap = await createRelationMap({
-          paths: [["userWithMeta", "user", "name"], ["user", "name"]],
+          paths: [
+            ["userWithMeta", "user", "name"],
+            ["user", "name"]
+          ],
           properties: mainSchema.properties,
           resolve: resolve
         });

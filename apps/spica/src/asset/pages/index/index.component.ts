@@ -19,7 +19,10 @@ export class IndexComponent implements OnInit {
 
   assets$: Observable<Asset[]>;
 
-  constructor(private assetService: AssetService, private dialog: MatDialog) {}
+  constructor(
+    private assetService: AssetService,
+    private dialog: MatDialog
+  ) {}
 
   isPending = false;
 

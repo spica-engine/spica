@@ -53,7 +53,11 @@ export class LogViewComponent implements OnInit, OnDestroy {
 
   realtimeConnectivity: boolean;
 
-  constructor(private route: ActivatedRoute, private fs: FunctionService, public router: Router) {
+  constructor(
+    private route: ActivatedRoute,
+    private fs: FunctionService,
+    public router: Router
+  ) {
     this.fs.checkRealtimeLogConnectivity().subscribe(r => (this.realtimeConnectivity = r));
     this.realtimeConnectionTime = this.realtimeConnectionTime || new Date();
   }

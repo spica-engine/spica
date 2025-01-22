@@ -1,10 +1,9 @@
 {
-    "extends": "../../../tsconfig.json",
-    "include": ["src/**/*.ts", "index.ts"],
-    "references": [
-      {
-        "path": "../../replication"
-      }
-    ]
-  }
-  
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../replication"
+    }
+  ]
+}

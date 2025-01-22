@@ -11,13 +11,13 @@ describe("ChangeEnqueuer", () => {
   let changeEmitter: jest.Mocked<ChangeEmitter>;
 
   beforeEach(() => {
-    eventQueue = ({
+    eventQueue = {
       enqueue: jest.fn()
-    } as unknown) as jest.Mocked<EventQueue>;
-    changeEmitter = ({
+    } as unknown as jest.Mocked<EventQueue>;
+    changeEmitter = {
       on: jest.fn(),
       off: jest.fn()
-    } as unknown) as jest.Mocked<ChangeEmitter>;
+    } as unknown as jest.Mocked<ChangeEmitter>;
 
     changeEnqeuer = new ChangeEnqueuer(eventQueue, null, changeEmitter);
 

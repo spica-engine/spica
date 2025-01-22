@@ -157,7 +157,11 @@ async function _process(ev, queue) {
       break;
     case event.Type.FIREHOSE:
       const firehose = new FirehoseQueue();
-      const {client: clientDescription, pool: poolDescription, message} = await firehose.pop(
+      const {
+        client: clientDescription,
+        pool: poolDescription,
+        message
+      } = await firehose.pop(
         new Firehose.Message.Pop({
           id: ev.id
         })

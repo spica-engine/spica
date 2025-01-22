@@ -23,7 +23,10 @@ export class BuilderComponent {
   forOf: Observable<any>;
   forOfArguments: any;
 
-  constructor(@Inject(MAT_DIALOG_DATA) private target: TargetOptions, private cc: ComposerClient) {
+  constructor(
+    @Inject(MAT_DIALOG_DATA) private target: TargetOptions,
+    private cc: ComposerClient
+  ) {
     this.context = this.cc.fromEvent("context");
     this.services = this.cc.fromEvent<any>("services");
     this.schema = this.cc.fromEvent<any>("element schema").pipe(

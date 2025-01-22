@@ -6,17 +6,11 @@
     "declaration": true,
     "target": "ES2020",
     "module": "CommonJS",
-    "lib": [
-      "ES2015",
-      "ES2018",
-      "dom"
-    ],
+    "lib": ["ES2015", "ES2018", "dom"],
     "moduleResolution": "node",
     "baseUrl": "./",
     "paths": {
-      "@spica-devkit/*": [
-        "*"
-      ]
+      "@spica-devkit/*": ["*"]
     }
   }
 }

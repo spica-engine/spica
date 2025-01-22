@@ -512,26 +512,24 @@ if (args["cert-file"] && args["key-file"]) {
 NestFactory.create(RootModule, {
   httpsOptions,
   bodyParser: false
-})
-  .then(async app => {
-    app.useWebSocketAdapter(new WsAdapter(app));
-    app.use(
-      Middlewares.Preflight({
-        allowedOrigins: args["cors-allowed-origins"],
-        allowedMethods: args["cors-allowed-methods"],
-        allowedHeaders: args["cors-allowed-headers"],
-        allowCredentials: args["cors-allow-credentials"]
-      }),
-      Middlewares.JsonBodyParser({
-        limit: args["payload-size-limit"],
-        ignoreUrls: [/$\/storage/]
-      }),
-      Middlewares.MergePatchJsonParser(args["payload-size-limit"])
-    );
-    app.enableShutdownHooks();
+}).then(async app => {
+  app.useWebSocketAdapter(new WsAdapter(app));
+  app.use(
+    Middlewares.Preflight({
+      allowedOrigins: args["cors-allowed-origins"],
+      allowedMethods: args["cors-allowed-methods"],
+      allowedHeaders: args["cors-allowed-headers"],
+      allowCredentials: args["cors-allow-credentials"]
+    }),
+    Middlewares.JsonBodyParser({
+      limit: args["payload-size-limit"],
+      ignoreUrls: [/$\/storage/]
+    }),
+    Middlewares.MergePatchJsonParser(args["payload-size-limit"])
+  );
+  app.enableShutdownHooks();
 
-    const {port} = await args;
-    await app.listen(port);
-    console.log(`: APIs are ready on port ${port}`);
-  })
-  
+  const {port} = await args;
+  await app.listen(port);
+  console.log(`: APIs are ready on port ${port}`);
+});

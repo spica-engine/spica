@@ -6,9 +6,7 @@ import {of} from "rxjs";
 
 @Component({
   template: `
-    <button [canInteract]="action" (click)="onclick()" [resource]="id">
-      Click here.
-    </button>
+    <button [canInteract]="action" (click)="onclick()" [resource]="id">Click here.</button>
   `
 })
 class TestComponent {

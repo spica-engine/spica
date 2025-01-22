@@ -15,6 +15,10 @@
     "libs/*",
     "apps/*"
   ],
+  "scripts": {
+    "format:check": "yarn nx format:check",
+    "format:write": "yarn nx format:write"
+  },
   "dependencies": {
     "@nestjs/cache-manager": "^2.3.0",
     "@nestjs/common": "^10.4.15",

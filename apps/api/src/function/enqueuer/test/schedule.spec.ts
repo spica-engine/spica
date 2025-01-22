@@ -27,7 +27,7 @@ describe("ScheduleEnqueuer", () => {
     enqueuer = new ScheduleEnqueuer(eventQueue as any, schedulerUnsubscriptionSpy);
 
     noopTarget = createTarget();
-    
+
     jest.useFakeTimers();
     jest.setSystemTime(new Date(2015, 1, 1, 1, 1, 31, 0));
   });

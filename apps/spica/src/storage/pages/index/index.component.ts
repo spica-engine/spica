@@ -77,10 +77,10 @@ export class IndexComponent implements OnInit, OnDestroy {
         this.breakpointObserver.isMatched(Breakpoints.XSmall)
           ? (this.cols = 2)
           : this.breakpointObserver.isMatched(Breakpoints.Small)
-          ? (this.cols = 3)
-          : this.breakpointObserver.isMatched(Breakpoints.Medium)
-          ? (this.cols = 4)
-          : (this.cols = 5);
+            ? (this.cols = 3)
+            : this.breakpointObserver.isMatched(Breakpoints.Medium)
+              ? (this.cols = 4)
+              : (this.cols = 5);
       });
   }
 

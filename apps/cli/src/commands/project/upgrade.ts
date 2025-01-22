@@ -207,7 +207,7 @@ async function upgrade({args, options}: ActionParameters) {
   console.info(`Project '${name}' version has been set to the version ${desiredVersion}.`);
 }
 
-export default function(program: Program): Command {
+export default function (program: Program): Command {
   return program
     .command("project upgrade", "Upgrade the version of existing local project.")
     .argument("<name>", "Name of the project.", {validator: projectName})

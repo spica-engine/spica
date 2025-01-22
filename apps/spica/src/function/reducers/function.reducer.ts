@@ -65,19 +65,11 @@ export function reducer(state = initialState, action: FunctionActions): State {
 
 const functionFeatureSelector = createFeatureSelector<State>("function");
 
-export const {selectIds, selectEntities, selectAll, selectTotal} = adapter.getSelectors(
-  functionFeatureSelector
-);
+export const {selectIds, selectEntities, selectAll, selectTotal} =
+  adapter.getSelectors(functionFeatureSelector);
 
-export const selectLoaded = createSelector(
-  functionFeatureSelector,
-  state => state.loaded
-);
+export const selectLoaded = createSelector(functionFeatureSelector, state => state.loaded);
 
-export const selectEmpty = createSelector(
-  functionFeatureSelector,
-  selectTotal,
-  (state, total) => {
-    return state.loaded && total == 0;
-  }
-);
+export const selectEmpty = createSelector(functionFeatureSelector, selectTotal, (state, total) => {
+  return state.loaded && total == 0;
+});

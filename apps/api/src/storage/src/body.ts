@@ -300,17 +300,17 @@ const MultipartConverter: IBodyConverter<MultipartFormData, StorageObject<fs.Rea
   convert: (body: MultipartFormData) => multipartToStorageObject(body)
 };
 
-const MultipartArrayConverter: IBodyConverter<
-  MultipartFormData[],
-  StorageObject<fs.ReadStream>[]
-> = {
-  validate: (body: MixedBody) => {
-    return (
-      body && Array.isArray(body) && (body as unknown[]).every(b => MultipartConverter.validate(b))
-    );
-  },
-  convert: (body: MultipartFormData[]) => body.map(object => MultipartConverter.convert(object))
-};
+const MultipartArrayConverter: IBodyConverter<MultipartFormData[], StorageObject<fs.ReadStream>[]> =
+  {
+    validate: (body: MixedBody) => {
+      return (
+        body &&
+        Array.isArray(body) &&
+        (body as unknown[]).every(b => MultipartConverter.validate(b))
+      );
+    },
+    convert: (body: MultipartFormData[]) => body.map(object => MultipartConverter.convert(object))
+  };
 
 const BsonConverter: IBodyConverter<StorageObject<Buffer>, StorageObject<Buffer>> = {
   validate: (body: unknown) =>

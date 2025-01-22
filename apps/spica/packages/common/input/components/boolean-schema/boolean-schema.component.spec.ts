@@ -11,24 +11,22 @@ describe("Common#boolean-schema", () => {
   let component: BooleanSchemaComponent;
   let fixture: ComponentFixture<BooleanSchemaComponent>;
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [MatSlideToggleModule, MatFormFieldModule, MatInputModule, FormsModule],
-        declarations: [BooleanSchemaComponent],
-        providers: [
-          {
-            provide: INPUT_SCHEMA,
-            useValue: {
-              type: "array"
-            }
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      imports: [MatSlideToggleModule, MatFormFieldModule, MatInputModule, FormsModule],
+      declarations: [BooleanSchemaComponent],
+      providers: [
+        {
+          provide: INPUT_SCHEMA,
+          useValue: {
+            type: "array"
           }
-        ]
-      }).compileComponents();
-      fixture = TestBed.createComponent(BooleanSchemaComponent);
-      component = fixture.componentInstance;
-    })
-  );
+        }
+      ]
+    }).compileComponents();
+    fixture = TestBed.createComponent(BooleanSchemaComponent);
+    component = fixture.componentInstance;
+  }));
 
   it("should be open area and vale verify", fakeAsync(() => {
     fixture.detectChanges();

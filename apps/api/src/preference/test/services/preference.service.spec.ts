@@ -6,10 +6,7 @@ import {take} from "rxjs/operators";
 
 describe("Preference Service", () => {
   async function addPref(prefs: Preference[]) {
-    await module
-      .get(DatabaseService)
-      .collection("preferences")
-      .insertMany(prefs);
+    await module.get(DatabaseService).collection("preferences").insertMany(prefs);
   }
 
   let module: TestingModule;
@@ -24,10 +21,7 @@ describe("Preference Service", () => {
 
   beforeEach(async () => {
     // clear prefs
-    await module
-      .get(DatabaseService)
-      .collection("preferences")
-      .deleteMany({});
+    await module.get(DatabaseService).collection("preferences").deleteMany({});
 
     // add prefs
     const prefs: Preference[] = [

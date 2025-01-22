@@ -64,19 +64,11 @@ export function reducer(state = initialState, action: WebhookActions): State {
 
 const webhookFeatureSelector = createFeatureSelector<State>("webhook");
 
-export const {selectIds, selectEntities, selectAll, selectTotal} = adapter.getSelectors(
-  webhookFeatureSelector
-);
+export const {selectIds, selectEntities, selectAll, selectTotal} =
+  adapter.getSelectors(webhookFeatureSelector);
 
-export const selectLoaded = createSelector(
-  webhookFeatureSelector,
-  state => state.loaded
-);
+export const selectLoaded = createSelector(webhookFeatureSelector, state => state.loaded);
 
-export const selectEmpty = createSelector(
-  webhookFeatureSelector,
-  selectTotal,
-  (state, total) => {
-    return state.loaded && total == 0;
-  }
-);
+export const selectEmpty = createSelector(webhookFeatureSelector, selectTotal, (state, total) => {
+  return state.loaded && total == 0;
+});

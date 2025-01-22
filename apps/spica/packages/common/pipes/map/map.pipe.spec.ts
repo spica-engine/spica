@@ -4,9 +4,7 @@ import {By} from "@angular/platform-browser";
 import {MapPipe} from "./map.pipe";
 
 @Component({
-  template: `
-    <div>{{ users | map: "name" | json }}</div>
-  `
+  template: ` <div>{{ users | map: "name" | json }}</div> `
 })
 class MapTestComponent {
   users = [

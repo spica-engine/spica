@@ -16,9 +16,7 @@ import {MatTooltipModule} from "@angular/material/tooltip";
 import {StoreModule} from "@ngrx/store";
 
 @Component({
-  template: `
-    i'm a lonely placer
-  `,
+  template: ` i'm a lonely placer `,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

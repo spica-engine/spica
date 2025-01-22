@@ -27,9 +27,7 @@
     </div>
   </ng-container>
   <div [ngClass]="isSmall ? 'dashboard-component-content' : 'table-container'">
-    <button mat-stroked-button *ngIf="isSmall" (click)="onShowTableClicked()">
-      Show
-    </button>
+    <button mat-stroked-button *ngIf="isSmall" (click)="onShowTableClicked()">Show</button>
     <mat-card
       appearance="outlined"
       class="table-scroll mat-elevation-z0"

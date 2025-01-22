@@ -7,7 +7,10 @@ import {Function} from "@spica-server/interface/function";
 export class EnqueuerSchemaResolver {
   enqueuerPrefix = "http://spica.internal/function/enqueuer";
 
-  constructor(private registry: FunctionEngine, private validator: Validator) {}
+  constructor(
+    private registry: FunctionEngine,
+    private validator: Validator
+  ) {}
 
   resolve(uri: string): Promise<object> | undefined {
     const match = /http:\/\/spica\.internal\/function\/enqueuer\/(.*)/g.exec(uri);

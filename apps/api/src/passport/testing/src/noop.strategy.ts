@@ -4,7 +4,10 @@ import * as passport from "passport";
 import {TestingOptions} from "./interface";
 
 class _NoopStrategy extends passport.Strategy {
-  constructor(private options: TestingOptions, private callback: (req) => void) {
+  constructor(
+    private options: TestingOptions,
+    private callback: (req) => void
+  ) {
     super();
   }
 

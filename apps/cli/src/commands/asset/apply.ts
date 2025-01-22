@@ -52,12 +52,12 @@ async function apply({options}: ActionParameters) {
   return console.info(`Asset ${body.name} has been uploaded successfully`);
 }
 
-export default function(program: Program): Command {
+export default function (program: Program): Command {
   return program
     .command("asset apply", "Put objects to the API.")
     .option(
       "--path <path>",
       "Path of the folder that container asset.yaml file and resources of it. Current working directory is the default value."
     )
-    .action((apply as unknown) as Action);
+    .action(apply as unknown as Action);
 }

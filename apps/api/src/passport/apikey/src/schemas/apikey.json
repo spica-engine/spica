@@ -9,8 +9,8 @@
       "format": "objectid",
       "description": "Unique objectid of the apikey"
     },
-    "key":{
-      "type":"string",
+    "key": {
+      "type": "string",
       "description": "Key of the apikey."
     },
     "name": {

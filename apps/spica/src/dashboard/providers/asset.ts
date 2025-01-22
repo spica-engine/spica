@@ -21,10 +21,7 @@ export function provideAssetConfigExporter(ds: DashboardService) {
     ]);
 
   const propertyLoader = async selections => {
-    const dashboard = await ds
-      .findOne(selections.resource_id)
-      .pipe(take(1))
-      .toPromise();
+    const dashboard = await ds.findOne(selections.resource_id).pipe(take(1)).toPromise();
 
     const copy = JSON.parse(JSON.stringify(dashboard));
     delete copy._id;

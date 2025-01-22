@@ -29,7 +29,10 @@ let service: HttpService;
 const identitySegment = "passport/identity";
 
 class _Challenge implements Challenge {
-  constructor(private res: ChallengeRes, private answerResponseMapper: (res) => string = r => r) {}
+  constructor(
+    private res: ChallengeRes,
+    private answerResponseMapper: (res) => string = r => r
+  ) {}
 
   show() {
     return this.res.challenge;

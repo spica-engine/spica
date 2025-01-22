@@ -19,7 +19,7 @@ async function switchContext({args}: ActionParameters) {
   console.info(`Context has been changed to "${name}".`);
 }
 
-export default function(program: Program): Command {
+export default function (program: Program): Command {
   return program
     .command("context switch", "Switch context")
     .argument("<name>", "Name of the context.")

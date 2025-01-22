@@ -9,7 +9,10 @@ import {example} from "./example-code";
 
 @Injectable()
 export class DashboardService {
-  constructor(private http: HttpClient, private store: Store<fromDashboard.State>) {}
+  constructor(
+    private http: HttpClient,
+    private store: Store<fromDashboard.State>
+  ) {}
 
   getExample(type: string) {
     if (!type) {

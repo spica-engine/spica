@@ -28,7 +28,7 @@ async function _delete({options}: ActionParameters) {
   return console.info("Asset ${assetMeta.name} has been deleted successfully");
 }
 
-export default function(program: Program): Command {
+export default function (program: Program): Command {
   return program
     .command("asset delete", "Delete objects of the API.")
     .option(
@@ -38,5 +38,5 @@ export default function(program: Program): Command {
     .option("--type <type>", "Deletion type. Available options are 'soft' and 'hard'", {
       required: true
     })
-    .action((_delete as unknown) as Action);
+    .action(_delete as unknown as Action);
 }

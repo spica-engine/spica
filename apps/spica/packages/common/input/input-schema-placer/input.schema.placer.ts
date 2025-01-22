@@ -24,20 +24,20 @@ import {PresetLoader, presets, STRING_PRESET_LOADER} from "./predefineds";
   ],
   styles: [
     `
-                          :host {
-                            display: block;
-                          }
-                        `,
+      :host {
+        display: block;
+      }
+    `,
     `
-                          :host > mat-form-field:not(:first-of-type) {
-                            margin: 0px 5px;
-                          }
-                        `,
+      :host > mat-form-field:not(:first-of-type) {
+        margin: 0px 5px;
+      }
+    `,
     `
-                          :host > mat-form-field:first-of-type {
-                            margin-right: 5px;
-                          }
-                        `
+      :host > mat-form-field:first-of-type {
+        margin-right: 5px;
+      }
+    `
   ]
 })
 export class InputSchemaPlacer implements OnChanges, ControlValueAccessor {
@@ -55,7 +55,10 @@ export class InputSchemaPlacer implements OnChanges, ControlValueAccessor {
   public onChangeFn: Function = () => {};
   public onTouchFn: Function = () => {};
 
-  constructor(private _injector: Injector, private _inputResolver: InputResolver) {
+  constructor(
+    private _injector: Injector,
+    private _inputResolver: InputResolver
+  ) {
     this.inputTypes = this._inputResolver.entries();
   }
 

@@ -12,7 +12,7 @@ async function removeContext({args}: ActionParameters) {
   console.info(`Context "${name}" has been deleted.`);
 }
 
-export default function(program: Program): Command {
+export default function (program: Program): Command {
   return program
     .command("context remove", "Remove context")
     .argument("<name>", "Name of the context.")

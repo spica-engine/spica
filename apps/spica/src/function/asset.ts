@@ -13,10 +13,7 @@ export const assetConfigExporter = (fs: FunctionService) => {
     ]);
 
   const propertyLoader = async selections => {
-    const fn = await fs
-      .getFunction(selections.resource_id)
-      .pipe(take(1))
-      .toPromise();
+    const fn = await fs.getFunction(selections.resource_id).pipe(take(1)).toPromise();
 
     let copy = JSON.parse(JSON.stringify(fn));
     delete copy._id;

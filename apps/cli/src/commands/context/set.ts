@@ -35,7 +35,7 @@ async function addContext({options}: ActionParameters) {
   }
 }
 
-export default function(program: Program): Command {
+export default function (program: Program): Command {
   return program
     .command("context set", "Set context")
     .option("--name <name>", "Name of the context.")

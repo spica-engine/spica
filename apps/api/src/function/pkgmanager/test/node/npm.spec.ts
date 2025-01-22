@@ -49,10 +49,7 @@ describe("npm", () => {
 
   it("it should  fail when installing a package which does not exist", async () => {
     const _catch = jest.fn(() => {});
-    await npm
-      .install(cwd, "rxjs@couldnotexist")
-      .toPromise()
-      .catch(_catch);
+    await npm.install(cwd, "rxjs@couldnotexist").toPromise().catch(_catch);
     expect(_catch).toHaveBeenCalled();
     const errorMessage = _catch.mock.calls[0][0 as any];
     expect(errorMessage).toContain("npm error code ETARGET");

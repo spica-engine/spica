@@ -22,16 +22,16 @@ let loadPromise: Promise<void>;
   template: '<div class="editor-container" #editorContainer></div>',
   styles: [
     `
-                          :host {
-                            display: block;
-                          }
-                    
-                          .editor-container {
-                            width: 100%;
-                            height: 100%;
-                            min-height: 100px;
-                          }
-                        `
+      :host {
+        display: block;
+      }
+
+      .editor-container {
+        width: 100%;
+        height: 100%;
+        min-height: 100px;
+      }
+    `
   ],
   styleUrls: ["./editor.component.scss"],
   providers: [
@@ -80,7 +80,10 @@ export class EditorComponent implements ControlValueAccessor {
     this.onTouched = fn;
   }
 
-  constructor(private zone: NgZone, private schemeObserver: SchemeObserver) {
+  constructor(
+    private zone: NgZone,
+    private schemeObserver: SchemeObserver
+  ) {
     this.initializeWorkerSelector();
   }
 
@@ -90,7 +93,7 @@ export class EditorComponent implements ControlValueAccessor {
 
   initializeWorkerSelector() {
     window["MonacoEnvironment"] = {
-      getWorker: function(_, label) {
+      getWorker: function (_, label) {
         if (label === "typescript" || label === "javascript") {
           return new Worker(new URL("./workers/ts.worker", import.meta.url), {
             type: "module",

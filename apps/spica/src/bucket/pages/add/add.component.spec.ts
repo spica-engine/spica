@@ -277,7 +277,7 @@ describe("AddComponent", () => {
         expect(bucketHistoryService.historyList).toHaveBeenCalledWith("1", "2");
         const button = fixture.debugElement.query(By.css("mat-toolbar > button"));
         expect(button).toBeTruthy();
-        expect(button.injector.get(MatBadge).content).toBe((1 as unknown) as string);
+        expect(button.injector.get(MatBadge).content).toBe(1 as unknown as string);
       });
 
       it("should list changes", () => {

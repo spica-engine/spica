@@ -114,9 +114,11 @@ async function create({args: cmdArgs, options}: ActionParameters) {
         );
         await Promise.all(foundNetworks.map(network => machine.getNetwork(network.Id).remove()));
         if (!options.retainVolumes) {
-          const foundVolumes = (await machine.listVolumes({
-            filters: JSON.stringify({label: [`namespace=${name}`]})
-          })).Volumes;
+          const foundVolumes = (
+            await machine.listVolumes({
+              filters: JSON.stringify({label: [`namespace=${name}`]})
+            })
+          ).Volumes;
           await Promise.all(foundVolumes.map(volume => machine.getVolume(volume.Name).remove()));
         }
       }
@@ -433,7 +435,7 @@ Password: ${password}
   }
 }
 
-export default function(program: Program): Command {
+export default function (program: Program): Command {
   return program
     .command("project start", "Start a project on your local machine.")
     .argument("<name>", "Name of the project.", {validator: projectName})
@@ -483,5 +485,5 @@ export default function(program: Program): Command {
         validator: CaporalValidator.STRING
       }
     )
-    .action((create as unknown) as Action);
+    .action(create as unknown as Action);
 }

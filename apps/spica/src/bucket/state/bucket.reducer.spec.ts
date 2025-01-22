@@ -55,7 +55,12 @@ describe("BucketReducer", () => {
   });
 
   it("should remove entity from state", () => {
-    store.dispatch(new Retrieve([{primary: "", _id: "test"}, {primary: "", _id: "test1"}]));
+    store.dispatch(
+      new Retrieve([
+        {primary: "", _id: "test"},
+        {primary: "", _id: "test1"}
+      ])
+    );
     store.dispatch(new Remove("test1"));
     expectAsync(store.select(selectAll).toPromise()).toBeResolvedTo([{primary: "", _id: "test"}]);
   });
@@ -71,7 +76,12 @@ describe("BucketReducer", () => {
   });
 
   it("should update entity from state", () => {
-    store.dispatch(new Retrieve([{primary: "", _id: "test"}, {primary: "", _id: "test1"}]));
+    store.dispatch(
+      new Retrieve([
+        {primary: "", _id: "test"},
+        {primary: "", _id: "test1"}
+      ])
+    );
     store.dispatch(new Upsert({primary: "test", _id: "test"}));
     store.dispatch(new Upsert({primary: "test1", _id: "test1"}));
     expectAsync(store.select(selectAll).toPromise()).toBeResolvedTo([

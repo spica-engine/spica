@@ -24,14 +24,12 @@ describe("Relation Schema Component", () => {
           {
             provide: BucketService,
             useValue: {
-              getBuckets: jasmine
-                .createSpy("getBuckets")
-                .and.returnValues(
-                  of([
-                    {_id: "bucket1", primary: "primary", title: "Bucket 1"},
-                    {_id: "bucket2", primary: "primary", title: "Bucket 2"}
-                  ])
-                )
+              getBuckets: jasmine.createSpy("getBuckets").and.returnValues(
+                of([
+                  {_id: "bucket1", primary: "primary", title: "Bucket 1"},
+                  {_id: "bucket2", primary: "primary", title: "Bucket 2"}
+                ])
+              )
             }
           }
         ],

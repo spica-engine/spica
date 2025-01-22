@@ -81,7 +81,10 @@ export function createAuthGuard(type?: string): Type<CanActivate> {
 }
 
 export class MixinAuthGuard implements CanActivate {
-  constructor(@Optional() private readonly options?: AuthModuleOptions, private type?: string) {}
+  constructor(
+    @Optional() private readonly options?: AuthModuleOptions,
+    private type?: string
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest(),

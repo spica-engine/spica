@@ -84,9 +84,7 @@
       <mat-accordion *ngIf="strategy['options'].sp">
         <mat-expansion-panel>
           <mat-expansion-panel-header>
-            <mat-panel-title>
-              Service Provider Info
-            </mat-panel-title>
+            <mat-panel-title> Service Provider Info </mat-panel-title>
           </mat-expansion-panel-header>
           <mat-form-field>
             <textarea
@@ -149,9 +147,7 @@
       (click)="submitForm()"
     >
       <mat-icon>save</mat-icon>
-      <span>
-        Save
-      </span>
+      <span> Save </span>
     </button>
   </mat-card-actions>
 </mat-card>
@@ -171,12 +167,8 @@
         <h5>Method</h5>
         <mat-form-field>
           <mat-select [(ngModel)]="ref.method">
-            <mat-option value="get">
-              Get
-            </mat-option>
-            <mat-option value="post">
-              Post
-            </mat-option>
+            <mat-option value="get"> Get </mat-option>
+            <mat-option value="post"> Post </mat-option>
           </mat-select>
         </mat-form-field>
       </div>

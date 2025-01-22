@@ -11,13 +11,9 @@
         required
       ></span>
     </div>
-    <p *ngIf="!data.asset.configs || !data.asset.configs.length">
-      No configuration is required.
-    </p>
+    <p *ngIf="!data.asset.configs || !data.asset.configs.length">No configuration is required.</p>
     <div class="bottom-actions">
-      <button [disabled]="configForm.invalid" mat-button (click)="preview()">
-        Preview
-      </button>
+      <button [disabled]="configForm.invalid" mat-button (click)="preview()">Preview</button>
     </div>
   </form>
 </ng-container>
@@ -28,11 +24,7 @@
   <asset-preview [preview]="installationPreview"></asset-preview>
 
   <div class="bottom-actions">
-    <button mat-button (click)="configure()">
-      Back
-    </button>
-    <button mat-button (click)="install(data.asset)">
-      Install
-    </button>
+    <button mat-button (click)="configure()">Back</button>
+    <button mat-button (click)="install(data.asset)">Install</button>
   </div>
 </ng-container>

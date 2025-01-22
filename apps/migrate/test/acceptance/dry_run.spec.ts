@@ -45,10 +45,7 @@ describe("DRY Run", () => {
       from: "0.0.1",
       to: "1.0.0"
     });
-    const items = await db
-      .collection("_test_")
-      .find()
-      .toArray();
+    const items = await db.collection("_test_").find().toArray();
     expect(items.length).toBe(0);
   });
 

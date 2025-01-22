@@ -108,9 +108,7 @@
       <mat-divider *ngIf="exportMeta.configs.length > 1"></mat-divider>
     </div>
   </form>
-  <button class="add-config" mat-button (click)="addConfig()">
-    + Add New
-  </button>
+  <button class="add-config" mat-button (click)="addConfig()">+ Add New</button>
 
   <div class="bottom-actions">
     <button [disabled]="metaForm.invalid || configForm.invalid" mat-button (click)="export()">

@@ -21,7 +21,10 @@ export class Remove implements Action {
 
 export class Update implements Action {
   readonly type = AssetActionTypes.UPDATE;
-  constructor(public id: string, public changes: Partial<Asset>) {}
+  constructor(
+    public id: string,
+    public changes: Partial<Asset>
+  ) {}
 }
 
 export class Add implements Action {
@@ -55,22 +58,14 @@ export function reducer(state: State = initialState, action: AssetAction): State
 
 export const assetFeatureSelector = createFeatureSelector<State>("asset");
 
-export const {selectIds, selectEntities, selectAll, selectTotal} = adapter.getSelectors(
-  assetFeatureSelector
-);
+export const {selectIds, selectEntities, selectAll, selectTotal} =
+  adapter.getSelectors(assetFeatureSelector);
 
-export const selectLoaded = createSelector(
-  assetFeatureSelector,
-  state => state.loaded
-);
+export const selectLoaded = createSelector(assetFeatureSelector, state => state.loaded);
 
-export const selectEmpty = createSelector(
-  assetFeatureSelector,
-  selectTotal,
-  (state, total) => {
-    return state.loaded && total == 0;
-  }
-);
+export const selectEmpty = createSelector(assetFeatureSelector, selectTotal, (state, total) => {
+  return state.loaded && total == 0;
+});
 
 export const selectName = (id: string) =>
   createSelector(
@@ -79,7 +74,4 @@ export const selectName = (id: string) =>
   );
 
 export const selectEntity = (id: string) =>
-  createSelector(
-    selectEntities,
-    state => state && state[id]
-  );
+  createSelector(selectEntities, state => state && state[id]);

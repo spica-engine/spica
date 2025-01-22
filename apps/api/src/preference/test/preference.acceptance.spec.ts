@@ -12,10 +12,7 @@ describe("PreferenceController", () => {
   let db: DatabaseService;
 
   function addpref(pref: any) {
-    return app
-      .get(DatabaseService)
-      .collection("preferences")
-      .insertOne(pref);
+    return app.get(DatabaseService).collection("preferences").insertOne(pref);
   }
 
   beforeAll(async () => {

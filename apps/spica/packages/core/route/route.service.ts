@@ -26,7 +26,10 @@ function wrap<T>(value: T | Promise<T> | Observable<T>) {
 export class RouteService {
   readonly routes: Observable<Route[]>;
 
-  constructor(private store: Store<RouteState>, private filters: RouteFilter[]) {
+  constructor(
+    private store: Store<RouteState>,
+    private filters: RouteFilter[]
+  ) {
     this.routes = store.select(selectRoutes).pipe(
       switchMap(routes =>
         from(routes).pipe(

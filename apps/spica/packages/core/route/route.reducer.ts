@@ -19,7 +19,10 @@ export class Add implements Action {
 
 export class Update implements Action {
   public readonly type = RouteActionTypes.UPDATE;
-  constructor(public id: string, public changes: Partial<Route>) {}
+  constructor(
+    public id: string,
+    public changes: Partial<Route>
+  ) {}
 }
 
 export class Upsert implements Action {
@@ -85,7 +88,4 @@ export function reducer(state: RouteState = initialState, action: RouteAction): 
 
 const {selectAll} = adapter.getSelectors();
 
-export const selectRoutes = createSelector(
-  createFeatureSelector<RouteState>("routes"),
-  selectAll
-);
+export const selectRoutes = createSelector(createFeatureSelector<RouteState>("routes"), selectAll);

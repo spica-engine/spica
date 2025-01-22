@@ -43,7 +43,7 @@ module.exports = {
     }),
     typescript({
       outDir: "./dist/apps/api/src/function/runtime/node/bootstrap",
-      tsconfig: "./apps/api/src/function/runtime/node/bootstrap/tsconfig.json",
+      tsconfig: "./apps/api/src/function/runtime/node/bootstrap/tsconfig.json"
     }),
     json(),
     commonjs({

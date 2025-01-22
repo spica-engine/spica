@@ -20,7 +20,10 @@ export interface WebhookResult {
 
 @Injectable({providedIn: "root"})
 export class WebhookService {
-  constructor(private http: HttpClient, private store: Store<fromWebhook.State>) {}
+  constructor(
+    private http: HttpClient,
+    private store: Store<fromWebhook.State>
+  ) {}
 
   private resetTimezoneOffset(date: Date) {
     return new Date(date.setMinutes(date.getMinutes() - date.getTimezoneOffset()));

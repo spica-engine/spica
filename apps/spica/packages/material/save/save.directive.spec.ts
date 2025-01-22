@@ -7,9 +7,7 @@ import {MatSaveModule} from "./save.module";
 import {SavingState} from "./interface";
 
 @Component({
-  template: `
-    <button *matSave="$save | async; let state">{{ state }}</button>
-  `
+  template: ` <button *matSave="$save | async; let state">{{ state }}</button> `
 })
 class TestSaveComponent {
   @ViewChild(MatSaveDirective, {static: true}) directive: MatSaveDirective;

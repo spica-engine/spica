@@ -10,7 +10,7 @@ import {NumberComponent} from "./number.component";
 
 async function patchScheme<T extends {schema: InternalPropertySchema}>(
   fixture: ComponentFixture<T>,
-  changes: Partial<typeof fixture["componentInstance"]["schema"]>
+  changes: Partial<(typeof fixture)["componentInstance"]["schema"]>
 ) {
   fixture.componentInstance.schema = {...fixture.componentInstance.schema, ...changes};
   fixture.detectChanges();

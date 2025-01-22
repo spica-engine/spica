@@ -9,10 +9,7 @@ async function listContexts() {
     return {context: undefined};
   });
   const contexts = context.list().map(ctx => {
-    let authorization = new Array(ctx.authorization.length)
-      .fill("*")
-      .slice(0, 10)
-      .join(" ");
+    let authorization = new Array(ctx.authorization.length).fill("*").slice(0, 10).join(" ");
     if (ctx.name == currentContext.context) {
       authorization = authorization + "   (selected)";
     }
@@ -26,6 +23,6 @@ async function listContexts() {
   console.table(contexts, ["name", "url", "authorization"]);
 }
 
-export default function(program: Program): Command {
+export default function (program: Program): Command {
   return program.command("context ls", "List contexts").action(listContexts);
 }
