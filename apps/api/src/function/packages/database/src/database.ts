@@ -156,10 +156,11 @@ function validateDocs(doc: object | object[]) {
 
 export function close(force?: boolean): Promise<void> | void {
   if (connection) {
-    globalThis[Symbol.for("kDatabaseDevkitConn")] = undefined;
-    return connection.close(force);
+    const closed = connection.close(force);
+    connection = globalThis[Symbol.for("kDatabaseDevkitConn")] = undefined;
+    return closed;
   }
-    return Promise.resolve();
+  return Promise.resolve();
 }
 
 export function isConnected() {
