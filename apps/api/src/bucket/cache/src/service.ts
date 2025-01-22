@@ -1,7 +1,8 @@
-import {CACHE_MANAGER, Inject, Injectable} from "@nestjs/common";
+import {Inject, Injectable} from "@nestjs/common";
 import {Cache} from "cache-manager";
 import {DatabaseService} from "@spica-server/database";
 import * as cron from "cron";
+import {CACHE_MANAGER} from "@nestjs/cache-manager";
 
 @Injectable()
 export class BucketCacheService {
@@ -10,9 +11,12 @@ export class BucketCacheService {
   // to prevent infinite loop while clearing bucket caches which has cross-relation or self-relation
   invalidatedBucketIds = new Set();
 
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache, private db: DatabaseService) {
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private db: DatabaseService
+  ) {
     if (!this.invalidateJob) {
-      this.invalidateJob = new cron.CronJob({
+      this.invalidateJob = cron.CronJob.from({
         cronTime: "0 0 0 * * *",
         start: true,
         onTick: () => this.reset()

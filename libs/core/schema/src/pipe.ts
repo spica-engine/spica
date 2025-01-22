@@ -28,12 +28,12 @@ abstract class MixinValidator implements PipeTransform {
 }
 
 function buildErrorMessage(e) {
-  let dataPath = e.dataPath.replace(/\//g, ".");
+  let instancePath = e.instancePath.replace(/\//g, ".");
 
-  if (!dataPath && e.params && e.params.additionalProperty) {
+  if (!instancePath && e.params && e.params.additionalProperty) {
     return `${e.message} '${e.params.additionalProperty}'`;
   }
-  return `${dataPath} ${e.message}`;
+  return `${instancePath} ${e.message}`;
 }
 
 // we need to separate request injected validator and base validator

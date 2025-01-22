@@ -1,8 +1,8 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
 import {default as Ajv, ValidateFunction} from "ajv";
 import formats from "ajv-formats";
-import {ValidationError} from "ajv/dist/compile/error_classes";
-import * as request from "request-promise-native";
+import ValidationError from "ajv/dist/runtime/validation_error";
+import got from "got";
 import {from, isObservable} from "rxjs";
 import {skip, take, tap} from "rxjs/operators";
 import defaultVocabulary from "./default";
@@ -17,7 +17,7 @@ import {
   UriResolver
 } from "./interface";
 export {CodeKeywordDefinition, ErrorObject, KeywordCxt, _} from "ajv";
-export {ValidationError} from "ajv/dist/compile/error_classes";
+export {default as ValidationError} from "ajv/dist/runtime/validation_error";
 
 @Injectable()
 export class Validator {
@@ -49,6 +49,7 @@ export class Validator {
         }, {}),
       schemas: new Array().concat(local.schemas || []).concat(global.schemas || []),
       strict: true,
+      allowUnionTypes: true,
       ["defaults" as any]: this._defaults
     });
 
@@ -73,7 +74,7 @@ export class Validator {
     for (const interceptor of this._resolvers) {
       const result = interceptor(uri);
       if (!!result) {
-        if (isObservable<Object>(result)) {
+        if (isObservable(result)) {
           result
             .pipe(
               skip(1),
@@ -89,9 +90,11 @@ export class Validator {
         }
       }
     }
-    return request({uri, json: true}).catch(() =>
-      Promise.reject(new Error(`Could not resolve the schema ${uri}`))
-    );
+
+    return got
+      .post(uri)
+      .json()
+      .catch(() => Promise.reject(new Error(`Could not resolve the schema ${uri}`)));
   }
 
   registerUriResolver(uriResolver: UriResolver) {

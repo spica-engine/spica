@@ -484,7 +484,7 @@ describe("Realtime", () => {
                 {
                   kind: ChunkKind.Response,
                   status: 400,
-                  message: " should have required property 'title'"
+                  message: " must have required property 'title'"
                 }
               ]);
               await ws.close();

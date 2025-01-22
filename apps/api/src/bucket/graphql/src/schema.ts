@@ -170,14 +170,14 @@ export function createSchema(bucket: Bucket, staticTypes: string, bucketIds: str
 
       type Query{
         Find${name}(limit: Int, skip: Int, sort: JSON, language: String, query: JSON): ${name}FindResponse
-        FindBy${name}Id(_id: ObjectID!, language: String):${name}
+        FindBy${name}Id(_id: ObjectId!, language: String):${name}
       }
 
       type Mutation{
         insert${name}(input: ${name}Input): ${name}
-        replace${name}(_id: ObjectID!, input: ${name}Input): ${name}
-        patch${name}(_id: ObjectID!, input: JSON): ${name}
-        delete${name}(_id: ObjectID!): String
+        replace${name}(_id: ObjectId!, input: ${name}Input): ${name}
+        patch${name}(_id: ObjectId!, input: JSON): ${name}
+        delete${name}(_id: ObjectId!): String
       }
     `;
 
@@ -201,7 +201,7 @@ function createInterface(
   const properties = [];
 
   if (schema._id && prefix == Prefix.Type) {
-    properties.push("_id: ObjectID");
+    properties.push("_id: ObjectId");
   }
 
   for (const [key, value] of Object.entries(schema.properties)) {

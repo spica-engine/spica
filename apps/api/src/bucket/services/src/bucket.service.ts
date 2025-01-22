@@ -4,10 +4,11 @@ import {
   BaseCollection,
   Collection,
   DatabaseService,
-  FilterQuery,
-  FindOneAndReplaceOption,
-  IndexOptions,
-  ObjectId
+  Filter,
+  FindOneAndReplaceOptions,
+  CreateIndexesOptions,
+  ObjectId,
+  WithId
 } from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference/services";
 import {BehaviorSubject, Observable} from "rxjs";
@@ -19,7 +20,7 @@ export interface IndexDefinition {
   definition: {
     [key: string]: any;
   };
-  options?: IndexOptions;
+  options?: CreateIndexesOptions;
 }
 
 interface ExistingIndex {
@@ -96,13 +97,13 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
   }
 
   findOneAndReplace(
-    filter: FilterQuery<{_id: string}>,
+    filter: Filter<{_id: ObjectId}>,
     doc: Bucket,
-    options?: FindOneAndReplaceOption
-  ): Promise<Bucket> {
+    options?: FindOneAndReplaceOptions
+  ): Promise<WithId<Bucket>> {
     return super
       .findOneAndReplace(filter, doc, options)
-      .then(r => this.updateIndexes({...doc, _id: filter._id}).then(() => r));
+      .then(r => this.updateIndexes({...doc, _id: filter._id as ObjectId}).then(() => r));
   }
 
   async updateIndexes(bucket: Bucket): Promise<void> {
@@ -153,9 +154,11 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
           fullDocument: "updateLookup"
         }
       );
-      stream.on("change", change => observer.next(change.fullDocument));
+      stream.on("change", change =>
+        observer.next("fullDocument" in change ? change.fullDocument : undefined)
+      );
       return () => {
-        if (!stream.isClosed()) {
+        if (!stream.closed) {
           stream.close();
         }
       };

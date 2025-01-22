@@ -19,10 +19,13 @@ export class MongoMemory<T> implements IPubSub<T> {
     return this._changeStream;
   }
 
-  constructor(private service: BaseCollection<any>, private options: MemoryOptions) {}
+  constructor(
+    private service: BaseCollection<any>,
+    private options: MemoryOptions
+  ) {}
 
   publish(document: T) {
-    this.service._coll.insertOne(document).then(r => r.ops[0]);
+    this.service._coll.insertOne(document).then(r => ({...document, _id: r.insertedId}));
   }
 
   subscribe(observer: PartialObserver<T>) {

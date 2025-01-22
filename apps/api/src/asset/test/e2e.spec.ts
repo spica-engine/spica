@@ -213,7 +213,7 @@ describe("E2E Tests", () => {
         const res = await req.post("asset", {...asset, reject: "me"});
 
         expect(res.statusCode).toEqual(400);
-        expect(res.body.message).toEqual("should NOT have additional properties 'reject'");
+        expect(res.body.message).toEqual("must NOT have additional properties 'reject'");
       });
 
       it("should throw error for missing required properties", async () => {
@@ -222,7 +222,7 @@ describe("E2E Tests", () => {
         const res = await req.post("asset", asset);
 
         expect(res.statusCode).toEqual(400);
-        expect(res.body.message).toEqual(" should have required property 'name'");
+        expect(res.body.message).toEqual(" must have required property 'name'");
       });
 
       it("should throw error for wrong typed properties", async () => {
@@ -231,7 +231,7 @@ describe("E2E Tests", () => {
         const res = await req.post("asset", asset);
 
         expect(res.statusCode).toEqual(400);
-        expect(res.body.message).toEqual(".description should be string");
+        expect(res.body.message).toEqual(".description must be string");
       });
     });
 

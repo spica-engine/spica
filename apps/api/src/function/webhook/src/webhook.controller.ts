@@ -16,7 +16,7 @@ import {
 } from "@nestjs/common";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
-import {DatabaseService, ObjectId, OBJECT_ID} from "@spica-server/database";
+import {DatabaseService, ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {CollectionSlug, COLL_SLUG} from "@spica-server/function/services";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {Webhook} from "./interface";
@@ -112,7 +112,9 @@ export class WebhookController {
     } catch (error) {
       throw new BadRequestException(error.toString());
     }
-    return this.webhookService.findOneAndReplace({_id: id}, hook, {returnOriginal: false});
+    return this.webhookService.findOneAndReplace({_id: id}, hook, {
+      returnDocument: ReturnDocument.AFTER
+    });
   }
 
   @Delete(":id")

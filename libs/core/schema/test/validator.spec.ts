@@ -27,10 +27,10 @@ describe("schema validator", () => {
     expect(errors).toEqual([
       {
         keyword: "additionalProperties",
-        dataPath: "",
+        instancePath: "",
         schemaPath: "#/additionalProperties",
         params: {additionalProperty: "prop_should_be_rejected"},
-        message: "should NOT have additional properties"
+        message: "must NOT have additional properties"
       }
     ]);
   });

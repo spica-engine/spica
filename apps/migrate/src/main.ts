@@ -56,15 +56,17 @@ export async function run(arg?: string | readonly string[]) {
     // Prevent from exiting when testing
     .exitProcess(!arg)
     .parse(arg);
+  
+  const resolvedArgs = await args;
 
   return migrate({
-    from: args.from.toString(),
-    to: args.to.toString(),
-    dryRun: args["dry-run"],
+    from: resolvedArgs.from.toString(),
+    to: resolvedArgs.to.toString(),
+    dryRun: resolvedArgs["dry-run"],
     console: _console,
     database: {
-      name: args["database-name"],
-      uri: args["database-uri"]
+      name: resolvedArgs["database-name"],
+      uri: resolvedArgs["database-uri"]
     }
   });
 }

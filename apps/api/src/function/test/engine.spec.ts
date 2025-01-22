@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService} from "@spica-server/database";
+import {DatabaseService, ObjectId} from "@spica-server/database";
 import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
@@ -189,7 +189,7 @@ describe("Engine", () => {
 
   it("should unregister triggers on module destroy", async () => {
     await fs.insertOne({
-      _id: "test_id",
+      _id: new ObjectId("test_id"),
       env: {},
       language: "js",
       timeout: 10,

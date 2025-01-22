@@ -10,9 +10,10 @@ import {ChunkKind} from "@spica-server/interface/realtime";
 function url(path: string, query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL(path, "ws://insteadof");
   for (const key in query) {
-    url.searchParams.set(key, (typeof query[key] == "string"
-      ? String(query[key])
-      : JSON.stringify(query[key])) as string);
+    url.searchParams.set(
+      key,
+      (typeof query[key] == "string" ? String(query[key]) : JSON.stringify(query[key])) as string
+    );
   }
   return `${url.pathname}${url.search}`;
 }
@@ -43,32 +44,33 @@ describe("Realtime", () => {
     app.useWebSocketAdapter(new WsAdapter(app));
     await app.listen(wsc.socket);
 
-    await new Promise(resolve => setTimeout(() => resolve(), 2000));
+    await new Promise<void>(resolve => setTimeout(() => resolve(), 2000));
   });
 
   afterAll(() => app.close());
 
   beforeEach(async () => {
     created_at = new Date();
+    const insertData = [
+      {
+        function: fn1.toHexString(),
+        event_id: "event_id",
+        content: "content",
+        created_at: created_at
+      },
+      {
+        function: fn2.toHexString(),
+        event_id: "event_id2",
+        content: "Function (default) did not finish within 84 seconds. Aborting.",
+        created_at: created_at
+      }
+    ];
     rows = await db
       .collection("function_logs")
-      .insertMany([
-        {
-          function: fn1.toHexString(),
-          event_id: "event_id",
-          content: "content",
-          created_at: created_at
-        },
-        {
-          function: fn2.toHexString(),
-          event_id: "event_id2",
-          content: "Function (default) did not finish within 84 seconds. Aborting.",
-          created_at: created_at
-        }
-      ])
+      .insertMany(insertData)
       .then(r =>
-        r.ops.map(({_id, created_at, ...rest}) => ({
-          _id: _id.toString(),
+        insertData.map(({created_at, ...rest}, index) => ({
+          _id: r.insertedIds[index].toString(),
           created_at: (created_at as Date).toISOString(),
           ...rest
         }))
@@ -144,17 +146,18 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync with skip and limit", async () => {
+    const insertData = {
+      function: new ObjectId().toHexString(),
+      event_id: "event_id",
+      content: "content",
+      created_at: created_at
+    };
     const newRows = await db
       .collection("function_logs")
-      .insertOne({
-        function: new ObjectId().toHexString(),
-        event_id: "event_id",
-        content: "content",
-        created_at: created_at
-      })
+      .insertOne(insertData)
       .then(r =>
-        r.ops.map(({_id, created_at, ...rest}) => ({
-          _id: _id.toString(),
+        [insertData].map(({created_at, ...rest}) => ({
+          _id: r.insertedId.toString(),
           created_at: created_at.toISOString(),
           ...rest
         }))
