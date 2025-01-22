@@ -1,4 +1,4 @@
-import {getSession, setSession} from "@spica/migrate/src/session";
+import {getSession, setSession} from "@spica/migrate";
 
 describe("Session", () => {
   it("should return empty session by default", () => {

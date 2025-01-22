@@ -33,7 +33,8 @@
     {
       "plugin": "@nx/jest/plugin",
       "options": {
-        "targetName": "test"
+        "targetName": "test",
+        "disableJestRuntime": true
       }
     }
   ],
@@ -44,11 +45,15 @@
     }
   },
   "targetDefaults": {
+    "build":{
+      "cache": false
+    },
     "test": {
+      "cache": true,
       "dependsOn": [
         {
-          "projects": ["api"],
-          "target": "build-function-node-entrypoint"
+          "projects": ["api/function/runtime/node/bootstrap"],
+          "target": "build"
         }
       ]
     }

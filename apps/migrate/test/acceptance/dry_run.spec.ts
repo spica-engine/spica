@@ -1,7 +1,7 @@
 import {Db, getConnectionUri, getDatabaseName, start} from "@spica-server/database/testing";
 import * as color from "cli-color/lib/supports-color";
 import * as fs from "fs";
-import {migrate} from "@spica/migrate/src/migrate";
+import {migrate} from "@spica/migrate";
 
 describe("DRY Run", () => {
   let database: {uri: string; name: string};

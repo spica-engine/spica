@@ -1,7 +1,7 @@
 import {Db, getConnectionUri, getDatabaseName, start} from "@spica-server/database/testing";
 import * as color from "cli-color/lib/supports-color";
 import * as fs from "fs";
-import {run} from "@spica/migrate/src/main";
+import {run} from "@spica/migrate";
 
 describe("Basic behavior", () => {
   let db: Db;
