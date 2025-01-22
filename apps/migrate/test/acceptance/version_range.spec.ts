@@ -7,7 +7,7 @@ import {
 } from "@spica-server/database/testing";
 import * as color from "cli-color/lib/supports-color";
 import * as fs from "fs";
-import {migrate} from "@spica/migrate/src/migrate";
+import {migrate} from "@spica/migrate";
 
 describe("Version range", () => {
   let database: {uri: string; name: string};

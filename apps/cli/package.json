@@ -10,22 +10,22 @@
     "spica": "bin/spica"
   },
   "dependencies": {
-    "colorette": "^1.2.1",
-    "ora": "^5.1.0",
-    "pretty-ms": "^7.0.1",
-    "@caporal/core": "^2.0.2",
-    "columnify": "^1.5.4",
-    "dockerode": "^3.2.1",
+    "@caporal/core": "^2.0.7",
+    "colorette": "^2.0.20",
+    "columnify": "^1.6.0",
+    "cosmiconfig": "^9.0.0",
+    "dockerode": "^4.0.4",
+    "dotenv": "^16.4.7",
     "get-port": "^5.0.0",
-    "cosmiconfig": "^7.0.0",
-    "open": "^7.3.0",
-    "jsonpath": "^1.0.2",
-    "semver": "^7.3.2",
-    "dotenv": "^16.0.3"
+    "jsonpath": "^1.1.1",
+    "open": "^10.1.0",
+    "ora": "^8.1.1",
+    "pretty-ms": "^7.0.1",
+    "semver": "^7.6.3"
   },
   "devDependencies": {
-    "@types/dockerode": "^3.3.1",
-    "@types/json-schema": "^7.0.9",
-    "@types/semver": "^7.2.0"
+    "@types/dockerode": "^3.3.34",
+    "@types/json-schema": "^7.0.15",
+    "@types/semver": "^7.5.8"
   }
 }
