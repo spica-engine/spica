@@ -4,15 +4,17 @@
   "version": "0.0.0-PLACEHOLDER",
   "description": "Database package for Spica functions.",
   "author": "spica",
-  "keywords": ["spica", "devkit"],
+  "keywords": [
+    "spica",
+    "devkit"
+  ],
   "main": "dist/index",
   "module": "dist/index.mjs",
   "sideEffects": false,
   "types": "dist/index.d.ts",
   "typings": "dist/index.d.ts",
   "dependencies": {
-    "mongodb": "^3.5.4",
-    "@types/mongodb": "^3.3.16"
+    "mongodb": "^6.12.0"
   },
   "scripts": {
     "postinstall": "node ./scripts/postinstall.js"

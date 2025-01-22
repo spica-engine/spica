@@ -159,9 +159,9 @@ export function close(force?: boolean): Promise<void> | void {
     globalThis[Symbol.for("kDatabaseDevkitConn")] = undefined;
     return connection.close(force);
   }
-    return Promise.resolve();
+  return Promise.resolve();
 }
 
 export function isConnected() {
-  return !!connection;
+  return !!globalThis[Symbol.for("kDatabaseDevkitConn")];
 }
