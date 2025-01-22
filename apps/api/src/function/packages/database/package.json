@@ -14,8 +14,7 @@
   "types": "dist/index.d.ts",
   "typings": "dist/index.d.ts",
   "dependencies": {
-    "mongodb": "^3.5.4",
-    "@types/mongodb": "^3.3.16"
+    "mongodb": "^6.12.0"
   },
   "scripts": {
     "postinstall": "node ./scripts/postinstall.js"
