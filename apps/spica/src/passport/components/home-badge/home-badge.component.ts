@@ -14,7 +14,10 @@ export class HomeBadgeComponent {
   dark$: Observable<boolean>;
   schemeSwitcherComponent = SchemeSwitcherComponent;
 
-  constructor(private router: Router, private schemeObserver: SchemeObserver) {
+  constructor(
+    private router: Router,
+    private schemeObserver: SchemeObserver
+  ) {
     this.dark$ = this.schemeObserver
       .observe(Scheme.Dark)
       .pipe(startWith(this.schemeObserver.isMatched(Scheme.Dark)));

@@ -5,7 +5,10 @@ import {take, map} from "rxjs/operators";
 
 @Injectable({providedIn: "root"})
 export class WebhookGuard {
-  constructor(private webhookService: WebhookService, private router: Router) {}
+  constructor(
+    private webhookService: WebhookService,
+    private router: Router
+  ) {}
 
   canActivate() {
     return this.webhookService.getAll(1, 0, {_id: 1}).pipe(

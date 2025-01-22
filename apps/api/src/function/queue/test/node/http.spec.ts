@@ -102,9 +102,7 @@ describe("Http", () => {
       it("should call the callback", async () => {
         await response.writeHead(200, "OK");
         expect(writeHeadSpy).toHaveBeenCalledTimes(1);
-        const [writeHead] = writeHeadSpy.mock.calls[0] as [
-          Http.WriteHead
-        ];
+        const [writeHead] = writeHeadSpy.mock.calls[0] as [Http.WriteHead];
         expect(writeHead.statusCode).toBe(200);
         expect(writeHead.statusMessage).toBe("OK");
       });

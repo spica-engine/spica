@@ -19,9 +19,7 @@
           #nameModel="ngModel"
           required
         />
-        <mat-error *ngIf="nameModel?.errors?.required">
-          This field is required.
-        </mat-error>
+        <mat-error *ngIf="nameModel?.errors?.required"> This field is required. </mat-error>
       </mat-form-field>
 
       <mat-form-field>
@@ -33,9 +31,7 @@
           #descriptionModel="ngModel"
           required
         ></textarea>
-        <mat-error *ngIf="descriptionModel?.errors?.required">
-          This field is required.
-        </mat-error>
+        <mat-error *ngIf="descriptionModel?.errors?.required"> This field is required. </mat-error>
       </mat-form-field>
 
       <mat-accordion>

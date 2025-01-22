@@ -25,7 +25,10 @@ export class EditComponent {
 
   preview: InstallationPreviewByModules = {};
 
-  constructor(private route: ActivatedRoute, private assetService: AssetService) {
+  constructor(
+    private route: ActivatedRoute,
+    private assetService: AssetService
+  ) {
     this.route.params
       .pipe(
         tap(() => (this.$save = of(SavingState.Pristine))),
@@ -65,7 +68,7 @@ export class EditComponent {
     return resource.contents.schema.title || resource.contents.schema.name || resource._id;
   }
 
-  categorizeResourcesByModule(resources: (Resource<any>)[]) {
+  categorizeResourcesByModule(resources: Resource<any>[]) {
     const categorizedResources: AssetResourceNode[] = [];
 
     for (const resource of resources) {

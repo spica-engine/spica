@@ -16,7 +16,7 @@ describe("StrategyDialogComponent", () => {
       providers: [
         {
           provide: MAT_DIALOG_DATA,
-          useValue: data = {url: "about:blank"}
+          useValue: (data = {url: "about:blank"})
         }
       ]
     }).compileComponents();

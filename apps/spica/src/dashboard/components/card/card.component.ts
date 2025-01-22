@@ -34,7 +34,10 @@ export class CardComponent implements OnChanges {
 
   token: string;
 
-  constructor(private passport: PassportService, private http: HttpClient) {
+  constructor(
+    private passport: PassportService,
+    private http: HttpClient
+  ) {
     this.token = this.passport.token;
   }
 

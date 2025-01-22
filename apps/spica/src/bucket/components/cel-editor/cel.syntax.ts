@@ -1,6 +1,10 @@
 export const configuration: import("monaco-editor-core").languages.LanguageConfiguration = {
   // symbols used as brackets
-  brackets: [["{", "}"], ["[", "]"], ["(", ")"]],
+  brackets: [
+    ["{", "}"],
+    ["[", "]"],
+    ["(", ")"]
+  ],
   // symbols that are auto closed when typing
   autoClosingPairs: [
     {open: "{", close: "}"},
@@ -75,9 +79,17 @@ export const language: any = {
       [/`/, "string", "@string_backtick"]
     ],
 
-    whitespace: [[/[ \t\r\n]+/, ""], [/\/\*/, "comment", "@comment"], [/\/\/.*$/, "comment"]],
+    whitespace: [
+      [/[ \t\r\n]+/, ""],
+      [/\/\*/, "comment", "@comment"],
+      [/\/\/.*$/, "comment"]
+    ],
 
-    comment: [[/[^\/*]+/, "comment"], [/\*\//, "comment", "@pop"], [/[\/*]/, "comment"]],
+    comment: [
+      [/[^\/*]+/, "comment"],
+      [/\*\//, "comment", "@pop"],
+      [/[\/*]/, "comment"]
+    ],
 
     string_double: [
       [/[^\\"]+/, "string"],

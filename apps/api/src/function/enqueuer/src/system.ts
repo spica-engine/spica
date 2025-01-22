@@ -23,10 +23,7 @@ export class SystemEnqueuer implements Enqueuer<EventOptions> {
 
   constructor(private queue: EventQueue) {
     this.subscriptionSubject
-      .pipe(
-        debounceTime(1000),
-        take(1)
-      )
+      .pipe(debounceTime(1000), take(1))
       .subscribe(() => this.invokeReadyEventTargets());
   }
 

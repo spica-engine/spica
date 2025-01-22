@@ -18,7 +18,11 @@ export class BucketActionsComponent implements OnDestroy, OnInit {
   private dispose = new Subject();
   @Input() route: Route;
 
-  constructor(private bs: BucketService, private router: Router, private dialog: MatDialog) {
+  constructor(
+    private bs: BucketService,
+    private router: Router,
+    private dialog: MatDialog
+  ) {
     this.bs
       .getBuckets()
       .pipe(

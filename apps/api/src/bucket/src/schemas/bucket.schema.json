@@ -5,7 +5,7 @@
   "type": "object",
   "definitions": {
     "propertyNames": {
-      "type":"string",
+      "type": "string",
       "pattern": "^(?!(_id)$)([a-z_0-9]*)+$"
     },
     "schemaArray": {

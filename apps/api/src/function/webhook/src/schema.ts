@@ -68,7 +68,10 @@ export function getSchema(collections: string[]): JSONSchema7 {
 
 @Injectable()
 export class SchemaResolver {
-  constructor(private db: DatabaseService, private validator: Validator) {
+  constructor(
+    private db: DatabaseService,
+    private validator: Validator
+  ) {
     validator.registerUriResolver(this.resolve.bind(this));
   }
 

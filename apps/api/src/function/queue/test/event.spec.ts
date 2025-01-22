@@ -11,7 +11,12 @@ describe("EventQueue", () => {
   beforeEach(() => {
     enqueueSpy = jest.fn();
     popSpy = jest.fn();
-    eventQueue = new EventQueue(() => {}, enqueueSpy, popSpy, () => {});
+    eventQueue = new EventQueue(
+      () => {},
+      enqueueSpy,
+      popSpy,
+      () => {}
+    );
   });
 
   afterEach(() => {

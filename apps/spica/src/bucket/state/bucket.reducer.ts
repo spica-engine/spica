@@ -20,7 +20,10 @@ export class Add implements Action {
 
 export class Update implements Action {
   readonly type = BucketActionTypes.UPDATE;
-  constructor(public id: string, public changes: Partial<Bucket>) {}
+  constructor(
+    public id: string,
+    public changes: Partial<Bucket>
+  ) {}
 }
 export class UpdateMany implements Action {
   readonly type = BucketActionTypes.UPDATE_MANY;
@@ -97,14 +100,10 @@ export function reducer(state: State = initialState, action: BucketAction): Stat
 
 export const bucketFeatureSelector = createFeatureSelector<State>("bucket");
 
-export const {selectIds, selectEntities, selectAll, selectTotal} = adapter.getSelectors(
-  bucketFeatureSelector
-);
+export const {selectIds, selectEntities, selectAll, selectTotal} =
+  adapter.getSelectors(bucketFeatureSelector);
 
-export const selectLoaded = createSelector(
-  bucketFeatureSelector,
-  state => state.loaded
-);
+export const selectLoaded = createSelector(bucketFeatureSelector, state => state.loaded);
 
 export const selectEmpty = createSelector(
   bucketFeatureSelector,

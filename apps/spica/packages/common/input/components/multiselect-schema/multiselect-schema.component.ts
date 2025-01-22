@@ -11,7 +11,10 @@ import {SchemaComponent} from "../schema.component";
 export class MultiselectSchemaComponent extends SchemaComponent {
   availableTypes = ["string", "number"];
 
-  constructor(@Inject(INPUT_SCHEMA) public schema: any, private resolver: InputResolver) {
+  constructor(
+    @Inject(INPUT_SCHEMA) public schema: any,
+    private resolver: InputResolver
+  ) {
     super(schema);
     this.schema.items = this.schema.items || {type: "string"};
   }

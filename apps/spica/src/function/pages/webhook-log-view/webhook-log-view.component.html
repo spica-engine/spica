@@ -24,16 +24,10 @@
     </mat-select>
   </mat-form-field>
   <mat-form-field>
-    <mat-label>
-      Select status
-    </mat-label>
+    <mat-label> Select status </mat-label>
     <mat-select [(ngModel)]="filter.succeed">
-      <mat-option value="true">
-        Succeeded
-      </mat-option>
-      <mat-option value="false">
-        Failed
-      </mat-option>
+      <mat-option value="true"> Succeeded </mat-option>
+      <mat-option value="false"> Failed </mat-option>
     </mat-select>
   </mat-form-field>
 
@@ -49,12 +43,8 @@
     </mat-date-range-picker>
   </mat-form-field>
 
-  <button mat-button (click)="applyFilter()">
-    Apply
-  </button>
-  <button mat-button color="warn" (click)="clearFilter()">
-    Clear
-  </button>
+  <button mat-button (click)="applyFilter()">Apply</button>
+  <button mat-button color="warn" (click)="clearFilter()">Clear</button>
   <mat-card-content>
     <mat-accordion>
       <cdk-virtual-scroll-viewport itemSize="50" class="example-viewport">
@@ -83,19 +73,13 @@
             </mat-panel-title>
           </mat-expansion-panel-header>
           <ng-container *ngIf="log.content.error; else elseBlock">
-            <h3>
-              Message
-            </h3>
+            <h3>Message</h3>
             <pre>{{ log.content.error }}</pre>
           </ng-container>
           <ng-template #elseBlock>
-            <h3>
-              Request
-            </h3>
+            <h3>Request</h3>
             <pre>{{ log.content.request | json }}</pre>
-            <h3>
-              Response
-            </h3>
+            <h3>Response</h3>
             <pre>{{ log.content.response | json }}</pre>
           </ng-template>
         </mat-expansion-panel>

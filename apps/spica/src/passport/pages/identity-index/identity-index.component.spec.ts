@@ -23,9 +23,7 @@ import {PolicyService} from "../../services/policy.service";
 import {MatDividerModule} from "@angular/material/divider";
 
 @Component({
-  template: `
-    <ng-container *ngTemplateOutlet="outlet"></ng-container>
-  `
+  template: ` <ng-container *ngTemplateOutlet="outlet"></ng-container> `
 })
 class ToolbarCmp {
   outlet: TemplateRef<any>;

@@ -407,13 +407,13 @@ describe("Storage Acceptance", () => {
           data: [row]
         }
       } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
-      const {statusCode, statusText, body: __} = await req.put(
-        `/storage/${row._id}`,
-        BSON.serialize(row),
-        {
-          "Content-Type": "application/bson"
-        }
-      );
+      const {
+        statusCode,
+        statusText,
+        body: __
+      } = await req.put(`/storage/${row._id}`, BSON.serialize(row), {
+        "Content-Type": "application/bson"
+      });
       expect(statusCode).toEqual(400);
       expect(statusText).toEqual("Bad Request");
 

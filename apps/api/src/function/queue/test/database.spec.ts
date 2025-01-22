@@ -4,14 +4,18 @@ import {credentials} from "@grpc/grpc-js";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5844";
 
-
 describe("DatabaseQueue", () => {
   let queue: EventQueue;
   let databaseQueue: DatabaseQueue;
   let databaseQueueClient: any;
 
   beforeEach(() => {
-    queue = new EventQueue(() => {}, () => {}, () => {}, () => {});
+    queue = new EventQueue(
+      () => {},
+      () => {},
+      () => {},
+      () => {}
+    );
     databaseQueue = new DatabaseQueue();
     queue.addQueue(databaseQueue);
     queue.listen();

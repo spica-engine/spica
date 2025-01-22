@@ -22,9 +22,7 @@ import {MatResizeHeader} from "./resize.directive";
       </ng-container>
       <ng-container matColumnDef="weight">
         <!--This is here to test matSort independence-->
-        <mat-header-cell *matHeaderCellDef mat-resize-header>
-          Weight
-        </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef mat-resize-header> Weight </mat-header-cell>
       </ng-container>
       <ng-container matColumnDef="height">
         <mat-header-cell

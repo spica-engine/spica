@@ -4,7 +4,10 @@
   "version": "0.0.0-PLACEHOLDER",
   "description": "Database package for Spica functions.",
   "author": "spica",
-  "keywords": ["spica", "devkit"],
+  "keywords": [
+    "spica",
+    "devkit"
+  ],
   "main": "dist/index",
   "module": "dist/index.mjs",
   "sideEffects": false,

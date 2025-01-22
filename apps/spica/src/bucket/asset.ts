@@ -13,10 +13,7 @@ export const assetConfigExporter = (bs: BucketService) => {
     ]);
 
   const propertyLoader = async selections => {
-    const bucket = await bs
-      .getBucket(selections.resource_id)
-      .pipe(take(1))
-      .toPromise();
+    const bucket = await bs.getBucket(selections.resource_id).pipe(take(1)).toPromise();
 
     const copy = JSON.parse(JSON.stringify(bucket));
     delete copy._id;

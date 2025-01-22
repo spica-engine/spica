@@ -111,7 +111,7 @@ export class SAMLController {
       },
       cert: CERTIFICATE,
       key: PRIVATE_KEY,
-      getPostURL: function(wtrealm, wreply, req, callback) {
+      getPostURL: function (wtrealm, wreply, req, callback) {
         const callbackUrl = xpath.select(
           "string(//AuthnRequest/@AssertionConsumerServiceURL)",
           wreply
@@ -120,7 +120,7 @@ export class SAMLController {
       },
       // actual implementation sends template to the user and redirects user to the spica home page as logged in
       // But we will return saml response and send the response to the strategy complete endpoint to complete the SSO flow.
-      responseHandler: function(response, opts, req, res, next) {
+      responseHandler: function (response, opts, req, res, next) {
         res.send({url: opts.postUrl, SAMLResponse: response.toString("base64")});
       }
     })(req, res, () => {});

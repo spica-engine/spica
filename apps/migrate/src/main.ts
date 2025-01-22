@@ -56,7 +56,7 @@ export async function run(arg?: string | readonly string[]) {
     // Prevent from exiting when testing
     .exitProcess(!arg)
     .parse(arg);
-  
+
   const resolvedArgs = await args;
 
   return migrate({

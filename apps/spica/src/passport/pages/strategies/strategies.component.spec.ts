@@ -18,9 +18,7 @@ import {StrategyService} from "../../services/strategy.service";
 import {StrategiesComponent} from "./strategies.component";
 
 @Component({
-  template: `
-    <ng-container *ngTemplateOutlet="outlet"></ng-container>
-  `
+  template: ` <ng-container *ngTemplateOutlet="outlet"></ng-container> `
 })
 class ToolbarCmp {
   outlet: TemplateRef<any>;

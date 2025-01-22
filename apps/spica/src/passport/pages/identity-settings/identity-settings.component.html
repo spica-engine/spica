@@ -8,9 +8,7 @@
 </ng-template>
 <mat-card appearance="outlined" class="mat-elevation-z25" *ngIf="preferences">
   <h4>Identity Custom Properties</h4>
-  <p>
-    Add custom properties to store additional data on Identities
-  </p>
+  <p>Add custom properties to store additional data on Identities</p>
   <mat-card-content>
     <mat-list-item>
       <mat-accordion #propertyStepper cdkDropList (cdkDropListDropped)="cardDrop($event)">
@@ -140,9 +138,7 @@
           required
         />
 
-        <mat-error *ngIf="pnm?.errors?.required">
-          Property name is required.
-        </mat-error>
+        <mat-error *ngIf="pnm?.errors?.required"> Property name is required. </mat-error>
         <mat-error *ngIf="preferences.identity.attributes.properties[pnm?.value?.toLowerCase()]">
           {{ pnm?.value | lowercase }} already exists.
         </mat-error>
@@ -168,9 +164,7 @@
       (click)="saveSettings()"
     >
       <mat-icon>save</mat-icon>
-      <span>
-        Save
-      </span>
+      <span> Save </span>
     </button>
   </mat-card-actions>
 </mat-card>

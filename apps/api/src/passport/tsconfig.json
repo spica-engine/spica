@@ -6,7 +6,5 @@
     {"path": "./identity"},
     {"path": "./apikey"},
     {"path": "./authfactor"}
-
-
   ]
 }

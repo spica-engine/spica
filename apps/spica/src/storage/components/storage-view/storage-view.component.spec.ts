@@ -8,9 +8,7 @@ import {empty, of} from "rxjs";
 import {StorageViewComponent} from "./storage-view.component";
 
 @Component({
-  template: `
-    <storage-view [blob]="blob"></storage-view>
-  `
+  template: ` <storage-view [blob]="blob"></storage-view> `
 })
 class TestCmp {
   blob: any;

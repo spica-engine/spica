@@ -38,7 +38,8 @@ import {InputResolver} from "./input.resolver";
   ]
 })
 export class InputPlacerComponent
-  implements ControlValueAccessor, OnDestroy, OnChanges, AfterContentInit {
+  implements ControlValueAccessor, OnDestroy, OnChanges, AfterContentInit
+{
   @Input("inputPlacer") schema: InputSchema;
   @Input() minimal: boolean;
   @Input() class: string;

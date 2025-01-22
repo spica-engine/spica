@@ -6,7 +6,10 @@ import {PassportService} from "./passport.service";
 
 @Injectable({providedIn: "root"})
 export class PolicyGuard {
-  constructor(public passport: PassportService, private router: Router) {}
+  constructor(
+    public passport: PassportService,
+    private router: Router
+  ) {}
 
   canActivate(route: ActivatedRouteSnapshot): Observable<boolean | UrlTree> | boolean {
     if (route.data.action && route.data.service) {

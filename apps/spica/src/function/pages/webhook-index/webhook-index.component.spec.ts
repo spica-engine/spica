@@ -39,7 +39,7 @@ describe("Webhook Index", () => {
             body: "",
             url: "test_url",
             title: "test title"
-          } as Webhook)
+          }) as Webhook
       );
 
       if (skip) {

@@ -21,7 +21,10 @@ import {ViewChange} from "@spica-client/core/route/route";
   styleUrls: ["./advanced.component.scss"]
 })
 export class AdvancedDrawerComponent implements OnInit, OnDestroy {
-  constructor(private dialog: MatDialog, public categoryService: CategoryService) {}
+  constructor(
+    private dialog: MatDialog,
+    public categoryService: CategoryService
+  ) {}
 
   @Input() categoryStorageKey: string;
   @Input() routes$: Observable<Route[]>;
@@ -143,10 +146,7 @@ export class AdvancedDrawerComponent implements OnInit, OnDestroy {
       panelClass: "categoryDialog"
     });
 
-    ref
-      .afterClosed()
-      .toPromise()
-      .then(afterClosed);
+    ref.afterClosed().toPromise().then(afterClosed);
 
     return ref;
   }

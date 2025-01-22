@@ -10,27 +10,25 @@ describe("Scheme Switcher Component", () => {
     let component: SchemeSwitcherComponent;
     let fixture: ComponentFixture<SchemeSwitcherComponent>;
 
-    beforeEach(
-      waitForAsync(() => {
-        TestBed.configureTestingModule({
-          declarations: [SchemeSwitcherComponent],
-          imports: [MatTooltipModule, MatIconModule],
-          providers: [
-            {
-              provide: SchemeObserver,
-              useValue: {
-                observe: jasmine.createSpy("observe").and.returnValue(of(true)),
-                setScheme: jasmine.createSpy("setScheme"),
-                isMatched: jasmine.createSpy("isMatched").and.returnValue(true)
-              }
+    beforeEach(waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [SchemeSwitcherComponent],
+        imports: [MatTooltipModule, MatIconModule],
+        providers: [
+          {
+            provide: SchemeObserver,
+            useValue: {
+              observe: jasmine.createSpy("observe").and.returnValue(of(true)),
+              setScheme: jasmine.createSpy("setScheme"),
+              isMatched: jasmine.createSpy("isMatched").and.returnValue(true)
             }
-          ]
-        }).compileComponents();
-        fixture = TestBed.createComponent(SchemeSwitcherComponent);
-        component = fixture.componentInstance;
-        fixture.detectChanges();
-      })
-    );
+          }
+        ]
+      }).compileComponents();
+      fixture = TestBed.createComponent(SchemeSwitcherComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+    }));
 
     it("should be dark theme as default", () => {
       expect(
@@ -54,28 +52,26 @@ describe("Scheme Switcher Component", () => {
     let component: SchemeSwitcherComponent;
     let fixture: ComponentFixture<SchemeSwitcherComponent>;
 
-    beforeEach(
-      waitForAsync(() => {
-        TestBed.resetTestingModule();
-        TestBed.configureTestingModule({
-          declarations: [SchemeSwitcherComponent],
-          imports: [MatTooltipModule, MatIconModule],
-          providers: [
-            {
-              provide: SchemeObserver,
-              useValue: {
-                observe: jasmine.createSpy("observe").and.returnValue(of(false)),
-                setScheme: jasmine.createSpy("setScheme"),
-                isMatched: jasmine.createSpy("isMatched").and.returnValue(false)
-              }
+    beforeEach(waitForAsync(() => {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        declarations: [SchemeSwitcherComponent],
+        imports: [MatTooltipModule, MatIconModule],
+        providers: [
+          {
+            provide: SchemeObserver,
+            useValue: {
+              observe: jasmine.createSpy("observe").and.returnValue(of(false)),
+              setScheme: jasmine.createSpy("setScheme"),
+              isMatched: jasmine.createSpy("isMatched").and.returnValue(false)
             }
-          ]
-        }).compileComponents();
-        fixture = TestBed.createComponent(SchemeSwitcherComponent);
-        component = fixture.componentInstance;
-        fixture.detectChanges();
-      })
-    );
+          }
+        ]
+      }).compileComponents();
+      fixture = TestBed.createComponent(SchemeSwitcherComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+    }));
 
     it("should be light theme as default", () => {
       expect(

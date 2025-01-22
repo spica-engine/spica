@@ -5,7 +5,6 @@ import path = require("path");
 
 process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(process.cwd(), "dist/apps/migrate/src");
 
-
 describe("Add phase to bucket trigger", () => {
   let db: Db;
   let args: string[];

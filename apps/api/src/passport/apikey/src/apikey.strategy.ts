@@ -5,7 +5,10 @@ import {ExtractJwt} from "passport-jwt";
 import {ApiKeyService} from "./apikey.service";
 
 class _ApiKeyStrategy extends passport.Strategy {
-  constructor(private tokenExtractor: (req) => string, private callback: Function) {
+  constructor(
+    private tokenExtractor: (req) => string,
+    private callback: Function
+  ) {
     super();
   }
 

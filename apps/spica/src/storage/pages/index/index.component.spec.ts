@@ -388,8 +388,9 @@ describe("Storage/IndexComponent", () => {
 
     describe("collapse folder", () => {
       beforeEach(fakeAsync(() => {
-        const firstColumn = fixture.debugElement.query(By.css(".column:nth-of-type(1)"))
-          .nativeElement;
+        const firstColumn = fixture.debugElement.query(
+          By.css(".column:nth-of-type(1)")
+        ).nativeElement;
 
         firstColumn.click();
 
@@ -526,8 +527,9 @@ describe("Storage/IndexComponent", () => {
     fixture.detectChanges();
     tick();
 
-    const storageView = fixture.debugElement.query(By.css(".object-details storage-view"))
-      .nativeElement;
+    const storageView = fixture.debugElement.query(
+      By.css(".object-details storage-view")
+    ).nativeElement;
     expect(storageView.getAttribute("ng-reflect-blob")).toEqual("http://example/2");
 
     const sideView = fixture.debugElement.query(By.css(".object-details .meta")).nativeElement
@@ -544,9 +546,9 @@ describe("Storage/IndexComponent", () => {
     });
 
     it("should create parameter to sort descend by name", () => {
-      (document.body.querySelector(
-        "div.mat-menu-content button:nth-child(1)"
-      ) as HTMLButtonElement).click();
+      (
+        document.body.querySelector("div.mat-menu-content button:nth-child(1)") as HTMLButtonElement
+      ).click();
       fixture.detectChanges();
 
       expect(fixture.componentInstance.sorter).toEqual({
@@ -555,9 +557,9 @@ describe("Storage/IndexComponent", () => {
     });
 
     it("should create parameter to sort ascend by name", () => {
-      (document.body.querySelector(
-        "div.mat-menu-content button:nth-child(2)"
-      ) as HTMLButtonElement).click();
+      (
+        document.body.querySelector("div.mat-menu-content button:nth-child(2)") as HTMLButtonElement
+      ).click();
       fixture.detectChanges();
 
       expect(fixture.componentInstance.sorter).toEqual({
@@ -566,9 +568,9 @@ describe("Storage/IndexComponent", () => {
     });
 
     it("should create parameter to sort descend by date", () => {
-      (document.body.querySelector(
-        "div.mat-menu-content button:nth-child(3)"
-      ) as HTMLButtonElement).click();
+      (
+        document.body.querySelector("div.mat-menu-content button:nth-child(3)") as HTMLButtonElement
+      ).click();
       fixture.detectChanges();
 
       expect(fixture.componentInstance.sorter).toEqual({
@@ -577,9 +579,9 @@ describe("Storage/IndexComponent", () => {
     });
 
     it("should create parameter to sort ascend by name", () => {
-      (document.body.querySelector(
-        "div.mat-menu-content button:nth-child(4)"
-      ) as HTMLButtonElement).click();
+      (
+        document.body.querySelector("div.mat-menu-content button:nth-child(4)") as HTMLButtonElement
+      ).click();
       fixture.detectChanges();
 
       expect(fixture.componentInstance.sorter).toEqual({

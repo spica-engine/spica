@@ -192,15 +192,10 @@ export class IndexComponent implements OnInit, OnDestroy {
         });
       }),
       tap(schema => {
-        this.search$
-          .pipe(
-            takeUntil(this.dispose),
-            debounceTime(1000)
-          )
-          .subscribe(_ => {
-            const filter = this.bucketFilter.getTextSearchFilter(this.searchValue, schema);
-            return this.onFilterChange(filter);
-          });
+        this.search$.pipe(takeUntil(this.dispose), debounceTime(1000)).subscribe(_ => {
+          const filter = this.bucketFilter.getTextSearchFilter(this.searchValue, schema);
+          return this.onFilterChange(filter);
+        });
       }),
       tap(schema => (this.displayTranslateButton = this.hasTranslatableProp(schema))),
       publishReplay(),
@@ -306,7 +301,10 @@ export class IndexComponent implements OnInit, OnDestroy {
     if (isSelect) {
       this.selectedItems.push(data);
     } else {
-      this.selectedItems.splice(this.selectedItems.findIndex(entry => entry._id == data._id), 1);
+      this.selectedItems.splice(
+        this.selectedItems.findIndex(entry => entry._id == data._id),
+        1
+      );
     }
   }
 
@@ -422,7 +420,10 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   deleteSelectedItems() {
     this.bds
-      .deleteMany(this.bucketId, this.selectedItems.map(i => i._id))
+      .deleteMany(
+        this.bucketId,
+        this.selectedItems.map(i => i._id)
+      )
       .toPromise()
       .then(() => this.refresh.next());
   }

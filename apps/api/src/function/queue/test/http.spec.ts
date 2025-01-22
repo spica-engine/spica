@@ -10,7 +10,12 @@ describe("HttpQueue", () => {
   let httpQueueClient: any;
 
   beforeEach(() => {
-    queue = new EventQueue(() => {}, () => {}, () => {}, () => {});
+    queue = new EventQueue(
+      () => {},
+      () => {},
+      () => {},
+      () => {}
+    );
     httpQueue = new HttpQueue();
     queue.addQueue(httpQueue);
     queue.listen();
@@ -60,7 +65,7 @@ describe("HttpQueue", () => {
     pop.id = "3";
 
     const response = {end: () => {}} as any;
-    jest.spyOn(response, "end").mockImplementation((cb:Function) => cb());
+    jest.spyOn(response, "end").mockImplementation((cb: Function) => cb());
 
     httpQueue.enqueue(pop.id, new Http.Request(), response);
 

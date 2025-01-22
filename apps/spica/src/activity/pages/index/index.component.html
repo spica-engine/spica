@@ -23,15 +23,9 @@
   <mat-form-field>
     <mat-label>Select action type</mat-label>
     <mat-select [(ngModel)]="filters.action" multiple>
-      <mat-option class="mat-accent" value="1">
-        Insert
-      </mat-option>
-      <mat-option class="mat-accent" value="2">
-        Update
-      </mat-option>
-      <mat-option class="mat-accent" value="3">
-        Delete
-      </mat-option>
+      <mat-option class="mat-accent" value="1"> Insert </mat-option>
+      <mat-option class="mat-accent" value="2"> Update </mat-option>
+      <mat-option class="mat-accent" value="3"> Delete </mat-option>
     </mat-select>
   </mat-form-field>
   <mat-form-field>
@@ -49,9 +43,7 @@
           {{ bucket.title }}
         </mat-option>
       </mat-optgroup>
-      <mat-option *ngIf="checkAllowed('bucket:index') | async" value="bucket">
-        Buckets
-      </mat-option>
+      <mat-option *ngIf="checkAllowed('bucket:index') | async" value="bucket"> Buckets </mat-option>
       <mat-optgroup label="Passport">
         <mat-option *ngIf="checkAllowed('passport:identity:index') | async" value="identity">
           Identity
@@ -69,9 +61,7 @@
       <mat-option *ngIf="checkAllowed('function:index') | async" value="function">
         Function
       </mat-option>
-      <mat-option value="preference">
-        Preference
-      </mat-option>
+      <mat-option value="preference"> Preference </mat-option>
     </mat-select>
   </mat-form-field>
   <mat-form-field>
@@ -103,12 +93,8 @@
     </mat-date-range-picker>
   </mat-form-field>
 
-  <button mat-button (click)="applyFilters()">
-    Apply
-  </button>
-  <button mat-button color="warn" (click)="clearFilters()">
-    Clear
-  </button>
+  <button mat-button (click)="applyFilters()">Apply</button>
+  <button mat-button color="warn" (click)="clearFilters()">Clear</button>
   <mat-card-content>
     <cdk-virtual-scroll-viewport itemSize="45" class="example-viewport">
       <mat-list>
@@ -119,15 +105,9 @@
           <span class="info">
             Identifier {{ activity.identifier | titlecase }}
             <ng-container [ngSwitch]="activity.action">
-              <ng-container *ngSwitchCase="1">
-                Insert
-              </ng-container>
-              <ng-container *ngSwitchCase="2">
-                Update
-              </ng-container>
-              <ng-container *ngSwitchCase="3">
-                Delete
-              </ng-container>
+              <ng-container *ngSwitchCase="1"> Insert </ng-container>
+              <ng-container *ngSwitchCase="2"> Update </ng-container>
+              <ng-container *ngSwitchCase="3"> Delete </ng-container>
             </ng-container>
             document
             <a [routerLink]="'../' + (activity | buildLink: 'activity')">
@@ -152,9 +132,7 @@
                   }}
                 </ng-container>
               </ng-container>
-              <mat-icon>
-                open_in_new
-              </mat-icon>
+              <mat-icon> open_in_new </mat-icon>
             </a>
             on {{ activity.resource[0] | titlecase }} module.
           </span>

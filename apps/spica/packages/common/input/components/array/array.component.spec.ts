@@ -32,9 +32,7 @@ function createEvent<T>(previousIndex: number, currentIndex: number): CdkDragDro
 }
 
 @Component({
-  template: `
-    <h1>testplacer1</h1>
-  `,
+  template: ` <h1>testplacer1</h1> `,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

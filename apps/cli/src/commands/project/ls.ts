@@ -78,6 +78,6 @@ async function list() {
   console.table(instances, ["NAMESPACE", "AGE", "STATUS", "VERSION", "PORT", "DESCRIPTION"]);
 }
 
-export default function(program: Program): Command {
+export default function (program: Program): Command {
   return program.command("project ls", "List local projects.").action(list);
 }

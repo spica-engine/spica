@@ -17,10 +17,10 @@ describe("FirehoseEnqueuer", () => {
 
   beforeEach(async () => {
     eventQueue = {
-      'enqueue': jest.fn()
+      enqueue: jest.fn()
     };
     firehoseQueue = {
-      'enqueue': jest.fn()
+      enqueue: jest.fn()
     };
 
     noopTarget = new event.Target();
@@ -87,7 +87,8 @@ describe("FirehoseEnqueuer", () => {
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
     expect(firehoseQueue.enqueue).toHaveBeenCalledTimes(1);
 
-    const connection = firehoseQueue.enqueue.mock.calls[firehoseQueue.enqueue.mock.calls.length - 1][1];
+    const connection =
+      firehoseQueue.enqueue.mock.calls[firehoseQueue.enqueue.mock.calls.length - 1][1];
 
     expect(connection instanceof Firehose.Message.Incoming).toBe(true);
     expect(connection.client.id).toBeTruthy();
@@ -103,7 +104,8 @@ describe("FirehoseEnqueuer", () => {
 
     await ws.connect;
 
-    const connection = firehoseQueue.enqueue.mock.calls[firehoseQueue.enqueue.mock.calls.length - 1][1];
+    const connection =
+      firehoseQueue.enqueue.mock.calls[firehoseQueue.enqueue.mock.calls.length - 1][1];
 
     expect(connection instanceof Firehose.Message.Incoming).toBe(true);
     expect(connection.pool instanceof Firehose.PoolDescription).toBe(true);
@@ -117,7 +119,8 @@ describe("FirehoseEnqueuer", () => {
 
     await ws.connect;
 
-    const connection = firehoseQueue.enqueue.mock.calls[firehoseQueue.enqueue.mock.calls.length - 1][1];
+    const connection =
+      firehoseQueue.enqueue.mock.calls[firehoseQueue.enqueue.mock.calls.length - 1][1];
 
     expect(connection instanceof Firehose.Message.Incoming).toBe(true);
     expect(connection.message instanceof Firehose.Message).toBe(true);
@@ -134,7 +137,8 @@ describe("FirehoseEnqueuer", () => {
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
     expect(firehoseQueue.enqueue).toHaveBeenCalledTimes(1);
 
-    const connection = firehoseQueue.enqueue.mock.calls[firehoseQueue.enqueue.mock.calls.length - 1][1];
+    const connection =
+      firehoseQueue.enqueue.mock.calls[firehoseQueue.enqueue.mock.calls.length - 1][1];
 
     expect(connection instanceof Firehose.Message.Incoming).toBe(true);
     expect(connection.message.name).toBe("connection");

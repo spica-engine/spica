@@ -67,9 +67,11 @@ async function remove({args, options}: ActionParameters) {
   }
 
   if (!options.retainVolumes) {
-    const foundVolumes = (await machine.listVolumes({
-      filters: JSON.stringify({label: [`namespace=${name}`]})
-    })).Volumes;
+    const foundVolumes = (
+      await machine.listVolumes({
+        filters: JSON.stringify({label: [`namespace=${name}`]})
+      })
+    ).Volumes;
     await spin({
       text: `Removing volumes (0/${foundVolumes.length}).`,
       op: spinner => {
@@ -93,12 +95,12 @@ async function remove({args, options}: ActionParameters) {
   console.info(`Spica ${name} was successfully deleted.`);
 }
 
-export default function(program: Program): Command {
+export default function (program: Program): Command {
   return program
     .command("project remove", "Stop and remove a local project.")
     .argument("<name>", "Name of the project to remove.", {validator: projectName})
     .option("--retain-volumes", "When false, the data will be removed along with the containers.", {
       default: true
     })
-    .action((remove as unknown) as Action);
+    .action(remove as unknown as Action);
 }

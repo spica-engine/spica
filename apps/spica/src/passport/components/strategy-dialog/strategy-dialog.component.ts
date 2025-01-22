@@ -12,7 +12,10 @@ export class StrategyDialogComponent {
 
   url: SafeResourceUrl;
 
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any, sanitizer: DomSanitizer) {
+  constructor(
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    sanitizer: DomSanitizer
+  ) {
     this.url = sanitizer.bypassSecurityTrustResourceUrl(data.url);
   }
 }

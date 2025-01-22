@@ -126,8 +126,7 @@ describe("Typescript", () => {
       {
         code: 2582,
         category: 1,
-        text:
-          "Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.",
+        text: "Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.",
         start: {line: 1, column: 1},
         end: {line: 1, column: 5}
       }

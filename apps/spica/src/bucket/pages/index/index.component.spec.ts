@@ -571,7 +571,10 @@ describe("IndexComponent", () => {
 
     it("should return relation one to many", () => {
       const template = fixture.componentInstance.buildTemplate(
-        [{test: "val1", otherField: "other_value"}, {test: "val2", otherField: "other_value2"}],
+        [
+          {test: "val1", otherField: "other_value"},
+          {test: "val2", otherField: "other_value2"}
+        ],
         {
           type: "relation",
           relationType: "onetomany",

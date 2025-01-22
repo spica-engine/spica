@@ -5,9 +5,7 @@ import {BuildLinkPipe} from "./build_link.pipe";
 import {BUILDLINK_FACTORY} from "@spica-client/core/factories/factory";
 
 @Component({
-  template: `
-    <a>{{ activity | buildLink: "activity" }}</a>
-  `
+  template: ` <a>{{ activity | buildLink: "activity" }}</a> `
 })
 class BuildLinkTestComponent {
   activity = {

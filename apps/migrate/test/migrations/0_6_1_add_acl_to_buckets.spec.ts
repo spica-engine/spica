@@ -22,10 +22,9 @@ describe("Add acl to buckets", () => {
 
   it("should acl to buckets", async () => {
     await run([...args, "--from", "0.6.0", "--to", "0.6.1", "--continue-if-versions-are-equal"]);
-    const buckets = (await db
-      .collection("buckets")
-      .find({})
-      .toArray()).map(bkt => ({acl: bkt.acl}));
+    const buckets = (await db.collection("buckets").find({}).toArray()).map(bkt => ({
+      acl: bkt.acl
+    }));
 
     expect(buckets).toEqual([
       {acl: {write: "true==true", read: "true==true"}},

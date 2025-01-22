@@ -9,9 +9,7 @@ import {InputResolver} from "../../input.resolver";
 import {ObjectComponent} from "./object.component";
 
 @Component({
-  template: `
-    <h1>testplacer1</h1>
-  `,
+  template: ` <h1>testplacer1</h1> `,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

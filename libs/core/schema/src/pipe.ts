@@ -43,7 +43,10 @@ function buildErrorMessage(e) {
 // request scoped controllers will be constructed on each request, which will call your code on controller constructor for each request, also it impacts performance
 // temporary solution is using base validator if validator schema is not dependent on request
 abstract class MixinValidatorRequestScope extends MixinValidator {
-  constructor(public validator: Validator, @Inject(REQUEST) public req) {
+  constructor(
+    public validator: Validator,
+    @Inject(REQUEST) public req
+  ) {
     super(validator);
   }
 

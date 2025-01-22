@@ -8,7 +8,10 @@ import {IAuthResolver} from "@spica-server/bucket/common";
 export class AuthResolver implements IAuthResolver {
   properties;
 
-  constructor(private identityService: IdentityService, private prefService: PreferenceService) {
+  constructor(
+    private identityService: IdentityService,
+    private prefService: PreferenceService
+  ) {
     this.prefService.watch("passport", {propagateOnStart: true}).subscribe(schema => {
       if (!schema || !schema.identity || !schema.identity.attributes) {
         this.properties = {};

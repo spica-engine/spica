@@ -33,9 +33,8 @@ export class ConditionalSchemaPipe implements PipeTransform {
       this.dataDiffer = this.differs.find(data).create();
     }
 
-    const schemaChanges: KeyValueChanges<string, JSONSchema7> | null = this.schemaDiffer.diff(
-      schema
-    );
+    const schemaChanges: KeyValueChanges<string, JSONSchema7> | null =
+      this.schemaDiffer.diff(schema);
     const dataChanges: KeyValueChanges<string, unknown> | null = this.dataDiffer.diff(data);
 
     if (!schemaChanges && !dataChanges) {

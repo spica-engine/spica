@@ -26,7 +26,10 @@ export class PickerComponent implements OnInit {
 
   sorter: any = {_id: -1};
 
-  constructor(private storage: StorageService, private ref: MatDialogRef<PickerComponent>) {}
+  constructor(
+    private storage: StorageService,
+    private ref: MatDialogRef<PickerComponent>
+  ) {}
 
   ngOnInit(): void {
     this.storages$ = merge(this._paginator.page, this.refresh).pipe(

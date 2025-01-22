@@ -15,9 +15,10 @@ import {ChunkKind} from "@spica-server/interface/realtime";
 function url(path: string, query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL(path, "ws://insteadof");
   for (const key in query) {
-    url.searchParams.set(key, (typeof query[key] == "string"
-      ? String(query[key])
-      : JSON.stringify(query[key])) as string);
+    url.searchParams.set(
+      key,
+      (typeof query[key] == "string" ? String(query[key]) : JSON.stringify(query[key])) as string
+    );
   }
   return `${url.pathname}${url.search}`;
 }

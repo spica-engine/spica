@@ -4,7 +4,10 @@ import * as AWS from "aws-sdk";
 
 export class AWSS3 implements Strategy {
   s3: AWS.S3;
-  constructor(private credentialsPath: string, private bucketName: string) {
+  constructor(
+    private credentialsPath: string,
+    private bucketName: string
+  ) {
     AWS.config.loadFromPath(this.credentialsPath);
     this.s3 = new AWS.S3();
   }

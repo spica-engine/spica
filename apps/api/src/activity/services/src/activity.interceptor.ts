@@ -13,7 +13,10 @@ import {Predict} from "./interface";
 import {createActivity} from "./activity";
 
 export abstract class ActivityInterceptor implements NestInterceptor {
-  constructor(private service: ActivityService, private predict: Predict) {}
+  constructor(
+    private service: ActivityService,
+    private predict: Predict
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     if (!this.service) {

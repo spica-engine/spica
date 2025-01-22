@@ -205,10 +205,12 @@ describe("ApiKey", () => {
   describe("delete", () => {
     let insertedApiKey;
     beforeEach(async () => {
-      insertedApiKey = (await req.post("/passport/apikey", {
-        name: "test",
-        active: true
-      })).body;
+      insertedApiKey = (
+        await req.post("/passport/apikey", {
+          name: "test",
+          active: true
+        })
+      ).body;
     });
     it("should delete apiKey", async () => {
       const response = await req.delete(`/passport/apikey/${insertedApiKey._id}`);
@@ -239,9 +241,11 @@ describe("ApiKey", () => {
 
   describe("attach/detach", () => {
     it("should attach policy to apikey", async () => {
-      const insertedApiKey = (await req.post("/passport/apikey", {
-        name: "test"
-      })).body;
+      const insertedApiKey = (
+        await req.post("/passport/apikey", {
+          name: "test"
+        })
+      ).body;
 
       const response = await req.put(`/passport/apikey/${insertedApiKey._id}/policy/test_policy`);
       expect(response.statusCode).toBe(200);
@@ -255,9 +259,11 @@ describe("ApiKey", () => {
     });
 
     it("should detach policy from apikey", async () => {
-      const insertedApiKey = (await req.post("/passport/apikey", {
-        name: "test"
-      })).body;
+      const insertedApiKey = (
+        await req.post("/passport/apikey", {
+          name: "test"
+        })
+      ).body;
 
       await req.put(`/passport/apikey/${insertedApiKey._id}/policy/test_policy`);
 

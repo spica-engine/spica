@@ -21,9 +21,7 @@
   <mat-card-content>
     <form #identityForm="ngForm">
       <mat-form-field>
-        <mat-label>
-          Identifier
-        </mat-label>
+        <mat-label> Identifier </mat-label>
         <input
           matInput
           name="identifier"
@@ -47,9 +45,7 @@
         Change Password
       </button>
       <mat-form-field *ngIf="!identity._id || changePasswordState">
-        <mat-label>
-          Password
-        </mat-label>
+        <mat-label> Password </mat-label>
         <input
           matInput
           name="password"
@@ -178,9 +174,7 @@
       (click)="upsertIdentity()"
     >
       <mat-icon>save</mat-icon>
-      <span>
-        Save
-      </span>
+      <span> Save </span>
     </button>
   </mat-card-actions>
 </mat-card>

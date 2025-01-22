@@ -34,25 +34,17 @@
         <div class="actions">
           <button mat-stroked-button (click)="addProperty()">
             <mat-icon>add</mat-icon>
-            <span>
-              New property
-            </span>
+            <span> New property </span>
           </button>
           <button mat-button [disabled]="isSchemaInvalid()" (click)="saveSchema()">
-            <mat-icon>
-              save
-            </mat-icon>
-            <span>
-              Save
-            </span>
+            <mat-icon> save </mat-icon>
+            <span> Save </span>
           </button>
         </div>
       </mat-step>
       <mat-step editable="false">
         <ng-template matStepLabel>Creating an entry</ng-template>
-        <h4 class="row">
-          Now, create few entries for your project.
-        </h4>
+        <h4 class="row">Now, create few entries for your project.</h4>
         <div class="placers">
           <ng-container *ngFor="let property of bucket.properties | keyvalue">
             <span
@@ -78,12 +70,8 @@
             <span>Url:</span>
             <pre [innerHtml]="exampleInfo.url"></pre>
             <button mat-button (click)="showEntry = true">
-              <mat-icon>
-                http
-              </mat-icon>
-              <span>
-                Send Request
-              </span>
+              <mat-icon> http </mat-icon>
+              <span> Send Request </span>
             </button>
             <ng-container *ngIf="showEntry">
               <span>Response:</span>
@@ -92,18 +80,14 @@
           </div>
           <mat-divider [vertical]="true"></mat-divider>
           <div class="curl">
-            <span>
-              Curl Command:
-            </span>
+            <span> Curl Command: </span>
             <pre [innerHtml]="curl"></pre>
             <div>
               <button mat-button #clipboard="matClipboard" [matClipboard]="curl">
                 <mat-icon [matTooltip]="clipboard.toolTip">
                   {{ clipboard.icon }}
                 </mat-icon>
-                <span>
-                  Copy to clipboard
-                </span>
+                <span> Copy to clipboard </span>
               </button>
             </div>
           </div>

@@ -35,10 +35,8 @@
         matBadgeSize="small"
         matBadgePosition="after"
         [matBadgeHidden]="
-          []
-            .concat(model?.errors?.uniqueItems)
-            .concat(model?.errors?.emptyItems)
-            .indexOf(index) == -1
+          [].concat(model?.errors?.uniqueItems).concat(model?.errors?.emptyItems).indexOf(index) ==
+          -1
         "
         [color]="_activeIndex == index ? 'primary' : 'default'"
         (click)="_activeIndex = index"

@@ -10,7 +10,12 @@ describe("FirehoseQueue", () => {
   let firehoseQueueClient: any;
 
   beforeAll(() => {
-    queue = new EventQueue(() => {}, () => {}, () => {}, () => {});
+    queue = new EventQueue(
+      () => {},
+      () => {},
+      () => {},
+      () => {}
+    );
     firehoseQueue = new FirehoseQueue();
     queue.addQueue(firehoseQueue as any);
     queue.listen();

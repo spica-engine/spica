@@ -27,78 +27,76 @@ describe("ApiKeyAddComponent", () => {
   let component: ApiKeyAddComponent;
   let fixture: ComponentFixture<ApiKeyAddComponent>;
 
-  beforeEach(
-    waitForAsync(async () => {
-      TestBed.configureTestingModule({
-        imports: [
-          MatIconModule,
-          MatToolbarModule,
-          MatTooltipModule,
-          MatListModule,
-          MatCardModule,
-          MatFormFieldModule,
-          MatInputModule,
-          MatButtonModule,
-          MatSlideToggleModule,
-          FormsModule,
-          RouterTestingModule,
-          NoopAnimationsModule,
-          HttpClientTestingModule
-        ],
-        providers: [
-          {
-            provide: ApiKeyService,
-            useValue: new MockApiKeyService()
-          },
-          {
-            provide: PassportService,
-            useValue: {
-              checkAllowed: () => {
-                return of(true);
-              }
-            }
-          },
-          {
-            provide: PolicyService,
-            useValue: {
-              find: () => {
-                return of({
-                  meta: 2,
-                  data: [
-                    {_id: "TestPolicy", name: "test policy", description: "test", statement: []},
-                    {
-                      _id: "AnotherPolicy",
-                      name: "another policy",
-                      description: "test",
-                      statement: []
-                    }
-                  ]
-                });
-              }
-            }
-          },
-          {
-            provide: ActivatedRoute,
-            useValue: {
-              params: of({})
-            }
-          },
-          {
-            provide: RouterTestingModule,
-            useValue: {
-              navigate: () => {}
+  beforeEach(waitForAsync(async () => {
+    TestBed.configureTestingModule({
+      imports: [
+        MatIconModule,
+        MatToolbarModule,
+        MatTooltipModule,
+        MatListModule,
+        MatCardModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatSlideToggleModule,
+        FormsModule,
+        RouterTestingModule,
+        NoopAnimationsModule,
+        HttpClientTestingModule
+      ],
+      providers: [
+        {
+          provide: ApiKeyService,
+          useValue: new MockApiKeyService()
+        },
+        {
+          provide: PassportService,
+          useValue: {
+            checkAllowed: () => {
+              return of(true);
             }
           }
-        ],
-        declarations: [ApiKeyAddComponent, CanInteractDirectiveTest]
-      }).compileComponents();
+        },
+        {
+          provide: PolicyService,
+          useValue: {
+            find: () => {
+              return of({
+                meta: 2,
+                data: [
+                  {_id: "TestPolicy", name: "test policy", description: "test", statement: []},
+                  {
+                    _id: "AnotherPolicy",
+                    name: "another policy",
+                    description: "test",
+                    statement: []
+                  }
+                ]
+              });
+            }
+          }
+        },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            params: of({})
+          }
+        },
+        {
+          provide: RouterTestingModule,
+          useValue: {
+            navigate: () => {}
+          }
+        }
+      ],
+      declarations: [ApiKeyAddComponent, CanInteractDirectiveTest]
+    }).compileComponents();
 
-      fixture = TestBed.createComponent(ApiKeyAddComponent);
-      component = fixture.componentInstance;
-      fixture.detectChanges();
-      await fixture.whenStable();
-    })
-  );
+    fixture = TestBed.createComponent(ApiKeyAddComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }));
 
   it("should set apiKey as emptyApiKey when this page navigated from add button", () => {
     expect(component.apiKey).toEqual({
@@ -186,9 +184,9 @@ describe("ApiKeyAddComponent", () => {
 
     component.saveApiKey();
 
-    const apiKeys = ((await component["apiKeyService"]
-      .getAll(0, 0, {_id: -1})
-      .toPromise()) as IndexResult<ApiKey>).data;
+    const apiKeys = (
+      (await component["apiKeyService"].getAll(0, 0, {_id: -1}).toPromise()) as IndexResult<ApiKey>
+    ).data;
     delete apiKeys[0]._id;
     expect(apiKeys).toEqual([
       {

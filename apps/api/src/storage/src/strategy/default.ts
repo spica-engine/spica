@@ -2,7 +2,10 @@ import * as fs from "fs";
 import {Strategy} from "./strategy";
 
 export class Default implements Strategy {
-  constructor(private path: string, private publicUrl: string) {
+  constructor(
+    private path: string,
+    private publicUrl: string
+  ) {
     this.publicUrl = publicUrl;
   }
 

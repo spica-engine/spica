@@ -57,7 +57,5 @@
   <mat-error *ngIf="model?.errors?.maxlength">
     This property must be less than {{ model.errors.maxlength.requiredLength }} characters.
   </mat-error>
-  <mat-error *ngIf="model?.errors?.pattern">
-    This property must match the pattern.
-  </mat-error>
+  <mat-error *ngIf="model?.errors?.pattern"> This property must match the pattern. </mat-error>
 </mat-form-field>

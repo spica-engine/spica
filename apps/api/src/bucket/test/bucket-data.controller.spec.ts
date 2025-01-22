@@ -1151,15 +1151,16 @@ describe("BucketDataController", () => {
 
     describe("post", () => {
       it("should insert document to bucket and return inserted document", async () => {
-        const insertedDocument = (await req.post(`/bucket/${myBucketId}/data`, {
-          title: "first title",
-          description: "first description"
-        })).body;
+        const insertedDocument = (
+          await req.post(`/bucket/${myBucketId}/data`, {
+            title: "first title",
+            description: "first description"
+          })
+        ).body;
 
-        const bucketDocument = (await req.get(
-          `/bucket/${myBucketId}/data/${insertedDocument._id}`,
-          {}
-        )).body;
+        const bucketDocument = (
+          await req.get(`/bucket/${myBucketId}/data/${insertedDocument._id}`, {})
+        ).body;
 
         expect(bucketDocument).toEqual(insertedDocument);
 
@@ -1169,11 +1170,13 @@ describe("BucketDataController", () => {
 
       it("should insert document with id", async () => {
         const _id = new ObjectId();
-        const insertedDocument = (await req.post(`/bucket/${myBucketId}/data`, {
-          _id: _id,
-          title: "first title",
-          description: "first description"
-        })).body;
+        const insertedDocument = (
+          await req.post(`/bucket/${myBucketId}/data`, {
+            _id: _id,
+            title: "first title",
+            description: "first description"
+          })
+        ).body;
 
         const bucketDocument = (await req.get(`/bucket/${myBucketId}/data/${_id}`, {})).body;
 

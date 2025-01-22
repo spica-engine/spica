@@ -25,7 +25,10 @@ export class PolicyIndexComponent implements OnInit {
 
   displayedColumns = ["id", "name", "description", "actions"];
 
-  constructor(private policyService: PolicyService, private router: Router) {}
+  constructor(
+    private policyService: PolicyService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.policies$ = merge(this.paginator.page, of(null), this.refresh$).pipe(

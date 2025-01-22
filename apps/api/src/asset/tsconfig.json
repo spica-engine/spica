@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*.ts", "schema/*.json" , "index.ts"],
+  "include": ["src/**/*.ts", "schema/*.json", "index.ts"],
   "references": [
     {
       "path": "../../../../libs/database"

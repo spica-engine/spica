@@ -185,7 +185,9 @@
       right: -2.5px;
       font-weight: bolder;
       color: var(--accent-a100);
-      box-shadow: 0 2px 5px 0 rgba(49, 49, 93, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.08);
+      box-shadow:
+        0 2px 5px 0 rgba(49, 49, 93, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.08);
       z-index: 222;
       cursor: pointer;
       ::ng-deep mat-icon {

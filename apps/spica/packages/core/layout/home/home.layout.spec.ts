@@ -239,9 +239,8 @@ describe("Home Layout", () => {
           {category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1"}
         ])
       );
-      const toolbarButton = fixture.debugElement.nativeElement.querySelector(
-        "mat-toolbar > button"
-      );
+      const toolbarButton =
+        fixture.debugElement.nativeElement.querySelector("mat-toolbar > button");
       toolbarButton.click();
       tick(200);
       fixture.detectChanges();

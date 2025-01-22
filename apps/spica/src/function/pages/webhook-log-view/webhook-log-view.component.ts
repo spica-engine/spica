@@ -20,7 +20,7 @@ export class WebhookLogViewComponent extends DataSource<WebhookLog> implements O
 
   logs: WebhookLog[] = [];
 
-  private dataStream = new BehaviorSubject<(WebhookLog)[]>(this.logs);
+  private dataStream = new BehaviorSubject<WebhookLog[]>(this.logs);
 
   isPending = false;
 
@@ -47,7 +47,7 @@ export class WebhookLogViewComponent extends DataSource<WebhookLog> implements O
 
   filter$ = new BehaviorSubject<WebhookLogFilter>(this.filter);
 
-  connect(collectionViewer: CollectionViewer): Observable<(WebhookLog)[]> {
+  connect(collectionViewer: CollectionViewer): Observable<WebhookLog[]> {
     this.subscription.add(
       collectionViewer.viewChange.subscribe(range => {
         if (!this.pageSize) {

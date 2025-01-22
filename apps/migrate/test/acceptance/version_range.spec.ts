@@ -44,7 +44,7 @@ describe("Version range", () => {
       fs.unlinkSync(indexJsonPath);
     }
 
-    infoSpy.mockClear()
+    infoSpy.mockClear();
   });
 
   it("should show versions", async () => {
@@ -66,12 +66,7 @@ describe("Version range", () => {
       from: "1.0.0",
       to: "2.0.0"
     });
-    expect(
-      (await db
-        .collection("_test_")
-        .find()
-        .toArray()).length
-    ).toEqual(2);
+    expect((await db.collection("_test_").find().toArray()).length).toEqual(2);
     expect(infoSpy).not.toHaveBeenCalledWith("VERSION: 1.0.0");
   });
 
@@ -82,12 +77,7 @@ describe("Version range", () => {
       from: "1.0.0",
       to: "2.0.0"
     });
-    expect(
-      (await db
-        .collection("_test_")
-        .find()
-        .toArray()).length
-    ).toEqual(2);
+    expect((await db.collection("_test_").find().toArray()).length).toEqual(2);
     expect(infoSpy).toHaveBeenCalledWith("VERSION: 2.0.0");
   });
 });

@@ -75,7 +75,10 @@ export class FunctionCompiler {
         return [{extension: "ts", content: code}];
       case "javascript":
         const types = this.generateTypesOfCode(code);
-        return [{extension: "js", content: code}, {extension: "d.ts", content: types}];
+        return [
+          {extension: "js", content: code},
+          {extension: "d.ts", content: types}
+        ];
       default:
         throw Error(`Language named ${this.fn.language} has no compiler yet.`);
     }

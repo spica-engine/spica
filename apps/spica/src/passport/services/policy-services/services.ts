@@ -86,7 +86,10 @@ const storageResource = {
 const preferenceResource = {
   title: "Preference",
   primary: "title",
-  source: of([{_id: "bucket", title: "Bucket"}, {_id: "passport", title: "Passport"}]),
+  source: of([
+    {_id: "bucket", title: "Bucket"},
+    {_id: "passport", title: "Passport"}
+  ]),
   maps: [asteriskMap("title")]
 };
 

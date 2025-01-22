@@ -4,7 +4,10 @@ import {PassportService} from "./passport.service";
 
 @Injectable({providedIn: "root"})
 export class IdentityGuard implements CanActivate, CanActivateChild {
-  constructor(public passport: PassportService, public router: Router) {}
+  constructor(
+    public passport: PassportService,
+    public router: Router
+  ) {}
 
   canActivate() {
     if (!this.passport.identified) {

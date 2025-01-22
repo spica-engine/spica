@@ -67,7 +67,18 @@ describe("differ", () => {
     expect(changes[0]).toEqual({
       kind: ChangeKind.Edit,
       path: ["test", 0],
-      patches: [{diffs: [[0, "item"], [-1, "1"]], start1: 0, start2: 0, length1: 5, length2: 4}]
+      patches: [
+        {
+          diffs: [
+            [0, "item"],
+            [-1, "1"]
+          ],
+          start1: 0,
+          start2: 0,
+          length1: 5,
+          length2: 4
+        }
+      ]
     });
   });
 
@@ -90,7 +101,18 @@ describe("differ", () => {
     expect(changes[1]).toEqual({
       kind: ChangeKind.Edit,
       path: ["tags", 0],
-      patches: [{diffs: [[0, "item"], [1, "2"]], start1: 0, start2: 0, length1: 4, length2: 5}]
+      patches: [
+        {
+          diffs: [
+            [0, "item"],
+            [1, "2"]
+          ],
+          start1: 0,
+          start2: 0,
+          length1: 4,
+          length2: 5
+        }
+      ]
     });
   });
 
@@ -100,12 +122,34 @@ describe("differ", () => {
     expect(changes[1]).toEqual({
       kind: ChangeKind.Edit,
       path: ["tags", 0],
-      patches: [{diffs: [[0, "item"], [1, "1"]], start1: 0, start2: 0, length1: 4, length2: 5}]
+      patches: [
+        {
+          diffs: [
+            [0, "item"],
+            [1, "1"]
+          ],
+          start1: 0,
+          start2: 0,
+          length1: 4,
+          length2: 5
+        }
+      ]
     });
     expect(changes[0]).toEqual({
       kind: ChangeKind.Edit,
       path: ["tags", 1],
-      patches: [{diffs: [[0, "item"], [1, "2"]], start1: 0, start2: 0, length1: 4, length2: 5}]
+      patches: [
+        {
+          diffs: [
+            [0, "item"],
+            [1, "2"]
+          ],
+          start1: 0,
+          start2: 0,
+          length1: 4,
+          length2: 5
+        }
+      ]
     });
   });
 

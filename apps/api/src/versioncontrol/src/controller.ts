@@ -15,7 +15,10 @@ import {Synchronizer} from "./synchronizer";
 
 @Controller("versioncontrol")
 export class VersionControlController {
-  constructor(private synchronizer: Synchronizer, private vers: VersionManager) {}
+  constructor(
+    private synchronizer: Synchronizer,
+    private vers: VersionManager
+  ) {}
 
   @Get("commands")
   @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))

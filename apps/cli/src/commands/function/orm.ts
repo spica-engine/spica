@@ -67,7 +67,7 @@ async function orm({options}: ActionParameters) {
   });
 }
 
-export default function(program: Program): Command {
+export default function (program: Program): Command {
   return program
     .command(
       "function orm",

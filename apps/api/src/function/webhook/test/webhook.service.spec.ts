@@ -91,10 +91,7 @@ describe("Webhook Service", () => {
     service.insertOne(webhook).then(hook => {
       service
         .targets()
-        .pipe(
-          bufferCount(2),
-          take(1)
-        )
+        .pipe(bufferCount(2), take(1))
         .subscribe(targets => {
           expect(targets).toEqual([
             {
@@ -123,10 +120,7 @@ describe("Webhook Service", () => {
     service.insertOne(webhook).then(hook => {
       service
         .targets()
-        .pipe(
-          bufferCount(2),
-          take(1)
-        )
+        .pipe(bufferCount(2), take(1))
         .subscribe(targets => {
           expect(targets).toEqual([
             {

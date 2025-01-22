@@ -30,8 +30,8 @@ function accessPropertyFromPath(properties: object, path: string, replaceWith?: 
   const subProperties = isObject
     ? properties[key].properties
     : isObjectArray
-    ? properties[key].items.properties
-    : undefined;
+      ? properties[key].items.properties
+      : undefined;
 
   if (!subProperties) {
     return undefined;

@@ -42,9 +42,7 @@ abstract class TestPlacer implements ControlValueAccessor {
 class TestPlacer1 extends TestPlacer {}
 
 @Component({
-  template: `
-    <h1>testplacer2</h1>
-  `,
+  template: ` <h1>testplacer2</h1> `,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
