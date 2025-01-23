@@ -341,7 +341,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
             ? "true"
             : "",
           LOGGER: this.options.logger ? "true" : undefined
-        }
+        },
+        entrypointPath: this.options.spawnEntrypointPath
       });
 
       worker.once("exit", () => this.lostWorker(id));

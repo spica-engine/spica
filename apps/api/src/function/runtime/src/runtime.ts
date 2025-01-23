@@ -11,6 +11,7 @@ export interface SpawnOptions {
   env: {
     [key: string]: string;
   };
+  entrypointPath?:string
 }
 
 export interface Description {

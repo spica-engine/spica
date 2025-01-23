@@ -44,7 +44,8 @@ describe("Entrypoint", () => {
         __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
         __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
         __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET
-      }
+      },
+      entrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH
     });
 
     const stream = stdout || new PassThrough();

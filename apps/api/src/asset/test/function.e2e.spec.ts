@@ -58,7 +58,8 @@ describe("function", () => {
         maxConcurrency: 1,
         debug: false,
         realtimeLogs: false,
-        logger: false
+        logger: false,
+        spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH
       })
     ]
   };
