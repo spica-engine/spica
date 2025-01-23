@@ -202,7 +202,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     if (data instanceof Buffer) {
       return this.service.write(_id.toString(), data, type);
     } else {
-      return this.service.writeStream(_id.toString(), data, type);
+      return this.service.writeStream(_id.toString(), data as fs.ReadStream, type);
     }
   }
 

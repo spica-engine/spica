@@ -101,7 +101,7 @@ export class GraphqlController implements OnModuleInit {
       name: "ObjectId",
       description:
         "BSON ObjectId type. Can be a 24 byte hex string, 12 byte binary string or a Number.",
-      parseValue(value) {
+      parseValue(value: string) {
         return new ObjectId(value);
       },
       serialize(value) {
