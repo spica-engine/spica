@@ -34,6 +34,7 @@ process.env.FUNCTION_TS_COMPILER_PATH = path.join(
   "apps",
   "api",
   "src",
+  "function",
   "compiler",
   "typescript",
   "src",
