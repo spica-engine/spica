@@ -13,7 +13,10 @@ import {BucketCacheService} from "./service";
 import {CacheInterceptor, CACHE_MANAGER} from "@nestjs/cache-manager";
 
 class BucketCacheInterceptor extends CacheInterceptor {
-  constructor(@Optional() @Inject(CACHE_MANAGER) cacheManager: any, reflector: any) {
+  constructor(
+    @Optional() @Inject(CACHE_MANAGER) cacheManager: any,
+    @Optional() @Inject() reflector: any
+  ) {
     super(cacheManager, reflector);
   }
 

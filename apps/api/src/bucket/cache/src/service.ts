@@ -2,6 +2,7 @@ import {Inject, Injectable} from "@nestjs/common";
 import {DatabaseService} from "@spica-server/database";
 import * as cron from "cron";
 import {CACHE_MANAGER} from "@nestjs/cache-manager";
+import {Cache} from "cache-manager";
 
 @Injectable()
 export class BucketCacheService {
@@ -11,7 +12,7 @@ export class BucketCacheService {
   invalidatedBucketIds = new Set();
 
   constructor(
-    @Inject(CACHE_MANAGER) private cacheManager,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private db: DatabaseService
   ) {
     if (!this.invalidateJob) {
