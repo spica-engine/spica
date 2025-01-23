@@ -20,7 +20,6 @@
     "format:write": "yarn nx format:write"
   },
   "dependencies": {
-    "@nestjs/cache-manager": "^2.3.0",
     "@nestjs/common": "^10.4.15",
     "@nestjs/core": "^10.4.15",
     "@nestjs/platform-express": "^10.4.15",

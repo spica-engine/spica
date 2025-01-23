@@ -60,7 +60,9 @@ export class BucketCacheService {
 
     const keys: string[] = await this.cacheManager.store.keys();
     const targets = keys.filter(key => key.startsWith(`/bucket/${bucketId}`));
-    await this.cacheManager.store.del(...targets);
+    for (const target of targets) {
+      await this.cacheManager.store.del(target);
+    }
     this.invalidatedBucketIds.delete(bucketId);
   }
 }
