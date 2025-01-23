@@ -1,8 +1,8 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {Cache} from "cache-manager";
 import {DatabaseService} from "@spica-server/database";
 import * as cron from "cron";
 import {CACHE_MANAGER} from "@nestjs/cache-manager";
+import {Cache} from "cache-manager";
 
 @Injectable()
 export class BucketCacheService {

@@ -54,7 +54,6 @@ export class EventQueue {
         process.env.FUNCTION_GRPC_ADDRESS,
         grpc.ServerCredentials.createInsecure()
       );
-    this.server.start();
   }
 
   /**

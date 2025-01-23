@@ -58,5 +58,6 @@
         }
       ]
     }
-  }
+  },
+  "sync": {"applyChanges": false}
 }
