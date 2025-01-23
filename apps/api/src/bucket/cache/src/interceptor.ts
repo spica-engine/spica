@@ -11,10 +11,11 @@ import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {BucketCacheService} from "./service";
 import {CacheInterceptor, CACHE_MANAGER} from "@nestjs/cache-manager";
+import {Cache} from "cache-manager";
 
 class BucketCacheInterceptor extends CacheInterceptor {
   constructor(
-    @Optional() @Inject(CACHE_MANAGER) cacheManager: any,
+    @Optional() @Inject(CACHE_MANAGER) cacheManager: Cache,
     @Optional() @Inject() reflector: any
   ) {
     super(cacheManager, reflector);
@@ -37,7 +38,7 @@ class BucketCacheInterceptor extends CacheInterceptor {
 
 class BucketCacheInvalidationInterceptor implements NestInterceptor {
   constructor(
-    @Optional() @Inject(CACHE_MANAGER) private cacheManager: any,
+    @Optional() @Inject(CACHE_MANAGER) private cacheManager: Cache,
     @Optional() private bucketCacheService: BucketCacheService
   ) {}
 
