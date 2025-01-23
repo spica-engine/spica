@@ -157,7 +157,7 @@ async function initialize() {
           return Promise.reject(error);
         }
       })
-    ).map(node => node.name);
+    )?.map(node => node.name);
 
     if (nodes) {
       if (nodes.length > 1) {

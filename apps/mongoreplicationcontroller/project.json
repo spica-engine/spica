@@ -5,6 +5,12 @@
   "projectType": "application",
   "tags": [],
   "targets": {
+    "serve": {
+      "executor": "@nx/js:node",
+      "options": {
+        "buildTarget": "mongoreplicationcontroller:build"
+      }
+    },
     "build": {
       "executor": "@nx/js:tsc",
       "inputs": [
@@ -30,7 +36,7 @@
         "{projectRoot}/Dockerfile"
       ],
       "command": "docker build . -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:latest",
-      "cache": true
+      "cache": false
     },
     "nx-release-publish": {
       "options": {

@@ -1,9 +1,11 @@
 FROM node:22-bookworm AS base
 
+FROM mongodb/mongodb-community-server:7.0.0-ubi8
+
 # install tools to nodejs image
 FROM base AS tools
 RUN apt-get install gnupg
-FROM mongodb/mongodb-community-server:7.0.12-ubi9 AS mongo
+
 
 # install app deps to nodejs image
 FROM base AS deps
