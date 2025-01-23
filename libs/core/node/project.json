@@ -1,0 +1,5 @@
+{
+  "name": "core/node",
+  "sourceRoot": "libs/core/node/src",
+  "projectType": "library"
+}

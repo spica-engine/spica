@@ -1,9 +1,10 @@
 import {EventEmitter} from "events";
 import {Writable} from "stream";
+import {Dirname} from "@spica-server/core/node";
 
 export abstract class Runtime {
   abstract description: Description;
-  abstract spawn(options: SpawnOptions): Worker;
+  abstract spawn(options: SpawnOptions, dirname: Dirname): Worker;
 }
 
 export interface SpawnOptions {

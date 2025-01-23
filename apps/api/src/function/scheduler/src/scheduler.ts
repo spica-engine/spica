@@ -22,6 +22,7 @@ import {generateLog, LogLevels} from "@spica-server/function/runtime/logger";
 import {Node} from "@spica-server/function/runtime/node";
 import {ClassCommander, CommandType, JobReducer} from "@spica-server/replication";
 import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/status/services";
+import {DIRNAME, Dirname} from "@spica-server/core/node";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
@@ -55,7 +56,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>,
     @Optional() private jobReducer: JobReducer,
-    @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker
+    @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker,
+    @Inject(DIRNAME) private dirname: Dirname
   ) {
     if (this.commander) {
       this.commander.register(this, [this.outdateWorkers], CommandType.SYNC);
@@ -63,7 +65,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     this.output = new DatabaseOutput(database);
 
-    this.languages.set("typescript", new Typescript());
+    this.languages.set("typescript", new Typescript(this.dirname));
     this.languages.set("javascript", new Javascript());
     this.runtimes.set("node", new Node());
     this.pkgmanagers.set("node", new Npm());
@@ -330,19 +332,22 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     for (let i = this.workers.size; i < desiredWorkers; i++) {
       const id: string = uniqid();
-      const worker = this.runtimes.get("node").spawn({
-        id,
-        env: {
-          __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
-          __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
-          __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
-          __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
-          __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
-            ? "true"
-            : "",
-          LOGGER: this.options.logger ? "true" : undefined
-        }
-      });
+      const worker = this.runtimes.get("node").spawn(
+        {
+          id,
+          env: {
+            __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
+            __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
+            __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
+            __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
+            __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
+              ? "true"
+              : "",
+            LOGGER: this.options.logger ? "true" : undefined
+          }
+        },
+        this.dirname
+      );
 
       worker.once("exit", () => this.lostWorker(id));
 

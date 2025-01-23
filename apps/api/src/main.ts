@@ -17,6 +17,7 @@ import {StorageModule} from "@spica-server/storage";
 import {VersionControlModule} from "@spica-server/versioncontrol";
 import {ReplicationModule} from "@spica-server/replication";
 import {AssetModule} from "@spica-server/asset";
+import {NodeModule} from "@spica-server/core/node";
 import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
@@ -405,6 +406,7 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   .parse();
 
 const modules = [
+  NodeModule.forRoot(),
   DashboardModule.forRoot(),
   PreferenceModule.forRoot(),
   AssetModule.forRoot({persistentPath: args["persistent-path"]}),

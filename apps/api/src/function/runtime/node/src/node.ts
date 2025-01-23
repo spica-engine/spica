@@ -1,10 +1,11 @@
 import {Description, Runtime, SpawnOptions, Worker} from "@spica-server/function/runtime";
+import {Dirname} from "@spica-server/core/node";
 import * as child_process from "child_process";
 import * as path from "path";
 import {Writable} from "stream";
 
-const getEntrypointPath = () => {
-  return path.join(__dirname, "..", "bootstrap", "entrypoint.js");
+const getEntrypointPath = dirname => {
+  return path.join(dirname, "..", "bootstrap", "entrypoint.js");
 };
 
 class NodeWorker extends Worker {
@@ -15,11 +16,11 @@ class NodeWorker extends Worker {
     return this._process.killed || this._quit;
   }
 
-  constructor(options: SpawnOptions) {
+  constructor(options: SpawnOptions, dirname: Dirname) {
     super();
     this._process = child_process.spawn(
       `node`,
-      ["--import=extensionless/register", getEntrypointPath()],
+      ["--import=extensionless/register", getEntrypointPath(dirname(__dirname))],
       {
         env: {
           PATH: process.env.PATH,
@@ -63,7 +64,7 @@ export class Node extends Runtime {
     description: "Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine."
   };
 
-  spawn(options: SpawnOptions): Worker {
-    return new NodeWorker(options);
+  spawn(options: SpawnOptions, dirname: Dirname): Worker {
+    return new NodeWorker(options, dirname);
   }
 }

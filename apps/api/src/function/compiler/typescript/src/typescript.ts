@@ -1,4 +1,5 @@
 import {Compilation, Description, Language} from "@spica-server/function/compiler";
+import {Dirname} from "@spica-server/core/node";
 import * as fs from "fs";
 import * as path from "path";
 import {fromEvent, Observable, of, throwError} from "rxjs";
@@ -17,7 +18,7 @@ export class Typescript extends Language {
 
   private message$: Observable<any>;
 
-  constructor() {
+  constructor(private dirname: Dirname) {
     super();
   }
 
@@ -78,6 +79,6 @@ export class Typescript extends Language {
   }
 
   private initiateWorker() {
-    return new worker_threads.Worker(path.join(__dirname, "typescript_worker.js"));
+    return new worker_threads.Worker(path.join(this.dirname(__dirname), "typescript_worker.js"));
   }
 }

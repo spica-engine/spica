@@ -43,6 +43,9 @@
       "path": "../../libs/core"
     },
     {
+      "path": "../../libs/core/node"
+    },
+    {
       "path": "../../libs/core/schema"
     },
     {

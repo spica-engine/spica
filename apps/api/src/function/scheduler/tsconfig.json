@@ -19,6 +19,9 @@
     },
     {
       "path": "../enqueuer"
+    },
+    {
+      "path": "../../../../../libs/core/node"
     }
   ]
 }
