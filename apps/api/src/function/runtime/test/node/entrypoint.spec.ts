@@ -305,7 +305,7 @@ describe("Entrypoint", () => {
 
   describe("cjs interop", () => {
     beforeEach(() => {
-      language = new Typescript();
+      language = new Typescript(process.env.FUNCTION_TS_COMPILER_PATH);
     });
 
     it("should work with default handler", async () => {

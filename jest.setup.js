@@ -27,6 +27,19 @@ process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH = path.join(
   "entrypoint.js"
 );
 
+// directory for function typescript compiler worker path
+process.env.FUNCTION_TS_COMPILER_PATH = path.join(
+  workspaceRoot,
+  "dist",
+  "apps",
+  "api",
+  "src",
+  "compiler",
+  "typescript",
+  "src",
+  "typescript_worker.js"
+);
+
 afterAll(() => {
   if (fs.existsSync(testTmpDir)) {
     fs.rmSync(testTmpDir, {recursive: true, force: true});

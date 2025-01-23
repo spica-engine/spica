@@ -73,7 +73,9 @@ describe("Queue shifting", () => {
           maxConcurrency: 1,
           debug: false,
           realtimeLogs: false,
-          logger: false
+          logger: false,
+          spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
+          tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
         }),
         ReplicationModule.forRoot(),
         BucketModule.forRoot({

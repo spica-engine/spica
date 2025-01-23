@@ -55,7 +55,9 @@ describe("Versioning e2e", () => {
           maxConcurrency: 1,
           debug: false,
           realtimeLogs: false,
-          logger: false
+          logger: false,
+          spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
+          tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
         }),
         VersionControlModule.forRoot({persistentPath: os.tmpdir()})
       ]

@@ -63,7 +63,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     this.output = new DatabaseOutput(database);
 
-    this.languages.set("typescript", new Typescript());
+    this.languages.set("typescript", new Typescript(options.tsCompilerPath));
     this.languages.set("javascript", new Javascript());
     this.runtimes.set("node", new Node());
     this.pkgmanagers.set("node", new Npm());

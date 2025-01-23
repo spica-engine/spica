@@ -38,7 +38,8 @@ describe("Engine", () => {
           maxConcurrency: 1,
           debug: false,
           logger: false,
-          spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH
+          spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
+          tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
         }),
         DatabaseTestingModule.replicaSet()
       ]

@@ -72,7 +72,8 @@ export class FunctionModule {
           corsOptions: options.corsOptions,
           debug: options.debug,
           logger: options.logger,
-          spawnEntrypointPath: options.spawnEntrypointPath
+          spawnEntrypointPath: options.spawnEntrypointPath,
+          tsCompilerPath: options.tsCompilerPath
         }),
         ServicesModule.forRoot({
           logExpireAfterSeconds: options.logExpireAfterSeconds,
