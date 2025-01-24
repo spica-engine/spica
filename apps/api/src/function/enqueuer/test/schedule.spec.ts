@@ -66,7 +66,7 @@ describe("ScheduleEnqueuer", () => {
       frequency: "* * * * *"
     });
 
-    let jobs = Array.from(enqueuer["jobs"]);
+    let jobs: any = Array.from(enqueuer["jobs"]);
     const stopSpies = jobs.map(j => jest.spyOn(j, "stop"));
 
     enqueuer.unsubscribe(target1);

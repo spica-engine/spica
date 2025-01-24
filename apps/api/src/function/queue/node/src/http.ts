@@ -157,7 +157,7 @@ export class Response {
   write(chunk: string | Buffer, encoding?: BufferEncoding): Promise<void> {
     const write = new Http.Write({
       encoding,
-      data: new Uint8Array(chunk instanceof Buffer ? chunk : Buffer.from(chunk, encoding))
+      data: new Uint8Array(chunk instanceof Buffer ? chunk : Buffer.from(chunk as string, encoding))
     });
     return this._write(write);
   }
@@ -205,7 +205,7 @@ export class Response {
       encoding,
       data:
         data != undefined
-          ? new Uint8Array(data instanceof Buffer ? data : Buffer.from(data, encoding))
+          ? new Uint8Array(data instanceof Buffer ? data : Buffer.from(data as string, encoding))
           : undefined
     });
     return this._end(end);
