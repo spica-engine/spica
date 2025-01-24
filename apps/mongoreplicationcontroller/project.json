@@ -38,9 +38,15 @@
       "command": "docker build --platform=linux/amd64 . -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:latest",
       "cache": false
     },
-    "nx-release-publish": {
+    "publish": {
+      "executor": "nx:run-commands",
       "options": {
-        "packageRoot": "dist/{projectRoot}"
+        "commands": [
+          "docker login -u {args.username} -p {args.password}",
+          "docker push spicaengine/mongoreplicationcontroller:latest"
+        ],
+        "parallel": false,
+        "forwardAllArgs": false
       }
     }
   }
