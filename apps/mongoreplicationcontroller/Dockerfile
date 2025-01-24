@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 node:22-bullseye AS base
+FROM node:22-bullseye AS base
 
 # install tools to nodejs image
 FROM base AS tools
@@ -21,6 +21,7 @@ COPY apps/mongoreplicationcontroller ./apps/mongoreplicationcontroller
 COPY nx.json ./
 COPY package.json ./
 COPY tsconfig.json ./
+COPY yarn.lock ./
 RUN yarn nx build mongoreplicationcontroller --verbose
 
 # start app from tools, because app executes many mongodb commands
