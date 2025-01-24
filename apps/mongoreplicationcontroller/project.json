@@ -36,10 +36,11 @@
         "{projectRoot}/Dockerfile"
       ],
       "command": "docker build --platform=linux/amd64 . -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:latest",
-      "cache": false
+      "cache": true
     },
     "publish": {
       "executor": "nx:run-commands",
+      "dependsOn": ["build-image"],
       "options": {
         "commands": [
           "docker login -u {args.username} -p {args.password}",
