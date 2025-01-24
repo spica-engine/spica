@@ -17,7 +17,7 @@ export class Typescript extends Language {
 
   private message$: Observable<any>;
 
-  constructor() {
+  constructor(private compilerPath?: string) {
     super();
   }
 
@@ -78,6 +78,7 @@ export class Typescript extends Language {
   }
 
   private initiateWorker() {
-    return new worker_threads.Worker(path.join(__dirname, "typescript_worker.js"));
+    const compilerPath = this.compilerPath || path.join(__dirname, "typescript_worker.js");
+    return new worker_threads.Worker(compilerPath);
   }
 }

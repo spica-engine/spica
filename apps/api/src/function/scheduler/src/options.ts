@@ -11,6 +11,8 @@ export interface SchedulingOptions {
   maxConcurrency: number;
   debug: boolean;
   logger: boolean;
+  spawnEntrypointPath?: string;
+  tsCompilerPath?: string;
 }
 
 export const SCHEDULING_OPTIONS = Symbol.for("SCHEDULING_OPTIONS");

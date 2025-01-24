@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const {workspaceRoot} = require("@nx/devkit");
 
 // directory for all tests
 const testTmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "jest-"));
@@ -10,6 +11,34 @@ process.env.TEST_TMPDIR = testTmpDir;
 process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(
   process.cwd(),
   "dist/apps/migrate/test/acceptance"
+);
+
+// directory for function spawned worker entrypoints
+process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH = path.join(
+  workspaceRoot,
+  "dist",
+  "apps",
+  "api",
+  "src",
+  "function",
+  "runtime",
+  "node",
+  "bootstrap",
+  "entrypoint.js"
+);
+
+// directory for function typescript compiler worker path
+process.env.FUNCTION_TS_COMPILER_PATH = path.join(
+  workspaceRoot,
+  "dist",
+  "apps",
+  "api",
+  "src",
+  "function",
+  "compiler",
+  "typescript",
+  "src",
+  "typescript_worker.js"
 );
 
 afterAll(() => {

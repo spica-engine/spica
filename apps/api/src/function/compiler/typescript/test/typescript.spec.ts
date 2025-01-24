@@ -13,7 +13,7 @@ describe("Typescript", () => {
   };
 
   beforeEach(() => {
-    language = new Typescript();
+    language = new Typescript(process.env.FUNCTION_TS_COMPILER_PATH);
     compilation.cwd = FunctionTestBed.initialize(``);
     return fs.promises.mkdir(path.join(compilation.cwd, "node_modules"), {recursive: true});
   });

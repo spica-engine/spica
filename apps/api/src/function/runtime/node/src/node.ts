@@ -3,10 +3,6 @@ import * as child_process from "child_process";
 import * as path from "path";
 import {Writable} from "stream";
 
-const getEntrypointPath = () => {
-  return path.join(__dirname, "..", "bootstrap", "entrypoint.js");
-};
-
 class NodeWorker extends Worker {
   private _process: child_process.ChildProcess;
   private _quit = false;
@@ -17,9 +13,11 @@ class NodeWorker extends Worker {
 
   constructor(options: SpawnOptions) {
     super();
+
+    const entrypointPath = options.entrypointPath || this.getEntrypointPath();
     this._process = child_process.spawn(
       `node`,
-      ["--import=extensionless/register", getEntrypointPath()],
+      ["--import=extensionless/register", entrypointPath],
       {
         env: {
           PATH: process.env.PATH,
@@ -53,6 +51,10 @@ class NodeWorker extends Worker {
       this._process.once("exit", () => resolve());
       this._process.kill("SIGTERM");
     });
+  }
+
+  private getEntrypointPath() {
+    return path.join(__dirname, "..", "bootstrap", "entrypoint.js");
   }
 }
 

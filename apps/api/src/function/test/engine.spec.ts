@@ -6,7 +6,6 @@ import {FunctionEngine} from "@spica-server/function/src/engine";
 import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
 import {TargetChange, ChangeKind} from "@spica-server/function/src/change";
-import {ClassCommander} from "@spica-server/replication";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
 describe("Engine", () => {
@@ -38,7 +37,9 @@ describe("Engine", () => {
           },
           maxConcurrency: 1,
           debug: false,
-          logger: false
+          logger: false,
+          spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
+          tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
         }),
         DatabaseTestingModule.replicaSet()
       ]
