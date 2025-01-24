@@ -5,6 +5,12 @@
   "projectType": "application",
   "tags": [],
   "targets": {
+    "serve": {
+      "executor": "@nx/js:node",
+      "options": {
+        "buildTarget": "mongoreplicationcontroller:build"
+      }
+    },
     "build": {
       "executor": "@nx/js:tsc",
       "inputs": [
@@ -29,8 +35,20 @@
         "{projectRoot}/project.json",
         "{projectRoot}/Dockerfile"
       ],
-      "command": "docker build . -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:latest",
+      "command": "docker build --platform=linux/amd64 . -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:latest",
       "cache": true
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build-image"],
+      "options": {
+        "commands": [
+          "docker login -u {args.username} -p {args.password}",
+          "docker push spicaengine/mongoreplicationcontroller:latest"
+        ],
+        "parallel": false,
+        "forwardAllArgs": false
+      }
     }
   }
 }
