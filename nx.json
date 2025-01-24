@@ -60,7 +60,10 @@
           "projects": ["api/function/compiler/typescript"],
           "target": "build"
         }
-      ]
+      ],
+      "options": {
+        "forceExit": true
+      }
     }
   },
   "sync": {"applyChanges": false}
