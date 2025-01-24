@@ -60,7 +60,7 @@ function debug(message: string) {
 async function findPrimaryNode(nodes: string[]) {
   for (const node of nodes) {
     try {
-      const {stdout} = await exec(`mongo admin --host "${node}" --eval "rs.isMaster()"`);
+      const {stdout} = await exec(`mongosh admin --host "${node}" --eval "rs.isMaster()"`);
       debug(stdout);
       if (stdout.indexOf('"ismaster" : true') > -1) {
         return node;
@@ -78,10 +78,10 @@ async function findPrimaryNode(nodes: string[]) {
 }
 
 async function initiateReplication(nodes: string[], reinitiate = false) {
-  const {stdout} = await exec(`mongo --host "${nodes[0]}" --eval "rs.status()"`);
+  const {stdout} = await exec(`mongosh --host "${nodes[0]}" --eval "rs.status()"`);
   if (stdout.indexOf("no replset config has been received") > -1) {
     const {stdout} = await exec(
-      `mongo --host ${nodes[0]} --eval 'rs.initiate({"_id": "${options["replica-set"]}", "members": ${JSON.stringify(nodes.map((host, _id) => ({_id, host})))}})'`
+      `mongosh --host ${nodes[0]} --eval 'rs.initiate({"_id": "${options["replica-set"]}", "members": ${JSON.stringify(nodes.map((host, _id) => ({_id, host})))}})'`
     );
     debug(stdout);
     if (stdout.indexOf('"ok" : 1') == -1) {
@@ -102,7 +102,7 @@ async function initiateReplication(nodes: string[], reinitiate = false) {
       `cfg.members = ${JSON.stringify(nodes.map((host, _id) => ({_id, host})))}`,
       "rs.reconfig(cfg, { force: true })"
     ];
-    const {stdout} = await exec(`mongo admin --host "${primary}" --eval '${script.join(";")}'`);
+    const {stdout} = await exec(`mongosh admin --host "${primary}" --eval '${script.join(";")}'`);
     debug(stdout);
     if (stdout.indexOf('"ok" : 1') == -1) {
       throw new Error("Can not initialize replica set.");
@@ -111,7 +111,7 @@ async function initiateReplication(nodes: string[], reinitiate = false) {
 }
 
 async function addAsSecondary(primaryHost: string, secondaryHost: string, index: number) {
-  const {stdout} = await exec(`mongo admin --host "${primaryHost}" --eval "rs.config()"`);
+  const {stdout} = await exec(`mongosh admin --host "${primaryHost}" --eval "rs.config()"`);
   debug(stdout);
 
   if (stdout.indexOf(secondaryHost) == -1) {
@@ -120,7 +120,7 @@ async function addAsSecondary(primaryHost: string, secondaryHost: string, index:
       `cfg.members[${index}] = { _id: ${index},  host: "${secondaryHost}"}`,
       "rs.reconfig(cfg, { force: true })"
     ];
-    const {stdout} = await exec(`mongo admin --host "${primaryHost}" --eval '${conf.join(";")}'`);
+    const {stdout} = await exec(`mongosh admin --host "${primaryHost}" --eval '${conf.join(";")}'`);
     debug(stdout);
     if (stdout.indexOf('"ok" : 1') == -1) {
       throw new Error(`Can not add the secondary node ${secondaryHost}`);
