@@ -114,6 +114,8 @@ export class Axios implements HttpService {
   }
 }
 
+// It's because axios switched from encodeURIComponent to URLSearchParams with version 1.x
+
 function encode(val) {
   return encodeURIComponent(val)
     .replace(/%3A/gi, ":")
@@ -166,8 +168,6 @@ function utilsForEach(obj, fn) {
     }
   }
 }
-
-// TODO: remove paramsSerializer method after the backend will be ready to work with axios ^1.x.x
 
 /**
  * Build a queryString as Axios v0.21.4 would do
