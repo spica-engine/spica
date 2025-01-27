@@ -189,8 +189,10 @@ describe("Engine", () => {
   });
 
   it("should unregister triggers on module destroy", async () => {
+    const hexString = "507f1f77bcf86cd799439011";
+
     await fs.insertOne({
-      _id: new ObjectId("test_id"),
+      _id: new ObjectId(hexString),
       env: {},
       language: "js",
       timeout: 10,
@@ -202,7 +204,7 @@ describe("Engine", () => {
       {
         kind: ChangeKind.Added,
         target: {
-          id: "test_id",
+          id: hexString,
           handler: "test_handler",
           context: {
             env: {},
