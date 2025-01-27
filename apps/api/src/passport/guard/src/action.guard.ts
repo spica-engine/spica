@@ -92,7 +92,7 @@ function buildResourceAndModuleName(path: string, params: object, format?: strin
 
   const resourceSegments = segments
     .filter(s => s.type == "text")
-    .map((s: Text) => s.value.replace(/\//g, ""))
+    .map((s: Text) => s.value.replace(/^\/|\/$/g, ""))
     .join("/")
     .split("/");
 
