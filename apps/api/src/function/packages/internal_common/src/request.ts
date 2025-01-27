@@ -71,6 +71,7 @@ export class Axios implements HttpService {
     );
 
     this.baseUrl = this.instance.defaults.baseURL;
+    this.instance.defaults.paramsSerializer = paramsSerializer;
   }
 
   setBaseUrl(url: string) {
@@ -111,4 +112,96 @@ export class Axios implements HttpService {
   request<T>(config: AxiosRequestConfig): Promise<T> {
     return this.instance.request(config);
   }
+}
+
+// It's because axios switched from encodeURIComponent to URLSearchParams with version 1.x
+
+function encode(val) {
+  return encodeURIComponent(val)
+    .replace(/%3A/gi, ":")
+    .replace(/%24/g, "$")
+    .replace(/%2C/gi, ",")
+    .replace(/%20/g, "+")
+    .replace(/%5B/gi, "[")
+    .replace(/%5D/gi, "]");
+}
+
+function utilsIsURLSearchParams(val) {
+  return typeof URLSearchParams !== "undefined" && val instanceof URLSearchParams;
+}
+
+function utilsIsArray(val) {
+  return toString.call(val) === "[object Array]";
+}
+
+function utilsIsDate(val) {
+  return toString.call(val) === "[object Date]";
+}
+
+function utilsIsObject(val) {
+  return val !== null && typeof val === "object";
+}
+
+function utilsForEach(obj, fn) {
+  // Don't bother if no value provided
+  if (obj === null || typeof obj === "undefined") {
+    return;
+  }
+
+  // Force an array if not already something iterable
+  if (typeof obj !== "object") {
+    /*eslint no-param-reassign:0*/
+    obj = [obj];
+  }
+
+  if (utilsIsArray(obj)) {
+    // Iterate over array values
+    for (var i = 0, l = obj.length; i < l; i++) {
+      fn.call(null, obj[i], i, obj);
+    }
+  } else {
+    // Iterate over object keys
+    for (var key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        fn.call(null, obj[key], key, obj);
+      }
+    }
+  }
+}
+
+/**
+ * Build a queryString as Axios v0.21.4 would do
+ *
+ * @param {object} [params] The params to be appended
+ * @returns {string} The serialized params
+ */
+function paramsSerializer(params) {
+  if (utilsIsURLSearchParams(params)) {
+    return params.toString();
+  }
+
+  var parts = [];
+
+  utilsForEach(params, function serialize(val, key) {
+    if (val === null || typeof val === "undefined") {
+      return;
+    }
+
+    if (utilsIsArray(val)) {
+      key = key + "[]";
+    } else {
+      val = [val];
+    }
+
+    utilsForEach(val, function parseValue(v) {
+      if (utilsIsDate(v)) {
+        v = v.toISOString();
+      } else if (utilsIsObject(v)) {
+        v = JSON.stringify(v);
+      }
+      parts.push(encode(key) + "=" + encode(v));
+    });
+  });
+
+  return parts.join("&");
 }
