@@ -1,11 +1,11 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
 name: Spica Continuous Integration Workflow
+
+env:
+  base_branch: nx-monorepo
 
 on:
   pull_request:
-    # use master later
+    # use master later, can't use env here
     branches: ["nx-monorepo"]
 
 jobs:
@@ -20,13 +20,11 @@ jobs:
       - name: Checkout
         id: checkout_branch
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Fetch base branch
-        run: git fetch origin nx-monorepo:nx-monorepo # Fetch the base branch explicitly
+        run: git fetch origin ${{ env.base_branch }}:${{ env.base_branch }}
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         id: setup_nodejs
         uses: actions/setup-node@v4
         with:
@@ -40,4 +38,4 @@ jobs:
 
       - name: Check Format
         id: check_code
-        run: git fetch --all && yarn run format:check
+        run: yarn run format:check
