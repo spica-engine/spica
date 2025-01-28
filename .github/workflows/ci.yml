@@ -5,7 +5,8 @@ name: Spica Continuous Integration Workflow
 
 on:
   pull_request:
-    branches: [ "nx-ci-cd-testing" ]
+    # use master later
+    branches: [ "nx-monorepo" ]
 
 jobs:
   lint:
