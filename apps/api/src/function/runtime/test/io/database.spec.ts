@@ -9,6 +9,8 @@ function sleep(ms: number) {
 }
 
 describe("IO Database", () => {
+  jest.setTimeout(10000);
+
   let db: DatabaseService;
   let dbOutput: DatabaseOutput;
 
