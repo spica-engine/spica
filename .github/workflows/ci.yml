@@ -33,10 +33,13 @@ jobs:
 
       - name: Save node modules
         id: node_modules_save
-        uses: actions/cache/save@v4
+        uses: actions/cache@v3
         with:
-          path: ./node_modules/
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          path: node_modules # Cache the node_modules folder
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }} # Use yarn.lock to define cache key
+          restore-keys: |
+            ${{ runner.os }}-yarn-  # Fall back if cache is not found
+            ${{ runner.os }}-yarn-${{ hashFiles('**/package.json') }}  # Fall back to package.json if yarn.lock changes
 
   lint:
     name: Check code format
@@ -46,15 +49,15 @@ jobs:
       - name: Checkout
         id: checkout_branch
         uses: actions/checkout@v4
-      
+
       - name: Fetch base branch
         run: git fetch origin ${{ env.base_branch }}:${{ env.base_branch }}
-      
-      - name: Restore node modules cache
+
+      - name: Restore node_modules cache
         id: node_modules_restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache@v3
         with:
-          path: ./node_modules/
+          path: node_modules
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
 
       - name: Check Format
