@@ -16,11 +16,9 @@ jobs:
 
     steps:
       - name: Checkout
-        id: checkout_branch
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        id: setup_nodejs
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
@@ -28,12 +26,53 @@ jobs:
           cache-dependency-path: yarn.lock
 
       - name: Install dependencies
-        id: install_deps
         run: yarn install --frozen-lockfile
 
       - name: Fetch base branch
         run: git fetch origin ${{ env.base_branch }}:${{ env.base_branch }}
 
       - name: Check Format
-        id: check_code
         run: yarn run format:check
+
+      # builds
+      # docker images
+      # - name: Build API
+      #   run: yarn nx build-image api
+
+      - name: Build Mongo Replication Controller
+        run: yarn nx build-image mongoreplicationcontroller -t spicaengine/mongoreplicationcontroller:${{ github.sha }}
+
+      # - name: Build Migrate
+      #   run: yarn nx build-image migrate
+
+      # npm libraries
+      - name: Build CLI
+        run: yarn nx build cli
+
+      # - name: Build Devkit Packages
+      #   run: |
+      #     yarn nx run-many --target build --projects \
+      #     api/function/packages/bucket \
+      #     api/function/packages/database \ 
+      #     api/function/packages/identity \
+      #     api/function/packages/storage
+
+      # # tests
+      # # docker images
+      # - name: Test API
+      #   run: yarn nx test-image api
+
+      # - name: Test Migrate
+      #   run: yarn nx test-image migrate
+
+      # # npm libraries
+      - name: Test CLI
+        run: yarn nx test cli
+
+      # - name: Test Devkit Packages
+      #   run: |
+      #     yarn nx run-many --target test --projects \
+      #     api/function/packages/bucket \
+      #     api/function/packages/database \ 
+      #     api/function/packages/identity \
+      #     api/function/packages/storage
