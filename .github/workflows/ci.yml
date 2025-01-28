@@ -6,11 +6,10 @@ name: Spica Continuous Integration Workflow
 on:
   pull_request:
     # use master later
-    branches: [ "nx-monorepo" ]
+    branches: ["nx-monorepo"]
 
 jobs:
   lint:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -21,7 +20,7 @@ jobs:
       - name: Checkout
         id: checkout_branch
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js ${{ matrix.node-version }}
         id: setup_nodejs
         uses: actions/setup-node@v4
@@ -29,14 +28,11 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: yarn
           cache-dependency-path: yarn.lock
-      
+
       - name: Install dependencies
         id: install_deps
         run: yarn install --frozen-lockfile
-  
+
       - name: Check Format
         id: check_code
         run: yarn run format:check
-    
-    
-    
