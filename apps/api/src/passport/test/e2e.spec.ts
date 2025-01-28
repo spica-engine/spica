@@ -644,7 +644,7 @@ describe("E2E Tests", () => {
           const totp = generateTotp(challenge);
 
           const thirtySecondsLater = new Date(Date.now() + TOTP_TIMEOUT);
-          jest.useFakeTimers({doNotFake: ["setImmediate"]});
+          jest.useFakeTimers({doNotFake: ["nextTick"]}); // passport.authenticate() depends on it
           jest.setSystemTime(thirtySecondsLater);
 
           const res = await completeVerification(totp, answerUrl);

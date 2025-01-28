@@ -18,7 +18,7 @@ export const StrategyType = createParamDecorator((data: unknown, ctx: ExecutionC
 });
 
 export function isAValidStrategy(type: string) {
-  return type.toLowerCase() in passport._strategies;
+  return type.toLowerCase() in passport.strategies;
 }
 
 export const AuthGuard: (
