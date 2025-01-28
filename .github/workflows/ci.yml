@@ -27,38 +27,12 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
 
-      - name: Cache all node_modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            **/node_modules  # Cache all node_modules across the entire repository
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }} # Cache key based on yarn.lock
-          restore-keys: |
-            ${{ runner.os }}-yarn-  # Fall back to key without hash of yarn.lock
-            ${{ runner.os }}-yarn-${{ hashFiles('**/package.json') }}  # Fall back to package.json if yarn.lock changes
-
       - name: Install dependencies
         id: install_deps
         run: yarn install --frozen-lockfile
 
-  lint:
-    name: Check code format
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - name: Checkout
-        id: checkout_branch
-        uses: actions/checkout@v4
-
       - name: Fetch base branch
         run: git fetch origin ${{ env.base_branch }}:${{ env.base_branch }}
-
-      - name: Restore all node_modules cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            **/node_modules  # Restore all node_modules across the entire repository
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
 
       - name: Check Format
         id: check_code
