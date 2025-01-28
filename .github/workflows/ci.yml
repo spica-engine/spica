@@ -20,6 +20,8 @@ jobs:
       - name: Checkout
         id: checkout_branch
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js ${{ matrix.node-version }}
         id: setup_nodejs
