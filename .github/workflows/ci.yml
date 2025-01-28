@@ -1,20 +1,17 @@
 name: Spica Continuous Integration Workflow
 
 env:
+  # use master later, can't use env here btw
   base_branch: nx-monorepo
 
 on:
   pull_request:
-    # use master later, can't use env here
+    # use master later, can't use env here btw
     branches: ["nx-monorepo"]
 
 jobs:
-  lint:
+  lint_build_test:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [22.x]
 
     steps:
       - name: Checkout
@@ -28,13 +25,13 @@ jobs:
         id: setup_nodejs
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 22.x
           cache: yarn
           cache-dependency-path: yarn.lock
 
       - name: Install dependencies
         id: install_deps
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --prefer-offline
 
       - name: Check Format
         id: check_code
