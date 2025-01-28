@@ -36,7 +36,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ./node_modules/
-          key: ${{ steps.node_modules_restore.outputs.cache-primary-key }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
 
   lint:
     name: Check code format
