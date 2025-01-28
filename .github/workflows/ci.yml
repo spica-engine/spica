@@ -10,8 +10,8 @@ on:
     branches: ["nx-monorepo"]
 
 jobs:
-  setup:
-    name: Setup NodeJS and Yarn packages
+  ci:
+    name: Continuous Integration
     runs-on: ubuntu-latest
 
     steps:
