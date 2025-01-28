@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Fetch base branch
         run: git fetch origin nx-monorepo:nx-monorepo # Fetch the base branch explicitly
 
