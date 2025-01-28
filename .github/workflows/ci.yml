@@ -10,8 +10,8 @@ on:
     branches: ["nx-monorepo"]
 
 jobs:
-  ci:
-    name: Continuous Integration
+  lint_build_test:
+    name: Lint, Build and Test
     runs-on: ubuntu-latest
 
     steps:
@@ -33,6 +33,9 @@ jobs:
 
       - name: Check Format
         run: yarn run format:check
+
+      - name: Disable Nx Cloud
+        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
       # builds
       # docker images

@@ -73,6 +73,5 @@
       "defaultConfiguration": "ci-cd"
     }
   },
-  "sync": {"applyChanges": false},
-  "neverConnectToCloud": true
+  "sync": {"applyChanges": false}
 }
