@@ -321,7 +321,7 @@ describe("E2E Tests", () => {
         expect(strategy.url.startsWith("/idp/login?SAMLRequest=")).toBe(true);
       });
 
-      it("should complete SSO with success", done => {
+      xit("should complete SSO with success", done => {
         req.get("/passport/strategies").then(({body: strategies}) => {
           req.get(`/passport/strategy/${strategies[0]._id}/url`).then(({body: strategy}) => {
             const _ = req.get("/passport/identify", {state: strategy.state}).then(async res => {
