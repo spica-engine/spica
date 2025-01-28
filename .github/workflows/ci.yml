@@ -37,4 +37,4 @@ jobs:
 
       - name: Check Format
         id: check_code
-        run: yarn run format:check
+        run: git fetch --all && yarn run format:check
