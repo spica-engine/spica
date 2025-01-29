@@ -73,5 +73,8 @@
       "defaultConfiguration": "ci-cd"
     }
   },
-  "sync": {"applyChanges": false}
+  "sync": {
+    "applyChanges": false,
+    "disabledTaskSyncGenerators": ["@nx/js:typescript-sync"]
+  }
 }
