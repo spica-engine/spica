@@ -43,8 +43,7 @@
     "speakeasy": "^2.0.0",
     "uniqid": "^5.4.0",
     "url": "^0.11.4",
-    "uuid": "^11.0.5",
-    "xpath": "^0.0.34"
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.2",
