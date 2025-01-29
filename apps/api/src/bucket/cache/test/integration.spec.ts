@@ -133,9 +133,7 @@ describe("Bucket Cache Integration", () => {
       let cachedKeys = await store.keys();
       expect(cachedKeys.length).toEqual(1);
 
-      const oneMinLater = new Date(Date.now() + 60 * 1000);
-      jest.useFakeTimers();
-      jest.setSystemTime(oneMinLater);
+      await new Promise(r => setTimeout(r, 1000));
 
       // it will clear cache right after same request received
       await req.get("bucket/bucket_id/data");

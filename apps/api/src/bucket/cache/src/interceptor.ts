@@ -13,12 +13,9 @@ import {BucketCacheService} from "./service";
 import {CacheInterceptor, CACHE_MANAGER} from "@nestjs/cache-manager";
 import {Cache} from "cache-manager";
 
-class BucketCacheInterceptor extends CacheInterceptor {
-  constructor(
-    @Optional() @Inject(CACHE_MANAGER) cacheManager: Cache,
-    @Optional() @Inject() reflector: any
-  ) {
-    super(cacheManager, reflector);
+export class BucketCacheInterceptor extends CacheInterceptor {
+  constructor(@Optional() @Inject(CACHE_MANAGER) cacheManager: Cache) {
+    super(cacheManager, {get: () => {}} as any);
   }
 
   trackBy(context: ExecutionContext): string | undefined {
