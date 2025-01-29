@@ -37,7 +37,7 @@ jobs:
       - name: Restore Nx Cache
         uses: actions/cache@v4
         with:
-          path: .nx/cache
+          path: .nx
           key: ${{ runner.os }}-nx-cache
           restore-keys: |
             ${{ runner.os }}-nx-cache
