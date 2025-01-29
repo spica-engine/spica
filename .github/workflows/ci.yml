@@ -1,7 +1,7 @@
 name: Spica Continuous Integration Workflow
 
 env:
-  # use master later, can't use env here btw
+  # use master later
   base_branch: nx-monorepo
 
 on:
@@ -24,6 +24,17 @@ jobs:
           node-version: 22.x
           cache: yarn
           cache-dependency-path: yarn.lock
+
+      - name: Restore node modules cache
+        id: project_build_restore
+        uses: actions/cache@v4
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+            ${{ runner.os }}-node-modules-
+            ${{ runner.os }}-
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
