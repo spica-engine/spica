@@ -210,7 +210,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     return container.start();
   }
 
-  const databaseReplicas = options.databaseReplicas;
+  const databaseReplicas = Number(options.databaseReplicas);
 
   await spin({
     text: `Creating database containers (1/${databaseReplicas})`,
