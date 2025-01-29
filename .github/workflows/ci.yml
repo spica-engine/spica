@@ -34,6 +34,14 @@ jobs:
             ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
             ${{ runner.os }}-node-modules-
 
+      - name: Restore Nx Cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: ${{ runner.os }}-nx-cache
+          restore-keys: |
+            ${{ runner.os }}-nx-cache
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
