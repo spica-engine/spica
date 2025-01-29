@@ -58,7 +58,7 @@ describe("Storage Acceptance", () => {
         })
       ]
     }).compile();
-    app = module.createNestApplication(undefined, options);
+    app = module.createNestApplication(options);
     req = module.get(Request);
     await app.listen(req.socket);
 
