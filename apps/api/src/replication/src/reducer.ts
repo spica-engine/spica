@@ -29,6 +29,6 @@ export class JobReducer implements IJobReducer {
   }
 
   findOneAndDelete(filter: Filter<JobMeta>) {
-    return this.service._coll.findOneAndDelete(filter).then(r => r.value);
+    return this.service._coll.findOneAndDelete(filter);
   }
 }

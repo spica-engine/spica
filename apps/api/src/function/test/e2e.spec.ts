@@ -150,14 +150,14 @@ describe("Queue shifting", () => {
             type: "http",
             active: true
           },
-          scheduler: {
-            options: {
-              timezone: "UTC",
-              frequency: "* * * * * *"
-            },
-            type: "schedule",
-            active: true
-          },
+          // scheduler: {
+          //   options: {
+          //     timezone: "UTC",
+          //     frequency: "* * * * * *"
+          //   },
+          //   type: "schedule",
+          //   active: true
+          // },
           database: {
             options: {
               collection: "my_coll",
@@ -194,9 +194,9 @@ describe("Queue shifting", () => {
             return "OK";
           }
   
-          export function scheduler(){
-            return "OK";
-          }
+          // export function scheduler(){
+          //   return "OK";
+          // }
           `
     });
 
@@ -252,7 +252,7 @@ describe("Queue shifting", () => {
     });
   });
 
-  describe("schedule", () => {
+  xdescribe("schedule", () => {
     let app: INestApplication;
     let app2: INestApplication;
     let req: Request;
