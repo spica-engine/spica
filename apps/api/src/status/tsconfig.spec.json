@@ -4,5 +4,5 @@
     "module": "commonjs",
     "types": ["jest", "node"]
   },
-  "include": ["**/*.spec.ts"]
+  "include": ["test/**/*.spec.ts"]
 }
