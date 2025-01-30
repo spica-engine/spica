@@ -33,7 +33,8 @@ export class NoopStrategy extends PassportStrategy(_NoopStrategy, "noop") {
   constructor(options: TestingOptions) {
     super(options);
     if (options.overriddenStrategyType) {
-      passport.strategies[options.overriddenStrategyType.toLowerCase()] = passport.strategies.noop;
+      passport["_strategies"][options.overriddenStrategyType.toLowerCase()] =
+        passport["_strategies"].noop;
     }
   }
   validate() {
