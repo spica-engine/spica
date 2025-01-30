@@ -25,7 +25,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
 
-      - name: Restore node modules cache
+      - name: Restore Node Modules Cache
         uses: actions/cache@v4
         with:
           path: "**/node_modules"
@@ -38,9 +38,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .nx
-          key: ${{ runner.os }}-nx-cache
+          key: ${{ runner.os }}-nx-cache-${{ hashFiles('.nx') }}
           restore-keys: |
-            ${{ runner.os }}-nx-cache
+            ${{ runner.os }}-nx-cache-
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
