@@ -12,10 +12,14 @@ import {tap} from "rxjs/operators";
 import {BucketCacheService} from "./service";
 import {CacheInterceptor, CACHE_MANAGER} from "@nestjs/cache-manager";
 import {Cache} from "cache-manager";
+import {Reflector} from "@nestjs/core";
 
 export class BucketCacheInterceptor extends CacheInterceptor {
-  constructor(@Optional() @Inject(CACHE_MANAGER) cacheManager: Cache) {
-    super(cacheManager, {get: () => {}} as any);
+  constructor(
+    @Optional() @Inject(CACHE_MANAGER) cacheManager: Cache,
+    @Optional() @Inject() reflector: Reflector
+  ) {
+    super(cacheManager, reflector);
   }
 
   trackBy(context: ExecutionContext): string | undefined {
