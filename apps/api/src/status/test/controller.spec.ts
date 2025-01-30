@@ -311,7 +311,7 @@ describe("Status", () => {
           })
         ]
       }).compile();
-      app = module.createNestApplication(undefined, {bodyParser: false});
+      app = module.createNestApplication({bodyParser: false});
       req = module.get(Request);
 
       await app.listen(req.socket);
