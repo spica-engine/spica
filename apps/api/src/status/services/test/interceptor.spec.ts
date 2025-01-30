@@ -61,6 +61,7 @@ describe("Status Interceptor", () => {
     it("should track request size and count for get request", async () => {
       await req.get("/test");
 
+      await sleep(1000);
       const res = await req.get("/status/api");
 
       await sleep(2000);
