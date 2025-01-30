@@ -27,14 +27,15 @@ export default async function (ctx: Context) {
               $set: {
                 [name]: newLocation
               }
-            }
+            },
+            {session: ctx.session}
           );
         }
       }
     }
 
     if (hasKey) {
-      await coll.updateOne({_id: bucket._id}, {$set: update});
+      await coll.updateOne({_id: bucket._id}, {$set: update}, {session: ctx.session});
     }
   }
 }

@@ -3,7 +3,6 @@ import * as mongodb from "mongodb";
 import * as path from "path";
 import * as fs from "fs";
 import * as semver from "semver";
-import {setSession} from "./session";
 import MigrationsIndex = require("./migrations/index.json");
 
 export type MigrationManifest = {
@@ -57,14 +56,14 @@ export async function migrate(options: Options) {
 
   const db = mongo.db(options.database.name);
 
-  const ctx: Context = {
-    database: db,
-    console: options.console
-  };
-
   const session = mongo.startSession();
   session.startTransaction();
-  setSession(session);
+
+  const ctx: Context = {
+    database: db,
+    console: options.console,
+    session
+  };
 
   let error: Error;
 
@@ -101,7 +100,6 @@ export async function migrate(options: Options) {
   }
   session.endSession();
   await mongo.close();
-  setSession(undefined);
 
   if (error) {
     return Promise.reject(error);
@@ -122,4 +120,5 @@ export interface Options {
 export type Context = {
   database: mongodb.Db;
   console: typeof console;
+  session: mongodb.ClientSession;
 };

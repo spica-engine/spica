@@ -15,7 +15,7 @@ export default async function (ctx: Context) {
     }
 
     if (hasKey) {
-      await coll.updateOne({_id: fn._id}, {$unset: update});
+      await coll.updateOne({_id: fn._id}, {$unset: update}, {session: ctx.session});
     }
   }
 }
