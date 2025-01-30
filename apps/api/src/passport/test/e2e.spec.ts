@@ -17,7 +17,6 @@ const EXPIRES_IN = 60_000;
 const TOTP_TIMEOUT = 1000 * 30;
 
 const samlp = require("samlp");
-const xpath = require("xpath");
 
 const CERTIFICATE = `-----BEGIN CERTIFICATE-----
 MIIDVjCCAj4CCQCIeeA38VX/wjANBgkqhkiG9w0BAQUFADBtMQswCQYDVQQGEwJU
@@ -112,10 +111,9 @@ export class SAMLController {
       cert: CERTIFICATE,
       key: PRIVATE_KEY,
       getPostURL: function (wtrealm, wreply, req, callback) {
-        const callbackUrl = xpath.select(
-          "string(//AuthnRequest/@AssertionConsumerServiceURL)",
-          wreply
-        );
+        const authnRequest = wreply.getElementsByTagName("AuthnRequest")[0];
+        const callbackUrl = authnRequest?.getAttribute("AssertionConsumerServiceURL");
+
         return callback(null, callbackUrl);
       },
       // actual implementation sends template to the user and redirects user to the spica home page as logged in
@@ -324,7 +322,7 @@ describe("E2E Tests", () => {
       it("should complete SSO with success", done => {
         req.get("/passport/strategies").then(({body: strategies}) => {
           req.get(`/passport/strategy/${strategies[0]._id}/url`).then(({body: strategy}) => {
-            const _ = req.get("/passport/identify", {state: strategy.state}).then(async res => {
+            req.get("/passport/identify", {state: strategy.state}).then(async res => {
               expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
               expect(res.body.scheme).toEqual("IDENTITY");
               expect(res.body.issuer).toEqual("passport/identity");
@@ -644,7 +642,7 @@ describe("E2E Tests", () => {
           const totp = generateTotp(challenge);
 
           const thirtySecondsLater = new Date(Date.now() + TOTP_TIMEOUT);
-          jest.useFakeTimers({doNotFake: ["setImmediate"]});
+          jest.useFakeTimers({doNotFake: ["nextTick"]}); // passport.authenticate() depends on it
           jest.setSystemTime(thirtySecondsLater);
 
           const res = await completeVerification(totp, answerUrl);
