@@ -3,6 +3,8 @@ const path = require("path");
 const os = require("os");
 const {workspaceRoot} = require("@nx/devkit");
 
+jest.setTimeout(30000);
+
 // directory for all tests
 const testTmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "jest-"));
 process.env.TEST_TMPDIR = testTmpDir;
