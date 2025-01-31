@@ -70,9 +70,9 @@ describe("Realtime", () => {
       .insertMany(insertData)
       .then(r =>
         insertData.map(({created_at, ...rest}, index) => ({
+          ...rest,
           _id: r.insertedIds[index].toString(),
-          created_at: (created_at as Date).toISOString(),
-          ...rest
+          created_at: (created_at as Date).toISOString()
         }))
       );
   });
