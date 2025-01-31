@@ -79,8 +79,8 @@ jobs:
 
       # # tests
       # # docker images
-      # - name: Test API
-      #   run: yarn nx test-image api
+      - name: Test API
+        run: yarn run test
 
       # - name: Test Migrate
       #   run: yarn nx test-image migrate
