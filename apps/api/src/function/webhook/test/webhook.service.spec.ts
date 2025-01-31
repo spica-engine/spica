@@ -114,7 +114,7 @@ describe("Webhook Service", () => {
 
       stream.wait().then(() => service.deleteOne({_id: hook._id}));
     });
-  }, 10000);
+  });
 
   it("should report hook as removed when deactivated", done => {
     service.insertOne(webhook).then(hook => {
