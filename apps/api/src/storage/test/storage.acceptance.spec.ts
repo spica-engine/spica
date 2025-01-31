@@ -747,7 +747,7 @@ describe("Storage Acceptance", () => {
           `Content-Disposition: form-data; name="${
             method == "post" ? "files" : "file"
           }"; filename="${file.name}"\r\n` +
-          `Content-Type: "${file.type}"\r\n\r\n` +
+          `Content-Type: ${file.type}\r\n\r\n` +
           `${file.data}\r\n`;
       }
 

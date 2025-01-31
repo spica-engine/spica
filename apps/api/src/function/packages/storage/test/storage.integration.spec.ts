@@ -120,7 +120,7 @@ describe("Storage", () => {
   it("should insert many", async () => {
     const insertedObjects = await Storage.insertMany([
       storageObject,
-      {...storageObject, name: "test2.txt"}
+      {name: "test2.json", contentType: "application/json", data: "{}"}
     ]);
 
     const expectedObjects = [
@@ -135,11 +135,11 @@ describe("Storage", () => {
       },
       {
         _id: insertedObjects[1]._id,
-        name: "test2.txt",
+        name: "test2.json",
         url: `${PUBLIC_URL}/storage/${insertedObjects[1]._id}/view`,
         content: {
-          size: 5,
-          type: "text/plain"
+          size: 2,
+          type: "application/json"
         }
       }
     ];
