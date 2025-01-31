@@ -15,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Show disk
+        run: df -h
+
       - name: Free up some space on disk
         run: |
           sudo rm -rf /usr/share/dotnet
@@ -66,15 +69,15 @@ jobs:
       # - name: Build API
       #   run: yarn nx build-image api
 
-      - name: Build Mongo Replication Controller
-        run: yarn nx build-image mongoreplicationcontroller -t spicaengine/mongoreplicationcontroller:${{ github.sha }}
+      # - name: Build Mongo Replication Controller
+      #   run: yarn nx build-image mongoreplicationcontroller -t spicaengine/mongoreplicationcontroller:${{ github.sha }}
 
       # - name: Build Migrate
       #   run: yarn nx build-image migrate
 
       # npm libraries
-      - name: Build CLI
-        run: yarn nx build cli
+      # - name: Build CLI
+      #   run: yarn nx build cli
 
       # - name: Build Devkit Packages
       #   run: |
@@ -86,6 +89,8 @@ jobs:
 
       # # tests
       # # docker images
+      - name: Show disk before tests
+        run: df -h
       - name: Test API
         run: yarn run test
 
@@ -93,8 +98,8 @@ jobs:
       #   run: yarn nx test-image migrate
 
       # # npm libraries
-      - name: Test CLI
-        run: yarn nx test cli
+      # - name: Test CLI
+      #   run: yarn nx test cli
 
       # - name: Test Devkit Packages
       #   run: |
