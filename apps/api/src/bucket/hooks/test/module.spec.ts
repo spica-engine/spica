@@ -47,7 +47,7 @@ describe("hook module", () => {
 
       const schema = await createSchema(database);
       expect(schema).toEqual(expectedSchema);
-    }, 10000);
+    });
   });
 
   describe("factory", () => {

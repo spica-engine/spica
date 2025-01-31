@@ -38,7 +38,7 @@ describe("History Service", () => {
       .get(DatabaseService)
       .collection(`bucket_${bucket._id}`)
       .replaceOne({_id: bucketDocument._id}, updatedDocument);
-  }, 30000);
+  });
 
   afterAll(() => {
     module.close();

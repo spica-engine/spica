@@ -74,7 +74,7 @@ describe("function", () => {
     await app.listen(req.socket);
 
     await new Promise((resolve, _) => setTimeout(resolve, 3000));
-  }, 10_000);
+  });
 
   afterEach(() => app.close());
 

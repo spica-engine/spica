@@ -17,7 +17,9 @@
   ],
   "scripts": {
     "format:check": "yarn nx format:check",
-    "format:write": "yarn nx format:write"
+    "format:write": "yarn nx format:write",
+    "test": "yarn nx run-many -t test",
+    "test:local": "yarn nx run-many -t test -c local"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",

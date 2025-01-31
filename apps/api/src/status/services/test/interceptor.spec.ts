@@ -84,7 +84,7 @@ describe("Status Interceptor", () => {
           }
         }
       });
-    }, 10000);
+    });
 
     it("should track request size and count for post request", async () => {
       const body = {message: "a".repeat(2 * MbInKb)};
@@ -113,7 +113,7 @@ describe("Status Interceptor", () => {
           }
         }
       });
-    }, 10000);
+    });
   });
 
   describe("Without Module", () => {

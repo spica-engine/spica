@@ -252,6 +252,6 @@ describe("Engine", () => {
       const schemaPromise = await engine.getSchema("database");
 
       expect(schemaPromise).toEqual(expectedSchema);
-    }, 10000);
+    });
   });
 });

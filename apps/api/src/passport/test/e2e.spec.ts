@@ -243,7 +243,7 @@ describe("E2E Tests", () => {
           }
         };
         await req.post("/passport/strategy", strategy, {Authorization: `IDENTITY ${token}`});
-      }, 20_000);
+      });
 
       it("should list strategies with public properties", async () => {
         const {body: strategies} = await req.get("/passport/strategies");
@@ -411,7 +411,7 @@ describe("E2E Tests", () => {
 
         // STRATEGY INSERT
         await req.post("/passport/strategy", strategy, {Authorization: `IDENTITY ${token}`});
-      }, 20_000);
+      });
 
       it("should list strategies", async () => {
         const {body: strategies} = await req.get("/passport/strategies");
@@ -507,7 +507,7 @@ describe("E2E Tests", () => {
       await new Promise((resolve, _) => setTimeout(resolve, 3000));
 
       await login("spica", "spica");
-    }, 20_000);
+    });
 
     describe("Activating 2fa", () => {
       beforeEach(async () => {

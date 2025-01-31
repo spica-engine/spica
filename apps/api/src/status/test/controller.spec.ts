@@ -307,7 +307,7 @@ describe("Status", () => {
             objectSizeLimit: 10,
             strategy: "default",
             totalSizeLimit: 10,
-            defaultPath: "test"
+            defaultPath: process.env.TEST_TMPDIR
           })
         ]
       }).compile();
