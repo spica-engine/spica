@@ -36,19 +36,22 @@ describe("Realtime Authorization", () => {
     authGuardCheck.mockReturnValue(Promise.resolve(true));
   });
 
-  it("should authorize and do the initial sync", async done => {
+  it("should authorize and do the initial sync", done => {
     const ws = wsc.get("/function-logs", {
       headers: {
         Authorization: "JWT test"
       }
     });
 
-    ws.onclose = done;
+    ws.onclose = _ => {
+      done();
+    };
     ws.onmessage = e => {
       expect(e.data).toEqual(`{"kind":1}`);
     };
-    await ws.connect;
-    await ws.close();
+    ws.connect.then(() => {
+      ws.close();
+    });
   });
 
   it("should show error messages", done => {
@@ -60,7 +63,9 @@ describe("Realtime Authorization", () => {
         Authorization: "JWT test"
       }
     });
-    ws.onclose = done;
+    ws.onclose = _ => {
+      done();
+    };
     ws.onmessage = e => {
       expect(e.data).toEqual(`{"code":401,"message":"Unauthorized"}`);
     };
