@@ -64,7 +64,8 @@
       "configurations": {
         "ci-cd": {
           "forceExit": true,
-          "runInBand": true
+          "runInBand": true,
+          "silent": true
         },
         "local": {
           "forceExit": true
