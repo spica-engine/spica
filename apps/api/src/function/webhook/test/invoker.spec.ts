@@ -74,7 +74,7 @@ describe("Webhook Invoker", () => {
         }
       }
     };
-  }, 20000);
+  });
 
   afterEach(async () => {
     subscribeSpy.mockClear();

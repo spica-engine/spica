@@ -404,7 +404,7 @@ describe("Versioning", () => {
         file = await rep.readResource("function", id.toString());
         expect(file).toEqual({});
         // we can not install dependency on test environment
-      }, 20000);
+      });
     });
 
     describe("Synchronization from files to database", () => {
@@ -504,7 +504,7 @@ describe("Versioning", () => {
         await engine.read(fn).catch(e => {
           expect(e).toEqual("Not Found");
         });
-      }, 20000);
+      });
     });
   });
 });

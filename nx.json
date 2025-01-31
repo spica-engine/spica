@@ -61,9 +61,16 @@
           "target": "build"
         }
       ],
-      "options": {
-        "forceExit": true
-      }
+      "configurations": {
+        "ci-cd": {
+          "forceExit": true,
+          "runInBand": true
+        },
+        "local": {
+          "forceExit": true
+        }
+      },
+      "defaultConfiguration": "ci-cd"
     }
   },
   "sync": {"applyChanges": false}

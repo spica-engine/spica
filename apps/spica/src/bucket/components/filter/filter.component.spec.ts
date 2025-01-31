@@ -402,7 +402,7 @@ describe("FilterComponent", () => {
       fixture.detectChanges();
 
       expect(fixture.debugElement.query(By.css("p.mat-error"))).toEqual(null);
-    }), 10000);
+    }));
   });
 
   describe("Expression", () => {

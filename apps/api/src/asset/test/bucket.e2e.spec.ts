@@ -53,7 +53,7 @@ describe("Bucket", () => {
     req = module.get(Request);
 
     await app.listen(req.socket);
-  }, 10_000);
+  });
 
   afterEach(() => app.close());
 

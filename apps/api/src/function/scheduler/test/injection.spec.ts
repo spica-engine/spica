@@ -72,5 +72,5 @@ describe("Scheduler Injection", () => {
 
     expect(addQueueSpy).toHaveBeenCalledTimes(1);
     expect(addQueueSpy).toHaveBeenCalledWith(null);
-  }, 20000);
+  });
 });

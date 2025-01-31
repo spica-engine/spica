@@ -62,7 +62,7 @@ describe("E2E Tests", () => {
       .post("/passport/identify", {identifier: "spica", password: "spica"})
       .then(r => r.body.token);
     req.setDefaultHeaders({Authorization: `IDENTITY ${token}`});
-  }, 10_000);
+  });
 
   afterEach(async () => {
     await app.get(DatabaseService).dropDatabase();
