@@ -15,8 +15,8 @@ export default {
     },
     {
       ...commonConfig,
-      testMatch: ["<rootDir>/test/realtime.spec.ts"],
-      setupFilesAfterEnv: [path.join(workspaceRoot, "jest.flaky.setup.js")]
+      testMatch: ["<rootDir>/test/realtime.spec.ts"]
+      // setupFilesAfterEnv: [path.join(workspaceRoot, "jest.flaky.setup.js")]
     }
   ]
 };

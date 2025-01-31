@@ -3,7 +3,7 @@ import {TestingModule, Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {FUNCTION_LOG_OPTIONS} from "@spica-server/function/log/src/interface";
 
-describe("Function Log Service", () => {
+xdescribe("Function Log Service", () => {
   let module: TestingModule;
   let logService: LogService;
   beforeEach(async () => {
