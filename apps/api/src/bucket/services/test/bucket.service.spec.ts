@@ -294,6 +294,7 @@ describe("Bucket Service", () => {
       const indexes = await bucketData._coll.listIndexes().toArray();
       const indexKeys = indexes.map(i => i.key);
 
+      expect(indexKeys.length).toEqual(3);
       expect(indexKeys).toContainEqual({_id: 1});
       expect(indexKeys).toContainEqual({title: 1});
       expect(indexKeys).toContainEqual({email: 1});
