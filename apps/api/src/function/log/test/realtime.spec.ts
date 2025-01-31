@@ -7,13 +7,15 @@ import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/da
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {ChunkKind} from "@spica-server/interface/realtime";
 
-function url(path: string, query?: {[k: string]: string | number | boolean | object}) {
+function url(path: string, query?: {[k: string]: string | string[]}) {
   const url = new URL(path, "ws://insteadof");
   for (const key in query) {
-    url.searchParams.set(
-      key,
-      (typeof query[key] == "string" ? String(query[key]) : JSON.stringify(query[key])) as string
-    );
+    const value = query[key];
+    if (Array.isArray(value)) {
+      value.forEach(v => url.searchParams.append(key, v));
+    } else {
+      url.searchParams.set(key, value);
+    }
   }
   return `${url.pathname}${url.search}`;
 }
@@ -70,9 +72,9 @@ describe("Realtime", () => {
       .insertMany(insertData)
       .then(r =>
         insertData.map(({created_at, ...rest}, index) => ({
+          ...rest,
           _id: r.insertedIds[index].toString(),
-          created_at: (created_at as Date).toISOString(),
-          ...rest
+          created_at: (created_at as Date).toISOString()
         }))
       );
   });
@@ -82,7 +84,7 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync", async () => {
-    const ws = wsc.get(url(`/function-logs?begin=${created_at.toString()}`));
+    const ws = wsc.get(url("/function-logs", {begin: created_at.toString()}));
     const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -95,7 +97,12 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync with filter", async () => {
-    const ws = wsc.get(url(`/function-logs?functions=${fn1}&begin=${created_at.toString()}`));
+    const ws = wsc.get(
+      url("/function-logs", {
+        functions: fn1.toString(),
+        begin: created_at.toString()
+      })
+    );
     const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -108,7 +115,10 @@ describe("Realtime", () => {
 
   it("should do the initial sync with filter array", async () => {
     const ws = wsc.get(
-      url(`/function-logs?functions=${fn1}&functions=${fn2}&begin=${created_at.toString()}`)
+      url("/function-logs", {
+        functions: [fn1.toString(), fn2.toString()],
+        begin: created_at.toString()
+      })
     );
     const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
@@ -122,7 +132,12 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync with limit", async () => {
-    const ws = wsc.get(url(`/function-logs?begin=${created_at.toString()}`, {limit: 1}));
+    const ws = wsc.get(
+      url("/function-logs", {
+        begin: created_at.toString(),
+        limit: String(1)
+      })
+    );
     const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -134,7 +149,12 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync with skip", async () => {
-    const ws = wsc.get(url(`/function-logs?begin=${created_at.toString()}`, {skip: 1}));
+    const ws = wsc.get(
+      url("/function-logs", {
+        begin: created_at.toString(),
+        skip: String(1)
+      })
+    );
     const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -157,12 +177,18 @@ describe("Realtime", () => {
       .insertOne(insertData)
       .then(r =>
         [insertData].map(({created_at, ...rest}) => ({
+          ...rest,
           _id: r.insertedId.toString(),
-          created_at: created_at.toISOString(),
-          ...rest
+          created_at: created_at.toISOString()
         }))
       );
-    const ws = wsc.get(url(`/function-logs?begin=${created_at.toString()}`, {skip: 1, limit: 2}));
+    const ws = wsc.get(
+      url("/function-logs", {
+        begin: created_at.toString(),
+        skip: String(1),
+        limit: String(2)
+      })
+    );
     const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -175,7 +201,14 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync with sort", async () => {
-    const ws = wsc.get(url(`/function-logs?begin=${created_at.toString()}`, {sort: {_id: -1}}));
+    const ws = wsc.get(
+      url("/function-logs", {
+        begin: created_at.toString(),
+        sort: JSON.stringify({
+          _id: -1
+        })
+      })
+    );
     const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -194,7 +227,11 @@ describe("Realtime", () => {
       content: "content",
       created_at: new Date(new Date().getTime() - 1000 * 60 * 60 * 24)
     });
-    const ws = wsc.get(url(`/function-logs?begin=${created_at.toString()}`));
+    const ws = wsc.get(
+      url("/function-logs", {
+        begin: created_at.toString()
+      })
+    );
     const message = jest.fn();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
