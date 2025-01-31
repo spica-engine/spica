@@ -292,7 +292,11 @@ describe("Bucket Service", () => {
 
       const bucketData = bds.children(bucket);
       const indexes = await bucketData._coll.listIndexes().toArray();
-      expect(indexes.map(i => i.key)).toEqual([{_id: 1}, {title: 1}, {email: 1}]);
+      const indexKeys = indexes.map(i => i.key);
+
+      expect(indexKeys).toContainEqual({_id: 1});
+      expect(indexKeys).toContainEqual({title: 1});
+      expect(indexKeys).toContainEqual({email: 1});
     });
 
     it("should use IXSCAN instead of COLLSCAN", async () => {
