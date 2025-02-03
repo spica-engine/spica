@@ -40,11 +40,6 @@
     }
   ],
   "nxCloudId": "66fba1edf5b0be5c19ad179e",
-  "release": {
-    "version": {
-      "preVersionCommand": "yarn nx run-many -t build"
-    }
-  },
   "targetDefaults": {
     "build": {
       "cache": false
@@ -71,6 +66,9 @@
         }
       },
       "defaultConfiguration": "ci-cd"
+    },
+    "nx-release-publish": {
+      "dependsOn": ["build"]
     }
   },
   "sync": {"applyChanges": false}
