@@ -23,7 +23,8 @@
     "publish:bucket": "yarn nx nx-release-publish api/function/packages/bucket",
     "publish:database": "yarn nx nx-release-publish api/function/packages/database",
     "publish:identity": "yarn nx nx-release-publish api/function/packages/identity",
-    "publish:storage": "yarn nx nx-release-publish api/function/packages/storage"
+    "publish:storage": "yarn nx nx-release-publish api/function/packages/storage",
+    "publish:cli": "yarn nx nx-release-publish cli"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",

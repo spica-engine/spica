@@ -215,7 +215,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
   await spin({
     text: `Creating database containers (1/${databaseReplicas})`,
     op: async spinner => {
-      for (let index = 0; index < databaseReplicas; index++) {
+      for (let index = 0; index < (databaseReplicas as number); index++) {
         await createMongoDB(index);
         spinner.text = `Creating database containers (${index + 1}/${databaseReplicas})`;
       }
