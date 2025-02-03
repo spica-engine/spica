@@ -93,8 +93,26 @@ jobs:
       - name: Show disk before tests
         run: df -h
 
-      - name: Test API
-        run: yarn test api
+      - name: Activity tests
+        run: yarn nx run-many -t test --projects api/activity/*
+
+      - name: Asset tests
+        run: yarn nx run-many -t test --projects api/asset/*
+
+      - name: Dashboard tests
+        run: yarn nx run-many -t test --projects api/dashboard/*
+
+      - name: Passport tests
+        run: yarn nx run-many -t test --projects api/passport/*
+
+      - name: Preference tests
+        run: yarn nx run-many -t test --projects api/preference/*
+
+      - name: Function tests
+        run: yarn nx run-many -t test --projects api/function/*
+
+      - name: Bucket tests
+        run: yarn nx run-many -t test --projects api/bucket/*
 
       # - name: Test Migrate
       #   run: yarn nx test-image migrate
