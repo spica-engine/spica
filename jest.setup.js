@@ -43,8 +43,12 @@ process.env.FUNCTION_TS_COMPILER_PATH = path.join(
   "typescript_worker.js"
 );
 
-afterAll(() => {
+afterAll(async () => {
   if (fs.existsSync(testTmpDir)) {
     fs.rmSync(testTmpDir, {recursive: true, force: true});
+  }
+
+  if (global.__MONGOINSTANCES) {
+    await Promise.all(global.__MONGOINSTANCES.map(mongoInstance => mongoInstance.stop()));
   }
 });

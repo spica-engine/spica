@@ -19,6 +19,9 @@ export async function start(topology: "standalone" | "replset") {
     clientOptions = {};
   }
 
+  global.__MONGOINSTANCES = global.__MONGOINSTANCES || [];
+  global.__MONGOINSTANCES.push(mongod);
+
   uri = mongod.getUri() + "&retryWrites=false";
 
   return MongoClient.connect(uri, clientOptions);
