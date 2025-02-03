@@ -112,7 +112,7 @@ jobs:
         run: df -h
 
       - name: Show disk usage
-        run: du -h --max-depth=1 / | sort -hr
+        run: sudo du -h --max-depth=1 / | sort -hr
 
       - name: Passport tests
         run: yarn nx run-many -t test --projects api/passport/*
@@ -121,7 +121,7 @@ jobs:
         run: df -h
 
       - name: Show disk usage
-        run: du -h --max-depth=1 / | sort -hr
+        run: sudo du -h --max-depth=1 / | sort -hr
 
       # - name: Preference tests
       #   run: yarn nx run-many -t test --projects api/preference/*
