@@ -93,15 +93,15 @@ jobs:
       - name: Show disk before tests
         run: df -h
 
-      # - name: Test API
-      #   run: yarn run test
+      - name: Test API
+        run: yarn test api
 
       # - name: Test Migrate
       #   run: yarn nx test-image migrate
 
       # npm libraries
-      - name: Test CLI
-        run: yarn nx test cli
+      # - name: Test CLI
+      #   run: yarn nx test cli
 
       # - name: Test Devkit Packages
       #   run: |
