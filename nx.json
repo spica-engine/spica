@@ -63,10 +63,13 @@
       ],
       "configurations": {
         "ci-cd": {
+          "forceExit": true,
           "runInBand": true,
           "silent": true
         },
-        "local": {}
+        "local": {
+          "forceExit": true
+        }
       },
       "defaultConfiguration": "ci-cd"
     }
