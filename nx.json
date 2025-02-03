@@ -68,7 +68,10 @@
       "defaultConfiguration": "ci-cd"
     },
     "nx-release-publish": {
-      "dependsOn": ["build"]
+      "dependsOn": ["build"],
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
     }
   },
   "sync": {"applyChanges": false}
