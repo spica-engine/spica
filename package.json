@@ -18,7 +18,7 @@
   "scripts": {
     "format:check": "yarn nx format:check",
     "format:write": "yarn nx format:write",
-    "test": "yarn nx run-many -t test --all --except=api/bucket",
+    "test": "yarn nx run-many -t test",
     "test:local": "yarn nx run-many -t test -c local"
   },
   "dependencies": {

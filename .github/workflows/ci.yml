@@ -68,6 +68,9 @@ jobs:
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
+      - name: Run All Tests
+        run: yarn run test
+
       # builds
       # docker images
       # - name: Build API
@@ -111,20 +114,20 @@ jobs:
       # - name: Dashboard tests
       #   run: yarn nx run-many -t test --projects api/dashboard/*
 
-      - name: Show disk before tests
-        run: df -h
+      # - name: Show disk before tests
+      #   run: df -h
 
-      - name: Show disk usage
-        run: sudo du -h /tmp | sort -hr
+      # - name: Show disk usage
+      #   run: sudo du -h /tmp | sort -hr
 
-      - name: Passport tests
-        run: yarn nx run-many -t test --projects api/passport/*
+      # - name: Passport tests
+      #   run: yarn nx run-many -t test --projects api/passport/*
 
-      - name: Show disk before tests
-        run: df -h
+      # - name: Show disk before tests
+      #   run: df -h
 
-      - name: Show disk usage
-        run: sudo du -h /tmp | sort -hr
+      # - name: Show disk usage
+      #   run: sudo du -h /tmp | sort -hr
 
       # - name: Preference tests
       #   run: yarn nx run-many -t test --projects api/preference/*
