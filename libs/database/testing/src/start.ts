@@ -45,7 +45,8 @@ function getReplicaClientOptions(): MongoClientOptions {
 
 function getServerOptions() {
   return {
-    binary: {version: MONGODB_BINARY_VERSION}
+    binary: {version: MONGODB_BINARY_VERSION},
+    journal: false
   };
 }
 
