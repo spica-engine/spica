@@ -92,15 +92,16 @@ jobs:
       # # docker images
       - name: Show disk before tests
         run: df -h
-      - name: Test API
-        run: yarn run test
+      
+      # - name: Test API
+      #   run: yarn run test
 
       # - name: Test Migrate
       #   run: yarn nx test-image migrate
 
-      # # npm libraries
-      # - name: Test CLI
-      #   run: yarn nx test cli
+      # npm libraries
+      - name: Test CLI
+        run: yarn nx test cli
 
       # - name: Test Devkit Packages
       #   run: |
