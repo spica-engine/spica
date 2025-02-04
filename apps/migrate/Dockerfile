@@ -44,6 +44,5 @@ RUN yarn nx test migrate
 FROM tools AS runner
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=test /app ./app
 COPY --from=build /app/dist ./dist
 ENTRYPOINT ["node","./dist/apps/migrate"]
