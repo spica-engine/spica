@@ -19,6 +19,9 @@ export async function start(topology: "standalone" | "replset") {
     clientOptions = {};
   }
 
+  global.__CLEANUPCALLBACKS = global.__CLEANUPCALLBACKS || [];
+  global.__CLEANUPCALLBACKS.push(() => mongod.stop());
+
   uri = mongod.getUri() + "&retryWrites=false";
 
   return MongoClient.connect(uri, clientOptions);
