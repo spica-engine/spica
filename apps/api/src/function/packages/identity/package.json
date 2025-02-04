@@ -8,10 +8,10 @@
     "spica",
     "devkit"
   ],
-  "main": "dist/index",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
-  "typings": "dist/index.d.ts",
+  "main": "index.js",
+  "module": "index.mjs",
+  "types": "index.d.ts",
+  "typings": "index.d.ts",
   "sideEffects": false,
   "dependencies": {
     "axios": "^1.7.9",

@@ -1,5 +1,13 @@
 {
   "name": "api/function/packages/database",
   "sourceRoot": "apps/api/src/function/packages/database",
-  "projectType": "library"
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --build {projectRoot}"
+      }
+    }
+  }
 }

@@ -8,11 +8,11 @@
     "spica",
     "devkit"
   ],
-  "main": "dist/index",
-  "module": "dist/index.mjs",
+  "main": "index.js",
+  "module": "index.mjs",
   "sideEffects": false,
-  "types": "dist/index.d.ts",
-  "typings": "dist/index.d.ts",
+  "types": "index.d.ts",
+  "typings": "index.d.ts",
   "dependencies": {
     "mongodb": "^6.12.0"
   },
