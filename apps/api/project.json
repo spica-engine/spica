@@ -16,6 +16,9 @@
         }
       }
     },
+    "test": {
+      "command": "yarn nx run-many -t test --projects=api/** --projects=filter** --projects=cli** --projects=core** --projects=core/** --projects=database/**"
+    },
     "compile": {
       "dependsOn": [
         "transform-paths",
