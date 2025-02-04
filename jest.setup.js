@@ -48,7 +48,7 @@ afterAll(async () => {
     fs.rmSync(testTmpDir, {recursive: true, force: true});
   }
 
-  if (global.__MONGOINSTANCES) {
-    await Promise.all(global.__MONGOINSTANCES.map(mongoInstance => mongoInstance.stop()));
+  if (global.__CLEANUPCALLBACKS) {
+    await Promise.all(global.__CLEANUPCALLBACKS.map(callback => callback()));
   }
 });
