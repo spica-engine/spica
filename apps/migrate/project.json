@@ -64,6 +64,10 @@
       "dependsOn": ["build-test"],
       "cache": true
     },
+    "test-image": {
+      "command": "docker build --target test --platform=linux/amd64 . -f ./apps/migrate/Dockerfile -t mayroyo/migrate:$VERSION",
+      "cache": true
+    },
     "build-image": {
       "inputs": [
         "{workspaceRoot}/tsconfig.json",
@@ -72,7 +76,7 @@
         "{projectRoot}/project.json",
         "{projectRoot}/Dockerfile"
       ],
-      "command": "docker build --platform=linux/amd64 . -f ./apps/migrate/Dockerfile -t spicaengine/migrate:latest",
+      "command": "docker build --platform=linux/amd64 . -f ./apps/migrate/Dockerfile -t spicaengine/migrate:$VERSION",
       "cache": true
     },
     "publish": {
@@ -80,8 +84,8 @@
       "dependsOn": ["build-image"],
       "options": {
         "commands": [
-          "docker login -u {args.username} -p {args.password}",
-          "docker push spicaengine/migrate:latest"
+          "docker login -u $USERNAME -p $PASSWORD",
+          "docker push spicaengine/migrate:$VERSION"
         ],
         "parallel": false,
         "forwardAllArgs": false
