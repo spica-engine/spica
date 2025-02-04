@@ -46,16 +46,6 @@
     },
     "test": {
       "cache": true,
-      "dependsOn": [
-        {
-          "projects": ["api/function/runtime/node/bootstrap"],
-          "target": "build"
-        },
-        {
-          "projects": ["api/function/compiler/typescript"],
-          "target": "build"
-        }
-      ],
       "configurations": {
         "ci-cd": {
           "forceExit": true,
