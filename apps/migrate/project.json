@@ -65,7 +65,7 @@
       "cache": true
     },
     "test-image": {
-      "command": "docker build --target test --platform=linux/amd64 . -f ./apps/migrate/Dockerfile -t mayroyo/migrate:$VERSION",
+      "command": "docker build --target test --platform=linux/amd64 . -f ./apps/migrate/Dockerfile",
       "cache": true
     },
     "build-image": {

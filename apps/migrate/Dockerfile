@@ -31,7 +31,6 @@ COPY apps/migrate ./apps/migrate
 COPY nx.json ./
 COPY package.json ./
 COPY tsconfig.json ./
-COPY apps/migrate/tsconfig.spec.json ./
 COPY yarn.lock ./
 COPY jest.flaky.setup.js ./
 COPY jest.preset.js ./
