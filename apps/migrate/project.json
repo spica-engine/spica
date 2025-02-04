@@ -87,8 +87,7 @@
           "docker login -u $USERNAME -p $PASSWORD",
           "docker push spicaengine/migrate:$VERSION"
         ],
-        "parallel": false,
-        "forwardAllArgs": false
+        "parallel": false
       }
     }
   }
