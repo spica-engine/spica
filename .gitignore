@@ -52,3 +52,5 @@ yarn-error.log
 
 # Ignore Angular CLI workspace-specific files (cache, etc.)
 .angular/
+
+.env
