@@ -64,5 +64,7 @@
       }
     }
   },
-  "sync": {"applyChanges": false}
+  "sync": {
+    "disabledTaskSyncGenerators": ["@nx/js:typescript-sync"]
+  }
 }
