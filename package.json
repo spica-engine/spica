@@ -18,7 +18,7 @@
   "scripts": {
     "format:check": "yarn nx format:check",
     "format:write": "yarn nx format:write",
-    "test": "yarn nx run-many -t test",
+    "test": "yarn nx run-many -t test --exclude=api",
     "test:local": "yarn nx run-many -t test -c local",
     "publish:bucket": "yarn nx nx-release-publish api/function/packages/bucket",
     "publish:database": "yarn nx nx-release-publish api/function/packages/database",
