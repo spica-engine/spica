@@ -16,6 +16,9 @@
         }
       }
     },
+    "test": {
+      "command": "yarn nx run-many -t test --projects=api/** --projects=filter** --projects=cli** --projects=core** --projects=core/** --projects=database/**"
+    },
     "compile": {
       "dependsOn": [
         "transform-paths",
@@ -34,6 +37,32 @@
       "dependsOn": ["build"],
       "options": {
         "command": "resolve-tspaths"
+      }
+    },
+    "test-image": {
+      "command": "docker build --target test --platform=linux/amd64 . -f ./apps/api/Dockerfile",
+      "cache": true
+    },
+    "build-image": {
+      "inputs": [
+        "{workspaceRoot}/tsconfig.json",
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/project.json",
+        "{projectRoot}/Dockerfile"
+      ],
+      "command": "docker build --platform=linux/amd64 . -f ./apps/api/Dockerfile -t spicaengine/api:$VERSION",
+      "cache": true
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build-image"],
+      "options": {
+        "commands": [
+          "docker login -u $USERNAME -p $PASSWORD",
+          "docker push spicaengine/api:$VERSION"
+        ],
+        "parallel": false
       }
     }
   }
