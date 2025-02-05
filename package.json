@@ -18,8 +18,9 @@
   "scripts": {
     "format:check": "yarn nx format:check",
     "format:write": "yarn nx format:write",
-    "test": "yarn nx run-many -t test --exclude=api",
+    "test": "yarn nx run-many -t test",
     "test:local": "yarn nx run-many -t test -c local",
+    "test:api": "yarn nx run-many -t test --projects=api/** --projects=filter --projects=cli --projects=core --projects=core/** --projects=database/**",
     "publish:bucket": "yarn nx nx-release-publish api/function/packages/bucket",
     "publish:database": "yarn nx nx-release-publish api/function/packages/database",
     "publish:identity": "yarn nx nx-release-publish api/function/packages/identity",
