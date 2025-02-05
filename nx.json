@@ -57,8 +57,15 @@
       },
       "defaultConfiguration": "ci-cd"
     },
-    "nx-release-publish": {
+    "set-version": {
+      "executor": "nx:run-commands",
       "dependsOn": ["build"],
+      "options": {
+        "command": "npm --prefix dist/{projectRoot} version $VERSION"
+      }
+    },
+    "nx-release-publish": {
+      "dependsOn": ["set-version"],
       "options": {
         "packageRoot": "dist/{projectRoot}"
       }

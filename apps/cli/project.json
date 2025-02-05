@@ -25,6 +25,7 @@
         "webpackConfig": "apps/cli/webpack.config.js"
       },
       "cache": true
-    }
+    },
+    "set-version": {}
   }
 }
