@@ -57,8 +57,15 @@
       },
       "defaultConfiguration": "ci-cd"
     },
-    "nx-release-publish": {
+    "set-version": {
+      "executor": "nx:run-commands",
       "dependsOn": ["build"],
+      "options": {
+        "command": "yarn --cwd dist/{projectRoot} version --new-version $VERSION --no-git-tag-version --no-commit-hooks"
+      }
+    },
+    "nx-release-publish": {
+      "dependsOn": ["set-version"],
       "options": {
         "packageRoot": "dist/{projectRoot}"
       }
