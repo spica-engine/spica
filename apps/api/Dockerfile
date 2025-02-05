@@ -31,6 +31,7 @@ COPY yarn.lock ./
 COPY jest.flaky.setup.js ./
 COPY jest.preset.js ./
 COPY jest.setup.js ./
+COPY *.env ./
 RUN yarn nx test api
 
 # start app from tools, because app executes many mongodb commands
