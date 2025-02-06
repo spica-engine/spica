@@ -25,7 +25,12 @@ describe("realtime database", () => {
     database = bed.get(DatabaseService);
   });
 
-  afterEach(() => bed.close());
+  afterEach(async () => {
+    // wait until unsubscriptions are completed
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    await realtime["destroy"]();
+    await bed.close();
+  });
 
   it("should sync late subscribers", async () => {
     await database.collection("test21").insertMany([{stars: 3}, {stars: 4}, {stars: 5}]);
@@ -86,7 +91,7 @@ describe("realtime database", () => {
       coll.insertOne({test: 1}).then(() => {
         realtime
           .find("test2")
-          .pipe(take(4), bufferCount(4))
+          .pipe(bufferCount(4), take(1))
           .subscribe(([initial, endofinitial, firstInsert, secondInsert]) => {
             expect(initial.kind).toBe(ChunkKind.Initial);
             expect(initial.document.test).toBe(1);
@@ -140,7 +145,7 @@ describe("realtime database", () => {
         .then(() => {
           realtime
             .find("test5", {filter: {stars: {$gt: 3}}})
-            .pipe(bufferCount(3))
+            .pipe(bufferCount(3), take(1))
             .subscribe(([first, second, endofinitial]) => {
               expect(first.document.stars).toBe(4);
               expect(second.document.stars).toBe(5);
@@ -157,7 +162,7 @@ describe("realtime database", () => {
         .then(() => {
           realtime
             .find("test6", {filter: {stars: {$gt: 3}, anotherfilter: true}})
-            .pipe(bufferCount(4))
+            .pipe(bufferCount(4), take(1))
             .subscribe(([first, second, endofinitial, third]) => {
               expect(first.document.stars).toBe(4);
               expect(second.document.stars).toBe(5);
@@ -274,7 +279,8 @@ describe("realtime database", () => {
           .find("test11", {skip: 2})
           .pipe(
             tap(() => (totalEmit += 1)),
-            bufferCount(7)
+            bufferCount(7),
+            take(1)
           )
           .subscribe({
             next: chunks => {
@@ -328,7 +334,8 @@ describe("realtime database", () => {
             .find("test12", {limit: 2})
             .pipe(
               tap(() => (totalEmit += 1)),
-              bufferCount(7)
+              bufferCount(7),
+              take(1)
             )
             .subscribe({
               next: chunks => {
@@ -382,7 +389,8 @@ describe("realtime database", () => {
             .find("test13", {limit: 2, skip: 2})
             .pipe(
               tap(() => (totalEmit += 1)),
-              bufferCount(5)
+              bufferCount(5),
+              take(1)
             )
             .subscribe({
               next: chunks => {
@@ -413,7 +421,7 @@ describe("realtime database", () => {
         .insertedIds;
       realtime
         .find("test14", {sort: {_id: -1}})
-        .pipe(bufferCount(5))
+        .pipe(bufferCount(5), take(1))
         .subscribe(chunks => {
           expect(chunks).toEqual([
             {kind: ChunkKind.Initial, document: {_id: insertedIds[3], test: 5}},
@@ -432,7 +440,7 @@ describe("realtime database", () => {
 
       realtime
         .find("test15", {sort: {_id: 1}})
-        .pipe(bufferCount(5))
+        .pipe(bufferCount(5), take(1))
         .subscribe(chunks => {
           expect(chunks).toEqual([
             {kind: ChunkKind.Initial, document: {_id: insertedIds[0], test: 1}},
@@ -449,7 +457,7 @@ describe("realtime database", () => {
       coll.insertMany([{test: 1}, {test: 3}, {test: 4}]).then(({insertedIds}) => {
         realtime
           .find("test16", {sort: {test: 1}})
-          .pipe(bufferCount(6))
+          .pipe(bufferCount(6), take(1))
           .subscribe(chunks => {
             expect(chunks).toEqual([
               {kind: ChunkKind.Initial, document: {_id: insertedIds[0], test: 1}},
@@ -487,7 +495,7 @@ describe("realtime database", () => {
         let laterInsertedId: ObjectId;
         realtime
           .find("test17", {sort: {_id: -1}, limit: 2})
-          .pipe(bufferCount(4))
+          .pipe(bufferCount(4), take(1))
           .subscribe(chunks => {
             expect(chunks).toEqual([
               {kind: ChunkKind.Initial, document: {_id: insertedId, test: 1}},
@@ -527,7 +535,7 @@ describe("realtime database", () => {
         let laterInsertedId;
         realtime
           .find("test18", {sort: {_id: -1}, limit: 1})
-          .pipe(bufferCount(4))
+          .pipe(bufferCount(4), take(1))
           .subscribe(chunks => {
             expect(chunks).toEqual([
               {kind: ChunkKind.Initial, document: {_id: insertedId, test: 1}},
@@ -561,7 +569,7 @@ describe("realtime database", () => {
         let laterInsertedIds2;
         realtime
           .find("test19", {sort: {_id: -1}, limit: 4})
-          .pipe(bufferCount(10))
+          .pipe(bufferCount(10), take(1))
           .subscribe(chunks => {
             expect(chunks).toEqual([
               {kind: ChunkKind.Initial, document: {_id: insertedId, test: 1}},
@@ -612,7 +620,7 @@ describe("realtime database", () => {
         let laterInsertedIds;
         realtime
           .find("test20", {sort: {_id: -1}, limit: 2})
-          .pipe(bufferCount(6))
+          .pipe(bufferCount(6), take(1))
           .subscribe(chunks => {
             expect(chunks).toEqual([
               {kind: ChunkKind.Initial, document: {_id: initiallyInsertedIds[1], test: 2}},
