@@ -9,6 +9,7 @@
         "commands": ["tsc --build {projectRoot}", "resolve-tspaths"],
         "parallel": false
       }
-    }
+    },
+    "set-version": {}
   }
 }

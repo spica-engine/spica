@@ -35,7 +35,7 @@
         "{projectRoot}/project.json",
         "{projectRoot}/Dockerfile"
       ],
-      "command": "docker build --platform=linux/amd64 . -f ./apps/mongoreplicationcontroller/Dockerfile",
+      "command": "docker build --platform=linux/amd64 . -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:$VERSION",
       "cache": true
     },
     "publish": {
@@ -43,11 +43,10 @@
       "dependsOn": ["build-image"],
       "options": {
         "commands": [
-          "docker login -u {args.username} -p {args.password}",
-          "docker push spicaengine/mongoreplicationcontroller:latest"
+          "docker login -u $USERNAME -p $PASSWORD",
+          "docker push spicaengine/mongoreplicationcontroller:$VERSION"
         ],
-        "parallel": false,
-        "forwardAllArgs": false
+        "parallel": false
       }
     }
   }

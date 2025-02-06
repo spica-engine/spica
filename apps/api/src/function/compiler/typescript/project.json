@@ -1,5 +1,15 @@
 {
   "name": "api/function/compiler/typescript",
   "sourceRoot": "apps/api/src/function/compiler/typescript",
-  "projectType": "application"
+  "projectType": "application",
+  "targets": {
+    "test": {
+      "dependsOn": [
+        {
+          "projects": ["api/function/compiler/typescript"],
+          "target": "build"
+        }
+      ]
+    }
+  }
 }

@@ -1,5 +1,15 @@
 {
   "name": "api/status",
   "sourceRoot": "apps/api/src/status",
-  "projectType": "application"
+  "projectType": "application",
+  "targets": {
+    "test": {
+      "dependsOn": [
+        {
+          "projects": ["api/function/runtime/node/bootstrap"],
+          "target": "build"
+        }
+      ]
+    }
+  }
 }
