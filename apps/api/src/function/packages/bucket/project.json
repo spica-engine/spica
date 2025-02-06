@@ -6,7 +6,9 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["tsc --build {projectRoot}", "resolve-tspaths"],
+        "commands": [
+          "yarn rollup -c './apps/api/src/function/packages/bucket/rollup.config.cjs' --bundleConfigAsCjs"
+        ],
         "parallel": false
       }
     },
