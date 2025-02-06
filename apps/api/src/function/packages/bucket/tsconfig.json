@@ -1,21 +1,4 @@
 {
-  "extends": "../../../../../../tsconfig.json",
-  "compilerOptions": {
-    "composite": false,
-    "declaration": true,
-    "resolveJsonModule": false
-  },
-  "include": [
-    "src/**/*.ts",
-    "index.ts",
-    "package.json",
-    // internal common deps
-    "../internal_common/src/*.ts",
-    "../internal_common/index.ts",
-    // interface realtime deps
-    "../../../../../../libs/interface/realtime/src/*.ts",
-    "../../../../../../libs/interface/realtime/index.ts"
-  ],
-  "exclude": [],
-  "references": []
+  "extends": "../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"]
 }
