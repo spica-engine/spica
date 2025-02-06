@@ -46,7 +46,10 @@ export default function getConfig(project) {
         } else if (action === "remove") {
           fs.rmSync(src, {recursive: true, force: true});
         }
-      } catch (e) {}
+      } catch (e) {
+        if (e.code === "ENOTEMPTY" || e.code === "ENOENT") return;
+        throw new Error(e);
+      }
     });
   }
 
