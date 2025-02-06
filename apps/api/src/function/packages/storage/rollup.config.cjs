@@ -1,3 +1,3 @@
 import getConfig from "../rollup.config.js";
 
-module.exports = getConfig("bucket");
+module.exports = getConfig("storage");

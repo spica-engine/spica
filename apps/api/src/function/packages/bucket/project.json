@@ -4,13 +4,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "yarn rollup -c './apps/api/src/function/packages/bucket/rollup.config.cjs' --bundleConfigAsCjs"
-        ],
-        "parallel": false
-      }
+      "command": "yarn rollup -c {projectRoot}/rollup.config.cjs --bundleConfigAsCjs"
     },
     "set-version": {}
   }

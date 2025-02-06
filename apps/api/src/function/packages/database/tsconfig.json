@@ -1,4 +1,9 @@
 {
   "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": true,
+    "resolveJsonModule": false
+  },
   "include": ["src/**/*.ts", "index.ts", "package.json"]
 }
