@@ -11,9 +11,29 @@ on:
     branches: ["nx-monorepo"]
 
 jobs:
-  lint_build_test:
-    name: Lint, Build and Test
+  test:
+    name: API Tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: [
+            api/activity,
+            api/asset,
+            api/bucket,
+            api/dashboard,
+            api/function,
+            api/passport,
+            api/preference,
+            api/replication,
+            api/status,
+            api/storage,
+            api/versioncontrol,
+            core,
+            database,
+            filter,
+            interface,
+            representative
+          ] # Module names in the matrix
 
     steps:
       - name: Free up some space on disk
@@ -63,35 +83,8 @@ jobs:
       - name: Check Format
         run: yarn run format:check
 
-      # builds
-      # docker images
-      # - name: Build API
-      #   run: yarn run build:api
+      - name: Debug Module
+        run: echo "Running tests for module: ${{ matrix.module }}
 
-      # - name: Build Mongo Replication Controller
-      #   run: yarn run build:mongoreplicationcontroller
-
-      # - name: Build Migrate
-      #   run: yarn run build:migrate
-
-      # # npm libraries
-      # - name: Build CLI
-      #   run: yarn run build:cli
-
-      # - name: Build Devkit Packages
-      #   run: yarn run build:devkit:*
-
-      # tests
-      # docker images
       - name: Test API
-        run: yarn run test:api
-
-      # - name: Test Migrate
-      #   run: yarn run test:migrate
-
-      # # npm libraries
-      # - name: Test CLI
-      #   run: yarn run test:cli
-
-      # - name: Test Devkit Packages
-      #   run: yarn run test:devkit:*
+        run: yarn nx run-many -t test --projects=${{matrix.module}}/**
