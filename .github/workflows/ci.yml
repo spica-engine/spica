@@ -15,9 +15,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Show disk
-        run: df -h
-
       - name: Free up some space on disk
         run: |
           sudo rm -rf /usr/share/dotnet
@@ -25,9 +22,6 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-
-      - name: Show disk
-        run: df -h
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,96 +62,35 @@ jobs:
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
-      - name: Run All Tests
-        run: yarn run test
-
       # builds
       # docker images
-      # - name: Build API
-      #   run: yarn nx build-image api
+      - name: Build API
+        run: yarn run build-image:api
 
-      # - name: Build Mongo Replication Controller
-      #   run: yarn nx build-image mongoreplicationcontroller -t spicaengine/mongoreplicationcontroller:${{ github.sha }}
+      - name: Build Mongo Replication Controller
+        run: yarn run build-image:mongoreplicationcontroller
 
-      # - name: Build Migrate
-      #   run: yarn nx build-image migrate
-
-      # npm libraries
-      # - name: Build CLI
-      #   run: yarn nx build cli
-
-      # - name: Build Devkit Packages
-      #   run: |
-      #     yarn nx run-many --target build --projects \
-      #     api/function/packages/bucket \
-      #     api/function/packages/database \
-      #     api/function/packages/identity \
-      #     api/function/packages/storage
-
-      # # tests
-      # # docker images
-      # - name: Show disk before tests
-      #   run: df -h
-
-      # - name: Activity tests
-      #   run: yarn nx run-many -t test --projects api/activity/*
-
-      # - name: Show disk before tests
-      #   run: df -h
-
-      # - name: Asset tests
-      #   run: yarn nx run-many -t test --projects api/asset/*
-
-      # - name: Show disk before tests
-      #   run: df -h
-
-      # - name: Dashboard tests
-      #   run: yarn nx run-many -t test --projects api/dashboard/*
-
-      # - name: Show disk before tests
-      #   run: df -h
-
-      # - name: Show disk usage
-      #   run: sudo du -h /tmp | sort -hr
-
-      # - name: Passport tests
-      #   run: yarn nx run-many -t test --projects api/passport/*
-
-      # - name: Show disk before tests
-      #   run: df -h
-
-      # - name: Show disk usage
-      #   run: sudo du -h /tmp | sort -hr
-
-      # - name: Preference tests
-      #   run: yarn nx run-many -t test --projects api/preference/*
-
-      # - name: Show disk before tests
-      #   run: df -h
-
-      # - name: Function tests
-      #   run: yarn nx run-many -t test --projects api/function/*
-
-      # - name: Show disk before tests
-      #   run: df -h
-
-      # - name: Bucket tests
-      #   run: yarn nx run-many -t test --projects api/bucket/*
-
-      # - name: Show disk before tests
-      #   run: df -h
-
-      # - name: Test Migrate
-      #   run: yarn nx test-image migrate
+      - name: Build Migrate
+        run: yarn run build-image:migrate
 
       # npm libraries
-      # - name: Test CLI
-      #   run: yarn nx test cli
+      - name: Build CLI
+        run: yarn run build:cli
 
-      # - name: Test Devkit Packages
-      #   run: |
-      #     yarn nx run-many --target test --projects \
-      #     api/function/packages/bucket \
-      #     api/function/packages/database \
-      #     api/function/packages/identity \
-      #     api/function/packages/storage
+      - name: Build Devkit Packages
+        run: yarn run build:devkit:*
+
+      # tests
+      # docker images
+      - name: Test API
+        run: yarn run test-image:api
+
+      - name: Test Migrate
+        run: yarn run test-image:migrate
+
+      # npm libraries
+      - name: Test CLI
+        run: yarn run test:cli
+
+      - name: Test Devkit Packages
+        run: yarn run test:devkit:*

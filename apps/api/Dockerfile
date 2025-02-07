@@ -17,7 +17,7 @@ COPY nx.json ./
 COPY package.json ./
 COPY tsconfig.json ./
 COPY yarn.lock ./
-RUN yarn nx compile api
+RUN yarn run build:api
 
 FROM base AS test
 WORKDIR /app
@@ -32,7 +32,7 @@ COPY jest.flaky.setup.js ./
 COPY jest.preset.js ./
 COPY jest.setup.js ./
 COPY *.env ./
-RUN yarn test:api
+RUN yarn run test:api
 
 # start app from tools, because app executes many mongodb commands
 # copy deps and build

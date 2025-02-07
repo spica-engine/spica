@@ -15,7 +15,7 @@ COPY nx.json ./
 COPY package.json ./
 COPY tsconfig.json ./
 COPY yarn.lock ./
-RUN yarn nx build migrate
+RUN yarn run build:migrate
 
 FROM base AS test
 WORKDIR /app
@@ -29,7 +29,7 @@ COPY jest.flaky.setup.js ./
 COPY jest.preset.js ./
 COPY jest.setup.js ./
 COPY libs/database ./libs/database
-RUN yarn nx test migrate
+RUN yarn run test:migrate
 
 # start app from tools, because app executes many mongodb commands
 # copy deps and build
