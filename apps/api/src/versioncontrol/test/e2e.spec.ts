@@ -62,6 +62,7 @@ describe("Versioning e2e", () => {
         VersionControlModule.forRoot({persistentPath: os.tmpdir()})
       ]
     }).compile();
+    module.enableShutdownHooks();
 
     app = module.createNestApplication();
     req = module.get(Request);

@@ -21,6 +21,8 @@ describe("realtime database", () => {
       providers: [RealtimeDatabaseService]
     }).compile();
 
+    bed.enableShutdownHooks();
+
     realtime = bed.get(RealtimeDatabaseService);
     database = bed.get(DatabaseService);
   });
@@ -28,7 +30,6 @@ describe("realtime database", () => {
   afterEach(async () => {
     // wait until unsubscriptions are completed
     await new Promise(resolve => setTimeout(resolve, 1000));
-    await realtime["destroy"]();
     await bed.close();
   });
 

@@ -40,6 +40,7 @@ describe("Realtime", () => {
         PassportTestingModule.initialize()
       ]
     }).compile();
+    module.enableShutdownHooks();
     db = module.get(DatabaseService);
     wsc = module.get(Websocket);
     app = module.createNestApplication();

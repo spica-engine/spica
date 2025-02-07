@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common";
+import {Injectable, OnModuleDestroy} from "@nestjs/common";
 import {ChangeStream, DatabaseService, Document} from "@spica-server/database";
 import {StreamChunk} from "@spica-server/interface/realtime";
 import {Observable} from "rxjs";
@@ -7,7 +7,7 @@ import {Emitter} from "./stream";
 const isEqual = require("lodash/isEqual");
 
 @Injectable()
-export class RealtimeDatabaseService {
+export class RealtimeDatabaseService implements OnModuleDestroy {
   constructor(private database: DatabaseService) {}
 
   private changeStreams = new Map<string, ChangeStream>();
@@ -62,10 +62,7 @@ export class RealtimeDatabaseService {
     return !!this.findEmitterName(name, options);
   }
 
-  /**
-   * Designed for only tests, don't use it on the production code
-   */
-  private async destroy() {
+  async onModuleDestroy() {
     await Promise.all(
       Array.from(this.emitters).map(([_, emitter]) => {
         return this.changeStreams.get(emitter.value.collectionName).close();

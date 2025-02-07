@@ -37,7 +37,7 @@ describe("Webhook Service", () => {
     service.insertOne(webhook).then(() =>
       service
         .targets()
-        .pipe(bufferTime(1000))
+        .pipe(bufferTime(1000), take(1))
         .subscribe(targets => {
           expect(targets).toEqual([]);
           done();

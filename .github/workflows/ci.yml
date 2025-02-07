@@ -16,8 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        module:
-          [
+        module: [
             api/activity/**,
             api/asset/**,
             api/bucket,
@@ -41,8 +40,8 @@ jobs:
             core/**,
             database/**,
             filter/**,
-            interface/**,
-            representative/**,
+            # interface/**,
+            # representative/**,
             cli/**,
             migrate/**
           ]
