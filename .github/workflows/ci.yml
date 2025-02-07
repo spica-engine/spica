@@ -11,12 +11,13 @@ on:
     branches: ["nx-monorepo"]
 
 jobs:
-  test:
-    name: Run Tests
+  container_test:
+    name: Run Container Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        module: [
+        project:
+          [
             api/activity/**,
             api/asset/**,
             api/bucket,
@@ -29,8 +30,15 @@ jobs:
             api/bucket/realtime/**,
             api/bucket/services/**,
             api/dashboard/**,
-            api/function/** --exclude=api/function/packages/**,
-            api/function/packages/**,
+            api/function,
+            api/function/compiler/**,
+            api/function/enqueuer/**,
+            api/function/log/**,
+            api/function/pkgmanager/**,
+            api/function/queue/**,
+            api/function/runtime/**,
+            api/function/scheduler/**,
+            api/function/webhook/**,
             api/passport/**,
             api/preference/**,
             api/replication/**,
@@ -40,8 +48,6 @@ jobs:
             core/**,
             database/**,
             filter/**,
-            # interface/**,
-            # representative/**,
             cli/**,
             migrate/**
           ]
@@ -83,8 +89,5 @@ jobs:
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
-      # - name: Check Format
-      #   run: yarn run format:check
-
-      - name: Run Tests
-        run: yarn nx run-many -t test --projects=${{matrix.module}}
+      - name: Run Container Tests
+        run: yarn run test-image:api --build-arg PROJECTS=${{matrix.project}}

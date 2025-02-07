@@ -32,7 +32,8 @@ COPY jest.flaky.setup.js ./
 COPY jest.preset.js ./
 COPY jest.setup.js ./
 COPY *.env ./
-RUN yarn run test:api
+ARG PROJECTS=""
+RUN yarn nx run-many -t test --projects=$PROJECTS
 
 # start app from tools, because app executes many mongodb commands
 # copy deps and build
