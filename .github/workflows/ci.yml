@@ -57,41 +57,71 @@ jobs:
       - name: Fetch base branch
         run: git fetch origin ${{ env.base_branch }}:${{ env.base_branch }}
 
-      - name: Check Format
-        run: yarn run format:check
-
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
+      - name: Check Format
+        run: yarn run format:check
+
       # builds
       # docker images
+      - name: Show disk usage
+        run: du -h ./ | sort -rh | head -10
+
       - name: Build API
         run: yarn run build-image:api
+
+      - name: Show disk usage
+        run: du -h ./ | sort -rh | head -10
 
       - name: Build Mongo Replication Controller
         run: yarn run build-image:mongoreplicationcontroller
 
+      - name: Show disk usage
+        run: du -h ./ | sort -rh | head -10
+
       - name: Build Migrate
         run: yarn run build-image:migrate
+
+      - name: Show disk usage
+        run: du -h ./ | sort -rh | head -10
 
       # npm libraries
       - name: Build CLI
         run: yarn run build:cli
 
+      - name: Show disk usage
+        run: du -h ./ | sort -rh | head -10
+
       - name: Build Devkit Packages
         run: yarn run build:devkit:*
+
+      - name: Show disk usage
+        run: du -h ./ | sort -rh | head -10
 
       # tests
       # docker images
       - name: Test API
         run: yarn run test-image:api
 
+      - name: Show disk usage
+        run: du -h ./ | sort -rh | head -10
+
       - name: Test Migrate
         run: yarn run test-image:migrate
+
+      - name: Show disk usage
+        run: du -h ./ | sort -rh | head -10
 
       # npm libraries
       - name: Test CLI
         run: yarn run test:cli
 
+      - name: Show disk usage
+        run: du -h ./ | sort -rh | head -10
+
       - name: Test Devkit Packages
         run: yarn run test:devkit:*
+
+      - name: Show disk usage
+        run: du -h ./ | sort -rh | head -10
