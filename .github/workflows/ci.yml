@@ -69,19 +69,19 @@ jobs:
         run: yarn run build-image:api
 
       - name: Cleanup docker images
-        run: docker image prune -af
+        run: docker system prune -af
 
       - name: Build Mongo Replication Controller
         run: yarn run build-image:mongoreplicationcontroller
 
       - name: Cleanup docker images
-        run: docker image prune -af
+        run: docker system prune -af
 
       - name: Build Migrate
         run: yarn run build-image:migrate
 
       - name: Cleanup docker images
-        run: docker image prune -af
+        run: docker system prune -af
 
       # npm libraries
       - name: Build CLI
@@ -99,13 +99,13 @@ jobs:
         run: yarn run test-image:api
 
       - name: Cleanup docker images
-        run: docker image prune -af
+        run: docker system prune -af
 
       - name: Test Migrate
         run: yarn run test-image:migrate
 
       - name: Cleanup docker images
-        run: docker image prune -af
+        run: docker system prune -af
 
       # npm libraries
       - name: Test CLI
