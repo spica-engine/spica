@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "format:check": "yarn nx format:check",
-    "format:write": "yarn nx format:write",
+    "format": "yarn nx format:write",
     "build": "yarn nx run-many -t build",
     "build:api": "yarn nx compile api",
     "serve:api": "yarn nx serve api",

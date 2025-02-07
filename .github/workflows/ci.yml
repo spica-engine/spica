@@ -3,6 +3,7 @@ name: Spica Continuous Integration Workflow
 env:
   # use master later
   base_branch: nx-monorepo
+  VERSION: ${{ github.sha }}
 
 on:
   pull_request:
