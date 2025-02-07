@@ -48,7 +48,7 @@
       "cache": true,
       "configurations": {
         "ci-cd": {
-          "forceExit": true,
+          "forceExit": false,
           "runInBand": true,
           "silent": true
         },
