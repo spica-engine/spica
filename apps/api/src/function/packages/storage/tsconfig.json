@@ -1,5 +1,4 @@
 {
-  "extends": "../../../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts", "package.json"],
-  "references": [{"path": "../internal_common"}]
+  "extends": "../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"]
 }

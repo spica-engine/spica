@@ -62,6 +62,19 @@ export class RealtimeDatabaseService {
     return !!this.findEmitterName(name, options);
   }
 
+  /**
+   * Designed for only tests, don't use it on the production code
+   */
+  private async destroy() {
+    await Promise.all(
+      Array.from(this.emitters).map(([_, emitter]) => {
+        return this.changeStreams.get(emitter.value.collectionName).close();
+      })
+    );
+    this.emitters.clear();
+    this.changeStreams.clear();
+  }
+
   removeEmitter(name: string, options: FindOptions<any>) {
     const emitterName = this.findEmitterName(name, options);
 
