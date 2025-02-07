@@ -19,8 +19,8 @@ export async function start(topology: "standalone" | "replset") {
     clientOptions = {};
   }
 
-  // global.__CLEANUPCALLBACKS = global.__CLEANUPCALLBACKS || [];
-  // global.__CLEANUPCALLBACKS.push(() => setTimeout(() => mongod.stop(), 1000));
+  global.__CLEANUPCALLBACKS = global.__CLEANUPCALLBACKS || [];
+  global.__CLEANUPCALLBACKS.push(() => setTimeout(() => mongod.stop(), 3000));
 
   uri = mongod.getUri() + "&retryWrites=false";
 
