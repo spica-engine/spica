@@ -1,4 +1,4 @@
-name: Spica Continuous Integration Workflow
+name: Spica CI/CD Workflow
 
 env:
   # use master later
@@ -16,7 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        module: [
+        module:
+          [
             api/activity/**,
             api/asset/**,
             api/bucket,
@@ -36,7 +37,7 @@ jobs:
             api/replication/**,
             api/status/**,
             api/storage/**,
-            api/versioncontrol,
+            api/versioncontrol/**,
             core/**,
             database/**,
             filter/**,
@@ -44,7 +45,7 @@ jobs:
             representative/**,
             cli/**,
             migrate/**
-          ] # Module names in the matrix
+          ]
 
     steps:
       - name: Free up some space on disk
