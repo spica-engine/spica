@@ -83,8 +83,5 @@ jobs:
       - name: Check Format
         run: yarn run format:check
 
-      - name: Debug Module
-        run: echo "Running tests for module: ${{ matrix.module }}
-
       - name: Test API
         run: yarn nx run-many -t test --projects=${{matrix.module}}/**
