@@ -65,54 +65,33 @@ jobs:
 
       # builds
       # docker images
-      - name: Build API
-        run: yarn run build-image:api
+      # - name: Build API
+      #   run: yarn run build:api
 
-      - name: Cleanup docker images
-        run: docker system prune -af
+      # - name: Build Mongo Replication Controller
+      #   run: yarn run build:mongoreplicationcontroller
 
-      - name: Build Mongo Replication Controller
-        run: yarn run build-image:mongoreplicationcontroller
+      # - name: Build Migrate
+      #   run: yarn run build:migrate
 
-      - name: Cleanup docker images
-        run: docker system prune -af
+      # # npm libraries
+      # - name: Build CLI
+      #   run: yarn run build:cli
 
-      - name: Build Migrate
-        run: yarn run build-image:migrate
-
-      - name: Cleanup docker images
-        run: docker system prune -af
-
-      # npm libraries
-      - name: Build CLI
-        run: yarn run build:cli
-
-      - name: Build Devkit Packages
-        run: yarn run build:devkit:*
-
-      - name: Cleanup dist folder
-        run: rm -rf ./dist
+      # - name: Build Devkit Packages
+      #   run: yarn run build:devkit:*
 
       # tests
       # docker images
       - name: Test API
-        run: yarn run test-image:api
+        run: yarn run test:api
 
-      - name: Cleanup docker images
-        run: docker system prune -af
+      # - name: Test Migrate
+      #   run: yarn run test:migrate
 
-      - name: Test Migrate
-        run: yarn run test-image:migrate
+      # # npm libraries
+      # - name: Test CLI
+      #   run: yarn run test:cli
 
-      - name: Cleanup docker images
-        run: docker system prune -af
-
-      # npm libraries
-      - name: Test CLI
-        run: yarn run test:cli
-
-      - name: Test Devkit Packages
-        run: yarn run test:devkit:*
-
-      - name: Cleanup dist folder
-        run: rm -rf ./dist
+      # - name: Test Devkit Packages
+      #   run: yarn run test:devkit:*
