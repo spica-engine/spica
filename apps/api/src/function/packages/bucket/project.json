@@ -4,11 +4,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": ["tsc --build {projectRoot}", "resolve-tspaths"],
-        "parallel": false
-      }
+      "command": "yarn rollup -c {projectRoot}/rollup.config.cjs --bundleConfigAsCjs"
     },
     "set-version": {}
   }

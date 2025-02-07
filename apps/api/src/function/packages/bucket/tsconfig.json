@@ -1,8 +1,4 @@
 {
-  "extends": "../../../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts", "package.json"],
-  "references": [
-    {"path": "../internal_common"},
-    {"path": "../../../../../../libs/interface/realtime"}
-  ]
+  "extends": "../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"]
 }

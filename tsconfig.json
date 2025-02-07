@@ -30,18 +30,6 @@
       "path": "./apps/api/src/function/compiler/typescript"
     },
     {
-      "path": "./apps/api/src/function/packages/database"
-    },
-    {
-      "path": "./apps/api/src/function/packages/identity"
-    },
-    {
-      "path": "./apps/api/src/function/packages/storage"
-    },
-    {
-      "path": "./apps/api/src/function/packages/bucket"
-    },
-    {
       "path": "./apps/api/src/function/pkgmanager/node"
     },
     {
