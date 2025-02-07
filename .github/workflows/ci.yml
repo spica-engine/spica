@@ -65,83 +65,54 @@ jobs:
 
       # builds
       # docker images
-      - name: Show disk usage
-        run: du -h ./ | sort -rh | head -10
-      - name: Show docker disk usage
-        run: docker image ls
-
       - name: Build API
         run: yarn run build-image:api
 
-      - name: Show disk usage
-        run: du -h ./ | sort -rh | head -10
-      - name: Show docker disk usage
-        run: docker image ls
+      - name: Cleanup docker images
+        run: docker image prune -af
 
       - name: Build Mongo Replication Controller
         run: yarn run build-image:mongoreplicationcontroller
 
-      - name: Show disk usage
-        run: du -h ./ | sort -rh | head -10
-      - name: Show docker disk usage
-        run: docker image ls
+      - name: Cleanup docker images
+        run: docker image prune -af
 
       - name: Build Migrate
         run: yarn run build-image:migrate
 
-      - name: Show disk usage
-        run: du -h ./ | sort -rh | head -10
-      - name: Show docker disk usage
-        run: docker image ls
+      - name: Cleanup docker images
+        run: docker image prune -af
 
       # npm libraries
       - name: Build CLI
         run: yarn run build:cli
 
-      - name: Show disk usage
-        run: du -h ./ | sort -rh | head -10
-      - name: Show docker disk usage
-        run: docker image ls
-
       - name: Build Devkit Packages
         run: yarn run build:devkit:*
 
-      - name: Show disk usage
-        run: du -h ./ | sort -rh | head -10
-      - name: Show docker disk usage
-        run: docker image ls
+      - name: Cleanup dist folder
+        run: rm -rf ./dist
 
       # tests
       # docker images
       - name: Test API
         run: yarn run test-image:api
 
-      - name: Show disk usage
-        run: du -h ./ | sort -rh | head -10
-      - name: Show docker disk usage
-        run: docker image ls
+      - name: Cleanup docker images
+        run: docker image prune -af
 
       - name: Test Migrate
         run: yarn run test-image:migrate
 
-      - name: Show disk usage
-        run: du -h ./ | sort -rh | head -10
-      - name: Show docker disk usage
-        run: docker image ls
+      - name: Cleanup docker images
+        run: docker image prune -af
 
       # npm libraries
       - name: Test CLI
         run: yarn run test:cli
 
-      - name: Show disk usage
-        run: du -h ./ | sort -rh | head -10
-      - name: Show docker disk usage
-        run: docker image ls
-
       - name: Test Devkit Packages
         run: yarn run test:devkit:*
 
-      - name: Show disk usage
-        run: du -h ./ | sort -rh | head -10
-      - name: Show docker disk usage
-        run: docker image ls
+      - name: Cleanup dist folder
+        run: rm -rf ./dist
