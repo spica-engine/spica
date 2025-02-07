@@ -67,24 +67,32 @@ jobs:
       # docker images
       - name: Show disk usage
         run: du -h ./ | sort -rh | head -10
+      - name: Show docker disk usage
+        run: docker image ls
 
       - name: Build API
         run: yarn run build-image:api
 
       - name: Show disk usage
         run: du -h ./ | sort -rh | head -10
+      - name: Show docker disk usage
+        run: docker image ls
 
       - name: Build Mongo Replication Controller
         run: yarn run build-image:mongoreplicationcontroller
 
       - name: Show disk usage
         run: du -h ./ | sort -rh | head -10
+      - name: Show docker disk usage
+        run: docker image ls
 
       - name: Build Migrate
         run: yarn run build-image:migrate
 
       - name: Show disk usage
         run: du -h ./ | sort -rh | head -10
+      - name: Show docker disk usage
+        run: docker image ls
 
       # npm libraries
       - name: Build CLI
@@ -92,12 +100,16 @@ jobs:
 
       - name: Show disk usage
         run: du -h ./ | sort -rh | head -10
+      - name: Show docker disk usage
+        run: docker image ls
 
       - name: Build Devkit Packages
         run: yarn run build:devkit:*
 
       - name: Show disk usage
         run: du -h ./ | sort -rh | head -10
+      - name: Show docker disk usage
+        run: docker image ls
 
       # tests
       # docker images
@@ -106,12 +118,16 @@ jobs:
 
       - name: Show disk usage
         run: du -h ./ | sort -rh | head -10
+      - name: Show docker disk usage
+        run: docker image ls
 
       - name: Test Migrate
         run: yarn run test-image:migrate
 
       - name: Show disk usage
         run: du -h ./ | sort -rh | head -10
+      - name: Show docker disk usage
+        run: docker image ls
 
       # npm libraries
       - name: Test CLI
@@ -119,9 +135,13 @@ jobs:
 
       - name: Show disk usage
         run: du -h ./ | sort -rh | head -10
+      - name: Show docker disk usage
+        run: docker image ls
 
       - name: Test Devkit Packages
         run: yarn run test:devkit:*
 
       - name: Show disk usage
         run: du -h ./ | sort -rh | head -10
+      - name: Show docker disk usage
+        run: docker image ls
