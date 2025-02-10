@@ -53,9 +53,7 @@ jobs:
           ]
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
       - name: Setup
-        uses: ./.github/workflows/setup.yml
+        uses: ./.github/actions/setup.yml
       - name: Run Container Tests
         run: yarn run test-image:api --build-arg PROJECTS=${{matrix.project}}
