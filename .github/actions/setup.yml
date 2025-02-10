@@ -10,7 +10,6 @@ runs:
         sudo rm -rf /opt/hostedtoolcache
         sudo rm -rf "/usr/local/share/boost"
         sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-      shell: bash
 
     - name: Checkout
       uses: actions/checkout@v4

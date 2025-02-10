@@ -11,48 +11,46 @@ on:
     branches: ["nx-monorepo"]
 
 jobs:
-  container_test:
-    name: Run Container Tests
+  run_command:
+    name: Run Command
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        project:
-          [
-            api/activity/**,
-            api/asset/**,
-            api/bucket,
-            api/bucket/cache/**,
-            api/bucket/common/**,
-            api/bucket/expression/**,
-            api/bucket/graphql/**,
-            api/bucket/history/**,
-            api/bucket/hooks/**,
-            api/bucket/realtime/**,
-            api/bucket/services/**,
-            api/dashboard/**,
-            api/function,
-            api/function/compiler/**,
-            api/function/enqueuer/**,
-            api/function/log/**,
-            api/function/pkgmanager/**,
-            api/function/queue/**,
-            api/function/runtime/**,
-            api/function/scheduler/**,
-            api/function/webhook/**,
-            api/passport/**,
-            api/preference/**,
-            api/replication/**,
-            api/status/**,
-            api/storage/**,
-            api/versioncontrol/**,
-            core/**,
-            database/**,
-            filter/**,
-            cli/**,
-            migrate/**
+        commands: [
+            format:check,
+            build:cli,
+            build:devkit:*,
+            build-image:api,
+            build-image:migrate,
+            build-image:mongoreplicationcontroller,
+            test:cli,
+            test:devkit:*,
+            test-image:api --build-arg PROJECTS=api/activity/**,
+            test-image:api --build-arg PROJECTS=api/asset/**,
+            test-image:api --build-arg PROJECTS=api/bucket
+            test-image:api --build-arg PROJECTS=api/bucket/** --build-arg EXCLUDE=api/bucket,
+            test-image:api --build-arg PROJECTS=api/dashboard/**,
+            test-image:api --build-arg PROJECTS=api/function/** --build-arg EXCLUDE=api/function/packages/**,
+            test-image:api --build-arg PROJECTS=api/passport/**,
+            test-image:api --build-arg PROJECTS=api/preference/**,
+            test-image:api --build-arg PROJECTS=api/replication/**,
+            test-image:api --build-arg PROJECTS=api/status/**,
+            test-image:api --build-arg PROJECTS=api/storage/**,
+            test-image:api --build-arg PROJECTS=api/versioncontrol/**,
+            test-image:api --build-arg PROJECTS=core/**,
+            test-image:api --build-arg PROJECTS=database/**,
+            test-image:api --build-arg PROJECTS=filter/**
           ]
 
     steps:
+      - name: Free up some space on disk
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -81,5 +79,5 @@ jobs:
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
-      - name: Run Container Tests
-        run: yarn run test-image:api --build-arg PROJECTS=${{matrix.project}}
+      - name: Run Command
+        run: yarn run ${{matrix.commands}}

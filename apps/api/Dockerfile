@@ -33,7 +33,8 @@ COPY jest.preset.js ./
 COPY jest.setup.js ./
 COPY *.env ./
 ARG PROJECTS=""
-RUN yarn nx run-many -t test --projects=$PROJECTS
+ARG EXCLUDE=""
+RUN yarn nx run-many -t test --projects=$PROJECTS --exclude=$EXCLUDE
 
 # start app from tools, because app executes many mongodb commands
 # copy deps and build
