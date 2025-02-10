@@ -60,5 +60,19 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Publish API image
-        run: yarn run publish:api
+      - uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
+
+      - name: Get GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: godfather
+          location: us-central1-a
+          project_id: spica-239113
+
+      - name: Kubectl tool installer
+        uses: Azure/setup-kubectl@v4.0.0
+
+      - name: Kubectl command
+        run: kubectl get pods -A
