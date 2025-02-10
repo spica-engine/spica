@@ -16,31 +16,32 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        commands: [
-            # "format:check",
-            # "build:cli",
-            # "build:devkit:*",
-            # "build-image:api",
-            # "build-image:migrate",
-            # "build-image:mongoreplicationcontroller",
-            # "test:cli",
-            # "test:devkit:*",
-            # "test-image:api --build-arg PROJECTS=api/activity/**",
-            # "test-image:api --build-arg PROJECTS=api/asset/**",
-            # "test-image:api --build-arg PROJECTS=api/bucket",
-            # "test-image:api --build-arg PROJECTS=api/bucket/** --build-arg EXCLUDE=api/bucket",
-            # "test-image:api --build-arg PROJECTS=api/dashboard/**",
-            # "test-image:api --build-arg PROJECTS=api/function",
-            "test-image:api --build-arg PROJECTS=api/function/** --build-arg EXCLUDE='api/function/packages/**,api/function'"
-            # "test-image:api --build-arg PROJECTS=api/passport/**",
-            # "test-image:api --build-arg PROJECTS=api/preference/**",
-            # "test-image:api --build-arg PROJECTS=api/replication/**",
-            # "test-image:api --build-arg PROJECTS=api/status/**",
-            # "test-image:api --build-arg PROJECTS=api/storage/**",
-            # "test-image:api --build-arg PROJECTS=api/versioncontrol/**",
-            # "test-image:api --build-arg PROJECTS=core/**",
-            # "test-image:api --build-arg PROJECTS=database/**",
-            # "test-image:api --build-arg PROJECTS=filter/**"
+        commands:
+          [
+            "format:check",
+            "build:cli",
+            "build:devkit:*",
+            "build-image:api",
+            "build-image:migrate",
+            "build-image:mongoreplicationcontroller",
+            "test:cli",
+            "test:devkit:*",
+            "test-image:api --build-arg PROJECTS=api/activity/**",
+            "test-image:api --build-arg PROJECTS=api/asset/**",
+            "test-image:api --build-arg PROJECTS=api/bucket",
+            "test-image:api --build-arg PROJECTS=api/bucket/** --build-arg EXCLUDE=api/bucket",
+            "test-image:api --build-arg PROJECTS=api/dashboard/**",
+            "test-image:api --build-arg PROJECTS=api/function",
+            "test-image:api --build-arg PROJECTS=api/function/** --build-arg EXCLUDE='api/function/packages/**,api/function'",
+            "test-image:api --build-arg PROJECTS=api/passport/**",
+            "test-image:api --build-arg PROJECTS=api/preference/**",
+            "test-image:api --build-arg PROJECTS=api/replication/**",
+            "test-image:api --build-arg PROJECTS=api/status/**",
+            "test-image:api --build-arg PROJECTS=api/storage/**",
+            "test-image:api --build-arg PROJECTS=api/versioncontrol/**",
+            "test-image:api --build-arg PROJECTS=core/**",
+            "test-image:api --build-arg PROJECTS=database/**",
+            "test-image:api --build-arg PROJECTS=filter/**"
           ]
     steps:
       - name: Free up some space on disk
