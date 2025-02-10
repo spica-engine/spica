@@ -47,10 +47,9 @@ afterAll(async () => {
   if (fs.existsSync(testTmpDir)) {
     fs.rmSync(testTmpDir, {recursive: true, force: true});
   }
-  console.log("TMPDIR REMOVED!");
 
   if (global.__CLEANUPCALLBACKS) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
     await Promise.all(global.__CLEANUPCALLBACKS.map(callback => callback()));
   }
-  console.log("SERVER STOPPED!");
 });
