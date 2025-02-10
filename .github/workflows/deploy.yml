@@ -1,4 +1,4 @@
-name: Spica CD Workflow For Testing Instance
+name: Spica Master Deployment
 
 env:
   # use master later
@@ -81,5 +81,5 @@ jobs:
       # - name: Publish Client
       #   run:
 
-      - name: Kubectl command
+      - name: Deploy to GKE
         run: kubectl apply -f ./deployment.yaml
