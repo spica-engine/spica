@@ -54,8 +54,5 @@ jobs:
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
-      - name: Build API image
-        run: yarn run build-image:api
-
-      - name: List images
-        run: docker image ls
+      - name: Publish API image
+        run: yarn run publish:api
