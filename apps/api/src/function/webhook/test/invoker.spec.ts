@@ -47,7 +47,7 @@ describe("Webhook Invoker", () => {
         }
       ]
     }).compile();
-
+    module.enableShutdownHooks();
     service = module.get(WebhookService);
     db = module.get(DatabaseService);
     logService = module.get(WebhookLogService);

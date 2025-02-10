@@ -58,6 +58,7 @@ describe("Realtime", () => {
         })
       ]
     }).compile();
+    module.enableShutdownHooks();
     wsc = module.get(Websocket);
     req = module.get(Request);
     app = module.createNestApplication();

@@ -1,34 +1,39 @@
-import {Injectable} from "@nestjs/common";
+import {Injectable, OnModuleDestroy} from "@nestjs/common";
 import {ChangeStream, DatabaseService} from "@spica-server/database";
 import fetch from "node-fetch";
 import {Webhook} from "./interface";
 import {WebhookLogService} from "./log.service";
 import {ChangeKind, WebhookService} from "./webhook.service";
 import {compile, precompile} from "handlebars";
+import {Subject, takeUntil} from "rxjs";
 
 @Injectable()
-export class WebhookInvoker {
+export class WebhookInvoker implements OnModuleDestroy {
   private targets = new Map<string, ChangeStream>();
+  private onDestroySubject = new Subject();
 
   constructor(
     private webhookService: WebhookService,
     private db: DatabaseService,
     private logService: WebhookLogService
   ) {
-    this.webhookService.targets().subscribe(change => {
-      switch (change.kind) {
-        case ChangeKind.Added:
-          this.subscribe(change.target, change.webhook);
-          break;
-        case ChangeKind.Updated:
-          this.unsubscribe(change.target);
-          this.subscribe(change.target, change.webhook);
-          break;
-        case ChangeKind.Removed:
-          this.unsubscribe(change.target);
-          break;
-      }
-    });
+    this.webhookService
+      .targets()
+      .pipe(takeUntil(this.onDestroySubject))
+      .subscribe(change => {
+        switch (change.kind) {
+          case ChangeKind.Added:
+            this.subscribe(change.target, change.webhook);
+            break;
+          case ChangeKind.Updated:
+            this.unsubscribe(change.target);
+            this.subscribe(change.target, change.webhook);
+            break;
+          case ChangeKind.Removed:
+            this.unsubscribe(change.target);
+            break;
+        }
+      });
   }
 
   preCompile(body: string) {
@@ -119,8 +124,12 @@ export class WebhookInvoker {
   private unsubscribe(target: string) {
     const stream = this.targets.get(target);
     if (stream) {
-      stream.close();
-      this.targets.delete(target);
+      return stream.close().then(() => this.targets.delete(target));
     }
+  }
+
+  onModuleDestroy() {
+    this.onDestroySubject.next("");
+    return Promise.all(Array.from(this.targets.keys()).map(key => this.unsubscribe(key)));
   }
 }

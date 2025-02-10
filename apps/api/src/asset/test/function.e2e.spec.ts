@@ -67,7 +67,7 @@ describe("function", () => {
 
   beforeEach(async () => {
     const module = await Test.createTestingModule(moduleMeta).compile();
-
+    module.enableShutdownHooks();
     app = module.createNestApplication();
     req = module.get(Request);
 
