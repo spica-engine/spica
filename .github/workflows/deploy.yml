@@ -3,7 +3,7 @@ name: Spica CD Workflow For Testing Instance
 env:
   # use master later
   base_branch: nx-monorepo
-  VERSION: master-pre-nx
+  VERSION: master-${{github.sha}}
 
 on:
   # # enable it later
