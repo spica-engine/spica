@@ -1,5 +1,5 @@
 import {INestApplication} from "@nestjs/common";
-import {Test} from "@nestjs/testing";
+import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
@@ -17,8 +17,10 @@ describe("BucketController", () => {
   let bucket;
   let bucket2;
 
+  let module: TestingModule;
+
   beforeEach(async () => {
-    const module = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
           formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME],
@@ -37,6 +39,7 @@ describe("BucketController", () => {
         })
       ]
     }).compile();
+    module.enableShutdownHooks();
     app = module.createNestApplication();
     req = module.get(Request);
     app.use(Middlewares.MergePatchJsonParser(10));

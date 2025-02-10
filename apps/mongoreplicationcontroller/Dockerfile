@@ -22,7 +22,7 @@ COPY nx.json ./
 COPY package.json ./
 COPY tsconfig.json ./
 COPY yarn.lock ./
-RUN yarn nx build mongoreplicationcontroller
+RUN yarn run build:mongoreplicationcontroller
 
 # start app from tools, because app executes many mongodb commands
 # copy deps and build

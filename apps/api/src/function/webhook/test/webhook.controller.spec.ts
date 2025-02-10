@@ -34,6 +34,7 @@ describe("Webhook Controller", () => {
         {provide: WEBHOOK_OPTIONS, useValue: {expireAfterSeconds: 60}}
       ]
     }).compile();
+    module.enableShutdownHooks();
     req = module.get(Request);
     app = module.createNestApplication();
     req.reject = true;

@@ -1,16 +1,22 @@
-import {Injectable, NotFoundException} from "@nestjs/common";
+import {Injectable, OnModuleDestroy} from "@nestjs/common";
 import {Bucket, BucketPreferences, BucketService, compile} from "@spica-server/bucket/services";
 import {CodeKeywordDefinition, KeywordCxt, Validator, _} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
-import {combineLatest, Observable} from "rxjs";
-import {map} from "rxjs/operators";
+import {combineLatest, Observable, Subject} from "rxjs";
+import {map, takeUntil} from "rxjs/operators";
 
 @Injectable()
-export class BucketSchemaResolver {
+export class BucketSchemaResolver implements OnModuleDestroy {
   preferenceWatcher: Observable<BucketPreferences>;
   bucketWatchers: Map<string, Observable<Bucket>> = new Map();
+  onDestroySubject = new Subject();
+
   constructor(private bucketService: BucketService) {
     this.preferenceWatcher = this.bucketService.watchPreferences(true);
+  }
+
+  onModuleDestroy() {
+    this.onDestroySubject.next("");
   }
 
   resolve(uri: string): Observable<object> {
@@ -21,6 +27,7 @@ export class BucketSchemaResolver {
         this.bucketWatchers.set(uri, bucketWatcher);
       }
       return combineLatest([this.preferenceWatcher, bucketWatcher]).pipe(
+        takeUntil(this.onDestroySubject),
         map(([prefs, schema]) => {
           // controller will handle the throwing error message when bucket does not exist
           if (!schema) {

@@ -211,6 +211,7 @@ describe("Status", () => {
           })
         ]
       }).compile();
+      module.enableShutdownHooks();
       req = module.get(Request);
 
       app = module.createNestApplication();

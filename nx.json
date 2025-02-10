@@ -49,7 +49,8 @@
       "configurations": {
         "ci-cd": {
           "forceExit": true,
-          "runInBand": true
+          "runInBand": true,
+          "silent": true
         },
         "local": {
           "forceExit": true
@@ -72,6 +73,7 @@
     }
   },
   "sync": {
+    "applyChanges": false,
     "disabledTaskSyncGenerators": ["@nx/js:typescript-sync"]
   }
 }

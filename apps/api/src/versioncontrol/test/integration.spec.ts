@@ -69,6 +69,8 @@ describe("Versioning", () => {
       ]
     }).compile();
 
+    module.enableShutdownHooks();
+
     app = module.createNestApplication();
     synchronizer = module.get(Synchronizer);
     bs = module.get(BucketService);
