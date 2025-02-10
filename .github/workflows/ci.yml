@@ -2,13 +2,13 @@ name: Spica CI/CD Workflow
 
 env:
   # use master later
-  base_branch: nx-monorepo
+  base_branch: SPICA-66
   VERSION: ${{ github.sha }}
 
 on:
   pull_request:
     # use master later, can't use env here btw
-    branches: ["nx-monorepo"]
+    branches: ["SPICA-66"]
 
 jobs:
   container_test:
