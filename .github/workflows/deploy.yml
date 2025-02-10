@@ -6,7 +6,9 @@ env:
   VERSION: master
 
 on:
-  push:
+  # # enable it later
+  # push
+  pull_request:
     # use master later, can't use env here btw
     branches: ["nx-monorepo"]
 
