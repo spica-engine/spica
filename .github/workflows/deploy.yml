@@ -3,7 +3,7 @@ name: Spica CD Workflow For Testing Instance
 env:
   # use master later
   base_branch: nx-monorepo
-  VERSION: master-${{github.sha}}
+  VERSION: master
 
 on:
   # # enable it later
@@ -74,5 +74,12 @@ jobs:
       - name: Kubectl tool installer
         uses: Azure/setup-kubectl@v4.0.0
 
+      - name: Publish API image
+        run: yarn run publish:api
+
+      # # not ready
+      # - name: Publish Client
+      #   run:
+
       - name: Kubectl command
-        run: kubectl get pods -A
+        run: kubectl apply -f ./deployment.yaml
