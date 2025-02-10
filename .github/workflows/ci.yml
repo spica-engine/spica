@@ -14,8 +14,6 @@ jobs:
   container_test:
     name: Run Container Tests
     runs-on: ubuntu-latest
-    uses: ./.github/workflows/setup.yml
-    # needs: setup
     strategy:
       matrix:
         project:
@@ -55,5 +53,7 @@ jobs:
           ]
 
     steps:
+      - name: Setup
+        uses: ./.github/workflows/setup.yml
       - name: Run Container Tests
         run: yarn run test-image:api --build-arg PROJECTS=${{matrix.project}}
