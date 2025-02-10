@@ -56,3 +56,6 @@ jobs:
 
       - name: Build API image
         run: yarn run build-image:api
+
+      - name: List images
+        run: docker image ls
