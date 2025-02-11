@@ -1,0 +1,90 @@
+{
+  "name": "migrate",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/migrate/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "inputs": [
+        "{workspaceRoot}/tsconfig.json",
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/index.ts",
+        "{projectRoot}/project.json",
+        "{projectRoot}/tsconfig.json"
+      ],
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/migrate",
+        "main": "apps/migrate/src/main.ts",
+        "tsConfig": "apps/migrate/tsconfig.json"
+      },
+      "cache": true
+    },
+    "build-test": {
+      "executor": "@nx/js:tsc",
+      "inputs": [
+        "{workspaceRoot}/tsconfig.json",
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/index.ts",
+        "{projectRoot}/project.json",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/test/**/*.ts",
+        "{projectRoot}/tsconfig.test.json",
+        "{projectRoot}/jest.config.ts",
+        "!{projectRoot}/test/**/*.spec.ts"
+      ],
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/migrate",
+        "main": "apps/migrate/test/acceptance/migrations/main.ts",
+        "tsConfig": "apps/migrate/tsconfig.test.json"
+      },
+      "cache": true
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "inputs": [
+        "{workspaceRoot}/tsconfig.json",
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/index.ts",
+        "{projectRoot}/project.json",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/test/**/*.ts",
+        "{projectRoot}/tsconfig.test.json",
+        "{projectRoot}/jest.config.ts",
+        "!{projectRoot}/test/**/*.spec.ts",
+        "{projectRoot}/test/**/*.spec.ts",
+        "{projectRoot}/tsconfig.spec.json"
+      ],
+      "options": {
+        "jestConfig": "apps/migrate/jest.config.ts",
+        "runInBand": true
+      },
+      "dependsOn": ["build-test"],
+      "cache": true
+    },
+    "test-image": {
+      "command": "docker build --target test --platform=linux/amd64 . -f ./apps/migrate/Dockerfile",
+      "cache": true
+    },
+    "build-image": {
+      "inputs": [
+        "{workspaceRoot}/tsconfig.json",
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/project.json",
+        "{projectRoot}/Dockerfile"
+      ],
+      "command": "docker build --platform=linux/amd64 . -f ./apps/migrate/Dockerfile -t spicaengine/migrate:$VERSION",
+      "cache": true
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build-image"],
+      "options": {
+        "command": "docker push spicaengine/migrate:$VERSION"
+      }
+    }
+  }
+}

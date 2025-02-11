@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/asset/configs",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["title", "module", "resource_id", "submodule", "property", "type"],
+    "properties": {
+      "title": {
+        "type": "string",
+        "description": "Title of the configuration that will be displayed on the top of this configuration while others configuring it before install."
+      },
+      "module": {
+        "type": "string",
+        "description": "Module of the configuration"
+      },
+      "resource_id": {
+        "type": "string",
+        "description": "Resource id of the configuration"
+      },
+      "submodule": {
+        "type": "string",
+        "description": "Submodule of the configuration, for example schema module of A module, package module of B module etc."
+      },
+      "property": {
+        "type": "string",
+        "description": "Property target of the configuration will affect. Use dot(.) for nested properties"
+      },
+      "value": {
+        "type": ["number", "string", "boolean", "object", "array"],
+        "description": "Value of the configuration that will be replaced with the value of matched property."
+      },
+      "type": {
+        "type": "string",
+        "description": "Type of the value",
+        "enum": ["number", "string", "boolean", "object", "array"]
+      }
+    },
+    "additionalProperties": false
+  }
+}

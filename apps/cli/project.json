@@ -1,0 +1,31 @@
+{
+  "name": "cli",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cli",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "!{projectRoot}/test/*",
+        "!{projectRoot}/node_modules/*",
+        "{workspaceRoot}/libs/interface/asset/src/**/*.ts",
+        "{workspaceRoot}/libs/interface/asset/index.ts",
+        "{workspaceRoot}/libs/interface/function/src/**/*.ts",
+        "{workspaceRoot}/libs/interface/function/index.ts"
+      ],
+      "options": {
+        "outputPath": "dist/apps/cli",
+        "main": "apps/cli/index.ts",
+        "tsConfig": "apps/cli/tsconfig.app.json",
+        "assets": ["apps/cli/README.md", "apps/cli/bin/spica"],
+        "webpackConfig": "apps/cli/webpack.config.js"
+      },
+      "cache": true
+    },
+    "set-version": {}
+  }
+}

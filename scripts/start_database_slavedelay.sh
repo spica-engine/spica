@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
-if [ ! -f WORKSPACE ]; then
+if [ ! -f nx.json ]; then
     echo "###########################################"
     echo "Please run this script from workspace root."
     echo "###########################################"
     exit 1;
 fi
 
-mkdir -p ./dist/.data1 ./dist/.data2 ./dist/.data3
-mongod --port 27017 --bind_ip_all --dbpath ./dist/.data1 --replSet infra & PID1="$!"
-mongod --port 27018 --bind_ip_all --dbpath ./dist/.data2 --replSet infra & PID2="$!"
-mongod --port 27019 --bind_ip_all --dbpath ./dist/.data3 --replSet infra & PID3="$!"
+mkdir -p ./db/.data1 ./db/.data2 ./db/.data3
+mongod --port 27017 --bind_ip_all --dbpath ./db/.data1 --replSet infra & PID1="$!"
+mongod --port 27018 --bind_ip_all --dbpath ./db/.data2 --replSet infra & PID2="$!"
+mongod --port 27019 --bind_ip_all --dbpath ./db/.data3 --replSet infra & PID3="$!"
 echo "Waiting for the nodes to become ready."
 sleep 10 && mongo --port 27017 --eval '
 rs.initiate(

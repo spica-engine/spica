@@ -1,0 +1,69 @@
+:root.dark :host {
+  --opacity: 0.5;
+}
+
+:host {
+  --opacity: 0.9;
+  display: inline-block;
+  overflow: hidden;
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  section.toolbar {
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    background: rgba(var(--background-app-bar-rgb), var(--opacity));
+    padding: 10px 10px;
+    header {
+      .fill {
+        flex: 1 1 auto;
+      }
+      button {
+        margin: 0 5px;
+      }
+    }
+    div.actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      padding-top: 5px;
+      span {
+        padding: 5px;
+      }
+
+      mat-divider {
+        height: 30px;
+        margin: 0px 10px;
+      }
+
+      mat-form-field {
+        margin-top: 4px;
+        width: 32%;
+        /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
+        &::ng-deep .mat-form-field-wrapper {
+          padding: unset;
+        }
+        &:not(:first-of-type) {
+          margin-left: 5px;
+        }
+      }
+    }
+  }
+
+  div[contenteditable] {
+    background: rgba(
+      var(--background-app-bar-rgb),
+      calc(var(--opacity) - calc(var(--opacity) / 2))
+    );
+    max-height: 400px;
+    min-height: 150px;
+    overflow-y: auto;
+    padding: 15px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    outline: 0;
+    border: 0;
+  }
+}

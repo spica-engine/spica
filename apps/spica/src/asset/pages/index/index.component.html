@@ -1,0 +1,105 @@
+<mat-toolbar>
+  <h4 class="mat-h4">
+    <mat-icon>leaderboard</mat-icon>
+    <span>Assets</span>
+  </h4>
+  <button mat-button canInteract="asset:export" (click)="export()">
+    <mat-icon>ios_share</mat-icon>
+    Export
+  </button>
+</mat-toolbar>
+<mat-card appearance="outlined" class="mat-elevation-z25">
+  <mat-card-content>
+    <mat-table [dataSource]="assets$">
+      <ng-container matColumnDef="id">
+        <mat-header-cell *matHeaderCellDef>Id</mat-header-cell>
+        <mat-cell *matCellDef="let asset">{{ asset._id }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+        <mat-cell *matCellDef="let asset">{{ asset.name }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+        <mat-cell *matCellDef="let asset">
+          {{ asset.status.replace("_", " ") | titlecase }}
+          <button
+            mat-icon-button
+            *ngIf="asset.status == 'partially_installed'"
+            (click)="showPreview(asset.resources)"
+          >
+            <mat-icon>info</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell *matCellDef="let asset">
+          <mat-spinner color="accent" diameter="20" *ngIf="isPending"></mat-spinner>
+          <button
+            *ngIf="asset.status == 'downloaded' || asset.status == 'partially_installed'"
+            mat-icon-button
+            canInteract="asset:install"
+            [resource]="asset._id"
+            (click)="onInstall(asset)"
+            [disabled]="isPending"
+          >
+            <mat-icon>{{ asset.status == "downloaded" ? "play_arrow" : "replay" }}</mat-icon>
+          </button>
+          <button
+            *ngIf="asset.status == 'installed' || asset.status == 'partially_installed'"
+            mat-icon-button
+            canInteract="asset:delete"
+            [resource]="asset._id"
+            (click)="
+              onDelete(asset, 'soft', {
+                title: 'Confirmation',
+                templateOrDescription: assetSoftDeleteTemplate,
+                answer: asset.name
+              })
+            "
+            [disabled]="isPending"
+          >
+            <mat-icon>stop_circle</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            canInteract="asset:delete"
+            [resource]="asset._id"
+            color="warn"
+            (click)="
+              onDelete(asset, 'hard', {
+                title: 'Confirmation',
+                templateOrDescription: assetHardDeleteTemplate,
+                answer: asset.name
+              })
+            "
+            [disabled]="isPending"
+          >
+            <mat-icon mat-icon-button>delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    </mat-table>
+  </mat-card-content>
+</mat-card>
+
+<ng-template #assetHardDeleteTemplate let-answer="answer">
+  <p>This action will <b>permanently</b> delete the asset and it's resources.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>
+
+<ng-template #assetSoftDeleteTemplate let-answer="answer">
+  <p>This action will <b>permanently</b> delete asset resources but not itself.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>

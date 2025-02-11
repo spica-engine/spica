@@ -1,0 +1,11 @@
+{
+  "name": "api/function/packages/identity",
+  "sourceRoot": "apps/api/src/function/packages/identity",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "yarn rollup -c {projectRoot}/rollup.config.cjs --bundleConfigAsCjs"
+    },
+    "set-version": {}
+  }
+}

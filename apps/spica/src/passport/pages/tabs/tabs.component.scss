@@ -1,0 +1,39 @@
+:host ::ng-deep {
+  mat-toolbar {
+    min-height: 250px;
+    padding: 0 30px;
+    align-items: flex-start;
+    flex-direction: column;
+
+    span:first-of-type {
+      h4 {
+        & > * {
+          vertical-align: middle;
+          display: inline-block;
+        }
+        mat-icon {
+          margin-left: -3px;
+        }
+        span {
+          margin-left: 5px;
+        }
+      }
+      h6 {
+        font-size: 14px;
+      }
+    }
+
+    > button:last-of-type,
+    > span:not(:first-of-type):last-of-type {
+      align-self: flex-end;
+      margin-top: 30px;
+    }
+  }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  mat-card:first-of-type {
+    margin: 30px;
+    margin-top: -85px;
+    overflow: hidden;
+    min-height: 156px;
+  }
+}

@@ -1,0 +1,222 @@
+<ng-template #toolbar>
+  <span>
+    <h4>
+      <mat-icon>account_circle</mat-icon>
+      <span>Identity</span>
+    </h4>
+  </span>
+</ng-template>
+<div class="actions" *ngIf="identity._id">
+  <button mat-button (click)="viewState = 'meta'" [class.mat-flat-button]="viewState == 'meta'">
+    <mat-icon>view_module</mat-icon>
+    Credentials
+  </button>
+  <button mat-button (click)="viewState = 'policy'" [class.mat-flat-button]="viewState == 'policy'">
+    <mat-icon>layers</mat-icon>
+    Policies
+  </button>
+</div>
+
+<mat-card appearance="outlined" class="mat-elevation-z25" *ngIf="viewState == 'meta'">
+  <mat-card-content>
+    <form #identityForm="ngForm">
+      <mat-form-field>
+        <mat-label> Identifier </mat-label>
+        <input
+          matInput
+          name="identifier"
+          [(ngModel)]="identity.identifier"
+          #identifierModel="ngModel"
+          minlength="3"
+          required
+        />
+        <mat-error *ngIf="identifierModel?.errors?.minlength"
+          >Identifier must be greater than
+          {{ identifierModel?.errors?.minlength?.requiredLength }}
+          characters</mat-error
+        >
+        <mat-error *ngIf="identifierModel?.errors?.required">This field is required.</mat-error>
+      </mat-form-field>
+      <button
+        mat-button
+        *ngIf="identity._id && !changePasswordState"
+        (click)="changePasswordState = !changePasswordState"
+      >
+        Change Password
+      </button>
+      <mat-form-field *ngIf="!identity._id || changePasswordState">
+        <mat-label> Password </mat-label>
+        <input
+          matInput
+          name="password"
+          [(ngModel)]="identity.password"
+          #passwordModel="ngModel"
+          minlength="3"
+          required
+        />
+        <mat-error *ngIf="passwordModel?.errors?.minlength"
+          >Password must be greater than
+          {{ passwordModel?.errors?.minlength?.requiredLength }}
+          characters</mat-error
+        >
+        <mat-error *ngIf="passwordModel?.errors?.required">This field is required.</mat-error>
+      </mat-form-field>
+
+      <div
+        *ngFor="let propertyKv of preferences?.attributes?.properties | keyvalue"
+        [name]="propertyKv.key"
+        [inputPlacer]="propertyKv.value"
+        [disabled]="propertyKv.value.readOnly"
+        [required]="
+          preferences.attributes.required &&
+          preferences.attributes.required.indexOf(propertyKv.key) > -1
+        "
+        [ngModel]="identity.attributes && identity.attributes[propertyKv.key]"
+        (ngModelChange)="
+          identity.attributes = identity.attributes || {};
+          identity.attributes[propertyKv.key] = $event
+        "
+      ></div>
+
+      <mat-error *ngIf="error">{{ error }}</mat-error>
+    </form>
+    <div class="factor-auth" *ngIf="identity._id">
+      <mat-divider></mat-divider>
+      <button
+        mat-stroked-button
+        (click)="switch2FA(!identity.authFactor && !selectedAuthFactor ? true : false)"
+      >
+        {{ !identity.authFactor && !selectedAuthFactor ? "Enable" : "Disable" }} 2FA
+      </button>
+      <!-- Template if user has verified factor -->
+      <ng-container *ngIf="identity.authFactor">
+        <mat-form-field>
+          <mat-label>2FA Method</mat-label>
+          <mat-select [ngModel]="identity.authFactor.type" disabled>
+            <mat-option [value]="identity.authFactor.type">
+              {{ identity.authFactor.type | titlecase }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field *ngFor="let config of identity.authFactor.config | keyvalue">
+          <mat-label>{{ config.key | titlecase }}</mat-label>
+          <input matInput [value]="config.value" disabled />
+        </mat-form-field>
+      </ng-container>
+
+      <!-- Template if user has no verified factor -->
+      <ng-container *ngIf="selectedAuthFactor">
+        <mat-form-field>
+          <mat-label>2FA Method</mat-label>
+          <mat-select
+            [(ngModel)]="selectedAuthFactor.type"
+            (ngModelChange)="on2FAMethodChange($event)"
+          >
+            <mat-option *ngFor="let method of authFactorSchemas" [value]="method.type">
+              {{ method.title }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <ng-container *ngIf="selectedAuthFactor.type">
+          <mat-form-field
+            *ngFor="let config of getAuthFactorSchema(selectedAuthFactor.type).config | keyvalue"
+          >
+            <mat-label>{{ config.key | titlecase }}</mat-label>
+            <input
+              matInput
+              *ngIf="config.value.type == 'string' && !config.value.enum"
+              [(ngModel)]="selectedAuthFactor.config[config.key]"
+            />
+
+            <mat-select
+              *ngIf="config.value.enum"
+              [(ngModel)]="selectedAuthFactor.config[config.key]"
+            >
+              <mat-option *ngFor="let option of config.value.enum"> {{ option }} </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button
+            mat-button
+            *ngIf="!authFactorChallenge && selectedAuthFactor.type"
+            (click)="startVerification()"
+          >
+            Start Verification
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="authFactorChallenge">
+          <img
+            *ngIf="authFactorChallenge.challenge.startsWith('data:image'); else info"
+            [src]="authFactorChallenge.challenge"
+          />
+          <ng-template #info>
+            {{ authFactorChallenge.challenge }}
+          </ng-template>
+          <mat-form-field>
+            <mat-label>Answer</mat-label>
+            <input matInput ngModel #answerModel />
+          </mat-form-field>
+          <button mat-button (click)="completeVerification(answerModel.value)">
+            Complete verification
+          </button>
+        </ng-container>
+      </ng-container>
+      <span>{{ verificationResponse }}</span>
+    </div>
+  </mat-card-content>
+  <mat-card-actions>
+    <button
+      class="save-button"
+      [canInteract]="identity._id ? 'passport:identity:update' : 'passport:identity:create'"
+      [resource]="identity._id ? identity._id : undefined"
+      [disabled]="identityForm?.invalid"
+      mat-button
+      (click)="upsertIdentity()"
+    >
+      <mat-icon>save</mat-icon>
+      <span> Save </span>
+    </button>
+  </mat-card-actions>
+</mat-card>
+<mat-card appearance="outlined" class="mat-elevation-z25" *ngIf="viewState == 'policy'">
+  <mat-card-content>
+    <div class="policies" *ngIf="identity._id">
+      <mat-list>
+        <h3 mat-subheader>Owned Policies</h3>
+        <mat-list-item *ngFor="let policy of ownedPolicies">
+          <mat-icon mat-list-icon>layers</mat-icon>
+          <label mat-line [matTooltip]="policy.description">{{ policy.name }}</label>
+          <button
+            mat-icon-button
+            canInteract="passport:identity:policy:remove"
+            [resource]="identity._id + '/' + policy._id"
+            matTooltip="Detach this policy"
+            (click)="detachPolicy(policy._id)"
+            color="warn"
+          >
+            <mat-icon>link_off</mat-icon>
+          </button>
+        </mat-list-item>
+      </mat-list>
+
+      <mat-list>
+        <h3 mat-subheader>Ownable Policies</h3>
+        <ng-container *ngFor="let policy of policies">
+          <mat-list-item *ngIf="identity?.policies?.indexOf(policy._id) == -1">
+            <mat-icon mat-list-icon>layers</mat-icon>
+            <label mat-line [matTooltip]="policy.description">{{ policy.name }}</label>
+            <button
+              mat-icon-button
+              canInteract="passport:identity:policy:add"
+              [resource]="identity._id + '/' + policy._id"
+              matTooltip="Attach this policy"
+              (click)="attachPolicy(policy._id)"
+            >
+              <mat-icon>link</mat-icon>
+            </button>
+          </mat-list-item>
+        </ng-container>
+      </mat-list>
+    </div>
+  </mat-card-content>
+</mat-card>

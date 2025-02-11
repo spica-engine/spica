@@ -1,0 +1,31 @@
+:host {
+  display: inline-block;
+  border-radius: 5px;
+  /* TODO(mdc-migration): The following rule targets internal classes of slide-toggle that may no longer apply for the MDC version. */
+  mat-slide-toggle {
+    height: unset;
+  }
+  mat-error {
+    font-size: 75%;
+  }
+  mat-hint {
+    font-size: 12px;
+    display: block;
+    padding-top: 5px;
+  }
+
+  &.minimal-input-placer {
+    /* TODO(mdc-migration): The following rule targets internal classes of slide-toggle that may no longer apply for the MDC version. */
+    /* TODO(mdc-migration): The following rule targets internal classes of slide-toggle that may no longer apply for the MDC version. */
+    mat-slide-toggle {
+      /* TODO(mdc-migration): The following rule targets internal classes of slide-toggle that may no longer apply for the MDC version. */
+      ::ng-deep span.mat-slide-toggle-content {
+        display: none;
+      }
+    }
+
+    mat-hint {
+      display: none;
+    }
+  }
+}

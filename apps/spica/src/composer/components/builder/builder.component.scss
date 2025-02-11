@@ -1,0 +1,107 @@
+$container-color: #f7f9fa;
+$border-color: #e9eced;
+
+::ng-deep {
+  html.cdk-global-scrollblock {
+    overflow: unset;
+  }
+  .cdk-overlay-pane.builder .mat-mdc-dialog-container {
+    padding: 0;
+    border-radius: 0;
+  }
+}
+
+@mixin centralize {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.containers {
+  margin-top: 7%;
+  width: 43%;
+  height: 83%;
+  background-color: $container-color;
+  float: left;
+}
+.items {
+  width: 90%;
+  text-align: center;
+  border-bottom: 1px $border-color solid;
+  @include centralize();
+}
+
+:host {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+
+  .close-button {
+    color: grey;
+    font-size: 30px;
+    cursor: pointer;
+    position: absolute;
+    right: 10px;
+    top: 5px;
+  }
+
+  .left-container {
+    @extend .containers;
+    border-right: 1px $border-color solid;
+
+    .banner {
+      width: 90%;
+      text-align: center;
+      border-bottom: 1px #e9eced solid;
+      @include centralize();
+      h2 {
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+      h4 {
+        margin-top: 0;
+        padding-top: 0;
+        color: #979798;
+      }
+    }
+
+    ::ng-deep .input-placer-input {
+      width: 100%;
+    }
+
+    ::ng-deep mat-accordion {
+      mat-expansion-panel {
+        mat-expansion-panel-header {
+          mat-panel-title > span {
+            line-height: 24px;
+          }
+        }
+
+        &.add-for-of {
+          mat-form-field {
+            width: 100%;
+            /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
+            /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
+            mat-select {
+              /* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
+              mat-select-trigger > * {
+                vertical-align: middle;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .right-container {
+    @extend .containers;
+    position: relative;
+    .finish-button {
+      position: absolute;
+      bottom: 3px;
+      right: 3px;
+    }
+  }
+}

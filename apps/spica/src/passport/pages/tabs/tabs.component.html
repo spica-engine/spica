@@ -1,0 +1,6 @@
+<mat-toolbar>
+  <ng-container *ngIf="outlet">
+    <ng-container *ngTemplateOutlet="outlet?.component?.toolbar"></ng-container>
+  </ng-container>
+</mat-toolbar>
+<router-outlet #outlet="outlet"></router-outlet>

@@ -1,0 +1,18 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../status/services"
+    },
+    {
+      "path": "../../../../../libs/core"
+    },
+    {
+      "path": "../../replication"
+    },
+    {
+      "path": "../queue"
+    }
+  ]
+}

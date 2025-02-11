@@ -1,0 +1,212 @@
+<div *ngIf="step == 0">
+  <h3>Add New Property</h3>
+  <mat-divider></mat-divider>
+  <div class="field" *ngFor="let field of systemFields" (click)="chooseFieldType(field.type)">
+    <div class="icon" [style.background]="field.color">
+      <mat-icon>{{ field.icon }}</mat-icon>
+    </div>
+    {{ field.title || field.type }}
+  </div>
+</div>
+<div *ngIf="step > 0">
+  <div class="field-configuration" *ngIf="parentSchema.properties[propertyKey]">
+    <h3>Configure Property</h3>
+    <mat-divider></mat-divider>
+    <mat-label
+      >Immutable property key: <b>{{ propertyKey }}</b></mat-label
+    >
+
+    <mat-form-field>
+      <input
+        matInput
+        name="property-name"
+        placeholder="Enter a property name"
+        #pnm="ngModel"
+        (keyup.enter)="
+          pnm.valid && !parentSchema.properties[pnm?.value?.toLowerCase()];
+          pnm.reset();
+          pnm.control.markAsUntouched()
+        "
+        [(ngModel)]="parentSchema.properties[propertyKey].title"
+      />
+    </mat-form-field>
+    <mat-form-field>
+      <textarea
+        matInput
+        name="description"
+        placeholder="Description"
+        #dm="ngModel"
+        [(ngModel)]="parentSchema.properties[propertyKey].description"
+        rows="3"
+      ></textarea>
+      <mat-hint align="end"> {{ dm.value?.length || 0 }} / 250 </mat-hint>
+    </mat-form-field>
+    <div class="advanced-settings">
+      <span
+        *ngIf="field != 'object'"
+        class="input-placer-area"
+        [inputSchemaPlacer]="field"
+        [advancedOnly]="true"
+        [(ngModel)]="parentSchema.properties[propertyKey]"
+      >
+      </span>
+      <div
+        class="input-defaults"
+        *ngIf="
+          field == 'date' &&
+          predefinedDefaults &&
+          predefinedDefaults.hasOwnProperty(fieldConfig.type)
+        "
+      >
+        <mat-form-field *ngIf="predefinedDefaults">
+          <mat-label>Default value</mat-label>
+          <mat-select [(ngModel)]="propertyKv.default">
+            <mat-option>None</mat-option>
+            <ng-container *ngFor="let predef of predefinedDefaults[fieldConfig.type]">
+              <mat-option [value]="predef.match">
+                {{ predef.match }}
+              </mat-option>
+            </ng-container>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <mat-divider></mat-divider>
+      <div class="general-settings" *ngIf="parentSchema.hasOwnProperty('primary')">
+        <div
+          *ngIf="basicPropertyTypes.includes(fieldConfig.type)"
+          matTooltip="To change primary property select another property as primary"
+          [matTooltipDisabled]="parentSchema.primary != propertyKey"
+        >
+          <mat-checkbox
+            [disabled]="parentSchema.primary == propertyKey"
+            [checked]="parentSchema.primary == propertyKey"
+            [indeterminate]="parentSchema.primary != propertyKey"
+            (change)="$event.checked ? (parentSchema.primary = propertyKey) : undefined"
+          >
+            Primary field
+          </mat-checkbox>
+        </div>
+        <div
+          *ngIf="translatableTypes.includes(fieldConfig.type)"
+          matTooltip="You can't change this property after creation."
+        >
+          <mat-checkbox
+            [disabled]="immutableProperties.includes(propertyKey)"
+            [(ngModel)]="propertyKv.options.translate"
+          >
+            Translate
+          </mat-checkbox>
+        </div>
+        <div>
+          <mat-checkbox [(ngModel)]="propertyKv.readOnly"> Read-only </mat-checkbox>
+        </div>
+        <div
+          *ngIf="
+            propertyKv.type == 'string' ||
+            propertyKv.type == 'number' ||
+            propertyKv.type == 'textarea'
+          "
+        >
+          <mat-checkbox
+            matTooltip="Enable this option to prevent the duplication of the field value on the bucket. For example: email, username, etc."
+            [(ngModel)]="propertyKv.options.unique"
+          >
+            Unique
+          </mat-checkbox>
+        </div>
+      </div>
+
+      <div *ngIf="fieldConfig.type != 'boolean'">
+        <mat-checkbox
+          [ngModel]="parentSchema.required && parentSchema.required.indexOf(propertyKey) > -1"
+          (ngModelChange)="toggleRequired(propertyKey, $event)"
+        >
+          Required
+        </mat-checkbox>
+      </div>
+
+      <div *ngIf="nonIndexablePropertyTypes.indexOf(fieldConfig.type) == -1">
+        <mat-checkbox
+          [(ngModel)]="propertyKv.options.index"
+          matTooltip="Enable this option to reduce the response time if this field is used in queries often"
+        >
+          Index
+        </mat-checkbox>
+      </div>
+    </div>
+    <mat-card appearance="outlined" class="mat-elevation-z0">
+      <mat-card-actions>
+        <button
+          mat-button
+          *ngIf="parentSchema.properties[propertyKey]"
+          [disabled]="pnm.invalid || dm.invalid"
+          (click)="step = 0; field = null; propertyKey = ''"
+        >
+          <mat-icon>add</mat-icon>
+          Add Another Field
+        </button>
+        <button
+          *ngIf="parentSchema.properties[propertyKey]"
+          class="save-button"
+          mat-button
+          canInteract="bucket:update"
+          [resource]="parentSchema._id"
+          [disabled]="!!savingState || pnm.invalid || dm.invalid"
+          (click)="save()"
+          [ngSwitch]="savingState"
+        >
+          <mat-icon *ngSwitchDefault>save</mat-icon>
+          <mat-progress-spinner
+            *ngSwitchCase="'saving'"
+            [diameter]="18"
+            color="primary"
+            mode="indeterminate"
+          >
+          </mat-progress-spinner>
+          <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
+          <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
+          <span>{{ (!savingState ? "save" : savingState) | titlecase }}</span>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <div class="field-name-settings" *ngIf="!parentSchema.properties[propertyKey]">
+    <h3>Add New Property</h3>
+    <mat-divider></mat-divider>
+    <mat-form-field>
+      <input
+        matInput
+        name="property-name"
+        placeholder="Enter a property name"
+        #pnm="ngModel"
+        (ngModelChange)="updatePropertyExistsState(pnm, $event)"
+        (keyup.enter)="
+          pnm.valid &&
+            !parentSchema.properties[pnm?.value?.toLowerCase()] &&
+            addProperty(pnm.value) &&
+            pnm.reset() &&
+            pnm.control.markAsUntouched()
+        "
+        ngModel
+        required
+        pattern="^(?!(_id)$)([a-z_0-9]*)+$"
+      />
+      <mat-error *ngIf="pnm?.errors?.required"> Property name is required. </mat-error>
+      <mat-error *ngIf="pnm?.errors?.pattern">
+        Property name should meet the following requirements<br />
+        - Can not be '_id'.<br />
+        - Can not include non-word character.<br />
+        - Can not include uppercase letter.<br />
+      </mat-error>
+      <mat-error *ngIf="pnm?.errors?.propertyExists"> Property name already exists. </mat-error>
+    </mat-form-field>
+    <button
+      mat-button
+      [disabled]="dm?.invalid || pnm?.invalid || parentSchema.properties[pnm.value.toLowerCase()]"
+      (click)="addProperty(pnm?.value, dm?.value)"
+    >
+      <mat-icon>add</mat-icon> Add new property
+    </button>
+  </div>
+</div>

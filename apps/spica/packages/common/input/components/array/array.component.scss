@@ -1,0 +1,107 @@
+:root.dark :host {
+  --opacity: 0.5;
+}
+:host {
+  --opacity: 1;
+  display: inline-block;
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  mat-card {
+    padding: 0;
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+    mat-card-header {
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      background: rgba(var(--background-app-bar-rgb), var(--opacity));
+      align-items: center;
+      padding: 15px 10px;
+      padding-left: unset;
+      mat-card-subtitle,
+      mat-card-title {
+        margin: unset;
+        font-size: 12px;
+      }
+      span.fill {
+        flex: 1 1 auto;
+      }
+    }
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+    mat-card-content {
+      padding: 10px;
+      display: flex;
+      div {
+        display: flex;
+        flex-flow: column;
+        &:first-of-type {
+          width: 40px;
+          button {
+            ::ng-deep .mat-badge-content {
+              right: -1px;
+              top: -1px;
+            }
+            &:not(:first-of-type) {
+              margin-top: 4px;
+            }
+          }
+        }
+        &:last-of-type {
+          flex: 1 1 auto;
+          margin-top: unset;
+          margin-left: 10px;
+          display: flex;
+          flex-flow: row;
+          span {
+            flex: 1 1 auto;
+          }
+          ::ng-deep mat-form-field {
+            padding-top: 0px !important;
+          }
+          button {
+            margin-left: 10px;
+            width: 25px;
+            height: 25px;
+            line-height: 21px;
+            /* TODO(mdc-migration): The following rule targets internal classes of button that may no longer apply for the MDC version. */
+            ::ng-deep .mat-button-wrapper {
+              padding: unset;
+            }
+          }
+        }
+        .drag-box {
+          cursor: move;
+          .cdk-drag-preview {
+            box-sizing: border-box;
+            border-radius: 4px;
+            box-shadow:
+              0 5px 5px -3px rgba(0, 0, 0, 0.2),
+              0 8px 10px 1px rgba(0, 0, 0, 0.14),
+              0 3px 14px 2px rgba(0, 0, 0, 0.12);
+          }
+
+          .cdk-drag-placeholder {
+            opacity: 0;
+          }
+
+          .cdk-drag-animating {
+            transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+          }
+
+          .drag-box:last-child {
+            border: none;
+          }
+
+          .drag-list.cdk-drop-list-dragging .drag-box:not(.cdk-drag-placeholder) {
+            transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+          }
+        }
+      }
+    }
+  }
+
+  &.minimal-input-placer {
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+    mat-card-header {
+      display: none;
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "name": "mongoreplicationcontroller",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/mongoreplicationcontroller/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "serve": {
+      "executor": "@nx/js:node",
+      "options": {
+        "buildTarget": "mongoreplicationcontroller:build"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "inputs": [
+        "{workspaceRoot}/tsconfig.json",
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/project.json"
+      ],
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/mongoreplicationcontroller",
+        "main": "apps/mongoreplicationcontroller/src/main.ts",
+        "tsConfig": "apps/mongoreplicationcontroller/tsconfig.json"
+      },
+      "cache": true
+    },
+    "build-image": {
+      "inputs": [
+        "{workspaceRoot}/tsconfig.json",
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/project.json",
+        "{projectRoot}/Dockerfile"
+      ],
+      "command": "docker build --platform=linux/amd64 . -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:$VERSION",
+      "cache": true
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build-image"],
+      "options": {
+        "command": "docker push spicaengine/mongoreplicationcontroller:$VERSION"
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../../../../libs/core/differ"
+    },
+    {
+      "path": "../../passport/"
+    },
+    {
+      "path": "../services"
+    }
+  ]
+}

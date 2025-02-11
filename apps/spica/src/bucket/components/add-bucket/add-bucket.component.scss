@@ -1,0 +1,43 @@
+::ng-deep {
+  .add-new-bucket-modal {
+    padding: 0 !important;
+    align-items: flex-start;
+    flex-direction: column;
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+    mat-card-header {
+      /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+      .mat-card-header-text {
+        margin: 0;
+      }
+    }
+
+    form {
+      min-width: 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      mat-form-field {
+        width: 100%;
+        ::ng-deep {
+          /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
+          .mat-form-field-prefix {
+            top: 0.35rem;
+          }
+        }
+      }
+      > button {
+        margin-top: 10px;
+      }
+    }
+  }
+  .icon-container {
+    padding: 0px 8px;
+    .search-icon {
+      width: 100%;
+      mat-icon {
+        color: var(--foreground-icon);
+      }
+    }
+  }
+}

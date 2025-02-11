@@ -1,0 +1,114 @@
+<ng-template #toolbar>
+  <span>
+    <h4>
+      <mat-icon>vpn_key</mat-icon>
+      <span>{{ apiKey._id ? apiKey.name : "Create API Key" }}</span>
+    </h4>
+  </span>
+</ng-template>
+<div class="actions" *ngIf="apiKey._id">
+  <button mat-button (click)="viewState = 'meta'" [class.mat-flat-button]="viewState == 'meta'">
+    <mat-icon>view_module</mat-icon>
+    Credentials
+  </button>
+  <button mat-button (click)="viewState = 'policy'" [class.mat-flat-button]="viewState == 'policy'">
+    <mat-icon>layers</mat-icon>
+    Policies
+  </button>
+</div>
+<mat-card appearance="outlined" *ngIf="viewState == 'meta'">
+  <mat-card-content>
+    <form #apiKeyForm="ngForm">
+      <div class="status" *ngIf="apiKey._id">
+        <h3>Status</h3>
+        <mat-slide-toggle name="toggleStatus" [(ngModel)]="apiKey.active">
+          {{ apiKey.active ? "Active" : "Deactive" }}
+        </mat-slide-toggle>
+      </div>
+      <mat-form-field *ngIf="apiKey.key">
+        <input
+          matInput
+          name="apiKeyKey"
+          placeholder="API Key"
+          disabled
+          [(ngModel)]="apiKey.key"
+          required
+        />
+      </mat-form-field>
+      <mat-form-field>
+        <input
+          matInput
+          name="apiKeyName"
+          placeholder="Name"
+          [(ngModel)]="apiKey.name"
+          #apiKeyNameModel="ngModel"
+          required
+        />
+        <mat-error *ngIf="apiKeyNameModel?.errors?.required">This field is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <textarea
+          matInput
+          name="apiKeyDescription"
+          placeholder="Description"
+          [(ngModel)]="apiKey.description"
+        ></textarea>
+      </mat-form-field>
+    </form>
+  </mat-card-content>
+  <mat-card-actions>
+    <button
+      class="save-button"
+      [disabled]="apiKeyForm.invalid"
+      [canInteract]="apiKey._id ? 'passport:apikey:update' : 'passport:apikey:create'"
+      [resource]="apiKey._id ? apiKey._id : undefined"
+      mat-button
+      (click)="saveApiKey()"
+    >
+      <mat-icon>save</mat-icon>
+      <span> Save </span>
+    </button>
+  </mat-card-actions>
+</mat-card>
+
+<mat-card appearance="outlined" *ngIf="viewState == 'policy'">
+  <mat-card-content>
+    <div class="policies" *ngIf="apiKey._id">
+      <mat-list>
+        <h3 mat-subheader>Owned Policies</h3>
+        <mat-list-item *ngFor="let policy of ownedPolicies">
+          <mat-icon mat-list-icon>layers</mat-icon>
+          <label mat-line [matTooltip]="policy.description">{{ policy.name }}</label>
+          <button
+            canInteract="passport:apikey:policy:remove"
+            [resource]="apiKey._id + '/' + policy._id"
+            mat-icon-button
+            matTooltip="Detach this policy"
+            (click)="detachPolicy(policy._id)"
+            color="warn"
+          >
+            <mat-icon>link_off</mat-icon>
+          </button>
+        </mat-list-item>
+      </mat-list>
+      <mat-list>
+        <h3 mat-subheader>Ownable Policies</h3>
+        <ng-container *ngFor="let policy of ownablePolicies">
+          <mat-list-item>
+            <mat-icon mat-list-icon>layers</mat-icon>
+            <label mat-line [matTooltip]="policy.description">{{ policy.name }}</label>
+            <button
+              canInteract="passport:apikey:policy:add"
+              [resource]="apiKey._id + '/' + policy._id"
+              mat-icon-button
+              matTooltip="Attach this policy"
+              (click)="attachPolicy(policy._id)"
+            >
+              <mat-icon>link</mat-icon>
+            </button>
+          </mat-list-item>
+        </ng-container>
+      </mat-list>
+    </div>
+  </mat-card-content>
+</mat-card>

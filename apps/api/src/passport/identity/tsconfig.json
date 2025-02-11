@@ -1,0 +1,27 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../asset"
+    },
+    {
+      "path": "../../preference/services"
+    },
+    {
+      "path": "../policy"
+    },
+    {
+      "path": "../authfactor"
+    },
+    {
+      "path": "../../bucket/common"
+    },
+    {
+      "path": "../../status"
+    }
+  ]
+}

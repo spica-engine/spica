@@ -1,0 +1,48 @@
+<ng-template #fileView let-nodes="nodes">
+  <div class="list-header">
+    <div class="node">
+      <ng-container *ngIf="currentNode.parent; else noBack">
+        <button mat-icon-button (click)="back()" disableRipple>
+          <mat-icon>arrow_back </mat-icon>
+        </button>
+      </ng-container>
+      <ng-template #noBack>
+        <span>#</span>
+      </ng-template>
+      <span class="node-name">
+        {{ currentNode.name }}
+      </span>
+      <span class="node-date"> Last Modified </span>
+      <span class="node-size">Size</span>
+    </div>
+  </div>
+  <mat-nav-list *ngIf="controls">
+    <ng-container *ngTemplateOutlet="listItems; context: {nodes: nodes, controls: controls}">
+    </ng-container>
+  </mat-nav-list>
+</ng-template>
+
+<ng-template #listItems let-nodes="nodes" let-controls="controls">
+  <mat-list-item *ngFor="let node of nodes" (click)="controls && onNodeClicked(node)">
+    <div class="node">
+      <mat-icon> {{ node.dir ? "folder" : "description" }} </mat-icon>
+      <span class="node-name">
+        {{ node.name }}
+      </span>
+      <span class="node-date">
+        {{ node.date | date: "mediumDate" }}
+      </span>
+      <span class="node-size">{{ formatSize(node) }}</span>
+    </div>
+  </mat-list-item>
+</ng-template>
+
+<ng-container *ngIf="currentNode && controls">
+  <div *ngTemplateOutlet="fileView; context: {nodes: currentNode.children}"></div>
+</ng-container>
+
+<ng-container *ngIf="!controls">
+  <div class="disabled-controls">
+    <mat-icon>folder_zip</mat-icon>
+  </div>
+</ng-container>

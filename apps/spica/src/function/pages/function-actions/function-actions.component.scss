@@ -1,0 +1,98 @@
+:host {
+  mat-toolbar {
+    min-height: 250px;
+    padding: 0 30px;
+    align-items: flex-start;
+    flex-direction: column;
+
+    h4 {
+      mat-icon,
+      span {
+        vertical-align: middle;
+        margin-left: 5px;
+      }
+    }
+
+    button:last-of-type {
+      align-self: flex-end;
+      margin-top: 60px;
+    }
+  }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  mat-card {
+    margin: 30px;
+    margin-top: -85px;
+    overflow: hidden;
+  }
+
+  mat-header-cell:first-of-type,
+  mat-cell:first-of-type {
+    word-break: break-all;
+    flex: 1.5;
+    justify-content: flex-start;
+  }
+
+  mat-header-cell:nth-child(2),
+  mat-cell:nth-child(2) {
+    word-break: break-word;
+    flex: 2;
+    justify-content: center;
+  }
+
+  mat-header-cell:nth-child(3),
+  mat-cell:nth-child(3) {
+    word-break: break-word;
+    flex: 3;
+    justify-content: center;
+  }
+
+  mat-header-cell:last-of-type,
+  mat-cell:last-of-type {
+    min-width: 150px;
+    flex: 1;
+    justify-content: flex-end;
+  }
+  .list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 56px;
+    font-size: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+    margin-bottom: 5px;
+    > div {
+      flex: 1;
+      text-align: center;
+      color: var(--foreground-secondary-text);
+      &:last-of-type {
+        text-align: end;
+      }
+      &:first-of-type {
+        text-align: left;
+      }
+    }
+  }
+  category {
+    ::ng-deep {
+      .drag-container {
+        /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+        mat-card {
+          padding: 16px 36px;
+        }
+      }
+    }
+  }
+  .schema-card {
+    > div {
+      flex: 1;
+      width: 100%;
+      text-align: center;
+      &:first-of-type {
+        text-align: start;
+      }
+      &:last-of-type {
+        justify-content: flex-end;
+      }
+    }
+  }
+}

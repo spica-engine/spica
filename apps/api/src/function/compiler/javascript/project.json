@@ -1,0 +1,5 @@
+{
+  "name": "api/function/compiler/javascript",
+  "sourceRoot": "apps/api/src/function/compiler/javascript",
+  "projectType": "application"
+}

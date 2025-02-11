@@ -1,0 +1,112 @@
+:host {
+  .cdk-drop-list {
+    display: block;
+    width: 100%;
+    background: transparent !important;
+    min-height: 20px;
+  }
+  .cdk-drag-placeholder {
+    opacity: 0;
+  }
+}
+::ng-deep {
+  .cdk-drag-preview {
+    route-item {
+      /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+      .mat-list-item-content {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        box-sizing: border-box;
+        padding: 0 8px;
+        position: relative;
+        height: inherit;
+        height: 100%;
+        > mat-icon {
+          margin-right: 5px;
+        }
+      }
+    }
+  }
+
+  .grouping {
+    mat-expansion-panel {
+      margin: 0 2px;
+      background: transparent;
+      box-shadow: 0 10px 10px -3px rgb(0 0 0 / 10%);
+    }
+    mat-expansion-panel-header {
+      padding: 8px;
+      color: white;
+      &:hover {
+        .panel-actions {
+          opacity: 1;
+        }
+      }
+      .panel-actions {
+        align-items: center;
+        display: flex;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+    }
+  }
+
+  .categoryDialog {
+    mat-form-field {
+      width: 100%;
+    }
+    .actions {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      /* TODO(mdc-migration): The following rule targets internal classes of button that may no longer apply for the MDC version. */
+      .mat-button-wrapper {
+        display: flex;
+        align-items: center;
+        mat-icon {
+          margin-right: 5px;
+        }
+      }
+    }
+    .select-input {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 24px;
+      /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
+      /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
+      /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
+      mat-chip-list {
+        /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
+        /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
+        .mat-chip-list-wrapper {
+          flex-direction: column;
+          /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version. */
+          mat-chip {
+            width: 100%;
+            cursor: pointer;
+          }
+        }
+      }
+    }
+  }
+}
+
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 4px;
+  box-shadow:
+    0 5px 5px -3px rgba(0, 0, 0, 0.2),
+    0 8px 10px 1px rgba(0, 0, 0, 0.14),
+    0 3px 14px 2px rgba(0, 0, 0, 0.12);
+  color: var(--primary-text);
+  .drag-button {
+    z-index: 0;
+  }
+}
+
+.empty-category {
+  min-height: 50px;
+  position: relative;
+}

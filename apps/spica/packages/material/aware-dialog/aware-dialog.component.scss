@@ -1,0 +1,30 @@
+:host {
+  h4[mat-dialog-title] {
+    margin-bottom: 20px;
+    font-size: inherit;
+    & > * {
+      vertical-align: middle;
+    }
+  }
+  /* TODO(mdc-migration): The following rule targets internal classes of dialog that may no longer apply for the MDC version. */
+  mat-dialog-actions {
+    float: right;
+  }
+
+  ::ng-deep {
+    code {
+      background-color: rgba(27, 31, 35, 0.05);
+      border-radius: 3px;
+      font-size: 85%;
+      margin: 0;
+      padding: 0.2em 0.4em;
+    }
+    mat-form-field {
+      width: 100%;
+      /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
+      .mat-form-field-wrapper {
+        padding-bottom: unset;
+      }
+    }
+  }
+}

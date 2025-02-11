@@ -1,0 +1,89 @@
+<mat-card appearance="outlined" class="mat-elevation-z0">
+  <mat-card-header>
+    <mat-card-title>{{ schema.title }}</mat-card-title>
+    <mat-card-subtitle *ngIf="schema.description">{{ schema.description }}</mat-card-subtitle>
+    <span class="fill"></span>
+    <mat-error *ngIf="model?.errors?.minItems && _values.length == 0">
+      This property must have at least {{ model?.errors?.minItems?.min }} items.
+    </mat-error>
+    <ng-content></ng-content>
+  </mat-card-header>
+  <mat-card-content>
+    <div
+      cdkDropList
+      #model="ngModel"
+      #arrayContainer="arrayContainer"
+      ngModelArray
+      ngModelParent
+      [ngModel]="_values"
+      [name]="schema.$name"
+      [uniqueItems]="schema.uniqueItems"
+      [maxItems]="schema.maxItems"
+      [minItems]="schema.minItems"
+      [cdkDropListDisabled]="_disabled"
+      (cdkDropListDropped)="move($event)"
+    >
+      <button
+        *ngFor="let item of _values; let index = index"
+        class="mat-elevation-z0"
+        [class.drag-box]="!_disabled"
+        cdkDrag
+        mat-icon-button
+        mat-raised-button
+        matBadge="X"
+        matBadgeColor="warn"
+        matBadgeSize="small"
+        matBadgePosition="after"
+        [matBadgeHidden]="
+          [].concat(model?.errors?.uniqueItems).concat(model?.errors?.emptyItems).indexOf(index) ==
+          -1
+        "
+        [color]="_activeIndex == index ? 'primary' : 'default'"
+        (click)="_activeIndex = index"
+      >
+        {{ index + 1 }}
+      </button>
+      <button
+        mat-icon-button
+        [disabled]="_disabled"
+        (click)="addItem(); arrayContainer.propagateChanges()"
+      >
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
+    <div *ngIf="_activeIndex != undefined">
+      <span
+        #currentInput="ngModel"
+        [inputPlacer]="schema.items"
+        [disabled]="_disabled"
+        [name]="schema.$name + _activeIndex.toString()"
+        [(ngModel)]="_values[_activeIndex]"
+        (ngModelChange)="arrayContainer.propagateChanges()"
+        (click)="arrayContainer._onTouched()"
+      >
+        <mat-error *ngIf="model?.errors?.emptyItems">
+          All items in this property must be filled.
+        </mat-error>
+        <mat-error *ngIf="model?.errors?.uniqueItems">
+          All items in this property must be unique.
+        </mat-error>
+        <mat-error *ngIf="model?.errors?.minItems">
+          This property must have at least {{ model?.errors?.minItems?.min }} items.
+        </mat-error>
+        <mat-error *ngIf="model?.errors?.maxItems">
+          This property can have maximum {{ model?.errors?.maxItems?.max }} items.
+        </mat-error>
+      </span>
+      <button
+        mat-mini-fab
+        color="warn"
+        class="mat-elevation-z0"
+        [disabled]="_disabled"
+        *ngIf="_activeIndex != undefined && _values.length"
+        (click)="removeItem(); arrayContainer.propagateChanges()"
+      >
+        <mat-icon>remove</mat-icon>
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>

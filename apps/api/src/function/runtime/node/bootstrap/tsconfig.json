@@ -1,0 +1,32 @@
+{
+  "extends": "../../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "sourceMap": true,
+    "module": "ESNext",
+    "resolveJsonModule": false
+  },
+  "include": [
+    // bucket hooks proto
+    "../../../../bucket/hooks/proto/src/*.ts",
+    "../../../../bucket/hooks/proto/index.ts",
+    // bucket hooks proto node
+    "../../../../bucket/hooks/proto/node/src/*.ts",
+    "../../../../bucket/hooks/proto/node/index.ts",
+    // function database package
+    "../../../packages/database/src/*.ts",
+    "../../../packages/database/index.ts",
+    // function queue node
+    "../../../queue/node/src/*.ts",
+    "../../../queue/node/index.ts",
+    // function queue proto
+    "../../../queue/proto/*.ts",
+    "../../../queue/proto/index.ts",
+    // function logger
+    "../../../runtime/logger/*.ts",
+    "../../../runtime/logger/index.ts"
+  ],
+  "exclude": [],
+  "references": []
+}

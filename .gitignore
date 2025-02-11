@@ -1,9 +1,12 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
 # compiled output
-/dist
-/tmp
+dist
+tmp
 /out-tsc
+
+# database files
+db
 
 # dependencies
 node_modules
@@ -30,6 +33,7 @@ node_modules
 /coverage
 /libpeerconnection.log
 npm-debug.log
+yarn-error.log
 testem.log
 /typings
 *.log
@@ -39,9 +43,14 @@ testem.log
 Thumbs.db
 yarn-error.log
 
-# Bazel
-/bazel-*
-
 # Vim
 *.swp
 *.swo
+
+.nx/cache
+.nx/workspace-data
+
+# Ignore Angular CLI workspace-specific files (cache, etc.)
+.angular/
+
+.env

@@ -1,0 +1,30 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../../../../libs/core/patch"
+    },
+    {
+      "path": "../../../../../libs/database/pipeline"
+    },
+    {
+      "path": "../../../../../libs/filter"
+    },
+    {
+      "path": "../../../../../libs/core/differ"
+    },
+    {
+      "path": "../../bucket/services"
+    },
+    {
+      "path": "../../bucket/cache"
+    },
+    {
+      "path": "../../bucket/expression"
+    }
+  ]
+}

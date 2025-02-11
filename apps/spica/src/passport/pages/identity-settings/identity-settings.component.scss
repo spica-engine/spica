@@ -1,0 +1,69 @@
+:host {
+  /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+  mat-list-item.property {
+    text-align: center;
+    mat-form-field {
+      margin-top: 1em;
+      margin-right: 10px;
+    }
+    mat-form-field input {
+      text-transform: lowercase;
+    }
+  }
+
+  mat-expansion-panel {
+    box-shadow: none;
+    margin-top: 10px;
+    .input-placer-area {
+      display: flex;
+    }
+  }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  mat-card > p {
+    font-size: 13px;
+  }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  mat-card-content {
+    margin-bottom: 0px;
+  }
+
+  mat-expansion-panel.identity-settings {
+    mat-panel-title {
+      padding-top: 10px;
+    }
+    box-shadow: none;
+    margin-top: 10px;
+    mat-panel-description {
+      button {
+        flex: unset;
+        padding: 0;
+        min-width: 0;
+        width: auto;
+        height: auto;
+        flex-shrink: 0;
+        line-height: 0px;
+        border-radius: 50%;
+        margin-right: 10px;
+      }
+    }
+    .mat-mdc-subheader {
+      padding: 0 !important;
+    }
+    .mat-expansion-indicator {
+      height: 23px;
+    }
+    /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+    mat-list-item.validation {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    .mat-expansion-panel-header-description {
+      flex-grow: initial !important;
+    }
+    .drag-box {
+      cursor: move;
+      flex: unset;
+      padding-top: 2px;
+    }
+  }
+}

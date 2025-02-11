@@ -1,0 +1,158 @@
+:host {
+  mat-toolbar {
+    min-height: 250px;
+    padding: 0 30px;
+    display: flex !important;
+    justify-content: space-between !important;
+  }
+
+  .log-viewport {
+    height: 750px;
+    width: 100%;
+  }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  mat-card {
+    width: calc(100% - 60px);
+    margin: 30px;
+    margin-top: -85px;
+
+    div.header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      span.start {
+        width: 80%;
+        > mat-form-field:not(:last-of-type) {
+          margin-right: 10px;
+        }
+      }
+    }
+  }
+
+  .mat-mdc-card-content {
+    height: 100%;
+    .empty-list {
+      display: flex;
+      justify-content: center;
+    }
+    .cdk-virtual-scroll-viewport {
+      div:first-of-type {
+        margin-right: 24px;
+        padding: 0px 24px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        span {
+          display: inline-block;
+          word-wrap: break-word;
+        }
+        span:nth-child(1) {
+          width: 5%;
+          margin: 0px 5px 0px 0px;
+        }
+        span:nth-child(2) {
+          width: 15%;
+          margin: 0px 5px;
+        }
+        span:nth-child(3) {
+          width: 10%;
+          margin: 0px 5px;
+        }
+        span:last-of-type {
+          width: 70%;
+          margin: 0px 0px 0px 5px;
+        }
+      }
+
+      ::ng-deep .mat-expansion-panel {
+        box-shadow: none;
+        border-bottom: 1px solid rgba(var(--foreground-base-rgb), 0.1) !important;
+      }
+
+      .mat-expansion-panel  {
+        pre {
+          white-space: pre-wrap;
+          word-break: break-word;
+          font-size: 0.8rem !important;
+          line-height: 1rem;
+          margin: 0px;
+        }
+        .mat-expansion-panel-header {
+          height: 26px !important;
+          font-size: 0.9rem !important;
+        }
+        .mat-expansion-panel-header {
+          span {
+            display: flex;
+            align-items: center;
+          }
+          span:nth-child(1) {
+            width: 5%;
+            word-break: break-word;
+            margin: 0px 5px 0px 0px;
+            mat-icon {
+              &.debug {
+                color: #3d8d50;
+              }
+              &.log {
+                transform: scale(0.6);
+              }
+              &.info {
+                color: #4080d9;
+              }
+              &.warning {
+                color: #fba747;
+              }
+              &.error {
+                color: rgb(217, 48, 37);
+              }
+            }
+          }
+          span:nth-child(2) {
+            width: 15%;
+            word-break: break-word;
+            margin: 0px 5px;
+          }
+          span:nth-child(3) {
+            width: 10%;
+            word-break: break-word;
+            margin: 0px 5px;
+            outline: none;
+            mat-icon {
+              opacity: 0;
+              will-change: opacity;
+              transition: opacity 0.1s ease-in;
+              margin-left: 15px;
+              width: 18px;
+              height: 18px;
+              font-size: 18px;
+            }
+            &:hover  {
+              mat-icon {
+                opacity: 1;
+              }
+            }
+            &.active {
+              pointer-events: none;
+            }
+          }
+          span:last-of-type {
+            word-break: break-all;
+            overflow: hidden;
+            width: 70%;
+            margin: 0px 0px 0px 5px;
+
+            display: inline-block;
+            height: 26px;
+            line-height: 26px;
+          }
+        }
+      }
+
+      .mat-mdc-progress-spinner {
+        margin: 15px auto;
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "name": "api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/api/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "serve": {
+      "executor": "@nx/js:node",
+      "dependsOn": ["compile"],
+      "options": {
+        "buildTarget": "api:compile",
+        "buildTargetOptions": {
+          "outputPath": "dist/apps/api/src",
+          "outputFileName": "main.js"
+        }
+      }
+    },
+    "compile": {
+      "dependsOn": [
+        "transform-paths",
+        "build-assets",
+        {
+          "projects": ["api/function/runtime/node/bootstrap"],
+          "target": "build"
+        }
+      ]
+    },
+    "build-assets": {
+      "dependsOn": ["api/bucket/expression:build-assets"]
+    },
+    "transform-paths": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "resolve-tspaths"
+      }
+    },
+    "test-image": {
+      "command": "docker build --target test --platform=linux/amd64 . -f ./apps/api/Dockerfile",
+      "cache": true
+    },
+    "build-image": {
+      "inputs": [
+        "{workspaceRoot}/tsconfig.json",
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/project.json",
+        "{projectRoot}/Dockerfile"
+      ],
+      "command": "docker build --platform=linux/amd64 . -f ./apps/api/Dockerfile -t spicaengine/api:$VERSION",
+      "cache": true
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build-image"],
+      "options": {
+        "command": "docker push spicaengine/api:$VERSION"
+      }
+    }
+  }
+}

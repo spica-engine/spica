@@ -1,0 +1,23 @@
+{
+  "name": "api/function/runtime",
+  "sourceRoot": "apps/api/src/function/runtime",
+  "projectType": "application",
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/api/src/function/runtime/jest.config.ts"
+      },
+      "dependsOn": [
+        {
+          "projects": ["api/function/runtime/node/bootstrap"],
+          "target": "build"
+        },
+        {
+          "projects": ["api/function/compiler/typescript"],
+          "target": "build"
+        }
+      ]
+    }
+  }
+}

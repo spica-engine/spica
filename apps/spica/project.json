@@ -1,0 +1,105 @@
+{
+  "name": "spica",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "app",
+  "sourceRoot": "apps/spica/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@angular-devkit/build-angular:browser",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/spica",
+        "index": "apps/spica/src/index.html",
+        "main": "apps/spica/src/main.ts",
+        "polyfills": "apps/spica/src/polyfills.ts",
+        "tsConfig": "apps/spica/tsconfig.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "node_modules/monaco-editor/min",
+            "output": "assets/monaco/min/"
+          },
+          {
+            "glob": "**/*",
+            "input": "node_modules/monaco-editor/min-maps",
+            "output": "assets/monaco/min-maps/"
+          },
+          {
+            "glob": "**/*",
+            "input": "apps/spica/assets",
+            "output": "assets"
+          }
+        ],
+        "styles": [
+          "apps/spica/src/styles.scss",
+          "node_modules/@angular/material/prebuilt-themes/indigo-pink.css"
+        ],
+        "scripts": [],
+        "webWorkerTsConfig": "apps/spica/tsconfig.worker.json",
+        "vendorChunk": true,
+        "extractLicenses": false,
+        "buildOptimizer": false,
+        "sourceMap": true,
+        "optimization": false,
+        "namedChunks": true
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "2kb",
+              "maximumError": "4kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "buildOptimizer": false,
+          "optimization": false,
+          "vendorChunk": true,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "namedChunks": true
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "serve": {
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "configurations": {
+        "production": {
+          "browserTarget": "spica:build:production"
+        },
+        "development": {
+          "browserTarget": "spica:build:development"
+        }
+      },
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"]
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "buildTarget": "spica:build"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "serve-static": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "spica:build",
+        "spa": true
+      }
+    }
+  }
+}

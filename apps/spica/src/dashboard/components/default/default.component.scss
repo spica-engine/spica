@@ -1,0 +1,23 @@
+:host {
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  mat-card-header {
+    align-items: center;
+    justify-content: center;
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+    ::ng-deep .mat-card-header-text {
+      margin: 0;
+      text-align: center;
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  div.chart-container {
+    min-height: 320px;
+    height: calc(100% - 120px);
+  }
+  canvas {
+    height: 100%;
+  }
+}

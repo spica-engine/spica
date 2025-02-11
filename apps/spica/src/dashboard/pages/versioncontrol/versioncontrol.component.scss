@@ -1,0 +1,110 @@
+:host {
+  mat-toolbar {
+    min-height: 250px;
+    padding: 0 30px;
+    align-items: flex-start;
+    h4 > * {
+      vertical-align: middle;
+      margin-left: 5px;
+    }
+  }
+
+  mat-expansion-panel {
+    margin-top: -85px !important;
+    margin: 30px;
+
+    .expansion-content {
+      display: flex;
+
+      gap: 30px;
+
+      .starter {
+        flex: 1;
+      }
+
+      .advanced {
+        flex: 1;
+      }
+    }
+
+    pre {
+      background-color: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
+      padding: 10px;
+      border-radius: 3px;
+
+      span.comment {
+        color: grey;
+      }
+
+      span.editable {
+        border: 1px solid rgba(var(--foreground-base-rgb), 0.3);
+        border-radius: 3px;
+        padding: 2px;
+      }
+    }
+  }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  mat-card {
+    margin: 30px;
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+    mat-card-content {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 10px;
+
+      div.cli {
+        width: 50%;
+        max-width: 50%;
+      }
+
+      div.response {
+        width: 50%;
+        max-width: 50%;
+      }
+    }
+  }
+
+  pre.response {
+    background-color: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
+    text-align: left;
+    overflow: scroll;
+    border-radius: 3px;
+
+    width: 100%;
+    padding: 10px;
+    min-height: 100px;
+  }
+
+  mat-form-field.command-field {
+    /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
+    ::ng-deep .mat-form-field-infix {
+      padding: 0;
+    }
+
+    width: 100%;
+    pre {
+      margin: 0 !important;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+
+      input {
+        margin-top: 1px;
+      }
+
+      button {
+        mat-spinner {
+          display: inline-block;
+        }
+      }
+    }
+  }
+
+  mat-divider {
+    position: unset;
+  }
+}

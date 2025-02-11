@@ -1,0 +1,31 @@
+{
+  "name": "api/function/runtime/node/bootstrap",
+  "sourceRoot": "apps/api/src/function/runtime/node/bootstrap",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/*",
+        "{workspaceRoot}/tsconfig.json",
+        "{workspaceRoot}/apps/api/src/bucket/hooks/proto/src/*.ts",
+        "{projectRoot}/apps/api/src/bucket/hooks/proto/index.ts",
+        "{projectRoot}/apps/api/src/bucket/hooks/proto/node/src/*.ts",
+        "{projectRoot}/apps/api/src/bucket/hooks/proto/node/index.ts",
+        "{projectRoot}/apps/api/src/function/packages/database/src/*.ts",
+        "{projectRoot}/apps/api/src/function/packages/database/index.ts",
+        "{projectRoot}/apps/api/src/function/queue/node/src/*.ts",
+        "{projectRoot}/apps/api/src/function/queue/node/index.ts",
+        "{projectRoot}/apps/api/src/function/queue/proto/*.ts",
+        "{projectRoot}/apps/api/src/function/queue/proto/index.ts",
+        "{projectRoot}/apps/api/src/function/runtime/logger/*.ts",
+        "{projectRoot}/apps/api/src/function/runtime/logger/index.ts"
+      ],
+      "outputs": ["{workspaceRoot}/dist/apps/api/src/function/runtime/node/bootstrap/*"],
+      "options": {
+        "command": "yarn rollup -c './apps/api/src/function/runtime/node/bootstrap/rollup.config.js' --bundleConfigAsCjs"
+      },
+      "cache": true
+    }
+  }
+}

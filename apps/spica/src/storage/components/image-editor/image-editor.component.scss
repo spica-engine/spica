@@ -1,0 +1,29 @@
+:host {
+  .scaleSlider {
+    float: right;
+    mat-label {
+      padding: 0 10px;
+    }
+  }
+
+  ::ng-deep .cropper {
+    max-width: 100vw;
+    max-height: calc(80vh - 80px);
+  }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  mat-card {
+    max-height: 100%;
+  }
+
+  img {
+    max-width: 100%; /* This rule is very important, please do not ignore this! */
+  }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  mat-card-content {
+    margin-bottom: 0px !important;
+  }
+
+  mat-progress-spinner.save-spinner {
+    margin: auto;
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@spica-devkit/bucket",
+  "license": "AGPLv3",
+  "version": "0.0.0-PLACEHOLDER",
+  "description": "Bucket package for Spica.",
+  "author": "spica",
+  "keywords": [
+    "spica",
+    "devkit"
+  ],
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "typings": "dist/index.d.ts",
+  "sideEffects": false,
+  "dependencies": {
+    "@types/json-schema": "^7.0.15",
+    "axios": "^1.7.9",
+    "rxjs": "^7.8.1",
+    "ws": "^8.18.0"
+  }
+}

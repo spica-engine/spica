@@ -1,0 +1,13 @@
+<div>
+  <h4>Example Code</h4>
+  <button mat-icon-button (click)="dialogRef.close()"><mat-icon>clear</mat-icon></button>
+</div>
+<pre [innerHTML]="data.code"></pre>
+<div>
+  <button mat-button #clipboard="matClipboard" [matClipboard]="data.code">
+    <mat-icon [matTooltip]="clipboard.toolTip">
+      {{ clipboard.icon }}
+    </mat-icon>
+    Copy to clipboard
+  </button>
+</div>

@@ -1,0 +1,55 @@
+:host {
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  mat-card {
+    transition: width 1s;
+    display: inline-block;
+    width: calc(100% - 60px);
+    margin: 30px;
+    margin-top: -85px;
+    overflow: auto;
+
+    table {
+      min-width: 100%;
+      width: max-content;
+      .select {
+        width: 75px;
+      }
+      th:not(.select):not(:last-of-type) {
+        position: relative;
+        &:after {
+          content: "||";
+          position: absolute;
+          right: 10px;
+          top: 10px;
+        }
+      }
+      tr {
+        height: 40px !important;
+        > th:last-of-type {
+          padding-right: 35px;
+        }
+        > *:last-of-type {
+          text-align: right;
+        }
+      }
+
+      td.mat-mdc-cell {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 0;
+      }
+
+      td.mat-mdc-cell {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 0;
+      }
+
+      td.mat-mdc-cell:last-of-type {
+        text-overflow: unset;
+      }
+    }
+  }
+}

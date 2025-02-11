@@ -1,0 +1,79 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "defaultBase": "nx-monorepo",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": [
+      "default",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/jest.config.[jt]s",
+      "!{projectRoot}/src/test-setup.[jt]s",
+      "!{projectRoot}/test-setup.[jt]s"
+    ],
+    "sharedGlobals": []
+  },
+  "pluginsConfig": {
+    "@nx/js": {
+      "analyzeSourceFiles": false
+    }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        },
+        "build": {
+          "targetName": "build",
+          "configName": "tsconfig.json"
+        }
+      }
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "options": {
+        "targetName": "test",
+        "disableJestRuntime": true
+      }
+    }
+  ],
+  "nxCloudId": "66fba1edf5b0be5c19ad179e",
+  "targetDefaults": {
+    "build": {
+      "cache": false
+    },
+    "test": {
+      "cache": true,
+      "configurations": {
+        "ci-cd": {
+          "forceExit": true,
+          "runInBand": true,
+          "silent": true
+        },
+        "local": {
+          "forceExit": true
+        }
+      },
+      "defaultConfiguration": "ci-cd"
+    },
+    "set-version": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "yarn --cwd dist/{projectRoot} version --new-version $VERSION --no-git-tag-version --no-commit-hooks"
+      }
+    },
+    "nx-release-publish": {
+      "dependsOn": ["set-version"],
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    }
+  },
+  "sync": {
+    "applyChanges": false,
+    "disabledTaskSyncGenerators": ["@nx/js:typescript-sync"]
+  }
+}

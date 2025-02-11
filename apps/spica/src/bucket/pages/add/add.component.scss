@@ -1,0 +1,110 @@
+::ng-deep .history-tree {
+  min-width: unset !important;
+  overflow: unset !important;
+  width: 40px;
+  border-radius: 25px !important;
+  .mat-mdc-menu-content {
+    padding: 0 !important;
+    button:not(:first-child) {
+      margin-top: 4px;
+    }
+  }
+}
+
+:host {
+  mat-toolbar {
+    min-height: 250px;
+    padding: 0 30px;
+    align-items: flex-start;
+    span {
+      h4 {
+        & > * {
+          vertical-align: middle;
+        }
+        mat-icon {
+          margin-left: -3px;
+        }
+        span {
+          margin-left: 5px;
+        }
+        /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version.*/
+        /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version.*/
+        mat-chip-list {
+          display: inline-block;
+          margin-left: 10px;
+          /* TODO(mdc-migration): The following rule targets internal classes of chips that may no longer apply for the MDC version.*/
+          mat-chip {
+            font-size: 11px;
+            padding: 7px 10px;
+            min-height: 20px;
+            height: 22px;
+            line-height: normal;
+          }
+        }
+      }
+
+      h6 {
+        font-size: 14px;
+      }
+    }
+    .space-between {
+      flex: 1 1 auto;
+    }
+  }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
+  mat-card {
+    width: calc(100% - 60px);
+    margin: 30px;
+    margin-top: -85px;
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
+    mat-card-content {
+      &.handset form {
+        flex-flow: column;
+      }
+      form {
+        display: flex;
+        flex-flow: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        > div {
+          padding: 10px;
+          &.left,
+          &.right {
+            flex: 2.5;
+            overflow-x: scroll;
+          }
+          &.bottom {
+            width: 100%;
+            flex-basis: 100%;
+            padding-top: 0;
+          }
+          mat-error {
+            font-size: 10.5px;
+          }
+          div {
+            padding-top: 15px;
+          }
+          // TODO(thesayyn): replace this with css variables
+          ::ng-deep .input-placer-input {
+            width: 100%;
+          }
+        }
+      }
+    }
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
+    mat-card-actions {
+      display: flex;
+      align-items: baseline;
+      justify-content: flex-end;
+      form {
+        display: inline;
+        mat-form-field {
+          width: 150px;
+          margin-left: 5px;
+          margin-right: 10px;
+        }
+      }
+    }
+  }
+}

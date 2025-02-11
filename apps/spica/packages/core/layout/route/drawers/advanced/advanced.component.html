@@ -1,0 +1,184 @@
+<ng-template #addToCategory>
+  <h3>Move "{{ addToCategoryItemName }}" to category</h3>
+  <mat-divider></mat-divider>
+  <form>
+    <mat-form-field>
+      <input
+        matInput
+        (keyup.enter)="newCategory && onCategorySelect(newCategory, addToCategoryModalRef)"
+        placeholder="Find a category"
+        [(ngModel)]="newCategory"
+        autocomplete="off"
+      />
+      <div class="select-input">
+        <mat-chip-listbox>
+          <mat-chip-option
+            *ngFor="let category of getCategoryByName(newCategory); let index = index"
+            (click)="onCategorySelect(category.name, addToCategoryModalRef)"
+          >
+            {{ category.name }}
+          </mat-chip-option>
+          <mat-chip-option
+            color="accent"
+            (click)="onCategorySelect(newCategory, addToCategoryModalRef)"
+            *ngIf="isCategoryNameUnique(newCategory)"
+          >
+            + Add "{{ newCategory }}" as new category</mat-chip-option
+          >
+        </mat-chip-listbox>
+      </div>
+      <mat-icon matSuffix>arrow_drop_down</mat-icon>
+    </mat-form-field>
+  </form>
+</ng-template>
+
+<ng-template #editCategoryDialog>
+  <h3>Edit Category</h3>
+  <mat-divider></mat-divider>
+  <form>
+    <mat-form-field>
+      <input
+        (keydown.enter)="
+          isCategoryNameUnique(newCategory) && onCategorySelect(newCategory, editCategoryModalRef)
+        "
+        matInput
+        placeholder="Enter name..."
+        [(ngModel)]="newCategory"
+      />
+    </mat-form-field>
+    <div class="actions">
+      <button
+        mat-button
+        [disabled]="!isCategoryNameUnique(newCategory)"
+        (click)="onCategorySelect(newCategory, editCategoryModalRef)"
+      >
+        <mat-icon>save</mat-icon>
+        Save
+      </button>
+    </div>
+  </form>
+</ng-template>
+
+<div class="drag-container" *ngIf="categorizedRoutes">
+  <div
+    cdkDropList
+    [cdkDropListData]="categories"
+    (cdkDropListDropped)="changeCategoryOrder($event.previousIndex, $event.currentIndex)"
+  >
+    <div
+      cdkDrag
+      cdkDragLockAxis="y"
+      class="drag-part"
+      *ngFor="let category of categories; let i = index"
+    >
+      <mat-accordion class="grouping mat-elevation-z0">
+        <mat-expansion-panel
+          hideToggle
+          (closed)="categoryExpandStatus[i] = false"
+          (opened)="categoryExpandStatus[i] = true"
+          [expanded]="categoryExpandStatus[i] || false"
+        >
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <span class="route-title"> {{ category.name }}</span>
+              <div class="panel-actions">
+                <mat-icon cdkDragHandle>drag_handle</mat-icon>
+                <mat-icon (click)="$event.stopPropagation()" [matMenuTriggerFor]="categoryMoreMenu"
+                  >more_vert</mat-icon
+                >
+              </div>
+              <mat-menu #categoryMoreMenu="matMenu">
+                <button
+                  mat-menu-item
+                  [newCategory]="category.name"
+                  (click)="
+                    newCategory = category.name;
+                    openEditCategoryModal(editCategoryDialog, category.name)
+                  "
+                >
+                  <mat-icon>edit</mat-icon> Edit
+                </button>
+
+                <button
+                  (click)="$event.stopPropagation()"
+                  color="warn"
+                  [matAwareDialog]="{
+                    title: 'Confirmation',
+                    templateOrDescription: deleteCategoryDialog,
+                    answer: '',
+                    noAnswer: true
+                  }"
+                  (confirm)="deleteCategory(category.name)"
+                  mat-menu-item
+                >
+                  <mat-icon color="warn">delete</mat-icon> Delete
+                </button>
+              </mat-menu>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <ng-container
+            *ngTemplateOutlet="
+              routeList;
+              context: {
+                items: categorizedRoutes[category.name],
+                contentId: 'cdk-drop-list-0' + (i + 1)
+              }
+            "
+          >
+          </ng-container>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+
+    <div
+      [class.empty-category]="!categorizedRoutes[categoryService.EMPTY_CATEGORY_KEYWORD]?.length"
+    >
+      <ng-container
+        *ngTemplateOutlet="
+          routeList;
+          context: {
+            items: categorizedRoutes[categoryService.EMPTY_CATEGORY_KEYWORD],
+            contentId: categoryService.EMPTY_CATEGORY_DROP_ID
+          }
+        "
+      >
+      </ng-container>
+    </div>
+
+    <ng-template #routeList let-contentId="contentId" let-items="items">
+      <div
+        cdkDropList
+        cdkDropListOrientation="vertical"
+        (cdkDropListDropped)="drop($event)"
+        [id]="contentId"
+        [cdkDropListConnectedTo]="dropListIds"
+        [cdkDropListData]="items"
+      >
+        <div class="draggable-item" *ngFor="let item of items">
+          <div cdkDragLockAxis="y" [cdkDragDisabled]="!item.draggable" cdkDrag [id]="item.id">
+            <route-item
+              [currentCategory]="currentCategory"
+              [moreTemplate]="moreTemplate"
+              [route]="item"
+            >
+              <mat-icon actionContent *ngIf="item.draggable" cdkDragHandle>drag_handle</mat-icon>
+              <button
+                mat-menu-item
+                (click)="
+                  addToCategoryItemName = item.display; openAddToCategory(addToCategory, item.id)
+                "
+              >
+                <mat-icon>add</mat-icon>
+                Add to category
+              </button>
+            </route-item>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </div>
+</div>
+<ng-template #deleteCategoryDialog let-answer="answer">
+  <p>This action will remove the category but keep resources.</p>
+  <p>Please confirm this action to continue.</p>
+</ng-template>

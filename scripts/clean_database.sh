@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-if [ ! -f WORKSPACE ]; then
+if [ ! -f nx.json ]; then
     echo "###########################################"
     echo "Please run this script from workspace root."
     echo "###########################################"
-    exit 1;
+    exit 1
 fi
 
-rm -rf ./dist/.data ./dist/.data1 ./dist/.data2 ./dist/.data3
+rm -rf ./db/.data ./db/.data1 ./db/.data2 ./db/.data3

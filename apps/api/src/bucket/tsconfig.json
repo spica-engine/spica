@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "./realtime"
+    },
+    {
+      "path": "./graphql"
+    }
+  ]
+}

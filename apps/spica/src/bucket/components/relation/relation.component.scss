@@ -1,0 +1,81 @@
+::ng-deep {
+  .mat-mdc-menu-panel.relation-picker {
+    max-width: unset !important;
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+    /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+    mat-card {
+      /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+      mat-card-subtitle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      mat-spinner {
+        margin: 0 auto;
+      }
+
+      mat-table {
+        mat-header-row,
+        mat-row {
+          mat-header-cell,
+          mat-cell {
+            &:first-of-type {
+              flex: 5;
+            }
+            &:last-of-type {
+              flex: 1;
+              button[mat-icon-button].selected {
+                color: #009688;
+                font-size: 20px;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+:root.dark :host {
+  --opacity: 0.5;
+}
+
+:host {
+  --opacity: 1;
+  display: inline-block;
+  &.disabled {
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+  section {
+    display: flex;
+    align-items: center;
+    padding: 10px 10px;
+    border-radius: 4px;
+    background: rgba(
+      var(--background-app-bar-rgb),
+      calc(var(--opacity) - calc(var(--opacity) / 2))
+    );
+
+    div {
+      overflow-x: auto;
+      max-height: 180px;
+      button {
+        margin: 5px;
+      }
+    }
+
+    > button {
+      margin-left: 5px;
+    }
+
+    span {
+      flex: 1;
+    }
+  }
+  mat-hint {
+    margin-top: 1.25em;
+    font-size: 10.5px;
+  }
+}

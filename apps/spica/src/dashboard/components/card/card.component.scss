@@ -1,0 +1,48 @@
+:host {
+  .card {
+    justify-content: start;
+  }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  mat-card-header {
+    align-items: center;
+    justify-content: center;
+  }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  mat-card-content {
+    text-align: center;
+  }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  mat-card-content {
+    > span,
+    button {
+      margin-right: 5px;
+    }
+    span {
+      flex: 1;
+      ::ng-deep .string {
+        width: 100%;
+      }
+    }
+    /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
+    ::ng-deep .mat-form-field-wrapper {
+      padding: 0 !important;
+      width: 100% !important;
+    }
+
+    button.file-selector {
+      height: 44px;
+      width: 200px;
+
+      overflow-x: hidden;
+      text-overflow: ellipsis;
+      display: inline-block;
+    }
+    mat-form-field-wrapper {
+      padding: 0 !important;
+    }
+  }
+  /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+  mat-card-actions {
+    justify-content: center;
+  }
+}

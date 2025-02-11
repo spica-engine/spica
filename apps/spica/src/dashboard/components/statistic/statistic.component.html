@@ -1,0 +1,42 @@
+<div class="dashboard-component" *ngIf="componentData$ | async; let componentData">
+  <button
+    *ngIf="refresh"
+    class="dashboard-component-refresh-button"
+    mat-icon-button
+    matTooltip="Refresh card"
+    (click)="this.onUpdate.next()"
+  >
+    <mat-icon>refresh</mat-icon>
+  </button>
+  <div class="content dashboard-component">
+    <div class="icon-container" [style.background]="componentData.icon?.background_color">
+      <mat-icon [style.color]="componentData.icon?.color">{{ componentData.icon?.name }}</mat-icon>
+    </div>
+    <div class="statistic">
+      <div class="main">
+        <div class="title">
+          {{ componentData.main?.title }}
+        </div>
+        <div class="value" [style.color]="componentData.main?.color">
+          {{ componentData.main?.value }}
+        </div>
+      </div>
+      <div class="difference" *ngIf="componentData.difference">
+        <span
+          [style.color]="
+            componentData.difference.value > 0
+              ? '#38e640'
+              : componentData.difference.value < 0
+                ? '#ff1818'
+                : 'none'
+          "
+        >
+          {{ (componentData.difference.value > 0 && "+") + componentData.difference.value }}%
+        </span>
+        <span>
+          {{ componentData.difference.title }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
