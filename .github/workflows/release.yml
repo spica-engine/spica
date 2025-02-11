@@ -1,18 +1,77 @@
-name: Spica Version Release
+name: Spica Release
 
 env:
+  # use master later ??
   base_branch: nx-monorepo
+  VERSION: $(git describe --tags --abbrev=0)
 
 on:
   push:
+    # use x.x.x later
     branches:
-      - "[0-9]+.[0-9]+.[0-9]+"
+      - SPICA-67
+      # - "[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
-  hello:
-    name: Test is it triggered.
+  release:
+    name: Release new version
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        targets:
+          - api
+          - migrate
+          - mongoreplicationcontroller
+          - devkit:*
+          - cli
+          - charts
 
     steps:
-      - name: Hello
-        run: ls
+      - name: Free up some space on disk
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+          cache-dependency-path: yarn.lock
+
+      - name: Restore Node Modules Cache
+        uses: actions/cache@v4
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+            ${{ runner.os }}-node-modules-
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Fetch base branch
+        run: git fetch origin ${{ env.base_branch }}:${{ env.base_branch }}
+
+      - name: Disable Nx Cloud
+        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+
+      - uses: azure/setup-helm@v4.2.0
+      - name: Test helm
+        run: helm version
+
+      - uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
+      - name: Test gsutils
+        run: gsutil --version
+
+      # - name: Release Applications
+      #   run: yarn run publish:${{ matrix.targets }}

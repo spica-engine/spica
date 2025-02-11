@@ -53,7 +53,8 @@
     "publish:devkit:identity": "yarn nx nx-release-publish api/function/packages/identity",
     "publish:devkit:storage": "yarn nx nx-release-publish api/function/packages/storage",
     "publish:devkit:*": "yarn nx run-many -t nx-release-publish --projects=api/function/packages/*",
-    "publish:cli": "yarn nx nx-release-publish cli"
+    "publish:cli": "yarn nx nx-release-publish cli",
+    "publish:charts": "./scripts/sync_charts.sh"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
