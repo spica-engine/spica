@@ -521,7 +521,12 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     if (req.query.has("sort")) {
-      options.sort = JSON.parse(req.query.get("sort"));
+      try {
+        options.sort = JSON.parse(req.query.get("sort"));
+      } catch (e) {
+        this.send(client, ChunkKind.Error, e.status, e.message);
+        return client.close(1003);
+      }
     }
 
     if (req.query.has("limit")) {
