@@ -8,7 +8,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-        app: database
+      app: database
   template:
     metadata:
       labels:
@@ -17,7 +17,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: mongo
-          image: mongo:4.2
+          image: mongo:7.0.16
           command:
             - mongod
             - "--replSet"
@@ -69,7 +69,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-        app: spica
+      app: spica
   template:
     metadata:
       labels:
@@ -177,14 +177,14 @@ spec:
             backend:
               service:
                 name: spica
-                port: 
+                port:
                   number: 80
           - path: /api/?(.*)
             pathType: ImplementationSpecific
             backend:
               service:
                 name: spica
-                port: 
+                port:
                   number: 4300
 ---
 apiVersion: batch/v1
@@ -208,10 +208,11 @@ spec:
             limits:
               memory: "50Mi"
               cpu: "50m"
-          args: [
-            "--from-srv",
-            "false",
-            "--nodes",
-            "database-0.mongo.infrastructure-master-spicaengine-com.svc.cluster.local",
-            "--debug"
-          ]
+          args:
+            [
+              "--from-srv",
+              "false",
+              "--nodes",
+              "database-0.mongo.infrastructure-master-spicaengine-com.svc.cluster.local",
+              "--debug"
+            ]

@@ -83,11 +83,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["build-image"],
       "options": {
-        "commands": [
-          "docker login -u $USERNAME -p $PASSWORD",
-          "docker push spicaengine/migrate:$VERSION"
-        ],
-        "parallel": false
+        "command": "docker push spicaengine/migrate:$VERSION"
       }
     }
   }

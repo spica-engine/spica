@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
 
-if [ ! -f WORKSPACE ]; then
+if [ ! -f nx.json ]; then
     echo "###############################################"
     echo "Please run this script from the workspace root."
     echo "###############################################"
-    exit 1;
+    exit 1
 fi
 
 readonly GCS_BUCKET=gs://spica-charts
 readonly REPOSITORY_URL=https://spica-charts.storage.googleapis.com
 readonly OUT_DIR=./dist/charts
 
-VERSION=$(git describe --abbrev=7 --tags HEAD)
+if [ -z "$VERSION" ]; then
+    VERSION=$(git describe --tags --abbrev=0)
+fi
+
+echo "VERSION is set to: $VERSION"
 
 # Clean up
 rm -rf charts-${VERSION}

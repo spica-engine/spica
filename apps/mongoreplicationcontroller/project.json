@@ -42,11 +42,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["build-image"],
       "options": {
-        "commands": [
-          "docker login -u $USERNAME -p $PASSWORD",
-          "docker push spicaengine/mongoreplicationcontroller:$VERSION"
-        ],
-        "parallel": false
+        "command": "docker push spicaengine/mongoreplicationcontroller:$VERSION"
       }
     }
   }
