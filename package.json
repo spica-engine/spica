@@ -43,6 +43,7 @@
     "test:devkit:identity": "yarn nx test api/function/packages/identity",
     "test:devkit:storage": "yarn nx test api/function/packages/storage",
     "test:devkit:*": "yarn nx run-many -t test --projects=api/function/packages/**",
+    "test-image:*": "yarn nx run-many -t test-image",
     "test-image:api": "yarn nx test-image api",
     "test-image:migrate": "yarn nx test-image migrate",
     "test-image:mongoreplicationcontroller": "yarn nx test-image mongoreplicationcontroller",
