@@ -137,6 +137,7 @@ export class PassportController {
       identity = await this.identityService.insertOne({
         identifier: idenfitifer,
         password: undefined,
+        deactivateJwtsBefore: 0,
         policies: [],
         attributes: user
       });

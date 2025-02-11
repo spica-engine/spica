@@ -26,7 +26,7 @@ import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {Factor, FactorMeta, AuthFactor} from "@spica-server/passport/authfactor";
 import {createIdentityActivity} from "./activity.resource";
-import {hash} from "./hash";
+import {compare, hash} from "./hash";
 import {IdentityService} from "./identity.service";
 import {Identity, PaginationResponse} from "./interface";
 import {POLICY_PROVIDER} from "./options";
@@ -334,6 +334,17 @@ export class IdentityController {
     identity: Partial<Identity>
   ) {
     if (identity.password) {
+      const user = await this.identityService.findOne({_id: id}).catch(exception => {
+        throw new BadRequestException(exception.message);
+      });
+
+      if (user) {
+        const hasNotChanged = await compare(identity.password, user.password);
+        if (!hasNotChanged) {
+          identity.deactivateJwtsBefore = Date.now() / 1000;
+        }
+      }
+
       identity.password = await hash(identity.password);
     }
 

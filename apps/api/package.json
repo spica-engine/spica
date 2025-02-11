@@ -59,7 +59,6 @@
     "@types/uniqid": "^5.3.4",
     "@types/uuid": "^10.0.0",
     "jsqr": "^1.4.0",
-    "jwt-decode": "^4.0.0",
     "nodemon": "^3.1.9",
     "pngjs": "^7.0.0",
     "resolve-tspaths": "^0.8.23",

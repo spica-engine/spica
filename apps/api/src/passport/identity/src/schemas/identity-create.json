@@ -15,6 +15,11 @@
       "title": "Password of the identity",
       "minLength": 3
     },
+    "deactivateJwtsBefore": {
+      "type": "number",
+      "title": "Unix timestamp (in seconds). All JWTs issued before this timestamp will be considered invalid",
+      "default": 0
+    },
     "attributes": {
       "type": "object"
     }

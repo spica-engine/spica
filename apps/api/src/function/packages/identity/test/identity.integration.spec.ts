@@ -103,7 +103,12 @@ describe("Identity", () => {
     it("should get all", async () => {
       const identities = await Identity.getAll();
       expect(identities).toEqual([
-        {identifier: "spica", _id: identities[0]._id, policies: ["PassportFullAccess"]}
+        {
+          identifier: "spica",
+          deactivateJwtsBefore: 0,
+          _id: identities[0]._id,
+          policies: ["PassportFullAccess"]
+        }
       ]);
     });
 
@@ -114,6 +119,7 @@ describe("Identity", () => {
         const spica = await Identity.get(identities[0]._id);
         expect(spica).toEqual({
           _id: spica._id,
+          deactivateJwtsBefore: 0,
           identifier: "spica",
           policies: ["PassportFullAccess"]
         });
@@ -124,7 +130,12 @@ describe("Identity", () => {
         expect(identities).toEqual({
           meta: {total: 1},
           data: [
-            {identifier: "spica", _id: identities.data[0]._id, policies: ["PassportFullAccess"]}
+            {
+              identifier: "spica",
+              deactivateJwtsBefore: 0,
+              _id: identities.data[0]._id,
+              policies: ["PassportFullAccess"]
+            }
           ]
         });
       });
@@ -136,6 +147,7 @@ describe("Identity", () => {
           {
             _id: identities[0]._id,
             identifier: "spica",
+            deactivateJwtsBefore: 0,
             policies: ["PassportFullAccess"]
           }
         ]);
@@ -148,6 +160,7 @@ describe("Identity", () => {
           {
             _id: identities[0]._id,
             identifier: "user",
+            deactivateJwtsBefore: 0,
             policies: []
           }
         ]);
@@ -164,11 +177,13 @@ describe("Identity", () => {
           {
             _id: identities[0]._id,
             identifier: "user",
+            deactivateJwtsBefore: 0,
             policies: []
           },
           {
             _id: identities[1]._id,
             identifier: "spica",
+            deactivateJwtsBefore: 0,
             policies: ["PassportFullAccess"]
           }
         ]);
@@ -181,7 +196,9 @@ describe("Identity", () => {
             identifier: "user"
           }
         });
-        expect(identities).toEqual([{_id: identities[0]._id, identifier: "user", policies: []}]);
+        expect(identities).toEqual([
+          {_id: identities[0]._id, identifier: "user", deactivateJwtsBefore: 0, policies: []}
+        ]);
       });
     });
 
@@ -196,6 +213,7 @@ describe("Identity", () => {
       expect(identity).toEqual({
         _id: identity._id,
         identifier: "user1",
+        deactivateJwtsBefore: 0,
         policies: ["BucketFullAccess"]
       });
 
@@ -250,7 +268,12 @@ describe("Identity", () => {
       const identities = await Identity.getAll();
 
       expect(identities).toEqual([
-        {identifier: "spica", _id: identities[0]._id, policies: ["PassportFullAccess"]}
+        {
+          identifier: "spica",
+          deactivateJwtsBefore: 0,
+          _id: identities[0]._id,
+          policies: ["PassportFullAccess"]
+        }
       ]);
     });
 
@@ -268,6 +291,7 @@ describe("Identity", () => {
         expect(identity).toEqual({
           _id: identity._id,
           identifier: "user",
+          deactivateJwtsBefore: 0,
           policies: ["FunctionFullAccess"]
         });
       });
@@ -285,6 +309,7 @@ describe("Identity", () => {
         expect(identity).toEqual({
           _id: identity._id,
           identifier: "user",
+          deactivateJwtsBefore: 0,
           policies: []
         });
       });
