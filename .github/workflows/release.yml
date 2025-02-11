@@ -70,5 +70,7 @@
 #       - name: Test gsutils
 #         run: gsutil --version
 
+# add docker login
+
 #       # - name: Release Applications
 #       #   run: yarn run publish:${{ matrix.targets }}
