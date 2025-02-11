@@ -1,14 +1,12 @@
 name: Spica Continuous Integration
 
 env:
-  # use master later
-  #   base_branch: nx-monorepo
+  origin_branch: master
   VERSION: ${{ github.sha }}
 
 on:
   pull_request:
-    # use master later, can't use env here btw
-    branches: ["nx-monorepo"]
+    branches: ["master"]
 
 jobs:
   run_command:
@@ -54,8 +52,6 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -76,11 +72,12 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      #   - name: Fetch base branch
-      #     run: git fetch origin ${{ env.base_branch }}:${{ env.base_branch }}
+      # necessary for the "nx lint" command
+      - name: Fetch base branch
+        run: git fetch origin ${{ env.origin_branch }}:${{ env.origin_branch }}
 
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
       - name: Run Command
-        run: yarn run ${{matrix.commands}}
+        run: yarn run ${{ matrix.commands }}
