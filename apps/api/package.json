@@ -1,6 +1,7 @@
 {
   "name": "@spica/server",
   "version": "0.0.0-PLACEHOLDER",
+  "type": "module",
   "dependencies": {
     "@google-cloud/storage": "^7.15.0",
     "@graphql-tools/merge": "^9.0.17",
@@ -62,8 +63,7 @@
     "jwt-decode": "^4.0.0",
     "nodemon": "^3.1.9",
     "pngjs": "^7.0.0",
-    "resolve-tspaths": "^0.8.23",
     "rollup": "^4.31.0",
-    "rollup-plugin-terser": "^7.0.2"
+    "@rollup/plugin-terser": "^0.4.4"
   }
 }

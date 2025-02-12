@@ -1,5 +1,5 @@
 import {Triggers, Function, Trigger} from "@spica-server/interface/function";
-import * as ts from "typescript";
+import ts from "typescript";
 import {getFunctionName} from "./function/helpers";
 import {FunctionWithIndex, TriggerOptions} from "./function/interface";
 import {triggerTransformers} from "./function/triggers";

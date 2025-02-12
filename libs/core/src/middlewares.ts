@@ -1,7 +1,8 @@
-import * as matcher from "matcher";
+import matcher from "matcher";
 import {CorsOptions} from "./interfaces";
-import {json} from "body-parser";
-import * as typeis from "type-is";
+import pkg from "body-parser";
+const {json} = pkg;
+import typeis from "type-is";
 
 export namespace Middlewares {
   export function JsonBodyParser({

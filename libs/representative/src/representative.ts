@@ -1,8 +1,8 @@
 import {Inject, Injectable, Scope} from "@nestjs/common";
-import * as fs from "fs";
-import * as path from "path";
-import * as YAML from "yaml";
-import * as dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
+import YAML from "yaml";
+import dotenv from "dotenv";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 
 @Injectable()

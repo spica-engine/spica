@@ -1,5 +1,5 @@
-import * as docker from "dockerode";
-import * as semver from "semver";
+import docker from "dockerode";
+import semver from "semver";
 
 let machine: DockerMachine;
 

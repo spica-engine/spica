@@ -9,11 +9,11 @@ import {
   ASSET_WORKING_DIRECTORY,
   INSTALLATION_STRATEGIES
 } from "./interface";
-import * as fs from "fs";
+import fs from "fs";
 
-import AssetSchema = require("../schema/asset.json");
-import ConfigsSchema = require("../schema/configs.json");
-import ExportSchema = require("../schema/export.json");
+import AssetSchema from "../schema/asset.json" with {type: "json"};
+import ConfigsSchema from "../schema/configs.json" with {type: "json"};
+import ExportSchema from "../schema/export.json" with {type: "json"};
 import {AssetRepManager} from "./representative";
 import {installationStrategies} from "./strategies";
 

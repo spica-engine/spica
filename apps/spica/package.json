@@ -49,7 +49,7 @@
     "@ngrx/schematics": "^9.2.0",
     "@types/cropperjs": "^1.1.5",
     "@types/hammerjs": "^2.0.36",
-    "@types/jasmine": "~3.6.0",
+    "@types/jest": "^29.5.14",
     "@types/json-schema": "^7.0.3",
     "@types/leaflet": "^1.4.4",
     "@types/matcher": "^2.0.0",

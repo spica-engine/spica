@@ -1,14 +1,11 @@
 import * as Bucket from "@spica-devkit/bucket";
-import * as Operators from "@spica-devkit/bucket/src/operators";
 import {Axios} from "@spica-devkit/internal_common";
-import {of} from "rxjs";
 
 describe("@spica-devkit/bucket", () => {
   let getSpy: jest.Mocked<any>;
   let postSpy: jest.Mocked<any>;
   let putSpy: jest.Mocked<any>;
   let deleteSpy: jest.Mocked<any>;
-  let wsSpy: jest.Mocked<any>;
 
   beforeEach(() => {
     getSpy = jest.spyOn(Axios.prototype, "get").mockReturnValue(Promise.resolve());
@@ -18,8 +15,6 @@ describe("@spica-devkit/bucket", () => {
 
     process.env.__INTERNAL__SPICA__PUBLIC_URL__ = "http://test";
     Bucket.initialize({apikey: "TEST_APIKEY"});
-
-    wsSpy = jest.spyOn(Operators, "getWsObs").mockReturnValue(of() as any);
   });
 
   afterEach(() => {
@@ -28,7 +23,6 @@ describe("@spica-devkit/bucket", () => {
     putSpy.mockClear();
     deleteSpy.mockClear();
     deleteSpy.mockClear();
-    wsSpy.mockClear();
   });
 
   describe("errors", () => {
@@ -170,17 +164,16 @@ describe("@spica-devkit/bucket", () => {
     describe("bucket-data realtime", () => {
       describe("getAll", () => {
         it("should get all bucket-data", () => {
-          Bucket.data.realtime.getAll("bucket_id");
+          const connection = Bucket.data.realtime.getAll("bucket_id");
 
           const url = new URL("ws://test/bucket/bucket_id/data");
           url.searchParams.append("Authorization", "APIKEY TEST_APIKEY");
 
-          expect(wsSpy).toHaveBeenCalledTimes(1);
-          expect(wsSpy).toHaveBeenCalledWith(url.toString(), undefined, undefined, undefined);
+          expect(connection["_config"].url).toEqual(url.toString());
         });
 
         it("should get all with filter", () => {
-          Bucket.data.realtime.getAll("bucket_id", {
+          const connection = Bucket.data.realtime.getAll("bucket_id", {
             filter: "name=='test'"
           });
 
@@ -188,14 +181,13 @@ describe("@spica-devkit/bucket", () => {
           url.searchParams.append("filter", "name=='test'");
           url.searchParams.append("Authorization", "APIKEY TEST_APIKEY");
 
-          expect(wsSpy).toHaveBeenCalledTimes(1);
-          expect(wsSpy).toHaveBeenCalledWith(url.toString(), undefined, undefined, undefined);
+          expect(connection["_config"].url).toEqual(url.toString());
         });
 
         it("should get all with sort", () => {
           const sort = {age: 1};
 
-          Bucket.data.realtime.getAll("bucket_id", {
+          const connection = Bucket.data.realtime.getAll("bucket_id", {
             sort
           });
 
@@ -203,12 +195,11 @@ describe("@spica-devkit/bucket", () => {
           url.searchParams.append("sort", JSON.stringify(sort));
           url.searchParams.append("Authorization", "APIKEY TEST_APIKEY");
 
-          expect(wsSpy).toHaveBeenCalledTimes(1);
-          expect(wsSpy).toHaveBeenCalledWith(url.toString(), sort, undefined, undefined);
+          expect(connection["_config"].url).toEqual(url.toString());
         });
 
         it("should get all with limit and skip", () => {
-          Bucket.data.realtime.getAll("bucket_id", {
+          const connection = Bucket.data.realtime.getAll("bucket_id", {
             limit: 1,
             skip: 1
           });
@@ -218,21 +209,19 @@ describe("@spica-devkit/bucket", () => {
           url.searchParams.append("skip", "1");
           url.searchParams.append("Authorization", "APIKEY TEST_APIKEY");
 
-          expect(wsSpy).toHaveBeenCalledTimes(1);
-          expect(wsSpy).toHaveBeenCalledWith(url.toString(), undefined, undefined, undefined);
+          expect(connection["_config"].url).toEqual(url.toString());
         });
       });
 
       describe("get", () => {
         it("should get specific bucket-data", () => {
-          Bucket.data.realtime.get("bucket_id", "document_id");
+          const connection = Bucket.data.realtime.get("bucket_id", "document_id");
 
           const url = new URL("ws://test/bucket/bucket_id/data");
           url.searchParams.append("filter", 'document._id=="document_id"');
           url.searchParams.append("Authorization", "APIKEY TEST_APIKEY");
 
-          expect(wsSpy).toHaveBeenCalledTimes(1);
-          expect(wsSpy).toHaveBeenCalledWith(url.toString(), undefined, "document_id", undefined);
+          expect(connection["_config"].url).toEqual(url.toString());
         });
       });
     });

@@ -5,9 +5,9 @@ import {Javascript} from "@spica-server/function/compiler/javascript";
 import {Typescript} from "@spica-server/function/compiler/typescript";
 import {Node} from "@spica-server/function/runtime/node";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
-import * as os from "os";
+import os from "os";
 import {PassThrough, Writable} from "stream";
-import * as WebSocket from "ws";
+import WebSocket from "ws";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:24075";
 process.env.DISABLE_LOGGER = "true";

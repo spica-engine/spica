@@ -1,4 +1,4 @@
-const {Query} = require("mingo");
+import {Query} from "mingo";
 import {ChunkKind, StreamChunk} from "@spica-server/interface/realtime";
 import {ChangeStream, Collection, ObjectId} from "mongodb";
 import {asyncScheduler, Observable, Subject, Subscriber, Subscription, TeardownLogic} from "rxjs";

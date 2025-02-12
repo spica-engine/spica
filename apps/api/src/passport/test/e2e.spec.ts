@@ -9,14 +9,13 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 import jsQR from "jsqr";
 import {PNG} from "pngjs";
-import * as speakeasy from "speakeasy";
+import speakeasy from "speakeasy";
 import {parse} from "url";
+import samlp from "samlp";
 
 const EXPIRES_IN = 60_000;
 
 const TOTP_TIMEOUT = 1000 * 30;
-
-const samlp = require("samlp");
 
 const CERTIFICATE = `-----BEGIN CERTIFICATE-----
 MIIDVjCCAj4CCQCIeeA38VX/wjANBgkqhkiG9w0BAQUFADBtMQswCQYDVQQGEwJU

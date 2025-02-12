@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {FunctionModule} from "@spica-server/function";
-import * as os from "os";
+import os from "os";
 import {
   DatabaseService,
   DatabaseTestingModule,

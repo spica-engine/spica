@@ -4,6 +4,7 @@ import {tap, delayWhen, map, debounceTime, retryWhen, filter, takeWhile} from "r
 import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
 import {isPlatformBrowser} from "@spica-devkit/internal_common";
+import ws from "ws";
 
 export class IterableSet<T> implements Iterable<T> {
   ids = new Array<string>();
@@ -88,10 +89,9 @@ export function getWsObs<T>(
   let urlConfigOrSource: string | WebSocketSubjectConfig<any> = url;
 
   if (!isPlatformBrowser()) {
-    const wsCtor = require("ws");
     urlConfigOrSource = {
       url: url,
-      WebSocketCtor: wsCtor
+      WebSocketCtor: ws as any
     };
   }
 

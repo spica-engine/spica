@@ -1,6 +1,6 @@
 import {Npm} from "@spica-server/function/pkgmanager/node";
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
+import path from "path";
 import {distinctUntilChanged} from "rxjs/operators";
 
 describe("npm", () => {

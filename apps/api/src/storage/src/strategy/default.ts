@@ -1,4 +1,4 @@
-import * as fs from "fs";
+import fs from "fs";
 import {Strategy} from "./strategy";
 
 export class Default implements Strategy {

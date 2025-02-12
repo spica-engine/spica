@@ -7,7 +7,7 @@ import {
   ErrorObject
 } from "ajv/dist/types";
 import {KeywordCxt} from "ajv/dist/compile/validate/index";
-import {_, str, nil, or, Code, getProperty} from "ajv/dist/compile/codegen";
+import {_, str, nil, or, Code, getProperty} from "ajv/dist/compile/codegen/index.js";
 
 type FormatValidate =
   | FormatValidator<string>

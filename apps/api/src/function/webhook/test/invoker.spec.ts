@@ -3,7 +3,7 @@ import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/data
 import {Webhook, WebhookService, WEBHOOK_OPTIONS} from "@spica-server/function/webhook";
 import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
 import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
-import * as __fetch__ from "node-fetch";
+import __fetch__ from "node-fetch";
 
 jest.setTimeout(60_000);
 
@@ -18,17 +18,6 @@ describe("Webhook Invoker", () => {
   let unsubscribeSpy: jest.SpyInstance;
   let fetchSpy: jest.SpyInstance;
   let insertLogSpy: jest.SpyInstance;
-
-  let mockHttpResponse = {
-    headers: {
-      raw: () => {
-        return {key: ["value"]};
-      }
-    },
-    status: 404,
-    statusText: "Not Found",
-    text: () => Promise.resolve("res_body")
-  } as any;
 
   let webhook: Webhook;
 
@@ -56,7 +45,9 @@ describe("Webhook Invoker", () => {
 
     subscribeSpy = jest.spyOn(invoker, "subscribe" as never);
     unsubscribeSpy = jest.spyOn(invoker, "unsubscribe" as never);
-    fetchSpy = jest.spyOn(__fetch__, "default").mockReturnValue(Promise.resolve(mockHttpResponse));
+
+    const nodeFetch = {fetch: __fetch__};
+    fetchSpy = jest.spyOn(nodeFetch, "fetch");
     insertLogSpy = jest.spyOn(logService, "insertOne" as never).mockImplementation();
 
     await new Promise(resolve => setTimeout(() => resolve(""), 2000));

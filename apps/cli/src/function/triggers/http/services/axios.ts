@@ -1,5 +1,5 @@
 import {Trigger} from "@spica-server/interface/function";
-import * as ts from "typescript";
+import ts from "typescript";
 import {FunctionDeclarationModifier, SpicaFunctionModifier} from "../../../modifier";
 
 export class Axios extends SpicaFunctionModifier {

@@ -1,7 +1,8 @@
 import {Description, Runtime, SpawnOptions, Worker} from "@spica-server/function/runtime";
-import * as child_process from "child_process";
-import * as path from "path";
+import child_process from "child_process";
 import {Writable} from "stream";
+import path from "path";
+import {fileURLToPath} from "url";
 
 class NodeWorker extends Worker {
   private _process: child_process.ChildProcess;
@@ -54,6 +55,8 @@ class NodeWorker extends Worker {
   }
 
   private getEntrypointPath() {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
     return path.join(__dirname, "..", "bootstrap", "entrypoint.js");
   }
 }

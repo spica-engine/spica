@@ -5,8 +5,8 @@ import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {Resource} from "@spica-server/interface/asset";
 import {registrar} from "@spica-server/asset";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
-import * as uniqid from "uniqid";
-import ApiKeySchema = require("./schemas/apikey.json");
+import uniqid from "uniqid";
+import ApiKeySchema from "./schemas/apikey.json" with {type: "json"};
 
 const _module = "apikey";
 

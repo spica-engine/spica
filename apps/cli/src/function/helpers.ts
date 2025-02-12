@@ -1,4 +1,4 @@
-import * as ts from "typescript";
+import ts from "typescript";
 
 export function getFunctionName(node: ts.FunctionDeclaration) {
   if (node.name) {

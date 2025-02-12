@@ -1,8 +1,8 @@
 import {Compilation} from "@spica-server/function/compiler";
 import {Javascript} from "@spica-server/function/compiler/javascript";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
+import path from "path";
 
 describe("Javascript", () => {
   let language: Javascript;

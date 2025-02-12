@@ -4,7 +4,7 @@ import {StreamChunk} from "@spica-server/interface/realtime";
 import {Observable} from "rxjs";
 import {FindOptions} from "./interface";
 import {Emitter} from "./stream";
-const isEqual = require("lodash/isEqual");
+import isEqual from "lodash/isEqual.js";
 
 @Injectable()
 export class RealtimeDatabaseService implements OnModuleDestroy {

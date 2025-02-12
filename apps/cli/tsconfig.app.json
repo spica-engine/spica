@@ -1,14 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "composite": false,
+    "incremental": false,
     "declaration": true,
     "types": ["node"]
   },
-  "include": [
-    "**/*.ts",
-    "../../libs/interface/asset/**/*.ts",
-    "../../libs/interface/function/**/*.ts"
-  ],
-  "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-  "references": []
+  "include": ["index.ts", "src/**/*.ts", "package.json"],
+  "exclude": ["**/*.spec.ts", "**/*.test.ts"]
 }

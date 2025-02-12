@@ -9,13 +9,14 @@ import {
   Type
 } from "@nestjs/common";
 import {ObjectId} from "@spica-server/database";
-import {raw, json} from "body-parser";
+import pkg from "body-parser";
+const {raw, json} = pkg;
 import {deserialize} from "bson";
 import {Observable, OperatorFunction, PartialObserver, Subscriber, TeardownLogic} from "rxjs";
 import {finalize, switchMapTo} from "rxjs/operators";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
-import * as multer from "multer";
-import * as fs from "fs";
+import multer from "multer";
+import fs from "fs";
 
 class __BaseBody {
   payloadSizeError: HttpException;

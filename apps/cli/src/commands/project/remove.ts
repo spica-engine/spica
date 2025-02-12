@@ -1,5 +1,5 @@
 import {Action, ActionParameters, Command, CreateCommandParameters, Program} from "@caporal/core";
-import * as docker from "dockerode";
+import docker from "dockerode";
 import {spin} from "../../console";
 import {projectName} from "../../validator";
 

@@ -1,9 +1,6 @@
 import {isPlatformBrowser} from "@spica-devkit/internal_common";
 import {BufferWithMeta} from "./interface";
-
-function importFormData() {
-  return require("form-data")();
-}
+import form from "form-data";
 
 export function fileToBuffer(file: File): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -45,7 +42,7 @@ function instanceOfBufferWithMeta(value: any): value is BufferWithMeta {
 }
 
 function createForm() {
-  return isPlatformBrowser() ? new FormData() : importFormData();
+  return isPlatformBrowser() ? new FormData() : new form();
 }
 
 async function appendToForm(form, key: string, file: BufferWithMeta | File) {

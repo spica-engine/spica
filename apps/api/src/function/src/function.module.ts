@@ -2,7 +2,7 @@ import {DynamicModule, Inject, Module, Optional} from "@nestjs/common";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {Scheduler, SchedulerModule, SchedulingOptions} from "@spica-server/function/scheduler";
 import {WebhookModule} from "@spica-server/function/webhook";
-import * as path from "path";
+import path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
 import {LogModule, LogService} from "@spica-server/function/log";
@@ -16,7 +16,7 @@ import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/en
 import {Http} from "./services/interface";
 import {Axios} from "./services/axios";
 import {registerStatusProvider} from "./status";
-import FunctionSchema = require("./schema/function.json");
+import FunctionSchema from "./schema/function.json" with {type: "json"};
 import {
   RegisterSyncProvider,
   REGISTER_VC_SYNC_PROVIDER,

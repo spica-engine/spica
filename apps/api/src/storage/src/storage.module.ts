@@ -9,12 +9,13 @@ import {Strategy} from "./strategy/strategy";
 import {BASE_64} from "./schema/format";
 import {registerStatusProvider} from "./status";
 
-import BsonObject = require("./schema/bson.object.schema.json");
-import JsonObject = require("./schema/json.object.schema.json");
-import MultipartObject = require("./schema/multipart.object.schema.json");
+import BsonObject from "./schema/bson.object.schema.json" with {type: "json"};
+import JsonObject from "./schema/json.object.schema.json" with {type: "json"};
+import MultipartObject from "./schema/multipart.object.schema.json" with {type: "json"};
 
-import BodySchema = require("./schema/body.schema.json");
-import BodySingleSchema = require("./schema/body.single.schema.json");
+import BodySchema from "./schema/body.schema.json" with {type: "json"};
+import BodySingleSchema from "./schema/body.single.schema.json" with {type: "json"};
+
 import {AWSS3} from "./strategy/aws.s3";
 
 @Module({})

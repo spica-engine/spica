@@ -4,8 +4,8 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {StorageModule} from "@spica-server/storage";
-import * as BSON from "bson";
-import * as etag from "etag";
+import {Binary, serialize} from "bson";
+import etag from "etag";
 import {StorageObject} from "@spica-server/storage/src/body";
 
 describe("Storage Acceptance", () => {
@@ -16,7 +16,7 @@ describe("Storage Acceptance", () => {
     const first = {
       name: `first.txt`,
       content: {
-        data: new BSON.Binary(Buffer.from("first")),
+        data: new Binary(Buffer.from("first")),
         type: `text/plain`
       }
     };
@@ -24,7 +24,7 @@ describe("Storage Acceptance", () => {
     const second = {
       name: `second.txt`,
       content: {
-        data: new BSON.Binary(Buffer.from("second")),
+        data: new Binary(Buffer.from("second")),
         type: `text/plain`
       }
     };
@@ -32,12 +32,12 @@ describe("Storage Acceptance", () => {
     const third = {
       name: `third.txt`,
       content: {
-        data: new BSON.Binary(Buffer.from("third")),
+        data: new Binary(Buffer.from("third")),
         type: `text/plain`
       }
     };
 
-    return await req.post("/storage", BSON.serialize({content: [first, second, third]}), {
+    return await req.post("/storage", serialize({content: [first, second, third]}), {
       "Content-Type": "application/bson"
     });
   }
@@ -386,13 +386,13 @@ describe("Storage Acceptance", () => {
         }
       } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
 
-      row.content.data = new BSON.Binary(Buffer.from("new data"));
+      row.content.data = new Binary(Buffer.from("new data"));
 
       const id = row._id;
       delete row._id;
       delete row.url;
 
-      await req.put(`/storage/${id}`, BSON.serialize(row), {
+      await req.put(`/storage/${id}`, serialize(row), {
         "Content-Type": "application/bson"
       });
 
@@ -411,7 +411,7 @@ describe("Storage Acceptance", () => {
         statusCode,
         statusText,
         body: __
-      } = await req.put(`/storage/${row._id}`, BSON.serialize(row), {
+      } = await req.put(`/storage/${row._id}`, serialize(row), {
         "Content-Type": "application/bson"
       });
       expect(statusCode).toEqual(400);
@@ -428,8 +428,8 @@ describe("Storage Acceptance", () => {
         }
       } = await req.get("/storage", {paginate: true});
       const size = 0.2 * 1024 * 1024;
-      row.content.data = new BSON.Binary(Buffer.alloc(size, "f"));
-      const {statusCode, statusText} = await req.put(`/storage/${row._id}`, BSON.serialize(row), {
+      row.content.data = new Binary(Buffer.alloc(size, "f"));
+      const {statusCode, statusText} = await req.put(`/storage/${row._id}`, serialize(row), {
         "Content-Type": "application/bson"
       });
       expect(statusCode).toBe(413);
@@ -478,16 +478,16 @@ describe("Storage Acceptance", () => {
 
   describe("post", () => {
     it("should insert single storage object", async () => {
-      const data: StorageObject<BSON.Binary> = {
+      const data: StorageObject<Binary> = {
         name: "remoteconfig.json",
         content: {
-          data: new BSON.Binary(Buffer.from("{}")),
+          data: new Binary(Buffer.from("{}")),
           type: "application/json"
         }
       };
       const {body, statusCode, statusText} = await req.post(
         "/storage",
-        BSON.serialize({content: [data]}),
+        serialize({content: [data]}),
         {
           "Content-Type": "application/bson"
         }
@@ -515,21 +515,21 @@ describe("Storage Acceptance", () => {
         {
           name: "remote config.json",
           content: {
-            data: new BSON.Binary(Buffer.from("{}")),
+            data: new Binary(Buffer.from("{}")),
             type: "application/json"
           }
         },
         {
           name: "remote config backup.json",
           content: {
-            data: new BSON.Binary(Buffer.from("[]")),
+            data: new Binary(Buffer.from("[]")),
             type: "application/json"
           }
         }
       ];
       const {statusCode, statusText, body} = await req.post(
         "/storage",
-        BSON.serialize({content: objects}),
+        serialize({content: objects}),
         {
           "Content-Type": "application/bson"
         }
@@ -578,18 +578,14 @@ describe("Storage Acceptance", () => {
         {
           name: "valid.json",
           content: {
-            data: new BSON.Binary(Buffer.from("[]")),
+            data: new Binary(Buffer.from("[]")),
             type: "application/json"
           }
         }
       ];
-      const {statusCode, statusText} = await req.post(
-        "/storage",
-        BSON.serialize({content: objects}),
-        {
-          "Content-Type": "application/bson"
-        }
-      );
+      const {statusCode, statusText} = await req.post("/storage", serialize({content: objects}), {
+        "Content-Type": "application/bson"
+      });
 
       expect(statusCode).toBe(400);
       expect(statusText).toBe("Bad Request");
@@ -604,18 +600,14 @@ describe("Storage Acceptance", () => {
         {
           name: "password.txt",
           content: {
-            data: new BSON.Binary(Buffer.alloc(size, "f")),
+            data: new Binary(Buffer.alloc(size, "f")),
             type: "text/plain"
           }
         }
       ];
-      const {statusCode, statusText} = await req.post(
-        "/storage",
-        BSON.serialize({content: objects}),
-        {
-          "Content-Type": "application/bson"
-        }
-      );
+      const {statusCode, statusText} = await req.post("/storage", serialize({content: objects}), {
+        "Content-Type": "application/bson"
+      });
       expect(statusCode).toBe(413);
       expect(statusText).toBe("Payload Too Large");
     });

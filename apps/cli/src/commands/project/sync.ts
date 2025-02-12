@@ -1,15 +1,12 @@
-import {
-  ActionParameters,
-  CaporalValidator,
-  Command,
-  CreateCommandParameters,
-  Program
-} from "@caporal/core";
+import {ActionParameters, CreateCommandParameters, Program, Command} from "@caporal/core";
+import caporalCore from "@caporal/core";
+const {CaporalValidator} = caporalCore;
 import {spin} from "../../console";
 import {httpService} from "../../http";
 import {availableSyncModules, validateSyncModules} from "../../validator";
 import {bold, green, red} from "colorette";
-import {isEqual} from "lodash";
+import lodash from "lodash";
+const {isEqual} = lodash;
 
 let IGNORE_ERRORS;
 let CONCURRENCY_LIMIT;

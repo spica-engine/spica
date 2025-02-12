@@ -6,7 +6,7 @@ import {PassportTestingModule} from "@spica-server/passport/testing";
 import {AssetModule} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
-import * as os from "os";
+import os from "os";
 import {IdentityModule} from "@spica-server/passport/identity";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {PreferenceModule} from "@spica-server/preference";

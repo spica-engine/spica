@@ -1,8 +1,8 @@
 import {ExportMeta} from "@spica-server/interface/asset";
 import {RepresentativeManager} from "@spica-server/representative";
-import * as archiver from "archiver";
-import * as fs from "fs";
-import * as path from "path";
+import archiver from "archiver";
+import fs from "fs";
+import path from "path";
 
 export class AssetRepManager extends RepresentativeManager {
   constructor(cwd: string) {

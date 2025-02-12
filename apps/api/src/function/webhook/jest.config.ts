@@ -4,7 +4,10 @@ const {workspaceRoot} = require("@nx/devkit");
 const commonConfig = {
   preset: "../../../../../jest.preset.js",
   testEnvironment: "node",
-  coverageDirectory: path.join(workspaceRoot, "coverage/apps/api/function/webhook")
+  coverageDirectory: path.join(workspaceRoot, "coverage/apps/api/function/webhook"),
+  moduleNameMapper: {
+    "node-fetch": "<rootDir>/__mocks__/node-fetch.ts"
+  }
 };
 
 export default {

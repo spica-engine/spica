@@ -1,5 +1,6 @@
 import {CallHandler, ExecutionContext, mixin, Type} from "@nestjs/common";
-import {urlencoded} from "body-parser";
+import pkg from "body-parser";
+const {urlencoded} = pkg;
 import {Observable} from "rxjs";
 import {switchMapTo} from "rxjs/operators";
 

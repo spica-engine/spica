@@ -23,7 +23,7 @@ import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import * as etag from "etag";
+import etag from "etag";
 import {createStorageActivity} from "./activity.resource";
 import {
   BsonBodyParser,

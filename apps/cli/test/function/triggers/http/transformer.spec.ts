@@ -1,5 +1,5 @@
 import {HttpTransformer} from "@spica/cli/src/function/triggers";
-import * as ts from "typescript";
+import ts from "typescript";
 
 describe("HttpTriggerTransformer", () => {
   function createSrc(code: string) {

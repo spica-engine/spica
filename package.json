@@ -29,12 +29,11 @@
     "build:devkit:identity": "yarn nx build api/function/packages/identity",
     "build:devkit:storage": "yarn nx build api/function/packages/storage",
     "build:devkit:*": "yarn nx run-many -t build --projects=api/function/packages/**",
-    "build-image:*": "yarn nx run-many -t build-image",
     "build-image:api": "yarn nx build-image api",
     "build-image:migrate": "yarn nx build-image migrate",
     "build-image:mongoreplicationcontroller": "yarn nx build-image mongoreplicationcontroller",
-    "test:*": "yarn nx run-many -t test",
-    "test:local:*": "yarn nx run-many -t test -c local",
+    "test": "yarn nx run-many -t test",
+    "test:local": "yarn nx run-many -t test -c local",
     "test:api": "yarn nx run-many -t test --projects=api/** --projects=filter --projects=cli --projects=core --projects=core/** --projects=database/** --exclude=api/function/packages/**",
     "test:cli": "yarn nx test cli",
     "test:migrate": "yarn nx test migrate",
@@ -43,7 +42,6 @@
     "test:devkit:identity": "yarn nx test api/function/packages/identity",
     "test:devkit:storage": "yarn nx test api/function/packages/storage",
     "test:devkit:*": "yarn nx run-many -t test --projects=api/function/packages/**",
-    "test-image:*": "yarn nx run-many -t test-image",
     "test-image:api": "yarn nx test-image api",
     "test-image:migrate": "yarn nx test-image migrate",
     "test-image:mongoreplicationcontroller": "yarn nx test-image mongoreplicationcontroller",
@@ -93,6 +91,7 @@
   "devDependencies": {
     "@angular-devkit/build-angular": "^15.0.0",
     "@angular/compiler-cli": "^15.0.0",
+    "@babel/preset-env": "^7.26.7",
     "@nestjs/testing": "^10.4.15",
     "@nx/jest": "^20.3.1",
     "@nx/node": "^20.3.1",
@@ -108,13 +107,15 @@
     "@types/lodash": "^4.17.14",
     "@types/matcher": "^2.0.0",
     "@types/node": "^22.10.7",
-    "@types/ws": "^8.5.13",
     "@types/yargs": "^17.0.33",
+    "babel-jest": "^29.7.0",
     "dgeni": "^0.4.14",
     "dgeni-packages": "^0.30.0",
     "jest": "^29.7.0",
     "nx": "^20.3.1",
     "prettier": "^3.4.2",
-    "ts-node": "^10.9.2"
-  }
+    "ts-node": "^10.9.2",
+    "resolve-tspaths": "^0.8.23"
+  },
+  "type": "module"
 }

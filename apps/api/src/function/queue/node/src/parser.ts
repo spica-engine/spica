@@ -1,4 +1,4 @@
-import * as qs from "qs";
+import qs from "qs";
 
 export function parseBody(raw: Uint8Array, contentTypeHeader: string | string[] = "") {
   if (contentTypeHeader == "application/json") {
