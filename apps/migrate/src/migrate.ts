@@ -1,9 +1,9 @@
-import * as color from "cli-color";
-import * as mongodb from "mongodb";
-import * as path from "path";
-import * as fs from "fs";
-import * as semver from "semver";
-import MigrationsIndex = require("./migrations/index.json");
+import color from "cli-color";
+import mongodb from "mongodb";
+import path from "path";
+import fs from "fs";
+import semver from "semver";
+import MigrationsIndex from "./migrations/index.json" with {type: "json"};
 
 export type MigrationManifest = {
   [k: string]: string[];

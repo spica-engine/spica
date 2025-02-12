@@ -1,6 +1,6 @@
 import {RepresentativeManager} from "@spica-server/representative";
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
+import path from "path";
 
 describe("Representative", () => {
   const cwd = path.join(process.cwd(), "representatives");

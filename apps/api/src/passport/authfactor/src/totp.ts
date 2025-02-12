@@ -1,6 +1,6 @@
 import {Factor, FactorMeta, FactorSchema, AuthFactorSchemaProvider} from "./interface";
-import * as speakeasy from "speakeasy";
-import * as qrcode from "qrcode";
+import speakeasy from "speakeasy";
+import qrcode from "qrcode";
 
 export const TotpFactorSchemaProvider: AuthFactorSchemaProvider = () => {
   const schema: FactorSchema = {

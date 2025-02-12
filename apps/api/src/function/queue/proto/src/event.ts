@@ -1,5 +1,5 @@
-import * as pb_1 from "google-protobuf";
-import * as grpc_1 from "@grpc/grpc-js";
+import pb_1 from "google-protobuf";
+import grpc_1 from "@grpc/grpc-js";
 export namespace event {
   export enum Type {
     HTTP = 0,

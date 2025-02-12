@@ -1,7 +1,7 @@
-import * as fs from "fs";
-import * as path from "path";
-import * as YAML from "yaml";
-import * as dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
+import YAML from "yaml";
+import dotenv from "dotenv";
 
 export class RepresentativeManager {
   private serializer = new Map<string, (val: any) => string>();

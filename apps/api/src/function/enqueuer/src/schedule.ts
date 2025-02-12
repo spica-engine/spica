@@ -1,9 +1,9 @@
 import {EventQueue} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
 import {ClassCommander, CommandType, JobReducer} from "@spica-server/replication";
-import * as cron from "cron";
+import cron from "cron";
 import {Description, Enqueuer} from "./enqueuer";
-import * as uniqid from "uniqid";
+import uniqid from "uniqid";
 
 interface ScheduleOptions {
   frequency: string;

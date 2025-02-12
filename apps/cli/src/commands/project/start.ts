@@ -1,18 +1,15 @@
-import {
-  Action,
-  ActionParameters,
-  CaporalValidator,
-  Command,
-  CreateCommandParameters,
-  Program
-} from "@caporal/core";
-import * as getport from "get-port";
+import {Action, ActionParameters, Command, CreateCommandParameters, Program} from "@caporal/core";
+
+import caporalCore from "@caporal/core";
+const {CaporalValidator} = caporalCore;
+
+import getport from "get-port";
 import open from "open";
 import {Stream} from "stream";
 import {spin} from "../../console";
 import {projectName} from "../../validator";
-import * as path from "path";
-import * as fs from "fs";
+import path from "path";
+import fs from "fs";
 import {DockerMachine} from "../../project";
 
 function streamToBuffer(stream: Stream): Promise<Buffer> {

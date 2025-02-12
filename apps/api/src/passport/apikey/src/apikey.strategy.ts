@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {PassportStrategy} from "@nestjs/passport";
-import * as passport from "passport";
+import passport from "passport";
 import {ExtractJwt} from "passport-jwt";
 import {ApiKeyService} from "./apikey.service";
 

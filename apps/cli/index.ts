@@ -1,4 +1,6 @@
-import {program} from "@caporal/core";
+import caporalCore from "@caporal/core";
+const {program} = caporalCore;
+
 import "./src/console";
 import assetApply from "./src/commands/asset/apply";
 import assetDelete from "./src/commands/asset/delete";

@@ -1,9 +1,5 @@
 {
   "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "types": ["node"],
-    "esModuleInterop": false
-  },
   "include": ["src/main.ts"],
   "references": [
     {

@@ -1,9 +1,10 @@
 import {Compilation, Description, Language} from "@spica-server/function/compiler";
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
 import {fromEvent, Observable, of, throwError} from "rxjs";
 import {filter, switchMap, take} from "rxjs/operators";
-import * as worker_threads from "worker_threads";
+import worker_threads from "worker_threads";
+import path from "path";
+import {fileURLToPath} from "url";
 
 export class Typescript extends Language {
   description: Description = {
@@ -78,6 +79,8 @@ export class Typescript extends Language {
   }
 
   private initiateWorker() {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
     const compilerPath = this.compilerPath || path.join(__dirname, "typescript_worker.js");
     return new worker_threads.Worker(compilerPath);
   }

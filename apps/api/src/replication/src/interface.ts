@@ -1,5 +1,5 @@
 import {PartialObserver} from "rxjs";
-import * as uniqid from "uniqid";
+import uniqid from "uniqid";
 
 export interface IPublisher<T> {
   publish(msg: T): void;

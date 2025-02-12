@@ -8,7 +8,7 @@ import {FunctionModule} from "@spica-server/function";
 import {FunctionService} from "@spica-server/function/services";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import * as os from "os";
+import os from "os";
 
 import {
   SyncDirection,

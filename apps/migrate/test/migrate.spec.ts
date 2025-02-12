@@ -1,6 +1,6 @@
-import * as fs from "fs";
+import fs from "fs";
 import {loadMigrations, migrationVersions, getMigrations} from "@spica/migrate";
-import path = require("path");
+import path from "path";
 
 function updateMigrationManifest(migrations: any) {
   fs.writeFileSync(

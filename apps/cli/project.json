@@ -6,8 +6,8 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/webpack:webpack",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/cli"],
       "inputs": [
         "{projectRoot}/**/*",
         "!{projectRoot}/test/*",
@@ -18,11 +18,12 @@
         "{workspaceRoot}/libs/interface/function/index.ts"
       ],
       "options": {
-        "outputPath": "dist/apps/cli",
-        "main": "apps/cli/index.ts",
-        "tsConfig": "apps/cli/tsconfig.app.json",
-        "assets": ["apps/cli/README.md", "apps/cli/bin/spica"],
-        "webpackConfig": "apps/cli/webpack.config.js"
+        "commands": [
+          "tsc --project apps/cli/tsconfig.app.json",
+          "node apps/cli/copy-bin.js",
+          "resolve-tspaths"
+        ],
+        "parallel": false
       },
       "cache": true
     },

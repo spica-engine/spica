@@ -1,6 +1,6 @@
 import {Firehose} from "@spica-server/function/queue/proto";
-import * as grpc from "@grpc/grpc-js";
-import * as Websocket from "ws";
+import grpc from "@grpc/grpc-js";
+import Websocket from "ws";
 import {Queue} from "./queue";
 
 export function parseMessage(message: Firehose.Message): {name: string; data?: unknown} {

@@ -1,7 +1,7 @@
 import {Action, ActionParameters, Command, CreateCommandParameters, Program} from "@caporal/core";
 import {httpService} from "../../http";
-import * as fs from "fs";
-import * as YAML from "yaml";
+import fs from "fs";
+import YAML from "yaml";
 
 async function _delete({options}: ActionParameters) {
   const type = options.type as string;

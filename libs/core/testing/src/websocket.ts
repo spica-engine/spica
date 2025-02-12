@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import * as CL from "ws";
+import CL from "ws";
 
 const TIMEOUT_MS = 100;
 

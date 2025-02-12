@@ -12,8 +12,8 @@ import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {StatusModule} from "@spica-server/status";
 import {StorageModule} from "@spica-server/storage";
-import * as os from "os";
-import * as BSON from "bson";
+import os from "os";
+import {Binary} from "bson";
 import {WsAdapter} from "@spica-server/core/websocket";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50051";
@@ -327,7 +327,7 @@ describe("Status", () => {
           name: "test.txt",
           content: {
             type: "text/plain",
-            data: new BSON.Binary(Buffer.alloc(3 * 1000 * 1000))
+            data: new Binary(Buffer.alloc(3 * 1000 * 1000))
           }
         }
       ]);

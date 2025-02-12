@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {PassportStrategy} from "@nestjs/passport";
-import * as passport from "passport";
+import passport from "passport";
 import {TestingOptions} from "./interface";
 
 class _NoopStrategy extends passport.Strategy {

@@ -4,7 +4,7 @@ import {Database, event} from "@spica-server/function/queue/proto";
 import {CommandType, JobReducer} from "@spica-server/replication";
 import {Description, Enqueuer} from "./enqueuer";
 import {ClassCommander} from "@spica-server/replication";
-import uniqid = require("uniqid");
+import uniqid from "uniqid";
 
 interface DatabaseOptions {
   collection: string;

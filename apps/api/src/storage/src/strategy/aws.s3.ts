@@ -1,6 +1,6 @@
 import {ReadStream} from "fs";
 import {Strategy} from "./strategy";
-import * as AWS from "aws-sdk";
+import AWS from "aws-sdk";
 
 export class AWSS3 implements Strategy {
   s3: AWS.S3;

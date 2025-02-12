@@ -10,7 +10,7 @@ import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {StorageObject, StorageObjectMeta} from "./body";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {Strategy} from "./strategy/strategy";
-import * as fs from "fs";
+import fs from "fs";
 
 @Injectable()
 export class StorageService extends BaseCollection<StorageObjectMeta>("storage") {

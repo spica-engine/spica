@@ -1,6 +1,6 @@
 import {Compilation} from "./compilation";
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
+import path from "path";
 
 export abstract class Language {
   abstract description: Description;

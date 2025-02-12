@@ -9,7 +9,7 @@ import {
 } from "./interface";
 import {RepresentativeManager} from "@spica-server/representative";
 import {Git} from "./versionmanager";
-import * as fs from "fs";
+import fs from "fs";
 import {Synchronizer} from "./synchronizer";
 
 @Global()

@@ -6,7 +6,7 @@ import {PassportTestingModule} from "@spica-server/passport/testing";
 import {AssetModule, exporters, operators, registrar, validators} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
-import * as os from "os";
+import os from "os";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:45672";
 

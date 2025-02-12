@@ -2,9 +2,9 @@ import {Action, ActionParameters, Command, CreateCommandParameters, Program} fro
 import {httpService} from "../../http";
 import {RepresentativeManager} from "../../representative";
 import {Resource} from "@spica-server/interface/asset";
-import * as path from "path";
-import * as fs from "fs";
-import * as YAML from "yaml";
+import path from "path";
+import fs from "fs";
+import YAML from "yaml";
 
 async function apply({options}: ActionParameters) {
   const folderPath = (options.path as string) || process.cwd();

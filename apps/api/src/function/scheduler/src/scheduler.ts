@@ -22,7 +22,7 @@ import {generateLog, LogLevels} from "@spica-server/function/runtime/logger";
 import {Node} from "@spica-server/function/runtime/node";
 import {ClassCommander, CommandType, JobReducer} from "@spica-server/replication";
 import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/status/services";
-import * as uniqid from "uniqid";
+import uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
 import {Subject} from "rxjs";

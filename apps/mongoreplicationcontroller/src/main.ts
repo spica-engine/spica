@@ -1,10 +1,10 @@
-import * as cp from "child_process";
-import * as dns from "dns";
-import * as os from "os";
-import * as util from "util";
-import * as yargs from "yargs";
+import cp from "child_process";
+import dns from "dns";
+import os from "os";
+import util from "util";
+import yargs from "yargs";
 
-const options = yargs
+const options = yargs(process.argv.slice(2))
   .option("from-srv", {
     type: "boolean",
     default: true,

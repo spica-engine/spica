@@ -1,6 +1,6 @@
 import {Command, CreateCommandParameters, Program} from "@caporal/core";
-import * as docker from "dockerode";
-import * as duration from "pretty-ms";
+import docker from "dockerode";
+import duration from "pretty-ms";
 
 async function list() {
   const machine = new docker();

@@ -3,7 +3,7 @@ import {
   AxiosReadValidator,
   AxiosWriteValidator
 } from "@spica/cli/src/function/triggers/http/services";
-import * as ts from "typescript";
+import ts from "typescript";
 
 describe("Axios", () => {
   let emptyFn: ts.FunctionDeclaration;

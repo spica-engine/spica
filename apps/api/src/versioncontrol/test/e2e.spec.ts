@@ -12,7 +12,7 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {RepresentativeManager} from "@spica-server/representative";
 import {VC_REP_MANAGER, VersionControlModule} from "@spica-server/versioncontrol";
 
-import * as os from "os";
+import os from "os";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50050";
 

@@ -1,10 +1,7 @@
-import {
-  ActionParameters,
-  CaporalValidator,
-  Command,
-  CreateCommandParameters,
-  Program
-} from "@caporal/core";
+import {ActionParameters, Command, CreateCommandParameters, Program} from "@caporal/core";
+import caporalCore from "@caporal/core";
+const {CaporalValidator} = caporalCore;
+
 import {projectName} from "../../validator";
 import {spin} from "../../console";
 import {DockerMachine, isVersionUpgrade, version} from "../../project";

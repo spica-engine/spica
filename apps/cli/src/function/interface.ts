@@ -1,5 +1,5 @@
 import {Triggers, Function, Trigger} from "@spica-server/interface/function";
-import * as ts from "typescript";
+import ts from "typescript";
 import {FunctionDeclarationModifier} from "./modifier";
 
 export abstract class TriggerTransformer<T extends ts.Node> {

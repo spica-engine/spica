@@ -1,4 +1,4 @@
-import * as util from "util";
+import util from "util";
 import {mongodb, _mongodb} from "./mongo";
 
 export const objectId = util.deprecate((id?: string | number | _mongodb.ObjectId) => {

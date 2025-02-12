@@ -1,8 +1,10 @@
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
-const {workspaceRoot} = require("@nx/devkit");
+import fs from "fs";
+import path from "path";
+import os from "os";
+import {workspaceRoot} from "@nx/devkit";
+import {jest} from "@jest/globals";
 
+global.jest = jest;
 jest.setTimeout(30000);
 
 // directory for all tests

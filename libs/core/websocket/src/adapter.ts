@@ -1,12 +1,12 @@
 import {WsAdapter as BaseAdapter} from "@nestjs/platform-ws";
 import {pathToRegexp} from "path-to-regexp";
-import * as ws from "ws";
+import {WebSocketServer} from "ws";
 
 export class WsAdapter extends BaseAdapter {
   paths = new Map<string, any>();
 
   create(port: number, options: any) {
-    const server = new ws.Server({
+    const server = new WebSocketServer({
       noServer: true
       // Documentation of the ws package says this should not be set because it increases memory usage significantly when enabled.
       // But enabling these lines reduces memory usage significantly on local development. It's clearly the opposite of what documentation says.

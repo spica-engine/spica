@@ -1,9 +1,9 @@
 import {EventQueue, FirehoseQueue} from "@spica-server/function/queue";
 import {event, Firehose} from "@spica-server/function/queue/proto";
-import * as url from "url";
-import * as ws from "ws";
+import url from "url";
+import ws, {WebSocketServer} from "ws";
 import {Description, Enqueuer} from "./enqueuer";
-import express = require("express");
+import express from "express";
 
 interface FirehoseOptions {
   event: "*" | "**" | "connection" | "close" | string;
@@ -23,7 +23,7 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
     description: "Designed for low latency bi-directional messaging."
   };
 
-  private wss: ws.Server;
+  private wss: WebSocketServer;
 
   private eventTargetPairs = new Set<{name: string; target: event.Target}>();
 
@@ -35,7 +35,7 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
   ) {
     super();
 
-    this.wss = new ws.Server({noServer: true});
+    this.wss = new WebSocketServer({noServer: true});
     const [socketIoUpgrade] = server.listeners("upgrade");
     server.removeAllListeners("upgrade");
     server.addListener("upgrade", (request, socket, head) => {

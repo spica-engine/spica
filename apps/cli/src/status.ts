@@ -1,5 +1,5 @@
 import {getLineNumberAndColumnFromRange} from "./range";
-import * as path from "path";
+import path from "path";
 
 export interface Status<Details = StatusDetails> {
   metadata?: StatusMetadata;

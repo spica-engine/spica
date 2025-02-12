@@ -1,5 +1,5 @@
-import * as deepDiff from "deep-diff";
-import * as diffMatchPatch from "diff-match-patch";
+import deepDiff from "deep-diff";
+import diffMatchPatch from "diff-match-patch";
 
 export function diff<T>(prev: T, current: T): Change[] {
   const structuralChanges = deepDiff.diff(prev, current);

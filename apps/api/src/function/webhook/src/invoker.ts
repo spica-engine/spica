@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 import {Webhook} from "./interface";
 import {WebhookLogService} from "./log.service";
 import {ChangeKind, WebhookService} from "./webhook.service";
-import {compile, precompile} from "handlebars";
+import handlebars from "handlebars";
 import {Subject, takeUntil} from "rxjs";
 
 @Injectable()
@@ -37,7 +37,7 @@ export class WebhookInvoker implements OnModuleDestroy {
   }
 
   preCompile(body: string) {
-    precompile(body, {strict: true});
+    handlebars.precompile(body, {strict: true});
   }
 
   private subscribe(target: string, {trigger, url, body}: Webhook) {
@@ -48,7 +48,7 @@ export class WebhookInvoker implements OnModuleDestroy {
     if (body == undefined) {
       body = "{{{ toJSON this }}}";
     }
-    const bodyTemplate = compile(body, {strict: true});
+    const bodyTemplate = handlebars.compile(body, {strict: true});
     const stream = this.db.collection(trigger.options.collection).watch(
       [
         {

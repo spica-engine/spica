@@ -1,6 +1,6 @@
 import {Inject, Injectable} from "@nestjs/common";
 import got, {Headers, Method} from "got";
-import * as querystring from "querystring";
+import querystring from "querystring";
 
 @Injectable()
 export class Request {

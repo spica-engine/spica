@@ -16,7 +16,7 @@ import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import * as uniqid from "uniqid";
+import uniqid from "uniqid";
 import {createApikeyActivity} from "./activity.resource";
 import {ApiKeyService} from "./apikey.service";
 import {ApiKey} from "./interface";

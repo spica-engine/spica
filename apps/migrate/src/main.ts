@@ -1,11 +1,12 @@
-import * as semver from "semver";
-import * as yargs from "yargs";
-import * as color from "cli-color";
+import semver from "semver";
+import yargs from "yargs";
+import color from "cli-color";
 import {migrate} from "./migrate";
+import {fileURLToPath} from "url";
 
 export async function run(arg?: string | readonly string[]) {
   const _console = new console.Console(process.stdout, process.stderr);
-  const args = yargs
+  const args = yargs(process.argv.slice(2))
     .option("from", {
       type: "string",
       coerce: semver.coerce,
@@ -71,7 +72,7 @@ export async function run(arg?: string | readonly string[]) {
   });
 }
 
-if (require.main == module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   run().catch(e => {
     console.error(e);
     process.exit(1);

@@ -1,6 +1,6 @@
 import {Function} from "@spica-server/interface/function";
 import {FunctionCompiler} from "@spica/cli/src/compile";
-import * as ts from "typescript";
+import ts from "typescript";
 
 describe("Function Compiler", () => {
   const deletedStatement = `// This statement has been deleted.`;

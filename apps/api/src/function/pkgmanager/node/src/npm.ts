@@ -1,10 +1,10 @@
 import {Package, PackageManager} from "@spica-server/function/pkgmanager";
-import * as child_process from "child_process";
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
+import child_process from "child_process";
+import fs from "fs";
+import os from "os";
+import path from "path";
 import {Observable} from "rxjs";
-import {glob} from "glob";
+import * as glob from "glob";
 
 function getNpmPath() {
   let npmPath: string = "npm";

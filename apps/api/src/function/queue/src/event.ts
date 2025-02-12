@@ -1,7 +1,7 @@
-import * as grpc from "@grpc/grpc-js";
+import grpc from "@grpc/grpc-js";
 import {event} from "@spica-server/function/queue/proto";
-import * as uniqid from "uniqid";
-import * as util from "util";
+import uniqid from "uniqid";
+import util from "util";
 import {Queue} from "./queue";
 
 export class EventQueue {

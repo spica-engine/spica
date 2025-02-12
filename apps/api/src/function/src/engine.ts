@@ -3,12 +3,12 @@ import {DatabaseService, MongoClient} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {Package, PackageManager} from "@spica-server/function/pkgmanager";
 import {event} from "@spica-server/function/queue/proto";
-import * as fs from "fs";
+import fs from "fs";
 import {JSONSchema7} from "json-schema";
-import * as path from "path";
+import path from "path";
 import {rimraf} from "rimraf";
 import {Observable, Subject} from "rxjs";
-import * as util from "util";
+import util from "util";
 import {
   FunctionService,
   FUNCTION_OPTIONS,
@@ -22,10 +22,10 @@ import {ChangeKind, TargetChange} from "./change";
 import {SCHEMA, SchemaWithName} from "./schema/schema";
 import {createTargetChanges} from "./change";
 
-import HttpSchema = require("./schema/http.json");
-import ScheduleSchema = require("./schema/schedule.json");
-import FirehoseSchema = require("./schema/firehose.json");
-import SystemSchema = require("./schema/system.json");
+import HttpSchema from "./schema/http.json" with {type: "json"};
+import ScheduleSchema from "./schema/schedule.json" with {type: "json"};
+import FirehoseSchema from "./schema/firehose.json" with {type: "json"};
+import SystemSchema from "./schema/system.json" with {type: "json"};
 import {ClassCommander, CommandType} from "@spica-server/replication";
 
 @Injectable()

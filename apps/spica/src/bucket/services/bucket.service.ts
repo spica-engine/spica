@@ -3,7 +3,7 @@ import {Injectable} from "@angular/core";
 import {select, Store} from "@ngrx/store";
 import {fileToBuffer, PreferencesService} from "@spica-client/core";
 import {ViewChange} from "@spica-client/core/route/route";
-import * as BSON from "bson";
+import BSON from "bson";
 import {from, Observable, pipe} from "rxjs";
 import {filter, flatMap, map, tap, debounceTime} from "rxjs/operators";
 import {Storage} from "../../storage/interfaces/storage";

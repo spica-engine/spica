@@ -1,4 +1,4 @@
-import * as grpc from "@grpc/grpc-js";
+import grpc from "@grpc/grpc-js";
 
 export abstract class Queue<T> {
   abstract TYPE: grpc.ServiceDefinition<T>;

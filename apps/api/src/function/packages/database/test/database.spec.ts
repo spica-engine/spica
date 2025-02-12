@@ -1,5 +1,5 @@
 import {close, isConnected, database} from "@spica-devkit/database";
-import * as mongodb from "mongodb";
+import mongodb from "mongodb";
 import {ObjectId} from "mongodb";
 
 function resetEnvironment() {

@@ -1,8 +1,8 @@
 import {Compilation} from "@spica-server/function/compiler";
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
-import * as ts from "typescript";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import ts from "typescript";
 import {parentPort} from "worker_threads";
 
 const ROOT_TSCONFIG_PATH = path.join(os.tmpdir(), "_tsconfig.json");

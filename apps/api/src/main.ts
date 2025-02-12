@@ -17,12 +17,12 @@ import {StorageModule} from "@spica-server/storage";
 import {VersionControlModule} from "@spica-server/versioncontrol";
 import {ReplicationModule} from "@spica-server/replication";
 import {AssetModule} from "@spica-server/asset";
-import * as fs from "fs";
-import * as https from "https";
-import * as path from "path";
-import * as yargs from "yargs";
+import fs from "fs";
+import https from "https";
+import path from "path";
+import yargs from "yargs/yargs";
 
-const args = yargs
+const args = yargs(process.argv.slice(2))
   /* TLS Options */
   .options({
     "cert-file": {

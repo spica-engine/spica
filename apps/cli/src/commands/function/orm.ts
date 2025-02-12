@@ -1,8 +1,8 @@
 import {ActionParameters, CreateCommandParameters, Command, Program} from "@caporal/core";
 import {Function, Triggers, Trigger} from "@spica-server/interface/function";
 import axios from "axios";
-import * as path from "path";
-import * as fs from "fs";
+import path from "path";
+import fs from "fs";
 import {spin} from "../../console";
 import {FunctionCompiler} from "../../compile";
 import {availableHttpServices, separateToNewLines} from "../../validator";

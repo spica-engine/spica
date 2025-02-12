@@ -1,7 +1,7 @@
 import {blue, bold, red, yellow} from "colorette";
-import * as columnify from "columnify";
-import * as ora from "ora";
-import * as util from "util";
+import columnify from "columnify";
+import ora from "ora";
+import util from "util";
 
 export function spin(options?: ora.Options): ora.Ora;
 export function spin<T = any>(options?: ora.Options & {op: Promise<T>}): Promise<T>;

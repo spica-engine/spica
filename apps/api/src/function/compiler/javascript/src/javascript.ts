@@ -1,6 +1,6 @@
 import {Compilation, Language, Description} from "@spica-server/function/compiler";
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
+import path from "path";
 
 export class Javascript extends Language {
   readonly description: Description = {

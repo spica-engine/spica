@@ -1,6 +1,6 @@
 import {ActionParameters, Command, CreateCommandParameters, Program} from "@caporal/core";
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
+import path from "path";
 import {config} from "../../config";
 import {context} from "../../context";
 import {spin} from "../../console";

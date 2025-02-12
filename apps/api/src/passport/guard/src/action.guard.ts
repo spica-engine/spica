@@ -10,7 +10,7 @@ import {
   Type
 } from "@nestjs/common";
 import {ObjectId} from "@spica-server/database";
-import * as matcher from "matcher";
+import matcher from "matcher";
 import {Text, Parameter, parse} from "path-to-regexp";
 import {PolicyResolver, POLICY_RESOLVER} from "./action.resolver";
 

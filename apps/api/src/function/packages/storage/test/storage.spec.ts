@@ -1,6 +1,5 @@
 import * as Storage from "@spica-devkit/storage";
 import {Axios} from "@spica-devkit/internal_common";
-import * as BSON from "bson";
 
 function getValueOfFormField(form, field) {
   return form

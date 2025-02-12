@@ -1,5 +1,5 @@
 import {Http} from "@spica-server/function/queue/proto";
-import * as grpc from "@grpc/grpc-js";
+import grpc from "@grpc/grpc-js";
 import {parseBody} from "./parser";
 
 export class HttpQueue {

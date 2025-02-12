@@ -1,7 +1,7 @@
 import {cosmiconfig} from "cosmiconfig";
-import * as fs from "fs";
-import * as os from "os";
-import * as _path from "path";
+import fs from "fs";
+import os from "os";
+import _path from "path";
 
 export namespace config {
   export interface Config {
