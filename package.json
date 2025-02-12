@@ -72,7 +72,7 @@
     "deep-diff": "^1.0.2",
     "diff-match-patch": "^1.0.5",
     "dotenv": "^16.4.7",
-    "got": "^11.3.0",
+    "got": "^14.4.6",
     "ioredis": "^5.4.2",
     "json-merge-patch": "^1.0.2",
     "lodash": "^4.17.21",
@@ -115,8 +115,8 @@
     "jest": "^29.7.0",
     "nx": "^20.3.1",
     "prettier": "^3.4.2",
-    "ts-node": "^10.9.2",
-    "resolve-tspaths": "^0.8.23"
+    "resolve-tspaths": "^0.8.23",
+    "ts-node": "^10.9.2"
   },
   "type": "module"
 }
