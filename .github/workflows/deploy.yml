@@ -70,4 +70,6 @@ jobs:
         run: yarn run publish:api
 
       - name: Deploy to GKE
-        run: kubectl apply -f ./deployment.yaml
+        run: |
+          kubectl apply -f ./deployment.yaml
+          kubectl delete --all pods -n infrastructure-master-spicaengine-com
