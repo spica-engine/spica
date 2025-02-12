@@ -334,9 +334,7 @@ export class IdentityController {
     identity: Partial<Identity>
   ) {
     if (identity.password) {
-      const user = await this.identityService.findOne({_id: id}).catch(exception => {
-        throw new BadRequestException(exception.message);
-      });
+      const user = await this.identityService.findOne({_id: id});
 
       if (user) {
         const isEqual = await compare(identity.password, user.password);
