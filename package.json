@@ -76,7 +76,7 @@
     "ioredis": "^5.4.2",
     "json-merge-patch": "^1.0.2",
     "lodash": "^4.17.21",
-    "matcher": "^3.0.0",
+    "matcher": "^5.0.0",
     "mingo": "^6.5.1",
     "mongodb": "^6.12.0",
     "mongodb-memory-server": "^10.1.3",
@@ -115,8 +115,8 @@
     "jest": "^29.7.0",
     "nx": "^20.3.1",
     "prettier": "^3.4.2",
-    "ts-node": "^10.9.2",
-    "resolve-tspaths": "^0.8.23"
+    "resolve-tspaths": "^0.8.23",
+    "ts-node": "^10.9.2"
   },
   "type": "module"
 }
