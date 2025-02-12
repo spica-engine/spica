@@ -5,7 +5,7 @@ export interface Identity {
   _id?: ObjectId;
   identifier: string;
   password: string;
-  deactivateJwtsBefore: number;
+  deactivateJwtsBefore?: number;
   policies: string[];
   attributes?: {
     [key: string]: any;

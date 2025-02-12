@@ -32,7 +32,6 @@ export class IdentityModule {
       identityService.default({
         identifier: options.defaultIdentityIdentifier,
         password: options.defaultIdentityPassword,
-        deactivateJwtsBefore: 0,
         policies: options.defaultIdentityPolicies
       });
     }

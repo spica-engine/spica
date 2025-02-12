@@ -339,8 +339,8 @@ export class IdentityController {
       });
 
       if (user) {
-        const hasNotChanged = await compare(identity.password, user.password);
-        if (!hasNotChanged) {
+        const isEqual = await compare(identity.password, user.password);
+        if (!isEqual) {
           identity.deactivateJwtsBefore = Date.now() / 1000;
         }
       }

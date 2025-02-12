@@ -11,7 +11,6 @@ import {AuthModuleOptions, Type} from "@nestjs/passport";
 import {defaultOptions} from "@nestjs/passport/dist/options";
 import {memoize} from "@nestjs/passport/dist/utils/memoize.util";
 import * as passport from "passport";
-import {jwtDecode} from "jwt-decode";
 
 export const StrategyType = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest();
@@ -51,11 +50,9 @@ export function createAuthGuard(type?: string): Type<CanActivate> {
       const desiredStrategy = parseAuthHeader(request.headers.authorization);
 
       let strategyType: string;
-      let token: string;
 
       if (desiredStrategy) {
         strategyType = desiredStrategy.scheme.toLocaleLowerCase();
-        token = desiredStrategy.value;
       } else {
         strategyType = type.toLowerCase();
       }
@@ -72,23 +69,7 @@ export function createAuthGuard(type?: string): Type<CanActivate> {
           if (!user) {
             throw new UnauthorizedException(info ? info.message : undefined);
           }
-          if (token) {
-            let decodedToken;
 
-            try {
-              decodedToken = jwtDecode(token);
-            } catch (e) {
-              console.error("Invalid Token:", e.message);
-            }
-
-            if (decodedToken) {
-              const deactivateJwtsBefore = user["deactivateJwtsBefore"];
-
-              if (decodedToken.iat < deactivateJwtsBefore) {
-                throw new UnauthorizedException("Invalid JWT");
-              }
-            }
-          }
           return user;
         }
       );
