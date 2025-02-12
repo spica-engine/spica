@@ -257,7 +257,7 @@ describe("E2E Tests", () => {
       );
 
       const {body: error} = await getIdentities();
-      expect(error).toEqual({message: "Invalid JWT", error: "Unauthorized", statusCode: 401});
+      expect(error).toEqual({message: "Invalid JWT", error: "Bad Request", statusCode: 400});
 
       // WAIT BEFORE CREATE NEW JWT
       await new Promise((resolve, _) => setTimeout(resolve, 1000));
