@@ -22,7 +22,7 @@
     "open": "^7.3.0",
     "ora": "^5.1.0",
     "pretty-ms": "^7.0.1",
-    "semver": "^7.6.3"
+    "semver": "^7.7.0"
   },
   "devDependencies": {
     "@types/dockerode": "^3.3.34",
