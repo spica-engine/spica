@@ -1,11 +1,10 @@
-import {Test, TestingModule} from "@nestjs/testing";
+import {Test} from "@nestjs/testing";
 import {FunctionModule} from "@spica-server/function";
 import os from "os";
 import {
   DatabaseService,
   DatabaseTestingModule,
   getConnectionUri,
-  MongoClient,
   stream
 } from "@spica-server/database/testing";
 import {INestApplication} from "@nestjs/common";
@@ -23,6 +22,9 @@ function sleep(ms: number) {
   return new Promise((resolve, _) => setTimeout(resolve, ms));
 }
 describe("Queue shifting", () => {
+  let fn;
+  let bucket;
+
   function onEventEnqueued(
     scheduler: Scheduler,
     eventType?: number,
@@ -122,7 +124,7 @@ describe("Queue shifting", () => {
     const req = module.get(Request);
     await app.listen(req.socket);
 
-    const bucket = await req
+    bucket = await req
       .post("/bucket", {
         title: "Bucket1",
         description: "Bucket1",
@@ -134,7 +136,7 @@ describe("Queue shifting", () => {
       })
       .then(r => r.body);
 
-    const fn = await req
+    fn = await req
       .post("/function", {
         name: "test",
         description: "test",
@@ -150,14 +152,14 @@ describe("Queue shifting", () => {
             type: "http",
             active: true
           },
-          // scheduler: {
-          //   options: {
-          //     timezone: "UTC",
-          //     frequency: "* * * * * *"
-          //   },
-          //   type: "schedule",
-          //   active: true
-          // },
+          scheduler: {
+            options: {
+              timezone: "UTC",
+              frequency: "* * * * * *"
+            },
+            type: "schedule",
+            active: false
+          },
           database: {
             options: {
               collection: "my_coll",
@@ -194,9 +196,9 @@ describe("Queue shifting", () => {
             return "OK";
           }
   
-          // export function scheduler(){
-          //   return "OK";
-          // }
+          export function scheduler(){
+            return "OK";
+          }
           `
     });
 
@@ -252,7 +254,7 @@ describe("Queue shifting", () => {
     });
   });
 
-  xdescribe("schedule", () => {
+  describe("schedule", () => {
     let app: INestApplication;
     let app2: INestApplication;
     let req: Request;
@@ -266,9 +268,21 @@ describe("Queue shifting", () => {
       req = res.req;
       scheduler = res.scheduler;
       scheduler2 = res.scheduler2;
+
+      updateSchedulerTrigger(true);
     });
 
     afterEach(async () => await app2.close());
+
+    // don't know but somehow scheduler trigger prevents API from exiting on the exit signal received If it runs every second
+    // that's why we had to disable the trigger after the event shifted
+    // it does not valid for the production
+    function updateSchedulerTrigger(active: boolean) {
+      fn = JSON.parse(JSON.stringify(fn));
+      fn.triggers.scheduler.active = active;
+
+      return req.put(`/function/${fn._id}`, fn).then(res => res.body);
+    }
 
     it("should shift the event", done => {
       let event1;
@@ -276,6 +290,8 @@ describe("Queue shifting", () => {
 
       onEventEnqueued(scheduler, event.Type.HTTP).then(() => {
         onEventEnqueued(scheduler, event.Type.SCHEDULE).then(shiftedEvent => {
+          updateSchedulerTrigger(false);
+
           event1 = shiftedEvent;
           onEventEnqueued(scheduler2, event.Type.SCHEDULE, shiftedEvent.id).then(enqueuedEvent => {
             event2 = enqueuedEvent;
