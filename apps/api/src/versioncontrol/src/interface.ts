@@ -1,5 +1,6 @@
 export interface VersionControlOptions {
   persistentPath: string;
+  isReplicationEnabled: boolean;
 }
 
 export abstract class VersionManager {

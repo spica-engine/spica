@@ -59,7 +59,7 @@ describe("Versioning e2e", () => {
           spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
           tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
         }),
-        VersionControlModule.forRoot({persistentPath: os.tmpdir()})
+        VersionControlModule.forRoot({persistentPath: os.tmpdir(), isReplicationEnabled: false})
       ]
     }).compile();
     module.enableShutdownHooks();
