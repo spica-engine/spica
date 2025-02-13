@@ -50,8 +50,8 @@ afterAll(async () => {
     fs.rmSync(testTmpDir, {recursive: true, force: true});
   }
 
-  if (global.__CLEANUPCALLBACKS) {
+  if (globalThis.__CLEANUPCALLBACKS) {
     await new Promise(resolve => setTimeout(resolve, 1000));
-    await Promise.all(global.__CLEANUPCALLBACKS.map(callback => callback()));
+    await Promise.all(globalThis.__CLEANUPCALLBACKS.map(callback => callback()));
   }
 });
