@@ -566,6 +566,31 @@ describe("Storage Acceptance", () => {
       expect(statusText).toBe("Created");
     });
 
+    it("should throw a duplicate name error", async () => {
+      const objects = [
+        {
+          name: "remote config.json",
+          content: {
+            data: new BSON.Binary(Buffer.from("{}")),
+            type: "application/json"
+          }
+        },
+        {
+          name: "remote config.json",
+          content: {
+            data: new BSON.Binary(Buffer.from("[]")),
+            type: "application/json"
+          }
+        }
+      ];
+      const {body} = await req.post("/storage", BSON.serialize({content: objects}), {
+        "Content-Type": "application/bson"
+      });
+
+      expect(body.statusCode).toBe(400);
+      expect(body.message).toBe("An object with this name already exists.");
+    });
+
     it("should throw an error if the inserted object's data is empty", async () => {
       const objects = [
         {

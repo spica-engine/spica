@@ -1,4 +1,4 @@
-import matcher from "matcher";
+import {isMatch} from "matcher";
 import {CorsOptions} from "./interfaces";
 import pkg from "body-parser";
 const {json} = pkg;
@@ -77,7 +77,7 @@ export namespace Middlewares {
 }
 
 export function getMatchedValue(source: string | string[], alloweds: string[]): string {
-  if (alloweds.findIndex(allowed => matcher.isMatch(source, allowed)) != -1) {
+  if (alloweds.findIndex(allowed => isMatch(source, allowed)) != -1) {
     return Array.isArray(source) ? source.join(",") : source;
   } else {
     return "";

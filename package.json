@@ -76,7 +76,7 @@
     "ioredis": "^5.4.2",
     "json-merge-patch": "^1.0.2",
     "lodash": "^4.17.21",
-    "matcher": "^3.0.0",
+    "matcher": "^5.0.0",
     "mingo": "^6.5.1",
     "mongodb": "^6.12.0",
     "mongodb-memory-server": "^10.1.3",

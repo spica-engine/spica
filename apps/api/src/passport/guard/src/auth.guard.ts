@@ -50,6 +50,7 @@ export function createAuthGuard(type?: string): Type<CanActivate> {
       const desiredStrategy = parseAuthHeader(request.headers.authorization);
 
       let strategyType: string;
+
       if (desiredStrategy) {
         strategyType = desiredStrategy.scheme.toLocaleLowerCase();
       } else {
@@ -68,6 +69,7 @@ export function createAuthGuard(type?: string): Type<CanActivate> {
           if (!user) {
             throw new UnauthorizedException(info ? info.message : undefined);
           }
+
           return user;
         }
       );

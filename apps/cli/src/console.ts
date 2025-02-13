@@ -1,15 +1,13 @@
 import {blue, bold, red, yellow} from "colorette";
 import columnify from "columnify";
-import ora from "ora";
+import ora, {Options, Ora} from "ora";
 import util from "util";
 
-export function spin(options?: ora.Options): ora.Ora;
-export function spin<T = any>(options?: ora.Options & {op: Promise<T>}): Promise<T>;
-export function spin<T = any>(
-  options?: ora.Options & {op: (spinner: ora.Ora) => Promise<T>}
-): Promise<T>;
+export function spin(options?: Options): Ora;
+export function spin<T = any>(options?: Options & {op: Promise<T>}): Promise<T>;
+export function spin<T = any>(options?: Options & {op: (spinner: Ora) => Promise<T>}): Promise<T>;
 export function spin(
-  options?: ora.Options & {op?: Promise<unknown> | ((spinner: ora.Ora) => Promise<unknown>)}
+  options?: Options & {op?: Promise<unknown> | ((spinner: Ora) => Promise<unknown>)}
 ) {
   const spinner = ora({...options, color: options.color || "yellow"});
   if (typeof options.op == "function") {

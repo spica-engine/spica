@@ -1,4 +1,4 @@
-import {Inject, Injectable} from "@nestjs/common";
+import {BadRequestException, Inject, Injectable} from "@nestjs/common";
 import {
   BaseCollection,
   DatabaseService,
@@ -19,7 +19,9 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     private service: Strategy,
     @Inject(STORAGE_OPTIONS) private storageOptions: StorageOptions
   ) {
-    super(database);
+    super(database, {
+      afterInit: () => this._coll.createIndex({name: 1}, {unique: true})
+    });
   }
 
   private existingSize(): Promise<number> {
@@ -178,9 +180,17 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     await this.validateTotalStorageSize(schemas.reduce((sum, curr) => sum + curr.content.size, 0));
 
-    const insertedObjects: StorageObjectMeta[] = await this._coll
-      .insertMany(schemas)
-      .then(result => schemas.map((s, i) => ({...s, _id: result.insertedIds[i]})));
+    let insertedObjects: StorageObjectMeta[];
+
+    try {
+      insertedObjects = await this._coll
+        .insertMany(schemas)
+        .then(result => schemas.map((s, i) => ({...s, _id: result.insertedIds[i]})));
+    } catch (exception) {
+      throw new BadRequestException(
+        exception.code === 11000 ? "An object with this name already exists." : exception.message
+      );
+    }
 
     for (const [i, object] of insertedObjects.entries()) {
       try {

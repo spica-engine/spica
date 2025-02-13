@@ -204,14 +204,69 @@ describe("E2E Tests", () => {
   let app: INestApplication;
   let token: string;
 
-  async function login(identifier, password) {
+  async function login(identifier?: string, password?: string) {
     const {body} = await req.post("/passport/identify", {
-      identifier: "spica",
-      password: "spica"
+      identifier: identifier || "spica",
+      password: password || "spica"
     });
 
     token = body.token;
   }
+
+  describe("JWT", () => {
+    beforeEach(async () => {
+      const module = await Test.createTestingModule(moduleMetaData).compile();
+
+      req = module.get(Request);
+      app = module.createNestApplication();
+
+      await app.listen(req.socket);
+
+      // WAIT UNTIL IDENTITY IS INSERTED
+      await new Promise((resolve, _) => setTimeout(resolve, 3000));
+
+      await login();
+    });
+
+    const getIdentities = () => {
+      return req.get(
+        "/passport/identity",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`
+        }
+      );
+    };
+
+    it("should list identities", async () => {
+      const {body: identities} = await getIdentities();
+
+      expect(identities.length).toBe(1);
+    });
+
+    it("should not list identities if jwt is out of date", async () => {
+      const {body: identities} = await getIdentities();
+      expect(identities.length).toBe(1);
+
+      const identityId = identities[0]._id;
+      await req.put(
+        `/passport/identity/${identityId}`,
+        {identifier: "spica", password: "spica2"},
+        {Authorization: `IDENTITY ${token}`}
+      );
+
+      const {body: error} = await getIdentities();
+      expect(error).toEqual({message: "Invalid JWT", error: "Bad Request", statusCode: 400});
+
+      // WAIT BEFORE CREATE NEW JWT
+      await new Promise((resolve, _) => setTimeout(resolve, 1000));
+
+      await login("spica", "spica2");
+
+      const {body: updatedIdentities} = await getIdentities();
+      expect(updatedIdentities.length).toBe(1);
+    });
+  });
 
   describe("SSO", () => {
     describe("SAML", () => {
@@ -226,7 +281,7 @@ describe("E2E Tests", () => {
         // WAIT UNTIL IDENTITY IS INSERTED
         await new Promise((resolve, _) => setTimeout(resolve, 3000));
 
-        await login("spica", "spica");
+        await login();
 
         // STRATEGY INSERT
         const strategy = {
@@ -406,7 +461,7 @@ describe("E2E Tests", () => {
         // WAIT UNTIL IDENTITY IS INSERTED
         await new Promise((resolve, _) => setTimeout(resolve, 3000));
 
-        await login("spica", "spica");
+        await login();
 
         // STRATEGY INSERT
         await req.post("/passport/strategy", strategy, {Authorization: `IDENTITY ${token}`});
@@ -505,7 +560,7 @@ describe("E2E Tests", () => {
       // WAIT UNTIL IDENTITY IS INSERTED
       await new Promise((resolve, _) => setTimeout(resolve, 3000));
 
-      await login("spica", "spica");
+      await login();
     });
 
     describe("Activating 2fa", () => {

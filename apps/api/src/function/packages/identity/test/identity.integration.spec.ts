@@ -103,7 +103,11 @@ describe("Identity", () => {
     it("should get all", async () => {
       const identities = await Identity.getAll();
       expect(identities).toEqual([
-        {identifier: "spica", _id: identities[0]._id, policies: ["PassportFullAccess"]}
+        {
+          identifier: "spica",
+          _id: identities[0]._id,
+          policies: ["PassportFullAccess"]
+        }
       ]);
     });
 
@@ -124,7 +128,11 @@ describe("Identity", () => {
         expect(identities).toEqual({
           meta: {total: 1},
           data: [
-            {identifier: "spica", _id: identities.data[0]._id, policies: ["PassportFullAccess"]}
+            {
+              identifier: "spica",
+              _id: identities.data[0]._id,
+              policies: ["PassportFullAccess"]
+            }
           ]
         });
       });
@@ -250,7 +258,11 @@ describe("Identity", () => {
       const identities = await Identity.getAll();
 
       expect(identities).toEqual([
-        {identifier: "spica", _id: identities[0]._id, policies: ["PassportFullAccess"]}
+        {
+          identifier: "spica",
+          _id: identities[0]._id,
+          policies: ["PassportFullAccess"]
+        }
       ]);
     });
 
