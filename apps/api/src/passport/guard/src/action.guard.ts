@@ -10,7 +10,7 @@ import {
   Type
 } from "@nestjs/common";
 import {ObjectId} from "@spica-server/database";
-import matcher from "matcher";
+import {isMatch} from "matcher";
 import {Text, Parameter, parse} from "path-to-regexp";
 import {PolicyResolver, POLICY_RESOLVER} from "./action.resolver";
 
@@ -284,7 +284,7 @@ function createActionGuard(
                       }
                     }
 
-                    return matcher.isMatch(part, pattern);
+                    return isMatch(part, pattern);
                   });
 
                   if (hasResourceFilter && match) {
