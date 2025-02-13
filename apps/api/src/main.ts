@@ -193,7 +193,7 @@ const args = yargs(process.argv.slice(2))
     "function-debug": {
       boolean: true,
       description: "Enable/disable function workers debugging mode. Default value is true",
-      default: true
+      default: false
     },
     "function-realtime-logs": {
       boolean: true,
