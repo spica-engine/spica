@@ -1,11 +1,10 @@
-import {Test, TestingModule} from "@nestjs/testing";
+import {Test} from "@nestjs/testing";
 import {FunctionModule} from "@spica-server/function";
 import os from "os";
 import {
   DatabaseService,
   DatabaseTestingModule,
   getConnectionUri,
-  MongoClient,
   stream
 } from "@spica-server/database/testing";
 import {INestApplication} from "@nestjs/common";
@@ -255,6 +254,61 @@ describe("Queue shifting", () => {
     });
   });
 
+  describe("schedule", () => {
+    let app: INestApplication;
+    let app2: INestApplication;
+    let req: Request;
+    let scheduler: Scheduler;
+    let scheduler2: Scheduler;
+
+    beforeEach(async () => {
+      const res = await startApp(["0.0.0.0:38748", "0.0.0.0:34954"]);
+      app = res.app;
+      app2 = res.app2;
+      req = res.req;
+      scheduler = res.scheduler;
+      scheduler2 = res.scheduler2;
+
+      updateSchedulerTrigger(true);
+    });
+
+    afterEach(async () => await app2.close());
+
+    // don't know but somehow scheduler trigger prevents api from exiting on sigkill
+    // if it runs every seconds
+    // thats why we had to disable the trigger after event shifted
+    // it does not valid for the production
+    function updateSchedulerTrigger(active: boolean) {
+      fn = JSON.parse(JSON.stringify(fn));
+      fn.triggers.scheduler.active = active;
+
+      return req.put(`/function/${fn._id}`, fn).then(res => res.body);
+    }
+
+    it("should shift the event", done => {
+      let event1;
+      let event2;
+
+      onEventEnqueued(scheduler, event.Type.HTTP).then(() => {
+        onEventEnqueued(scheduler, event.Type.SCHEDULE).then(shiftedEvent => {
+          updateSchedulerTrigger(false);
+
+          event1 = shiftedEvent;
+          onEventEnqueued(scheduler2, event.Type.SCHEDULE, shiftedEvent.id).then(enqueuedEvent => {
+            event2 = enqueuedEvent;
+          });
+
+          app.close().then(() => {
+            expect(event1).toEqual(event2);
+            done();
+          });
+        });
+      });
+
+      req.get("/fn-execute/test");
+    });
+  });
+
   describe("database", () => {
     let app: INestApplication;
     let app2: INestApplication;
@@ -353,61 +407,6 @@ describe("Queue shifting", () => {
         });
 
         triggerBucketDataEvent();
-      });
-
-      req.get("/fn-execute/test");
-    });
-  });
-
-  describe("schedule", () => {
-    let app: INestApplication;
-    let app2: INestApplication;
-    let req: Request;
-    let scheduler: Scheduler;
-    let scheduler2: Scheduler;
-
-    beforeEach(async () => {
-      const res = await startApp(["0.0.0.0:38748", "0.0.0.0:34954"]);
-      app = res.app;
-      app2 = res.app2;
-      req = res.req;
-      scheduler = res.scheduler;
-      scheduler2 = res.scheduler2;
-
-      updateSchedulerTrigger(true);
-    });
-
-    afterEach(async () => await app2.close());
-
-    // don't know but somehow scheduler trigger prevents api from exiting on sigkill
-    // if it runs every seconds
-    // thats why we had to disable it manually
-    // it does not valid for production
-    function updateSchedulerTrigger(active: boolean) {
-      fn = JSON.parse(JSON.stringify(fn));
-      fn.triggers.scheduler.active = active;
-
-      return req.put(`/function/${fn._id}`, fn).then(res => res.body);
-    }
-
-    it("should shift the event", done => {
-      let event1;
-      let event2;
-
-      onEventEnqueued(scheduler, event.Type.HTTP).then(() => {
-        onEventEnqueued(scheduler, event.Type.SCHEDULE).then(shiftedEvent => {
-          updateSchedulerTrigger(false);
-
-          event1 = shiftedEvent;
-          onEventEnqueued(scheduler2, event.Type.SCHEDULE, shiftedEvent.id).then(enqueuedEvent => {
-            event2 = enqueuedEvent;
-          });
-
-          app.close().then(() => {
-            expect(event1).toEqual(event2);
-            done();
-          });
-        });
       });
 
       req.get("/fn-execute/test");
