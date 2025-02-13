@@ -11241,7 +11241,7 @@ jws@^4.0.0:
 
 jwt-decode@^2.2.0:
   version "2.2.0"
-  resolved "https://registry.yarnpkg.com/jwt-decode/-/jwt-decode-2.2.0.tgz#7d86bd56679f58ce6a84704a657dd392bba81a79"
+  resolved "https://registry.npmjs.org/jwt-decode/-/jwt-decode-2.2.0.tgz#7d86bd56679f58ce6a84704a657dd392bba81a79"
   integrity sha512-86GgN2vzfUu7m9Wcj63iUkuDzFNYFVmjeDm2GzWpUk+opB0pEpMsw6ePCMrhYkumz2C1ihqtZzOMAg7FiXcNoQ==
 
 jwt-decode@^4.0.0:

@@ -1,4 +1,4 @@
-import {Inject, Injectable} from "@nestjs/common";
+import {BadRequestException, Inject, Injectable, UnauthorizedException} from "@nestjs/common";
 import {PassportStrategy} from "@nestjs/passport";
 import {ExtractJwt, Strategy} from "passport-jwt";
 import {IdentityService} from "./identity.service";
@@ -19,7 +19,21 @@ export class IdentityStrategy extends PassportStrategy(Strategy, "identity") {
     });
   }
 
-  async validate({header}: any) {
-    return this.identity.findOne({identifier: header.identifier});
+  async validate(request: any) {
+    const {identifier} = request.header;
+    const {iat} = request.payload;
+
+    const user = await this.identity.findOne({identifier});
+    if (!user) return undefined;
+
+    const deactivateJwtsBefore = user["deactivateJwtsBefore"];
+    const jwtDeactivationTimestamp =
+      typeof deactivateJwtsBefore === "number" ? deactivateJwtsBefore : 0;
+
+    if (iat < jwtDeactivationTimestamp) {
+      throw new Error("Invalid JWT");
+    }
+
+    return user;
   }
 }
