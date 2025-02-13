@@ -17,7 +17,6 @@
     "baseUrl": "./",
     "lib": ["es2020", "dom"],
     "esModuleInterop": true,
-    "typeRoots": ["./node_modules/@types", "./types"],
     "paths": {
       "@spica-devkit/*": ["apps/api/src/function/packages/*"],
       "@spica-server/*": ["libs/*", "apps/api/src/*"],

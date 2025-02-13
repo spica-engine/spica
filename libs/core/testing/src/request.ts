@@ -1,4 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
+//@ts-ignore
 import got, {Headers, Method} from "got";
 import querystring from "querystring";
 import path from "path";

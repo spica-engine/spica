@@ -1,6 +1,7 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
 import {default as Ajv, ValidationError} from "ajv";
 import formats from "ajv-formats";
+//@ts-ignore
 import got from "got";
 import {from, isObservable} from "rxjs";
 import {skip, take, tap} from "rxjs/operators";
