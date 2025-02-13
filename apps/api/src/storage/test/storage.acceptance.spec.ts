@@ -571,19 +571,19 @@ describe("Storage Acceptance", () => {
         {
           name: "remote config.json",
           content: {
-            data: new BSON.Binary(Buffer.from("{}")),
+            data: new Binary(Buffer.from("{}")),
             type: "application/json"
           }
         },
         {
           name: "remote config.json",
           content: {
-            data: new BSON.Binary(Buffer.from("[]")),
+            data: new Binary(Buffer.from("[]")),
             type: "application/json"
           }
         }
       ];
-      const {body} = await req.post("/storage", BSON.serialize({content: objects}), {
+      const {body} = await req.post("/storage", serialize({content: objects}), {
         "Content-Type": "application/bson"
       });
 
