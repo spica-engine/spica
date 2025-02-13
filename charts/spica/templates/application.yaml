@@ -32,7 +32,7 @@ spec:
   {{- if ne .Values.application.diskAccessMode "ReadWriteMany"}}
   serviceName: {{ .Release.Name }}-application
   {{- end }}
-  replicas: 1
+  replicas: {{ .Values.application.replicas }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ .Release.Name }}-spica
