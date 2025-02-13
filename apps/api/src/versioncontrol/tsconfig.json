@@ -3,6 +3,7 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {"path": "../passport/guard"},
+    {"path": "../replication"},
     {"path": "../../../../libs/representative"},
     {"path": "../../../../libs/core/differ"}
   ]
