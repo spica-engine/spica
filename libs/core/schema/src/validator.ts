@@ -1,5 +1,5 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
-import {default as Ajv, ValidateFunction, ValidationError} from "ajv";
+import {default as Ajv, ValidationError} from "ajv";
 import formats from "ajv-formats";
 import got from "got";
 import {from, isObservable} from "rxjs";
@@ -91,8 +91,7 @@ export class Validator {
     }
 
     return got
-      .post(uri)
-      .json()
+      .post(uri, {responseType: "json"})
       .catch(() => Promise.reject(new Error(`Could not resolve the schema ${uri}`)));
   }
 

@@ -1,6 +1,7 @@
 import {Inject, Injectable} from "@nestjs/common";
 import got, {Headers, Method} from "got";
 import querystring from "querystring";
+import path from "path";
 
 @Injectable()
 export class Request {
@@ -40,17 +41,15 @@ export class Request {
   }
 
   request<T>(options: RequestOptions): Promise<Response<T>> {
+    const normalizedPath = path.posix.join("/", options.path);
+    const url = `unix:${this.socket}:${normalizedPath}`;
+
     const req: any = {
       headers: options.headers ? {...this.headers, ...options.headers} : this.headers,
       method: options.method,
-      socketPath: this.socket,
-      pathname: options.path,
-      hostname: "unix",
-      protocol: "http:",
       responseType: "text",
-      retry: {
-        limit: 0
-      }
+      retry: {limit: 0},
+      enableUnixSockets: true
     };
 
     if (options.followRedirect != undefined) {
@@ -58,7 +57,7 @@ export class Request {
     }
 
     if (options.query) {
-      req.search = querystring.stringify(options.query);
+      req.searchParams = querystring.stringify(options.query);
     }
     if (options.body instanceof Buffer) {
       req.body = options.body;
@@ -66,7 +65,7 @@ export class Request {
       req.json = options.body;
     }
 
-    return got(req)
+    return got(url, req)
       .then(response => {
         if (response && typeof response.body == "string" && response.body) {
           try {
