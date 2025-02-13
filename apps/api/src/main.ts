@@ -335,6 +335,19 @@ While the 'passport' module will use this url to re-route the user to the Passpo
 Example: http(s)://doomed-d45f1.spica.io/api`
   })
   .demandOption("public-url")
+  .middleware(args => {
+    const username = process.env.MONGODB_USERNAME;
+    const password = process.env.MONGODB_PASSWORD;
+
+    if (username && password) {
+      const uri = new URL(args["database-uri"]);
+
+      uri.username = encodeURIComponent(username);
+      uri.password = encodeURIComponent(password);
+
+      args["database-uri"] = uri.toString();
+    }
+  })
   .check(args => {
     if (!args["passport-identity-token-expiration-seconds-limit"]) {
       args["passport-identity-token-expiration-seconds-limit"] =
