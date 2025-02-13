@@ -59,6 +59,7 @@ describe("Storage Service", () => {
         }))
       )
     ).resolves.not.toThrow();
+
     return await expect(
       storageService.getAll(resourceFilter, undefined, true, 30, 0, {_id: -1}).then(result => {
         Array.from(result.data).forEach((val, index) => {
@@ -70,6 +71,28 @@ describe("Storage Service", () => {
       })
     );
   });
+
+  it("should not insert storage object with an already existing name", async () => {
+    await expect(
+      storageService.insert([
+        {
+          name: "my_obj",
+          content: {
+            data: Buffer.from("123"),
+            type: "0"
+          }
+        },
+        {
+          name: "my_obj",
+          content: {
+            data: Buffer.from("1234"),
+            type: "1"
+          }
+        }
+      ])
+    ).rejects.toThrow("An object with this name already exists.");
+  });
+
   it("should delete failed object from database", async () => {
     const storageObjects = [
       {
@@ -240,6 +263,7 @@ describe("Storage Service", () => {
       }));
       await storageService.insertMany(storageObjects);
     });
+
     it("should sort storage objects descend by name", async () => {
       return await expect(
         storageService.getAll(resourceFilter, undefined, true, 3, 0, {name: -1}).then(result => {
@@ -250,6 +274,7 @@ describe("Storage Service", () => {
         })
       ).resolves.not.toThrow();
     });
+
     it("should sort storage objects ascend by name", async () => {
       return await expect(
         storageService.getAll(resourceFilter, undefined, true, 3, 0, {name: 1}).then(result => {
@@ -260,6 +285,7 @@ describe("Storage Service", () => {
         })
       ).resolves.not.toThrow();
     });
+
     it("should sort storage objects descend by date", async () => {
       return await expect(
         storageService.getAll(resourceFilter, undefined, true, 3, 0, {_id: -1}).then(result => {
@@ -270,6 +296,7 @@ describe("Storage Service", () => {
         })
       ).resolves.not.toThrow();
     });
+
     it("should sort storage objects ascend by date", async () => {
       return await expect(
         storageService.getAll(resourceFilter, undefined, true, 3, 0, {_id: 1}).then(result => {
@@ -349,7 +376,7 @@ describe("Storage Service", () => {
       it("should insert if it won't exceed the limit", async () => {
         const storageObject = {
           _id: new ObjectId(),
-          name: "name",
+          name: "name3",
           url: "url",
           content: {
             data: Buffer.from(""),
@@ -365,7 +392,7 @@ describe("Storage Service", () => {
       it("should not insert if it exceed the limit", async () => {
         const storageObject = {
           _id: new ObjectId(),
-          name: "name",
+          name: "name3",
           url: "url",
           content: {
             data: Buffer.from(""),
