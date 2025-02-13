@@ -274,9 +274,8 @@ describe("Queue shifting", () => {
 
     afterEach(async () => await app2.close());
 
-    // don't know but somehow scheduler trigger prevents api from exiting on sigkill
-    // if it runs every seconds
-    // thats why we had to disable the trigger after event shifted
+    // don't know but somehow scheduler trigger prevents API from exiting on the exit signal received If it runs every second
+    // that's why we had to disable the trigger after the event shifted
     // it does not valid for the production
     function updateSchedulerTrigger(active: boolean) {
       fn = JSON.parse(JSON.stringify(fn));
