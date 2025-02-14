@@ -73,7 +73,7 @@ describe("Storage Service", () => {
   });
 
   it("should not insert storage object with an already existing name", async () => {
-    await expect(
+    expect(
       storageService.insert([
         {
           name: "my_obj",

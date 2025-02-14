@@ -187,7 +187,6 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
         .insertMany(schemas)
         .then(result => schemas.map((s, i) => ({...s, _id: result.insertedIds[i]})));
     } catch (exception) {
-      console.log("🚀 ~ StorageService ~ insert ~ exception:", exception);
       throw new BadRequestException(
         exception.code === 11000 ? "An object with this name already exists." : exception.message
       );
