@@ -104,8 +104,6 @@ function build(compilation: Compilation) {
       sourceMap: true,
       alwaysStrict: true,
       preserveSymlinks: true,
-      composite: true,
-      incremental: true,
       tsBuildInfoFile: path.join(compilation.cwd, ".build", ".tsbuildinfo"),
       baseUrl: compilation.cwd,
       rootDir: compilation.cwd,
@@ -125,9 +123,7 @@ function build(compilation: Compilation) {
     updateRootTsConfig(rootTsConfig);
   }
 
-  builder = ts.createSolutionBuilder(host, [ROOT_TSCONFIG_PATH], {
-    incremental: true
-  });
+  builder = ts.createSolutionBuilder(host, [ROOT_TSCONFIG_PATH], {});
 
   builder.build();
 }
