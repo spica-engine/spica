@@ -246,6 +246,26 @@ describe("Identity", () => {
       ]);
     });
 
+    it("the sent policies should be returned", async () => {
+      const identity = await Identity.insert({
+        identifier: "user1",
+        password: "pass1",
+        policies: ["BucketReadonlyAccess"]
+      });
+
+      const updatedIdentity = await Identity.update(identity._id, {
+        identifier: "user1",
+        password: "pass1",
+        policies: ["BucketReadonlyAccess", "FunctionReadonlyAccess"]
+      });
+
+      expect(updatedIdentity.identifier).toEqual("user1");
+      expect(updatedIdentity.policies.sort((a, b) => a.localeCompare(b))).toEqual([
+        "BucketReadonlyAccess",
+        "FunctionReadonlyAccess"
+      ]);
+    });
+
     it("should remove", async () => {
       const identity = await Identity.insert({
         identifier: "user1",

@@ -221,18 +221,22 @@ export async function update(id: string, identity: IdentityUpdate): Promise<Iden
 
   const existingIdentity = await service.get<IdentityGet>(`${identitySegment}/${id}`);
 
-  await policy.detach(id, existingIdentity.policies || []);
-
   identity = deepCopyJSON(identity);
   const desiredPolicies = identity.policies;
   delete identity.policies;
 
-  const updatedIdentity = await service.put<IdentityGet>(`${identitySegment}/${id}`, identity);
+  const {onlyInFirst: policiesForDetach, onlyInSecond: policiesForAttach} = getArrayDifferences(
+    existingIdentity.policies,
+    desiredPolicies
+  );
 
-  return policy.attach(id, desiredPolicies || []).then(policies => {
-    updatedIdentity.policies = policies;
-    return updatedIdentity;
-  });
+  const updatedIdentity = await service.put<IdentityGet>(`${identitySegment}/${id}`, identity);
+  updatedIdentity.policies = desiredPolicies;
+
+  await policy.attach(id, policiesForAttach);
+  await policy.detach(id, policiesForDetach);
+
+  return updatedIdentity;
 }
 
 export function remove(id: string): Promise<any> {
@@ -282,4 +286,14 @@ export namespace policy {
 
     return Promise.all(promises).then(() => Array.from(detachedPolicies));
   }
+}
+
+function getArrayDifferences<T>(arr1: T[], arr2: T[]): {onlyInFirst: T[]; onlyInSecond: T[]} {
+  const set1 = new Set(arr1);
+  const set2 = new Set(arr2);
+
+  const onlyInFirst = arr1.filter(item => !set2.has(item));
+  const onlyInSecond = arr2.filter(item => !set1.has(item));
+
+  return {onlyInFirst, onlyInSecond};
 }
