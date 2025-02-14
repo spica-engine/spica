@@ -231,8 +231,9 @@ export async function update(id: string, identity: IdentityUpdate): Promise<Iden
   );
 
   const updatedIdentity = await service.put<IdentityGet>(`${identitySegment}/${id}`, identity);
+  updatedIdentity.policies = desiredPolicies;
 
-  updatedIdentity.policies = await policy.attach(id, policiesForAttach);
+  await policy.attach(id, policiesForAttach);
   await policy.detach(id, policiesForDetach);
 
   return updatedIdentity;
