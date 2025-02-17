@@ -7,6 +7,13 @@ COPY package.json yarn.lock ./
 COPY apps/api/package.json ./apps/api/package.json
 RUN yarn install --frozen-lockfile
 
+FROM base AS deps-production
+WORKDIR /app
+COPY package.json yarn.lock ./
+COPY apps/api/package.json ./apps/api/package.json
+ENV NODE_ENV=production
+RUN yarn install --frozen-lockfile --production
+
 # build app to nodejs image
 FROM base AS build 
 WORKDIR /app
@@ -40,8 +47,8 @@ RUN yarn nx run-many -t test --projects=$PROJECTS --exclude=$EXCLUDE
 # copy deps and build
 FROM base AS runner
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=deps-production /app/node_modules ./node_modules
+COPY --from=deps-production /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=build /app/dist ./dist
 ENV DEFAULT_PASSWORD=spica
 ENV FUNCTION_GRPC_ADDRESS=0.0.0.0:5688
