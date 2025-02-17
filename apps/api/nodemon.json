@@ -1,6 +1,6 @@
 {
   "watch": ["apps/api"],
   "ext": "ts",
-  "exec": "nx serve api",
+  "exec": "yarn nx serve api",
   "delay": "300"
 }
