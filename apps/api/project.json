@@ -18,7 +18,6 @@
     },
     "serve:watch": {
       "executor": "nx:run-commands",
-      "dependsOn": ["compile"],
       "options": {
         "command": "nodemon --config apps/api/nodemon.json"
       }
