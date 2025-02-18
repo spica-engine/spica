@@ -3,9 +3,9 @@
   "version": "0.0.0-PLACEHOLDER",
   "private": true,
   "dependencies": {
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "react-router-dom": "6.11.2"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^6.11.2"
   },
   "devDependencies": {
     "@nx/react": "^20.4.4",

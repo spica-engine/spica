@@ -1,5 +1,5 @@
 {
-  "name": "@spica/api",
+  "name": "@spica/server",
   "version": "0.0.0-PLACEHOLDER",
   "type": "module",
   "dependencies": {
