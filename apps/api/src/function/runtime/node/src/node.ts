@@ -16,21 +16,18 @@ class NodeWorker extends Worker {
     super();
 
     const entrypointPath = options.entrypointPath || this.getEntrypointPath();
-    this._process = child_process.spawn(
-      `node`,
-      ["--import=extensionless/register", entrypointPath],
-      {
-        env: {
-          PATH: process.env.PATH,
-          HOME: process.env.HOME,
-          FUNCTION_GRPC_ADDRESS: process.env.FUNCTION_GRPC_ADDRESS,
-          ENTRYPOINT: "index.mjs",
-          RUNTIME: "node",
-          WORKER_ID: options.id,
-          ...options.env
-        }
+    this._process = child_process.spawn(`node`, ["--import=./register.mjs", entrypointPath], {
+      env: {
+        PATH: process.env.PATH,
+        HOME: process.env.HOME,
+        FUNCTION_GRPC_ADDRESS: process.env.FUNCTION_GRPC_ADDRESS,
+        ENTRYPOINT: "index.mjs",
+        RUNTIME: "node",
+        WORKER_ID: options.id,
+        ...options.env
       }
-    );
+    });
+
     this._process.once("exit", () => (this._quit = true));
     Object.assign(this, this._process);
   }
