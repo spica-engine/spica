@@ -1,5 +1,17 @@
 {
   "name": "panel",
   "sourceRoot": "apps/panel",
-  "projectType": "application"
+  "projectType": "application",
+  "targets": {
+    "build-image": {
+      "command": "docker build --platform=linux/amd64 . -f ./apps/panel/Dockerfile -t spicaengine/panel:$VERSION"
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build-image"],
+      "options": {
+        "command": "docker push spicaengine/panel:$VERSION"
+      }
+    }
+  }
 }
