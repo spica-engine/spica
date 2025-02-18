@@ -134,8 +134,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       version: "0.0.1",
       private: true,
       keywords: ["spica", "function", "node.js"],
-      license: "UNLICENSED",
-      type: "module"
+      license: "UNLICENSED"
     };
 
     return fs.promises.writeFile(
