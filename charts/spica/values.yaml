@@ -3,9 +3,9 @@
 # Declare variables to be passed into your templates.
 database:
   replicas: 1
-  replicaSetName: "rs0"
+  replicaSetName: 'rs0'
   name: spica
-  version: "4.2"
+  version: '4.2'
   storageSize: 2Gi
   storageClass:
   resources: {}
