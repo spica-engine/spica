@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 import {workspaceRoot} from "@nx/devkit";
 
 export default defineConfig({
-  base: "",
+  base: process.env.BASE_URL || "",
   root: __dirname,
   cacheDir: "../../node_modules/.vite/apps/panel",
   server: {
