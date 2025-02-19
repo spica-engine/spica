@@ -1,6 +1,7 @@
 {
-  "watch": ["dist/apps/api"],
-  "ext": "js",
-  "exec": "node dist/apps/api/main.js",
-  "delay": "500"
+  "watch": ["apps/api"],
+  "ext": "ts",
+  "exec": "yarn nx serve api",
+  "delay": "300",
+  "signal": "SIGTERM"
 }

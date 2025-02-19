@@ -267,6 +267,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       }
       this.timeouts.set(workerId, setTimeout(timeoutFn, timeoutInMs));
 
+      if (this.options.invocationLogs) {
+        this.logInvocations(event);
+      }
+
       schedule(event);
 
       this.eventQueue.delete(event.id);
@@ -275,6 +279,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
       this.scaleWorkers();
     }
+  }
+
+  logInvocations(ev: event.Event) {
+    const log = `fn-invocation-log: ${ev.id} ${ev.target.id} ${ev.target.handler} ${event.Type[ev.type]}`;
+    console.log(log);
   }
 
   enqueue(event: event.Event) {

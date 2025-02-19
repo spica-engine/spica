@@ -41,6 +41,7 @@ describe("function", () => {
       SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
       AssetModule.forRoot({persistentPath: os.tmpdir()}),
       FunctionModule.forRoot({
+        invocationLogs: false,
         path: os.tmpdir(),
         databaseName: undefined,
         databaseReplicaSet: undefined,
