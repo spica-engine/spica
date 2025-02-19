@@ -281,7 +281,7 @@ const args = yargs(process.argv.slice(2))
     replication: {
       boolean: true,
       description: "When enabled, server will keep all API replicas at the same level.",
-      default: true
+      default: false
     }
   })
   /* CORS Options */
