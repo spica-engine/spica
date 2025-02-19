@@ -39,16 +39,16 @@ spec:
             "$(PASSWORD)"
           ]
           env:
-            - name: USERNAME
+            - name: ROOT_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.database.rootSecretName }}
-                  key: username
-            - name: PASSWORD
+                  name: {{ .Release.Name }}-database-root-credentials
+                  key: rootUsername
+            - name: ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.database.rootSecretName }}
-                  key: password
+                  name: {{ .Release.Name }}-database-root-credentials
+                  key: rootPassword
       {{- if .Values.database.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.database.nodeSelector | indent 8 }}

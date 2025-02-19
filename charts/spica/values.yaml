@@ -2,7 +2,7 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 database:
-  replicas: 2
+  replicas: 1
   replicaSetName: "rs0"
   name: spica
   version: "4.2"
@@ -10,10 +10,11 @@ database:
   storageClass:
   resources: {}
   replicationControllerImage:
-  username:
-  password:
+  spicaUsername:
+  spicaPassword:
+  rootUsername:
+  rootPassword:
   replicaAuthKey:
-  rootSecretName:
 
 images:
   api: spicaengine/api

@@ -5,7 +5,7 @@ metadata:
   name: {{ .Release.Name }}-database
 data:
   init-users.sh: |
-    #!/bin/sh
+    #!/bin/bash
 
     ROOT_USERNAME=$ROOT_USERNAME
     ROOT_PASSWORD=$ROOT_PASSWORD
@@ -15,8 +15,7 @@ data:
     echo "Defining retry command.."
     retry_command() {
       local retries=0
-      local max_retries=5
-      local base_delay=5
+      local max_retries=10
 
       while true; do
         "$@" && break  # Break the loop if the command succeeds
@@ -25,11 +24,11 @@ data:
           echo "Max retries reached. Exiting script."
           exit 1
         fi
+        
+        delay=$((2**retries))
+        echo "Command failed. Retrying in $delay seconds..."
+        sleep $delay
       
-      delay=$((base_delay * (2 ** retries)))
-      echo "Command failed. Retrying in $delay seconds..."
-      sleep $delay
-
       done
     }
 
@@ -37,7 +36,7 @@ data:
 
     # Start MongoDB without authentication
     echo "Starting mongodb with replica and no-auth.."
-    mongod --replSet rs0 --bind_ip_all > /dev/null 2>&1 & PID="$!"
+    mongod --replSet rs0 --bind_ip_all > start-replicaset.log 2>&1 & PID="$!"
     echo "Starting mongodb succeeded!"
 
 
@@ -53,12 +52,16 @@ data:
 
     # Insert root user if not exist
     echo "Inserting root user.."
-    OUTPUT=$(mongo --quiet <<EOF
+    mongo --quiet <<EOF
       use admin
-      db.createUser({ user: '$ROOT_USERNAME', pwd: '$ROOT_PASSWORD', roles: ["root"] })
+      var user = db.getUser('$ROOT_USERNAME')
+      var roles = [ "root" ]
+      if(user){
+          db.updateUser('$ROOT_USERNAME', { pwd: '$ROOT_PASSWORD', roles: roles })
+      }else{
+          db.createUser({ user: '$ROOT_USERNAME', pwd: '$ROOT_PASSWORD', roles: roles })
+      }
     EOF
-    ) || true
-    echo "$OUTPUT"
     echo "Inserting root user has been completed!"
 
     # Upsert application user
@@ -82,6 +85,8 @@ data:
     echo "Initializing has been completed successfully."
 
   init-replica.sh: | 
+    #!/bin/bash
+    
     echo "Defining retry command.."
     retry_command() {
       local retries=0
@@ -94,7 +99,11 @@ data:
           echo "Max retries reached. Exiting script."
           exit 1
         fi
-        sleep 5
+        
+        delay=$((2**retries))
+        echo "Command failed. Retrying in $delay seconds..."
+        sleep $delay
+        
       done
     }
     echo "Defined retry command!"
