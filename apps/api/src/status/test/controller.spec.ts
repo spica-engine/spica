@@ -188,6 +188,7 @@ describe("Status", () => {
           PassportTestingModule.initialize(),
           SchemaModule.forRoot({formats: [OBJECT_ID]}),
           FunctionModule.forRoot({
+            invocationLogs: false,
             path: os.tmpdir(),
             databaseName: undefined,
             databaseReplicaSet: undefined,

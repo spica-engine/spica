@@ -209,19 +209,18 @@ Must be one of the following:
 
 ### Scope
 
-The scope should be the name of the npm package affected (as perceived by the person reading the changelog generated from commit messages.
+The scope should be the name of the project affected (as perceived by the person reading the changelog generated from commit messages.
 
 The following is the list of supported scopes:
 
-- **core**
-- **common**
-- **material**
-- **bucket**
-- **function**
-- **passport**
-- **preference**
-- **storage**
-- **composer**
+- **api**
+- **cli**
+- **migrate**
+- **mongorc**
+- **spica**
+- **devkit**
+- **libs**
+- **chart**
 
 There are currently a few exceptions to the "use package name" rule:
 
