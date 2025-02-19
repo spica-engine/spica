@@ -21,6 +21,7 @@ import fs from "fs";
 import https from "https";
 import path from "path";
 import yargs from "yargs/yargs";
+import morgan from "morgan";
 
 const args = yargs(process.argv.slice(2))
   /* TLS Options */
@@ -335,6 +336,21 @@ While the 'passport' module will use this url to re-route the user to the Passpo
 Example: http(s)://doomed-d45f1.spica.io/api`
   })
   .demandOption("public-url")
+  .option("access-logs", {
+    boolean: true,
+    description: "Enable/disable http access logs",
+    default: false
+  })
+  .option("access-logs-url-filter", {
+    string: true,
+    description: "Regex to filter access logs by url",
+    default: ".*"
+  })
+  .option("access-logs-statuscode-filter", {
+    string: true,
+    description: "Regex to filter access logs by status code",
+    default: ".*"
+  })
   .middleware(args => {
     const username = process.env.MONGODB_USERNAME;
     const password = process.env.MONGODB_PASSWORD;
@@ -546,6 +562,22 @@ NestFactory.create(RootModule, {
     Middlewares.MergePatchJsonParser(args["payload-size-limit"])
   );
   app.enableShutdownHooks();
+
+  if (args["access-logs"]) {
+    morgan.token("prefix", () => "access-log:");
+    app.use(
+      morgan(
+        ':prefix :remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length]',
+        {
+          skip: (req, res) => {
+            const urlRegex = new RegExp(args["access-logs-url-filter"]);
+            const statusCodeRegex = new RegExp(args["access-logs-statuscode-filter"]);
+            return !urlRegex.test(req.url) || !statusCodeRegex.test(res.statusCode.toString());
+          }
+        }
+      )
+    );
+  }
 
   const {port} = await args;
   await app.listen(port);
