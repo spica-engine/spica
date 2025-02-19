@@ -82,6 +82,17 @@ spec:
           volumeMounts:
             - name: {{ .Release.Name }}-data
               mountPath: /data
+          env:
+            - name: MONGODB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-credentials
+                  key: username
+            - name: MONGODB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-credentials
+                  key: password
       {{- if .Values.application.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.application.nodeSelector | indent 8 }}
