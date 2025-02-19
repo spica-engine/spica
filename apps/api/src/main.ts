@@ -205,6 +205,11 @@ const args = yargs(process.argv.slice(2))
       boolean: true,
       description: "Allows keeping logs with their levels like DEBUG, INFO, WARN, ERROR etc.",
       default: true
+    },
+    "function-invocation-logs": {
+      boolean: true,
+      description: "Log function invocations to the stdout.",
+      default: false
     }
   })
   /* Storage Options */
@@ -500,7 +505,8 @@ const modules = [
     debug: args["function-debug"],
     maxConcurrency: args["function-worker-concurrency"],
     realtimeLogs: args["function-realtime-logs"],
-    logger: args["function-logger"]
+    logger: args["function-logger"],
+    invocationLogs: args["function-invocation-logs"]
   })
 ];
 
