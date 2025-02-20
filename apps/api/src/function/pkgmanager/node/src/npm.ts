@@ -4,7 +4,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import {Observable} from "rxjs";
-import * as glob from "glob";
+import fastGlob from "fast-glob";
 
 function getNpmPath() {
   let npmPath: string = "npm";
@@ -112,7 +112,7 @@ export class Npm extends PackageManager {
   }
 
   findTypes(cwd: string, depName: string) {
-    let typeFiles = glob.sync(`node_modules/${depName}/**/*.d.ts`, {cwd});
+    let typeFiles = fastGlob.sync(`node_modules/${depName}/**/*.d.ts`, {cwd});
     const promises: Promise<{[file: string]: string}>[] = [];
 
     const size = this.calculateFileSizesMb(typeFiles, cwd);
