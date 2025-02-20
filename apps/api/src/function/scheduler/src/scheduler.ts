@@ -245,7 +245,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       const channel = this.options.logger ? stdout : stderr;
 
       const timeoutFn = () => {
-        worker.schedule = undefined;
+        worker.markAsTimeouted();
         if (channel.writable) {
           channel.write(timeoutMsg);
         }

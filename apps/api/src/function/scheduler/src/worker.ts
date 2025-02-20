@@ -19,7 +19,8 @@ export class Node extends Runtime {
 export enum WorkerState {
   "Fresh",
   "Targeted",
-  "Busy"
+  "Busy",
+  "Timeouted"
 }
 
 export class ScheduleWorker extends NodeWorker {
@@ -30,8 +31,8 @@ export class ScheduleWorker extends NodeWorker {
 
   transitionMap = {
     [WorkerState.Fresh]: [WorkerState.Busy],
-    [WorkerState.Targeted]: [WorkerState.Busy],
-    [WorkerState.Busy]: [WorkerState.Targeted]
+    [WorkerState.Targeted]: [WorkerState.Busy, WorkerState.Timeouted],
+    [WorkerState.Busy]: [WorkerState.Targeted, WorkerState.Timeouted]
   };
 
   execute(event: event.Event) {
@@ -45,6 +46,10 @@ export class ScheduleWorker extends NodeWorker {
       this.transitionTo(WorkerState.Targeted);
     }
     this.schedule = schedule;
+  }
+
+  markAsTimeouted() {
+    this.transitionTo(WorkerState.Timeouted);
   }
 
   transitionTo(state: WorkerState) {
