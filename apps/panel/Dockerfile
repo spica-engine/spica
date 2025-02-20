@@ -14,7 +14,8 @@ COPY apps/panel ./apps/panel
 COPY nx.json ./
 COPY package.json ./
 COPY yarn.lock ./
-RUN yarn run build:panel
+ARG BASE_URL=""
+RUN BASE_URL=$BASE_URL yarn run build:panel
 
 # start app
 FROM nginx:alpine as prod
