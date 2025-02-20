@@ -2,6 +2,7 @@ name: Spica Panel Deployment
 
 env:
   VERSION: latest
+  BASE_URL: spica
 
 on:
   push:
