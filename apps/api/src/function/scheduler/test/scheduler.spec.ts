@@ -5,6 +5,7 @@ import {event} from "@spica-server/function/queue/proto";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {PassThrough} from "stream";
+import {WorkerState} from "@spica-server/function/scheduler";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5687";
 process.env.DISABLE_LOGGER = "true";
@@ -35,11 +36,15 @@ describe("Scheduler", () => {
   let module: TestingModule;
 
   function freeWorkers() {
-    return Array.from(scheduler["workers"].entries()).filter(([_, w]) => !w.target);
+    return Array.from(scheduler["workers"].entries()).filter(
+      ([_, w]) => w.state == WorkerState.Fresh
+    );
   }
 
   function activatedWorkers() {
-    return Array.from(scheduler["workers"].entries()).filter(([_, w]) => w.target);
+    return Array.from(scheduler["workers"].entries()).filter(
+      ([_, w]) => w.state != WorkerState.Fresh
+    );
   }
 
   function allWorkers() {
@@ -54,7 +59,9 @@ describe("Scheduler", () => {
   };
 
   function findWorkerFromEventId(evId: string) {
-    return Array.from(scheduler.workers.entries()).find(([id, worker]) => worker.target.id == evId);
+    return Array.from(scheduler.workers.entries()).find(([id, worker]) =>
+      worker.hasSameTarget(evId)
+    );
   }
 
   function completeEvent(evId: string) {
@@ -64,7 +71,7 @@ describe("Scheduler", () => {
 
   function triggerGotWorker(_id?: string) {
     const [workerId] = Array.from(scheduler.workers.entries()).find(([id, worker]) =>
-      _id ? _id == id : !worker.target
+      _id ? _id == id : worker.state == WorkerState.Fresh
     );
     scheduler.gotWorker(workerId, () => {});
   }
@@ -299,7 +306,7 @@ describe("Scheduler", () => {
 
     const activateds = activatedWorkers();
     expect(activateds.length).toEqual(2);
-    expect(activateds.every(([_, worker]) => worker.target.id == "1")).toBe(true);
+    expect(activateds.every(([_, worker]) => worker.hasSameTarget("1"))).toBe(true);
 
     expect(freeWorkers().length).toEqual(1);
   });
@@ -326,7 +333,7 @@ describe("Scheduler", () => {
 
     let activateds = activatedWorkers();
     expect(activateds.length).toEqual(2);
-    expect(activateds.every(([_, worker]) => worker.target.id == "1")).toBe(true);
+    expect(activateds.every(([_, worker]) => worker.hasSameTarget("1"))).toBe(true);
 
     expect(freeWorkers().length).toEqual(1);
 
@@ -339,7 +346,7 @@ describe("Scheduler", () => {
 
     activateds = activatedWorkers();
     expect(activateds.length).toEqual(2);
-    expect(activateds.every(([_, worker]) => worker.target.id == "1")).toBe(true);
+    expect(activateds.every(([_, worker]) => worker.hasSameTarget("1"))).toBe(true);
 
     expect(freeWorkers().length).toEqual(1);
   });

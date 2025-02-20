@@ -4,7 +4,7 @@ import {Writable} from "stream";
 import path from "path";
 import {fileURLToPath} from "url";
 
-class NodeWorker extends Worker {
+export class NodeWorker extends Worker {
   private _process: child_process.ChildProcess;
   private _quit = false;
 
@@ -58,17 +58,5 @@ class NodeWorker extends Worker {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
     return path.join(__dirname, "..", "bootstrap", "entrypoint.js");
-  }
-}
-
-export class Node extends Runtime {
-  description: Description = {
-    name: "node",
-    title: "Node.js 12",
-    description: "Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine."
-  };
-
-  spawn(options: SpawnOptions): Worker {
-    return new NodeWorker(options);
   }
 }
