@@ -32,7 +32,8 @@ export class ScheduleWorker extends NodeWorker {
   transitionMap = {
     [WorkerState.Fresh]: [WorkerState.Busy],
     [WorkerState.Targeted]: [WorkerState.Busy, WorkerState.Timeouted],
-    [WorkerState.Busy]: [WorkerState.Targeted, WorkerState.Timeouted]
+    [WorkerState.Busy]: [WorkerState.Targeted, WorkerState.Timeouted],
+    [WorkerState.Timeouted]: []
   };
 
   execute(event: event.Event) {
