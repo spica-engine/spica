@@ -4,9 +4,8 @@ env:
   VERSION: $(git describe --tags --abbrev=0)
 
 on:
-  push:
-    branches:
-      - "release"
+  release:
+    types: [published]
 
 jobs:
   release:
