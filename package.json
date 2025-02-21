@@ -21,6 +21,7 @@
     "build:*": "yarn nx run-many -t build",
     "build:api": "yarn nx compile api",
     "serve:api": "yarn nx serve api",
+    "serve:watch:api": "yarn nx serve:watch api",
     "build:cli": "yarn nx build cli",
     "build:migrate": "yarn nx build migrate",
     "build:mongoreplicationcontroller": "yarn nx build mongoreplicationcontroller",

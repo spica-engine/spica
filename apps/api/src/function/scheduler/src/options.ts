@@ -11,6 +11,7 @@ export interface SchedulingOptions {
   maxConcurrency: number;
   debug: boolean;
   logger: boolean;
+  invocationLogs: boolean;
   spawnEntrypointPath?: string;
   tsCompilerPath?: string;
 }

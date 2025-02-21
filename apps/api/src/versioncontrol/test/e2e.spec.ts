@@ -38,6 +38,7 @@ describe("Versioning e2e", () => {
           graphql: false
         }),
         FunctionModule.forRoot({
+          invocationLogs: false,
           path: os.tmpdir(),
           databaseName: undefined,
           databaseReplicaSet: undefined,

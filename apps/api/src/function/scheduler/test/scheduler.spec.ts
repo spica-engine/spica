@@ -14,6 +14,7 @@ describe("Scheduler", () => {
   let app: INestApplication;
   let spawnSpy: jest.SpyInstance;
   let schedulerOptions = {
+    invocationLogs: false,
     databaseUri: undefined,
     databaseName: undefined,
     databaseReplicaSet: undefined,

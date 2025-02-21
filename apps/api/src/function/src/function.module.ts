@@ -72,6 +72,7 @@ export class FunctionModule {
           corsOptions: options.corsOptions,
           debug: options.debug,
           logger: options.logger,
+          invocationLogs: options.invocationLogs,
           spawnEntrypointPath: options.spawnEntrypointPath,
           tsCompilerPath: options.tsCompilerPath
         }),
