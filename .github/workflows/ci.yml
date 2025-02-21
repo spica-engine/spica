@@ -24,7 +24,7 @@ jobs:
             "build-image:mongoreplicationcontroller",
             "test:cli",
             "test:devkit:*",
-            "test-image:migrate"
+            "test-image:migrate",
             "test-image:api --build-arg PROJECTS=api/activity/**",
             "test-image:api --build-arg PROJECTS=api/asset/**",
             "test-image:api --build-arg PROJECTS=api/bucket",
