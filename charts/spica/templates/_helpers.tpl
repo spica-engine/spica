@@ -35,3 +35,17 @@
 {{- end -}}
 ]
 {{- end -}}
+
+
+{{- define "generatePassword" -}}
+  {{- $specialChars := list "!" "@" "#" "$" "%" "^" "&" "*" "-" "_" -}} 
+  {{- $password := list 
+        (randAlpha 2)
+        (randNumeric 2)
+        (index $specialChars (randInt 0 (len $specialChars)))
+        (index $specialChars (randInt 0 (len $specialChars)))
+        (randAlphaNum 6)
+      | join "" | shuffle 
+  -}}
+  {{- $password -}}
+{{- end -}}
