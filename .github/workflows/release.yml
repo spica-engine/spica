@@ -6,7 +6,7 @@ env:
 on:
   push:
     branches:
-      - "[0-9]+.[0-9]+.[0-9]+"
+      - "release"
 
 jobs:
   release:
