@@ -1,4 +1,4 @@
-FROM node:22-bullseye AS base
+FROM node:22-alpine AS base
 
 # install app deps to nodejs image
 FROM base AS deps
@@ -19,10 +19,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/api ./apps/api
 COPY libs ./libs
-COPY nx.json ./
-COPY package.json ./
-COPY tsconfig.json ./
-COPY yarn.lock ./
+COPY nx.json package.json tsconfig.json yarn.lock ./
 RUN yarn run build:api
 
 FROM base AS test
@@ -30,13 +27,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/api ./apps/api
 COPY libs ./libs
-COPY nx.json ./
-COPY package.json ./
-COPY tsconfig.json ./
-COPY yarn.lock ./
-COPY jest.flaky.setup.js ./
-COPY jest.preset.js ./
-COPY jest.setup.js ./
+COPY nx.json package.json tsconfig.json yarn.lock ./
+COPY jest.flaky.setup.js jest.preset.js jest.setup.js ./
 COPY *.env ./
 ARG PROJECTS=""
 ARG EXCLUDE=""
