@@ -280,8 +280,8 @@ describe("Scheduler", () => {
 
     const activateds = activatedWorkers();
     expect(activatedWorkers().length).toEqual(2);
-    expect(activateds[0][1].target.id).toEqual("1");
-    expect(activateds[1][1].target.id).toEqual("2");
+    expect(activateds[0][1].hasSameTarget("1")).toEqual(true);
+    expect(activateds[1][1].hasSameTarget("2")).toEqual(true);
 
     expect(freeWorkers().length).toEqual(1);
   });
