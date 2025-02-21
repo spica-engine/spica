@@ -294,7 +294,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   gotWorker(id: string, schedule: (event: event.Event) => void) {
     const relatedWorker = this.workers.get(id);
 
-    if (!relatedWorker || relatedWorker.isOutdated) {
+    if (!relatedWorker || relatedWorker.state == WorkerState.Outdated) {
       this.print(`the worker ${id} won't be scheduled anymore.`);
     } else {
       let message;
@@ -327,7 +327,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   outdateWorkers(targetId: string) {
     Array.from(this.workers.values())
       .filter(worker => worker.hasSameTarget(targetId))
-      .forEach(worker => (worker.isOutdated = true));
+      .forEach(worker => worker.markAsOutdated());
   }
 
   private scaleWorkers() {

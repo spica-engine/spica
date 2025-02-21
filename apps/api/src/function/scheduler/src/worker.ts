@@ -20,40 +20,52 @@ export enum WorkerState {
   "Fresh",
   "Targeted",
   "Busy",
-  "Timeouted"
+  "Timeouted",
+  "Outdated"
 }
 
 export class ScheduleWorker extends NodeWorker {
-  state: WorkerState = WorkerState.Fresh;
-  target: event.Target;
-  schedule: Schedule;
-  isOutdated?: boolean;
+  private _state: WorkerState = WorkerState.Fresh;
+  public get state(): WorkerState {
+    return this._state;
+  }
+  private set state(value: WorkerState) {
+    this._state = value;
+  }
 
-  transitionMap = {
+  private target: event.Target;
+  private schedule: Schedule;
+
+  private transitionMap = {
     [WorkerState.Fresh]: [WorkerState.Busy],
-    [WorkerState.Targeted]: [WorkerState.Busy, WorkerState.Timeouted],
-    [WorkerState.Busy]: [WorkerState.Targeted, WorkerState.Timeouted],
-    [WorkerState.Timeouted]: []
+    [WorkerState.Targeted]: [WorkerState.Busy, WorkerState.Timeouted, WorkerState.Outdated],
+    [WorkerState.Busy]: [WorkerState.Targeted, WorkerState.Timeouted, WorkerState.Outdated],
+    [WorkerState.Timeouted]: [WorkerState.Outdated],
+    [WorkerState.Outdated]: [WorkerState.Timeouted]
   };
 
-  execute(event: event.Event) {
+  public execute(event: event.Event) {
     this.transitionTo(WorkerState.Busy);
     this.target = event.target;
     this.schedule(event);
   }
 
-  markAsAvailable(schedule: Schedule) {
+  public markAsAvailable(schedule: Schedule) {
     if (this.state == WorkerState.Busy) {
       this.transitionTo(WorkerState.Targeted);
     }
     this.schedule = schedule;
   }
 
-  markAsTimeouted() {
+  public markAsTimeouted() {
     this.transitionTo(WorkerState.Timeouted);
   }
 
-  transitionTo(state: WorkerState) {
+  public markAsOutdated() {
+    this.transitionTo(WorkerState.Outdated);
+  }
+
+  private transitionTo(state: WorkerState) {
     const validStates = this.transitionMap[this.state];
     if (!validStates.includes(state)) {
       throw new Error(
@@ -64,7 +76,7 @@ export class ScheduleWorker extends NodeWorker {
     this.state = state;
   }
 
-  hasSameTarget(targetId: string) {
+  public hasSameTarget(targetId: string) {
     return this.target && this.target.id == targetId;
   }
 }
