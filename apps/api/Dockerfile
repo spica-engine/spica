@@ -11,7 +11,6 @@ FROM base AS deps-production
 WORKDIR /app
 COPY package.json yarn.lock ./
 COPY apps/api/package.json ./apps/api/package.json
-ENV NODE_ENV=production
 RUN yarn install --frozen-lockfile --production
 
 # build app to nodejs image
