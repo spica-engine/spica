@@ -2,7 +2,26 @@ import {Context} from "../../migrate";
 
 export default async function (ctx: Context) {
   const coll = ctx.database.collection("storage");
-  const storageObjects = await coll.find().toArray();
+  const storageObjects = await coll
+    .aggregate([
+      {
+        $group: {
+          _id: "$name",
+          count: {$sum: 1},
+          docs: {$push: "$$ROOT"}
+        }
+      },
+      {
+        $match: {count: {$gt: 1}}
+      },
+      {
+        $unwind: "$docs"
+      },
+      {
+        $replaceRoot: {newRoot: "$docs"}
+      }
+    ])
+    .toArray();
 
   const nameCounts = {};
   const bulkOps = [];
