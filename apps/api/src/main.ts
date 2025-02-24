@@ -179,7 +179,7 @@ const args = yargs(process.argv.slice(2))
     "experimental-function-devkit-database-cache": {
       boolean: true,
       description: "When true, @spica-devkit/database will be cached and run significantly fast.",
-      default: true
+      default: false
     },
     "function-limit": {
       number: true,
