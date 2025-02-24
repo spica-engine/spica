@@ -24,7 +24,7 @@ class NodeWorker extends Worker {
           PATH: process.env.PATH,
           HOME: process.env.HOME,
           FUNCTION_GRPC_ADDRESS: process.env.FUNCTION_GRPC_ADDRESS,
-          ENTRYPOINT: "index.js",
+          ENTRYPOINT: "index",
           RUNTIME: "node",
           WORKER_ID: options.id,
           ...options.env
