@@ -209,7 +209,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     const sameTargets = workers.filter(({worker}) => worker.hasSameTarget(target.id));
 
     const available = sameTargets.find(
-      ({worker}) => worker.state != WorkerState.Busy && worker.state != WorkerState.Timeouted
+      ({worker}) =>
+        worker.state != WorkerState.Busy &&
+        worker.state != WorkerState.Timeouted &&
+        worker.state != WorkerState.Outdated
     );
     if (available) {
       return available;
@@ -327,7 +330,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   outdateWorkers(targetId: string) {
     Array.from(this.workers.values())
       .filter(worker => worker.hasSameTarget(targetId))
-      .forEach(worker => worker.markAsOutdated());
+      .forEach(worker => {
+        if (worker.state != WorkerState.Outdated) {
+          worker.markAsOutdated();
+        }
+      });
   }
 
   private scaleWorkers() {
