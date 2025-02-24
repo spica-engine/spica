@@ -210,9 +210,19 @@ async function _process(ev, queue) {
 
   globalThis.require = createRequire(path.join(process.cwd(), "node_modules"));
 
-  let module = await import(
-    path.join(process.cwd(), ".build", process.env.ENTRYPOINT) + "?event=" + ev.id
-  );
+  const extensions = [".js", ".mjs"];
+
+  const getPath = extension =>
+    path.join(process.cwd(), ".build", process.env.ENTRYPOINT + extension) + "?event=" + ev.id;
+
+  let module;
+
+  for (let extension of extensions) {
+    try {
+      module = await import(getPath(extension));
+      break;
+    } catch {}
+  }
 
   if ("default" in module && module.default.__esModule) {
     module = module.default; // Do not ask me why
