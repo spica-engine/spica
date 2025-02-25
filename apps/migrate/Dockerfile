@@ -11,24 +11,17 @@ FROM base AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/migrate ./apps/migrate
-COPY nx.json ./
-COPY package.json ./
-COPY tsconfig.json ./
-COPY yarn.lock ./
+COPY nx.json package.json tsconfig.json yarn.lock ./
 RUN yarn run build:migrate
 
 FROM base AS test
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/migrate ./apps/migrate
-COPY nx.json ./
-COPY package.json ./
-COPY tsconfig.json ./
-COPY yarn.lock ./
-COPY jest.flaky.setup.js ./
-COPY jest.preset.js ./
-COPY jest.setup.js ./
+COPY nx.json package.json tsconfig.json yarn.lock ./
+COPY jest.flaky.setup.js jest.preset.js jest.setup.js ./
 COPY libs/database ./libs/database
+COPY *.env ./
 RUN yarn run test:migrate
 
 # start app from tools, because app executes many mongodb commands

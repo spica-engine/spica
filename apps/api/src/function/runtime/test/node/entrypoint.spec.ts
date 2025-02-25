@@ -3,7 +3,7 @@ import {Database, event, Firehose, Http} from "@spica-server/function/queue/prot
 import {Compilation, Language} from "@spica-server/function/compiler";
 import {Javascript} from "@spica-server/function/compiler/javascript";
 import {Typescript} from "@spica-server/function/compiler/typescript";
-import {Node} from "@spica-server/function/runtime/node";
+import {Node} from "@spica-server/function/scheduler";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import os from "os";
 import {PassThrough, Writable} from "stream";
