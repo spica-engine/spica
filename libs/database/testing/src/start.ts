@@ -1,20 +1,27 @@
 import {MongoClient, MongoClientOptions} from "mongodb";
 import {MongoMemoryReplSet, MongoMemoryServer} from "mongodb-memory-server";
+import path from "path";
+import fs from "fs";
 
 let uri;
+let DEFAULT_DB_PATH = fs.mkdtempSync(path.join(process.env.TEST_TMPDIR, "db-"));
+let mongod: MongoMemoryReplSet | MongoMemoryServer;
 
-const MONGODB_BINARY_VERSION = "7.0.14";
+const DEFAULT_MONGODB_BINARY_VERSION = "7.0.14";
 
-export async function start(topology: "standalone" | "replset") {
-  let mongod: MongoMemoryReplSet | MongoMemoryServer;
+export async function start(
+  topology: "standalone" | "replset",
+  version = DEFAULT_MONGODB_BINARY_VERSION,
+  dbPath = DEFAULT_DB_PATH
+) {
   let clientOptions: MongoClientOptions;
 
   if (topology == "replset") {
-    const serverOptions = getReplicaServerOptions();
+    const serverOptions = getReplicaServerOptions(version, dbPath);
     mongod = await MongoMemoryReplSet.create(serverOptions);
     clientOptions = getReplicaClientOptions();
   } else {
-    const serverOptions = getStandaloneServerOptions();
+    const serverOptions = getStandaloneServerOptions(version, dbPath);
     mongod = await MongoMemoryServer.create(serverOptions);
     clientOptions = {};
   }
@@ -23,7 +30,6 @@ export async function start(topology: "standalone" | "replset") {
   globalThis.__CLEANUPCALLBACKS.push(() => setTimeout(() => mongod.stop(), 1000));
 
   uri = mongod.getUri() + "&retryWrites=false";
-
   return MongoClient.connect(uri, clientOptions);
 }
 
@@ -39,6 +45,10 @@ export function getDatabaseName() {
   return "test";
 }
 
+export function stopServer(doCleanup: boolean, force: boolean) {
+  return mongod.stop({doCleanup, force});
+}
+
 function getReplicaClientOptions(): MongoClientOptions {
   return {
     replicaSet: "testset",
@@ -46,19 +56,25 @@ function getReplicaClientOptions(): MongoClientOptions {
   };
 }
 
-function getServerOptions() {
+function getServerOptions(version: string, dbPath: string) {
   return {
-    binary: {version: MONGODB_BINARY_VERSION}
+    binary: {version: version},
+    instance: {dbPath}
   };
 }
 
-function getStandaloneServerOptions(): any {
-  return getServerOptions();
+function getStandaloneServerOptions(version: string, dbPath: string): any {
+  return getServerOptions(version, dbPath);
 }
 
-function getReplicaServerOptions(): any {
+function getReplicaServerOptions(version: string, dbPath: string): any {
   return {
-    ...getServerOptions(),
-    replSet: {count: 1, storageEngine: "wiredTiger"}
+    ...getServerOptions(version, dbPath),
+    replSet: {count: 1, storageEngine: "wiredTiger"},
+    instanceOpts: [
+      {
+        dbPath
+      }
+    ]
   };
 }
