@@ -1,7 +1,7 @@
 {
-  "0.5.2": ["0.5.2/add_phase_to_bucket_triggers"],
-  "0.6.1": ["0.6.1/add_acl_to_buckets"],
-  "0.7.2": ["0.7.2/remove_phase_from_bucket_triggers"],
-  "0.8.2": ["0.8.2/update_location_bucket_bucket-data"],
-  "0.9.30": ["0.9.30/add_index_for_duplicate_storage_objects"]
+  "0.5.2": ["0.5.2/add_phase_to_bucket_triggers.js"],
+  "0.6.1": ["0.6.1/add_acl_to_buckets.js"],
+  "0.7.2": ["0.7.2/remove_phase_from_bucket_triggers.js"],
+  "0.8.2": ["0.8.2/update_location_bucket_bucket-data.js"],
+  "0.9.30": ["0.9.30/add_index_for_duplicate_storage_objects.js"]
 }
