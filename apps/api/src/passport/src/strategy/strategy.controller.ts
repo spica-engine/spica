@@ -95,4 +95,145 @@ export class StrategyController {
 
     return updatedStrategy;
   }
+
+  @Get("presets/:idp")
+  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:show"))
+  getPresets(@Param("idp") idp: string) {
+    const presets = {
+      google: {
+        type: "oauth",
+        name: "Google OAuth",
+        title: "Google OAuth",
+        icon: "login",
+        options: {
+          code: {
+            base_url: "https://accounts.google.com/o/oauth2/v2/auth",
+            params: {
+              response_type: "code",
+              scope: "email",
+              client_id: null
+            },
+            headers: {},
+            method: "get"
+          },
+          access_token: {
+            base_url: "https://oauth2.googleapis.com/token",
+            params: {
+              grant_type: "authorization_code",
+              client_id: null,
+              client_secret: null
+            },
+            headers: {},
+            method: "post"
+          },
+          identifier: {
+            base_url: "https://www.googleapis.com/oauth2/v2/userinfo",
+            params: {},
+            headers: {},
+            method: "get"
+          }
+        }
+      },
+      facebook: {
+        type: "oauth",
+        name: "Facebook OAuth",
+        title: "Facebook OAuth",
+        icon: "login",
+        options: {
+          code: {
+            base_url: "https://www.facebook.com/v22.0/dialog/oauth",
+            params: {
+              client_id: null
+            },
+            headers: {},
+            method: "get"
+          },
+          access_token: {
+            base_url: "https://graph.facebook.com/v22.0/oauth/access_token",
+            params: {
+              client_id: null,
+              client_secret: null
+            },
+            headers: {},
+            method: "get"
+          },
+          identifier: {
+            base_url: "https://graph.facebook.com/me",
+            params: {
+              fields: "email"
+            },
+            headers: {},
+            method: "get"
+          }
+        }
+      },
+      github: {
+        type: "oauth",
+        name: "Github OAuth",
+        title: "Github OAuth",
+        icon: "login",
+        options: {
+          code: {
+            base_url: "https://github.com/login/oauth/authorize",
+            params: {
+              scope: "user",
+              client_id: null
+            },
+            headers: {},
+            method: "get"
+          },
+          access_token: {
+            base_url: "https://github.com/login/oauth/access_token",
+            params: {
+              client_id: null,
+              client_secret: null
+            },
+            headers: {},
+            method: "post"
+          },
+          identifier: {
+            base_url: "https://api.github.com/user",
+            params: {},
+            headers: {},
+            method: "get"
+          }
+        }
+      },
+      apple: {
+        type: "oauth",
+        name: "Apple OAuth",
+        title: "Apple OAuth",
+        icon: "login",
+        options: {
+          code: {
+            base_url: "https://appleid.apple.com/auth/authorize",
+            params: {
+              response_type: "code",
+              scope: "email",
+              client_id: null
+            },
+            headers: {},
+            method: "get"
+          },
+          access_token: {
+            base_url: "https://appleid.apple.com/auth/token",
+            params: {
+              grant_type: "authorization_code",
+              client_id: null,
+              client_secret: null
+            },
+            headers: {},
+            method: "post"
+          }
+        }
+      }
+    };
+
+    const preset = presets[idp];
+
+    if (!preset) {
+      throw new BadRequestException("Preset for this identity provider not found.");
+    }
+    return preset;
+  }
 }
