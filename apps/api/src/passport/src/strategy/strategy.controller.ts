@@ -198,34 +198,6 @@ export class StrategyController {
             method: "get"
           }
         }
-      },
-      apple: {
-        type: "oauth",
-        name: "Apple OAuth",
-        title: "Apple OAuth",
-        icon: "login",
-        options: {
-          code: {
-            base_url: "https://appleid.apple.com/auth/authorize",
-            params: {
-              response_type: "code",
-              scope: "email",
-              client_id: null
-            },
-            headers: {},
-            method: "get"
-          },
-          access_token: {
-            base_url: "https://appleid.apple.com/auth/token",
-            params: {
-              grant_type: "authorization_code",
-              client_id: null,
-              client_secret: null
-            },
-            headers: {},
-            method: "post"
-          }
-        }
       }
     };
 
