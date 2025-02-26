@@ -34,7 +34,8 @@
         "textarea",
         "color",
         "relation",
-        "location"
+        "location",
+        "json"
       ]
     },
     "stringArray": {
