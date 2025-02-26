@@ -1,0 +1,32 @@
+name: Spica Auto Release
+
+on:
+  pull_request:
+    branches: ["master"]
+
+# on:
+#   push:
+#     - cron: "0 0 * * 0"
+
+jobs:
+  build_and_deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Decide next version
+        run: ./scripts/decide_next_version.sh
+
+      - name: Check if version was decided
+        run: |
+          if [ -z "${{ env.NEXT_VERSION }}" ]; then
+            echo "No commit found to decide new version. Skipping release.";
+            exit 0;
+          fi
+
+      - name: Push tag
+        run: echo ${{ env.NEXT_VERSION }}
+      #  run: ./scripts/generate_and_push_tag.sh ${{ env.NEXT_VERSION }} false -y
