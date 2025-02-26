@@ -7,7 +7,7 @@ describe("Representative", () => {
   const representative: RepresentativeManager = new RepresentativeManager(cwd);
 
   afterEach(() => {
-    fs.rmSync(cwd, {recursive: true, force: true});
+    fs.rmSync(cwd, {recursive: true});
   });
 
   describe("write", () => {
