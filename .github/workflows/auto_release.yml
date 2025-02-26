@@ -9,13 +9,17 @@ on:
 #     - cron: "0 0 * * 0"
 
 jobs:
-  build_and_deploy:
-    name: Build and Deploy
+  decide_and_push_tag:
+    name: Decide next version and push tag
     runs-on: ubuntu-latest
 
     steps:
+      - name: Print current working directory
+        run: pwd
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Print current working directory
+        run: pwd
 
       - name: Decide next version
         run: ./scripts/decide_next_version.sh
@@ -27,6 +31,6 @@ jobs:
             exit 0;
           fi
 
-      - name: Push tag
+      - name: Push next version as tag
         run: echo ${{ env.NEXT_VERSION }}
       #  run: ./scripts/generate_and_push_tag.sh ${{ env.NEXT_VERSION }} false -y
