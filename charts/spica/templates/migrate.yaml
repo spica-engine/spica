@@ -14,7 +14,7 @@ metadata:
   annotations:
     helm.sh/hook: post-upgrade
 spec:
-  backoffLimit: 3
+  backoffLimit: 5
   template:
     spec:
       restartPolicy: OnFailure
