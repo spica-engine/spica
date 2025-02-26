@@ -30,4 +30,4 @@ FROM base AS runner
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
-ENTRYPOINT ["node","./dist/apps/migrate"]
+ENTRYPOINT ["node","./dist/apps/migrate/src/main.js"]
