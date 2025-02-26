@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Inject,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -25,80 +26,9 @@ export class StrategyController {
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions
   ) {}
 
-  @Get()
-  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:index"))
-  find(@ResourceFilter() resourceFilter: object) {
-    return this.strategy.aggregate([resourceFilter]).toArray();
-  }
-
-  @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:show"))
-  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.strategy.findOne({_id: id}).then(strategy => {
-      strategy["callbackUrl"] =
-        `${this.options.publicUrl}/passport/strategy/${strategy._id}/complete`;
-      return strategy;
-    });
-  }
-
-  @Delete(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:delete"))
-  deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.strategy.deleteOne({_id: id});
-  }
-
-  @Post()
-  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:insert"))
-  async insertOne(@Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy) {
-    delete strategy._id;
-
-    const service = this.strategies.find(strategy.type);
-
-    try {
-      service.prepareToInsert(strategy);
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-
-    let insertedStrategy = await this.strategy.insertOne(strategy);
-
-    if (service.afterInsert) {
-      insertedStrategy = await service.afterInsert(insertedStrategy);
-    }
-
-    return insertedStrategy;
-  }
-
-  @Put(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:update"))
-  async replaceOne(
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy
-  ) {
-    delete strategy._id;
-
-    const service = this.strategies.find(strategy.type);
-
-    try {
-      service.prepareToInsert(strategy);
-    } catch (error) {
-      throw new BadRequestException(error);
-    }
-
-    let updatedStrategy = await this.strategy.findOneAndReplace({_id: id}, strategy, {
-      returnDocument: ReturnDocument.AFTER
-    });
-
-    if (service.afterInsert) {
-      updatedStrategy = await service.afterInsert(updatedStrategy);
-    }
-
-    return updatedStrategy;
-  }
-
-  @Get("presets/:idp")
-  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:show"))
-  getPresets(@Param("idp") idp: string) {
+  @Get("presets/:idp?")
+  @UseGuards(AuthGuard())
+  getPresets(@Param("idp") idp?: string) {
     const presets = {
       google: {
         type: "oauth",
@@ -201,11 +131,86 @@ export class StrategyController {
       }
     };
 
+    if (!idp) {
+      return presets;
+    }
+
     const preset = presets[idp];
 
     if (!preset) {
-      throw new BadRequestException("Preset for this identity provider not found.");
+      throw new NotFoundException();
     }
     return preset;
+  }
+
+  @Get()
+  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:index"))
+  find(@ResourceFilter() resourceFilter: object) {
+    return this.strategy.aggregate([resourceFilter]).toArray();
+  }
+
+  @Get(":id")
+  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:show"))
+  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    return this.strategy.findOne({_id: id}).then(strategy => {
+      strategy["callbackUrl"] =
+        `${this.options.publicUrl}/passport/strategy/${strategy._id}/complete`;
+      return strategy;
+    });
+  }
+
+  @Delete(":id")
+  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:delete"))
+  deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    return this.strategy.deleteOne({_id: id});
+  }
+
+  @Post()
+  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:insert"))
+  async insertOne(@Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy) {
+    delete strategy._id;
+
+    const service = this.strategies.find(strategy.type);
+
+    try {
+      service.prepareToInsert(strategy);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+
+    let insertedStrategy = await this.strategy.insertOne(strategy);
+
+    if (service.afterInsert) {
+      insertedStrategy = await service.afterInsert(insertedStrategy);
+    }
+
+    return insertedStrategy;
+  }
+
+  @Put(":id")
+  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:update"))
+  async replaceOne(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy
+  ) {
+    delete strategy._id;
+
+    const service = this.strategies.find(strategy.type);
+
+    try {
+      service.prepareToInsert(strategy);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+
+    let updatedStrategy = await this.strategy.findOneAndReplace({_id: id}, strategy, {
+      returnDocument: ReturnDocument.AFTER
+    });
+
+    if (service.afterInsert) {
+      updatedStrategy = await service.afterInsert(updatedStrategy);
+    }
+
+    return updatedStrategy;
   }
 }
