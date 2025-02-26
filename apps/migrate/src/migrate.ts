@@ -4,13 +4,17 @@ import path from "path";
 import fs from "fs";
 import semver from "semver";
 import MigrationsIndex from "./migrations/index.json" with {type: "json"};
+import {fileURLToPath} from "url";
 
 export type MigrationManifest = {
   [k: string]: string[];
 };
 
 function getManifestDir() {
-  let manifestDir = "./";
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+
+  let manifestDir = __dirname;
   const isTestEnv = process.env.NODE_ENV == "test";
   if (isTestEnv) {
     manifestDir = process.env.TESTONLY_MIGRATION_LOOKUP_DIR;
@@ -48,6 +52,18 @@ export function getMigrations(version: string): string[] {
 export async function migrate(options: Options) {
   const versions = migrationVersions(options.from, options.to);
   console.log(`${color.green("VERSIONS:")} ${versions.join(", ") || "None"}`);
+
+  const username = process.env.MONGODB_USERNAME;
+  const password = process.env.MONGODB_PASSWORD;
+
+  if (username && password) {
+    const uri = new URL(options.database.uri);
+
+    uri.username = encodeURIComponent(username);
+    uri.password = encodeURIComponent(password);
+
+    options.database.uri = uri.toString();
+  }
 
   const mongo = new mongodb.MongoClient(options.database.uri, {
     appName: "spicaengine/migrate"
