@@ -1,6 +1,7 @@
 {
   "watch": ["apps/api", "libs"],
   "ext": "ts,json",
+  "ignore": ["**/*.spec.ts"],
   "exec": "yarn nx serve api",
   "delay": "300",
   "signal": "SIGTERM"
