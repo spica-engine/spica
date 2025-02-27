@@ -53,4 +53,4 @@ jobs:
             -X POST \
             -H "Accept: application/jsonjson" \
             https://master.spicaengine.com/api/fn-execute/load-test  \
-            -d "{\"tag_name\": \"${{ env.last_tag }}\", \"name\": \"${{ env.last_tag }}\", \"body\": \"$release_notes\", \"draft\": true}"
+            -d '{"tag_name": "${{ env.last_tag }}", "name": "${{ env.last_tag }}", "body": "'"${sanitized_notes}"'",, "draft": true }'
