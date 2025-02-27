@@ -22,7 +22,7 @@ jobs:
         run: ls
 
       - name: Decide next version
-        run: ./scripts/decide_next_version.sh
+        run: bash ./scripts/decide_next_version.sh
 
       - name: Check if version was decided
         run: |
