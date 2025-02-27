@@ -30,7 +30,6 @@ RUN yarn run build:api
 # test app
 FROM tools AS test
 WORKDIR /app
-RUN apk add --no-cache libcurl4
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/api ./apps/api
 COPY libs ./libs
