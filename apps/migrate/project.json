@@ -4,6 +4,10 @@
   "sourceRoot": "apps/migrate/src",
   "projectType": "application",
   "targets": {
+    "compile": {
+      "dependsOn": ["build"],
+      "command": "resolve-tspaths"
+    },
     "build": {
       "executor": "@nx/js:tsc",
       "inputs": [
