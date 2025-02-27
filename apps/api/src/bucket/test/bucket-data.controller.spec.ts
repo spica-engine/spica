@@ -2049,7 +2049,7 @@ describe("BucketDataController", () => {
       const {statusCode, statusText, body} = document;
 
       expect([statusCode, statusText]).toEqual([200, "OK"]);
-      expect(body).toEqual({...newDocument, _id: body._id});
+      expect(body).toEqual({...newDocument, _id: res.body._id});
     });
 
     it("should update document", async () => {
@@ -2061,10 +2061,13 @@ describe("BucketDataController", () => {
       const {statusCode, statusText, body} = document;
 
       expect([statusCode, statusText]).toEqual([200, "OK"]);
-      expect(body).toEqual({...body, characteristics: {...body.characteristics, height: 200}});
+      expect(body).toEqual({
+        ...rows[0],
+        characteristics: {...rows[0].characteristics, height: 200}
+      });
     });
 
-    it("should replace document", async () => {
+    fit("should replace document", async () => {
       const newDocument = {
         name: "James",
         characteristics: {height: 200, weight: "80kg"}
@@ -2076,7 +2079,7 @@ describe("BucketDataController", () => {
       const {statusCode, statusText, body} = document;
 
       expect([statusCode, statusText]).toEqual([200, "OK"]);
-      expect(body).toEqual({...newDocument, _id: body._id});
+      expect(body).toEqual({...newDocument, _id: rows[0]._id});
     });
 
     it("should filter documents based on multiple characteristics", async () => {
