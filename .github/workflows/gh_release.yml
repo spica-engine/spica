@@ -28,10 +28,20 @@ jobs:
 
       - name: Generate Release Notes
         run: |
-          curl -L \
-          -X POST \
-          -H "Accept: application/vnd.github+json" \
-          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-          -H "X-GitHub-Api-Version: 2022-11-28" \
-          https://api.github.com/repos/${{ github.repository }}/releases/generate-notes \
-          -d '{"tag_name": "${{ env.last_tag }}", "previous_tag_name": "${{ env.prev_tag }}"}'
+          response=$(curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/${{ github.repository }}/releases/generate-notes \
+            -d '{"tag_name": "${{ env.last_tag }}", "previous_tag_name": "${{ env.prev_tag }}"}')
+
+          # Extract the body from the response
+          release_notes=$(echo "$response" | jq -r '.body')
+
+          # Store release notes in GitHub Actions environment variable
+          echo "RELEASE_NOTES=$release_notes" >> $GITHUB_ENV
+
+      - name: Use Release Notes
+        run: |
+          echo "Release Notes: ${{ env.RELEASE_NOTES }}"
