@@ -43,6 +43,8 @@ jobs:
           # Escape problematic characters
           sanitized_notes=$(echo "$release_notes" | sed 's/"/\\"/g' | sed 's/\n/\\n/g' | sed 's/\r/\\r/g' | sed 's/\t/\\t/g')
 
+          echo "$sanitized_notes"
+
           # Release a version
           curl -L \
             -X POST \
