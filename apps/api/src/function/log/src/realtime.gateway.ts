@@ -77,6 +77,13 @@ export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
     };
 
+    if (req.query.has("content")) {
+      options.filter = {
+        ...options.filter,
+        content: {$regex: req.query.get("content"), $options: "i"}
+      };
+    }
+
     if (req.query.has("sort")) {
       try {
         options.sort = JSON.parse(req.query.get("sort"));

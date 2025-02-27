@@ -88,7 +88,7 @@ export class Npm extends PackageManager {
     });
   }
 
-  ls(cwd: string): Promise<Package[]> {
+  ls(cwd: string, includeTypes?: boolean): Promise<Package[]> {
     return fs.promises
       .readFile(path.join(cwd, "package.json"))
       .then(async buffer => {
@@ -97,7 +97,12 @@ export class Npm extends PackageManager {
 
         const packages = new Array<Package>();
         for (const depName of Object.keys(dependencies)) {
-          const types = await this.findTypes(cwd, depName);
+          let types = {};
+
+          if (includeTypes) {
+            types = await this.findTypes(cwd, depName);
+          }
+
           packages.push({name: depName, version: dependencies[depName], types});
         }
         return packages;

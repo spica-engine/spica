@@ -29,6 +29,7 @@ spec:
         app.kubernetes.io/managed-by: helm
       annotations:
         checksum/secret: {{ include (print $.Template.BasePath "/databasesecrets.yaml") . | sha256sum }}
+        checksum/initdb: {{ include (print $.Template.BasePath "/initdb.yaml") . | sha256sum }}
     spec:
       terminationGracePeriodSeconds: 10
       volumes:
