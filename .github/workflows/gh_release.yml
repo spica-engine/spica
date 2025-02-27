@@ -1,8 +1,15 @@
 name: Spica Github Releasing
 
+# on:
+#   push:
+#     tags: ["*"]
+
+env:
+  tag_name: $(git describe --tags --abbrev=0)
+
 on:
-  push:
-    tags: ["*"]
+  pull_request:
+    branches: ["master"]
 
 jobs:
   create_github_release:
@@ -20,3 +27,4 @@ jobs:
           make_latest: "true"
           files: "*"
           draft: true # until testing completed.
+          tag_name: $tag_name
