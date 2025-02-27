@@ -2,8 +2,7 @@ FROM node:22-slim AS base
 
 # install necessary tools
 FROM base AS tools
-RUN apt update
-RUN apt install git -y
+RUN apt-get update && apt-get install git -y
 
 # install app deps to nodejs image
 FROM base AS deps
@@ -31,8 +30,7 @@ RUN yarn run build:api
 # test app
 FROM tools AS test
 WORKDIR /app
-RUN apt-get update
-RUN apt-get install libcurl4 -y
+RUN apt-get update && apt-get install libcurl4 -y
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/api ./apps/api
 COPY libs ./libs
