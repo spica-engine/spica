@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Inject,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -24,6 +25,123 @@ export class StrategyController {
     @Inject(STRATEGIES) private strategies: {find: (type: string) => StrategyTypeService},
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions
   ) {}
+
+  @Get("presets/:idp?")
+  @UseGuards(AuthGuard())
+  getPresets(@Param("idp") idp?: string) {
+    const presets = {
+      google: {
+        type: "oauth",
+        name: "Google OAuth",
+        title: "Google OAuth",
+        icon: "login",
+        options: {
+          code: {
+            base_url: "https://accounts.google.com/o/oauth2/v2/auth",
+            params: {
+              response_type: "code",
+              scope: "email",
+              client_id: null
+            },
+            headers: {},
+            method: "get"
+          },
+          access_token: {
+            base_url: "https://oauth2.googleapis.com/token",
+            params: {
+              grant_type: "authorization_code",
+              client_id: null,
+              client_secret: null
+            },
+            headers: {},
+            method: "post"
+          },
+          identifier: {
+            base_url: "https://www.googleapis.com/oauth2/v2/userinfo",
+            params: {},
+            headers: {},
+            method: "get"
+          }
+        }
+      },
+      facebook: {
+        type: "oauth",
+        name: "Facebook OAuth",
+        title: "Facebook OAuth",
+        icon: "login",
+        options: {
+          code: {
+            base_url: "https://www.facebook.com/v22.0/dialog/oauth",
+            params: {
+              client_id: null
+            },
+            headers: {},
+            method: "get"
+          },
+          access_token: {
+            base_url: "https://graph.facebook.com/v22.0/oauth/access_token",
+            params: {
+              client_id: null,
+              client_secret: null
+            },
+            headers: {},
+            method: "get"
+          },
+          identifier: {
+            base_url: "https://graph.facebook.com/me",
+            params: {
+              fields: "email"
+            },
+            headers: {},
+            method: "get"
+          }
+        }
+      },
+      github: {
+        type: "oauth",
+        name: "Github OAuth",
+        title: "Github OAuth",
+        icon: "login",
+        options: {
+          code: {
+            base_url: "https://github.com/login/oauth/authorize",
+            params: {
+              scope: "user",
+              client_id: null
+            },
+            headers: {},
+            method: "get"
+          },
+          access_token: {
+            base_url: "https://github.com/login/oauth/access_token",
+            params: {
+              client_id: null,
+              client_secret: null
+            },
+            headers: {},
+            method: "post"
+          },
+          identifier: {
+            base_url: "https://api.github.com/user",
+            params: {},
+            headers: {},
+            method: "get"
+          }
+        }
+      }
+    };
+
+    if (!idp) {
+      return presets;
+    }
+
+    const preset = presets[idp];
+
+    if (!preset) {
+      throw new NotFoundException();
+    }
+    return preset;
+  }
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:strategy:index"))
