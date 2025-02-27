@@ -1,4 +1,9 @@
-FROM node:22-alpine AS base
+FROM node:22-slim AS base
+
+# install necessary tools
+FROM base AS tools
+RUN apt update
+RUN apt install git -y
 
 # install app deps to nodejs image
 FROM base AS deps
@@ -7,6 +12,7 @@ COPY package.json yarn.lock ./
 COPY apps/api/package.json ./apps/api/package.json
 RUN yarn install --frozen-lockfile
 
+# install app production deps to nodejs image
 FROM base AS deps-production
 WORKDIR /app
 COPY package.json yarn.lock ./
@@ -22,7 +28,8 @@ COPY libs ./libs
 COPY nx.json package.json tsconfig.json yarn.lock ./
 RUN yarn run build:api
 
-FROM base AS test
+# test app
+FROM tools AS test
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/api ./apps/api
@@ -36,7 +43,7 @@ RUN yarn nx run-many -t test --projects=$PROJECTS --exclude=$EXCLUDE
 
 # start app from tools, because app executes many mongodb commands
 # copy deps and build
-FROM base AS runner
+FROM tools AS runner
 WORKDIR /app
 COPY --from=build /app/dist ./dist
 COPY --from=deps-production /app/node_modules ./node_modules
