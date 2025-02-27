@@ -1,12 +1,8 @@
 name: Spica Auto Release
 
 on:
-  pull_request:
-    branches: ["master"]
-
-# on:
-#   push:
-#     - cron: "0 0 * * 0"
+  schedule:
+    - cron: "0 0 * * 0"
 
 jobs:
   decide_and_push_tag:
