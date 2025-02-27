@@ -35,7 +35,7 @@ if [ $(echo "$COMMITS" | wc -l) -gt 1 ]; then
 
     # 7. Create the new version tag
     NEW_VERSION="$MAJOR.$MINOR.$PATCH"
-    # export NEXT_VERSION="$NEW_VERSION" # Export the version for use in the next script
+    export NEXT_VERSION="$NEW_VERSION" # Export the version for use in the next script
     echo "Next version: $NEW_VERSION"
 else
     echo "No commits found between the latest tag and HEAD."

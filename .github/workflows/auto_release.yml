@@ -22,7 +22,7 @@ jobs:
       - name: Decide next version
         id: decide_version
         run: |
-          source ./scripts/decide_next_version.sh
+          ./scripts/decide_next_version.sh
           if [[ -z "$NEXT_VERSION" ]]; then
             echo "No commit found to decide new version. Skipping release."
             echo "SKIP_RELEASE=true" >> $GITHUB_ENV
