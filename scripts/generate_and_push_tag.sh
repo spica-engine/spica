@@ -17,7 +17,7 @@ fi
 
 # Generate the tag based on the version
 if [ "$RC_OPTION" == "rc" ]; then
-    # If the "rc" option is passed, append "-rc<commit_hash>"
+    # If the "rc" option is passed, append "-rc-<commit_hash>"
     COMMIT_HASH=$(git rev-parse --short HEAD)
     TAG="${VERSION}-rc-${COMMIT_HASH}"
 else
