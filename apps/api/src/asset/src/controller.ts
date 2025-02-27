@@ -69,7 +69,6 @@ export class AssetController {
   @UseGuards(AuthGuard(), ActionGuard("asset:export", "asset"))
   async export(
     @Body(Schema.validate("http://spica.internal/asset/export")) exportMeta: ExportMeta,
-    //@ts-ignore
     @Res({passthrough: true}) res
   ) {
     await this.repManager.rm();
@@ -104,7 +103,7 @@ export class AssetController {
       "Content-Disposition": 'attachment; filename="asset.zip"'
     });
 
-    file.pipe(res);
+    return new Promise(() => file.pipe(res));
   }
 
   @Post(":id")
