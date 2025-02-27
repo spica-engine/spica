@@ -47,4 +47,4 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/${{ github.repository }}/releases\
-            -d '{"tag_name": "${{ env.last_tag }}", "name": "${{ env.last_tag }}", "body": "'"${release_notes}"'", "draft": true }'
+            -d "{\"tag_name\": \"${{ env.last_tag }}\", \"name\": \"${{ env.last_tag }}\", \"body\": \"${release_notes}\", \"draft\": true}"
