@@ -19,7 +19,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Print current working directory
-        run: ls
+        run: ls ./scripts/
 
       - name: Decide next version
         run: $GITHUB_WORKSPACE/scripts/decide_next_version.sh
