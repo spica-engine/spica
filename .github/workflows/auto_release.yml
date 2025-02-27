@@ -22,7 +22,7 @@ jobs:
         run: ls
 
       - name: Decide next version
-        run: chmod +x ./scripts/decide_next_version.sh && ./scripts/decide_next_version.sh
+        run: $GITHUB_WORKSPACE/scripts/decide_next_version.sh
 
       - name: Check if version was decided
         run: |
