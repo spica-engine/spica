@@ -26,7 +26,8 @@ export class LogController {
     @Query("end", DEFAULT(() => new Date().setUTCHours(23, 59, 59, 999)), DATE) end: Date,
     @Query("functions", ARRAY(String)) functions: string[],
     @Query("channel") channel: string,
-    @Query("levels", ARRAY(Number)) levels: number[] = []
+    @Query("levels", ARRAY(Number)) levels: number[] = [],
+    @Query("content") content: string
   ) {
     const match: any = {
       _id: {
@@ -49,6 +50,10 @@ export class LogController {
       match.function = {
         $in: functions
       };
+    }
+
+    if (content) {
+      match.content = {$regex: content, $options: "i"};
     }
 
     const pipeline: any[] = [
