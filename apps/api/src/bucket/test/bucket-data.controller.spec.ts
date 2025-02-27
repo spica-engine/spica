@@ -2067,7 +2067,7 @@ describe("BucketDataController", () => {
       });
     });
 
-    fit("should replace document", async () => {
+    it("should replace document", async () => {
       const newDocument = {
         name: "James",
         characteristics: {height: 200, weight: "80kg"}
