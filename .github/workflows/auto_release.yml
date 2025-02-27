@@ -24,7 +24,7 @@ jobs:
         run: ls
 
       - name: Make the script files executable
-        run: chmod +x decide_next_version generate_and_push_tag.sh
+        run: chmod +x decide_next_version.sh generate_and_push_tag.sh
 
       - name: Decide next version
         run: ./decide_next_version.sh
