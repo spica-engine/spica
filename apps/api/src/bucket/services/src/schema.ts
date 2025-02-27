@@ -12,7 +12,8 @@ type ExtendedJSONSchema7Type =
   | "multiselect"
   | "relation"
   | "date"
-  | "location";
+  | "location"
+  | "json";
 
 function addIdField(bucket) {
   bucket.properties._id = {
@@ -119,6 +120,11 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
         }
 
         break;
+
+      case "json":
+        schema.type = "object";
+        break;
+
       default:
     }
     return schema;
