@@ -25,9 +25,9 @@ jobs:
           source ./scripts/decide_next_version.sh
           if [[ -z "$NEXT_VERSION" ]]; then
             echo "No commit found to decide new version. Skipping release."
-            echo "SKIP_RELEASE=true" >> $GITHUB_OUTPUTS
+            echo "SKIP_RELEASE=true" >> $GITHUB_OUTPUT
           else
-            echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_OUTPUTS
+            echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_OUTPUT
           fi
 
       - name: Check if version was decided
