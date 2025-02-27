@@ -36,5 +36,4 @@ jobs:
 
       - name: Push next version as tag
         if: steps.decide_version.outputs.SKIP_RELEASE != 'true'
-        run: echo ${{ steps.decide_version.outputs.NEXT_VERSION }}
-        # run: ./scripts/generate_and_push_tag.sh ${{ steps.decide_version.outputs.NEXT_VERSION }} false -y
+        run: ./scripts/generate_and_push_tag.sh ${{ steps.decide_version.outputs.NEXT_VERSION }} false -y
