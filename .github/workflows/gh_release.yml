@@ -19,4 +19,4 @@ jobs:
           generate_release_notes: true
           make_latest: "true"
           files: "*"
-          draft: true
+          draft: true # until testing completed.
