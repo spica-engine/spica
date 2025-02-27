@@ -19,14 +19,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Print current working directory
-        run: ls -la scripts
-
-      - name: Make the script files executable
-        run: chmod +x scripts/generate_and_push_tag.sh
-
-      - name: Generate tag
-        run: ./scripts/generate_and_push_tag.sh
+      - name: Decide next version
+        run: ./scripts/decide_next_version.sh
 
       - name: Check if version was decided
         run: |
