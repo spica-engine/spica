@@ -32,9 +32,9 @@ jobs:
 
       - name: Check if version was decided
         if: steps.decide_version.outputs.SKIP_RELEASE != 'true'
-        run: echo "Decided NEXT_VERSION=${{ steps.decide_version.outputs.NEXT_VERSION }}"
+        run: echo "Decided NEXT_VERSION=${{ env.NEXT_VERSION }}"
 
       - name: Push next version as tag
         if: steps.decide_version.outputs.SKIP_RELEASE != 'true'
-        run: echo ${{ steps.decide_version.outputs.NEXT_VERSION }}
+        run: echo ${{ env.NEXT_VERSION }}
         # run: ./scripts/generate_and_push_tag.sh ${{ steps.decide_version.outputs.NEXT_VERSION }} false -y
