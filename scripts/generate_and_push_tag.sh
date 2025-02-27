@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Ensure there is at least one argument (the version)
 if [ -z "$1" ]; then

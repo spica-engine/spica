@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # 1. Fetch the latest changes from the origin master branch
 git fetch origin master
