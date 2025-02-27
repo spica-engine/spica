@@ -1,4 +1,10 @@
 {
   "name": "function-node-entrypoint",
-  "type": "module"
+  "type": "module",
+  "extensionless": {
+    "lookFor": [
+      "js",
+      "mjs"
+    ]
+  }
 }
