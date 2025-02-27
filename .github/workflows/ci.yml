@@ -1,84 +1,84 @@
-name: Spica Continuous Integration
+# name: Spica Continuous Integration
 
-env:
-  origin_branch: master
-  VERSION: ${{ github.sha }}
+# env:
+#   origin_branch: master
+#   VERSION: ${{ github.sha }}
 
-on:
-  pull_request:
-    branches: ["master"]
+# on:
+#   pull_request:
+#     branches: ["master"]
 
-jobs:
-  run_command:
-    name: Run Command
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        commands:
-          [
-            "format:check",
-            "build:cli",
-            "build:devkit:*",
-            "build-image:api",
-            "build-image:migrate",
-            "build-image:mongoreplicationcontroller",
-            "test:cli",
-            "test:devkit:*",
-            "test-image:migrate",
-            "test-image:api --build-arg PROJECTS=api/activity/**",
-            "test-image:api --build-arg PROJECTS=api/asset/**",
-            "test-image:api --build-arg PROJECTS=api/bucket",
-            "test-image:api --build-arg PROJECTS=api/bucket/** --build-arg EXCLUDE=api/bucket",
-            "test-image:api --build-arg PROJECTS=api/dashboard/**",
-            "test-image:api --build-arg PROJECTS=api/function",
-            "test-image:api --build-arg PROJECTS=api/function/** --build-arg EXCLUDE='api/function/packages/**,api/function'",
-            "test-image:api --build-arg PROJECTS=api/passport/**",
-            "test-image:api --build-arg PROJECTS=api/preference/**",
-            "test-image:api --build-arg PROJECTS=api/replication/**",
-            "test-image:api --build-arg PROJECTS=api/status/**",
-            "test-image:api --build-arg PROJECTS=api/storage/**",
-            "test-image:api --build-arg PROJECTS=api/versioncontrol/**",
-            "test-image:api --build-arg PROJECTS=core/**",
-            "test-image:api --build-arg PROJECTS=database/**",
-            "test-image:api --build-arg PROJECTS=filter/**"
-          ]
-    steps:
-      - name: Free up some space on disk
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+# jobs:
+#   run_command:
+#     name: Run Command
+#     runs-on: ubuntu-latest
+#     strategy:
+#       matrix:
+#         commands:
+#           [
+#             "format:check",
+#             "build:cli",
+#             "build:devkit:*",
+#             "build-image:api",
+#             "build-image:migrate",
+#             "build-image:mongoreplicationcontroller",
+#             "test:cli",
+#             "test:devkit:*",
+#             "test-image:migrate",
+#             "test-image:api --build-arg PROJECTS=api/activity/**",
+#             "test-image:api --build-arg PROJECTS=api/asset/**",
+#             "test-image:api --build-arg PROJECTS=api/bucket",
+#             "test-image:api --build-arg PROJECTS=api/bucket/** --build-arg EXCLUDE=api/bucket",
+#             "test-image:api --build-arg PROJECTS=api/dashboard/**",
+#             "test-image:api --build-arg PROJECTS=api/function",
+#             "test-image:api --build-arg PROJECTS=api/function/** --build-arg EXCLUDE='api/function/packages/**,api/function'",
+#             "test-image:api --build-arg PROJECTS=api/passport/**",
+#             "test-image:api --build-arg PROJECTS=api/preference/**",
+#             "test-image:api --build-arg PROJECTS=api/replication/**",
+#             "test-image:api --build-arg PROJECTS=api/status/**",
+#             "test-image:api --build-arg PROJECTS=api/storage/**",
+#             "test-image:api --build-arg PROJECTS=api/versioncontrol/**",
+#             "test-image:api --build-arg PROJECTS=core/**",
+#             "test-image:api --build-arg PROJECTS=database/**",
+#             "test-image:api --build-arg PROJECTS=filter/**"
+#           ]
+#     steps:
+#       - name: Free up some space on disk
+#         run: |
+#           sudo rm -rf /usr/share/dotnet
+#           sudo rm -rf /opt/ghc
+#           sudo rm -rf /opt/hostedtoolcache
+#           sudo rm -rf "/usr/local/share/boost"
+#           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
-      - name: Checkout
-        uses: actions/checkout@v4
+#       - name: Checkout
+#         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          cache: yarn
-          cache-dependency-path: yarn.lock
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: 22.x
+#           cache: yarn
+#           cache-dependency-path: yarn.lock
 
-      - name: Restore Node Modules Cache
-        uses: actions/cache@v4
-        with:
-          path: "**/node_modules"
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
-            ${{ runner.os }}-node-modules-
+#       - name: Restore Node Modules Cache
+#         uses: actions/cache@v4
+#         with:
+#           path: "**/node_modules"
+#           key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+#           restore-keys: |
+#             ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+#             ${{ runner.os }}-node-modules-
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+#       - name: Install dependencies
+#         run: yarn install --frozen-lockfile
 
-      # necessary for the "nx lint" command
-      - name: Fetch base branch
-        run: git fetch origin ${{ env.origin_branch }}:${{ env.origin_branch }}
+#       # necessary for the "nx lint" command
+#       - name: Fetch base branch
+#         run: git fetch origin ${{ env.origin_branch }}:${{ env.origin_branch }}
 
-      - name: Disable Nx Cloud
-        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+#       - name: Disable Nx Cloud
+#         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
-      - name: Run Command
-        run: yarn run ${{ matrix.commands }}
+#       - name: Run Command
+#         run: yarn run ${{ matrix.commands }}
