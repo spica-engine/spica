@@ -15,11 +15,11 @@ jobs:
 
     steps:
       - name: Print current working directory
-        run: pwd
+        run: ls
       - name: Checkout
         uses: actions/checkout@v4
       - name: Print current working directory
-        run: pwd
+        run: ls
 
       - name: Decide next version
         run: ./scripts/decide_next_version.sh
