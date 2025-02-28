@@ -21,8 +21,10 @@ jobs:
 
       - name: Set tags
         run: |
-          last_tag=$(git describe --tags --abbrev=0)
-          prev_tag=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
+          last_tag=0.10.0
+          prev_tag=0.9.29
+          # last_tag=$(git describe --tags --abbrev=0)
+          # prev_tag=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
           echo "last_tag=$last_tag" >> $GITHUB_ENV
           echo "prev_tag=$prev_tag" >> $GITHUB_ENV
 
