@@ -42,17 +42,17 @@ data:
 
     # Ping until mongodb process is ready
     echo "Trying to ping.."
-    retry_command mongo --quiet --eval "db.runCommand({ ping: 1 })"
+    retry_command mongosh --quiet --eval "db.runCommand({ ping: 1 })"
     echo "Ping succeeded!"
 
     # Initiate replicaset
     echo "Trying to initiate replicaset.."
-    mongo --eval "rs.initiate()"
+    mongosh --eval "rs.initiate()"
     echo "Replicaset initiation succeeded!"
 
     # Insert root user if not exist
     echo "Inserting root user.."
-    mongo --quiet <<EOF
+    mongosh --quiet <<EOF
       use admin
       var user = db.getUser('$ROOT_USERNAME')
       var roles = [ "root" ]
@@ -66,7 +66,7 @@ data:
 
     # Upsert application user
     echo "Inserting spica user.."
-    mongo --quiet <<EOF
+    mongosh --quiet <<EOF
       use admin
       var user = db.getUser('$SPICA_USERNAME')
       var roles = [ { role: 'readWrite', db: 'spica' } ]
@@ -110,7 +110,7 @@ data:
 
     # retry until mongodb process is ready
     echo "Trying to ping.."
-    retry_command mongo --quiet --eval "db.runCommand({ ping: 1 })"
+    retry_command mongosh --quiet --eval "db.runCommand({ ping: 1 })"
     echo "Ping succeeded!"
 
-    mongo --authenticationDatabase "admin" -u "$ROOT_USERNAME" -p "$ROOT_PASSWORD" --eval "rs.reconfig({ _id: 'rs0', members: $RS_MEMBERS },{force: true})"
+    mongosh --authenticationDatabase "admin" -u "$ROOT_USERNAME" -p "$ROOT_PASSWORD" --eval "rs.reconfig({ _id: 'rs0', members: $RS_MEMBERS },{force: true})"

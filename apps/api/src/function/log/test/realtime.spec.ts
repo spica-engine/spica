@@ -243,4 +243,24 @@ describe("Realtime", () => {
       {kind: ChunkKind.EndOfInitial}
     ]);
   });
+
+  it("should do the initial sync with content", async () => {
+    const ws = wsc.get(
+      url("/function-logs", {
+        begin: created_at.toString(),
+        content: "finish"
+      })
+    );
+
+    const message = jest.fn();
+    ws.onmessage = e => message(JSON.parse(e.data as string));
+
+    await ws.connect;
+    await ws.close();
+
+    expect(message.mock.calls.map(c => c[0])).toEqual([
+      {kind: ChunkKind.Initial, document: rows[1]},
+      {kind: ChunkKind.EndOfInitial}
+    ]);
+  });
 });
