@@ -15,6 +15,9 @@
       "path": "./log"
     },
     {
+      "path": "./environment_variable"
+    },
+    {
       "path": "../asset"
     }
   ]
