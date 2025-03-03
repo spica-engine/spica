@@ -4,27 +4,18 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Post,
   Put,
-  Query,
-  Req,
-  UseGuards,
-  UseInterceptors,
-  HttpStatus,
-  HttpCode,
-  Headers,
-  Inject,
-  UnauthorizedException,
-  InternalServerErrorException,
-  Optional
+  Query
 } from "@nestjs/common";
 import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {PaginationResponse} from "@spica-server/passport/identity";
 import {EnvironmentVariableService} from "./service";
 import {EnvironmentVariable} from "./interface";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {Schema} from "@spica-server/core/schema";
 
 @Controller("function-env")
@@ -64,7 +55,7 @@ export class EnvironmentVariableController {
     }
 
     return this.environmentVariableService
-      .aggregate<EnvironmentVariable[]>(seekingPipeline)
+      .aggregate<EnvironmentVariable[]>([...pipeline, ...seekingPipeline])
       .toArray();
   }
 
@@ -81,5 +72,33 @@ export class EnvironmentVariableController {
     return this.environmentVariableService.insertOne(environmentVariable).catch(exception => {
       throw new BadRequestException(exception.message);
     });
+  }
+
+  @Put(":id")
+  async updateOne(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body(Schema.validate("http://spica.internal/function/environment_variable"))
+    environmentVariable: Partial<EnvironmentVariable>
+  ) {
+    return this.environmentVariableService
+      .findOneAndUpdate(
+        {_id: id},
+        {$set: environmentVariable},
+        {returnDocument: ReturnDocument.AFTER}
+      )
+      .catch(exception => {
+        throw new BadRequestException(exception.message);
+      });
+  }
+
+  @Delete(":id")
+  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    const environmentVariable = await this.environmentVariableService.findOne({_id: id});
+
+    if (!environmentVariable) {
+      throw new NotFoundException();
+    }
+
+    return this.environmentVariableService.deleteOne({_id: id});
   }
 }
