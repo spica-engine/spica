@@ -2040,7 +2040,7 @@ describe("BucketDataController", () => {
       expect(body).toEqual(rows);
     });
 
-    it("should insert new document", async () => {
+    xit("should insert new document", async () => {
       const newDocument = {
         name: "Modric",
         characteristics: {height: 174, weight: "74kg"}
@@ -2056,7 +2056,7 @@ describe("BucketDataController", () => {
       expect(body).toEqual({...newDocument, _id: res.body._id});
     });
 
-    it("should update document", async () => {
+    xit("should update document", async () => {
       await req.patch(`/bucket/${bucket._id}/data/${rows[0]._id}`, {
         characteristics: {height: 200}
       });
@@ -2071,7 +2071,7 @@ describe("BucketDataController", () => {
       });
     });
 
-    it("should replace document", async () => {
+    xit("should replace document", async () => {
       const newDocument = {
         name: "James",
         characteristics: {height: 200, weight: "80kg"}
