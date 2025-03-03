@@ -2027,6 +2027,10 @@ describe("BucketDataController", () => {
       ].map(r => r.body);
     });
 
+    afterEach(async () => {
+      await req.delete(`/bucket/${bucket._id}`);
+    });
+
     it("should get documents", async () => {
       const res = await req.get(`/bucket/${bucket._id}/data`);
 
