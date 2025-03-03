@@ -1,2 +1,2 @@
-export {EnvironmentVariableModule} from "./environment_variabe.module";
-export {EnvironmentVariableService} from "./environment_variabe.service";
+export {EnvironmentVariableModule} from "./module";
+export {EnvironmentVariableService} from "./service";
