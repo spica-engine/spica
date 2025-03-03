@@ -2040,7 +2040,7 @@ describe("BucketDataController", () => {
       expect(body).toEqual(rows);
     });
 
-    xit("should insert new document", async () => {
+    it("should insert new document", async () => {
       const newDocument = {
         name: "Modric",
         characteristics: {height: 174, weight: "74kg"}
@@ -2056,7 +2056,7 @@ describe("BucketDataController", () => {
       expect(body).toEqual({...newDocument, _id: res.body._id});
     });
 
-    xit("should update document", async () => {
+    it("should update document", async () => {
       await req.patch(`/bucket/${bucket._id}/data/${rows[0]._id}`, {
         characteristics: {height: 200}
       });
@@ -2071,7 +2071,7 @@ describe("BucketDataController", () => {
       });
     });
 
-    xit("should replace document", async () => {
+    it("should replace document", async () => {
       const newDocument = {
         name: "James",
         characteristics: {height: 200, weight: "80kg"}
@@ -2086,7 +2086,7 @@ describe("BucketDataController", () => {
       expect(body).toEqual({...newDocument, _id: rows[0]._id});
     });
 
-    xit("should filter documents based on multiple characteristics", async () => {
+    it("should filter documents based on multiple characteristics", async () => {
       const document = await req.get(`/bucket/${bucket._id}/data`, {
         filter: JSON.stringify({characteristics: {height: 170, weight: "70kg"}})
       });
@@ -2097,7 +2097,7 @@ describe("BucketDataController", () => {
       expect(body[0]).toEqual(rows[1]);
     });
 
-    xit("should filter documents based on a single characteristic", async () => {
+    it("should filter documents based on a single characteristic", async () => {
       const document = await req.get(`/bucket/${bucket._id}/data`, {
         filter: JSON.stringify({"characteristics.height": {$eq: 184}})
       });
