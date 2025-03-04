@@ -5,7 +5,7 @@ database:
   replicas: 1
   replicaSetName: 'rs0'
   name: spica
-  version: '6.0'
+  version: '7.0'
   storageSize: 2Gi
   storageClass:
   resources: {}
