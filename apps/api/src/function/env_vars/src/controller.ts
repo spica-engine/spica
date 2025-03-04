@@ -54,9 +54,7 @@ export class EnvVarsController {
         });
     }
 
-    return this.envVarsService
-      .aggregate<EnvVar[]>([...pipeline, ...seekingPipeline])
-      .toArray();
+    return this.envVarsService.aggregate<EnvVar[]>([...pipeline, ...seekingPipeline]).toArray();
   }
 
   @Get(":id")
@@ -81,11 +79,7 @@ export class EnvVarsController {
     envVar: Partial<EnvVar>
   ) {
     return this.envVarsService
-      .findOneAndUpdate(
-        {_id: id},
-        {$set: envVar},
-        {returnDocument: ReturnDocument.AFTER}
-      )
+      .findOneAndUpdate({_id: id}, {$set: envVar}, {returnDocument: ReturnDocument.AFTER})
       .catch(exception => {
         throw new BadRequestException(exception.message);
       });
