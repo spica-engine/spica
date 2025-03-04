@@ -128,11 +128,20 @@ function build(compilation: Compilation) {
   builder.build();
 }
 
-function postCompilation(baseUrl: string, diagnostics: ts.Diagnostic[]) {
+function renameJsToMjs(baseUrl: string) {
   const buildFolder = path.join(baseUrl, ".build");
+  const filePath = path.join(buildFolder, "index.mjs");
 
-  fs.renameSync(path.join(buildFolder, "index.js"), path.join(buildFolder, "index.mjs"));
+  fs.renameSync(path.join(buildFolder, "index.js"), filePath);
   fs.renameSync(path.join(buildFolder, "index.js.map"), path.join(buildFolder, "index.mjs.map"));
+
+  let content = fs.readFileSync(filePath, "utf8");
+  content = content.replace(/(\/\/# sourceMappingURL=).*\.map$/, "$1index.mjs.map");
+  fs.writeFileSync(filePath, content);
+}
+
+function postCompilation(baseUrl: string, diagnostics: ts.Diagnostic[]) {
+  renameJsToMjs(baseUrl);
 
   parentPort.postMessage({
     baseUrl: baseUrl,
