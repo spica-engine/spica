@@ -107,7 +107,8 @@ function build(compilation: Compilation) {
       tsBuildInfoFile: path.join(compilation.cwd, ".build", ".tsbuildinfo"),
       baseUrl: compilation.cwd,
       rootDir: compilation.cwd,
-      outDir: path.join(compilation.cwd, ".build")
+      outDir: path.join(compilation.cwd, ".build"),
+      declaration: true
     };
 
     fs.writeFileSync(
