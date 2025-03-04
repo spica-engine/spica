@@ -36,7 +36,7 @@ describe("Typescript", () => {
     const stat = await fs.promises.readFile(path.join(compilation.cwd, ".build", "index.mjs"));
 
     expect(stat.toString()).toContain(`export default function () { }
-//# sourceMappingURL=index.mjs.map`);
+//# sourceMappingURL=index.js.map`);
   });
 
   it("should report diagnostics", async () => {
