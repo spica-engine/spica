@@ -9,7 +9,8 @@ describe("Typescript", () => {
 
   const compilation: Compilation = {
     cwd: undefined,
-    entrypoint: "index.ts"
+    entrypoint: "index.ts",
+    outDir: ".build"
   };
 
   beforeEach(() => {
@@ -67,11 +68,13 @@ describe("Typescript", () => {
   it("should report diagnostics for multiple functions", async () => {
     const first: Compilation = {
       cwd: FunctionTestBed.initialize(`const a;`),
-      entrypoint: "index.ts"
+      entrypoint: "index.ts",
+      outDir: ".build"
     };
     const second: Compilation = {
       cwd: FunctionTestBed.initialize(`import {} from 'non-existent-module';`),
-      entrypoint: "index.ts"
+      entrypoint: "index.ts",
+      outDir: ".build"
     };
     const diagnostics = await Promise.all([
       language.compile(first).catch(e => e),
