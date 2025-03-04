@@ -4,7 +4,7 @@ import {Observable} from "rxjs";
 export class LocalPackageManager extends DelegatePkgManager {
   private LOCAL_PACKAGE_NAME_REGEX = /^[a-fA-F0-9]{24}$/;
   private LOCAL_PACKAGE_VERSION_REGEX = /file:.*([a-fA-F0-9]{24}).*/;
-  private LOCAL_PACKAGE_REGEX_REPLACER = /([a-fA-F0-9]{24}$)/;
+  private LOCAL_PACKAGE_NAME_REGEX_REPLACER = /([a-fA-F0-9]{24}$)/;
 
   constructor(pkgManager: PackageManager) {
     super(pkgManager);
@@ -16,7 +16,6 @@ export class LocalPackageManager extends DelegatePkgManager {
     return super.install(cwd, qualifiedNames);
   }
   uninstall(cwd: string, name: string): Promise<void> {
-    name = this.transformLocalPackageName(cwd, name);
     return super.uninstall(cwd, name);
   }
   ls(cwd: string, includeTypes?: boolean): Promise<Package[]> {
@@ -29,7 +28,7 @@ export class LocalPackageManager extends DelegatePkgManager {
     if (!this.isLocalPackage(name)) {
       return name;
     }
-    const localPackageName = cwd.replace(this.LOCAL_PACKAGE_REGEX_REPLACER, name);
+    const localPackageName = cwd.replace(this.LOCAL_PACKAGE_NAME_REGEX_REPLACER, name);
 
     return localPackageName;
   }
@@ -40,8 +39,7 @@ export class LocalPackageManager extends DelegatePkgManager {
       return pkg;
     }
 
-    pkg.name = this.LOCAL_PACKAGE_VERSION_REGEX.exec(pkg.version)[1];
-    pkg.version = "";
+    pkg.version = this.LOCAL_PACKAGE_VERSION_REGEX.exec(pkg.version)[1];
     return pkg;
   }
 
