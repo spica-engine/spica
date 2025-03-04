@@ -130,7 +130,14 @@ function build(compilation: Compilation) {
   builder.build();
 }
 
+function renameJsToMjs(baseUrl: string) {
+  const buildFolder = path.join(baseUrl, ".build");
+  fs.renameSync(path.join(buildFolder, "index.js"), path.join(buildFolder, "index.mjs"));
+}
+
 function postCompilation(baseUrl: string, diagnostics: ts.Diagnostic[]) {
+  renameJsToMjs(baseUrl);
+
   parentPort.postMessage({
     baseUrl: baseUrl,
     diagnostics: diagnostics

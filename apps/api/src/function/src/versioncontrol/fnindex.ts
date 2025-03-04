@@ -43,7 +43,7 @@ export function indexSyncProviders(
 
   const readAll = async () => {
     const resourceNameValidator = str => ObjectId.isValid(str);
-    const files = await manager.read(module, resourceNameValidator, ["index.js", "index.ts"]);
+    const files = await manager.read(module, resourceNameValidator, ["index.mjs", "index.ts"]);
     return files.map(file => {
       return {_id: file._id, index: file.contents.index};
     });

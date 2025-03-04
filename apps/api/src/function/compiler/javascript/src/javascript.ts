@@ -4,8 +4,8 @@ import path from "path";
 
 export class Javascript extends Language {
   readonly description: Description = {
-    extension: "js",
-    entrypoint: "index.js",
+    extension: "mjs",
+    entrypoint: "index.mjs",
     name: "javascript",
     title: "Javascript"
   };
