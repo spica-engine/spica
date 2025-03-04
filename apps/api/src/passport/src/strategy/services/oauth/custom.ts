@@ -35,11 +35,6 @@ export class CustomOAuthService implements OAuthStrategyService {
       access_token: tokenResponse.access_token
     };
 
-    // some services only accept token on Authorization header
-    strategy.options.identifier.headers = {
-      Authorization: `token ${tokenResponse.access_token}`
-    };
-
     return this.sendRequest(strategy.options.identifier).then(user => {
       return {user};
     });
