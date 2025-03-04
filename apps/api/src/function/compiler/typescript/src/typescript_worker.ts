@@ -130,14 +130,7 @@ function build(compilation: Compilation) {
 
 function renameJsToMjs(baseUrl: string) {
   const buildFolder = path.join(baseUrl, ".build");
-  const filePath = path.join(buildFolder, "index.mjs");
-
-  fs.renameSync(path.join(buildFolder, "index.js"), filePath);
-  fs.renameSync(path.join(buildFolder, "index.js.map"), path.join(buildFolder, "index.mjs.map"));
-
-  let content = fs.readFileSync(filePath, "utf8");
-  content = content.replace(/(\/\/# sourceMappingURL=).*\.map$/, "$1index.mjs.map");
-  fs.writeFileSync(filePath, content);
+  fs.renameSync(path.join(buildFolder, "index.js"), path.join(buildFolder, "index.mjs"));
 }
 
 function postCompilation(baseUrl: string, diagnostics: ts.Diagnostic[]) {

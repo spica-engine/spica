@@ -27,7 +27,7 @@ export class Javascript extends Language {
       });
 
     await fs.promises.copyFile(
-      path.join(compilation.cwd, "index.mjs"),
+      path.join(compilation.cwd, this.description.entrypoint),
       path.join(compilation.cwd, ".build", this.description.entrypoint)
     );
   }
