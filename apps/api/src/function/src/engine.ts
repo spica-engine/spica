@@ -1,7 +1,7 @@
 import {Inject, Injectable, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {DatabaseService, MongoClient} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
-import {Package, PackageManager} from "@spica-server/function/pkgmanager";
+import {DelegatePkgManager, Package, PackageManager} from "@spica-server/function/pkgmanager";
 import {event} from "@spica-server/function/queue/proto";
 import fs from "fs";
 import {JSONSchema7} from "json-schema";
@@ -104,7 +104,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private getDefaultPackageManager(): PackageManager {
+  private getDefaultPackageManager(): DelegatePkgManager {
     return this.scheduler.pkgmanagers.get("node");
   }
 
