@@ -9,7 +9,7 @@ import {fileURLToPath} from "url";
 export class Typescript extends Language {
   description: Description = {
     extension: "ts",
-    entrypoint: "index.js",
+    entrypoint: "index.mjs",
     name: "typescript",
     title: "Typescript"
   };
