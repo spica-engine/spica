@@ -39,7 +39,7 @@ export class Typescript extends Language {
     await fs.promises
       .symlink(
         path.join(compilation.cwd, "node_modules"),
-        path.join(compilation.cwd, ".build", "node_modules"),
+        path.join(compilation.cwd, compilation.outDir, "node_modules"),
         "dir"
       )
       .catch(e => {

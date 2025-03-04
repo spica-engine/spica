@@ -11,11 +11,11 @@ export class Javascript extends Language {
   };
   async compile(compilation: Compilation): Promise<void> {
     await super.prepare(compilation);
-
+    const outDirAbsolutePath = path.join(compilation.cwd, compilation.outDir);
     await fs.promises
       .symlink(
         path.join(compilation.cwd, "node_modules"),
-        path.join(compilation.cwd, ".build", "node_modules"),
+        path.join(outDirAbsolutePath, "node_modules"),
         "dir"
       )
       .catch(e => {
@@ -27,8 +27,8 @@ export class Javascript extends Language {
       });
 
     await fs.promises.copyFile(
-      path.join(compilation.cwd, "index.js"),
-      path.join(compilation.cwd, ".build", this.description.entrypoint)
+      path.join(compilation.cwd, this.description.entrypoint),
+      path.join(outDirAbsolutePath, this.description.entrypoint)
     );
   }
 

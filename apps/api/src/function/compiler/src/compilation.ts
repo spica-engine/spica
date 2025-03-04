@@ -1,6 +1,7 @@
 export interface Compilation {
   cwd: string;
   entrypoint: string;
+  outDir: string;
 }
 
 export interface Diagnostic {

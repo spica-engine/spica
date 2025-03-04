@@ -96,6 +96,7 @@ function build(compilation: Compilation) {
   const refPath = `./${referencedProject}`;
 
   if (rootTsConfig.references.findIndex(ref => ref.path == refPath) == -1) {
+    const outDirAbsolutePath = path.join(compilation.cwd, compilation.outDir);
     const options = {
       moduleResolution: "node",
       module: "ES2022",
@@ -104,10 +105,10 @@ function build(compilation: Compilation) {
       sourceMap: true,
       alwaysStrict: true,
       preserveSymlinks: true,
-      tsBuildInfoFile: path.join(compilation.cwd, ".build", ".tsbuildinfo"),
+      tsBuildInfoFile: path.join(outDirAbsolutePath, ".tsbuildinfo"),
       baseUrl: compilation.cwd,
       rootDir: compilation.cwd,
-      outDir: path.join(compilation.cwd, ".build"),
+      outDir: outDirAbsolutePath,
       declaration: true
     };
 
@@ -116,7 +117,7 @@ function build(compilation: Compilation) {
       JSON.stringify({
         compilerOptions: options,
         files: [path.join(compilation.cwd, compilation.entrypoint)],
-        exclude: ["**/.build/**"]
+        exclude: [`**/${compilation.outDir}/**`]
       })
     );
 

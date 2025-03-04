@@ -135,7 +135,9 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       private: true,
       keywords: ["spica", "function", "node.js"],
       license: "UNLICENSED",
-      type: "module"
+      // type: "module",
+      // assume all extensions are mjs after https://trello.com/c/XnGSA72f/318-spica-318-treat-file-extensions-are-mjs-for-all-functions
+      main: path.join(functionRoot, this.options.outDir, this.getFunctionEntrypoint(fn))
     };
 
     return fs.promises.writeFile(
@@ -154,24 +156,20 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     const language = this.scheduler.languages.get(fn.language);
     return language.compile({
       cwd: functionRoot,
-      entrypoint: `index.${language.description.extension}`
+      entrypoint: language.description.entrypoint,
+      outDir: this.options.outDir
     });
   }
 
   update(fn: Function, index: string): Promise<void> {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    const language = this.scheduler.languages.get(fn.language);
-    return fs.promises.writeFile(
-      path.join(functionRoot, `index.${language.description.extension}`),
-      index
-    );
+    return fs.promises.writeFile(path.join(functionRoot, this.getFunctionEntrypoint(fn)), index);
   }
 
   read(fn: Function): Promise<string> {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    const language = this.scheduler.languages.get(fn.language);
     return fs.promises
-      .readFile(path.join(functionRoot, `index.${language.description.extension}`))
+      .readFile(path.join(functionRoot, this.getFunctionEntrypoint(fn)))
       .then(b => b.toString())
       .catch(e => {
         if (e.code == "ENOENT") {
@@ -238,6 +236,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       });
       enqueuer.unsubscribe(target);
     }
+  }
+
+  private getFunctionEntrypoint(fn: Function) {
+    const language = this.scheduler.languages.get(fn.language);
+    return language.description.entrypoint;
   }
 }
 
