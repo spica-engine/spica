@@ -18,7 +18,7 @@ import {EnvVar} from "./interface";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {Schema} from "@spica-server/core/schema";
 
-@Controller("function-env")
+@Controller("function-env-vars")
 export class EnvVarsController {
   constructor(private envVarsService: EnvVarsService) {}
 
