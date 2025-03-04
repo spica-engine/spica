@@ -59,5 +59,5 @@ export interface StrategyTypeService {
 }
 
 export interface StrategyTypeServices {
-  find: (type: string) => StrategyTypeService;
+  find: (type: string, idp?: string) => StrategyTypeService;
 }

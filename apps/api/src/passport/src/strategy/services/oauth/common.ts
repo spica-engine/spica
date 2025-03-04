@@ -1,13 +1,14 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
-import {OAuthRequestDetails, OAuthStrategy, Strategy, StrategyTypeService} from "../interface";
-import {StrategyService} from "./strategy.service";
-import {PassportOptions, PASSPORT_OPTIONS, RequestService, REQUEST_SERVICE} from "../../options";
+import {OAuthRequestDetails, OAuthStrategy, Strategy, StrategyTypeService} from "../../interface";
+import {StrategyService} from "../strategy.service";
+import {PassportOptions, PASSPORT_OPTIONS, RequestService, REQUEST_SERVICE} from "../../../options";
 import {v4 as uuidv4} from "uuid";
 
 @Injectable()
-export class OAuthService implements StrategyTypeService {
+export class CommonOAuthService implements StrategyTypeService {
   readonly type = "oauth";
+  readonly idp;
 
   constructor(
     private strategyService: StrategyService,
@@ -26,19 +27,7 @@ export class OAuthService implements StrategyTypeService {
       throw Error("Access token could not find.");
     }
 
-    strategy.options.identifier.params = {
-      ...(strategy.options.identifier.params || {}),
-      access_token: tokenResponse.access_token
-    };
-
-    // some services only accept token on Authorization header
-    strategy.options.identifier.headers = {
-      Authorization: `token ${tokenResponse.access_token}`
-    };
-
-    return this.sendRequest(strategy.options.identifier).then(user => {
-      return {user};
-    });
+    return this.getUser(strategy, tokenResponse);
   }
 
   getLoginUrl(strategy: OAuthStrategy): {url: string; state: string} {
@@ -89,5 +78,9 @@ export class OAuthService implements StrategyTypeService {
       headers: requestDetails.headers,
       responseType: "json"
     });
+  }
+
+  getUser(strategy: OAuthStrategy, tokenResponse) {
+    return {};
   }
 }
