@@ -4,8 +4,8 @@ import path from "path";
 
 export class Javascript extends Language {
   readonly description: Description = {
-    extension: "js",
-    entrypoint: "index.js",
+    extension: "mjs",
+    entrypoint: "index.mjs",
     name: "javascript",
     title: "Javascript"
   };
@@ -27,7 +27,7 @@ export class Javascript extends Language {
       });
 
     await fs.promises.copyFile(
-      path.join(compilation.cwd, "index.js"),
+      path.join(compilation.cwd, "index.mjs"),
       path.join(compilation.cwd, ".build", this.description.entrypoint)
     );
   }

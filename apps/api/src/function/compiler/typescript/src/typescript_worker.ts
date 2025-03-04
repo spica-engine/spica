@@ -129,6 +129,11 @@ function build(compilation: Compilation) {
 }
 
 function postCompilation(baseUrl: string, diagnostics: ts.Diagnostic[]) {
+  const buildFolder = path.join(baseUrl, ".build");
+
+  fs.renameSync(path.join(buildFolder, "index.js"), path.join(buildFolder, "index.mjs"));
+  fs.renameSync(path.join(buildFolder, "index.js.map"), path.join(buildFolder, "index.mjs.map"));
+
   parentPort.postMessage({
     baseUrl: baseUrl,
     diagnostics: diagnostics
