@@ -13,14 +13,14 @@ import {
 import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {PaginationResponse} from "@spica-server/passport/identity";
-import {EnvironmentVariableService} from "./service";
-import {EnvironmentVariable} from "./interface";
+import {EnvVarsService} from "./service";
+import {EnvVar} from "./interface";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {Schema} from "@spica-server/core/schema";
 
 @Controller("function-env")
-export class EnvironmentVariableController {
-  constructor(private environmentVariableService: EnvironmentVariableService) {}
+export class EnvVarsController {
+  constructor(private envVarsService: EnvVarsService) {}
 
   @Get()
   async find(
@@ -38,13 +38,13 @@ export class EnvironmentVariableController {
       await pipelineBuilder.paginate(
         paginate,
         seekingPipeline,
-        this.environmentVariableService.estimatedDocumentCount()
+        this.envVarsService.estimatedDocumentCount()
       )
     ).result();
 
     if (paginate) {
-      return this.environmentVariableService
-        .aggregate<PaginationResponse<EnvironmentVariable>>(pipeline)
+      return this.envVarsService
+        .aggregate<PaginationResponse<EnvVar>>(pipeline)
         .next()
         .then(r => {
           if (!r.data.length) {
@@ -54,22 +54,22 @@ export class EnvironmentVariableController {
         });
     }
 
-    return this.environmentVariableService
-      .aggregate<EnvironmentVariable[]>([...pipeline, ...seekingPipeline])
+    return this.envVarsService
+      .aggregate<EnvVar[]>([...pipeline, ...seekingPipeline])
       .toArray();
   }
 
   @Get(":id")
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.environmentVariableService.findOne({_id: id});
+    return this.envVarsService.findOne({_id: id});
   }
 
   @Post()
   async insertOne(
-    @Body(Schema.validate("http://spica.internal/function/environment_variable"))
-    environmentVariable: EnvironmentVariable
+    @Body(Schema.validate("http://spica.internal/function/env_vars"))
+    envVar: EnvVar
   ) {
-    return this.environmentVariableService.insertOne(environmentVariable).catch(exception => {
+    return this.envVarsService.insertOne(envVar).catch(exception => {
       throw new BadRequestException(exception.message);
     });
   }
@@ -77,13 +77,13 @@ export class EnvironmentVariableController {
   @Put(":id")
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/function/environment_variable"))
-    environmentVariable: Partial<EnvironmentVariable>
+    @Body(Schema.validate("http://spica.internal/function/env_vars"))
+    envVar: Partial<EnvVar>
   ) {
-    return this.environmentVariableService
+    return this.envVarsService
       .findOneAndUpdate(
         {_id: id},
-        {$set: environmentVariable},
+        {$set: envVar},
         {returnDocument: ReturnDocument.AFTER}
       )
       .catch(exception => {
@@ -93,12 +93,12 @@ export class EnvironmentVariableController {
 
   @Delete(":id")
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const environmentVariable = await this.environmentVariableService.findOne({_id: id});
+    const envVar = await this.envVarsService.findOne({_id: id});
 
-    if (!environmentVariable) {
+    if (!envVar) {
       throw new NotFoundException();
     }
 
-    return this.environmentVariableService.deleteOne({_id: id});
+    return this.envVarsService.deleteOne({_id: id});
   }
 }

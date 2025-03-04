@@ -1,5 +1,5 @@
 {
-  "$id": "http://spica.internal/function/environment_variable",
+  "$id": "http://spica.internal/function/env_vars",
   "type": "object",
   "required": ["key", "value"],
   "properties": {

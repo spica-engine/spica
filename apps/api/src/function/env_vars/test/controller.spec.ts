@@ -4,7 +4,7 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
-import {EnvironmentVariableModule} from "../src";
+import {EnvVarsModule} from "../src";
 
 describe("Environment Variable", () => {
   let req: Request;
@@ -15,7 +15,7 @@ describe("Environment Variable", () => {
       imports: [
         DatabaseTestingModule.standalone(),
         CoreTestingModule,
-        EnvironmentVariableModule.forRoot(),
+        EnvVarsModule.forRoot(),
         SchemaModule.forRoot({formats: [OBJECT_ID]})
       ]
     }).compile();

@@ -4,6 +4,6 @@ const {workspaceRoot} = require("@nx/devkit");
 export default {
   preset: "../../../../../jest.preset.js",
   testEnvironment: "node",
-  coverageDirectory: path.join(workspaceRoot, "coverage/apps/api/function/environment_variable"),
+  coverageDirectory: path.join(workspaceRoot, "coverage/apps/api/function/env_vars"),
   testMatch: ["<rootDir>/test/**/*.spec.ts"]
 };
