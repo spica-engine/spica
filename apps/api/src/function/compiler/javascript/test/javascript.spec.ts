@@ -9,7 +9,8 @@ describe("Javascript", () => {
 
   const compilation: Compilation = {
     cwd: undefined,
-    entrypoint: undefined
+    entrypoint: undefined,
+    outDir: ".build"
   };
 
   beforeEach(() => {

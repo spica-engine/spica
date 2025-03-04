@@ -21,7 +21,8 @@ describe("Entrypoint", () => {
   let popSpy: jest.Mock;
   let compilation: Compilation = {
     cwd: undefined,
-    entrypoint: undefined
+    entrypoint: undefined,
+    outDir: ".build"
   };
   let id = 0;
 

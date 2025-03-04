@@ -55,7 +55,8 @@ describe("Scheduler", () => {
 
   const compilation = {
     cwd: undefined,
-    entrypoint: "index.js"
+    entrypoint: "index.js",
+    outDir: ".build"
   };
 
   function findWorkerFromEventId(evId: string) {
