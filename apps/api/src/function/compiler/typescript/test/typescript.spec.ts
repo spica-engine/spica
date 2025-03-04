@@ -33,10 +33,10 @@ describe("Typescript", () => {
     const files = fs.readdirSync(path.join(compilation.cwd, ".build"));
     expect(files).toContain(".tsbuildinfo");
 
-    const stat = await fs.promises.readFile(path.join(compilation.cwd, ".build", "index.js"));
+    const stat = await fs.promises.readFile(path.join(compilation.cwd, ".build", "index.mjs"));
 
     expect(stat.toString()).toContain(`export default function () { }
-//# sourceMappingURL=index.js.map`);
+//# sourceMappingURL=index.mjs.map`);
   });
 
   it("should report diagnostics", async () => {
