@@ -7,8 +7,7 @@ import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
 import {rimraf} from "rimraf";
-import {Observable, Subject} from "rxjs";
-import util from "util";
+import {Observable} from "rxjs";
 import {
   FunctionService,
   FUNCTION_OPTIONS,
@@ -109,23 +108,24 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return this.scheduler.pkgmanagers.get("node");
   }
 
+  private getFunctionRoot(fn: Function) {
+    return path.join(this.options.root, fn._id.toString());
+  }
+
   getPackages(fn: Function): Promise<Package[]> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.getDefaultPackageManager().ls(functionRoot, true);
+    return this.getDefaultPackageManager().ls(this.getFunctionRoot(fn), true);
   }
 
   addPackage(fn: Function, qualifiedNames: string | string[]): Observable<number> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.getDefaultPackageManager().install(functionRoot, qualifiedNames);
+    return this.getDefaultPackageManager().install(this.getFunctionRoot(fn), qualifiedNames);
   }
 
   removePackage(fn: Function, name: string): Promise<void> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.getDefaultPackageManager().uninstall(functionRoot, name);
+    return this.getDefaultPackageManager().uninstall(this.getFunctionRoot(fn), name);
   }
 
   async createFunction(fn: Function) {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
+    const functionRoot = this.getFunctionRoot(fn);
     await fs.promises.mkdir(functionRoot, {recursive: true});
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
@@ -147,29 +147,28 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   deleteFunction(fn: Function) {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return rimraf(functionRoot);
+    return rimraf(this.getFunctionRoot(fn));
   }
 
   compile(fn: Function) {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
     const language = this.scheduler.languages.get(fn.language);
     return language.compile({
-      cwd: functionRoot,
+      cwd: this.getFunctionRoot(fn),
       entrypoint: language.description.entrypoint,
       outDir: this.options.outDir
     });
   }
 
   update(fn: Function, index: string): Promise<void> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return fs.promises.writeFile(path.join(functionRoot, this.getFunctionEntrypoint(fn)), index);
+    return fs.promises.writeFile(
+      path.join(this.getFunctionRoot(fn), this.getFunctionEntrypoint(fn)),
+      index
+    );
   }
 
   read(fn: Function): Promise<string> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
     return fs.promises
-      .readFile(path.join(functionRoot, this.getFunctionEntrypoint(fn)))
+      .readFile(path.join(this.getFunctionRoot(fn), this.getFunctionEntrypoint(fn)))
       .then(b => b.toString())
       .catch(e => {
         if (e.code == "ENOENT") {
