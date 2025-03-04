@@ -58,6 +58,11 @@ export interface StrategyTypeService {
   createMetadata?(id: String): any;
 }
 
+export interface OAuthStrategyService extends StrategyTypeService {
+  getToken(strategy: OAuthStrategy): Promise<object>;
+  getIdentifier(strategy: OAuthStrategy, tokenResponse: object): Promise<object>;
+}
+
 export interface StrategyTypeServices {
   find: (type: string, idp?: string) => StrategyTypeService;
 }
