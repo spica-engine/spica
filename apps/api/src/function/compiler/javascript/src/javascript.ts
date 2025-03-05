@@ -4,8 +4,10 @@ import path from "path";
 
 export class Javascript extends Language {
   readonly description: Description = {
-    extension: "mjs",
-    entrypoint: "index.mjs",
+    entrypoints: {
+      build: "index.mjs",
+      runtime: "index.mjs"
+    },
     name: "javascript",
     title: "Javascript"
   };
@@ -27,8 +29,8 @@ export class Javascript extends Language {
       });
 
     await fs.promises.copyFile(
-      path.join(compilation.cwd, this.description.entrypoint),
-      path.join(outDirAbsolutePath, this.description.entrypoint)
+      path.join(compilation.cwd, this.description.entrypoints.build),
+      path.join(outDirAbsolutePath, this.description.entrypoints.runtime)
     );
   }
 

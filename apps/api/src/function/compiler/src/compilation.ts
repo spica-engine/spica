@@ -1,7 +1,12 @@
 export interface Compilation {
   cwd: string;
-  entrypoint: string;
   outDir: string;
+  entrypoints: Entrypoints;
+}
+
+export interface Entrypoints {
+  build: string;
+  runtime: string;
 }
 
 export interface Diagnostic {

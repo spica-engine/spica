@@ -89,7 +89,7 @@ function createEmitAndSemanticDiagnosticsBuilderProgram(
 function build(compilation: Compilation) {
   const referencedProject = `${compilation.cwd.replace(/\//g, "_")}_tsconfig.json`;
 
-  astCache.delete(path.join(compilation.cwd, compilation.entrypoint));
+  astCache.delete(path.join(compilation.cwd, compilation.entrypoints.build));
 
   const rootTsConfig: any = readRootTsConfig();
 
@@ -116,7 +116,7 @@ function build(compilation: Compilation) {
       path.join(os.tmpdir(), referencedProject),
       JSON.stringify({
         compilerOptions: options,
-        files: [path.join(compilation.cwd, compilation.entrypoint)],
+        files: [path.join(compilation.cwd, compilation.entrypoints.build)],
         exclude: [`**/${compilation.outDir}/**`]
       })
     );
@@ -130,13 +130,13 @@ function build(compilation: Compilation) {
   builder.build();
 }
 
-function renameJsToMjs(baseUrl: string) {
-  const buildFolder = path.join(baseUrl, ".build");
-  fs.renameSync(path.join(buildFolder, "index.js"), path.join(buildFolder, "index.mjs"));
-}
+// function renameJsToMjs(baseUrl: string) {
+//   const buildFolder = path.join(baseUrl, ".build");
+//   fs.renameSync(path.join(buildFolder, "index.js"), path.join(buildFolder, "index.mjs"));
+// }
 
 function postCompilation(baseUrl: string, diagnostics: ts.Diagnostic[]) {
-  renameJsToMjs(baseUrl);
+  // renameJsToMjs(baseUrl);
 
   parentPort.postMessage({
     baseUrl: baseUrl,

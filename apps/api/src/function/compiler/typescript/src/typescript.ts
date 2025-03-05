@@ -1,15 +1,17 @@
 import {Compilation, Description, Language} from "@spica-server/function/compiler";
 import fs from "fs";
 import {fromEvent, Observable, of, throwError} from "rxjs";
-import {filter, switchMap, take} from "rxjs/operators";
+import {filter, switchMap, take, tap} from "rxjs/operators";
 import worker_threads from "worker_threads";
 import path from "path";
 import {fileURLToPath} from "url";
 
 export class Typescript extends Language {
   description: Description = {
-    extension: "ts",
-    entrypoint: "index.mjs",
+    entrypoints: {
+      build: "index.ts",
+      runtime: "index.mjs"
+    },
     name: "typescript",
     title: "Typescript"
   };
@@ -66,10 +68,21 @@ export class Typescript extends Language {
           }
           return of(null);
         }),
+        // tap(() => this.renameJsToMjs(compilation)),
         take(1)
       )
       .toPromise();
   }
+
+  // private renameJsToMjs(compilation: Compilation) {
+  //   setTimeout(() => {
+  //     const outDirAbsolutePath = path.join(compilation.cwd, compilation.outDir);
+  //     fs.renameSync(
+  //       path.join(outDirAbsolutePath, "index.js"),
+  //       path.join(outDirAbsolutePath, this.description.entrypoints.runtime)
+  //     );
+  //   });
+  // }
 
   kill() {
     if (this.worker) {

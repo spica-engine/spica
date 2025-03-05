@@ -126,6 +126,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   async createFunction(fn: Function) {
     const functionRoot = this.getFunctionRoot(fn);
+    const functionLanguage = this.getFunctionLanguage(fn);
     await fs.promises.mkdir(functionRoot, {recursive: true});
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
@@ -135,7 +136,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       private: true,
       keywords: ["spica", "function", "node.js"],
       license: "UNLICENSED",
-      main: path.join(".", this.options.outDir, this.getFunctionEntrypoint(fn))
+      main: path.join(".", this.options.outDir, functionLanguage.description.entrypoints.runtime)
     };
 
     return fs.promises.writeFile(
@@ -149,24 +150,27 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   compile(fn: Function) {
-    const language = this.scheduler.languages.get(fn.language);
+    const language = this.getFunctionLanguage(fn);
     return language.compile({
       cwd: this.getFunctionRoot(fn),
-      entrypoint: language.description.entrypoint,
-      outDir: this.options.outDir
+      outDir: this.options.outDir,
+      entrypoints: language.description.entrypoints
     });
   }
 
   update(fn: Function, index: string): Promise<void> {
+    const language = this.getFunctionLanguage(fn);
     return fs.promises.writeFile(
-      path.join(this.getFunctionRoot(fn), this.getFunctionEntrypoint(fn)),
+      path.join(this.getFunctionRoot(fn), language.description.entrypoints.build),
       index
     );
   }
 
   read(fn: Function): Promise<string> {
+    const language = this.getFunctionLanguage(fn);
+
     return fs.promises
-      .readFile(path.join(this.getFunctionRoot(fn), this.getFunctionEntrypoint(fn)))
+      .readFile(path.join(this.getFunctionRoot(fn), language.description.entrypoints.build))
       .then(b => b.toString())
       .catch(e => {
         if (e.code == "ENOENT") {
@@ -235,9 +239,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private getFunctionEntrypoint(fn: Function) {
-    const language = this.scheduler.languages.get(fn.language);
-    return language.description.entrypoint;
+  private getFunctionLanguage(fn: Function) {
+    return this.scheduler.languages.get(fn.language);
   }
 }
 
