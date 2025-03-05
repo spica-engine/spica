@@ -38,6 +38,7 @@ export interface IncomingOAuthPreset extends Strategy {
   };
 }
 
+// basicly we send request for getting code, then we exhange code for getting access token, then we get user email by using acces token
 interface OAuthOptions {
   code: OAuthRequestDetails;
   access_token: OAuthRequestDetails;
