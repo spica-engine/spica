@@ -9,7 +9,7 @@ describe("Javascript", () => {
 
   const compilation: Compilation = {
     cwd: undefined,
-    entrypoints: {build: "index.js", runtime: "index.js"},
+    entrypoints: {build: "index.mjs", runtime: "index.mjs"},
     outDir: ".build"
   };
 
