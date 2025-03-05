@@ -1,0 +1,35 @@
+name: Spica Periodic Tagging
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+
+jobs:
+  decide_and_push_tag:
+    name: Decide the next tag and push it
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Decide the next tag
+        id: decide_tag
+        run: |
+          source ./scripts/decide_next_tag.sh
+          if [[ -z "$NEXT_TAG" ]]; then
+            echo "No commit found to decide new tag. Skipping tagging."
+            echo "SKIP_TAGGING=true" >> $GITHUB_OUTPUT
+          else
+            echo "NEXT_TAG=$NEXT_TAG" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if tag was decided
+        if: steps.decide_tag.outputs.SKIP_TAGGING != 'true'
+        run: echo "Decided NEXT_TAG=${{ steps.decide_tag.outputs.NEXT_TAG }}"
+
+      - name: Push the tag
+        if: steps.decide_tag.outputs.SKIP_TAGGING != 'true'
+        run: ./scripts/generate_and_push_tag.sh ${{ steps.decide_tag.outputs.NEXT_TAG }} false -y
