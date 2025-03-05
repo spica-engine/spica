@@ -17,7 +17,7 @@ import {SamlService} from "./strategy/services/saml.service";
 import {StrategyController} from "./strategy/strategy.controller";
 import {StrategyService} from "./strategy/services/strategy.service";
 import {SchemaModule} from "@spica-server/core/schema";
-import {OAuthService} from "./strategy/services/oauth.service";
+import {initializeOAuthServices} from "./strategy/services/oauth/oauth.service";
 import {AuthFactorModule} from "@spica-server/passport/authfactor";
 import LoginSchema from "./schemas/login.json" with {type: "json"};
 import StrategySchema from "./schemas/strategy.json" with {type: "json"};
@@ -79,9 +79,17 @@ export class PassportModule {
         {
           provide: STRATEGIES,
           useFactory: (ser, ops, req) => {
-            const strategies = [new OAuthService(ser, ops, req), new SamlService(ser, ops)];
+            const oauthStrategies = initializeOAuthServices(ser, ops, req);
+            const strategies = [...oauthStrategies, new SamlService(ser, ops)];
+
             return {
-              find: (type: string) => strategies.find(s => s.type == type)
+              find: (type: string, idp?: string) =>
+                strategies.find(strategy => {
+                  if (type == "oauth") {
+                    return strategy.type == type && strategy.idp == idp;
+                  }
+                  return strategy.type == type;
+                })
             };
           },
           inject: [StrategyService, PASSPORT_OPTIONS, REQUEST_SERVICE]

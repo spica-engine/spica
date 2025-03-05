@@ -6,7 +6,7 @@ env:
 
 on:
   pull_request:
-    branches: ["master"]
+    branches: ["master", "SPICA-310"]
 
 jobs:
   run_command:
