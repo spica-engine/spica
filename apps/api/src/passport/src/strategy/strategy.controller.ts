@@ -55,13 +55,15 @@ export class StrategyController {
 
     const service = this.strategies.find(strategy.type, strategy.options.idp);
 
+    let preparedStrategy;
+
     try {
-      service.prepareToInsert(strategy);
+      preparedStrategy = service.prepareToInsert(strategy);
     } catch (error) {
       throw new BadRequestException(error.message);
     }
 
-    let insertedStrategy = await this.strategy.insertOne(strategy);
+    let insertedStrategy = await this.strategy.insertOne(preparedStrategy);
 
     if (service.afterInsert) {
       insertedStrategy = await service.afterInsert(insertedStrategy);
@@ -80,13 +82,15 @@ export class StrategyController {
 
     const service = this.strategies.find(strategy.type);
 
+    let preparedStrategy;
+
     try {
-      service.prepareToInsert(strategy);
+      preparedStrategy = service.prepareToInsert(strategy);
     } catch (error) {
       throw new BadRequestException(error);
     }
 
-    let updatedStrategy = await this.strategy.findOneAndReplace({_id: id}, strategy, {
+    let updatedStrategy = await this.strategy.findOneAndReplace({_id: id}, preparedStrategy, {
       returnDocument: ReturnDocument.AFTER
     });
 

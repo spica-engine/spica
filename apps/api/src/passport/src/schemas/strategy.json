@@ -158,7 +158,6 @@
       "type": "object"
     }
   },
-  "required": ["name", "type", "options"],
   "additionalProperties": false,
   "if": {
     "properties": {
@@ -179,6 +178,34 @@
       "options": {
         "$ref": "#/definitions/oauthOptions"
       }
+    },
+    "if": {
+      "properties": {
+        "options": {
+          "type": "object",
+          "properties": {
+            "idp": {
+              "const": "custom"
+            }
+          }
+        }
+      }
+    },
+    "then": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name of the strategy"
+        },
+        "title": {
+          "type": "string",
+          "title": "Title of the strategy"
+        }
+      },
+      "required": ["name", "type", "options"]
+    },
+    "else": {
+      "required": ["type", "options"]
     }
   }
 }
