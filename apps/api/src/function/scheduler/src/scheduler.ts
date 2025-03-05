@@ -1,5 +1,5 @@
 import {Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
-import {APP_INTERCEPTOR, HttpAdapterHost} from "@nestjs/core";
+import {HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica-server/database";
 import {Language} from "@spica-server/function/compiler";
 import {Javascript} from "@spica-server/function/compiler/javascript";
@@ -12,8 +12,9 @@ import {
   ScheduleEnqueuer,
   SystemEnqueuer
 } from "@spica-server/function/enqueuer";
-import {PackageManager} from "@spica-server/function/pkgmanager";
+import {DelegatePkgManager} from "@spica-server/function/pkgmanager";
 import {Npm} from "@spica-server/function/pkgmanager/node";
+import {LocalPackageManager} from "@spica-server/function/pkgmanager/local";
 import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
 import {Runtime, Worker} from "@spica-server/function/runtime";
@@ -36,7 +37,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   private firehoseQueue: FirehoseQueue;
 
   readonly runtimes = new Map<string, Runtime>();
-  readonly pkgmanagers = new Map<string, PackageManager>();
+  readonly pkgmanagers = new Map<string, DelegatePkgManager>();
   readonly enqueuers = new Set<Enqueuer<unknown>>();
   readonly languages = new Map<string, Language>();
 
@@ -60,7 +61,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.languages.set("typescript", new Typescript(options.tsCompilerPath));
     this.languages.set("javascript", new Javascript());
     this.runtimes.set("node", new Node());
-    this.pkgmanagers.set("node", new Npm());
+    this.pkgmanagers.set("node", new LocalPackageManager(new Npm()));
 
     this.queue = new EventQueue(
       (id, schedule) => this.gotWorker(id, schedule),

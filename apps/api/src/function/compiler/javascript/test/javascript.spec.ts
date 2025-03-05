@@ -9,13 +9,13 @@ describe("Javascript", () => {
 
   const compilation: Compilation = {
     cwd: undefined,
-    entrypoint: undefined
+    entrypoints: {build: "index.mjs", runtime: "index.mjs"},
+    outDir: ".build"
   };
 
   beforeEach(() => {
     language = new Javascript();
-    compilation.entrypoint = `index.${language.description.extension}`;
-    compilation.cwd = FunctionTestBed.initialize(``, compilation.entrypoint);
+    compilation.cwd = FunctionTestBed.initialize(``, compilation);
     return fs.promises.mkdir(path.join(compilation.cwd, "node_modules"), {recursive: true});
   });
 
@@ -27,11 +27,11 @@ describe("Javascript", () => {
 
   it("should copy file as is", async () => {
     const content = "export default function() {};";
-    compilation.cwd = FunctionTestBed.initialize(content, compilation.entrypoint);
+    compilation.cwd = FunctionTestBed.initialize(content, compilation);
     await language.compile(compilation);
 
     const builtFileContent = await fs.promises.readFile(
-      path.join(compilation.cwd, ".build", language.description.entrypoint)
+      path.join(compilation.cwd, compilation.outDir, language.description.entrypoints.runtime)
     );
 
     expect(builtFileContent.toString()).toContain(content);

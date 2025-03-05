@@ -7,6 +7,7 @@ export type CollectionSlug = (collName: string) => Promise<string>;
 export interface Options {
   timeout: number;
   root: string;
+  outDir: string;
 }
 
 export interface FunctionOptions {
