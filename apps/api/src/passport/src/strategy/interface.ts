@@ -1,7 +1,7 @@
 import {ObjectId} from "@spica-server/database";
 
 export interface Strategy {
-  _id: ObjectId;
+  _id?: ObjectId;
   type: string;
   name: string;
   title: string;
@@ -30,18 +30,7 @@ export interface OAuthRequestDetails {
   headers: {[key: string]: any};
 }
 
-export interface OAuthStrategy extends Strategy {
-  options: {
-    // basicly we send request for getting code, then we exhange code for getting access token, then we get user email by using acces token
-    idp: "custom";
-    code: OAuthRequestDetails;
-    access_token: OAuthRequestDetails;
-    identifier: OAuthRequestDetails;
-    revoke?: OAuthRequestDetails;
-  };
-}
-
-export interface PredeterminedOAuthStrategy extends Strategy {
+export interface IncomingOAuthPreset extends Strategy {
   options: {
     idp: "google" | "facebook" | "github" | "apple";
     client_id: string;
@@ -49,12 +38,31 @@ export interface PredeterminedOAuthStrategy extends Strategy {
   };
 }
 
+interface OAuthOptions {
+  code: OAuthRequestDetails;
+  access_token: OAuthRequestDetails;
+  identifier: OAuthRequestDetails;
+  revoke?: OAuthRequestDetails;
+}
+
+export interface IncomingCustomOAuth extends Strategy {
+  options: {
+    idp: "custom";
+  } & OAuthOptions;
+}
+
+export interface OAuthStrategy extends Strategy {
+  options: {
+    idp: string;
+  } & OAuthOptions;
+}
+
 export interface StrategyTypeService {
   readonly type: string;
 
   getStrategy(id: string): Promise<Strategy>;
 
-  prepareToInsert(strategy: Strategy): Strategy | void;
+  prepareToInsert(strategy: Strategy): Strategy;
 
   afterInsert?(strategy: Strategy);
 
@@ -70,7 +78,7 @@ export interface StrategyTypeService {
 export interface OAuthStrategyService extends StrategyTypeService {
   readonly idp: string;
 
-  prepareToInsert(strategy: OAuthStrategy | PredeterminedOAuthStrategy): OAuthStrategy | void;
+  prepareToInsert(strategy: IncomingCustomOAuth | IncomingOAuthPreset): OAuthStrategy;
 
   getToken(strategy: OAuthStrategy): Promise<object>;
 

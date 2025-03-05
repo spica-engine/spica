@@ -1,12 +1,12 @@
 import {Injectable} from "@nestjs/common";
-import {OAuthStrategy, PredeterminedOAuthStrategy} from "../../interface";
+import {IncomingOAuthPreset, OAuthStrategy} from "../../interface";
 import {CustomOAuthService} from "./custom";
 
 @Injectable()
 export class GoogleOAuthService extends CustomOAuthService {
   _idp = "google";
 
-  prepareToInsert(strategy: PredeterminedOAuthStrategy) {
+  prepareToInsert(strategy: IncomingOAuthPreset) {
     return {
       type: "oauth",
       name: "Google oauth",

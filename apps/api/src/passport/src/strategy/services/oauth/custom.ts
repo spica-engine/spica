@@ -1,10 +1,11 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {
+  IncomingCustomOAuth,
+  IncomingOAuthPreset,
   OAuthRequestDetails,
   OAuthStrategy,
   OAuthStrategyService,
-  PredeterminedOAuthStrategy,
   Strategy
 } from "../../interface";
 import {StrategyService} from "../strategy.service";
@@ -77,7 +78,9 @@ export class CustomOAuthService implements OAuthStrategyService {
     return this.strategyService.findOne({_id: new ObjectId(id)}) as Promise<OAuthStrategy>;
   }
 
-  prepareToInsert(strategy: OAuthStrategy | PredeterminedOAuthStrategy) {}
+  prepareToInsert(strategy: IncomingCustomOAuth | IncomingOAuthPreset) {
+    return strategy as OAuthStrategy;
+  }
 
   afterInsert(strategy: OAuthStrategy): Promise<Strategy> {
     const redirectUri = `${this.options.publicUrl}/passport/strategy/${strategy._id}/complete`;
