@@ -1,6 +1,12 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
-import {OAuthRequestDetails, OAuthStrategy, OAuthStrategyService, Strategy} from "../../interface";
+import {
+  OAuthRequestDetails,
+  OAuthStrategy,
+  OAuthStrategyService,
+  PredeterminedOAuthStrategy,
+  Strategy
+} from "../../interface";
 import {StrategyService} from "../strategy.service";
 import {PassportOptions, PASSPORT_OPTIONS, RequestService, REQUEST_SERVICE} from "../../../options";
 import {v4 as uuidv4} from "uuid";
@@ -8,7 +14,11 @@ import {v4 as uuidv4} from "uuid";
 @Injectable()
 export class CustomOAuthService implements OAuthStrategyService {
   readonly type = "oauth";
-  readonly idp = "custom";
+
+  protected _idp = "custom";
+  get idp() {
+    return this._idp;
+  }
 
   constructor(
     private strategyService: StrategyService,
@@ -67,7 +77,7 @@ export class CustomOAuthService implements OAuthStrategyService {
     return this.strategyService.findOne({_id: new ObjectId(id)}) as Promise<OAuthStrategy>;
   }
 
-  prepareToInsert(strategy: OAuthStrategy) {}
+  prepareToInsert(strategy: OAuthStrategy | PredeterminedOAuthStrategy) {}
 
   afterInsert(strategy: OAuthStrategy): Promise<Strategy> {
     const redirectUri = `${this.options.publicUrl}/passport/strategy/${strategy._id}/complete`;
@@ -89,7 +99,7 @@ export class CustomOAuthService implements OAuthStrategyService {
     return this.req.request({
       url: requestDetails.base_url,
       params: requestDetails.params,
-      method: requestDetails.method as any,
+      method: requestDetails.method,
       headers: requestDetails.headers,
       responseType: "json"
     });
