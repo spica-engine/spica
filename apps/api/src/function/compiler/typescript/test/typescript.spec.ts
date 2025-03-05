@@ -9,13 +9,13 @@ describe("Typescript", () => {
 
   const compilation: Compilation = {
     cwd: undefined,
-    entrypoint: "index.ts",
+    entrypoints: {build: "index.ts", runtime: "index.mjs"},
     outDir: ".build"
   };
 
   beforeEach(() => {
     language = new Typescript(process.env.FUNCTION_TS_COMPILER_PATH);
-    compilation.cwd = FunctionTestBed.initialize(``);
+    compilation.cwd = FunctionTestBed.initialize(``, compilation);
     return fs.promises.mkdir(path.join(compilation.cwd, "node_modules"), {recursive: true});
   });
 
@@ -23,30 +23,37 @@ describe("Typescript", () => {
 
   it("should symlink node_modules to .build path", async () => {
     await language.compile(compilation);
-    const stat = await fs.promises.lstat(path.join(compilation.cwd, ".build", "node_modules"));
+    const stat = await fs.promises.lstat(
+      path.join(compilation.cwd, compilation.outDir, "node_modules")
+    );
     expect(stat.isSymbolicLink()).toBe(true);
   });
 
   it("should compile entrypoint", async () => {
-    compilation.cwd = FunctionTestBed.initialize(`export default function() {}`);
+    compilation.cwd = FunctionTestBed.initialize(`export default function() {}`, compilation);
     await language.compile(compilation);
 
-    const files = fs.readdirSync(path.join(compilation.cwd, ".build"));
+    const files = fs.readdirSync(path.join(compilation.cwd, compilation.outDir));
     expect(files).toContain(".tsbuildinfo");
 
-    const stat = await fs.promises.readFile(path.join(compilation.cwd, ".build", "index.mjs"));
+    const stat = await fs.promises.readFile(
+      path.join(compilation.cwd, compilation.outDir, compilation.entrypoints.runtime)
+    );
 
     expect(stat.toString()).toContain(`export default function () { }
 //# sourceMappingURL=index.js.map`);
   });
 
   it("should report diagnostics", async () => {
-    compilation.cwd = FunctionTestBed.initialize(`
+    compilation.cwd = FunctionTestBed.initialize(
+      `
     import {database} from '@spica-server/database';
     export default function() {
     const a;
     }
-    `);
+    `,
+      compilation
+    );
     await expect(language.compile(compilation)).rejects.toEqual([
       Object({
         code: 2307,
@@ -67,14 +74,14 @@ describe("Typescript", () => {
 
   it("should report diagnostics for multiple functions", async () => {
     const first: Compilation = {
-      cwd: FunctionTestBed.initialize(`const a;`),
-      entrypoint: "index.ts",
-      outDir: ".build"
+      cwd: FunctionTestBed.initialize(`const a;`, compilation),
+      entrypoints: compilation.entrypoints,
+      outDir: compilation.outDir
     };
     const second: Compilation = {
-      cwd: FunctionTestBed.initialize(`import {} from 'non-existent-module';`),
-      entrypoint: "index.ts",
-      outDir: ".build"
+      cwd: FunctionTestBed.initialize(`import {} from 'non-existent-module';`, compilation),
+      entrypoints: compilation.entrypoints,
+      outDir: compilation.outDir
     };
     const diagnostics = await Promise.all([
       language.compile(first).catch(e => e),
@@ -104,8 +111,8 @@ describe("Typescript", () => {
   });
 
   it("should report diagnostics incrementally", async () => {
-    compilation.cwd = FunctionTestBed.initialize(`export default function() {}`);
-    const indexPath = path.join(compilation.cwd, "index.ts");
+    compilation.cwd = FunctionTestBed.initialize(`export default function() {}`, compilation);
+    const indexPath = path.join(compilation.cwd, compilation.entrypoints.build);
     expect(await language.compile(compilation)).not.toBeTruthy();
 
     await fs.promises.writeFile(indexPath, `const a;`);

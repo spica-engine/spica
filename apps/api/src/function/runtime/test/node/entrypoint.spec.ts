@@ -21,7 +21,7 @@ describe("Entrypoint", () => {
   let popSpy: jest.Mock;
   let compilation: Compilation = {
     cwd: undefined,
-    entrypoint: undefined,
+    entrypoints: {build: undefined, runtime: undefined},
     outDir: ".build"
   };
   let id = 0;
@@ -33,8 +33,8 @@ describe("Entrypoint", () => {
   let stream: PassThrough;
 
   function initializeFn(index: string) {
-    compilation.entrypoint = `index.${language.description.extension}`;
-    compilation.cwd = FunctionTestBed.initialize(index, compilation.entrypoint);
+    compilation.entrypoints = language.description.entrypoints;
+    compilation.cwd = FunctionTestBed.initialize(index, compilation);
     return language.compile(compilation);
   }
 
