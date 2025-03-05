@@ -3,39 +3,37 @@ import {IncomingOAuthPreset, OAuthStrategy} from "../../interface";
 import {CustomOAuthService} from "./custom";
 
 @Injectable()
-export class GoogleOAuthService extends CustomOAuthService {
-  _idp = "google";
+export class GithubOAuthService extends CustomOAuthService {
+  _idp = "github";
 
   prepareToInsert(strategy: IncomingOAuthPreset) {
     return {
       type: "oauth",
-      name: "Google oauth",
-      title: "Google oauth",
+      name: "Github oauth",
+      title: "Github oauth",
       icon: strategy.icon,
       options: {
         idp: this.idp,
         code: {
-          base_url: "https://accounts.google.com/o/oauth2/v2/auth",
+          base_url: "ttps://github.com/login/oauth/authorize",
           params: {
             client_id: strategy.options.client_id,
-            response_type: "code",
-            scope: "email"
+            scope: "user"
           },
           headers: {},
           method: "get"
         },
         access_token: {
-          base_url: "https://oauth2.googleapis.com/token",
+          base_url: "https://github.com/login/oauth/access_token",
           params: {
             client_id: strategy.options.client_id,
-            client_secret: strategy.options.client_secret,
-            grant_type: "authorization_code"
+            client_secret: strategy.options.client_secret
           },
           headers: {},
           method: "post"
         },
         identifier: {
-          base_url: "https://www.googleapis.com/oauth2/v2/userinfo",
+          base_url: "https://api.github.com/user",
           params: {},
           headers: {},
           method: "get"
