@@ -67,6 +67,12 @@ describe("local package manager", () => {
       await localPkgManager.uninstall(cwd, "rxjs");
       expect(mockPackageManager.uninstall).toHaveBeenCalledWith(cwd, "rxjs");
     });
+
+    it("should prevent installing itself as package", async () => {
+      expect(() => localPkgManager.install(cwd, fn1Id).toPromise()).toThrow(
+        "Cannot install package into itself."
+      );
+    });
   });
 
   describe("integration tests", () => {

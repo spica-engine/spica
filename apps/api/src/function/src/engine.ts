@@ -135,9 +135,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       private: true,
       keywords: ["spica", "function", "node.js"],
       license: "UNLICENSED",
-      // type: "module",
-      // assume all extensions are mjs after https://trello.com/c/XnGSA72f/318-spica-318-treat-file-extensions-are-mjs-for-all-functions
-      main: path.join(functionRoot, this.options.outDir, this.getFunctionEntrypoint(fn))
+      main: path.join(".", this.options.outDir, this.getFunctionEntrypoint(fn))
     };
 
     return fs.promises.writeFile(

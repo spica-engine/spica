@@ -30,6 +30,11 @@ export class LocalPackageManager extends DelegatePkgManager {
     }
     const localPackageName = cwd.replace(this.LOCAL_PACKAGE_NAME_REGEX_REPLACER, name);
 
+    const areTheySame = localPackageName == cwd;
+    if (areTheySame) {
+      throw Error("Cannot install package into itself.");
+    }
+
     return localPackageName;
   }
 
