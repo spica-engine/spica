@@ -1,4 +1,5 @@
 import FunctionReadOnlyAccess from "./function.readonly";
+import EnvVarsFullAccess from "./env.var.fullaccess";
 
 export default {
   _id: "FunctionFullAccess",
@@ -6,6 +7,7 @@ export default {
   description: "Full access to function service.",
   statement: [
     ...FunctionReadOnlyAccess.statement,
+    ...EnvVarsFullAccess.statement,
     {
       action: "function:create",
       module: "function"
@@ -23,10 +25,6 @@ export default {
     {
       action: "function:logs:delete",
       module: "function:logs"
-    },
-    {
-      action: "function:integrations",
-      module: "function"
     }
   ]
 };
