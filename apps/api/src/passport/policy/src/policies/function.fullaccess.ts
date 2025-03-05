@@ -1,5 +1,5 @@
 import FunctionReadOnlyAccess from "./function.readonly";
-import EnvVarsFullAccess from "./env.vars.fullaccess";
+import EnvVarsFullAccess from "./env.var.fullaccess";
 
 export default {
   _id: "FunctionFullAccess",

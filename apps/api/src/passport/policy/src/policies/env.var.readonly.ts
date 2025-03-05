@@ -4,14 +4,14 @@ export default {
   description: "Read only access to function environment variables service.",
   statement: [
     {
-      action: "env-vars:index",
+      action: "env-var:index",
       resource: {include: ["*"], exclude: []},
-      module: "env-vars"
+      module: "env-var"
     },
     {
-      action: "env-vars:show",
+      action: "env-var:show",
       resource: {include: ["*"], exclude: []},
-      module: "env-vars"
+      module: "env-var"
     }
   ]
 };

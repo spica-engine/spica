@@ -313,7 +313,7 @@ export class FunctionController {
    * @param id identifier of the function.
    * @param envVarId identifier of the environment variable. Example: `5f31002e4a51a68d6fec4d3f`
    */
-  @Put(":id/env-vars/:envVarId")
+  @Put(":id/env-var/:envVarId")
   @UseGuards(AuthGuard(), ActionGuard("function:env-var:inject"))
   async injectEnvironmentVariable(
     @Param("id", OBJECT_ID) id: ObjectId,
@@ -324,7 +324,7 @@ export class FunctionController {
         _id: id
       },
       {
-        $addToSet: {env_vars: envVarId}
+        $addToSet: {env_var: envVarId}
       },
       {
         returnDocument: ReturnDocument.AFTER
@@ -337,7 +337,7 @@ export class FunctionController {
    * @param id identifier of the function.
    * @param envVarId identifier of the environment variable. Example: `5f31002e4a51a68d6fec4d3f`
    */
-  @Delete(":id/env-vars/:envVarId")
+  @Delete(":id/env-var/:envVarId")
   @UseGuards(AuthGuard(), ActionGuard("function:env-var:eject"))
   async ejectEnvironmentVariable(
     @Param("id", OBJECT_ID) id: ObjectId,
@@ -348,7 +348,7 @@ export class FunctionController {
         _id: id
       },
       {
-        $pull: {env_vars: envVarId}
+        $pull: {env_var: envVarId}
       },
       {
         returnDocument: ReturnDocument.AFTER

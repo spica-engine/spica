@@ -1,4 +1,4 @@
-import {EnvVar} from "@spica-server/interface/env_vars";
+import {EnvVar} from "@spica-server/interface/env_var";
 
 export interface Function {
   _id?: any;

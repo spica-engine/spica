@@ -17,7 +17,7 @@ import {StorageModule} from "@spica-server/storage";
 import {VersionControlModule} from "@spica-server/versioncontrol";
 import {ReplicationModule} from "@spica-server/replication";
 import {AssetModule} from "@spica-server/asset";
-import {EnvVarsModule} from "@spica-server/env_vars";
+import {EnvVarsModule} from "@spica-server/env_var";
 import fs from "fs";
 import https from "https";
 import path from "path";

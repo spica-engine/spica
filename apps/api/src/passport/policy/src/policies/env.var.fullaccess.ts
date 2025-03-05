@@ -1,4 +1,4 @@
-import EnvVarsReadonlyAccess from "./env.vars.readonly";
+import EnvVarsReadonlyAccess from "./env.var.readonly";
 
 export default {
   _id: "EnvVarsFullAccess",
@@ -7,28 +7,28 @@ export default {
   statement: [
     ...EnvVarsReadonlyAccess.statement,
     {
-      action: "env-vars:create",
-      module: "env-vars"
+      action: "env-var:create",
+      module: "env-var"
     },
     {
-      action: "env-vars:update",
+      action: "env-var:update",
       resource: {include: ["*"], exclude: []},
-      module: "env-vars"
+      module: "env-var"
     },
     {
-      action: "env-vars:delete",
+      action: "env-var:delete",
       resource: {include: ["*"], exclude: []},
-      module: "env-vars"
+      module: "env-var"
     },
     {
-      action: "function:env-vars:inject",
+      action: "function:env-var:inject",
       resource: {include: ["*/*"], exclude: []},
-      module: "function:env-vars"
+      module: "function:env-var"
     },
     {
-      action: "function:env-vars:eject",
+      action: "function:env-var:eject",
       resource: {include: ["*/*"], exclude: []},
-      module: "function:env-vars"
+      module: "function:env-var"
     }
   ]
 };

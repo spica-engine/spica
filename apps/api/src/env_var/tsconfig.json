@@ -4,7 +4,7 @@
   "references": [
     {"path": "../../../../libs/database"},
     {"path": "../../../../libs/core"},
-    {"path": "../../../../libs/interface/env_vars"},
+    {"path": "../../../../libs/interface/env_var"},
 
     {
       "path": "../passport/guard"

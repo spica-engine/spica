@@ -19,14 +19,14 @@ import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {Schema} from "@spica-server/core/schema";
 import {AuthGuard} from "@nestjs/passport";
 import {ActionGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {EnvVar} from "@spica-server/interface/env_vars";
+import {EnvVar} from "@spica-server/interface/env_var";
 
-@Controller("env-vars")
+@Controller("env-var")
 export class EnvVarsController {
   constructor(private envVarsService: EnvVarsService) {}
 
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("env-vars:index"))
+  @UseGuards(AuthGuard(), ActionGuard("env-var:index"))
   async find(
     @ResourceFilter() resourceFilter: object,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
@@ -65,15 +65,15 @@ export class EnvVarsController {
   }
 
   @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("env-vars:show"))
+  @UseGuards(AuthGuard(), ActionGuard("env-var:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.envVarsService.findOne({_id: id});
   }
 
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("env-vars:create"))
+  @UseGuards(AuthGuard(), ActionGuard("env-var:create"))
   async insertOne(
-    @Body(Schema.validate("http://spica.internal/env_vars"))
+    @Body(Schema.validate("http://spica.internal/env_var"))
     envVar: EnvVar
   ) {
     return this.envVarsService.insertOne(envVar).catch(exception => {
@@ -82,10 +82,10 @@ export class EnvVarsController {
   }
 
   @Put(":id")
-  @UseGuards(AuthGuard(), ActionGuard("env-vars:update"))
+  @UseGuards(AuthGuard(), ActionGuard("env-var:update"))
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/env_vars"))
+    @Body(Schema.validate("http://spica.internal/env_var"))
     envVar: Partial<EnvVar>
   ) {
     return this.envVarsService
@@ -96,7 +96,7 @@ export class EnvVarsController {
   }
 
   @Delete(":id")
-  @UseGuards(AuthGuard(), ActionGuard("env-vars:delete"))
+  @UseGuards(AuthGuard(), ActionGuard("env-var:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     const envVar = await this.envVarsService.findOne({_id: id});
 
