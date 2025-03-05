@@ -1,5 +1,5 @@
 import {Package, PackageManager, DelegatePkgManager} from "@spica-server/function/pkgmanager";
-import {Observable} from "rxjs";
+import {Observable, throwError} from "rxjs";
 
 export class LocalPackageManager extends DelegatePkgManager {
   private LOCAL_PACKAGE_NAME_REGEX = /^[a-fA-F0-9]{24}$/;
@@ -12,7 +12,11 @@ export class LocalPackageManager extends DelegatePkgManager {
 
   install(cwd: string, _qualifiedNames: string | string[]): Observable<number> {
     let qualifiedNames: string[] = super.normalizePackageNames(_qualifiedNames);
-    qualifiedNames = qualifiedNames.map(name => this.transformLocalPackageName(cwd, name));
+    try {
+      qualifiedNames = qualifiedNames.map(name => this.transformLocalPackageName(cwd, name));
+    } catch (error) {
+      return throwError(() => error);
+    }
     return super.install(cwd, qualifiedNames);
   }
   uninstall(cwd: string, name: string): Promise<void> {

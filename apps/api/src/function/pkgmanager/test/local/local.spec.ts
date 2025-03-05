@@ -69,9 +69,13 @@ describe("local package manager", () => {
     });
 
     it("should prevent installing itself as package", async () => {
-      expect(() => localPkgManager.install(cwd, fn1Id).toPromise()).toThrow(
-        "Cannot install package into itself."
-      );
+      let errMsg;
+      try {
+        await localPkgManager.install(cwd, fn1Id).toPromise();
+      } catch (error) {
+        errMsg = error.message;
+      }
+      expect(errMsg).toEqual("Cannot install package into itself.");
     });
   });
 
