@@ -1,13 +1,14 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
-import {OAuthRequestDetails, OAuthStrategy, Strategy, StrategyTypeService} from "../interface";
-import {StrategyService} from "./strategy.service";
-import {PassportOptions, PASSPORT_OPTIONS, RequestService, REQUEST_SERVICE} from "../../options";
+import {OAuthRequestDetails, OAuthStrategy, OAuthStrategyService, Strategy} from "../../interface";
+import {StrategyService} from "../strategy.service";
+import {PassportOptions, PASSPORT_OPTIONS, RequestService, REQUEST_SERVICE} from "../../../options";
 import {v4 as uuidv4} from "uuid";
 
 @Injectable()
-export class OAuthService implements StrategyTypeService {
+export class CustomOAuthService implements OAuthStrategyService {
   readonly type = "oauth";
+  readonly idp = "custom";
 
   constructor(
     private strategyService: StrategyService,
@@ -15,7 +16,7 @@ export class OAuthService implements StrategyTypeService {
     @Inject(REQUEST_SERVICE) private req: RequestService
   ) {}
 
-  async assert(strategy: OAuthStrategy, body?: unknown, code?: string): Promise<any> {
+  async getToken(strategy: OAuthStrategy, code?: string) {
     strategy.options.access_token.params = {
       ...(strategy.options.access_token.params || {}),
       code
@@ -25,20 +26,23 @@ export class OAuthService implements StrategyTypeService {
     if (!tokenResponse.access_token) {
       throw Error("Access token could not find.");
     }
+    return tokenResponse;
+  }
 
+  getIdentifier(strategy: OAuthStrategy, tokenResponse) {
     strategy.options.identifier.params = {
       ...(strategy.options.identifier.params || {}),
       access_token: tokenResponse.access_token
     };
 
-    // some services only accept token on Authorization header
-    strategy.options.identifier.headers = {
-      Authorization: `token ${tokenResponse.access_token}`
-    };
-
     return this.sendRequest(strategy.options.identifier).then(user => {
       return {user};
     });
+  }
+
+  async assert(strategy: OAuthStrategy, body?: unknown, code?: string): Promise<any> {
+    const tokenResponse = await this.getToken(strategy, code);
+    return this.getIdentifier(strategy, tokenResponse);
   }
 
   getLoginUrl(strategy: OAuthStrategy): {url: string; state: string} {

@@ -14,14 +14,15 @@ import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {PassportOptions, PASSPORT_OPTIONS, STRATEGIES} from "../options";
-import {Strategy, StrategyTypeService} from "./interface";
+import {Strategy, StrategyTypeServices} from "./interface";
 import {StrategyService} from "./services/strategy.service";
 
 @Controller("passport/strategy")
 export class StrategyController {
   constructor(
     private strategy: StrategyService,
-    @Inject(STRATEGIES) private strategies: {find: (type: string) => StrategyTypeService},
+    @Inject(STRATEGIES)
+    private strategies: StrategyTypeServices,
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions
   ) {}
 
@@ -52,7 +53,7 @@ export class StrategyController {
   async insertOne(@Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy) {
     delete strategy._id;
 
-    const service = this.strategies.find(strategy.type);
+    const service = this.strategies.find(strategy.type, strategy.options.idp);
 
     try {
       service.prepareToInsert(strategy);
