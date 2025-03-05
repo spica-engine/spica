@@ -307,4 +307,52 @@ export class FunctionController {
       throw new BadRequestException(error.message);
     });
   }
+
+  /**
+   * Inject the environment variable to function.
+   * @param id identifier of the function.
+   * @param envVarId identifier of the environment variable. Example: `5f31002e4a51a68d6fec4d3f`
+   */
+  @Put(":id/env-vars/:envVarId")
+  @UseGuards(AuthGuard(), ActionGuard("function:env-var:inject"))
+  async injectEnvironmentVariable(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("envVarId") envVarId: string
+  ) {
+    return this.fs.findOneAndUpdate(
+      {
+        _id: id
+      },
+      {
+        $addToSet: {env_vars: envVarId}
+      },
+      {
+        returnDocument: ReturnDocument.AFTER
+      }
+    );
+  }
+
+  /**
+   * Eject the environment variable from function.
+   * @param id identifier of the function.
+   * @param envVarId identifier of the environment variable. Example: `5f31002e4a51a68d6fec4d3f`
+   */
+  @Delete(":id/env-vars/:envVarId")
+  @UseGuards(AuthGuard(), ActionGuard("function:env-var:eject"))
+  async ejectEnvironmentVariable(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("envVarId") envVarId: string
+  ) {
+    return this.fs.findOneAndUpdate(
+      {
+        _id: id
+      },
+      {
+        $pull: {env_vars: envVarId}
+      },
+      {
+        returnDocument: ReturnDocument.AFTER
+      }
+    );
+  }
 }

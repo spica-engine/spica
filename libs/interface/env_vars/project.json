@@ -1,0 +1,5 @@
+{
+  "name": "interface/env_vars",
+  "sourceRoot": "libs/interface/env_vars/src",
+  "projectType": "library"
+}

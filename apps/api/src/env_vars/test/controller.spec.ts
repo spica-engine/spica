@@ -5,6 +5,7 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
 import {EnvVarsModule} from "../src";
+import {PassportTestingModule} from "@spica-server/passport/testing";
 
 describe("Environment Variable", () => {
   let req: Request;
@@ -16,7 +17,8 @@ describe("Environment Variable", () => {
         DatabaseTestingModule.standalone(),
         CoreTestingModule,
         EnvVarsModule.forRoot(),
-        SchemaModule.forRoot({formats: [OBJECT_ID]})
+        SchemaModule.forRoot({formats: [OBJECT_ID]}),
+        PassportTestingModule.initialize({overriddenStrategyType: "JWT"})
       ]
     }).compile();
 
@@ -33,9 +35,9 @@ describe("Environment Variable", () => {
     it("should return all envs", async () => {
       const envVar = {key: "ENV_KEY", value: "123"};
 
-      await req.post("/function-env-vars", envVar);
+      await req.post("/env-vars", envVar);
 
-      const res = await req.get("/function-env-vars");
+      const res = await req.get("/env-vars");
       const bodyWithoutIds = res.body.map(({_id, ...rest}) => rest);
       expect(bodyWithoutIds).toEqual([envVar]);
     });
@@ -46,12 +48,12 @@ describe("Environment Variable", () => {
       const envVar3 = {key: "ENV_KEY_3", value: "123"};
 
       await Promise.all([
-        req.post("/function-env-vars", envVar1),
-        req.post("/function-env-vars", envVar2),
-        req.post("/function-env-vars", envVar3)
+        req.post("/env-vars", envVar1),
+        req.post("/env-vars", envVar2),
+        req.post("/env-vars", envVar3)
       ]);
 
-      const res = await req.get(`/function-env-vars`, {limit: 2});
+      const res = await req.get(`/env-vars`, {limit: 2});
       const bodyWithoutIds = res.body.map(({_id, ...rest}) => rest);
 
       expect(res.body.length).toEqual(2);
@@ -62,12 +64,9 @@ describe("Environment Variable", () => {
       const envVar1 = {key: "ENV_KEY_1", value: "123"};
       const envVar2 = {key: "ENV_KEY_2", value: "1234"};
 
-      await Promise.all([
-        req.post("/function-env-vars", envVar1),
-        req.post("/function-env-vars", envVar2)
-      ]);
+      await Promise.all([req.post("/env-vars", envVar1), req.post("/env-vars", envVar2)]);
 
-      const res = await req.get(`/function-env-vars`, {skip: 1});
+      const res = await req.get(`/env-vars`, {skip: 1});
       const bodyWithoutIds = res.body.map(({_id, ...rest}) => rest);
       expect(bodyWithoutIds).toEqual([envVar2]);
     });
@@ -78,12 +77,12 @@ describe("Environment Variable", () => {
       const envVar3 = {key: "ENV_KEY_3", value: "100"};
 
       await Promise.all([
-        req.post("/function-env-vars", envVar1),
-        req.post("/function-env-vars", envVar2),
-        req.post("/function-env-vars", envVar3)
+        req.post("/env-vars", envVar1),
+        req.post("/env-vars", envVar2),
+        req.post("/env-vars", envVar3)
       ]);
 
-      const res = await req.get(`/function-env-vars`, {sort: JSON.stringify({value: -1})});
+      const res = await req.get(`/env-vars`, {sort: JSON.stringify({value: -1})});
       const bodyWithoutIds = res.body.map(({_id, ...rest}) => rest);
       expect(bodyWithoutIds).toEqual([envVar2, envVar1, envVar3]);
     });
@@ -94,12 +93,12 @@ describe("Environment Variable", () => {
       const envVar3 = {key: "ENV_KEY_3", value: "val_3"};
 
       await Promise.all([
-        req.post("/function-env-vars", envVar1),
-        req.post("/function-env-vars", envVar2),
-        req.post("/function-env-vars", envVar3)
+        req.post("/env-vars", envVar1),
+        req.post("/env-vars", envVar2),
+        req.post("/env-vars", envVar3)
       ]);
 
-      const res = await req.get(`/function-env-vars`, {paginate: true});
+      const res = await req.get(`/env-vars`, {paginate: true});
       const bodyWithoutIds = {...res.body, data: res.body.data.map(({_id, ...rest}) => rest)};
       expect(bodyWithoutIds).toEqual({
         meta: {total: 3},
@@ -113,16 +112,16 @@ describe("Environment Variable", () => {
       const envVar3 = {key: "ENV_KEY_2", value: "val_3"};
 
       await Promise.all([
-        req.post("/function-env-vars", envVar1),
-        req.post("/function-env-vars", envVar2),
-        req.post("/function-env-vars", envVar3)
+        req.post("/env-vars", envVar1),
+        req.post("/env-vars", envVar2),
+        req.post("/env-vars", envVar3)
       ]);
 
-      const res = await req.get(`/function-env-vars`, {filter: JSON.stringify({key: "ENV_KEY_2"})});
+      const res = await req.get(`/env-vars`, {filter: JSON.stringify({key: "ENV_KEY_2"})});
       const bodyWithoutIds = res.body.map(({_id, ...rest}) => rest);
       expect(bodyWithoutIds).toEqual([envVar2, envVar3]);
 
-      const res2 = await req.get(`/function-env-vars`, {filter: JSON.stringify({value: "val_2"})});
+      const res2 = await req.get(`/env-vars`, {filter: JSON.stringify({value: "val_2"})});
       const bodyWithoutIds2 = res2.body.map(({_id, ...rest}) => rest);
       expect(bodyWithoutIds2).toEqual([envVar2]);
     });
@@ -132,9 +131,9 @@ describe("Environment Variable", () => {
     it("should return env by id", async () => {
       const envVar = {key: "ENV_KEY", value: "123"};
 
-      const {body} = await req.post("/function-env-vars", envVar);
+      const {body} = await req.post("/env-vars", envVar);
 
-      const res = await req.get(`/function-env-vars/${body._id}`);
+      const res = await req.get(`/env-vars/${body._id}`);
       delete res.body._id;
       expect(res.body).toEqual(envVar);
     });
@@ -144,20 +143,20 @@ describe("Environment Variable", () => {
     const envVar = {key: "ENV_KEY", value: "123"};
 
     it("should add new env", async () => {
-      const {body} = await req.post("/function-env-vars", envVar);
+      const {body} = await req.post("/env-vars", envVar);
 
       expect(body._id).not.toBeFalsy();
       expect(body.key).toBe("ENV_KEY");
       expect(body.value).toBe("123");
 
-      const res = await req.get(`/function-env-vars/${body._id}`);
+      const res = await req.get(`/env-vars/${body._id}`);
       delete res.body._id;
       expect(res.body).toEqual(envVar);
     });
 
     it("should return validation errors", async () => {
       const {body, statusCode} = await req
-        .post("/function-env-vars", {
+        .post("/env-vars", {
           key: "value"
         })
         .catch(r => r);
@@ -170,14 +169,14 @@ describe("Environment Variable", () => {
 
   describe("updateOne", () => {
     it("should update env", async () => {
-      const {body} = await req.post("/function-env-vars", {key: "ENV_KEY", value: "123"});
+      const {body} = await req.post("/env-vars", {key: "ENV_KEY", value: "123"});
 
-      await req.put(`/function-env-vars/${body._id}`, {
+      await req.put(`/env-vars/${body._id}`, {
         key: "ENV_KEY",
         value: "456"
       });
 
-      const res = await req.get(`/function-env-vars/${body._id}`);
+      const res = await req.get(`/env-vars/${body._id}`);
 
       expect(res.body._id).not.toBeFalsy();
       expect(res.body.key).toBe("ENV_KEY");
@@ -186,7 +185,7 @@ describe("Environment Variable", () => {
 
     it("should not update and return 404", async () => {
       const res = await req
-        .post(`/function-env-vars/${ObjectId.createFromTime(Date.now())}`, {
+        .post(`/env-vars/${ObjectId.createFromTime(Date.now())}`, {
           key: "ENV_KEY",
           value: "123"
         })
@@ -198,28 +197,28 @@ describe("Environment Variable", () => {
 
   describe("delete", () => {
     it("should delete env", async () => {
-      const {body} = await req.post("/function-env-vars", {
+      const {body} = await req.post("/env-vars", {
         key: "ENV_KEY",
         value: "123"
       });
 
-      const res = await req.delete(`/function-env-vars/${body._id}`);
+      const res = await req.delete(`/env-vars/${body._id}`);
       expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
 
-      const {body: envVars} = await req.get("/function-env-vars");
+      const {body: envVars} = await req.get("/env-vars");
       expect(envVars.length).toEqual(0);
     });
 
     it("should throw NotFoundExpection", async () => {
-      await req.post("/function-env-vars", {
+      await req.post("/env-vars", {
         key: "ENV_KEY",
         value: "123"
       });
 
-      const res = await req.delete(`/function-env-vars/${new ObjectId()}`);
+      const res = await req.delete(`/env-vars/${new ObjectId()}`);
       expect([res.body.statusCode, res.body.message]).toEqual([404, "Not Found"]);
 
-      const {body} = await req.get("/function-env-vars");
+      const {body} = await req.get("/env-vars");
       expect(body.length).toEqual(1);
     });
   });

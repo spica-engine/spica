@@ -26,7 +26,6 @@ import {getSyncProviders} from "./versioncontrol";
 import {registerAssetHandlers} from "./asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
-import {EnvVarsModule} from "@spica-server/function/env_vars";
 
 @Module({})
 export class FunctionModule {
@@ -82,8 +81,7 @@ export class FunctionModule {
           path: options.path,
           entryLimit: options.entryLimit,
           realtimeLogs: options.realtimeLogs
-        }),
-        EnvVarsModule.forRoot()
+        })
       ],
       controllers: [FunctionController],
       providers: [

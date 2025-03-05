@@ -1,9 +1,10 @@
-import {Module} from "@nestjs/common";
+import {Global, Module} from "@nestjs/common";
 import {EnvVarsService} from "./service";
 import {EnvVarsController} from "./controller";
 import {SchemaModule} from "@spica-server/core/schema";
 import EnvVarsSchema from "./schema.json" with {type: "json"};
 
+@Global()
 @Module({})
 export class EnvVarsModule {
   static forRoot() {

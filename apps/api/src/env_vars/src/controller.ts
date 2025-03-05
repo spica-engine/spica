@@ -8,29 +8,36 @@ import {
   Param,
   Post,
   Put,
-  Query
+  Query,
+  UseGuards
 } from "@nestjs/common";
 import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {PaginationResponse} from "@spica-server/passport/identity";
 import {EnvVarsService} from "./service";
-import {EnvVar} from "./interface";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {Schema} from "@spica-server/core/schema";
+import {AuthGuard} from "@nestjs/passport";
+import {ActionGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {EnvVar} from "@spica-server/interface/env_vars";
 
-@Controller("function-env-vars")
+@Controller("env-vars")
 export class EnvVarsController {
   constructor(private envVarsService: EnvVarsService) {}
 
   @Get()
+  @UseGuards(AuthGuard(), ActionGuard("env-vars:index"))
   async find(
+    @ResourceFilter() resourceFilter: object,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", JSONP) sort: object,
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object
   ) {
-    const pipelineBuilder = await new PipelineBuilder().filterByUserRequest(filter);
+    let pipelineBuilder = new PipelineBuilder().filterResources(resourceFilter);
+
+    pipelineBuilder = await pipelineBuilder.filterByUserRequest(filter);
 
     const seekingPipeline = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
 
@@ -58,13 +65,15 @@ export class EnvVarsController {
   }
 
   @Get(":id")
+  @UseGuards(AuthGuard(), ActionGuard("env-vars:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.envVarsService.findOne({_id: id});
   }
 
   @Post()
+  @UseGuards(AuthGuard(), ActionGuard("env-vars:create"))
   async insertOne(
-    @Body(Schema.validate("http://spica.internal/function/env_vars"))
+    @Body(Schema.validate("http://spica.internal/env_vars"))
     envVar: EnvVar
   ) {
     return this.envVarsService.insertOne(envVar).catch(exception => {
@@ -73,9 +82,10 @@ export class EnvVarsController {
   }
 
   @Put(":id")
+  @UseGuards(AuthGuard(), ActionGuard("env-vars:update"))
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/function/env_vars"))
+    @Body(Schema.validate("http://spica.internal/env_vars"))
     envVar: Partial<EnvVar>
   ) {
     return this.envVarsService
@@ -86,6 +96,7 @@ export class EnvVarsController {
   }
 
   @Delete(":id")
+  @UseGuards(AuthGuard(), ActionGuard("env-vars:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     const envVar = await this.envVarsService.findOne({_id: id});
 

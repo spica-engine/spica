@@ -1,8 +1,10 @@
+import {EnvVar} from "@spica-server/interface/env_vars";
+
 export interface Function {
   _id?: any;
   name: string;
   description?: string;
-  env: Environment;
+  env?: EnvVar[];
   triggers: Triggers;
   timeout: number;
   language: string;
@@ -39,8 +41,6 @@ export interface FunctionContents {
   package: {
     dependencies: Dependency;
   };
-  env: {
-    [key: string]: string;
-  };
+  env: Environment;
   index: string;
 }
