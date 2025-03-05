@@ -68,21 +68,10 @@ export class Typescript extends Language {
           }
           return of(null);
         }),
-        // tap(() => this.renameJsToMjs(compilation)),
         take(1)
       )
       .toPromise();
   }
-
-  // private renameJsToMjs(compilation: Compilation) {
-  //   setTimeout(() => {
-  //     const outDirAbsolutePath = path.join(compilation.cwd, compilation.outDir);
-  //     fs.renameSync(
-  //       path.join(outDirAbsolutePath, "index.js"),
-  //       path.join(outDirAbsolutePath, this.description.entrypoints.runtime)
-  //     );
-  //   });
-  // }
 
   kill() {
     if (this.worker) {
