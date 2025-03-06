@@ -785,12 +785,16 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
           objectName: this.getDisplayableModuleName() + " " + apikey.name,
           e
         });
+
+      const policies = [...apikey.policies];
+      delete apikey.policies;
+
       const apikeyInsertPromise = this.targetService
         .post("passport/apikey", apikey)
         .catch(e => insertRejectionHandler(e));
 
       return apikeyInsertPromise.then(() => {
-        const policyAttachPromises = apikey.policies.map(policy =>
+        const policyAttachPromises = policies.map(policy =>
           this.targetService
             .put(`passport/apikey/${apikey._id}/policy/${policy}`)
             .catch(e => insertRejectionHandler(e))
