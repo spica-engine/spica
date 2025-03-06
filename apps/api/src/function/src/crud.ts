@@ -35,7 +35,7 @@ export function findOne<ER extends EnvRelation = EnvRelation.NotResolved>(
   }
 ): Promise<Function<ER>> {
   const pipeline = new FunctionPipelineBuilder()
-    .filterResources(options.id)
+    .findOneIfRequested(options.id)
     .resolveEnvRelation(options.resolveEnvRelations)
     .result();
 

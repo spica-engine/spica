@@ -33,7 +33,7 @@ import {catchError, finalize, last, map, tap} from "rxjs/operators";
 import {createFunctionActivity} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService, FUNCTION_OPTIONS, Options} from "@spica-server/function/services";
-import {Function} from "@spica-server/interface/function";
+import {EnvRelation, Function} from "@spica-server/interface/function";
 import {LogService} from "@spica-server/function/log/src/log.service";
 import {generate} from "./schema/enqueuer.resolver";
 import {applyPatch} from "@spica-server/core/patch";
@@ -84,7 +84,10 @@ export class FunctionController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("function:index"))
   index(@ResourceFilter() resourceFilter) {
-    return this.fs.aggregate([resourceFilter]).toArray();
+    return CRUD.find(this.fs, {
+      resolveEnvRelations: EnvRelation.Resolved,
+      resourceFilter
+    });
   }
 
   /**
@@ -94,7 +97,10 @@ export class FunctionController {
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.fs.findOne({_id: id});
+    return CRUD.findOne(this.fs, {
+      id: id,
+      resolveEnvRelations: EnvRelation.Resolved
+    });
   }
 
   /**
