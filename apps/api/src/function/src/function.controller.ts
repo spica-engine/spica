@@ -121,6 +121,7 @@ export class FunctionController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate(generate)) fn: Function
   ) {
+    delete fn.env;
     return CRUD.replace(this.fs, this.engine, {...fn, _id: id}).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
@@ -182,6 +183,7 @@ export class FunctionController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
+    delete fn.env;
     return CRUD.insert(this.fs, this.engine, fn).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });

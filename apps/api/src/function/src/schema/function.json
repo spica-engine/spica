@@ -20,10 +20,7 @@
     },
     "env": {
       "type": "object",
-      "patternProperties": {
-        "": {"type": "string"}
-      },
-      "description": "Environment variables that will be accesible globally in the function"
+      "description": "Sending environment with function has no effect. It's defined for only backward-compatibility. Use function environment inject-eject endpoints instead"
     },
     "memoryLimit": {
       "type": "number",
