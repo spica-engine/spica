@@ -15,7 +15,7 @@ export class GithubOAuthService extends CustomOAuthService {
       options: {
         idp: this.idp,
         code: {
-          base_url: "ttps://github.com/login/oauth/authorize",
+          base_url: "https://github.com/login/oauth/authorize",
           params: {
             client_id: strategy.options.client_id,
             scope: "user"
