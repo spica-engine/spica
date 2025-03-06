@@ -7,8 +7,7 @@ import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
 import {rimraf} from "rimraf";
-import {Observable, Subject} from "rxjs";
-import util from "util";
+import {Observable} from "rxjs";
 import {
   FunctionService,
   FUNCTION_OPTIONS,

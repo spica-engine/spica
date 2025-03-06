@@ -62,7 +62,8 @@ export function hasContextChange(
   currentFn: Function<EnvRelation.NotResolved>
 ) {
   return (
-    diff(previousFn.env_vars, currentFn.env_vars).length || previousFn.timeout != currentFn.timeout
+    diff(previousFn.env_vars, currentFn.env_vars).length > 0 ||
+    previousFn.timeout != currentFn.timeout
   );
 }
 
