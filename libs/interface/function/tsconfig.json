@@ -4,6 +4,9 @@
   "references": [
     {
       "path": "../env_var"
+    },
+    {
+      "path": "../../database"
     }
   ]
 }

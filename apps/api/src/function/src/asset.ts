@@ -76,9 +76,9 @@ export function registerAssetHandlers(
     const promises = [];
 
     // env and schema
-    const env = JSON.parse(JSON.stringify(fn.env || {}));
+    const env = JSON.parse(JSON.stringify(fn.env_vars || {}));
     for (const key of Object.keys(env)) {
-      fn.env[key] = `{${key}}`;
+      fn.env_vars[key] = `{${key}}`;
     }
 
     promises.push(

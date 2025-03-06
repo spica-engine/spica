@@ -6,7 +6,7 @@ import {
   FunctionWithDependencies
 } from "@spica-server/interface/function";
 import {ChangeKind, changesFromTriggers, createTargetChanges, hasContextChange} from "./change";
-import {ObjectId, ReturnDocument} from "@spica-server/database";
+import {ObjectId} from "@spica-server/database";
 import {FunctionEngine} from "./engine";
 import {LogService} from "@spica-server/function/log";
 import {NotFoundException} from "@nestjs/common";
@@ -23,7 +23,6 @@ export function find<ER extends EnvRelation = EnvRelation.NotResolved>(
     .filterResources(options.resourceFilter)
     .resolveEnvRelation(options.resolveEnvRelations)
     .result();
-
   return fs.aggregate<Function<ER>>(pipeline).toArray();
 }
 
@@ -38,7 +37,6 @@ export function findOne<ER extends EnvRelation = EnvRelation.NotResolved>(
     .findOneIfRequested(options.id)
     .resolveEnvRelation(options.resolveEnvRelations)
     .result();
-
   return fs.aggregate<Function<ER>>(pipeline).next();
 }
 
@@ -176,14 +174,14 @@ export namespace environment {
     fs: FunctionService,
     fnId: ObjectId,
     engine: FunctionEngine,
-    envVarId: string
+    envVarId: ObjectId
   ) {
     await fs.findOneAndUpdate(
       {
         _id: fnId
       },
       {
-        $addToSet: {env_var: envVarId}
+        $addToSet: {env_vars: envVarId}
       }
     );
 
@@ -194,14 +192,14 @@ export namespace environment {
     fs: FunctionService,
     fnId: ObjectId,
     engine: FunctionEngine,
-    envVarId: string
+    envVarId: ObjectId
   ) {
     await fs.findOneAndUpdate(
       {
         _id: fnId
       },
       {
-        $pull: {env_var: envVarId}
+        $pull: {env_vars: envVarId}
       }
     );
 
@@ -213,13 +211,12 @@ export namespace environment {
       id: fnId,
       resolveEnvRelations: EnvRelation.Resolved
     });
-
     const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated);
     return engine.categorizeChanges(changes);
   }
 
   export function apply(fn: Function, env: object) {
-    const placeholders = fn.env || {};
+    const placeholders = fn.env_vars || {};
     const actualEnvs = env || {};
 
     for (const [key, value] of Object.entries<string>(placeholders)) {
@@ -230,7 +227,7 @@ export namespace environment {
         replacedValue = actualEnvs[match[1]];
       }
 
-      fn.env[key] = replacedValue;
+      fn.env_vars[key] = replacedValue;
     }
     return fn;
   }

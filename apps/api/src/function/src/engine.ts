@@ -16,7 +16,7 @@ import {
   COLL_SLUG,
   CollectionSlug
 } from "@spica-server/function/services";
-import {Function} from "@spica-server/interface/function";
+import {EnvRelation, Function} from "@spica-server/interface/function";
 
 import {ChangeKind, TargetChange} from "./change";
 import {SCHEMA, SchemaWithName} from "./schema/schema";
@@ -27,6 +27,7 @@ import ScheduleSchema from "./schema/schedule.json" with {type: "json"};
 import FirehoseSchema from "./schema/firehose.json" with {type: "json"};
 import SystemSchema from "./schema/system.json" with {type: "json"};
 import {ClassCommander, CommandType} from "@spica-server/replication";
+import * as CRUD from "./crud";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
@@ -73,7 +74,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   private updateTriggers(kind: ChangeKind) {
-    return this.fs.find().then(fns => {
+    return CRUD.find(this.fs, {resolveEnvRelations: EnvRelation.Resolved}).then(fns => {
       const targetChanges: TargetChange[] = [];
       for (const fn of fns) {
         targetChanges.push(...createTargetChanges(fn, kind));

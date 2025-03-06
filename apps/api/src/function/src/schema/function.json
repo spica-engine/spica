@@ -18,10 +18,6 @@
       "type": "string",
       "description": "Description of the function"
     },
-    "env": {
-      "type": "object",
-      "description": "Sending environment with function has no effect. It's defined for only backward-compatibility. Use function environment inject-eject endpoints instead"
-    },
     "memoryLimit": {
       "type": "number",
       "default": 100,

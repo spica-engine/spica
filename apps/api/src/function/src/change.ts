@@ -61,7 +61,9 @@ export function hasContextChange(
   previousFn: Function<EnvRelation.NotResolved>,
   currentFn: Function<EnvRelation.NotResolved>
 ) {
-  return diff(previousFn.env, currentFn.env).length || previousFn.timeout != currentFn.timeout;
+  return (
+    diff(previousFn.env_vars, currentFn.env_vars).length || previousFn.timeout != currentFn.timeout
+  );
 }
 
 export function createTargetChanges<CK extends ChangeKind>(
@@ -86,7 +88,7 @@ export function createTargetChanges<CK extends ChangeKind>(
 
     if (changeKind != ChangeKind.Removed) {
       change.target.context = {
-        env: normalizeEnvVars(fn.env as EnvVar[]),
+        env: normalizeEnvVars(fn.env_vars as EnvVar[]),
         timeout: fn.timeout
       };
     }

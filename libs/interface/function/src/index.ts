@@ -1,4 +1,5 @@
 import {EnvVar} from "@spica-server/interface/env_var";
+import {ObjectId} from "@spica-server/database";
 
 export enum EnvRelation {
   Resolved,
@@ -9,7 +10,7 @@ export interface Function<ER extends EnvRelation = EnvRelation.NotResolved> {
   _id?: any;
   name: string;
   description?: string;
-  env?: ER extends EnvRelation.Resolved ? EnvVar[] : string[];
+  env_vars?: ER extends EnvRelation.Resolved ? EnvVar[] : ObjectId[];
   triggers: Triggers;
   timeout: number;
   language: string;
