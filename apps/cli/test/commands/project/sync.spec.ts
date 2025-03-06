@@ -315,8 +315,7 @@ describe("Synchronize", () => {
             "passport/apikey",
             {
               _id: "3",
-              name: "insert_me",
-              policies: ["brand_new_policy_id"]
+              name: "insert_me"
             }
           ],
           [
