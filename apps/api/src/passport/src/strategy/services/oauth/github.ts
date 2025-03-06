@@ -29,7 +29,9 @@ export class GithubOAuthService extends CustomOAuthService {
             client_id: strategy.options.client_id,
             client_secret: strategy.options.client_secret
           },
-          headers: {},
+          headers: {
+            Accept: "application/json"
+          },
           method: "post"
         },
         identifier: {
