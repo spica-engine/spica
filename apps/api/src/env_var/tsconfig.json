@@ -1,11 +1,13 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json", "services/src/service.ts"],
   "references": [
     {"path": "../../../../libs/database"},
     {"path": "../../../../libs/core"},
     {"path": "../../../../libs/interface/env_var"},
-
+    {
+      "path": "./services"
+    },
     {
       "path": "../passport/guard"
     },
