@@ -194,7 +194,7 @@ describe("Engine", () => {
 
     await fs.insertOne({
       _id: new ObjectId(hexString),
-      env: {},
+      env_vars: [],
       language: "js",
       timeout: 10,
       name: "my_fn",
