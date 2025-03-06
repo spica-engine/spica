@@ -55,7 +55,11 @@ describe("Scheduler", () => {
 
   const compilation = {
     cwd: undefined,
-    entrypoint: "index.mjs"
+    entrypoints: {
+      build: "index.mjs",
+      runtime: "index.mjs"
+    },
+    outDir: ".build"
   };
 
   function findWorkerFromEventId(evId: string) {
@@ -106,10 +110,7 @@ describe("Scheduler", () => {
 
     await app.init();
 
-    compilation.cwd = FunctionTestBed.initialize(
-      `export default function() {}`,
-      compilation.entrypoint
-    );
+    compilation.cwd = FunctionTestBed.initialize(`export default function() {}`, compilation);
     await scheduler.languages.get("javascript").compile(compilation);
 
     triggerGotWorker();
