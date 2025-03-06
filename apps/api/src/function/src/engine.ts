@@ -27,6 +27,7 @@ import FirehoseSchema from "./schema/firehose.json" with {type: "json"};
 import SystemSchema from "./schema/system.json" with {type: "json"};
 import {ClassCommander, CommandType} from "@spica-server/replication";
 import * as CRUD from "./crud";
+import {EnvVarsService} from "@spica-server/env_var/services";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
@@ -43,6 +44,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     private fs: FunctionService,
     private db: DatabaseService,
     private scheduler: Scheduler,
+    private evs: EnvVarsService,
     @Optional() private commander: ClassCommander,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
@@ -53,6 +55,24 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     }
 
     this.schemas.set("database", () => getDatabaseSchema(this.db, collSlug));
+
+    this.evs.watch().subscribe({
+      next: async envVar => {
+        if (!envVar) {
+          return;
+        }
+        const relatedFunctions = await CRUD.find(this.fs, {
+          envVars: [envVar._id]
+        });
+        return Promise.all(
+          relatedFunctions.map(fn => CRUD.environment.reload(this.fs, fn._id, this))
+        );
+      },
+      error: e => {
+        console.error(`Error occured on environment variables change stream`);
+        console.error(e);
+      }
+    });
   }
 
   onModuleInit() {

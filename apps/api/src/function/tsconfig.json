@@ -16,6 +16,9 @@
     },
     {
       "path": "../asset"
+    },
+    {
+      "path": "../env_var/services"
     }
   ]
 }

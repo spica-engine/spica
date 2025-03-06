@@ -17,10 +17,12 @@ export function find<ER extends EnvRelation = EnvRelation.NotResolved>(
   options: {
     resourceFilter?: object;
     resolveEnvRelations?: ER;
+    envVars?: ObjectId[];
   }
 ): Promise<Function<ER>[]> {
   const pipeline = new FunctionPipelineBuilder()
     .filterResources(options.resourceFilter)
+    .filterByEnvVars(options.envVars)
     .resolveEnvRelation(options.resolveEnvRelations)
     .result();
   return fs.aggregate<Function<ER>>(pipeline).toArray();
@@ -185,7 +187,7 @@ export namespace environment {
       }
     );
 
-    return reflectChanges(fs, fnId, engine);
+    return reload(fs, fnId, engine);
   }
 
   export async function eject(
@@ -203,10 +205,10 @@ export namespace environment {
       }
     );
 
-    return reflectChanges(fs, fnId, engine);
+    return reload(fs, fnId, engine);
   }
 
-  async function reflectChanges(fs: FunctionService, fnId: ObjectId, engine: FunctionEngine) {
+  export async function reload(fs: FunctionService, fnId: ObjectId, engine: FunctionEngine) {
     const envResolvedFn = await findOne(fs, {
       id: fnId,
       resolveEnvRelations: EnvRelation.Resolved
