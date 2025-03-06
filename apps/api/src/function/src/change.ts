@@ -3,7 +3,7 @@ import {diff} from "@spica-server/core/differ";
 import {EnvVar} from "@spica-server/interface/env_var";
 
 export function changesFromTriggers(
-  previousFn: Function<EnvRelation.Resolved>,
+  previousFn: Function<EnvRelation.Resolved | EnvRelation.NotResolved>,
   currentFn: Function<EnvRelation.Resolved>
 ) {
   const targetChanges: TargetChange[] = [];
@@ -57,15 +57,21 @@ export function changesFromTriggers(
   return targetChanges;
 }
 
-export function hasContextChange(previousFn: Function, currentFn: Function) {
+export function hasContextChange(
+  previousFn: Function<EnvRelation.NotResolved>,
+  currentFn: Function<EnvRelation.NotResolved>
+) {
   return diff(previousFn.env, currentFn.env).length || previousFn.timeout != currentFn.timeout;
 }
 
-export function createTargetChanges(
-  fn: Function<EnvRelation.Resolved>,
-  changeKind: ChangeKind
+export function createTargetChanges<CK extends ChangeKind>(
+  fn: Function<
+    CK extends ChangeKind.Removed
+      ? EnvRelation.Resolved | EnvRelation.NotResolved
+      : EnvRelation.Resolved
+  >,
+  changeKind: CK
 ): TargetChange[] {
-  fn.env;
   const changes: TargetChange[] = [];
   for (const [handler, trigger] of Object.entries(fn.triggers)) {
     const change: TargetChange = {
@@ -74,13 +80,16 @@ export function createTargetChanges(
       type: trigger.type,
       target: {
         id: fn._id.toString(),
-        handler,
-        context: {
-          env: normalizeEnvVars(fn.env),
-          timeout: fn.timeout
-        }
+        handler
       }
     };
+
+    if (changeKind != ChangeKind.Removed) {
+      change.target.context = {
+        env: normalizeEnvVars(fn.env as EnvVar[]),
+        timeout: fn.timeout
+      };
+    }
 
     changes.push(change);
   }

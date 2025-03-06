@@ -321,17 +321,7 @@ export class FunctionController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Param("envVarId") envVarId: string
   ) {
-    return this.fs.findOneAndUpdate(
-      {
-        _id: id
-      },
-      {
-        $addToSet: {env_var: envVarId}
-      },
-      {
-        returnDocument: ReturnDocument.AFTER
-      }
-    );
+    return CRUD.environment.inject(this.fs, id, this.engine, envVarId);
   }
 
   /**
@@ -345,16 +335,6 @@ export class FunctionController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Param("envVarId") envVarId: string
   ) {
-    return this.fs.findOneAndUpdate(
-      {
-        _id: id
-      },
-      {
-        $pull: {env_var: envVarId}
-      },
-      {
-        returnDocument: ReturnDocument.AFTER
-      }
-    );
+    return CRUD.environment.eject(this.fs, id, this.engine, envVarId);
   }
 }
