@@ -27,6 +27,15 @@
       },
       "cache": true
     },
+    "serve": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "commands": [
+          "node dist/apps/cli/bin/spica project sync --modules function --source-url http://localhost:4500/api --source-apikey 40599w1m7yoaf73 --target-url http://localhost:49613/api --target-apikey 4059a01m7yocd4v"
+        ]
+      }
+    },
     "set-version": {}
   }
 }
