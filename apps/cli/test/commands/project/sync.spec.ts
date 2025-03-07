@@ -322,8 +322,7 @@ describe("Synchronize", () => {
             "passport/apikey",
             {
               _id: "2",
-              name: "update_me",
-              policies: ["new_policy_id"]
+              name: "update_me"
             }
           ]
         ]);

@@ -813,6 +813,9 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
         });
       };
 
+      const policies = [...apikey.policies];
+      delete apikey.policies;
+
       // detaching all policies then attaching policies will cause sending a lot of requests, instead we will remove apikey
       const apikeyDeletePromise = this.targetService
         .delete(`passport/apikey/${apikey._id}`)
@@ -822,7 +825,7 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
       );
 
       return apikeyInsertPromise.then(() => {
-        const policyAttachPromises = apikey.policies.map(policy =>
+        const policyAttachPromises = policies.map(policy =>
           this.targetService
             .put(`passport/apikey/${apikey._id}/policy/${policy}`)
             .catch(e => rejectionHandler(e))
