@@ -39,6 +39,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   ]);
   readonly runSchemas = new Map<string, JSONSchema7>();
   private cmdSubs: {unsubscribe: () => void};
+  private watchEnvSubs: {unsubscribe: () => void};
 
   constructor(
     private fs: FunctionService,
@@ -56,22 +57,17 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
     this.schemas.set("database", () => getDatabaseSchema(this.db, collSlug));
 
-    this.evs.watch().subscribe({
-      next: async envVar => {
-        if (!envVar) {
-          return;
-        }
-        const relatedFunctions = await CRUD.find(this.fs, {
-          envVars: [envVar._id]
-        });
-        return Promise.all(
-          relatedFunctions.map(fn => CRUD.environment.reload(this.fs, fn._id, this))
-        );
-      },
-      error: e => {
-        console.error(`Error occured on environment variables change stream`);
-        console.error(e);
-      }
+    this.watchEnvSubs = this.fs.watchFunctionsForEnvChanges().subscribe({
+      next: ({fns, envVarId, operationType}) =>
+        fns.map(fn =>
+          operationType == "delete"
+            ? CRUD.environment.eject(this.fs, fn._id, this, envVarId)
+            : CRUD.environment.reload(this.fs, fn._id, this)
+        ),
+      error: err =>
+        console.error(
+          `Error received on listening functions for environment variable changes. Reason: ${JSON.stringify(err)}`
+        )
     });
   }
 
@@ -106,6 +102,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     if (this.commander) {
       this.cmdSubs.unsubscribe();
     }
+    this.watchEnvSubs.unsubscribe();
     return this.unregisterTriggers();
   }
 
