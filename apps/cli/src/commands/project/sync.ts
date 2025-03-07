@@ -81,7 +81,12 @@ async function sync({
           moduleName: synchronizer.getDisplayableModuleName()
         });
       } else {
-        await synchronizer.synchronize()?.catch(e => Promise.reject(returnErrorMessage(e)));
+        try {
+          await synchronizer.synchronize();
+        } catch (error) {
+          Promise.reject(returnErrorMessage(error));
+        }
+
         console.log(
           `\n${synchronizer.getDisplayableModuleName()} synchronization has been completed!`.toUpperCase()
         );
@@ -486,7 +491,7 @@ export class FunctionIndexSynchronizer implements ModuleSynchronizer {
             };
           })
           .catch(e => {
-            if (isNotFoundException(e) || e == "Index does not exist.") {
+            if (isNotFoundException(e)) {
               return false;
             }
             return Promise.reject(e.data);
@@ -1023,7 +1028,7 @@ ${errorMessage}`;
 }
 
 function returnErrorMessage(e) {
-  return e?.data ? e.data.message || e.data : e;
+  return e.data ? e.data.message || e.data : e;
 }
 
 function isNotFoundException(e) {
