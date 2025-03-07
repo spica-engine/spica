@@ -790,12 +790,16 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
           objectName: this.getDisplayableModuleName() + " " + apikey.name,
           e
         });
+
+      const policies = [...apikey.policies];
+      delete apikey.policies;
+
       const apikeyInsertPromise = this.targetService
         .post("passport/apikey", apikey)
         .catch(e => insertRejectionHandler(e));
 
       return apikeyInsertPromise.then(() => {
-        const policyAttachPromises = apikey.policies.map(policy =>
+        const policyAttachPromises = policies.map(policy =>
           this.targetService
             .put(`passport/apikey/${apikey._id}/policy/${policy}`)
             .catch(e => insertRejectionHandler(e))
@@ -814,6 +818,9 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
         });
       };
 
+      const policies = [...apikey.policies];
+      delete apikey.policies;
+
       // detaching all policies then attaching policies will cause sending a lot of requests, instead we will remove apikey
       const apikeyDeletePromise = this.targetService
         .delete(`passport/apikey/${apikey._id}`)
@@ -823,7 +830,7 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
       );
 
       return apikeyInsertPromise.then(() => {
-        const policyAttachPromises = apikey.policies.map(policy =>
+        const policyAttachPromises = policies.map(policy =>
           this.targetService
             .put(`passport/apikey/${apikey._id}/policy/${policy}`)
             .catch(e => rejectionHandler(e))
@@ -901,28 +908,30 @@ export class PolicySynchronizer implements ModuleSynchronizer {
 
   async synchronize() {
     console.log();
-    const insertPromiseFactories = this.insertions.map(
-      policy => () =>
-        this.targetService.post("passport/policy", policy).catch(e =>
-          handleRejection({
-            action: "insert",
-            objectName: this.getDisplayableModuleName() + " " + policy.name,
-            e
-          })
-        )
-    );
+    const insertPromiseFactories = this.insertions.map(policy => () => {
+      delete policy.system;
+
+      return this.targetService.post("passport/policy", policy).catch(e =>
+        handleRejection({
+          action: "insert",
+          objectName: this.getDisplayableModuleName() + " " + policy.name,
+          e
+        })
+      );
+    });
     await spinUntilPromiseEnd(insertPromiseFactories, "Inserting policies to the target instance");
 
-    const updatePromiseFactories = this.updations.map(
-      policy => () =>
-        this.targetService.put(`passport/policy/${policy._id}`, policy).catch(e =>
-          handleRejection({
-            action: "update",
-            objectName: this.getDisplayableModuleName() + " " + policy.name,
-            e
-          })
-        )
-    );
+    const updatePromiseFactories = this.updations.map(policy => () => {
+      delete policy.system;
+
+      return this.targetService.put(`passport/policy/${policy._id}`, policy).catch(e =>
+        handleRejection({
+          action: "update",
+          objectName: this.getDisplayableModuleName() + " " + policy.name,
+          e
+        })
+      );
+    });
     await spinUntilPromiseEnd(updatePromiseFactories, "Updating policies on the target instance");
 
     const deletePromiseFactories = this.deletions.map(
