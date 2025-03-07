@@ -27,7 +27,6 @@ import FirehoseSchema from "./schema/firehose.json" with {type: "json"};
 import SystemSchema from "./schema/system.json" with {type: "json"};
 import {ClassCommander, CommandType} from "@spica-server/replication";
 import * as CRUD from "./crud";
-import {EnvVarsService} from "@spica-server/env_var/services";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
@@ -45,7 +44,6 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     private fs: FunctionService,
     private db: DatabaseService,
     private scheduler: Scheduler,
-    private evs: EnvVarsService,
     @Optional() private commander: ClassCommander,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,

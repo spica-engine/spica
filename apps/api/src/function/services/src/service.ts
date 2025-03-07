@@ -1,7 +1,6 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {
   BaseCollection,
-  ChangeStreamDocument,
   CreateIndexesOptions,
   DatabaseService,
   FindOneAndUpdateOptions,
