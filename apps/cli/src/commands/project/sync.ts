@@ -903,28 +903,30 @@ export class PolicySynchronizer implements ModuleSynchronizer {
 
   async synchronize() {
     console.log();
-    const insertPromiseFactories = this.insertions.map(
-      policy => () =>
-        this.targetService.post("passport/policy", policy).catch(e =>
-          handleRejection({
-            action: "insert",
-            objectName: this.getDisplayableModuleName() + " " + policy.name,
-            e
-          })
-        )
-    );
+    const insertPromiseFactories = this.insertions.map(policy => () => {
+      delete policy.system;
+
+      return this.targetService.post("passport/policy", policy).catch(e =>
+        handleRejection({
+          action: "insert",
+          objectName: this.getDisplayableModuleName() + " " + policy.name,
+          e
+        })
+      );
+    });
     await spinUntilPromiseEnd(insertPromiseFactories, "Inserting policies to the target instance");
 
-    const updatePromiseFactories = this.updations.map(
-      policy => () =>
-        this.targetService.put(`passport/policy/${policy._id}`, policy).catch(e =>
-          handleRejection({
-            action: "update",
-            objectName: this.getDisplayableModuleName() + " " + policy.name,
-            e
-          })
-        )
-    );
+    const updatePromiseFactories = this.updations.map(policy => () => {
+      delete policy.system;
+
+      return this.targetService.put(`passport/policy/${policy._id}`, policy).catch(e =>
+        handleRejection({
+          action: "update",
+          objectName: this.getDisplayableModuleName() + " " + policy.name,
+          e
+        })
+      );
+    });
     await spinUntilPromiseEnd(updatePromiseFactories, "Updating policies on the target instance");
 
     const deletePromiseFactories = this.deletions.map(
