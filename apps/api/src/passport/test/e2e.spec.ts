@@ -416,6 +416,7 @@ describe("E2E Tests", () => {
         title: "oauth",
         icon: "login",
         options: {
+          idp: "custom",
           code: {
             base_url: publicUrl + "/oauth/code",
             params: {

@@ -115,5 +115,7 @@ export class SamlService implements StrategyTypeService {
         private_key: forge.pki.privateKeyToPem(keys.privateKey)
       };
     }
+
+    return strategy;
   }
 }

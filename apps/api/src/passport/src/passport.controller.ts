@@ -271,7 +271,7 @@ export class PassportController {
       throw new BadRequestException("Strategy does not exist.");
     }
 
-    const service = this.strategyTypes.find(strategy.type);
+    const service = this.strategyTypes.find(strategy.type, strategy.options.idp);
 
     const login = await service.getLoginUrl(strategy);
 
@@ -313,7 +313,7 @@ export class PassportController {
       throw new BadRequestException("Strategy does not exist.");
     }
 
-    const service = this.strategyTypes.find(strategy.type);
+    const service = this.strategyTypes.find(strategy.type, strategy.options.idp);
 
     const observer = this.assertObservers.get(stateId);
 
