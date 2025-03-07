@@ -5,7 +5,9 @@
     {"path": "../../../../libs/database"},
     {"path": "../../../../libs/core"},
     {"path": "../../../../libs/interface/env_var"},
-
+    {
+      "path": "./services"
+    },
     {
       "path": "../passport/guard"
     },
