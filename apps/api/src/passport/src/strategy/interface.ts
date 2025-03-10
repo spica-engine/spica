@@ -32,7 +32,7 @@ export interface OAuthRequestDetails {
 
 export interface IncomingOAuthPreset extends Strategy {
   options: {
-    idp: "google" | "facebook" | "github" | "apple";
+    idp: "google" | "facebook" | "github";
     client_id: string;
     client_secret: string;
   };
