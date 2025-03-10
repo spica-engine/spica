@@ -1,8 +1,12 @@
 name: Spica Github Release
 
 on:
-  push:
-    tags: ["*"]
+  pull_request:
+    branches: ["master"]
+
+# on:
+#   push:
+#     tags: ["*"]
 
 jobs:
   create_github_release:
@@ -17,10 +21,10 @@ jobs:
 
       - name: Set tags
         run: |
-           last_tag=$(git describe --tags --abbrev=0)
-           prev_tag=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
-           echo "last_tag=$last_tag" >> $GITHUB_ENV
-           echo "prev_tag=$prev_tag" >> $GITHUB_ENV
+          last_tag=$(git describe --tags --abbrev=0)
+          prev_tag=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
+          echo "last_tag=$last_tag" >> $GITHUB_ENV
+          echo "prev_tag=$prev_tag" >> $GITHUB_ENV
 
       - name: Generate Release Notes and Release the Version
         run: |
