@@ -1,10 +1,9 @@
-import {Global, Module} from "@nestjs/common";
-import {EnvVarsService} from "./service";
+import {Module} from "@nestjs/common";
+import {EnvVarsService, ServicesModule} from "@spica-server/env_var/services";
 import {EnvVarsController} from "./controller";
 import {SchemaModule} from "@spica-server/core/schema";
 import EnvVarsSchema from "./schema.json" with {type: "json"};
 
-@Global()
 @Module({})
 export class EnvVarsModule {
   static forRoot() {
@@ -13,11 +12,12 @@ export class EnvVarsModule {
       imports: [
         SchemaModule.forChild({
           schemas: [EnvVarsSchema]
-        })
+        }),
+        ServicesModule
       ],
       controllers: [EnvVarsController],
       providers: [EnvVarsService],
-      exports: [EnvVarsService]
+      exports: []
     };
   }
 }
