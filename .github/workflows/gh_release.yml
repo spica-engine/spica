@@ -1,12 +1,8 @@
 name: Spica Github Release
 
 on:
-  pull_request:
-    branches: ["master"]
-
-# on:
-#   push:
-#     tags: ["*"]
+  push:
+    tags: ["*"]
 
 jobs:
   create_github_release:
