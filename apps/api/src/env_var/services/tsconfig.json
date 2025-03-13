@@ -3,7 +3,10 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../env_var"
+      "path": "../../../../../libs/database"
+    },
+    {
+      "path": "../../../../../libs/interface/env_var"
     }
   ]
 }

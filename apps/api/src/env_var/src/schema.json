@@ -1,0 +1,20 @@
+{
+  "$id": "http://spica.internal/env_var",
+  "type": "object",
+  "required": ["key", "value"],
+  "properties": {
+    "key": {
+      "title": "Key",
+      "description": "Environment variable key",
+      "type": "string",
+      "examples": ["SECRET_KEY", "NO_DEVKIT"]
+    },
+    "value": {
+      "title": "Value",
+      "description": "Environment variable value",
+      "type": "string",
+      "examples": ["123abc", "true"]
+    }
+  },
+  "additionalProperties": false
+}

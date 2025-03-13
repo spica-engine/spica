@@ -220,8 +220,7 @@ export default {
       "function:show": [functionResource],
       "function:create": [],
       "function:update": [functionResource],
-      "function:delete": [functionResource],
-      "function:integrations": []
+      "function:delete": [functionResource]
     }
   },
   "function:logs": {

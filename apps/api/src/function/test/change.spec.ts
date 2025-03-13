@@ -1,18 +1,35 @@
-import {Function} from "@spica-server/interface/function";
+import {EnvRelation, Function} from "@spica-server/interface/function";
 import {
   ChangeKind,
   createTargetChanges,
-  changesFromTriggers
+  changesFromTriggers,
+  hasContextChange
 } from "@spica-server/function/src/change";
+import {ObjectId} from "@spica-devkit/database";
+import {EnvVar} from "@spica-server/interface/env_var";
+import {deepCopy} from "@spica-server/core/patch";
 
 describe("Change", () => {
-  let fn: Function;
+  let fn: Function<EnvRelation.Resolved>;
+  const envVarIds = [new ObjectId(), new ObjectId()];
+  let envVars: EnvVar[] = [
+    {
+      _id: envVarIds[0],
+      key: "IGNORE_ERRORS",
+      value: "true"
+    },
+    {
+      _id: envVarIds[1],
+      key: "SOMETHING_SECRET",
+      value: "91kd209k1"
+    }
+  ];
 
   beforeEach(() => {
     fn = {
       _id: "fn_id",
       name: "my_fn",
-      env: {test: "123"},
+      env_vars: envVars,
       language: "javascript",
       timeout: 50,
       triggers: {}
@@ -49,7 +66,10 @@ describe("Change", () => {
           id: "fn_id",
           handler: "default",
           context: {
-            env: {test: "123"},
+            env: {
+              IGNORE_ERRORS: "true",
+              SOMETHING_SECRET: "91kd209k1"
+            },
             timeout: 50
           }
         }
@@ -64,7 +84,10 @@ describe("Change", () => {
           id: "fn_id",
           handler: "another",
           context: {
-            env: {test: "123"},
+            env: {
+              IGNORE_ERRORS: "true",
+              SOMETHING_SECRET: "91kd209k1"
+            },
             timeout: 50
           }
         }
@@ -178,5 +201,44 @@ describe("Change", () => {
     expect(insertedHandlers).toEqual(["inserted"]);
     expect(updatedHandlers).toEqual(["updated"]);
     expect(removedHandlers).toEqual(["deactivated", "removed"]);
+  });
+
+  it("should detect environment variable on ejected", () => {
+    const previousFn: Function<EnvRelation.NotResolved> = deepCopy(fn);
+    previousFn.env_vars = envVarIds;
+
+    const currentFn: Function<EnvRelation.NotResolved> = deepCopy(previousFn);
+    currentFn.env_vars = [envVarIds[0]];
+
+    const hasContextChanges = hasContextChange(previousFn, currentFn);
+    expect(hasContextChanges).toBe(true);
+  });
+
+  it("should detect environment variable on injected", () => {
+    const previousFn: Function<EnvRelation.NotResolved> = deepCopy(fn);
+    previousFn.env_vars = [envVarIds[0]];
+
+    const currentFn: Function<EnvRelation.NotResolved> = deepCopy(previousFn);
+    currentFn.env_vars = envVarIds;
+
+    const hasContextChanges = hasContextChange(previousFn, currentFn);
+    expect(hasContextChanges).toBe(true);
+  });
+
+  it("should not detect anything if environment variables are same", () => {
+    const previousFn: Function<EnvRelation.NotResolved> = deepCopy(fn);
+    const currentFn: Function<EnvRelation.NotResolved> = deepCopy(previousFn);
+
+    const hasContextChanges = hasContextChange(previousFn, currentFn);
+    expect(hasContextChanges).toBe(false);
+  });
+
+  it("should detect timeout changes", () => {
+    const previousFn: Function<EnvRelation.NotResolved> = deepCopy(fn);
+    const currentFn: Function<EnvRelation.NotResolved> = deepCopy(previousFn);
+    currentFn.timeout = previousFn.timeout + 10;
+
+    const hasContextChanges = hasContextChange(previousFn, currentFn);
+    expect(hasContextChanges).toBe(true);
   });
 });
