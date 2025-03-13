@@ -48,20 +48,52 @@
       "type": "object",
       "title": "The oauth options",
       "properties": {
-        "code": {
-          "$ref": "#/definitions/requestDetails",
-          "title": "Getting code step"
-        },
-        "access_token": {
-          "$ref": "#/definitions/requestDetails",
-          "title": "Exchanging code for access token step"
-        },
-        "identifier": {
-          "$ref": "#/definitions/requestDetails",
-          "title": "Getting user information by using access toe-ken"
+        "idp": {
+          "type": "string",
+          "enum": ["custom", "google", "facebook", "github"],
+          "default": "custom",
+          "title": "Identity provider",
+          "description": "Identity provider that will be used for authentication"
         }
       },
-      "additionalProperties": false
+      "required": ["idp"],
+      "if": {
+        "properties": {"idp": {"const": "custom"}}
+      },
+      "then": {
+        "properties": {
+          "idp": {"const": "custom"},
+          "code": {
+            "$ref": "#/definitions/requestDetails",
+            "title": "Getting code step"
+          },
+          "access_token": {
+            "$ref": "#/definitions/requestDetails",
+            "title": "Exchanging code for access token step"
+          },
+          "identifier": {
+            "$ref": "#/definitions/requestDetails",
+            "title": "Getting user information by using access token"
+          }
+        },
+        "required": ["code", "access_token", "identifier"],
+        "additionalProperties": false
+      },
+      "else": {
+        "properties": {
+          "idp": {"not": {"const": "custom"}},
+          "client_id": {
+            "type": "string",
+            "title": "Client ID of the application"
+          },
+          "client_secret": {
+            "type": "string",
+            "title": "Client secret of the application"
+          }
+        },
+        "required": ["client_id", "client_secret"],
+        "additionalProperties": false
+      }
     },
     "requestDetails": {
       "type": "object",
@@ -126,7 +158,6 @@
       "type": "object"
     }
   },
-  "required": ["name", "type", "options"],
   "additionalProperties": false,
   "if": {
     "properties": {
@@ -147,6 +178,34 @@
       "options": {
         "$ref": "#/definitions/oauthOptions"
       }
+    },
+    "if": {
+      "properties": {
+        "options": {
+          "type": "object",
+          "properties": {
+            "idp": {
+              "const": "custom"
+            }
+          }
+        }
+      }
+    },
+    "then": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name of the strategy"
+        },
+        "title": {
+          "type": "string",
+          "title": "Title of the strategy"
+        }
+      },
+      "required": ["name", "type", "options"]
+    },
+    "else": {
+      "required": ["type", "options"]
     }
   }
 }
