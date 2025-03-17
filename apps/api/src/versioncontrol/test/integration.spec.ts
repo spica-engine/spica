@@ -317,7 +317,7 @@ describe("Versioning", () => {
     describe("Synchronization from database to files", () => {
       // seperating function tests will increase test duration
       // that's why we are testing all cases in one 'it'
-      fit("should sync changes", async () => {
+      it("should sync changes", async () => {
         const id = new ObjectId();
         const fn = {
           _id: id,
