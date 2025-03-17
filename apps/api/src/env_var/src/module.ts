@@ -9,7 +9,7 @@ import {
   VC_REP_MANAGER
 } from "@spica-server/versioncontrol";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {getVCSyncProvider} from "./versioncontrol/env-var";
+import {getVCSyncProvider} from "./versioncontrol/schema";
 
 @Module({})
 export class EnvVarsModule {
@@ -29,11 +29,12 @@ export class EnvVarsModule {
   }
 
   constructor(
+    evs: EnvVarsService,
     @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
     @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerVCSyncProvider: RegisterSyncProvider
   ) {
     if (registerVCSyncProvider) {
-      const provider = getVCSyncProvider(this.vcRepManager);
+      const provider = getVCSyncProvider(evs, this.vcRepManager);
       registerVCSyncProvider(provider);
     }
   }
