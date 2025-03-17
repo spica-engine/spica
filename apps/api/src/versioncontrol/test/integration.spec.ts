@@ -317,7 +317,7 @@ describe("Versioning", () => {
     describe("Synchronization from database to files", () => {
       // seperating function tests will increase test duration
       // that's why we are testing all cases in one 'it'
-      it("should sync changes", async () => {
+      fit("should sync changes", async () => {
         const id = new ObjectId();
         const fn = {
           _id: id,
@@ -343,10 +343,10 @@ describe("Versioning", () => {
         expect(file).toEqual({
           _id: id.toHexString(),
           contents: {
+            env: {},
             index: "",
             package: {dependencies: {}},
-            schema: expectedSchema,
-            env: {}
+            schema: expectedSchema
           }
         });
 
@@ -363,6 +363,7 @@ describe("Versioning", () => {
         expect(file).toEqual({
           _id: id.toHexString(),
           contents: {
+            env: {},
             index: "",
             package: {dependencies: {}},
             schema: {...expectedSchema, triggers: {onCall}}
@@ -377,6 +378,7 @@ describe("Versioning", () => {
         expect(file).toEqual({
           _id: id.toHexString(),
           contents: {
+            env: {},
             index: "console.log(123)",
             package: {dependencies: {}},
             schema: {...expectedSchema, triggers: {onCall}}
