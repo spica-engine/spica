@@ -20,6 +20,8 @@ import {RepresentativeManager} from "@spica-server/representative";
 import {PreferenceModule} from "@spica-server/preference";
 import {PreferenceService} from "@spica-server/preference/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
+import {EnvVarsService} from "@spica-server/env_var/services";
+import {EnvVarsModule} from "@spica-server/env_var";
 
 describe("Versioning", () => {
   let module: TestingModule;
@@ -29,6 +31,7 @@ describe("Versioning", () => {
   let rep: RepresentativeManager;
   let fs: FunctionService;
   let engine: FunctionEngine;
+  let evs: EnvVarsService;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -66,6 +69,7 @@ describe("Versioning", () => {
           spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
           tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
         }),
+        EnvVarsModule.forRoot(),
         VersionControlModule.forRoot({persistentPath: os.tmpdir(), isReplicationEnabled: false})
       ]
     }).compile();
@@ -79,6 +83,7 @@ describe("Versioning", () => {
 
     fs = module.get(FunctionService);
     engine = module.get(FunctionEngine);
+    evs = module.get(EnvVarsService);
   });
 
   describe("preference", () => {
@@ -202,9 +207,7 @@ describe("Versioning", () => {
   });
 
   afterEach(async () => {
-    await rep.rm("bucket").catch(() => {});
-    await rep.rm("function").catch(() => {});
-    await rep.rm("preference").catch(() => {});
+    await rep.rm().catch(console.warn);
   });
 
   describe("bucket", () => {
@@ -319,10 +322,6 @@ describe("Versioning", () => {
         const fn = {
           _id: id,
           name: "fn1",
-          env: {
-            APIKEY: "SECRET",
-            BUCKET_ID: "SOME_ID"
-          },
           language: "javascript",
           timeout: 100,
           triggers: {}
@@ -340,22 +339,14 @@ describe("Versioning", () => {
 
         let file = await rep.readResource("function", id.toString());
         const expectedSchema = {...fn, _id: id.toHexString()};
-        expectedSchema.env = {
-          APIKEY: "{APIKEY}",
-          BUCKET_ID: "{BUCKET_ID}"
-        };
 
-        // console.dir(file,{depth:Infinity})
         expect(file).toEqual({
           _id: id.toHexString(),
           contents: {
             index: "",
             package: {dependencies: {}},
             schema: expectedSchema,
-            env: {
-              APIKEY: "SECRET",
-              BUCKET_ID: "SOME_ID"
-            }
+            env: {}
           }
         });
 
@@ -374,11 +365,7 @@ describe("Versioning", () => {
           contents: {
             index: "",
             package: {dependencies: {}},
-            schema: {...expectedSchema, triggers: {onCall}},
-            env: {
-              APIKEY: "SECRET",
-              BUCKET_ID: "SOME_ID"
-            }
+            schema: {...expectedSchema, triggers: {onCall}}
           }
         });
 
@@ -392,11 +379,7 @@ describe("Versioning", () => {
           contents: {
             index: "console.log(123)",
             package: {dependencies: {}},
-            schema: {...expectedSchema, triggers: {onCall}},
-            env: {
-              APIKEY: "SECRET",
-              BUCKET_ID: "SOME_ID"
-            }
+            schema: {...expectedSchema, triggers: {onCall}}
           }
         });
 
@@ -417,21 +400,11 @@ describe("Versioning", () => {
         let fn = {
           _id: id,
           name: "fn1",
-          env: {
-            APIKEY: "{APIKEY}",
-            BUCKET_ID: "{BUCKET_ID}"
-          },
           language: "javascript",
           timeout: 100,
           triggers: {}
         };
         await rep.write("function", id, "schema", fn, "yaml");
-
-        const env = {
-          APIKEY: "SECRET",
-          BUCKET_ID: "SOME_ID"
-        };
-        await rep.write("function", id, "env", env, "env");
 
         let index = "console.log('hi')";
         await rep.write("function", id, "index", index, "ts");
@@ -447,11 +420,7 @@ describe("Versioning", () => {
         expect(fns).toEqual([
           {
             ...fn,
-            _id: new ObjectId(id),
-            env: {
-              APIKEY: "SECRET",
-              BUCKET_ID: "SOME_ID"
-            }
+            _id: new ObjectId(id)
           }
         ]);
 
@@ -476,11 +445,7 @@ describe("Versioning", () => {
           {
             ...fn,
             triggers: {onCall},
-            _id: new ObjectId(id),
-            env: {
-              APIKEY: "SECRET",
-              BUCKET_ID: "SOME_ID"
-            }
+            _id: new ObjectId(id)
           }
         ]);
 
@@ -507,6 +472,98 @@ describe("Versioning", () => {
         await engine.read(fn).catch(e => {
           expect(e).toEqual("Not Found");
         });
+      });
+    });
+  });
+
+  describe("environment variables", () => {
+    let envVar;
+    let id: ObjectId;
+
+    beforeEach(async () => {
+      id = new ObjectId();
+      envVar = {
+        _id: id,
+        key: "IGNORE_ERRORS",
+        value: "true"
+      };
+    });
+
+    describe("Synchronization from database to files", () => {
+      it("should make first synchronization", async () => {
+        await evs.insertOne(envVar);
+        await synchronizer.synchronize(SyncDirection.DocToRep);
+
+        const file = await rep.readResource("env-var", id.toString());
+        expect(file).toEqual({
+          _id: id.toHexString(),
+          contents: {schema: {_id: id.toString(), key: "IGNORE_ERRORS", value: "true"}}
+        });
+      });
+
+      it("should update if schema has changes", async () => {
+        await evs.insertOne(envVar);
+        await synchronizer.synchronize(SyncDirection.DocToRep);
+
+        await evs.updateOne({_id: id}, {$set: {value: "false"}});
+        await synchronizer.synchronize(SyncDirection.DocToRep);
+
+        const file = await rep.readResource("env-var", id.toString());
+
+        expect(file).toEqual({
+          _id: id.toHexString(),
+          contents: {schema: {_id: id.toString(), key: "IGNORE_ERRORS", value: "false"}}
+        });
+      });
+
+      it("should delete if schema has been deleted", async () => {
+        await evs.insertOne(envVar);
+        await synchronizer.synchronize(SyncDirection.DocToRep);
+
+        await evs.findOneAndDelete({_id: id});
+        await synchronizer.synchronize(SyncDirection.DocToRep);
+
+        const file = await rep.readResource("env-var", id.toString());
+        expect(file).toEqual({});
+      });
+    });
+
+    describe("Synchronization from files to database", () => {
+      it("should make first synchronization", async () => {
+        await rep.write("env-var", id.toHexString(), "schema", envVar, "yaml");
+
+        await synchronizer.synchronize(SyncDirection.RepToDoc);
+
+        const envVars = await evs.find();
+        expect(envVars).toEqual([{...envVar, _id: id}]);
+      });
+
+      it("should update if schema has changes", async () => {
+        await rep.write("env-var", id.toHexString(), "schema", envVar, "yaml");
+        await synchronizer.synchronize(SyncDirection.RepToDoc);
+
+        await rep.write("env-var", id.toHexString(), "schema", {...envVar, value: "false"}, "yaml");
+        await synchronizer.synchronize(SyncDirection.RepToDoc);
+
+        const envVars = await evs.find({});
+        expect(envVars).toEqual([
+          {
+            _id: id,
+            key: "IGNORE_ERRORS",
+            value: "false"
+          }
+        ]);
+      });
+
+      it("should delete if schema has been deleted", async () => {
+        await rep.write("env-var", id.toHexString(), "schema", envVar, "yaml");
+        await synchronizer.synchronize(SyncDirection.RepToDoc);
+
+        await rep.rm("env-var", id.toHexString());
+        await synchronizer.synchronize(SyncDirection.RepToDoc);
+
+        const envVars = await evs.find({});
+        expect(envVars).toEqual([]);
       });
     });
   });
