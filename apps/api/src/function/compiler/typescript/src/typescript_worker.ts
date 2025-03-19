@@ -89,13 +89,14 @@ function createEmitAndSemanticDiagnosticsBuilderProgram(
 function build(compilation: Compilation) {
   const referencedProject = `${compilation.cwd.replace(/\//g, "_")}_tsconfig.json`;
 
-  astCache.delete(path.join(compilation.cwd, compilation.entrypoint));
+  astCache.delete(path.join(compilation.cwd, compilation.entrypoints.build));
 
   const rootTsConfig: any = readRootTsConfig();
 
   const refPath = `./${referencedProject}`;
 
   if (rootTsConfig.references.findIndex(ref => ref.path == refPath) == -1) {
+    const outDirAbsolutePath = path.join(compilation.cwd, compilation.outDir);
     const options = {
       moduleResolution: "node",
       module: "ES2022",
@@ -104,20 +105,19 @@ function build(compilation: Compilation) {
       sourceMap: true,
       alwaysStrict: true,
       preserveSymlinks: true,
-      composite: true,
-      incremental: true,
-      tsBuildInfoFile: path.join(compilation.cwd, ".build", ".tsbuildinfo"),
+      tsBuildInfoFile: path.join(outDirAbsolutePath, ".tsbuildinfo"),
       baseUrl: compilation.cwd,
       rootDir: compilation.cwd,
-      outDir: path.join(compilation.cwd, ".build")
+      outDir: outDirAbsolutePath,
+      declaration: true
     };
 
     fs.writeFileSync(
       path.join(os.tmpdir(), referencedProject),
       JSON.stringify({
         compilerOptions: options,
-        files: [path.join(compilation.cwd, compilation.entrypoint)],
-        exclude: ["**/.build/**"]
+        files: [path.join(compilation.cwd, compilation.entrypoints.build)],
+        exclude: [`**/${compilation.outDir}/**`]
       })
     );
 
@@ -125,14 +125,19 @@ function build(compilation: Compilation) {
     updateRootTsConfig(rootTsConfig);
   }
 
-  builder = ts.createSolutionBuilder(host, [ROOT_TSCONFIG_PATH], {
-    incremental: true
-  });
+  builder = ts.createSolutionBuilder(host, [ROOT_TSCONFIG_PATH], {});
 
   builder.build();
 }
 
+function renameJsToMjs(baseUrl: string) {
+  const buildFolder = path.join(baseUrl, ".build");
+  fs.renameSync(path.join(buildFolder, "index.js"), path.join(buildFolder, "index.mjs"));
+}
+
 function postCompilation(baseUrl: string, diagnostics: ts.Diagnostic[]) {
+  renameJsToMjs(baseUrl);
+
   parentPort.postMessage({
     baseUrl: baseUrl,
     diagnostics: diagnostics

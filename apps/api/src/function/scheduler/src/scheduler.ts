@@ -1,5 +1,5 @@
 import {Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
-import {APP_INTERCEPTOR, HttpAdapterHost} from "@nestjs/core";
+import {HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica-server/database";
 import {Language} from "@spica-server/function/compiler";
 import {Javascript} from "@spica-server/function/compiler/javascript";
@@ -12,14 +12,14 @@ import {
   ScheduleEnqueuer,
   SystemEnqueuer
 } from "@spica-server/function/enqueuer";
-import {PackageManager} from "@spica-server/function/pkgmanager";
+import {DelegatePkgManager} from "@spica-server/function/pkgmanager";
 import {Npm} from "@spica-server/function/pkgmanager/node";
+import {LocalPackageManager} from "@spica-server/function/pkgmanager/local";
 import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
 import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
 import {generateLog, LogLevels} from "@spica-server/function/runtime/logger";
-import {Node} from "@spica-server/function/runtime/node";
 import {ClassCommander, CommandType, JobReducer} from "@spica-server/replication";
 import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/status/services";
 import uniqid from "uniqid";
@@ -27,12 +27,7 @@ import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
 import {Subject} from "rxjs";
 import {take} from "rxjs/operators";
-
-type ScheduleWorker = Worker & {
-  target: event.Target;
-  schedule: (event: event.Event) => void;
-  isOutdated?: boolean;
-};
+import {ScheduleWorker, Node, WorkerState} from "@spica-server/function/scheduler";
 
 @Injectable()
 export class Scheduler implements OnModuleInit, OnModuleDestroy {
@@ -42,7 +37,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   private firehoseQueue: FirehoseQueue;
 
   readonly runtimes = new Map<string, Runtime>();
-  readonly pkgmanagers = new Map<string, PackageManager>();
+  readonly pkgmanagers = new Map<string, DelegatePkgManager>();
   readonly enqueuers = new Set<Enqueuer<unknown>>();
   readonly languages = new Map<string, Language>();
 
@@ -66,7 +61,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.languages.set("typescript", new Typescript(options.tsCompilerPath));
     this.languages.set("javascript", new Javascript());
     this.runtimes.set("node", new Node());
-    this.pkgmanagers.set("node", new Npm());
+    this.pkgmanagers.set("node", new LocalPackageManager(new Npm()));
 
     this.queue = new EventQueue(
       (id, schedule) => this.gotWorker(id, schedule),
@@ -139,11 +134,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   killFreeWorkers() {
-    const isFresh = worker => !worker.target;
-    const isWaitingForNextEvent = worker => worker.target && worker.schedule;
-
     const freeWorkers = Array.from(this.workers.entries()).filter(
-      ([key, worker]) => isFresh(worker) || isWaitingForNextEvent(worker)
+      ([key, worker]) => worker.state == WorkerState.Fresh || worker.state == WorkerState.Targeted
     );
 
     const killWorkers = freeWorkers.map(([key, worker]) => {
@@ -200,8 +192,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   getStatus() {
     const workers = Array.from(this.workers.values());
 
-    const activated = workers.filter(w => w.target).length;
-    const fresh = workers.length - activated;
+    const fresh = workers.filter(w => w.state == WorkerState.Fresh).length;
+    const activated = workers.length - fresh;
 
     return {
       activated: activated,
@@ -215,29 +207,33 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       return {id, worker};
     });
 
-    const fresh = workers.find(({worker}) => !worker.target);
-    const activateds = workers.filter(({worker}) => worker.target && worker.target.id == target.id);
+    const sameTargets = workers.filter(({worker}) => worker.hasSameTarget(target.id));
 
-    const available = activateds.find(({worker}) => worker.schedule);
-
-    if (activateds.length == this.options.maxConcurrency) {
-      return available || {id: undefined, worker: {} as any};
+    const available = sameTargets.find(
+      ({worker}) =>
+        worker.state != WorkerState.Busy &&
+        worker.state != WorkerState.Timeouted &&
+        worker.state != WorkerState.Outdated
+    );
+    if (available) {
+      return available;
     }
 
-    return available || fresh;
+    const fresh = workers.find(({worker}) => worker.state == WorkerState.Fresh);
+    if (sameTargets.length < this.options.maxConcurrency) {
+      return fresh;
+    }
+    return;
   }
 
   process() {
     for (const event of this.eventQueue.values()) {
-      const {id: workerId, worker} = this.takeAWorker(event.target);
-      // if worker is busy, move to the next events
-      if (!worker.schedule) {
+      const workerMeta = this.takeAWorker(event.target);
+      if (!workerMeta) {
         continue;
       }
 
-      const schedule = worker.schedule;
-      worker.schedule = undefined;
-      worker.target = event.target;
+      const {id: workerId, worker} = workerMeta;
 
       const [stdout, stderr] = this.output.create({
         eventId: event.id,
@@ -255,7 +251,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       const channel = this.options.logger ? stdout : stderr;
 
       const timeoutFn = () => {
-        worker.schedule = undefined;
+        worker.markAsTimeouted();
         if (channel.writable) {
           channel.write(timeoutMsg);
         }
@@ -267,7 +263,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       }
       this.timeouts.set(workerId, setTimeout(timeoutFn, timeoutInMs));
 
-      schedule(event);
+      if (this.options.invocationLogs) {
+        this.logInvocations(event);
+      }
+
+      worker.execute(event);
 
       this.eventQueue.delete(event.id);
 
@@ -275,6 +275,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
       this.scaleWorkers();
     }
+  }
+
+  logInvocations(ev: event.Event) {
+    const log = `fn-invocation-log: ${ev.id} ${ev.target.id} ${ev.target.handler} ${event.Type[ev.type]}`;
+    console.log(log);
   }
 
   enqueue(event: event.Event) {
@@ -293,14 +298,18 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   gotWorker(id: string, schedule: (event: event.Event) => void) {
     const relatedWorker = this.workers.get(id);
 
-    if (!relatedWorker || relatedWorker.isOutdated) {
+    if (!relatedWorker || relatedWorker.state == WorkerState.Outdated) {
       this.print(`the worker ${id} won't be scheduled anymore.`);
     } else {
-      relatedWorker.schedule = schedule;
+      let message;
+      if (relatedWorker.state == WorkerState.Fresh) {
+        message = `got a new worker ${id}`;
+      } else if (relatedWorker.state == WorkerState.Busy) {
+        message = `worker ${id} is waiting for new event`;
+      }
+      relatedWorker.markAsAvailable(schedule);
 
-      this.print(
-        relatedWorker.target ? `worker ${id} is waiting for new event` : `got a new worker ${id}`
-      );
+      this.print(message);
     }
 
     this.process();
@@ -321,38 +330,43 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   outdateWorkers(targetId: string) {
     Array.from(this.workers.values())
-      .filter(worker => worker.target && worker.target.id == targetId)
-      .forEach(worker => (worker.isOutdated = true));
+      .filter(worker => worker.hasSameTarget(targetId))
+      .forEach(worker => {
+        if (worker.state != WorkerState.Outdated) {
+          worker.markAsOutdated();
+        }
+      });
   }
 
   private scaleWorkers() {
-    const activatedWorkers = Array.from(this.workers.values()).filter(w => w.target).length;
-    const desiredWorkers = activatedWorkers + 1;
+    const hasFreshWorker = Array.from(this.workers.values()).find(
+      worker => worker.state == WorkerState.Fresh
+    );
 
-    for (let i = this.workers.size; i < desiredWorkers; i++) {
-      const id: string = uniqid();
-      const worker = this.runtimes.get("node").spawn({
-        id,
-        env: {
-          __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
-          __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
-          __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
-          __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
-          __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
-            ? "true"
-            : "",
-          LOGGER: this.options.logger ? "true" : undefined
-        },
-        entrypointPath: this.options.spawnEntrypointPath
-      });
-
-      worker.once("exit", () => this.lostWorker(id));
-
-      (worker as ScheduleWorker).schedule = undefined;
-      (worker as ScheduleWorker).target = undefined;
-
-      this.workers.set(id, worker as ScheduleWorker);
+    if (hasFreshWorker) {
+      return;
     }
+
+    const id: string = uniqid();
+    const node = this.runtimes.get("node") as Node;
+    const worker = node.spawn({
+      id,
+      env: {
+        __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
+        __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
+        __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
+        __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
+        __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
+          ? "true"
+          : "",
+        LOGGER: this.options.logger ? "true" : undefined
+      },
+      entrypointPath: this.options.spawnEntrypointPath
+    });
+
+    worker.once("exit", () => this.lostWorker(id));
+
+    this.workers.set(id, worker);
   }
 
   /**

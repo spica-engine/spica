@@ -27,16 +27,65 @@ spec:
         app.kubernetes.io/version: {{ .Chart.AppVersion }}
         app.kubernetes.io/part-of: {{ .Chart.Name }}
         app.kubernetes.io/managed-by: helm
+      annotations:
+        checksum/secret: {{ include (print $.Template.BasePath "/databasesecrets.yaml") . | sha256sum }}
+        checksum/initdb: {{ include (print $.Template.BasePath "/initdb.yaml") . | sha256sum }}
     spec:
       terminationGracePeriodSeconds: 10
+      volumes:
+      - name: init-db
+        configMap:
+          name: {{ .Release.Name }}-database
+          defaultMode: 0755
+      - name: db-replica-auth-key
+        secret:
+          secretName: {{ .Release.Name }}-database-replica-auth-key
+          defaultMode: 0400
+      initContainers:
+        - name: init-users
+          image: mongo:{{ .Values.database.version }}
+          command:
+            - "/bin/sh"
+            - "-c"
+            - | 
+              ./scripts/init-users.sh > ./init-users.log
+          volumeMounts:
+            - name: {{ .Release.Name }}-data
+              mountPath: /data/db
+            - name: init-db
+              mountPath: /scripts
+          env:
+            - name: SPICA_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-spica-credentials
+                  key: spicaUsername
+            - name: SPICA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-spica-credentials
+                  key: spicaPassword
+            - name: ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-root-credentials
+                  key: rootUsername
+            - name: ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-root-credentials
+                  key: rootPassword
       containers:
         - name: mongo
           image: mongo:{{ .Values.database.version }}
           command:
-          - mongod 
-          - "--replSet" 
-          - rs0 
-          - "--bind_ip_all"
+            - "/bin/sh"
+            - "-c"
+          args: 
+            - |
+              mongod --replSet rs0 --bind_ip_all --auth --keyFile ./etc/secrets/replicaAuthKey
+          ports:
+            - containerPort: 27017
           {{- if eq (int .Values.database.replicas) 1}}
           lifecycle:
             postStart:
@@ -44,17 +93,33 @@ spec:
                 command:
                   - "/bin/sh"
                   - "-c"
-                  - |
-                    sleep 5s
-                    mongo --eval 'rs.initiate({"_id": "rs0", "members": {{ template "generateReplicaSetMembers" . }} })'
+                  - | 
+                    ./scripts/init-replica.sh > ./init-replica.log
           {{- end}}
-          ports:
-            - containerPort: 27017
           resources:
 {{ toYaml .Values.database.resources | indent 12 }}
           volumeMounts:
             - name: {{ .Release.Name }}-data
               mountPath: /data/db
+            - name: init-db
+              mountPath: /scripts
+            - name: db-replica-auth-key
+              mountPath: /etc/secrets
+          env:
+            - name: ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-root-credentials
+                  key: rootUsername
+            - name: ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-root-credentials
+                  key: rootPassword
+            {{- if eq (int .Values.database.replicas) 1}}
+            - name: RS_MEMBERS
+              value: '{{ template "generateReplicaSetMembers" . }}'
+            {{- end}}      
       {{- if .Values.database.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.database.nodeSelector | indent 8 }}

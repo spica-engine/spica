@@ -1,12 +1,8 @@
 name: Spica Release
 
-env:
-  VERSION: $(git describe --tags --abbrev=0)
-
 on:
-  push:
-    branches:
-      - "[0-9]+.[0-9]+.[0-9]+"
+  release:
+    types: [published]
 
 jobs:
   release:
@@ -33,6 +29,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -55,6 +53,11 @@ jobs:
 
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+
+      - name: Set the VERSION
+        run: |
+          VERSION=$(git describe --tags --abbrev=0)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Install Helm
         uses: azure/setup-helm@v4.2.0

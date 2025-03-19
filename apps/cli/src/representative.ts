@@ -155,6 +155,6 @@ export class RepresentativeManager {
       dir = path.join(dir, id);
     }
 
-    return fs.promises.rmdir(dir, {recursive: true});
+    return fs.promises.rm(dir, {recursive: true});
   }
 }

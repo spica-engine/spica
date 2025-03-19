@@ -1,21 +1,19 @@
-import {Package, PackageManager} from "@spica-server/function/pkgmanager";
 import child_process from "child_process";
 import fs from "fs";
 import os from "os";
 import path from "path";
 import {Observable} from "rxjs";
-import * as glob from "glob";
+import {NodePackageManager} from "./node";
 
 function getNpmPath() {
   let npmPath: string = "npm";
   return npmPath;
 }
 
-export class Npm extends PackageManager {
-  private readonly MAX_DEP_TYPE_SIZE_MB = 5;
+export class Npm extends NodePackageManager {
+  install(cwd: string, _qualifiedNames: string | string[]): Observable<number> {
+    let qualifiedNames: string[] = this.normalizePackageNames(_qualifiedNames);
 
-  install(cwd: string, qualifiedNames: string | string[]): Observable<number> {
-    qualifiedNames = Array.isArray(qualifiedNames) ? qualifiedNames : [qualifiedNames];
     return new Observable(observer => {
       const proc = child_process.spawn(
         getNpmPath(),
@@ -86,62 +84,5 @@ export class Npm extends PackageManager {
         reject(`npm uninstall has failed. code: ${code}\n${stderr}`);
       });
     });
-  }
-
-  ls(cwd: string): Promise<Package[]> {
-    return fs.promises
-      .readFile(path.join(cwd, "package.json"))
-      .then(async buffer => {
-        const packageJson = JSON.parse(buffer.toString());
-        const dependencies = packageJson.dependencies || {};
-
-        const packages = new Array<Package>();
-        for (const depName of Object.keys(dependencies)) {
-          const types = await this.findTypes(cwd, depName);
-          packages.push({name: depName, version: dependencies[depName], types});
-        }
-        return packages;
-      })
-      .catch(e => {
-        // Function has no package.json file.
-        if (e.code == "ENOENT") {
-          return [];
-        }
-        return Promise.reject(e);
-      });
-  }
-
-  findTypes(cwd: string, depName: string) {
-    let typeFiles = glob.sync(`node_modules/${depName}/**/*.d.ts`, {cwd});
-    const promises: Promise<{[file: string]: string}>[] = [];
-
-    const size = this.calculateFileSizesMb(typeFiles, cwd);
-
-    if (size > this.MAX_DEP_TYPE_SIZE_MB) {
-      return Promise.resolve({});
-    }
-
-    for (const file of typeFiles) {
-      promises.push(
-        fs.promises.readFile(path.join(cwd, file)).then(b => {
-          return {
-            [file]: b.toString()
-          };
-        })
-      );
-    }
-
-    return Promise.all(promises).then(files => {
-      return files.reduce((acc, curr) => {
-        acc = {...acc, ...curr};
-        return acc;
-      }, {});
-    });
-  }
-
-  calculateFileSizesMb(files: string[], cwd: string) {
-    return (
-      files.reduce((acc, curr) => acc + fs.statSync(path.join(cwd, curr)).size, 0) / (1024 * 1024)
-    );
   }
 }

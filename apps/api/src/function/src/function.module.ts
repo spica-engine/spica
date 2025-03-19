@@ -72,6 +72,7 @@ export class FunctionModule {
           corsOptions: options.corsOptions,
           debug: options.debug,
           logger: options.logger,
+          invocationLogs: options.invocationLogs,
           spawnEntrypointPath: options.spawnEntrypointPath,
           tsCompilerPath: options.tsCompilerPath
         }),
@@ -90,7 +91,8 @@ export class FunctionModule {
           useValue: {
             root: path.join(options.path, "functions"),
             timeout: options.timeout,
-            entryLimit: options.entryLimit
+            entryLimit: options.entryLimit,
+            outDir: ".build"
           }
         },
         {

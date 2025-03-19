@@ -1,14 +1,13 @@
 import {Inject, Injectable, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {DatabaseService, MongoClient} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
-import {Package, PackageManager} from "@spica-server/function/pkgmanager";
+import {DelegatePkgManager, Package, PackageManager} from "@spica-server/function/pkgmanager";
 import {event} from "@spica-server/function/queue/proto";
 import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
 import {rimraf} from "rimraf";
-import {Observable, Subject} from "rxjs";
-import util from "util";
+import {Observable} from "rxjs";
 import {
   FunctionService,
   FUNCTION_OPTIONS,
@@ -105,27 +104,29 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private getDefaultPackageManager(): PackageManager {
+  private getDefaultPackageManager(): DelegatePkgManager {
     return this.scheduler.pkgmanagers.get("node");
   }
 
+  private getFunctionRoot(fn: Function) {
+    return path.join(this.options.root, fn._id.toString());
+  }
+
   getPackages(fn: Function): Promise<Package[]> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.getDefaultPackageManager().ls(functionRoot);
+    return this.getDefaultPackageManager().ls(this.getFunctionRoot(fn), true);
   }
 
   addPackage(fn: Function, qualifiedNames: string | string[]): Observable<number> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.getDefaultPackageManager().install(functionRoot, qualifiedNames);
+    return this.getDefaultPackageManager().install(this.getFunctionRoot(fn), qualifiedNames);
   }
 
   removePackage(fn: Function, name: string): Promise<void> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.getDefaultPackageManager().uninstall(functionRoot, name);
+    return this.getDefaultPackageManager().uninstall(this.getFunctionRoot(fn), name);
   }
 
   async createFunction(fn: Function) {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
+    const functionRoot = this.getFunctionRoot(fn);
+    const functionLanguage = this.getFunctionLanguage(fn);
     await fs.promises.mkdir(functionRoot, {recursive: true});
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
@@ -135,7 +136,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       private: true,
       keywords: ["spica", "function", "node.js"],
       license: "UNLICENSED",
-      type: "module"
+      main: path.join(".", this.options.outDir, functionLanguage.description.entrypoints.runtime)
     };
 
     return fs.promises.writeFile(
@@ -145,33 +146,31 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   deleteFunction(fn: Function) {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return rimraf(functionRoot);
+    return rimraf(this.getFunctionRoot(fn));
   }
 
   compile(fn: Function) {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    const language = this.scheduler.languages.get(fn.language);
+    const language = this.getFunctionLanguage(fn);
     return language.compile({
-      cwd: functionRoot,
-      entrypoint: `index.${language.description.extension}`
+      cwd: this.getFunctionRoot(fn),
+      outDir: this.options.outDir,
+      entrypoints: language.description.entrypoints
     });
   }
 
   update(fn: Function, index: string): Promise<void> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    const language = this.scheduler.languages.get(fn.language);
+    const language = this.getFunctionLanguage(fn);
     return fs.promises.writeFile(
-      path.join(functionRoot, `index.${language.description.extension}`),
+      path.join(this.getFunctionRoot(fn), language.description.entrypoints.build),
       index
     );
   }
 
   read(fn: Function): Promise<string> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    const language = this.scheduler.languages.get(fn.language);
+    const language = this.getFunctionLanguage(fn);
+
     return fs.promises
-      .readFile(path.join(functionRoot, `index.${language.description.extension}`))
+      .readFile(path.join(this.getFunctionRoot(fn), language.description.entrypoints.build))
       .then(b => b.toString())
       .catch(e => {
         if (e.code == "ENOENT") {
@@ -238,6 +237,10 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       });
       enqueuer.unsubscribe(target);
     }
+  }
+
+  private getFunctionLanguage(fn: Function) {
+    return this.scheduler.languages.get(fn.language);
   }
 }
 

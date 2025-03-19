@@ -58,6 +58,7 @@ describe("Queue shifting", () => {
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
         FunctionModule.forRoot({
+          invocationLogs: false,
           path: os.tmpdir(),
           databaseName: undefined,
           databaseReplicaSet: undefined,

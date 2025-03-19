@@ -1,15 +1,17 @@
 import {Compilation, Description, Language} from "@spica-server/function/compiler";
 import fs from "fs";
 import {fromEvent, Observable, of, throwError} from "rxjs";
-import {filter, switchMap, take} from "rxjs/operators";
+import {filter, switchMap, take, tap} from "rxjs/operators";
 import worker_threads from "worker_threads";
 import path from "path";
 import {fileURLToPath} from "url";
 
 export class Typescript extends Language {
   description: Description = {
-    extension: "ts",
-    entrypoint: "index.js",
+    entrypoints: {
+      build: "index.ts",
+      runtime: "index.mjs"
+    },
     name: "typescript",
     title: "Typescript"
   };
@@ -39,7 +41,7 @@ export class Typescript extends Language {
     await fs.promises
       .symlink(
         path.join(compilation.cwd, "node_modules"),
-        path.join(compilation.cwd, ".build", "node_modules"),
+        path.join(compilation.cwd, compilation.outDir, "node_modules"),
         "dir"
       )
       .catch(e => {
