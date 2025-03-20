@@ -18,6 +18,9 @@
       "path": "./src/passport"
     },
     {
+      "path": "./src/env_var"
+    },
+    {
       "path": "./src/preference"
     },
     {

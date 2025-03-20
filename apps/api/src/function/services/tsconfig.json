@@ -6,6 +6,9 @@
       "path": "../../../../../libs/database"
     },
     {
+      "path": "../../env_var/services"
+    },
+    {
       "path": "../../../../../libs/interface/function"
     }
   ]

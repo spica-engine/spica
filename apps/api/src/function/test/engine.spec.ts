@@ -6,6 +6,7 @@ import {FunctionEngine} from "@spica-server/function/src/engine";
 import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
 import {TargetChange, ChangeKind} from "@spica-server/function/src/change";
+import {EnvVarsService} from "@spica-server/env_var/services";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
 describe("Engine", () => {
@@ -16,9 +17,12 @@ describe("Engine", () => {
   let scheduler: Scheduler;
   let database: DatabaseService;
   let fs: FunctionService;
+  let evs: EnvVarsService;
 
   let module: TestingModule;
   let app: INestApplication;
+
+  const hexString = "507f1f77bcf86cd799439011";
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -51,7 +55,8 @@ describe("Engine", () => {
     scheduler = module.get(Scheduler);
     database = module.get(DatabaseService);
 
-    fs = new FunctionService(database, {} as any);
+    evs = new EnvVarsService(database);
+    fs = new FunctionService(database, evs, {} as any);
     engine = new FunctionEngine(
       fs,
       database,
@@ -191,11 +196,9 @@ describe("Engine", () => {
   });
 
   it("should unregister triggers on module destroy", async () => {
-    const hexString = "507f1f77bcf86cd799439011";
-
     await fs.insertOne({
       _id: new ObjectId(hexString),
-      env: {},
+      env_vars: [],
       language: "js",
       timeout: 10,
       name: "my_fn",
@@ -220,15 +223,93 @@ describe("Engine", () => {
 
     engine["categorizeChanges"](changes);
 
+    delete changes[0].target.context;
+
     await engine.onModuleDestroy();
 
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
     expect(unsubscribeSpy).toHaveBeenCalledWith({...changes[0], kind: ChangeKind.Removed});
   });
 
+  it("should reload function environments when environment variable changed", async () => {
+    const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
+    const fnId = new ObjectId(hexString);
+    await fs.insertOne({
+      _id: fnId,
+      env_vars: [env._id],
+      language: "js",
+      timeout: 10,
+      name: "my_fn",
+      triggers: {test_handler: {active: true, options: {}, type: "http"}}
+    });
+
+    await evs.findOneAndUpdate({_id: env._id}, {$set: {value: "YES"}});
+
+    let change: any = {
+      kind: ChangeKind.Updated,
+      target: {
+        id: hexString,
+        handler: "test_handler",
+        context: {
+          env: {IGNORE_ME: "YES"},
+          timeout: 10
+        }
+      },
+      options: {},
+      type: "http"
+    };
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
+    expect(unsubscribeSpy).toHaveBeenCalledWith(change);
+
+    expect(subscribeSpy).toHaveBeenCalledTimes(1);
+    expect(subscribeSpy).toHaveBeenCalledWith(change);
+  });
+
+  it("should reload function environments and clear relation when environment variable removed", async () => {
+    const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
+    const fnId = new ObjectId(hexString);
+    await fs.insertOne({
+      _id: fnId,
+      env_vars: [env._id],
+      language: "js",
+      timeout: 10,
+      name: "my_fn",
+      triggers: {test_handler: {active: true, options: {}, type: "http"}}
+    });
+
+    await evs.findOneAndDelete({_id: env._id});
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const change = {
+      kind: ChangeKind.Updated,
+      target: {
+        id: hexString,
+        handler: "test_handler",
+        context: {
+          env: {},
+          timeout: 10
+        }
+      },
+      options: {},
+      type: "http"
+    };
+    expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
+    expect(unsubscribeSpy).toHaveBeenCalledWith(change);
+
+    expect(subscribeSpy).toHaveBeenCalledTimes(1);
+    expect(subscribeSpy).toHaveBeenCalledWith(change);
+
+    const fn = await fs.findOne({_id: fnId});
+    expect(fn.env_vars).toEqual([]);
+  });
+
   describe("Database Schema", () => {
     it("should get initial schema", async () => {
-      await database.createCollection("functions");
+      await database.createCollection("function");
       const expectedSchema: any = {
         $id: "http://spica.internal/function/enqueuer/database",
         type: "object",
@@ -237,9 +318,8 @@ describe("Engine", () => {
           collection: {
             title: "Collection Name",
             type: "string",
-            //@ts-ignore
-            viewEnum: ["functions"],
-            enum: ["functions"],
+            viewEnum: ["function"],
+            enum: ["function"],
             description: "Collection name that the event will be tracked on"
           },
           type: {
