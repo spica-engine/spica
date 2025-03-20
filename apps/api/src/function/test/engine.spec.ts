@@ -24,6 +24,7 @@ describe("Engine", () => {
     module = await Test.createTestingModule({
       imports: [
         SchedulerModule.forRoot({
+          invocationLogs: false,
           databaseName: undefined,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
@@ -58,7 +59,8 @@ describe("Engine", () => {
       undefined,
       {
         root: "test_root",
-        timeout: 1
+        timeout: 1,
+        outDir: ".build"
       },
       undefined,
       undefined

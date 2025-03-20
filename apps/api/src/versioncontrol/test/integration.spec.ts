@@ -45,6 +45,7 @@ describe("Versioning", () => {
           graphql: false
         }),
         FunctionModule.forRoot({
+          invocationLogs: false,
           path: os.tmpdir(),
           databaseName: undefined,
           databaseReplicaSet: undefined,

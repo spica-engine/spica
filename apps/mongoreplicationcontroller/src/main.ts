@@ -5,6 +5,19 @@ import util from "util";
 import yargs from "yargs";
 
 const options = yargs(process.argv.slice(2))
+  .option("username", {
+    type: "string",
+    describe: "Username of the mongodb user to perform replicaset configurations"
+  })
+  .option("password", {
+    type: "string",
+    describe: "Password of the mongodb user to perform replicaset configurations"
+  })
+  .option("authentication-database", {
+    type: "string",
+    describe: "Database where mongodb user has been created.",
+    default: "admin"
+  })
   .option("from-srv", {
     type: "boolean",
     default: true,
@@ -57,10 +70,27 @@ function debug(message: string) {
   options["debug"] && console.debug(`${new Date().toISOString()}  ${message}`);
 }
 
+let mongoCommand = "mongosh";
+function execMongo(rest: string) {
+  const command = `${mongoCommand} ${rest}`;
+  return exec(command);
+}
+
+function authenticateForMongo(username, password, authenticationDatabase) {
+  if (!username || !password || !authenticationDatabase) {
+    return;
+  }
+
+  debug(
+    "Assuming mongodb started with --auth flag and credentals will be provided for each connection."
+  );
+  mongoCommand = `${mongoCommand} --username '${username}' --password '${password}' --authenticationDatabase '${authenticationDatabase}'`;
+}
+
 async function findPrimaryNode(nodes: string[]) {
   for (const node of nodes) {
     try {
-      const {stdout} = await exec(`mongosh admin --host "${node}" --eval "rs.isMaster()"`);
+      const {stdout} = await execMongo(`admin --host "${node}" --eval "rs.isMaster()"`);
       debug(stdout);
       if (stdout.indexOf('"ismaster" : true') > -1) {
         return node;
@@ -78,10 +108,12 @@ async function findPrimaryNode(nodes: string[]) {
 }
 
 async function initiateReplication(nodes: string[], reinitiate = false) {
-  const {stdout} = await exec(`mongosh --host "${nodes[0]}" --eval "rs.status()"`);
+  const {stdout} = await execMongo(`--host "${nodes[0]}" --eval "rs.status()"`);
   if (stdout.indexOf("no replset config has been received") > -1) {
-    const {stdout} = await exec(
-      `mongosh --host ${nodes[0]} --eval 'rs.initiate({"_id": "${options["replica-set"]}", "members": ${JSON.stringify(nodes.map((host, _id) => ({_id, host})))}})'`
+    const {stdout} = await execMongo(
+      `--host ${nodes[0]} --eval 'rs.initiate({"_id": "${
+        options["replica-set"]
+      }", "members": ${JSON.stringify(nodes.map((host, _id) => ({_id, host})))}})'`
     );
     debug(stdout);
     if (stdout.indexOf('"ok" : 1') == -1) {
@@ -102,7 +134,7 @@ async function initiateReplication(nodes: string[], reinitiate = false) {
       `cfg.members = ${JSON.stringify(nodes.map((host, _id) => ({_id, host})))}`,
       "rs.reconfig(cfg, { force: true })"
     ];
-    const {stdout} = await exec(`mongosh admin --host "${primary}" --eval '${script.join(";")}'`);
+    const {stdout} = await execMongo(`admin --host "${primary}" --eval '${script.join(";")}'`);
     debug(stdout);
     if (stdout.indexOf('"ok" : 1') == -1) {
       throw new Error("Can not initialize replica set.");
@@ -111,7 +143,7 @@ async function initiateReplication(nodes: string[], reinitiate = false) {
 }
 
 async function addAsSecondary(primaryHost: string, secondaryHost: string, index: number) {
-  const {stdout} = await exec(`mongosh admin --host "${primaryHost}" --eval "rs.config()"`);
+  const {stdout} = await execMongo(`admin --host "${primaryHost}" --eval "rs.config()"`);
   debug(stdout);
 
   if (stdout.indexOf(secondaryHost) == -1) {
@@ -120,7 +152,7 @@ async function addAsSecondary(primaryHost: string, secondaryHost: string, index:
       `cfg.members[${index}] = { _id: ${index},  host: "${secondaryHost}"}`,
       "rs.reconfig(cfg, { force: true })"
     ];
-    const {stdout} = await exec(`mongosh admin --host "${primaryHost}" --eval '${conf.join(";")}'`);
+    const {stdout} = await execMongo(`admin --host "${primaryHost}" --eval '${conf.join(";")}'`);
     debug(stdout);
     if (stdout.indexOf('"ok" : 1') == -1) {
       throw new Error(`Can not add the secondary node ${secondaryHost}`);
@@ -129,6 +161,12 @@ async function addAsSecondary(primaryHost: string, secondaryHost: string, index:
 }
 
 async function initialize() {
+  authenticateForMongo(
+    options["username"],
+    options["password"],
+    options["authentication-database"]
+  );
+
   if (options["from-srv"]) {
     debug("Server discovery is in action.");
     debug(`POD Hostname is: ${options["hostname"]}`);
@@ -157,7 +195,7 @@ async function initialize() {
           return Promise.reject(error);
         }
       })
-    )?.map(node => node.name);
+    ).map(node => node.name);
 
     if (nodes) {
       if (nodes.length > 1) {

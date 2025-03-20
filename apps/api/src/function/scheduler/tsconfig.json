@@ -12,6 +12,9 @@
       "path": "../pkgmanager/node"
     },
     {
+      "path": "../pkgmanager/local"
+    },
+    {
       "path": "../compiler/javascript"
     },
     {

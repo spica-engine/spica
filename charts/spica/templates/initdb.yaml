@@ -1,0 +1,116 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{.Release.Namespace}}
+  name: {{ .Release.Name }}-database
+data:
+  init-users.sh: |
+    #!/bin/bash
+
+    ROOT_USERNAME=$ROOT_USERNAME
+    ROOT_PASSWORD=$ROOT_PASSWORD
+    SPICA_USERNAME=$SPICA_USERNAME
+    SPICA_PASSWORD=$SPICA_PASSWORD
+
+    echo "Defining retry command.."
+    retry_command() {
+      local retries=0
+      local max_retries=10
+
+      while true; do
+        "$@" && break  # Break the loop if the command succeeds
+        retries=$((retries+1))
+        if [ $retries -ge $max_retries ]; then
+          echo "Max retries reached. Exiting script."
+          exit 1
+        fi
+        
+        delay=$((2**retries))
+        echo "Command failed. Retrying in $delay seconds..."
+        sleep $delay
+      
+      done
+    }
+
+    echo "Defined retry command!"
+
+    # Start MongoDB without authentication
+    echo "Starting mongodb with replica and no-auth.."
+    mongod --replSet rs0 --bind_ip_all > start-replicaset.log 2>&1 & PID="$!"
+    echo "Starting mongodb succeeded!"
+
+
+    # Ping until mongodb process is ready
+    echo "Trying to ping.."
+    retry_command mongosh --quiet --eval "db.runCommand({ ping: 1 })"
+    echo "Ping succeeded!"
+
+    # Initiate replicaset
+    echo "Trying to initiate replicaset.."
+    mongosh --eval "rs.initiate()"
+    echo "Replicaset initiation succeeded!"
+
+    # Insert root user if not exist
+    echo "Inserting root user.."
+    mongosh --quiet <<EOF
+      use admin
+      var user = db.getUser('$ROOT_USERNAME')
+      var roles = [ "root" ]
+      if(user){
+          db.updateUser('$ROOT_USERNAME', { pwd: '$ROOT_PASSWORD', roles: roles })
+      }else{
+          db.createUser({ user: '$ROOT_USERNAME', pwd: '$ROOT_PASSWORD', roles: roles })
+      }
+    EOF
+    echo "Inserting root user has been completed!"
+
+    # Upsert application user
+    echo "Inserting spica user.."
+    mongosh --quiet <<EOF
+      use admin
+      var user = db.getUser('$SPICA_USERNAME')
+      var roles = [ { role: 'readWrite', db: 'spica' } ]
+      if(user){
+          db.updateUser('$SPICA_USERNAME', { pwd: '$SPICA_PASSWORD', roles: roles })
+      }else{
+          db.createUser({ user: '$SPICA_USERNAME', pwd: '$SPICA_PASSWORD', roles: roles })
+      }
+    EOF
+    echo "Inserted spica user!"
+
+    echo "Killing mongodb process.."
+    kill $PID
+    echo "Mongodb process has been killed!"
+
+    echo "Initializing has been completed successfully."
+
+  init-replica.sh: | 
+    #!/bin/bash
+    
+    echo "Defining retry command.."
+    retry_command() {
+      local retries=0
+      local max_retries=10
+
+      while true; do
+        "$@" && break  # Break the loop if the command succeeds
+        retries=$((retries+1))
+        if [ $retries -ge $max_retries ]; then
+          echo "Max retries reached. Exiting script."
+          exit 1
+        fi
+        
+        delay=$((2**retries))
+        echo "Command failed. Retrying in $delay seconds..."
+        sleep $delay
+        
+      done
+    }
+    echo "Defined retry command!"
+
+    # retry until mongodb process is ready
+    echo "Trying to ping.."
+    retry_command mongosh --quiet --eval "db.runCommand({ ping: 1 })"
+    echo "Ping succeeded!"
+
+    mongosh --authenticationDatabase "admin" -u "$ROOT_USERNAME" -p "$ROOT_PASSWORD" --eval "rs.reconfig({ _id: 'rs0', members: $RS_MEMBERS },{force: true})"
