@@ -43,7 +43,7 @@ export function schemaSyncProviders(
     const resourceNameValidator = str => ObjectId.isValid(str);
     let files = await manager.read(module, resourceNameValidator, ["schema.yaml", "env.env"]);
 
-    return files.map(file => CRUD.environment.apply(file.contents.schema, file.contents.env));
+    return files.map(file => file.contents.schema);
   };
 
   const write = fn => {
