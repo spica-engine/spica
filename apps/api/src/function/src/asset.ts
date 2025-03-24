@@ -75,16 +75,8 @@ export function registerAssetHandlers(
 
     const promises = [];
 
-    // env and schema
-    const env = JSON.parse(JSON.stringify(fn.env_vars || {}));
-    for (const key of Object.keys(env)) {
-      fn.env_vars[key] = `{${key}}`;
-    }
-
-    promises.push(
-      manager.write(_module, _id, "schema", fn, "yaml"),
-      manager.write(_module, _id, "env", env, "env")
-    );
+    // schema
+    promises.push(manager.write(_module, _id, "schema", fn, "yaml"));
 
     // dependencies
     const dependencies = await engine.getPackages(fn).then(deps => {
