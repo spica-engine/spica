@@ -40,7 +40,7 @@ describe("Replace env vars", () => {
             }
           }
         },
-        env_vars: {
+        env: {
           SECRET: "123",
           APIKEY: "OBJECT_ID"
         }
@@ -60,7 +60,7 @@ describe("Replace env vars", () => {
             }
           }
         },
-        env_vars: {}
+        env: {}
       },
       {
         name: "newFuncTs",
@@ -77,7 +77,7 @@ describe("Replace env vars", () => {
             }
           }
         },
-        env_vars: {
+        env: {
           SECRET: "123"
         }
       }

@@ -10,7 +10,7 @@ export default async function (ctx: Context) {
 
   for (let func of functions) {
     const envVars = [];
-    Object.entries(func.env_vars).forEach(([key, value]) => envVars.push({key, value}));
+    Object.entries(func.env).forEach(([key, value]) => envVars.push({key, value}));
 
     if (envVars.length) {
       await envVarCollection.insertMany(envVars);
