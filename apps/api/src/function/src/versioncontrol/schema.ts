@@ -65,6 +65,6 @@ export function schemaSyncProviders(
     name,
     document,
     representative,
-    parents: 0
+    parents: 1
   };
 }
