@@ -47,7 +47,7 @@ export function schemaSyncProviders(
   };
 
   const write = fn => {
-    return Promise.all([manager.write(module, fn._id, "schema", fn, "yaml")]);
+    return manager.write(module, fn._id, "schema", fn, "yaml");
   };
 
   const rm = fn => {
