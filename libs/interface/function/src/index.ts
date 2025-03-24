@@ -50,6 +50,5 @@ export interface FunctionContents<ER extends EnvRelation = EnvRelation.NotResolv
   package: {
     dependencies: Dependency;
   };
-  env: Environment;
   index: string;
 }
