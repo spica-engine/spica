@@ -17,7 +17,10 @@ export default async function (ctx: Context) {
     }
 
     bulkOps.push({
-      updateOne: {filter: {_id: func._id}, update: {$set: {env_vars: envVars.map(v => v._id)}}}
+      updateOne: {
+        filter: {_id: func._id},
+        update: {$set: {env_vars: envVars.map(v => v._id)}, $unset: {env: ""}}
+      }
     });
   }
 

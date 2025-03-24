@@ -84,35 +84,27 @@ describe("Replace env vars", () => {
     ]);
   });
 
-  it("should insert env vars", async () => {
+  it("should insert and replace env vars", async () => {
     await run([...args, "--from", "0.15.0", "--to", "0.16.0", "--continue-if-versions-are-equal"]);
+
+    const envVarIds = [];
+
     const envVars = await db
       .collection("env_var")
       .find({})
       .map(obj => {
+        envVarIds.push(obj._id);
         delete obj._id;
         return obj;
       })
       .toArray();
 
     expect(envVars).toEqual([
-      {
-        key: "SECRET",
-        value: "123"
-      },
-      {
-        key: "APIKEY",
-        value: "OBJECT_ID"
-      },
-      {
-        key: "SECRET",
-        value: "123"
-      }
+      {key: "SECRET", value: "123"},
+      {key: "APIKEY", value: "OBJECT_ID"},
+      {key: "SECRET", value: "123"}
     ]);
-  });
 
-  it("should replace env vars", async () => {
-    await run([...args, "--from", "0.15.0", "--to", "0.16.0", "--continue-if-versions-are-equal"]);
     const functions = await db
       .collection("function")
       .find({})
@@ -138,7 +130,7 @@ describe("Replace env vars", () => {
             }
           }
         },
-        env_vars: functions[0].env_vars
+        env_vars: [envVarIds[0], envVarIds[1]]
       },
       {
         name: "brandNewFuncJs",
@@ -172,14 +164,12 @@ describe("Replace env vars", () => {
             }
           }
         },
-        env_vars: functions[2].env_vars
+        env_vars: [envVarIds[2]]
       }
     ]);
 
-    functions.forEach(f =>
-      f.env_vars.forEach(v => {
-        expect(ObjectId.isValid(v)).toBe(true);
-      })
-    );
+    envVarIds.forEach(v => {
+      expect(ObjectId.isValid(v)).toBe(true);
+    });
   });
 });
