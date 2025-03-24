@@ -1,4 +1,10 @@
-import {Db, getConnectionUri, getDatabaseName, start} from "@spica-server/database/testing";
+import {
+  Db,
+  getConnectionUri,
+  getDatabaseName,
+  ObjectId,
+  start
+} from "@spica-server/database/testing";
 import color from "cli-color/lib/supports-color";
 import {run} from "@spica/migrate";
 import path from "path";
@@ -132,10 +138,7 @@ describe("Replace env vars", () => {
             }
           }
         },
-        env_vars: [
-          {_id: functions[0].env_vars[0]._id, key: "SECRET", value: "123"},
-          {_id: functions[0].env_vars[1]._id, key: "APIKEY", value: "OBJECT_ID"}
-        ]
+        env_vars: functions[0].env_vars
       },
       {
         name: "brandNewFuncJs",
@@ -169,8 +172,14 @@ describe("Replace env vars", () => {
             }
           }
         },
-        env_vars: [{_id: functions[2].env_vars[0]._id, key: "SECRET", value: "123"}]
+        env_vars: functions[2].env_vars
       }
     ]);
+
+    functions.forEach(f =>
+      f.env_vars.forEach(v => {
+        expect(ObjectId.isValid(v)).toBe(true);
+      })
+    );
   });
 });

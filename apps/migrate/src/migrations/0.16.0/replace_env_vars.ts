@@ -16,7 +16,9 @@ export default async function (ctx: Context) {
       await envVarCollection.insertMany(envVars);
     }
 
-    bulkOps.push({updateOne: {filter: {_id: func._id}, update: {$set: {env_vars: envVars}}}});
+    bulkOps.push({
+      updateOne: {filter: {_id: func._id}, update: {$set: {env_vars: envVars.map(v => v._id)}}}
+    });
   }
 
   if (bulkOps.length) {
