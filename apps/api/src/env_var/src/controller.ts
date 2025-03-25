@@ -9,7 +9,8 @@ import {
   Post,
   Put,
   Query,
-  UseGuards
+  UseGuards,
+  UseInterceptors
 } from "@nestjs/common";
 import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
@@ -20,6 +21,8 @@ import {Schema} from "@spica-server/core/schema";
 import {AuthGuard, ActionGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {EnvVar} from "@spica-server/interface/env_var";
 import * as CRUD from "./crud";
+import {activity} from "@spica-server/activity/services";
+import {createEnvVarActivity} from "./activity.resource";
 
 @Controller("env-var")
 export class EnvVarsController {
@@ -66,6 +69,7 @@ export class EnvVarsController {
     return this.evs.findOne({_id: id});
   }
 
+  @UseInterceptors(activity(createEnvVarActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("env-var:create"))
   async insertOne(
@@ -77,6 +81,7 @@ export class EnvVarsController {
     });
   }
 
+  @UseInterceptors(activity(createEnvVarActivity))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("env-var:update"))
   async updateOne(
@@ -89,6 +94,7 @@ export class EnvVarsController {
     });
   }
 
+  @UseInterceptors(activity(createEnvVarActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("env-var:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {

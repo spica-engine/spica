@@ -216,21 +216,4 @@ export namespace environment {
     const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated);
     return engine.categorizeChanges(changes);
   }
-
-  export function apply(fn: Function, env: object) {
-    const placeholders = fn.env_vars || {};
-    const actualEnvs = env || {};
-
-    for (const [key, value] of Object.entries<string>(placeholders)) {
-      const match = /{(.*?)}/gm.exec(value);
-
-      let replacedValue = value;
-      if (match && match.length && Object.keys(actualEnvs).includes(match[1])) {
-        replacedValue = actualEnvs[match[1]];
-      }
-
-      fn.env_vars[key] = replacedValue;
-    }
-    return fn;
-  }
 }
