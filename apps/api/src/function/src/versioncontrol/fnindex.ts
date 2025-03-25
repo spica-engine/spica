@@ -65,6 +65,6 @@ export function indexSyncProviders(
     name,
     document,
     representative,
-    parents: 1
+    parents: 2
   };
 }
