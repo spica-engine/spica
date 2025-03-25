@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/batch",
+  "type": "object",
+  "required": ["requests"],
+  "properties": {
+    "requests": {
+      "type": "array",
+      "description": "HTTP requests array",
+      "items": {
+        "type": "object",
+        "description": "Properties of HTTP requests",
+        "required": ["id", "method", "url"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the request"
+          },
+          "method": {
+            "type": "string",
+            "description": "Method of the HTTP request",
+            "enum": ["GET", "POST", "PATCH", "DELETE"]
+          },
+          "url": {
+            "type": "string",
+            "description": "Relative url of the HTTP request"
+          },
+          "body": {
+            "type": "object",
+            "description": "Body of the HTTP request"
+          },
+          "headers": {
+            "type": "object",
+            "description": "Headers of the HTTP request"
+          }
+        }
+      }
+    },
+    "concurrency": {
+      "type": "number",
+      "description": "Limit of HTTP requests to be sent concurrently. Default is 0 for unlimited concurrency.",
+      "default": 0,
+      "minimum": 0
+    },
+    "additionalProperties": false
+  },
+  "additionalProperties": false
+}
