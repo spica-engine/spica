@@ -47,7 +47,8 @@ async function sync({
     FunctionSynchronizer,
     BucketSynchronizer,
     ApikeySynchronizer,
-    PolicySynchronizer
+    PolicySynchronizer,
+    EnvironmentVariableSynchronizer
   ];
   const synchronizers = [];
 
@@ -931,6 +932,92 @@ export class PolicySynchronizer implements ModuleSynchronizer {
         )
     );
     await spinUntilPromiseEnd(deletePromiseFactories, "Deleting policies from the target instance");
+  }
+
+  getDisplayableModuleName(): string {
+    return this.moduleName;
+  }
+}
+
+export class EnvironmentVariableSynchronizer implements ModuleSynchronizer {
+  moduleName = "env-var";
+  primaryField = "key";
+
+  insertions = [];
+  updations = [];
+  deletions = [];
+
+  constructor(
+    private sourceService: httpService.Client,
+    private targetService: httpService.Client
+  ) {}
+
+  initialize() {
+    return Promise.resolve([]);
+  }
+
+  async analyze() {
+    console.log();
+    const sourceEnvVars = await spin<any>({
+      text: "Fetching env vars from source instance",
+      op: () => this.sourceService.get("env-var")
+    });
+
+    const targetEnvVars = await spin<any>({
+      text: "Fetching env vars from target instance",
+      op: () => this.targetService.get("env-var")
+    });
+
+    const decider = new ResourceGroupComparisor(sourceEnvVars, targetEnvVars);
+
+    this.insertions = decider.insertions();
+    this.updations = decider.updations();
+    this.deletions = decider.deletions();
+
+    return {
+      insertions: this.insertions,
+      updations: this.updations,
+      deletions: this.deletions
+    };
+  }
+
+  async synchronize() {
+    console.log();
+    const insertPromiseFactories = this.insertions.map(
+      envVar => () =>
+        this.targetService.post("env-var", envVar).catch(e =>
+          handleRejection({
+            action: "insert",
+            objectName: this.getDisplayableModuleName() + " " + envVar.key,
+            e
+          })
+        )
+    );
+    await spinUntilPromiseEnd(insertPromiseFactories, "Inserting env vars to the target instance");
+
+    const updatePromiseFactories = this.updations.map(
+      envVar => () =>
+        this.targetService.put(`env-var/${envVar._id}`, envVar).catch(e =>
+          handleRejection({
+            action: "update",
+            objectName: this.getDisplayableModuleName() + " " + envVar.key,
+            e
+          })
+        )
+    );
+    await spinUntilPromiseEnd(updatePromiseFactories, "Updating env vars on the target instance");
+
+    const deletePromiseFactories = this.deletions.map(
+      envVar => () =>
+        this.targetService.delete(`env-var/${envVar._id}`).catch(e =>
+          handleRejection({
+            action: "delete",
+            objectName: envVar.key,
+            e
+          })
+        )
+    );
+    await spinUntilPromiseEnd(deletePromiseFactories, "Deleting env vars from the target instance");
   }
 
   getDisplayableModuleName(): string {
