@@ -1,4 +1,4 @@
-import {Controller, Body, Post, Inject, Req} from "@nestjs/common";
+import {Controller, Body, Post, Inject, Req, UseGuards} from "@nestjs/common";
 import {Schema} from "@spica-server/core/schema";
 import {
   BatchRequest,
@@ -10,6 +10,7 @@ import {
   Request,
   Response
 } from "./interface";
+import {AuthGuard} from "@spica-server/passport/guard";
 
 @Controller("batch")
 export class BatchController {
@@ -19,6 +20,7 @@ export class BatchController {
   ) {}
 
   @Post()
+  @UseGuards(AuthGuard())
   async insert(
     @Body(Schema.validate("http://spica.internal/batch")) batch: BatchRequest,
     @Req() req
