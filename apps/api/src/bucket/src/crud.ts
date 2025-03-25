@@ -1,10 +1,11 @@
 import {schemaDiff, ChangeKind} from "@spica-server/core/differ";
 import {findRelations} from "@spica-server/bucket/common";
-import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/services";
+import {BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {HistoryService} from "@spica-server/bucket/history";
 import * as expression from "@spica-server/bucket/expression";
 import {BadRequestException} from "@nestjs/common";
+import {Bucket} from "@spica-server/interface/bucket/services";
 
 export async function insert(bs: BucketService, bucket: Bucket) {
   ruleValidation(bucket);

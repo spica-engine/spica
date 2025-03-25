@@ -16,8 +16,6 @@ import {
   clearRelations,
   getDependents,
   authIdToString,
-  AUTH_RESOLVER,
-  IAuthResolver,
   filterReviver,
   constructFilterValues
 } from "@spica-server/bucket/common";
@@ -28,8 +26,7 @@ import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {
   BucketService,
   getBucketDataCollection,
-  BucketDataService,
-  BucketDocument
+  BucketDataService
 } from "@spica-server/bucket/services";
 import {applyPatch, deepCopy} from "@spica-server/core/patch";
 import {Schema, Validator} from "@spica-server/core/schema";
@@ -40,8 +37,10 @@ import {GuardService} from "@spica-server/passport";
 import {resourceFilterFunction} from "@spica-server/passport/guard";
 import {fromEvent, of} from "rxjs";
 import {takeUntil, catchError} from "rxjs/operators";
-import {MessageKind} from "./interface";
 import {Action} from "@spica-server/interface/activity";
+import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
+import {MessageKind} from "@spica-server/interface/bucket/realtime";
+import {BucketDocument} from "@spica-server/interface/bucket/services";
 
 @WebSocketGateway({
   path: "/bucket/:id/data"

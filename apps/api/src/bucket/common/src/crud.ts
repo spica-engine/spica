@@ -1,15 +1,8 @@
 import {BaseCollection, ObjectId, ReturnDocument} from "@spica-server/database";
 import * as expression from "@spica-server/bucket/expression";
 import {
-  Bucket,
-  BucketDocument,
-  BucketPreferences,
-  LimitExceedBehaviours
-} from "@spica-server/bucket/services";
-import {
   createRelationMap,
   getRelationPipeline,
-  RelationMap,
   resetNonOverlappingPathsInRelationMap
 } from "./relation";
 import {getUpdateQueryForPatch} from "@spica-server/core/patch";
@@ -19,40 +12,22 @@ import {
   DatabaseException,
   ForbiddenException
 } from "./exception";
-import {IAuthResolver} from "./interface";
+import {IAuthResolver} from "@spica-server/interface/bucket/common";
 import {categorizePropertyMap} from "./helpers";
 import {BucketPipelineBuilder} from "./pipeline.builder";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
-
-interface CrudOptions<Paginate> {
-  localize?: boolean;
-  paginate?: Paginate;
-}
-
-interface CrudParams {
-  resourceFilter?: object;
-  documentId?: ObjectId;
-  filter?: object | string;
-  language?: string;
-  relationPaths: string[][];
-  req: any;
-  sort?: object;
-  skip?: number;
-  limit?: number;
-  projectMap: string[][];
-}
-
-export interface CrudFactories<T> {
-  collection: (schema: Bucket) => BaseCollection<T>;
-  preference: () => Promise<BucketPreferences>;
-  schema: (id: string | ObjectId) => Promise<Bucket>;
-  authResolver: IAuthResolver;
-}
-
-export interface CrudPagination<T> {
-  meta: {total: number};
-  data: T[];
-}
+import {
+  CrudOptions,
+  CrudParams,
+  CrudFactories,
+  CrudPagination,
+  RelationMap
+} from "@spica-server/interface/bucket/common";
+import {
+  Bucket,
+  LimitExceedBehaviours,
+  BucketDocument
+} from "@spica-server/interface/bucket/services";
 
 export async function findDocuments<T>(
   schema: Bucket,

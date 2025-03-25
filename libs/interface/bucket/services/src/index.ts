@@ -1,6 +1,22 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId, CreateIndexesOptions} from "@spica-server/database";
 import {Preference} from "@spica-server/preference/services";
 import {JSONSchema7, JSONSchema7TypeName} from "json-schema";
+
+export interface IndexDefinition {
+  definition: {
+    [key: string]: any;
+  };
+  options?: CreateIndexesOptions;
+}
+
+export interface ExistingIndex {
+  v: number;
+  key: {
+    [key: string]: any;
+  };
+  name: string;
+  [key: string]: any;
+}
 
 export interface Bucket {
   _id?: ObjectId;
@@ -55,3 +71,18 @@ export interface BucketPreferences extends Preference {
     default: string;
   };
 }
+
+export type ExtendedJSONSchema7Type =
+  | JSONSchema7["type"]
+  | "objectid"
+  | "storage"
+  | "richtext"
+  | "textarea"
+  | "color"
+  | "multiselect"
+  | "relation"
+  | "date"
+  | "location"
+  | "json";
+
+export const BUCKET_DATA_LIMIT = Symbol.for("BUCKET_DATA_LIMIT");

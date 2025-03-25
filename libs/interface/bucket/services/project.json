@@ -1,0 +1,5 @@
+{
+  "name": "interface/bucket/services",
+  "sourceRoot": "libs/interface/bucket/services/src",
+  "projectType": "library"
+}

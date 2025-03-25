@@ -27,6 +27,7 @@ import {getSyncProvider} from "./versioncontrol/schema";
 import {registerAssetHandlers} from "./asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
+import {BucketOptions} from "@spica-server/interface/bucket";
 
 @Module({})
 export class BucketModule {
@@ -155,14 +156,4 @@ export class BucketCoreModule {
       exports: [BUCKET_LANGUAGE_FINALIZER]
     };
   }
-}
-
-export interface BucketOptions {
-  hooks: boolean;
-  history: boolean;
-  realtime: boolean;
-  cache: boolean;
-  cacheTtl?: number;
-  bucketDataLimit?: number;
-  graphql: boolean;
 }

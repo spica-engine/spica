@@ -10,7 +10,7 @@ import {HttpAdapterHost} from "@nestjs/core";
 import {ActivityService} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
-import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/services";
+import {BucketService} from "@spica-server/bucket/services";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {GuardService} from "@spica-server/passport";
@@ -35,10 +35,11 @@ import {
   clearRelations,
   getDependents,
   findLocale,
-  insertActivity,
-  AUTH_RESOLVER,
-  IAuthResolver
+  insertActivity
 } from "@spica-server/bucket/common";
+import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
+import {FindResponse} from "@spica-server/interface/bucket/graphql";
+import {Bucket, BucketDocument} from "@spica-server/interface/bucket/services";
 
 import {
   createSchema,
@@ -46,16 +47,11 @@ import {
   getBucketName,
   requestedFieldsFromExpression,
   requestedFieldsFromInfo,
-  SchemaWarning,
   validateBuckets
 } from "./schema";
 import {applyPatch, deepCopy} from "@spica-server/core/patch";
 import {Action} from "@spica-server/interface/activity";
-
-interface FindResponse {
-  meta: {total: number};
-  data: BucketDocument[];
-}
+import {SchemaWarning} from "@spica-server/interface/bucket/graphql";
 
 @Injectable()
 export class GraphqlController implements OnModuleInit {

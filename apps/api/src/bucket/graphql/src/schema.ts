@@ -1,23 +1,9 @@
-import {Bucket} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
 import {GraphQLResolveInfo} from "graphql";
+import {Prefix, Suffix, SchemaWarning} from "@spica-server/interface/bucket/graphql";
+import {Bucket} from "@spica-server/interface/bucket/services";
 
 const locationTypes = ["Point"];
-
-enum Prefix {
-  Type = "type",
-  Input = "input"
-}
-
-enum Suffix {
-  Type = "",
-  Input = "Input"
-}
-
-export interface SchemaWarning {
-  target: string;
-  reason: string;
-}
 
 export function validateBuckets(buckets: Bucket[]) {
   const warnings: SchemaWarning[] = [];

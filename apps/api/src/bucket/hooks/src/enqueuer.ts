@@ -6,11 +6,7 @@ import {ChangeQueue} from "./queue";
 import {ChangeEmitter, changeKey} from "./emitter";
 import uniqid from "uniqid";
 import {ClassCommander, CommandType, JobReducer} from "@spica-server/replication";
-
-export interface ChangeOptions {
-  bucket: string;
-  type: string;
-}
+import {ChangeOptions} from "@spica-server/interface/bucket/hooks";
 
 function getChangeType(type: string): hooks.Change.Kind {
   switch (type) {
