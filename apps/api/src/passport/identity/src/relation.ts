@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {PreferenceService} from "@spica-server/preference/services";
 import {IdentityService} from "./identity.service";
-import {Identity} from "./interface";
+import {Identity} from "@spica-server/interface/passport/identity";
 import {IAuthResolver} from "@spica-server/interface/bucket/common";
 
 @Injectable()

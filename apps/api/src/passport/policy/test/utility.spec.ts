@@ -1,4 +1,4 @@
-import {Policy} from "@spica-server/passport/policy";
+import {Policy} from "@spica-server/interface/passport/policy";
 import {
   getDuplicatedActionMaps,
   createDuplicatedActionsErrorMessage

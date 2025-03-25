@@ -28,6 +28,9 @@
     },
     {
       "path": "../../../../../libs/interface/activity"
+    },
+    {
+      "path": "../../../../../libs/interface/passport/apikey"
     }
   ]
 }

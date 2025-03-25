@@ -1,4 +1,8 @@
-import {Factor, FactorMeta, AuthFactorSchemaProvider} from "./interface";
+import {
+  Factor,
+  FactorMeta,
+  AuthFactorSchemaProvider
+} from "@spica-server/interface/passport/authfactor";
 import {Inject, Injectable, Optional} from "@nestjs/common";
 import {ClassCommander, CommandType} from "@spica-server/replication";
 

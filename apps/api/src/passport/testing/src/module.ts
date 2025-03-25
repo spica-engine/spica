@@ -3,7 +3,7 @@ import {PassportModule} from "@nestjs/passport";
 import {GuardService} from "@spica-server/passport";
 import {AuthFactor} from "@spica-server/passport/authfactor";
 import {PreferenceService} from "@spica-server/preference/services";
-import {TestingOptions} from "./interface";
+import {TestingOptions} from "@spica-server/interface/passport/testing";
 import {NoopStrategy} from "./noop.strategy";
 import {AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 

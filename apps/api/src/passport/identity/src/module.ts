@@ -3,12 +3,17 @@ import {SchemaResolver, provideSchemaResolver} from "./schema.resolver";
 import {Validator, SchemaModule} from "@spica-server/core/schema";
 import {PreferenceService, IDENTITY_SETTINGS_FINALIZER} from "@spica-server/preference/services";
 import {JwtModule} from "@nestjs/jwt";
-import {IdentityOptions, IDENTITY_OPTIONS, POLICY_PROVIDER} from "./options";
+import {
+  IdentityOptions,
+  IDENTITY_OPTIONS,
+  POLICY_PROVIDER
+} from "@spica-server/interface/passport/identity";
 import {IdentityController} from "./identity.controller";
 import {IdentityService} from "./identity.service";
 import {IdentityStrategy} from "./identity.strategy";
 import {provideSettingsFinalizer, providePolicyFinalizer} from "./utility";
-import {IDENTITY_POLICY_FINALIZER, PolicyService} from "@spica-server/passport/policy";
+import {PolicyService} from "@spica-server/passport/policy";
+import {IDENTITY_POLICY_FINALIZER} from "@spica-server/interface/passport/policy";
 import {registerStatusProvider} from "./status";
 import IdentitySchema from "./schemas/identity.json" with {type: "json"};
 import IdentityCreateSchema from "./schemas/identity-create.json" with {type: "json"};

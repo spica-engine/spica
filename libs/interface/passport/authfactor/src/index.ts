@@ -25,3 +25,8 @@ export interface FactorSchema {
 }
 
 export type AuthFactorSchemaProvider = () => Promise<FactorSchema>;
+
+export interface TotpFactorMeta extends FactorMeta {
+  type: "totp";
+  secret: string;
+}

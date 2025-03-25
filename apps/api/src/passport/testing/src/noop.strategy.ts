@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {PassportStrategy} from "@nestjs/passport";
 import passport from "passport";
-import {TestingOptions} from "./interface";
+import {TestingOptions} from "@spica-server/interface/passport/testing";
 
 class _NoopStrategy extends passport.Strategy {
   constructor(

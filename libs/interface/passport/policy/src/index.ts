@@ -17,12 +17,12 @@ export interface Statement {
   module: string;
 }
 
-export const APIKEY_POLICY_FINALIZER = Symbol.for("APIKEY_POLICY_FINALIZER");
-export const IDENTITY_POLICY_FINALIZER = Symbol.for("IDENTITY_POLICY_FINALIZER");
-
 export type changeFactory = (policyId: string) => Promise<unknown>;
 
 export interface ActionMap {
   action: string;
   indexes: number[];
 }
+
+export const APIKEY_POLICY_FINALIZER = Symbol.for("APIKEY_POLICY_FINALIZER");
+export const IDENTITY_POLICY_FINALIZER = Symbol.for("IDENTITY_POLICY_FINALIZER");
