@@ -21,5 +21,5 @@ export async function replace(evs: EnvVarsService, envVar: EnvVar) {
 }
 
 export async function remove(evs: EnvVarsService, id: string | ObjectId) {
-  return evs.findOneAndDelete({_id: new ObjectId(id)});
+  evs.findOneAndDelete({_id: new ObjectId(id)});
 }

@@ -2,6 +2,7 @@ import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {EnvVarsService} from "@spica-server/env_var/services";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {SyncProvider} from "@spica-server/versioncontrol";
+import * as CRUD from "../crud";
 
 export const getVCSyncProvider = (
   evs: EnvVarsService,
@@ -20,22 +21,11 @@ export const getVCSyncProvider = (
       })
     );
 
-  const insert = envVar => {
-    if (envVar._id) {
-      envVar._id = new ObjectId(envVar._id);
-    }
-    return evs.insertOne(envVar);
-  };
+  const insert = envVar => CRUD.insert(evs, envVar);
 
-  const update = envVar => {
-    const id = new ObjectId(envVar._id);
-    delete envVar._id;
-    return evs.findOneAndReplace({_id: id}, envVar, {returnDocument: ReturnDocument.AFTER});
-  };
+  const update = envVar => CRUD.replace(evs, envVar);
 
-  const remove = async envVar => {
-    await evs.findOneAndDelete({_id: new ObjectId(envVar._id)});
-  };
+  const remove = envVar => CRUD.remove(evs, envVar._id);
 
   const document = {
     getAll,

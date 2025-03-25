@@ -4,7 +4,7 @@ import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {EnvVarsService} from "@spica-server/env_var/services";
 import {EnvVar} from "@spica-server/interface/env_var";
-import {ObjectId, ReturnDocument} from "@spica-server/database";
+import {ObjectId} from "@spica-server/database";
 import * as CRUD from "./crud";
 
 const _module = "env_var";
