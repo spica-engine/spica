@@ -1,0 +1,5 @@
+{
+  "name": "interface/function/services",
+  "sourceRoot": "libs/interface/function/services/src",
+  "projectType": "library"
+}

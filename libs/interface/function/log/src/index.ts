@@ -1,5 +1,5 @@
 import {ObjectId} from "@spica-server/database";
-import {LogLevels, LogChannels} from "@spica-server/function/runtime/logger";
+import {LogLevels, LogChannels} from "@spica-server/interface/function/runtime";
 
 export interface Log {
   _id: ObjectId;

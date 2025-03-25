@@ -13,6 +13,9 @@
     },
     {
       "path": "../queue"
+    },
+    {
+      "path": "../../../../../libs/interface/function/enqueuer"
     }
   ]
 }

@@ -2,14 +2,10 @@ import {ChangeStream, DatabaseService} from "@spica-server/database";
 import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
 import {Database, event} from "@spica-server/function/queue/proto";
 import {CommandType, JobReducer} from "@spica-server/replication";
-import {Description, Enqueuer} from "./enqueuer";
+import {Enqueuer} from "./enqueuer";
 import {ClassCommander} from "@spica-server/replication";
 import uniqid from "uniqid";
-
-interface DatabaseOptions {
-  collection: string;
-  type: "INSERT" | "UPDATE" | "REPLACE" | "DELETE";
-}
+import {DatabaseOptions, Description} from "@spica-server/interface/function/enqueuer";
 
 export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   type = event.Type.DATABASE;

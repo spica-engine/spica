@@ -10,11 +10,11 @@ import {
   WithId
 } from "@spica-server/database";
 import {Function} from "@spica-server/interface/function";
-import {FunctionOptions, FUNCTION_OPTIONS} from "./options";
 import {EnvVarService} from "@spica-server/env_var/services";
 import {filter, map, Observable, switchMap} from "rxjs";
 
 const collectionName = "function";
+import {FunctionOptions, FUNCTION_OPTIONS} from "@spica-server/interface/function/services";
 
 @Injectable()
 export class FunctionService extends BaseCollection<Function>(collectionName) {

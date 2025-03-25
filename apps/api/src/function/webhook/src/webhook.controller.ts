@@ -17,11 +17,11 @@ import {
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {DatabaseService, ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
-import {CollectionSlug, COLL_SLUG} from "@spica-server/function/services";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {Webhook} from "./interface";
+import {Webhook} from "@spica-server/interface/function/webhook";
 import {WebhookInvoker} from "./invoker";
 import {WebhookService} from "./webhook.service";
+import {CollectionSlug, COLL_SLUG} from "@spica-server/interface/function/services";
 
 @Controller("webhook")
 export class WebhookController {

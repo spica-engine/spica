@@ -12,8 +12,6 @@ export interface WebhookOptions {
   expireAfterSeconds: number;
 }
 
-export const WEBHOOK_OPTIONS = Symbol.for("WEBHOOK_OPTIONS");
-
 export interface Trigger {
   name: "database";
   active?: boolean;
@@ -43,11 +41,16 @@ export interface Request {
   body: string;
 }
 
-export interface Response {
-  status: number;
-  statusText: string;
-  body: string;
-  headers: {
-    [key: string]: string[];
-  };
+export enum ChangeKind {
+  Added = 0,
+  Removed = 1,
+  Updated = 2
 }
+
+export interface TargetChange {
+  kind: ChangeKind;
+  target: string;
+  webhook?: Omit<Webhook, "_id">;
+}
+
+export const WEBHOOK_OPTIONS = Symbol.for("WEBHOOK_OPTIONS");

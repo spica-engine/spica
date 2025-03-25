@@ -1,17 +1,13 @@
 import {DynamicModule, Inject, Module, Optional} from "@nestjs/common";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {Scheduler, SchedulerModule, SchedulingOptions} from "@spica-server/function/scheduler";
+import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
+import {SchedulingOptions} from "@spica-server/interface/function/scheduler";
 import {WebhookModule} from "@spica-server/function/webhook";
 import path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
 import {LogModule, LogService} from "@spica-server/function/log";
-import {
-  FunctionOptions,
-  FUNCTION_OPTIONS,
-  FunctionService,
-  ServicesModule
-} from "@spica-server/function/services";
+import {FunctionService, ServicesModule} from "@spica-server/function/services";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
 import {Http} from "./services/interface";
 import {Axios} from "./services/axios";
@@ -26,6 +22,7 @@ import {getSyncProviders} from "./versioncontrol";
 import {registerAssetHandlers} from "./asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
+import {FunctionOptions, FUNCTION_OPTIONS} from "@spica-server/interface/function/services";
 
 @Module({})
 export class FunctionModule {

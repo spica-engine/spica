@@ -1,11 +1,13 @@
 import {EnvVar} from "@spica-server/interface/env_var";
 import {ObjectId} from "@spica-server/database";
 
+import {JSONSchema7} from "json-schema";
+import {Observable} from "rxjs";
+
 export enum EnvRelation {
   Resolved,
   NotResolved
 }
-
 export interface Function<ER extends EnvRelation = EnvRelation.NotResolved> {
   _id?: any;
   name: string;
@@ -52,3 +54,31 @@ export interface FunctionContents<ER extends EnvRelation = EnvRelation.NotResolv
   };
   index: string;
 }
+
+type Schema = JSONSchema7 | ((observe: boolean) => Promise<JSONSchema7> | Observable<JSONSchema7>);
+
+export type SchemaWithName = {name: string; schema: Schema};
+
+export enum ChangeKind {
+  Added = 0,
+  Removed = 1,
+  Updated = 2
+}
+
+export interface Context {
+  timeout: number;
+  env: Environment;
+}
+
+export interface TargetChange {
+  kind: ChangeKind;
+  type?: string;
+  options?: unknown;
+  target: {
+    id: string;
+    handler?: string;
+    context?: Context;
+  };
+}
+
+export const SCHEMA = Symbol.for("FUNCTION_ENQUEUER_SCHEMA");
