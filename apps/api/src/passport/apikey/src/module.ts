@@ -6,7 +6,7 @@ import {ApiKeyStrategy} from "./apikey.strategy";
 import {APIKEY_POLICY_FINALIZER} from "@spica-server/passport/policy";
 import {providePolicyFinalizer} from "./utility";
 import ApiKeySchema from "./schemas/apikey.json" with {type: "json"};
-import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
+import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {registerAssetHandlers} from "./asset";
 
