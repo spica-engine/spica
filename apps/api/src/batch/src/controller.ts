@@ -1,10 +1,10 @@
-import {Controller, Body, Post} from "@nestjs/common";
+import {Controller, Body, Post, Inject} from "@nestjs/common";
 import {Schema} from "@spica-server/core/schema";
-import {Batch} from "./interface";
+import {Batch, HTTP_SERVICE, HTTPService} from "./interface";
 
 @Controller("batch")
 export class BatchController {
-  constructor() {}
+  constructor(@Inject(HTTP_SERVICE) private httpService: HTTPService) {}
 
   @Post()
   insert(@Body(Schema.validate("http://spica.internal/batch")) batch: Batch) {
