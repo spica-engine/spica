@@ -440,7 +440,9 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   .parse();
 
 const modules = [
-  BatchModule.forRoot(),
+  BatchModule.forRoot({
+    port: args["port"]
+  }),
   DashboardModule.forRoot(),
   PreferenceModule.forRoot(),
   AssetModule.forRoot({persistentPath: args["persistent-path"]}),

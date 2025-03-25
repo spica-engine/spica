@@ -3,11 +3,11 @@ import {SchemaModule} from "@spica-server/core/schema";
 import BatchSchema from "./schema/batch.json" with {type: "json"};
 import {BatchController} from "./controller";
 import {AxiosHttpService} from "./service";
-import {HTTP_SERVICE} from "./interface";
+import {BATCH_OPTIONS, BatchOptions, HTTP_SERVICE} from "./interface";
 
 @Module({})
 export class BatchModule {
-  static forRoot(): DynamicModule {
+  static forRoot(options: BatchOptions): DynamicModule {
     return {
       module: BatchModule,
       imports: [
@@ -20,6 +20,10 @@ export class BatchModule {
         {
           provide: HTTP_SERVICE,
           useClass: AxiosHttpService
+        },
+        {
+          provide: BATCH_OPTIONS,
+          useValue: options
         }
       ],
       exports: []

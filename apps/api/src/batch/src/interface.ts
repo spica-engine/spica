@@ -1,25 +1,50 @@
-export interface Batch {
+export interface BatchRequest {
   requests: Request[];
-  concurrenct: number;
+  concurrency: number;
 }
+
+export interface BatchResponse {
+  responses: Response[];
+}
+
+type RequestMethods = "GET" | "POST" | "PATCH" | "DELETE";
 
 export interface Request {
   id: string;
-  method: ["GET", "POST", "PATCH", "DELETE"];
+  method: RequestMethods;
   url: string;
-  body: object;
-  headers: object;
+  body: any;
+  headers: Record<string, string>;
+}
+
+export interface Response {
+  id: string;
+  status: number;
+  body: any;
+  headers: Record<string, string>;
+}
+
+export interface BatchOptions {
+  port: string;
+}
+
+export interface HTTPResponse {
+  body: any;
+  status: number;
+  headers: Record<string, string>;
 }
 
 export interface HTTPService {
-  get<T>(url: string, params?: Record<string, any>, headers?: Record<string, string>): Promise<T>;
-  post<T>(url: string, data: Record<string, any>, headers?: Record<string, string>): Promise<T>;
-  put<T>(url: string, data: Record<string, any>, headers?: Record<string, string>): Promise<T>;
-  delete<T>(
+  request<R = HTTPResponse>(
     url: string,
+    method: RequestMethods,
     params?: Record<string, any>,
-    headers?: Record<string, string>
-  ): Promise<T>;
+    headers?: Record<string, string>,
+    body?: Record<string, any>
+  ): Promise<R>;
+
+  baseURL: string;
 }
 
 export const HTTP_SERVICE = Symbol.for("HTTP_SERVICE");
+export const BATCH_OPTIONS = Symbol.for("BATCH_OPTIONS");
