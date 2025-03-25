@@ -25,6 +25,9 @@
     },
     {
       "path": "../policy"
+    },
+    {
+      "path": "../../../../../libs/interface/activity"
     }
   ]
 }

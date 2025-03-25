@@ -25,6 +25,9 @@
     },
     {
       "path": "../../bucket/expression"
+    },
+    {
+      "path": "../../../../../libs/interface/activity"
     }
   ]
 }

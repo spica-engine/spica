@@ -3,10 +3,7 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../../../libs/database"
-    },
-    {
-      "path": "../../../../../libs/interface/activity"
+      "path": "../../database"
     }
   ]
 }

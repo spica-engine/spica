@@ -5,7 +5,7 @@ import {
   SubscribeMessage,
   WebSocketGateway
 } from "@nestjs/websockets";
-import {Action, ActivityService} from "@spica-server/activity/services";
+import {ActivityService} from "@spica-server/activity/services";
 import {BucketCacheService} from "@spica-server/bucket/cache";
 import {
   insertDocument,
@@ -41,6 +41,7 @@ import {resourceFilterFunction} from "@spica-server/passport/guard";
 import {fromEvent, of} from "rxjs";
 import {takeUntil, catchError} from "rxjs/operators";
 import {MessageKind} from "./interface";
+import {Action} from "@spica-server/interface/activity";
 
 @WebSocketGateway({
   path: "/bucket/:id/data"

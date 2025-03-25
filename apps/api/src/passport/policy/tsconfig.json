@@ -13,6 +13,9 @@
     },
     {
       "path": "../../activity/services"
+    },
+    {
+      "path": "../../../../../libs/interface/activity"
     }
   ]
 }

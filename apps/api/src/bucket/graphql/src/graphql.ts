@@ -7,7 +7,7 @@ import {
   PipeTransform
 } from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
-import {Action, ActivityService} from "@spica-server/activity/services";
+import {ActivityService} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/services";
@@ -50,6 +50,7 @@ import {
   validateBuckets
 } from "./schema";
 import {applyPatch, deepCopy} from "@spica-server/core/patch";
+import {Action} from "@spica-server/interface/activity";
 
 interface FindResponse {
   meta: {total: number};
