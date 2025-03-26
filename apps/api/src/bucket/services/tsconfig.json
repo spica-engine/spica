@@ -9,7 +9,7 @@
       "path": "../../preference/services"
     },
     {
-      "path": "../../../../../libs/interface/bucket/services"
+      "path": "../../../../../libs/interface/bucket"
     }
   ]
 }
