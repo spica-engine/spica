@@ -4,9 +4,9 @@ import {getPropertyByPath} from "./schema";
 import {
   extractFilterPropertyMap,
   replaceFilter,
-  replaceFilterObjectIds,
-  ValueConstructor
+  replaceFilterObjectIds
 } from "@spica-server/filter";
+import {ValueConstructor} from "@spica-server/interface/filter";
 import {FilterReplacer, RelationResolver} from "@spica-server/interface/bucket/common";
 import {Bucket} from "@spica-server/interface/bucket/services";
 
