@@ -41,6 +41,15 @@ export interface Request {
   body: string;
 }
 
+interface Response {
+  status: number;
+  statusText: string;
+  body: string;
+  headers: {
+    [key: string]: string[];
+  };
+}
+
 export enum ChangeKind {
   Added = 0,
   Removed = 1,

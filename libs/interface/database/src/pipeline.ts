@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "mongodb";
 
 export interface IPipelineBuilder {
   attachToPipeline(condition: any, ...attachedObject: object[]): this;
