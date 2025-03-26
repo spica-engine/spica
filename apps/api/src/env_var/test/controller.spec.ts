@@ -203,7 +203,7 @@ describe("Environment Variable", () => {
       });
 
       const res = await req.delete(`/env-var/${body._id}`);
-      expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
+      expect([res.statusCode, res.statusText]).toEqual([204, "No Content"]);
 
       const {body: envVars} = await req.get("/env-var");
       expect(envVars.length).toEqual(0);
