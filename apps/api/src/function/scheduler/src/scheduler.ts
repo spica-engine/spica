@@ -22,7 +22,7 @@ import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io"
 import {generateLog} from "@spica-server/function/runtime/logger";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
-import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/status/services";
+import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/interface/status";
 import uniqid from "uniqid";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "@spica-server/interface/function/scheduler";
 import {Subject} from "rxjs";

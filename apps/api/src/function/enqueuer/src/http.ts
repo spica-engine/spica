@@ -5,7 +5,7 @@ import {Enqueuer} from "./enqueuer";
 import express from "express";
 import bodyParser from "body-parser";
 import {CorsOptions} from "@spica-server/core";
-import {AttachStatusTracker} from "@spica-server/status/services";
+import {AttachStatusTracker} from "@spica-server/interface/status";
 import {Description, HttpMethod, HttpOptions} from "@spica-server/interface/function/enqueuer";
 
 export class HttpEnqueuer extends Enqueuer<HttpOptions> {
