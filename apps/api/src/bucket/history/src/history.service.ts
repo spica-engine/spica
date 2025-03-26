@@ -7,7 +7,8 @@ import {
   InsertOneResult,
   ObjectId
 } from "@spica-server/database";
-import {ChangePaths, ChangeKind, diff, schemaDiff} from "@spica-server/core/differ";
+import {diff, schemaDiff} from "@spica-server/core/differ";
+import {ChangePaths, ChangeKind} from "@spica-server/interface/core";
 import {History} from "@spica-server/interface/bucket/history";
 import {Bucket, BucketDocument} from "@spica-server/interface/bucket/services";
 

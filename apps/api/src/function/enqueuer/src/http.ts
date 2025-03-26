@@ -4,7 +4,7 @@ import {event, Http} from "@spica-server/function/queue/proto";
 import {Enqueuer} from "./enqueuer";
 import express from "express";
 import bodyParser from "body-parser";
-import {CorsOptions} from "@spica-server/core";
+import {CorsOptions} from "@spica-server/interface/core";
 import {AttachStatusTracker} from "@spica-server/interface/status";
 import {Description, HttpMethod, HttpOptions} from "@spica-server/interface/function/enqueuer";
 

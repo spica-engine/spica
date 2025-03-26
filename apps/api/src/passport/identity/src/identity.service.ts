@@ -5,7 +5,8 @@ import {
   IDENTITY_OPTIONS,
   IdentityOptions
 } from "@spica-server/interface/passport/identity";
-import {Validator, Default} from "@spica-server/core/schema";
+import {Validator} from "@spica-server/core/schema";
+import {Default} from "@spica-server/interface/core";
 import {hash, compare} from "./hash";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
 

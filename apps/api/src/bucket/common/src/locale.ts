@@ -1,6 +1,7 @@
 import {BucketDataService, BucketService} from "@spica-server/bucket/services";
 import locale from "locale";
-import {ChangeKind, diff} from "@spica-server/core/differ";
+import {diff} from "@spica-server/core/differ";
+import {ChangeKind} from "@spica-server/interface/core";
 import {BucketCacheService} from "@spica-server/bucket/cache";
 import {Locale} from "@spica-server/interface/bucket/common";
 import {Bucket, BucketPreferences} from "@spica-server/interface/bucket/services";

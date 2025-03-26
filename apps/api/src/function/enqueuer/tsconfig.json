@@ -9,6 +9,9 @@
       "path": "../../../../../libs/core"
     },
     {
+      "path": "../../../../../libs/interface/core"
+    },
+    {
       "path": "../../replication"
     },
     {
