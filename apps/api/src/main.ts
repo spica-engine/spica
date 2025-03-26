@@ -17,6 +17,7 @@ import {StorageModule} from "@spica-server/storage";
 import {VersionControlModule} from "@spica-server/versioncontrol";
 import {ReplicationModule} from "@spica-server/replication";
 import {AssetModule} from "@spica-server/asset";
+import {BatchModule} from "@spica-server/batch";
 import fs from "fs";
 import https from "https";
 import path from "path";
@@ -439,6 +440,9 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   .parse();
 
 const modules = [
+  BatchModule.forRoot({
+    port: args["port"]
+  }),
   DashboardModule.forRoot(),
   PreferenceModule.forRoot(),
   AssetModule.forRoot({persistentPath: args["persistent-path"]}),
