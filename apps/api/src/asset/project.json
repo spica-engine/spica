@@ -1,5 +1,14 @@
 {
   "name": "api/asset",
   "sourceRoot": "apps/api/src/asset",
-  "projectType": "application"
+  "projectType": "application",
+  "implicitDependencies": [
+    "!api/passport/apikey",
+    "!api/passport/testing",
+    "!api/passport/identity",
+    "!api/bucket",
+    "!api/preference",
+    "!api/dashboard",
+    "!api/function"
+  ]
 }

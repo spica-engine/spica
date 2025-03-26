@@ -1,5 +1,6 @@
 {
   "name": "api/status/services",
   "sourceRoot": "apps/api/src/status/services",
-  "projectType": "application"
+  "projectType": "application",
+  "implicitDependencies": ["!api/status", "!api/passport/testing"]
 }
