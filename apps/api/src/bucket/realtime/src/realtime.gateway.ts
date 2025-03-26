@@ -31,7 +31,7 @@ import {
 import {applyPatch, deepCopy} from "@spica-server/core/patch";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
-import {FindOptions, RealtimeDatabaseService} from "@spica-server/database/realtime";
+import {RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {ChunkKind} from "@spica-server/interface/realtime";
 import {GuardService} from "@spica-server/passport";
 import {resourceFilterFunction} from "@spica-server/passport/guard";

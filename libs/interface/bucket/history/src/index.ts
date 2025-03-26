@@ -1,5 +1,5 @@
 import {ObjectId} from "@spica-server/database";
-import {Change} from "@spica-server/core/differ";
+import {Change} from "@spica-server/interface/core";
 
 export interface History {
   _id?: string | ObjectId;

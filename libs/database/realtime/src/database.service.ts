@@ -2,7 +2,7 @@ import {Injectable, OnModuleDestroy} from "@nestjs/common";
 import {ChangeStream, DatabaseService, Document} from "@spica-server/database";
 import {StreamChunk} from "@spica-server/interface/realtime";
 import {Observable} from "rxjs";
-import {FindOptions} from "./interface";
+import {FindOptions} from "@spica-server/interface/database";
 import {Emitter} from "./stream";
 import isEqual from "lodash/isEqual.js";
 
