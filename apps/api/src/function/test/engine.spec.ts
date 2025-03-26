@@ -64,7 +64,8 @@ describe("Engine", () => {
       undefined,
       {
         root: "test_root",
-        timeout: 1
+        timeout: 1,
+        outDir: ".build"
       },
       undefined,
       undefined
