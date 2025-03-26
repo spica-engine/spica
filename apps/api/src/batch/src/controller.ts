@@ -11,6 +11,7 @@ import {
   Response
 } from "./interface";
 import {AuthGuard} from "@spica-server/passport/guard";
+import {getBaseUrl, handleResponse, splitIntoChunks} from "./utilities";
 
 @Controller("batch")
 export class BatchController {
@@ -25,14 +26,14 @@ export class BatchController {
     @Body(Schema.validate("http://spica.internal/batch")) batch: BatchRequest,
     @Req() req
   ) {
-    this.httpService.baseURL = this.getBaseUrl(req);
+    this.httpService.baseURL = getBaseUrl(req, this.options);
 
-    const requestChunks = this.spliceToChunks(batch.requests, batch.concurrency);
+    const requestChunks = splitIntoChunks(batch.requests, batch.concurrency);
 
     const responses: Response[] = [];
     for (let requestChunk of requestChunks) {
       const responseHandler = (request, response) =>
-        responses.push(this.handleResponse(request, response));
+        responses.push(handleResponse(request, response));
 
       await Promise.all(
         requestChunk.map(r =>
@@ -45,31 +46,5 @@ export class BatchController {
     }
 
     return responses;
-  }
-
-  private handleResponse(request: Request, response: HTTPResponse): Response {
-    return {
-      id: request.id,
-      status: response.status,
-      headers: response.headers,
-      body: response.body
-    };
-  }
-
-  private spliceToChunks<T>(items: T[], limit: number) {
-    let chunks: T[][] = [];
-    if (limit > 0) {
-      while (items.length) {
-        chunks.push(items.splice(0, limit));
-      }
-    } else {
-      chunks = [items];
-    }
-
-    return chunks;
-  }
-
-  private getBaseUrl(req) {
-    return `${req.protocol}://localhost:${this.options.port}`;
   }
 }
