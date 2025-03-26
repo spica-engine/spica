@@ -1,0 +1,30 @@
+.pan {
+  padding: 0 !important;
+  height: unset;
+  svg {
+    color: #5187ed;
+  }
+}
+
+.container {
+  position: relative;
+  .date {
+    min-width: 120px;
+    border: 1.5px solid #5187ed;
+    border-radius: var(--border-radius-round);
+    padding: var(--padding-sm) var(--padding-md);
+    position: absolute;
+    bottom: -10px;
+    background: white;
+    color: #5187ed !important;
+    font-size: var(--font-size-sm) !important;
+    font-weight: 600;
+
+    &.from {
+      left: 30px;
+    }
+    &.to {
+      right: 0;
+    }
+  }
+}

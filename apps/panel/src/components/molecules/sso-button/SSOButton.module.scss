@@ -1,0 +1,22 @@
+@use "../../../styles/mixins";
+
+.ssoButton {
+  border-radius: var(--border-radius-lg);
+  padding: var(--padding-xl);
+  background: var(--color-menu-background);
+  border: 1px solid var(--color-border);
+
+  .text {
+    @include mixins.textEllipsis(1);
+    display: block;
+    white-space: nowrap;
+  }
+
+  &.clicked {
+    border-color: var(--color-primary);
+  }
+
+  .active {
+    color: var(--color-primary) !important;
+  }
+}

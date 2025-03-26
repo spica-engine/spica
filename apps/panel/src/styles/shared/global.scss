@@ -1,0 +1,80 @@
+.flexElement {
+  display: flex;
+
+  &.horizontal {
+    flex-direction: row;
+  }
+
+  &.vertical {
+    flex-direction: column;
+  }
+
+  &.wrap {
+    flex-wrap: wrap;
+  }
+
+  &.noWrap {
+    flex-wrap: nowrap;
+  }
+
+  &.leftTop {
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+
+  &.top {
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  &.rightTop {
+    justify-content: flex-end;
+    align-items: flex-start;
+  }
+
+  &.leftCenter {
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  &.center {
+    justify-content: center;
+    align-items: center;
+  }
+
+  &.rightCenter {
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  &.leftBottom {
+    justify-content: flex-start;
+    align-items: flex-end;
+  }
+
+  &.bottom {
+    justify-content: center;
+    align-items: flex-end;
+  }
+
+  &.rightBottom {
+    justify-content: flex-end;
+    align-items: flex-end;
+  }
+
+  &.dimensionXfill {
+    width: 100%;
+  }
+
+  &.dimensionXhug {
+    width: max-content;
+  }
+
+  &.dimensionYfill {
+    align-self: stretch;
+  }
+
+  &.dimensionYhug {
+    height: max-content;
+  }
+}

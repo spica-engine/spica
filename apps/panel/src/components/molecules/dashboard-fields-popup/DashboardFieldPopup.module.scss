@@ -1,0 +1,16 @@
+.container {
+  padding: var(--padding-md);
+  background-color: var(--color-menu-background);
+  border-radius: var(--border-radius-md);
+  .title {
+    color: #000000;
+    font-weight: bold;
+    padding: var(--padding-sm) 0;
+  }
+  .buttonText {
+    color: var(--color-font-secondary);
+  }
+  .cancelButton {
+    border: 0;
+  }
+}
