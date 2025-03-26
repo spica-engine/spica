@@ -1,6 +1,6 @@
 import {ObjectId} from "@spica-server/database";
 import {FunctionService} from "@spica-server/function/services";
-import {SyncProvider} from "@spica-server/versioncontrol";
+import {SyncProvider} from "@spica-server/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
 import {LogService} from "@spica-server/function/log/src/log.service";
 import * as CRUD from "../crud";

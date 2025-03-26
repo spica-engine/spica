@@ -17,7 +17,7 @@ import {
   RegisterSyncProvider,
   REGISTER_VC_SYNC_PROVIDER,
   VC_REP_MANAGER
-} from "@spica-server/versioncontrol";
+} from "@spica-server/interface/versioncontrol";
 import {getSyncProviders} from "./versioncontrol";
 import {registerAssetHandlers} from "./asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
