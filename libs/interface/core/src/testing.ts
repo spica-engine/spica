@@ -1,12 +1,11 @@
-import {Headers, Method} from "got";
 import CL from "ws";
 
 export interface RequestOptions {
-  method: Method;
+  method: string;
   path: string;
   body?: any;
   query?: any;
-  headers?: Headers;
+  headers?: Record<string, string | string[] | undefined>;
   followRedirect?: boolean;
 }
 
