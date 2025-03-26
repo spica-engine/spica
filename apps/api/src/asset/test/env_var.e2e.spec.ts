@@ -8,7 +8,7 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import os from "os";
 import {PreferenceModule} from "@spica-server/preference";
-import {EnvVarsModule} from "@spica-server/env_var";
+import {EnvVarModule} from "@spica-server/env_var";
 
 describe("EnvVar", () => {
   function downloadAsset(asset) {
@@ -39,7 +39,7 @@ describe("EnvVar", () => {
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
         AssetModule.forRoot({persistentPath: os.tmpdir()}),
-        EnvVarsModule.forRoot()
+        EnvVarModule.forRoot()
       ]
     }).compile();
 

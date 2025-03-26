@@ -17,7 +17,7 @@ import {
 import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {PaginationResponse} from "@spica-server/passport/identity";
-import {EnvVarsService} from "@spica-server/env_var/services";
+import {EnvVarService} from "@spica-server/env_var/services";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {Schema} from "@spica-server/core/schema";
 import {AuthGuard, ActionGuard, ResourceFilter} from "@spica-server/passport/guard";
@@ -27,8 +27,8 @@ import {activity} from "@spica-server/activity/services";
 import {createEnvVarActivity} from "./activity.resource";
 
 @Controller("env-var")
-export class EnvVarsController {
-  constructor(private evs: EnvVarsService) {}
+export class EnvVarController {
+  constructor(private evs: EnvVarService) {}
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("env-var:index"))

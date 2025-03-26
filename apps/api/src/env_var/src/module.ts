@@ -1,8 +1,8 @@
 import {Inject, Module, Optional} from "@nestjs/common";
-import {EnvVarsService, ServicesModule} from "@spica-server/env_var/services";
-import {EnvVarsController} from "./controller";
+import {EnvVarService, ServicesModule} from "@spica-server/env_var/services";
+import {EnvVarController} from "./controller";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
-import EnvVarsSchema from "./schema.json" with {type: "json"};
+import EnvVarSchema from "./schema.json" with {type: "json"};
 import {
   REGISTER_VC_SYNC_PROVIDER,
   RegisterSyncProvider,
@@ -14,24 +14,24 @@ import {registerAssetHandlers} from "./asset";
 import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
 
 @Module({})
-export class EnvVarsModule {
+export class EnvVarModule {
   static forRoot() {
     return {
-      module: EnvVarsModule,
+      module: EnvVarModule,
       imports: [
         SchemaModule.forChild({
-          schemas: [EnvVarsSchema]
+          schemas: [EnvVarSchema]
         }),
         ServicesModule
       ],
-      controllers: [EnvVarsController],
-      providers: [EnvVarsService],
+      controllers: [EnvVarController],
+      providers: [EnvVarService],
       exports: []
     };
   }
 
   constructor(
-    evs: EnvVarsService,
+    evs: EnvVarService,
     @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
     @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerVCSyncProvider: RegisterSyncProvider,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,

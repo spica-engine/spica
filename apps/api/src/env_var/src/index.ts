@@ -1,1 +1,1 @@
-export {EnvVarsModule} from "./module";
+export {EnvVarModule} from "./module";

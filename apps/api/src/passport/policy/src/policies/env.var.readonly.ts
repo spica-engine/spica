@@ -1,5 +1,5 @@
 export default {
-  _id: "EnvVarsReadOnlyAccess",
+  _id: "EnvVarReadOnlyAccess",
   name: "Environment Variables Read Only Access",
   description: "Read only access to function environment variables service.",
   statement: [

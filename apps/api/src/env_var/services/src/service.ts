@@ -9,7 +9,7 @@ import {EnvVar} from "@spica-server/interface/env_var";
 import {Observable} from "rxjs";
 
 @Injectable()
-export class EnvVarsService extends BaseCollection<EnvVar>("env_var") {
+export class EnvVarService extends BaseCollection<EnvVar>("env_var") {
   constructor(db: DatabaseService) {
     super(db);
   }

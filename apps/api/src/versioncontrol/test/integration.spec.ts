@@ -20,8 +20,8 @@ import {RepresentativeManager} from "@spica-server/representative";
 import {PreferenceModule} from "@spica-server/preference";
 import {PreferenceService} from "@spica-server/preference/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {EnvVarsService} from "@spica-server/env_var/services";
-import {EnvVarsModule} from "@spica-server/env_var";
+import {EnvVarService} from "@spica-server/env_var/services";
+import {EnvVarModule} from "@spica-server/env_var";
 
 describe("Versioning", () => {
   let module: TestingModule;
@@ -31,7 +31,7 @@ describe("Versioning", () => {
   let rep: RepresentativeManager;
   let fs: FunctionService;
   let engine: FunctionEngine;
-  let evs: EnvVarsService;
+  let evs: EnvVarService;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -69,7 +69,7 @@ describe("Versioning", () => {
           spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
           tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
         }),
-        EnvVarsModule.forRoot(),
+        EnvVarModule.forRoot(),
         VersionControlModule.forRoot({persistentPath: os.tmpdir(), isReplicationEnabled: false})
       ]
     }).compile();
@@ -83,7 +83,7 @@ describe("Versioning", () => {
 
     fs = module.get(FunctionService);
     engine = module.get(FunctionEngine);
-    evs = module.get(EnvVarsService);
+    evs = module.get(EnvVarService);
   });
 
   describe("preference", () => {

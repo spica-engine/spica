@@ -11,7 +11,7 @@ import {
 } from "@spica-server/database";
 import {Function} from "@spica-server/interface/function";
 import {FunctionOptions, FUNCTION_OPTIONS} from "./options";
-import {EnvVarsService} from "@spica-server/env_var/services";
+import {EnvVarService} from "@spica-server/env_var/services";
 import {filter, map, Observable, switchMap} from "rxjs";
 
 const collectionName = "function";
@@ -20,7 +20,7 @@ const collectionName = "function";
 export class FunctionService extends BaseCollection<Function>(collectionName) {
   constructor(
     database: DatabaseService,
-    private evs: EnvVarsService,
+    private evs: EnvVarService,
     @Inject(FUNCTION_OPTIONS) options: FunctionOptions
   ) {
     super(database, {

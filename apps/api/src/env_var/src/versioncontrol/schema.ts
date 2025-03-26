@@ -1,11 +1,11 @@
 import {ObjectId, ReturnDocument} from "@spica-server/database";
-import {EnvVarsService} from "@spica-server/env_var/services";
+import {EnvVarService} from "@spica-server/env_var/services";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {SyncProvider} from "@spica-server/versioncontrol";
 import * as CRUD from "../crud";
 
 export const getVCSyncProvider = (
-  evs: EnvVarsService,
+  evs: EnvVarService,
   manager: IRepresentativeManager
 ): SyncProvider => {
   const name = "env-var-schema";

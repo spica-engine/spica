@@ -4,7 +4,7 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
-import {EnvVarsModule} from "../src";
+import {EnvVarModule} from "../src";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
 describe("Environment Variable", () => {
@@ -16,7 +16,7 @@ describe("Environment Variable", () => {
       imports: [
         DatabaseTestingModule.standalone(),
         CoreTestingModule,
-        EnvVarsModule.forRoot(),
+        EnvVarModule.forRoot(),
         SchemaModule.forRoot({formats: [OBJECT_ID]}),
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"})
       ]

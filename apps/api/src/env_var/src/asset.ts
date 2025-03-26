@@ -2,7 +2,7 @@ import {registrar} from "@spica-server/asset";
 import {Resource} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {Schema, Validator} from "@spica-server/core/schema";
-import {EnvVarsService} from "@spica-server/env_var/services";
+import {EnvVarService} from "@spica-server/env_var/services";
 import {EnvVar} from "@spica-server/interface/env_var";
 import {ObjectId} from "@spica-server/database";
 import * as CRUD from "./crud";
@@ -10,7 +10,7 @@ import * as CRUD from "./crud";
 const _module = "env_var";
 
 export function registerAssetHandlers(
-  evs: EnvVarsService,
+  evs: EnvVarService,
   schemaValidator: Validator,
   manager: IRepresentativeManager
 ) {

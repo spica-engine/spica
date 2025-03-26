@@ -1,11 +1,11 @@
-import EnvVarsReadonlyAccess from "./env.var.readonly";
+import EnvVarReadonlyAccess from "./env.var.readonly";
 
 export default {
-  _id: "EnvVarsFullAccess",
+  _id: "EnvVarFullAccess",
   name: "Environment Variables Full Access",
   description: "Full access to function environment variables service.",
   statement: [
-    ...EnvVarsReadonlyAccess.statement,
+    ...EnvVarReadonlyAccess.statement,
     {
       action: "env-var:create",
       module: "env-var"

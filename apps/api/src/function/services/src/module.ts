@@ -2,15 +2,15 @@ import {Module} from "@nestjs/common";
 import {FunctionOptions, FUNCTION_OPTIONS} from "./options";
 import {FunctionService} from "./service";
 import {
-  EnvVarsService,
-  ServicesModule as EnvVarsServicesModule
+  EnvVarService,
+  ServicesModule as EnvVarServicesModule
 } from "@spica-server/env_var/services";
 
 @Module({})
 export class ServicesModule {
   static forRoot(options: FunctionOptions) {
     return {
-      imports: [EnvVarsServicesModule],
+      imports: [EnvVarServicesModule],
       module: ServicesModule,
       providers: [
         FunctionService,
@@ -18,7 +18,7 @@ export class ServicesModule {
           provide: FUNCTION_OPTIONS,
           useValue: options
         },
-        EnvVarsService
+        EnvVarService
       ],
       exports: [FunctionService]
     };

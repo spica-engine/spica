@@ -1,8 +1,8 @@
 import {ObjectId, ReturnDocument} from "@spica-server/database";
-import {EnvVarsService} from "../services";
+import {EnvVarService} from "../services";
 import {EnvVar} from "@spica-server/interface/env_var";
 
-export async function insert(evs: EnvVarsService, envVar: EnvVar) {
+export async function insert(evs: EnvVarService, envVar: EnvVar) {
   if (envVar._id) {
     envVar._id = new ObjectId(envVar._id);
   }
@@ -10,7 +10,7 @@ export async function insert(evs: EnvVarsService, envVar: EnvVar) {
   return envVar;
 }
 
-export async function replace(evs: EnvVarsService, envVar: EnvVar) {
+export async function replace(evs: EnvVarService, envVar: EnvVar) {
   const _id = new ObjectId(envVar._id);
   delete envVar._id;
 
@@ -20,6 +20,6 @@ export async function replace(evs: EnvVarsService, envVar: EnvVar) {
   return currentSchema;
 }
 
-export async function remove(evs: EnvVarsService, id: string | ObjectId) {
+export async function remove(evs: EnvVarService, id: string | ObjectId) {
   evs.findOneAndDelete({_id: new ObjectId(id)});
 }

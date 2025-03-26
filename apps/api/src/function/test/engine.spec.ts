@@ -6,7 +6,7 @@ import {FunctionEngine} from "@spica-server/function/src/engine";
 import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
 import {TargetChange, ChangeKind} from "@spica-server/function/src/change";
-import {EnvVarsService} from "@spica-server/env_var/services";
+import {EnvVarService} from "@spica-server/env_var/services";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
 describe("Engine", () => {
@@ -17,7 +17,7 @@ describe("Engine", () => {
   let scheduler: Scheduler;
   let database: DatabaseService;
   let fs: FunctionService;
-  let evs: EnvVarsService;
+  let evs: EnvVarService;
 
   let module: TestingModule;
   let app: INestApplication;
@@ -55,7 +55,7 @@ describe("Engine", () => {
     scheduler = module.get(Scheduler);
     database = module.get(DatabaseService);
 
-    evs = new EnvVarsService(database);
+    evs = new EnvVarService(database);
     fs = new FunctionService(database, evs, {} as any);
     engine = new FunctionEngine(
       fs,
