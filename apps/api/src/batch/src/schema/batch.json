@@ -19,7 +19,7 @@
           "method": {
             "type": "string",
             "description": "Method of the HTTP request",
-            "enum": ["GET", "POST", "PATCH", "DELETE"]
+            "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
           },
           "url": {
             "type": "string",
@@ -34,7 +34,8 @@
             "description": "Headers of the HTTP request"
           }
         }
-      }
+      },
+      "minItems": 1
     },
     "concurrency": {
       "type": "number",

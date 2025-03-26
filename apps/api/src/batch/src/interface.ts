@@ -7,7 +7,7 @@ export interface BatchResponse {
   responses: Response[];
 }
 
-type RequestMethods = "GET" | "POST" | "PATCH" | "DELETE";
+type RequestMethods = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 export interface Request {
   id: string;

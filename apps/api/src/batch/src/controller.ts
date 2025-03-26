@@ -27,7 +27,6 @@ export class BatchController {
     @Req() req
   ) {
     this.httpService.baseURL = getBaseUrl(req, this.options);
-
     const requestChunks = splitIntoChunks(batch.requests, batch.concurrency);
 
     const responses: Response[] = [];
@@ -45,6 +44,6 @@ export class BatchController {
       );
     }
 
-    return responses;
+    return {responses};
   }
 }
