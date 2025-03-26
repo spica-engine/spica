@@ -1,5 +1,3 @@
-export const STORAGE_OPTIONS = Symbol.for("STORAGE_OPTIONS");
-
 export interface StorageOptions {
   strategy: "default" | "gcloud" | "awss3";
   defaultPath?: string;
@@ -11,3 +9,5 @@ export interface StorageOptions {
   objectSizeLimit: number;
   totalSizeLimit?: number;
 }
+
+export const STORAGE_OPTIONS = Symbol.for("STORAGE_OPTIONS");

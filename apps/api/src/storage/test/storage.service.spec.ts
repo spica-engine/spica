@@ -1,10 +1,9 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {StorageService} from "@spica-server/storage";
-import {StorageObject} from "@spica-server/storage/src/body";
 import {Default} from "@spica-server/storage/src/strategy/default";
 import {Strategy} from "@spica-server/storage/src/strategy/strategy";
-import {STORAGE_OPTIONS} from "@spica-server/storage/src/options";
+import {StorageObject, STORAGE_OPTIONS} from "@spica-server/interface/storage";
 
 describe("Storage Service", () => {
   let module: TestingModule;
