@@ -1,11 +1,10 @@
 import {PartialObserver} from "rxjs";
-import uniqid from "uniqid";
 
-export interface IPublisher<T> {
+interface IPublisher<T> {
   publish(msg: T): void;
 }
 
-export interface ISubscriber<T> {
+interface ISubscriber<T> {
   subscribe(observer: PartialObserver<T>): {unsubscribe: () => void};
 }
 
@@ -26,8 +25,6 @@ export interface CommandMessengerOptions {
    */
   listenOwnCommands?: boolean;
 }
-
-export type Message = CommandMessage;
 
 export interface CommandMessage {
   _id?: string;
@@ -55,43 +52,15 @@ export type Filter<T> = (arg: T) => boolean;
 
 export type CommandMessageFilter = Filter<CommandMessage>;
 
-export const REPLICATION_SERVICE_OPTIONS = Symbol.for("REPLICATION_SERVICE_OPTIONS");
 export interface ReplicationServiceOptions {
   expireAfterSeconds: number;
 }
-export const replicationServiceOptions: ReplicationServiceOptions = {
-  expireAfterSeconds: 60 * 60
-};
-
-export const COMMAND_MEMORY_OPTIONS = Symbol.for("COMMAND_MEMORY_OPTIONS");
-export const CONDITION_MEMORY_OPTIONS = Symbol.for("CONDITION_MEMORY_OPTIONS");
 
 export interface MemoryOptions {
   changeType: ChangeType[];
 }
 
 type ChangeType = "insert" | "update" | "replace" | "delete";
-
-export const commandMemoryOptions: MemoryOptions = {
-  changeType: ["insert"]
-};
-
-export const conditionMemoryOptions: MemoryOptions = {
-  changeType: ["insert", "update", "replace", "delete"]
-};
-
-export const COMMAND_MESSENGER_OPTIONS = Symbol.for("COMMAND_MESSENGER_OPTIONS");
-export const commandMessengerOptions: CommandMessengerOptions = {
-  listenOwnCommands: false
-};
-
-export const MEMORY_SERVICE = Symbol.for("MEMORY_SERVICE");
-
-export const REPLICA_ID = Symbol.for("REPLICA_ID");
-export const replicaIdProvider = () => {
-  // we could use process id to track which api failed to execute command, publish etc.
-  return uniqid();
-};
 
 export enum CommandType {
   /**
@@ -103,3 +72,9 @@ export enum CommandType {
    */
   SYNC
 }
+
+export const REPLICATION_SERVICE_OPTIONS = Symbol.for("REPLICATION_SERVICE_OPTIONS");
+
+export const COMMAND_MEMORY_OPTIONS = Symbol.for("COMMAND_MEMORY_OPTIONS");
+
+export const REPLICA_ID = Symbol.for("REPLICA_ID");

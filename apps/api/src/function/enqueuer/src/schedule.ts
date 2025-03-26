@@ -1,6 +1,7 @@
 import {EventQueue} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
-import {ClassCommander, CommandType, JobReducer} from "@spica-server/replication";
+import {ClassCommander, JobReducer} from "@spica-server/replication";
+import {CommandType} from "@spica-server/interface/replication";
 import cron from "cron";
 import {Enqueuer} from "./enqueuer";
 import uniqid from "uniqid";

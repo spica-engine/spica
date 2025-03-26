@@ -35,7 +35,8 @@ import {
   POLICY_PROVIDER
 } from "@spica-server/interface/passport/identity";
 import {registerPolicyAttacher} from "./utility";
-import {ClassCommander, CommandType} from "@spica-server/replication";
+import {ClassCommander} from "@spica-server/replication";
+import {CommandType} from "@spica-server/interface/replication";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 
 @Controller("passport/identity")

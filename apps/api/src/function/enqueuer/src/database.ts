@@ -1,7 +1,8 @@
 import {ChangeStream, DatabaseService} from "@spica-server/database";
 import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
 import {Database, event} from "@spica-server/function/queue/proto";
-import {CommandType, JobReducer} from "@spica-server/replication";
+import {JobReducer} from "@spica-server/replication";
+import {CommandType} from "@spica-server/interface/replication";
 import {Enqueuer} from "./enqueuer";
 import {ClassCommander} from "@spica-server/replication";
 import uniqid from "uniqid";

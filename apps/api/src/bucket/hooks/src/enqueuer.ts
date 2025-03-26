@@ -5,7 +5,8 @@ import {hooks} from "@spica-server/bucket/hooks/proto";
 import {ChangeQueue} from "./queue";
 import {ChangeEmitter, changeKey} from "./emitter";
 import uniqid from "uniqid";
-import {ClassCommander, CommandType, JobReducer} from "@spica-server/replication";
+import {ClassCommander, JobReducer} from "@spica-server/replication";
+import {CommandType} from "@spica-server/interface/replication";
 import {ChangeOptions} from "@spica-server/interface/bucket/hooks";
 import {Description} from "@spica-server/interface/function/enqueuer";
 

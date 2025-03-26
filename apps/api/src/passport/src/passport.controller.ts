@@ -31,7 +31,8 @@ import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {STRATEGIES, StrategyTypeServices} from "@spica-server/interface/passport";
 import {AuthFactor} from "@spica-server/passport/authfactor";
-import {ClassCommander, CommandType} from "@spica-server/replication";
+import {ClassCommander} from "@spica-server/replication";
+import {CommandType} from "@spica-server/interface/replication";
 
 /**
  * @name passport
