@@ -343,7 +343,6 @@ describe("Versioning", () => {
         expect(file).toEqual({
           _id: id.toHexString(),
           contents: {
-            env: {},
             index: "",
             package: {dependencies: {}},
             schema: expectedSchema
@@ -363,7 +362,6 @@ describe("Versioning", () => {
         expect(file).toEqual({
           _id: id.toHexString(),
           contents: {
-            env: {},
             index: "",
             package: {dependencies: {}},
             schema: {...expectedSchema, triggers: {onCall}}
@@ -378,7 +376,6 @@ describe("Versioning", () => {
         expect(file).toEqual({
           _id: id.toHexString(),
           contents: {
-            env: {},
             index: "console.log(123)",
             package: {dependencies: {}},
             schema: {...expectedSchema, triggers: {onCall}}
