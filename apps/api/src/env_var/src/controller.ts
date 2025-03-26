@@ -4,7 +4,9 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpException,
+  HttpStatus,
   Param,
   Post,
   Put,
@@ -96,6 +98,7 @@ export class EnvVarsController {
 
   @UseInterceptors(activity(createEnvVarActivity))
   @Delete(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("env-var:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return CRUD.remove(this.evs, id);
