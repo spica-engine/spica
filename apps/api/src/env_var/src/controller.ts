@@ -4,7 +4,9 @@ import {
   Controller,
   Delete,
   Get,
-  NotFoundException,
+  HttpCode,
+  HttpException,
+  HttpStatus,
   Param,
   Post,
   Put,
@@ -20,12 +22,13 @@ import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {Schema} from "@spica-server/core/schema";
 import {AuthGuard, ActionGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {EnvVar} from "@spica-server/interface/env_var";
+import * as CRUD from "./crud";
 import {activity} from "@spica-server/activity/services";
 import {createEnvVarActivity} from "./activity.resource";
 
 @Controller("env-var")
 export class EnvVarsController {
-  constructor(private envVarsService: EnvVarsService) {}
+  constructor(private evs: EnvVarsService) {}
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("env-var:index"))
@@ -44,15 +47,11 @@ export class EnvVarsController {
     const seekingPipeline = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
 
     const pipeline = (
-      await pipelineBuilder.paginate(
-        paginate,
-        seekingPipeline,
-        this.envVarsService.estimatedDocumentCount()
-      )
+      await pipelineBuilder.paginate(paginate, seekingPipeline, this.evs.estimatedDocumentCount())
     ).result();
 
     if (paginate) {
-      return this.envVarsService
+      return this.evs
         .aggregate<PaginationResponse<EnvVar>>(pipeline)
         .next()
         .then(r => {
@@ -63,13 +62,13 @@ export class EnvVarsController {
         });
     }
 
-    return this.envVarsService.aggregate<EnvVar[]>([...pipeline, ...seekingPipeline]).toArray();
+    return this.evs.aggregate<EnvVar[]>([...pipeline, ...seekingPipeline]).toArray();
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("env-var:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.envVarsService.findOne({_id: id});
+    return this.evs.findOne({_id: id});
   }
 
   @UseInterceptors(activity(createEnvVarActivity))
@@ -79,8 +78,8 @@ export class EnvVarsController {
     @Body(Schema.validate("http://spica.internal/env_var"))
     envVar: EnvVar
   ) {
-    return this.envVarsService.insertOne(envVar).catch(exception => {
-      throw new BadRequestException(exception.message);
+    return CRUD.insert(this.evs, envVar).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
     });
   }
 
@@ -90,25 +89,18 @@ export class EnvVarsController {
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/env_var"))
-    envVar: Partial<EnvVar>
+    envVar: EnvVar
   ) {
-    return this.envVarsService
-      .findOneAndUpdate({_id: id}, {$set: envVar}, {returnDocument: ReturnDocument.AFTER})
-      .catch(exception => {
-        throw new BadRequestException(exception.message);
-      });
+    return CRUD.replace(this.evs, {...envVar, _id: id}).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
+    });
   }
 
   @UseInterceptors(activity(createEnvVarActivity))
   @Delete(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("env-var:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const envVar = await this.envVarsService.findOne({_id: id});
-
-    if (!envVar) {
-      throw new NotFoundException();
-    }
-
-    return this.envVarsService.deleteOne({_id: id});
+    return CRUD.remove(this.evs, id);
   }
 }

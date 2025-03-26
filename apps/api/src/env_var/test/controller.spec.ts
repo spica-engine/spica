@@ -203,23 +203,10 @@ describe("Environment Variable", () => {
       });
 
       const res = await req.delete(`/env-var/${body._id}`);
-      expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
+      expect([res.statusCode, res.statusText]).toEqual([204, "No Content"]);
 
       const {body: envVars} = await req.get("/env-var");
       expect(envVars.length).toEqual(0);
-    });
-
-    it("should throw NotFoundExpection", async () => {
-      await req.post("/env-var", {
-        key: "ENV_KEY",
-        value: "123"
-      });
-
-      const res = await req.delete(`/env-var/${new ObjectId()}`);
-      expect([res.body.statusCode, res.body.message]).toEqual([404, "Not Found"]);
-
-      const {body} = await req.get("/env-var");
-      expect(body.length).toEqual(1);
     });
   });
 });

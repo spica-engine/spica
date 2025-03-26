@@ -3,6 +3,11 @@
   "type": "object",
   "required": ["key", "value"],
   "properties": {
+    "_id": {
+      "type": "string",
+      "format": "objectid",
+      "description": "Unique objectid id of schema."
+    },
     "key": {
       "title": "Key",
       "description": "Environment variable key",
