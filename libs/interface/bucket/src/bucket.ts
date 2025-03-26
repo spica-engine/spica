@@ -1,4 +1,4 @@
-import {ObjectId, CreateIndexesOptions} from "@spica-server/database";
+import {ObjectId} from "@spica-server/database";
 import {Preference} from "@spica-server/interface/preference";
 import {JSONSchema7, JSONSchema7TypeName} from "json-schema";
 
@@ -54,4 +54,18 @@ export interface BucketPreferences extends Preference {
     };
     default: string;
   };
+}
+
+export interface BucketAsset {
+  schema: Bucket;
+}
+
+export interface BucketOptions {
+  hooks: boolean;
+  history: boolean;
+  realtime: boolean;
+  cache: boolean;
+  cacheTtl?: number;
+  bucketDataLimit?: number;
+  graphql: boolean;
 }

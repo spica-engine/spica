@@ -1,4 +1,4 @@
-import {Bucket} from "@spica-server/interface/bucket/services";
+import {Bucket} from "@spica-server/interface/bucket";
 
 export type FilterReplacer = (
   filter: object,

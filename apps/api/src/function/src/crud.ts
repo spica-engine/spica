@@ -3,10 +3,10 @@ import {
   Dependency,
   EnvRelation,
   Function,
-  FunctionWithDependencies
+  FunctionWithDependencies,
+  ChangeKind
 } from "@spica-server/interface/function";
 import {changesFromTriggers, createTargetChanges, hasContextChange} from "./change";
-import {ChangeKind} from "@spica-server/interface/function";
 import {ObjectId} from "@spica-server/database";
 import {FunctionEngine} from "./engine";
 import {LogService} from "@spica-server/function/log";

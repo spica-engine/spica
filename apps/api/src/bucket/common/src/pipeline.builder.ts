@@ -7,7 +7,7 @@ import {categorizePropertyMap} from "./helpers";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {extractFilterPropertyMap} from "@spica-server/filter";
 import {CrudFactories, Locale, RelationMap} from "@spica-server/interface/bucket/common";
-import {Bucket} from "@spica-server/interface/bucket/services";
+import {Bucket} from "@spica-server/interface/bucket";
 
 export class BucketPipelineBuilder extends PipelineBuilder {
   private schema: Bucket;

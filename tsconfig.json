@@ -248,9 +248,6 @@
       "path": "./libs/interface/bucket/realtime"
     },
     {
-      "path": "./libs/interface/bucket/services"
-    },
-    {
       "path": "./libs/interface/core"
     },
     {
@@ -282,9 +279,6 @@
     },
     {
       "path": "./libs/interface/function/scheduler"
-    },
-    {
-      "path": "./libs/interface/function/services"
     },
     {
       "path": "./libs/interface/function/webhook"

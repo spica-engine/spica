@@ -21,7 +21,7 @@ import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/gua
 import {Webhook} from "@spica-server/interface/function/webhook";
 import {WebhookInvoker} from "./invoker";
 import {WebhookService} from "./webhook.service";
-import {CollectionSlug, COLL_SLUG} from "@spica-server/interface/function/services";
+import {CollectionSlug, COLL_SLUG} from "@spica-server/interface/function";
 
 @Controller("webhook")
 export class WebhookController {

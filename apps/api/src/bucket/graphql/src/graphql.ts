@@ -39,7 +39,7 @@ import {
 } from "@spica-server/bucket/common";
 import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {FindResponse} from "@spica-server/interface/bucket/graphql";
-import {Bucket, BucketDocument} from "@spica-server/interface/bucket/services";
+import {Bucket, BucketDocument} from "@spica-server/interface/bucket";
 
 import {
   createSchema,

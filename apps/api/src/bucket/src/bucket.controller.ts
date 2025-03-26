@@ -29,7 +29,7 @@ import * as expression from "@spica-server/bucket/expression";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket/cache";
 import * as CRUD from "./crud";
 import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core/patch";
-import {Bucket} from "@spica-server/interface/bucket/services";
+import {Bucket} from "@spica-server/interface/bucket";
 
 /**
  * All APIs related to bucket schemas.

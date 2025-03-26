@@ -40,7 +40,7 @@ import {takeUntil, catchError} from "rxjs/operators";
 import {Action} from "@spica-server/interface/activity";
 import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {MessageKind} from "@spica-server/interface/bucket/realtime";
-import {BucketDocument} from "@spica-server/interface/bucket/services";
+import {BucketDocument} from "@spica-server/interface/bucket";
 
 @WebSocketGateway({
   path: "/bucket/:id/data"

@@ -9,16 +9,19 @@ import path from "path";
 import {rimraf} from "rimraf";
 import {Observable} from "rxjs";
 import {FunctionService} from "@spica-server/function/services";
-import {EnvRelation, Function} from "@spica-server/interface/function";
 import {
   CollectionSlug,
   Options,
   FUNCTION_OPTIONS,
-  COLL_SLUG
-} from "@spica-server/interface/function/services";
+  COLL_SLUG,
+  Function,
+  ChangeKind,
+  TargetChange,
+  SCHEMA,
+  SchemaWithName,
+  EnvRelation
+} from "@spica-server/interface/function";
 
-import {ChangeKind, TargetChange} from "@spica-server/interface/function";
-import {SCHEMA, SchemaWithName} from "@spica-server/interface/function";
 import {createTargetChanges} from "./change";
 
 import HttpSchema from "./schema/http.json" with {type: "json"};

@@ -6,7 +6,7 @@ import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {HistoryService} from "@spica-server/bucket/history";
 import * as expression from "@spica-server/bucket/expression";
 import {BadRequestException} from "@nestjs/common";
-import {Bucket} from "@spica-server/interface/bucket/services";
+import {Bucket} from "@spica-server/interface/bucket";
 
 export async function insert(bs: BucketService, bucket: Bucket) {
   ruleValidation(bucket);

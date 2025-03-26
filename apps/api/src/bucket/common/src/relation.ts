@@ -12,7 +12,7 @@ import {
   RelationDefinition,
   RelationResolver
 } from "@spica-server/interface/bucket/common";
-import {Bucket, BucketDocument} from "@spica-server/interface/bucket/services";
+import {Bucket, BucketDocument} from "@spica-server/interface/bucket";
 
 export function findRelations(
   schema: any,

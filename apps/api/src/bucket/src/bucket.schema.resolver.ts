@@ -4,7 +4,7 @@ import {CodeKeywordDefinition, KeywordCxt, Validator, _} from "@spica-server/cor
 import {ObjectId} from "@spica-server/database";
 import {combineLatest, Observable, Subject} from "rxjs";
 import {map, takeUntil} from "rxjs/operators";
-import {Bucket, BucketPreferences} from "@spica-server/interface/bucket/services";
+import {Bucket, BucketPreferences} from "@spica-server/interface/bucket";
 
 @Injectable()
 export class BucketSchemaResolver implements OnModuleDestroy {

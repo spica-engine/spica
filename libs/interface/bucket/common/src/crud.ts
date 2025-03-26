@@ -1,5 +1,5 @@
 import {ObjectId, BaseCollection} from "@spica-server/database";
-import {Bucket, BucketPreferences} from "@spica-server/interface/bucket/services";
+import {Bucket, BucketPreferences} from "@spica-server/interface/bucket";
 import {IAuthResolver} from "./auth";
 
 export interface CrudOptions<Paginate> {

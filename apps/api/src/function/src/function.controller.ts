@@ -34,7 +34,7 @@ import {createFunctionActivity} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {EnvRelation, Function} from "@spica-server/interface/function";
 import {FunctionService} from "@spica-server/function/services";
-import {Options, FUNCTION_OPTIONS} from "@spica-server/interface/function/services";
+import {Options, FUNCTION_OPTIONS, Function} from "@spica-server/interface/function";
 import {LogService} from "@spica-server/function/log/src/log.service";
 import {generate} from "./schema/enqueuer.resolver";
 import {applyPatch} from "@spica-server/core/patch";

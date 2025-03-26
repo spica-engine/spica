@@ -57,7 +57,7 @@ import {
 } from "@spica-server/bucket/common";
 import {applyPatch} from "@spica-server/core/patch";
 import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
-import {BucketDocument} from "@spica-server/interface/bucket/services";
+import {BucketDocument} from "@spica-server/interface/bucket";
 
 /**
  * All APIs related to bucket documents.

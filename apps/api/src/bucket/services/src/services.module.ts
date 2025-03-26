@@ -2,7 +2,7 @@ import {Module, Global, DynamicModule} from "@nestjs/common";
 import {BucketService} from "./bucket.service";
 import {SchemaModule} from "@spica-server/core/schema";
 import {BucketDataService} from "./bucket-data.service";
-import {BUCKET_DATA_LIMIT} from "@spica-server/interface/bucket/services";
+import {BUCKET_DATA_LIMIT} from "@spica-server/interface/bucket";
 
 @Global()
 @Module({})

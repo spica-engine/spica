@@ -13,12 +13,13 @@ import {
 import {PreferenceService} from "@spica-server/preference/services";
 import {BehaviorSubject, Observable} from "rxjs";
 import {getBucketDataCollection} from "./";
-import {IndexDefinition, ExistingIndex} from "@spica-server/interface/bucket/services";
 import {
+  IndexDefinition,
+  ExistingIndex,
   Bucket,
   BucketPreferences,
   BUCKET_DATA_LIMIT
-} from "@spica-server/interface/bucket/services";
+} from "@spica-server/interface/bucket";
 
 @Injectable()
 export class BucketService extends BaseCollection<Bucket>("buckets") {

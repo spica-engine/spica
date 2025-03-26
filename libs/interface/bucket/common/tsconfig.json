@@ -6,7 +6,7 @@
       "path": "../../../database"
     },
     {
-      "path": "../services"
+      "path": "../"
     }
   ]
 }

@@ -1,6 +1,6 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
 import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
-import {Bucket, BucketDocument, BUCKET_DATA_LIMIT} from "@spica-server/interface/bucket/services";
+import {Bucket, BucketDocument, BUCKET_DATA_LIMIT} from "@spica-server/interface/bucket";
 
 @Injectable()
 export class BucketDataService {

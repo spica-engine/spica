@@ -22,7 +22,7 @@ import {getSyncProviders} from "./versioncontrol";
 import {registerAssetHandlers} from "./asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
-import {FunctionOptions, FUNCTION_OPTIONS} from "@spica-server/interface/function/services";
+import {FunctionOptions, FUNCTION_OPTIONS} from "@spica-server/interface/function";
 
 @Module({})
 export class FunctionModule {

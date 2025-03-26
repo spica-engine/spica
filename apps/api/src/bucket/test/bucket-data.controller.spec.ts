@@ -8,7 +8,7 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {Bucket, BucketDocument} from "@spica-server/interface/bucket/services";
+import {Bucket, BucketDocument} from "@spica-server/interface/bucket";
 
 describe("BucketDataController", () => {
   let app: INestApplication;

@@ -23,11 +23,7 @@ import {
   CrudPagination,
   RelationMap
 } from "@spica-server/interface/bucket/common";
-import {
-  Bucket,
-  LimitExceedBehaviours,
-  BucketDocument
-} from "@spica-server/interface/bucket/services";
+import {Bucket, LimitExceedBehaviours, BucketDocument} from "@spica-server/interface/bucket";
 
 export async function findDocuments<T>(
   schema: Bucket,
