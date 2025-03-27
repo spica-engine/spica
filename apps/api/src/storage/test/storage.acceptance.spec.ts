@@ -584,7 +584,7 @@ describe("Storage Acceptance", () => {
         }
       ];
 
-      req
+      await req
         .post("/storage", serialize({content: objects}), {
           "Content-Type": "application/bson"
         })

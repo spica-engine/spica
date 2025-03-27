@@ -73,7 +73,7 @@ describe("Storage Service", () => {
   });
 
   it("should not insert storage object with an already existing name", async () => {
-    storageService
+    await storageService
       .insert([
         {
           name: "my_obj",
