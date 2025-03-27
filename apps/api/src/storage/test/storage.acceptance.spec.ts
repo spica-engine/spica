@@ -6,7 +6,7 @@ import {PassportTestingModule} from "@spica-server/passport/testing";
 import {StorageModule} from "@spica-server/storage";
 import {Binary, serialize} from "bson";
 import etag from "etag";
-import {StorageObject} from "@spica-server/storage/src/body";
+import {StorageObject} from "@spica-server/interface/storage";
 
 describe("Storage Acceptance", () => {
   let app: INestApplication;

@@ -1,6 +1,11 @@
 import {Injectable} from "@nestjs/common";
 import {compareResourceGroups} from "@spica-server/core/differ";
-import {Provider, SyncDirection, SyncLog, SyncProvider} from "./interface";
+import {
+  Provider,
+  SyncDirection,
+  SyncLog,
+  SyncProvider
+} from "@spica-server/interface/versioncontrol";
 
 @Injectable()
 export class Synchronizer {

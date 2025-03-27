@@ -7,8 +7,14 @@ import {
   WithId
 } from "@spica-server/database";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
-import {StorageObject, StorageObjectMeta} from "./body";
-import {StorageOptions, STORAGE_OPTIONS} from "./options";
+import {
+  StorageOptions,
+  StorageObject,
+  StorageObjectMeta,
+  STORAGE_OPTIONS,
+  StorageResponse,
+  PaginatedStorageResponse
+} from "@spica-server/interface/storage";
 import {Strategy} from "./strategy/strategy";
 import fs from "fs";
 
@@ -219,13 +225,4 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   async getUrl(id: string) {
     return this.service.url(id);
   }
-}
-
-export type StorageResponse = StorageObjectMeta;
-
-export interface PaginatedStorageResponse {
-  meta: {
-    total: number;
-  };
-  data: StorageResponse[];
 }

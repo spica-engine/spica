@@ -8,7 +8,7 @@ import {
   OptionalId,
   WithId
 } from "@spica-server/database";
-import {Preference} from "./interface";
+import {Preference} from "@spica-server/interface/preference";
 import {Observable} from "rxjs";
 
 @Injectable()

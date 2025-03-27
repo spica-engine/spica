@@ -1,5 +1,6 @@
 import deepDiff from "deep-diff";
 import diffMatchPatch from "diff-match-patch";
+import {ChangeKind, Change, ChangePath, Patch} from "@spica-server/interface/core";
 
 export function diff<T>(prev: T, current: T): Change[] {
   const structuralChanges = deepDiff.diff(prev, current);
@@ -84,33 +85,10 @@ export function diff<T>(prev: T, current: T): Change[] {
   return changes;
 }
 
-export enum ChangeKind {
-  Edit = 1,
-  Delete = 2,
-  Add = 0
-}
-
-export type ChangePath = string | number;
-export type ChangePaths = ChangePath[];
-
-export interface Change {
-  kind: ChangeKind;
-  path: ChangePaths;
-  patches?: Patch[];
-}
-
 export function createPatch(previous: string, current: string): Patch[] {
   const differ = new diffMatchPatch.diff_match_patch();
   const patches = differ.patch_make(String(previous), String(current));
   return patches.map(patch => ({...patch})) as Patch[];
-}
-
-export class Patch {
-  diffs: [number, string][];
-  start1: number | null;
-  start2: number | null;
-  length1: number;
-  length2: number;
 }
 
 export function compareResourceGroups<T>(

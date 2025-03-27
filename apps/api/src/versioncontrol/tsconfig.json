@@ -5,6 +5,7 @@
     {"path": "../passport/guard"},
     {"path": "../replication"},
     {"path": "../../../../libs/representative"},
-    {"path": "../../../../libs/core/differ"}
+    {"path": "../../../../libs/core/differ"},
+    {"path": "../../../../libs/interface/versioncontrol"}
   ]
 }

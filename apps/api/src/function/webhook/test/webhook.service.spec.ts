@@ -1,6 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
-import {ChangeKind, Webhook, WebhookService} from "@spica-server/function/webhook";
+import {WebhookService} from "@spica-server/function/webhook";
+import {Webhook, ChangeKind} from "@spica-server/interface/function/webhook";
 import {bufferCount, bufferTime, take} from "rxjs/operators";
 
 describe("Webhook Service", () => {

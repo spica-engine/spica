@@ -1,6 +1,7 @@
 import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
 import {Database, event, Firehose, Http} from "@spica-server/function/queue/proto";
-import {Compilation, Language} from "@spica-server/function/compiler";
+import {Language} from "@spica-server/function/compiler";
+import {Compilation} from "@spica-server/interface/function/compiler";
 import {Javascript} from "@spica-server/function/compiler/javascript";
 import {Typescript} from "@spica-server/function/compiler/typescript";
 import {Node} from "@spica-server/function/scheduler";

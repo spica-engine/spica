@@ -4,7 +4,7 @@ import {ChangeStream, Collection, ObjectId} from "mongodb";
 import {asyncScheduler, Observable, Subject, Subscriber, Subscription, TeardownLogic} from "rxjs";
 import {filter, bufferTime, switchMap, share} from "rxjs/operators";
 import {PassThrough} from "stream";
-import {DatabaseChange, FindOptions, OperationType} from "./interface";
+import {DatabaseChange, FindOptions, OperationType} from "@spica-server/interface/database";
 import {levenshtein} from "./levenshtein";
 import {late} from "./operators";
 

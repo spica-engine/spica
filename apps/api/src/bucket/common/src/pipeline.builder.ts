@@ -1,18 +1,13 @@
 import * as expression from "@spica-server/bucket/expression";
-import {Bucket} from "@spica-server/bucket/services";
-import {CrudFactories} from "./crud";
-import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
+import {buildI18nAggregation, findLocale, hasTranslatedProperties} from "./locale";
 import {deepCopy} from "@spica-server/core/patch";
-import {
-  compareAndUpdateRelations,
-  createRelationMap,
-  getRelationPipeline,
-  RelationMap
-} from "./relation";
+import {compareAndUpdateRelations, createRelationMap, getRelationPipeline} from "./relation";
 import {constructFilterValues} from "@spica-server/bucket/common";
 import {categorizePropertyMap} from "./helpers";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {extractFilterPropertyMap} from "@spica-server/filter";
+import {CrudFactories, Locale, RelationMap} from "@spica-server/interface/bucket/common";
+import {Bucket} from "@spica-server/interface/bucket";
 
 export class BucketPipelineBuilder extends PipelineBuilder {
   private schema: Bucket;

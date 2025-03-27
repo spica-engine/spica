@@ -1,11 +1,10 @@
 import {
-  LogChannels,
-  LogLevels,
   RESERVED_ENDING_INDICATOR,
   RESERVED_LOG_LEVEL_INDICATOR,
   RESERVED_LOG_REGEX,
   RESERVED_STARTING_INDICATOR
-} from "./interface";
+} from "./consts";
+import {LogChannels, LogLevels} from "@spica-server/interface/function/runtime";
 
 export function getLoggerConsole() {
   const copiedConsole = Object.assign({}, console);

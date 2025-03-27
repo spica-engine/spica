@@ -8,4 +8,3 @@ export {
   CodeKeywordDefinition,
   KeywordCxt
 } from "./src/validator";
-export {Default, Format, Keyword} from "./src/interface";

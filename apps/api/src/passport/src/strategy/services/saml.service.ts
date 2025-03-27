@@ -1,8 +1,12 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
 import saml2 from "saml2-js";
 import * as uuid from "uuid";
-import {SamlStrategy, StrategyTypeService} from "../interface";
-import {PassportOptions, PASSPORT_OPTIONS} from "../../options";
+import {
+  SamlStrategy,
+  StrategyTypeService,
+  PassportOptions,
+  PASSPORT_OPTIONS
+} from "@spica-server/interface/passport";
 import {StrategyService} from "./strategy.service";
 import forge from "node-forge";
 import {ObjectId} from "@spica-server/database";

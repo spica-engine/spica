@@ -12,23 +12,15 @@ import {
 import {ObjectId} from "@spica-server/database";
 import {isMatch} from "matcher";
 import {Text, Parameter, parse} from "path-to-regexp";
-import {PolicyResolver, POLICY_RESOLVER} from "./action.resolver";
-
-export interface Statement {
-  action: string;
-  resource: {
-    include: string[];
-    exclude: string[];
-  };
-  module: string;
-}
+import {
+  Statement,
+  PrepareUser,
+  PolicyResolver,
+  POLICY_RESOLVER
+} from "@spica-server/interface/passport/guard";
 
 export function wrapArray(val: string | string[]) {
   return Array.isArray(val) ? val : Array(val);
-}
-
-export interface PrepareUser {
-  (request: any): any;
 }
 
 export const resourceFilterFunction = (

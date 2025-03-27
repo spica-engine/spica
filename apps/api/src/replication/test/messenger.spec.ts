@@ -1,5 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {CommandMessage, CommandMessenger, Command} from "@spica-server/replication/src";
+import {CommandMessenger} from "@spica-server/replication/src";
+import {CommandMessage, Command} from "@spica-server/interface/replication";
 import {ReplicationTestingModule} from "@spica-server/replication/testing";
 
 function wait(ms) {

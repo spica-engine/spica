@@ -22,7 +22,7 @@ import {
 import {activity, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
-import {BucketDataService, BucketDocument, BucketService} from "@spica-server/bucket/services";
+import {BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {
   ARRAY,
   BOOLEAN,
@@ -45,8 +45,6 @@ import {
   patchDocument,
   replaceDocument,
   authIdToString,
-  AUTH_RESOLVER,
-  IAuthResolver,
   isJSONFilter,
   filterReviver
 } from "@spica-server/bucket/common";
@@ -58,6 +56,8 @@ import {
   createBucketDataActivity
 } from "@spica-server/bucket/common";
 import {applyPatch} from "@spica-server/core/patch";
+import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
+import {BucketDocument} from "@spica-server/interface/bucket";
 
 /**
  * All APIs related to bucket documents.

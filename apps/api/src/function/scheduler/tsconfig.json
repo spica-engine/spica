@@ -22,6 +22,9 @@
     },
     {
       "path": "../enqueuer"
+    },
+    {
+      "path": "../../../../../libs/interface/function/scheduler"
     }
   ]
 }

@@ -1,0 +1,5 @@
+{
+  "name": "interface/function/compiler",
+  "sourceRoot": "libs/interface/function/compiler/src",
+  "projectType": "library"
+}

@@ -5,7 +5,8 @@ import {
   DatabaseTestingModule,
   getConnectionUri
 } from "@spica-server/database/testing";
-import {ClassCommander, CommandType, ReplicationModule} from "@spica-server/replication/src";
+import {ClassCommander, ReplicationModule} from "@spica-server/replication/src";
+import {CommandType} from "@spica-server/interface/replication";
 
 function wait(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));

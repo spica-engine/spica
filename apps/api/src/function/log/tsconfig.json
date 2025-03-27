@@ -11,6 +11,9 @@
     },
     {
       "path": "../runtime/logger"
+    },
+    {
+      "path": "../../../../../libs/interface/function/log"
     }
   ]
 }

@@ -4,7 +4,8 @@ import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {BucketService, BucketDataService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {BUCKET_LANGUAGE_FINALIZER, PreferenceService} from "@spica-server/preference/services";
+import {PreferenceService} from "@spica-server/preference/services";
+import {BUCKET_LANGUAGE_FINALIZER} from "@spica-server/interface/preference";
 import {BucketCacheModule} from "@spica-server/bucket/cache";
 import {BucketDataController} from "./bucket-data.controller";
 import {BucketController} from "./bucket.controller";
@@ -22,11 +23,12 @@ import {
   RegisterSyncProvider,
   REGISTER_VC_SYNC_PROVIDER,
   VC_REP_MANAGER
-} from "@spica-server/versioncontrol";
+} from "@spica-server/interface/versioncontrol";
 import {getSyncProvider} from "./versioncontrol/schema";
 import {registerAssetHandlers} from "./asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
+import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
+import {BucketOptions} from "@spica-server/interface/bucket";
 
 @Module({})
 export class BucketModule {
@@ -155,14 +157,4 @@ export class BucketCoreModule {
       exports: [BUCKET_LANGUAGE_FINALIZER]
     };
   }
-}
-
-export interface BucketOptions {
-  hooks: boolean;
-  history: boolean;
-  realtime: boolean;
-  cache: boolean;
-  cacheTtl?: number;
-  bucketDataLimit?: number;
-  graphql: boolean;
 }

@@ -1,36 +1,25 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
-import {Default, Validator} from "@spica-server/core/schema";
+import {Validator} from "@spica-server/core/schema";
+import {Default} from "@spica-server/interface/core";
 import {
   BaseCollection,
   Collection,
   DatabaseService,
   Filter,
   FindOneAndReplaceOptions,
-  CreateIndexesOptions,
   ObjectId,
   WithId
 } from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference/services";
 import {BehaviorSubject, Observable} from "rxjs";
-import {Bucket, BucketPreferences} from "./bucket";
 import {getBucketDataCollection} from "./";
-import {BUCKET_DATA_LIMIT} from "./options";
-
-export interface IndexDefinition {
-  definition: {
-    [key: string]: any;
-  };
-  options?: CreateIndexesOptions;
-}
-
-interface ExistingIndex {
-  v: number;
-  key: {
-    [key: string]: any;
-  };
-  name: string;
-  [key: string]: any;
-}
+import {
+  IndexDefinition,
+  ExistingIndex,
+  Bucket,
+  BucketPreferences,
+  BUCKET_DATA_LIMIT
+} from "@spica-server/interface/bucket";
 
 @Injectable()
 export class BucketService extends BaseCollection<Bucket>("buckets") {
