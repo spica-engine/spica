@@ -12,32 +12,43 @@ import {FunctionEngine} from "./engine";
 import {LogService} from "@spica-server/function/log";
 import {NotFoundException} from "@nestjs/common";
 import {FunctionPipelineBuilder} from "./pipeline.builder";
+import fs from "fs";
+import * as readline from "readline";
 
-export function find<ER extends EnvRelation = EnvRelation.NotResolved>(
+export async function find<ER extends EnvRelation = EnvRelation.NotResolved>(
   fs: FunctionService,
-  options: {
-    resourceFilter?: object;
+  engine: FunctionEngine,
+  options?: {
+    filter?: {
+      resources?: object;
+      envVars?: ObjectId[];
+      index?: string;
+    };
     resolveEnvRelations?: ER;
-    envVars?: ObjectId[];
   }
 ): Promise<Function<ER>[]> {
   const pipeline = new FunctionPipelineBuilder()
-    .filterResources(options.resourceFilter)
-    .filterByEnvVars(options.envVars)
-    .resolveEnvRelation(options.resolveEnvRelations)
+    .filterResources(options?.filter?.resources)
+    .filterByEnvVars(options?.filter?.envVars)
+    .resolveEnvRelation(options?.resolveEnvRelations)
     .result();
-  return fs.aggregate<Function<ER>>(pipeline).toArray();
+  let fns = await fs.aggregate<Function<ER>>(pipeline).toArray();
+
+  if (options?.filter?.index) {
+    fns = await index.filter(fns, options.filter.index, engine);
+  }
+  return fns;
 }
 
 export function findOne<ER extends EnvRelation = EnvRelation.NotResolved>(
   fs: FunctionService,
+  id: ObjectId,
   options: {
-    id: ObjectId;
     resolveEnvRelations?: ER;
   }
 ): Promise<Function<ER>> {
   const pipeline = new FunctionPipelineBuilder()
-    .findOneIfRequested(options.id)
+    .findOneIfRequested(id)
     .resolveEnvRelation(options.resolveEnvRelations)
     .result();
   return fs.aggregate<Function<ER>>(pipeline).next();
@@ -50,7 +61,7 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
 
   const insertedFn = await fs
     .insertOne(fn)
-    .then(r => findOne(fs, {id: r._id, resolveEnvRelations: EnvRelation.Resolved}));
+    .then(r => findOne(fs, r._id, {resolveEnvRelations: EnvRelation.Resolved}));
 
   const changes = createTargetChanges(insertedFn, ChangeKind.Added);
   engine.categorizeChanges(changes);
@@ -69,7 +80,7 @@ export async function replace(fs: FunctionService, engine: FunctionEngine, fn: F
   const preFn = await fs.findOneAndUpdate({_id}, {$set: fn});
 
   fn._id = _id;
-  const currFnEnvResolved = await findOne(fs, {id: _id, resolveEnvRelations: EnvRelation.Resolved});
+  const currFnEnvResolved = await findOne(fs, _id, {resolveEnvRelations: EnvRelation.Resolved});
 
   let changes;
 
@@ -122,12 +133,55 @@ export namespace index {
 
     await engine.update(fn, index);
 
-    const envResolvedFn = await findOne(fs, {id, resolveEnvRelations: EnvRelation.Resolved});
+    const envResolvedFn = await findOne(fs, id, {resolveEnvRelations: EnvRelation.Resolved});
 
     const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated);
     engine.categorizeChanges(changes);
 
     return engine.compile(fn);
+  }
+
+  export async function filter(
+    fns: Function<EnvRelation>[],
+    text: string,
+    engine: FunctionEngine
+  ): Promise<Function<EnvRelation>[]> {
+    const foundFns = [];
+    const promises = fns.map(fn => {
+      const entrypoint = engine.getFunctionBuildEntrypoint(fn);
+      return doesFileIncludeText(entrypoint, text)
+        .then(doesInclude => {
+          if (doesInclude) {
+            foundFns.push(fn);
+          }
+        })
+        .catch(e => Promise.reject(`Failed to filter function by index, reason: ${e}`));
+    });
+    return Promise.all(promises).then(() => foundFns);
+  }
+
+  function doesFileIncludeText(filePath: string, text: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      let isFound = false;
+      const regex = new RegExp(text);
+
+      const stream = fs.createReadStream(filePath, {encoding: "utf8"});
+      const rl = readline.createInterface({input: stream});
+
+      stream.on("error", e => {
+        rl.close();
+        reject(e);
+      });
+
+      rl.on("line", line => {
+        if (regex.test(line)) {
+          isFound = true;
+          rl.close();
+        }
+      });
+
+      rl.on("close", () => resolve(isFound));
+    });
   }
 }
 
@@ -210,8 +264,7 @@ export namespace environment {
   }
 
   export async function reload(fs: FunctionService, fnId: ObjectId, engine: FunctionEngine) {
-    const envResolvedFn = await findOne(fs, {
-      id: fnId,
+    const envResolvedFn = await findOne(fs, fnId, {
       resolveEnvRelations: EnvRelation.Resolved
     });
     const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated);

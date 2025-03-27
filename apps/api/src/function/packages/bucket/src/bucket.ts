@@ -146,21 +146,39 @@ export namespace data {
   }
 
   export namespace realtime {
+    /**
+     * @param {Object} queryParams - Query params.
+     * * @param {string[] | boolean} queryParams.relation - Resolves relation of document(s), but increases the response time.
+     */
     export function get<T>(
       bucketId: string,
       documentId: string,
-      messageCallback?: (res: {status: number; message: string}) => any
+      messageCallback?: (res: {status: number; message: string}) => any,
+      queryParams: object = {}
     ): RealtimeConnectionOne<T> {
       checkInitialized(authorization);
+
+      const relation = queryParams["relation"];
 
       const fullUrl = buildUrl(`${wsUrl}/${bucketId}/data`, {
         filter: `document._id=="${documentId}"`,
         Authorization: authorization
       });
 
-      return getWsObs<T>(fullUrl.toString(), undefined, documentId, messageCallback);
+      return getWsObs<T>(
+        fullUrl.toString(),
+        undefined,
+        relation,
+        bucketId,
+        documentId,
+        messageCallback
+      );
     }
 
+    /**
+     * @param {Object} queryParams - Query params.
+     * * @param {string[] | boolean} queryParams.relation - Resolves relation of document(s), but increases the response time.
+     */
     export function getAll<T>(
       bucketId: string,
       queryParams: object = {},
@@ -169,13 +187,14 @@ export namespace data {
       checkInitialized(authorization);
 
       const sort = queryParams["sort"];
+      const relation = queryParams["relation"];
 
       const fullUrl = buildUrl(`${wsUrl}/${bucketId}/data`, {
         ...queryParams,
         Authorization: authorization
       });
 
-      return getWsObs<T>(fullUrl.toString(), sort, undefined, messageCallback);
+      return getWsObs<T>(fullUrl.toString(), sort, relation, bucketId, undefined, messageCallback);
     }
   }
 }
