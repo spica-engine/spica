@@ -45,7 +45,10 @@ describe("Storage Service", () => {
     strategyInstance = module.get(Strategy);
   });
 
-  afterEach(() => module.close());
+  afterEach(() => {
+    storageService.deleteMany({});
+    module.close();
+  });
 
   it("should add storage objects", async () => {
     await expect(
@@ -90,7 +93,6 @@ describe("Storage Service", () => {
           }
         }
       ])
-      .then(data => console.log(Array.from({length: 100}, v => "WRONG BEHAVIOR! ").join(""), data))
       .catch(error => {
         expect(error.response.statusCode).toBe(400);
         expect(error.response.message).toBe("An object with this name already exists.");
