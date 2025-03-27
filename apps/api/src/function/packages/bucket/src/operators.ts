@@ -1,10 +1,20 @@
 import {ChunkKind, Sequence, SequenceKind} from "@spica-server/interface/realtime";
 import {RealtimeConnection, RealtimeConnectionOne} from "./interface";
-import {tap, delayWhen, map, debounceTime, retryWhen, filter, takeWhile} from "rxjs/operators";
+import {
+  tap,
+  delayWhen,
+  map,
+  debounceTime,
+  retryWhen,
+  filter,
+  takeWhile,
+  switchMap
+} from "rxjs/operators";
 import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
 import {isPlatformBrowser} from "@spica-devkit/internal_common";
 import ws from "ws";
+import * as Bucket from "@spica-devkit/bucket";
 
 export class IterableSet<T> implements Iterable<T> {
   ids = new Array<string>();
@@ -65,18 +75,24 @@ export class IterableSet<T> implements Iterable<T> {
 export function getWsObs<T>(
   url: string,
   sort?: object,
+  relation?: string[] | boolean,
+  bucketId?: string,
   targetDocumentId?: string,
   messageCallback?: (res: {status: number; message: string}) => any
 ): RealtimeConnectionOne<T>;
 export function getWsObs<T>(
   url: string,
   sort?: object,
+  relation?: string[] | boolean,
+  bucketId?: string,
   targetDocumentId?: null,
   messageCallback?: (res: {status: number; message: string}) => any
 ): RealtimeConnection<T[]>;
 export function getWsObs<T>(
   url: string,
   sort?: object,
+  relation?: string[] | boolean,
+  bucketId?: string,
   targetDocumentId?: string | null,
   messageCallback: (res: {status: number; message: string}) => any = res => {
     if (res.status >= 400 && res.status < 600) {
@@ -132,7 +148,18 @@ export function getWsObs<T>(
       return of(null);
     }),
     debounceTime(1),
-    map(() => (targetDocumentId ? Array.from(data)[0] : Array.from(data)))
+    map(() => (targetDocumentId ? Array.from(data)[0] : Array.from(data))),
+    switchMap(chunk => {
+      if (!relation) {
+        return of(chunk);
+      }
+      if (Array.isArray(chunk)) {
+        return Bucket.data.getAll(bucketId, {
+          queryParams: {filter: {_id: {$in: chunk.map(c => c["_id"])}}, relation}
+        });
+      }
+      return Bucket.data.get(bucketId, chunk["_id"], {queryParams: {relation}});
+    })
   );
 
   const insert = document => subject.next({event: "insert", data: document});
