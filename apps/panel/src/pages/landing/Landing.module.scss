@@ -1,0 +1,33 @@
+.container {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-image: url("../../assets/images/Home.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  .contentContainer {
+    padding: var(--padding-xl);
+    border-radius: var(--border-radius-md);
+    background-color: var(--color-menu-background);
+  }
+  .passwordIcon {
+    color: var(--color-font-primary) !important;
+  }
+  .passwordText {
+    color: var(--color-input-placeholder) !important;
+  }
+  .spicaButton {
+    height: 16px !important;
+  }
+  .bottomContainer {
+    padding: 0;
+
+    .linkButtons {
+      color: var(--color-font-primary) !important;
+    }
+  }
+}
