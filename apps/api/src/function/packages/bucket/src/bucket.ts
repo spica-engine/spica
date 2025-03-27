@@ -153,8 +153,8 @@ export namespace data {
     export function get<T>(
       bucketId: string,
       documentId: string,
-      queryParams: object = {},
-      messageCallback?: (res: {status: number; message: string}) => any
+      messageCallback?: (res: {status: number; message: string}) => any,
+      queryParams: object = {}
     ): RealtimeConnectionOne<T> {
       checkInitialized(authorization);
 

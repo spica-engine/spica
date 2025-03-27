@@ -323,7 +323,7 @@ describe("Bucket", () => {
 
         Bucket.data.insert<any>(bucketid, bucketData).then(r => {
           const bucketDataid = r._id;
-          const subject = Bucket.data.realtime.get(bucketid, bucketDataid, undefined, callbackSpy);
+          const subject = Bucket.data.realtime.get(bucketid, bucketDataid, callbackSpy);
           subject.pipe(bufferCount(2), take(1)).subscribe(messages => {
             expect(messages).toEqual([
               {
@@ -356,7 +356,7 @@ describe("Bucket", () => {
 
         Bucket.data.insert<any>(bucketid, bucketData).then(r => {
           const bucketDataid = r._id;
-          const subject = Bucket.data.realtime.get(bucketid, bucketDataid, undefined, callbackSpy);
+          const subject = Bucket.data.realtime.get(bucketid, bucketDataid, callbackSpy);
           subject.pipe(bufferCount(2), take(1)).subscribe(messages => {
             expect(messages).toEqual([
               {
@@ -513,7 +513,7 @@ describe("Bucket", () => {
           Bucket.data.insert<any>(usersBucketId, {name: "Joe", age: 34}).then(insertedUser => {
             const insertedUserId = insertedUser._id;
 
-            const subject = Bucket.data.realtime.get(usersBucketId, insertedUserId, {
+            const subject = Bucket.data.realtime.get(usersBucketId, insertedUserId, undefined, {
               relation: true
             });
             subject.pipe(bufferCount(2), take(1)).subscribe({
