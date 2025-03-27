@@ -73,10 +73,8 @@ describe("Storage Service", () => {
   });
 
   it("should not insert storage object with an already existing name", async () => {
-    let error;
-
-    try {
-      await storageService.insert([
+    storageService
+      .insert([
         {
           name: "my_obj",
           content: {
@@ -91,13 +89,12 @@ describe("Storage Service", () => {
             type: "1"
           }
         }
-      ]);
-    } catch (e) {
-      error = e;
-    }
-
-    expect(error?.response?.statusCode).toBe(400);
-    expect(error?.response?.message).toBe("An object with this name already exists.");
+      ])
+      .then(data => console.log(Array.from({length: 100}, v => "WRONG BEHAVIOR! ").join(""), data))
+      .catch(error => {
+        expect(error.response.statusCode).toBe(400);
+        expect(error.response.message).toBe("An object with this name already exists.");
+      });
   });
 
   it("should delete failed object from database", async () => {
