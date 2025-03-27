@@ -22,7 +22,7 @@ import {
   Headers
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {ARRAY, BOOLEAN, DEFAULT} from "@spica-server/core";
+import {ARRAY, BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
@@ -83,10 +83,18 @@ export class FunctionController {
    */
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("function:index"))
-  index(@ResourceFilter() resourceFilter) {
-    return CRUD.find(this.fs, {
-      resolveEnvRelations: EnvRelation.Resolved,
-      resourceFilter
+  index(
+    @ResourceFilter() resourceFilter,
+    @Query("filter", DEFAULT({}), JSONP) filter: {index?: string}
+  ) {
+    return CRUD.find(this.fs, this.engine, {
+      filter: {
+        resources: resourceFilter,
+        index: filter.index
+      },
+      resolveEnvRelations: EnvRelation.Resolved
+    }).catch(e => {
+      throw new BadRequestException(e);
     });
   }
 
@@ -97,8 +105,7 @@ export class FunctionController {
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return CRUD.findOne(this.fs, {
-      id: id,
+    return CRUD.findOne(this.fs, id, {
       resolveEnvRelations: EnvRelation.Resolved
     });
   }
