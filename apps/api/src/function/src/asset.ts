@@ -37,7 +37,7 @@ export function registerAssetHandlers(
 
   const operator = {
     insert: async (resource: Resource<FunctionContents>) => {
-      const schema = CRUD.environment.apply(resource.contents.schema, resource.contents.env);
+      const schema = resource.contents.schema;
       const fn: any = await CRUD.insert(fs, engine, schema);
 
       await CRUD.index.write(fs, engine, fn._id, resource.contents.index);
@@ -46,7 +46,7 @@ export function registerAssetHandlers(
     },
 
     update: async (resource: Resource<FunctionContents>) => {
-      const schema = CRUD.environment.apply(resource.contents.schema, resource.contents.env);
+      const schema = resource.contents.schema;
       const fn: any = await CRUD.replace(fs, engine, schema);
 
       await CRUD.index.write(fs, engine, fn._id, resource.contents.index);
@@ -75,16 +75,8 @@ export function registerAssetHandlers(
 
     const promises = [];
 
-    // env and schema
-    const env = JSON.parse(JSON.stringify(fn.env || {}));
-    for (const key of Object.keys(env)) {
-      fn.env[key] = `{${key}}`;
-    }
-
-    promises.push(
-      manager.write(_module, _id, "schema", fn, "yaml"),
-      manager.write(_module, _id, "env", env, "env")
-    );
+    // schema
+    promises.push(manager.write(_module, _id, "schema", fn, "yaml"));
 
     // dependencies
     const dependencies = await engine.getPackages(fn).then(deps => {

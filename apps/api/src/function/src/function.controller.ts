@@ -22,7 +22,7 @@ import {
   Headers
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {ARRAY, BOOLEAN, DEFAULT} from "@spica-server/core";
+import {ARRAY, BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
@@ -33,7 +33,7 @@ import {catchError, finalize, last, map, tap} from "rxjs/operators";
 import {createFunctionActivity} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService, FUNCTION_OPTIONS, Options} from "@spica-server/function/services";
-import {Function} from "@spica-server/interface/function";
+import {EnvRelation, Function} from "@spica-server/interface/function";
 import {LogService} from "@spica-server/function/log/src/log.service";
 import {generate} from "./schema/enqueuer.resolver";
 import {applyPatch} from "@spica-server/core/patch";
@@ -83,8 +83,19 @@ export class FunctionController {
    */
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("function:index"))
-  index(@ResourceFilter() resourceFilter) {
-    return this.fs.aggregate([resourceFilter]).toArray();
+  index(
+    @ResourceFilter() resourceFilter,
+    @Query("filter", DEFAULT({}), JSONP) filter: {index?: string}
+  ) {
+    return CRUD.find(this.fs, this.engine, {
+      filter: {
+        resources: resourceFilter,
+        index: filter.index
+      },
+      resolveEnvRelations: EnvRelation.Resolved
+    }).catch(e => {
+      throw new BadRequestException(e);
+    });
   }
 
   /**
@@ -94,7 +105,9 @@ export class FunctionController {
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.fs.findOne({_id: id});
+    return CRUD.findOne(this.fs, id, {
+      resolveEnvRelations: EnvRelation.Resolved
+    });
   }
 
   /**
@@ -306,5 +319,33 @@ export class FunctionController {
     return this.engine.removePackage(fn, name).catch(error => {
       throw new BadRequestException(error.message);
     });
+  }
+
+  /**
+   * Inject the environment variable to function.
+   * @param id identifier of the function.
+   * @param envVarId identifier of the environment variable. Example: `5f31002e4a51a68d6fec4d3f`
+   */
+  @Put(":id/env-var/:envVarId")
+  @UseGuards(AuthGuard(), ActionGuard("function:env-var:inject"))
+  async injectEnvironmentVariable(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("envVarId", OBJECT_ID) envVarId: ObjectId
+  ) {
+    return CRUD.environment.inject(this.fs, id, this.engine, envVarId);
+  }
+
+  /**
+   * Eject the environment variable from function.
+   * @param id identifier of the function.
+   * @param envVarId identifier of the environment variable. Example: `5f31002e4a51a68d6fec4d3f`
+   */
+  @Delete(":id/env-var/:envVarId")
+  @UseGuards(AuthGuard(), ActionGuard("function:env-var:eject"))
+  async ejectEnvironmentVariable(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("envVarId", OBJECT_ID) envVarId: ObjectId
+  ) {
+    return CRUD.environment.eject(this.fs, id, this.engine, envVarId);
   }
 }

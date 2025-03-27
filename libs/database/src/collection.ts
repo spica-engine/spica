@@ -15,7 +15,9 @@ import {
   OptionalUnlessRequiredId,
   WithId,
   Document,
-  AggregateOptions
+  AggregateOptions,
+  IndexSpecification,
+  CreateIndexesOptions
 } from "mongodb";
 import {DatabaseService} from "./database.service";
 
@@ -179,6 +181,10 @@ export class _MixinCollection<T> {
           });
         }
       });
+  }
+
+  createIndex(indexSpec: IndexSpecification, options?: CreateIndexesOptions) {
+    this._coll.createIndex(indexSpec, options);
   }
 
   collection(collection: string, options?: InitializeOptions) {

@@ -2,6 +2,7 @@ import {
   ApikeySynchronizer,
   BucketDataSynchronizer,
   BucketSynchronizer,
+  EnvironmentVariableSynchronizer,
   FunctionDependencySynchronizer,
   FunctionIndexSynchronizer,
   FunctionSynchronizer,
@@ -437,6 +438,104 @@ describe("Synchronize", () => {
           statements: []
         });
         expect(targetService.delete).toHaveBeenCalledWith("passport/policy/4");
+      });
+    });
+
+    describe("EnvironmentVariableSynchronizer", () => {
+      const sourceObjects = [
+        {_id: "1", key: "dont_update_me", value: "val"},
+        {_id: "2", key: "update_me", value: "val_2"},
+        {_id: "3", key: "insert_me", value: "new_val"}
+      ];
+      const targetObjects = [
+        {_id: "1", key: "dont_update_me", value: "val"},
+        {_id: "2", key: "update_me", value: "updated_val_2"},
+        {_id: "4", key: "delete_me", value: "val"}
+      ];
+
+      const sourceService = {
+        get: jest.fn().mockImplementation(url => {
+          if (!url.includes("/")) {
+            return Promise.resolve(sourceObjects);
+          }
+          const id = url.split("/")[1];
+          return Promise.resolve(sourceObjects.find(b => b._id == id));
+        }),
+
+        put: jest.fn().mockImplementation(() => Promise.resolve()),
+        post: jest.fn().mockImplementation(() => Promise.resolve()),
+        delete: jest.fn().mockImplementation(() => Promise.resolve())
+      };
+
+      const targetService = {
+        get: jest.fn().mockImplementation(url => {
+          if (!url.includes("/")) {
+            return Promise.resolve(targetObjects);
+          }
+          const id = url.split("/")[1];
+          return Promise.resolve(targetObjects.find(b => b._id == id));
+        }),
+
+        put: jest.fn().mockImplementation(() => Promise.resolve()),
+        post: jest.fn().mockImplementation(() => Promise.resolve()),
+        delete: jest.fn().mockImplementation(() => Promise.resolve())
+      };
+
+      beforeEach(() => {
+        sourceService.get.mockClear();
+        sourceService.put.mockClear();
+        sourceService.post.mockClear();
+        sourceService.delete.mockClear();
+
+        targetService.get.mockClear();
+        targetService.put.mockClear();
+        targetService.post.mockClear();
+        targetService.delete.mockClear();
+      });
+
+      const synchronizer = new EnvironmentVariableSynchronizer(
+        sourceService as any,
+        targetService as any
+      );
+
+      it("should analyze env vars", async () => {
+        const {insertions, updations, deletions} = await synchronizer.analyze();
+        expect(insertions).toEqual([{_id: "3", key: "insert_me", value: "new_val"}]);
+        expect(updations).toEqual([{_id: "2", key: "update_me", value: "val_2"}]);
+        expect(deletions).toEqual([{_id: "4", key: "delete_me", value: "val"}]);
+
+        expect(synchronizer.insertions).toEqual([{_id: "3", key: "insert_me", value: "new_val"}]);
+        expect(synchronizer.updations).toEqual([{_id: "2", key: "update_me", value: "val_2"}]);
+        expect(synchronizer.deletions).toEqual([{_id: "4", key: "delete_me", value: "val"}]);
+
+        expect(sourceService.get).toHaveBeenCalledWith("env-var");
+        expect(sourceService.put).not.toHaveBeenCalled();
+        expect(sourceService.post).not.toHaveBeenCalled();
+
+        expect(targetService.get).toHaveBeenCalledWith("env-var");
+        expect(targetService.put).not.toHaveBeenCalled();
+        expect(targetService.post).not.toHaveBeenCalled();
+      });
+
+      it("should synchronize env vars", async () => {
+        await synchronizer.analyze();
+        await synchronizer.synchronize();
+
+        expect(sourceService.put).not.toHaveBeenCalled();
+        expect(sourceService.post).not.toHaveBeenCalled();
+        expect(sourceService.delete).not.toHaveBeenCalled();
+
+        expect(targetService.put).toHaveBeenCalledWith("env-var/2", {
+          _id: "2",
+          key: "update_me",
+          value: "val_2"
+        });
+        expect(targetService.post).toHaveBeenCalledWith("env-var", {
+          _id: "3",
+          key: "insert_me",
+          value: "new_val"
+        });
+        expect(targetService.delete).toHaveBeenCalledWith("env-var/4");
       });
     });
   });

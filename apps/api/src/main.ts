@@ -18,6 +18,7 @@ import {VersionControlModule} from "@spica-server/versioncontrol";
 import {ReplicationModule} from "@spica-server/replication";
 import {AssetModule} from "@spica-server/asset";
 import {BatchModule} from "@spica-server/batch";
+import {EnvVarModule} from "@spica-server/env_var";
 import fs from "fs";
 import https from "https";
 import path from "path";
@@ -452,6 +453,7 @@ const modules = [
     maxPoolSize: args["database-pool-size"],
     appName: "spica"
   }),
+  EnvVarModule.forRoot(),
   SchemaModule.forRoot({
     formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
     defaults: [CREATED_AT, UPDATED_AT]
