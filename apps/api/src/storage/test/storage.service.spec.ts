@@ -45,7 +45,10 @@ describe("Storage Service", () => {
     strategyInstance = module.get(Strategy);
   });
 
-  afterEach(() => module.close());
+  afterEach(() => {
+    storageService.deleteMany({});
+    module.close();
+  });
 
   it("should add storage objects", async () => {
     await expect(
@@ -73,10 +76,8 @@ describe("Storage Service", () => {
   });
 
   it("should not insert storage object with an already existing name", async () => {
-    let error;
-
-    try {
-      await storageService.insert([
+    await storageService
+      .insert([
         {
           name: "my_obj",
           content: {
@@ -91,13 +92,11 @@ describe("Storage Service", () => {
             type: "1"
           }
         }
-      ]);
-    } catch (e) {
-      error = e;
-    }
-
-    expect(error?.response?.statusCode).toBe(400);
-    expect(error?.response?.message).toBe("An object with this name already exists.");
+      ])
+      .catch(error => {
+        expect(error.response.statusCode).toBe(400);
+        expect(error.response.message).toBe("An object with this name already exists.");
+      });
   });
 
   it("should delete failed object from database", async () => {
