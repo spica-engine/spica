@@ -83,16 +83,11 @@ export class FunctionController {
    */
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("function:index"))
-  index(
-    @ResourceFilter() resourceFilter,
-    @Query("index") index: string,
-    @Query("dependencies", DEFAULT([]), ARRAY(String)) dependencies: string[]
-  ) {
+  index(@ResourceFilter() resourceFilter, @Query("index") index: string) {
     return CRUD.find(this.fs, this.engine, {
       filter: {
         resources: resourceFilter,
-        index,
-        dependencies
+        index
       },
       resolveEnvRelations: EnvRelation.Resolved
     });

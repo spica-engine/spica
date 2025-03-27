@@ -22,7 +22,6 @@ export async function find<ER extends EnvRelation = EnvRelation.NotResolved>(
       resources?: object;
       envVars?: ObjectId[];
       index?: string;
-      dependencies?: string[];
     };
     resolveEnvRelations?: ER;
   }
