@@ -148,7 +148,7 @@ export namespace data {
   export namespace realtime {
     /**
      * @param {Object} queryParams - Query params.
-     * * @param {string} queryParams.relation - This will increase response time.
+     * * @param {string[] | boolean} queryParams.relation - Resolves relation of document(s), but increases the response time.
      */
     export function get<T>(
       bucketId: string,
@@ -177,7 +177,7 @@ export namespace data {
 
     /**
      * @param {Object} queryParams - Query params.
-     * * @param {string} queryParams.relation - This will increase response time.
+     * * @param {string[] | boolean} queryParams.relation - Resolves relation of document(s), but increases the response time.
      */
     export function getAll<T>(
       bucketId: string,

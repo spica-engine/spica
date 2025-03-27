@@ -1,6 +1,15 @@
 import {ChunkKind, Sequence, SequenceKind} from "@spica-server/interface/realtime";
 import {RealtimeConnection, RealtimeConnectionOne} from "./interface";
-import {tap, delayWhen, map, debounceTime, retryWhen, filter, takeWhile} from "rxjs/operators";
+import {
+  tap,
+  delayWhen,
+  map,
+  debounceTime,
+  retryWhen,
+  filter,
+  takeWhile,
+  switchMap
+} from "rxjs/operators";
 import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
 import {isPlatformBrowser} from "@spica-devkit/internal_common";
@@ -140,9 +149,9 @@ export function getWsObs<T>(
     }),
     debounceTime(1),
     map(() => (targetDocumentId ? Array.from(data)[0] : Array.from(data))),
-    map(chunk => {
+    switchMap(chunk => {
       if (!relation) {
-        return chunk;
+        return of(chunk);
       }
       if (Array.isArray(chunk)) {
         return Bucket.data.getAll(bucketId, {
