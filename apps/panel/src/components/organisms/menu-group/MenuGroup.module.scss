@@ -1,0 +1,26 @@
+@use "styles/mixins";
+
+.container {
+  background-color: var(--color-menu-background);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--box-shadow);
+  color: var(--color-font-primary);
+}
+
+.menuSection {
+  padding: var(--padding-md);
+
+  .label {
+    width: 100%;
+    @include mixins.textEllipsis(1);
+    color: var(--color-input-placeholder);
+  }
+}
+
+.noDivider {
+  border-bottom: none !important;
+}
+
+.container > *:not(:last-child) {
+  border-bottom: 1px solid var(--color-border);
+}

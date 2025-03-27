@@ -1,0 +1,16 @@
+.contentContainer {
+  max-width: min-content;
+}
+.modalBody {
+  padding: 0 !important;
+}
+.buttonWrapper {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row-reverse;
+
+  .buttonInnerFields {
+    background: var(--color-soft) !important;
+  }
+}

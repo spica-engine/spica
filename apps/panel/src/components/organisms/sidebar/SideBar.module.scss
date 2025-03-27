@@ -1,0 +1,44 @@
+@use "styles/mixins.scss";
+
+.container {
+  background-color: var(--color-background);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 350px;
+  height: 100%;
+  display: flex;
+  padding: var(--padding-md) 0;
+
+  .menuContainer {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0 var(--padding-lg);
+  }
+
+  .menu {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    width: 100%;
+    .menuItem {
+      width: 50px;
+      height: 70px;
+      @include mixins.flexCenter;
+      border-top-left-radius: var(--border-radius-md);
+      border-bottom-left-radius: var(--border-radius-md);
+      cursor: pointer;
+    }
+
+    .active {
+      background-color: var(--color-menu-background);
+    }
+  }
+
+  .versionControl {
+    cursor: pointer;
+  }
+}

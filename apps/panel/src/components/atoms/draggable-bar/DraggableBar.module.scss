@@ -1,0 +1,17 @@
+.bar {
+  cursor: grab;
+  position: absolute;
+  border-left: 2px dashed var(--color-primary-light);
+  height: 100px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    left: -8px;
+    width: 14px;
+    height: 14px;
+    border-radius: 100%;
+    background: var(--color-primary-light);
+  }
+}

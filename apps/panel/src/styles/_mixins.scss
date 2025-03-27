@@ -1,0 +1,113 @@
+// <-------- FLEX
+@mixin flexCenter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flexColCenter {
+  @include flexCenter;
+  flex-direction: column;
+}
+
+@mixin flexAlignCenter {
+  display: flex;
+  align-items: center;
+}
+
+@mixin flexJustifyCenter {
+  display: flex;
+  justify-content: center;
+}
+
+@mixin flexJustifyColCenter {
+  @include flexJustifyCenter;
+  flex-direction: column;
+}
+
+@mixin flexAlignCenterJustifyBetween {
+  @include flexAlignCenter;
+  justify-content: space-between;
+}
+
+@mixin flexAlignCenterRow {
+  @include flexAlignCenter;
+  flex-direction: row;
+}
+
+@mixin flexAlignCenterCol {
+  @include flexAlignCenter;
+  flex-direction: column;
+}
+
+@mixin flexJustifyBetweenCol {
+  @include flexCol();
+  justify-content: space-between;
+}
+
+@mixin flexJustifyBetweenRow {
+  @include flexRow;
+  justify-content: space-between;
+}
+
+@mixin flexCol {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin flexRow {
+  display: flex;
+  flex-direction: row;
+}
+
+@mixin flexWrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+@mixin flexJustifyEnd {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@mixin flexJustifyBetween {
+  display: flex;
+  justify-content: space-between;
+}
+// FLEX END -------->
+
+@mixin textEllipsis($line, $important: "") {
+  display: -webkit-box#{$important};
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: unset;
+  -webkit-line-clamp: $line#{$important};
+}
+
+@mixin inputContainer {
+  background-color: var(--color-input-background);
+  border-radius: var(--border-radius-md);
+  color: var(--color-input-placeholder);
+  padding: var(--padding-md) var(--padding-lg);
+  input {
+    padding: 0;
+  }
+}
+
+@mixin inputMinimizedContainer {
+  @include inputContainer;
+  color: var(--color-font-primary);
+  border-radius: 0;
+}
+
+@mixin modalContentContainer {
+  color: var(--color-font-primary);
+  font-size: var(--font-size-lg);
+  padding: var(--padding-md);
+}
+
+@mixin inputDescriptionContainer {
+  @include textEllipsis(2, !important);
+  padding: 0 var(--padding-md);
+}

@@ -1,0 +1,29 @@
+@use "../../../styles/mixins";
+
+.bucketSchemaItem {
+  &:hover .suffixIcons {
+    opacity: 1;
+    visibility: visible;
+  }
+  .suffixIcons {
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--transition-duration) ease,
+      visibility var(--transition-duration) ease;
+  }
+  .label {
+    @include mixins.textEllipsis(1);
+    display: block;
+    white-space: nowrap;
+    width: 100px;
+  }
+
+  .buttons {
+    padding: 0;
+    min-width: none;
+  }
+  .prefixDiv {
+    width: 100px;
+  }
+}
