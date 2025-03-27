@@ -3,8 +3,7 @@
   "version": "0.0.0-PLACEHOLDER",
   "private": true,
   "dependencies": {
-    "@types/react": "^19.0.12",
-    "oziko-ui-kit": "^0.0.16",
+    "oziko-ui-kit": "^0.0.18",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-grid-layout": "^1.5.1",
@@ -14,7 +13,7 @@
     "@nx/react": "^20.4.4",
     "@nx/vite": "20.4.4",
     "@nx/web": "20.4.4",
-    "@types/react": "19.0.0",
+    "@types/react": "^19.0.12",
     "@types/react-dom": "19.0.0",
     "@types/react-grid-layout": "^1.3.5",
     "@vitejs/plugin-react": "^4.2.0",
