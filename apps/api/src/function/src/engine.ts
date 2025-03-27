@@ -88,7 +88,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   private updateTriggers(kind: ChangeKind) {
-    return CRUD.find(this.fs, {resolveEnvRelations: EnvRelation.Resolved}).then(fns => {
+    return CRUD.find(this.fs, this, {resolveEnvRelations: EnvRelation.Resolved}).then(fns => {
       const targetChanges: TargetChange[] = [];
       for (const fn of fns) {
         targetChanges.push(...createTargetChanges(fn, kind));
