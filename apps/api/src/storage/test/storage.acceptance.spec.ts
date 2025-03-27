@@ -477,6 +477,13 @@ describe("Storage Acceptance", () => {
   });
 
   describe("post", () => {
+    afterEach(async () => {
+      const res = await req.get("/storage");
+      for (let obj of res.body) {
+        await req.delete("/storage", obj._id);
+      }
+    });
+
     it("should insert single storage object", async () => {
       const data: StorageObject<Binary> = {
         name: "remoteconfig.json",
@@ -567,8 +574,6 @@ describe("Storage Acceptance", () => {
     });
 
     it("should throw a duplicate name error", async () => {
-      let error;
-
       const objects = [
         {
           name: "remote config.json",
@@ -586,16 +591,14 @@ describe("Storage Acceptance", () => {
         }
       ];
 
-      try {
-        error = await req.post("/storage", serialize({content: objects}), {
+      await req
+        .post("/storage", serialize({content: objects}), {
           "Content-Type": "application/bson"
+        })
+        .catch(error => {
+          expect(error.response.statusCode).toBe(400);
+          expect(error.response.message).toBe("An object with this name already exists.");
         });
-      } catch (e) {
-        error = e;
-      }
-
-      expect(error?.body?.statusCode).toBe(400);
-      expect(error?.body?.message).toBe("An object with this name already exists.");
     });
 
     it("should throw an error if the inserted object's data is empty", async () => {
