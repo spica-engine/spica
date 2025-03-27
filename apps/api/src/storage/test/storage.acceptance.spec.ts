@@ -477,7 +477,7 @@ describe("Storage Acceptance", () => {
   });
 
   describe("post", () => {
-    beforeEach(async () => {
+    afterEach(async () => {
       const res = await req.get("/storage");
       for (let obj of res.body) {
         await req.delete("/storage", obj._id);
