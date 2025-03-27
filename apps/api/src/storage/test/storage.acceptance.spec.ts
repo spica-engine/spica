@@ -477,6 +477,13 @@ describe("Storage Acceptance", () => {
   });
 
   describe("post", () => {
+    beforeEach(async () => {
+      const res = await req.get("/storage");
+      for (let obj of res.body) {
+        await req.delete("/storage", obj._id);
+      }
+    });
+
     it("should insert single storage object", async () => {
       const data: StorageObject<Binary> = {
         name: "remoteconfig.json",
@@ -566,36 +573,33 @@ describe("Storage Acceptance", () => {
       expect(statusText).toBe("Created");
     });
 
-    // it("should throw a duplicate name error", async () => {
-    //   const objects = [
-    //     {
-    //       name: "remote config.json",
-    //       content: {
-    //         data: new Binary(Buffer.from("{}")),
-    //         type: "application/json"
-    //       }
-    //     },
-    //     {
-    //       name: "remote config.json",
-    //       content: {
-    //         data: new Binary(Buffer.from("[]")),
-    //         type: "application/json"
-    //       }
-    //     }
-    //   ];
+    it("should throw a duplicate name error", async () => {
+      const objects = [
+        {
+          name: "remote config.json",
+          content: {
+            data: new Binary(Buffer.from("{}")),
+            type: "application/json"
+          }
+        },
+        {
+          name: "remote config.json",
+          content: {
+            data: new Binary(Buffer.from("[]")),
+            type: "application/json"
+          }
+        }
+      ];
 
-    //   await req
-    //     .post("/storage", serialize({content: objects}), {
-    //       "Content-Type": "application/bson"
-    //     })
-    //     .catch(error => {
-    //       expect(error.response.statusCode).toBe(400);
-    //       expect(error.response.message).toBe("An object with this name already exists.");
-    //     });
-
-    //     req
-    //     .delete("/storage", )
-    // });
+      await req
+        .post("/storage", serialize({content: objects}), {
+          "Content-Type": "application/bson"
+        })
+        .catch(error => {
+          expect(error.response.statusCode).toBe(400);
+          expect(error.response.message).toBe("An object with this name already exists.");
+        });
+    });
 
     it("should throw an error if the inserted object's data is empty", async () => {
       const objects = [
