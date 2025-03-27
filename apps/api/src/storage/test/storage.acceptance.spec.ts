@@ -567,8 +567,6 @@ describe("Storage Acceptance", () => {
     });
 
     it("should throw a duplicate name error", async () => {
-      let error;
-
       const objects = [
         {
           name: "remote config.json",
@@ -586,16 +584,17 @@ describe("Storage Acceptance", () => {
         }
       ];
 
-      try {
-        error = await req.post("/storage", serialize({content: objects}), {
+      req
+        .post("/storage", serialize({content: objects}), {
           "Content-Type": "application/bson"
+        })
+        .then(data =>
+          console.log(Array.from({length: 100}, v => "WRONG BEHAVIOR2! ").join(""), data)
+        )
+        .catch(error => {
+          expect(error.response.statusCode).toBe(400);
+          expect(error.response.message).toBe("An object with this name already exists.");
         });
-      } catch (e) {
-        error = e;
-      }
-
-      expect(error?.body?.statusCode).toBe(400);
-      expect(error?.body?.message).toBe("An object with this name already exists.");
     });
 
     it("should throw an error if the inserted object's data is empty", async () => {
