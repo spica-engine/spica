@@ -27,6 +27,7 @@ import FirehoseSchema from "./schema/firehose.json" with {type: "json"};
 import SystemSchema from "./schema/system.json" with {type: "json"};
 import {ClassCommander, CommandType} from "@spica-server/replication";
 import * as CRUD from "./crud";
+import {Language} from "../compiler";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
@@ -175,18 +176,16 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   update(fn: Function, index: string): Promise<void> {
-    const language = this.getFunctionLanguage(fn);
-    return fs.promises.writeFile(
-      path.join(this.getFunctionRoot(fn), language.description.entrypoints.build),
-      index
-    );
+    const filePath = this.getFunctionBuildEntrypoint(fn);
+
+    return fs.promises.writeFile(filePath, index);
   }
 
   read(fn: Function): Promise<string> {
-    const language = this.getFunctionLanguage(fn);
+    const filePath = this.getFunctionBuildEntrypoint(fn);
 
     return fs.promises
-      .readFile(path.join(this.getFunctionRoot(fn), language.description.entrypoints.build))
+      .readFile(filePath)
       .then(b => b.toString())
       .catch(e => {
         if (e.code == "ENOENT") {
@@ -257,6 +256,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   private getFunctionLanguage(fn: Function) {
     return this.scheduler.languages.get(fn.language);
+  }
+
+  getFunctionBuildEntrypoint(fn: Function) {
+    const language = this.getFunctionLanguage(fn);
+    return path.join(this.getFunctionRoot(fn), language.description.entrypoints.build);
   }
 }
 

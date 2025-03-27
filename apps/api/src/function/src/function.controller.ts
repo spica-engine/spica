@@ -83,10 +83,18 @@ export class FunctionController {
    */
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("function:index"))
-  index(@ResourceFilter() resourceFilter) {
-    return CRUD.find(this.fs, {
-      resolveEnvRelations: EnvRelation.Resolved,
-      resourceFilter
+  index(
+    @ResourceFilter() resourceFilter,
+    @Query("index") index: string,
+    @Query("dependencies", DEFAULT([]), ARRAY(String)) dependencies: string[]
+  ) {
+    return CRUD.find(this.fs, this.engine, {
+      filter: {
+        resources: resourceFilter,
+        index,
+        dependencies
+      },
+      resolveEnvRelations: EnvRelation.Resolved
     });
   }
 
@@ -97,8 +105,7 @@ export class FunctionController {
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return CRUD.findOne(this.fs, {
-      id: id,
+    return CRUD.findOne(this.fs, id, {
       resolveEnvRelations: EnvRelation.Resolved
     });
   }
