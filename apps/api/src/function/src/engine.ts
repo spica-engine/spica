@@ -15,7 +15,7 @@ import {
   COLL_SLUG,
   CollectionSlug
 } from "@spica-server/function/services";
-import {Function} from "@spica-server/interface/function";
+import {EnvRelation, Function} from "@spica-server/interface/function";
 
 import {ChangeKind, TargetChange} from "./change";
 import {SCHEMA, SchemaWithName} from "./schema/schema";
@@ -26,6 +26,7 @@ import ScheduleSchema from "./schema/schedule.json" with {type: "json"};
 import FirehoseSchema from "./schema/firehose.json" with {type: "json"};
 import SystemSchema from "./schema/system.json" with {type: "json"};
 import {ClassCommander, CommandType} from "@spica-server/replication";
+import * as CRUD from "./crud";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
@@ -37,6 +38,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   ]);
   readonly runSchemas = new Map<string, JSONSchema7>();
   private cmdSubs: {unsubscribe: () => void};
+  private watchEnvSubs: {unsubscribe: () => void};
 
   constructor(
     private fs: FunctionService,
@@ -52,6 +54,19 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     }
 
     this.schemas.set("database", () => getDatabaseSchema(this.db, collSlug));
+
+    this.watchEnvSubs = this.fs.watchFunctionsForEnvChanges().subscribe({
+      next: ({fns, envVarId, operationType}) =>
+        fns.map(fn =>
+          operationType == "delete"
+            ? CRUD.environment.eject(this.fs, fn._id, this, envVarId)
+            : CRUD.environment.reload(this.fs, fn._id, this)
+        ),
+      error: err =>
+        console.error(
+          `Error received on listening functions for environment variable changes. Reason: ${JSON.stringify(err)}`
+        )
+    });
   }
 
   onModuleInit() {
@@ -72,7 +87,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   private updateTriggers(kind: ChangeKind) {
-    return this.fs.find().then(fns => {
+    return CRUD.find(this.fs, {resolveEnvRelations: EnvRelation.Resolved}).then(fns => {
       const targetChanges: TargetChange[] = [];
       for (const fn of fns) {
         targetChanges.push(...createTargetChanges(fn, kind));
@@ -85,6 +100,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     if (this.commander) {
       this.cmdSubs.unsubscribe();
     }
+    this.watchEnvSubs.unsubscribe();
     return this.unregisterTriggers();
   }
 
