@@ -20,7 +20,6 @@ describe("Function Compiler", () => {
   beforeEach(() => {
     fn = {
       name: "fn1",
-      env: {},
       language: "javascript",
       timeout: 100,
       triggers: {

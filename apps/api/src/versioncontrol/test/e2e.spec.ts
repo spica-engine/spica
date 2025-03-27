@@ -101,7 +101,6 @@ describe("Versioning e2e", () => {
   function getEmptyFunction() {
     return {
       name: "fn1",
-      env: {},
       language: "javascript",
       timeout: 100,
       triggers: {
@@ -193,7 +192,6 @@ describe("Versioning e2e", () => {
           //bucket
           `bucket/${bucket._id}/schema.yaml`,
           //fn
-          `function/${fn._id}/env.env`,
           `function/${fn._id}/index.ts`,
           `function/${fn._id}/package.json`,
           `function/${fn._id}/schema.yaml`
@@ -209,7 +207,6 @@ describe("Versioning e2e", () => {
 
         const changes = stringToArray(res.body.message);
         expect(changes).toEqual([
-          `function/${fn._id}/env.env`,
           `function/${fn._id}/index.ts`,
           `function/${fn._id}/package.json`,
           `function/${fn._id}/schema.yaml`
