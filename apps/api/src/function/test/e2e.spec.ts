@@ -492,7 +492,9 @@ describe("Queue shifting", () => {
   }`
       });
 
-      const foundFns = await request.get("/function", {index: "findMe\\("}).then(r => r.body);
+      const foundFns = await request
+        .get("/function", {filter: JSON.stringify({index: "findMe\\("})})
+        .then(r => r.body);
       expect(foundFns).toEqual([{...fn1, env_vars: []}]);
     });
 
@@ -506,7 +508,9 @@ describe("Queue shifting", () => {
       });
 
       // notice no escape charachter("\\") for special charachters("(")
-      const body = await request.get("/function", {index: "findMe("}).then(r => r.body);
+      const body = await request
+        .get("/function", {filter: JSON.stringify({index: "findMe("})})
+        .then(r => r.body);
       expect(body.statusCode).toEqual(400);
       expect(body.error).toEqual("Bad Request");
       expect(body.message).toContain("Invalid regular expression");

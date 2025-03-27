@@ -22,7 +22,7 @@ import {
   Headers
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {ARRAY, BOOLEAN, DEFAULT} from "@spica-server/core";
+import {ARRAY, BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
@@ -83,11 +83,14 @@ export class FunctionController {
    */
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("function:index"))
-  index(@ResourceFilter() resourceFilter, @Query("index") index: string) {
+  index(
+    @ResourceFilter() resourceFilter,
+    @Query("filter", DEFAULT({}), JSONP) filter: {index?: string}
+  ) {
     return CRUD.find(this.fs, this.engine, {
       filter: {
         resources: resourceFilter,
-        index
+        index: filter.index
       },
       resolveEnvRelations: EnvRelation.Resolved
     }).catch(e => {
