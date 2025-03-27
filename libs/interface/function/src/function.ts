@@ -1,11 +1,18 @@
 import {JSONSchema7} from "json-schema";
 import {Observable} from "rxjs";
+import {EnvVar} from "@spica-server/interface/env_var";
+import {ObjectId} from "@spica-server/database";
 
-export interface Function {
+export enum EnvRelation {
+  Resolved,
+  NotResolved
+}
+
+export interface Function<ER extends EnvRelation = EnvRelation.NotResolved> {
   _id?: any;
   name: string;
   description?: string;
-  env: Environment;
+  env_vars?: ER extends EnvRelation.Resolved ? EnvVar[] : ObjectId[];
   triggers: Triggers;
   timeout: number;
   language: string;
