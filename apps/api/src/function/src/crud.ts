@@ -148,11 +148,13 @@ export namespace index {
     const foundFns = [];
     const promises = fns.map(fn => {
       const entrypoint = engine.getFunctionBuildEntrypoint(fn);
-      return doesFileIncludeText(entrypoint, text).then(doesInclude => {
-        if (doesInclude) {
-          foundFns.push(fn);
-        }
-      });
+      return doesFileIncludeText(entrypoint, text)
+        .then(doesInclude => {
+          if (doesInclude) {
+            foundFns.push(fn);
+          }
+        })
+        .catch(e => Promise.reject(`Failed to filter function by index, reason: ${e}`));
     });
     return Promise.all(promises).then(() => foundFns);
   }

@@ -90,6 +90,8 @@ export class FunctionController {
         index
       },
       resolveEnvRelations: EnvRelation.Resolved
+    }).catch(e => {
+      throw new BadRequestException(e);
     });
   }
 
