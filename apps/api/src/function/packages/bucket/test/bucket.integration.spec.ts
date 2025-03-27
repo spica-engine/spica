@@ -323,7 +323,7 @@ describe("Bucket", () => {
 
         Bucket.data.insert<any>(bucketid, bucketData).then(r => {
           const bucketDataid = r._id;
-          const subject = Bucket.data.realtime.get(bucketid, bucketDataid, callbackSpy);
+          const subject = Bucket.data.realtime.get(bucketid, bucketDataid, undefined, callbackSpy);
           subject.pipe(bufferCount(2), take(1)).subscribe(messages => {
             expect(messages).toEqual([
               {
@@ -356,7 +356,7 @@ describe("Bucket", () => {
 
         Bucket.data.insert<any>(bucketid, bucketData).then(r => {
           const bucketDataid = r._id;
-          const subject = Bucket.data.realtime.get(bucketid, bucketDataid, callbackSpy);
+          const subject = Bucket.data.realtime.get(bucketid, bucketDataid, undefined, callbackSpy);
           subject.pipe(bufferCount(2), take(1)).subscribe(messages => {
             expect(messages).toEqual([
               {
@@ -428,8 +428,8 @@ describe("Bucket", () => {
             description: "Headphones bucket",
             primary: "model",
             properties: {
-              model: {type: "string", options: {position: "left"}},
-              price: {type: "number", options: {position: "right"}}
+              model: {title: "model", type: "string", options: {position: "left"}},
+              price: {title: "price", type: "number", options: {position: "right"}}
             },
             history: false,
             acl: {write: "true==true", read: "true==true"},
@@ -441,9 +441,10 @@ describe("Bucket", () => {
             description: "Users bucket",
             primary: "name",
             properties: {
-              name: {type: "string", options: {position: "left"}},
-              age: {type: "number", options: {position: "right"}},
+              name: {title: "name", type: "string", options: {position: "left"}},
+              age: {title: "age", type: "number", options: {position: "right"}},
               headphone: {
+                title: "headphone",
                 bucketId: "",
                 dependent: false,
                 type: "relation",
@@ -465,7 +466,7 @@ describe("Bucket", () => {
           usersBucketId = insertedUsersBucket._id;
         });
 
-        fit("should get changes in realtime with resolved relations", done => {
+        it("should get all changes in realtime with resolved relations", done => {
           let insertedUserId;
 
           const headphone: Record<string, any> = {model: "QBC", price: 400};
@@ -475,13 +476,15 @@ describe("Bucket", () => {
 
           subject.pipe(bufferCount(2), take(1)).subscribe({
             next: messages => {
-              expect(messages).toEqual([
-                // initial docs
-                [],
-                // docs after changes
-                [{_id: insertedUserId, name: "Joe", age: 34, headphone}]
-              ]);
-              done();
+              Promise.all(messages).then(data => {
+                expect(data).toEqual([
+                  // initial docs
+                  [],
+                  // docs after changes
+                  [{_id: insertedUserId, name: "Joe", age: 34, headphone}]
+                ]);
+                done();
+              });
             }
           });
 
@@ -495,6 +498,44 @@ describe("Bucket", () => {
             });
             insertedUserId = insertedUser._id;
           }, 1000);
+        });
+
+        it("should get changes in realtime with resolved relations", done => {
+          const headphone: Record<string, any> = {model: "QBC", price: 400};
+          const user = {name: "Joe", age: 34};
+
+          Bucket.data.insert<any>(usersBucketId, {...user}).then(insertedUser => {
+            const insertedUserId = insertedUser._id;
+
+            const subject = Bucket.data.realtime.get(usersBucketId, insertedUserId, {
+              relation: true
+            });
+            subject.pipe(bufferCount(2), take(1)).subscribe({
+              next: messages => {
+                Promise.all(messages).then(data => {
+                  expect(data).toEqual([
+                    // initial docs
+                    {_id: insertedUserId, name: "Joe", age: 34},
+                    // docs after changes
+                    {_id: insertedUserId, name: "Joe", age: 34, headphone}
+                  ]);
+                  done();
+                });
+              }
+            });
+
+            setTimeout(async () => {
+              const insertedHeadphone = await Bucket.data.insert<any>(
+                headphonesBucketId,
+                headphone
+              );
+              headphone._id = insertedHeadphone._id;
+
+              Bucket.data.patch(usersBucketId, insertedUserId, {
+                headphone: insertedHeadphone._id
+              });
+            }, 1000);
+          });
         });
       });
     });
