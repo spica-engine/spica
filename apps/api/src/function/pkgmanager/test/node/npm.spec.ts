@@ -57,7 +57,7 @@ describe("npm", () => {
     expect(errorMessage).toContain("npm install has failed. code: 1");
   });
 
-  xit("should report progress", done => {
+  it("should report progress", done => {
     const progress = [];
     npm
       .install(cwd, "debug")
@@ -65,12 +65,12 @@ describe("npm", () => {
       .subscribe({
         next: p => progress.push(p),
         complete: () => {
-          // prettier-ignore
-          expect(progress).toEqual([
-            6, 11, 17,  22, 28, 33, 39,
-            44, 50, 56,  61, 67, 72, 78,
-            83, 89, 94, 100
-          ]);
+          let lastValue = 0;
+          progress.forEach(p => {
+            expect(p).toBeGreaterThan(lastValue);
+            lastValue = p;
+          });
+          expect(progress.at(-1)).toEqual(100);
           done();
         }
       });
