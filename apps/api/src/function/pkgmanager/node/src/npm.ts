@@ -17,13 +17,14 @@ export class Npm extends NodePackageManager {
     return new Observable(observer => {
       const proc = child_process.spawn(
         getNpmPath(),
-        ["install", ...qualifiedNames, "--no-audit", "--loglevel", "timing"],
+        ["install", ...qualifiedNames, "--no-audit", "--loglevel", "verbose"],
         {cwd}
       );
       let stderr: string = "",
         stdout: string = "";
+
       let progress = 1;
-      const progressAmountOfAStep = 100 / 18;
+
       proc.stdout.on("data", chunk => {
         chunk = chunk.toString();
         stdout += chunk;
@@ -31,11 +32,23 @@ export class Npm extends NodePackageManager {
       proc.stderr.on("data", chunk => {
         chunk = chunk.toString();
 
-        if (chunk.indexOf("timing") != -1) {
-          progress += 1;
+        const stages = [
+          "npm verbose cli",
+          "npm verbose title",
+          "npm verbose argv",
+          "npm http fetch",
+          "npm verbose reify",
+          "npm verbose cwd",
+          "npm verbose exit"
+        ];
+
+        const index = stages.findIndex(stage => chunk.includes(stage));
+        if (index !== -1) {
+          const currentStage = Math.ceil(((index + 1) / stages.length) * 100);
+          progress = progress > currentStage ? progress : currentStage;
         }
 
-        observer.next(Math.min(Math.round(progressAmountOfAStep * progress), 100));
+        observer.next(progress);
 
         stderr += chunk;
       });
