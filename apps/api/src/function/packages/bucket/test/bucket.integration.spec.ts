@@ -415,6 +415,138 @@ describe("Bucket", () => {
           }, 1000);
         });
       });
+
+      describe("relation", () => {
+        let users;
+        let headphones;
+        let usersBucketId;
+        let headphonesBucketId;
+
+        beforeEach(async () => {
+          headphones = {
+            title: "Headphones",
+            description: "Headphones bucket",
+            primary: "model",
+            properties: {
+              model: {title: "model", type: "string", options: {position: "left"}},
+              price: {title: "price", type: "number", options: {position: "right"}}
+            },
+            history: false,
+            acl: {write: "true==true", read: "true==true"},
+            icon: "view_stream"
+          };
+
+          users = {
+            title: "Users",
+            description: "Users bucket",
+            primary: "name",
+            properties: {
+              name: {title: "name", type: "string", options: {position: "left"}},
+              age: {title: "age", type: "number", options: {position: "right"}},
+              headphone: {
+                title: "headphone",
+                bucketId: "",
+                dependent: false,
+                type: "relation",
+                relationType: "onetoone",
+                options: {position: "right"}
+              }
+            },
+            history: false,
+            acl: {write: "true==true", read: "true==true"},
+            icon: "view_stream"
+          };
+
+          const insertedHeadphonesBucket = await Bucket.insert(headphones);
+          headphonesBucketId = insertedHeadphonesBucket._id;
+
+          users.properties.headphone.bucketId = headphonesBucketId;
+
+          const insertedUsersBucket = await Bucket.insert(users);
+          usersBucketId = insertedUsersBucket._id;
+        });
+
+        it("should get all changes in realtime with resolved relations", done => {
+          let insertedUserId;
+          let insertedHeadphoneId;
+
+          const subject = Bucket.data.realtime.getAll(usersBucketId, {relation: true});
+
+          subject.pipe(bufferCount(2), take(1)).subscribe({
+            next: messages => {
+              expect(messages).toEqual([
+                // initial docs
+                [],
+                // docs after changes
+                [
+                  {
+                    _id: insertedUserId,
+                    name: "Joe",
+                    age: 34,
+                    headphone: {_id: insertedHeadphoneId, model: "QBC", price: 400}
+                  }
+                ]
+              ]);
+              done();
+            }
+          });
+
+          setTimeout(async () => {
+            const insertedHeadphone = await Bucket.data.insert<any>(headphonesBucketId, {
+              model: "QBC",
+              price: 400
+            });
+            insertedHeadphoneId = insertedHeadphone._id;
+
+            const insertedUser = await Bucket.data.insert<any>(usersBucketId, {
+              name: "Joe",
+              age: 34,
+              headphone: insertedHeadphone._id
+            });
+            insertedUserId = insertedUser._id;
+          }, 1000);
+        });
+
+        it("should get changes in realtime with resolved relations", done => {
+          let insertedHeadphoneId;
+
+          Bucket.data.insert<any>(usersBucketId, {name: "Joe", age: 34}).then(insertedUser => {
+            const insertedUserId = insertedUser._id;
+
+            const subject = Bucket.data.realtime.get(usersBucketId, insertedUserId, undefined, {
+              relation: true
+            });
+            subject.pipe(bufferCount(2), take(1)).subscribe({
+              next: messages => {
+                expect(messages).toEqual([
+                  // initial docs
+                  {_id: insertedUserId, name: "Joe", age: 34},
+                  // docs after changes
+                  {
+                    _id: insertedUserId,
+                    name: "Joe",
+                    age: 34,
+                    headphone: {_id: insertedHeadphoneId, model: "QBC", price: 400}
+                  }
+                ]);
+                done();
+              }
+            });
+
+            setTimeout(async () => {
+              const insertedHeadphone = await Bucket.data.insert<any>(headphonesBucketId, {
+                model: "QBC",
+                price: 400
+              });
+              insertedHeadphoneId = insertedHeadphone._id;
+
+              Bucket.data.patch(usersBucketId, insertedUserId, {
+                headphone: insertedHeadphone._id
+              });
+            }, 1000);
+          });
+        });
+      });
     });
   });
 });

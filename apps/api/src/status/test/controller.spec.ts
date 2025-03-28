@@ -237,7 +237,6 @@ describe("Status", () => {
               active: true
             }
           },
-          env: {},
           memoryLimit: 100
         })
         .then(res => res.body);

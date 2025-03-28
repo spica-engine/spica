@@ -88,6 +88,6 @@ export function dependecySyncProviders(
     name,
     document,
     representative,
-    parents: 1
+    parents: 2
   };
 }
