@@ -5,12 +5,14 @@ describe("@spica-devkit/bucket", () => {
   let getSpy: jest.Mocked<any>;
   let postSpy: jest.Mocked<any>;
   let putSpy: jest.Mocked<any>;
+  let patchSpy: jest.Mocked<any>;
   let deleteSpy: jest.Mocked<any>;
 
   beforeEach(() => {
     getSpy = jest.spyOn(Axios.prototype, "get").mockReturnValue(Promise.resolve());
     postSpy = jest.spyOn(Axios.prototype, "post").mockReturnValue(Promise.resolve());
     putSpy = jest.spyOn(Axios.prototype, "put").mockReturnValue(Promise.resolve());
+    patchSpy = jest.spyOn(Axios.prototype, "patch").mockReturnValue(Promise.resolve());
     deleteSpy = jest.spyOn(Axios.prototype, "delete").mockReturnValue(Promise.resolve());
 
     process.env.__INTERNAL__SPICA__PUBLIC_URL__ = "http://test";
@@ -21,7 +23,7 @@ describe("@spica-devkit/bucket", () => {
     getSpy.mockClear();
     postSpy.mockClear();
     putSpy.mockClear();
-    deleteSpy.mockClear();
+    patchSpy.mockClear();
     deleteSpy.mockClear();
   });
 
@@ -143,14 +145,72 @@ describe("@spica-devkit/bucket", () => {
         Bucket.data.insert("bucket_id", document);
 
         expect(postSpy).toHaveBeenCalledTimes(1);
-        expect(postSpy).toHaveBeenCalledWith("bucket/bucket_id/data", document);
+        expect(postSpy).toHaveBeenCalledWith("bucket/bucket_id/data", document, {
+          headers: undefined
+        });
+      });
+
+      it("should insert bucket-data with headers", () => {
+        Bucket.data.insert("bucket_id", document, {accept: "application/json"});
+
+        expect(postSpy).toHaveBeenCalledTimes(1);
+        expect(postSpy).toHaveBeenCalledWith("bucket/bucket_id/data", document, {
+          headers: {accept: "application/json"}
+        });
       });
 
       it("should update bucket-data", () => {
         Bucket.data.update("bucket_id", "document_id", document);
 
         expect(putSpy).toHaveBeenCalledTimes(1);
-        expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", document);
+        expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", document, {
+          headers: undefined
+        });
+      });
+
+      it("should update bucket-data with headers", () => {
+        Bucket.data.update("bucket_id", "document_id", document, {accept: "application/json"});
+
+        expect(putSpy).toHaveBeenCalledTimes(1);
+        expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", document, {
+          headers: {accept: "application/json"}
+        });
+      });
+
+      it("should patch bucket-data", () => {
+        Bucket.data.patch("bucket_id", "document_id", document);
+
+        expect(patchSpy).toHaveBeenCalledTimes(1);
+        expect(patchSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", document, {
+          headers: undefined
+        });
+      });
+
+      it("should patch bucket-data with headers", () => {
+        Bucket.data.patch("bucket_id", "document_id", document, {accept: "application/json"});
+
+        expect(patchSpy).toHaveBeenCalledTimes(1);
+        expect(patchSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", document, {
+          headers: {accept: "application/json"}
+        });
+      });
+
+      it("should remove bucket-data", () => {
+        Bucket.data.remove("bucket_id", "document_id");
+
+        expect(deleteSpy).toHaveBeenCalledTimes(1);
+        expect(deleteSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", {
+          headers: undefined
+        });
+      });
+
+      it("should remove bucket-data with headers", () => {
+        Bucket.data.remove("bucket_id", "document_id", {accept: "application/json"});
+
+        expect(deleteSpy).toHaveBeenCalledTimes(1);
+        expect(deleteSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", {
+          headers: {accept: "application/json"}
+        });
       });
 
       it("should get bucket-data", () => {

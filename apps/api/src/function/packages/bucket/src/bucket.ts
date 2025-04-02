@@ -117,32 +117,42 @@ export namespace data {
     });
   }
 
-  export function insert<T>(bucketId: string, document: Omit<T, "_id">): Promise<T> {
+  export function insert<T>(
+    bucketId: string,
+    document: Omit<T, "_id">,
+    headers?: object
+  ): Promise<T> {
     checkInitialized(authorization);
 
-    return service.post<T>(`bucket/${bucketId}/data`, document);
+    return service.post<T>(`bucket/${bucketId}/data`, document, {headers});
   }
 
-  export function update<T>(bucketId: string, documentId: string, document: T): Promise<T> {
+  export function update<T>(
+    bucketId: string,
+    documentId: string,
+    document: T,
+    headers?: object
+  ): Promise<T> {
     checkInitialized(authorization);
 
-    return service.put<T>(`bucket/${bucketId}/data/${documentId}`, document);
+    return service.put<T>(`bucket/${bucketId}/data/${documentId}`, document, {headers});
   }
 
   export function patch(
     bucketId: string,
     documentId: string,
-    document: Partial<BucketDocument>
+    document: Partial<BucketDocument>,
+    headers?: object
   ): Promise<any> {
     checkInitialized(authorization);
 
-    return service.patch(`bucket/${bucketId}/data/${documentId}`, document);
+    return service.patch(`bucket/${bucketId}/data/${documentId}`, document, {headers});
   }
 
-  export function remove(bucketId: string, documentId: string): Promise<any> {
+  export function remove(bucketId: string, documentId: string, headers?: object): Promise<any> {
     checkInitialized(authorization);
 
-    return service.delete(`bucket/${bucketId}/data/${documentId}`);
+    return service.delete(`bucket/${bucketId}/data/${documentId}`, {headers});
   }
 
   export namespace realtime {
