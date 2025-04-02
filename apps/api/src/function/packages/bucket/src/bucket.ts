@@ -41,34 +41,34 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
   });
 }
 
-export function get(id: string): Promise<Bucket> {
+export function get(id: string, headers?: object): Promise<Bucket> {
   checkInitialized(authorization);
 
-  return service.get<Bucket>(`bucket/${id}`);
+  return service.get<Bucket>(`bucket/${id}`, {headers});
 }
 
-export function getAll(): Promise<Bucket[]> {
+export function getAll(headers?: object): Promise<Bucket[]> {
   checkInitialized(authorization);
 
-  return service.get<Bucket[]>("bucket");
+  return service.get<Bucket[]>("bucket", {headers});
 }
 
-export function insert(bucket: Bucket): Promise<Bucket> {
+export function insert(bucket: Bucket, headers?: object): Promise<Bucket> {
   checkInitialized(authorization);
 
-  return service.post<Bucket>("bucket", bucket);
+  return service.post<Bucket>("bucket", bucket, {headers});
 }
 
-export function update(id: string, bucket: Bucket): Promise<Bucket> {
+export function update(id: string, bucket: Bucket, headers?: object): Promise<Bucket> {
   checkInitialized(authorization);
 
-  return service.put<Bucket>(`bucket/${id}`, bucket);
+  return service.put<Bucket>(`bucket/${id}`, bucket, {headers});
 }
 
-export function remove(id: string): Promise<any> {
+export function remove(id: string, headers?: object): Promise<any> {
   checkInitialized(authorization);
 
-  return service.delete(`bucket/${id}`);
+  return service.delete(`bucket/${id}`, {headers});
 }
 
 export namespace data {

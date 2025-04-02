@@ -57,7 +57,16 @@ describe("@spica-devkit/bucket", () => {
       Bucket.insert(bucket);
 
       expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenCalledWith("bucket", bucket);
+      expect(postSpy).toHaveBeenCalledWith("bucket", bucket, {headers: undefined});
+    });
+
+    it("should insert bucket with headers", () => {
+      Bucket.insert(bucket, {accept: "application/json"});
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith("bucket", bucket, {
+        headers: {accept: "application/json"}
+      });
     });
 
     it("should update bucket", () => {
@@ -65,28 +74,63 @@ describe("@spica-devkit/bucket", () => {
       Bucket.update("bucket_id", updatedBucket);
 
       expect(putSpy).toHaveBeenCalledTimes(1);
-      expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id", updatedBucket);
+      expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id", updatedBucket, {headers: undefined});
+    });
+
+    it("should update bucket with headers", () => {
+      const updatedBucket = {...bucket, title: "new title"};
+      Bucket.update("bucket_id", updatedBucket, {accept: "application/json"});
+
+      expect(putSpy).toHaveBeenCalledTimes(1);
+      expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id", updatedBucket, {
+        headers: {accept: "application/json"}
+      });
     });
 
     it("should get all buckets", () => {
       Bucket.getAll();
 
       expect(getSpy).toHaveBeenCalledTimes(1);
-      expect(getSpy).toHaveBeenCalledWith("bucket");
+      expect(getSpy).toHaveBeenCalledWith("bucket", {headers: undefined});
+    });
+
+    it("should get all buckets with headers", () => {
+      Bucket.getAll({accept: "application/json"});
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith("bucket", {headers: {accept: "application/json"}});
     });
 
     it("should get specific bucket", () => {
       Bucket.get("bucket_id");
 
       expect(getSpy).toHaveBeenCalledTimes(1);
-      expect(getSpy).toHaveBeenCalledWith("bucket/bucket_id");
+      expect(getSpy).toHaveBeenCalledWith("bucket/bucket_id", {headers: undefined});
+    });
+
+    it("should get specific bucket with headers", () => {
+      Bucket.get("bucket_id", {accept: "application/json"});
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith("bucket/bucket_id", {
+        headers: {accept: "application/json"}
+      });
     });
 
     it("should remove bucket", () => {
       Bucket.remove("bucket_id");
 
       expect(deleteSpy).toHaveBeenCalledTimes(1);
-      expect(deleteSpy).toHaveBeenCalledWith("bucket/bucket_id");
+      expect(deleteSpy).toHaveBeenCalledWith("bucket/bucket_id", {headers: undefined});
+    });
+
+    it("should remove bucket with headers", () => {
+      Bucket.remove("bucket_id", {accept: "application/json"});
+
+      expect(deleteSpy).toHaveBeenCalledTimes(1);
+      expect(deleteSpy).toHaveBeenCalledWith("bucket/bucket_id", {
+        headers: {accept: "application/json"}
+      });
     });
 
     describe("bucket-data", () => {
