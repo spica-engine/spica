@@ -6,6 +6,9 @@
       "path": "./src/activity"
     },
     {
+      "path": "./src/batch"
+    },
+    {
       "path": "./src/bucket"
     },
     {
