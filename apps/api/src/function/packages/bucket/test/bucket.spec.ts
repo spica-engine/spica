@@ -63,11 +63,11 @@ describe("@spica-devkit/bucket", () => {
     });
 
     it("should insert bucket with headers", () => {
-      Bucket.insert(bucket, {accept: "application/json"});
+      Bucket.insert(bucket, {Accept: "application/json"});
 
       expect(postSpy).toHaveBeenCalledTimes(1);
       expect(postSpy).toHaveBeenCalledWith("bucket", bucket, {
-        headers: {accept: "application/json"}
+        headers: {Accept: "application/json"}
       });
     });
 
@@ -81,11 +81,11 @@ describe("@spica-devkit/bucket", () => {
 
     it("should update bucket with headers", () => {
       const updatedBucket = {...bucket, title: "new title"};
-      Bucket.update("bucket_id", updatedBucket, {accept: "application/json"});
+      Bucket.update("bucket_id", updatedBucket, {Accept: "application/json"});
 
       expect(putSpy).toHaveBeenCalledTimes(1);
       expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id", updatedBucket, {
-        headers: {accept: "application/json"}
+        headers: {Accept: "application/json"}
       });
     });
 
@@ -97,10 +97,10 @@ describe("@spica-devkit/bucket", () => {
     });
 
     it("should get all buckets with headers", () => {
-      Bucket.getAll({accept: "application/json"});
+      Bucket.getAll({Accept: "application/json"});
 
       expect(getSpy).toHaveBeenCalledTimes(1);
-      expect(getSpy).toHaveBeenCalledWith("bucket", {headers: {accept: "application/json"}});
+      expect(getSpy).toHaveBeenCalledWith("bucket", {headers: {Accept: "application/json"}});
     });
 
     it("should get specific bucket", () => {
@@ -111,11 +111,11 @@ describe("@spica-devkit/bucket", () => {
     });
 
     it("should get specific bucket with headers", () => {
-      Bucket.get("bucket_id", {accept: "application/json"});
+      Bucket.get("bucket_id", {Accept: "application/json"});
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith("bucket/bucket_id", {
-        headers: {accept: "application/json"}
+        headers: {Accept: "application/json"}
       });
     });
 
@@ -127,11 +127,11 @@ describe("@spica-devkit/bucket", () => {
     });
 
     it("should remove bucket with headers", () => {
-      Bucket.remove("bucket_id", {accept: "application/json"});
+      Bucket.remove("bucket_id", {Accept: "application/json"});
 
       expect(deleteSpy).toHaveBeenCalledTimes(1);
       expect(deleteSpy).toHaveBeenCalledWith("bucket/bucket_id", {
-        headers: {accept: "application/json"}
+        headers: {Accept: "application/json"}
       });
     });
 
@@ -151,11 +151,11 @@ describe("@spica-devkit/bucket", () => {
       });
 
       it("should insert bucket-data with headers", () => {
-        Bucket.data.insert("bucket_id", document, {accept: "application/json"});
+        Bucket.data.insert("bucket_id", document, {Accept: "application/json"});
 
         expect(postSpy).toHaveBeenCalledTimes(1);
         expect(postSpy).toHaveBeenCalledWith("bucket/bucket_id/data", document, {
-          headers: {accept: "application/json"}
+          headers: {Accept: "application/json"}
         });
       });
 
@@ -169,11 +169,11 @@ describe("@spica-devkit/bucket", () => {
       });
 
       it("should update bucket-data with headers", () => {
-        Bucket.data.update("bucket_id", "document_id", document, {accept: "application/json"});
+        Bucket.data.update("bucket_id", "document_id", document, {Accept: "application/json"});
 
         expect(putSpy).toHaveBeenCalledTimes(1);
         expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", document, {
-          headers: {accept: "application/json"}
+          headers: {Accept: "application/json"}
         });
       });
 
@@ -187,11 +187,11 @@ describe("@spica-devkit/bucket", () => {
       });
 
       it("should patch bucket-data with headers", () => {
-        Bucket.data.patch("bucket_id", "document_id", document, {accept: "application/json"});
+        Bucket.data.patch("bucket_id", "document_id", document, {Accept: "application/json"});
 
         expect(patchSpy).toHaveBeenCalledTimes(1);
         expect(patchSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", document, {
-          headers: {accept: "application/json"}
+          headers: {Accept: "application/json"}
         });
       });
 
@@ -205,11 +205,11 @@ describe("@spica-devkit/bucket", () => {
       });
 
       it("should remove bucket-data with headers", () => {
-        Bucket.data.remove("bucket_id", "document_id", {accept: "application/json"});
+        Bucket.data.remove("bucket_id", "document_id", {Accept: "application/json"});
 
         expect(deleteSpy).toHaveBeenCalledTimes(1);
         expect(deleteSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", {
-          headers: {accept: "application/json"}
+          headers: {Accept: "application/json"}
         });
       });
 
