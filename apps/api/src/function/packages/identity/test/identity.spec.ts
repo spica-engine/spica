@@ -46,10 +46,30 @@ describe("@spica-devkit/identity", () => {
       Identity.insert(identity);
 
       expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenCalledWith("passport/identity", {
-        identifier: "test",
-        password: "test"
-      });
+      expect(postSpy).toHaveBeenCalledWith(
+        "passport/identity",
+        {
+          identifier: "test",
+          password: "test"
+        },
+        {headers: undefined}
+      );
+
+      expect(identity).toEqual({identifier: "test", password: "test", policies: []});
+    });
+
+    it("should insert identity with headers", () => {
+      Identity.insert(identity, {Accept: "application/json"});
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "passport/identity",
+        {
+          identifier: "test",
+          password: "test"
+        },
+        {headers: {Accept: "application/json"}}
+      );
 
       expect(identity).toEqual({identifier: "test", password: "test", policies: []});
     });
@@ -60,13 +80,21 @@ describe("@spica-devkit/identity", () => {
       await Identity.insert(identityWithPolicy);
 
       expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenCalledWith("passport/identity", {
-        identifier: "test",
-        password: "test"
-      });
+      expect(postSpy).toHaveBeenCalledWith(
+        "passport/identity",
+        {
+          identifier: "test",
+          password: "test"
+        },
+        {headers: undefined}
+      );
 
       expect(putSpy).toHaveBeenCalledTimes(1);
-      expect(putSpy).toHaveBeenCalledWith("passport/identity/identity_id/policy/policy_id", {});
+      expect(putSpy).toHaveBeenCalledWith(
+        "passport/identity/identity_id/policy/policy_id",
+        {},
+        {headers: undefined}
+      );
 
       expect(identity).toEqual({identifier: "test", password: "test", policies: []});
     });
@@ -76,7 +104,18 @@ describe("@spica-devkit/identity", () => {
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith("passport/identity", {
-        params: {}
+        params: {},
+        headers: undefined
+      });
+    });
+
+    it("should get all identities with headers", () => {
+      Identity.getAll({}, {Accept: "application/json"});
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith("passport/identity", {
+        params: {},
+        headers: {Accept: "application/json"}
       });
     });
 
@@ -84,21 +123,76 @@ describe("@spica-devkit/identity", () => {
       Identity.get("identity_id");
 
       expect(getSpy).toHaveBeenCalledTimes(1);
-      expect(getSpy).toHaveBeenCalledWith("passport/identity/identity_id");
+      expect(getSpy).toHaveBeenCalledWith("passport/identity/identity_id", {headers: undefined});
+    });
+
+    it("should get specific identity with headers", () => {
+      Identity.get("identity_id", {Accept: "application/json"});
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith("passport/identity/identity_id", {
+        headers: {Accept: "application/json"}
+      });
     });
 
     it("should remove identity", () => {
       Identity.remove("identity_id");
 
       expect(deleteSpy).toHaveBeenCalledTimes(1);
-      expect(deleteSpy).toHaveBeenCalledWith("passport/identity/identity_id");
+      expect(deleteSpy).toHaveBeenCalledWith("passport/identity/identity_id", {headers: undefined});
+    });
+
+    it("should remove identity with headers", () => {
+      Identity.remove("identity_id", {Accept: "application/json"});
+
+      expect(deleteSpy).toHaveBeenCalledTimes(1);
+      expect(deleteSpy).toHaveBeenCalledWith("passport/identity/identity_id", {
+        headers: {Accept: "application/json"}
+      });
+    });
+
+    it("should attach policy", () => {
+      Identity.policy.attach("identity_id", ["policy_id"]);
+
+      expect(putSpy).toHaveBeenCalledTimes(1);
+      expect(putSpy).toHaveBeenCalledWith(
+        "passport/identity/identity_id/policy/policy_id",
+        {},
+        {
+          headers: undefined
+        }
+      );
+    });
+
+    it("should attach policy with headers", () => {
+      Identity.policy.attach("identity_id", ["policy_id"], {Accept: "application/json"});
+
+      expect(putSpy).toHaveBeenCalledTimes(1);
+      expect(putSpy).toHaveBeenCalledWith(
+        "passport/identity/identity_id/policy/policy_id",
+        {},
+        {
+          headers: {Accept: "application/json"}
+        }
+      );
     });
 
     it("should detach policy", () => {
       Identity.policy.detach("identity_id", ["policy_id"]);
 
       expect(deleteSpy).toHaveBeenCalledTimes(1);
-      expect(deleteSpy).toHaveBeenCalledWith("passport/identity/identity_id/policy/policy_id");
+      expect(deleteSpy).toHaveBeenCalledWith("passport/identity/identity_id/policy/policy_id", {
+        headers: undefined
+      });
+    });
+
+    it("should detach policy with headers", () => {
+      Identity.policy.detach("identity_id", ["policy_id"], {Accept: "application/json"});
+
+      expect(deleteSpy).toHaveBeenCalledTimes(1);
+      expect(deleteSpy).toHaveBeenCalledWith("passport/identity/identity_id/policy/policy_id", {
+        headers: {Accept: "application/json"}
+      });
     });
   });
 });

@@ -27,37 +27,39 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
 
 export async function insert(
   object: File | BufferWithMeta,
-  onUploadProgress?: (progress: ProgressEvent) => void
+  onUploadProgress?: (progress: ProgressEvent) => void,
+  headers: object = {}
 ) {
   checkInitialized(authorization);
-  const {body, headers} = await preparePostBody([object]);
+  const postBody = await preparePostBody([object]);
 
   return service
-    .post<StorageObject[]>("storage", body, {
+    .post<StorageObject[]>("storage", postBody.body, {
       onUploadProgress,
-      headers
+      headers: {...postBody.headers, ...headers}
     })
     .then(([r]) => r);
 }
 
 export async function insertMany(
   objects: FileList | (File | BufferWithMeta)[],
-  onUploadProgress?: (progress: ProgressEvent) => void
+  onUploadProgress?: (progress: ProgressEvent) => void,
+  headers: object = {}
 ): Promise<StorageObject[]> {
   checkInitialized(authorization);
 
-  const {body, headers} = await preparePostBody(objects);
+  const postBody = await preparePostBody(objects);
 
-  return service.post<StorageObject[]>("storage", body, {
+  return service.post<StorageObject[]>("storage", postBody.body, {
     onUploadProgress,
-    headers
+    headers: {...postBody.headers, ...headers}
   });
 }
 
-export function get(id: string) {
+export function get(id: string, headers?: object) {
   checkInitialized(authorization);
 
-  return service.get<StorageObject>(`storage/${id}`);
+  return service.get<StorageObject>(`storage/${id}`, {headers});
 }
 
 /**
@@ -79,61 +81,73 @@ export function download(
   });
 }
 
-export function getAll(queryParams?: {
-  filter?: object;
-  paginate?: false;
-  limit?: number;
-  skip?: number;
-  sort?: object;
-}): Promise<StorageObject[]>;
-export function getAll(queryParams?: {
-  filter?: object;
-  paginate?: true;
-  limit?: number;
-  skip?: number;
-  sort?: object;
-}): Promise<IndexResult<StorageObject>>;
-export function getAll(queryParams?: {
-  filter?: object;
-  paginate?: boolean;
-  limit?: number;
-  skip?: number;
-  sort?: object;
-}): Promise<IndexResult<StorageObject> | StorageObject[]> {
+export function getAll(
+  queryParams?: {
+    filter?: object;
+    paginate?: false;
+    limit?: number;
+    skip?: number;
+    sort?: object;
+  },
+  headers?: object
+): Promise<StorageObject[]>;
+export function getAll(
+  queryParams?: {
+    filter?: object;
+    paginate?: true;
+    limit?: number;
+    skip?: number;
+    sort?: object;
+  },
+  headers?: object
+): Promise<IndexResult<StorageObject>>;
+export function getAll(
+  queryParams?: {
+    filter?: object;
+    paginate?: boolean;
+    limit?: number;
+    skip?: number;
+    sort?: object;
+  },
+  headers?: object
+): Promise<IndexResult<StorageObject> | StorageObject[]> {
   checkInitialized(authorization);
 
   return service.get<IndexResult<StorageObject> | StorageObject[]>(`storage`, {
-    params: queryParams
+    params: queryParams,
+    headers
   });
 }
 
 export async function update(
   id: string,
   object: File | BufferWithMeta,
-  onUploadProgress?: (progress: ProgressEvent) => void
+  onUploadProgress?: (progress: ProgressEvent) => void,
+  headers: object = {}
 ) {
   checkInitialized(authorization);
 
-  const {body, headers} = await preparePutBody(object);
+  const putBody = await preparePutBody(object);
 
-  return service.put<StorageObject>(`storage/${id}`, body, {
+  return service.put<StorageObject>(`storage/${id}`, putBody.body, {
     onUploadProgress,
-    headers
+    headers: {...putBody.headers, ...headers}
   });
 }
 
-export async function updateMeta(id: string, meta: {name: string}) {
+export async function updateMeta(id: string, meta: {name: string}, headers: object = {}) {
   checkInitialized(authorization);
 
   return service.patch<StorageObject>(`storage/${id}`, meta, {
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      ...headers
     }
   });
 }
 
-export function remove(id: string) {
+export function remove(id: string, headers?: object) {
   checkInitialized(authorization);
 
-  return service.delete(`storage/${id}`);
+  return service.delete(`storage/${id}`, {headers});
 }

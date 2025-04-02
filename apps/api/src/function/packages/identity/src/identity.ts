@@ -57,7 +57,7 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
   });
 }
 
-export function verifyToken(token: string, baseUrl?: string) {
+export function verifyToken(token: string, baseUrl?: string, headers: object = {}) {
   const _baseUrl = baseUrl ? baseUrl : service ? service.baseUrl : undefined;
 
   if (!_baseUrl) {
@@ -66,32 +66,39 @@ export function verifyToken(token: string, baseUrl?: string) {
 
   const req = new Axios({baseURL: _baseUrl});
 
-  return req.get(`${identitySegment}/verify`, {headers: {Authorization: token}});
+  return req.get(`${identitySegment}/verify`, {headers: {Authorization: token, ...headers}});
 }
 
 export async function login<TFA extends false>(
   identifier: string,
   password: string,
-  tokenLifeSpan?: number
+  tokenLifeSpan?: number,
+  headers?: object
 ): Promise<string>;
 export async function login<TFA extends true>(
   identifier: string,
   password: string,
-  tokenLifeSpan?: number
+  tokenLifeSpan?: number,
+  headers?: object
 ): Promise<Challenge>;
 export async function login(
   identifier: string,
   password: string,
-  tokenLifeSpan?: number
+  tokenLifeSpan?: number,
+  headers?: object
 ): Promise<string | Challenge> {
   checkInitialized(authorization);
 
   return service
-    .post<TokenScheme | ChallengeRes>("/passport/identify", {
-      identifier,
-      password,
-      expires: tokenLifeSpan
-    })
+    .post<TokenScheme | ChallengeRes>(
+      "/passport/identify",
+      {
+        identifier,
+        password,
+        expires: tokenLifeSpan
+      },
+      {headers}
+    )
     .then(r => {
       if (isTokenScheme(r)) {
         return r.token;
@@ -142,49 +149,60 @@ export async function loginWithStrategy(id: string): Promise<LoginWithStrategyRe
 }
 
 export namespace authfactor {
-  export function list(): Promise<FactorSchema[]> {
-    return service.get<FactorSchema[]>("passport/identity/factors");
+  export function list(headers?: object): Promise<FactorSchema[]> {
+    return service.get<FactorSchema[]>("passport/identity/factors", {headers});
   }
 
-  export async function register(identityId: string, factor: FactorMeta): Promise<Challenge> {
+  export async function register(
+    identityId: string,
+    factor: FactorMeta,
+    headers?: object
+  ): Promise<Challenge> {
     const response = await service.post<ChallengeRes>(
       `passport/identity/${identityId}/start-factor-verification`,
-      factor
+      factor,
+      {headers}
     );
 
     const challenge = new _Challenge(response, response => response.message);
     return challenge;
   }
 
-  export function unregister(identityId: string) {
-    return service.delete(`passport/identity/${identityId}/factors`);
+  export function unregister(identityId: string, headers?: object) {
+    return service.delete(`passport/identity/${identityId}/factors`, {headers});
   }
 }
 
-export function getStrategies() {
-  return service.get<Strategy[]>("/passport/strategies");
+export function getStrategies(headers?: object) {
+  return service.get<Strategy[]>("/passport/strategies", {headers});
 }
 
-export function get(id: string): Promise<IdentityGet> {
+export function get(id: string, headers?: object): Promise<IdentityGet> {
   checkInitialized(authorization);
 
-  return service.get<IdentityGet>(`${identitySegment}/${id}`);
+  return service.get<IdentityGet>(`${identitySegment}/${id}`, {headers});
 }
 
-export function getAll(queryParams?: {
-  paginate?: false;
-  limit?: number;
-  skip?: number;
-  filter?: object;
-  sort?: object;
-}): Promise<IdentityGet[]>;
-export function getAll(queryParams?: {
-  paginate?: true;
-  limit?: number;
-  skip?: number;
-  filter?: object;
-  sort?: object;
-}): Promise<IndexResult<IdentityGet>>;
+export function getAll(
+  queryParams?: {
+    paginate?: false;
+    limit?: number;
+    skip?: number;
+    filter?: object;
+    sort?: object;
+  },
+  headers?: object
+): Promise<IdentityGet[]>;
+export function getAll(
+  queryParams?: {
+    paginate?: true;
+    limit?: number;
+    skip?: number;
+    filter?: object;
+    sort?: object;
+  },
+  headers?: object
+): Promise<IndexResult<IdentityGet>>;
 export function getAll(
   queryParams: {
     paginate?: boolean;
@@ -192,23 +210,25 @@ export function getAll(
     skip?: number;
     filter?: object;
     sort?: object;
-  } = {}
+  } = {},
+  headers?: object
 ): Promise<IdentityGet[] | IndexResult<IdentityGet>> {
   checkInitialized(authorization);
 
   return service.get<IdentityGet[] | IndexResult<IdentityGet>>(identitySegment, {
-    params: queryParams
+    params: queryParams,
+    headers
   });
 }
 
-export async function insert(identity: IdentityCreate): Promise<IdentityGet> {
+export async function insert(identity: IdentityCreate, headers?: object): Promise<IdentityGet> {
   checkInitialized(authorization);
 
   identity = deepCopyJSON(identity);
   const desiredPolicies = identity.policies;
   delete identity.policies;
 
-  const insertedIdentity = await service.post<IdentityGet>(identitySegment, identity);
+  const insertedIdentity = await service.post<IdentityGet>(identitySegment, identity, {headers});
 
   return policy.attach(insertedIdentity._id, desiredPolicies).then(policies => {
     insertedIdentity.policies = policies;
@@ -216,7 +236,11 @@ export async function insert(identity: IdentityCreate): Promise<IdentityGet> {
   });
 }
 
-export async function update(id: string, identity: IdentityUpdate): Promise<IdentityGet> {
+export async function update(
+  id: string,
+  identity: IdentityUpdate,
+  headers?: object
+): Promise<IdentityGet> {
   checkInitialized(authorization);
 
   const existingIdentity = await service.get<IdentityGet>(`${identitySegment}/${id}`);
@@ -230,7 +254,9 @@ export async function update(id: string, identity: IdentityUpdate): Promise<Iden
     desiredPolicies
   );
 
-  const updatedIdentity = await service.put<IdentityGet>(`${identitySegment}/${id}`, identity);
+  const updatedIdentity = await service.put<IdentityGet>(`${identitySegment}/${id}`, identity, {
+    headers
+  });
   updatedIdentity.policies = desiredPolicies;
 
   await policy.attach(id, policiesForAttach);
@@ -239,15 +265,19 @@ export async function update(id: string, identity: IdentityUpdate): Promise<Iden
   return updatedIdentity;
 }
 
-export function remove(id: string): Promise<any> {
+export function remove(id: string, headers?: object): Promise<any> {
   checkInitialized(authorization);
 
-  return service.delete(`${identitySegment}/${id}`);
+  return service.delete(`${identitySegment}/${id}`, {headers});
 }
 
 // policy attach detach
 export namespace policy {
-  export function attach(identityId: string, policyIds: string[] = []): Promise<string[]> {
+  export function attach(
+    identityId: string,
+    policyIds: string[] = [],
+    headers?: object
+  ): Promise<string[]> {
     checkInitialized(authorization);
 
     const promises: Promise<IdentityGet>[] = [];
@@ -255,7 +285,7 @@ export namespace policy {
 
     for (const policyId of policyIds) {
       const promise = service
-        .put<any>(`${identitySegment}/${identityId}/policy/${policyId}`, {})
+        .put<any>(`${identitySegment}/${identityId}/policy/${policyId}`, {}, {headers})
         .then(() => attachedPolicies.add(policyId))
         .catch(e => {
           console.error(`Failed to attach policy with id ${policyId}: `, e);
@@ -267,7 +297,11 @@ export namespace policy {
     return Promise.all(promises).then(() => Array.from(attachedPolicies));
   }
 
-  export function detach(identityId: string, policyIds: string[] = []): Promise<string[]> {
+  export function detach(
+    identityId: string,
+    policyIds: string[] = [],
+    headers?: object
+  ): Promise<string[]> {
     checkInitialized(authorization);
 
     const promises: Promise<IdentityGet>[] = [];
@@ -275,7 +309,7 @@ export namespace policy {
 
     for (const policyId of policyIds) {
       const promise = service
-        .delete(`${identitySegment}/${identityId}/policy/${policyId}`)
+        .delete(`${identitySegment}/${identityId}/policy/${policyId}`, {headers})
         .then(() => detachedPolicies.add(policyId))
         .catch(e => {
           console.error(`Failed to detach policy with id ${policyId}: `, e);
