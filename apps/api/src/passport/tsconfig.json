@@ -5,6 +5,7 @@
     {"path": "./guard"},
     {"path": "./identity"},
     {"path": "./apikey"},
-    {"path": "./authfactor"}
+    {"path": "./authfactor"},
+    {"path": "../../../../libs/interface/passport"}
   ]
 }

@@ -98,9 +98,6 @@
       "path": "./apps/api/src/passport/testing"
     },
     {
-      "path": "./libs/interface/representative"
-    },
-    {
       "path": "./apps/api/src/bucket/realtime"
     },
     {
@@ -149,12 +146,6 @@
       "path": "./apps/api/src/preference"
     },
     {
-      "path": "./libs/interface/function"
-    },
-    {
-      "path": "./libs/interface/realtime"
-    },
-    {
       "path": "./apps/api/src/dashboard"
     },
     {
@@ -177,9 +168,6 @@
     },
     {
       "path": "./apps/api/src/storage"
-    },
-    {
-      "path": "./libs/interface/asset"
     },
     {
       "path": "./apps/api/src/bucket"
@@ -231,6 +219,111 @@
     },
     {
       "path": "./apps/cli"
+    },
+    {
+      "path": "./libs/interface/activity"
+    },
+    {
+      "path": "./libs/interface/asset"
+    },
+    {
+      "path": "./libs/interface/bucket"
+    },
+    {
+      "path": "./libs/interface/bucket/common"
+    },
+    {
+      "path": "./libs/interface/bucket/expression"
+    },
+    {
+      "path": "./libs/interface/bucket/graphql"
+    },
+    {
+      "path": "./libs/interface/bucket/history"
+    },
+    {
+      "path": "./libs/interface/bucket/hooks"
+    },
+    {
+      "path": "./libs/interface/bucket/realtime"
+    },
+    {
+      "path": "./libs/interface/core"
+    },
+    {
+      "path": "./libs/interface/dashboard"
+    },
+    {
+      "path": "./libs/interface/database"
+    },
+    {
+      "path": "./libs/interface/filter"
+    },
+    {
+      "path": "./libs/interface/function"
+    },
+    {
+      "path": "./libs/interface/function/compiler"
+    },
+    {
+      "path": "./libs/interface/function/enqueuer"
+    },
+    {
+      "path": "./libs/interface/function/log"
+    },
+    {
+      "path": "./libs/interface/function/pkgmanager"
+    },
+    {
+      "path": "./libs/interface/function/runtime"
+    },
+    {
+      "path": "./libs/interface/function/scheduler"
+    },
+    {
+      "path": "./libs/interface/function/webhook"
+    },
+    {
+      "path": "./libs/interface/passport"
+    },
+    {
+      "path": "./libs/interface/passport/apikey"
+    },
+    {
+      "path": "./libs/interface/passport/authfactor"
+    },
+    {
+      "path": "./libs/interface/passport/guard"
+    },
+    {
+      "path": "./libs/interface/passport/identity"
+    },
+    {
+      "path": "./libs/interface/passport/policy"
+    },
+    {
+      "path": "./libs/interface/passport/testing"
+    },
+    {
+      "path": "./libs/interface/preference"
+    },
+    {
+      "path": "./libs/interface/realtime"
+    },
+    {
+      "path": "./libs/interface/replication"
+    },
+    {
+      "path": "./libs/interface/representative"
+    },
+    {
+      "path": "./libs/interface/status"
+    },
+    {
+      "path": "./libs/interface/storage"
+    },
+    {
+      "path": "./libs/interface/versioncontrol"
     }
   ]
 }

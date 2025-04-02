@@ -1,4 +1,5 @@
 import {Observable} from "rxjs";
+import {Package} from "@spica-server/interface/function/pkgmanager";
 
 export abstract class PackageManager {
   normalizePackageNames(qualifiedNames: string | string[]): string[] {
@@ -27,10 +28,4 @@ export abstract class DelegatePkgManager extends PackageManager {
   ls(cwd: string, includeTypes?: boolean): Promise<Package[]> {
     return this.pkgManager.ls(cwd, includeTypes);
   }
-}
-
-export interface Package {
-  name: string;
-  version: string;
-  types: object;
 }

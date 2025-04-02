@@ -1,0 +1,5 @@
+{
+  "name": "interface/function/pkgmanager",
+  "sourceRoot": "libs/interface/function/pkgmanager/src",
+  "projectType": "library"
+}

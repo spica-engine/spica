@@ -10,7 +10,8 @@ import {
   Param
 } from "@nestjs/common";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
-import {SyncDirection, VersionManager} from "./interface";
+import {VersionManager} from "./interface";
+import {SyncDirection} from "@spica-server/interface/versioncontrol";
 import {Synchronizer} from "./synchronizer";
 
 @Controller("versioncontrol")

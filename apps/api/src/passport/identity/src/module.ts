@@ -1,22 +1,28 @@
 import {Module, Global, DynamicModule, Inject, Optional} from "@nestjs/common";
 import {SchemaResolver, provideSchemaResolver} from "./schema.resolver";
 import {Validator, SchemaModule} from "@spica-server/core/schema";
-import {PreferenceService, IDENTITY_SETTINGS_FINALIZER} from "@spica-server/preference/services";
+import {PreferenceService} from "@spica-server/preference/services";
+import {IDENTITY_SETTINGS_FINALIZER} from "@spica-server/interface/preference";
 import {JwtModule} from "@nestjs/jwt";
-import {IdentityOptions, IDENTITY_OPTIONS, POLICY_PROVIDER} from "./options";
+import {
+  IdentityOptions,
+  IDENTITY_OPTIONS,
+  POLICY_PROVIDER
+} from "@spica-server/interface/passport/identity";
 import {IdentityController} from "./identity.controller";
 import {IdentityService} from "./identity.service";
 import {IdentityStrategy} from "./identity.strategy";
 import {provideSettingsFinalizer, providePolicyFinalizer} from "./utility";
-import {IDENTITY_POLICY_FINALIZER, PolicyService} from "@spica-server/passport/policy";
+import {PolicyService} from "@spica-server/passport/policy";
+import {IDENTITY_POLICY_FINALIZER} from "@spica-server/interface/passport/policy";
 import {registerStatusProvider} from "./status";
 import IdentitySchema from "./schemas/identity.json" with {type: "json"};
 import IdentityCreateSchema from "./schemas/identity-create.json" with {type: "json"};
 import AuthFactorSchema from "./schemas/authfactor.json" with {type: "json"};
 import {AuthResolver} from "./relation";
-import {AUTH_RESOLVER} from "@spica-server/bucket/common";
+import {AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {registerAssetHandlers} from "./asset";
-import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
+import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 
 @Global()

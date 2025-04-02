@@ -1,0 +1,5 @@
+{
+  "name": "interface/passport/guard",
+  "sourceRoot": "libs/interface/passport/guard/src",
+  "projectType": "library"
+}

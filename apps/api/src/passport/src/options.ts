@@ -1,16 +1,5 @@
 import axios from "axios";
 
-import {IdentityOptions} from "@spica-server/passport/identity";
-
-export const PASSPORT_OPTIONS = Symbol.for("PASSPORT_OPTIONS");
-export const STRATEGIES = Symbol.for("STRATEGIES");
-
-export interface PassportOptions extends IdentityOptions {
-  publicUrl: string;
-  defaultStrategy?: string;
-  samlCertificateTTL: number;
-}
-
 export class RequestService {
   request(options: any) {
     return axios(options)
@@ -26,5 +15,3 @@ export class RequestService {
       );
   }
 }
-
-export const REQUEST_SERVICE = Symbol.for("REQUEST_SERVICE");

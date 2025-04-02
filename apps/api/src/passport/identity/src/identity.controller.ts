@@ -24,14 +24,19 @@ import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {Factor, FactorMeta, AuthFactor} from "@spica-server/passport/authfactor";
+import {AuthFactor} from "@spica-server/passport/authfactor";
+import {Factor, FactorMeta} from "@spica-server/interface/passport/authfactor";
 import {createIdentityActivity} from "./activity.resource";
 import {compare, hash} from "./hash";
 import {IdentityService} from "./identity.service";
-import {Identity, PaginationResponse} from "./interface";
-import {POLICY_PROVIDER} from "./options";
+import {
+  Identity,
+  PaginationResponse,
+  POLICY_PROVIDER
+} from "@spica-server/interface/passport/identity";
 import {registerPolicyAttacher} from "./utility";
-import {ClassCommander, CommandType} from "@spica-server/replication";
+import {ClassCommander} from "@spica-server/replication";
+import {CommandType} from "@spica-server/interface/replication";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 
 @Controller("passport/identity")

@@ -1,9 +1,8 @@
 import {Inject, Injectable} from "@nestjs/common";
 import CL from "ws";
+import {WebsocketOptions} from "@spica-server/interface/core";
 
 const TIMEOUT_MS = 100;
-
-export type WebsocketOptions = CL.ClientOptions;
 
 @Injectable()
 export class Websocket {

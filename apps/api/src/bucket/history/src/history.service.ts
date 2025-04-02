@@ -1,5 +1,4 @@
 import {Injectable} from "@nestjs/common";
-import {BucketDocument, Bucket} from "@spica-server/bucket/services";
 import {
   Collection,
   DatabaseService,
@@ -8,8 +7,10 @@ import {
   InsertOneResult,
   ObjectId
 } from "@spica-server/database";
-import {ChangePaths, ChangeKind, diff, schemaDiff} from "@spica-server/core/differ";
-import {History} from "./interfaces";
+import {diff, schemaDiff} from "@spica-server/core/differ";
+import {ChangePaths, ChangeKind} from "@spica-server/interface/core";
+import {History} from "@spica-server/interface/bucket/history";
+import {Bucket, BucketDocument} from "@spica-server/interface/bucket";
 
 @Injectable()
 export class HistoryService {

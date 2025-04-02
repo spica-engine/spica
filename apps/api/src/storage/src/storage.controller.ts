@@ -28,13 +28,11 @@ import {createStorageActivity} from "./activity.resource";
 import {
   BsonBodyParser,
   JsonBodyParser,
-  MixedBody,
   MultipartFormDataParser,
-  StorageObject,
-  MultipartFormData,
   getPostBodyConverter,
   getPutBodyConverter
 } from "./body";
+import {MixedBody, StorageObject, MultipartFormData} from "@spica-server/interface/storage";
 import {StorageService} from "./storage.service";
 
 /**

@@ -7,7 +7,7 @@ import {
   CommandTarget,
   Command,
   CommandType
-} from "./interface";
+} from "@spica-server/interface/replication";
 
 abstract class Commander {
   protected filters: CommandMessageFilter[] = [];

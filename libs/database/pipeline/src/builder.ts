@@ -1,5 +1,5 @@
 import {ObjectId} from "@spica-server/database";
-import {IPipelineBuilder} from "./interface";
+import {IPipelineBuilder} from "@spica-server/interface/database";
 
 export class PipelineBuilder implements IPipelineBuilder {
   protected pipeline: object[] = [];

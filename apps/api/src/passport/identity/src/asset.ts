@@ -1,8 +1,8 @@
 import {registrar} from "@spica-server/asset";
 import {Resource} from "@spica-server/interface/asset";
-import {Schema, Validator} from "@spica-server/core/schema";
 import {PreferenceService} from "@spica-server/preference/services";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {IdentitySettingsContents} from "@spica-server/interface/passport/identity";
 
 /**
  * Preference has 2 sub modules named bucket(not yet) and identity
@@ -10,16 +10,6 @@ import {IRepresentativeManager} from "@spica-server/interface/representative";
  * It's a bit different than the other modules
  */
 const _module = "preference";
-
-interface IdentitySettingsContents {
-  schema: IdentitySchema;
-}
-
-interface IdentitySchema {
-  attributes: {
-    [key: string]: any;
-  };
-}
 
 function isIdentityPreference(resourceOrId: Resource<IdentitySettingsContents> | string) {
   return typeof resourceOrId == "string"

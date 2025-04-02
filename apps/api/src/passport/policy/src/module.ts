@@ -1,7 +1,7 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
-import {PolicyResolver, POLICY_RESOLVER} from "@spica-server/passport/guard";
-import {Policy} from "./interface";
+import {PolicyResolver, POLICY_RESOLVER} from "@spica-server/interface/passport/guard";
+import {Policy} from "@spica-server/interface/passport/policy";
 import {PolicyController} from "./policy.controller";
 import {PolicyService} from "./policy.service";
 import PolicySchema from "./schemas/policy.json" with {type: "json"};

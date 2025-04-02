@@ -6,10 +6,13 @@ import {
   OAuthRequestDetails,
   OAuthStrategy,
   OAuthStrategyService,
-  Strategy
-} from "../../interface";
+  Strategy,
+  PassportOptions,
+  PASSPORT_OPTIONS,
+  REQUEST_SERVICE
+} from "@spica-server/interface/passport";
 import {StrategyService} from "../strategy.service";
-import {PassportOptions, PASSPORT_OPTIONS, RequestService, REQUEST_SERVICE} from "../../../options";
+import {RequestService} from "../../../options";
 import {v4 as uuidv4} from "uuid";
 
 @Injectable()

@@ -1,9 +1,10 @@
 import {Validator, Schema} from "@spica-server/core/schema";
-import {Dashboard, DashboardService} from "@spica-server/dashboard";
+import {DashboardService} from "@spica-server/dashboard";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {Resource} from "@spica-server/interface/asset";
 import {registrar} from "@spica-server/asset";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
+import {DashboardAsset} from "@spica-server/interface/dashboard";
 
 const _module = "dashboard";
 
@@ -61,10 +62,6 @@ export function registerAssetHandlers(
         };
       });
     });
-}
-
-export interface DashboardAsset {
-  schema: Dashboard;
 }
 
 function validateDashboard(dashboard: any, validator: Validator): Promise<void> {

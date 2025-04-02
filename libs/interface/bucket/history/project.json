@@ -1,0 +1,5 @@
+{
+  "name": "interface/bucket/history",
+  "sourceRoot": "libs/interface/bucket/history/src",
+  "projectType": "library"
+}

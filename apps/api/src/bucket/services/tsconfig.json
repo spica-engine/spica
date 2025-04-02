@@ -7,6 +7,9 @@
     },
     {
       "path": "../../preference/services"
+    },
+    {
+      "path": "../../../../../libs/interface/bucket"
     }
   ]
 }

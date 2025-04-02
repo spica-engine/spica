@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {Observable} from "rxjs";
-import {Webhook} from "./interface";
+import {Webhook, TargetChange, ChangeKind} from "@spica-server/interface/function/webhook";
 
 @Injectable()
 export class WebhookService extends BaseCollection<Webhook>("webhook") {
@@ -60,16 +60,4 @@ export class WebhookService extends BaseCollection<Webhook>("webhook") {
       };
     });
   }
-}
-
-export enum ChangeKind {
-  Added = 0,
-  Removed = 1,
-  Updated = 2
-}
-
-export interface TargetChange {
-  kind: ChangeKind;
-  target: string;
-  webhook?: Omit<Webhook, "_id">;
 }

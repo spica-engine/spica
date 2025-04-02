@@ -1,4 +1,4 @@
-import {Compilation} from "@spica-server/function/compiler";
+import {Compilation} from "@spica-server/interface/function/compiler";
 import {Typescript} from "@spica-server/function/compiler/typescript";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import fs from "fs";

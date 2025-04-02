@@ -1,6 +1,12 @@
-import {Triggers, Function, Environment, EnvRelation} from "@spica-server/interface/function";
 import {diff} from "@spica-server/core/differ";
 import {EnvVar} from "@spica-server/interface/env_var";
+import {
+  Triggers,
+  Function,
+  ChangeKind,
+  TargetChange,
+  EnvRelation
+} from "@spica-server/interface/function";
 
 export function changesFromTriggers(
   previousFn: Function<EnvRelation.Resolved | EnvRelation.NotResolved>,
@@ -104,26 +110,4 @@ function normalizeEnvVars(envVars: EnvVar[]) {
     acc[curr.key] = curr.value;
     return acc;
   }, {});
-}
-
-export enum ChangeKind {
-  Added = 0,
-  Removed = 1,
-  Updated = 2
-}
-
-export interface Context {
-  timeout: number;
-  env: Environment;
-}
-
-export interface TargetChange {
-  kind: ChangeKind;
-  type?: string;
-  options?: unknown;
-  target: {
-    id: string;
-    handler?: string;
-    context?: Context;
-  };
 }
