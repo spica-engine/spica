@@ -24,6 +24,7 @@ async function _delete({options}: ActionParameters) {
 
   if (!asset) {
     console.error(`Asset ${assetMeta.name} does not exist`);
+    return;
   }
 
   await client.delete(`/asset/${asset._id}`, {params: {type}});
