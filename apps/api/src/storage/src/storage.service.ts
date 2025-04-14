@@ -1,4 +1,4 @@
-import {BadRequestException, Inject, Injectable} from "@nestjs/common";
+import {BadRequestException, Inject, Injectable, NotFoundException} from "@nestjs/common";
 import {
   BaseCollection,
   DatabaseService,
@@ -130,7 +130,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     const deletedCount = await this._coll.deleteOne({_id: id}).then(res => res.deletedCount);
 
     if (!deletedCount) {
-      return;
+      throw new NotFoundException(`Storage object ${id} could not be found`);
     }
 
     await this.service.delete(id.toHexString());
@@ -139,7 +139,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   async updateMeta(_id: ObjectId, name: string) {
     const existing = await this._coll.findOne({_id});
     if (!existing) {
-      throw new Error(`Storage object ${_id} could not be found`);
+      throw new NotFoundException(`Storage object ${_id} could not be found`);
     }
 
     return this._coll.findOneAndUpdate(
@@ -155,7 +155,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   ): Promise<StorageObjectMeta> {
     const existing = await this._coll.findOne({_id});
     if (!existing) {
-      throw new Error(`Storage object ${_id} could not be found`);
+      throw new NotFoundException(`Storage object ${_id} could not be found`);
     }
 
     await this.validateTotalStorageSize(object.content.size - existing.content.size);
