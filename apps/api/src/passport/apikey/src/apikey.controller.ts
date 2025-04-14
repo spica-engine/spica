@@ -122,17 +122,23 @@ export class ApiKeyController {
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy:add"))
   async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
-    return this.apiKeyService.findOneAndUpdate(
-      {
-        _id: id
-      },
-      {
-        $addToSet: {policies: policyId}
-      },
-      {
-        returnDocument: ReturnDocument.AFTER
-      }
-    );
+    return this.apiKeyService
+      .findOneAndUpdate(
+        {
+          _id: id
+        },
+        {
+          $addToSet: {policies: policyId}
+        },
+        {
+          returnDocument: ReturnDocument.AFTER
+        }
+      )
+      .then(r => {
+        if (!r) {
+          throw new NotFoundException();
+        }
+      });
   }
 
   /**
@@ -144,16 +150,22 @@ export class ApiKeyController {
   @Delete(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy:remove"))
   async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
-    return this.apiKeyService.findOneAndUpdate(
-      {
-        _id: id
-      },
-      {
-        $pull: {policies: policyId}
-      },
-      {
-        returnDocument: ReturnDocument.AFTER
-      }
-    );
+    return this.apiKeyService
+      .findOneAndUpdate(
+        {
+          _id: id
+        },
+        {
+          $pull: {policies: policyId}
+        },
+        {
+          returnDocument: ReturnDocument.AFTER
+        }
+      )
+      .then(r => {
+        if (!r) {
+          throw new NotFoundException();
+        }
+      });
   }
 }
