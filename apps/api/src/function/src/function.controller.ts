@@ -221,17 +221,7 @@ export class FunctionController {
   @Get(":id/index")
   @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
   async showIndex(@Param("id", OBJECT_ID) id: ObjectId) {
-    const fn = await this.fs.findOne({_id: id});
-    if (!fn) {
-      throw new NotFoundException("Can not find function.");
-    }
-    const index = await this.engine.read(fn).catch(e => {
-      if (e == "Not Found") {
-        throw new NotFoundException("Index does not exist.");
-      }
-      throw new InternalServerErrorException(e);
-    });
-    return {index};
+    return CRUD.index.find(this.fs, this.engine, id);
   }
 
   /**
@@ -241,11 +231,7 @@ export class FunctionController {
   @Get(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
   async getDependencies(@Param("id", OBJECT_ID) id: ObjectId) {
-    const fn = await this.fs.findOne({_id: id});
-    if (!fn) {
-      throw new NotFoundException("Could not find the function.");
-    }
-    return this.engine.getPackages(fn);
+    return CRUD.dependencies.findOne(this.fs, this.engine, id);
   }
 
   /**

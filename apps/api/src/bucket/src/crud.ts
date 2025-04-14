@@ -6,6 +6,14 @@ import {HistoryService} from "@spica-server/bucket/history";
 import * as expression from "@spica-server/bucket/expression";
 import {BadRequestException} from "@nestjs/common";
 
+export async function find(bs: BucketService, resourceFilter: object): Promise<Bucket[]> {
+  return bs.aggregate<Bucket>([resourceFilter, {$sort: {order: 1}}]).toArray();
+}
+
+export function findOne(bs: BucketService, id: ObjectId): Promise<Bucket> {
+  return bs.findOne({_id: id});
+}
+
 export async function insert(bs: BucketService, bucket: Bucket) {
   ruleValidation(bucket);
 
