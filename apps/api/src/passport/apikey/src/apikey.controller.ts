@@ -134,10 +134,11 @@ export class ApiKeyController {
           returnDocument: ReturnDocument.AFTER
         }
       )
-      .then(r => {
-        if (!r) {
+      .then(res => {
+        if (!res) {
           throw new NotFoundException();
         }
+        return res;
       });
   }
 
@@ -162,10 +163,11 @@ export class ApiKeyController {
           returnDocument: ReturnDocument.AFTER
         }
       )
-      .then(r => {
-        if (!r) {
+      .then(res => {
+        if (!res) {
           throw new NotFoundException();
         }
+        return res;
       });
   }
 }

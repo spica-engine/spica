@@ -184,11 +184,11 @@ export class IdentityController {
   )
   async deleteFactor(@Param("id", OBJECT_ID) id: ObjectId) {
     const res = this.deleteIdentityFactor(id.toHexString());
+    this.authFactor.unregister(id.toHexString());
+
     if (!res) {
       throw new NotFoundException(`Identity with ID ${id} not found`);
     }
-
-    this.authFactor.unregister(id.toHexString());
 
     await this.identityService.findOneAndUpdate({_id: id}, {$unset: {authFactor: ""}});
   }
