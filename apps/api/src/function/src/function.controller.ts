@@ -119,7 +119,7 @@ export class FunctionController {
   @UseGuards(AuthGuard(), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    CRUD.remove(this.fs, this.engine, this.log, id);
+    return CRUD.remove(this.fs, this.engine, this.log, id);
   }
 
   /**
