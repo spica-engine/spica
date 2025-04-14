@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Query,
   UseGuards
@@ -89,14 +90,22 @@ export class ActivityController {
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("activity:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.activityService.deleteOne({_id: id});
+  async delete(@Param("id", OBJECT_ID) id: ObjectId) {
+    const deletedCount = await this.activityService.deleteOne({_id: id});
+    if (!deletedCount) {
+      throw new NotFoundException(`Activity with ID ${id} not found`);
+    }
   }
 
   @Delete()
   @UseGuards(AuthGuard(), ActionGuard("activity:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteMany(@Body() ids: ObjectId[]) {
-    return this.activityService.deleteMany({_id: {$in: ids.map(id => new ObjectId(id))}});
+  async deleteMany(@Body() ids: ObjectId[]) {
+    const deletedCount = await this.activityService.deleteMany({
+      _id: {$in: ids.map(id => new ObjectId(id))}
+    });
+    if (!deletedCount) {
+      throw new NotFoundException("No activities found with the provided IDs");
+    }
   }
 }
