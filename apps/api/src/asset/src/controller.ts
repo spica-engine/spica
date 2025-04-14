@@ -176,6 +176,10 @@ export class AssetController {
   ) {
     const asset = await this.service.findOne({_id: id});
 
+    if (!asset) {
+      throw new NotFoundException(`Asset with ID ${id} not found`);
+    }
+
     if (asset.status != "downloaded") {
       await this.operate(
         asset.resources.filter(resource => resource.installation_status == "installed"),
