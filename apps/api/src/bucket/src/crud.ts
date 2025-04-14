@@ -4,7 +4,7 @@ import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/ser
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {HistoryService} from "@spica-server/bucket/history";
 import * as expression from "@spica-server/bucket/expression";
-import {BadRequestException} from "@nestjs/common";
+import {BadRequestException, NotFoundException} from "@nestjs/common";
 
 export async function insert(bs: BucketService, bucket: Bucket) {
   ruleValidation(bucket);
@@ -33,6 +33,9 @@ export async function replace(
   delete bucket._id;
 
   const previousSchema = await bs.findOne({_id});
+  if (!previousSchema) {
+    throw new NotFoundException(`Bucket with ID ${_id} does not exist.`);
+  }
 
   const currentSchema = await bs.findOneAndReplace({_id}, bucket, {
     returnDocument: ReturnDocument.AFTER
