@@ -1,13 +1,11 @@
 import {Global, Module} from "@nestjs/common";
 import {CommandMessenger} from "./messenger";
+import {replicaIdProvider, replicationServiceOptions, commandMemoryOptions} from "./consts";
 import {
   REPLICA_ID,
-  replicaIdProvider,
   COMMAND_MEMORY_OPTIONS,
-  replicationServiceOptions,
-  REPLICATION_SERVICE_OPTIONS,
-  commandMemoryOptions
-} from "./interface";
+  REPLICATION_SERVICE_OPTIONS
+} from "@spica-server/interface/replication";
 import {CommandService} from "./database";
 import {CommandMemory} from "./memory";
 import {ClassCommander} from "./commander";
