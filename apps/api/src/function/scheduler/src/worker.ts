@@ -1,8 +1,8 @@
 import {event} from "@spica-server/function/queue/proto";
-import {Description, Runtime, SpawnOptions} from "@spica-server/function/runtime";
+import {Runtime} from "@spica-server/function/runtime";
 import {NodeWorker} from "@spica-server/function/runtime/node";
-
-export type Schedule = (event: event.Event) => void;
+import {Description, SpawnOptions} from "@spica-server/interface/function/runtime";
+import {Schedule, WorkerState} from "@spica-server/interface/function/scheduler";
 
 export class Node extends Runtime {
   description: Description = {
@@ -14,14 +14,6 @@ export class Node extends Runtime {
   spawn(options: SpawnOptions): ScheduleWorker {
     return new ScheduleWorker(options);
   }
-}
-
-export enum WorkerState {
-  "Fresh",
-  "Targeted",
-  "Busy",
-  "Timeouted",
-  "Outdated"
 }
 
 export class ScheduleWorker extends NodeWorker {

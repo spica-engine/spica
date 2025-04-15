@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {Collection, DatabaseService, ObjectId, BaseCollection} from "@spica-server/database";
-import {Policy} from "./interface";
+import {Policy} from "@spica-server/interface/passport/policy";
 import managedPolicies from "./policies";
 
 @Injectable()
@@ -54,4 +54,3 @@ export class PolicyService extends BaseCollection("policies") {
 }
 
 type PolicyWithType = Policy & {system: boolean};
-type UserManagedPolicy = Policy & {_id?: string};

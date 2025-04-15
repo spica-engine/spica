@@ -8,7 +8,7 @@ import {
   ASSET_REP_MANAGER,
   ASSET_WORKING_DIRECTORY,
   INSTALLATION_STRATEGIES
-} from "./interface";
+} from "@spica-server/interface/asset";
 import fs from "fs";
 
 import AssetSchema from "../schema/asset.json" with {type: "json"};
