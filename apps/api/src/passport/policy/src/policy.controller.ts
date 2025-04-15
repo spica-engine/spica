@@ -12,7 +12,9 @@ import {
   Optional,
   Inject,
   BadRequestException,
-  NotFoundException
+  NotFoundException,
+  HttpCode,
+  HttpStatus
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {NUMBER, DEFAULT, JSONP} from "@spica-server/core";
@@ -92,6 +94,7 @@ export class PolicyController {
   @UseInterceptors(activity(createPolicyActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:delete"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     if (this.apikeyFinalizer) {
       await this.apikeyFinalizer(id.toHexString());
