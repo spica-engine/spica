@@ -10,6 +10,9 @@
     },
     {
       "path": "../services"
+    },
+    {
+      "path": "../../../../../libs/interface/bucket/history"
     }
   ]
 }

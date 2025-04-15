@@ -1,13 +1,14 @@
 import {ObjectId} from "@spica-server/database";
-import {Bucket} from "@spica-server/bucket/services";
 import * as Relation from "./relation";
 import {getPropertyByPath} from "./schema";
 import {
   extractFilterPropertyMap,
   replaceFilter,
-  replaceFilterObjectIds,
-  ValueConstructor
+  replaceFilterObjectIds
 } from "@spica-server/filter";
+import {ValueConstructor} from "@spica-server/interface/filter";
+import {FilterReplacer, RelationResolver} from "@spica-server/interface/bucket/common";
+import {Bucket} from "@spica-server/interface/bucket";
 
 // this reviver should be kept for backward compatibility and in case the filter is complex and our replacer can't detect the value that should be constructed
 export function filterReviver(k: string, v: string) {
@@ -37,7 +38,7 @@ export function isJSONFilter(value: any) {
 export const constructFilterValues = async (
   filter: object,
   bucket: Bucket,
-  relationResolver: Relation.RelationResolver
+  relationResolver: RelationResolver
 ) => {
   const replacers: FilterReplacer[] = [replaceFilterObjectIds, replaceFilterDates];
   for (let replacer of replacers) {
@@ -46,16 +47,10 @@ export const constructFilterValues = async (
   return filter;
 };
 
-export type FilterReplacer = (
-  filter: object,
-  bucket: Bucket,
-  relationResolver: Relation.RelationResolver
-) => Promise<object>;
-
 export async function replaceFilterDates(
   filter: object,
   bucket: Bucket,
-  relationResolver: Relation.RelationResolver
+  relationResolver: RelationResolver
 ) {
   const propertyMap = extractFilterPropertyMap(filter);
   const relationResolvedSchema = await Relation.getRelationResolvedBucketSchema(

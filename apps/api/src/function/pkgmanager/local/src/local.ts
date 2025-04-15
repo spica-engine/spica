@@ -1,5 +1,6 @@
-import {Package, PackageManager, DelegatePkgManager} from "@spica-server/function/pkgmanager";
+import {PackageManager, DelegatePkgManager} from "@spica-server/function/pkgmanager";
 import {Observable, throwError} from "rxjs";
+import {Package} from "@spica-server/interface/function/pkgmanager";
 
 export class LocalPackageManager extends DelegatePkgManager {
   private LOCAL_PACKAGE_NAME_REGEX = /^[a-fA-F0-9]{24}$/;

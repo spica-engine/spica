@@ -1,6 +1,10 @@
 import {Injectable, Inject} from "@nestjs/common";
 import {CommandService} from "../database/command";
-import {CommandMessage, COMMAND_MEMORY_OPTIONS, MemoryOptions} from "../interface";
+import {
+  CommandMessage,
+  COMMAND_MEMORY_OPTIONS,
+  MemoryOptions
+} from "@spica-server/interface/replication";
 import {MongoMemory} from "./mongo";
 
 @Injectable()

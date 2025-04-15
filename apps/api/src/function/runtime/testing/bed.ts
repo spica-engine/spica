@@ -1,4 +1,4 @@
-import {Compilation} from "@spica-server/function/compiler";
+import {Compilation} from "@spica-server/interface/function/compiler";
 import fs from "fs";
 import path from "path";
 

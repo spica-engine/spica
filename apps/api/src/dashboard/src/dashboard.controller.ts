@@ -13,7 +13,7 @@ import {
 } from "@nestjs/common";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {DashboardService} from "./dashboard.service";
-import {Dashboard} from "./dashboard";
+import {Dashboard} from "@spica-server/interface/dashboard";
 import {Schema} from "@spica-server/core/schema";
 import {ResourceFilter} from "@spica-server/passport/guard";
 import {OBJECT_ID, ObjectId, ReturnDocument} from "@spica-server/database";

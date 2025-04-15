@@ -1,13 +1,18 @@
-import {
-  Bucket,
-  BucketService,
-  getBucketDataCollection,
-  BucketDocument
-} from "@spica-server/bucket/services";
+import {BucketService, getBucketDataCollection} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
-import {buildI18nAggregation, Locale} from "./locale";
+import {buildI18nAggregation} from "./locale";
 import {deepCopy} from "@spica-server/core/patch";
 import {setPropertyByPath} from "./schema";
+import {
+  Locale,
+  RelationType,
+  RelationMap,
+  RelationMapOptions,
+  ResetNonOverlappingPathsOptions,
+  RelationDefinition,
+  RelationResolver
+} from "@spica-server/interface/bucket/common";
+import {Bucket, BucketDocument} from "@spica-server/interface/bucket";
 
 export function findRelations(
   schema: any,
@@ -63,25 +68,6 @@ export function getRelationPipeline(map: RelationMap[], locale: Locale): object[
   }
 
   return pipeline;
-}
-
-export const enum RelationType {
-  One = "onetoone",
-  Many = "onetomany"
-}
-
-export interface RelationMap {
-  type: RelationType;
-  target: string;
-  path: string;
-  children?: RelationMap[];
-  schema: Bucket;
-}
-
-interface RelationMapOptions {
-  resolve: RelationResolver;
-  paths: string[][];
-  properties: object;
 }
 
 export async function getRelationResolvedBucketSchema(
@@ -168,12 +154,6 @@ export async function createRelationMap(options: RelationMapOptions): Promise<Re
   };
 
   return visit(options.properties, options.paths, 0);
-}
-
-interface ResetNonOverlappingPathsOptions {
-  left: string[][];
-  right: string[][];
-  map: RelationMap[];
 }
 
 export function resetNonOverlappingPathsInRelationMap(
@@ -298,13 +278,6 @@ export function isRelation(schema: any): schema is RelationDefinition {
   return schema.type == "relation";
 }
 
-type RelationDefinition = {
-  type: "relation";
-  bucketId: string;
-  relationType: RelationType;
-  dependent: boolean;
-};
-
 export function isDesiredRelation(schema: any, bucketId: string) {
   return isRelation(schema) && schema.bucketId == bucketId;
 }
@@ -422,5 +395,3 @@ export function getDependents(schema: Bucket, deletedDocument: BucketDocument) {
 
   return dependents;
 }
-
-export type RelationResolver = (id: string) => Promise<Bucket>;

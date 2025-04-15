@@ -1,3 +1,5 @@
+import {FunctionContext, Func} from "@spica-server/interface/bucket/expression";
+
 let funcs = new Map<string, Func>();
 
 export function register(name: string, func: Func) {
@@ -15,11 +17,3 @@ export function visit(name: string, ctx: FunctionContext) {
   }
   return func(ctx);
 }
-
-export interface FunctionContext {
-  receiver: any;
-  arguments: any[];
-  target: "aggregation" | "default";
-}
-
-export type Func = (context: FunctionContext) => (ctx) => unknown;
