@@ -1,10 +1,14 @@
 import {Injectable, Inject} from "@nestjs/common";
 import {BaseCollection, DatabaseService} from "@spica-server/database";
-import {Identity} from "./interface";
-import {Validator, Default} from "@spica-server/core/schema";
+import {
+  Identity,
+  IDENTITY_OPTIONS,
+  IdentityOptions
+} from "@spica-server/interface/passport/identity";
+import {Validator} from "@spica-server/core/schema";
+import {Default} from "@spica-server/interface/core";
 import {hash, compare} from "./hash";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
-import {IDENTITY_OPTIONS, IdentityOptions} from "./options";
 
 @Injectable()
 export class IdentityService extends BaseCollection<Identity>("identity") {

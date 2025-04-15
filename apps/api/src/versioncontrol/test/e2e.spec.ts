@@ -10,7 +10,8 @@ import {FunctionModule} from "@spica-server/function";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {RepresentativeManager} from "@spica-server/representative";
-import {VC_REP_MANAGER, VersionControlModule} from "@spica-server/versioncontrol";
+import {VersionControlModule} from "@spica-server/versioncontrol";
+import {VC_REP_MANAGER} from "@spica-server/interface/versioncontrol";
 
 import os from "os";
 

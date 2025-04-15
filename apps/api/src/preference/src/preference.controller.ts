@@ -11,13 +11,13 @@ import {
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {AuthGuard, ActionGuard} from "@spica-server/passport";
+import {PreferenceService} from "@spica-server/preference/services";
 import {
   Preference,
-  PreferenceService,
   BUCKET_LANGUAGE_FINALIZER,
   changeFactory,
   IDENTITY_SETTINGS_FINALIZER
-} from "@spica-server/preference/services";
+} from "@spica-server/interface/preference";
 import {createPreferenceActivity} from "./activity.resource";
 import {ReturnDocument} from "@spica-server/database";
 

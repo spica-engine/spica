@@ -1,4 +1,9 @@
-import {Factor, FactorMeta, FactorSchema, AuthFactorSchemaProvider} from "./interface";
+import {
+  Factor,
+  FactorSchema,
+  AuthFactorSchemaProvider,
+  TotpFactorMeta
+} from "@spica-server/interface/passport/authfactor";
 import speakeasy from "speakeasy";
 import qrcode from "qrcode";
 
@@ -12,11 +17,6 @@ export const TotpFactorSchemaProvider: AuthFactorSchemaProvider = () => {
   };
   return Promise.resolve(schema);
 };
-
-export interface TotpFactorMeta extends FactorMeta {
-  type: "totp";
-  secret: string;
-}
 
 export class Totp implements Factor {
   meta: TotpFactorMeta;

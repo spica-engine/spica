@@ -5,13 +5,13 @@ import {IdentityModule} from "@spica-server/passport/identity";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {PreferenceService} from "@spica-server/preference/services";
 import {GuardService} from "./guard.service";
+import {RequestService} from "./options";
 import {
   PassportOptions,
   PASSPORT_OPTIONS,
-  RequestService,
   REQUEST_SERVICE,
   STRATEGIES
-} from "./options";
+} from "@spica-server/interface/passport";
 import {PassportController} from "./passport.controller";
 import {SamlService} from "./strategy/services/saml.service";
 import {StrategyController} from "./strategy/strategy.controller";
