@@ -221,7 +221,9 @@ export class FunctionController {
   @Get(":id/index")
   @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
   async showIndex(@Param("id", OBJECT_ID) id: ObjectId) {
-    return CRUD.index.find(this.fs, this.engine, id);
+    return CRUD.index.find(this.fs, this.engine, id).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
+    });
   }
 
   /**
@@ -231,7 +233,9 @@ export class FunctionController {
   @Get(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
   async getDependencies(@Param("id", OBJECT_ID) id: ObjectId) {
-    return CRUD.dependencies.findOne(this.fs, this.engine, id);
+    return CRUD.dependencies.findOne(this.fs, this.engine, id).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
+    });
   }
 
   /**
