@@ -248,49 +248,13 @@ export class FunctionController {
   @Header("X-Content-Type-Options", "nosniff")
   async addDependency(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body("name", DEFAULT([]), ARRAY(String)) name: string[],
-    @Res() res,
-    @Query("progress", BOOLEAN) progress?: boolean
+    @Body("name", DEFAULT([]), ARRAY(String)) name: string[]
   ) {
-    if (!name) {
-      throw new BadRequestException("Dependency name is required.");
-    }
     const fn = await this.fs.findOne({_id: id});
-    if (!fn) {
-      throw new NotFoundException("Could not find the function.");
-    }
 
-    let operators: OperatorFunction<unknown, unknown>[] = [
-      catchError(err => {
-        res.status(400).json({message: err.toString()});
-        return of(err);
-      })
-    ];
-
-    if (progress) {
-      operators = [];
-      operators.push(
-        map(progress => {
-          return {
-            progress,
-            state: "installing"
-          };
-        }),
-        catchError(error =>
-          of({
-            state: "failed",
-            message: error
-          })
-        ),
-        tap(response => res.write(`${JSON.stringify(response)}${os.EOL}`))
-      );
-    }
-    operators.push(
-      last(),
-      finalize(() => res.end())
-    );
-
-    return (this.engine.addPackage(fn, name) as any).pipe(...operators);
+    return CRUD.dependencies.install(this.engine, fn, name).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
+    });
   }
 
   /**
@@ -303,11 +267,9 @@ export class FunctionController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteDependency(@Param("id", OBJECT_ID) id: ObjectId, @Param("name") name: string) {
     const fn = await this.fs.findOne({_id: id});
-    if (!fn) {
-      throw new NotFoundException("Could not find the function.");
-    }
-    return this.engine.removePackage(fn, name).catch(error => {
-      throw new BadRequestException(error.message);
+
+    return CRUD.dependencies.uninstall(this.engine, fn, [name]).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
     });
   }
 
