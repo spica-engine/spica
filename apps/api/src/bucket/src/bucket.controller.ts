@@ -56,7 +56,7 @@ export class BucketController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("bucket:index"))
   index(@ResourceFilter() resourceFilter: object) {
-    return CRUD.find(this.bs, resourceFilter);
+    return CRUD.find(this.bs, {resourceFilter, sort: {order: 1}});
   }
 
   /**
