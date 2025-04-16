@@ -86,6 +86,16 @@ spec:
               mongod --replSet rs0 --bind_ip_all --auth --keyFile ./etc/secrets/replicaAuthKey
           ports:
             - containerPort: 27017
+          readinessProbe:
+            exec:
+              command:
+                - mongo
+                - --eval
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
           {{- if eq (int .Values.database.replicas) 1}}
           lifecycle:
             postStart:
