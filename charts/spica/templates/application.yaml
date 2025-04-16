@@ -66,7 +66,7 @@ spec:
             - containerPort: 4300
           readinessProbe:
             httpGet:
-              path: /passport/identify
+              path: /passport/strategies
               port: 4300
               scheme: HTTP
             initialDelaySeconds: 10
