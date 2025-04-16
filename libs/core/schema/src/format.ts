@@ -1,24 +1,7 @@
-import {
-  AddedFormat,
-  FormatValidator,
-  AsyncFormatValidator,
-  CodeKeywordDefinition,
-  KeywordErrorDefinition,
-  ErrorObject
-} from "ajv/dist/types";
+import {AddedFormat, CodeKeywordDefinition, KeywordErrorDefinition} from "ajv/dist/types";
 import {KeywordCxt} from "ajv/dist/compile/validate/index";
 import {_, str, nil, or, Code, getProperty} from "ajv/dist/compile/codegen/index.js";
-
-type FormatValidate =
-  | FormatValidator<string>
-  | FormatValidator<number>
-  | AsyncFormatValidator<string>
-  | AsyncFormatValidator<number>
-  | RegExp
-  | string
-  | true;
-
-export type FormatError = ErrorObject<"format", {format: string}>;
+import {FormatValidate} from "@spica-server/interface/core";
 
 const error: KeywordErrorDefinition = {
   message: ({schemaCode}) => str`should match format "${schemaCode}"`,

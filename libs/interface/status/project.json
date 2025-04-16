@@ -1,0 +1,5 @@
+{
+  "name": "interface/status",
+  "sourceRoot": "libs/interface/status/src",
+  "projectType": "library"
+}

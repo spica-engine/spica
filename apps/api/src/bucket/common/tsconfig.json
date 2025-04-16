@@ -25,6 +25,15 @@
     },
     {
       "path": "../../bucket/expression"
+    },
+    {
+      "path": "../../../../../libs/interface/activity"
+    },
+    {
+      "path": "../../../../../libs/interface/bucket/common"
+    },
+    {
+      "path": "../../../../../libs/interface/core"
     }
   ]
 }
