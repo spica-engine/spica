@@ -1,15 +1,13 @@
 import {Global, Module, OnModuleDestroy} from "@nestjs/common";
 import {
-  REPLICATION_SERVICE_OPTIONS,
   replicationServiceOptions,
-  REPLICA_ID,
   replicaIdProvider,
   CommandMessenger,
   ClassCommander,
   CommandMemory,
-  JobService,
   JobReducer
 } from "@spica-server/replication";
+import {REPLICA_ID, REPLICATION_SERVICE_OPTIONS} from "@spica-server/interface/replication";
 import {MockJobReducer, MockMemoryService} from "./utilities";
 
 const memoryService = new MockMemoryService();

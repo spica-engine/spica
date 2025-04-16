@@ -27,7 +27,7 @@ import {
   APIKEY_POLICY_FINALIZER,
   changeFactory,
   IDENTITY_POLICY_FINALIZER
-} from "./interface";
+} from "@spica-server/interface/passport/policy";
 import {PolicyService} from "./policy.service";
 import {getDuplicatedActionMaps, createDuplicatedActionsErrorMessage} from "./utility";
 

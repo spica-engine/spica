@@ -5,8 +5,8 @@ import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
-import {TargetChange, ChangeKind} from "@spica-server/function/src/change";
 import {EnvVarService} from "@spica-server/env_var/services";
+import {TargetChange, ChangeKind} from "@spica-server/interface/function";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
 describe("Engine", () => {

@@ -20,7 +20,7 @@ import {
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
-import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/services";
+import {BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
@@ -29,6 +29,8 @@ import * as expression from "@spica-server/bucket/expression";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket/cache";
 import * as CRUD from "./crud";
 import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core/patch";
+import {Bucket} from "@spica-server/interface/bucket";
+
 /**
  * All APIs related to bucket schemas.
  * @name bucket

@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {Dashboard} from "./dashboard";
+import {Dashboard} from "@spica-server/interface/dashboard";
 import {BaseCollection, DatabaseService} from "@spica-server/database";
 
 @Injectable()

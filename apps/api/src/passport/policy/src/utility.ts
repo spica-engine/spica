@@ -1,4 +1,4 @@
-import {Policy, ActionMap} from "./interface";
+import {Policy, ActionMap} from "@spica-server/interface/passport/policy";
 
 export function getDuplicatedActionMaps(policy: Policy) {
   const actionMaps: ActionMap[] = [];

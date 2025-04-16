@@ -21,7 +21,7 @@ import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/gua
 import uniqid from "uniqid";
 import {createApikeyActivity} from "./activity.resource";
 import {ApiKeyService} from "./apikey.service";
-import {ApiKey} from "./interface";
+import {ApiKey} from "@spica-server/interface/passport/apikey";
 
 @Controller("passport/apikey")
 export class ApiKeyController {

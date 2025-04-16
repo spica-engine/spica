@@ -1,8 +1,9 @@
 import {Inject, Injectable} from "@nestjs/common";
 //@ts-ignore
-import got, {Headers, Method} from "got";
+import got, {Headers} from "got";
 import querystring from "querystring";
 import path from "path";
+import {RequestOptions, Response} from "@spica-server/interface/core";
 
 @Injectable()
 export class Request {
@@ -109,22 +110,4 @@ export class Request {
         return response;
       });
   }
-}
-
-export interface RequestOptions {
-  method: Method;
-  path: string;
-  body?: any;
-  query?: any;
-  headers?: Headers;
-  followRedirect?: boolean;
-}
-
-export interface Response<T = any> {
-  headers: {
-    [header: string]: string;
-  };
-  body: any;
-  statusCode: number;
-  statusText: string;
 }
