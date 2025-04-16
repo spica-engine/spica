@@ -167,7 +167,7 @@ class CRUD<Scheme,Paginate extends boolean = false> {
 
   private normalizeRelations(document: any) {
     this.relationalFields.forEach((field) => {
-      if (typeof document[field] == 'object') {
+      if (typeof document[field] == 'object' && document[field] !== null) {
         document[field] = Array.isArray(document[field])
           ? document[field].map((v: any) => v._id || v)
           : document[field]._id;
