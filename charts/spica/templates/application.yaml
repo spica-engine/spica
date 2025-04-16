@@ -67,8 +67,8 @@ spec:
           readinessProbe:
             httpGet:
               path: /passport/identify
-                port: 4300
-                scheme: HTTP
+              port: 4300
+              scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 5
             timeoutSeconds: 2
