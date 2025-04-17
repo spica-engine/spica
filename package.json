@@ -52,7 +52,7 @@
     "publish:migrate": "yarn nx publish migrate",
     "publish:mongoreplicationcontroller": "yarn nx publish mongoreplicationcontroller",
     "publish:devkit:bucket": "yarn nx nx-release-publish api/function/packages/bucket",
-    "publish:devlit:database": "yarn nx nx-release-publish api/function/packages/database",
+    "publish:devkit:database": "yarn nx nx-release-publish api/function/packages/database",
     "publish:devkit:identity": "yarn nx nx-release-publish api/function/packages/identity",
     "publish:devkit:storage": "yarn nx nx-release-publish api/function/packages/storage",
     "publish:devkit:*": "yarn nx run-many -t nx-release-publish --projects=api/function/packages/*",
