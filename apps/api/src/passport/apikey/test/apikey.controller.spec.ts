@@ -214,7 +214,7 @@ describe("ApiKey", () => {
     });
     it("should delete apiKey", async () => {
       const response = await req.delete(`/passport/apikey/${insertedApiKey._id}`);
-      expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
+      expect([response.statusCode, response.statusText]).toEqual([204, "No Content"]);
 
       const apiKeys = (await req.get("/passport/apikey", {})).body;
       expect(apiKeys).toEqual({
@@ -270,8 +270,12 @@ describe("ApiKey", () => {
       const response = await req.delete(
         `/passport/apikey/${insertedApiKey._id}/policy/test_policy`
       );
-      expect(response.statusCode).toBe(200);
-      expect(response.body).toEqual({
+      expect([response.statusCode, response.statusText]).toEqual([204, "No Content"]);
+
+      const modifiedApikey = await req.get(`/passport/apikey/${insertedApiKey._id}`);
+
+      expect(modifiedApikey.statusCode).toBe(200);
+      expect(modifiedApikey.body).toEqual({
         _id: insertedApiKey._id,
         key: insertedApiKey.key,
         name: "test",

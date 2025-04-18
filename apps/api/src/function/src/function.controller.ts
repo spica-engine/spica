@@ -37,8 +37,8 @@ import {
   createFunctionEnvVarActivity
 } from "./activity.resource";
 import {FunctionEngine} from "./engine";
-import {FunctionService, FUNCTION_OPTIONS, Options} from "@spica-server/function/services";
-import {EnvRelation, Function} from "@spica-server/interface/function";
+import {FunctionService} from "@spica-server/function/services";
+import {Options, FUNCTION_OPTIONS, EnvRelation, Function} from "@spica-server/interface/function";
 import {LogService} from "@spica-server/function/log/src/log.service";
 import {generate} from "./schema/enqueuer.resolver";
 import {applyPatch} from "@spica-server/core/patch";
@@ -124,7 +124,7 @@ export class FunctionController {
   @UseGuards(AuthGuard(), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    CRUD.remove(this.fs, this.engine, this.log, id);
+    return CRUD.remove(this.fs, this.engine, this.log, id);
   }
 
   /**
@@ -352,6 +352,7 @@ export class FunctionController {
   @UseInterceptors(activity(createFunctionEnvVarActivity))
   @Delete(":id/env-var/:envVarId")
   @UseGuards(AuthGuard(), ActionGuard("function:env-var:eject"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async ejectEnvironmentVariable(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Param("envVarId", OBJECT_ID) envVarId: ObjectId

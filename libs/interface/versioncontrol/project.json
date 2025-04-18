@@ -1,0 +1,5 @@
+{
+  "name": "interface/versioncontrol",
+  "sourceRoot": "libs/interface/versioncontrol/src",
+  "projectType": "library"
+}

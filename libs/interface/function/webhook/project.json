@@ -1,0 +1,5 @@
+{
+  "name": "interface/function/webhook",
+  "sourceRoot": "libs/interface/function/webhook/src",
+  "projectType": "library"
+}
