@@ -1,5 +1,6 @@
 import {IdentityService} from "./identity.service";
-import {schemaDiff, ChangeKind} from "@spica-server/core/differ";
+import {schemaDiff} from "@spica-server/core/differ";
+import {ChangeKind} from "@spica-server/interface/core";
 
 export function registerPolicyAttacher(policy: string | string[]) {
   policy = Array.isArray(policy) ? policy : [policy];

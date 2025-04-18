@@ -4,6 +4,9 @@
   "references": [
     {
       "path": "../../replication"
+    },
+    {
+      "path": "../../../../../libs/interface/passport/authfactor"
     }
   ]
 }

@@ -8,15 +8,23 @@ import {
   mixin,
   Type
 } from "@nestjs/common";
-import {ObjectId} from "@spica-server/database";
 import pkg from "body-parser";
 const {raw, json} = pkg;
 import {deserialize} from "bson";
 import {Observable, OperatorFunction, PartialObserver, Subscriber, TeardownLogic} from "rxjs";
 import {finalize, switchMapTo} from "rxjs/operators";
-import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import multer from "multer";
 import fs from "fs";
+import {
+  StorageOptions,
+  STORAGE_OPTIONS,
+  StorageObject,
+  MultipartFormData,
+  IBodyConverter,
+  MixedBody,
+  BsonArray,
+  JsonArray
+} from "@spica-server/interface/storage";
 
 class __BaseBody {
   payloadSizeError: HttpException;
@@ -230,35 +238,6 @@ export function MultipartFormDataParser(options: {isArray: boolean}): Type<any> 
   );
 }
 
-export interface StorageObject<DataType> {
-  _id?: string | ObjectId;
-  name: string;
-  url?: string;
-  content: StorageObjectContent<DataType>;
-}
-
-export interface StorageObjectContent<DataType> {
-  data: DataType;
-  type: string;
-  size?: number;
-}
-
-export type StorageObjectContentMeta = Omit<StorageObjectContent<any>, "data">;
-
-export type StorageObjectMeta = Omit<StorageObject<any>, "content"> & {
-  content: StorageObjectContentMeta;
-};
-
-export interface BsonArray {
-  content: StorageObject<Buffer>[];
-}
-
-export type JsonArray = StorageObject<Buffer>[];
-
-export type MultipartFormData = Express.Multer.File;
-
-export type MixedBody = BsonArray | JsonArray | MultipartFormData[];
-
 export function isMultipartFormDataArray(object: unknown): object is MultipartFormData[] {
   return Array.isArray(object) && isMultipartFormData(object[0]);
 }
@@ -289,11 +268,6 @@ export function multipartToStorageObject(object: MultipartFormData): StorageObje
 export function addContentSize(object: StorageObject<Buffer>) {
   object.content.size = object.content.data.byteLength;
   return object;
-}
-
-interface IBodyConverter<I, O> {
-  validate: (body: unknown) => boolean;
-  convert: (body: I) => O;
 }
 
 const MultipartConverter: IBodyConverter<MultipartFormData, StorageObject<fs.ReadStream>> = {

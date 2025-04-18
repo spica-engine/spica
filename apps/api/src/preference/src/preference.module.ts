@@ -6,7 +6,7 @@ import {
   REGISTER_VC_SYNC_PROVIDER,
   RegisterSyncProvider,
   VC_REP_MANAGER
-} from "@spica-server/versioncontrol";
+} from "@spica-server/interface/versioncontrol";
 import {PreferenceController} from "./preference.controller";
 import {getSyncProvider} from "./versioncontrol/schema";
 

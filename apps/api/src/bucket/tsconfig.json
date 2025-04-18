@@ -7,6 +7,12 @@
     },
     {
       "path": "./graphql"
+    },
+    {
+      "path": "../../../../libs/interface/bucket"
+    },
+    {
+      "path": "../../../../libs/interface/status"
     }
   ]
 }
