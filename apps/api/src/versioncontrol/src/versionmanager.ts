@@ -11,14 +11,8 @@ export class Git implements VersionManager {
     name: string;
     exec: Function;
   }[] = [
-    {
-      name: "add",
-      exec: ops => this.add(ops)
-    },
-    {
-      name: "commit",
-      exec: ops => this.commit(ops)
-    },
+    {name: "add", exec: ops => this.add(ops)},
+    {name: "commit", exec: ops => this.commit(ops)},
     {name: "reset", exec: ops => this.reset(ops)},
     {name: "tag", exec: ops => this.tag(ops)},
     {name: "stash", exec: ops => this.stash(ops)},
@@ -36,7 +30,8 @@ export class Git implements VersionManager {
 
     {name: "diff", exec: ops => this.diff(ops)},
     {name: "log", exec: ops => this.log(ops)},
-    {name: "clean", exec: ops => this.clean(ops)}
+    {name: "clean", exec: ops => this.clean(ops)},
+    {name: "rm", exec: ops => this.rm(ops)}
   ];
 
   availables() {
@@ -149,5 +144,9 @@ export class Git implements VersionManager {
 
   pull({args}) {
     return this.git.pull(args);
+  }
+
+  rm({args}) {
+    return this.git.rm(args);
   }
 }
