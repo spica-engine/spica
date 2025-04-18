@@ -119,7 +119,7 @@ export class FunctionController {
   @UseGuards(AuthGuard(), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    CRUD.remove(this.fs, this.engine, this.log, id);
+    return CRUD.remove(this.fs, this.engine, this.log, id);
   }
 
   /**
@@ -342,6 +342,7 @@ export class FunctionController {
    */
   @Delete(":id/env-var/:envVarId")
   @UseGuards(AuthGuard(), ActionGuard("function:env-var:eject"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async ejectEnvironmentVariable(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Param("envVarId", OBJECT_ID) envVarId: ObjectId

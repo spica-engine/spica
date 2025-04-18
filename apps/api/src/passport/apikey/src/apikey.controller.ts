@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   NotFoundException,
   Param,
   Post,
@@ -105,6 +107,7 @@ export class ApiKeyController {
   @UseInterceptors(activity(createApikeyActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:delete"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.apiKeyService.deleteOne({_id: id}).then(r => {
       if (!r) {
@@ -122,17 +125,24 @@ export class ApiKeyController {
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy:add"))
   async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
-    return this.apiKeyService.findOneAndUpdate(
-      {
-        _id: id
-      },
-      {
-        $addToSet: {policies: policyId}
-      },
-      {
-        returnDocument: ReturnDocument.AFTER
-      }
-    );
+    return this.apiKeyService
+      .findOneAndUpdate(
+        {
+          _id: id
+        },
+        {
+          $addToSet: {policies: policyId}
+        },
+        {
+          returnDocument: ReturnDocument.AFTER
+        }
+      )
+      .then(res => {
+        if (!res) {
+          throw new NotFoundException();
+        }
+        return res;
+      });
   }
 
   /**
@@ -143,17 +153,25 @@ export class ApiKeyController {
   @UseInterceptors(activity(createApikeyActivity))
   @Delete(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy:remove"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
-    return this.apiKeyService.findOneAndUpdate(
-      {
-        _id: id
-      },
-      {
-        $pull: {policies: policyId}
-      },
-      {
-        returnDocument: ReturnDocument.AFTER
-      }
-    );
+    return this.apiKeyService
+      .findOneAndUpdate(
+        {
+          _id: id
+        },
+        {
+          $pull: {policies: policyId}
+        },
+        {
+          returnDocument: ReturnDocument.AFTER
+        }
+      )
+      .then(res => {
+        if (!res) {
+          throw new NotFoundException();
+        }
+        return res;
+      });
   }
 }
