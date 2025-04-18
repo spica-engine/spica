@@ -1,9 +1,9 @@
-import * as func from "./func";
 import {convert} from "./convert";
 import {compile} from "./compile";
 import {ObjectId} from "@spica-server/database";
+import {ArgumentValidation, Func} from "@spica-server/interface/bucket/expression";
 
-export const has: func.Func = context => {
+export const has: Func = context => {
   const fnName = "has";
 
   validateArgumentsLength(fnName, context.arguments, 1);
@@ -31,7 +31,7 @@ export const has: func.Func = context => {
   };
 };
 
-export const unixTime: func.Func = context => {
+export const unixTime: Func = context => {
   const fnName = "unixTime";
 
   validateArgumentsLength(fnName, context.arguments, 1);
@@ -63,7 +63,7 @@ export const unixTime: func.Func = context => {
   };
 };
 
-export const now: func.Func = context => {
+export const now: Func = context => {
   const fnName = "now";
 
   validateArgumentsLength(fnName, context.arguments, 0);
@@ -84,7 +84,7 @@ export const now: func.Func = context => {
   };
 };
 
-export const some: func.Func = context => {
+export const some: Func = context => {
   const fnName = "some";
 
   validateArgumentsLength(fnName, context.arguments, 2);
@@ -129,7 +129,7 @@ export const some: func.Func = context => {
   };
 };
 
-export const every: func.Func = context => {
+export const every: Func = context => {
   const fnName = "every";
   validateArgumentsLength(fnName, context.arguments, 2);
 
@@ -173,7 +173,7 @@ export const every: func.Func = context => {
   };
 };
 
-export const equal: func.Func = context => {
+export const equal: Func = context => {
   const fnName = "equal";
   validateArgumentsLength(fnName, context.arguments, 2);
 
@@ -245,7 +245,7 @@ export const equal: func.Func = context => {
   };
 };
 
-export const length: func.Func = context => {
+export const length: Func = context => {
   const fnName = "length";
   validateArgumentsLength(fnName, context.arguments, 1);
 
@@ -285,7 +285,7 @@ export const length: func.Func = context => {
   };
 };
 
-export const regex: func.Func = context => {
+export const regex: Func = context => {
   const fnName = "regex";
   validateArgumentsLength(fnName, context.arguments, undefined, 2, 3);
 
@@ -381,11 +381,6 @@ export function createInQuery(items: any[], propertyName: string, operator: "$an
 }
 
 // VALIDATIONS
-interface ArgumentValidation {
-  validator: (node) => boolean;
-  mustBe: string;
-}
-
 export const PropertyAccesChainValidation: ArgumentValidation = {
   validator: node => {
     if (node.kind != "operator" || node.type != "select") {

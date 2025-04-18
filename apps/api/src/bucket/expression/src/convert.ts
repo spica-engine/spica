@@ -2,6 +2,7 @@ import {ObjectId} from "@spica-server/database";
 import {getMostLeftSelectIdentifier} from "./ast";
 import {compile} from "./compile";
 import * as func from "./func";
+import {Replacer} from "@spica-server/interface/bucket/expression";
 
 function visitArgFns(fns: any[], ctx) {
   const finalResult = [];
@@ -291,10 +292,6 @@ function visitBinaryOperatorSubtract(node) {
 export const convert = visit;
 
 // REPLACEMENTS
-interface Replacer {
-  condition: (...args) => boolean;
-  replace: (...args) => void;
-}
 
 // ObjectId
 const ObjectIdReplacer: Replacer = {

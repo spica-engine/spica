@@ -1,6 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
-import {Preference, PreferenceService} from "@spica-server/preference/services";
+import {PreferenceService} from "@spica-server/preference/services";
+import {Preference} from "@spica-server/interface/preference";
 import {Observable} from "rxjs";
 import {take} from "rxjs/operators";
 

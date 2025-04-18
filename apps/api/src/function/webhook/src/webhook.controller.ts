@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
+  NotFoundException,
   Optional,
   Param,
   Post,
@@ -17,11 +18,11 @@ import {
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {DatabaseService, ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
-import {CollectionSlug, COLL_SLUG} from "@spica-server/function/services";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {Webhook} from "./interface";
+import {Webhook} from "@spica-server/interface/function/webhook";
 import {WebhookInvoker} from "./invoker";
 import {WebhookService} from "./webhook.service";
+import {CollectionSlug, COLL_SLUG} from "@spica-server/interface/function";
 
 @Controller("webhook")
 export class WebhookController {
@@ -103,7 +104,7 @@ export class WebhookController {
 
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("webhook:update"))
-  replaceOne(
+  async replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/webhook")) hook: Webhook
   ) {
@@ -112,15 +113,22 @@ export class WebhookController {
     } catch (error) {
       throw new BadRequestException(error.toString());
     }
-    return this.webhookService.findOneAndReplace({_id: id}, hook, {
+    const res = await this.webhookService.findOneAndReplace({_id: id}, hook, {
       returnDocument: ReturnDocument.AFTER
     });
+    if (!res) {
+      throw new NotFoundException(`Webhook with ID ${id} not found`);
+    }
+    return res;
   }
 
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("webhook:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.webhookService.deleteOne({_id: id}).then(() => {});
+  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    const deletedCount = await this.webhookService.deleteOne({_id: id});
+    if (!deletedCount) {
+      throw new NotFoundException(`Activity with ID ${id} not found`);
+    }
   }
 }

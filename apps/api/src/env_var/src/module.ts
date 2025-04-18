@@ -3,15 +3,15 @@ import {EnvVarService, ServicesModule} from "@spica-server/env_var/services";
 import {EnvVarController} from "./controller";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import EnvVarSchema from "./schema.json" with {type: "json"};
-import {
-  REGISTER_VC_SYNC_PROVIDER,
-  RegisterSyncProvider,
-  VC_REP_MANAGER
-} from "@spica-server/versioncontrol";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {getVCSyncProvider} from "./versioncontrol/schema";
 import {registerAssetHandlers} from "./asset";
-import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
+import {
+  RegisterSyncProvider,
+  VC_REP_MANAGER,
+  REGISTER_VC_SYNC_PROVIDER
+} from "@spica-server/interface/versioncontrol";
+import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 
 @Module({})
 export class EnvVarModule {
