@@ -2,12 +2,9 @@ import {EventQueue, FirehoseQueue} from "@spica-server/function/queue";
 import {event, Firehose} from "@spica-server/function/queue/proto";
 import url from "url";
 import ws, {WebSocketServer} from "ws";
-import {Description, Enqueuer} from "./enqueuer";
+import {Enqueuer} from "./enqueuer";
 import express from "express";
-
-interface FirehoseOptions {
-  event: "*" | "**" | "connection" | "close" | string;
-}
+import {Description, FirehoseOptions} from "@spica-server/interface/function/enqueuer";
 
 export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
   type = event.Type.FIREHOSE;

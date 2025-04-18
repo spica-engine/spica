@@ -1,14 +1,12 @@
 import {
   AggregationCursor,
   Collection,
-  CollectionOptions,
   Filter,
   FindOptions,
   FindOneAndDeleteOptions,
   FindOneAndReplaceOptions,
   FindOneAndUpdateOptions,
   InsertOneResult,
-  InsertManyResult,
   ObjectId,
   UpdateFilter,
   UpdateOptions,
@@ -20,14 +18,7 @@ import {
   CreateIndexesOptions
 } from "mongodb";
 import {DatabaseService} from "./database.service";
-
-export interface InitializeOptions {
-  entryLimit?: number;
-  collectionOptions?: CollectionOptions;
-  afterInit?: (...args: any[]) => any;
-}
-
-export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
+import {InitializeOptions, OptionalId} from "@spica-server/interface/database";
 
 export class _MixinCollection<T> {
   _coll: Collection<T>;

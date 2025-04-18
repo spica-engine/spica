@@ -5,13 +5,15 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Query,
   UseGuards
 } from "@nestjs/common";
-import {Activity, ActivityService} from "@spica-server/activity/services";
+import {ActivityService} from "@spica-server/activity/services";
 import {DATE, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
 import {Filter, ObjectId, OBJECT_ID} from "@spica-server/database";
+import {Activity} from "@spica-server/interface/activity";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 
 @Controller("activity")
@@ -89,14 +91,22 @@ export class ActivityController {
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("activity:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.activityService.deleteOne({_id: id});
+  async delete(@Param("id", OBJECT_ID) id: ObjectId) {
+    const deletedCount = await this.activityService.deleteOne({_id: id});
+    if (!deletedCount) {
+      throw new NotFoundException(`Activity with ID ${id} not found`);
+    }
   }
 
   @Delete()
   @UseGuards(AuthGuard(), ActionGuard("activity:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteMany(@Body() ids: ObjectId[]) {
-    return this.activityService.deleteMany({_id: {$in: ids.map(id => new ObjectId(id))}});
+  async deleteMany(@Body() ids: ObjectId[]) {
+    const deletedCount = await this.activityService.deleteMany({
+      _id: {$in: ids.map(id => new ObjectId(id))}
+    });
+    if (!deletedCount) {
+      throw new NotFoundException("No activities found with the provided IDs");
+    }
   }
 }

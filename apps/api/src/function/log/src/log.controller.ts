@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Query,
   UseGuards
@@ -89,7 +90,7 @@ export class LogController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
-  clearLogs(
+  async clearLogs(
     @Param("id") fnId: string,
     @Query("begin", DEFAULT(() => new Date(0)), DATE) begin: Date,
     @Query("end", DEFAULT(() => new Date().setUTCHours(23, 59, 59, 999)), DATE) end: Date,
@@ -109,6 +110,9 @@ export class LogController {
       };
     }
 
-    return this.logService.deleteMany(filter);
+    const deletedCount = await this.logService.deleteMany(filter);
+    if (!deletedCount) {
+      throw new NotFoundException(`Log for function with ID ${fnId} not found`);
+    }
   }
 }

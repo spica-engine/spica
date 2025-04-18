@@ -1,12 +1,12 @@
 import {Global, Module} from "@nestjs/common";
 import {VersionControlController} from "./controller";
+import {VersionManager} from "./interface";
 import {
   REGISTER_VC_SYNC_PROVIDER,
-  VersionManager,
   VersionControlOptions,
   VERSIONCONTROL_WORKING_DIRECTORY,
   VC_REP_MANAGER
-} from "./interface";
+} from "@spica-server/interface/versioncontrol";
 import {RepresentativeManager} from "@spica-server/representative";
 import {Git} from "./versionmanager";
 import fs from "fs";

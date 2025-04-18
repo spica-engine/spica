@@ -4,6 +4,9 @@
   "references": [
     {
       "path": "../../../../../libs/database"
+    },
+    {
+      "path": "../../../../../libs/interface/status"
     }
   ]
 }

@@ -10,6 +10,9 @@
     },
     {
       "path": "../../activity/services"
+    },
+    {
+      "path": "../../../../../libs/interface/bucket/graphql"
     }
   ]
 }

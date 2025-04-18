@@ -141,7 +141,16 @@ describe("@spica-devkit/Storage", () => {
       Storage.remove("storage_object_id");
 
       expect(deleteSpy).toHaveBeenCalledTimes(1);
-      expect(deleteSpy).toHaveBeenCalledWith("storage/storage_object_id");
+      expect(deleteSpy).toHaveBeenCalledWith("storage/storage_object_id", {headers: undefined});
+    });
+
+    it("should delete storage object with headers", () => {
+      Storage.remove("storage_object_id", {Accept: "application/json"});
+
+      expect(deleteSpy).toHaveBeenCalledTimes(1);
+      expect(deleteSpy).toHaveBeenCalledWith("storage/storage_object_id", {
+        headers: {Accept: "application/json"}
+      });
     });
 
     it("should get storage objects", () => {
@@ -155,7 +164,16 @@ describe("@spica-devkit/Storage", () => {
       Storage.get("storage_object_id");
 
       expect(getSpy).toHaveBeenCalledTimes(1);
-      expect(getSpy).toHaveBeenCalledWith("storage/storage_object_id");
+      expect(getSpy).toHaveBeenCalledWith("storage/storage_object_id", {headers: undefined});
+    });
+
+    it("should get specific storage object with headers", () => {
+      Storage.get("storage_object_id", {Accept: "application/json"});
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith("storage/storage_object_id", {
+        headers: {Accept: "application/json"}
+      });
     });
   });
 });
