@@ -15,6 +15,7 @@ database:
   rootUsername:
   rootPassword:
   replicaAuthKey:
+  logLevel: 0
 
 images:
   api: spicaengine/api
