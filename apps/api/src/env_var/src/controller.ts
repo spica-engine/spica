@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -18,7 +17,7 @@ import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {PaginationResponse} from "@spica-server/interface/passport/identity";
 import {EnvVarService} from "@spica-server/env_var/services";
-import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
+import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Schema} from "@spica-server/core/schema";
 import {AuthGuard, ActionGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {EnvVar} from "@spica-server/interface/env_var";
@@ -40,35 +39,13 @@ export class EnvVarController {
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object
   ) {
-    let pipelineBuilder = new PipelineBuilder().filterResources(resourceFilter);
-
-    pipelineBuilder = await pipelineBuilder.filterByUserRequest(filter);
-
-    const seekingPipeline = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
-
-    const pipeline = (
-      await pipelineBuilder.paginate(paginate, seekingPipeline, this.evs.estimatedDocumentCount())
-    ).result();
-
-    if (paginate) {
-      return this.evs
-        .aggregate<PaginationResponse<EnvVar>>(pipeline)
-        .next()
-        .then(r => {
-          if (!r.data.length) {
-            r.meta = {total: 0};
-          }
-          return r;
-        });
-    }
-
-    return this.evs.aggregate<EnvVar[]>([...pipeline, ...seekingPipeline]).toArray();
+    return CRUD.find(this.evs, {resourceFilter, limit, skip, sort, paginate, filter});
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("env-var:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.evs.findOne({_id: id});
+    return CRUD.findOne(this.evs, id);
   }
 
   @UseInterceptors(activity(createEnvVarActivity))
