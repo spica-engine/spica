@@ -78,7 +78,7 @@ spec:
             --passport-password,  {{ .Values.application.defaultPassword }},
             --public-url, {{ required "A valid .Values.application.publicHost is required!" .Values.application.publicHost }}{{.Values.application.apiBaseUrl | trimSuffix "/"}},
             --persistent-path, /data,
-            --replication, {{ ternary "true" "false" (gt (int .Values.application.replicas) 1) }}
+            --replication, "{{ ternary "true" "false" (gt (int .Values.application.replicas) 1) }}"
           ]
           volumeMounts:
             - name: {{ .Release.Name }}-data
