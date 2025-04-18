@@ -17,7 +17,8 @@ import {
   Inject,
   UnauthorizedException,
   InternalServerErrorException,
-  Optional
+  Optional,
+  NotFoundException
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
@@ -56,7 +57,7 @@ export class IdentityController {
   }
 
   deleteIdentityFactor(id) {
-    this.identityFactors.delete(id);
+    return this.identityFactors.delete(id);
   }
 
   constructor(
@@ -187,9 +188,12 @@ export class IdentityController {
     )
   )
   async deleteFactor(@Param("id", OBJECT_ID) id: ObjectId) {
-    this.deleteIdentityFactor(id.toHexString());
-
+    const res = this.deleteIdentityFactor(id.toHexString());
     this.authFactor.unregister(id.toHexString());
+
+    if (!res) {
+      throw new NotFoundException(`Identity with ID ${id} not found`);
+    }
 
     await this.identityService.findOneAndUpdate({_id: id}, {$unset: {authFactor: ""}});
   }
@@ -355,7 +359,12 @@ export class IdentityController {
 
     return this.identityService
       .findOneAndUpdate({_id: id}, {$set: identity}, {returnDocument: ReturnDocument.AFTER})
-      .then(updatedIdentity => this.afterIdentityUpsert(updatedIdentity))
+      .then(updatedIdentity => {
+        if (!updatedIdentity) {
+          throw new NotFoundException(`Identity with ID ${id} not found`);
+        }
+        return this.afterIdentityUpsert(updatedIdentity);
+      })
       .catch(exception => {
         throw new BadRequestException(
           exception.code === 11000 ? "Identity already exists." : exception.message
@@ -374,7 +383,10 @@ export class IdentityController {
       return;
     }
 
-    return this.identityService.deleteOne({_id: id}).then(() => {
+    return this.identityService.deleteOne({_id: id}).then(res => {
+      if (!res) {
+        throw new NotFoundException(`Identity with ID ${id} not found`);
+      }
       if (this.authFactor.hasFactor(id.toHexString())) {
         this.authFactor.unregister(id.toHexString());
       }
@@ -386,7 +398,7 @@ export class IdentityController {
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:add"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
-    return this.identityService.findOneAndUpdate(
+    const res = await this.identityService.findOneAndUpdate(
       {
         _id: id
       },
@@ -398,6 +410,10 @@ export class IdentityController {
         projection: {password: 0}
       }
     );
+    if (!res) {
+      throw new NotFoundException(`Identity with ID ${id} not found`);
+    }
+    return res;
   }
 
   @UseInterceptors(activity(createIdentityActivity))
@@ -405,7 +421,7 @@ export class IdentityController {
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:remove"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
-    return this.identityService.findOneAndUpdate(
+    const res = await this.identityService.findOneAndUpdate(
       {
         _id: id
       },
@@ -417,5 +433,9 @@ export class IdentityController {
         projection: {password: 0}
       }
     );
+    if (!res) {
+      throw new NotFoundException(`Identity with ID ${id} not found`);
+    }
+    return res;
   }
 }
