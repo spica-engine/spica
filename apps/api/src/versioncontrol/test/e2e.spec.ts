@@ -14,6 +14,9 @@ import {VersionControlModule} from "@spica-server/versioncontrol";
 import {VC_REP_MANAGER} from "@spica-server/interface/versioncontrol";
 
 import os from "os";
+import fs from "fs";
+import {execSync} from "child_process";
+import path from "path";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50050";
 
@@ -167,6 +170,7 @@ describe("Versioning e2e", () => {
         "rebase",
         "remote",
         "reset",
+        "rm",
         "stash",
         "tag"
       ]);
@@ -370,6 +374,86 @@ describe("Versioning e2e", () => {
           "'bucket 3 inserted'",
           "'bucket 2 inserted'",
           "'first commit'"
+        ]);
+      });
+    });
+
+    describe("remote repo", () => {
+      const bareRepo = path.join(os.tmpdir(), "test-repo");
+
+      beforeEach(async () => {
+        fs.mkdirSync(bareRepo, {recursive: true});
+        execSync("git init --bare", {cwd: bareRepo});
+      });
+
+      afterEach(() => {
+        fs.rmSync(bareRepo, {recursive: true, force: true});
+      });
+
+      it("should show remote", async () => {
+        await req.post("/versioncontrol/commands/remote", {args: ["add", "origin", bareRepo]});
+        const res = await req.post("/versioncontrol/commands/remote");
+        expect(res.body.message).toEqual("origin\n");
+      });
+
+      it("should clean", async () => {
+        await insertBucket(getEmptyBucket());
+        await req.post("/versioncontrol/commands/add", {args: ["."]});
+        await req.post("/versioncontrol/commands/rm", {args: ["--cached", "-r", "bucket"]});
+
+        const res = await req.post("/versioncontrol/commands/clean", {args: ["-f", "-d"]});
+        expect(res.body.folders).toEqual(["bucket/"]);
+      });
+
+      it("should push", async () => {
+        await insertBucket(getEmptyBucket());
+        await commit("initial commit");
+
+        await req.post("/versioncontrol/commands/remote", {args: ["add", "origin", bareRepo]});
+        await req.post("/versioncontrol/commands/push", {args: ["origin", "master"]});
+
+        const res = await req.post("/versioncontrol/commands/log", {args: ["origin/master"]});
+        expect(res.body.all.map(c => c.message)).toEqual(["'initial commit'"]);
+      });
+
+      it("should fetch", async () => {
+        await insertBucket(getEmptyBucket());
+        await commit("initial commit");
+
+        await req.post("/versioncontrol/commands/remote", {args: ["add", "origin", bareRepo]});
+        await req.post("/versioncontrol/commands/push", {args: ["origin", "master"]});
+
+        await req.post("/versioncontrol/commands/branch", {args: ["-dr", "origin/master"]});
+
+        const res = await req.post("/versioncontrol/commands/branch");
+        expect(Object.keys(res.body.branches)).toEqual(["master"]);
+
+        await req.post("/versioncontrol/commands/fetch", {args: ["origin"]});
+
+        const updatedRes = await req.post("/versioncontrol/commands/branch");
+        expect(Object.keys(updatedRes.body.branches)).toEqual(["master", "remotes/origin/master"]);
+      });
+
+      it("should pull", async () => {
+        await insertBucket(getEmptyBucket());
+        await commit("initial commit");
+        await insertBucket(getEmptyBucket());
+        await commit("second commit");
+
+        await req.post("/versioncontrol/commands/remote", {args: ["add", "origin", bareRepo]});
+        await req.post("/versioncontrol/commands/push", {args: ["-u", "origin", "master"]});
+
+        await req.post("/versioncontrol/commands/reset", {args: ["--hard", "HEAD~1"]});
+
+        const log = await req.post("/versioncontrol/commands/log", {args: ["master"]});
+        expect(log.body.all.map(c => c.message)).toEqual(["'initial commit'"]);
+
+        await req.post("/versioncontrol/commands/pull");
+
+        const updatedLog = await req.post("/versioncontrol/commands/log", {args: ["master"]});
+        expect(updatedLog.body.all.map(c => c.message)).toEqual([
+          "'second commit'",
+          "'initial commit'"
         ]);
       });
     });
