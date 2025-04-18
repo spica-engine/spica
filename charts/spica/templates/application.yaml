@@ -71,9 +71,8 @@ spec:
               scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 5
-            timeoutSeconds: 2
-            failureThreshold: 3
-            successThreshold: 1   
+            timeoutSeconds: 5
+            failureThreshold: 6
           args: [
 {{if len .Values.application.args}}
 {{- range .Values.application.args }}
