@@ -4,6 +4,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Inject,
   Param,
   Post,
@@ -44,6 +46,7 @@ export class StrategyController {
 
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:strategy:delete"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.strategy.deleteOne({_id: id});
   }

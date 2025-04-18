@@ -11,7 +11,10 @@ import {
   UseInterceptors,
   Optional,
   Inject,
-  BadRequestException
+  BadRequestException,
+  NotFoundException,
+  HttpCode,
+  HttpStatus
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {NUMBER, DEFAULT, JSONP} from "@spica-server/core";
@@ -70,7 +73,7 @@ export class PolicyController {
   @UseInterceptors(activity(createPolicyActivity))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:update"))
-  replaceOne(
+  async replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/policy")) body: Policy
   ) {
@@ -80,12 +83,18 @@ export class PolicyController {
       const message = createDuplicatedActionsErrorMessage(duplicatedActionMaps);
       throw new BadRequestException(message);
     }
-    return this.policy.replaceOne({_id: id}, body);
+    const res = await this.policy.replaceOne({_id: id}, body);
+
+    if (!res) {
+      throw new NotFoundException(`Policy with ID ${id} not found`);
+    }
+    return res;
   }
 
   @UseInterceptors(activity(createPolicyActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:delete"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     if (this.apikeyFinalizer) {
       await this.apikeyFinalizer(id.toHexString());
@@ -95,6 +104,11 @@ export class PolicyController {
       await this.identityFinalizer(id.toHexString());
     }
 
-    return this.policy.deleteOne({_id: id});
+    const res = await this.policy.deleteOne({_id: id});
+
+    if (!res) {
+      throw new NotFoundException(`Policy with ID ${id} not found`);
+    }
+    return res;
   }
 }

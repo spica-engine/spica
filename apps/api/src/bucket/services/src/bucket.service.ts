@@ -1,4 +1,4 @@
-import {Inject, Injectable, Optional} from "@nestjs/common";
+import {Inject, Injectable, NotFoundException, Optional} from "@nestjs/common";
 import {Validator} from "@spica-server/core/schema";
 import {Default} from "@spica-server/interface/core";
 import {
@@ -122,6 +122,9 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
 
   async drop(id: string | ObjectId) {
     const schema = await super.findOneAndDelete({_id: new ObjectId(id)});
+    if (!schema) {
+      throw new NotFoundException(`Bucket with ID ${id} does not exist.`);
+    }
     await this.db.dropCollection(getBucketDataCollection(id));
     return schema;
   }
