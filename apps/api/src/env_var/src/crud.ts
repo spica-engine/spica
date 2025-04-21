@@ -2,8 +2,8 @@ import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {EnvVarService} from "../services";
 import {EnvVar} from "@spica-server/interface/env_var";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
-import {PaginationResponse} from "@spica-server/passport/identity";
 import {NotFoundException} from "@nestjs/common";
+import {PaginationResponse} from "@spica-server/interface/passport/identity";
 
 export async function find(
   evs: EnvVarService,
