@@ -9,7 +9,8 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  BadRequestException
+  BadRequestException,
+  NotFoundException
 } from "@nestjs/common";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {DashboardService} from "./dashboard.service";
@@ -44,20 +45,27 @@ export class DashboardController {
 
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("dashboard:update"))
-  update(
+  async update(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/dashboard"))
     dashboard: Dashboard
   ) {
-    return this.dashboardService.findOneAndReplace({_id: id}, dashboard, {
+    const res = await this.dashboardService.findOneAndReplace({_id: id}, dashboard, {
       returnDocument: ReturnDocument.AFTER
     });
+    if (!res) {
+      throw new NotFoundException(`Dashboard with ID ${id} not found`);
+    }
+    return res;
   }
 
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("dashboard:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.dashboardService.deleteOne({_id: id});
+  async delete(@Param("id", OBJECT_ID) id: ObjectId) {
+    const deletedCount = await this.dashboardService.deleteOne({_id: id});
+    if (!deletedCount) {
+      throw new NotFoundException(`Dashboard with ID ${id} not found`);
+    }
   }
 }
