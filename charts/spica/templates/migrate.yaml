@@ -12,7 +12,7 @@ metadata:
     app.kubernetes.io/part-of: {{ .Chart.Name }}
     app.kubernetes.io/managed-by: helm
   annotations:
-    helm.sh/hook: post-upgrade
+    helm.sh/hook: pre-upgrade
 spec:
   backoffLimit: 5
   template:
@@ -35,16 +35,6 @@ spec:
                 configMapKeyRef:
                   name: {{ .Release.Name }}-version
                   key: VERSION
-            - name: MONGODB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-database-root-credentials
-                  key: rootUsername
-            - name: MONGODB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-database-root-credentials
-                  key: rootPassword
       {{- if .Values.database.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.database.nodeSelector | indent 8 }}
