@@ -78,6 +78,9 @@ export async function replace(fs: FunctionService, engine: FunctionEngine, fn: F
   delete fn.language;
 
   const preFn = await fs.findOneAndUpdate({_id}, {$set: fn});
+  if (!preFn) {
+    throw new NotFoundException(`Couldn't find the function with id ${_id}`);
+  }
 
   fn._id = _id;
   const currFnEnvResolved = await findOne(fs, _id, {resolveEnvRelations: EnvRelation.Resolved});
@@ -233,7 +236,7 @@ export namespace environment {
     engine: FunctionEngine,
     envVarId: ObjectId
   ) {
-    await fs.findOneAndUpdate(
+    const res = await fs.findOneAndUpdate(
       {
         _id: fnId
       },
@@ -241,6 +244,9 @@ export namespace environment {
         $addToSet: {env_vars: envVarId}
       }
     );
+    if (!res) {
+      throw new NotFoundException(`Function with ID ${fnId} not found`);
+    }
 
     return reload(fs, fnId, engine);
   }
@@ -251,7 +257,7 @@ export namespace environment {
     engine: FunctionEngine,
     envVarId: ObjectId
   ) {
-    await fs.findOneAndUpdate(
+    const res = await fs.findOneAndUpdate(
       {
         _id: fnId
       },
@@ -259,6 +265,9 @@ export namespace environment {
         $pull: {env_vars: envVarId}
       }
     );
+    if (!res) {
+      throw new NotFoundException(`Function with ID ${fnId} not found`);
+    }
 
     return reload(fs, fnId, engine);
   }

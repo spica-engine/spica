@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Query,
   UseGuards
@@ -64,14 +65,20 @@ export class WebhookLogController {
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("webhook:logs:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.logService.deleteOne({_id: id});
+  async delete(@Param("id", OBJECT_ID) id: ObjectId) {
+    const deletedCount = await this.logService.deleteOne({_id: id});
+    if (!deletedCount) {
+      throw new NotFoundException(`Log with ID ${id} not found`);
+    }
   }
 
   @Delete()
   @UseGuards(AuthGuard(), ActionGuard("webhook:logs:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteMany(@Body(DEFAULT([]), ARRAY(value => new ObjectId(value))) ids: ObjectId[]) {
-    return this.logService.deleteMany({_id: {$in: ids}});
+  async deleteMany(@Body(DEFAULT([]), ARRAY(value => new ObjectId(value))) ids: ObjectId[]) {
+    const deletedCount = await this.logService.deleteMany({_id: {$in: ids}});
+    if (!deletedCount) {
+      throw new NotFoundException("No logs found with the provided IDs");
+    }
   }
 }
