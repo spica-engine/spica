@@ -30,7 +30,12 @@ import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/gua
 import os from "os";
 import {of, OperatorFunction} from "rxjs";
 import {catchError, finalize, last, map, tap} from "rxjs/operators";
-import {createFunctionActivity} from "./activity.resource";
+import {
+  createFunctionActivity,
+  createFunctionIndexActivity,
+  createFunctionDependencyActivity,
+  createFunctionEnvVarActivity
+} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "@spica-server/function/services";
 import {Options, FUNCTION_OPTIONS, EnvRelation, Function} from "@spica-server/interface/function";
@@ -205,6 +210,7 @@ export class FunctionController {
    * Also, it compiles the index to make it ready for execution.
    * @param id Identifier of the function
    */
+  @UseInterceptors(activity(createFunctionIndexActivity))
   @Post(":id/index")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
@@ -243,6 +249,7 @@ export class FunctionController {
    * @param progress When true, installation progress is reported.
    * @param id Identifier of the function
    */
+  @UseInterceptors(activity(createFunctionDependencyActivity))
   @Post(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
   @Header("X-Content-Type-Options", "nosniff")
@@ -262,6 +269,7 @@ export class FunctionController {
    * @param id Identifier of the function
    * @param name Name of the dependency to remove
    */
+  @UseInterceptors(activity(createFunctionDependencyActivity))
   @Delete(":id/dependencies/:name(*)")
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -278,6 +286,7 @@ export class FunctionController {
    * @param id identifier of the function.
    * @param envVarId identifier of the environment variable. Example: `5f31002e4a51a68d6fec4d3f`
    */
+  @UseInterceptors(activity(createFunctionEnvVarActivity))
   @Put(":id/env-var/:envVarId")
   @UseGuards(AuthGuard(), ActionGuard("function:env-var:inject"))
   async injectEnvironmentVariable(
@@ -292,6 +301,7 @@ export class FunctionController {
    * @param id identifier of the function.
    * @param envVarId identifier of the environment variable. Example: `5f31002e4a51a68d6fec4d3f`
    */
+  @UseInterceptors(activity(createFunctionEnvVarActivity))
   @Delete(":id/env-var/:envVarId")
   @UseGuards(AuthGuard(), ActionGuard("function:env-var:eject"))
   @HttpCode(HttpStatus.NO_CONTENT)
