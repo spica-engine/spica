@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package RabbitMQ;
+
+message Request {
+    string id = 1;
+}
+
+message Response {
+    string id = 1;
+    string result = 2;
+}
+
+service Queue {
+    rpc pop(Request) returns (Response);
+}
