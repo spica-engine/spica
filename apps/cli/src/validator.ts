@@ -11,7 +11,14 @@ export function projectName(input: string): string {
   return input;
 }
 
-export const availableSyncModules = ["bucket", "function", "bucket-data", "apikey", "policy"];
+export const availableSyncModules = [
+  "bucket",
+  "function",
+  "bucket-data",
+  "apikey",
+  "policy",
+  "env-var"
+];
 export function validateSyncModules(input: string): string {
   const moduleNames = input.split(",").map(m => m.trim());
 

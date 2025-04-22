@@ -18,12 +18,10 @@
       "type": "string",
       "description": "Description of the function"
     },
-    "env": {
-      "type": "object",
-      "patternProperties": {
-        "": {"type": "string"}
-      },
-      "description": "Environment variables that will be accesible globally in the function"
+    "env_vars": {
+      "type": "array",
+      "description": "Environment variables that will be accesible globally in the function",
+      "items": {"type": "string"}
     },
     "memoryLimit": {
       "type": "number",

@@ -41,34 +41,34 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
   });
 }
 
-export function get(id: string): Promise<Bucket> {
+export function get(id: string, headers?: object): Promise<Bucket> {
   checkInitialized(authorization);
 
-  return service.get<Bucket>(`bucket/${id}`);
+  return service.get<Bucket>(`bucket/${id}`, {headers});
 }
 
-export function getAll(): Promise<Bucket[]> {
+export function getAll(headers?: object): Promise<Bucket[]> {
   checkInitialized(authorization);
 
-  return service.get<Bucket[]>("bucket");
+  return service.get<Bucket[]>("bucket", {headers});
 }
 
-export function insert(bucket: Bucket): Promise<Bucket> {
+export function insert(bucket: Bucket, headers?: object): Promise<Bucket> {
   checkInitialized(authorization);
 
-  return service.post<Bucket>("bucket", bucket);
+  return service.post<Bucket>("bucket", bucket, {headers});
 }
 
-export function update(id: string, bucket: Bucket): Promise<Bucket> {
+export function update(id: string, bucket: Bucket, headers?: object): Promise<Bucket> {
   checkInitialized(authorization);
 
-  return service.put<Bucket>(`bucket/${id}`, bucket);
+  return service.put<Bucket>(`bucket/${id}`, bucket, {headers});
 }
 
-export function remove(id: string): Promise<any> {
+export function remove(id: string, headers?: object): Promise<any> {
   checkInitialized(authorization);
 
-  return service.delete(`bucket/${id}`);
+  return service.delete(`bucket/${id}`, {headers});
 }
 
 export namespace data {
@@ -117,50 +117,78 @@ export namespace data {
     });
   }
 
-  export function insert<T>(bucketId: string, document: Omit<T, "_id">): Promise<T> {
+  export function insert<T>(
+    bucketId: string,
+    document: Omit<T, "_id">,
+    headers?: object
+  ): Promise<T> {
     checkInitialized(authorization);
 
-    return service.post<T>(`bucket/${bucketId}/data`, document);
+    return service.post<T>(`bucket/${bucketId}/data`, document, {headers});
   }
 
-  export function update<T>(bucketId: string, documentId: string, document: T): Promise<T> {
+  export function update<T>(
+    bucketId: string,
+    documentId: string,
+    document: T,
+    headers?: object
+  ): Promise<T> {
     checkInitialized(authorization);
 
-    return service.put<T>(`bucket/${bucketId}/data/${documentId}`, document);
+    return service.put<T>(`bucket/${bucketId}/data/${documentId}`, document, {headers});
   }
 
   export function patch(
     bucketId: string,
     documentId: string,
-    document: Partial<BucketDocument>
+    document: Partial<BucketDocument>,
+    headers?: object
   ): Promise<any> {
     checkInitialized(authorization);
 
-    return service.patch(`bucket/${bucketId}/data/${documentId}`, document);
+    return service.patch(`bucket/${bucketId}/data/${documentId}`, document, {headers});
   }
 
-  export function remove(bucketId: string, documentId: string): Promise<any> {
+  export function remove(bucketId: string, documentId: string, headers?: object): Promise<any> {
     checkInitialized(authorization);
 
-    return service.delete(`bucket/${bucketId}/data/${documentId}`);
+    return service.delete(`bucket/${bucketId}/data/${documentId}`, {headers});
   }
 
   export namespace realtime {
+    /**
+     * @param {Object} queryParams - Query params.
+     * * @param {string[] | boolean} queryParams.relation - Resolves relation of document(s), but increases the response time.
+     */
     export function get<T>(
       bucketId: string,
       documentId: string,
-      messageCallback?: (res: {status: number; message: string}) => any
+      messageCallback?: (res: {status: number; message: string}) => any,
+      queryParams: object = {}
     ): RealtimeConnectionOne<T> {
       checkInitialized(authorization);
+
+      const relation = queryParams["relation"];
 
       const fullUrl = buildUrl(`${wsUrl}/${bucketId}/data`, {
         filter: `document._id=="${documentId}"`,
         Authorization: authorization
       });
 
-      return getWsObs<T>(fullUrl.toString(), undefined, documentId, messageCallback);
+      return getWsObs<T>(
+        fullUrl.toString(),
+        undefined,
+        relation,
+        bucketId,
+        documentId,
+        messageCallback
+      );
     }
 
+    /**
+     * @param {Object} queryParams - Query params.
+     * * @param {string[] | boolean} queryParams.relation - Resolves relation of document(s), but increases the response time.
+     */
     export function getAll<T>(
       bucketId: string,
       queryParams: object = {},
@@ -169,13 +197,14 @@ export namespace data {
       checkInitialized(authorization);
 
       const sort = queryParams["sort"];
+      const relation = queryParams["relation"];
 
       const fullUrl = buildUrl(`${wsUrl}/${bucketId}/data`, {
         ...queryParams,
         Authorization: authorization
       });
 
-      return getWsObs<T>(fullUrl.toString(), sort, undefined, messageCallback);
+      return getWsObs<T>(fullUrl.toString(), sort, relation, bucketId, undefined, messageCallback);
     }
   }
 }

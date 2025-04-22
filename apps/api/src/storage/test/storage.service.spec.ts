@@ -1,10 +1,9 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {StorageService} from "@spica-server/storage";
-import {StorageObject} from "@spica-server/storage/src/body";
 import {Default} from "@spica-server/storage/src/strategy/default";
 import {Strategy} from "@spica-server/storage/src/strategy/strategy";
-import {STORAGE_OPTIONS} from "@spica-server/storage/src/options";
+import {StorageObject, STORAGE_OPTIONS} from "@spica-server/interface/storage";
 
 describe("Storage Service", () => {
   let module: TestingModule;
@@ -45,7 +44,10 @@ describe("Storage Service", () => {
     strategyInstance = module.get(Strategy);
   });
 
-  afterEach(() => module.close());
+  afterEach(() => {
+    storageService.deleteMany({});
+    module.close();
+  });
 
   it("should add storage objects", async () => {
     await expect(
@@ -73,10 +75,8 @@ describe("Storage Service", () => {
   });
 
   it("should not insert storage object with an already existing name", async () => {
-    let error;
-
-    try {
-      await storageService.insert([
+    await storageService
+      .insert([
         {
           name: "my_obj",
           content: {
@@ -91,13 +91,11 @@ describe("Storage Service", () => {
             type: "1"
           }
         }
-      ]);
-    } catch (e) {
-      error = e;
-    }
-
-    expect(error?.response?.statusCode).toBe(400);
-    expect(error?.response?.message).toBe("An object with this name already exists.");
+      ])
+      .catch(error => {
+        expect(error.response.statusCode).toBe(400);
+        expect(error.response.message).toBe("An object with this name already exists.");
+      });
   });
 
   it("should delete failed object from database", async () => {

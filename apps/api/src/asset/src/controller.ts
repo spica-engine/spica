@@ -17,18 +17,21 @@ import {
 } from "@nestjs/common";
 import {AssetService} from "./service";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
-import {Asset, Config, ExportMeta, Resource} from "@spica-server/interface/asset";
+import {
+  Asset,
+  Config,
+  ExportMeta,
+  Resource,
+  ASSET_REP_MANAGER,
+  IInstallationStrategy,
+  InstallationChanges,
+  INSTALLATION_STRATEGIES
+} from "@spica-server/interface/asset";
 import {exporters, operators, validators} from "./registration";
 import {putConfiguration} from "./helpers";
 import {BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
-import {
-  ASSET_REP_MANAGER,
-  IInstallationStrategy,
-  InstallationChanges,
-  INSTALLATION_STRATEGIES
-} from "./interface";
 import {AssetRepManager} from "./representative";
 import {createReadStream} from "fs";
 import {OptionalId} from "@spica-server/database";
@@ -175,6 +178,10 @@ export class AssetController {
     @Query("type") type: "soft" | "hard" = "soft"
   ) {
     const asset = await this.service.findOne({_id: id});
+
+    if (!asset) {
+      throw new NotFoundException(`Asset with ID ${id} not found`);
+    }
 
     if (asset.status != "downloaded") {
       await this.operate(

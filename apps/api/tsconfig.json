@@ -6,6 +6,9 @@
       "path": "./src/activity"
     },
     {
+      "path": "./src/batch"
+    },
+    {
       "path": "./src/bucket"
     },
     {
@@ -16,6 +19,9 @@
     },
     {
       "path": "./src/passport"
+    },
+    {
+      "path": "./src/env_var"
     },
     {
       "path": "./src/preference"

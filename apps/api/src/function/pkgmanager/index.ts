@@ -1,1 +1,1 @@
-export {Package, PackageManager} from "./src/pkgmanager";
+export {PackageManager, DelegatePkgManager} from "./src/pkgmanager";

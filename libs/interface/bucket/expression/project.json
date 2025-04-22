@@ -1,0 +1,5 @@
+{
+  "name": "interface/bucket/expression",
+  "sourceRoot": "libs/interface/bucket/expression/src",
+  "projectType": "library"
+}

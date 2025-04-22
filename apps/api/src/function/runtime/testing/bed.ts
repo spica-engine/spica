@@ -1,10 +1,11 @@
+import {Compilation} from "@spica-server/interface/function/compiler";
 import fs from "fs";
 import path from "path";
 
 export class FunctionTestBed {
-  static initialize(index: string, entrypoint = "index.ts"): string {
+  static initialize(index: string, compilation: Compilation): string {
     const tmpdir = fs.mkdtempSync(path.join(process.env.TEST_TMPDIR, "fn"));
-    fs.writeFileSync(path.join(tmpdir, entrypoint), index);
+    fs.writeFileSync(path.join(tmpdir, compilation.entrypoints.build), index);
     fs.writeFileSync(
       path.join(tmpdir, "package.json"),
       `{
@@ -14,7 +15,7 @@ export class FunctionTestBed {
           "private": true,
           "keywords": ["spica", "function", "node.js"],
           "license": "UNLICENSED",
-          "type": "module"
+          "main": "${path.join(".", compilation.outDir, compilation.entrypoints.runtime)}"
       }`
     );
 

@@ -5,7 +5,7 @@ import {event} from "@spica-server/function/queue/proto";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {PassThrough} from "stream";
-import {WorkerState} from "@spica-server/function/scheduler";
+import {WorkerState} from "@spica-server/interface/function/scheduler";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5687";
 process.env.DISABLE_LOGGER = "true";
@@ -55,7 +55,11 @@ describe("Scheduler", () => {
 
   const compilation = {
     cwd: undefined,
-    entrypoint: "index.js"
+    entrypoints: {
+      build: "index.mjs",
+      runtime: "index.mjs"
+    },
+    outDir: ".build"
   };
 
   function findWorkerFromEventId(evId: string) {
@@ -106,10 +110,7 @@ describe("Scheduler", () => {
 
     await app.init();
 
-    compilation.cwd = FunctionTestBed.initialize(
-      `export default function() {}`,
-      compilation.entrypoint
-    );
+    compilation.cwd = FunctionTestBed.initialize(`export default function() {}`, compilation);
     await scheduler.languages.get("javascript").compile(compilation);
 
     triggerGotWorker();

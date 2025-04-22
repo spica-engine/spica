@@ -1,6 +1,6 @@
 import {ObjectId} from "@spica-server/database";
 import {FunctionService} from "@spica-server/function/services";
-import {SyncProvider} from "@spica-server/versioncontrol";
+import {SyncProvider} from "@spica-server/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
 import * as CRUD from "../crud";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
@@ -43,7 +43,7 @@ export function indexSyncProviders(
 
   const readAll = async () => {
     const resourceNameValidator = str => ObjectId.isValid(str);
-    const files = await manager.read(module, resourceNameValidator, ["index.js", "index.ts"]);
+    const files = await manager.read(module, resourceNameValidator, ["index.mjs", "index.ts"]);
     return files.map(file => {
       return {_id: file._id, index: file.contents.index};
     });
@@ -65,6 +65,6 @@ export function indexSyncProviders(
     name,
     document,
     representative,
-    parents: 1
+    parents: 2
   };
 }

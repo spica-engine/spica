@@ -1,6 +1,7 @@
 import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
 import {Database, event, Firehose, Http} from "@spica-server/function/queue/proto";
-import {Compilation, Language} from "@spica-server/function/compiler";
+import {Language} from "@spica-server/function/compiler";
+import {Compilation} from "@spica-server/interface/function/compiler";
 import {Javascript} from "@spica-server/function/compiler/javascript";
 import {Typescript} from "@spica-server/function/compiler/typescript";
 import {Node} from "@spica-server/function/scheduler";
@@ -21,7 +22,8 @@ describe("Entrypoint", () => {
   let popSpy: jest.Mock;
   let compilation: Compilation = {
     cwd: undefined,
-    entrypoint: undefined
+    entrypoints: {build: undefined, runtime: undefined},
+    outDir: ".build"
   };
   let id = 0;
 
@@ -32,8 +34,8 @@ describe("Entrypoint", () => {
   let stream: PassThrough;
 
   function initializeFn(index: string) {
-    compilation.entrypoint = `index.${language.description.extension}`;
-    compilation.cwd = FunctionTestBed.initialize(index, compilation.entrypoint);
+    compilation.entrypoints = language.description.entrypoints;
+    compilation.cwd = FunctionTestBed.initialize(index, compilation);
     return language.compile(compilation);
   }
 

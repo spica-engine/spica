@@ -20,7 +20,8 @@ import {
   Next,
   Optional
 } from "@nestjs/common";
-import {Identity, IdentityService, LoginCredentials} from "@spica-server/passport/identity";
+import {IdentityService} from "@spica-server/passport/identity";
+import {Identity, LoginCredentials} from "@spica-server/interface/passport/identity";
 import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
 import {UrlEncodedBodyParser} from "./body";
@@ -28,10 +29,10 @@ import {StrategyService} from "./strategy/services/strategy.service";
 import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {STRATEGIES} from "./options";
-import {StrategyTypeServices} from "./strategy/interface";
+import {STRATEGIES, StrategyTypeServices} from "@spica-server/interface/passport";
 import {AuthFactor} from "@spica-server/passport/authfactor";
-import {ClassCommander, CommandType} from "@spica-server/replication";
+import {ClassCommander} from "@spica-server/replication";
+import {CommandType} from "@spica-server/interface/replication";
 
 /**
  * @name passport
@@ -271,7 +272,7 @@ export class PassportController {
       throw new BadRequestException("Strategy does not exist.");
     }
 
-    const service = this.strategyTypes.find(strategy.type);
+    const service = this.strategyTypes.find(strategy.type, strategy.options.idp);
 
     const login = await service.getLoginUrl(strategy);
 
@@ -313,7 +314,7 @@ export class PassportController {
       throw new BadRequestException("Strategy does not exist.");
     }
 
-    const service = this.strategyTypes.find(strategy.type);
+    const service = this.strategyTypes.find(strategy.type, strategy.options.idp);
 
     const observer = this.assertObservers.get(stateId);
 

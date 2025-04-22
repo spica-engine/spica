@@ -1,31 +1,24 @@
 import {
   AggregationCursor,
   Collection,
-  CollectionOptions,
   Filter,
   FindOptions,
   FindOneAndDeleteOptions,
   FindOneAndReplaceOptions,
   FindOneAndUpdateOptions,
   InsertOneResult,
-  InsertManyResult,
   ObjectId,
   UpdateFilter,
   UpdateOptions,
   OptionalUnlessRequiredId,
   WithId,
   Document,
-  AggregateOptions
+  AggregateOptions,
+  IndexSpecification,
+  CreateIndexesOptions
 } from "mongodb";
 import {DatabaseService} from "./database.service";
-
-export interface InitializeOptions {
-  entryLimit?: number;
-  collectionOptions?: CollectionOptions;
-  afterInit?: (...args: any[]) => any;
-}
-
-export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
+import {InitializeOptions, OptionalId} from "@spica-server/interface/database";
 
 export class _MixinCollection<T> {
   _coll: Collection<T>;
@@ -179,6 +172,10 @@ export class _MixinCollection<T> {
           });
         }
       });
+  }
+
+  createIndex(indexSpec: IndexSpecification, options?: CreateIndexesOptions) {
+    this._coll.createIndex(indexSpec, options);
   }
 
   collection(collection: string, options?: InitializeOptions) {

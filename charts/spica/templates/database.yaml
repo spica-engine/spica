@@ -82,7 +82,7 @@ spec:
             - "-c"
           args: 
             - |
-              mongod --replSet rs0 --bind_ip_all --auth --keyFile ./etc/secrets/replicaAuthKey
+              mongod --replSet rs0 --bind_ip_all --auth --keyFile ./etc/secrets/replicaAuthKey  --setParameter logLevel={{ .Values.database.logLevel }}
           ports:
             - containerPort: 27017
           {{- if eq (int .Values.database.replicas) 1}}

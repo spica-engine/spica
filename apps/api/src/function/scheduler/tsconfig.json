@@ -12,6 +12,9 @@
       "path": "../pkgmanager/node"
     },
     {
+      "path": "../pkgmanager/local"
+    },
+    {
       "path": "../compiler/javascript"
     },
     {
@@ -19,6 +22,9 @@
     },
     {
       "path": "../enqueuer"
+    },
+    {
+      "path": "../../../../../libs/interface/function/scheduler"
     }
   ]
 }

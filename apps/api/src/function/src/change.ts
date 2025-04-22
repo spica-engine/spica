@@ -1,7 +1,17 @@
-import {Triggers, Function, Environment} from "@spica-server/interface/function";
 import {diff} from "@spica-server/core/differ";
+import {EnvVar} from "@spica-server/interface/env_var";
+import {
+  Triggers,
+  Function,
+  ChangeKind,
+  TargetChange,
+  EnvRelation
+} from "@spica-server/interface/function";
 
-export function changesFromTriggers(previousFn: Function, currentFn: Function) {
+export function changesFromTriggers(
+  previousFn: Function<EnvRelation.Resolved | EnvRelation.NotResolved>,
+  currentFn: Function<EnvRelation.Resolved>
+) {
   const targetChanges: TargetChange[] = [];
 
   const insertedTriggers: Triggers = {};
@@ -53,11 +63,24 @@ export function changesFromTriggers(previousFn: Function, currentFn: Function) {
   return targetChanges;
 }
 
-export function hasContextChange(previousFn: Function, currentFn: Function) {
-  return diff(previousFn.env, currentFn.env).length || previousFn.timeout != currentFn.timeout;
+export function hasContextChange(
+  previousFn: Function<EnvRelation.NotResolved>,
+  currentFn: Function<EnvRelation.NotResolved>
+) {
+  return (
+    diff(previousFn.env_vars, currentFn.env_vars).length > 0 ||
+    previousFn.timeout != currentFn.timeout
+  );
 }
 
-export function createTargetChanges(fn: Function, changeKind: ChangeKind): TargetChange[] {
+export function createTargetChanges<CK extends ChangeKind>(
+  fn: Function<
+    CK extends ChangeKind.Removed
+      ? EnvRelation.Resolved | EnvRelation.NotResolved
+      : EnvRelation.Resolved
+  >,
+  changeKind: CK
+): TargetChange[] {
   const changes: TargetChange[] = [];
   for (const [handler, trigger] of Object.entries(fn.triggers)) {
     const change: TargetChange = {
@@ -66,37 +89,25 @@ export function createTargetChanges(fn: Function, changeKind: ChangeKind): Targe
       type: trigger.type,
       target: {
         id: fn._id.toString(),
-        handler,
-        context: {
-          env: fn.env,
-          timeout: fn.timeout
-        }
+        handler
       }
     };
+
+    if (changeKind != ChangeKind.Removed) {
+      change.target.context = {
+        env: normalizeEnvVars(fn.env_vars as EnvVar[]),
+        timeout: fn.timeout
+      };
+    }
 
     changes.push(change);
   }
   return changes;
 }
 
-export enum ChangeKind {
-  Added = 0,
-  Removed = 1,
-  Updated = 2
-}
-
-export interface Context {
-  timeout: number;
-  env: Environment;
-}
-
-export interface TargetChange {
-  kind: ChangeKind;
-  type?: string;
-  options?: unknown;
-  target: {
-    id: string;
-    handler?: string;
-    context?: Context;
-  };
+function normalizeEnvVars(envVars: EnvVar[]) {
+  return (envVars || []).reduce((acc, curr) => {
+    acc[curr.key] = curr.value;
+    return acc;
+  }, {});
 }

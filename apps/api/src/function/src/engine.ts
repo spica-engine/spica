@@ -1,32 +1,38 @@
 import {Inject, Injectable, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {DatabaseService, MongoClient} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
-import {Package, PackageManager} from "@spica-server/function/pkgmanager";
+import {DelegatePkgManager} from "@spica-server/function/pkgmanager";
 import {event} from "@spica-server/function/queue/proto";
 import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
 import {rimraf} from "rimraf";
-import {Observable, Subject} from "rxjs";
-import util from "util";
+import {Observable} from "rxjs";
+import {FunctionService} from "@spica-server/function/services";
 import {
-  FunctionService,
-  FUNCTION_OPTIONS,
+  CollectionSlug,
   Options,
+  FUNCTION_OPTIONS,
   COLL_SLUG,
-  CollectionSlug
-} from "@spica-server/function/services";
-import {Function} from "@spica-server/interface/function";
+  Function,
+  ChangeKind,
+  TargetChange,
+  SCHEMA,
+  SchemaWithName,
+  EnvRelation
+} from "@spica-server/interface/function";
 
-import {ChangeKind, TargetChange} from "./change";
-import {SCHEMA, SchemaWithName} from "./schema/schema";
 import {createTargetChanges} from "./change";
 
 import HttpSchema from "./schema/http.json" with {type: "json"};
 import ScheduleSchema from "./schema/schedule.json" with {type: "json"};
 import FirehoseSchema from "./schema/firehose.json" with {type: "json"};
 import SystemSchema from "./schema/system.json" with {type: "json"};
-import {ClassCommander, CommandType} from "@spica-server/replication";
+import * as CRUD from "./crud";
+import {ClassCommander} from "@spica-server/replication";
+import {CommandType} from "@spica-server/interface/replication";
+import {Package} from "@spica-server/interface/function/pkgmanager";
+import {Language} from "../compiler";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
@@ -38,6 +44,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   ]);
   readonly runSchemas = new Map<string, JSONSchema7>();
   private cmdSubs: {unsubscribe: () => void};
+  private watchEnvSubs: {unsubscribe: () => void};
 
   constructor(
     private fs: FunctionService,
@@ -53,6 +60,19 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     }
 
     this.schemas.set("database", () => getDatabaseSchema(this.db, collSlug));
+
+    this.watchEnvSubs = this.fs.watchFunctionsForEnvChanges().subscribe({
+      next: ({fns, envVarId, operationType}) =>
+        fns.map(fn =>
+          operationType == "delete"
+            ? CRUD.environment.eject(this.fs, fn._id, this, envVarId)
+            : CRUD.environment.reload(this.fs, fn._id, this)
+        ),
+      error: err =>
+        console.error(
+          `Error received on listening functions for environment variable changes. Reason: ${JSON.stringify(err)}`
+        )
+    });
   }
 
   onModuleInit() {
@@ -73,7 +93,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   private updateTriggers(kind: ChangeKind) {
-    return this.fs.find().then(fns => {
+    return CRUD.find(this.fs, this, {resolveEnvRelations: EnvRelation.Resolved}).then(fns => {
       const targetChanges: TargetChange[] = [];
       for (const fn of fns) {
         targetChanges.push(...createTargetChanges(fn, kind));
@@ -86,6 +106,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     if (this.commander) {
       this.cmdSubs.unsubscribe();
     }
+    this.watchEnvSubs.unsubscribe();
     return this.unregisterTriggers();
   }
 
@@ -105,27 +126,29 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private getDefaultPackageManager(): PackageManager {
+  private getDefaultPackageManager(): DelegatePkgManager {
     return this.scheduler.pkgmanagers.get("node");
   }
 
+  private getFunctionRoot(fn: Function) {
+    return path.join(this.options.root, fn._id.toString());
+  }
+
   getPackages(fn: Function): Promise<Package[]> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.getDefaultPackageManager().ls(functionRoot, true);
+    return this.getDefaultPackageManager().ls(this.getFunctionRoot(fn), true);
   }
 
   addPackage(fn: Function, qualifiedNames: string | string[]): Observable<number> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.getDefaultPackageManager().install(functionRoot, qualifiedNames);
+    return this.getDefaultPackageManager().install(this.getFunctionRoot(fn), qualifiedNames);
   }
 
   removePackage(fn: Function, name: string): Promise<void> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.getDefaultPackageManager().uninstall(functionRoot, name);
+    return this.getDefaultPackageManager().uninstall(this.getFunctionRoot(fn), name);
   }
 
   async createFunction(fn: Function) {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
+    const functionRoot = this.getFunctionRoot(fn);
+    const functionLanguage = this.getFunctionLanguage(fn);
     await fs.promises.mkdir(functionRoot, {recursive: true});
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
@@ -135,7 +158,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       private: true,
       keywords: ["spica", "function", "node.js"],
       license: "UNLICENSED",
-      type: "module"
+      main: path.join(".", this.options.outDir, functionLanguage.description.entrypoints.runtime)
     };
 
     return fs.promises.writeFile(
@@ -145,33 +168,29 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   deleteFunction(fn: Function) {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return rimraf(functionRoot);
+    return rimraf(this.getFunctionRoot(fn));
   }
 
   compile(fn: Function) {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    const language = this.scheduler.languages.get(fn.language);
+    const language = this.getFunctionLanguage(fn);
     return language.compile({
-      cwd: functionRoot,
-      entrypoint: `index.${language.description.extension}`
+      cwd: this.getFunctionRoot(fn),
+      outDir: this.options.outDir,
+      entrypoints: language.description.entrypoints
     });
   }
 
   update(fn: Function, index: string): Promise<void> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    const language = this.scheduler.languages.get(fn.language);
-    return fs.promises.writeFile(
-      path.join(functionRoot, `index.${language.description.extension}`),
-      index
-    );
+    const filePath = this.getFunctionBuildEntrypoint(fn);
+
+    return fs.promises.writeFile(filePath, index);
   }
 
   read(fn: Function): Promise<string> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    const language = this.scheduler.languages.get(fn.language);
+    const filePath = this.getFunctionBuildEntrypoint(fn);
+
     return fs.promises
-      .readFile(path.join(functionRoot, `index.${language.description.extension}`))
+      .readFile(filePath)
       .then(b => b.toString())
       .catch(e => {
         if (e.code == "ENOENT") {
@@ -238,6 +257,15 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       });
       enqueuer.unsubscribe(target);
     }
+  }
+
+  private getFunctionLanguage(fn: Function) {
+    return this.scheduler.languages.get(fn.language);
+  }
+
+  getFunctionBuildEntrypoint(fn: Function) {
+    const language = this.getFunctionLanguage(fn);
+    return path.join(this.getFunctionRoot(fn), language.description.entrypoints.build);
   }
 }
 

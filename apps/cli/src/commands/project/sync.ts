@@ -47,7 +47,8 @@ async function sync({
     FunctionSynchronizer,
     BucketSynchronizer,
     ApikeySynchronizer,
-    PolicySynchronizer
+    PolicySynchronizer,
+    EnvironmentVariableSynchronizer
   ];
   const synchronizers = [];
 
@@ -81,7 +82,12 @@ async function sync({
           moduleName: synchronizer.getDisplayableModuleName()
         });
       } else {
-        await synchronizer.synchronize().catch(e => Promise.reject(returnErrorMessage(e)));
+        try {
+          await synchronizer.synchronize();
+        } catch (error) {
+          Promise.reject(returnErrorMessage(error));
+        }
+
         console.log(
           `\n${synchronizer.getDisplayableModuleName()} synchronization has been completed!`.toUpperCase()
         );
@@ -785,12 +791,16 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
           objectName: this.getDisplayableModuleName() + " " + apikey.name,
           e
         });
+
+      const policies = [...apikey.policies];
+      delete apikey.policies;
+
       const apikeyInsertPromise = this.targetService
         .post("passport/apikey", apikey)
         .catch(e => insertRejectionHandler(e));
 
       return apikeyInsertPromise.then(() => {
-        const policyAttachPromises = apikey.policies.map(policy =>
+        const policyAttachPromises = policies.map(policy =>
           this.targetService
             .put(`passport/apikey/${apikey._id}/policy/${policy}`)
             .catch(e => insertRejectionHandler(e))
@@ -809,6 +819,9 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
         });
       };
 
+      const policies = [...apikey.policies];
+      delete apikey.policies;
+
       // detaching all policies then attaching policies will cause sending a lot of requests, instead we will remove apikey
       const apikeyDeletePromise = this.targetService
         .delete(`passport/apikey/${apikey._id}`)
@@ -818,7 +831,7 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
       );
 
       return apikeyInsertPromise.then(() => {
-        const policyAttachPromises = apikey.policies.map(policy =>
+        const policyAttachPromises = policies.map(policy =>
           this.targetService
             .put(`passport/apikey/${apikey._id}/policy/${policy}`)
             .catch(e => rejectionHandler(e))
@@ -896,28 +909,30 @@ export class PolicySynchronizer implements ModuleSynchronizer {
 
   async synchronize() {
     console.log();
-    const insertPromiseFactories = this.insertions.map(
-      policy => () =>
-        this.targetService.post("passport/policy", policy).catch(e =>
-          handleRejection({
-            action: "insert",
-            objectName: this.getDisplayableModuleName() + " " + policy.name,
-            e
-          })
-        )
-    );
+    const insertPromiseFactories = this.insertions.map(policy => () => {
+      delete policy.system;
+
+      return this.targetService.post("passport/policy", policy).catch(e =>
+        handleRejection({
+          action: "insert",
+          objectName: this.getDisplayableModuleName() + " " + policy.name,
+          e
+        })
+      );
+    });
     await spinUntilPromiseEnd(insertPromiseFactories, "Inserting policies to the target instance");
 
-    const updatePromiseFactories = this.updations.map(
-      policy => () =>
-        this.targetService.put(`passport/policy/${policy._id}`, policy).catch(e =>
-          handleRejection({
-            action: "update",
-            objectName: this.getDisplayableModuleName() + " " + policy.name,
-            e
-          })
-        )
-    );
+    const updatePromiseFactories = this.updations.map(policy => () => {
+      delete policy.system;
+
+      return this.targetService.put(`passport/policy/${policy._id}`, policy).catch(e =>
+        handleRejection({
+          action: "update",
+          objectName: this.getDisplayableModuleName() + " " + policy.name,
+          e
+        })
+      );
+    });
     await spinUntilPromiseEnd(updatePromiseFactories, "Updating policies on the target instance");
 
     const deletePromiseFactories = this.deletions.map(
@@ -931,6 +946,92 @@ export class PolicySynchronizer implements ModuleSynchronizer {
         )
     );
     await spinUntilPromiseEnd(deletePromiseFactories, "Deleting policies from the target instance");
+  }
+
+  getDisplayableModuleName(): string {
+    return this.moduleName;
+  }
+}
+
+export class EnvironmentVariableSynchronizer implements ModuleSynchronizer {
+  moduleName = "env-var";
+  primaryField = "key";
+
+  insertions = [];
+  updations = [];
+  deletions = [];
+
+  constructor(
+    private sourceService: httpService.Client,
+    private targetService: httpService.Client
+  ) {}
+
+  initialize() {
+    return Promise.resolve([]);
+  }
+
+  async analyze() {
+    console.log();
+    const sourceEnvVars = await spin<any>({
+      text: "Fetching env vars from source instance",
+      op: () => this.sourceService.get("env-var")
+    });
+
+    const targetEnvVars = await spin<any>({
+      text: "Fetching env vars from target instance",
+      op: () => this.targetService.get("env-var")
+    });
+
+    const decider = new ResourceGroupComparisor(sourceEnvVars, targetEnvVars);
+
+    this.insertions = decider.insertions();
+    this.updations = decider.updations();
+    this.deletions = decider.deletions();
+
+    return {
+      insertions: this.insertions,
+      updations: this.updations,
+      deletions: this.deletions
+    };
+  }
+
+  async synchronize() {
+    console.log();
+    const insertPromiseFactories = this.insertions.map(
+      envVar => () =>
+        this.targetService.post("env-var", envVar).catch(e =>
+          handleRejection({
+            action: "insert",
+            objectName: this.getDisplayableModuleName() + " " + envVar.key,
+            e
+          })
+        )
+    );
+    await spinUntilPromiseEnd(insertPromiseFactories, "Inserting env vars to the target instance");
+
+    const updatePromiseFactories = this.updations.map(
+      envVar => () =>
+        this.targetService.put(`env-var/${envVar._id}`, envVar).catch(e =>
+          handleRejection({
+            action: "update",
+            objectName: this.getDisplayableModuleName() + " " + envVar.key,
+            e
+          })
+        )
+    );
+    await spinUntilPromiseEnd(updatePromiseFactories, "Updating env vars on the target instance");
+
+    const deletePromiseFactories = this.deletions.map(
+      envVar => () =>
+        this.targetService.delete(`env-var/${envVar._id}`).catch(e =>
+          handleRejection({
+            action: "delete",
+            objectName: envVar.key,
+            e
+          })
+        )
+    );
+    await spinUntilPromiseEnd(deletePromiseFactories, "Deleting env vars from the target instance");
   }
 
   getDisplayableModuleName(): string {

@@ -10,7 +10,8 @@ import {FunctionModule} from "@spica-server/function";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {RepresentativeManager} from "@spica-server/representative";
-import {VC_REP_MANAGER, VersionControlModule} from "@spica-server/versioncontrol";
+import {VersionControlModule} from "@spica-server/versioncontrol";
+import {VC_REP_MANAGER} from "@spica-server/interface/versioncontrol";
 
 import os from "os";
 
@@ -101,7 +102,6 @@ describe("Versioning e2e", () => {
   function getEmptyFunction() {
     return {
       name: "fn1",
-      env: {},
       language: "javascript",
       timeout: 100,
       triggers: {
@@ -193,7 +193,6 @@ describe("Versioning e2e", () => {
           //bucket
           `bucket/${bucket._id}/schema.yaml`,
           //fn
-          `function/${fn._id}/env.env`,
           `function/${fn._id}/index.ts`,
           `function/${fn._id}/package.json`,
           `function/${fn._id}/schema.yaml`
@@ -209,7 +208,6 @@ describe("Versioning e2e", () => {
 
         const changes = stringToArray(res.body.message);
         expect(changes).toEqual([
-          `function/${fn._id}/env.env`,
           `function/${fn._id}/index.ts`,
           `function/${fn._id}/package.json`,
           `function/${fn._id}/schema.yaml`

@@ -1,6 +1,6 @@
 import {ObjectId} from "@spica-server/database";
 import {FunctionService} from "@spica-server/function/services";
-import {SyncProvider} from "@spica-server/versioncontrol";
+import {SyncProvider} from "@spica-server/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
 import {LogService} from "@spica-server/function/log/src/log.service";
 import * as CRUD from "../crud";
@@ -41,21 +41,13 @@ export function schemaSyncProviders(
 
   const readAll = async () => {
     const resourceNameValidator = str => ObjectId.isValid(str);
-    let files = await manager.read(module, resourceNameValidator, ["schema.yaml", "env.env"]);
+    let files = await manager.read(module, resourceNameValidator, ["schema.yaml"]);
 
-    return files.map(file => CRUD.environment.apply(file.contents.schema, file.contents.env));
+    return files.map(file => file.contents.schema);
   };
 
   const write = fn => {
-    const env = JSON.parse(JSON.stringify(fn.env || {}));
-    for (const key of Object.keys(env)) {
-      fn.env[key] = `{${key}}`;
-    }
-
-    return Promise.all([
-      manager.write(module, fn._id, "schema", fn, "yaml"),
-      manager.write(module, fn._id, "env", env, "env")
-    ]);
+    return manager.write(module, fn._id, "schema", fn, "yaml");
   };
 
   const rm = fn => {
@@ -73,6 +65,6 @@ export function schemaSyncProviders(
     name,
     document,
     representative,
-    parents: 0
+    parents: 1
   };
 }

@@ -4,6 +4,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Inject,
   Param,
   Post,
@@ -13,15 +15,16 @@ import {
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {PassportOptions, PASSPORT_OPTIONS, STRATEGIES} from "../options";
-import {Strategy, StrategyTypeService} from "./interface";
+import {PassportOptions, PASSPORT_OPTIONS, STRATEGIES} from "@spica-server/interface/passport";
+import {Strategy, StrategyTypeServices} from "@spica-server/interface/passport";
 import {StrategyService} from "./services/strategy.service";
 
 @Controller("passport/strategy")
 export class StrategyController {
   constructor(
     private strategy: StrategyService,
-    @Inject(STRATEGIES) private strategies: {find: (type: string) => StrategyTypeService},
+    @Inject(STRATEGIES)
+    private strategies: StrategyTypeServices,
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions
   ) {}
 
@@ -43,6 +46,7 @@ export class StrategyController {
 
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:strategy:delete"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.strategy.deleteOne({_id: id});
   }
@@ -52,15 +56,17 @@ export class StrategyController {
   async insertOne(@Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy) {
     delete strategy._id;
 
-    const service = this.strategies.find(strategy.type);
+    const service = this.strategies.find(strategy.type, strategy.options.idp);
+
+    let preparedStrategy;
 
     try {
-      service.prepareToInsert(strategy);
+      preparedStrategy = service.prepareToInsert(strategy);
     } catch (error) {
       throw new BadRequestException(error.message);
     }
 
-    let insertedStrategy = await this.strategy.insertOne(strategy);
+    let insertedStrategy = await this.strategy.insertOne(preparedStrategy);
 
     if (service.afterInsert) {
       insertedStrategy = await service.afterInsert(insertedStrategy);
@@ -79,13 +85,15 @@ export class StrategyController {
 
     const service = this.strategies.find(strategy.type);
 
+    let preparedStrategy;
+
     try {
-      service.prepareToInsert(strategy);
+      preparedStrategy = service.prepareToInsert(strategy);
     } catch (error) {
       throw new BadRequestException(error);
     }
 
-    let updatedStrategy = await this.strategy.findOneAndReplace({_id: id}, strategy, {
+    let updatedStrategy = await this.strategy.findOneAndReplace({_id: id}, preparedStrategy, {
       returnDocument: ReturnDocument.AFTER
     });
 
