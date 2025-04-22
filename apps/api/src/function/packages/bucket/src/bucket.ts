@@ -101,7 +101,7 @@ export function removeMany(ids: string[], headers?: object) {
       return {
         id: i.toString(),
         body: undefined,
-        method: "POST",
+        method: "DELETE",
         url: `bucket/${id}`,
         headers: headers as Record<string, any>
       };
