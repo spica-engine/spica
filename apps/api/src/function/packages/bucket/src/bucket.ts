@@ -11,7 +11,9 @@ import {
   initialize as _initialize,
   checkInitialized,
   buildUrl,
-  HttpService
+  HttpService,
+  BatchRequest,
+  mapBatchResponse
 } from "@spica-devkit/internal_common";
 import {getWsObs} from "./operators";
 
@@ -59,6 +61,26 @@ export function insert(bucket: Bucket, headers?: object): Promise<Bucket> {
   return service.post<Bucket>("bucket", bucket, {headers});
 }
 
+export function insertMany(buckets: Bucket[], headers?: object) {
+  checkInitialized(authorization);
+
+  const batchRequest: BatchRequest<Bucket> = {
+    requests: buckets.map((bucket, i) => {
+      return {
+        id: i.toString(),
+        body: bucket,
+        method: "POST",
+        url: "bucket",
+        headers: headers as Record<string, any>
+      };
+    })
+  };
+
+  return service
+    .batch<Bucket>(batchRequest, {headers})
+    .then(batchResponse => mapBatchResponse(batchRequest, batchResponse));
+}
+
 export function update(id: string, bucket: Bucket, headers?: object): Promise<Bucket> {
   checkInitialized(authorization);
 
@@ -69,6 +91,26 @@ export function remove(id: string, headers?: object): Promise<any> {
   checkInitialized(authorization);
 
   return service.delete(`bucket/${id}`, {headers});
+}
+
+export function removeMany(ids: string[], headers?: object) {
+  checkInitialized(authorization);
+
+  const batchRequest: BatchRequest<undefined> = {
+    requests: ids.map((id, i) => {
+      return {
+        id: i.toString(),
+        body: undefined,
+        method: "POST",
+        url: `bucket/${id}`,
+        headers: headers as Record<string, any>
+      };
+    })
+  };
+
+  return service
+    .batch(batchRequest, {headers})
+    .then(batchResponse => mapBatchResponse(batchRequest, batchResponse));
 }
 
 export namespace data {
