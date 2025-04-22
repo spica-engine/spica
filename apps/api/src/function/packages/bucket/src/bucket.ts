@@ -73,7 +73,7 @@ export function insertMany(buckets: Bucket[], headers?: object) {
   );
 
   return service
-    .request<BatchResponse<Bucket>>({headers, data: batchReqs})
+    .post<BatchResponse<Bucket>>("batch", batchReqs, {headers})
     .then(response => Batch.handleBatchResponse(batchReqs, response));
 }
 
@@ -95,7 +95,7 @@ export function removeMany(ids: string[], headers?: object) {
   const batchReqs = Batch.prepareRemoveRequest(ids, "bucket", service.getAuthorization(), headers);
 
   return service
-    .request<BatchResponse<undefined>>({headers, data: batchReqs})
+    .post<BatchResponse<Bucket>>("batch", batchReqs, {headers})
     .then(response => Batch.handleBatchResponse(batchReqs, response));
 }
 
