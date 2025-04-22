@@ -13,7 +13,8 @@ import {
   buildUrl,
   HttpService,
   BatchRequest,
-  mapBatchResponse
+  Batch,
+  BatchResponse
 } from "@spica-devkit/internal_common";
 import {getWsObs} from "./operators";
 
@@ -64,21 +65,16 @@ export function insert(bucket: Bucket, headers?: object): Promise<Bucket> {
 export function insertMany(buckets: Bucket[], headers?: object) {
   checkInitialized(authorization);
 
-  const batchRequest: BatchRequest<Bucket> = {
-    requests: buckets.map((bucket, i) => {
-      return {
-        id: i.toString(),
-        body: bucket,
-        method: "POST",
-        url: "bucket",
-        headers: headers as Record<string, any>
-      };
-    })
-  };
+  const batchReqs = Batch.prepareInsertRequest<Bucket>(
+    buckets,
+    "bucket",
+    service.getAuthorization(),
+    headers
+  );
 
   return service
-    .batch<Bucket>(batchRequest, {headers})
-    .then(batchResponse => mapBatchResponse(batchRequest, batchResponse));
+    .request<BatchResponse<Bucket>>({headers, data: batchReqs})
+    .then(response => Batch.handleBatchResponse(batchReqs, response));
 }
 
 export function update(id: string, bucket: Bucket, headers?: object): Promise<Bucket> {
@@ -96,21 +92,11 @@ export function remove(id: string, headers?: object): Promise<any> {
 export function removeMany(ids: string[], headers?: object) {
   checkInitialized(authorization);
 
-  const batchRequest: BatchRequest<undefined> = {
-    requests: ids.map((id, i) => {
-      return {
-        id: i.toString(),
-        body: undefined,
-        method: "DELETE",
-        url: `bucket/${id}`,
-        headers: headers as Record<string, any>
-      };
-    })
-  };
+  const batchReqs = Batch.prepareRemoveRequest(ids, "bucket", service.getAuthorization(), headers);
 
   return service
-    .batch(batchRequest, {headers})
-    .then(batchResponse => mapBatchResponse(batchRequest, batchResponse));
+    .request<BatchResponse<undefined>>({headers, data: batchReqs})
+    .then(response => Batch.handleBatchResponse(batchReqs, response));
 }
 
 export namespace data {

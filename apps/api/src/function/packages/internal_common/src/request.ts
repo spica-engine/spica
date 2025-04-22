@@ -5,6 +5,7 @@ export interface HttpService {
   baseUrl: string;
   setBaseUrl(url: string): void;
   setAuthorization(authorization: string): void;
+  getAuthorization(): string;
   setWriteDefaults(writeDefaults: {headers: {[key: string]: string}}): void;
 
   get<T>(url: string, options?: any): Promise<T>;
@@ -13,8 +14,6 @@ export interface HttpService {
   patch<T>(url: string, body: any, options?: any): Promise<T>;
   delete(url: string, options?: any);
   request<T>(options: any): Promise<T>;
-
-  batch<T, X = T>(requests: BatchRequest<T>, options?: any): Promise<BatchResponse<X>>;
 }
 
 export function logWarning(response: any) {
@@ -92,6 +91,10 @@ export class Axios implements HttpService {
     this.instance.defaults.headers["Authorization"] = authorization;
   }
 
+  getAuthorization() {
+    return this.instance.defaults.headers["Authorization"].toString();
+  }
+
   get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     return this.instance.get(url, config);
   }
@@ -114,21 +117,6 @@ export class Axios implements HttpService {
 
   request<T>(config: AxiosRequestConfig): Promise<T> {
     return this.instance.request(config);
-  }
-
-  batch<X, T = X>(
-    request: BatchRequest<T>,
-    config?: AxiosRequestConfig
-  ): Promise<BatchResponse<X>> {
-    request.requests.forEach(
-      r => (r.headers["Authorization"] = this.instance.defaults.headers["Authorization"].toString())
-    );
-    return this.instance.request({
-      ...config,
-      url: "batch",
-      method: "POST",
-      data: request
-    });
   }
 }
 

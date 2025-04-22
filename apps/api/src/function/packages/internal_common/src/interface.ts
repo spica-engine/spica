@@ -34,21 +34,21 @@ export interface BatchResponse<T> {
   responses: Response<T>[];
 }
 
-type RequestMethods = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+export type RequestMethods = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 export interface Request<T = any> {
   id: string;
   method: RequestMethods;
   url: string;
   body: T;
-  headers: Record<string, string>;
+  headers: object;
 }
 
 export interface Response<T = any> {
   id: string;
   status: number;
   body: T;
-  headers: Record<string, string>;
+  headers: object;
 }
 
 export interface SuccessResponse<P, R> {
