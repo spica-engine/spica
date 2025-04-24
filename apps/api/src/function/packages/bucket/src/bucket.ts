@@ -95,8 +95,8 @@ export function removeMany(ids: string[], headers?: object) {
   const batchReqs = Batch.prepareRemoveRequest(ids, "bucket", service.getAuthorization(), headers);
 
   return service
-    .post<BatchResponse<Bucket>>("batch", batchReqs, {headers})
-    .then(response => Batch.handleBatchResponse(batchReqs, response));
+    .post<BatchResponse<string>>("batch", batchReqs, {headers})
+    .then(response => Batch.handleBatchResponse<string>(batchReqs, response));
 }
 
 export namespace data {

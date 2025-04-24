@@ -51,13 +51,13 @@ export interface Response<T = any> {
   headers: object;
 }
 
-export interface SuccessResponse<P, R> {
-  payload: P;
+export interface SuccessResponse<P, R = P> {
+  request: P;
   response: R;
 }
 
 export interface FailureResponse<P> {
-  payload: P;
+  request: P;
   response: {
     message: string;
     error: string;

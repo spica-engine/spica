@@ -1,18 +1,18 @@
-import {BatchRequest, BatchResponse, ManyResponse, RequestMethods} from "./interface";
+import {BatchRequest, BatchResponse, ManyResponse} from "./interface";
 
 export namespace Batch {
   export function prepareInsertRequest<T>(
-    payloads: T[],
+    resources: T[],
     url: string,
     auth: string,
     headers?: object
   ): BatchRequest<T> {
     return {
-      requests: payloads.map((payload, i) => {
+      requests: resources.map((resource, i) => {
         headers = addAuthHeader(headers, auth);
         return {
           id: i.toString(),
-          body: payload,
+          body: resource,
           method: "POST",
           url: url,
           headers: headers
@@ -41,26 +41,32 @@ export namespace Batch {
     };
   }
 
-  export function handleBatchResponse<P, R>(
+  export function handleBatchResponse<P, R = P>(
     {requests}: BatchRequest<P>,
     {responses}: BatchResponse<P>
   ): ManyResponse<P, R> {
-    const successResponses = responses.filter(r => r.status >= 200 && r.status < 300);
-    const failureResponses = responses.filter(r => r.status >= 400 && r.status <= 500);
+    const sortById = (a, b) => Number(a.id) - Number(b.id);
+
+    const successResponses = responses
+      .sort(sortById)
+      .filter(r => r.status >= 200 && r.status < 300);
+    const failureResponses = responses
+      .sort(sortById)
+      .filter(r => r.status >= 400 && r.status <= 500);
 
     const successes = successResponses.map(sr => {
-      const payload = requests.find(br => br.id == sr.id).body;
+      const req = requests.find(r => r.id == sr.id);
       return {
-        payload,
+        request: (req.body || req.url) as P,
         response: sr.body
       };
     });
 
     const failures = failureResponses.map(fr => {
-      const payload = requests.find(br => br.id == fr.id).body;
+      const request = requests.find(r => r.id == fr.id).body;
 
       return {
-        payload,
+        request,
         response: {
           error: fr.body["error"],
           message: fr.body["message"]

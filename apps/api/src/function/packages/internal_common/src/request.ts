@@ -211,36 +211,3 @@ function paramsSerializer(params) {
 
   return parts.join("&");
 }
-
-export function mapBatchResponse<T, X>(
-  batchReq: BatchRequest<T>,
-  batchRes: BatchResponse<X>
-): ManyResponse<T, X> {
-  const successResponses = batchRes.responses.filter(r => r.status >= 200 && r.status < 300);
-  const failureResponses = batchRes.responses.filter(r => r.status >= 400 && r.status <= 500);
-
-  const successes = successResponses.map(sr => {
-    const payload = batchReq.requests.find(br => br.id == sr.id).body;
-    return {
-      payload,
-      response: sr.body
-    };
-  });
-
-  const failures = failureResponses.map(fr => {
-    const payload = batchReq.requests.find(br => br.id == fr.id).body;
-
-    return {
-      payload,
-      response: {
-        error: fr.body["error"],
-        message: fr.body["message"]
-      }
-    };
-  });
-
-  return {
-    successes,
-    failures
-  };
-}

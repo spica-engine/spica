@@ -10,6 +10,7 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as Bucket from "@spica-devkit/bucket";
 import {bufferCount, take} from "rxjs/operators";
 import {WsAdapter} from "@spica-server/core/websocket";
+import {BatchModule} from "@spica-server/batch";
 
 const PORT = 3002;
 const PUBLIC_URL = `http://localhost:${PORT}`;
@@ -20,6 +21,7 @@ describe("Bucket", () => {
   let app: INestApplication;
 
   let bucket;
+  let bucket2;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -38,7 +40,8 @@ describe("Bucket", () => {
           realtime: true,
           bucketDataLimit: 100,
           graphql: false
-        })
+        }),
+        BatchModule.forRoot({port: PORT.toString()})
       ]
     }).compile();
 
@@ -60,6 +63,19 @@ describe("Bucket", () => {
       icon: "view_stream"
     };
 
+    bucket2 = {
+      title: "Another Bucket",
+      description: "Description of the another bucket",
+      primary: "title",
+      properties: {
+        name: {type: "string", options: {position: "left"}},
+        surname: {type: "string", options: {position: "right"}}
+      },
+      history: false,
+      acl: {write: "true==true", read: "true==true"},
+      icon: "view_stream"
+    };
+
     Bucket.initialize({identity: "token", publicUrl: PUBLIC_URL});
   });
 
@@ -70,6 +86,27 @@ describe("Bucket", () => {
       const insertedBucket = await Bucket.insert(bucket);
       expect(ObjectId.isValid(insertedBucket._id)).toEqual(true);
       expect(insertedBucket).toEqual({...bucket, _id: insertedBucket._id});
+    });
+
+    it("should create multiple buckets", async () => {
+      const response = await Bucket.insertMany([bucket, bucket2]);
+
+      expect(response.failures.length).toEqual(0);
+
+      expect(response.successes.length).toEqual(2);
+      expect(response.successes[0].request).toEqual(bucket);
+      expect(response.successes[1].request).toEqual(bucket2);
+
+      const bucket1id = response.successes[0].response._id;
+      const bucket2id = response.successes[1].response._id;
+
+      expect(ObjectId.isValid(bucket1id)).toEqual(true);
+      expect(ObjectId.isValid(bucket2id)).toEqual(true);
+
+      const insertedBuckets = await Bucket.getAll();
+      expect(insertedBuckets.length).toEqual(2);
+      expect(insertedBuckets.find(b => b._id == bucket1id)).toEqual({...bucket, _id: bucket1id});
+      expect(insertedBuckets.find(b => b._id == bucket2id)).toEqual({...bucket2, _id: bucket2id});
     });
 
     it("should update bucket", async () => {
@@ -88,6 +125,32 @@ describe("Bucket", () => {
 
       const existingBuckets = await Bucket.getAll();
       expect(existingBuckets).toEqual([]);
+    });
+
+    it("should delete multiple buckets", async () => {
+      const {
+        successes: [
+          {
+            response: {_id: bucket1id}
+          },
+          {
+            response: {_id: bucket2id}
+          }
+        ]
+      } = await Bucket.insertMany([bucket, bucket2]);
+
+      const response = await Bucket.removeMany([bucket1id, bucket2id]);
+
+      expect(response).toEqual({
+        successes: [
+          {request: `bucket/${bucket1id}`, response: ""},
+          {request: `bucket/${bucket2id}`, response: ""}
+        ],
+        failures: []
+      });
+
+      const buckets = await Bucket.getAll();
+      expect(buckets).toEqual([]);
     });
 
     it("should get bucket", async () => {
