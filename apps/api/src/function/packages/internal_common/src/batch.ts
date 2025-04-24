@@ -58,7 +58,7 @@ export namespace Batch {
       const req = requests.find(r => r.id == sr.id);
       return {
         request: (req.body || req.url) as P,
-        response: sr.body
+        response: sr.body as unknown as R
       };
     });
 
@@ -75,7 +75,6 @@ export namespace Batch {
     });
 
     return {
-      // @ts-ignore, return back here!
       successes,
       failures
     };
