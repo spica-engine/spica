@@ -199,6 +199,47 @@ describe("Bucket", () => {
       expect(existingData).toEqual([expectedData]);
     });
 
+    it("should insertmany", async () => {
+      const expectedData = {_id: undefined, title: "hello", description: "hi"};
+      const expectedData2 = {_id: undefined, title: "bye", description: "see you"};
+
+      const response = await Bucket.data.insertMany<any>(bucketid, [
+        {
+          title: "hello",
+          description: "hi"
+        },
+        {
+          title: "bye",
+          description: "see you"
+        }
+      ]);
+
+      expect(response.successes.length).toEqual(2);
+      expect(response.failures.length).toEqual(0);
+
+      expect(response.successes[0].request).toEqual({
+        title: "hello",
+        description: "hi"
+      });
+      expect(response.successes[1].request).toEqual({
+        title: "bye",
+        description: "see you"
+      });
+
+      const data1Id = response.successes[0].response._id;
+      const data2Id = response.successes[1].response._id;
+
+      expect(ObjectId.isValid(data1Id)).toEqual(true);
+      expect(ObjectId.isValid(data2Id)).toEqual(true);
+
+      expectedData._id = data1Id;
+      expectedData2._id = data2Id;
+
+      const existingData = await Bucket.data.getAll<any>(bucketid);
+      expect(existingData.find(d => d._id == data1Id)).toEqual(expectedData);
+      expect(existingData.find(d => d._id == data2Id)).toEqual(expectedData2);
+    });
+
     it("should update", async () => {
       const insertedData = await Bucket.data.insert<any>(bucketid, {
         title: "hello",
@@ -240,6 +281,46 @@ describe("Bucket", () => {
         description: "hi"
       });
       await Bucket.data.remove(bucketid, insertedData._id);
+
+      const existingData = await Bucket.data.getAll(bucketid);
+      expect(existingData).toEqual([]);
+    });
+
+    it("should deleteMany", async () => {
+      const {
+        successes: [
+          {
+            response: {_id: data1Id}
+          },
+          {
+            response: {_id: data2Id}
+          }
+        ]
+      } = await Bucket.data.insertMany<any>(bucketid, [
+        {
+          title: "hello",
+          description: "hi"
+        },
+        {
+          title: "bye",
+          description: "see you"
+        }
+      ]);
+
+      const response = await Bucket.data.removeMany(bucketid, [data1Id, data2Id]);
+      expect(response).toEqual({
+        successes: [
+          {
+            request: `bucket/${bucketid}/data/${data1Id}`,
+            response: ""
+          },
+          {
+            request: `bucket/${bucketid}/data/${data2Id}`,
+            response: ""
+          }
+        ],
+        failures: []
+      });
 
       const existingData = await Bucket.data.getAll(bucketid);
       expect(existingData).toEqual([]);

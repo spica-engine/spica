@@ -155,6 +155,21 @@ export namespace data {
     return service.post<T>(`bucket/${bucketId}/data`, document, {headers});
   }
 
+  export function insertMany<T>(bucketId: string, documents: T[], headers?: object) {
+    checkInitialized(authorization);
+
+    const batchReqs = Batch.prepareInsertRequest<T>(
+      documents,
+      `bucket/${bucketId}/data`,
+      service.getAuthorization(),
+      headers
+    );
+
+    return service
+      .post<BatchResponse<T>>("batch", batchReqs, {headers})
+      .then(response => Batch.handleBatchResponse(batchReqs, response));
+  }
+
   export function update<T>(
     bucketId: string,
     documentId: string,
@@ -181,6 +196,21 @@ export namespace data {
     checkInitialized(authorization);
 
     return service.delete(`bucket/${bucketId}/data/${documentId}`, {headers});
+  }
+
+  export function removeMany(bucketId: string, documentIds: string[], headers?: object) {
+    checkInitialized(authorization);
+
+    const batchReqs = Batch.prepareRemoveRequest(
+      documentIds,
+      `bucket/${bucketId}/data`,
+      service.getAuthorization(),
+      headers
+    );
+
+    return service
+      .post<BatchResponse<string>>("batch", batchReqs, {headers})
+      .then(response => Batch.handleBatchResponse<string>(batchReqs, response));
   }
 
   export namespace realtime {
