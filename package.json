@@ -47,7 +47,6 @@
     "test-image:*": "yarn nx run-many -t test-image",
     "test-image:api": "yarn nx test-image api",
     "test-image:migrate": "yarn nx test-image migrate",
-    "test-image:mongoreplicationcontroller": "yarn nx test-image mongoreplicationcontroller",
     "publish:api": "yarn nx publish api",
     "publish:migrate": "yarn nx publish migrate",
     "publish:mongoreplicationcontroller": "yarn nx publish mongoreplicationcontroller",
