@@ -63,10 +63,10 @@ export namespace Batch {
     });
 
     const failures = failureResponses.map(fr => {
-      const request = requests.find(r => r.id == fr.id).body;
+      const req = requests.find(r => r.id == fr.id);
 
       return {
-        request,
+        request: (req.body || req.url) as P,
         response: {
           error: fr.body["error"],
           message: fr.body["message"]

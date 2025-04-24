@@ -214,7 +214,7 @@ describe("Storage", () => {
   it("should remove multiple storage objects", async () => {
     const insertedObjects = await Storage.insertMany([storageObject, storageObject2]);
 
-    const response = await Storage.removeMany(insertedObjects.map(i => i._id));
+    const response = await Storage.removeMany([...insertedObjects.map(i => i._id), "123"]);
 
     expect(response).toEqual({
       successes: [
@@ -227,7 +227,15 @@ describe("Storage", () => {
           response: ""
         }
       ],
-      failures: []
+      failures: [
+        {
+          request: "storage/123",
+          response: {
+            error: undefined,
+            message: "Invalid id."
+          }
+        }
+      ]
     });
 
     const existings = await Storage.getAll();

@@ -302,7 +302,7 @@ describe("Identity", () => {
         })
       ]);
 
-      const response = await Identity.removeMany(identities.map(i => i._id));
+      const response = await Identity.removeMany([...identities.map(i => i._id), "123"]);
 
       expect(response).toEqual({
         successes: [
@@ -315,7 +315,15 @@ describe("Identity", () => {
             response: ""
           }
         ],
-        failures: []
+        failures: [
+          {
+            request: `passport/identity/123`,
+            response: {
+              error: undefined,
+              message: "Invalid id."
+            }
+          }
+        ]
       });
 
       const existingIdentities = await Identity.getAll();

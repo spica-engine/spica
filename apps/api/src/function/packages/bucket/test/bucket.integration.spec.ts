@@ -89,9 +89,18 @@ describe("Bucket", () => {
     });
 
     it("should create multiple buckets", async () => {
-      const response = await Bucket.insertMany([bucket, bucket2]);
+      const failedBucket = {};
+      const response = await Bucket.insertMany([bucket, bucket2, failedBucket]);
 
-      expect(response.failures.length).toEqual(0);
+      expect(response.failures.length).toEqual(1);
+      expect(response.failures[0].request).toEqual({});
+      expect(response.failures[0]).toEqual({
+        request: {},
+        response: {
+          error: "validation failed",
+          message: " must have required property 'title'"
+        }
+      });
 
       expect(response.successes.length).toEqual(2);
       expect(response.successes[0].request).toEqual(bucket);
@@ -139,14 +148,22 @@ describe("Bucket", () => {
         ]
       } = await Bucket.insertMany([bucket, bucket2]);
 
-      const response = await Bucket.removeMany([bucket1id, bucket2id]);
+      const response = await Bucket.removeMany([bucket1id, bucket2id, "123"]);
 
       expect(response).toEqual({
         successes: [
           {request: `bucket/${bucket1id}`, response: ""},
           {request: `bucket/${bucket2id}`, response: ""}
         ],
-        failures: []
+        failures: [
+          {
+            request: "bucket/123",
+            response: {
+              error: undefined,
+              message: "Invalid id."
+            }
+          }
+        ]
       });
 
       const buckets = await Bucket.getAll();
@@ -211,11 +228,24 @@ describe("Bucket", () => {
         {
           title: "bye",
           description: "see you"
+        },
+        {
+          title: -1
         }
       ]);
 
+      expect(response.failures.length).toEqual(1);
+      expect(response.failures[0]).toEqual({
+        request: {
+          title: -1
+        },
+        response: {
+          error: "validation failed",
+          message: ".title must be string"
+        }
+      });
+
       expect(response.successes.length).toEqual(2);
-      expect(response.failures.length).toEqual(0);
 
       expect(response.successes[0].request).toEqual({
         title: "hello",
@@ -307,7 +337,7 @@ describe("Bucket", () => {
         }
       ]);
 
-      const response = await Bucket.data.removeMany(bucketid, [data1Id, data2Id]);
+      const response = await Bucket.data.removeMany(bucketid, [data1Id, data2Id, "123"]);
       expect(response).toEqual({
         successes: [
           {
@@ -319,7 +349,15 @@ describe("Bucket", () => {
             response: ""
           }
         ],
-        failures: []
+        failures: [
+          {
+            request: `bucket/${bucketid}/data/123`,
+            response: {
+              error: undefined,
+              message: "Invalid id."
+            }
+          }
+        ]
       });
 
       const existingData = await Bucket.data.getAll(bucketid);
