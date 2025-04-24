@@ -30,6 +30,7 @@ RUN yarn run build:api
 # test app
 FROM tools AS test
 WORKDIR /app
+# for mongo memory server
 RUN apt-get update && apt-get install libcurl4 -y
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/api ./apps/api
