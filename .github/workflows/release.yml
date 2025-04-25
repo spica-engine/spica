@@ -38,6 +38,7 @@ jobs:
           node-version: 22.x
           cache: yarn
           cache-dependency-path: yarn.lock
+          registry-url: https://registry.npmjs.org/
 
       - name: Restore Node Modules Cache
         uses: actions/cache@v4
@@ -62,10 +63,13 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v4.2.0
 
-      - name: Install GCP and login
+      - name: Setup GCP
         uses: "google-github-actions/auth@v2"
         with:
           credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
+
+      - name: Login to GPC
+        run: gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -73,5 +77,10 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Set Yarn registry explicitly
+        run: yarn config set registry https://registry.npmjs.org
+
       - name: Release Applications
         run: yarn run publish:${{ matrix.targets }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
