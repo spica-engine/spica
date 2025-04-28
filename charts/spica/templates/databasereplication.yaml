@@ -34,9 +34,9 @@ spec:
             "--nodes",
             {{ template "database.nodes" . }},
             "--username",
-            "$(USERNAME)",
+            "$(ROOT_USERNAME)",
             "--password",
-            "$(PASSWORD)"
+            "$(ROOT_PASSWORD)"
           ]
           env:
             - name: ROOT_USERNAME

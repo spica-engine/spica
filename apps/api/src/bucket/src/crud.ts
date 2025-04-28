@@ -8,6 +8,20 @@ import * as expression from "@spica-server/bucket/expression";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
 import {Bucket} from "@spica-server/interface/bucket";
 
+export async function find(
+  bs: BucketService,
+  options: {
+    resourceFilter: object;
+    sort: object;
+  }
+): Promise<Bucket[]> {
+  return bs.aggregate<Bucket>([options.resourceFilter, {$sort: options.sort}]).toArray();
+}
+
+export function findOne(bs: BucketService, id: ObjectId): Promise<Bucket> {
+  return bs.findOne({_id: id});
+}
+
 export async function insert(bs: BucketService, bucket: Bucket) {
   ruleValidation(bucket);
 

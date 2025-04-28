@@ -30,7 +30,12 @@ import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/gua
 import os from "os";
 import {of, OperatorFunction} from "rxjs";
 import {catchError, finalize, last, map, tap} from "rxjs/operators";
-import {createFunctionActivity} from "./activity.resource";
+import {
+  createFunctionActivity,
+  createFunctionIndexActivity,
+  createFunctionDependencyActivity,
+  createFunctionEnvVarActivity
+} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "@spica-server/function/services";
 import {Options, FUNCTION_OPTIONS, EnvRelation, Function} from "@spica-server/interface/function";
@@ -205,6 +210,7 @@ export class FunctionController {
    * Also, it compiles the index to make it ready for execution.
    * @param id Identifier of the function
    */
+  @UseInterceptors(activity(createFunctionIndexActivity))
   @Post(":id/index")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
@@ -221,17 +227,9 @@ export class FunctionController {
   @Get(":id/index")
   @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
   async showIndex(@Param("id", OBJECT_ID) id: ObjectId) {
-    const fn = await this.fs.findOne({_id: id});
-    if (!fn) {
-      throw new NotFoundException("Can not find function.");
-    }
-    const index = await this.engine.read(fn).catch(e => {
-      if (e == "Not Found") {
-        throw new NotFoundException("Index does not exist.");
-      }
-      throw new InternalServerErrorException(e);
+    return CRUD.index.find(this.fs, this.engine, id).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
     });
-    return {index};
   }
 
   /**
@@ -241,11 +239,9 @@ export class FunctionController {
   @Get(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
   async getDependencies(@Param("id", OBJECT_ID) id: ObjectId) {
-    const fn = await this.fs.findOne({_id: id});
-    if (!fn) {
-      throw new NotFoundException("Could not find the function.");
-    }
-    return this.engine.getPackages(fn);
+    return CRUD.dependencies.findOne(this.fs, this.engine, id).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
+    });
   }
 
   /**
@@ -253,54 +249,19 @@ export class FunctionController {
    * @param progress When true, installation progress is reported.
    * @param id Identifier of the function
    */
+  @UseInterceptors(activity(createFunctionDependencyActivity))
   @Post(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
   @Header("X-Content-Type-Options", "nosniff")
   async addDependency(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body("name", DEFAULT([]), ARRAY(String)) name: string[],
-    @Res() res,
-    @Query("progress", BOOLEAN) progress?: boolean
+    @Body("name", DEFAULT([]), ARRAY(String)) name: string[]
   ) {
-    if (!name) {
-      throw new BadRequestException("Dependency name is required.");
-    }
     const fn = await this.fs.findOne({_id: id});
-    if (!fn) {
-      throw new NotFoundException("Could not find the function.");
-    }
 
-    let operators: OperatorFunction<unknown, unknown>[] = [
-      catchError(err => {
-        res.status(400).json({message: err.toString()});
-        return of(err);
-      })
-    ];
-
-    if (progress) {
-      operators = [];
-      operators.push(
-        map(progress => {
-          return {
-            progress,
-            state: "installing"
-          };
-        }),
-        catchError(error =>
-          of({
-            state: "failed",
-            message: error
-          })
-        ),
-        tap(response => res.write(`${JSON.stringify(response)}${os.EOL}`))
-      );
-    }
-    operators.push(
-      last(),
-      finalize(() => res.end())
-    );
-
-    return (this.engine.addPackage(fn, name) as any).pipe(...operators);
+    return CRUD.dependencies.install(this.engine, fn, name).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
+    });
   }
 
   /**
@@ -308,16 +269,15 @@ export class FunctionController {
    * @param id Identifier of the function
    * @param name Name of the dependency to remove
    */
+  @UseInterceptors(activity(createFunctionDependencyActivity))
   @Delete(":id/dependencies/:name(*)")
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteDependency(@Param("id", OBJECT_ID) id: ObjectId, @Param("name") name: string) {
     const fn = await this.fs.findOne({_id: id});
-    if (!fn) {
-      throw new NotFoundException("Could not find the function.");
-    }
-    return this.engine.removePackage(fn, name).catch(error => {
-      throw new BadRequestException(error.message);
+
+    return CRUD.dependencies.uninstall(this.engine, fn, [name]).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
     });
   }
 
@@ -326,6 +286,7 @@ export class FunctionController {
    * @param id identifier of the function.
    * @param envVarId identifier of the environment variable. Example: `5f31002e4a51a68d6fec4d3f`
    */
+  @UseInterceptors(activity(createFunctionEnvVarActivity))
   @Put(":id/env-var/:envVarId")
   @UseGuards(AuthGuard(), ActionGuard("function:env-var:inject"))
   async injectEnvironmentVariable(
@@ -340,6 +301,7 @@ export class FunctionController {
    * @param id identifier of the function.
    * @param envVarId identifier of the environment variable. Example: `5f31002e4a51a68d6fec4d3f`
    */
+  @UseInterceptors(activity(createFunctionEnvVarActivity))
   @Delete(":id/env-var/:envVarId")
   @UseGuards(AuthGuard(), ActionGuard("function:env-var:eject"))
   @HttpCode(HttpStatus.NO_CONTENT)
