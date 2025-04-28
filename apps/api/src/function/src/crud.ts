@@ -10,7 +10,7 @@ import {changesFromTriggers, createTargetChanges, hasContextChange} from "./chan
 import {ObjectId} from "@spica-server/database";
 import {FunctionEngine} from "./engine";
 import {LogService} from "@spica-server/function/log";
-import {NotFoundException} from "@nestjs/common";
+import {BadRequestException, InternalServerErrorException, NotFoundException} from "@nestjs/common";
 import {FunctionPipelineBuilder} from "./pipeline.builder";
 import fs from "fs";
 import * as readline from "readline";
@@ -120,6 +120,20 @@ export async function remove(
 }
 
 export namespace index {
+  export async function find(fs: FunctionService, engine: FunctionEngine, id: ObjectId) {
+    const fn = await fs.findOne({_id: id});
+    if (!fn) {
+      throw new NotFoundException("Can not find function.");
+    }
+    const index = await engine.read(fn).catch(e => {
+      if (e == "Not Found") {
+        throw new NotFoundException("Index does not exist.");
+      }
+      throw new InternalServerErrorException(e);
+    });
+    return {index};
+  }
+
   export async function write(
     fs: FunctionService,
     engine: FunctionEngine,
@@ -189,13 +203,31 @@ export namespace index {
 }
 
 export namespace dependencies {
-  export async function install(engine: FunctionEngine, fn: Function, deps: Dependency) {
-    const newDeps = Object.entries(deps).map(([name, version]) => {
-      return `${name}@${(version as string).slice(1)}`;
-    });
+  export async function findOne(fs: FunctionService, engine: FunctionEngine, id: ObjectId) {
+    const fn = await fs.findOne({_id: id});
+    if (!fn) {
+      throw new NotFoundException("Could not find the function.");
+    }
+    return engine.getPackages(fn);
+  }
 
-    if (newDeps.length) {
-      await engine.addPackage(fn, newDeps).toPromise();
+  export async function install(engine: FunctionEngine, fn: Function, deps: Dependency | string[]) {
+    if (!deps) {
+      throw new BadRequestException("Dependency name is required.");
+    }
+
+    if (!fn) {
+      throw new NotFoundException("Could not find the function.");
+    }
+
+    if (!Array.isArray(deps)) {
+      deps = Object.entries(deps).map(([name, version]) => {
+        return `${name}@${(version as string).slice(1)}`;
+      });
+    }
+
+    if (deps.length) {
+      await engine.addPackage(fn, deps).toPromise();
     }
   }
 
@@ -225,7 +257,17 @@ export namespace dependencies {
   }
 
   export async function uninstall(engine: FunctionEngine, fn: Function, deps: string[]) {
-    await Promise.all(deps.map(dep => engine.removePackage(fn, dep)));
+    if (!fn) {
+      throw new NotFoundException("Could not find the function.");
+    }
+
+    await Promise.all(
+      deps.map(dep =>
+        engine.removePackage(fn, dep).catch(error => {
+          throw new BadRequestException(error.message);
+        })
+      )
+    );
   }
 }
 
