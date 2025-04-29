@@ -41,7 +41,7 @@ export namespace Middlewares {
     return (req, res, next) => {
       Object.entries(options).forEach(([key, value]) => {
         const headerSet = res.headers && res.headers[key];
-        const isNullish = value == null || value == undefined;
+        const isNullish = value == null;
         if (!headerSet && !isNullish) {
           res.set(key, value);
         }
