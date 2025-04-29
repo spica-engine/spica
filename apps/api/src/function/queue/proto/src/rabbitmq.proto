@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package RabbitMQ;
+
+message RabbitMQMessage {
+    string id = 1;
+    bytes content = 2;
+    string fields = 3;
+    string properties = 4;
+
+    message Pop {
+        string id = 1;
+    }
+
+    message Result {}
+}
+
+message Error {
+    string content = 1;
+
+    message Result {}
+}
+
+service Queue {
+    rpc pop(RabbitMQMessage.Pop) returns (RabbitMQMessage);
+    rpc ack(RabbitMQMessage) returns (RabbitMQMessage.Result);
+    rpc error(Error) returns (Error.Result);
+}
