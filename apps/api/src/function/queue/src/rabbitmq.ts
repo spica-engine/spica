@@ -65,26 +65,17 @@ export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueServi
   error(
     call: grpc.ServerUnaryCall<RabbitMQ.Error, RabbitMQ.Error.Result>,
     callback: grpc.sendUnaryData<RabbitMQ.Error>
-  ) {
-    // if (!this.queue.has(call.request.id)) {
-    //   callback(new Error(`Queue has no item with id ${call.request.id}`), undefined);
-    // } else {
-    //   callback(undefined, this.queue.get(call.request.id));
-    //   this.queue.delete(call.request.id);
-    // }
-  }
+  ) {}
 
   ack(
     call: grpc.ServerUnaryCall<RabbitMQ.RabbitMQMessage, RabbitMQ.RabbitMQMessage.Result>,
     callback: grpc.sendUnaryData<RabbitMQ.RabbitMQMessage.Result>
   ) {
-    console.log("4 call.request: ", call.request);
     if (!this.channelMap.has(call.request.id)) {
       callback({code: 1}, undefined);
     } else {
       const serverResponse = this.channelMap.get(call.request.id);
       if (call.request.id) {
-        console.log("call.request: ", call.request.content);
         const msg = {
           content: Buffer.from(call.request.content),
           fields: JSON.parse(call.request.fields),
