@@ -37,6 +37,19 @@ export namespace Middlewares {
     return (req, res, next) => json({type: "application/merge-patch+json", limit})(req, res, next);
   }
 
+  export function Headers(options: object) {
+    return (req, res, next) => {
+      Object.entries(options).forEach(([key, value]) => {
+        const headerSet = res.headers && res.headers[key];
+        const isNullish = value == null || value == undefined;
+        if (!headerSet && !isNullish) {
+          res.set(key, value);
+        }
+      });
+      next();
+    };
+  }
+
   export function Preflight(options: CorsOptions) {
     return (req, res, next) => {
       let allowedOrigin = getMatchedValue(req.header("Origin"), options.allowedOrigins);
