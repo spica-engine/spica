@@ -336,3 +336,33 @@ export function getPostBodyConverter(body: MixedBody) {
 export function getPutBodyConverter(body: MultipartFormData | StorageObject<Buffer>) {
   return putConverters.find(c => c.validate(body));
 }
+
+// for tests
+export function getMultipartFormDataMeta(
+  files: {name: string; data: string; type: string}[],
+  method: "post" | "put"
+) {
+  const boundary = "--------------------------" + Date.now().toString(16);
+  const headers = {
+    "Content-Type": `multipart/form-data; boundary=${boundary}`
+  };
+
+  let body = "";
+
+  for (let file of files) {
+    body +=
+      `--${boundary}\r\n` +
+      `Content-Disposition: form-data; name="${
+        method == "post" ? "files" : "file"
+      }"; filename="${file.name}"\r\n` +
+      `Content-Type: ${file.type}\r\n\r\n` +
+      `${file.data}\r\n`;
+  }
+
+  body += `--${boundary}--\r\n`;
+
+  return {
+    body: Buffer.from(body),
+    headers: headers
+  };
+}
