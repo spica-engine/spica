@@ -6,520 +6,444 @@
 import * as pb_1 from "google-protobuf";
 import * as grpc_1 from "@grpc/grpc-js";
 export namespace RabbitMQ {
-  export class RabbitMQMessage extends pb_1.Message {
-    #one_of_decls: number[][] = [];
-    constructor(
-      data?:
-        | any[]
-        | {
+    export class RabbitMQMessage extends pb_1.Message {
+        #one_of_decls: number[][] = [];
+        constructor(data?: any[] | {
             id?: string;
             content?: Uint8Array;
             fields?: string;
             properties?: string;
-          }
-    ) {
-      super();
-      pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-      if (!Array.isArray(data) && typeof data == "object") {
-        if ("id" in data && data.id != undefined) {
-          this.id = data.id;
-        }
-        if ("content" in data && data.content != undefined) {
-          this.content = data.content;
-        }
-        if ("fields" in data && data.fields != undefined) {
-          this.fields = data.fields;
-        }
-        if ("properties" in data && data.properties != undefined) {
-          this.properties = data.properties;
-        }
-      }
-    }
-    get id() {
-      return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
-    }
-    set id(value: string) {
-      pb_1.Message.setField(this, 1, value);
-    }
-    get content() {
-      return pb_1.Message.getFieldWithDefault(this, 2, new Uint8Array(0)) as Uint8Array;
-    }
-    set content(value: Uint8Array) {
-      pb_1.Message.setField(this, 2, value);
-    }
-    get fields() {
-      return pb_1.Message.getFieldWithDefault(this, 3, "") as string;
-    }
-    set fields(value: string) {
-      pb_1.Message.setField(this, 3, value);
-    }
-    get properties() {
-      return pb_1.Message.getFieldWithDefault(this, 4, "") as string;
-    }
-    set properties(value: string) {
-      pb_1.Message.setField(this, 4, value);
-    }
-    static fromObject(data: {
-      id?: string;
-      content?: Uint8Array;
-      fields?: string;
-      properties?: string;
-    }): RabbitMQMessage {
-      const message = new RabbitMQMessage({});
-      if (data.id != null) {
-        message.id = data.id;
-      }
-      if (data.content != null) {
-        message.content = data.content;
-      }
-      if (data.fields != null) {
-        message.fields = data.fields;
-      }
-      if (data.properties != null) {
-        message.properties = data.properties;
-      }
-      return message;
-    }
-    toObject() {
-      const data: {
-        id?: string;
-        content?: Uint8Array;
-        fields?: string;
-        properties?: string;
-      } = {};
-      if (this.id != null) {
-        data.id = this.id;
-      }
-      if (this.content != null) {
-        data.content = this.content;
-      }
-      if (this.fields != null) {
-        data.fields = this.fields;
-      }
-      if (this.properties != null) {
-        data.properties = this.properties;
-      }
-      return data;
-    }
-    serialize(): Uint8Array;
-    serialize(w: pb_1.BinaryWriter): void;
-    serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
-      const writer = w || new pb_1.BinaryWriter();
-      if (this.id.length) writer.writeString(1, this.id);
-      if (this.content.length) writer.writeBytes(2, this.content);
-      if (this.fields.length) writer.writeString(3, this.fields);
-      if (this.properties.length) writer.writeString(4, this.properties);
-      if (!w) return writer.getResultBuffer();
-    }
-    static deserialize(bytes: Uint8Array | pb_1.BinaryReader): RabbitMQMessage {
-      const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes),
-        message = new RabbitMQMessage();
-      while (reader.nextField()) {
-        if (reader.isEndGroup()) break;
-        switch (reader.getFieldNumber()) {
-          case 1:
-            message.id = reader.readString();
-            break;
-          case 2:
-            message.content = reader.readBytes();
-            break;
-          case 3:
-            message.fields = reader.readString();
-            break;
-          case 4:
-            message.properties = reader.readString();
-            break;
-          default:
-            reader.skipField();
-        }
-      }
-      return message;
-    }
-    serializeBinary(): Uint8Array {
-      return this.serialize();
-    }
-    static deserializeBinary(bytes: Uint8Array): RabbitMQMessage {
-      return RabbitMQMessage.deserialize(bytes);
-    }
-  }
-  export namespace RabbitMQMessage {
-    export class Pop extends pb_1.Message {
-      #one_of_decls: number[][] = [];
-      constructor(
-        data?:
-          | any[]
-          | {
-              id?: string;
+        }) {
+            super();
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+            if (!Array.isArray(data) && typeof data == "object") {
+                if ("id" in data && data.id != undefined) {
+                    this.id = data.id;
+                }
+                if ("content" in data && data.content != undefined) {
+                    this.content = data.content;
+                }
+                if ("fields" in data && data.fields != undefined) {
+                    this.fields = data.fields;
+                }
+                if ("properties" in data && data.properties != undefined) {
+                    this.properties = data.properties;
+                }
             }
-      ) {
-        super();
-        pb_1.Message.initialize(
-          this,
-          Array.isArray(data) ? data : [],
-          0,
-          -1,
-          [],
-          this.#one_of_decls
-        );
-        if (!Array.isArray(data) && typeof data == "object") {
-          if ("id" in data && data.id != undefined) {
-            this.id = data.id;
-          }
         }
-      }
-      get id() {
-        return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
-      }
-      set id(value: string) {
-        pb_1.Message.setField(this, 1, value);
-      }
-      static fromObject(data: {id?: string}): Pop {
-        const message = new Pop({});
-        if (data.id != null) {
-          message.id = data.id;
+        get id() {
+            return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
         }
-        return message;
-      }
-      toObject() {
-        const data: {
-          id?: string;
-        } = {};
-        if (this.id != null) {
-          data.id = this.id;
+        set id(value: string) {
+            pb_1.Message.setField(this, 1, value);
         }
-        return data;
-      }
-      serialize(): Uint8Array;
-      serialize(w: pb_1.BinaryWriter): void;
-      serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
-        const writer = w || new pb_1.BinaryWriter();
-        if (this.id.length) writer.writeString(1, this.id);
-        if (!w) return writer.getResultBuffer();
-      }
-      static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Pop {
-        const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes),
-          message = new Pop();
-        while (reader.nextField()) {
-          if (reader.isEndGroup()) break;
-          switch (reader.getFieldNumber()) {
-            case 1:
-              message.id = reader.readString();
-              break;
-            default:
-              reader.skipField();
-          }
+        get content() {
+            return pb_1.Message.getFieldWithDefault(this, 2, new Uint8Array(0)) as Uint8Array;
         }
-        return message;
-      }
-      serializeBinary(): Uint8Array {
-        return this.serialize();
-      }
-      static deserializeBinary(bytes: Uint8Array): Pop {
-        return Pop.deserialize(bytes);
-      }
+        set content(value: Uint8Array) {
+            pb_1.Message.setField(this, 2, value);
+        }
+        get fields() {
+            return pb_1.Message.getFieldWithDefault(this, 3, "") as string;
+        }
+        set fields(value: string) {
+            pb_1.Message.setField(this, 3, value);
+        }
+        get properties() {
+            return pb_1.Message.getFieldWithDefault(this, 4, "") as string;
+        }
+        set properties(value: string) {
+            pb_1.Message.setField(this, 4, value);
+        }
+        static fromObject(data: {
+            id?: string;
+            content?: Uint8Array;
+            fields?: string;
+            properties?: string;
+        }): RabbitMQMessage {
+            const message = new RabbitMQMessage({});
+            if (data.id != null) {
+                message.id = data.id;
+            }
+            if (data.content != null) {
+                message.content = data.content;
+            }
+            if (data.fields != null) {
+                message.fields = data.fields;
+            }
+            if (data.properties != null) {
+                message.properties = data.properties;
+            }
+            return message;
+        }
+        toObject() {
+            const data: {
+                id?: string;
+                content?: Uint8Array;
+                fields?: string;
+                properties?: string;
+            } = {};
+            if (this.id != null) {
+                data.id = this.id;
+            }
+            if (this.content != null) {
+                data.content = this.content;
+            }
+            if (this.fields != null) {
+                data.fields = this.fields;
+            }
+            if (this.properties != null) {
+                data.properties = this.properties;
+            }
+            return data;
+        }
+        serialize(): Uint8Array;
+        serialize(w: pb_1.BinaryWriter): void;
+        serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+            const writer = w || new pb_1.BinaryWriter();
+            if (this.id.length)
+                writer.writeString(1, this.id);
+            if (this.content.length)
+                writer.writeBytes(2, this.content);
+            if (this.fields.length)
+                writer.writeString(3, this.fields);
+            if (this.properties.length)
+                writer.writeString(4, this.properties);
+            if (!w)
+                return writer.getResultBuffer();
+        }
+        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): RabbitMQMessage {
+            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new RabbitMQMessage();
+            while (reader.nextField()) {
+                if (reader.isEndGroup())
+                    break;
+                switch (reader.getFieldNumber()) {
+                    case 1:
+                        message.id = reader.readString();
+                        break;
+                    case 2:
+                        message.content = reader.readBytes();
+                        break;
+                    case 3:
+                        message.fields = reader.readString();
+                        break;
+                    case 4:
+                        message.properties = reader.readString();
+                        break;
+                    default: reader.skipField();
+                }
+            }
+            return message;
+        }
+        serializeBinary(): Uint8Array {
+            return this.serialize();
+        }
+        static deserializeBinary(bytes: Uint8Array): RabbitMQMessage {
+            return RabbitMQMessage.deserialize(bytes);
+        }
     }
-    export class Result extends pb_1.Message {
-      #one_of_decls: number[][] = [];
-      constructor(data?: any[] | {}) {
-        super();
-        pb_1.Message.initialize(
-          this,
-          Array.isArray(data) ? data : [],
-          0,
-          -1,
-          [],
-          this.#one_of_decls
-        );
-        if (!Array.isArray(data) && typeof data == "object") {
+    export namespace RabbitMQMessage {
+        export class Pop extends pb_1.Message {
+            #one_of_decls: number[][] = [];
+            constructor(data?: any[] | {
+                id?: string;
+            }) {
+                super();
+                pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+                if (!Array.isArray(data) && typeof data == "object") {
+                    if ("id" in data && data.id != undefined) {
+                        this.id = data.id;
+                    }
+                }
+            }
+            get id() {
+                return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
+            }
+            set id(value: string) {
+                pb_1.Message.setField(this, 1, value);
+            }
+            static fromObject(data: {
+                id?: string;
+            }): Pop {
+                const message = new Pop({});
+                if (data.id != null) {
+                    message.id = data.id;
+                }
+                return message;
+            }
+            toObject() {
+                const data: {
+                    id?: string;
+                } = {};
+                if (this.id != null) {
+                    data.id = this.id;
+                }
+                return data;
+            }
+            serialize(): Uint8Array;
+            serialize(w: pb_1.BinaryWriter): void;
+            serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+                const writer = w || new pb_1.BinaryWriter();
+                if (this.id.length)
+                    writer.writeString(1, this.id);
+                if (!w)
+                    return writer.getResultBuffer();
+            }
+            static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Pop {
+                const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new Pop();
+                while (reader.nextField()) {
+                    if (reader.isEndGroup())
+                        break;
+                    switch (reader.getFieldNumber()) {
+                        case 1:
+                            message.id = reader.readString();
+                            break;
+                        default: reader.skipField();
+                    }
+                }
+                return message;
+            }
+            serializeBinary(): Uint8Array {
+                return this.serialize();
+            }
+            static deserializeBinary(bytes: Uint8Array): Pop {
+                return Pop.deserialize(bytes);
+            }
         }
-      }
-      static fromObject(data: {}): Result {
-        const message = new Result({});
-        return message;
-      }
-      toObject() {
-        const data: {} = {};
-        return data;
-      }
-      serialize(): Uint8Array;
-      serialize(w: pb_1.BinaryWriter): void;
-      serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
-        const writer = w || new pb_1.BinaryWriter();
-        if (!w) return writer.getResultBuffer();
-      }
-      static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Result {
-        const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes),
-          message = new Result();
-        while (reader.nextField()) {
-          if (reader.isEndGroup()) break;
-          switch (reader.getFieldNumber()) {
-            default:
-              reader.skipField();
-          }
+        export class Result extends pb_1.Message {
+            #one_of_decls: number[][] = [];
+            constructor(data?: any[] | {}) {
+                super();
+                pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+                if (!Array.isArray(data) && typeof data == "object") { }
+            }
+            static fromObject(data: {}): Result {
+                const message = new Result({});
+                return message;
+            }
+            toObject() {
+                const data: {} = {};
+                return data;
+            }
+            serialize(): Uint8Array;
+            serialize(w: pb_1.BinaryWriter): void;
+            serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+                const writer = w || new pb_1.BinaryWriter();
+                if (!w)
+                    return writer.getResultBuffer();
+            }
+            static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Result {
+                const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new Result();
+                while (reader.nextField()) {
+                    if (reader.isEndGroup())
+                        break;
+                    switch (reader.getFieldNumber()) {
+                        default: reader.skipField();
+                    }
+                }
+                return message;
+            }
+            serializeBinary(): Uint8Array {
+                return this.serialize();
+            }
+            static deserializeBinary(bytes: Uint8Array): Result {
+                return Result.deserialize(bytes);
+            }
         }
-        return message;
-      }
-      serializeBinary(): Uint8Array {
-        return this.serialize();
-      }
-      static deserializeBinary(bytes: Uint8Array): Result {
-        return Result.deserialize(bytes);
-      }
     }
-  }
-  export class Error extends pb_1.Message {
-    #one_of_decls: number[][] = [];
-    constructor(
-      data?:
-        | any[]
-        | {
+    export class Error extends pb_1.Message {
+        #one_of_decls: number[][] = [];
+        constructor(data?: any[] | {
             content?: string;
-          }
-    ) {
-      super();
-      pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-      if (!Array.isArray(data) && typeof data == "object") {
-        if ("content" in data && data.content != undefined) {
-          this.content = data.content;
+        }) {
+            super();
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+            if (!Array.isArray(data) && typeof data == "object") {
+                if ("content" in data && data.content != undefined) {
+                    this.content = data.content;
+                }
+            }
         }
-      }
-    }
-    get content() {
-      return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
-    }
-    set content(value: string) {
-      pb_1.Message.setField(this, 1, value);
-    }
-    static fromObject(data: {content?: string}): Error {
-      const message = new Error({});
-      if (data.content != null) {
-        message.content = data.content;
-      }
-      return message;
-    }
-    toObject() {
-      const data: {
-        content?: string;
-      } = {};
-      if (this.content != null) {
-        data.content = this.content;
-      }
-      return data;
-    }
-    serialize(): Uint8Array;
-    serialize(w: pb_1.BinaryWriter): void;
-    serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
-      const writer = w || new pb_1.BinaryWriter();
-      if (this.content.length) writer.writeString(1, this.content);
-      if (!w) return writer.getResultBuffer();
-    }
-    static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Error {
-      const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes),
-        message = new Error();
-      while (reader.nextField()) {
-        if (reader.isEndGroup()) break;
-        switch (reader.getFieldNumber()) {
-          case 1:
-            message.content = reader.readString();
-            break;
-          default:
-            reader.skipField();
+        get content() {
+            return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
         }
-      }
-      return message;
-    }
-    serializeBinary(): Uint8Array {
-      return this.serialize();
-    }
-    static deserializeBinary(bytes: Uint8Array): Error {
-      return Error.deserialize(bytes);
-    }
-  }
-  export namespace Error {
-    export class Result extends pb_1.Message {
-      #one_of_decls: number[][] = [];
-      constructor(data?: any[] | {}) {
-        super();
-        pb_1.Message.initialize(
-          this,
-          Array.isArray(data) ? data : [],
-          0,
-          -1,
-          [],
-          this.#one_of_decls
-        );
-        if (!Array.isArray(data) && typeof data == "object") {
+        set content(value: string) {
+            pb_1.Message.setField(this, 1, value);
         }
-      }
-      static fromObject(data: {}): Result {
-        const message = new Result({});
-        return message;
-      }
-      toObject() {
-        const data: {} = {};
-        return data;
-      }
-      serialize(): Uint8Array;
-      serialize(w: pb_1.BinaryWriter): void;
-      serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
-        const writer = w || new pb_1.BinaryWriter();
-        if (!w) return writer.getResultBuffer();
-      }
-      static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Result {
-        const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes),
-          message = new Result();
-        while (reader.nextField()) {
-          if (reader.isEndGroup()) break;
-          switch (reader.getFieldNumber()) {
-            default:
-              reader.skipField();
-          }
+        static fromObject(data: {
+            content?: string;
+        }): Error {
+            const message = new Error({});
+            if (data.content != null) {
+                message.content = data.content;
+            }
+            return message;
         }
-        return message;
-      }
-      serializeBinary(): Uint8Array {
-        return this.serialize();
-      }
-      static deserializeBinary(bytes: Uint8Array): Result {
-        return Result.deserialize(bytes);
-      }
+        toObject() {
+            const data: {
+                content?: string;
+            } = {};
+            if (this.content != null) {
+                data.content = this.content;
+            }
+            return data;
+        }
+        serialize(): Uint8Array;
+        serialize(w: pb_1.BinaryWriter): void;
+        serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+            const writer = w || new pb_1.BinaryWriter();
+            if (this.content.length)
+                writer.writeString(1, this.content);
+            if (!w)
+                return writer.getResultBuffer();
+        }
+        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Error {
+            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new Error();
+            while (reader.nextField()) {
+                if (reader.isEndGroup())
+                    break;
+                switch (reader.getFieldNumber()) {
+                    case 1:
+                        message.content = reader.readString();
+                        break;
+                    default: reader.skipField();
+                }
+            }
+            return message;
+        }
+        serializeBinary(): Uint8Array {
+            return this.serialize();
+        }
+        static deserializeBinary(bytes: Uint8Array): Error {
+            return Error.deserialize(bytes);
+        }
     }
-  }
-  interface GrpcUnaryServiceInterface<P, R> {
-    (
-      message: P,
-      metadata: grpc_1.Metadata,
-      options: grpc_1.CallOptions,
-      callback: grpc_1.requestCallback<R>
-    ): grpc_1.ClientUnaryCall;
-    (
-      message: P,
-      metadata: grpc_1.Metadata,
-      callback: grpc_1.requestCallback<R>
-    ): grpc_1.ClientUnaryCall;
-    (
-      message: P,
-      options: grpc_1.CallOptions,
-      callback: grpc_1.requestCallback<R>
-    ): grpc_1.ClientUnaryCall;
-    (message: P, callback: grpc_1.requestCallback<R>): grpc_1.ClientUnaryCall;
-  }
-  interface GrpcStreamServiceInterface<P, R> {
-    (
-      message: P,
-      metadata: grpc_1.Metadata,
-      options?: grpc_1.CallOptions
-    ): grpc_1.ClientReadableStream<R>;
-    (message: P, options?: grpc_1.CallOptions): grpc_1.ClientReadableStream<R>;
-  }
-  interface GrpWritableServiceInterface<P, R> {
-    (
-      metadata: grpc_1.Metadata,
-      options: grpc_1.CallOptions,
-      callback: grpc_1.requestCallback<R>
-    ): grpc_1.ClientWritableStream<P>;
-    (
-      metadata: grpc_1.Metadata,
-      callback: grpc_1.requestCallback<R>
-    ): grpc_1.ClientWritableStream<P>;
-    (
-      options: grpc_1.CallOptions,
-      callback: grpc_1.requestCallback<R>
-    ): grpc_1.ClientWritableStream<P>;
-    (callback: grpc_1.requestCallback<R>): grpc_1.ClientWritableStream<P>;
-  }
-  interface GrpcChunkServiceInterface<P, R> {
-    (metadata: grpc_1.Metadata, options?: grpc_1.CallOptions): grpc_1.ClientDuplexStream<P, R>;
-    (options?: grpc_1.CallOptions): grpc_1.ClientDuplexStream<P, R>;
-  }
-  interface GrpcPromiseServiceInterface<P, R> {
-    (message: P, metadata: grpc_1.Metadata, options?: grpc_1.CallOptions): Promise<R>;
-    (message: P, options?: grpc_1.CallOptions): Promise<R>;
-  }
-  export abstract class UnimplementedQueueService {
-    static definition = {
-      pop: {
-        path: "/RabbitMQ.Queue/pop",
-        requestStream: false,
-        responseStream: false,
-        requestSerialize: (message: RabbitMQMessage.Pop) => Buffer.from(message.serialize()),
-        requestDeserialize: (bytes: Buffer) =>
-          RabbitMQMessage.Pop.deserialize(new Uint8Array(bytes)),
-        responseSerialize: (message: RabbitMQMessage) => Buffer.from(message.serialize()),
-        responseDeserialize: (bytes: Buffer) => RabbitMQMessage.deserialize(new Uint8Array(bytes))
-      },
-      ack: {
-        path: "/RabbitMQ.Queue/ack",
-        requestStream: false,
-        responseStream: false,
-        requestSerialize: (message: RabbitMQMessage) => Buffer.from(message.serialize()),
-        requestDeserialize: (bytes: Buffer) => RabbitMQMessage.deserialize(new Uint8Array(bytes)),
-        responseSerialize: (message: RabbitMQMessage.Result) => Buffer.from(message.serialize()),
-        responseDeserialize: (bytes: Buffer) =>
-          RabbitMQMessage.Result.deserialize(new Uint8Array(bytes))
-      },
-      error: {
-        path: "/RabbitMQ.Queue/error",
-        requestStream: false,
-        responseStream: false,
-        requestSerialize: (message: Error) => Buffer.from(message.serialize()),
-        requestDeserialize: (bytes: Buffer) => Error.deserialize(new Uint8Array(bytes)),
-        responseSerialize: (message: Error.Result) => Buffer.from(message.serialize()),
-        responseDeserialize: (bytes: Buffer) => Error.Result.deserialize(new Uint8Array(bytes))
-      }
-    };
-    [method: string]: grpc_1.UntypedHandleCall;
-    abstract pop(
-      call: grpc_1.ServerUnaryCall<RabbitMQMessage.Pop, RabbitMQMessage>,
-      callback: grpc_1.sendUnaryData<RabbitMQMessage>
-    ): void;
-    abstract ack(
-      call: grpc_1.ServerUnaryCall<RabbitMQMessage, RabbitMQMessage.Result>,
-      callback: grpc_1.sendUnaryData<RabbitMQMessage.Result>
-    ): void;
-    abstract error(
-      call: grpc_1.ServerUnaryCall<Error, Error.Result>,
-      callback: grpc_1.sendUnaryData<Error.Result>
-    ): void;
-  }
-  export class QueueClient extends grpc_1.makeGenericClientConstructor(
-    UnimplementedQueueService.definition,
-    "Queue",
-    {}
-  ) {
-    constructor(
-      address: string,
-      credentials: grpc_1.ChannelCredentials,
-      options?: Partial<grpc_1.ChannelOptions>
-    ) {
-      super(address, credentials, options);
+    export namespace Error {
+        export class Result extends pb_1.Message {
+            #one_of_decls: number[][] = [];
+            constructor(data?: any[] | {}) {
+                super();
+                pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+                if (!Array.isArray(data) && typeof data == "object") { }
+            }
+            static fromObject(data: {}): Result {
+                const message = new Result({});
+                return message;
+            }
+            toObject() {
+                const data: {} = {};
+                return data;
+            }
+            serialize(): Uint8Array;
+            serialize(w: pb_1.BinaryWriter): void;
+            serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+                const writer = w || new pb_1.BinaryWriter();
+                if (!w)
+                    return writer.getResultBuffer();
+            }
+            static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Result {
+                const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new Result();
+                while (reader.nextField()) {
+                    if (reader.isEndGroup())
+                        break;
+                    switch (reader.getFieldNumber()) {
+                        default: reader.skipField();
+                    }
+                }
+                return message;
+            }
+            serializeBinary(): Uint8Array {
+                return this.serialize();
+            }
+            static deserializeBinary(bytes: Uint8Array): Result {
+                return Result.deserialize(bytes);
+            }
+        }
     }
-    pop: GrpcUnaryServiceInterface<RabbitMQMessage.Pop, RabbitMQMessage> = (
-      message: RabbitMQMessage.Pop,
-      metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage>,
-      options?: grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage>,
-      callback?: grpc_1.requestCallback<RabbitMQMessage>
-    ): grpc_1.ClientUnaryCall => {
-      return super.pop(message, metadata, options, callback);
-    };
-    ack: GrpcUnaryServiceInterface<RabbitMQMessage, RabbitMQMessage.Result> = (
-      message: RabbitMQMessage,
-      metadata:
-        | grpc_1.Metadata
-        | grpc_1.CallOptions
-        | grpc_1.requestCallback<RabbitMQMessage.Result>,
-      options?: grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage.Result>,
-      callback?: grpc_1.requestCallback<RabbitMQMessage.Result>
-    ): grpc_1.ClientUnaryCall => {
-      return super.ack(message, metadata, options, callback);
-    };
-    error: GrpcUnaryServiceInterface<Error, Error.Result> = (
-      message: Error,
-      metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<Error.Result>,
-      options?: grpc_1.CallOptions | grpc_1.requestCallback<Error.Result>,
-      callback?: grpc_1.requestCallback<Error.Result>
-    ): grpc_1.ClientUnaryCall => {
-      return super.error(message, metadata, options, callback);
-    };
-  }
+    interface GrpcUnaryServiceInterface<P, R> {
+        (message: P, metadata: grpc_1.Metadata, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<R>): grpc_1.ClientUnaryCall;
+        (message: P, metadata: grpc_1.Metadata, callback: grpc_1.requestCallback<R>): grpc_1.ClientUnaryCall;
+        (message: P, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<R>): grpc_1.ClientUnaryCall;
+        (message: P, callback: grpc_1.requestCallback<R>): grpc_1.ClientUnaryCall;
+    }
+    interface GrpcStreamServiceInterface<P, R> {
+        (message: P, metadata: grpc_1.Metadata, options?: grpc_1.CallOptions): grpc_1.ClientReadableStream<R>;
+        (message: P, options?: grpc_1.CallOptions): grpc_1.ClientReadableStream<R>;
+    }
+    interface GrpWritableServiceInterface<P, R> {
+        (metadata: grpc_1.Metadata, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<R>): grpc_1.ClientWritableStream<P>;
+        (metadata: grpc_1.Metadata, callback: grpc_1.requestCallback<R>): grpc_1.ClientWritableStream<P>;
+        (options: grpc_1.CallOptions, callback: grpc_1.requestCallback<R>): grpc_1.ClientWritableStream<P>;
+        (callback: grpc_1.requestCallback<R>): grpc_1.ClientWritableStream<P>;
+    }
+    interface GrpcChunkServiceInterface<P, R> {
+        (metadata: grpc_1.Metadata, options?: grpc_1.CallOptions): grpc_1.ClientDuplexStream<P, R>;
+        (options?: grpc_1.CallOptions): grpc_1.ClientDuplexStream<P, R>;
+    }
+    interface GrpcPromiseServiceInterface<P, R> {
+        (message: P, metadata: grpc_1.Metadata, options?: grpc_1.CallOptions): Promise<R>;
+        (message: P, options?: grpc_1.CallOptions): Promise<R>;
+    }
+    export abstract class UnimplementedQueueService {
+        static definition = {
+            pop: {
+                path: "/RabbitMQ.Queue/pop",
+                requestStream: false,
+                responseStream: false,
+                requestSerialize: (message: RabbitMQMessage.Pop) => Buffer.from(message.serialize()),
+                requestDeserialize: (bytes: Buffer) => RabbitMQMessage.Pop.deserialize(new Uint8Array(bytes)),
+                responseSerialize: (message: RabbitMQMessage) => Buffer.from(message.serialize()),
+                responseDeserialize: (bytes: Buffer) => RabbitMQMessage.deserialize(new Uint8Array(bytes))
+            },
+            ack: {
+                path: "/RabbitMQ.Queue/ack",
+                requestStream: false,
+                responseStream: false,
+                requestSerialize: (message: RabbitMQMessage) => Buffer.from(message.serialize()),
+                requestDeserialize: (bytes: Buffer) => RabbitMQMessage.deserialize(new Uint8Array(bytes)),
+                responseSerialize: (message: RabbitMQMessage.Result) => Buffer.from(message.serialize()),
+                responseDeserialize: (bytes: Buffer) => RabbitMQMessage.Result.deserialize(new Uint8Array(bytes))
+            },
+            nack: {
+                path: "/RabbitMQ.Queue/nack",
+                requestStream: false,
+                responseStream: false,
+                requestSerialize: (message: RabbitMQMessage) => Buffer.from(message.serialize()),
+                requestDeserialize: (bytes: Buffer) => RabbitMQMessage.deserialize(new Uint8Array(bytes)),
+                responseSerialize: (message: RabbitMQMessage.Result) => Buffer.from(message.serialize()),
+                responseDeserialize: (bytes: Buffer) => RabbitMQMessage.Result.deserialize(new Uint8Array(bytes))
+            },
+            error: {
+                path: "/RabbitMQ.Queue/error",
+                requestStream: false,
+                responseStream: false,
+                requestSerialize: (message: Error) => Buffer.from(message.serialize()),
+                requestDeserialize: (bytes: Buffer) => Error.deserialize(new Uint8Array(bytes)),
+                responseSerialize: (message: Error.Result) => Buffer.from(message.serialize()),
+                responseDeserialize: (bytes: Buffer) => Error.Result.deserialize(new Uint8Array(bytes))
+            }
+        };
+        [method: string]: grpc_1.UntypedHandleCall;
+        abstract pop(call: grpc_1.ServerUnaryCall<RabbitMQMessage.Pop, RabbitMQMessage>, callback: grpc_1.sendUnaryData<RabbitMQMessage>): void;
+        abstract ack(call: grpc_1.ServerUnaryCall<RabbitMQMessage, RabbitMQMessage.Result>, callback: grpc_1.sendUnaryData<RabbitMQMessage.Result>): void;
+        abstract nack(call: grpc_1.ServerUnaryCall<RabbitMQMessage, RabbitMQMessage.Result>, callback: grpc_1.sendUnaryData<RabbitMQMessage.Result>): void;
+        abstract error(call: grpc_1.ServerUnaryCall<Error, Error.Result>, callback: grpc_1.sendUnaryData<Error.Result>): void;
+    }
+    export class QueueClient extends grpc_1.makeGenericClientConstructor(UnimplementedQueueService.definition, "Queue", {}) {
+        constructor(address: string, credentials: grpc_1.ChannelCredentials, options?: Partial<grpc_1.ChannelOptions>) {
+            super(address, credentials, options);
+        }
+        pop: GrpcUnaryServiceInterface<RabbitMQMessage.Pop, RabbitMQMessage> = (message: RabbitMQMessage.Pop, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage>, options?: grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage>, callback?: grpc_1.requestCallback<RabbitMQMessage>): grpc_1.ClientUnaryCall => {
+            return super.pop(message, metadata, options, callback);
+        };
+        ack: GrpcUnaryServiceInterface<RabbitMQMessage, RabbitMQMessage.Result> = (message: RabbitMQMessage, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage.Result>, options?: grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage.Result>, callback?: grpc_1.requestCallback<RabbitMQMessage.Result>): grpc_1.ClientUnaryCall => {
+            return super.ack(message, metadata, options, callback);
+        };
+        nack: GrpcUnaryServiceInterface<RabbitMQMessage, RabbitMQMessage.Result> = (message: RabbitMQMessage, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage.Result>, options?: grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage.Result>, callback?: grpc_1.requestCallback<RabbitMQMessage.Result>): grpc_1.ClientUnaryCall => {
+            return super.nack(message, metadata, options, callback);
+        };
+        error: GrpcUnaryServiceInterface<Error, Error.Result> = (message: Error, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<Error.Result>, options?: grpc_1.CallOptions | grpc_1.requestCallback<Error.Result>, callback?: grpc_1.requestCallback<Error.Result>): grpc_1.ClientUnaryCall => {
+            return super.error(message, metadata, options, callback);
+        };
+    }
 }

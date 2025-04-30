@@ -24,5 +24,6 @@ message Error {
 service Queue {
     rpc pop(RabbitMQMessage.Pop) returns (RabbitMQMessage);
     rpc ack(RabbitMQMessage) returns (RabbitMQMessage.Result);
+    rpc nack(RabbitMQMessage) returns (RabbitMQMessage.Result);
     rpc error(Error) returns (Error.Result);
 }
