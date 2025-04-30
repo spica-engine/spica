@@ -85,7 +85,17 @@ abstract class __MultipartFormDataBody extends __BaseBody {
     const [req] = context.getArgs();
     if (this.isContentTypeValid(req)) {
       const files = this.isArray ? req.body : [req.body];
-      return Promise.all(files.map(b => fs.promises.unlink(b.path)));
+      return Promise.all(
+        files.map(file =>
+          fs.promises
+            .unlink(file.path)
+            .catch(e =>
+              console.error(
+                `Storage can't remove the tmp file ${file.filename}, reason: ${e.message}`
+              )
+            )
+        )
+      );
     }
     return Promise.resolve();
   }

@@ -23,13 +23,8 @@ export class Storage {
   @UseInterceptors(MultipartFormDataParser({isArray: true}))
   @Post("failed")
   uploadManyFailed(@Req() req) {
+    // will trigger ENOENT error on file removals
     fs.rmSync(req.body[0].path);
-    return "OK";
-  }
-
-  @UseInterceptors(MultipartFormDataParser({isArray: false}))
-  @Put("succeeded")
-  uploadOneFailed() {
     return "OK";
   }
 }
@@ -37,7 +32,7 @@ export class Storage {
 describe("Body Parsers", () => {
   let req: Request;
   let app: INestApplication;
-  let tmpFileDest = path.join(process.env.TEST_TMPDIR, "tmp_files");
+  let tmpFolder = path.join(process.env.TEST_TMPDIR, "tmp_files");
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -49,7 +44,7 @@ describe("Body Parsers", () => {
           useValue: {
             strategy: "default",
             objectSizeLimit: 10,
-            defaultPath: tmpFileDest
+            defaultPath: tmpFolder
           }
         }
       ]
@@ -62,64 +57,41 @@ describe("Body Parsers", () => {
   });
 
   describe("MultipartFormDataParser", () => {
-    let body;
-    let headers;
-
-    describe("array", () => {
-      beforeEach(() => {
-        const meta = getMultipartFormDataMeta(
-          [
-            {
-              name: "file.txt",
-              data: "My File",
-              type: "text/plain"
-            },
-            {
-              name: "file2.txt",
-              data: "My File 2",
-              type: "text/plain"
-            }
-          ],
-          "post"
-        );
-        body = meta.body;
-        headers = meta.headers;
-      });
-
-      // it("should remove tmp files", async () => {
-      //   await req.post("/storage/succeeded", body, headers);
-      //   const tmpFile = fs.readdirSync(tmpFileDest);
-      //   expect(tmpFile).toEqual([]);
-      // });
-
-      fit("should remove all files even if ", async () => {
-        await req.post("/storage/failed", body, headers);
-        const tmpFile = fs.readdirSync(tmpFileDest);
-        expect(tmpFile).toEqual([]);
-      });
+    let files = Array(100).fill({
+      name: "file.txt",
+      data: "My File",
+      type: "text/plain"
     });
 
-    // describe("single", () => {
-    //   beforeEach(() => {
-    //     const meta = getMultipartFormDataMeta(
-    //       [
-    //         {
-    //           name: "file.txt",
-    //           data: "My File",
-    //           type: "text/plain"
-    //         }
-    //       ],
-    //       "put"
-    //     );
-    //     body = meta.body;
-    //     headers = meta.headers;
-    //   });
+    describe("cleanup", () => {
+      it("should remove tmp files for arrays", async () => {
+        const {body, headers} = getMultipartFormDataMeta(files, "post");
 
-    //   it("should remove tmp files", async () => {
-    //     await req.put("/storage", body, headers);
-    //     const tmpFile = fs.readdirSync(tmpFileDest);
-    //     expect(tmpFile).toEqual([]);
-    //   });
-    // });
+        const response = await req.post("/storage/succeeded", body, headers);
+        expect(response.statusCode).toEqual(201);
+
+        const tmpFiles = fs.readdirSync(tmpFolder);
+        expect(tmpFiles).toEqual([]);
+      });
+
+      it("should remove tmp files for single file", async () => {
+        const {body, headers} = getMultipartFormDataMeta([files[0]], "put");
+
+        const response = await req.put("/storage/succeeded", body, headers);
+        expect(response.statusCode).toEqual(200);
+
+        const tmpFiles = fs.readdirSync(tmpFolder);
+        expect(tmpFiles).toEqual([]);
+      });
+
+      it("should remove all files even if error occurred", async () => {
+        const {body, headers} = getMultipartFormDataMeta(files, "post");
+
+        const response = await req.post("/storage/failed", body, headers);
+        expect(response.statusCode).toEqual(201);
+        const tmpFiles = fs.readdirSync(tmpFolder);
+        expect(tmpFiles).toEqual([]);
+      });
+    });
   });
 });
