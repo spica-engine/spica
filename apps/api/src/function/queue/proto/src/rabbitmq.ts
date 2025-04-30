@@ -251,115 +251,6 @@ export namespace RabbitMQ {
             }
         }
     }
-    export class Error extends pb_1.Message {
-        #one_of_decls: number[][] = [];
-        constructor(data?: any[] | {
-            content?: string;
-        }) {
-            super();
-            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("content" in data && data.content != undefined) {
-                    this.content = data.content;
-                }
-            }
-        }
-        get content() {
-            return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
-        }
-        set content(value: string) {
-            pb_1.Message.setField(this, 1, value);
-        }
-        static fromObject(data: {
-            content?: string;
-        }): Error {
-            const message = new Error({});
-            if (data.content != null) {
-                message.content = data.content;
-            }
-            return message;
-        }
-        toObject() {
-            const data: {
-                content?: string;
-            } = {};
-            if (this.content != null) {
-                data.content = this.content;
-            }
-            return data;
-        }
-        serialize(): Uint8Array;
-        serialize(w: pb_1.BinaryWriter): void;
-        serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
-            const writer = w || new pb_1.BinaryWriter();
-            if (this.content.length)
-                writer.writeString(1, this.content);
-            if (!w)
-                return writer.getResultBuffer();
-        }
-        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Error {
-            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new Error();
-            while (reader.nextField()) {
-                if (reader.isEndGroup())
-                    break;
-                switch (reader.getFieldNumber()) {
-                    case 1:
-                        message.content = reader.readString();
-                        break;
-                    default: reader.skipField();
-                }
-            }
-            return message;
-        }
-        serializeBinary(): Uint8Array {
-            return this.serialize();
-        }
-        static deserializeBinary(bytes: Uint8Array): Error {
-            return Error.deserialize(bytes);
-        }
-    }
-    export namespace Error {
-        export class Result extends pb_1.Message {
-            #one_of_decls: number[][] = [];
-            constructor(data?: any[] | {}) {
-                super();
-                pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-                if (!Array.isArray(data) && typeof data == "object") { }
-            }
-            static fromObject(data: {}): Result {
-                const message = new Result({});
-                return message;
-            }
-            toObject() {
-                const data: {} = {};
-                return data;
-            }
-            serialize(): Uint8Array;
-            serialize(w: pb_1.BinaryWriter): void;
-            serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
-                const writer = w || new pb_1.BinaryWriter();
-                if (!w)
-                    return writer.getResultBuffer();
-            }
-            static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Result {
-                const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new Result();
-                while (reader.nextField()) {
-                    if (reader.isEndGroup())
-                        break;
-                    switch (reader.getFieldNumber()) {
-                        default: reader.skipField();
-                    }
-                }
-                return message;
-            }
-            serializeBinary(): Uint8Array {
-                return this.serialize();
-            }
-            static deserializeBinary(bytes: Uint8Array): Result {
-                return Result.deserialize(bytes);
-            }
-        }
-    }
     interface GrpcUnaryServiceInterface<P, R> {
         (message: P, metadata: grpc_1.Metadata, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<R>): grpc_1.ClientUnaryCall;
         (message: P, metadata: grpc_1.Metadata, callback: grpc_1.requestCallback<R>): grpc_1.ClientUnaryCall;
@@ -412,22 +303,12 @@ export namespace RabbitMQ {
                 requestDeserialize: (bytes: Buffer) => RabbitMQMessage.deserialize(new Uint8Array(bytes)),
                 responseSerialize: (message: RabbitMQMessage.Result) => Buffer.from(message.serialize()),
                 responseDeserialize: (bytes: Buffer) => RabbitMQMessage.Result.deserialize(new Uint8Array(bytes))
-            },
-            error: {
-                path: "/RabbitMQ.Queue/error",
-                requestStream: false,
-                responseStream: false,
-                requestSerialize: (message: Error) => Buffer.from(message.serialize()),
-                requestDeserialize: (bytes: Buffer) => Error.deserialize(new Uint8Array(bytes)),
-                responseSerialize: (message: Error.Result) => Buffer.from(message.serialize()),
-                responseDeserialize: (bytes: Buffer) => Error.Result.deserialize(new Uint8Array(bytes))
             }
         };
         [method: string]: grpc_1.UntypedHandleCall;
         abstract pop(call: grpc_1.ServerUnaryCall<RabbitMQMessage.Pop, RabbitMQMessage>, callback: grpc_1.sendUnaryData<RabbitMQMessage>): void;
         abstract ack(call: grpc_1.ServerUnaryCall<RabbitMQMessage, RabbitMQMessage.Result>, callback: grpc_1.sendUnaryData<RabbitMQMessage.Result>): void;
         abstract nack(call: grpc_1.ServerUnaryCall<RabbitMQMessage, RabbitMQMessage.Result>, callback: grpc_1.sendUnaryData<RabbitMQMessage.Result>): void;
-        abstract error(call: grpc_1.ServerUnaryCall<Error, Error.Result>, callback: grpc_1.sendUnaryData<Error.Result>): void;
     }
     export class QueueClient extends grpc_1.makeGenericClientConstructor(UnimplementedQueueService.definition, "Queue", {}) {
         constructor(address: string, credentials: grpc_1.ChannelCredentials, options?: Partial<grpc_1.ChannelOptions>) {
@@ -441,9 +322,6 @@ export namespace RabbitMQ {
         };
         nack: GrpcUnaryServiceInterface<RabbitMQMessage, RabbitMQMessage.Result> = (message: RabbitMQMessage, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage.Result>, options?: grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage.Result>, callback?: grpc_1.requestCallback<RabbitMQMessage.Result>): grpc_1.ClientUnaryCall => {
             return super.nack(message, metadata, options, callback);
-        };
-        error: GrpcUnaryServiceInterface<Error, Error.Result> = (message: Error, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<Error.Result>, options?: grpc_1.CallOptions | grpc_1.requestCallback<Error.Result>, callback?: grpc_1.requestCallback<Error.Result>): grpc_1.ClientUnaryCall => {
-            return super.error(message, metadata, options, callback);
         };
     }
 }
