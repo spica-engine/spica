@@ -88,10 +88,32 @@ export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueServi
     }
   }
 
+  nack(
+    call: grpc.ServerUnaryCall<RabbitMQ.RabbitMQMessage, RabbitMQ.RabbitMQMessage.Result>,
+    callback: grpc.sendUnaryData<RabbitMQ.RabbitMQMessage.Result>
+  ) {
+    if (!this.channelMap.has(call.request.id)) {
+      callback({code: 1}, undefined);
+    } else {
+      const serverResponse = this.channelMap.get(call.request.id);
+      if (call.request.id) {
+        const msg = {
+          content: Buffer.from(call.request.content),
+          fields: JSON.parse(call.request.fields),
+          properties: JSON.parse(call.request.properties)
+        };
+
+        serverResponse.channel.nack(msg);
+      }
+      this.dequeue(call.request.id);
+    }
+  }
+
   create() {
     return {
       pop: this.pop.bind(this),
       ack: this.ack.bind(this),
+      nack: this.nack.bind(this),
       error: this.error.bind(this)
     };
   }

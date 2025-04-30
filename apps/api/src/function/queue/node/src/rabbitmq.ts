@@ -23,11 +23,11 @@ export class RabbitMQQueue {
     });
   }
 
-  error(e: RabbitMQ.Error): Promise<RabbitMQ.Error.Result> {
+  ack(e: RabbitMQ.RabbitMQMessage): Promise<RabbitMQ.RabbitMQMessage.Result> {
     return new Promise((resolve, reject) => {
-      this.client.error(e, (err, event) => {
-        if (err) {
-          reject(new Error(err.details));
+      this.client.ack(e, (error, event) => {
+        if (error) {
+          reject(error);
         } else {
           resolve(event);
         }
@@ -35,9 +35,9 @@ export class RabbitMQQueue {
     });
   }
 
-  ack(e: RabbitMQ.RabbitMQMessage): Promise<RabbitMQ.RabbitMQMessage.Result> {
+  nack(e: RabbitMQ.RabbitMQMessage): Promise<RabbitMQ.RabbitMQMessage.Result> {
     return new Promise((resolve, reject) => {
-      this.client.ack(e, (error, event) => {
+      this.client.nack(e, (error, event) => {
         if (error) {
           reject(error);
         } else {
@@ -61,7 +61,10 @@ export class RabbitMQMessage {
 }
 
 export class RabbitMQChannel {
-  constructor(private _ack: (e: RabbitMQ.RabbitMQMessage) => Promise<void>) {}
+  constructor(
+    private _ack: (e: RabbitMQ.RabbitMQMessage) => Promise<void>,
+    private _nack: (e: RabbitMQ.RabbitMQMessage) => Promise<void>
+  ) {}
 
   ack(msg: RabbitMQ.RabbitMQMessage) {
     const rabbitmqMessage = new RabbitMQ.RabbitMQMessage({
@@ -70,5 +73,14 @@ export class RabbitMQChannel {
       properties: JSON.stringify(msg.properties)
     });
     return this._ack(rabbitmqMessage);
+  }
+
+  nack(msg: RabbitMQ.RabbitMQMessage) {
+    const rabbitmqMessage = new RabbitMQ.RabbitMQMessage({
+      content: new Uint8Array(msg.content),
+      fields: JSON.stringify(msg.fields),
+      properties: JSON.stringify(msg.properties)
+    });
+    return this._nack(rabbitmqMessage);
   }
 }
