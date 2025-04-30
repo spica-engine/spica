@@ -11,7 +11,7 @@ export class RabbitMQQueue {
     );
   }
 
-  pop(e: RabbitMQ.RabbitMQMessage.Pop): Promise<RabbitMQ.RabbitMQMessage> {
+  pop(e: RabbitMQ.Message.Pop): Promise<RabbitMQ.Message> {
     return new Promise((resolve, reject) => {
       this.client.pop(e, (error, event) => {
         if (error) {
@@ -23,7 +23,7 @@ export class RabbitMQQueue {
     });
   }
 
-  ack(e: RabbitMQ.RabbitMQMessage): Promise<RabbitMQ.RabbitMQMessage.Result> {
+  ack(e: RabbitMQ.Message): Promise<RabbitMQ.Message.Result> {
     return new Promise((resolve, reject) => {
       this.client.ack(e, (error, event) => {
         if (error) {
@@ -35,7 +35,7 @@ export class RabbitMQQueue {
     });
   }
 
-  nack(e: RabbitMQ.RabbitMQMessage): Promise<RabbitMQ.RabbitMQMessage.Result> {
+  nack(e: RabbitMQ.Message): Promise<RabbitMQ.Message.Result> {
     return new Promise((resolve, reject) => {
       this.client.nack(e, (error, event) => {
         if (error) {
@@ -53,7 +53,7 @@ export class RabbitMQMessage {
   fields: string;
   properties: string;
 
-  constructor(message: RabbitMQ.RabbitMQMessage) {
+  constructor(message: RabbitMQ.Message) {
     this.content = message.content;
     this.fields = message.fields;
     this.properties = message.properties;
@@ -62,25 +62,25 @@ export class RabbitMQMessage {
 
 export class RabbitMQChannel {
   constructor(
-    private _ack: (e: RabbitMQ.RabbitMQMessage) => Promise<void>,
-    private _nack: (e: RabbitMQ.RabbitMQMessage) => Promise<void>
+    private _ack: (e: RabbitMQ.Message) => Promise<void>,
+    private _nack: (e: RabbitMQ.Message) => Promise<void>
   ) {}
 
-  ack(msg: RabbitMQ.RabbitMQMessage) {
-    const rabbitmqMessage = new RabbitMQ.RabbitMQMessage({
+  ack(msg: RabbitMQ.Message) {
+    const message = new RabbitMQ.Message({
       content: new Uint8Array(msg.content),
       fields: JSON.stringify(msg.fields),
       properties: JSON.stringify(msg.properties)
     });
-    return this._ack(rabbitmqMessage);
+    return this._ack(message);
   }
 
-  nack(msg: RabbitMQ.RabbitMQMessage) {
-    const rabbitmqMessage = new RabbitMQ.RabbitMQMessage({
+  nack(msg: RabbitMQ.Message) {
+    const message = new RabbitMQ.Message({
       content: new Uint8Array(msg.content),
       fields: JSON.stringify(msg.fields),
       properties: JSON.stringify(msg.properties)
     });
-    return this._nack(rabbitmqMessage);
+    return this._nack(message);
   }
 }

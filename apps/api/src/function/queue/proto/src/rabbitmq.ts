@@ -6,7 +6,7 @@
 import * as pb_1 from "google-protobuf";
 import * as grpc_1 from "@grpc/grpc-js";
 export namespace RabbitMQ {
-    export class RabbitMQMessage extends pb_1.Message {
+    export class Message extends pb_1.Message {
         #one_of_decls: number[][] = [];
         constructor(data?: any[] | {
             id?: string;
@@ -60,8 +60,8 @@ export namespace RabbitMQ {
             content?: Uint8Array;
             fields?: string;
             properties?: string;
-        }): RabbitMQMessage {
-            const message = new RabbitMQMessage({});
+        }): Message {
+            const message = new Message({});
             if (data.id != null) {
                 message.id = data.id;
             }
@@ -112,8 +112,8 @@ export namespace RabbitMQ {
             if (!w)
                 return writer.getResultBuffer();
         }
-        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): RabbitMQMessage {
-            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new RabbitMQMessage();
+        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Message {
+            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new Message();
             while (reader.nextField()) {
                 if (reader.isEndGroup())
                     break;
@@ -138,11 +138,11 @@ export namespace RabbitMQ {
         serializeBinary(): Uint8Array {
             return this.serialize();
         }
-        static deserializeBinary(bytes: Uint8Array): RabbitMQMessage {
-            return RabbitMQMessage.deserialize(bytes);
+        static deserializeBinary(bytes: Uint8Array): Message {
+            return Message.deserialize(bytes);
         }
     }
-    export namespace RabbitMQMessage {
+    export namespace Message {
         export class Pop extends pb_1.Message {
             #one_of_decls: number[][] = [];
             constructor(data?: any[] | {
@@ -281,46 +281,46 @@ export namespace RabbitMQ {
                 path: "/RabbitMQ.Queue/pop",
                 requestStream: false,
                 responseStream: false,
-                requestSerialize: (message: RabbitMQMessage.Pop) => Buffer.from(message.serialize()),
-                requestDeserialize: (bytes: Buffer) => RabbitMQMessage.Pop.deserialize(new Uint8Array(bytes)),
-                responseSerialize: (message: RabbitMQMessage) => Buffer.from(message.serialize()),
-                responseDeserialize: (bytes: Buffer) => RabbitMQMessage.deserialize(new Uint8Array(bytes))
+                requestSerialize: (message: Message.Pop) => Buffer.from(message.serialize()),
+                requestDeserialize: (bytes: Buffer) => Message.Pop.deserialize(new Uint8Array(bytes)),
+                responseSerialize: (message: Message) => Buffer.from(message.serialize()),
+                responseDeserialize: (bytes: Buffer) => Message.deserialize(new Uint8Array(bytes))
             },
             ack: {
                 path: "/RabbitMQ.Queue/ack",
                 requestStream: false,
                 responseStream: false,
-                requestSerialize: (message: RabbitMQMessage) => Buffer.from(message.serialize()),
-                requestDeserialize: (bytes: Buffer) => RabbitMQMessage.deserialize(new Uint8Array(bytes)),
-                responseSerialize: (message: RabbitMQMessage.Result) => Buffer.from(message.serialize()),
-                responseDeserialize: (bytes: Buffer) => RabbitMQMessage.Result.deserialize(new Uint8Array(bytes))
+                requestSerialize: (message: Message) => Buffer.from(message.serialize()),
+                requestDeserialize: (bytes: Buffer) => Message.deserialize(new Uint8Array(bytes)),
+                responseSerialize: (message: Message.Result) => Buffer.from(message.serialize()),
+                responseDeserialize: (bytes: Buffer) => Message.Result.deserialize(new Uint8Array(bytes))
             },
             nack: {
                 path: "/RabbitMQ.Queue/nack",
                 requestStream: false,
                 responseStream: false,
-                requestSerialize: (message: RabbitMQMessage) => Buffer.from(message.serialize()),
-                requestDeserialize: (bytes: Buffer) => RabbitMQMessage.deserialize(new Uint8Array(bytes)),
-                responseSerialize: (message: RabbitMQMessage.Result) => Buffer.from(message.serialize()),
-                responseDeserialize: (bytes: Buffer) => RabbitMQMessage.Result.deserialize(new Uint8Array(bytes))
+                requestSerialize: (message: Message) => Buffer.from(message.serialize()),
+                requestDeserialize: (bytes: Buffer) => Message.deserialize(new Uint8Array(bytes)),
+                responseSerialize: (message: Message.Result) => Buffer.from(message.serialize()),
+                responseDeserialize: (bytes: Buffer) => Message.Result.deserialize(new Uint8Array(bytes))
             }
         };
         [method: string]: grpc_1.UntypedHandleCall;
-        abstract pop(call: grpc_1.ServerUnaryCall<RabbitMQMessage.Pop, RabbitMQMessage>, callback: grpc_1.sendUnaryData<RabbitMQMessage>): void;
-        abstract ack(call: grpc_1.ServerUnaryCall<RabbitMQMessage, RabbitMQMessage.Result>, callback: grpc_1.sendUnaryData<RabbitMQMessage.Result>): void;
-        abstract nack(call: grpc_1.ServerUnaryCall<RabbitMQMessage, RabbitMQMessage.Result>, callback: grpc_1.sendUnaryData<RabbitMQMessage.Result>): void;
+        abstract pop(call: grpc_1.ServerUnaryCall<Message.Pop, Message>, callback: grpc_1.sendUnaryData<Message>): void;
+        abstract ack(call: grpc_1.ServerUnaryCall<Message, Message.Result>, callback: grpc_1.sendUnaryData<Message.Result>): void;
+        abstract nack(call: grpc_1.ServerUnaryCall<Message, Message.Result>, callback: grpc_1.sendUnaryData<Message.Result>): void;
     }
     export class QueueClient extends grpc_1.makeGenericClientConstructor(UnimplementedQueueService.definition, "Queue", {}) {
         constructor(address: string, credentials: grpc_1.ChannelCredentials, options?: Partial<grpc_1.ChannelOptions>) {
             super(address, credentials, options);
         }
-        pop: GrpcUnaryServiceInterface<RabbitMQMessage.Pop, RabbitMQMessage> = (message: RabbitMQMessage.Pop, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage>, options?: grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage>, callback?: grpc_1.requestCallback<RabbitMQMessage>): grpc_1.ClientUnaryCall => {
+        pop: GrpcUnaryServiceInterface<Message.Pop, Message> = (message: Message.Pop, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<Message>, options?: grpc_1.CallOptions | grpc_1.requestCallback<Message>, callback?: grpc_1.requestCallback<Message>): grpc_1.ClientUnaryCall => {
             return super.pop(message, metadata, options, callback);
         };
-        ack: GrpcUnaryServiceInterface<RabbitMQMessage, RabbitMQMessage.Result> = (message: RabbitMQMessage, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage.Result>, options?: grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage.Result>, callback?: grpc_1.requestCallback<RabbitMQMessage.Result>): grpc_1.ClientUnaryCall => {
+        ack: GrpcUnaryServiceInterface<Message, Message.Result> = (message: Message, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>, options?: grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>, callback?: grpc_1.requestCallback<Message.Result>): grpc_1.ClientUnaryCall => {
             return super.ack(message, metadata, options, callback);
         };
-        nack: GrpcUnaryServiceInterface<RabbitMQMessage, RabbitMQMessage.Result> = (message: RabbitMQMessage, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage.Result>, options?: grpc_1.CallOptions | grpc_1.requestCallback<RabbitMQMessage.Result>, callback?: grpc_1.requestCallback<RabbitMQMessage.Result>): grpc_1.ClientUnaryCall => {
+        nack: GrpcUnaryServiceInterface<Message, Message.Result> = (message: Message, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>, options?: grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>, callback?: grpc_1.requestCallback<Message.Result>): grpc_1.ClientUnaryCall => {
             return super.nack(message, metadata, options, callback);
         };
     }

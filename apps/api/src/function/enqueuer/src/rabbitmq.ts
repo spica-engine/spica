@@ -115,7 +115,7 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
       target
     });
 
-    const message = new RabbitMQ.RabbitMQMessage({
+    const message = new RabbitMQ.Message({
       content: msg.content,
       fields: JSON.stringify(msg.fields),
       properties: JSON.stringify(msg.properties)

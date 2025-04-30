@@ -23,7 +23,7 @@ export interface RabbitMQOptions {
 export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueService.definition> {
   readonly TYPE = RabbitMQ.UnimplementedQueueService.definition;
 
-  private queue = new Map<string, RabbitMQ.RabbitMQMessage>();
+  private queue = new Map<string, RabbitMQ.Message>();
 
   private channelMap = new Map<string, {channel: amqp.Channel; options: RabbitMQOptions}>();
 
@@ -35,12 +35,7 @@ export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueServi
     return this.queue.get(id);
   }
 
-  enqueue(
-    id: string,
-    message: RabbitMQ.RabbitMQMessage,
-    channel: amqp.Channel,
-    options: RabbitMQOptions
-  ) {
+  enqueue(id: string, message: RabbitMQ.Message, channel: amqp.Channel, options: RabbitMQOptions) {
     this.queue.set(id, message);
     this.channelMap.set(id, {channel, options});
   }
@@ -51,8 +46,8 @@ export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueServi
   }
 
   pop(
-    call: grpc.ServerUnaryCall<RabbitMQ.RabbitMQMessage.Pop, RabbitMQ.RabbitMQMessage>,
-    callback: grpc.sendUnaryData<RabbitMQ.RabbitMQMessage>
+    call: grpc.ServerUnaryCall<RabbitMQ.Message.Pop, RabbitMQ.Message>,
+    callback: grpc.sendUnaryData<RabbitMQ.Message>
   ) {
     if (!this.queue.has(call.request.id)) {
       callback(new Error(`Queue has no item with id ${call.request.id}`), undefined);
@@ -63,8 +58,8 @@ export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueServi
   }
 
   ack(
-    call: grpc.ServerUnaryCall<RabbitMQ.RabbitMQMessage, RabbitMQ.RabbitMQMessage.Result>,
-    callback: grpc.sendUnaryData<RabbitMQ.RabbitMQMessage.Result>
+    call: grpc.ServerUnaryCall<RabbitMQ.Message, RabbitMQ.Message.Result>,
+    callback: grpc.sendUnaryData<RabbitMQ.Message.Result>
   ) {
     if (!this.channelMap.has(call.request.id)) {
       callback({code: 1}, undefined);
@@ -84,8 +79,8 @@ export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueServi
   }
 
   nack(
-    call: grpc.ServerUnaryCall<RabbitMQ.RabbitMQMessage, RabbitMQ.RabbitMQMessage.Result>,
-    callback: grpc.sendUnaryData<RabbitMQ.RabbitMQMessage.Result>
+    call: grpc.ServerUnaryCall<RabbitMQ.Message, RabbitMQ.Message.Result>,
+    callback: grpc.sendUnaryData<RabbitMQ.Message.Result>
   ) {
     if (!this.channelMap.has(call.request.id)) {
       callback({code: 1}, undefined);
