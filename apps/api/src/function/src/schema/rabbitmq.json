@@ -19,7 +19,8 @@
         },
         "durable": {
           "title": "Durable",
-          "type": "boolean"
+          "type": "boolean",
+          "default": false
         },
         "exclusive": {
           "title": "Exclusive",
@@ -29,7 +30,8 @@
     },
     "noAck": {
       "title": "No Acknowledgement",
-      "type": "boolean"
+      "type": "boolean",
+      "default": false
     }
   },
   "additionalProperties": false
