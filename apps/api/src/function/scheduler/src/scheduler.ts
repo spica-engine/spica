@@ -10,12 +10,19 @@ import {
   FirehoseEnqueuer,
   HttpEnqueuer,
   ScheduleEnqueuer,
-  SystemEnqueuer
+  SystemEnqueuer,
+  RabbitMQEnqueuer
 } from "@spica-server/function/enqueuer";
 import {DelegatePkgManager} from "@spica-server/function/pkgmanager";
 import {Npm} from "@spica-server/function/pkgmanager/node";
 import {LocalPackageManager} from "@spica-server/function/pkgmanager/local";
-import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
+import {
+  DatabaseQueue,
+  EventQueue,
+  FirehoseQueue,
+  HttpQueue,
+  RabbitMQQueue
+} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
 import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
@@ -37,6 +44,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   private httpQueue: HttpQueue;
   private databaseQueue: DatabaseQueue;
   private firehoseQueue: FirehoseQueue;
+  private rabbitmqQueue: RabbitMQQueue;
 
   readonly runtimes = new Map<string, Runtime>();
   readonly pkgmanagers = new Map<string, DelegatePkgManager>();
@@ -80,6 +88,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     this.firehoseQueue = new FirehoseQueue();
     this.queue.addQueue(this.firehoseQueue);
+
+    this.rabbitmqQueue = new RabbitMQQueue();
+    this.queue.addQueue(this.rabbitmqQueue);
   }
 
   async onModuleInit() {
@@ -123,6 +134,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     );
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
+
+    this.enqueuers.add(
+      new RabbitMQEnqueuer(this.queue, this.rabbitmqQueue, schedulerUnsubscription)
+    );
 
     if (typeof this.enqueuerFactory == "function") {
       const factory = this.enqueuerFactory(this.queue, this.jobReducer, this.commander);

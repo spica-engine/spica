@@ -1,0 +1,38 @@
+{
+  "$id": "http://spica.internal/function/enqueuer/rabbitmq",
+  "title": "RabbitMQ",
+  "description": "RabbitMQ enqueuer for functions",
+  "type": "object",
+  "required": ["url"],
+  "properties": {
+    "url": {
+      "title": "URl",
+      "type": "string"
+    },
+    "queue": {
+      "title": "Queue",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "durable": {
+          "title": "Durable",
+          "type": "boolean",
+          "default": false
+        },
+        "exclusive": {
+          "title": "Exclusive",
+          "type": "boolean"
+        }
+      }
+    },
+    "noAck": {
+      "title": "No Acknowledgement",
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "additionalProperties": false
+}
