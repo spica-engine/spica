@@ -221,11 +221,16 @@ async function _process(ev, queue) {
         properties: JSON.parse(rabbitmqMessageInstance.properties)
       };
 
-      const channel = new RabbitMQChannel(e => {
-        console.log("2 eeeeeeeee: ", e);
-        e.id = ev.id;
-        return rabbitmq.ack(e);
-      });
+      const channel = new RabbitMQChannel(
+        e => {
+          e.id = ev.id;
+          return rabbitmq.ack(e);
+        },
+        e => {
+          e.id = ev.id;
+          return rabbitmq.nack(e);
+        }
+      );
       callArguments[1] = channel;
       break;
     default:
