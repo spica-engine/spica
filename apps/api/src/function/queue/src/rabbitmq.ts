@@ -62,11 +62,6 @@ export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueServi
     }
   }
 
-  error(
-    call: grpc.ServerUnaryCall<RabbitMQ.Error, RabbitMQ.Error.Result>,
-    callback: grpc.sendUnaryData<RabbitMQ.Error>
-  ) {}
-
   ack(
     call: grpc.ServerUnaryCall<RabbitMQ.RabbitMQMessage, RabbitMQ.RabbitMQMessage.Result>,
     callback: grpc.sendUnaryData<RabbitMQ.RabbitMQMessage.Result>
@@ -113,8 +108,7 @@ export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueServi
     return {
       pop: this.pop.bind(this),
       ack: this.ack.bind(this),
-      nack: this.nack.bind(this),
-      error: this.error.bind(this)
+      nack: this.nack.bind(this)
     };
   }
 }
