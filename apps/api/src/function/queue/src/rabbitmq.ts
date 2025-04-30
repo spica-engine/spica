@@ -8,12 +8,12 @@ export interface RabbitMQOptions {
   exchange?: {
     name: string;
     type: "direct" | "topic" | "fanout" | "headers";
-    pattern?: string;
-    durable?: boolean;
+    pattern: string;
+    durable: boolean;
   };
   queue: {
-    name?: string;
-    durable?: boolean;
+    name: string;
+    durable: boolean;
     exclusive?: boolean;
   };
   prefetch?: number;
