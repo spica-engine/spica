@@ -1,5 +1,6 @@
 import {EventQueue, RabbitMQOptions, RabbitMQQueue} from "@spica-server/function/queue";
-import {Description, Enqueuer} from "./enqueuer";
+import {Enqueuer} from "./enqueuer";
+import {Description} from "@spica-server/interface/function/enqueuer";
 import {event, RabbitMQ} from "@spica-server/function/queue/proto";
 import amqp from "amqplib";
 import uniqid from "uniqid";
@@ -50,8 +51,7 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
               })
               .then(q => {
                 if (options.exchange) {
-                  const pattern = options.exchange.pattern;
-                  channel.bindQueue(q.queue, options.exchange.name, pattern);
+                  channel.bindQueue(q.queue, options.exchange.name, options.exchange.pattern);
                 }
               });
 
@@ -70,12 +70,12 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
             Object.defineProperty(channel, "target", {writable: false, value: target});
             this.channels.add(channel);
           })
-          .catch(err => console.log(err));
+          .catch(err => console.error(err));
 
         Object.defineProperty(connection, "target", {writable: false, value: target});
         this.connections.add(connection);
       })
-      .catch(err => console.log(err));
+      .catch(err => console.error(err));
   }
 
   unsubscribe(target: event.Target): void {
