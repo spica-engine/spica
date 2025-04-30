@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package RabbitMQ;
 
-message RabbitMQMessage {
+message Message {
     string id = 1;
     bytes content = 2;
     string fields = 3;
@@ -16,7 +16,7 @@ message RabbitMQMessage {
 }
 
 service Queue {
-    rpc pop(RabbitMQMessage.Pop) returns (RabbitMQMessage);
-    rpc ack(RabbitMQMessage) returns (RabbitMQMessage.Result);
-    rpc nack(RabbitMQMessage) returns (RabbitMQMessage.Result);
+    rpc pop(Message.Pop) returns (Message);
+    rpc ack(Message) returns (Message.Result);
+    rpc nack(Message) returns (Message.Result);
 }
