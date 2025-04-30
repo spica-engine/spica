@@ -10,6 +10,7 @@ export interface RabbitMQOptions {
     type: "direct" | "topic" | "fanout" | "headers";
     pattern: string;
     durable: boolean;
+    headers?: Record<string, any>;
   };
   queue: {
     name: string;

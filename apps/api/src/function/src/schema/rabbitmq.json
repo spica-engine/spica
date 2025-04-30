@@ -32,6 +32,13 @@
           "title": "Pattern",
           "type": "string",
           "default": ""
+        },
+        "headers": {
+          "title": "Headers",
+          "type": "object",
+          "additionalProperties": {
+            "type": ["string", "number", "boolean"]
+          }
         }
       }
     },

@@ -51,7 +51,12 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
               })
               .then(q => {
                 if (options.exchange) {
-                  channel.bindQueue(q.queue, options.exchange.name, options.exchange.pattern);
+                  channel.bindQueue(
+                    q.queue,
+                    options.exchange.name,
+                    options.exchange.pattern,
+                    options.exchange.headers
+                  );
                 }
               });
 
