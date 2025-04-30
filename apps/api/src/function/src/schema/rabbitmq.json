@@ -9,13 +9,44 @@
       "title": "URl",
       "type": "string"
     },
-    "queue": {
-      "title": "Queue",
+    "exchange": {
+      "title": "Exchange",
       "type": "object",
+      "required": ["name", "type"],
       "properties": {
         "name": {
           "title": "Name",
           "type": "string"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string",
+          "enum": ["direct", "fanout", "topic", "headers"]
+        },
+        "durable": {
+          "title": "Durable",
+          "type": "boolean",
+          "default": false
+        },
+        "pattern": {
+          "title": "Pattern",
+          "type": "string",
+          "default": ""
+        }
+      }
+    },
+    "queue": {
+      "title": "Queue",
+      "type": "object",
+      "default": {
+        "name": "",
+        "durable": false
+      },
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "default": ""
         },
         "durable": {
           "title": "Durable",
@@ -28,10 +59,14 @@
         }
       }
     },
+    "prefetch": {
+      "title": "Prefetch",
+      "type": "integer"
+    },
     "noAck": {
       "title": "No Acknowledgement",
       "type": "boolean",
-      "default": false
+      "default": true
     }
   },
   "additionalProperties": false
