@@ -16,11 +16,14 @@ const {
   HttpQueue,
   Message,
   Request,
-  Response
+  Response,
+  RabbitMQQueue,
+  RabbitMQMessage,
+  RabbitMQChannel
 } = FnQueueNode;
 
 import * as FnQueueProto from "@spica-server/function/queue/proto";
-const {Database, event, Firehose, Http} = FnQueueProto;
+const {Database, event, Firehose, Http, RabbitMQ} = FnQueueProto;
 
 import {createRequire} from "module";
 import * as path from "path";
@@ -202,6 +205,33 @@ async function _process(ev, queue) {
         })
       );
       callArguments[0] = new BucketChange(bucketChange);
+      break;
+    case event.Type.RABBITMQ:
+      const rabbitmq = new RabbitMQQueue();
+      const rabbitmqPop = new RabbitMQ.RabbitMQMessage.Pop({
+        id: ev.id
+      });
+
+      const rabbitmqMessage = await rabbitmq.pop(rabbitmqPop);
+      const rabbitmqMessageInstance = new RabbitMQMessage(rabbitmqMessage);
+
+      callArguments[0] = {
+        content: Buffer.from(rabbitmqMessageInstance.content),
+        fields: JSON.parse(rabbitmqMessageInstance.fields),
+        properties: JSON.parse(rabbitmqMessageInstance.properties)
+      };
+
+      const channel = new RabbitMQChannel(
+        e => {
+          e.id = ev.id;
+          return rabbitmq.ack(e);
+        },
+        e => {
+          e.id = ev.id;
+          return rabbitmq.nack(e);
+        }
+      );
+      callArguments[1] = channel;
       break;
     default:
       exitAbnormally(`Invalid event type received. (${ev.type})`);
