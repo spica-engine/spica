@@ -16,6 +16,7 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   };
 
   private connections = new Set<amqp.ChannelModel>();
+  private channels = new Set<amqp.Channel>();
 
   constructor(
     private queue: EventQueue,
@@ -65,11 +66,13 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
                 noAck: options.noAck
               }
             );
+
+            Object.defineProperty(channel, "target", {writable: false, value: target});
+            this.channels.add(channel);
           })
           .catch(err => console.log(err));
 
         Object.defineProperty(connection, "target", {writable: false, value: target});
-
         this.connections.add(connection);
       })
       .catch(err => console.log(err));
@@ -78,17 +81,22 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   unsubscribe(target: event.Target): void {
     this.schedulerUnsubscription(target.id);
 
-    for (const connection of this.connections) {
-      if (
-        (!target.handler && connection["target"].cwd == target.cwd) ||
-        (target.handler &&
-          connection["target"].cwd == target.cwd &&
-          connection["target"].handler == target.handler)
-      ) {
-        connection.close();
-        this.connections.delete(connection);
+    const close = (set: Set<amqp.ChannelModel | amqp.Channel>) => {
+      for (const item of set) {
+        if (
+          (!target.handler && item["target"].cwd == target.cwd) ||
+          (target.handler &&
+            item["target"].cwd == target.cwd &&
+            item["target"].handler == target.handler)
+        ) {
+          item.close();
+          set.delete(item);
+        }
       }
-    }
+    };
+
+    close(this.channels);
+    close(this.connections);
   }
 
   onEventsAreDrained(events: event.Event[]): Promise<any> {
