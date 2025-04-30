@@ -38,7 +38,7 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
 
             if (options.exchange) {
               channel.assertExchange(options.exchange.name, options.exchange.type, {
-                durable: options.exchange.durable ?? false
+                durable: options.exchange.durable
               });
             }
 
@@ -49,7 +49,7 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
               })
               .then(q => {
                 if (options.exchange) {
-                  const pattern = options.exchange.pattern ?? "";
+                  const pattern = options.exchange.pattern;
                   channel.bindQueue(q.queue, options.exchange.name, pattern);
                 }
               });
@@ -62,7 +62,7 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
               options.queue.name,
               (msg: amqp.Message | null) => this.onMessageHandler(target, msg, channel, options),
               {
-                noAck: options.noAck ?? false
+                noAck: options.noAck
               }
             );
           })
