@@ -64,7 +64,6 @@
     "@types/uuid": "^10.0.0",
     "jsqr": "^1.4.0",
     "jwt-decode": "^4.0.0",
-    "mock-amqplib": "^1.8.2",
     "nodemon": "^3.1.9",
     "pngjs": "^7.0.0",
     "rollup": "^4.31.0",
