@@ -7,43 +7,66 @@
   "properties": {
     "url": {
       "title": "URl",
-      "type": "string"
+      "description": "RabbitMQ connection URL",
+      "type": "string",
+      "examples": ["amqp://localhost:5672"]
     },
     "exchange": {
       "title": "Exchange",
+      "description": "Exchange to publish messages to",
       "type": "object",
       "required": ["name", "type"],
       "properties": {
         "name": {
           "title": "Name",
-          "type": "string"
+          "description": "Exchange name",
+          "type": "string",
+          "examples": ["my_exchange"]
         },
         "type": {
           "title": "Type",
+          "description": "Exchange type",
           "type": "string",
           "enum": ["direct", "fanout", "topic", "headers"]
         },
         "durable": {
           "title": "Durable",
+          "description": "Durable exchange",
           "type": "boolean",
           "default": false
         },
         "pattern": {
           "title": "Pattern",
+          "description": "Pattern for exchange",
           "type": "string",
-          "default": ""
+          "default": "",
+          "examples": ["#", "*.orange.*", "*.*.rabbit", "lazy.#"]
         },
         "headers": {
           "title": "Headers",
+          "description": "Headers for exchange",
           "type": "object",
           "additionalProperties": {
             "type": ["string", "number", "boolean"]
-          }
+          },
+          "examples": [
+            {
+              "x-match": "all",
+              "type": "error",
+              "format": "json"
+            },
+            {
+              "x-match": "any",
+              "type": "error",
+              "source": "spica"
+            }
+          ]
         }
       }
     },
     "queue": {
       "title": "Queue",
+      "description": "Queue to publish messages to",
       "type": "object",
       "default": {
         "name": "",
@@ -52,26 +75,33 @@
       "properties": {
         "name": {
           "title": "Name",
+          "description": "Queue name",
           "type": "string",
-          "default": ""
+          "default": "",
+          "examples": ["my_queue"]
         },
         "durable": {
           "title": "Durable",
+          "description": "Durable queue",
           "type": "boolean",
           "default": false
         },
         "exclusive": {
           "title": "Exclusive",
+          "description": "Exclusive queue",
           "type": "boolean"
         }
       }
     },
     "prefetch": {
       "title": "Prefetch",
-      "type": "integer"
+      "description": "Number of messages to prefetch",
+      "type": "integer",
+      "examples": [1, 10]
     },
     "noAck": {
       "title": "No Acknowledgement",
+      "description": "No acknowledgement for messages",
       "type": "boolean",
       "default": true
     }
