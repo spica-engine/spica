@@ -3,7 +3,7 @@ import {RabbitMQMessage} from "../../node/src/rabbitmq";
 
 describe("RabbitMQ", () => {
   describe("Message", () => {
-    it("should map INSERT event", () => {
+    it("should map event", () => {
       const msg = {
         content: Buffer.from("test")
       };
