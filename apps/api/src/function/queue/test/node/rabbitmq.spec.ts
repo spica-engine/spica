@@ -4,11 +4,13 @@ import {RabbitMQMessage} from "../../node/src/rabbitmq";
 describe("RabbitMQ", () => {
   describe("Message", () => {
     it("should map INSERT event", () => {
-      const rabbitmqMessage = new RabbitMQ.RabbitMQMessage();
-      rabbitmqMessage.msg = "Test Message!";
+      const msg = {
+        content: Buffer.from("test")
+      };
+      const rabbitmqMessage = new RabbitMQ.Message(msg);
       const message = new RabbitMQMessage(rabbitmqMessage);
 
-      expect(message.msg).toBe(rabbitmqMessage.msg);
+      expect(message.content.toString()).toBe("test");
     });
   });
 });
