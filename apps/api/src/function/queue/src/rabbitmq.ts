@@ -75,7 +75,6 @@ export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueServi
 
         serverResponse.channel.ack(msg);
       }
-      this.dequeue(call.request.id);
     }
   }
 
@@ -96,7 +95,6 @@ export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueServi
 
         serverResponse.channel.nack(msg);
       }
-      this.dequeue(call.request.id);
     }
   }
 
