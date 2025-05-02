@@ -32,7 +32,7 @@ describe("RabbitMQQueue", () => {
 
   describe("pop", () => {
     it("should return error for nonexistent events", done => {
-      const pop = new RabbitMQ.RabbitMQMessage.Pop();
+      const pop = new RabbitMQ.Message.Pop();
       pop.id = "1";
       rabbitmqQueueClient.pop(pop, (e, req) => {
         expect(e).not.toBeUndefined();
@@ -46,15 +46,15 @@ describe("RabbitMQQueue", () => {
     });
 
     it("should pop", done => {
-      const pop = new RabbitMQ.RabbitMQMessage.Pop();
+      const pop = new RabbitMQ.Message.Pop();
       pop.id = "2";
 
-      rabbitmqQueue.enqueue(pop.id, new RabbitMQ.RabbitMQMessage());
+      rabbitmqQueue.enqueue(pop.id, new RabbitMQ.Message(), {} as any, {} as any);
       expect(rabbitmqQueue.size).toEqual(1);
 
       rabbitmqQueueClient.pop(pop, (e, req) => {
         expect(e).toBe(null);
-        expect(req instanceof RabbitMQ.RabbitMQMessage).toBe(true);
+        expect(req instanceof RabbitMQ.Message).toBe(true);
 
         expect(rabbitmqQueue.size).toEqual(0);
 

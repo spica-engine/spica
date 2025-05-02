@@ -208,7 +208,7 @@ async function _process(ev, queue) {
       break;
     case event.Type.RABBITMQ:
       const rabbitmq = new RabbitMQQueue();
-      const rabbitmqPop = new RabbitMQ.RabbitMQMessage.Pop({
+      const rabbitmqPop = new RabbitMQ.Message.Pop({
         id: ev.id
       });
 
