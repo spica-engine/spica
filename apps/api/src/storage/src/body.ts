@@ -85,7 +85,17 @@ abstract class __MultipartFormDataBody extends __BaseBody {
     const [req] = context.getArgs();
     if (this.isContentTypeValid(req)) {
       const files = this.isArray ? req.body : [req.body];
-      return Promise.all(files.map(b => fs.promises.unlink(b.path)));
+      return Promise.all(
+        files.map(file =>
+          fs.promises
+            .unlink(file.path)
+            .catch(e =>
+              console.error(
+                `Storage can't remove the tmp file ${file.filename}, reason: ${e.message}`
+              )
+            )
+        )
+      );
     }
     return Promise.resolve();
   }
@@ -335,4 +345,34 @@ export function getPostBodyConverter(body: MixedBody) {
 
 export function getPutBodyConverter(body: MultipartFormData | StorageObject<Buffer>) {
   return putConverters.find(c => c.validate(body));
+}
+
+// for tests
+export function getMultipartFormDataMeta(
+  files: {name: string; data: string; type: string}[],
+  method: "post" | "put"
+) {
+  const boundary = "--------------------------" + Date.now().toString(16);
+  const headers = {
+    "Content-Type": `multipart/form-data; boundary=${boundary}`
+  };
+
+  let body = "";
+
+  for (let file of files) {
+    body +=
+      `--${boundary}\r\n` +
+      `Content-Disposition: form-data; name="${
+        method == "post" ? "files" : "file"
+      }"; filename="${file.name}"\r\n` +
+      `Content-Type: ${file.type}\r\n\r\n` +
+      `${file.data}\r\n`;
+  }
+
+  body += `--${boundary}--\r\n`;
+
+  return {
+    body: Buffer.from(body),
+    headers: headers
+  };
 }
