@@ -31,17 +31,33 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
     amqp
       .connect(options.url)
       .then(connection => {
+        connection.on("close", () => {
+          if (this.connections.has(connection)) {
+            this.onErrorHandler(target, "The connection was closed unexpectedly.");
+          }
+        });
+
         connection
           .createChannel()
           .then(channel => {
             channel.on("error", err => {
-              console.error("Channel error:", err.message);
+              this.onErrorHandler(target, "Channel error. " + err.message);
+            });
+
+            channel.on("close", () => {
+              if (this.channels.has(channel)) {
+                this.onErrorHandler(target, "The channel was closed unexpectedly.");
+              }
             });
 
             if (options.exchange) {
-              channel.assertExchange(options.exchange.name, options.exchange.type, {
-                durable: options.exchange.durable
-              });
+              channel
+                .assertExchange(options.exchange.name, options.exchange.type, {
+                  durable: options.exchange.durable
+                })
+                .catch(err => {
+                  this.onErrorHandler(target, "Exchange assertion failed. " + err.message);
+                });
             }
 
             channel
@@ -58,29 +74,40 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
                     options.exchange.headers
                   );
                 }
+              })
+              .catch(err => {
+                this.onErrorHandler(target, "Queue assertion failed. " + err.message);
               });
 
             if (options.prefetch) {
               channel.prefetch(options.prefetch);
             }
 
-            channel.consume(
-              options.queue.name,
-              (msg: amqp.Message | null) => this.onMessageHandler(target, msg, channel, options),
-              {
-                noAck: options.noAck
-              }
-            );
+            channel
+              .consume(
+                options.queue.name,
+                (msg: amqp.Message | null) => this.onMessageHandler(target, msg, channel, options),
+                {
+                  noAck: options.noAck
+                }
+              )
+              .catch(err => {
+                this.onErrorHandler(target, "Queue consumption failed. " + err.message);
+              });
 
             Object.defineProperty(channel, "target", {writable: false, value: target});
             this.channels.add(channel);
           })
-          .catch(err => console.error(err));
+          .catch(err => {
+            this.onErrorHandler(target, "Channel creation failed. " + err.message);
+          });
 
         Object.defineProperty(connection, "target", {writable: false, value: target});
         this.connections.add(connection);
       })
-      .catch(err => console.error(err));
+      .catch(err => {
+        this.onErrorHandler(target, "Connection failed. " + err.message);
+      });
   }
 
   unsubscribe(target: event.Target): void {
@@ -94,8 +121,8 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
             item["target"].cwd == target.cwd &&
             item["target"].handler == target.handler)
         ) {
-          item.close();
           set.delete(item);
+          item.close().catch(err => console.error(err));
         }
       }
     };
@@ -128,5 +155,20 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
 
     this.queue.enqueue(ev);
     this.rabbitmqQueue.enqueue(ev.id, message, channel, options);
+  }
+
+  onErrorHandler(target: event.Target, errorMessage: string) {
+    const ev = new event.Event({
+      id: uniqid(),
+      type: event.Type.RABBITMQ,
+      target
+    });
+
+    const message = new RabbitMQ.Message({
+      errorMessage: Buffer.from(errorMessage)
+    });
+
+    this.queue.enqueue(ev);
+    this.rabbitmqQueue.enqueue(ev.id, message);
   }
 }
