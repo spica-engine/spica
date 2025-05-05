@@ -152,7 +152,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   killFreeWorkers() {
     const freeWorkers = Array.from(this.workers.entries()).filter(
-      ([key, worker]) => worker.state == WorkerState.Fresh || worker.state == WorkerState.Targeted
+      ([key, worker]) =>
+        worker.state == WorkerState.Initial ||
+        worker.state == WorkerState.Fresh ||
+        worker.state == WorkerState.Targeted
     );
 
     const killWorkers = freeWorkers.map(([key, worker]) => {
