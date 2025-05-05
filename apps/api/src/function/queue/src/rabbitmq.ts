@@ -36,7 +36,12 @@ export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueServi
     return this.queue.get(id);
   }
 
-  enqueue(id: string, message: RabbitMQ.Message, channel: amqp.Channel, options: RabbitMQOptions) {
+  enqueue(
+    id: string,
+    message: RabbitMQ.Message,
+    channel?: amqp.Channel,
+    options?: RabbitMQOptions
+  ) {
     this.queue.set(id, message);
     this.channelMap.set(id, {channel, options});
   }

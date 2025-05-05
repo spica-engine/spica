@@ -74,9 +74,10 @@ describe("Scheduler", () => {
   }
 
   function triggerGotWorker(_id?: string) {
-    const [workerId] = Array.from(scheduler.workers.entries()).find(([id, worker]) =>
-      _id ? _id == id : worker.state == WorkerState.Fresh
-    );
+    const [workerId] = Array.from(scheduler.workers.entries()).find(([id, worker]) => {
+      if (_id) return _id == id;
+      return worker.state == WorkerState.Initial || worker.state == WorkerState.Fresh;
+    });
     scheduler.gotWorker(workerId, () => {});
   }
 

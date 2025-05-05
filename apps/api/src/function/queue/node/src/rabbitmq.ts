@@ -52,11 +52,13 @@ export class RabbitMQMessage {
   content: Uint8Array<ArrayBufferLike>;
   fields: string;
   properties: string;
+  errorMessage: Uint8Array<ArrayBufferLike>;
 
   constructor(message: RabbitMQ.Message) {
     this.content = message.content;
     this.fields = message.fields;
     this.properties = message.properties;
+    this.errorMessage = message.errorMessage;
   }
 }
 

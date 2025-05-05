@@ -215,6 +215,12 @@ async function _process(ev, queue) {
       const rabbitmqMessage = await rabbitmq.pop(rabbitmqPop);
       const rabbitmqMessageInstance = new RabbitMQMessage(rabbitmqMessage);
 
+      if (rabbitmqMessageInstance.errorMessage?.length) {
+        console.error(Buffer.from(rabbitmqMessageInstance.errorMessage).toString());
+        queue.complete(new event.Complete({id: ev.id, succedded: false}));
+        return;
+      }
+
       callArguments[0] = {
         content: Buffer.from(rabbitmqMessageInstance.content),
         fields: JSON.parse(rabbitmqMessageInstance.fields),

@@ -29,6 +29,7 @@ export interface SchedulingOptions {
 export type Schedule = (event: event.Event) => void;
 
 export enum WorkerState {
+  "Initial",
   "Fresh",
   "Targeted",
   "Busy",
