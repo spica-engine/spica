@@ -3,7 +3,7 @@ import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {StorageModule} from "@spica-server/storage";
+import {getMultipartFormDataMeta, StorageModule} from "@spica-server/storage";
 import {Binary, serialize} from "bson";
 import etag from "etag";
 import {StorageObject} from "@spica-server/interface/storage";
@@ -757,35 +757,6 @@ describe("Storage Acceptance", () => {
   });
 
   describe("multipart/form-data", () => {
-    function getMultipartFormDataMeta(
-      files: {name: string; data: string; type: string}[],
-      method: "post" | "put"
-    ) {
-      const boundary = "--------------------------" + Date.now().toString(16);
-      const headers = {
-        "Content-Type": `multipart/form-data; boundary=${boundary}`
-      };
-
-      let body = "";
-
-      for (let file of files) {
-        body +=
-          `--${boundary}\r\n` +
-          `Content-Disposition: form-data; name="${
-            method == "post" ? "files" : "file"
-          }"; filename="${file.name}"\r\n` +
-          `Content-Type: ${file.type}\r\n\r\n` +
-          `${file.data}\r\n`;
-      }
-
-      body += `--${boundary}--\r\n`;
-
-      return {
-        body: Buffer.from(body),
-        headers: headers
-      };
-    }
-
     it("should insert storage objects", async () => {
       const {body, headers} = getMultipartFormDataMeta(
         [
