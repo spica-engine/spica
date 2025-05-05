@@ -142,6 +142,39 @@ describe("@spica-devkit/identity", () => {
       expect(deleteSpy).toHaveBeenCalledWith("passport/identity/identity_id", {headers: undefined});
     });
 
+    it("should remove multiple identities", () => {
+      postSpy.mockReturnValue(Promise.resolve({responses: []}));
+      Identity.removeMany(["identity_id_1", "identity_id_2"]);
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "batch",
+        {
+          requests: [
+            {
+              body: undefined,
+              headers: {
+                Authorization: "APIKEY TEST_APIKEY"
+              },
+              id: "0",
+              method: "DELETE",
+              url: "passport/identity/identity_id_1"
+            },
+            {
+              body: undefined,
+              headers: {
+                Authorization: "APIKEY TEST_APIKEY"
+              },
+              id: "1",
+              method: "DELETE",
+              url: "passport/identity/identity_id_2"
+            }
+          ]
+        },
+        {headers: undefined}
+      );
+    });
+
     it("should remove identity with headers", () => {
       Identity.remove("identity_id", {Accept: "application/json"});
 

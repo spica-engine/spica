@@ -144,6 +144,39 @@ describe("@spica-devkit/Storage", () => {
       expect(deleteSpy).toHaveBeenCalledWith("storage/storage_object_id", {headers: undefined});
     });
 
+    it("should remove multiple storage objects", () => {
+      postSpy.mockReturnValue(Promise.resolve({responses: []}));
+      Storage.removeMany(["storage_object_1", "storage_object_2"]);
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "batch",
+        {
+          requests: [
+            {
+              body: undefined,
+              headers: {
+                Authorization: "APIKEY TEST_APIKEY"
+              },
+              id: "0",
+              method: "DELETE",
+              url: "storage/storage_object_1"
+            },
+            {
+              body: undefined,
+              headers: {
+                Authorization: "APIKEY TEST_APIKEY"
+              },
+              id: "1",
+              method: "DELETE",
+              url: "storage/storage_object_2"
+            }
+          ]
+        },
+        {headers: undefined}
+      );
+    });
+
     it("should delete storage object with headers", () => {
       Storage.remove("storage_object_id", {Accept: "application/json"});
 

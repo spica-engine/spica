@@ -11,7 +11,10 @@ import {
   initialize as _initialize,
   checkInitialized,
   buildUrl,
-  HttpService
+  HttpService,
+  BatchRequest,
+  Batch,
+  BatchResponse
 } from "@spica-devkit/internal_common";
 import {getWsObs} from "./operators";
 
@@ -59,6 +62,21 @@ export function insert(bucket: Bucket, headers?: object): Promise<Bucket> {
   return service.post<Bucket>("bucket", bucket, {headers});
 }
 
+export function insertMany(buckets: Bucket[], headers?: object) {
+  checkInitialized(authorization);
+
+  const batchReqs = Batch.prepareInsertRequest<Bucket>(
+    buckets,
+    "bucket",
+    service.getAuthorization(),
+    headers
+  );
+
+  return service
+    .post<BatchResponse<Bucket>>("batch", batchReqs, {headers})
+    .then(response => Batch.handleBatchResponse(batchReqs, response));
+}
+
 export function update(id: string, bucket: Bucket, headers?: object): Promise<Bucket> {
   checkInitialized(authorization);
 
@@ -69,6 +87,16 @@ export function remove(id: string, headers?: object): Promise<any> {
   checkInitialized(authorization);
 
   return service.delete(`bucket/${id}`, {headers});
+}
+
+export function removeMany(ids: string[], headers?: object) {
+  checkInitialized(authorization);
+
+  const batchReqs = Batch.prepareRemoveRequest(ids, "bucket", service.getAuthorization(), headers);
+
+  return service
+    .post<BatchResponse<string>>("batch", batchReqs, {headers})
+    .then(response => Batch.handleBatchResponse<string>(batchReqs, response));
 }
 
 export namespace data {
@@ -127,6 +155,21 @@ export namespace data {
     return service.post<T>(`bucket/${bucketId}/data`, document, {headers});
   }
 
+  export function insertMany<T>(bucketId: string, documents: T[], headers?: object) {
+    checkInitialized(authorization);
+
+    const batchReqs = Batch.prepareInsertRequest<T>(
+      documents,
+      `bucket/${bucketId}/data`,
+      service.getAuthorization(),
+      headers
+    );
+
+    return service
+      .post<BatchResponse<T>>("batch", batchReqs, {headers})
+      .then(response => Batch.handleBatchResponse(batchReqs, response));
+  }
+
   export function update<T>(
     bucketId: string,
     documentId: string,
@@ -153,6 +196,21 @@ export namespace data {
     checkInitialized(authorization);
 
     return service.delete(`bucket/${bucketId}/data/${documentId}`, {headers});
+  }
+
+  export function removeMany(bucketId: string, documentIds: string[], headers?: object) {
+    checkInitialized(authorization);
+
+    const batchReqs = Batch.prepareRemoveRequest(
+      documentIds,
+      `bucket/${bucketId}/data`,
+      service.getAuthorization(),
+      headers
+    );
+
+    return service
+      .post<BatchResponse<string>>("batch", batchReqs, {headers})
+      .then(response => Batch.handleBatchResponse<string>(batchReqs, response));
   }
 
   export namespace realtime {
