@@ -205,6 +205,13 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
         const idsToDelete = insertedObjects.slice(i).map(o => o._id);
         await this._coll.deleteMany({_id: {$in: idsToDelete}});
 
+        const deletePromises = [];
+        idsToDelete.forEach(id => {
+          const promise = this.service.delete(id.toString());
+          deletePromises.push(promise);
+        });
+        await Promise.all(deletePromises);
+
         throw new Error(
           `Error: Failed to write object ${object.name} to storage. Reason: ${error}`
         );
