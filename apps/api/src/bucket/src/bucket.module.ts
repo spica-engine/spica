@@ -22,13 +22,17 @@ import BucketsSchema from "./schemas/buckets.schema.json" with {type: "json"};
 import {
   RegisterSyncProvider,
   REGISTER_VC_SYNC_PROVIDER,
-  VC_REP_MANAGER
+  REGISTER_VC_SYNCHRONIZER,
+  VC_REP_MANAGER,
+  RegisterVCSynchronizer,
+  ResourceType,
+  ChangeTypes
 } from "@spica-server/interface/versioncontrol";
 import {getSyncProvider} from "./versioncontrol/schema";
 import {registerAssetHandlers} from "./asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
-import {BucketOptions} from "@spica-server/interface/bucket";
+import {Bucket, BucketOptions} from "@spica-server/interface/bucket";
 
 @Module({})
 export class BucketModule {
@@ -117,12 +121,44 @@ export class BucketModule {
     @Optional() private history: HistoryService,
     @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
     @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
+    @Optional()
+    @Inject(REGISTER_VC_SYNCHRONIZER)
+    registerVCSynchronizer: RegisterVCSynchronizer<Bucket, Bucket>,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager
   ) {
     if (registerSync) {
       const provider = getSyncProvider(bs, bds, this.history, this.vcRepManager);
       registerSync(provider);
     }
+
+    registerVCSynchronizer({
+      syncs: [
+        {
+          watcher: {
+            resourceType: ResourceType.DOCUMENT,
+            watch: () => {
+              const observable = bs.watch("", false);
+              return observable;
+            }
+          },
+          converter: {
+            convert: change => {
+              return {...change, resourceType: ResourceType.REPRESENTATIVE};
+            }
+          },
+          applier: {
+            resourceType: ResourceType.REPRESENTATIVE,
+            apply: change => {}
+          }
+        },
+        {
+          watcher: {},
+          converter: {},
+          applier: {}
+        }
+      ],
+      moduleName: "bucket"
+    }).start();
 
     preference.default({
       scope: "bucket",

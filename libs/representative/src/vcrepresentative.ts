@@ -1,67 +1,15 @@
-import {Inject, Injectable, Scope} from "@nestjs/common";
+import {Injectable} from "@nestjs/common";
 import fs from "fs";
 import path from "path";
-import YAML from "yaml";
-import dotenv from "dotenv";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {watch} from "chokidar";
 
 @Injectable()
-export class RepresentativeManager implements IRepresentativeManager {
-  private serializer = new Map<string, (val: any) => string>();
-  private parsers = new Map<string, (val: string) => any>();
-
-  constructor(protected cwd: string) {
-    // JSON
-    this.serializer.set("json", val => JSON.stringify(val));
-    this.parsers.set("json", val => JSON.parse(val));
-
-    // YAML
-    this.serializer.set("yaml", val => {
-      const document = new YAML.Document();
-      document.contents = val;
-      return document.toString();
-    });
-    this.parsers.set("yaml", val => YAML.parse(val));
-
-    // JS/TS
-    this.serializer.set("js", val => val);
-    this.parsers.set("js", val => val);
-    this.serializer.set("ts", val => val);
-    this.parsers.set("ts", val => val);
-
-    // .env
-    this.serializer.set("env", content => {
-      let lines = [];
-      for (const [key, value] of Object.entries(content)) {
-        lines.push(`${key}=${value}`);
-      }
-      return lines.join("\n");
-    });
-    this.parsers.set("env", content => {
-      return dotenv.parse(content);
-    });
-  }
+export class VCRepresentativeManager implements IRepresentativeManager {
+  constructor(protected cwd: string) {}
 
   private getModuleDir(module: string) {
     return path.join(this.cwd, module);
-  }
-
-  private serializeContent(content: any, extension: string) {
-    const serializer = this.serializer.get(extension);
-    if (!serializer) {
-      throw Error(`Unknown extension type ${extension}`);
-    }
-
-    return serializer(content);
-  }
-
-  private parseContent(content: string, extension: string) {
-    const parser = this.parsers.get(extension);
-    if (!parser) {
-      throw Error(`Unknown extension type ${extension}`);
-    }
-
-    return parser(content);
   }
 
   write(module: string, id: string, fileName: string, content: any, extension: string) {
@@ -71,8 +19,6 @@ export class RepresentativeManager implements IRepresentativeManager {
     }
 
     const fullPath = path.join(resourcesDirectory, `${fileName}.${extension}`);
-
-    content = this.serializeContent(content, extension);
 
     return fs.promises.writeFile(fullPath, content);
   }
@@ -99,15 +45,7 @@ export class RepresentativeManager implements IRepresentativeManager {
     for (const resource of resources) {
       const resourcePath = path.join(resourcesPath, resource);
 
-      const promise = fs.promises.readFile(resourcePath).then(content => {
-        const extension = resource.split(".").pop();
-
-        const key = resource.replace(`.${extension}`, "");
-        const value = this.parseContent(content.toString(), extension);
-
-        contents[key] = value;
-      });
-
+      const promise = fs.promises.readFile(resourcePath);
       promises.push(promise);
     }
 
@@ -161,6 +99,9 @@ export class RepresentativeManager implements IRepresentativeManager {
     return fs.promises.rm(dir, {recursive: true});
   }
 
-  // delete later
-  watch() {}
+  watch() {
+    watch(this.cwd).on("all", (event, path) => {
+      console.log(event, path);
+    });
+  }
 }

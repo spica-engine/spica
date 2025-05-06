@@ -14,4 +14,6 @@ export interface IRepresentativeManager {
   ): Promise<{_id: string; contents: {[key: string]: any}}[]>;
 
   rm(module?: string, id?: string): Promise<void>;
+
+  watch(): void;
 }
