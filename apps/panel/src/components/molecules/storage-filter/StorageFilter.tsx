@@ -12,7 +12,6 @@ import {
   Button
 } from "oziko-ui-kit";
 import {useFormik} from "formik";
-import "oziko-ui-kit/dist/index.css";
 
 type TypeFilterValue = {
   type: string[];

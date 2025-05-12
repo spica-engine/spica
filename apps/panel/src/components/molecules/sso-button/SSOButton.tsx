@@ -4,7 +4,6 @@ import type {IconName} from "../../../../../../node_modules/oziko-ui-kit/dist/ut
 import styles from "./SSOButton.module.scss";
 import {useOnClickOutside} from "../../../custom-hooks/useOnClickOutside";
 import type {TypeFluidContainer} from "../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/fluid-container/FluidContainer";
-import "oziko-ui-kit/dist/index.css";
 
 type TypeSSOButton = {
   icon: IconName;

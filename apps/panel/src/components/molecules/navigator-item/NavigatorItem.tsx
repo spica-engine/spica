@@ -3,7 +3,6 @@ import React, {type FC, memo} from "react";
 import styles from "./NavigatorItem.module.scss";
 import type {IconName} from "../../../../../../node_modules/oziko-ui-kit/dist/utils/iconList";
 import {Button, Text, Icon, FluidContainer} from "oziko-ui-kit";
-import "oziko-ui-kit/dist/index.css";
 
 type SuffixIcon = {
   name: IconName;

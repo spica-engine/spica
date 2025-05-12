@@ -4,7 +4,6 @@ import React, {type FC, type JSX, memo} from "react";
 import styles from "./BucketSchemaList.module.scss";
 import BucketSchemaItem from "../bucket-schema-item/BucketSchemaItem";
 import type {TypeFlexElement} from "../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/flex-element/FlexElement";
-import "oziko-ui-kit/dist/index.css";
 
 type TypeSchema = {
   type: TypeInputType;

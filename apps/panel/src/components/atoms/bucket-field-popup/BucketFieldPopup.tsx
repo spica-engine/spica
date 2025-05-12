@@ -4,7 +4,6 @@ import type {TypeFlexElement} from "../../../../../../node_modules/oziko-ui-kit/
 import type {IconName} from "../../../../../../node_modules/oziko-ui-kit/dist/utils/iconList";
 import type {TypeInputType} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import styles from "./BucketFieldPopup.module.scss";
-import "oziko-ui-kit/dist/index.css";
 
 const fieldOptions: {icon: IconName; text: string; type: TypeInputType}[] = [
   {icon: "formatQuoteClose", text: "String", type: "string"},

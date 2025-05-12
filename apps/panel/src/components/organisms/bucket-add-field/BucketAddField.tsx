@@ -5,7 +5,6 @@ import useInputRepresenter from "oziko-ui-kit/dist/custom-hooks/useInputRepresen
 import styles from "./BucketAddField.module.scss";
 import {type TypeInputType} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import {type TypeModal} from "oziko-ui-kit/dist/utils/interface";
-import "oziko-ui-kit/dist/index.css";
 
 type TypeBucketAddField = {
   name: string;
