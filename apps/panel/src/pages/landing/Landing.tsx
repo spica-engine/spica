@@ -4,6 +4,7 @@ import styles from "./Landing.module.scss";
 import logoSmall from "../../assets/images/logo_small.svg";
 import logo from "../../assets/images/logo.svg";
 import "oziko-ui-kit/dist/index.css";
+import Logo from "../../components/atoms/logo/Logo";
 
 const Landing = () => {
   return (
@@ -15,7 +16,7 @@ const Landing = () => {
           direction="vertical"
           gap={10}
         >
-          <img src={logo} alt="logo"></img>
+          <Logo size="xl"></Logo>
           <StringInput label="Name"></StringInput>
           <BaseInput
             dimensionX={"fill"}
