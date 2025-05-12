@@ -1,12 +1,11 @@
 import React from "react";
 import {BaseInput, Button, FlexElement, Icon, Input, StringInput, Text} from "oziko-ui-kit";
-import styles from "./Landing.module.scss";
+import styles from "./Login.module.scss";
 import logoSmall from "../../assets/images/logo_small.svg";
 import logo from "../../assets/images/logo.svg";
-import "oziko-ui-kit/dist/index.css";
 import Logo from "../../components/atoms/logo/Logo";
 
-const Landing = () => {
+const Login = () => {
   return (
     <div className={styles.container}>
       <FlexElement direction="vertical" gap={5}>
@@ -74,4 +73,4 @@ const Landing = () => {
   );
 };
 
-export default Landing;
+export default Login;
