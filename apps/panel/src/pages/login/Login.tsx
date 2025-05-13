@@ -1,9 +1,8 @@
-import React, {useState, useEffect, memo} from "react";
+import React, {memo} from "react";
 import {useFormik} from "formik";
 import * as Yup from "yup";
 import {BaseInput, Button, FlexElement, Icon, Input, StringInput, Text} from "oziko-ui-kit";
 import styles from "./Login.module.scss";
-import logoSmall from "../../assets/images/logo_small.svg";
 import Logo from "../../components/atoms/logo/Logo";
 
 const validationSchema = Yup.object({
@@ -14,9 +13,6 @@ const validationSchema = Yup.object({
 });
 
 const Login = () => {
-  const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
-
   const formik = useFormik({
     initialValues: {name: "", password: ""},
     validationSchema,
@@ -26,14 +22,6 @@ const Login = () => {
     validateOnChange: false,
     validateOnBlur: false
   });
-
-  useEffect(() => {
-    formik.setFieldValue("name", name, false);
-  }, [name]);
-
-  useEffect(() => {
-    formik.setFieldValue("password", password, false);
-  }, [password]);
 
   return (
     <div className={styles.container}>
@@ -52,7 +40,13 @@ const Login = () => {
           >
             <Logo size="xl" />
 
-            <StringInput label="Name" value={name} onChange={val => setName(val)} />
+            <StringInput
+              id="name"
+              label="Name"
+              value={formik.values.name}
+              onChange={(value: string) => formik.setFieldValue("name", value)}
+              onBlur={() => formik.setFieldTouched("name", true)}
+            />
             {formik.errors.name && <div className={styles.errorText}>{formik.errors.name}</div>}
 
             <BaseInput
@@ -73,7 +67,13 @@ const Login = () => {
                 }
               }}
             >
-              <Input value={password} onChange={e => setPassword(e.target.value)} type="password" />
+              <Input
+                id="password"
+                value={formik.values.password}
+                onChange={event => formik.setFieldValue("password", event.target.value)}
+                onBlur={() => formik.setFieldTouched("password", true)}
+                type="password"
+              />
             </BaseInput>
             {formik.errors.password && (
               <div className={styles.errorText}>{formik.errors.password}</div>
