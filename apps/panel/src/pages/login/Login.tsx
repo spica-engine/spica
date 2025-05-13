@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, memo} from "react";
 import {useFormik} from "formik";
 import * as Yup from "yup";
 import {BaseInput, Button, FlexElement, Icon, Input, StringInput, Text} from "oziko-ui-kit";
@@ -131,4 +131,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default memo(Login);
