@@ -93,7 +93,7 @@ const Login = () => {
                 className: styles.spicaButton
               }}
             >
-              <img src={logoSmall} alt="logo" />
+              <Logo size="sm" type="withoutText" />
               Login With Spica Account
             </Button>
           </FlexElement>

@@ -3,16 +3,22 @@ import logo from "../../../assets/images/logo.svg";
 import styles from "./Logo.module.scss";
 import {FlexElement} from "oziko-ui-kit";
 import type {TypeFlexElement} from "oziko-ui-kit";
+import logoSmall from "../../../assets/images/logo_small.svg";
 
 type TypeLogo = {
+  type?: "withText" | "withoutText";
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   imageClassName?: string;
 } & TypeFlexElement;
 
-const Logo: FC<TypeLogo> = ({size = "md", imageClassName, ...props}) => {
+const Logo: FC<TypeLogo> = ({size = "md", type = "withText", imageClassName, ...props}) => {
   return (
     <FlexElement {...props} className={`${props.className} ${styles.logo}`}>
-      <img src={logo} alt="logo" className={`${styles[size]} ${imageClassName}`}></img>
+      <img
+        src={type == "withText" ? logo : logoSmall}
+        alt="logo"
+        className={`${styles[size]} ${imageClassName}`}
+      ></img>
     </FlexElement>
   );
 };
