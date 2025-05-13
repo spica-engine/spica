@@ -30,4 +30,10 @@
       color: var(--color-font-primary) !important;
     }
   }
+  .errorText {
+    width: 100%;
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
+    margin-top: calc(var(--gap-md) * -1);
+  }
 }

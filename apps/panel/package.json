@@ -3,11 +3,13 @@
   "version": "0.0.0-PLACEHOLDER",
   "private": true,
   "dependencies": {
+    "formik": "^2.4.6",
     "oziko-ui-kit": "^0.0.23",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-grid-layout": "^1.5.1",
-    "react-router-dom": "^6.11.2"
+    "react-router-dom": "^6.11.2",
+    "yup": "^1.6.1"
   },
   "devDependencies": {
     "@nx/react": "^20.4.4",
