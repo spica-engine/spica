@@ -2,7 +2,6 @@ import React, {type FC, memo} from "react";
 import {FlexElement} from "oziko-ui-kit";
 import type {TypeFlexElement} from "../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/flex-element/FlexElement";
 import styles from "./Section.module.scss";
-import "oziko-ui-kit/dist/index.css";
 
 type TypeSection = {
   ref?: React.Ref<HTMLDivElement>;

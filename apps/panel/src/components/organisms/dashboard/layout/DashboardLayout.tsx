@@ -5,7 +5,6 @@ import {type ChartData, type ChartOptions, type ChartType} from "chart.js";
 import {Icon, Text, FlexElement} from "oziko-ui-kit";
 import type {TypeFluidContainer} from "../../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/fluid-container/FluidContainer";
 import DashboardItem from "../../../atoms/dashboard-item/DashboardItem";
-import "oziko-ui-kit/dist/index.css";
 
 type TypeDashboardItem = {
   ratio: string;

@@ -4,7 +4,6 @@ import {Button, Icon, Text, Chart} from "oziko-ui-kit";
 import {type ChartType} from "chart.js";
 import Section from "../../organisms/section/Section";
 import type {TypeChartComponentProps} from "../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/chart/Chart";
-import "oziko-ui-kit/dist/index.css";
 
 type TypeDashboardItem = {
   headerProps?: {
