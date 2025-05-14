@@ -7,10 +7,10 @@
     padding: var(--padding-md) 0;
   }
   .button {
-    background-color: white;
+    background-color: white !important;
   }
   .tokenButton {
-    border: var(--color-border) 1px solid;
+    border: var(--color-border) 1px solid !important;
   }
   .text {
     @include mixins.textEllipsis(1);

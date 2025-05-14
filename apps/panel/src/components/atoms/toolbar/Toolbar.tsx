@@ -1,14 +1,13 @@
-import {Button, FlexElement, FluidContainer, Icon, type TypeFluidContainer} from "oziko-ui-kit";
+import {Button, FlexElement, FluidContainer, Icon} from "oziko-ui-kit";
 import React, {memo, useState, type FC} from "react";
-import "oziko-ui-kit/dist/index.css";
 import styles from "./Toolbar.module.scss";
 
 type TypeToolbar = {
   token: string;
   name: string;
-} & TypeFluidContainer;
+};
 
-const Toolbar: FC<TypeToolbar> = ({token, name, ...props}) => {
+const Toolbar: FC<TypeToolbar> = ({token, name}) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -25,7 +24,6 @@ const Toolbar: FC<TypeToolbar> = ({token, name, ...props}) => {
   return (
     <FluidContainer
       dimensionX={"fill"}
-      {...props}
       className={styles.toolbar}
       prefix={{
         children: (
