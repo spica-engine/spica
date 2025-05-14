@@ -15,10 +15,11 @@ import projectRemove from "./src/commands/project/remove";
 import projectStart from "./src/commands/project/start";
 import projectSync from "./src/commands/project/sync";
 import projectUpgrade from "./src/commands/project/upgrade";
+import pkg from "./package.json" with {type: "json"};
 
 export function run(argv?: string[]) {
   program
-    .version("0.0.0-PLACEHOLDER")
+    .version(pkg.version)
     .name("spica")
     .bin("spica")
     .description("Command line interface for spica.");
