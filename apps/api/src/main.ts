@@ -309,6 +309,17 @@ const args = yargs(process.argv.slice(2))
       default: true
     }
   })
+  /* Additional Header Options */
+  .option({
+    "cache-control-header": {
+      string: true,
+      description: "Cache-Control"
+    },
+    "x-frame-options-header": {
+      string: true,
+      description: "X-Frame-Option"
+    }
+  })
   /* Common Options */
   .option("payload-size-limit", {
     number: true,
@@ -561,6 +572,10 @@ NestFactory.create(RootModule, {
 }).then(async app => {
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
+    Middlewares.Headers({
+      "Cache-Control": args["cache-control-header"],
+      "X-Frame-Options": args["x-frame-options-header"]
+    }),
     Middlewares.Preflight({
       allowedOrigins: args["cors-allowed-origins"],
       allowedMethods: args["cors-allowed-methods"],
