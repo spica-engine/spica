@@ -29,6 +29,11 @@ export default {
       module: "bucket:data"
     },
     {
+      action: "bucket:data:profile",
+      resource: {include: ["*"], exclude: []},
+      module: "bucket:data"
+    },
+    {
       action: "preference:show",
       module: "preference",
       resource: {
