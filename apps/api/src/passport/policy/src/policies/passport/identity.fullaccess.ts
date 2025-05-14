@@ -21,6 +21,10 @@ export default {
       module: "passport:identity"
     },
     {
+      action: "passport:identity:profile",
+      module: "passport:identity"
+    },
+    {
       action: "passport:identity:policy:add",
       resource: {include: ["*/*"], exclude: []},
       module: "passport:identity:policy"
