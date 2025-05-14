@@ -46,7 +46,7 @@ async function orm({options}: ActionParameters) {
         };
         const sources = new FunctionCompiler(fn, TRIGGER_TYPES, url, options).compile();
 
-        const replacedName = fn.name.replace(/ /gm, "_");
+        const replacedName = fn.name.replace(/ /gm, "_").replace(/\//g, "__");
         const folderPath = path.join(PATH, replacedName);
         if (!fs.existsSync(folderPath)) {
           fs.mkdirSync(folderPath);
