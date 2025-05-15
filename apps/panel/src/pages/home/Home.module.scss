@@ -1,0 +1,41 @@
+.container {
+  height: 100%;
+  width: 100%;
+
+  .content {
+    transition: padding-left 0.3s ease-in-out;
+
+    .mainContainer {
+      padding: 10px;
+      .welcomeText {
+        .userName {
+          font-weight: 700;
+        }
+      }
+      .quickLinks {
+        padding: var(--padding-lg);
+        background-color: var(--color-menu-background);
+        border-radius: var(--border-radius-md);
+        .title {
+          font-size: var(--font-size-lg);
+          font-weight: 400;
+          margin: 0;
+        }
+        .links {
+          font-size: var(--font-size-lg);
+          font-weight: 700;
+          cursor: pointer;
+        }
+      }
+      .video {
+        border: 0;
+      }
+    }
+  }
+  .navigatorOpen {
+    padding-left: var(--sidebar-with-navigator-width);
+  }
+  .navigatorClosed {
+    padding-left: var(--sidebar-width);
+  }
+}
