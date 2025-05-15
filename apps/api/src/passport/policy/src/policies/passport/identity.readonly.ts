@@ -14,10 +14,6 @@ export default {
       module: "passport:identity"
     },
     {
-      action: "passport:identity:profile",
-      module: "passport:identity"
-    },
-    {
       action: "preference:show",
       module: "preference",
       resource: {
