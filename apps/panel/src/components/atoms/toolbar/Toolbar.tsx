@@ -2,17 +2,15 @@ import {Button, FlexElement, FluidContainer, Icon} from "oziko-ui-kit";
 import React, {memo, useState, type FC} from "react";
 import styles from "./Toolbar.module.scss";
 
-type TypeToolbar = {
-  token: string;
-  name: string;
-};
+const name = "Spica";
+const jwt = "PlaceholderJWT123";
 
-const Toolbar: FC<TypeToolbar> = ({token, name}) => {
+const Toolbar = () => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard
-      .writeText(token)
+      .writeText(jwt)
       .then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1000);
@@ -28,7 +26,7 @@ const Toolbar: FC<TypeToolbar> = ({token, name}) => {
       prefix={{
         children: (
           <FlexElement className={styles.flexElement} gap={10}>
-            <span className={styles.text}>{token}</span>
+            <span className={styles.text}>{jwt}</span>
             <Button
               variant="icon"
               shape="circle"

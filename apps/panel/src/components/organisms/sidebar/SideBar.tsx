@@ -55,7 +55,7 @@ const SideBar: FC<TypeSideBar> = ({
     <div className={styles.container}>
       <div className={styles.menuContainer}>
         <div className={styles.logo}>
-          <Logo></Logo>
+          <Logo />
         </div>
 
         <div className={styles.menu}>
