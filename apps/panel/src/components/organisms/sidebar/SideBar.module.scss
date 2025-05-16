@@ -1,11 +1,10 @@
-@use "styles/mixins.scss";
+@use "../../../styles/mixins";
 
 .container {
   background-color: var(--color-background);
   position: fixed;
   top: 0;
   left: 0;
-  width: 350px;
   height: 100%;
   display: flex;
   padding: var(--padding-md) 0;
@@ -40,5 +39,19 @@
 
   .versionControl {
     cursor: pointer;
+  }
+  .navigatorContainer {
+    width: var(--navigator-width);
+    transition: width var(--transition-duration) ease-in;
+    overflow: hidden;
+
+    &.closed {
+      width: 0;
+
+      > * {
+        opacity: 0;
+        transition: opacity var(--transition-duration) ease-out;
+      }
+    }
   }
 }
