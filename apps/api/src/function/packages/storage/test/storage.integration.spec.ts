@@ -6,6 +6,7 @@ import {CoreTestingModule} from "@spica-server/core/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {StorageModule} from "@spica-server/storage";
 import * as Storage from "@spica-devkit/storage";
+import {BatchModule} from "@spica-server/batch";
 
 const PORT = 3001;
 const PUBLIC_URL = `http://localhost:${PORT}`;
@@ -14,6 +15,7 @@ describe("Storage", () => {
   let module: TestingModule;
   let app: INestApplication;
   let storageObject;
+  let storageObject2;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -27,7 +29,8 @@ describe("Storage", () => {
           defaultPublicUrl: PUBLIC_URL,
           defaultPath: process.env.TEST_TMPDIR
         }),
-        CoreTestingModule
+        CoreTestingModule,
+        BatchModule.forRoot({port: PORT.toString()})
       ]
     }).compile();
     app = module.createNestApplication();
@@ -37,6 +40,12 @@ describe("Storage", () => {
       contentType: "text/plain",
       name: "test.txt",
       data: Buffer.from("spica")
+    };
+
+    storageObject2 = {
+      contentType: "text/plain",
+      name: "test2.txt",
+      data: Buffer.from("hello")
     };
 
     Storage.initialize({identity: "token", publicUrl: PUBLIC_URL});
@@ -199,6 +208,38 @@ describe("Storage", () => {
     await Storage.remove(insertedObj._id);
 
     const existings = await Storage.getAll();
+    expect(existings).toEqual([]);
+  });
+
+  it("should remove multiple storage objects", async () => {
+    const insertedObjects = await Storage.insertMany([storageObject, storageObject2]);
+
+    const response = await Storage.removeMany([...insertedObjects.map(i => i._id), "123"]);
+
+    expect(response).toEqual({
+      successes: [
+        {
+          request: `storage/${insertedObjects[0]._id}`,
+          response: ""
+        },
+        {
+          request: `storage/${insertedObjects[1]._id}`,
+          response: ""
+        }
+      ],
+      failures: [
+        {
+          request: "storage/123",
+          response: {
+            error: undefined,
+            message: "Invalid id."
+          }
+        }
+      ]
+    });
+
+    const existings = await Storage.getAll();
+
     expect(existings).toEqual([]);
   });
 
