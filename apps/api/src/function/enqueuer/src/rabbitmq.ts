@@ -122,7 +122,13 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
             item["target"].handler == target.handler)
         ) {
           set.delete(item);
-          item.close().catch(err => console.error(err));
+          item
+            .close()
+            .catch(err =>
+              console.error(
+                `Error on closing connection/channel of the ${target.cwd}:${target.handler}, reason: ${JSON.stringify(err)}`
+              )
+            );
         }
       }
     };
