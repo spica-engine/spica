@@ -1,24 +1,32 @@
 FROM node:22-alpine AS base
 
+# Install dependencies with full workspace context
 FROM base AS deps
 WORKDIR /app
-COPY package.json yarn.lock ./
-COPY apps/panel/package.json ./apps/panel/package.json
+
+# Copy entire monorepo (or at least what's needed for dependency resolution)
+COPY . .
+
 RUN yarn install --frozen-lockfile
 
-# build app
-FROM base AS build 
+# Build the panel app
+FROM base AS build
 WORKDIR /app
+
+# Copy the full repo again to ensure consistent build context
+COPY . .
+
 COPY --from=deps /app/node_modules ./node_modules
-COPY apps/panel ./apps/panel
-COPY nx.json ./
-COPY package.json ./
-COPY yarn.lock ./
+
+# Optional: Set Node memory limit to avoid OOM
+ENV NODE_OPTIONS=--max-old-space-size=4096
+
+# Build panel
 ARG BASE_URL=""
 RUN BASE_URL=$BASE_URL yarn run build:panel
 
-# start app
-FROM nginx:alpine as prod
+# Final nginx serving stage
+FROM nginx:alpine AS prod
 COPY --from=build /app/dist/panel /usr/share/nginx/html
 COPY ./apps/panel/nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80
