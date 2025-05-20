@@ -5,7 +5,7 @@ env:
   BASE_URL: spica
 
 on:
-  push:
+  pull_request:
     branches: ["panel"]
 
 jobs:
@@ -24,7 +24,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
-
+      - name: Set Node memory limit
+        run: echo "NODE_OPTIONS=--max-old-space-size=4096" >> $GITHUB_ENV
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -43,6 +44,12 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+      - name: Log memory usage
+        run: |
+          echo "Free memory:"
+          free -h
+          echo "Top Node processes:"
+          ps aux | grep node | sort -nrk 4 | head -5
 
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
