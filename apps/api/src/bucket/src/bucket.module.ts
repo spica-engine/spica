@@ -26,13 +26,21 @@ import {
   VC_REP_MANAGER,
   RegisterVCSynchronizer,
   ResourceType,
-  ChangeTypes
+  ChangeTypes,
+  DocChange,
+  VC_REPRESENTATIVE_MANAGER
 } from "@spica-server/interface/versioncontrol";
 import {getSyncProvider} from "./versioncontrol/schema";
 import {registerAssetHandlers} from "./asset";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {
+  IRepresentativeManager,
+  RepresentativeManagerResource
+} from "@spica-server/interface/representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {Bucket, BucketOptions} from "@spica-server/interface/bucket";
+import {Observable} from "rxjs";
+import {ChangeStreamDocument} from "mongodb";
+import YAML from "yaml";
 
 @Module({})
 export class BucketModule {
@@ -122,43 +130,138 @@ export class BucketModule {
     @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
     @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
     @Optional()
+    @Inject(VC_REPRESENTATIVE_MANAGER)
+    private vcRepresentativeManager: IRepresentativeManager,
+    @Optional()
     @Inject(REGISTER_VC_SYNCHRONIZER)
-    registerVCSynchronizer: RegisterVCSynchronizer<Bucket, Bucket>,
+    registerVCSynchronizer: RegisterVCSynchronizer<Bucket, RepresentativeManagerResource>,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager
   ) {
-    if (registerSync) {
-      const provider = getSyncProvider(bs, bds, this.history, this.vcRepManager);
-      registerSync(provider);
-    }
+    if (registerVCSynchronizer) {
+      const moduleName = "bucket";
+      const provider = getSyncProvider(bs, bds, this.history, this.vcRepresentativeManager);
 
-    registerVCSynchronizer({
-      syncs: [
-        {
-          watcher: {
-            resourceType: ResourceType.DOCUMENT,
-            watch: () => {
-              const observable = bs.watch("", false);
-              return observable;
+      registerVCSynchronizer({
+        syncs: [
+          {
+            watcher: {
+              resourceType: ResourceType.DOCUMENT,
+              watch: () => {
+                console.log("watch doc");
+                return new Observable<DocChange<Bucket>>(observer => {
+                  const changeStream = bs._coll.watch([], {
+                    fullDocument: "updateLookup"
+                  });
+
+                  changeStream.on("change", (change: ChangeStreamDocument<Bucket>) => {
+                    let changeType: ChangeTypes;
+                    let resource: Bucket;
+
+                    switch (change.operationType) {
+                      case "insert":
+                        changeType = ChangeTypes.INSERT;
+                        resource = change.fullDocument!;
+                        break;
+
+                      case "replace":
+                      case "update":
+                        changeType = ChangeTypes.UPDATE;
+                        resource = change.fullDocument!;
+                        break;
+
+                      case "delete":
+                        changeType = ChangeTypes.DELETE;
+                        resource = {_id: change.documentKey._id} as Bucket;
+                        break;
+
+                      default:
+                        return;
+                    }
+
+                    const docChange: DocChange<Bucket> = {
+                      resourceType: ResourceType.DOCUMENT,
+                      changeType,
+                      resource
+                    };
+
+                    observer.next(docChange);
+                  });
+
+                  changeStream.on("error", err => observer.error(err));
+                  changeStream.on("close", () => observer.complete());
+
+                  return () => changeStream.close();
+                });
+              }
+            },
+            converter: {
+              convert: change => {
+                console.log("convert to rep");
+                return {
+                  resourceType: ResourceType.REPRESENTATIVE,
+                  changeType: change.changeType,
+                  resource: {
+                    _id: change.resource._id.toString(),
+                    content: YAML.stringify(change.resource)
+                  }
+                };
+              }
+            },
+            applier: {
+              resourceType: ResourceType.REPRESENTATIVE,
+              apply: change => {
+                console.log("apply to rep");
+                const {representative} = provider;
+
+                const representativeStrategy = {
+                  [ChangeTypes.INSERT]: representative.insert,
+                  [ChangeTypes.UPDATE]: representative.update,
+                  [ChangeTypes.DELETE]: representative.delete
+                };
+
+                representativeStrategy[change.changeType](change.resource);
+              }
             }
           },
-          converter: {
-            convert: change => {
-              return {...change, resourceType: ResourceType.REPRESENTATIVE};
+          {
+            watcher: {
+              resourceType: ResourceType.REPRESENTATIVE,
+              watch: () => {
+                console.log("watch doc");
+                return this.vcRepresentativeManager.watch(moduleName);
+              }
+            },
+            converter: {
+              convert: change => {
+                console.log("convert to doc");
+                return {
+                  ...change,
+                  resourceType: ResourceType.DOCUMENT,
+                  resource: YAML.parse(change.resource.content)
+                };
+              }
+            },
+            applier: {
+              resourceType: ResourceType.DOCUMENT,
+              apply: change => {
+                console.log("apply to doc");
+                const {document} = provider;
+
+                const documentStrategy = {
+                  [ChangeTypes.INSERT]: document.insert,
+                  [ChangeTypes.UPDATE]: document.update,
+                  [ChangeTypes.DELETE]: document.delete
+                };
+
+                documentStrategy[change.changeType](change.resource);
+              }
             }
-          },
-          applier: {
-            resourceType: ResourceType.REPRESENTATIVE,
-            apply: change => {}
           }
-        },
-        {
-          watcher: {},
-          converter: {},
-          applier: {}
-        }
-      ],
-      moduleName: "bucket"
-    }).start();
+        ],
+        moduleName,
+        subModuleName: ""
+      }).start();
+    }
 
     preference.default({
       scope: "bucket",

@@ -30,9 +30,9 @@ export class VersionControlController {
   @Post("commands/:cmd")
   @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
   async performAction(@Param("cmd") cmd: string, @Body() body: any) {
-    await this.synchronizer.synchronize(SyncDirection.DocToRep).catch(e => {
-      throw new InternalServerErrorException(e.message || e);
-    });
+    // await this.synchronizer.synchronize(SyncDirection.DocToRep).catch(e => {
+    //   throw new InternalServerErrorException(e.message || e);
+    // });
 
     const cmdResult = await this.vers
       .exec(cmd, body)
@@ -41,11 +41,13 @@ export class VersionControlController {
       })
       .then(res => (typeof res == "string" ? {message: res} : res));
 
-    return this.synchronizer
-      .synchronize(SyncDirection.RepToDoc)
-      .then(() => cmdResult)
-      .catch(e => {
-        throw new InternalServerErrorException(e.message || e);
-      });
+    return cmdResult;
+
+    // return this.synchronizer
+    //   .synchronize(SyncDirection.RepToDoc)
+    //   .then(() => cmdResult)
+    //   .catch(e => {
+    //     throw new InternalServerErrorException(e.message || e);
+    //   });
   }
 }

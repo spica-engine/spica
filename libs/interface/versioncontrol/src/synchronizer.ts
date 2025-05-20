@@ -21,11 +21,11 @@ interface Change<R extends Resource> {
   resource: R;
 }
 
-interface DocChange<R extends Resource = Resource> extends Change<R> {
+export interface DocChange<R extends Resource = Resource> extends Change<R> {
   resourceType: ResourceType.DOCUMENT;
 }
 
-interface RepChange<R extends Resource = Resource> extends Change<R> {
+export interface RepChange<R extends Resource = Resource> extends Change<R> {
   resourceType: ResourceType.REPRESENTATIVE;
 }
 
@@ -102,7 +102,7 @@ type RepSync<Src extends Resource, Target extends Resource> = Sync<
 >;
 
 export type SynchronizerArgs<R1 extends Resource, R2 extends Resource> = {
-  syncs: [DocSync<R1, R2>, RepSync<R1, R2>];
+  syncs: [DocSync<R1, R2>, RepSync<R2, R1>];
   moduleName: string;
   subModuleName: string;
 };
@@ -141,7 +141,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 
 export type RegisterVCSynchronizer<R1 extends Resource, R2 extends Resource> = (
   args: SynchronizerArgs<R1, R2>
-) => Synchronizer<R1, R2>;
+) => Synchronizer<R2, R1>;
 
 export const REGISTER_VC_SYNCHRONIZER = Symbol.for("REGISTER_VC_SYNCHRONIZER");
 

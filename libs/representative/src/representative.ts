@@ -3,7 +3,12 @@ import fs from "fs";
 import path from "path";
 import YAML from "yaml";
 import dotenv from "dotenv";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {
+  IRepresentativeManager,
+  RepresentativeManagerResource
+} from "@spica-server/interface/representative";
+import {Observable} from "rxjs";
+import {RepChange} from "@spica-server/interface/versioncontrol";
 
 @Injectable()
 export class RepresentativeManager implements IRepresentativeManager {
@@ -162,5 +167,7 @@ export class RepresentativeManager implements IRepresentativeManager {
   }
 
   // delete later
-  watch() {}
+  watch() {
+    return new Observable<RepChange<RepresentativeManagerResource>>(observer => {});
+  }
 }

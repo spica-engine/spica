@@ -1,7 +1,10 @@
 import {HistoryService} from "@spica-server/bucket/history";
 import {BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {
+  IRepresentativeManager,
+  RepresentativeManagerResource
+} from "@spica-server/interface/representative";
 import {SyncProvider} from "@spica-server/interface/versioncontrol";
 import * as CRUD from "../crud";
 
@@ -22,7 +25,9 @@ export const getSyncProvider = (
     );
   };
 
-  const insert = bucket => CRUD.insert(bs, bucket);
+  const insert = async bucket => {
+    await bs.updateOne({_id: bucket._id}, {$setOnInsert: bucket}, {upsert: true});
+  };
 
   const update = bucket => CRUD.replace(bs, bds, history, bucket);
 
@@ -35,13 +40,12 @@ export const getSyncProvider = (
     delete: remove
   };
 
-  const write = bucket => {
-    bucket._id = bucket._id.toString();
-    return manager.write(module, bucket._id, "schema", bucket, "yaml");
+  const write = (resource: RepresentativeManagerResource) => {
+    return manager.write(module, resource._id, "schema", resource.content, "yaml");
   };
 
-  const rm = bucket => {
-    return manager.rm(module, bucket._id);
+  const rm = (resource: RepresentativeManagerResource) => {
+    return manager.rm(module, resource._id);
   };
 
   const readAll = async () => {
