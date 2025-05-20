@@ -27,60 +27,90 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
     super();
   }
 
-  subscribe(target: event.Target, options: RabbitMQOptions): void {
-    amqp
-      .connect(options.url)
-      .then(connection => {
-        connection
-          .createChannel()
-          .then(channel => {
-            channel.on("error", err => {
-              console.error("Channel error:", err.message);
-            });
+  async subscribe(target: event.Target, options: RabbitMQOptions) {
+    const connection = await amqp.connect(options.url).catch(err => {
+      this.onErrorHandler(target, "Connection failed. " + err.message);
+      return null;
+    });
+    if (!connection) return;
 
-            if (options.exchange) {
-              channel.assertExchange(options.exchange.name, options.exchange.type, {
-                durable: options.exchange.durable
-              });
-            }
+    connection.on("close", () => {
+      if (this.connections.has(connection)) {
+        this.onErrorHandler(target, "The connection was closed unexpectedly.");
+      }
+    });
 
-            channel
-              .assertQueue(options.queue.name, {
-                durable: options.queue.durable,
-                exclusive: options.queue.exclusive
-              })
-              .then(q => {
-                if (options.exchange) {
-                  channel.bindQueue(
-                    q.queue,
-                    options.exchange.name,
-                    options.exchange.pattern,
-                    options.exchange.headers
-                  );
-                }
-              });
+    Object.defineProperty(connection, "target", {writable: false, value: target});
+    this.connections.add(connection);
 
-            if (options.prefetch) {
-              channel.prefetch(options.prefetch);
-            }
+    const channel = await connection.createChannel().catch(err => {
+      this.onErrorHandler(target, "Channel creation failed. " + err.message);
+      return null;
+    });
+    if (!channel) return;
 
-            channel.consume(
-              options.queue.name,
-              (msg: amqp.Message | null) => this.onMessageHandler(target, msg, channel, options),
-              {
-                noAck: options.noAck
-              }
-            );
+    channel.on("error", err => {
+      this.onErrorHandler(target, "Channel error. " + err.message);
+    });
 
-            Object.defineProperty(channel, "target", {writable: false, value: target});
-            this.channels.add(channel);
-          })
-          .catch(err => console.error(err));
+    channel.on("close", () => {
+      if (this.channels.has(channel)) {
+        this.onErrorHandler(target, "The channel was closed unexpectedly.");
+      }
+    });
 
-        Object.defineProperty(connection, "target", {writable: false, value: target});
-        this.connections.add(connection);
+    Object.defineProperty(channel, "target", {writable: false, value: target});
+    this.channels.add(channel);
+
+    if (options.exchange) {
+      await channel
+        .assertExchange(options.exchange.name, options.exchange.type, {
+          durable: options.exchange.durable
+        })
+        .catch(err => {
+          this.onErrorHandler(target, "Exchange assertion failed. " + err.message);
+        });
+    }
+
+    const q = await channel
+      .assertQueue(options.queue.name, {
+        durable: options.queue.durable,
+        exclusive: options.queue.exclusive
       })
-      .catch(err => console.error(err));
+      .catch(err => {
+        this.onErrorHandler(target, "Queue assertion failed. " + err.message);
+        return null;
+      });
+    if (!q) return;
+
+    if (options.exchange) {
+      await channel
+        .bindQueue(
+          q.queue,
+          options.exchange.name,
+          options.exchange.pattern,
+          options.exchange.headers
+        )
+        .catch(err => {
+          this.onErrorHandler(target, "Queue binding failed. " + err.message);
+        });
+    }
+
+    if (options.prefetch) {
+      await channel.prefetch(options.prefetch).catch(err => {
+        this.onErrorHandler(target, "Prefetch failed. " + err.message);
+      });
+    }
+
+    await channel
+      .consume(
+        options.queue.name,
+        (msg: amqp.Message | null) => this.onMessageHandler(target, msg, channel, options),
+        {noAck: options.noAck}
+      )
+      .catch(err => {
+        this.onErrorHandler(target, "Queue consumption failed. " + err.message);
+      });
   }
 
   unsubscribe(target: event.Target): void {
@@ -94,8 +124,14 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
             item["target"].cwd == target.cwd &&
             item["target"].handler == target.handler)
         ) {
-          item.close();
           set.delete(item);
+          item
+            .close()
+            .catch(err =>
+              console.error(
+                `Error on closing connection/channel of the ${target.cwd}:${target.handler}, reason: ${JSON.stringify(err)}`
+              )
+            );
         }
       }
     };
@@ -128,5 +164,20 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
 
     this.queue.enqueue(ev);
     this.rabbitmqQueue.enqueue(ev.id, message, channel, options);
+  }
+
+  onErrorHandler(target: event.Target, errorMessage: string) {
+    const ev = new event.Event({
+      id: uniqid(),
+      type: event.Type.RABBITMQ,
+      target
+    });
+
+    const message = new RabbitMQ.Message({
+      errorMessage: Buffer.from(errorMessage)
+    });
+
+    this.queue.enqueue(ev);
+    this.rabbitmqQueue.enqueue(ev.id, message);
   }
 }
