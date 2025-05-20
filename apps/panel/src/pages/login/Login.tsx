@@ -4,7 +4,7 @@ import * as Yup from "yup";
 import {BaseInput, Button, FlexElement, Icon, Input, StringInput, Text} from "oziko-ui-kit";
 import styles from "./Login.module.scss";
 import Logo from "../../components/atoms/logo/Logo";
-
+//Test
 const validationSchema = Yup.object({
   name: Yup.string().min(3, "Name must be at least 3 characters").required("Name is required"),
   password: Yup.string()
