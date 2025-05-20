@@ -8,6 +8,7 @@ import {PassportModule} from "@spica-server/passport";
 import * as Identity from "@spica-devkit/identity";
 import Axios from "axios";
 import {jwtDecode} from "jwt-decode";
+import {BatchModule} from "@spica-server/batch";
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
@@ -38,7 +39,8 @@ describe("Identity", () => {
           defaultIdentityPolicies: ["PassportFullAccess"]
         }),
         PreferenceTestingModule,
-        CoreTestingModule
+        CoreTestingModule,
+        BatchModule.forRoot({port: PORT.toString()})
       ]
     }).compile();
     app = module.createNestApplication();
@@ -281,6 +283,55 @@ describe("Identity", () => {
         {
           identifier: "spica",
           _id: identities[0]._id,
+          policies: ["PassportFullAccess"]
+        }
+      ]);
+    });
+
+    it("should remove multiple identities", async () => {
+      let identities = await Promise.all([
+        Identity.insert({
+          identifier: "user1",
+          password: "pass1",
+          policies: ["BucketReadonlyAccess"]
+        }),
+        Identity.insert({
+          identifier: "user2",
+          password: "pass2",
+          policies: ["BucketReadonlyAccess"]
+        })
+      ]);
+
+      const response = await Identity.removeMany([...identities.map(i => i._id), "123"]);
+
+      expect(response).toEqual({
+        successes: [
+          {
+            request: `passport/identity/${identities[0]._id}`,
+            response: ""
+          },
+          {
+            request: `passport/identity/${identities[1]._id}`,
+            response: ""
+          }
+        ],
+        failures: [
+          {
+            request: `passport/identity/123`,
+            response: {
+              error: undefined,
+              message: "Invalid id."
+            }
+          }
+        ]
+      });
+
+      const existingIdentities = await Identity.getAll();
+
+      expect(existingIdentities).toEqual([
+        {
+          identifier: "spica",
+          _id: existingIdentities[0]._id,
           policies: ["PassportFullAccess"]
         }
       ]);
