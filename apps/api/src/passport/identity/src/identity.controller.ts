@@ -122,6 +122,31 @@ export class IdentityController {
     return expression;
   }
 
+  @Get("profile")
+  @UseGuards(AuthGuard(), ActionGuard("passport:identity:profile", "passport/identity"))
+  async findProfileEntries(
+    @Query("filter", JSONP) filter?: object,
+    @Query("limit", NUMBER) limit?: number,
+    @Query("skip", NUMBER) skip?: number,
+    @Query("sort", JSONP) sort?: {[key: string]: 1 | -1}
+  ) {
+    const cursor = this.identityService.findOnProfiler(filter);
+
+    if (limit) {
+      cursor.limit(limit);
+    }
+
+    if (skip) {
+      cursor.skip(skip);
+    }
+
+    if (sort) {
+      cursor.sort(sort);
+    }
+
+    return cursor.toArray();
+  }
+
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:index"))
   async find(
