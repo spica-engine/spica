@@ -60,53 +60,53 @@ describe("Identity Controller", () => {
       ]);
     });
 
-    it("should list identity profile logs", async () => {
+    it("should list identity profile entries", async () => {
       const res = await req.get("/passport/identity/profile");
       expect(res.statusCode).toEqual(200);
-      expect(res.body.every(log => log.ns == "test.identity")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
     });
 
-    it("should filter identity profile logs by operation type", async () => {
+    it("should filter identity profile entries by operation type", async () => {
       const res = await req.get("/passport/identity/profile", {
         filter: JSON.stringify({op: "insert"})
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body.every(log => log.op == "insert")).toEqual(true);
-      expect(res.body.every(log => log.ns == "test.identity")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.op == "insert")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
     });
 
-    it("should limit identity profile logs", async () => {
+    it("should limit identity profile entries", async () => {
       const res = await req.get("/passport/identity/profile", {
         limit: 1
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body.length).toEqual(1);
-      expect(res.body.every(log => log.ns == "test.identity")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
     });
 
-    it("should skip bucket1 profile logs", async () => {
-      const {body: allLogs} = await req.get("/passport/identity/profile");
+    it("should skip bucket1 profile entries", async () => {
+      const {body: allProfileEntries} = await req.get("/passport/identity/profile");
       const res = await req.get("/passport/identity/profile", {skip: 1});
       expect(res.statusCode).toEqual(200);
-      expect(res.body.length).toEqual(allLogs.length - 1);
+      expect(res.body.length).toEqual(allProfileEntries.length - 1);
 
-      allLogs.shift();
-      expect(res.body).toEqual(allLogs);
-      expect(res.body.every(log => log.ns == "test.identity")).toEqual(true);
+      allProfileEntries.shift();
+      expect(res.body).toEqual(allProfileEntries);
+      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
     });
 
-    it("should sort bucket1 profile logs", async () => {
-      const {body: allLogs} = await req.get("/passport/identity/profile");
+    it("should sort bucket1 profile entries", async () => {
+      const {body: allProfileEntries} = await req.get("/passport/identity/profile");
       const res = await req.get("/passport/identity/profile", {sort: JSON.stringify({ts: -1})});
       expect(res.statusCode).toEqual(200);
-      expect(res.body).not.toEqual(allLogs);
+      expect(res.body).not.toEqual(allProfileEntries);
 
-      allLogs.reverse();
-      expect(res.body).toEqual(allLogs);
-      expect(res.body.every(log => log.ns == "test.identity")).toEqual(true);
+      allProfileEntries.reverse();
+      expect(res.body).toEqual(allProfileEntries);
+      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
     });
 
-    // to prevent accessing other collections profile logs
+    // to prevent accessing other collections profile entries
     it("should ignore ns on filter", async () => {
       let res = await req.get("/passport/identity/profile", {
         filter: JSON.stringify({ns: "test.buckets"})
@@ -114,7 +114,7 @@ describe("Identity Controller", () => {
 
       expect(res.statusCode).toEqual(200);
       // user provided ns filter will be overridden
-      expect(res.body.every(log => log.ns == "test.identity")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
     });
 
     it("should ignore ns on the nested filter", async () => {
@@ -125,7 +125,7 @@ describe("Identity Controller", () => {
       });
 
       expect(res.statusCode).toEqual(200);
-      // there is no such profile log for filter below
+      // there is no such profile entries for filter below
       /*
       {
         $or: [{ns: "test.functions"}, {ns: "test.buckets"}]

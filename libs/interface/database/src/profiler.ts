@@ -1,4 +1,4 @@
-export interface ProfilerLog {
+export interface ProfilerEntry {
   op: Op;
   ns: string;
   command: DynamicObject;

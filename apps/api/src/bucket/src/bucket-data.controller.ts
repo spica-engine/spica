@@ -146,7 +146,7 @@ export class BucketDataController {
 
   @Get("profile")
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:profile", "bucket/:bucketId/data"))
-  async findProfileLogs(
+  async findProfileEntries(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Query("filter", JSONPR(filterReviver)) filter?: object,
     @Query("limit", NUMBER) limit?: number,

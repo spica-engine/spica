@@ -124,7 +124,7 @@ export class IdentityController {
 
   @Get("profile")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:profile", "passport/identity"))
-  async findProfileLogs(
+  async findProfileEntries(
     @Query("filter", JSONP) filter?: object,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,

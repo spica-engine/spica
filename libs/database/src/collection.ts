@@ -18,7 +18,7 @@ import {
   CreateIndexesOptions
 } from "mongodb";
 import {DatabaseService} from "./database.service";
-import {InitializeOptions, OptionalId, ProfilerLog} from "@spica-server/interface/database";
+import {InitializeOptions, OptionalId, ProfilerEntry} from "@spica-server/interface/database";
 
 export class _MixinCollection<T> {
   _coll: Collection<T>;
@@ -179,9 +179,9 @@ export class _MixinCollection<T> {
   }
 
   // profiler
-  findOnProfiler(filter: Filter<Omit<ProfilerLog, "ns">> = {}) {
-    (filter as Filter<ProfilerLog>).ns = this._coll.namespace;
-    return this.db.collection<ProfilerLog>("system.profile").find(filter);
+  findOnProfiler(filter: Filter<Omit<ProfilerEntry, "ns">> = {}) {
+    (filter as Filter<ProfilerEntry>).ns = this._coll.namespace;
+    return this.db.collection<ProfilerEntry>("system.profile").find(filter);
   }
 
   collection(collection: string, options?: InitializeOptions) {

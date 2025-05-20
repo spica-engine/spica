@@ -97,59 +97,67 @@ describe("BucketDataController profiler", () => {
     bucket2Namespace = `test.bucket_${bucket2._id}`;
   });
 
-  it("should list bucket1 data profile logs", async () => {
+  it("should list bucket1 data profile entries", async () => {
     const res = await req.get(`/bucket/${bucket1._id}/data/profile`);
     expect(res.statusCode).toEqual(200);
-    expect(res.body.every(log => log.ns == "test.bucket_6824a87e86e3700817eadc77")).toEqual(true);
+    expect(
+      res.body.every(profileEntry => profileEntry.ns == "test.bucket_6824a87e86e3700817eadc77")
+    ).toEqual(true);
   });
 
-  it("should list bucket2 data profile logs", async () => {
+  it("should list bucket2 data profile entries", async () => {
     const res = await req.get(`/bucket/${bucket2._id}/data/profile`);
     expect(res.statusCode).toEqual(200);
-    expect(res.body.every(log => log.ns == "test.bucket_6824a894faa1408d00875d80")).toEqual(true);
+    expect(
+      res.body.every(profileEntry => profileEntry.ns == "test.bucket_6824a894faa1408d00875d80")
+    ).toEqual(true);
   });
 
-  it("should filter bucket1 profile logs by operation type", async () => {
+  it("should filter bucket1 profile entries by operation type", async () => {
     const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
       filter: JSON.stringify({op: "insert"})
     });
     expect(res.statusCode).toEqual(200);
-    expect(res.body.every(log => log.ns == "test.bucket_6824a87e86e3700817eadc77")).toEqual(true);
-    expect(res.body.every(log => log.op == "insert")).toEqual(true);
+    expect(
+      res.body.every(profileEntry => profileEntry.ns == "test.bucket_6824a87e86e3700817eadc77")
+    ).toEqual(true);
+    expect(res.body.every(profileEntry => profileEntry.op == "insert")).toEqual(true);
   });
 
-  it("should limit bucket1 profile logs", async () => {
+  it("should limit bucket1 profile entries", async () => {
     const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
       limit: 1
     });
     expect(res.statusCode).toEqual(200);
     expect(res.body.length).toEqual(1);
-    expect(res.body.every(log => log.ns == "test.bucket_6824a87e86e3700817eadc77")).toEqual(true);
+    expect(
+      res.body.every(profileEntry => profileEntry.ns == "test.bucket_6824a87e86e3700817eadc77")
+    ).toEqual(true);
   });
 
-  it("should skip bucket1 profile logs", async () => {
-    const {body: allLogs} = await req.get(`/bucket/${bucket1._id}/data/profile`);
+  it("should skip bucket1 profile entries", async () => {
+    const {body: allProfileEntries} = await req.get(`/bucket/${bucket1._id}/data/profile`);
     const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {skip: 1});
     expect(res.statusCode).toEqual(200);
-    expect(res.body.length).toEqual(allLogs.length - 1);
+    expect(res.body.length).toEqual(allProfileEntries.length - 1);
 
-    allLogs.shift();
-    expect(res.body).toEqual(allLogs);
+    allProfileEntries.shift();
+    expect(res.body).toEqual(allProfileEntries);
   });
 
-  it("should sort bucket1 profile logs", async () => {
-    const {body: allLogs} = await req.get(`/bucket/${bucket1._id}/data/profile`);
+  it("should sort bucket1 profile entries", async () => {
+    const {body: allProfileEntries} = await req.get(`/bucket/${bucket1._id}/data/profile`);
     const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
       sort: JSON.stringify({ts: -1})
     });
     expect(res.statusCode).toEqual(200);
-    expect(res.body).not.toEqual(allLogs);
+    expect(res.body).not.toEqual(allProfileEntries);
 
-    allLogs.reverse();
-    expect(res.body).toEqual(allLogs);
+    allProfileEntries.reverse();
+    expect(res.body).toEqual(allProfileEntries);
   });
 
-  // to prevent accessing other collections profile logs
+  // to prevent accessing other collections profile entries
   it("should ignore ns on filter", async () => {
     let res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
       filter: JSON.stringify({ns: "test.buckets"})
@@ -157,7 +165,9 @@ describe("BucketDataController profiler", () => {
 
     expect(res.statusCode).toEqual(200);
     // user provided ns filter will be overridden
-    expect(res.body.every(log => log.ns == "test.bucket_6824a87e86e3700817eadc77")).toEqual(true);
+    expect(
+      res.body.every(profileEntry => profileEntry.ns == "test.bucket_6824a87e86e3700817eadc77")
+    ).toEqual(true);
   });
 
   it("should ignore ns on the nested filter", async () => {
@@ -168,7 +178,7 @@ describe("BucketDataController profiler", () => {
     });
 
     expect(res.statusCode).toEqual(200);
-    // there is no such profile log for filter below
+    // there is no such profile entries for filter below
     /*
       {
         $or: [{ns: "test.bucket_6824a894faa1408d00875d80"}, {ns: "test.buckets"}]
