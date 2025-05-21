@@ -125,6 +125,8 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   unsubscribe(target: event.Target): void {
     this.schedulerUnsubscription(target.id);
 
+    const indexesToRemove = [];
+
     this.subscriptions.forEach((subscription, index) => {
       const isCwdEqual = subscription.target.cwd == target.cwd;
       const isHandlerEqual = subscription.target.handler == target.handler;
@@ -139,8 +141,12 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
         ?.close()
         .catch(err => console.error(getErrorMessage("connection", err)));
 
-      this.subscriptions.splice(index, 1);
+      indexesToRemove.push(index);
     });
+
+    for (let i = indexesToRemove.length - 1; i >= 0; i--) {
+      this.subscriptions.splice(indexesToRemove[i], 1);
+    }
   }
 
   onEventsAreDrained(events: event.Event[]): Promise<any> {
