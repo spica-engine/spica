@@ -16810,10 +16810,10 @@ oxc-resolver@^5.0.0:
     "@oxc-resolver/binding-win32-arm64-msvc" "5.0.1"
     "@oxc-resolver/binding-win32-x64-msvc" "5.0.1"
 
-oziko-ui-kit@^0.0.23:
-  version "0.0.23"
-  resolved "https://registry.yarnpkg.com/oziko-ui-kit/-/oziko-ui-kit-0.0.23.tgz#de1ee7a615987c7c35138f8c3e2541856fdc90be"
-  integrity sha512-0ruXL7N9f34hTWOAT0urBzsYjszWAarjSWnf7JoxHjk4HVkdUwz6JPaA1lkoMQzDbMbXQ0M7f7EK8SE9ASAlPA==
+oziko-ui-kit@^0.0.24:
+  version "0.0.24"
+  resolved "https://registry.yarnpkg.com/oziko-ui-kit/-/oziko-ui-kit-0.0.24.tgz#accb3ab32806512a6da256b32d68301887659b42"
+  integrity sha512-6RvJhjatPfQh/99AMjl2N7agND7IwvUTVPNnqqw/6lzJ6UyClzhET8s3rL+oToaFTep7P8+oBKy2FvA5R6nV6Q==
   dependencies:
     "@emotion/react" "^11.14.0"
     "@emotion/styled" "^11.14.0"
