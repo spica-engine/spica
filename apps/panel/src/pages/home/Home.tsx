@@ -4,10 +4,10 @@ import {FlexElement} from "oziko-ui-kit";
 import "oziko-ui-kit/dist/index.css";
 import SideBar from "../../components/organisms/sidebar/SideBar";
 import Toolbar from "../../components/atoms/toolbar/Toolbar";
-import ExampleVideo from "../../components/molecules/youtube-video/ExampleVideo";
+import VideoDisplay from "../../components/molecules/video-display/VideoDisplay";
 import Quicklinks from "../../components/molecules/quicklinks/Quicklinks";
 import WelcomeText from "../../components/atoms/welcome-text/WelcomeText";
-import {menuItems, navigatorItems} from "./mock";
+import {menuItems, navigatorItems, token, name} from "./mock";
 
 const Home = () => {
   const [navigatorOpen, setNavigatorOpen] = useState(true);
@@ -22,7 +22,7 @@ const Home = () => {
       <div
         className={`${styles.content} ${navigatorOpen ? styles.navigatorOpen : styles.navigatorClosed}`}
       >
-        <Toolbar></Toolbar>
+        <Toolbar token={token} name={name}></Toolbar>
         <FlexElement
           dimensionX={"fill"}
           direction="vertical"
@@ -32,7 +32,7 @@ const Home = () => {
           <WelcomeText />
           <FlexElement dimensionX={"fill"}>
             <Quicklinks />
-            <ExampleVideo />
+            <VideoDisplay />
           </FlexElement>
         </FlexElement>
       </div>

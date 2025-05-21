@@ -1,9 +1,13 @@
 import {FlexElement} from "oziko-ui-kit";
 import styles from "./Quicklinks.module.scss";
-import {memo} from "react";
+import {memo, type FC} from "react";
+import {environment} from "environment";
 
-const currentVersion = "v0.0.0";
-const Quicklinks = () => {
+type TypeQuicklinks = {
+  currentVersion?: string;
+};
+
+const Quicklinks: FC<TypeQuicklinks> = ({currentVersion = "v0.0.0"}) => {
   return (
     <FlexElement
       className={styles.quickLinks}
@@ -17,7 +21,7 @@ const Quicklinks = () => {
       <a
         className={styles.links}
         onClick={() => {
-          window.open("https://spicaengine.com/docs/guide/getting-started", "_blank");
+          window.open(environment.SPICA_DOCS_URL, "_blank");
         }}
       >
         Documentation
@@ -25,7 +29,7 @@ const Quicklinks = () => {
       <a
         className={styles.links}
         onClick={() => {
-          window.open("https://github.com/spica-engine/spica", "_blank");
+          window.open(environment.SPICA_GITHUB_URL, "_blank");
         }}
       >
         Github
@@ -33,7 +37,7 @@ const Quicklinks = () => {
       <a
         className={styles.links}
         onClick={() => {
-          window.open("https://www.youtube.com/playlist?list=UUCfDC3-r1tIeYfylt_9QVJg", "_blank");
+          window.open(environment.SPICA_YOUTUBE_EXAMPLE_URL, "_blank");
         }}
       >
         Youtube
@@ -41,7 +45,7 @@ const Quicklinks = () => {
       <a
         className={styles.links}
         onClick={() => {
-          window.open("https://github.com/spica-engine/spica/releases", "_blank");
+          window.open(environment.SPICA_RELEASES_URL, "_blank");
         }}
       >
         Releases (Current release {currentVersion})

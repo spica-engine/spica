@@ -48,3 +48,6 @@ export const navigatorItems: {[key: string]: TypeNavigatorItems[]} = {
     {_id: "4", title: "Security", icon: "lock"}
   ]
 };
+
+export const name = "Spica";
+export const token = "PlaceholderJWT123";
