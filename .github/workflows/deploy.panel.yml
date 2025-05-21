@@ -5,7 +5,7 @@ env:
   BASE_URL: spica
 
 on:
-  pull_request:
+  push:
     branches: ["panel"]
 
 jobs:
@@ -24,6 +24,9 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set Node memory limit
+        run: echo "NODE_OPTIONS=--max-old-space-size=4096" >> $GITHUB_ENV
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
