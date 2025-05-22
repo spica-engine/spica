@@ -1,6 +1,5 @@
 import React, {type FC, memo} from "react";
-import {FlexElement} from "oziko-ui-kit";
-import type {TypeFlexElement} from "../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/flex-element/FlexElement";
+import {FlexElement, type TypeFlexElement} from "oziko-ui-kit";
 import styles from "./Section.module.scss";
 
 type TypeSection = {

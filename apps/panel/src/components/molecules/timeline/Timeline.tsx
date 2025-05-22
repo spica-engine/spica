@@ -19,10 +19,14 @@ import {Bar} from "react-chartjs-2";
 import zoomPlugin from "chartjs-plugin-zoom";
 import annotationPlugin from "chartjs-plugin-annotation";
 import "chartjs-adapter-date-fns";
-import {Icon, Button, FluidContainer, FlexElement, Text} from "oziko-ui-kit";
-
-import type {TypeFluidContainer} from "../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/fluid-container/FluidContainer";
-
+import {
+  Icon,
+  Button,
+  FluidContainer,
+  FlexElement,
+  Text,
+  type TypeFluidContainer
+} from "oziko-ui-kit";
 import {utils} from "../../../../../../node_modules/oziko-ui-kit/dist/utils";
 import {type _DeepPartialObject} from "../../../../../../node_modules/chart.js/dist/types/utils";
 import DraggableBar from "../../atoms/draggable-bar/DraggableBar";

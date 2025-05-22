@@ -1,6 +1,5 @@
 import React, {type FC, memo} from "react";
-import type {TypeFlexElement} from "../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/flex-element/FlexElement";
-import {Text, FlexElement} from "oziko-ui-kit";
+import {Text, FlexElement, type TypeFlexElement} from "oziko-ui-kit";
 import styles from "./MenuGroup.module.scss";
 
 type TypeMenuGroup = {

@@ -2,8 +2,7 @@ import React, {type FC, useEffect, useRef} from "react";
 import GridLayout, {type Layout} from "react-grid-layout";
 import styles from "./DashboardLayout.module.scss";
 import {type ChartData, type ChartOptions, type ChartType} from "chart.js";
-import {Icon, Text, FlexElement} from "oziko-ui-kit";
-import type {TypeFluidContainer} from "../../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/fluid-container/FluidContainer";
+import {Icon, Text, FlexElement, type TypeFluidContainer} from "oziko-ui-kit";
 import DashboardItem from "../../../atoms/dashboard-item/DashboardItem";
 
 type TypeDashboardItem = {

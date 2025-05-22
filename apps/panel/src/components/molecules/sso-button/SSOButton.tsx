@@ -1,9 +1,13 @@
-import {Icon, Text, FluidContainer} from "oziko-ui-kit";
+import {
+  Icon,
+  Text,
+  FluidContainer,
+  type TypeFluidContainer,
+  useOnClickOutside,
+  type IconName
+} from "oziko-ui-kit";
 import React, {type FC, memo, useRef, useState} from "react";
-import type {IconName} from "../../../../../../node_modules/oziko-ui-kit/dist/utils/iconList";
 import styles from "./SSOButton.module.scss";
-import {useOnClickOutside} from "../../../custom-hooks/useOnClickOutside";
-import type {TypeFluidContainer} from "../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/fluid-container/FluidContainer";
 
 type TypeSSOButton = {
   icon: IconName;
