@@ -136,7 +136,13 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
     this.enqueuers.add(
-      new RabbitMQEnqueuer(this.queue, this.rabbitmqQueue, schedulerUnsubscription)
+      new RabbitMQEnqueuer(
+        this.queue,
+        this.rabbitmqQueue,
+        schedulerUnsubscription,
+        this.jobReducer,
+        this.commander
+      )
     );
 
     if (typeof this.enqueuerFactory == "function") {

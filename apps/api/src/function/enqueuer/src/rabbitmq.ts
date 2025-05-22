@@ -4,6 +4,8 @@ import {Description} from "@spica-server/interface/function/enqueuer";
 import {event, RabbitMQ} from "@spica-server/function/queue/proto";
 import amqp from "amqplib";
 import uniqid from "uniqid";
+import {ClassCommander, JobReducer} from "@spica-server/replication";
+import {CommandType} from "@spica-server/interface/replication";
 
 export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   type = event.Type.RABBITMQ;
@@ -21,9 +23,16 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   constructor(
     private queue: EventQueue,
     private rabbitmqQueue: RabbitMQQueue,
-    private schedulerUnsubscription: (targetId: string) => void
+    private schedulerUnsubscription: (targetId: string) => void,
+    private jobReducer?: JobReducer,
+    private commander?: ClassCommander
   ) {
     super();
+    if (this.commander) {
+      this.commander = this.commander.new();
+      this.commander.register(this, [this.shift], CommandType.SHIFT);
+    }
+
     this.retryConnecting();
   }
 
@@ -52,7 +61,9 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
     subscription.connection = connection;
 
     connection.on("close", () => {
-      this.setAsClosed(subscription, target, "The connection was closed unexpectedly.");
+      if (this.subscriptions.some(subscription => subscription.connection == connection)) {
+        this.setAsClosed(subscription, target, "The connection was closed unexpectedly.");
+      }
     });
 
     const channel = await connection.createChannel().catch(err => {
@@ -68,7 +79,9 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
     });
 
     channel.on("close", () => {
-      this.setAsClosed(subscription, target, "The channel was closed unexpectedly.");
+      if (this.subscriptions.some(subscription => subscription.channel == channel)) {
+        this.setAsClosed(subscription, target, "The channel was closed unexpectedly.");
+      }
     });
 
     if (options.exchange) {
@@ -150,17 +163,37 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   }
 
   onEventsAreDrained(events: event.Event[]): Promise<any> {
-    return Promise.resolve();
+    if (!this.jobReducer) {
+      return;
+    }
+
+    const shiftPromises: Promise<any>[] = [];
+
+    for (const event of events) {
+      const shift = this.jobReducer.findOneAndDelete({event_id: event.id}).then(job => {
+        if (!job) {
+          console.error(`Job with event id ${event.id} does not exist!`);
+          return;
+        }
+
+        return this.shift(job.msg, job.channel, event.target.toObject(), job.options, event.id);
+      });
+
+      shiftPromises.push(shift);
+    }
+
+    return Promise.all(shiftPromises);
   }
 
   onMessageHandler(
     target: event.Target,
     msg: amqp.Message,
     channel: amqp.Channel,
-    options: RabbitMQOptions
+    options: RabbitMQOptions,
+    eventId?: string
   ) {
     const ev = new event.Event({
-      id: uniqid(),
+      id: eventId || uniqid(),
       type: event.Type.RABBITMQ,
       target
     });
@@ -171,8 +204,23 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
       properties: JSON.stringify(msg.properties)
     });
 
-    this.queue.enqueue(ev);
-    this.rabbitmqQueue.enqueue(ev.id, message, channel, options);
+    const enqueue = () => {
+      this.queue.enqueue(ev);
+      this.rabbitmqQueue.enqueue(ev.id, message, channel, options);
+    };
+
+    const meta = {
+      _id: uniqid(),
+      msg,
+      channel,
+      options
+    };
+
+    if (this.jobReducer) {
+      this.jobReducer.do(meta, enqueue);
+    } else {
+      enqueue();
+    }
   }
 
   onErrorHandler(target: event.Target, errorMessage: string) {
@@ -193,6 +241,44 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   setAsClosed(subscription: Subscription, target: event.Target, errorMessage: string) {
     this.onErrorHandler(target, errorMessage);
     subscription.closed = true;
+  }
+
+  private shift(
+    msg: amqp.Message,
+    channel: amqp.Channel,
+    target: {
+      id: string;
+      cwd: string;
+      handler: string;
+      context: {
+        env: {
+          key: string;
+          value: string;
+        }[];
+        timeout: number;
+      };
+    },
+    options: RabbitMQOptions,
+    eventId: string
+  ) {
+    const newTarget = new event.Target({
+      id: target.id,
+      cwd: target.cwd,
+      handler: target.handler,
+      context: new event.SchedulingContext({
+        env: Object.keys(target.context.env).reduce((envs, key) => {
+          envs.push(
+            new event.SchedulingContext.Env({
+              key,
+              value: target.context.env[key]
+            })
+          );
+          return envs;
+        }, []),
+        timeout: target.context.timeout
+      })
+    });
+    return this.onMessageHandler(newTarget, msg, channel, options, eventId);
   }
 }
 
