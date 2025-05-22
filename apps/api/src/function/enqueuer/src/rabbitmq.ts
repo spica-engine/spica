@@ -61,7 +61,10 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
     subscription.connection = connection;
 
     connection.on("close", () => {
-      if (this.subscriptions.some(subscription => subscription.connection == connection)) {
+      const isNotClosedByUs = this.subscriptions.some(
+        subscription => subscription.connection == connection
+      );
+      if (isNotClosedByUs) {
         this.setAsClosed(subscription, target, "The connection was closed unexpectedly.");
       }
     });
@@ -79,7 +82,10 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
     });
 
     channel.on("close", () => {
-      if (this.subscriptions.some(subscription => subscription.channel == channel)) {
+      const isNotClosedByUs = this.subscriptions.some(
+        subscription => subscription.channel == channel
+      );
+      if (isNotClosedByUs) {
         this.setAsClosed(subscription, target, "The channel was closed unexpectedly.");
       }
     });
