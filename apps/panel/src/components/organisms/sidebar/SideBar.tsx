@@ -14,6 +14,7 @@ export type TypeMenuItems = {
 
 export type TypeNavigatorItems = {
   _id: string;
+  section: string; //!Todo can be improvable like statically defined values etc.
   title?: string;
   icon?: IconName;
   category?: string;

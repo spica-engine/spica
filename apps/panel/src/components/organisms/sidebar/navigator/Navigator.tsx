@@ -83,6 +83,7 @@ const Navigator = ({header, items, button}: TypeNavigatorProps) => {
       <>
         {item.map((item: any, index: number) => (
           <NavigatorItem
+            key={item?._id}
             label={item?.title}
             prefix={{children: <Icon name={item?.icon} />}}
             prefixIcon={item?.icon}
@@ -94,6 +95,9 @@ const Navigator = ({header, items, button}: TypeNavigatorProps) => {
                 name: "dotsVertical"
               }
             ]}
+            onClick={() => {
+              window.location.href = `/${item?.section}/${item?._id}`;
+            }}
           />
         ))}
       </>
@@ -120,6 +124,7 @@ const Navigator = ({header, items, button}: TypeNavigatorProps) => {
         />
         {ungrouped?.map((item: any, index: number) => (
           <NavigatorItem
+            key={item?._id}
             label={item?.title}
             prefixIcon={item?.icon}
             suffixIcons={[
@@ -130,6 +135,9 @@ const Navigator = ({header, items, button}: TypeNavigatorProps) => {
                 name: "dotsVertical"
               }
             ]}
+            onClick={() => {
+              window.location.href = `/${item?.section}/${item?._id}`;
+            }}
             className={styles.ungrouped}
           />
         ))}
