@@ -136,7 +136,13 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
     this.enqueuers.add(
-      new RabbitMQEnqueuer(this.queue, this.rabbitmqQueue, schedulerUnsubscription)
+      new RabbitMQEnqueuer(
+        this.queue,
+        this.rabbitmqQueue,
+        schedulerUnsubscription,
+        this.jobReducer,
+        this.commander
+      )
     );
 
     if (typeof this.enqueuerFactory == "function") {
@@ -322,7 +328,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       this.print(`the worker ${id} won't be scheduled anymore.`);
     } else {
       let message;
-      if (relatedWorker.state == WorkerState.Fresh) {
+      if (relatedWorker.state == WorkerState.Initial) {
         message = `got a new worker ${id}`;
       } else if (relatedWorker.state == WorkerState.Busy) {
         message = `worker ${id} is waiting for new event`;
