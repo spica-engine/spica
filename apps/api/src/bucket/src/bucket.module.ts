@@ -27,7 +27,6 @@ import {
   RegisterVCSynchronizer,
   VC_REPRESENTATIVE_MANAGER
 } from "@spica-server/interface/versioncontrol";
-import {getSyncProvider} from "./versioncontrol/schema";
 import {registerAssetHandlers} from "./asset";
 import {
   IRepresentativeManager,
@@ -133,8 +132,7 @@ export class BucketModule {
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager
   ) {
     if (registerVCSynchronizer) {
-      const provider = getSyncProvider(bs, bds, this.history, this.vcRepresentativeManager);
-      const synchronizer = getSynchronizer(bs, provider, this.vcRepresentativeManager);
+      const synchronizer = getSynchronizer(bs, bds, this.history, this.vcRepresentativeManager);
 
       registerVCSynchronizer(synchronizer);
     }
