@@ -63,7 +63,8 @@ export class VersionControlModule {
         },
         {
           provide: REGISTER_VC_SYNCHRONIZER,
-          useFactory: () => (args: SynchronizerArgs<Resource, Resource>) => new VCSynchronizer(args)
+          useFactory: () => (args: SynchronizerArgs<Resource, Resource>) =>
+            new VCSynchronizer(args).start()
         }
       ],
       exports: [
