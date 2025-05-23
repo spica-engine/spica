@@ -7,6 +7,7 @@ import {
 import {
   ChangeTypes,
   DocChange,
+  RepChange,
   ResourceType,
   SynchronizerArgs,
   SyncProvider
@@ -84,7 +85,7 @@ export const getSynchronizer = (
     });
   };
 
-  const docConverter = change => {
+  const docConverter = (change: DocChange<Bucket>): RepChange<RepresentativeManagerResource> => {
     return {
       ...change,
       resourceType: ResourceType.REPRESENTATIVE,
@@ -95,7 +96,7 @@ export const getSynchronizer = (
     };
   };
 
-  const docApplier = change => {
+  const docApplier = (change: RepChange<RepresentativeManagerResource>) => {
     const {representative} = provider;
 
     const representativeStrategy = {
@@ -109,7 +110,7 @@ export const getSynchronizer = (
 
   const repWatcher = () => vcRepresentativeManager.watch(moduleName);
 
-  const repConverter = change => {
+  const repConverter = (change: RepChange<RepresentativeManagerResource>): DocChange<Bucket> => {
     const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
 
     return {
@@ -119,7 +120,7 @@ export const getSynchronizer = (
     };
   };
 
-  const repApplier = change => {
+  const repApplier = (change: DocChange<Bucket>) => {
     const {document} = provider;
 
     const documentStrategy = {
