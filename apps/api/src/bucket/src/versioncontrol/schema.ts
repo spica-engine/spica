@@ -25,9 +25,7 @@ export const getSyncProvider = (
     );
   };
 
-  const insert = async bucket => {
-    await bs.updateOne({_id: bucket._id}, {$setOnInsert: bucket}, {upsert: true});
-  };
+  const insert = async bucket => CRUD.insert(bs, bucket);
 
   const update = bucket => CRUD.replace(bs, bds, history, bucket);
 

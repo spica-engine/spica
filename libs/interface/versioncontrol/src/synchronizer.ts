@@ -110,6 +110,9 @@ export type SynchronizerArgs<R1 extends Resource, R2 extends Resource> = {
 export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
   constructor(private args: SynchronizerArgs<R1, R2>) {}
 
+  docToRepActions = new Set<string>();
+  repToDocActions = new Set<string>();
+
   start() {
     const {syncs, moduleName, subModuleName} = this.args;
 
@@ -122,6 +125,15 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
     const docSync = syncs[0];
     docSync.watcher.watch().subscribe({
       next: change => {
+        const resourceId = change.resource._id.toString();
+
+        const isSynchronizerAction = this.repToDocActions.has(resourceId);
+        if (isSynchronizerAction) {
+          return this.repToDocActions.delete(resourceId);
+        }
+
+        this.docToRepActions.add(resourceId);
+
         const convertedChange = docSync.converter.convert(change);
         docSync.applier.apply(convertedChange);
       },
@@ -131,6 +143,15 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
     const repSync = syncs[1];
     repSync.watcher.watch().subscribe({
       next: change => {
+        const resourceId = change.resource._id;
+
+        const isSynchronizerAction = this.docToRepActions.has(resourceId);
+        if (isSynchronizerAction) {
+          return this.docToRepActions.delete(resourceId);
+        }
+
+        this.repToDocActions.add(resourceId);
+
         const convertedChange = repSync.converter.convert(change);
         repSync.applier.apply(convertedChange);
       },

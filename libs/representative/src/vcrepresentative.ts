@@ -20,12 +20,18 @@ export class VCRepresentativeManager implements IRepresentativeManager {
   write(module: string, id: string, fileName: string, content: string, extension: string) {
     const resourcesDirectory = path.join(this.cwd, module, id);
     if (!fs.existsSync(resourcesDirectory)) {
-      fs.mkdirSync(resourcesDirectory, {recursive: true});
+      fs.mkdirSync(resourcesDirectory);
     }
 
     const fullPath = path.join(resourcesDirectory, `${fileName}.${extension}`);
-
     return fs.promises.writeFile(fullPath, content);
+  }
+
+  createModuleDirectory(path: string) {
+    if (fs.existsSync(path)) {
+      fs.rmSync(path, {recursive: true, force: true});
+    }
+    fs.mkdirSync(path, {recursive: true});
   }
 
   readFile(path: string) {
@@ -51,82 +57,56 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     return [];
   }
 
-  startRealWatcher(
-    moduleDir: string,
-    subscriber: Subscriber<RepChange<RepresentativeManagerResource>>,
-    bootstrapWatcher?: chokidar.FSWatcher
-  ) {
-    const watcher = chokidar.watch(moduleDir, {
-      ignored: /(^|[/\\])\../,
-      persistent: true
-    });
-
-    watcher.on("all", (event, path) => {
-      let changeType: ChangeTypes;
-      let resource: RepresentativeManagerResource;
-
-      const relativePath = path.slice(moduleDir.length + 1);
-      const _id = relativePath?.split("/")[0];
-
-      switch (event) {
-        case "add":
-          changeType = ChangeTypes.INSERT;
-          resource = {_id, content: this.readFile(path)};
-          break;
-
-        case "change":
-          changeType = ChangeTypes.UPDATE;
-          resource = {_id, content: this.readFile(path)};
-          break;
-
-        case "unlink":
-          changeType = ChangeTypes.DELETE;
-          resource = {_id, content: ""};
-          break;
-
-        default:
-          return;
-      }
-
-      const repChange: RepChange<RepresentativeManagerResource> = {
-        resourceType: ResourceType.REPRESENTATIVE,
-        changeType,
-        resource
-      };
-
-      subscriber.next(repChange);
-    });
-
-    watcher.on("error", err => subscriber.error(err));
-    bootstrapWatcher?.close();
-
-    return () => watcher.close();
-  }
-
   watch(module: string) {
     const moduleDir = this.getModuleDir(module);
 
+    this.createModuleDirectory(moduleDir);
+
     return new Observable<RepChange<RepresentativeManagerResource>>(subscriber => {
-      if (fs.existsSync(moduleDir)) {
-        return this.startRealWatcher(moduleDir, subscriber);
-      }
-
-      const bootstrapWatcher = chokidar.watch(this.cwd, {
+      const watcher = chokidar.watch(moduleDir, {
         ignored: /(^|[/\\])\../,
-        persistent: true,
-        depth: 1
+        persistent: true
       });
 
-      bootstrapWatcher.on("addDir", createdPath => {
-        if (createdPath === moduleDir) {
-          bootstrapWatcher.close();
-          return this.startRealWatcher(moduleDir, subscriber, bootstrapWatcher);
+      watcher.on("all", (event, path) => {
+        let changeType: ChangeTypes;
+        let resource: RepresentativeManagerResource;
+
+        const relativePath = path.slice(moduleDir.length + 1);
+        const _id = relativePath?.split("/")[0];
+
+        switch (event) {
+          case "add":
+            changeType = ChangeTypes.INSERT;
+            resource = {_id, content: this.readFile(path)};
+            break;
+
+          case "change":
+            changeType = ChangeTypes.UPDATE;
+            resource = {_id, content: this.readFile(path)};
+            break;
+
+          case "unlink":
+            changeType = ChangeTypes.DELETE;
+            resource = {_id, content: ""};
+            break;
+
+          default:
+            return;
         }
+
+        const repChange: RepChange<RepresentativeManagerResource> = {
+          resourceType: ResourceType.REPRESENTATIVE,
+          changeType,
+          resource
+        };
+
+        subscriber.next(repChange);
       });
 
-      bootstrapWatcher.on("error", error => subscriber.error(error));
+      watcher.on("error", err => subscriber.error(err));
 
-      return () => bootstrapWatcher.close();
+      return () => watcher.close();
     });
   }
 }
