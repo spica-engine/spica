@@ -1,8 +1,12 @@
 import {memo, type FC} from "react";
-import {FlexElement, ListItem, Icon} from "oziko-ui-kit";
-import type {TypeFlexElement} from "../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/flex-element/FlexElement";
-import type {IconName} from "../../../../../../node_modules/oziko-ui-kit/dist/utils/iconList";
-import type {TypeInputType} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import {
+  FlexElement,
+  ListItem,
+  Icon,
+  type TypeFlexElement,
+  type IconName,
+  type TypeInputType
+} from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
 
 const fieldOptions: {icon: IconName; text: string; type: TypeInputType}[] = [

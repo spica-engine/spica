@@ -1,9 +1,6 @@
-import {FluidContainer, Icon, Text} from "oziko-ui-kit";
-import type {IconName} from "../../../../../../../node_modules/oziko-ui-kit/dist/utils/iconList";
+import {FluidContainer, Icon, Text, type IconName, helperUtils} from "oziko-ui-kit";
 import styles from "./Navigator.module.scss";
 import {Button, Accordion} from "oziko-ui-kit";
-//Todo! import type from ui-kit
-// import {helperUtils} from "../../../../../../../node_modules/oziko-ui-kit/dist/utils/helperUtils";
 import NavigatorItem from "../../../molecules/navigator-item/NavigatorItem";
 import {memo} from "react";
 
@@ -78,7 +75,7 @@ const Navigator = ({header, items, button}: TypeNavigatorProps) => {
   const {grouped, ungrouped} = groupObjectsByCategory(items);
 
   const accordionItems = grouped?.map((item: any, index: number) => ({
-    title: item[0].category.charAt(0).toUpperCase() + item[0].category.slice(1),
+    title: helperUtils.capitalize(item[0].category),
     content: (
       <>
         {item.map((item: any, index: number) => (

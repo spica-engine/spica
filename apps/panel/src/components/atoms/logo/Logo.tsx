@@ -1,8 +1,7 @@
 import React, {memo, type FC} from "react";
 import logo from "../../../assets/images/logo.svg";
 import styles from "./Logo.module.scss";
-import {FlexElement} from "oziko-ui-kit";
-import type {TypeFlexElement} from "oziko-ui-kit";
+import {FlexElement, type TypeFlexElement} from "oziko-ui-kit";
 import logoSmall from "../../../assets/images/logo_small.svg";
 
 type TypeLogo = {

@@ -1,8 +1,14 @@
-import type {TypeInputType} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
-import {Button, FlexElement, FluidContainer, Icon, Text} from "oziko-ui-kit";
+import {
+  Button,
+  FlexElement,
+  FluidContainer,
+  Icon,
+  Text,
+  type TypeFluidContainer,
+  type TypeInputType
+} from "oziko-ui-kit";
 import React, {type FC, memo} from "react";
 import styles from "./BucketSchemaItem.module.scss";
-import type {TypeFluidContainer} from "../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/fluid-container/FluidContainer";
 
 type TypeBucketSchemaItem = {
   label?: string;

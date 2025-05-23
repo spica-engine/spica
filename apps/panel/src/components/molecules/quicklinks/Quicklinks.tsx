@@ -1,7 +1,7 @@
 import {FlexElement} from "oziko-ui-kit";
 import styles from "./Quicklinks.module.scss";
 import {memo, type FC} from "react";
-import {environment} from "environment";
+import {environment} from "../../../../environment";
 
 type TypeQuicklinks = {
   currentVersion?: string;

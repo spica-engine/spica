@@ -1,7 +1,6 @@
 import React, {type FC, type ReactNode, useState} from "react";
 import styles from "./SideBar.module.scss";
-import {Icon} from "oziko-ui-kit";
-import type {IconName} from "../../../../../../node_modules/oziko-ui-kit/dist/utils/iconList";
+import {Icon, type IconName} from "oziko-ui-kit";
 import Navigator, {type TypeNavigatorHeader} from "./navigator/Navigator";
 import Logo from "../../atoms/logo/Logo";
 

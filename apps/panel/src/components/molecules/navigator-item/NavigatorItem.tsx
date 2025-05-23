@@ -1,8 +1,13 @@
-import type {TypeFluidContainer} from "../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/fluid-container/FluidContainer";
 import React, {type FC, memo} from "react";
 import styles from "./NavigatorItem.module.scss";
-import type {IconName} from "../../../../../../node_modules/oziko-ui-kit/dist/utils/iconList";
-import {Button, Text, Icon, FluidContainer} from "oziko-ui-kit";
+import {
+  Button,
+  Text,
+  Icon,
+  FluidContainer,
+  type TypeFluidContainer,
+  type IconName
+} from "oziko-ui-kit";
 
 type SuffixIcon = {
   name: IconName;

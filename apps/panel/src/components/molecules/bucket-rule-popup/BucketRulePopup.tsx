@@ -1,7 +1,13 @@
-import {Button, FluidContainer, Icon, Text, TextAreaInput} from "oziko-ui-kit";
+import {
+  Button,
+  FluidContainer,
+  Icon,
+  Text,
+  TextAreaInput,
+  type TypeFluidContainer
+} from "oziko-ui-kit";
 import React, {type FC, memo} from "react";
 import styles from "./BucketRulePopup.module.scss";
-import type {TypeFluidContainer} from "../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/fluid-container/FluidContainer";
 
 type TypeDashboardEditNameProps = {
   name?: string;

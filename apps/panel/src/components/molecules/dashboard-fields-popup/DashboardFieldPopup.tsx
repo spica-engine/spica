@@ -1,8 +1,13 @@
-import {Button, FluidContainer, Icon, Text} from "oziko-ui-kit";
+import {
+  Button,
+  FluidContainer,
+  Icon,
+  Text,
+  useInputRepresenter,
+  type TypeInputType
+} from "oziko-ui-kit";
 import styles from "./DashboardFieldPopup.module.scss";
 import {type FC, memo} from "react";
-import useInputRepresenter from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
-import type {TypeInputType} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 
 type DashboardFieldPopupProps = {
   onClickApply?: () => void;
