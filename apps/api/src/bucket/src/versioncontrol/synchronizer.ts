@@ -1,4 +1,4 @@
-import {BucketService} from "@spica-server/bucket/services";
+import {BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {Bucket} from "@spica-server/interface/bucket";
 import {
   IRepresentativeManager,
@@ -15,10 +15,13 @@ import {
 import {ChangeStreamDocument, ObjectId} from "mongodb";
 import {Observable} from "rxjs";
 import YAML from "yaml";
+import * as CRUD from "../crud";
+import {HistoryService} from "@spica-server/bucket/history";
 
 export const getSynchronizer = (
   bs: BucketService,
-  provider: SyncProvider,
+  bds: BucketDataService,
+  history: HistoryService,
   vcRepresentativeManager: IRepresentativeManager
 ): SynchronizerArgs<Bucket, RepresentativeManagerResource> => {
   const moduleName = "bucket";
@@ -97,12 +100,18 @@ export const getSynchronizer = (
   };
 
   const docApplier = (change: RepChange<RepresentativeManagerResource>) => {
-    const {representative} = provider;
+    const write = (resource: RepresentativeManagerResource) => {
+      vcRepresentativeManager.write(moduleName, resource._id, "schema", resource.content, "yaml");
+    };
+
+    const rm = (resource: RepresentativeManagerResource) => {
+      vcRepresentativeManager.rm(moduleName, resource._id);
+    };
 
     const representativeStrategy = {
-      [ChangeTypes.INSERT]: representative.insert,
-      [ChangeTypes.UPDATE]: representative.update,
-      [ChangeTypes.DELETE]: representative.delete
+      [ChangeTypes.INSERT]: write,
+      [ChangeTypes.UPDATE]: write,
+      [ChangeTypes.DELETE]: rm
     };
 
     representativeStrategy[change.changeType](change.resource);
@@ -121,12 +130,10 @@ export const getSynchronizer = (
   };
 
   const repApplier = (change: DocChange<Bucket>) => {
-    const {document} = provider;
-
     const documentStrategy = {
-      [ChangeTypes.INSERT]: document.insert,
-      [ChangeTypes.UPDATE]: document.update,
-      [ChangeTypes.DELETE]: document.delete
+      [ChangeTypes.INSERT]: (bucket: Bucket) => CRUD.insert(bs, bucket),
+      [ChangeTypes.UPDATE]: (bucket: Bucket) => CRUD.replace(bs, bds, history, bucket),
+      [ChangeTypes.DELETE]: (bucket: Bucket) => CRUD.remove(bs, bds, history, bucket._id)
     };
 
     documentStrategy[change.changeType](change.resource);
@@ -162,6 +169,6 @@ export const getSynchronizer = (
       }
     ],
     moduleName,
-    subModuleName: ""
+    subModuleName: "schema"
   };
 };
