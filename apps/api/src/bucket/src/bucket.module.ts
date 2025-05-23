@@ -22,13 +22,20 @@ import BucketsSchema from "./schemas/buckets.schema.json" with {type: "json"};
 import {
   RegisterSyncProvider,
   REGISTER_VC_SYNC_PROVIDER,
-  VC_REP_MANAGER
+  REGISTER_VC_SYNCHRONIZER,
+  VC_REP_MANAGER,
+  RegisterVCSynchronizer,
+  VC_REPRESENTATIVE_MANAGER
 } from "@spica-server/interface/versioncontrol";
 import {getSyncProvider} from "./versioncontrol/schema";
 import {registerAssetHandlers} from "./asset";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {
+  IRepresentativeManager,
+  RepresentativeManagerResource
+} from "@spica-server/interface/representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
-import {BucketOptions} from "@spica-server/interface/bucket";
+import {Bucket, BucketOptions} from "@spica-server/interface/bucket";
+import {getSynchronizer} from "./versioncontrol/synchronizer";
 
 @Module({})
 export class BucketModule {
@@ -117,11 +124,19 @@ export class BucketModule {
     @Optional() private history: HistoryService,
     @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
     @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
+    @Optional()
+    @Inject(VC_REPRESENTATIVE_MANAGER)
+    private vcRepresentativeManager: IRepresentativeManager,
+    @Optional()
+    @Inject(REGISTER_VC_SYNCHRONIZER)
+    registerVCSynchronizer: RegisterVCSynchronizer<Bucket, RepresentativeManagerResource>,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager
   ) {
-    if (registerSync) {
-      const provider = getSyncProvider(bs, bds, this.history, this.vcRepManager);
-      registerSync(provider);
+    if (registerVCSynchronizer) {
+      const provider = getSyncProvider(bs, bds, this.history, this.vcRepresentativeManager);
+      const synchronizer = getSynchronizer(bs, provider, this.vcRepresentativeManager);
+
+      registerVCSynchronizer(synchronizer).start();
     }
 
     preference.default({
