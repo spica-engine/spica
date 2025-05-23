@@ -6,6 +6,7 @@ import {Button, Accordion} from "oziko-ui-kit";
 // import {helperUtils} from "../../../../../../../node_modules/oziko-ui-kit/dist/utils/helperUtils";
 import NavigatorItem from "../../../molecules/navigator-item/NavigatorItem";
 import {memo} from "react";
+import {useNavigate} from "react-router-dom";
 
 type TypeNavigatorProps = {
   header?: TypeNavigatorHeader;
@@ -54,6 +55,7 @@ const NavigatorHeader = ({header}: TypeNavigatorProps) => {
 };
 
 const Navigator = ({header, items, button}: TypeNavigatorProps) => {
+  const navigator = useNavigate();
   const groupObjectsByCategory = (objects: any) => {
     const groupedMap = new Map();
     const ungrouped: any[] = [];
@@ -96,7 +98,7 @@ const Navigator = ({header, items, button}: TypeNavigatorProps) => {
               }
             ]}
             onClick={() => {
-              window.location.href = `/${item?.section}/${item?._id}`;
+              navigator(`/${item?.section}/${item?._id}`);
             }}
           />
         ))}
@@ -136,7 +138,7 @@ const Navigator = ({header, items, button}: TypeNavigatorProps) => {
               }
             ]}
             onClick={() => {
-              window.location.href = `/${item?.section}/${item?._id}`;
+              navigator(`/${item?.section}/${item?._id}`);
             }}
             className={styles.ungrouped}
           />
