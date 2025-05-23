@@ -136,7 +136,7 @@ export class BucketModule {
       const provider = getSyncProvider(bs, bds, this.history, this.vcRepresentativeManager);
       const synchronizer = getSynchronizer(bs, provider, this.vcRepresentativeManager);
 
-      registerVCSynchronizer(synchronizer).start();
+      registerVCSynchronizer(synchronizer);
     }
 
     preference.default({
