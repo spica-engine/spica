@@ -1,20 +1,11 @@
 import React, {memo} from "react";
 import styles from "./BucketActionBar.module.scss";
 import {Button, FlexElement, Icon, InputWithIcon} from "oziko-ui-kit";
+import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 const BucketActionBar = () => {
   return (
     <div className={styles.container}>
-      <InputWithIcon
-        gap={10}
-        dimensionX={400}
-        prefix={{
-          children: <Icon name="magnify" className={styles.icon} />
-        }}
-        inputProps={{
-          placeholder: "Search"
-        }}
-        className={styles.input}
-      ></InputWithIcon>
+      <SearchBar />
       <FlexElement>
         <Button onClick={() => {}}>
           <Icon name="plus" />

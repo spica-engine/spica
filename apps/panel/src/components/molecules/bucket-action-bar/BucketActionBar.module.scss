@@ -2,12 +2,4 @@
 .container {
   width: 100%;
   @include mixins.flexAlignCenterJustifyBetween;
-
-  .icon {
-    color: var(--color-font-primary);
-  }
-
-  .input {
-    border: 0;
-  }
 }
