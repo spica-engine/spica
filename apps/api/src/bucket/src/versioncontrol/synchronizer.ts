@@ -24,6 +24,7 @@ export const getSynchronizer = (
   vcRepresentativeManager: IRepresentativeManager
 ): SynchronizerArgs<Bucket, RepresentativeManagerResource> => {
   const moduleName = "bucket";
+  const file = "schema.yaml";
 
   const docWatcher = () => {
     return new Observable<DocChange<Bucket>>(observer => {
@@ -99,8 +100,6 @@ export const getSynchronizer = (
       }
     };
   };
-
-  const file = "schema.yaml";
 
   const repApplier = (change: RepChange<RepresentativeManagerResource>) => {
     const write = (resource: RepresentativeManagerResource) => {

@@ -25,6 +25,7 @@ export const getSchemaSynchronizer = (
   logs: LogService
 ): SynchronizerArgs<Function, RepresentativeManagerResource> => {
   const moduleName = "function";
+  const file = "schema.yaml";
 
   const docWatcher = () => {
     return new Observable<DocChange<Function>>(observer => {
@@ -100,8 +101,6 @@ export const getSchemaSynchronizer = (
       }
     };
   };
-
-  const file = "schema.yaml";
 
   const repApplier = (change: RepChange<RepresentativeManagerResource>) => {
     const write = (resource: RepresentativeManagerResource) => {
