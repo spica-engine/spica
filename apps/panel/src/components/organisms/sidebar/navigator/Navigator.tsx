@@ -55,7 +55,7 @@ const NavigatorHeader = ({header}: TypeNavigatorProps) => {
 };
 
 const Navigator = ({header, items, button}: TypeNavigatorProps) => {
-  const navigator = useNavigate();
+  const navigate = useNavigate();
   const groupObjectsByCategory = (objects: any) => {
     const groupedMap = new Map();
     const ungrouped: any[] = [];
@@ -98,7 +98,7 @@ const Navigator = ({header, items, button}: TypeNavigatorProps) => {
               }
             ]}
             onClick={() => {
-              navigator(`/${item?.section}/${item?._id}`);
+              navigate(`/${item?.section}/${item?._id}`);
             }}
           />
         ))}
@@ -138,7 +138,7 @@ const Navigator = ({header, items, button}: TypeNavigatorProps) => {
               }
             ]}
             onClick={() => {
-              navigator(`/${item?.section}/${item?._id}`);
+              navigate(`/${item?.section}/${item?._id}`);
             }}
             className={styles.ungrouped}
           />
