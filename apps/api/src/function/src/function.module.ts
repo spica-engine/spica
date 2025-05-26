@@ -21,15 +21,19 @@ import {
   REGISTER_VC_SYNCHRONIZER,
   RegisterVCSynchronizer
 } from "@spica-server/interface/versioncontrol";
-import {getSyncProviders} from "./versioncontrol";
 import {registerAssetHandlers} from "./asset";
 import {
   IRepresentativeManager,
   RepresentativeManagerResource
 } from "@spica-server/interface/representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
-import {Function, FunctionOptions, FUNCTION_OPTIONS} from "@spica-server/interface/function";
-import {getSynchronizers} from "./versioncontrol/synchronizer";
+import {
+  Function,
+  FunctionOptions,
+  FUNCTION_OPTIONS,
+  FunctionChange
+} from "@spica-server/interface/function";
+import {getSynchronizers} from "./versioncontrol";
 
 @Module({})
 export class FunctionModule {
@@ -45,7 +49,10 @@ export class FunctionModule {
     private vcRepresentativeManager: IRepresentativeManager,
     @Optional()
     @Inject(REGISTER_VC_SYNCHRONIZER)
-    registerVCSynchronizer: RegisterVCSynchronizer<Function, RepresentativeManagerResource>,
+    registerVCSynchronizer: RegisterVCSynchronizer<
+      Function | FunctionChange,
+      RepresentativeManagerResource
+    >,
     logs: LogService,
     validator: Validator
   ) {

@@ -120,7 +120,7 @@ export const getSchemaSynchronizer = (
     representativeStrategy[change.changeType](change.resource);
   };
 
-  const repWatcher = () => vcRepresentativeManager.watch(moduleName, file);
+  const repWatcher = () => vcRepresentativeManager.watch(moduleName, [file]);
 
   const repToDocConverter = (
     change: RepChange<RepresentativeManagerResource>

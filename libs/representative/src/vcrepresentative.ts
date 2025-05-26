@@ -6,7 +6,7 @@ import {
   RepresentativeManagerResource
 } from "@spica-server/interface/representative";
 import chokidar from "chokidar";
-import {Observable, Subscriber} from "rxjs";
+import {Observable} from "rxjs";
 import {ChangeTypes, RepChange, ResourceType} from "@spica-server/interface/versioncontrol";
 
 @Injectable()
@@ -67,7 +67,7 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     return [];
   }
 
-  watch(module: string, file: string) {
+  watch(module: string, files: string[], events: string[] = ["add", "change", "unlink"]) {
     const moduleDir = this.getModuleDir(module);
 
     this.createModuleDirectory(moduleDir);
@@ -80,10 +80,15 @@ export class VCRepresentativeManager implements IRepresentativeManager {
       });
 
       watcher.on("all", (event, path) => {
+        const isTrackedEvent = events.includes(event);
+        if (!isTrackedEvent) return;
+
         const relativePath = path.slice(moduleDir.length + 1);
         const parts = relativePath.split(/[/\\]/);
 
-        if (parts.length !== 2 || parts[1] !== file) return;
+        const isCorrectDepth = parts.length == 2;
+        const isTrackedFile = files.some(file => parts[1] == file);
+        if (!isCorrectDepth || !isTrackedFile) return;
 
         const _id = parts[0];
 
