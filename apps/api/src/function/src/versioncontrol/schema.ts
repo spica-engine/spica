@@ -101,9 +101,11 @@ export const getSchemaSynchronizer = (
     };
   };
 
+  const file = "schema.yaml";
+
   const repApplier = (change: RepChange<RepresentativeManagerResource>) => {
     const write = (resource: RepresentativeManagerResource) => {
-      vcRepresentativeManager.write(moduleName, resource._id, "schema", resource.content, "yaml");
+      vcRepresentativeManager.writeFile(moduleName, resource._id, file, resource.content);
     };
 
     const rm = (resource: RepresentativeManagerResource) => {
@@ -119,7 +121,7 @@ export const getSchemaSynchronizer = (
     representativeStrategy[change.changeType](change.resource);
   };
 
-  const repWatcher = () => vcRepresentativeManager.watch(moduleName);
+  const repWatcher = () => vcRepresentativeManager.watch(moduleName, file);
 
   const repToDocConverter = (
     change: RepChange<RepresentativeManagerResource>

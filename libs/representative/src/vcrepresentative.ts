@@ -27,6 +27,16 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     return fs.promises.writeFile(fullPath, content);
   }
 
+  writeFile(module: string, id: string, file: string, content: string) {
+    const resourcesDirectory = path.join(this.cwd, module, id);
+    if (!fs.existsSync(resourcesDirectory)) {
+      fs.mkdirSync(resourcesDirectory);
+    }
+
+    const fullPath = path.join(resourcesDirectory, file);
+    return fs.promises.writeFile(fullPath, content);
+  }
+
   createModuleDirectory(path: string) {
     if (fs.existsSync(path)) {
       fs.rmSync(path, {recursive: true, force: true});
@@ -57,7 +67,7 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     return [];
   }
 
-  watch(module: string) {
+  watch(module: string, file: string) {
     const moduleDir = this.getModuleDir(module);
 
     this.createModuleDirectory(moduleDir);
@@ -65,15 +75,20 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     return new Observable<RepChange<RepresentativeManagerResource>>(subscriber => {
       const watcher = chokidar.watch(moduleDir, {
         ignored: /(^|[/\\])\../,
-        persistent: true
+        persistent: true,
+        depth: 2
       });
 
       watcher.on("all", (event, path) => {
+        const relativePath = path.slice(moduleDir.length + 1);
+        const parts = relativePath.split(/[/\\]/);
+
+        if (parts.length !== 2 || parts[1] !== file) return;
+
+        const _id = parts[0];
+
         let changeType: ChangeTypes;
         let resource: RepresentativeManagerResource;
-
-        const relativePath = path.slice(moduleDir.length + 1);
-        const _id = relativePath?.split("/")[0];
 
         switch (event) {
           case "add":
