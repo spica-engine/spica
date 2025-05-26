@@ -9,8 +9,7 @@ import {
   DocChange,
   RepChange,
   ResourceType,
-  SynchronizerArgs,
-  SyncProvider
+  SynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {ChangeStreamDocument, ObjectId} from "mongodb";
 import {Observable} from "rxjs";
@@ -88,7 +87,9 @@ export const getSynchronizer = (
     });
   };
 
-  const docToRepConverter = (change: DocChange<Bucket>): RepChange<RepresentativeManagerResource> => {
+  const docToRepConverter = (
+    change: DocChange<Bucket>
+  ): RepChange<RepresentativeManagerResource> => {
     return {
       ...change,
       resourceType: ResourceType.REPRESENTATIVE,
@@ -119,7 +120,9 @@ export const getSynchronizer = (
 
   const repWatcher = () => vcRepresentativeManager.watch(moduleName);
 
-  const repToDocConverter = (change: RepChange<RepresentativeManagerResource>): DocChange<Bucket> => {
+  const repToDocConverter = (
+    change: RepChange<RepresentativeManagerResource>
+  ): DocChange<Bucket> => {
     const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
 
     return {

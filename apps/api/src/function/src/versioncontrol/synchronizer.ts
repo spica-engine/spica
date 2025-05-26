@@ -4,18 +4,19 @@ import {FunctionEngine} from "../engine";
 import {LogService} from "@spica-server/function/log";
 import {dependecySyncProviders} from "./dependency";
 import {indexSyncProviders} from "./fnindex";
+import {getSchemaSynchronizer} from "./schema";
 import {Dependency} from "@spica-server/interface/function";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 
-export const getSyncProviders = (
+export const getSynchronizers = (
   service: FunctionService,
   manager: IRepresentativeManager,
   engine: FunctionEngine,
   logs: LogService
-): SyncProvider[] => {
-  // const schema = schemaSyncProviders(service, manager, engine, logs);
-  const index = indexSyncProviders(service, manager, engine);
-  const dependency = dependecySyncProviders(service, manager, engine);
+) => {
+  const schema = getSchemaSynchronizer(service, manager, engine, logs);
+  //   const index = getIndexSynchronizer();
+  //   const dependency = getDependencySynchronizer();
 
-  return [index, dependency];
+  return [schema];
 };
