@@ -88,7 +88,7 @@ export const getSynchronizer = (
     });
   };
 
-  const docConverter = (change: DocChange<Bucket>): RepChange<RepresentativeManagerResource> => {
+  const docToRepConverter = (change: DocChange<Bucket>): RepChange<RepresentativeManagerResource> => {
     return {
       ...change,
       resourceType: ResourceType.REPRESENTATIVE,
@@ -99,7 +99,7 @@ export const getSynchronizer = (
     };
   };
 
-  const docApplier = (change: RepChange<RepresentativeManagerResource>) => {
+  const repApplier = (change: RepChange<RepresentativeManagerResource>) => {
     const write = (resource: RepresentativeManagerResource) => {
       vcRepresentativeManager.write(moduleName, resource._id, "schema", resource.content, "yaml");
     };
@@ -119,7 +119,7 @@ export const getSynchronizer = (
 
   const repWatcher = () => vcRepresentativeManager.watch(moduleName);
 
-  const repConverter = (change: RepChange<RepresentativeManagerResource>): DocChange<Bucket> => {
+  const repToDocConverter = (change: RepChange<RepresentativeManagerResource>): DocChange<Bucket> => {
     const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
 
     return {
@@ -129,7 +129,7 @@ export const getSynchronizer = (
     };
   };
 
-  const repApplier = (change: DocChange<Bucket>) => {
+  const docApplier = (change: DocChange<Bucket>) => {
     const documentStrategy = {
       [ChangeTypes.INSERT]: (bucket: Bucket) => CRUD.insert(bs, bucket),
       [ChangeTypes.UPDATE]: (bucket: Bucket) => CRUD.replace(bs, bds, history, bucket),
@@ -147,11 +147,11 @@ export const getSynchronizer = (
           watch: docWatcher
         },
         converter: {
-          convert: docConverter
+          convert: docToRepConverter
         },
         applier: {
           resourceType: ResourceType.REPRESENTATIVE,
-          apply: docApplier
+          apply: repApplier
         }
       },
       {
@@ -160,11 +160,11 @@ export const getSynchronizer = (
           watch: repWatcher
         },
         converter: {
-          convert: repConverter
+          convert: repToDocConverter
         },
         applier: {
           resourceType: ResourceType.DOCUMENT,
-          apply: repApplier
+          apply: docApplier
         }
       }
     ],
