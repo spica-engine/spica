@@ -80,6 +80,8 @@ describe("Body Parsers", () => {
         const response = await req.put("/storage/succeeded", body, headers);
         expect(response.statusCode).toEqual(200);
 
+        await new Promise((resolve, _) => setTimeout(resolve, 1000));
+
         const tmpFiles = fs.readdirSync(tmpFolder);
         expect(tmpFiles).toEqual([]);
       });
@@ -89,6 +91,9 @@ describe("Body Parsers", () => {
 
         const response = await req.post("/storage/failed", body, headers);
         expect(response.statusCode).toEqual(201);
+
+        await new Promise((resolve, _) => setTimeout(resolve, 1000));
+
         const tmpFiles = fs.readdirSync(tmpFolder);
         expect(tmpFiles).toEqual([]);
       });
