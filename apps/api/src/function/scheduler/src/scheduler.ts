@@ -218,12 +218,14 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   getStatus() {
     const workers = Array.from(this.workers.values());
 
+    const initial = workers.filter(w => w.state == WorkerState.Initial).length;
     const fresh = workers.filter(w => w.state == WorkerState.Fresh).length;
-    const activated = workers.length - fresh;
+    const activated = workers.length - initial - fresh;
 
     return {
-      activated: activated,
-      fresh: fresh,
+      initial,
+      activated,
+      fresh,
       unit: "count"
     };
   }
