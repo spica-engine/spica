@@ -2,16 +2,6 @@
   height: 100vh;
   width: 100vw;
   .content {
-    transition: padding-left 0.3s ease-in-out;
-
-    .mainContainer {
-      padding: 10px;
-    }
-  }
-  .navigatorOpen {
-    padding-left: var(--sidebar-with-navigator-width);
-  }
-  .navigatorClosed {
-    padding-left: var(--sidebar-width);
+    padding: 10px;
   }
 }
