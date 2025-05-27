@@ -9,8 +9,7 @@ import {
   DocChange,
   RepChange,
   ResourceType,
-  SynchronizerArgs,
-  SyncProvider
+  SynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {ChangeStreamDocument, ObjectId} from "mongodb";
 import {Observable} from "rxjs";
@@ -25,6 +24,7 @@ export const getSynchronizer = (
   vcRepresentativeManager: IRepresentativeManager
 ): SynchronizerArgs<Bucket, RepresentativeManagerResource> => {
   const moduleName = "bucket";
+  const file = "schema.yaml";
 
   const docWatcher = () => {
     return new Observable<DocChange<Bucket>>(observer => {
@@ -88,7 +88,9 @@ export const getSynchronizer = (
     });
   };
 
-  const docToRepConverter = (change: DocChange<Bucket>): RepChange<RepresentativeManagerResource> => {
+  const docToRepConverter = (
+    change: DocChange<Bucket>
+  ): RepChange<RepresentativeManagerResource> => {
     return {
       ...change,
       resourceType: ResourceType.REPRESENTATIVE,
@@ -101,7 +103,7 @@ export const getSynchronizer = (
 
   const repApplier = (change: RepChange<RepresentativeManagerResource>) => {
     const write = (resource: RepresentativeManagerResource) => {
-      vcRepresentativeManager.write(moduleName, resource._id, "schema", resource.content, "yaml");
+      vcRepresentativeManager.writeFile(moduleName, resource._id, file, resource.content);
     };
 
     const rm = (resource: RepresentativeManagerResource) => {
@@ -117,9 +119,11 @@ export const getSynchronizer = (
     representativeStrategy[change.changeType](change.resource);
   };
 
-  const repWatcher = () => vcRepresentativeManager.watch(moduleName);
+  const repWatcher = () => vcRepresentativeManager.watch(moduleName, [file]);
 
-  const repToDocConverter = (change: RepChange<RepresentativeManagerResource>): DocChange<Bucket> => {
+  const repToDocConverter = (
+    change: RepChange<RepresentativeManagerResource>
+  ): DocChange<Bucket> => {
     const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
 
     return {
