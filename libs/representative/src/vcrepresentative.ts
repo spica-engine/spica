@@ -6,7 +6,7 @@ import {
   RepresentativeManagerResource
 } from "@spica-server/interface/representative";
 import chokidar from "chokidar";
-import {Observable, Subscriber} from "rxjs";
+import {Observable} from "rxjs";
 import {ChangeTypes, RepChange, ResourceType} from "@spica-server/interface/versioncontrol";
 
 @Injectable()
@@ -24,6 +24,16 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     }
 
     const fullPath = path.join(resourcesDirectory, `${fileName}.${extension}`);
+    return fs.promises.writeFile(fullPath, content);
+  }
+
+  writeFile(module: string, id: string, file: string, content: string) {
+    const resourcesDirectory = path.join(this.cwd, module, id);
+    if (!fs.existsSync(resourcesDirectory)) {
+      fs.mkdirSync(resourcesDirectory);
+    }
+
+    const fullPath = path.join(resourcesDirectory, file);
     return fs.promises.writeFile(fullPath, content);
   }
 
@@ -57,7 +67,7 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     return [];
   }
 
-  watch(module: string) {
+  watch(module: string, files: string[], events: string[] = ["add", "change", "unlink"]) {
     const moduleDir = this.getModuleDir(module);
 
     this.createModuleDirectory(moduleDir);
@@ -65,15 +75,25 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     return new Observable<RepChange<RepresentativeManagerResource>>(subscriber => {
       const watcher = chokidar.watch(moduleDir, {
         ignored: /(^|[/\\])\../,
-        persistent: true
+        persistent: true,
+        depth: 2
       });
 
       watcher.on("all", (event, path) => {
-        let changeType: ChangeTypes;
-        let resource: RepresentativeManagerResource;
+        const isTrackedEvent = events.includes(event);
+        if (!isTrackedEvent) return;
 
         const relativePath = path.slice(moduleDir.length + 1);
-        const _id = relativePath?.split("/")[0];
+        const parts = relativePath.split(/[/\\]/);
+
+        const isCorrectDepth = parts.length == 2;
+        const isTrackedFile = files.some(file => parts[1] == file);
+        if (!isCorrectDepth || !isTrackedFile) return;
+
+        const _id = parts[0];
+
+        let changeType: ChangeTypes;
+        let resource: RepresentativeManagerResource;
 
         switch (event) {
           case "add":
