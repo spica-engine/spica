@@ -266,7 +266,7 @@ describe("Versioning e2e", () => {
         await insertBucket(getEmptyBucket());
 
         await req.post("/versioncontrol/commands/add", {args: ["."]});
-        const r = await req.post("/versioncontrol/commands/commit", {
+        await req.post("/versioncontrol/commands/commit", {
           args: ["-m", "'first commit'"]
         });
 
