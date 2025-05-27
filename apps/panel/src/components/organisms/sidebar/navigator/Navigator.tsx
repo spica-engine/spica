@@ -3,6 +3,7 @@ import styles from "./Navigator.module.scss";
 import {Button, Accordion} from "oziko-ui-kit";
 import NavigatorItem from "../../../molecules/navigator-item/NavigatorItem";
 import {memo} from "react";
+import {useNavigate} from "react-router-dom";
 
 type TypeNavigatorProps = {
   header?: TypeNavigatorHeader;
@@ -51,6 +52,7 @@ const NavigatorHeader = ({header}: TypeNavigatorProps) => {
 };
 
 const Navigator = ({header, items, button}: TypeNavigatorProps) => {
+  const navigate = useNavigate();
   const groupObjectsByCategory = (objects: any) => {
     const groupedMap = new Map();
     const ungrouped: any[] = [];
@@ -80,6 +82,7 @@ const Navigator = ({header, items, button}: TypeNavigatorProps) => {
       <>
         {item.map((item: any, index: number) => (
           <NavigatorItem
+            key={item?._id}
             label={item?.title}
             prefix={{children: <Icon name={item?.icon} />}}
             prefixIcon={item?.icon}
@@ -91,6 +94,9 @@ const Navigator = ({header, items, button}: TypeNavigatorProps) => {
                 name: "dotsVertical"
               }
             ]}
+            onClick={() => {
+              navigate(`/${item?.section}/${item?._id}`);
+            }}
           />
         ))}
       </>
@@ -117,6 +123,7 @@ const Navigator = ({header, items, button}: TypeNavigatorProps) => {
         />
         {ungrouped?.map((item: any, index: number) => (
           <NavigatorItem
+            key={item?._id}
             label={item?.title}
             prefixIcon={item?.icon}
             suffixIcons={[
@@ -127,6 +134,9 @@ const Navigator = ({header, items, button}: TypeNavigatorProps) => {
                 name: "dotsVertical"
               }
             ]}
+            onClick={() => {
+              navigate(`/${item?.section}/${item?._id}`);
+            }}
             className={styles.ungrouped}
           />
         ))}

@@ -1,4 +1,4 @@
-import type {TypeMenuItems, TypeNavigatorItems} from "oziko-ui-kit";
+import type {TypeMenuItems, TypeNavigatorItems} from "../../components/organisms/sidebar/SideBar";
 
 export const menuItems: TypeMenuItems[] = [
   {
@@ -40,12 +40,12 @@ export const menuItems: TypeMenuItems[] = [
 
 export const navigatorItems: {[key: string]: TypeNavigatorItems[]} = {
   dashboard: [
-    {_id: "1", title: "Overview", icon: "dashboard"},
-    {_id: "2", title: "Analytics", icon: "dashboard"}
+    {_id: "1", title: "Overview", icon: "dashboard", section: "dashboard"},
+    {_id: "2", title: "Analytics", icon: "dashboard", section: "dashboard"}
   ],
   bucket: [
-    {_id: "3", title: "Profile", icon: "bucket"},
-    {_id: "4", title: "Security", icon: "lock"}
+    {_id: "3", title: "Profile", icon: "bucket", section: "bucket"},
+    {_id: "4", title: "Security", icon: "lock", section: "bucket"}
   ]
 };
 
