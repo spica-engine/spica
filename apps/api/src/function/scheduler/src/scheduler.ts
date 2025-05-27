@@ -219,8 +219,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     const activated = workers.length - fresh;
 
     return {
-      activated,
-      fresh,
+      activated: activated,
+      fresh: fresh,
       unit: "count"
     };
   }
