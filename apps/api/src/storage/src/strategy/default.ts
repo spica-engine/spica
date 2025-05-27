@@ -44,7 +44,15 @@ export class Default implements Strategy {
   async delete(id: string) {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
-    return fs.promises.unlink(objectPath);
+    try {
+      return await fs.promises.unlink(objectPath);
+    } catch (err: any) {
+      if (err.code === "ENOENT") {
+        // File does not exist, treat as successful delete
+        return;
+      }
+      throw err;
+    }
   }
 
   url(id: string) {
