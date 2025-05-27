@@ -284,7 +284,7 @@ describe("Status", () => {
           },
           workers: {
             activated: 1,
-            fresh: 1,
+            fresh: 0,
             unit: "count"
           }
         }

@@ -137,7 +137,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   killFreeWorkers() {
     const freeWorkers = Array.from(this.workers.entries()).filter(
-      ([key, worker]) => worker.state == WorkerState.Fresh || worker.state == WorkerState.Targeted
+      ([key, worker]) =>
+        worker.state == WorkerState.Initial ||
+        worker.state == WorkerState.Fresh ||
+        worker.state == WorkerState.Targeted
     );
 
     const killWorkers = freeWorkers.map(([key, worker]) => {
@@ -194,8 +197,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   getStatus() {
     const workers = Array.from(this.workers.values());
 
+    const initial = workers.filter(w => w.state == WorkerState.Initial).length;
     const fresh = workers.filter(w => w.state == WorkerState.Fresh).length;
-    const activated = workers.length - fresh;
+    const activated = workers.length - initial - fresh;
 
     return {
       activated: activated,
@@ -304,7 +308,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       this.print(`the worker ${id} won't be scheduled anymore.`);
     } else {
       let message;
-      if (relatedWorker.state == WorkerState.Fresh) {
+      if (relatedWorker.state == WorkerState.Initial) {
         message = `got a new worker ${id}`;
       } else if (relatedWorker.state == WorkerState.Busy) {
         message = `worker ${id} is waiting for new event`;
