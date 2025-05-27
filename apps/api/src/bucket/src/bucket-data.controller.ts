@@ -144,6 +144,37 @@ export class BucketDataController {
     ).catch(this.errorHandler);
   }
 
+  @Get("profile")
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:profile", "bucket/:bucketId/data"))
+  async findProfileEntries(
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Query("filter", JSONPR(filterReviver)) filter?: object,
+    @Query("limit", NUMBER) limit?: number,
+    @Query("skip", NUMBER) skip?: number,
+    @Query("sort", JSONP) sort?: {[key: string]: 1 | -1}
+  ) {
+    const schema = await this.bs.findOne({_id: bucketId});
+
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
+    const cursor = this.bds.children(schema).findOnProfiler(filter);
+
+    if (limit) {
+      cursor.limit(limit);
+    }
+
+    if (skip) {
+      cursor.skip(skip);
+    }
+
+    if (sort) {
+      cursor.sort(sort);
+    }
+
+    return cursor.toArray();
+  }
+
   /**
    * Return the document.
    * If the document has translations, `accept-language` header will be taken into account.

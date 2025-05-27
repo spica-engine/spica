@@ -2,7 +2,9 @@ import {
   initialize as _initialize,
   checkInitialized,
   isPlatformBrowser,
-  HttpService
+  HttpService,
+  Batch,
+  BatchResponse
 } from "@spica-devkit/internal_common";
 import {
   StorageObject,
@@ -150,4 +152,14 @@ export function remove(id: string, headers?: object) {
   checkInitialized(authorization);
 
   return service.delete(`storage/${id}`, {headers});
+}
+
+export function removeMany(ids: string[], headers?: object) {
+  checkInitialized(authorization);
+
+  const batchReqs = Batch.prepareRemoveRequest(ids, "storage", service.getAuthorization(), headers);
+
+  return service
+    .post<BatchResponse<string>>("batch", batchReqs, {headers})
+    .then(response => Batch.handleBatchResponse<string>(batchReqs, response));
 }

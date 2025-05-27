@@ -1,9 +1,11 @@
 import axios, {AxiosRequestConfig, AxiosInstance, AxiosResponse} from "axios";
+import {BatchRequest, BatchResponse, ManyResponse} from "./interface";
 
 export interface HttpService {
   baseUrl: string;
   setBaseUrl(url: string): void;
   setAuthorization(authorization: string): void;
+  getAuthorization(): string;
   setWriteDefaults(writeDefaults: {headers: {[key: string]: string}}): void;
 
   get<T>(url: string, options?: any): Promise<T>;
@@ -87,6 +89,10 @@ export class Axios implements HttpService {
 
   setAuthorization(authorization: string) {
     this.instance.defaults.headers["Authorization"] = authorization;
+  }
+
+  getAuthorization() {
+    return this.instance.defaults.headers["Authorization"].toString();
   }
 
   get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {

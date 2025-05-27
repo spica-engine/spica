@@ -16,6 +16,8 @@ database:
   rootPassword:
   replicaAuthKey:
   logLevel: 0
+  profilingLevel: 1
+  profilingSlowms: 100
 
 images:
   api: spicaengine/api
