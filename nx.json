@@ -53,7 +53,8 @@
           "silent": true
         },
         "local": {
-          "forceExit": true
+          "forceExit": true,
+          "silent": false
         }
       },
       "defaultConfiguration": "ci-cd"

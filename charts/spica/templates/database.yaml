@@ -104,6 +104,7 @@ spec:
                   - "-c"
                   - | 
                     ./scripts/init-replica.sh > ./init-replica.log
+                    ./scripts/set-profiling-level.sh > ./set-profiling-level.log
           {{- end}}
           resources:
 {{ toYaml .Values.database.resources | indent 12 }}
@@ -125,6 +126,12 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-database-root-credentials
                   key: rootPassword
+            - name: DATABASE_NAME
+              value: {{ .Values.database.name }}
+            - name: PROFILING_LEVEL
+              value: "{{ .Values.database.profilingLevel }}"
+            - name: PROFILING_SLOWMS
+              value: "{{ .Values.database.profilingSlowms }}"
             {{- if eq (int .Values.database.replicas) 1}}
             - name: RS_MEMBERS
               value: '{{ template "generateReplicaSetMembers" . }}'
