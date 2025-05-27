@@ -88,9 +88,15 @@ spec:
           readinessProbe:
             exec:
               command:
-                - mongo
+                - mongosh
+                - --username
+                - $(ROOT_USERNAME)
+                - --password
+                - $(ROOT_PASSWORD)
+                - --authenticationDatabase
+                - admin
                 - --eval
-                - "db.adminCommand('ping')"
+                - db.adminCommand('ping')
             initialDelaySeconds: 10
             periodSeconds: 5
             timeoutSeconds: 5

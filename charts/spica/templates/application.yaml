@@ -69,7 +69,7 @@ spec:
               path: /passport/strategies
               port: 4300
               scheme: HTTP
-            initialDelaySeconds: 10
+            initialDelaySeconds: 15
             periodSeconds: 5
             timeoutSeconds: 5
             failureThreshold: 6
