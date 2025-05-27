@@ -27,7 +27,7 @@ import {
   Text,
   type TypeFluidContainer
 } from "oziko-ui-kit";
-import {utils} from "../../../../../../node_modules/oziko-ui-kit/dist/utils";
+import {timeUtil} from "oziko-ui-kit";
 import {type _DeepPartialObject} from "../../../../../../node_modules/chart.js/dist/types/utils";
 import DraggableBar from "../../atoms/draggable-bar/DraggableBar";
 
@@ -89,8 +89,8 @@ const Timeline: FC<TypeTimeline> = ({
   const [endBarPosition, setEndBarPosition] = useState<TypeBarPosition>(null);
 
   const getUnit = (): TypeUnit => {
-    const diffInMinutes = utils.time.getDiffInMinutes(dateRange.from, dateRange.to);
-    return utils.time.unitMapper(diffInMinutes);
+    const diffInMinutes = timeUtil.getDiffInMinutes(dateRange.from, dateRange.to);
+    return timeUtil.unitMapper(diffInMinutes);
   };
 
   const handlePan = (direction: "left" | "right") => {
@@ -98,7 +98,7 @@ const Timeline: FC<TypeTimeline> = ({
     if (!ticks) return;
     const valueInPercent = ticks.length * 0.1;
     const timeUnit = getUnit();
-    const seconds = valueInPercent * utils.time.timeUnitsInSeconds[timeUnit];
+    const seconds = valueInPercent * timeUtil.timeUnitsInSeconds[timeUnit];
 
     onPan?.(direction, seconds);
   };
@@ -225,7 +225,7 @@ const Timeline: FC<TypeTimeline> = ({
         children: (
           <FlexElement className={styles.container} dimensionX="fill" dimensionY={"fill"}>
             <Text className={`${styles.date} ${styles.from}`}>
-              {utils.time.formatDateToEnUs(dateRange.from)}
+              {timeUtil.formatDateToEnUs(dateRange.from)}
             </Text>
             {startBarPosition && (
               <DraggableBar
@@ -251,7 +251,7 @@ const Timeline: FC<TypeTimeline> = ({
               />
             )}
             <Text className={`${styles.date} ${styles.to}`}>
-              {utils.time.formatDateToEnUs(dateRange.to)}
+              {timeUtil.formatDateToEnUs(dateRange.to)}
             </Text>
           </FlexElement>
         )
