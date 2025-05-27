@@ -263,7 +263,6 @@ describe("Status", () => {
             unit: "count"
           },
           workers: {
-            initial: 0,
             activated: 0,
             fresh: 1,
             unit: "count"
@@ -284,9 +283,8 @@ describe("Status", () => {
             unit: "count"
           },
           workers: {
-            initial: 1,
             activated: 1,
-            fresh: 0,
+            fresh: 1,
             unit: "count"
           }
         }

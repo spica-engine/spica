@@ -17,7 +17,7 @@ export class Node extends Runtime {
 }
 
 export class ScheduleWorker extends NodeWorker {
-  private _state: WorkerState = WorkerState.Initial;
+  private _state: WorkerState = WorkerState.Fresh;
   public get state(): WorkerState {
     return this._state;
   }
@@ -29,7 +29,6 @@ export class ScheduleWorker extends NodeWorker {
   private schedule: Schedule;
 
   private transitionMap = {
-    [WorkerState.Initial]: [WorkerState.Fresh],
     [WorkerState.Fresh]: [WorkerState.Busy],
     [WorkerState.Targeted]: [WorkerState.Busy, WorkerState.Timeouted, WorkerState.Outdated],
     [WorkerState.Busy]: [WorkerState.Targeted, WorkerState.Timeouted, WorkerState.Outdated],
@@ -46,8 +45,6 @@ export class ScheduleWorker extends NodeWorker {
   public markAsAvailable(schedule: Schedule) {
     if (this.state == WorkerState.Busy) {
       this.transitionTo(WorkerState.Targeted);
-    } else if (this.state == WorkerState.Initial) {
-      this.transitionTo(WorkerState.Fresh);
     }
     this.schedule = schedule;
   }
