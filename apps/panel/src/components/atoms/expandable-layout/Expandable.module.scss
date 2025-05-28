@@ -1,0 +1,18 @@
+.container {
+  border-bottom: var(--border-default);
+  width: 100%;
+}
+
+.title {
+  padding: var(--padding-md);
+  text-align: left;
+  cursor: pointer;
+  font-weight: 700;
+  border: none !important;
+  outline: none;
+  width: 100%;
+}
+
+.contentWrapper {
+  overflow: hidden;
+}
