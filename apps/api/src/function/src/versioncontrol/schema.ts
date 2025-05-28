@@ -103,13 +103,10 @@ export const getSchemaSynchronizer = (
   };
 
   const repApplier = (change: RepChange<RepresentativeManagerResource>) => {
-    const write = (resource: RepresentativeManagerResource) => {
+    const write = (resource: RepresentativeManagerResource) =>
       vcRepresentativeManager.writeFile(moduleName, resource._id, file, resource.content);
-    };
-
-    const rm = (resource: RepresentativeManagerResource) => {
+    const rm = (resource: RepresentativeManagerResource) =>
       vcRepresentativeManager.rm(moduleName, resource._id);
-    };
 
     const representativeStrategy = {
       [ChangeTypes.INSERT]: write,
