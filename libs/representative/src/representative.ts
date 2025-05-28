@@ -82,11 +82,6 @@ export class RepresentativeManager implements IRepresentativeManager {
     return fs.promises.writeFile(fullPath, content);
   }
 
-  // delete later
-  writeFile(module: string, id: string, file: string, content: string): Promise<void> {
-    return new Promise(() => {});
-  }
-
   readResource(module: string, id: string, fileNames = []): Promise<any> {
     const moduleDir = this.getModuleDir(module);
 
