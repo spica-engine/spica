@@ -24,6 +24,7 @@ import {AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {registerAssetHandlers} from "./asset";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
 
 @Global()
 @Module({})
@@ -52,6 +53,7 @@ export class IdentityModule {
       exports: [
         IdentityService,
         IdentityStrategy,
+        RefreshTokenService,
         IDENTITY_SETTINGS_FINALIZER,
         IDENTITY_POLICY_FINALIZER,
         AUTH_RESOLVER

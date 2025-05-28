@@ -17,6 +17,8 @@ const EXPIRES_IN = 60_000;
 
 const TOTP_TIMEOUT = 1000 * 30;
 
+const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
+
 const CERTIFICATE = `-----BEGIN CERTIFICATE-----
 MIIDVjCCAj4CCQCIeeA38VX/wjANBgkqhkiG9w0BAQUFADBtMQswCQYDVQQGEwJU
 UjEMMAoGA1UECAwDYXNkMQwwCgYDVQQHDANxd2UxDjAMBgNVBAoMBXZjYmNiMQ0w
@@ -193,7 +195,8 @@ describe("E2E Tests", () => {
         defaultIdentityIdentifier: "spica",
         defaultIdentityPassword: "spica",
         audience: "spica",
-        defaultIdentityPolicies: ["PassportFullAccess"]
+        defaultIdentityPolicies: ["PassportFullAccess"],
+        refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN
       }),
       PreferenceTestingModule,
       CoreTestingModule

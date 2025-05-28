@@ -9,6 +9,7 @@ import {Validator} from "@spica-server/core/schema";
 import {Default} from "@spica-server/interface/core";
 import {hash, compare} from "./hash";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
+import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
 
 @Injectable()
 export class IdentityService extends BaseCollection<Identity>("identity") {
@@ -16,6 +17,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     database: DatabaseService,
     private validator: Validator,
     private jwt: JwtService,
+    private refreshTokenService: RefreshTokenService,
     @Inject(IDENTITY_OPTIONS) private identityOptions: IdentityOptions
   ) {
     super(database, {
@@ -29,10 +31,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
   }
 
   sign(identity: Identity, requestedExpires?: number) {
-    let expiresIn = this.identityOptions.expiresIn;
-    if (requestedExpires) {
-      expiresIn = Math.min(requestedExpires, this.identityOptions.maxExpiresIn);
-    }
+    const expiresIn = this.getAccessTokenExpiresIn(requestedExpires);
 
     type CustomJwtHeader = JwtSignOptions["header"] & {
       identifier?: string;
@@ -54,6 +53,60 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       scheme: "IDENTITY",
       token,
       issuer: "passport/identity"
+    };
+  }
+
+  getAccessTokenExpiresIn(requestedExpiresIn?: number) {
+    if (requestedExpiresIn) {
+      return Math.min(requestedExpiresIn, this.identityOptions.maxExpiresIn);
+    }
+    return this.identityOptions.expiresIn;
+  }
+
+  signRefreshToken(identity: Identity) {
+    const expiresIn = this.identityOptions.refreshTokenExpiresIn;
+    const token = this.jwt.sign({identifier: identity.identifier}, {expiresIn});
+
+    const tokenSchema = {
+      token,
+      identity: String(identity._id),
+      created_at: new Date(),
+      expired_at: new Date(Date.now() + expiresIn * 1000),
+      last_used_at: undefined
+    };
+
+    this.refreshTokenService.insertOne(tokenSchema);
+
+    return tokenSchema;
+  }
+
+  async getIdentifierOfTokens(accessToken: string, refreshToken: string) {
+    await this.verify(refreshToken);
+
+    const refreshTokenData = await this.refreshTokenService.findOne({token: refreshToken});
+    if (!refreshTokenData) {
+      return Promise.reject("Refresh token not found");
+    }
+
+    const {identifier} = await this.verify(accessToken.split(" ")[1]);
+    const identity = await this.findOne({identifier});
+
+    if (refreshTokenData.identity !== String(identity._id)) {
+      return Promise.reject("Refresh and access token identifiers are mismatched");
+    }
+
+    return identity;
+  }
+
+  getCookieOptions() {
+    return {
+      httpOnly: true,
+      secure: true,
+      // ????
+      sameSite: "Strict",
+      path: "/",
+      overwrite: true,
+      maxAge: this.identityOptions.refreshTokenExpiresIn * 1000
     };
   }
 
