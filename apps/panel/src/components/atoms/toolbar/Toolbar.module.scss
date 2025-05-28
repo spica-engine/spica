@@ -12,6 +12,10 @@
   .tokenButton {
     border: var(--color-border) 1px solid !important;
   }
+  .menuButton {
+    justify-content: flex-start;
+    padding: 0;
+  }
   .text {
     @include mixins.textEllipsis(1);
     display: block;
