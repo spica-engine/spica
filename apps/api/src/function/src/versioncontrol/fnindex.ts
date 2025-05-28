@@ -25,7 +25,7 @@ export const getIndexSynchronizer = (
 
   const docWatcher = () => {
     return new Observable<DocChange<FunctionChange>>(observer => {
-      engine.watch(["index.mjs", "index.ts"]).subscribe({
+      engine.watch("index").subscribe({
         next: (change: FunctionChange) => {
           const docChange: DocChange<FunctionChange> = {
             resourceType: ResourceType.DOCUMENT,

@@ -201,7 +201,18 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       });
   }
 
-  watch(files: string[]): Observable<FunctionChange> {
+  watch(scope: "index" | "dependency"): Observable<FunctionChange> {
+    let files = [];
+
+    switch (scope) {
+      case "index":
+        files = ["index.mjs", "index.ts"];
+        break;
+      case "dependency":
+        files = ["package.json"];
+        break;
+    }
+
     const moduleDir = this.options.root;
 
     return new Observable<FunctionChange>(observer => {
