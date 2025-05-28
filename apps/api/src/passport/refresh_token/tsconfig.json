@@ -1,0 +1,14 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {"path": "../../../../../libs/core"},
+    {"path": "../../../../../libs/database"},
+    {
+      "path": "../guard"
+    },
+    {
+      "path": "../../../../../libs/database/pipeline"
+    }
+  ]
+}
