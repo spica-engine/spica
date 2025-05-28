@@ -85,6 +85,22 @@ spec:
               mongod --replSet rs0 --bind_ip_all --auth --keyFile ./etc/secrets/replicaAuthKey  --setParameter logLevel={{ .Values.database.logLevel }}
           ports:
             - containerPort: 27017
+          readinessProbe:
+            exec:
+              command:
+                - mongosh
+                - --username
+                - $(ROOT_USERNAME)
+                - --password
+                - $(ROOT_PASSWORD)
+                - --authenticationDatabase
+                - admin
+                - --eval
+                - db.adminCommand('ping')
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 6
           {{- if eq (int .Values.database.replicas) 1}}
           lifecycle:
             postStart:
