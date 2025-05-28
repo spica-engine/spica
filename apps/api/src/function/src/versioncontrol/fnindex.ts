@@ -56,12 +56,12 @@ export const getIndexSynchronizer = (
 
   const repApplier = (change: RepChange<RepresentativeManagerResource>) => {
     const extension = change.resource.additionalParameters.language == "javascript" ? "js" : "ts";
-    const file = `index.${extension}`;
-    vcRepresentativeManager.writeFile(
+    vcRepresentativeManager.write(
       moduleName,
       change.resource._id,
-      file,
-      change.resource.content
+      "index",
+      change.resource.content,
+      extension
     );
   };
 
