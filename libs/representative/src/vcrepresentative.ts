@@ -27,16 +27,6 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     return fs.promises.writeFile(fullPath, content);
   }
 
-  writeFile(module: string, id: string, file: string, content: string) {
-    const resourcesDirectory = path.join(this.cwd, module, id);
-    if (!fs.existsSync(resourcesDirectory)) {
-      fs.mkdirSync(resourcesDirectory);
-    }
-
-    const fullPath = path.join(resourcesDirectory, file);
-    return fs.promises.writeFile(fullPath, content);
-  }
-
   createModuleDirectory(path: string) {
     if (fs.existsSync(path)) {
       fs.rmSync(path, {recursive: true, force: true});

@@ -10,8 +10,6 @@ export type RepresentativeManagerResource = {
 export interface IRepresentativeManager {
   write(module: string, id: string, file: string, content: any, extension: string): Promise<void>;
 
-  writeFile(module: string, id: string, file: string, content: string): Promise<void>;
-
   read(
     module: string,
     resNameValidator: (name: string) => boolean,
