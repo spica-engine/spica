@@ -83,18 +83,7 @@ export const getDependencySynchronizer = (
 
   const docApplier = (change: DocChange<FunctionChange>) => {
     const parsed = JSON.parse(change.resource.content);
-
-    const update = () =>
-      CRUD.dependencies.update(engine, {...change.resource.fn, dependencies: parsed.dependencies});
-
-    const retry = (delays: number[]) =>
-      update().catch(err =>
-        delays.length
-          ? new Promise(res => setTimeout(res, delays[0])).then(() => retry(delays.slice(1)))
-          : console.error("Error updating dependencies after retries:", err)
-      );
-
-    retry([2000, 4000, 8000]);
+    CRUD.dependencies.update(engine, {...change.resource.fn, dependencies: parsed.dependencies});
   };
 
   return {
