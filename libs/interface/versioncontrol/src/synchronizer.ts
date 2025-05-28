@@ -153,7 +153,20 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
         this.repToDocActions.add(resourceId);
 
         const convertedChange = repSync.converter.convert(change);
-        repSync.applier.apply(convertedChange);
+
+        const apply = () => repSync.applier.apply(convertedChange);
+
+        const retry = (delays: number[]) => {
+          try {
+            apply();
+          } catch (err) {
+            delays.length
+              ? new Promise(res => setTimeout(res, delays[0])).then(() => retry(delays.slice(1)))
+              : console.error("Error applying after retries:", err);
+          }
+        };
+
+        retry([2000, 4000, 8000]);
       },
       error: errorHandler
     });

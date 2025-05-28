@@ -80,19 +80,8 @@ export const getIndexSynchronizer = (
     }
   });
 
-  const docApplier = (change: DocChange<FunctionChange>) => {
-    const write = () =>
-      CRUD.index.write(fs, engine, change.resource.fn._id, change.resource.content);
-
-    const retry = (delays: number[]) =>
-      write().catch(err =>
-        delays.length
-          ? new Promise(res => setTimeout(res, delays[0])).then(() => retry(delays.slice(1)))
-          : console.error("Error writing index after retries:", err)
-      );
-
-    retry([2000, 4000, 8000]);
-  };
+  const docApplier = (change: DocChange<FunctionChange>) =>
+    CRUD.index.write(fs, engine, change.resource.fn._id, change.resource.content);
 
   return {
     syncs: [
