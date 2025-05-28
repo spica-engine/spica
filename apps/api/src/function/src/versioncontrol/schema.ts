@@ -73,12 +73,12 @@ export const getSchemaSynchronizer = (
       fs._coll
         .find()
         .toArray()
-        .then(buckets => {
-          buckets.forEach(bucket => {
+        .then(functions => {
+          functions.forEach(fn => {
             const docChange: DocChange<Function> = {
               resourceType: ResourceType.DOCUMENT,
               changeType: ChangeTypes.INSERT,
-              resource: bucket
+              resource: fn
             };
 
             observer.next(docChange);
