@@ -22,11 +22,12 @@ export const getDependencySynchronizer = (
   engine: FunctionEngine
 ): SynchronizerArgs<FunctionChange, RepresentativeManagerResource> => {
   const moduleName = "function";
-  const file = "package.json";
+  const fileName = "package";
+  const extension = "json";
 
   const docWatcher = () => {
     return new Observable<DocChange<FunctionChange>>(observer => {
-      engine.watch([file]).subscribe({
+      engine.watch([`${fileName}.${extension}`]).subscribe({
         next: (change: FunctionChange) => {
           const docChange: DocChange<FunctionChange> = {
             resourceType: ResourceType.DOCUMENT,
@@ -58,11 +59,12 @@ export const getDependencySynchronizer = (
   };
 
   const repApplier = (change: RepChange<RepresentativeManagerResource>) => {
-    vcRepresentativeManager.writeFile(
+    vcRepresentativeManager.write(
       moduleName,
       change.resource._id,
-      file,
-      change.resource.content
+      fileName,
+      change.resource.content,
+      extension
     );
   };
 
