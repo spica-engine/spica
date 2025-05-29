@@ -14,9 +14,6 @@ import {Axios} from "./services/axios";
 import {registerStatusProvider} from "./status";
 import FunctionSchema from "./schema/function.json" with {type: "json"};
 import {
-  RegisterSyncProvider,
-  REGISTER_VC_SYNC_PROVIDER,
-  VC_REP_MANAGER,
   VC_REPRESENTATIVE_MANAGER,
   REGISTER_VC_SYNCHRONIZER,
   RegisterVCSynchronizer
@@ -41,8 +38,6 @@ export class FunctionModule {
     fs: FunctionService,
     fe: FunctionEngine,
     scheduler: Scheduler,
-    @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
-    @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
     @Optional()
     @Inject(VC_REPRESENTATIVE_MANAGER)
