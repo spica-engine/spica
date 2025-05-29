@@ -14,7 +14,6 @@ import {
   VC_REPRESENTATIVE_MANAGER
 } from "@spica-server/interface/versioncontrol";
 import {PreferenceController} from "./preference.controller";
-import {getSyncProvider} from "./versioncontrol/schema";
 import {getSynchronizer} from "./versioncontrol/synchronizer";
 import {Preference} from "@spica-server/interface/preference";
 
