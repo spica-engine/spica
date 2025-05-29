@@ -20,10 +20,7 @@ import {registerStatusProvider} from "./status";
 import BucketSchema from "./schemas/bucket.schema.json" with {type: "json"};
 import BucketsSchema from "./schemas/buckets.schema.json" with {type: "json"};
 import {
-  RegisterSyncProvider,
-  REGISTER_VC_SYNC_PROVIDER,
   REGISTER_VC_SYNCHRONIZER,
-  VC_REP_MANAGER,
   RegisterVCSynchronizer,
   VC_REPRESENTATIVE_MANAGER
 } from "@spica-server/interface/versioncontrol";
@@ -121,8 +118,6 @@ export class BucketModule {
     bds: BucketDataService,
     validator: Validator,
     @Optional() private history: HistoryService,
-    @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
-    @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
     @Optional()
     @Inject(VC_REPRESENTATIVE_MANAGER)
     private vcRepresentativeManager: IRepresentativeManager,
