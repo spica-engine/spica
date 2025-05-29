@@ -516,8 +516,10 @@ export class IndexComponent implements OnInit, OnDestroy {
             "border-radius": "3px"
           };
 
+          const url = new URL(value);
+          url.searchParams.append("timestamp", new Date().getTime().toString());
           props = {
-            src: value + "?timestamp=" + new Date().getTime(),
+            src: url,
             alt: value,
             onerror: this.onImageError
           };
