@@ -83,7 +83,10 @@ export const getDependencySynchronizer = (
 
   const docApplier = (change: DocChange<FunctionChange>) => {
     const parsed = JSON.parse(change.resource.content);
-    CRUD.dependencies.update(engine, {...change.resource.fn, dependencies: parsed.dependencies});
+    return CRUD.dependencies.update(engine, {
+      ...change.resource.fn,
+      dependencies: parsed.dependencies
+    });
   };
 
   return {

@@ -58,7 +58,7 @@ interface Watcher<R extends Resource, T extends ResourceType, RC extends Change<
 
 interface Applier<R extends Resource, RT extends ResourceType, RC extends Change<R> = Change<R>> {
   resourceType: RT;
-  apply(change: RC): void;
+  apply(change: RC): void | Promise<any>;
 }
 
 type DocWatcher<R extends Resource> = Watcher<R, ResourceType.DOCUMENT, DocChange<R>>;
@@ -154,11 +154,9 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 
         const convertedChange = repSync.converter.convert(change);
 
-        const apply = () => repSync.applier.apply(convertedChange);
-
-        const retry = (delays: number[]) => {
+        const retry = async (delays: number[]) => {
           try {
-            apply();
+            await repSync.applier.apply(convertedChange);
           } catch (err) {
             delays.length
               ? new Promise(res => setTimeout(res, delays[0])).then(() => retry(delays.slice(1)))
