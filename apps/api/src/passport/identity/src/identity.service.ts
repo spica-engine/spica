@@ -80,22 +80,38 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     return tokenSchema;
   }
 
-  async getIdentifierOfTokens(accessToken: string, refreshToken: string) {
-    await this.verify(refreshToken);
+  private extractAccessToken(authHeader: string) {
+    return authHeader.split(" ")[1];
+  }
 
+  private async verifyTokenCanBeRefreshed(accessToken: string, refreshToken: string) {
+    await this.verify(accessToken);
+    // await this.verify(accessToken.split(" ")[1]);
+    await this.verify(refreshToken);
+  }
+
+  private async verifyTokenIdentifiersAreMatched(accessToken: string, refreshToken: string) {
     const refreshTokenData = await this.refreshTokenService.findOne({token: refreshToken});
     if (!refreshTokenData) {
       return Promise.reject("Refresh token not found");
     }
 
-    const {identifier} = await this.verify(accessToken.split(" ")[1]);
+    const {identifier} = this.decode(accessToken);
     const identity = await this.findOne({identifier});
 
     if (refreshTokenData.identity !== String(identity._id)) {
       return Promise.reject("Refresh and access token identifiers are mismatched");
     }
 
-    return identity;
+    return Promise.resolve();
+  }
+
+  async refreshToken(accessToken: string, refreshToken: string) {
+    accessToken = this.extractAccessToken(accessToken);
+    await this.verifyTokenCanBeRefreshed(accessToken, refreshToken);
+    await this.verifyTokenIdentifiersAreMatched(accessToken, refreshToken);
+    const {identifier} = this.decode(accessToken);
+    return this.sign(identifier);
   }
 
   getCookieOptions() {
@@ -112,6 +128,10 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
 
   verify(token: string) {
     return this.jwt.verifyAsync(token);
+  }
+
+  decode(token: string) {
+    return this.jwt.decode(token);
   }
 
   async identify(identifier: string, password: string): Promise<Identity | null> {

@@ -18,7 +18,8 @@ import {
   Inject,
   Res,
   Next,
-  Optional
+  Optional,
+  Headers
 } from "@nestjs/common";
 import {IdentityService} from "@spica-server/passport/identity";
 import {Identity, LoginCredentials} from "@spica-server/interface/passport/identity";
@@ -292,7 +293,6 @@ export class PassportController {
     return res.status(200).json(this.identityToken.get(id));
   }
 
-  // @UseGuards(AuthGuard()) can't use since expired access tokens are allowed
   @Get("refresh-token")
   async refreshToken(
     @Headers("authorization") accessToken: string,
@@ -305,14 +305,12 @@ export class PassportController {
       throw new UnauthorizedException("Refresh token does not exist.");
     }
 
-    let identity;
+    let tokenSchema;
     try {
-      identity = await this.identityService.getIdentifierOfTokens(accessToken, refreshToken);
+      tokenSchema = await this.identityService.refreshToken(accessToken, refreshToken);
     } catch (error) {
       throw new BadRequestException(error);
     }
-
-    const tokenSchema = this.identityService.sign(identity);
     res.status(200).json(tokenSchema);
   }
 
