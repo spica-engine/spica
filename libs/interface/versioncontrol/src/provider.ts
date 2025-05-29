@@ -48,7 +48,3 @@ export interface SyncLog {
 }
 
 export const VERSIONCONTROL_WORKING_DIRECTORY = Symbol.for("VERSIONCONTROL_WORKING_DIRECTORY");
-
-export const REGISTER_VC_SYNC_PROVIDER = Symbol.for("REGISTER_VC_SYNC_PROVIDER");
-
-export const VC_REP_MANAGER = Symbol.for("VC_REP_MANAGER");

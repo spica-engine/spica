@@ -11,7 +11,6 @@ import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {RepresentativeManager} from "@spica-server/representative";
 import {VersionControlModule} from "@spica-server/versioncontrol";
-import {VC_REP_MANAGER} from "@spica-server/interface/versioncontrol";
 
 import os from "os";
 import fs from "fs";
