@@ -12,7 +12,6 @@ import {
 import {RepresentativeManager, VCRepresentativeManager} from "@spica-server/representative";
 import {Git} from "./versionmanager";
 import fs from "fs";
-import {Synchronizer} from "./synchronizer";
 import {JobReducer} from "@spica-server/replication";
 import {VCSynchronizer} from "./vcsynchronizer";
 
@@ -42,7 +41,6 @@ export class VersionControlModule {
             return dir;
           }
         },
-        Synchronizer,
         versionManagerProvider,
         {
           provide: VC_REPRESENTATIVE_MANAGER,
