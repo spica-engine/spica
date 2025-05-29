@@ -16,13 +16,24 @@ import FunctionSchema from "./schema/function.json" with {type: "json"};
 import {
   RegisterSyncProvider,
   REGISTER_VC_SYNC_PROVIDER,
-  VC_REP_MANAGER
+  VC_REP_MANAGER,
+  VC_REPRESENTATIVE_MANAGER,
+  REGISTER_VC_SYNCHRONIZER,
+  RegisterVCSynchronizer
 } from "@spica-server/interface/versioncontrol";
-import {getSyncProviders} from "./versioncontrol";
 import {registerAssetHandlers} from "./asset";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {
+  IRepresentativeManager,
+  RepresentativeManagerResource
+} from "@spica-server/interface/representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
-import {FunctionOptions, FUNCTION_OPTIONS} from "@spica-server/interface/function";
+import {
+  Function,
+  FunctionOptions,
+  FUNCTION_OPTIONS,
+  FunctionChange
+} from "@spica-server/interface/function";
+import {getSynchronizers} from "./versioncontrol";
 
 @Module({})
 export class FunctionModule {
@@ -33,18 +44,27 @@ export class FunctionModule {
     @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
     @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
+    @Optional()
+    @Inject(VC_REPRESENTATIVE_MANAGER)
+    private vcRepresentativeManager: IRepresentativeManager,
+    @Optional()
+    @Inject(REGISTER_VC_SYNCHRONIZER)
+    registerVCSynchronizer: RegisterVCSynchronizer<
+      Function | FunctionChange,
+      RepresentativeManagerResource
+    >,
     logs: LogService,
     validator: Validator
   ) {
-    if (registerSync) {
-      getSyncProviders(fs, this.vcRepManager, fe, logs).forEach(provider => registerSync(provider));
+    if (registerVCSynchronizer) {
+      getSynchronizers(fs, this.vcRepresentativeManager, fe, logs).forEach(synchronizer =>
+        registerVCSynchronizer(synchronizer)
+      );
     }
 
     registerStatusProvider(fs, scheduler);
-
     registerAssetHandlers(fs, fe, logs, validator, assetRepManager);
   }
-
   static forRoot(options: SchedulingOptions & FunctionOptions): DynamicModule {
     return {
       module: FunctionModule,

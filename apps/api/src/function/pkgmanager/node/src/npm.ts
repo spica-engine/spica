@@ -46,6 +46,10 @@ export class Npm extends NodePackageManager {
         observer.error(`npm install has failed. code: ${code}\n${stderr}`);
       });
 
+      proc.on("error", err => {
+        observer.error(`npm install has failed. error: ${err.message}`);
+      });
+
       return () => {
         if (!proc.killed) {
           proc.kill("SIGKILL");
@@ -82,6 +86,9 @@ export class Npm extends NodePackageManager {
           return resolve();
         }
         reject(`npm uninstall has failed. code: ${code}\n${stderr}`);
+      });
+      proc.on("error", err => {
+        reject(`npm uninstall has failed. error: ${err.message}`);
       });
     });
   }

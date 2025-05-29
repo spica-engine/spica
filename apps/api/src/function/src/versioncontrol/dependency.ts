@@ -1,93 +1,121 @@
-import {ObjectId} from "@spica-server/database";
 import {FunctionService} from "@spica-server/function/services";
-import {SyncProvider} from "@spica-server/interface/versioncontrol";
+import {
+  ChangeTypes,
+  DocChange,
+  RepChange,
+  ResourceType,
+  SynchronizerArgs
+} from "@spica-server/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
+import {FunctionChange, Function, EnvRelation, Dependency} from "@spica-server/interface/function";
+import {
+  IRepresentativeManager,
+  RepresentativeManagerResource
+} from "@spica-server/interface/representative";
+import {Observable} from "rxjs";
+import {ObjectId} from "mongodb";
 import * as CRUD from "../crud";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
 
-export function dependecySyncProviders(
-  service: FunctionService,
-  manager: IRepresentativeManager,
+export const getDependencySynchronizer = (
+  fs: FunctionService,
+  vcRepresentativeManager: IRepresentativeManager,
   engine: FunctionEngine
-): SyncProvider {
-  const name = "function-dependency";
-  const module = "function";
+): SynchronizerArgs<FunctionChange, RepresentativeManagerResource> => {
+  const moduleName = "function";
 
-  const getAll = async () => {
-    const fns = await service.find();
-    const promises = [];
+  const docWatcher = () => {
+    return new Observable<DocChange<FunctionChange>>(observer => {
+      engine.watch("dependency").subscribe({
+        next: (change: FunctionChange) => {
+          const docChange: DocChange<FunctionChange> = {
+            resourceType: ResourceType.DOCUMENT,
+            changeType: ChangeTypes.INSERT,
+            resource: change
+          };
 
-    const dependencies = [];
-    for (const fn of fns) {
-      const promise = engine.getPackages(fn).then(deps => {
-        const depsDef = deps.reduce((acc, curr) => {
-          acc[curr.name] = curr.version;
-          return acc;
-        }, {});
-        deps = deps.map(d => {
-          delete d.types;
-          return d;
-        });
-        dependencies.push({_id: fn._id.toString(), dependencies: depsDef});
+          observer.next(docChange);
+        },
+        error: observer.error
       });
-
-      promises.push(promise);
-    }
-
-    return Promise.all(promises).then(() => dependencies);
-  };
-
-  const install = fn => CRUD.dependencies.install(engine, fn, fn.dependencies);
-
-  const update = fn => CRUD.dependencies.update(engine, fn);
-
-  const uninstall = async fn => {
-    const deps = await engine.getPackages(fn);
-    return CRUD.dependencies.uninstall(
-      engine,
-      fn,
-      deps.map(d => d.name)
-    );
-  };
-
-  const document = {
-    getAll,
-    insert: install,
-    update: update,
-    delete: uninstall
-  };
-
-  const readAll = async () => {
-    const resourceNameValidator = str => ObjectId.isValid(str);
-    const files = await manager.read(module, resourceNameValidator, ["package.json"]);
-    return files.map(file => {
-      return {_id: file._id, dependencies: file.contents.package.dependencies};
     });
   };
 
-  const write = fn => {
-    return manager.write(
-      module,
-      fn._id.toString(),
+  const docToRepConverter = (
+    change: DocChange<FunctionChange>
+  ): RepChange<RepresentativeManagerResource> => {
+    const parsed = JSON.parse(change.resource.content);
+    const dependencies = parsed.dependencies || {};
+
+    return {
+      changeType: change.changeType,
+      resourceType: ResourceType.REPRESENTATIVE,
+      resource: {
+        _id: change.resource.fn._id.toString(),
+        content: JSON.stringify({dependencies})
+      }
+    };
+  };
+
+  const repApplier = (change: RepChange<RepresentativeManagerResource>) => {
+    vcRepresentativeManager.write(
+      moduleName,
+      change.resource._id,
       "package",
-      {dependencies: fn.dependencies},
+      change.resource.content,
       "json"
     );
   };
 
-  const rm = () => Promise.resolve();
+  const repWatcher = () =>
+    vcRepresentativeManager.watch(moduleName, ["package.json"], ["add", "change"]);
 
-  const representative = {
-    getAll: readAll,
-    insert: write,
-    update: write,
-    delete: rm
+  const repToDocConverter = (
+    change: RepChange<RepresentativeManagerResource>
+  ): DocChange<FunctionChange> => ({
+    changeType: change.changeType,
+    resourceType: ResourceType.DOCUMENT,
+    resource: {
+      _id: change.resource._id,
+      fn: {_id: new ObjectId(change.resource._id)} as Function<EnvRelation.NotResolved>,
+      content: change.resource.content
+    }
+  });
+
+  const docApplier = (change: DocChange<FunctionChange>) => {
+    const parsed = JSON.parse(change.resource.content);
+    CRUD.dependencies.update(engine, {...change.resource.fn, dependencies: parsed.dependencies});
   };
 
   return {
-    name,
-    document,
-    representative,
-    parents: 2
+    syncs: [
+      {
+        watcher: {
+          resourceType: ResourceType.DOCUMENT,
+          watch: docWatcher
+        },
+        converter: {
+          convert: docToRepConverter
+        },
+        applier: {
+          resourceType: ResourceType.REPRESENTATIVE,
+          apply: repApplier
+        }
+      },
+      {
+        watcher: {
+          resourceType: ResourceType.REPRESENTATIVE,
+          watch: repWatcher
+        },
+        converter: {
+          convert: repToDocConverter
+        },
+        applier: {
+          resourceType: ResourceType.DOCUMENT,
+          apply: docApplier
+        }
+      }
+    ],
+    moduleName,
+    subModuleName: "dependency"
   };
-}
+};

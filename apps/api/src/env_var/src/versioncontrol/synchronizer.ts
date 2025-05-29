@@ -1,5 +1,7 @@
-import {ChangeStreamDocument, ObjectId} from "@spica-server/database";
-import {FunctionService} from "@spica-server/function/services";
+import {
+  IRepresentativeManager,
+  RepresentativeManagerResource
+} from "@spica-server/interface/representative";
 import {
   ChangeTypes,
   DocChange,
@@ -7,36 +9,30 @@ import {
   ResourceType,
   SynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
-import {FunctionEngine} from "../engine";
-import {LogService} from "@spica-server/function/log/src/log.service";
-import * as CRUD from "../crud";
-import {
-  IRepresentativeManager,
-  RepresentativeManagerResource
-} from "@spica-server/interface/representative";
-import {Function} from "@spica-server/interface/function";
+import {ChangeStreamDocument, ObjectId} from "mongodb";
 import {Observable} from "rxjs";
 import YAML from "yaml";
+import * as CRUD from "../crud";
+import {EnvVarService} from "@spica-server/env_var/services";
+import {EnvVar} from "@spica-server/interface/env_var";
 
-export const getSchemaSynchronizer = (
-  fs: FunctionService,
-  vcRepresentativeManager: IRepresentativeManager,
-  engine: FunctionEngine,
-  logs: LogService
-): SynchronizerArgs<Function, RepresentativeManagerResource> => {
-  const moduleName = "function";
+export const getSynchronizer = (
+  evs: EnvVarService,
+  vcRepresentativeManager: IRepresentativeManager
+): SynchronizerArgs<EnvVar, RepresentativeManagerResource> => {
+  const moduleName = "env-var";
   const fileName = "schema";
   const extension = "yaml";
 
   const docWatcher = () => {
-    return new Observable<DocChange<Function>>(observer => {
-      const changeStream = fs._coll.watch([], {
+    return new Observable<DocChange<EnvVar>>(observer => {
+      const changeStream = evs._coll.watch([], {
         fullDocument: "updateLookup"
       });
 
-      changeStream.on("change", (change: ChangeStreamDocument<Function>) => {
+      changeStream.on("change", (change: ChangeStreamDocument<EnvVar>) => {
         let changeType: ChangeTypes;
-        let resource: Function;
+        let resource: EnvVar;
 
         switch (change.operationType) {
           case "insert":
@@ -52,14 +48,14 @@ export const getSchemaSynchronizer = (
 
           case "delete":
             changeType = ChangeTypes.DELETE;
-            resource = {_id: change.documentKey._id} as Function;
+            resource = {_id: change.documentKey._id} as EnvVar;
             break;
 
           default:
             return;
         }
 
-        const docChange: DocChange<Function> = {
+        const docChange: DocChange<EnvVar> = {
           resourceType: ResourceType.DOCUMENT,
           changeType,
           resource
@@ -71,15 +67,15 @@ export const getSchemaSynchronizer = (
       changeStream.on("error", err => observer.error(err));
       changeStream.on("close", () => observer.complete());
 
-      fs._coll
+      evs._coll
         .find()
         .toArray()
-        .then(functions => {
-          functions.forEach(fn => {
-            const docChange: DocChange<Function> = {
+        .then(envVars => {
+          envVars.forEach(envVar => {
+            const docChange: DocChange<EnvVar> = {
               resourceType: ResourceType.DOCUMENT,
               changeType: ChangeTypes.INSERT,
-              resource: fn
+              resource: envVar
             };
 
             observer.next(docChange);
@@ -91,10 +87,10 @@ export const getSchemaSynchronizer = (
   };
 
   const docToRepConverter = (
-    change: DocChange<Function>
+    change: DocChange<EnvVar>
   ): RepChange<RepresentativeManagerResource> => {
     return {
-      changeType: change.changeType,
+      ...change,
       resourceType: ResourceType.REPRESENTATIVE,
       resource: {
         _id: change.resource._id.toString(),
@@ -104,7 +100,7 @@ export const getSchemaSynchronizer = (
   };
 
   const repApplier = (change: RepChange<RepresentativeManagerResource>) => {
-    const write = (resource: RepresentativeManagerResource) =>
+    const write = (resource: RepresentativeManagerResource) => {
       vcRepresentativeManager.write(
         moduleName,
         resource._id,
@@ -112,8 +108,11 @@ export const getSchemaSynchronizer = (
         resource.content,
         extension
       );
-    const rm = (resource: RepresentativeManagerResource) =>
+    };
+
+    const rm = (resource: RepresentativeManagerResource) => {
       vcRepresentativeManager.rm(moduleName, resource._id);
+    };
 
     const representativeStrategy = {
       [ChangeTypes.INSERT]: write,
@@ -128,27 +127,21 @@ export const getSchemaSynchronizer = (
 
   const repToDocConverter = (
     change: RepChange<RepresentativeManagerResource>
-  ): DocChange<Function> => {
+  ): DocChange<EnvVar> => {
     const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
 
     return {
-      changeType: change.changeType,
+      ...change,
       resourceType: ResourceType.DOCUMENT,
       resource: {...parsed, _id: new ObjectId(change.resource._id)}
     };
   };
 
-  const docApplier = (change: DocChange<Function>) => {
-    const insert = async (fn: Function) => {
-      fn = await CRUD.insert(fs, engine, fn);
-      // check whether we really need to update index
-      await engine.update(fn, "");
-    };
-
+  const docApplier = (change: DocChange<EnvVar>) => {
     const documentStrategy = {
-      [ChangeTypes.INSERT]: insert,
-      [ChangeTypes.UPDATE]: (fn: Function) => CRUD.replace(fs, engine, fn),
-      [ChangeTypes.DELETE]: (fn: Function) => CRUD.remove(fs, engine, logs, fn._id)
+      [ChangeTypes.INSERT]: (envVar: EnvVar) => CRUD.insert(evs, envVar),
+      [ChangeTypes.UPDATE]: (envVar: EnvVar) => CRUD.replace(evs, envVar),
+      [ChangeTypes.DELETE]: (envVar: EnvVar) => CRUD.remove(evs, envVar._id)
     };
 
     documentStrategy[change.changeType](change.resource);
