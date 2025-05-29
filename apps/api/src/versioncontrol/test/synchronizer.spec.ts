@@ -1,4 +1,3 @@
-import {Synchronizer} from "@spica-server/versioncontrol";
 import {SyncDirection, SyncProvider} from "@spica-server/interface/versioncontrol";
 
 describe("Synchronizer", () => {
