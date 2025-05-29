@@ -4,7 +4,7 @@ if [ ! -f WORKSPACE ]; then
     echo "###############################################"
     echo "Please run this script from the workspace root."
     echo "###############################################"
-    exit 1;
+    exit 1
 fi
 
 readonly GCS_BUCKET=gs://spica-charts
@@ -25,7 +25,7 @@ gsutil cp "$GCS_BUCKET/index.yaml" "$OUT_DIR/index.yaml"
 
 # Substitute placeholder with current version
 cp -R charts/* charts-${VERSION}
-sed -i "s/0.0.0-PLACEHOLDER/${VERSION}/g" charts-${VERSION}/spica/Chart.yaml
+sed -i '' "s/0.0.0-PLACEHOLDER/${VERSION}/g" charts-${VERSION}/spica/Chart.yaml
 
 # Re-package substituted package
 helm package --destination $OUT_DIR ./charts-${VERSION}/spica

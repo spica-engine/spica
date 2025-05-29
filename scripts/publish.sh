@@ -6,7 +6,7 @@ if [ ! -f WORKSPACE ]; then
   echo "###########################################"
   echo "Please run this script from workspace root."
   echo "###########################################"
-  exit 1;
+  exit 1
 fi
 
 if [ $# -eq 0 ]; then
@@ -40,22 +40,21 @@ echo $BAZEL
 echo ""
 echo "## Bazel targets to publish"
 # Docker packages
-DOCKER_IMAGE_LABELS=`$BAZEL query --output=label --noshow_progress 'attr("tags", "\[.*release-with-spica.*\]", //stacks/... + //tools/...) intersect kind("container_push", //stacks/... + //tools/...)'`
+DOCKER_IMAGE_LABELS=$($BAZEL query --output=label --noshow_progress 'attr("tags", "\[.*release-with-spica.*\]", //stacks/... + //tools/...) intersect kind("container_push", //stacks/... + //tools/...)')
 
 # Npm packages
-NPM_PACKAGE_LABELS=`$BAZEL query --output=label --noshow_progress 'attr("tags", "\[.*release-with-spica.*\]", //stacks/...) intersect kind("pkg_.*", //stacks/...)'`
+# NPM_PACKAGE_LABELS=`$BAZEL query --output=label --noshow_progress 'attr("tags", "\[.*release-with-spica.*\]", //stacks/...) intersect kind("pkg_.*", //stacks/...)'`
 
-echo $DOCKER_IMAGE_LABELS $NPM_PACKAGE_LABELS
-
+echo $DOCKER_IMAGE_LABELS
 
 # Once we migrate client to bazel we'll get rid of these steps
 echo ""
 echo "## Building spica"
 yarn --cwd=stacks/spica --silent ng build --prod --progress=false
 
-echo ""
-echo "## Building bazel generated artifacts in parallel"
-$BAZEL build --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --noshow_progress --config=release $NPM_PACKAGE_LABELS $DOCKER_IMAGE_LABELS
+# echo ""
+# echo "## Building bazel generated artifacts in parallel"
+# $BAZEL build --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --noshow_progress --config=release $NPM_PACKAGE_LABELS $DOCKER_IMAGE_LABELS
 
 # Publish docker images
 for IMAGE_LABEL in $DOCKER_IMAGE_LABELS; do
@@ -65,13 +64,11 @@ for IMAGE_LABEL in $DOCKER_IMAGE_LABELS; do
   BUILD_SCM_VERSION_OVERRIDE=$TAG $BAZEL run --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --config=release $IMAGE_LABEL
 done
 
-
-# Publish npm packages
-for PACKAGE_LABEL in $NPM_PACKAGE_LABELS; do
-  echo "** Publishing $PACKAGE_LABEL"
-  $BAZEL run ${PACKAGE_LABEL}.publish --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --config=release -- --access public --tag $1
-done
-
+# # Publish npm packages
+# for PACKAGE_LABEL in $NPM_PACKAGE_LABELS; do
+#   echo "** Publishing $PACKAGE_LABEL"
+#   $BAZEL run ${PACKAGE_LABEL}.publish --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --config=release -- --access public --tag $1
+# done
 
 echo ""
 echo "## Publishing Helm charts"

@@ -102,5 +102,5 @@ container_push(
     registry = "index.docker.io",
     repository = "spicaengine/api",
     tag = "{BUILD_SCM_VERSION}",
-    tags = ["release-with-spica"],
+    # tags = ["release-with-spica"],
 )
