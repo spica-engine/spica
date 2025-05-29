@@ -6,11 +6,8 @@ import {
 } from "@spica-server/interface/representative";
 import {PreferenceService} from "@spica-server/preference/services";
 import {
-  REGISTER_VC_SYNC_PROVIDER,
   REGISTER_VC_SYNCHRONIZER,
-  RegisterSyncProvider,
   RegisterVCSynchronizer,
-  VC_REP_MANAGER,
   VC_REPRESENTATIVE_MANAGER
 } from "@spica-server/interface/versioncontrol";
 import {PreferenceController} from "./preference.controller";
@@ -22,8 +19,6 @@ import {Preference} from "@spica-server/interface/preference";
 export class PreferenceModule {
   constructor(
     prefService: PreferenceService,
-    @Optional() @Inject(VC_REP_MANAGER) private repManager: IRepresentativeManager,
-    @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
     @Inject(VC_REPRESENTATIVE_MANAGER)
     private vcRepresentativeManager: IRepresentativeManager,
     @Optional()

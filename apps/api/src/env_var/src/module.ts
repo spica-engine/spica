@@ -9,9 +9,6 @@ import {
 } from "@spica-server/interface/representative";
 import {registerAssetHandlers} from "./asset";
 import {
-  RegisterSyncProvider,
-  VC_REP_MANAGER,
-  REGISTER_VC_SYNC_PROVIDER,
   VC_REPRESENTATIVE_MANAGER,
   REGISTER_VC_SYNCHRONIZER,
   RegisterVCSynchronizer
@@ -39,8 +36,6 @@ export class EnvVarModule {
 
   constructor(
     evs: EnvVarService,
-    @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
-    @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerVCSyncProvider: RegisterSyncProvider,
     @Optional()
     @Inject(VC_REPRESENTATIVE_MANAGER)
     private vcRepresentativeManager: IRepresentativeManager,
