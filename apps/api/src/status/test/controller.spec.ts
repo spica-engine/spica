@@ -136,7 +136,8 @@ describe("Status", () => {
             issuer: "spica",
             maxExpiresIn: 1000,
             secretOrKey: "spica",
-            entryLimit: 20
+            entryLimit: 20,
+            refreshTokenExpiresIn: 1000
           })
         ]
       }).compile();

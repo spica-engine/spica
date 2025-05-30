@@ -1,0 +1,5 @@
+{
+  "name": "interface/passport/refresh_token",
+  "sourceRoot": "libs/interface/passport/policy/refresh_token",
+  "projectType": "library"
+}

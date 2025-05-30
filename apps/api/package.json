@@ -43,7 +43,8 @@
     "speakeasy": "^2.0.0",
     "uniqid": "^5.4.0",
     "url": "^0.11.4",
-    "uuid": "^11.0.5"
+    "uuid": "^11.0.5",
+    "cookie-parser": "^1.4.6"
   },
   "devDependencies": {
     "@rollup/plugin-alias": "^5.1.1",
