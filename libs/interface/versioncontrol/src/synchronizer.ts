@@ -58,7 +58,7 @@ interface Watcher<R extends Resource, T extends ResourceType, RC extends Change<
 
 interface Applier<R extends Resource, RT extends ResourceType, RC extends Change<R> = Change<R>> {
   resourceType: RT;
-  apply(change: RC): void | Promise<any>;
+  apply(change: RC): Promise<any>;
 }
 
 type DocWatcher<R extends Resource> = Watcher<R, ResourceType.DOCUMENT, DocChange<R>>;
