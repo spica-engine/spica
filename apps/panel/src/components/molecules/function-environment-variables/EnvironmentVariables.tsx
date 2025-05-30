@@ -13,13 +13,19 @@ import styles from "./EnvironmentVariables.module.scss";
 type TypeEnvironmentVariable = {
   key: string;
   value: string;
+  editOnClick?: () => void;
+  deleteOnClick?: () => void;
 };
 
 type TypeEnvironmentVariablesProps = {
   variables?: TypeEnvironmentVariable[];
+  addNewOnClick?: () => void;
 };
 
-const EnvironmentVariables: FC<TypeEnvironmentVariablesProps> = ({variables = []}) => {
+const EnvironmentVariables: FC<TypeEnvironmentVariablesProps> = ({
+  variables = [],
+  addNewOnClick
+}) => {
   const accordionItems: TypeAccordionItem[] = [
     {
       title: (
@@ -30,7 +36,7 @@ const EnvironmentVariables: FC<TypeEnvironmentVariablesProps> = ({variables = []
       content: (
         <FlexElement direction="vertical" dimensionX="fill" gap={10}>
           {variables.length > 0 &&
-            variables.map(({key, value}, index) => (
+            variables.map(({key, value, editOnClick, deleteOnClick}, index) => (
               <FluidContainer
                 key={index}
                 dimensionX="fill"
@@ -50,7 +56,7 @@ const EnvironmentVariables: FC<TypeEnvironmentVariablesProps> = ({variables = []
                         className={styles.button}
                         color="default"
                         variant="icon"
-                        onClick={() => {}}
+                        onClick={editOnClick}
                       >
                         <Icon name="pencil" />
                       </Button>
@@ -58,7 +64,7 @@ const EnvironmentVariables: FC<TypeEnvironmentVariablesProps> = ({variables = []
                         className={`${styles.button} ${styles.dangerButton}`}
                         color="default"
                         variant="icon"
-                        onClick={() => {}}
+                        onClick={deleteOnClick}
                       >
                         <Icon name="delete" />
                       </Button>
@@ -67,7 +73,7 @@ const EnvironmentVariables: FC<TypeEnvironmentVariablesProps> = ({variables = []
                 }}
               />
             ))}
-          <Button fullWidth color="default" onClick={() => {}}>
+          <Button fullWidth color="default" onClick={addNewOnClick}>
             <Icon name="plus" />
             Add New Environment Variable
           </Button>
