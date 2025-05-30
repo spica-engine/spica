@@ -1,3 +1,4 @@
+import React, {type FC, memo, useState} from "react";
 import {
   Button,
   FlexElement,
@@ -7,7 +8,6 @@ import {
   type TypeFluidContainer,
   type TypeInputType
 } from "oziko-ui-kit";
-import React, {type FC, memo} from "react";
 import styles from "./BucketSchemaItem.module.scss";
 
 type TypeBucketSchemaItem = {
@@ -21,6 +21,10 @@ type TypeBucketSchemaItem = {
   deleteOnClick?: () => void;
   itemDepth?: number;
   options?: Record<string, any>;
+  index: number;
+  onDragStart: (e: React.DragEvent, index: number) => void;
+  onDrop: (e: React.DragEvent, targetIndex: number) => void;
+  onDragOver: (e: React.DragEvent) => void;
 } & TypeFluidContainer;
 
 const BucketSchemaItem: FC<TypeBucketSchemaItem> = ({
@@ -33,8 +37,28 @@ const BucketSchemaItem: FC<TypeBucketSchemaItem> = ({
   deleteIcon = true,
   deleteOnClick,
   itemDepth,
+  index,
+  onDragStart,
+  onDrop,
+  onDragOver,
   ...props
 }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleButtonClick = (e: React.MouseEvent, action: "add" | "edit" | "delete") => {
+    e.stopPropagation();
+    switch (action) {
+      case "add":
+        addOnClick?.();
+        break;
+      case "edit":
+        editOnClick?.();
+        break;
+      case "delete":
+        deleteOnClick?.();
+        break;
+    }
+  };
   const renderPrefixIcon = () => {
     if (!itemDepth) return null;
 
@@ -57,10 +81,26 @@ const BucketSchemaItem: FC<TypeBucketSchemaItem> = ({
       mode="fill"
       dimensionX={"fill"}
       gap={20}
+      draggable
+      onDragStart={e => onDragStart(e, index)}
+      onDrop={e => onDrop(e, index)}
+      onDragOver={onDragOver}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       prefix={{
         className: styles.prefixDiv,
         children: (
           <>
+            {itemDepth === 0 && isHovered && (
+              <Button
+                variant="icon"
+                color="default"
+                className={`${styles.buttons} ${styles.dragDropButton}`}
+              >
+                <Icon name="dragHorizontalVariant" />
+              </Button>
+            )}
+
             <FlexElement className={styles.prefixIconDiv}>{renderPrefixIcon()}</FlexElement>
             <Text className={styles.label}>{label}</Text>
           </>
@@ -77,15 +117,23 @@ const BucketSchemaItem: FC<TypeBucketSchemaItem> = ({
             gap={10}
             prefix={{
               children: addIcon ? (
-                <Button variant="icon" className={styles.buttons} onClick={addOnClick}>
-                  <Icon name="plus"></Icon>
+                <Button
+                  variant="icon"
+                  className={styles.buttons}
+                  onClick={e => handleButtonClick(e, "add")}
+                >
+                  <Icon name="plus" />
                 </Button>
               ) : null
             }}
             root={{
               children: editIcon ? (
-                <Button variant="icon" className={styles.buttons} onClick={editOnClick}>
-                  <Icon name="pencil"></Icon>
+                <Button
+                  variant="icon"
+                  className={styles.buttons}
+                  onClick={e => handleButtonClick(e, "edit")}
+                >
+                  <Icon name="pencil" />
                 </Button>
               ) : null
             }}
@@ -95,9 +143,9 @@ const BucketSchemaItem: FC<TypeBucketSchemaItem> = ({
                   variant="icon"
                   color="danger"
                   className={styles.buttons}
-                  onClick={deleteOnClick}
+                  onClick={e => handleButtonClick(e, "delete")}
                 >
-                  <Icon name="delete"></Icon>
+                  <Icon name="delete" />
                 </Button>
               ) : null
             }}
