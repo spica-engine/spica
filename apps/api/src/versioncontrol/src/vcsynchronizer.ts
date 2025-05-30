@@ -2,23 +2,30 @@ import {Injectable} from "@nestjs/common";
 import {
   ChangeTypes,
   DocChange,
+  DocSync,
   RepChange,
+  RepSync,
   Resource,
   ResourceType,
   Synchronizer,
+  SynchronizerArgs,
   VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {VCRepresentativeManager} from "@spica-server/representative";
 import YAML from "yaml";
 import {ChangeStreamDocument, ObjectId} from "@spica-server/database";
 import {Observable} from "rxjs";
+import {RepresentativeManagerResource} from "@spica-server/interface/representative";
 
 @Injectable()
-export class VCSynchronizer<R1 extends Resource, R2 extends Resource> extends Synchronizer<R1, R2> {
-  constructor(args: VCSynchronizerArgs<R1, R2>, vcRepresentativeManager: VCRepresentativeManager) {
+export class VCSynchronizer<R1 extends Resource> extends Synchronizer<
+  R1,
+  RepresentativeManagerResource
+> {
+  constructor(args: VCSynchronizerArgs<R1>, vcRepresentativeManager: VCRepresentativeManager) {
     const docSync = args.syncs[0];
 
-    const service = docSync.watcher.service;
+    const service = docSync.watcher.collectionService;
 
     const collectionWatcher = () => {
       return new Observable<DocChange<R1>>(observer => {
@@ -84,14 +91,65 @@ export class VCSynchronizer<R1 extends Resource, R2 extends Resource> extends Sy
 
     const docWatcher = docSync.watcher.docWatcher ? docSync.watcher.docWatcher : collectionWatcher;
 
+    const docToRepConverter = (change: DocChange<R1>): RepChange<RepresentativeManagerResource> => {
+      return {
+        changeType: change.changeType,
+        resourceType: ResourceType.REPRESENTATIVE,
+        resource: docSync.converter?.resource(change) || {
+          _id: change.resource._id.toString(),
+          content: YAML.stringify(change.resource)
+        }
+      };
+    };
+
+    const repApplier = (change: RepChange<RepresentativeManagerResource>) => {
+      const fileName = docSync.applier?.fileName || "schema";
+
+      const getExtension = () => {
+        if (!docSync.applier) {
+          return "yaml";
+        }
+
+        if (typeof docSync.applier.extension == "function") {
+          return docSync.applier.extension(change);
+        }
+
+        return docSync.applier.extension;
+      };
+
+      const write = (resource: RepresentativeManagerResource) => {
+        return vcRepresentativeManager.write(
+          args.moduleName,
+          resource._id,
+          fileName,
+          resource.content,
+          getExtension()
+        );
+      };
+
+      const rm = (resource: RepresentativeManagerResource) => {
+        return vcRepresentativeManager.rm(args.moduleName, resource._id);
+      };
+
+      const representativeStrategy = {
+        [ChangeTypes.INSERT]: write,
+        [ChangeTypes.UPDATE]: write,
+        [ChangeTypes.DELETE]: rm
+      };
+
+      return representativeStrategy[change.changeType](change.resource);
+    };
+
     const repSync = args.syncs[1];
 
-    const filesToWatch = repSync.watcher.filesToWatch.map(file => `${file.name}.${file.extension}`);
+    const filesToWatch = repSync.watcher
+      ? repSync.watcher.filesToWatch.map(file => `${file.name}.${file.extension}`)
+      : ["schema.yaml"];
 
     const repWatcher = () =>
-      vcRepresentativeManager.watch(args.moduleName, filesToWatch, repSync.watcher.eventsToWatch);
+      vcRepresentativeManager.watch(args.moduleName, filesToWatch, repSync.watcher?.eventsToWatch);
 
-    const repToDocConverter = (change: RepChange<R2>): DocChange<R1> => {
+    const repToDocConverter = (change: RepChange<RepresentativeManagerResource>): DocChange<R1> => {
       const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
 
       const documentResource = {...parsed, _id: new ObjectId(change.resource._id)};
@@ -121,19 +179,22 @@ export class VCSynchronizer<R1 extends Resource, R2 extends Resource> extends Sy
       await documentStrategy[change.changeType](change.resource);
     };
 
-    const syncs = [
+    const syncs: [
+      DocSync<R1, RepresentativeManagerResource>,
+      RepSync<RepresentativeManagerResource, R1>
+    ] = [
       {
         watcher: {
           resourceType: ResourceType.DOCUMENT,
           watch: docWatcher
+        },
+        converter: {
+          convert: docToRepConverter
+        },
+        applier: {
+          resourceType: ResourceType.REPRESENTATIVE,
+          apply: repApplier
         }
-        // converter: {
-        //   convert: docToRepConverter
-        // },
-        // applier: {
-        //   resourceType: ResourceType.REPRESENTATIVE,
-        //   apply: repApplier
-        // }
       },
       {
         watcher: {
@@ -150,7 +211,7 @@ export class VCSynchronizer<R1 extends Resource, R2 extends Resource> extends Sy
       }
     ];
 
-    const synchronizerArgs = {
+    const synchronizerArgs: SynchronizerArgs<R1, RepresentativeManagerResource> = {
       syncs,
       moduleName: args.moduleName,
       subModuleName: args.subModuleName

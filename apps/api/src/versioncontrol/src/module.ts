@@ -51,7 +51,7 @@ export class VersionControlModule {
           provide: REGISTER_VC_SYNCHRONIZER,
           useFactory:
             (vcRepresentativeManager: VCRepresentativeManager) =>
-            <R1, R2>(args: VCSynchronizerArgs<R1, R2>) =>
+            <R1>(args: VCSynchronizerArgs<R1>) =>
               new VCSynchronizer(args, vcRepresentativeManager).start(),
           inject: [VC_REPRESENTATIVE_MANAGER]
         }

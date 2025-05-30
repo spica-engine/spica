@@ -1,9 +1,6 @@
 import {Global, Inject, Module, Optional} from "@nestjs/common";
 import {DatabaseModule} from "@spica-server/database";
-import {
-  IRepresentativeManager,
-  RepresentativeManagerResource
-} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {PreferenceService} from "@spica-server/preference/services";
 import {
   REGISTER_VC_SYNCHRONIZER,
@@ -19,14 +16,12 @@ import {Preference} from "@spica-server/interface/preference";
 export class PreferenceModule {
   constructor(
     prefService: PreferenceService,
-    @Inject(VC_REPRESENTATIVE_MANAGER)
-    private vcRepresentativeManager: IRepresentativeManager,
     @Optional()
     @Inject(REGISTER_VC_SYNCHRONIZER)
-    registerVCSynchronizer: RegisterVCSynchronizer<Preference, RepresentativeManagerResource>
+    registerVCSynchronizer: RegisterVCSynchronizer<Preference>
   ) {
     if (registerVCSynchronizer) {
-      const synchronizer = getSynchronizer(prefService, this.vcRepresentativeManager);
+      const synchronizer = getSynchronizer(prefService);
       registerVCSynchronizer(synchronizer);
     }
   }

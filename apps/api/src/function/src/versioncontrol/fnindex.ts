@@ -2,27 +2,19 @@ import {FunctionService} from "@spica-server/function/services";
 import {
   ChangeTypes,
   DocChange,
-  RepChange,
   ResourceType,
-  SynchronizerArgs,
   VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
-import {FunctionChange, Function, EnvRelation} from "@spica-server/interface/function";
-import {
-  IRepresentativeManager,
-  RepresentativeManagerResource
-} from "@spica-server/interface/representative";
+import {FunctionChange} from "@spica-server/interface/function";
 import {Observable} from "rxjs";
-import {ObjectId} from "mongodb";
 import * as CRUD from "../crud";
 
 export const getIndexSynchronizer = (
   fs: FunctionService,
-  vcRepresentativeManager: IRepresentativeManager,
   engine: FunctionEngine
-): VCSynchronizerArgs<FunctionChange, RepresentativeManagerResource> => {
-  const moduleName = "function";
+): VCSynchronizerArgs<FunctionChange> => {
+  const fileName = "index";
 
   const docWatcher = () =>
     new Observable<DocChange<FunctionChange>>(observer => {
@@ -40,47 +32,25 @@ export const getIndexSynchronizer = (
       });
     });
 
-  const docToRepConverter = (
-    change: DocChange<FunctionChange>
-  ): RepChange<RepresentativeManagerResource> => {
-    return {
-      changeType: change.changeType,
-      resourceType: ResourceType.REPRESENTATIVE,
-      resource: {
-        _id: change.resource.fn._id.toString(),
-        content: change.resource.content,
-        additionalParameters: {language: change.resource.fn.language}
-      }
-    };
-  };
-
-  const repApplier = (change: RepChange<RepresentativeManagerResource>) => {
-    const extension = change.resource.additionalParameters.language == "javascript" ? "js" : "ts";
-    vcRepresentativeManager.write(
-      moduleName,
-      change.resource._id,
-      "index",
-      change.resource.content,
-      extension
-    );
-  };
-
   const apply = (resource: FunctionChange) =>
     CRUD.index.write(fs, engine, resource.fn._id, resource.content);
 
   return {
     syncs: [
       {
-        watcher: {
-          docWatcher
+        watcher: {docWatcher},
+        converter: {
+          resource: change => ({
+            _id: change.resource.fn._id.toString(),
+            content: change.resource.content,
+            additionalParameters: {language: change.resource.fn.language}
+          })
+        },
+        applier: {
+          fileName,
+          extension: change =>
+            change.resource.additionalParameters.language == "javascript" ? "js" : "ts"
         }
-        // converter: {
-        //   convert: docToRepConverter
-        // },
-        // applier: {
-        //   resourceType: ResourceType.REPRESENTATIVE,
-        //   apply: repApplier
-        // }
       },
       {
         watcher: {
@@ -90,9 +60,7 @@ export const getIndexSynchronizer = (
           ],
           eventsToWatch: ["add", "change"]
         },
-        converter: {
-          resourceType: "file"
-        },
+        converter: {resourceType: "file"},
         applier: {
           insert: apply,
           update: apply,
@@ -100,7 +68,7 @@ export const getIndexSynchronizer = (
         }
       }
     ],
-    moduleName,
+    moduleName: "function",
     subModuleName: "index"
   };
 };

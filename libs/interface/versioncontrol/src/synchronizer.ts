@@ -1,6 +1,6 @@
 import {Observable} from "rxjs";
 import {_MixinCollection, BaseCollection} from "@spica-server/database";
-import {FunctionChange} from "@spica-server/interface/function";
+import {RepresentativeManagerResource} from "@spica-server/interface/representative";
 
 export enum ChangeTypes {
   INSERT,
@@ -60,7 +60,7 @@ interface Watcher<R extends Resource, T extends ResourceType, RC extends Change<
 
 interface Applier<R extends Resource, RT extends ResourceType, RC extends Change<R> = Change<R>> {
   resourceType: RT;
-  apply(change: RC): Promise<void>;
+  apply(change: RC): Promise<any>;
 }
 
 type DocWatcher<R extends Resource> = Watcher<R, ResourceType.DOCUMENT, DocChange<R>>;
@@ -83,7 +83,7 @@ interface Sync<
   applier: A;
 }
 
-type DocSync<Src extends Resource, Target extends Resource> = Sync<
+export type DocSync<Src extends Resource, Target extends Resource> = Sync<
   Src,
   ResourceType.DOCUMENT,
   Target,
@@ -93,7 +93,7 @@ type DocSync<Src extends Resource, Target extends Resource> = Sync<
   RepApplier<Target>
 >;
 
-type RepSync<Src extends Resource, Target extends Resource> = Sync<
+export type RepSync<Src extends Resource, Target extends Resource> = Sync<
   Src,
   ResourceType.REPRESENTATIVE,
   Target,
@@ -171,26 +171,27 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
   }
 }
 
-export type RegisterVCSynchronizer<R1 extends Resource, R2 extends Resource> = (
-  args: SynchronizerArgs<R1, R2>
-) => Synchronizer<R1, R2>;
-
-export type VCSynchronizerArgs<R1 extends Resource, R2 extends Resource> = Omit<
-  SynchronizerArgs<R1, R2>,
+export type VCSynchronizerArgs<R1 extends Resource> = Omit<
+  SynchronizerArgs<R1, RepresentativeManagerResource>,
   "syncs"
 > & {
   syncs: [
     {
       watcher: {
-        service?: BaseCollection<R1>;
+        collectionService?: BaseCollection<R1>;
         docWatcher?: () => Observable<DocChange<R1>>;
+      };
+      converter?: {
+        resource: (change: DocChange<R1>) => RepresentativeManagerResource;
+      };
+      applier?: {
+        fileName: string;
+        extension: string | ((change: RepChange<RepresentativeManagerResource>) => string);
       };
     },
     {
-      watcher: {filesToWatch: {name: string; extension: string}[]; eventsToWatch?: string[]};
-      converter: {
-        resourceType: "document" | "file";
-      };
+      watcher?: {filesToWatch: {name: string; extension: string}[]; eventsToWatch?: string[]};
+      converter: {resourceType: "document" | "file"};
       applier: {
         insert: (resource: R1) => unknown;
         update: (resource: R1) => unknown;
@@ -199,6 +200,10 @@ export type VCSynchronizerArgs<R1 extends Resource, R2 extends Resource> = Omit<
     }
   ];
 };
+
+export type RegisterVCSynchronizer<R1 extends Resource> = (
+  args: VCSynchronizerArgs<R1>
+) => Synchronizer<R1, RepresentativeManagerResource>;
 
 export const REGISTER_VC_SYNCHRONIZER = Symbol.for("REGISTER_VC_SYNCHRONIZER");
 
