@@ -2,10 +2,10 @@ import {Module} from "@nestjs/common";
 import {RefreshTokenService} from "./service";
 
 @Module({})
-export class ServicesModule {
+export class RefreshTokenServicesModule {
   static forRoot() {
     return {
-      module: ServicesModule,
+      module: RefreshTokenServicesModule,
       providers: [RefreshTokenService],
       exports: [RefreshTokenService]
     };

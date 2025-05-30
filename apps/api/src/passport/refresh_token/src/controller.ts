@@ -14,17 +14,13 @@ import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/gua
 import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
 import {RefreshToken, PaginationResponse} from "@spica-server/interface/passport/refresh_token";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
-import {REFRESH_TOKEN_OPTIONS, RefreshTokenOptions} from "./options";
 
-@Controller("passport/refreshtoken")
+@Controller("passport/refresh-token")
 export class RefreshTokenController {
-  constructor(
-    private service: RefreshTokenService,
-    @Inject(REFRESH_TOKEN_OPTIONS) private options: RefreshTokenOptions
-  ) {}
+  constructor(private service: RefreshTokenService) {}
 
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("passport:refreshtoken:index"))
+  @UseGuards(AuthGuard(), ActionGuard("passport:refresh-token:index"))
   async find(
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
@@ -37,15 +33,17 @@ export class RefreshTokenController {
       .filterResources(resourceFilter)
       .filterByUserRequest(filter);
 
-    const seekingPipeline = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
+    const seekingPipeline = new PipelineBuilder()
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .result();
 
-    const pipeline = (
-      await pipelineBuilder.paginate(
-        paginate,
-        seekingPipeline,
-        this.service.estimatedDocumentCount()
-      )
-    ).result();
+    const pipeline = (await pipelineBuilder.paginate(
+      paginate,
+      seekingPipeline,
+      this.service.estimatedDocumentCount()
+    )).result();
 
     if (paginate) {
       return this.service
@@ -63,7 +61,7 @@ export class RefreshTokenController {
   }
 
   @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:refreshtoken:show"))
+  @UseGuards(AuthGuard(), ActionGuard("passport:refresh-token:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.service.findOne({_id: id}).then(r => {
       if (!r) {
@@ -74,7 +72,7 @@ export class RefreshTokenController {
   }
 
   @Delete(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:refreshtoken:delete"))
+  @UseGuards(AuthGuard(), ActionGuard("passport:refresh-token:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.service.deleteOne({_id: id}).then(r => {
       if (!r) {

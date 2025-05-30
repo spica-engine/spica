@@ -24,7 +24,7 @@ import https from "https";
 import path from "path";
 import yargs from "yargs/yargs";
 import morgan from "morgan";
-import * as cookieParser from "cookie-parser";
+import cookieParser from "cookie-parser";
 
 const args = yargs(process.argv.slice(2))
   /* TLS Options */

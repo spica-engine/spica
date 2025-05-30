@@ -293,7 +293,7 @@ export class PassportController {
     return res.status(200).json(this.identityToken.get(id));
   }
 
-  @Get("refresh-token")
+  @Post("session/refresh")
   async refreshToken(
     @Headers("authorization") accessToken: string,
     @Req() req: any,

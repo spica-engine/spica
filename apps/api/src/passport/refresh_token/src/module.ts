@@ -1,17 +1,17 @@
 import {DynamicModule, Module} from "@nestjs/common";
 import {RefreshTokenController} from "./controller";
-import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
 import {REFRESH_TOKEN_OPTIONS, RefreshTokenOptions} from "./options";
+import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
 
 @Module({})
 export class RefreshTokenModule {
   static forRoot(options: RefreshTokenOptions): DynamicModule {
     return {
       module: RefreshTokenModule,
-      exports: [RefreshTokenService],
+      exports: [],
       controllers: [RefreshTokenController],
+      imports: [RefreshTokenServicesModule.forRoot()],
       providers: [
-        RefreshTokenService,
         {
           provide: REFRESH_TOKEN_OPTIONS,
           useValue: options

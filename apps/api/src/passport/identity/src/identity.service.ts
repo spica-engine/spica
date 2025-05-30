@@ -86,7 +86,6 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
 
   private async verifyTokenCanBeRefreshed(accessToken: string, refreshToken: string) {
     await this.verify(accessToken);
-    // await this.verify(accessToken.split(" ")[1]);
     await this.verify(refreshToken);
   }
 
@@ -96,8 +95,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       return Promise.reject("Refresh token not found");
     }
 
-    const {identifier} = this.decode(accessToken);
-    const identity = await this.findOne({identifier});
+    const identity = await this.findIdentityOfToken(accessToken);
 
     if (refreshTokenData.identity !== String(identity._id)) {
       return Promise.reject("Refresh and access token identifiers are mismatched");
@@ -106,12 +104,22 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     return Promise.resolve();
   }
 
+  private findIdentityOfToken(token: string) {
+    const {identifier} = this.decode(token);
+    return this.findOne({identifier});
+  }
+
   async refreshToken(accessToken: string, refreshToken: string) {
     accessToken = this.extractAccessToken(accessToken);
     await this.verifyTokenCanBeRefreshed(accessToken, refreshToken);
     await this.verifyTokenIdentifiersAreMatched(accessToken, refreshToken);
-    const {identifier} = this.decode(accessToken);
-    return this.sign(identifier);
+    await this.updateRefreshTokenLastUsedAt(refreshToken);
+    const identity = await this.findIdentityOfToken(accessToken);
+    return this.sign(identity);
+  }
+
+  updateRefreshTokenLastUsedAt(token: string) {
+    return this.refreshTokenService.updateOne({token}, {$set: {last_used_at: new Date()}});
   }
 
   getCookieOptions() {
@@ -130,8 +138,8 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     return this.jwt.verifyAsync(token);
   }
 
-  decode(token: string) {
-    return this.jwt.decode(token);
+  decode<T extends string | {[key: string]: any} = {[key: string]: any}>(token: string): T | null {
+    return (this.jwt.decode(token) as unknown) as T | null;
   }
 
   async identify(identifier: string, password: string): Promise<Identity | null> {
