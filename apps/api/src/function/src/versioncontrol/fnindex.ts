@@ -4,7 +4,8 @@ import {
   DocChange,
   RepChange,
   ResourceType,
-  SynchronizerArgs
+  SynchronizerArgs,
+  VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
 import {FunctionChange, Function, EnvRelation} from "@spica-server/interface/function";
@@ -20,11 +21,11 @@ export const getIndexSynchronizer = (
   fs: FunctionService,
   vcRepresentativeManager: IRepresentativeManager,
   engine: FunctionEngine
-): SynchronizerArgs<FunctionChange, RepresentativeManagerResource> => {
+): VCSynchronizerArgs<FunctionChange, RepresentativeManagerResource> => {
   const moduleName = "function";
 
-  const docWatcher = () => {
-    return new Observable<DocChange<FunctionChange>>(observer => {
+  const docWatcher = () =>
+    new Observable<DocChange<FunctionChange>>(observer => {
       engine.watch("index").subscribe({
         next: (change: FunctionChange) => {
           const docChange: DocChange<FunctionChange> = {
@@ -38,7 +39,6 @@ export const getIndexSynchronizer = (
         error: observer.error
       });
     });
-  };
 
   const docToRepConverter = (
     change: DocChange<FunctionChange>
@@ -65,50 +65,38 @@ export const getIndexSynchronizer = (
     );
   };
 
-  const repWatcher = () =>
-    vcRepresentativeManager.watch(moduleName, ["index.js", "index.ts"], ["add", "change"]);
-
-  const repToDocConverter = (
-    change: RepChange<RepresentativeManagerResource>
-  ): DocChange<FunctionChange> => ({
-    changeType: change.changeType,
-    resourceType: ResourceType.DOCUMENT,
-    resource: {
-      _id: change.resource._id,
-      fn: {_id: new ObjectId(change.resource._id)} as Function<EnvRelation.NotResolved>,
-      content: change.resource.content
-    }
-  });
-
-  const docApplier = (change: DocChange<FunctionChange>) =>
-    CRUD.index.write(fs, engine, change.resource.fn._id, change.resource.content);
+  const apply = (resource: FunctionChange) =>
+    CRUD.index.write(fs, engine, resource.fn._id, resource.content);
 
   return {
     syncs: [
       {
         watcher: {
-          resourceType: ResourceType.DOCUMENT,
-          watch: docWatcher
-        },
-        converter: {
-          convert: docToRepConverter
-        },
-        applier: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          apply: repApplier
+          docWatcher
         }
+        // converter: {
+        //   convert: docToRepConverter
+        // },
+        // applier: {
+        //   resourceType: ResourceType.REPRESENTATIVE,
+        //   apply: repApplier
+        // }
       },
       {
         watcher: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          watch: repWatcher
+          filesToWatch: [
+            {name: "index", extension: "js"},
+            {name: "index", extension: "ts"}
+          ],
+          eventsToWatch: ["add", "change"]
         },
         converter: {
-          convert: repToDocConverter
+          resourceType: "file"
         },
         applier: {
-          resourceType: ResourceType.DOCUMENT,
-          apply: docApplier
+          insert: apply,
+          update: apply,
+          delete: () => {}
         }
       }
     ],

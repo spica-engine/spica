@@ -7,7 +7,8 @@ import {
   DocChange,
   RepChange,
   ResourceType,
-  SynchronizerArgs
+  SynchronizerArgs,
+  VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {ChangeStreamDocument, ObjectId} from "mongodb";
 import {Observable} from "rxjs";
@@ -19,7 +20,7 @@ import {EnvVar} from "@spica-server/interface/env_var";
 export const getSynchronizer = (
   evs: EnvVarService,
   vcRepresentativeManager: IRepresentativeManager
-): SynchronizerArgs<EnvVar, RepresentativeManagerResource> => {
+): VCSynchronizerArgs<EnvVar, RepresentativeManagerResource> => {
   const moduleName = "env-var";
   const fileName = "schema";
   const extension = "yaml";
@@ -123,56 +124,31 @@ export const getSynchronizer = (
     representativeStrategy[change.changeType](change.resource);
   };
 
-  const repWatcher = () => vcRepresentativeManager.watch(moduleName, [`${fileName}.${extension}`]);
-
-  const repToDocConverter = (
-    change: RepChange<RepresentativeManagerResource>
-  ): DocChange<EnvVar> => {
-    const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
-
-    return {
-      ...change,
-      resourceType: ResourceType.DOCUMENT,
-      resource: {...parsed, _id: new ObjectId(change.resource._id)}
-    };
-  };
-
-  const docApplier = (change: DocChange<EnvVar>) => {
-    const documentStrategy = {
-      [ChangeTypes.INSERT]: (envVar: EnvVar) => CRUD.insert(evs, envVar),
-      [ChangeTypes.UPDATE]: (envVar: EnvVar) => CRUD.replace(evs, envVar),
-      [ChangeTypes.DELETE]: (envVar: EnvVar) => CRUD.remove(evs, envVar._id)
-    };
-
-    documentStrategy[change.changeType](change.resource);
-  };
-
   return {
     syncs: [
       {
         watcher: {
-          resourceType: ResourceType.DOCUMENT,
-          watch: docWatcher
-        },
-        converter: {
-          convert: docToRepConverter
-        },
-        applier: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          apply: repApplier
+          service: evs
         }
+        // converter: {
+        //   convert: docToRepConverter
+        // },
+        // applier: {
+        //   resourceType: ResourceType.REPRESENTATIVE,
+        //   apply: repApplier
+        // }
       },
       {
         watcher: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          watch: repWatcher
+          filesToWatch: [{name: fileName, extension}]
         },
         converter: {
-          convert: repToDocConverter
+          resourceType: "document"
         },
         applier: {
-          resourceType: ResourceType.DOCUMENT,
-          apply: docApplier
+          insert: (envVar: EnvVar) => CRUD.insert(evs, envVar),
+          update: (envVar: EnvVar) => CRUD.replace(evs, envVar),
+          delete: (envVar: EnvVar) => CRUD.remove(evs, envVar._id)
         }
       }
     ],

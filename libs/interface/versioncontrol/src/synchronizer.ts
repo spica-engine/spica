@@ -1,4 +1,6 @@
 import {Observable} from "rxjs";
+import {_MixinCollection, BaseCollection} from "@spica-server/database";
+import {FunctionChange} from "@spica-server/interface/function";
 
 export enum ChangeTypes {
   INSERT,
@@ -58,7 +60,7 @@ interface Watcher<R extends Resource, T extends ResourceType, RC extends Change<
 
 interface Applier<R extends Resource, RT extends ResourceType, RC extends Change<R> = Change<R>> {
   resourceType: RT;
-  apply(change: RC): void | Promise<any>;
+  apply(change: RC): Promise<void>;
 }
 
 type DocWatcher<R extends Resource> = Watcher<R, ResourceType.DOCUMENT, DocChange<R>>;
@@ -154,14 +156,12 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 
         const convertedChange = repSync.converter.convert(change);
 
-        const retry = async (delays: number[]) => {
-          try {
-            await repSync.applier.apply(convertedChange);
-          } catch (err) {
+        const retry = (delays: number[]) => {
+          repSync.applier.apply(convertedChange).catch(err => {
             delays.length
               ? new Promise(res => setTimeout(res, delays[0])).then(() => retry(delays.slice(1)))
               : console.error("Error applying after retries:", err);
-          }
+          });
         };
 
         retry([2000, 4000, 8000]);
@@ -173,7 +173,32 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 
 export type RegisterVCSynchronizer<R1 extends Resource, R2 extends Resource> = (
   args: SynchronizerArgs<R1, R2>
-) => Synchronizer<R2, R1>;
+) => Synchronizer<R1, R2>;
+
+export type VCSynchronizerArgs<R1 extends Resource, R2 extends Resource> = Omit<
+  SynchronizerArgs<R1, R2>,
+  "syncs"
+> & {
+  syncs: [
+    {
+      watcher: {
+        service?: BaseCollection<R1>;
+        docWatcher?: () => Observable<DocChange<R1>>;
+      };
+    },
+    {
+      watcher: {filesToWatch: {name: string; extension: string}[]; eventsToWatch?: string[]};
+      converter: {
+        resourceType: "document" | "file";
+      };
+      applier: {
+        insert: (resource: R1) => unknown;
+        update: (resource: R1) => unknown;
+        delete: (resource: R1) => unknown;
+      };
+    }
+  ];
+};
 
 export const REGISTER_VC_SYNCHRONIZER = Symbol.for("REGISTER_VC_SYNCHRONIZER");
 

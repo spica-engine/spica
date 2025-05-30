@@ -5,7 +5,8 @@ import {
   DocChange,
   RepChange,
   ResourceType,
-  SynchronizerArgs
+  SynchronizerArgs,
+  VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
 import {LogService} from "@spica-server/function/log/src/log.service";
@@ -23,7 +24,7 @@ export const getSchemaSynchronizer = (
   vcRepresentativeManager: IRepresentativeManager,
   engine: FunctionEngine,
   logs: LogService
-): SynchronizerArgs<Function, RepresentativeManagerResource> => {
+): VCSynchronizerArgs<Function, RepresentativeManagerResource> => {
   const moduleName = "function";
   const fileName = "schema";
   const extension = "yaml";
@@ -124,62 +125,37 @@ export const getSchemaSynchronizer = (
     representativeStrategy[change.changeType](change.resource);
   };
 
-  const repWatcher = () => vcRepresentativeManager.watch(moduleName, [`${fileName}.${extension}`]);
-
-  const repToDocConverter = (
-    change: RepChange<RepresentativeManagerResource>
-  ): DocChange<Function> => {
-    const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
-
-    return {
-      changeType: change.changeType,
-      resourceType: ResourceType.DOCUMENT,
-      resource: {...parsed, _id: new ObjectId(change.resource._id)}
-    };
-  };
-
-  const docApplier = (change: DocChange<Function>) => {
-    const insert = async (fn: Function) => {
-      fn = await CRUD.insert(fs, engine, fn);
-      // check whether we really need to update index
-      await engine.update(fn, "");
-    };
-
-    const documentStrategy = {
-      [ChangeTypes.INSERT]: insert,
-      [ChangeTypes.UPDATE]: (fn: Function) => CRUD.replace(fs, engine, fn),
-      [ChangeTypes.DELETE]: (fn: Function) => CRUD.remove(fs, engine, logs, fn._id)
-    };
-
-    documentStrategy[change.changeType](change.resource);
+  const insert = async (fn: Function) => {
+    fn = await CRUD.insert(fs, engine, fn);
+    // check whether we really need to update index
+    await engine.update(fn, "");
   };
 
   return {
     syncs: [
       {
         watcher: {
-          resourceType: ResourceType.DOCUMENT,
-          watch: docWatcher
-        },
-        converter: {
-          convert: docToRepConverter
-        },
-        applier: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          apply: repApplier
+          service: fs
         }
+        // converter: {
+        //   convert: docToRepConverter
+        // },
+        // applier: {
+        //   resourceType: ResourceType.REPRESENTATIVE,
+        //   apply: repApplier
+        // }
       },
       {
         watcher: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          watch: repWatcher
+          filesToWatch: [{name: fileName, extension}]
         },
         converter: {
-          convert: repToDocConverter
+          resourceType: "document"
         },
         applier: {
-          resourceType: ResourceType.DOCUMENT,
-          apply: docApplier
+          insert: insert,
+          update: (fn: Function) => CRUD.replace(fs, engine, fn),
+          delete: (fn: Function) => CRUD.remove(fs, engine, logs, fn._id)
         }
       }
     ],

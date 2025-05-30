@@ -1,3 +1,4 @@
+import {BaseCollection} from "@spica-server/database";
 import {Preference} from "@spica-server/interface/preference";
 import {
   IRepresentativeManager,
@@ -8,7 +9,8 @@ import {
   DocChange,
   RepChange,
   ResourceType,
-  SynchronizerArgs
+  SynchronizerArgs,
+  VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {PreferenceService} from "@spica-server/preference/services";
 import {ChangeStreamDocument, ObjectId, WithId} from "mongodb";
@@ -18,7 +20,7 @@ import YAML from "yaml";
 export const getSynchronizer = (
   prefService: PreferenceService,
   vcRepresentativeManager: IRepresentativeManager
-): SynchronizerArgs<Preference, RepresentativeManagerResource> => {
+): VCSynchronizerArgs<Preference, RepresentativeManagerResource> => {
   const moduleName = "preference";
   const fileName = "schema";
   const extension = "yaml";
@@ -122,80 +124,49 @@ export const getSynchronizer = (
     representativeStrategy[change.changeType](change.resource);
   };
 
-  const repWatcher = () => vcRepresentativeManager.watch(moduleName, [`${fileName}.${extension}`]);
-
-  const repToDocConverter = (
-    change: RepChange<RepresentativeManagerResource>
-  ): DocChange<Preference> => {
-    const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
-
-    return {
-      ...change,
-      resourceType: ResourceType.DOCUMENT,
-      resource: {...parsed, _id: new ObjectId(change.resource._id)}
-    };
+  const upsert = (preference: Preference) => {
+    delete preference._id;
+    prefService.updateOne({scope: "passport"}, {$set: {identity: preference}}, {upsert: true});
   };
 
-  const docApplier = (change: DocChange<Preference>) => {
-    const upsert = (preference: Preference) => {
-      delete preference._id;
-      return prefService.updateOne(
-        {scope: "passport"},
-        {$set: {identity: preference}},
-        {upsert: true}
-      );
-    };
-    const insert = upsert;
-    const update = upsert;
-
-    const remove = async () => {
-      await prefService.updateOne(
-        {scope: "passport"},
-        {
-          $set: {
-            identity: {
-              attributes: {}
-            }
+  const remove = async () => {
+    await prefService.updateOne(
+      {scope: "passport"},
+      {
+        $set: {
+          identity: {
+            attributes: {}
           }
         }
-      );
-    };
-
-    const documentStrategy = {
-      [ChangeTypes.INSERT]: upsert,
-      [ChangeTypes.UPDATE]: upsert,
-      [ChangeTypes.DELETE]: remove
-    };
-
-    documentStrategy[change.changeType](change.resource);
+      }
+    );
   };
 
   return {
     syncs: [
       {
         watcher: {
-          resourceType: ResourceType.DOCUMENT,
-          watch: docWatcher
-        },
-        converter: {
-          convert: docToRepConverter
-        },
-        applier: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          apply: repApplier
+          service: prefService as unknown as BaseCollection<Preference>
         }
+        // converter: {
+        //   convert: docToRepConverter
+        // },
+        // applier: {
+        //   resourceType: ResourceType.REPRESENTATIVE,
+        //   apply: repApplier
+        // }
       },
       {
         watcher: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          watch: repWatcher
+          filesToWatch: [{name: fileName, extension}]
         },
         converter: {
-          convert: repToDocConverter
+          resourceType: "document"
         },
         applier: {
-          resourceType: ResourceType.DOCUMENT,
-          apply: docApplier
+          insert: upsert,
+          update: upsert,
+          delete: remove
         }
       }
     ],

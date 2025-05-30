@@ -4,7 +4,8 @@ import {
   DocChange,
   RepChange,
   ResourceType,
-  SynchronizerArgs
+  SynchronizerArgs,
+  VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
 import {FunctionChange, Function, EnvRelation, Dependency} from "@spica-server/interface/function";
@@ -20,11 +21,13 @@ export const getDependencySynchronizer = (
   fs: FunctionService,
   vcRepresentativeManager: IRepresentativeManager,
   engine: FunctionEngine
-): SynchronizerArgs<FunctionChange, RepresentativeManagerResource> => {
+): VCSynchronizerArgs<FunctionChange, RepresentativeManagerResource> => {
   const moduleName = "function";
+  const fileName = "schema";
+  const extension = "yaml";
 
-  const docWatcher = () => {
-    return new Observable<DocChange<FunctionChange>>(observer => {
+  const docWatcher = () =>
+    new Observable<DocChange<FunctionChange>>(observer => {
       engine.watch("dependency").subscribe({
         next: (change: FunctionChange) => {
           const docChange: DocChange<FunctionChange> = {
@@ -38,7 +41,6 @@ export const getDependencySynchronizer = (
         error: observer.error
       });
     });
-  };
 
   const docToRepConverter = (
     change: DocChange<FunctionChange>
@@ -81,10 +83,10 @@ export const getDependencySynchronizer = (
     }
   });
 
-  const docApplier = (change: DocChange<FunctionChange>) => {
-    const parsed = JSON.parse(change.resource.content);
+  const apply = (resource: FunctionChange) => {
+    const parsed = JSON.parse(resource.content);
     return CRUD.dependencies.update(engine, {
-      ...change.resource.fn,
+      ...resource.fn,
       dependencies: parsed.dependencies
     });
   };
@@ -93,28 +95,28 @@ export const getDependencySynchronizer = (
     syncs: [
       {
         watcher: {
-          resourceType: ResourceType.DOCUMENT,
-          watch: docWatcher
-        },
-        converter: {
-          convert: docToRepConverter
-        },
-        applier: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          apply: repApplier
+          docWatcher
         }
+        // converter: {
+        //   convert: docToRepConverter
+        // },
+        // applier: {
+        //   resourceType: ResourceType.REPRESENTATIVE,
+        //   apply: repApplier
+        // }
       },
       {
         watcher: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          watch: repWatcher
+          filesToWatch: [{name: fileName, extension}],
+          eventsToWatch: ["add", "change"]
         },
         converter: {
-          convert: repToDocConverter
+          resourceType: "file"
         },
         applier: {
-          resourceType: ResourceType.DOCUMENT,
-          apply: docApplier
+          insert: apply,
+          update: apply,
+          delete: () => {}
         }
       }
     ],
