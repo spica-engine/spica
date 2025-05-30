@@ -1,11 +1,17 @@
 import React, {type FC, memo, useState} from "react";
 import {createShema} from "./BucketAddFieldSchema";
-import {Button, FlexElement, FluidContainer, Icon, Modal, Tab} from "oziko-ui-kit";
-import useInputRepresenter from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import {
+  Button,
+  FlexElement,
+  FluidContainer,
+  Icon,
+  Modal,
+  Tab,
+  useInputRepresenter,
+  type TypeInputType,
+  type TypeModal
+} from "oziko-ui-kit";
 import styles from "./BucketAddField.module.scss";
-import {type TypeInputType} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
-import {type TypeModal} from "oziko-ui-kit/dist/utils/interface";
-import "oziko-ui-kit/dist/index.css";
 
 type TypeBucketAddField = {
   name: string;

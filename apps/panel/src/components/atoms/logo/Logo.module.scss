@@ -1,0 +1,23 @@
+.logo {
+  img {
+    &.xs {
+      height: 15px;
+    }
+
+    &.sm {
+      height: 30px;
+    }
+
+    &.md {
+      height: 60px;
+    }
+
+    &.lg {
+      height: 120px;
+    }
+
+    &.xl {
+      height: 190px;
+    }
+  }
+}

@@ -1,0 +1,13 @@
+.content {
+  height: 100vh;
+  transition: padding-left 0.3s ease-in-out;
+  overflow: auto;
+}
+
+.navigatorOpen {
+  padding-left: var(--sidebar-with-navigator-width);
+}
+
+.navigatorClosed {
+  padding-left: var(--sidebar-width);
+}

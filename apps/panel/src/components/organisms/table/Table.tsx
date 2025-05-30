@@ -1,8 +1,6 @@
 import React, {type FC, memo, useEffect, useRef, useState} from "react";
-import {FlexElement} from "oziko-ui-kit";
-import type {TypeFlexElement} from "../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/flex-element/FlexElement";
+import {FlexElement, type TypeFlexElement, type TypeAlignment} from "oziko-ui-kit";
 import styles from "./Table.module.scss";
-import {type TypeAlignment} from "../../../../../../node_modules/oziko-ui-kit/dist/utils/interface";
 type TypeTable = {
   columns: any[];
   data: any[];

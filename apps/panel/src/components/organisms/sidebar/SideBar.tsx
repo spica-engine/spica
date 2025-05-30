@@ -1,9 +1,8 @@
 import React, {type FC, type ReactNode, useState} from "react";
 import styles from "./SideBar.module.scss";
-import defaultLogo from "../../../assets/images/logo.png";
-import {Icon} from "oziko-ui-kit";
-import type {IconName} from "../../../../../../node_modules/oziko-ui-kit/dist/utils/iconList";
+import {Icon, type IconName} from "oziko-ui-kit";
 import Navigator, {type TypeNavigatorHeader} from "./navigator/Navigator";
+import Logo from "../../atoms/logo/Logo";
 
 export type TypeMenuItems = {
   name?: string;
@@ -14,6 +13,7 @@ export type TypeMenuItems = {
 
 export type TypeNavigatorItems = {
   _id: string;
+  section: string; //!Todo can be improvable like statically defined values etc.
   title?: string;
   icon?: IconName;
   category?: string;
@@ -26,20 +26,36 @@ type TypeSideBar = {
   };
   logo?: string;
   footer?: ReactNode;
+  toggleIconName?: IconName;
+  onNavigatorToggle?: (isOpen: boolean) => void;
 };
 
-const SideBar: FC<TypeSideBar> = ({menuItems, navigatorItems, logo = defaultLogo, footer}) => {
+const SideBar: FC<TypeSideBar> = ({
+  menuItems,
+  navigatorItems,
+  footer,
+  toggleIconName = "chevronLeft",
+  onNavigatorToggle
+}) => {
   const [activeMenu, setActiveMenu] = useState<number>(0);
+  const [showNavigator, setShowNavigator] = useState(true);
 
   const handleClick = (index: number) => {
     setActiveMenu(index);
+    setShowNavigator(true);
   };
-
+  const toggleNavigator = () => {
+    setShowNavigator(prev => {
+      const newState = !prev;
+      onNavigatorToggle?.(newState);
+      return newState;
+    });
+  };
   return (
     <div className={styles.container}>
       <div className={styles.menuContainer}>
         <div className={styles.logo}>
-          <img src={logo} alt="logo" />
+          <Logo />
         </div>
 
         <div className={styles.menu}>
@@ -52,15 +68,22 @@ const SideBar: FC<TypeSideBar> = ({menuItems, navigatorItems, logo = defaultLogo
               <Icon name={menuItems.icon as IconName} />
             </div>
           ))}
+          <div className={styles.menuItem} onClick={toggleNavigator}>
+            <Icon name={toggleIconName} />
+          </div>
         </div>
 
         {footer || <Icon name="forkRight" size="lg" className={styles.versionControl} />}
       </div>
 
-      <Navigator
-        header={menuItems?.[activeMenu]?.header as TypeNavigatorHeader}
-        items={navigatorItems?.[menuItems![activeMenu]?.id]}
-      />
+      <div
+        className={`${styles.navigatorContainer} ${showNavigator ? styles.open : styles.closed}`}
+      >
+        <Navigator
+          header={menuItems?.[activeMenu]?.header as TypeNavigatorHeader}
+          items={navigatorItems?.[menuItems![activeMenu]?.id] ?? []}
+        />
+      </div>
     </div>
   );
 };

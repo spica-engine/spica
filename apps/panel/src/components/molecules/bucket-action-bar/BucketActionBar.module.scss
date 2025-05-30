@@ -1,0 +1,5 @@
+@use "../../../styles/mixins";
+.container {
+  width: 100%;
+  @include mixins.flexAlignCenterJustifyBetween;
+}

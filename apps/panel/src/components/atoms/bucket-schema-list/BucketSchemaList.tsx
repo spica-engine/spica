@@ -1,10 +1,7 @@
-import type {TypeInputType} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
-import {FlexElement} from "oziko-ui-kit";
 import React, {type FC, type JSX, memo, useState} from "react";
+import {FlexElement, type TypeFlexElement, type TypeInputType} from "oziko-ui-kit";
 import styles from "./BucketSchemaList.module.scss";
 import BucketSchemaItem from "../bucket-schema-item/BucketSchemaItem";
-import type {TypeFlexElement} from "../../../../../../node_modules/oziko-ui-kit/dist/components/atoms/flex-element/FlexElement";
-import "oziko-ui-kit/dist/index.css";
 
 export type TypeSchema = {
   type: TypeInputType;
