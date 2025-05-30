@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "formik": "^2.4.6",
-    "oziko-ui-kit": "^0.0.26",
+    "oziko-ui-kit": "^0.0.28",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-grid-layout": "^1.5.1",
