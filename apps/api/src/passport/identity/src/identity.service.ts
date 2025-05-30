@@ -10,6 +10,7 @@ import {Default} from "@spica-server/interface/core";
 import {hash, compare} from "./hash";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
 import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
+import {v4 as uuidv4} from "uuid";
 
 @Injectable()
 export class IdentityService extends BaseCollection<Identity>("identity") {
@@ -63,9 +64,9 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     return this.identityOptions.expiresIn;
   }
 
-  signRefreshToken(identity: Identity) {
+  async signRefreshToken(identity: Identity) {
     const expiresIn = this.identityOptions.refreshTokenExpiresIn;
-    const token = this.jwt.sign({identifier: identity.identifier}, {expiresIn});
+    const token = this.jwt.sign({identifier: identity.identifier, uuid: uuidv4()}, {expiresIn});
 
     const tokenSchema = {
       token,
@@ -75,7 +76,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       last_used_at: undefined
     };
 
-    this.refreshTokenService.insertOne(tokenSchema);
+    await this.refreshTokenService.insertOne(tokenSchema);
 
     return tokenSchema;
   }
