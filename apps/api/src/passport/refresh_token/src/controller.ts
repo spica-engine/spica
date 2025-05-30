@@ -2,7 +2,8 @@ import {
   Controller,
   Delete,
   Get,
-  Inject,
+  HttpCode,
+  HttpStatus,
   NotFoundException,
   Param,
   Query,
@@ -73,6 +74,7 @@ export class RefreshTokenController {
 
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:refresh-token:delete"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.service.deleteOne({_id: id}).then(r => {
       if (!r) {
