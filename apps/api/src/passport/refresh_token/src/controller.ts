@@ -34,17 +34,15 @@ export class RefreshTokenController {
       .filterResources(resourceFilter)
       .filterByUserRequest(filter);
 
-    const seekingPipeline = new PipelineBuilder()
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .result();
+    const seekingPipeline = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
 
-    const pipeline = (await pipelineBuilder.paginate(
-      paginate,
-      seekingPipeline,
-      this.service.estimatedDocumentCount()
-    )).result();
+    const pipeline = (
+      await pipelineBuilder.paginate(
+        paginate,
+        seekingPipeline,
+        this.service.estimatedDocumentCount()
+      )
+    ).result();
 
     if (paginate) {
       return this.service
