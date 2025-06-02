@@ -160,7 +160,12 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
           } catch (err) {
             delays.length
               ? new Promise(res => setTimeout(res, delays[0])).then(() => retry(delays.slice(1)))
-              : console.error("Error applying after retries:", err);
+              : console.error(
+                  "Failed to apply changes from doc to rep for the following change:\n",
+                  convertedChange,
+                  "\nreason:\n",
+                  err
+                );
           }
         };
 
