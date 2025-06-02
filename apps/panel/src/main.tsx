@@ -5,10 +5,14 @@ import App from "./app/app";
 import AppRouter from "./router";
 import "oziko-ui-kit/dist/index.css";
 import "./styles.scss";
+import {TableProvider} from "./context/TableContext";
+
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
 root.render(
   <StrictMode>
-    <AppRouter />
+    <TableProvider>
+      <AppRouter />
+    </TableProvider>
   </StrictMode>
 );
