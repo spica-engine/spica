@@ -307,6 +307,28 @@ describe("E2E Tests", () => {
       expect(updatedIdentities.length).toBe(1);
     });
 
+    it("should set refresh token cookie on login", async () => {
+      const now = new Date();
+      jest.useFakeTimers({doNotFake: ["nextTick"]}); // passport.authenticate() depends on it
+      jest.setSystemTime(now);
+
+      await login("spica", "spica");
+
+      jest.useRealTimers();
+
+      const {name, value, attributes} = parseCookie(cookies[0]);
+      expect(name).toEqual("refreshToken");
+      expect(value).toBeDefined();
+      expect(attributes).toEqual({
+        "max-age": String(REFRESH_TOKEN_EXPIRES_IN),
+        path: "passport/session/refresh",
+        expires: new Date(now.getTime() + REFRESH_TOKEN_EXPIRES_IN * 1000).toUTCString(),
+        httponly: true,
+        secure: true,
+        samesite: "None"
+      });
+    });
+
     it("should refresh jwt", async () => {
       await login("spica", "spica");
 

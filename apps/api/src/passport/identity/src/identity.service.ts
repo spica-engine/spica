@@ -123,14 +123,14 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     return this.refreshTokenService.updateOne({token}, {$set: {last_used_at: new Date()}});
   }
 
-  getCookieOptions() {
+  getCookieOptions(path: string) {
     return {
       httpOnly: true,
       secure: true,
-      // ????
-      sameSite: "Strict",
-      path: "/",
+      sameSite: "None",
+      path: path,
       overwrite: true,
+      // expects milliseconds but will be shown as seconds in the cookie header
       maxAge: this.identityOptions.refreshTokenExpiresIn * 1000
     };
   }
@@ -140,7 +140,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
   }
 
   decode<T extends string | {[key: string]: any} = {[key: string]: any}>(token: string): T | null {
-    return (this.jwt.decode(token) as unknown) as T | null;
+    return this.jwt.decode(token) as unknown as T | null;
   }
 
   async identify(identifier: string, password: string): Promise<Identity | null> {
