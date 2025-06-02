@@ -2,11 +2,9 @@ import {Global, Module} from "@nestjs/common";
 import {VersionControlController} from "./controller";
 import {VersionManager} from "./interface";
 import {
-  REGISTER_VC_SYNC_PROVIDER,
   REGISTER_VC_SYNCHRONIZER,
   VersionControlOptions,
   VERSIONCONTROL_WORKING_DIRECTORY,
-  VC_REP_MANAGER,
   VC_REPRESENTATIVE_MANAGER,
   SynchronizerArgs,
   Resource
@@ -14,7 +12,6 @@ import {
 import {RepresentativeManager, VCRepresentativeManager} from "@spica-server/representative";
 import {Git} from "./versionmanager";
 import fs from "fs";
-import {Synchronizer} from "./synchronizer";
 import {JobReducer} from "@spica-server/replication";
 import {VCSynchronizer} from "./vcsynchronizer";
 
@@ -44,18 +41,7 @@ export class VersionControlModule {
             return dir;
           }
         },
-        {
-          provide: VC_REP_MANAGER,
-          useFactory: dir => new RepresentativeManager(dir),
-          inject: [VERSIONCONTROL_WORKING_DIRECTORY]
-        },
-        Synchronizer,
         versionManagerProvider,
-        {
-          provide: REGISTER_VC_SYNC_PROVIDER,
-          useFactory: (sync: Synchronizer) => provider => sync.register(provider),
-          inject: [Synchronizer, VC_REP_MANAGER]
-        },
         {
           provide: VC_REPRESENTATIVE_MANAGER,
           useFactory: dir => new VCRepresentativeManager(dir),
@@ -67,12 +53,7 @@ export class VersionControlModule {
             new VCSynchronizer(args).start()
         }
       ],
-      exports: [
-        REGISTER_VC_SYNC_PROVIDER,
-        VC_REP_MANAGER,
-        REGISTER_VC_SYNCHRONIZER,
-        VC_REPRESENTATIVE_MANAGER
-      ]
+      exports: [REGISTER_VC_SYNCHRONIZER, VC_REPRESENTATIVE_MANAGER]
     };
   }
 }
