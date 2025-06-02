@@ -1,6 +1,7 @@
 import {Button, FlexElement, FluidContainer, Icon} from "oziko-ui-kit";
 import React, {memo, useState, type FC} from "react";
 import styles from "./Toolbar.module.scss";
+import {useUIContext} from "../../../context/UIContext";
 
 type TypeToolbar = {
   token: string;
@@ -9,6 +10,7 @@ type TypeToolbar = {
 
 const Toolbar: FC<TypeToolbar> = ({token, name}) => {
   const [copied, setCopied] = useState(false);
+  const {isSmallScreen, openDrawer} = useUIContext();
 
   const handleCopy = () => {
     navigator.clipboard
@@ -28,6 +30,16 @@ const Toolbar: FC<TypeToolbar> = ({token, name}) => {
       prefix={{
         children: (
           <FlexElement className={styles.flexElement} gap={10}>
+            {isSmallScreen && (
+              <Button
+                variant="icon"
+                shape="circle"
+                onClick={openDrawer}
+                className={`${styles.menuButton}`}
+              >
+                <Icon name="sort" />
+              </Button>
+            )}
             <span className={styles.text}>{token}</span>
             <Button
               variant="icon"
