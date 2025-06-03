@@ -42,8 +42,7 @@ describe("rabbitmq enqueuer", () => {
         console.error(e);
       }
     }
-    console.log("URL:", url);
-  }, 30_000);
+  });
 
   beforeEach(async () => {
     noopTarget = createTarget();
@@ -64,7 +63,7 @@ describe("rabbitmq enqueuer", () => {
     );
   });
 
-  fit("should subscribe", async () => {
+  it("should subscribe", async () => {
     await rabbitmqEnqueuer.subscribe(noopTarget, {
       url,
       queue: {name: "queue1", durable: true},
@@ -86,9 +85,23 @@ describe("rabbitmq enqueuer", () => {
     const target2 = createTarget("/tmp/fn1", "handler2");
     const target3 = createTarget("/tmp/fn2", "handler1");
 
-    rabbitmqEnqueuer.subscribe(target1, {url, queue: {name: "queue2", durable: true}, noAck: true});
-    rabbitmqEnqueuer.subscribe(target2, {url, queue: {name: "queue2", durable: true}, noAck: true});
-    rabbitmqEnqueuer.subscribe(target3, {url, queue: {name: "queue2", durable: true}, noAck: true});
+    await Promise.all([
+      rabbitmqEnqueuer.subscribe(target1, {
+        url,
+        queue: {name: "queue2", durable: true},
+        noAck: true
+      }),
+      rabbitmqEnqueuer.subscribe(target2, {
+        url,
+        queue: {name: "queue2", durable: true},
+        noAck: true
+      }),
+      rabbitmqEnqueuer.subscribe(target3, {
+        url,
+        queue: {name: "queue2", durable: true},
+        noAck: true
+      })
+    ]);
 
     await delay(1000);
 
@@ -99,11 +112,7 @@ describe("rabbitmq enqueuer", () => {
 
     expect(subscriptions.length).toEqual(2);
 
-    const remainedsubscriptions = Array.from(subscriptions);
-    const remainedItems = remainedsubscriptions.map(conn => [
-      conn["target"].cwd,
-      conn["target"].handler
-    ]);
+    const remainedItems = subscriptions.map(conn => [conn["target"].cwd, conn["target"].handler]);
 
     expect(remainedItems).toEqual(
       expect.arrayContaining([
@@ -126,7 +135,7 @@ describe("rabbitmq enqueuer", () => {
     });
 
     it("should enqueue with queue name", async () => {
-      rabbitmqEnqueuer.subscribe(noopTarget, {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
         url,
         queue: {name: "queue3", durable: true},
         noAck: true
@@ -167,7 +176,7 @@ describe("rabbitmq enqueuer", () => {
     });
 
     it("should enqueue for fanout type exchange", async () => {
-      rabbitmqEnqueuer.subscribe(noopTarget, {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
         url,
         exchange: {name: "fanoutExchange", type: "fanout", durable: true, pattern: ""},
         queue: {name: "", durable: true},
@@ -213,7 +222,7 @@ describe("rabbitmq enqueuer", () => {
     it("should enqueue for direct type exchange", async () => {
       const severity = "info";
 
-      rabbitmqEnqueuer.subscribe(noopTarget, {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
         url,
         exchange: {name: "directExchange", type: "direct", durable: true, pattern: severity},
         queue: {name: "", durable: true},
@@ -253,7 +262,7 @@ describe("rabbitmq enqueuer", () => {
     });
 
     it("should enqueue for topic type exchange", async () => {
-      rabbitmqEnqueuer.subscribe(noopTarget, {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
         url,
         exchange: {name: "topicExchange", type: "topic", durable: false, pattern: "*.critical"},
         queue: {name: "", durable: false},
@@ -293,7 +302,7 @@ describe("rabbitmq enqueuer", () => {
     });
 
     it("should enqueue for headers type exchange", async () => {
-      rabbitmqEnqueuer.subscribe(noopTarget, {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
         url,
         exchange: {
           name: "headersExchange",
