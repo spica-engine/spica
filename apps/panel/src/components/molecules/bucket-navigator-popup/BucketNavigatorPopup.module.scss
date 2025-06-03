@@ -1,0 +1,14 @@
+.popoverContainer {
+  padding: 0 !important;
+  .popoverContent {
+    padding: var(--padding-md);
+
+    .buttons {
+      padding: 2px 0;
+      width: 100%;
+    }
+    .deleteIcon {
+      color: var(--color-danger);
+    }
+  }
+}
