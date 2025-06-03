@@ -15,7 +15,7 @@ export const getSynchronizer = (prefService: PreferenceService): VCSynchronizerA
       map((preference: Preference) => ({
         resourceType: ResourceType.DOCUMENT,
         changeType: ChangeTypes.UPDATE,
-        resource: {...preference, _id: new ObjectId(preference._id)}
+        resource: {...preference.identity, _id: "identity"}
       }))
     );
   };
@@ -41,7 +41,8 @@ export const getSynchronizer = (prefService: PreferenceService): VCSynchronizerA
   return {
     syncs: [
       {
-        watcher: {docWatcher}
+        watcher: {docWatcher},
+        converter: {withoutID: true}
       },
       {
         converter: {resourceType: "document"},

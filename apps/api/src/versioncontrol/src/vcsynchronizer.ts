@@ -92,13 +92,27 @@ export class VCSynchronizer<R1 extends Resource> extends Synchronizer<
     const docWatcher = docSync.watcher.docWatcher ? docSync.watcher.docWatcher : collectionWatcher;
 
     const docToRepConverter = (change: DocChange<R1>): RepChange<RepresentativeManagerResource> => {
+      const getResource = () => {
+        if (docSync.converter?.resource) {
+          return docSync.converter.resource(change);
+        }
+
+        let preparedResource: R1 | Omit<R1, "_id"> = change.resource;
+        if (docSync.converter?.withoutID) {
+          const {_id, ...resourceWithoutID} = change.resource;
+          preparedResource = resourceWithoutID;
+        }
+
+        return {
+          _id: change.resource._id.toString(),
+          content: YAML.stringify(preparedResource)
+        };
+      };
+
       return {
         changeType: change.changeType,
         resourceType: ResourceType.REPRESENTATIVE,
-        resource: docSync.converter?.resource(change) || {
-          _id: change.resource._id.toString(),
-          content: YAML.stringify(change.resource)
-        }
+        resource: getResource()
       };
     };
 
@@ -151,13 +165,13 @@ export class VCSynchronizer<R1 extends Resource> extends Synchronizer<
 
     const repToDocConverter = (change: RepChange<RepresentativeManagerResource>): DocChange<R1> => {
       const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
+      const _id =
+        typeof change.resource._id == "string"
+          ? change.resource._id
+          : new ObjectId(change.resource._id);
 
-      const documentResource = {...parsed, _id: new ObjectId(change.resource._id)};
-      const fileResource = {
-        _id: change.resource._id,
-        fn: {_id: new ObjectId(change.resource._id)},
-        content: change.resource.content
-      };
+      const documentResource = {...parsed, _id};
+      const fileResource = {_id, content: change.resource.content};
 
       const resource =
         repSync.converter.resourceType == "document" ? documentResource : fileResource;

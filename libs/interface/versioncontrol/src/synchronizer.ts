@@ -126,7 +126,6 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
     const docSync = syncs[0];
     docSync.watcher.watch().subscribe({
       next: change => {
-        console.log(change);
         const resourceId = change.resource._id.toString();
 
         const isSynchronizerAction = this.repToDocActions.has(resourceId);
@@ -193,7 +192,8 @@ export type VCSynchronizerArgs<R1 extends Resource> = Omit<
         docWatcher?: () => Observable<DocChange<R1>>;
       };
       converter?: {
-        resource: (change: DocChange<R1>) => RepresentativeManagerResource;
+        resource?: (change: DocChange<R1>) => RepresentativeManagerResource;
+        withoutID?: boolean;
       };
       applier?: {
         fileName: string;
