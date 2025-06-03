@@ -5,5 +5,5 @@ export default {
   preset: "../../../../../jest.preset.js",
   testEnvironment: "node",
   coverageDirectory: path.join(workspaceRoot, "coverage/apps/api/function/enqueuer"),
-  testMatch: ["<rootDir>/test/**/*.spec.ts"]
+  testMatch: ["<rootDir>/test/**/rabbitmq.spec.ts"]
 };

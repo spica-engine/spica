@@ -65,7 +65,7 @@ describe("rabbitmq enqueuer", () => {
   });
 
   fit("should subscribe", async () => {
-    rabbitmqEnqueuer.subscribe(noopTarget, {
+    await rabbitmqEnqueuer.subscribe(noopTarget, {
       url,
       queue: {name: "queue1", durable: true},
       noAck: true
@@ -73,12 +73,12 @@ describe("rabbitmq enqueuer", () => {
 
     await delay(1000);
 
-    const connections = rabbitmqEnqueuer["connections"];
-    expect(connections.size).toEqual(1);
+    const subscriptions = rabbitmqEnqueuer["subscriptions"];
+    expect(subscriptions.length).toEqual(1);
 
-    const connection = Array.from(connections)[0];
-    expect(connection["target"].cwd).toEqual("/tmp/fn1");
-    expect(connection["target"].handler).toEqual("default");
+    const {target} = subscriptions[0];
+    expect(target.cwd).toEqual("/tmp/fn1");
+    expect(target.handler).toEqual("default");
   });
 
   it("should unsubscribe", async () => {
@@ -92,15 +92,15 @@ describe("rabbitmq enqueuer", () => {
 
     await delay(1000);
 
-    const connections = rabbitmqEnqueuer["connections"];
+    const subscriptions = rabbitmqEnqueuer["subscriptions"];
 
     rabbitmqEnqueuer.unsubscribe(target1);
     await delay(1000);
 
-    expect(connections.size).toEqual(2);
+    expect(subscriptions.length).toEqual(2);
 
-    const remainedConnections = Array.from(connections);
-    const remainedItems = remainedConnections.map(conn => [
+    const remainedsubscriptions = Array.from(subscriptions);
+    const remainedItems = remainedsubscriptions.map(conn => [
       conn["target"].cwd,
       conn["target"].handler
     ]);
