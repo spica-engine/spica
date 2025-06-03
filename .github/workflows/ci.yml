@@ -98,7 +98,16 @@ jobs:
           done
 
       - name: Run Command
-        run: yarn run ${{ matrix.command }}
+        run: |
+          echo "Is rabbitmq still running?"
+            for i in {1..10}; do
+              if nc -z localhost 5672; then
+                echo "RabbitMQ is running."
+                break
+              fi
+              sleep 2
+            done
+          yarn run ${{ matrix.command }}
 
       - name: Stop RabbitMQ if needed
         if: ${{ matrix.rabbitmq || false }}
