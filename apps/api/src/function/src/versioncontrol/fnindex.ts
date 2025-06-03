@@ -2,29 +2,22 @@ import {FunctionService} from "@spica-server/function/services";
 import {
   ChangeTypes,
   DocChange,
-  RepChange,
   ResourceType,
-  SynchronizerArgs
+  VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
-import {FunctionChange, Function, EnvRelation} from "@spica-server/interface/function";
-import {
-  IRepresentativeManager,
-  RepresentativeManagerResource
-} from "@spica-server/interface/representative";
+import {FunctionChange} from "@spica-server/interface/function";
 import {Observable} from "rxjs";
-import {ObjectId} from "mongodb";
 import * as CRUD from "../crud";
 
 export const getIndexSynchronizer = (
   fs: FunctionService,
-  vcRepresentativeManager: IRepresentativeManager,
   engine: FunctionEngine
-): SynchronizerArgs<FunctionChange, RepresentativeManagerResource> => {
-  const moduleName = "function";
+): VCSynchronizerArgs<FunctionChange> => {
+  const fileName = "index";
 
-  const docWatcher = () => {
-    return new Observable<DocChange<FunctionChange>>(observer => {
+  const docWatcher = () =>
+    new Observable<DocChange<FunctionChange>>(observer => {
       engine.watch("index").subscribe({
         next: (change: FunctionChange) => {
           const docChange: DocChange<FunctionChange> = {
@@ -38,81 +31,44 @@ export const getIndexSynchronizer = (
         error: observer.error
       });
     });
-  };
 
-  const docToRepConverter = (
-    change: DocChange<FunctionChange>
-  ): RepChange<RepresentativeManagerResource> => {
-    return {
-      changeType: change.changeType,
-      resourceType: ResourceType.REPRESENTATIVE,
-      resource: {
-        _id: change.resource.fn._id.toString(),
-        content: change.resource.content,
-        additionalParameters: {language: change.resource.fn.language}
-      }
-    };
-  };
-
-  const repApplier = (change: RepChange<RepresentativeManagerResource>) => {
-    const extension = change.resource.additionalParameters.language == "javascript" ? "js" : "ts";
-    vcRepresentativeManager.write(
-      moduleName,
-      change.resource._id,
-      "index",
-      change.resource.content,
-      extension
-    );
-  };
-
-  const repWatcher = () =>
-    vcRepresentativeManager.watch(moduleName, ["index.js", "index.ts"], ["add", "change"]);
-
-  const repToDocConverter = (
-    change: RepChange<RepresentativeManagerResource>
-  ): DocChange<FunctionChange> => ({
-    changeType: change.changeType,
-    resourceType: ResourceType.DOCUMENT,
-    resource: {
-      _id: change.resource._id,
-      fn: {_id: new ObjectId(change.resource._id)} as Function<EnvRelation.NotResolved>,
-      content: change.resource.content
-    }
-  });
-
-  const docApplier = (change: DocChange<FunctionChange>) =>
-    CRUD.index.write(fs, engine, change.resource.fn._id, change.resource.content);
+  const apply = (resource: FunctionChange) =>
+    CRUD.index.write(fs, engine, resource.fn._id, resource.content);
 
   return {
     syncs: [
       {
-        watcher: {
-          resourceType: ResourceType.DOCUMENT,
-          watch: docWatcher
-        },
+        watcher: {docWatcher},
         converter: {
-          convert: docToRepConverter
+          resource: change => ({
+            _id: change.resource.fn._id.toString(),
+            content: change.resource.content,
+            additionalParameters: {language: change.resource.fn.language}
+          })
         },
         applier: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          apply: repApplier
+          fileName,
+          extension: change =>
+            change.resource.additionalParameters.language == "javascript" ? "js" : "ts"
         }
       },
       {
         watcher: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          watch: repWatcher
+          filesToWatch: [
+            {name: "index", extension: "js"},
+            {name: "index", extension: "ts"}
+          ],
+          eventsToWatch: ["add", "change"]
         },
-        converter: {
-          convert: repToDocConverter
-        },
+        converter: {resourceType: "file"},
         applier: {
-          resourceType: ResourceType.DOCUMENT,
-          apply: docApplier
+          insert: apply,
+          update: apply,
+          delete: () => {}
         }
       }
     ],
-    moduleName,
+    moduleName: "function",
     subModuleName: "index"
   };
 };

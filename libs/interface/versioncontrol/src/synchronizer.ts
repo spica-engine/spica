@@ -1,4 +1,5 @@
 import {Observable} from "rxjs";
+import {_MixinCollection, BaseCollection} from "@spica-server/database";
 
 export enum ChangeTypes {
   INSERT,
@@ -81,7 +82,7 @@ interface Sync<
   applier: A;
 }
 
-type DocSync<Src extends Resource, Target extends Resource> = Sync<
+export type DocSync<Src extends Resource, Target extends Resource> = Sync<
   Src,
   ResourceType.DOCUMENT,
   Target,
@@ -91,7 +92,7 @@ type DocSync<Src extends Resource, Target extends Resource> = Sync<
   RepApplier<Target>
 >;
 
-type RepSync<Src extends Resource, Target extends Resource> = Sync<
+export type RepSync<Src extends Resource, Target extends Resource> = Sync<
   Src,
   ResourceType.REPRESENTATIVE,
   Target,
@@ -125,6 +126,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
     const docSync = syncs[0];
     docSync.watcher.watch().subscribe({
       next: change => {
+        console.log(change);
         const resourceId = change.resource._id.toString();
 
         const isSynchronizerAction = this.repToDocActions.has(resourceId);
@@ -154,10 +156,8 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 
         const convertedChange = repSync.converter.convert(change);
 
-        const retry = async (delays: number[]) => {
-          try {
-            await repSync.applier.apply(convertedChange);
-          } catch (err) {
+        const retry = (delays: number[]) => {
+          repSync.applier.apply(convertedChange).catch(err => {
             delays.length
               ? new Promise(res => setTimeout(res, delays[0])).then(() => retry(delays.slice(1)))
               : console.error(
@@ -166,7 +166,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
                   "\nreason:\n",
                   err
                 );
-          }
+          });
         };
 
         retry([2000, 4000, 8000]);
@@ -176,9 +176,45 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
   }
 }
 
-export type RegisterVCSynchronizer<R1 extends Resource, R2 extends Resource> = (
-  args: SynchronizerArgs<R1, R2>
-) => Synchronizer<R2, R1>;
+export type RepresentativeManagerResource = {
+  _id: string;
+  content: string;
+  additionalParameters?: {[key: string]: string | number};
+};
+
+export type VCSynchronizerArgs<R1 extends Resource> = Omit<
+  SynchronizerArgs<R1, RepresentativeManagerResource>,
+  "syncs"
+> & {
+  syncs: [
+    {
+      watcher: {
+        collectionService?: BaseCollection<R1>;
+        docWatcher?: () => Observable<DocChange<R1>>;
+      };
+      converter?: {
+        resource: (change: DocChange<R1>) => RepresentativeManagerResource;
+      };
+      applier?: {
+        fileName: string;
+        extension: string | ((change: RepChange<RepresentativeManagerResource>) => string);
+      };
+    },
+    {
+      watcher?: {filesToWatch: {name: string; extension: string}[]; eventsToWatch?: string[]};
+      converter: {resourceType: "document" | "file"};
+      applier: {
+        insert: (resource: R1) => unknown;
+        update: (resource: R1) => unknown;
+        delete: (resource: R1) => unknown;
+      };
+    }
+  ];
+};
+
+export type RegisterVCSynchronizer<R1 extends Resource> = (
+  args: VCSynchronizerArgs<R1>
+) => Synchronizer<R1, RepresentativeManagerResource>;
 
 export const REGISTER_VC_SYNCHRONIZER = Symbol.for("REGISTER_VC_SYNCHRONIZER");
 
