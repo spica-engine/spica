@@ -7,7 +7,7 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import {PreferenceController} from "./preference.controller";
 import {getSynchronizer} from "./versioncontrol/synchronizer";
-import {Preference} from "@spica-server/interface/preference";
+import {Identity} from "@spica-server/interface/passport/identity";
 
 @Global()
 @Module({})
@@ -16,7 +16,7 @@ export class PreferenceModule {
     prefService: PreferenceService,
     @Optional()
     @Inject(REGISTER_VC_SYNCHRONIZER)
-    registerVCSynchronizer: RegisterVCSynchronizer<Preference>
+    registerVCSynchronizer: RegisterVCSynchronizer<Identity["attributes"]>
   ) {
     if (registerVCSynchronizer) {
       const synchronizer = getSynchronizer(prefService);

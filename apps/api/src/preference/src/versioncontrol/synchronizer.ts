@@ -1,3 +1,4 @@
+import {Identity} from "@spica-server/interface/passport/identity";
 import {Preference} from "@spica-server/interface/preference";
 import {
   ChangeTypes,
@@ -6,11 +7,12 @@ import {
   VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {PreferenceService} from "@spica-server/preference/services";
-import {ObjectId} from "bson";
 import {map, Observable} from "rxjs";
 
-export const getSynchronizer = (prefService: PreferenceService): VCSynchronizerArgs<Preference> => {
-  const docWatcher = (): Observable<DocChange<Preference>> => {
+export const getSynchronizer = (
+  prefService: PreferenceService
+): VCSynchronizerArgs<Identity["attributes"]> => {
+  const docWatcher = (): Observable<DocChange<Identity["attributes"]>> => {
     return prefService.watch("passport", {propagateOnStart: true}).pipe(
       map((preference: Preference) => ({
         resourceType: ResourceType.DOCUMENT,
@@ -20,9 +22,13 @@ export const getSynchronizer = (prefService: PreferenceService): VCSynchronizerA
     );
   };
 
-  const upsert = (preference: Preference) => {
-    delete preference._id;
-    prefService.updateOne({scope: "passport"}, {$set: {identity: preference}}, {upsert: true});
+  const upsert = (identityAttributes: Identity["attributes"]) => {
+    delete identityAttributes._id;
+    prefService.updateOne(
+      {scope: "passport"},
+      {$set: {identity: identityAttributes}},
+      {upsert: true}
+    );
   };
 
   const remove = async () => {
