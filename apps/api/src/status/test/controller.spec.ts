@@ -273,6 +273,8 @@ describe("Status", () => {
 
       await req.get("/fn-execute/test");
 
+      await sleep(1000);
+
       res = await req.get("/status/function");
       expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
       expect(res.body).toEqual({

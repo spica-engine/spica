@@ -98,7 +98,7 @@ describe("Storage Service", () => {
       });
   });
 
-  it("should delete failed object from database", async () => {
+  it("should revert storage insert if one of objects failed", async () => {
     const storageObjects = [
       {
         _id: "successId",
@@ -128,11 +128,13 @@ describe("Storage Service", () => {
         }
       }
     ];
+
+    const originalWrite = strategyInstance.write.bind(strategyInstance);
     jest.spyOn(strategyInstance, "write").mockImplementation((id: string, data: Buffer) => {
       if (id == "failId") {
         return Promise.reject("Upload failed for Item");
       }
-      return Promise.resolve();
+      return originalWrite(id, data);
     });
 
     await expect(storageService.insert(storageObjects)).rejects.toThrow(
@@ -140,16 +142,13 @@ describe("Storage Service", () => {
     );
 
     const insertedBbjects = await storageService.find();
-    expect(insertedBbjects).toEqual([
-      {
-        _id: "successId",
-        name: "name1",
-        content: {
-          type: "type1",
-          size: 10
-        }
-      } as any
-    ]);
+    expect(insertedBbjects).toEqual([]);
+
+    const objectPromises = storageObjects.map(storageObject =>
+      strategyInstance.read(storageObject._id).catch(e => e.code)
+    );
+    const result = await Promise.all(objectPromises);
+    expect(result).toEqual(["ENOENT", "ENOENT", "ENOENT"]);
   });
 
   it("should update storage object", async () => {
