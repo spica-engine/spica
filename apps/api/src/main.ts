@@ -119,6 +119,16 @@ const args = yargs(process.argv.slice(2))
       description: "Default lifespan of the issued JWT tokens. Unit: second",
       default: 60 * 60 * 24 * 2
     },
+    "passport-identity-failed-login-attempt-limit": {
+      number: true,
+      description: "Maximum failed login attempt before blocking further attempts.",
+      default: 3
+    },
+    "passport-identity-block-duration-after-failed-login-attempts": {
+      number: true,
+      description: "Duration of blocking login attempts in minutes.",
+      default: 30
+    },
     "passport-identity-token-expiration-seconds-limit": {
       number: true,
       description: "Maximum lifespan of the requested JWT token can have. Unit: second"
@@ -501,7 +511,11 @@ const modules = [
     defaultIdentityIdentifier: args["passport-default-identity-identifier"],
     defaultIdentityPassword: args["passport-default-identity-password"],
     audience: "spica.io",
-    samlCertificateTTL: args["passport-saml-certificate-ttl"]
+    samlCertificateTTL: args["passport-saml-certificate-ttl"],
+    blockingOptions: {
+      failedAttemptLimit: args["passport-identity-failed-login-attempt-limit"],
+      blockDurationMinutes: args["passport-identity-block-duration-after-failed-login-attempts"]
+    }
   }),
   FunctionModule.forRoot({
     logExpireAfterSeconds: args["common-log-lifespan"],

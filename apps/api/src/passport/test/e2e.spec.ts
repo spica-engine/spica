@@ -193,7 +193,11 @@ describe("E2E Tests", () => {
         defaultIdentityIdentifier: "spica",
         defaultIdentityPassword: "spica",
         audience: "spica",
-        defaultIdentityPolicies: ["PassportFullAccess"]
+        defaultIdentityPolicies: ["PassportFullAccess"],
+        blockingOptions: {
+          failedAttemptLimit: 100,
+          blockDurationMinutes: 0
+        }
       }),
       PreferenceTestingModule,
       CoreTestingModule

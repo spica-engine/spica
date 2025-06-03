@@ -136,7 +136,11 @@ describe("Status", () => {
             issuer: "spica",
             maxExpiresIn: 1000,
             secretOrKey: "spica",
-            entryLimit: 20
+            entryLimit: 20,
+            blockingOptions: {
+              failedAttemptLimit: 100,
+              blockDurationMinutes: 0
+            }
           })
         ]
       }).compile();

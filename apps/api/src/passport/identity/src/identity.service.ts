@@ -1,4 +1,4 @@
-import {Injectable, Inject} from "@nestjs/common";
+import {Injectable, Inject, UnauthorizedException} from "@nestjs/common";
 import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {
   Identity,
@@ -67,11 +67,43 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     }
     const identity = await this.findOne({identifier});
 
-    if (identity) {
-      const matched = await compare(password, identity.password);
-      return matched ? identity : null;
+    if (!identity) {
+      return null;
     }
-    return null;
+
+    identity.failedAttempts = identity.failedAttempts || [];
+
+    this.checkIdentityIsBlocked(identity);
+
+    const matched = await compare(password, identity.password);
+
+    let result;
+
+    if (matched) {
+      identity.lastLogin = new Date();
+      identity.failedAttempts = [];
+      result = identity;
+    } else {
+      const isLimitReached =
+        identity.failedAttempts.length == this.identityOptions.blockingOptions.failedAttemptLimit;
+
+      if (isLimitReached) {
+        identity.failedAttempts = [];
+      }
+
+      identity.failedAttempts.push(new Date());
+
+      result = null;
+    }
+
+    await this.findOneAndUpdate(
+      {identifier},
+      {$set: {failedAttempts: identity.failedAttempts, lastLogin: identity.lastLogin}}
+    );
+
+    this.checkIdentityIsBlocked(identity);
+
+    return result;
   }
 
   // @internal
@@ -82,5 +114,68 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       {$setOnInsert: {...identity, password: hashedPassword}},
       {upsert: true}
     );
+  }
+
+  isIdentityBlocked(identity: Identity) {
+    const lastFailedAttempts = identity.failedAttempts.filter(
+      attempt => attempt > identity.lastLogin
+    );
+
+    const isAttemptLimitReached =
+      lastFailedAttempts.length == this.identityOptions.blockingOptions.failedAttemptLimit;
+
+    const remainingBlockedSeconds = this.getRemainingBlockedSeconds(identity);
+
+    return isAttemptLimitReached ? remainingBlockedSeconds > 0 : false;
+  }
+
+  getRemainingBlockedSeconds(identity: Identity) {
+    const lastAttempt = identity.failedAttempts[identity.failedAttempts.length - 1];
+
+    if (!lastAttempt) {
+      return 0;
+    }
+
+    const secondsPassedFromLastFailedAttempt =
+      (new Date().getTime() - lastAttempt.getTime()) / 1000;
+
+    const remainingBlockedSeconds =
+      this.identityOptions.blockingOptions.blockDurationMinutes * 60 -
+      secondsPassedFromLastFailedAttempt;
+
+    return remainingBlockedSeconds;
+  }
+
+  checkIdentityIsBlocked(identity: Identity) {
+    if (this.isIdentityBlocked(identity)) {
+      const remainingBlockedSeconds = this.getRemainingBlockedSeconds(identity);
+      throw new UnauthorizedException(
+        `Too many failed login attempts. Try again after ${this.formatRemainingDuration(
+          remainingBlockedSeconds
+        )}.`
+      );
+    }
+  }
+
+  formatRemainingDuration(remainingSeconds: number) {
+    let result = [];
+
+    const hours = Math.floor(remainingSeconds / (60 * 60));
+    if (hours) {
+      result.push(`${hours} hours`);
+      remainingSeconds = remainingSeconds - hours * (60 * 60);
+    }
+
+    const minutes = Math.floor(remainingSeconds / 60);
+    if (minutes) {
+      result.push(`${minutes} minutes`);
+      remainingSeconds = remainingSeconds - minutes * 60;
+    }
+
+    if (remainingSeconds) {
+      result.push(`${Math.floor(remainingSeconds)} seconds`);
+    }
+
+    return result.join(" ");
   }
 }
