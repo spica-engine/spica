@@ -15,10 +15,6 @@ function createTarget(cwd?: string, handler?: string) {
 }
 
 describe("rabbitmq enqueuer", () => {
-  it("empty test to prevent Jest errors, remove when fix real tests", () => {
-    expect("plug").toEqual("plug");
-  });
-
   let eventQueue: {enqueue: jest.Mock};
   let rabbitmqQueue: {enqueue: jest.Mock};
   let noopTarget: event.Target;
