@@ -1,5 +1,5 @@
 import {Observable} from "rxjs";
-import {_MixinCollection, BaseCollection} from "@spica-server/database";
+import {BaseCollection} from "@spica-server/database";
 
 export enum ChangeTypes {
   INSERT,
