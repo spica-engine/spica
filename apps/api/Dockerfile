@@ -42,7 +42,7 @@ ARG PROJECTS=""
 ARG EXCLUDE=""
 RUN yarn nx run-many -t test --projects=$PROJECTS --exclude=$EXCLUDE
 
-# start app from tools, because app executes many mongodb commands
+# start app from tools, because app uses git
 # copy deps and build
 FROM tools AS runner
 WORKDIR /app
