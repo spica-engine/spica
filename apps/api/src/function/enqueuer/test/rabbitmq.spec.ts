@@ -43,7 +43,7 @@ describe("rabbitmq enqueuer", () => {
       }
     }
     console.log("URL:", url);
-  });
+  }, 30_000);
 
   beforeEach(async () => {
     noopTarget = createTarget();
