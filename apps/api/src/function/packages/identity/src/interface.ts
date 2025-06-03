@@ -6,6 +6,8 @@ interface Identity {
   password: string;
   policies: string[];
   attributes?: object;
+  lastLogin?: Date;
+  failedAttempts?: Date[];
 }
 
 export type IdentityUpdate = Partial<Identity>;
