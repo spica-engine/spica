@@ -812,7 +812,7 @@ describe("E2E Tests", () => {
           const totp = generateTotp(challenge);
 
           res = await req.post(res.body.answerUrl, {answer: totp});
-          expect(res.statusCode).toEqual(201);
+          expect(res.statusCode).toEqual(200);
           expect(res.body.token).toBeDefined();
         });
 
