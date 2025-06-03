@@ -106,7 +106,8 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
   }
 
   private findIdentityOfToken(token: string) {
-    const {identifier} = this.decode(token);
+    const decodedToken = this.decode(token);
+    const identifier = decodedToken ? decodedToken.identifier : undefined;
     return this.findOne({identifier});
   }
 

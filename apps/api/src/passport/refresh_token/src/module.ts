@@ -10,7 +10,7 @@ export class RefreshTokenModule {
       module: RefreshTokenModule,
       exports: [],
       controllers: [RefreshTokenController],
-      imports: [RefreshTokenServicesModule.forRoot()],
+      imports: [RefreshTokenServicesModule],
       providers: [
         {
           provide: REFRESH_TOKEN_OPTIONS,

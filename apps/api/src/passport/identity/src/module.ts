@@ -58,7 +58,7 @@ export class IdentityModule {
         AUTH_RESOLVER
       ],
       imports: [
-        RefreshTokenServicesModule.forRoot(),
+        RefreshTokenServicesModule,
         JwtModule.register({
           secret: options.secretOrKey,
           signOptions: {
