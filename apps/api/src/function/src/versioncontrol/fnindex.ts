@@ -6,24 +6,24 @@ import {
   VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
-import {FunctionChange} from "@spica-server/interface/function";
+import {Function, FunctionWithContent} from "@spica-server/interface/function";
 import {Observable} from "rxjs";
 import * as CRUD from "../crud";
 
 export const getIndexSynchronizer = (
   fs: FunctionService,
   engine: FunctionEngine
-): VCSynchronizerArgs<FunctionChange> => {
+): VCSynchronizerArgs<FunctionWithContent> => {
   const fileName = "index";
 
   const docWatcher = () =>
-    new Observable<DocChange<FunctionChange>>(observer => {
+    new Observable<DocChange<FunctionWithContent>>(observer => {
       engine.watch("index").subscribe({
-        next: (change: FunctionChange) => {
-          const docChange: DocChange<FunctionChange> = {
+        next: (change: FunctionWithContent) => {
+          const docChange: DocChange<FunctionWithContent> = {
             resourceType: ResourceType.DOCUMENT,
             changeType: ChangeTypes.INSERT,
-            resource: change
+            resource: {...change, content: change.content}
           };
 
           observer.next(docChange);
@@ -32,20 +32,20 @@ export const getIndexSynchronizer = (
       });
     });
 
-  const apply = (resource: FunctionChange) =>
-    CRUD.index.write(fs, engine, resource.fn._id, resource.content);
+  const getRepResource = change => ({
+    _id: change.resource._id.toString(),
+    content: change.resource.content,
+    additionalParameters: {language: change.resource.language}
+  });
+
+  const apply = (resource: FunctionWithContent) =>
+    CRUD.index.write(fs, engine, resource._id, resource.content);
 
   return {
     syncs: [
       {
         watcher: {docWatcher},
-        converter: {
-          resource: change => ({
-            _id: change.resource.fn._id.toString(),
-            content: change.resource.content,
-            additionalParameters: {language: change.resource.fn.language}
-          })
-        },
+        converter: {resource: getRepResource},
         applier: {
           fileName,
           extension: change =>

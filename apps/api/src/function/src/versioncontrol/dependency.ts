@@ -5,21 +5,21 @@ import {
   VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
-import {FunctionChange} from "@spica-server/interface/function";
+import {FunctionWithContent} from "@spica-server/interface/function";
 import {Observable} from "rxjs";
 import * as CRUD from "../crud";
 
 export const getDependencySynchronizer = (
   engine: FunctionEngine
-): VCSynchronizerArgs<FunctionChange> => {
+): VCSynchronizerArgs<FunctionWithContent> => {
   const fileName = "package";
   const extension = "json";
 
   const docWatcher = () =>
-    new Observable<DocChange<FunctionChange>>(observer => {
+    new Observable<DocChange<FunctionWithContent>>(observer => {
       engine.watch("dependency").subscribe({
-        next: (change: FunctionChange) => {
-          const docChange: DocChange<FunctionChange> = {
+        next: (change: FunctionWithContent) => {
+          const docChange: DocChange<FunctionWithContent> = {
             resourceType: ResourceType.DOCUMENT,
             changeType: ChangeTypes.INSERT,
             resource: change
@@ -31,10 +31,20 @@ export const getDependencySynchronizer = (
       });
     });
 
-  const apply = (resource: FunctionChange) => {
+  const getRepResource = (change: DocChange<FunctionWithContent>) => {
+    const parsed = JSON.parse(change.resource.content);
+    const dependencies = parsed.dependencies || {};
+
+    return {
+      _id: change.resource._id.toString(),
+      content: JSON.stringify({dependencies})
+    };
+  };
+
+  const apply = (resource: FunctionWithContent) => {
     const parsed = JSON.parse(resource.content);
     return CRUD.dependencies.update(engine, {
-      ...resource.fn,
+      ...resource,
       dependencies: parsed.dependencies
     });
   };
@@ -42,20 +52,8 @@ export const getDependencySynchronizer = (
   return {
     syncs: [
       {
-        watcher: {
-          docWatcher
-        },
-        converter: {
-          resource: (change: DocChange<FunctionChange>) => {
-            const parsed = JSON.parse(change.resource.content);
-            const dependencies = parsed.dependencies || {};
-
-            return {
-              _id: change.resource.fn._id.toString(),
-              content: JSON.stringify({dependencies})
-            };
-          }
-        },
+        watcher: {docWatcher},
+        converter: {resource: getRepResource},
         applier: {fileName, extension}
       },
       {

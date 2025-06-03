@@ -20,7 +20,7 @@ import {
   SCHEMA,
   SchemaWithName,
   EnvRelation,
-  FunctionChange
+  FunctionWithContent
 } from "@spica-server/interface/function";
 
 import {createTargetChanges} from "./change";
@@ -201,7 +201,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       });
   }
 
-  watch(scope: "index" | "dependency"): Observable<FunctionChange> {
+  watch(scope: "index" | "dependency"): Observable<FunctionWithContent> {
     let files = [];
 
     switch (scope) {
@@ -215,7 +215,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
     const moduleDir = this.options.root;
 
-    return new Observable<FunctionChange>(observer => {
+    return new Observable<FunctionWithContent>(observer => {
       const watcher = chokidar.watch(moduleDir, {
         ignored: /(^|[/\\])\../,
         persistent: true,
@@ -238,7 +238,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
         const content = await fs.promises.readFile(path).then(b => b.toString());
 
-        observer.next({_id, fn, content});
+        observer.next({...fn, content});
       };
 
       watcher.on("change", path => handleFileEvent(path));

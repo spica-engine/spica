@@ -24,7 +24,7 @@ import {
   Function,
   FunctionOptions,
   FUNCTION_OPTIONS,
-  FunctionChange
+  FunctionWithContent
 } from "@spica-server/interface/function";
 import {getSynchronizers} from "./versioncontrol";
 
@@ -37,12 +37,11 @@ export class FunctionModule {
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
     @Optional()
     @Inject(REGISTER_VC_SYNCHRONIZER)
-    registerVCSynchronizer: RegisterVCSynchronizer<Function | FunctionChange>,
+    registerVCSynchronizer: RegisterVCSynchronizer<Function | FunctionWithContent>,
     logs: LogService,
     validator: Validator
   ) {
     if (registerVCSynchronizer) {
-      //@ts-ignore
       getSynchronizers(fs, fe, logs).forEach(synchronizer => registerVCSynchronizer(synchronizer));
     }
 
