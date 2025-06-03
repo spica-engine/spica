@@ -1,16 +1,21 @@
 @use "../../../styles/mixins";
 
 .bucketSchemaItem {
-  &:hover .suffixIcons {
-    opacity: 1;
-    visibility: visible;
-  }
-  .suffixIcons {
+  .suffixIcons,
+  .dragDropButton {
     opacity: 0;
     visibility: hidden;
     transition:
       opacity var(--transition-duration) ease,
       visibility var(--transition-duration) ease;
+  }
+
+  &:hover {
+    .suffixIcons,
+    .dragDropButton {
+      opacity: 1;
+      visibility: visible;
+    }
   }
   .label {
     @include mixins.textEllipsis(1);
