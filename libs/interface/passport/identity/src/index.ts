@@ -52,6 +52,7 @@ export interface IdentityOptions {
   defaultIdentityPassword?: string;
   defaultIdentityPolicies?: string[];
   entryLimit?: number;
+  refreshTokenExpiresIn?: number;
 }
 
 export const IDENTITY_OPTIONS = Symbol.for("IDENTITY_OPTIONS");
