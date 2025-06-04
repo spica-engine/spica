@@ -192,7 +192,7 @@ export type VCSynchronizerArgs<R1 extends Resource> = Omit<
         docWatcher?: () => Observable<DocChange<R1>>;
       };
       converter?: {
-        resource?: (change: DocChange<R1>) => RepresentativeManagerResource;
+        convertToRepResource?: (change: DocChange<R1>) => RepresentativeManagerResource;
         withoutID?: boolean;
       };
       applier?: {

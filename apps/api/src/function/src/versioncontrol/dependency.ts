@@ -31,7 +31,7 @@ export const getDependencySynchronizer = (
       });
     });
 
-  const getRepResource = (change: DocChange<FunctionWithContent>) => {
+  const convertToRepResource = (change: DocChange<FunctionWithContent>) => {
     const parsed = JSON.parse(change.resource.content);
     const dependencies = parsed.dependencies || {};
 
@@ -53,7 +53,7 @@ export const getDependencySynchronizer = (
     syncs: [
       {
         watcher: {docWatcher},
-        converter: {resource: getRepResource},
+        converter: {convertToRepResource},
         applier: {fileName, extension}
       },
       {

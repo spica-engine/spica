@@ -32,7 +32,7 @@ export const getIndexSynchronizer = (
       });
     });
 
-  const getRepResource = change => ({
+  const convertToRepResource = change => ({
     _id: change.resource._id.toString(),
     content: change.resource.content,
     additionalParameters: {language: change.resource.language}
@@ -45,7 +45,7 @@ export const getIndexSynchronizer = (
     syncs: [
       {
         watcher: {docWatcher},
-        converter: {resource: getRepResource},
+        converter: {convertToRepResource},
         applier: {
           fileName,
           extension: change =>

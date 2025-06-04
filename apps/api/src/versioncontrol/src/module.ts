@@ -6,14 +6,13 @@ import {
   VersionControlOptions,
   VERSIONCONTROL_WORKING_DIRECTORY,
   VC_REPRESENTATIVE_MANAGER,
-  SynchronizerArgs,
   VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {VCRepresentativeManager} from "@spica-server/representative";
 import {Git} from "./versionmanager";
 import fs from "fs";
 import {JobReducer} from "@spica-server/replication";
-import {VCSynchronizer} from "./vcsynchronizer";
+import {VCSynchronizer} from "./synchronizer/vcsynchronizer";
 
 @Global()
 @Module({})
