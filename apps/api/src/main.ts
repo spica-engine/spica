@@ -128,7 +128,7 @@ const args = yargs(process.argv.slice(2))
     "passport-identity-block-duration-after-failed-login-attempts": {
       number: true,
       description: "Duration of blocking login attempts in minutes.",
-      default: 30
+      default: 0
     },
     "passport-identity-token-expiration-seconds-limit": {
       number: true,
