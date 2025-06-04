@@ -10,8 +10,8 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import {VCRepresentativeManager} from "@spica-server/representative";
 import {RepresentativeManagerResource} from "@spica-server/interface/versioncontrol";
-import {getDocToRepConverter, getDocWatcher, getRepApplier} from "./docSynchronizer";
-import {getDocApplier, getRepToDocConverter, getRepWatcher} from "./repSynchronizer";
+import {getDocToRepConverter, getDocWatcher, getRepApplier} from "./doc.synchronizer";
+import {getDocApplier, getRepToDocConverter, getRepWatcher} from "./rep.synchronizer";
 
 @Injectable()
 export class VCSynchronizer<R extends Resource> extends Synchronizer<

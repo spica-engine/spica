@@ -187,22 +187,28 @@ export type VCSynchronizerArgs<R1 extends Resource> = Omit<
 > & {
   syncs: [
     {
-      watcher: {
-        collectionService?: BaseCollection<R1>;
-        docWatcher?: () => Observable<DocChange<R1>>;
+      watcher:
+        | {
+            collectionService: BaseCollection<R1>;
+            docWatcher?: never;
+          }
+        | {
+            collectionService?: never;
+            docWatcher: () => Observable<DocChange<R1>>;
+          };
+      converter: {
+        convertToRepResource: (change: DocChange<R1>) => RepresentativeManagerResource;
       };
-      converter?: {
-        convertToRepResource?: (change: DocChange<R1>) => RepresentativeManagerResource;
-        withoutID?: boolean;
-      };
-      applier?: {
+      applier: {
         fileName: string;
-        extension: string | ((change: RepChange<RepresentativeManagerResource>) => string);
+        getExtension: (change: RepChange<RepresentativeManagerResource>) => string;
       };
     },
     {
-      watcher?: {filesToWatch: {name: string; extension: string}[]; eventsToWatch?: string[]};
-      converter: {resourceType: "document" | "file"; notObjectID?: boolean};
+      watcher: {filesToWatch: {name: string; extension: string}[]; eventsToWatch?: string[]};
+      converter: {
+        convertToDocResource: (change: RepChange<RepresentativeManagerResource>) => R1;
+      };
       applier: {
         insert: (resource: R1) => unknown;
         update: (resource: R1) => unknown;

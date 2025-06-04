@@ -85,67 +85,28 @@ export function getDocWatcher<R extends Resource>(
 }
 
 export function getDocToRepConverter<R extends Resource>(
-  props?: VCSynchronizerArgs<R>["syncs"][0]["converter"]
+  props: VCSynchronizerArgs<R>["syncs"][0]["converter"]
 ): SynchronizerArgs<R, RepresentativeManagerResource>["syncs"][0]["converter"]["convert"] {
-  const getResourceConverter = (): ((change: DocChange<R>) => RepresentativeManagerResource) => {
-    if (props?.convertToRepResource) {
-      return props.convertToRepResource;
-    }
-
-    return (change: DocChange<R>) => {
-      let preparedResource: R | Omit<R, "_id"> = change.resource;
-      if (props?.withoutID) {
-        const {_id, ...resourceWithoutID} = change.resource;
-        preparedResource = resourceWithoutID;
-      }
-
-      return {
-        _id: change.resource._id.toString(),
-        content: YAML.stringify(preparedResource)
-      };
-    };
-  };
-
-  const convertToRepResource = getResourceConverter();
-
   return change => ({
     changeType: change.changeType,
     resourceType: ResourceType.REPRESENTATIVE,
-    resource: convertToRepResource(change)
+    resource: props.convertToRepResource(change)
   });
 }
 
 export function getRepApplier<R extends Resource>(
   vcRepresentativeManager: VCRepresentativeManager,
   moduleName: VCSynchronizerArgs<R>["moduleName"],
-  props?: VCSynchronizerArgs<R>["syncs"][0]["applier"]
+  props: VCSynchronizerArgs<R>["syncs"][0]["applier"]
 ): SynchronizerArgs<R, RepresentativeManagerResource>["syncs"][0]["applier"]["apply"] {
-  const fileName = props?.fileName || "schema";
-
-  const getExtensionResolver = (): ((
-    change: RepChange<RepresentativeManagerResource>
-  ) => string) => {
-    if (!props) {
-      return () => "yaml";
-    }
-
-    if (typeof props.extension == "function") {
-      return props.extension;
-    }
-
-    return () => props.extension as string;
-  };
-
-  const resolveExtension = getExtensionResolver();
-
   return change => {
     const write = (resource: RepresentativeManagerResource) => {
       return vcRepresentativeManager.write(
         moduleName,
         resource._id,
-        fileName,
+        props.fileName,
         resource.content,
-        resolveExtension(change)
+        props.getExtension(change)
       );
     };
 

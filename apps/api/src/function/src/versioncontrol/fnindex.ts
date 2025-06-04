@@ -2,6 +2,8 @@ import {FunctionService} from "@spica-server/function/services";
 import {
   ChangeTypes,
   DocChange,
+  RepChange,
+  RepresentativeManagerResource,
   ResourceType,
   VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
@@ -9,6 +11,7 @@ import {FunctionEngine} from "../engine";
 import {Function, FunctionWithContent} from "@spica-server/interface/function";
 import {Observable} from "rxjs";
 import * as CRUD from "../crud";
+import {ObjectId} from "bson";
 
 export const getIndexSynchronizer = (
   fs: FunctionService,
@@ -38,6 +41,12 @@ export const getIndexSynchronizer = (
     additionalParameters: {language: change.resource.language}
   });
 
+  const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) =>
+    ({
+      _id: new ObjectId(change.resource._id),
+      content: change.resource.content
+    }) as FunctionWithContent;
+
   const apply = (resource: FunctionWithContent) =>
     CRUD.index.write(fs, engine, resource._id, resource.content);
 
@@ -48,7 +57,7 @@ export const getIndexSynchronizer = (
         converter: {convertToRepResource},
         applier: {
           fileName,
-          extension: change =>
+          getExtension: change =>
             change.resource.additionalParameters.language == "javascript" ? "js" : "ts"
         }
       },
@@ -60,7 +69,7 @@ export const getIndexSynchronizer = (
           ],
           eventsToWatch: ["add", "change"]
         },
-        converter: {resourceType: "file"},
+        converter: {convertToDocResource},
         applier: {
           insert: apply,
           update: apply,
