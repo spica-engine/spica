@@ -915,6 +915,7 @@ describe("E2E Tests", () => {
       await new Promise((resolve, _) => setTimeout(resolve, 3000));
 
       jest.useFakeTimers({doNotFake: ["nextTick"]});
+      jest.setSystemTime(new Date());
     });
 
     afterEach(() => {
@@ -931,15 +932,9 @@ describe("E2E Tests", () => {
 
       expect(responseWithBlockedError.statusCode).toEqual(401);
       expect(responseWithBlockedError.statusText).toEqual("Unauthorized");
-
-      const expectedMessages = [
-        "Too many failed login attempts. Try again after 10 minutes.",
-        "Too many failed login attempts. Try again after 9 minutes 59 seconds."
-      ];
-      const found = expectedMessages.some(msg =>
-        responseWithBlockedError.body.message.includes(msg)
+      expect(responseWithBlockedError.body.message).toEqual(
+        "Too many failed login attempts. Try again after 10 minutes."
       );
-      expect(found).toBe(true);
 
       await login();
       expect(token).toBeUndefined();
@@ -947,15 +942,9 @@ describe("E2E Tests", () => {
       jest.advanceTimersByTime(6 * 60 * 1000);
 
       const retryResponse = await login("spica", "wrongPassword");
-
-      const retryExpectedMessages = [
-        "Too many failed login attempts. Try again after 4 minutes.",
-        "Too many failed login attempts. Try again after 3 minutes 59 seconds."
-      ];
-      const retryFound = retryExpectedMessages.some(msg =>
-        retryResponse.body.message.includes(msg)
+      expect(retryResponse.body.message).toEqual(
+        "Too many failed login attempts. Try again after 4 minutes."
       );
-      expect(retryFound).toBe(true);
     });
 
     it("should unlock after the lock time expires", async () => {
@@ -972,7 +961,7 @@ describe("E2E Tests", () => {
       expect(token).toBeDefined();
     });
 
-    it("should lock again", async () => {
+    it("should give three chances after the block duration ended", async () => {
       for (const fn of Array(3).fill(() => login("spica", "wrongPassword"))) {
         await fn();
       }

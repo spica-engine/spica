@@ -41,7 +41,7 @@ describe("Identity", () => {
           defaultIdentityPolicies: ["PassportFullAccess"],
           blockingOptions: {
             blockDurationMinutes: 0,
-            failedAttemptLimit: 100
+            failedAttemptLimit: 0
           }
         }),
         PreferenceTestingModule,

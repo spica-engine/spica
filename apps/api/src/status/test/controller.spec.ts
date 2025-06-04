@@ -138,7 +138,7 @@ describe("Status", () => {
             secretOrKey: "spica",
             entryLimit: 20,
             blockingOptions: {
-              failedAttemptLimit: 100,
+              failedAttemptLimit: 0,
               blockDurationMinutes: 0
             },
             refreshTokenExpiresIn: 1000

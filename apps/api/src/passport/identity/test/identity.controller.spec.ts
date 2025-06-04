@@ -36,7 +36,7 @@ describe("Identity Controller", () => {
           secretOrKey: "spica",
           blockingOptions: {
             blockDurationMinutes: 0,
-            failedAttemptLimit: 100
+            failedAttemptLimit: 0
           }
         }),
         PolicyModule.forRoot()

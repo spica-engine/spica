@@ -48,7 +48,7 @@ describe("identity-settings", () => {
         secretOrKey: "secret",
         blockingOptions: {
           blockDurationMinutes: 0,
-          failedAttemptLimit: 100
+          failedAttemptLimit: 0
         },
         refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN
       }),

@@ -123,7 +123,7 @@ const args = yargs(process.argv.slice(2))
     "passport-identity-failed-login-attempt-limit": {
       number: true,
       description: "Maximum failed login attempt before blocking further attempts.",
-      default: 3
+      default: 0
     },
     "passport-identity-block-duration-after-failed-login-attempts": {
       number: true,
