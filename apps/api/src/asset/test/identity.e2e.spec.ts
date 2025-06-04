@@ -143,7 +143,7 @@ describe("identity-settings", () => {
     let identitySettings = await getIdentitySettings();
     expect(identitySettings).toEqual({
       scope: "passport",
-      identity: {attributes: {type: "object"}}
+      identity: {attributes: {}}
     });
 
     // INSERT
@@ -192,7 +192,7 @@ describe("identity-settings", () => {
     expect(identitySettings).toEqual({
       _id: identitySettings._id,
       scope: "passport",
-      identity: identitySettingsV2
+      identity: {attributes: {...identitySettingsV1.attributes, ...identitySettingsV2.attributes}}
     });
 
     // DELETE PREVIEW
@@ -222,7 +222,7 @@ describe("identity-settings", () => {
     expect(identitySettings).toEqual({
       _id: identitySettings._id,
       scope: "passport",
-      identity: identitySettingsV2
+      identity: {attributes: {...identitySettingsV1.attributes, ...identitySettingsV2.attributes}}
     });
 
     // DELETE
@@ -241,7 +241,7 @@ describe("identity-settings", () => {
     expect(identitySettings).toEqual({
       _id: identitySettings._id,
       scope: "passport",
-      identity: {attributes: {}}
+      identity: identitySettingsV1
     });
   });
 });
