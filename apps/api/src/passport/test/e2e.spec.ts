@@ -195,8 +195,8 @@ describe("E2E Tests", () => {
         audience: "spica",
         defaultIdentityPolicies: ["PassportFullAccess"],
         blockingOptions: {
-          failedAttemptLimit: 100,
-          blockDurationMinutes: 0
+          failedAttemptLimit: 3,
+          blockDurationMinutes: 10
         }
       }),
       PreferenceTestingModule,
@@ -728,6 +728,56 @@ describe("E2E Tests", () => {
           expect(res.body.message).toEqual("Unauthorized");
         });
       });
+    });
+  });
+
+  describe("Login attempts", () => {
+    beforeEach(async () => {
+      const module = await Test.createTestingModule(moduleMetaData).compile();
+
+      req = module.get(Request);
+      app = module.createNestApplication();
+
+      await app.listen(req.socket);
+
+      // WAIT UNTIL IDENTITY IS INSERTED
+      await new Promise((resolve, _) => setTimeout(resolve, 3000));
+    });
+
+    const loginWithWrongPassword = () =>
+      req.post("/passport/identify", {
+        identifier: "spica",
+        password: "wrongPassword"
+      });
+
+    it("should block if the attempt limit is exceeded ", async () => {
+      const responses = [];
+      for (const fn of Array(3).fill(loginWithWrongPassword)) {
+        responses.push(await fn());
+      }
+
+      const responseWithBlockedError = responses.at(-1);
+
+      expect(responseWithBlockedError.statusCode).toEqual(401);
+      expect(responseWithBlockedError.statusText).toEqual("Unauthorized");
+      expect(responseWithBlockedError.body.message).toContain(
+        "Too many failed login attempts. Try again after"
+      );
+
+      await login();
+      expect(token).toBeUndefined();
+    });
+
+    it("should unlock after the lock time expires", async () => {
+      for (const fn of Array(3).fill(loginWithWrongPassword)) {
+        await fn();
+      }
+
+      jest.useFakeTimers();
+      jest.advanceTimersByTime(11 * 60 * 1000);
+
+      await login();
+      expect(token).toBeDefined();
     });
   });
 });
