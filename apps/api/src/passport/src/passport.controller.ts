@@ -18,7 +18,8 @@ import {
   Inject,
   Res,
   Next,
-  Optional
+  Optional,
+  Headers
 } from "@nestjs/common";
 import {IdentityService} from "@spica-server/passport/identity";
 import {Identity, LoginCredentials} from "@spica-server/interface/passport/identity";
@@ -53,6 +54,7 @@ export class PassportController {
   }
 
   identityToken = new Map<string, any>();
+  refreshTokenMap = new Map<string, any>();
 
   setIdentityToken(id, token) {
     this.identityToken.set(id, token);
@@ -60,6 +62,19 @@ export class PassportController {
 
   deleteIdentityToken(id) {
     this.identityToken.delete(id);
+  }
+
+  setRefreshToken(id, token) {
+    this.refreshTokenMap.set(id, token);
+  }
+
+  deleteRefreshToken(id) {
+    this.refreshTokenMap.delete(id);
+  }
+
+  setRefreshTokenCookie(res: any, token: string) {
+    const path = "passport/session/refresh";
+    res.cookie("refreshToken", token, this.identityService.getCookieOptions(path));
   }
 
   stateReqs = new Map<string, any>();
@@ -79,6 +94,8 @@ export class PassportController {
           this.completeIdentifyWithState,
           this.setIdentityToken,
           this.deleteIdentityToken,
+          this.setRefreshToken,
+          this.deleteRefreshToken,
           this.setAssertObservers,
           this.deleteAssertObservers
         ],
@@ -153,26 +170,33 @@ export class PassportController {
       return;
     }
 
-    const body = await this.signIdentity(identity, expires);
-    res.status(200).json(body);
+    const {tokenSchema, refreshTokenSchema} = await this.signIdentity(identity, expires);
+    this.setRefreshTokenCookie(res, refreshTokenSchema.token);
+    res.status(200).json(tokenSchema);
   }
 
   async signIdentity(identity: Identity, expiresIn: number) {
     const tokenSchema = this.identityService.sign(identity, expiresIn);
+    const refreshTokenSchema = await this.identityService.signRefreshToken(identity);
 
     const id = identity._id.toHexString();
     if (this.authFactor.hasFactor(id)) {
       this.setIdentityToken(id, tokenSchema);
-      setTimeout(() => this.deleteIdentityToken(id), this.SESSION_TIMEOUT_MS);
+      this.setRefreshToken(id, refreshTokenSchema);
+
+      setTimeout(() => {
+        this.deleteIdentityToken(id);
+        this.deleteRefreshToken(id);
+      }, this.SESSION_TIMEOUT_MS);
 
       const challenge = await this.authFactor.start(id);
-
-      return {
+      const factorRes = {
         challenge,
         answerUrl: `passport/identify/${identity._id}/factor-authentication`
       };
+      return {factorRes};
     } else {
-      return tokenSchema;
+      return {tokenSchema, refreshTokenSchema};
     }
   }
 
@@ -197,12 +221,18 @@ export class PassportController {
       return;
     }
 
-    const body = await this.signIdentity(identity, expires).catch(catchError);
-    if (!body) {
+    const identifyResult = await this.signIdentity(identity, expires).catch(catchError);
+    if (!identifyResult) {
       return;
     }
 
-    return res.status(200).json(body);
+    const {refreshTokenSchema, factorRes, tokenSchema} = identifyResult;
+    if (factorRes) {
+      return res.status(200).json(factorRes);
+    }
+
+    this.setRefreshTokenCookie(res, refreshTokenSchema.token);
+    return res.status(200).json(tokenSchema);
   }
 
   @Get("identify")
@@ -232,7 +262,7 @@ export class PassportController {
   }
 
   @Post("identify/:id/factor-authentication")
-  async authenticateWithFactor(@Param("id") id: string, @Body() body) {
+  async authenticateWithFactor(@Param("id") id: string, @Body() body, @Res() res) {
     const hasFactor = this.authFactor.hasFactor(id);
     const token = this.identityToken.get(id);
 
@@ -248,15 +278,41 @@ export class PassportController {
 
     const isAuthenticated = await this.authFactor.authenticate(id, answer).catch(e => {
       this.deleteIdentityToken(id);
+      this.deleteRefreshToken(id);
       throw new BadRequestException(e);
     });
 
     if (!isAuthenticated) {
       this.deleteIdentityToken(id);
+      this.deleteRefreshToken(id);
+
       throw new UnauthorizedException();
     }
 
-    return this.identityToken.get(id);
+    const refreshTokenSchema = this.refreshTokenMap.get(id);
+    this.setRefreshTokenCookie(res, refreshTokenSchema.token);
+    return res.status(200).json(this.identityToken.get(id));
+  }
+
+  @Post("session/refresh")
+  async refreshToken(
+    @Headers("authorization") accessToken: string,
+    @Req() req: any,
+    @Res() res: any
+  ) {
+    const {refreshToken} = req.cookies || {};
+
+    if (!refreshToken) {
+      throw new UnauthorizedException("Refresh token does not exist.");
+    }
+
+    let tokenSchema;
+    try {
+      tokenSchema = await this.identityService.refreshToken(accessToken, refreshToken);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+    res.status(200).json(tokenSchema);
   }
 
   @Get("strategies")

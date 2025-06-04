@@ -24,6 +24,7 @@ import https from "https";
 import path from "path";
 import yargs from "yargs/yargs";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
 
 const args = yargs(process.argv.slice(2))
   /* TLS Options */
@@ -123,6 +124,11 @@ const args = yargs(process.argv.slice(2))
       number: true,
       description: "Maximum lifespan of the requested JWT token can have. Unit: second"
     },
+    "passport-identity-refresh-token-expires-in": {
+      number: true,
+      description: "Default lifespan of the issued refresh JWT tokens. Unit: second",
+      default: 60 * 60 * 24 * 3
+    },
     "passport-default-identity-identifier": {
       string: true,
       description: "Identifier of the default identity.",
@@ -157,7 +163,8 @@ const args = yargs(process.argv.slice(2))
         "PreferenceFullAccess",
         "StatusFullAccess",
         "AssetFullAccess",
-        "VersionControlFullAccess"
+        "VersionControlFullAccess",
+        "RefreshTokenFullAccess"
       ]
     },
     "passport-identity-limit": {
@@ -501,7 +508,8 @@ const modules = [
     defaultIdentityIdentifier: args["passport-default-identity-identifier"],
     defaultIdentityPassword: args["passport-default-identity-password"],
     audience: "spica.io",
-    samlCertificateTTL: args["passport-saml-certificate-ttl"]
+    samlCertificateTTL: args["passport-saml-certificate-ttl"],
+    refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"]
   }),
   FunctionModule.forRoot({
     logExpireAfterSeconds: args["common-log-lifespan"],
@@ -605,6 +613,8 @@ NestFactory.create(RootModule, {
       )
     );
   }
+
+  app.use(cookieParser());
 
   const {port} = await args;
   await app.listen(port);

@@ -13,6 +13,7 @@ import {PreferenceModule} from "@spica-server/preference";
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
+const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
 
 describe("identity-settings", () => {
   function downloadAsset(asset) {
@@ -44,7 +45,8 @@ describe("identity-settings", () => {
         expiresIn: EXPIRES_IN,
         issuer: "spica",
         maxExpiresIn: MAX_EXPIRES_IN,
-        secretOrKey: "secret"
+        secretOrKey: "secret",
+        refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN
       }),
       PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
       SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),

@@ -15,6 +15,9 @@
       "path": "../policy"
     },
     {
+      "path": "../refresh_token/services"
+    },
+    {
       "path": "../authfactor"
     },
     {
