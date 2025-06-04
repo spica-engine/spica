@@ -109,17 +109,10 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     const decodedToken = this.decode(token);
     const identifier = decodedToken ? decodedToken.identifier : undefined;
 
-    const notFoundMessage = "Identifier does not exist";
-    let identity: Identity | null;
-    try {
-      identity = await this.findOne({identifier});
-    } catch (error) {
-      console.error(notFoundMessage, error);
-      return Promise.reject(notFoundMessage);
-    }
+    const identity = await this.findOne({identifier});
 
     if (!identity) {
-      return Promise.reject(notFoundMessage);
+      return Promise.reject("Identifier does not exist");
     }
     return identity;
   }
