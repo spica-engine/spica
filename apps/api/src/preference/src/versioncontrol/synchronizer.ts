@@ -51,7 +51,7 @@ export const getSynchronizer = (
         converter: {withoutID: true}
       },
       {
-        converter: {resourceType: "document"},
+        converter: {resourceType: "document", notObjectID: true},
         applier: {insert: upsert, update: upsert, delete: remove}
       }
     ],

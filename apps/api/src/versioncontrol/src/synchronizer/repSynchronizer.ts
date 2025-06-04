@@ -28,7 +28,7 @@ export function getRepToDocConverter<R extends Resource>(
   return change => {
     const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
 
-    const _id = new ObjectId(change.resource._id);
+    const _id = props.notObjectID ? change.resource._id : new ObjectId(change.resource._id);
 
     const documentResource = {...parsed, _id};
     const fileResource = {_id, content: change.resource.content};

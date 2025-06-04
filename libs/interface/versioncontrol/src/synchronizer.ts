@@ -202,7 +202,7 @@ export type VCSynchronizerArgs<R1 extends Resource> = Omit<
     },
     {
       watcher?: {filesToWatch: {name: string; extension: string}[]; eventsToWatch?: string[]};
-      converter: {resourceType: "document" | "file"};
+      converter: {resourceType: "document" | "file"; notObjectID?: boolean};
       applier: {
         insert: (resource: R1) => unknown;
         update: (resource: R1) => unknown;
