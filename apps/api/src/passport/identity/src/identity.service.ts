@@ -105,10 +105,23 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     return Promise.resolve();
   }
 
-  private findIdentityOfToken(token: string) {
+  private async findIdentityOfToken(token: string) {
     const decodedToken = this.decode(token);
     const identifier = decodedToken ? decodedToken.identifier : undefined;
-    return this.findOne({identifier});
+
+    const notFoundMessage = "Identifier does not exist";
+    let identity: Identity | null;
+    try {
+      identity = await this.findOne({identifier});
+    } catch (error) {
+      console.error(notFoundMessage, error);
+      return Promise.reject(notFoundMessage);
+    }
+
+    if (!identity) {
+      return Promise.reject(notFoundMessage);
+    }
+    return identity;
   }
 
   async refreshToken(accessToken: string, refreshToken: string) {
