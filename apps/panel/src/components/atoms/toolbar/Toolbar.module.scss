@@ -5,6 +5,13 @@
   padding: 0 var(--padding-md);
   .flexElement {
     padding: var(--padding-md) 0;
+    .menuButton {
+      display: none;
+
+      @media (max-width: 1280px) {
+        display: block;
+      }
+    }
   }
   .button {
     background-color: white !important;

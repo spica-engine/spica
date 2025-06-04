@@ -1,16 +1,15 @@
 import {Button, FlexElement, FluidContainer, Icon} from "oziko-ui-kit";
 import React, {memo, useState, type FC} from "react";
 import styles from "./Toolbar.module.scss";
-import {useUIContext} from "../../../context/UIContext";
 
 type TypeToolbar = {
   token: string;
   name: string;
+  onDrawerOpen?: () => void;
 };
 
-const Toolbar: FC<TypeToolbar> = ({token, name}) => {
+const Toolbar: FC<TypeToolbar> = ({token, name, onDrawerOpen}) => {
   const [copied, setCopied] = useState(false);
-  const {isSmallScreen, openDrawer} = useUIContext();
 
   const handleCopy = () => {
     navigator.clipboard
@@ -25,21 +24,20 @@ const Toolbar: FC<TypeToolbar> = ({token, name}) => {
   };
   return (
     <FluidContainer
-      dimensionX={"fill"}
+      dimensionX="fill"
       className={styles.toolbar}
       prefix={{
         children: (
           <FlexElement className={styles.flexElement} gap={10}>
-            {isSmallScreen && (
-              <Button
-                variant="icon"
-                shape="circle"
-                onClick={openDrawer}
-                className={`${styles.menuButton}`}
-              >
-                <Icon name="sort" />
-              </Button>
-            )}
+            <Button
+              variant="icon"
+              shape="circle"
+              onClick={onDrawerOpen}
+              className={styles.menuButton}
+            >
+              <Icon name="sort" />
+            </Button>
+
             <span className={styles.text}>{token}</span>
             <Button
               variant="icon"
@@ -57,7 +55,7 @@ const Toolbar: FC<TypeToolbar> = ({token, name}) => {
           <FlexElement className={styles.flexElement} gap={10}>
             <span className={styles.text}>{name}</span>
             <Button variant="icon" shape="circle" className={styles.button} onClick={() => {}}>
-              <Icon name={"identities"}></Icon> {/* Todo! change icon name */}
+              <Icon name="person" />
             </Button>
           </FlexElement>
         )
