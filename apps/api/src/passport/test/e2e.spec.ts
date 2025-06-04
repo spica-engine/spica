@@ -253,6 +253,8 @@ describe("E2E Tests", () => {
     token = response.body.token;
 
     cookies = response.headers["set-cookie"] as unknown as string[];
+
+    return response;
   }
 
   describe("JWT", () => {
@@ -911,45 +913,77 @@ describe("E2E Tests", () => {
 
       // WAIT UNTIL IDENTITY IS INSERTED
       await new Promise((resolve, _) => setTimeout(resolve, 3000));
+
+      jest.useFakeTimers({doNotFake: ["nextTick"]});
     });
 
-    const loginWithWrongPassword = () =>
-      req.post("/passport/identify", {
-        identifier: "spica",
-        password: "wrongPassword"
-      });
+    afterEach(() => {
+      jest.useRealTimers();
+    });
 
     it("should block if the attempt limit is exceeded ", async () => {
       const responses = [];
-      for (const fn of Array(3).fill(loginWithWrongPassword)) {
+      for (const fn of Array(3).fill(() => login("spica", "wrongPassword"))) {
         responses.push(await fn());
       }
 
-      const responseWithBlockedError = responses.at(-1);
+      const responseWithBlockedError = responses[responses.length - 1];
 
       expect(responseWithBlockedError.statusCode).toEqual(401);
       expect(responseWithBlockedError.statusText).toEqual("Unauthorized");
-      expect(responseWithBlockedError.body.message).toContain(
-        "Too many failed login attempts. Try again after"
+
+      const expectedMessages = [
+        "Too many failed login attempts. Try again after 10 minutes.",
+        "Too many failed login attempts. Try again after 9 minutes 59 seconds."
+      ];
+      const found = expectedMessages.some(msg =>
+        responseWithBlockedError.body.message.includes(msg)
       );
+      expect(found).toBe(true);
 
       await login();
       expect(token).toBeUndefined();
+
+      jest.advanceTimersByTime(6 * 60 * 1000);
+
+      const retryResponse = await login("spica", "wrongPassword");
+
+      const retryExpectedMessages = [
+        "Too many failed login attempts. Try again after 4 minutes.",
+        "Too many failed login attempts. Try again after 3 minutes 59 seconds."
+      ];
+      const retryFound = retryExpectedMessages.some(msg =>
+        retryResponse.body.message.includes(msg)
+      );
+      expect(retryFound).toBe(true);
     });
 
     it("should unlock after the lock time expires", async () => {
-      for (const fn of Array(3).fill(loginWithWrongPassword)) {
+      for (const fn of Array(3).fill(() => login("spica", "wrongPassword"))) {
         await fn();
       }
 
       await login();
       expect(token).toBeUndefined();
 
-      jest.useFakeTimers({doNotFake: ["nextTick"]});
       jest.advanceTimersByTime(11 * 60 * 1000);
 
       await login();
-      jest.useRealTimers();
+      expect(token).toBeDefined();
+    });
+
+    it("should lock again", async () => {
+      for (const fn of Array(3).fill(() => login("spica", "wrongPassword"))) {
+        await fn();
+      }
+
+      jest.advanceTimersByTime(11 * 60 * 1000);
+
+      for (const fn of Array(2).fill(() => login("spica", "wrongPassword"))) {
+        const res = await fn();
+        expect(res.body.message).toEqual("Identifier or password was incorrect.");
+      }
+      await login();
       expect(token).toBeDefined();
     });
   });
