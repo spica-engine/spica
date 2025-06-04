@@ -21,6 +21,7 @@ import {initializeOAuthServices} from "./strategy/services/oauth/oauth.service";
 import {AuthFactorModule} from "@spica-server/passport/authfactor";
 import LoginSchema from "./schemas/login.json" with {type: "json"};
 import StrategySchema from "./schemas/strategy.json" with {type: "json"};
+import {RefreshTokenModule} from "@spica-server/passport/refresh_token";
 
 @Global()
 @Module({})
@@ -59,6 +60,7 @@ export class PassportModule {
           expiresIn: options.expiresIn,
           maxExpiresIn: options.maxExpiresIn,
           issuer: options.issuer,
+          refreshTokenExpiresIn: options.refreshTokenExpiresIn,
           secretOrKey: options.secretOrKey,
           audience: options.audience,
           defaultIdentityIdentifier: options.defaultIdentityIdentifier,
@@ -69,6 +71,9 @@ export class PassportModule {
         }),
         PolicyModule.forRoot(),
         ApiKeyModule.forRoot(),
+        RefreshTokenModule.forRoot({
+          expiresIn: options.refreshTokenExpiresIn
+        }),
         AuthFactorModule
       ],
       providers: [

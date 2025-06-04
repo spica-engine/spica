@@ -58,6 +58,7 @@ export interface IdentityOptions {
     failedAttemptLimit: number;
     blockDurationMinutes: number;
   };
+  refreshTokenExpiresIn?: number;
 }
 
 export const IDENTITY_OPTIONS = Symbol.for("IDENTITY_OPTIONS");

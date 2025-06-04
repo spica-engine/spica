@@ -140,7 +140,8 @@ describe("Status", () => {
             blockingOptions: {
               failedAttemptLimit: 100,
               blockDurationMinutes: 0
-            }
+            },
+            refreshTokenExpiresIn: 1000
           })
         ]
       }).compile();

@@ -24,6 +24,7 @@ import {AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {registerAssetHandlers} from "./asset";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
 
 @Global()
 @Module({})
@@ -59,6 +60,7 @@ export class IdentityModule {
         AUTH_RESOLVER
       ],
       imports: [
+        RefreshTokenServicesModule,
         JwtModule.register({
           secret: options.secretOrKey,
           signOptions: {

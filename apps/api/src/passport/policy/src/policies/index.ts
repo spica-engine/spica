@@ -41,6 +41,9 @@ import AssetReadOnlyAccess from "./asset.readonly";
 
 import VersionControlFullAccess from "./version.fullaccess";
 
+import RefreshTokenFullAccess from "./passport/refresh.token.fullaccess";
+import RefreshTokenReadonlyAccess from "./passport/refresh.token.readonly";
+
 export default [
   ApiKeyFullAccess,
   ApiKeyReadOnlyAccess,
@@ -83,5 +86,8 @@ export default [
   AssetFullaccess,
   AssetReadOnlyAccess,
 
-  VersionControlFullAccess
+  VersionControlFullAccess,
+
+  RefreshTokenFullAccess,
+  RefreshTokenReadonlyAccess
 ];
