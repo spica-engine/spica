@@ -942,10 +942,14 @@ describe("E2E Tests", () => {
         await fn();
       }
 
-      jest.useFakeTimers();
+      await login();
+      expect(token).toBeUndefined();
+
+      jest.useFakeTimers({doNotFake: ["nextTick"]});
       jest.advanceTimersByTime(11 * 60 * 1000);
 
       await login();
+      jest.useRealTimers();
       expect(token).toBeDefined();
     });
   });
