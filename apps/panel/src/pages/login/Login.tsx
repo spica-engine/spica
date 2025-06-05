@@ -1,24 +1,43 @@
-import React, {memo} from "react";
+import React, {memo, useState} from "react";
 import {useFormik} from "formik";
-import * as Yup from "yup";
 import {BaseInput, Button, FlexElement, Icon, Input, StringInput, Text} from "oziko-ui-kit";
 import styles from "./Login.module.scss";
 import Logo from "../../components/atoms/logo/Logo";
+import {identify} from "../../services/passport/identify";
+import {useNavigate} from "react-router-dom";
 
-const validationSchema = Yup.object({
-  name: Yup.string().min(3, "Name must be at least 3 characters").required("Name is required"),
-  password: Yup.string()
-    .min(3, "Password must be at least 3 characters")
-    .required("Password is required")
-});
+const getErrorMessage = (error: any): string => {
+  return error.response?.data?.message || "An unexpected error occurred. Please try again.";
+};
 
 const Login = () => {
+  const navigate = useNavigate();
+  const [loginError, setLoginError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const handleLogin = async (values: {identifier: string; password: string}) => {
+    setIsLoading(true);
+
+    try {
+      const response = await identify(values);
+      if (response.data && response.data.token) {
+        // localStorage.setItem('token', response.data.token);
+        navigate("/home");
+      } else {
+        throw new Error("Invalid response: No authentication token received");
+      }
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      console.error("Login failed:", error);
+      setLoginError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const formik = useFormik({
-    initialValues: {name: "", password: ""},
-    validationSchema,
-    onSubmit: values => {
-      console.log("Login with:", values);
-    },
+    initialValues: {identifier: "", password: ""},
+    onSubmit: handleLogin,
     validateOnChange: false,
     validateOnBlur: false
   });
@@ -40,14 +59,17 @@ const Login = () => {
           >
             <Logo size="xl" />
 
+            {loginError && <div className={styles.errorText}>{loginError}</div>}
+
             <StringInput
-              id="name"
+              id="identifier"
               label="Name"
-              value={formik.values.name}
-              onChange={(value: string) => formik.setFieldValue("name", value)}
-              onBlur={() => formik.setFieldTouched("name", true)}
+              value={formik.values.identifier}
+              onChange={(value: string) => {
+                formik.setFieldValue("identifier", value);
+              }}
+              onBlur={() => formik.setFieldTouched("identifier", true)}
             />
-            {formik.errors.name && <div className={styles.errorText}>{formik.errors.name}</div>}
 
             <BaseInput
               dimensionX="fill"
@@ -70,16 +92,22 @@ const Login = () => {
               <Input
                 id="password"
                 value={formik.values.password}
-                onChange={event => formik.setFieldValue("password", event.target.value)}
+                onChange={event => {
+                  formik.setFieldValue("password", event.target.value);
+                }}
                 onBlur={() => formik.setFieldTouched("password", true)}
                 type="password"
               />
             </BaseInput>
-            {formik.errors.password && (
-              <div className={styles.errorText}>{formik.errors.password}</div>
-            )}
-
-            <Button fullWidth type="submit">
+            <Button
+              fullWidth
+              type="submit"
+              disabled={
+                formik.values.identifier.length < 3 ||
+                formik.values.password.length < 3 ||
+                isLoading
+              }
+            >
               <Icon name="login" />
               Login
             </Button>
