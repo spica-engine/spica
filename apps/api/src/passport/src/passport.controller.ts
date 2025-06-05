@@ -157,6 +157,7 @@ export class PassportController {
         password: undefined,
         policies: [],
         attributes: user,
+        lastPasswords: [],
         failedAttempts: [],
         lastLogin: undefined
       });
