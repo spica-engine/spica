@@ -377,7 +377,10 @@ export class IdentityController {
         identifier: identity.identifier
       });
 
-      const desiredPassword = await hash(identity.password);
+      const isEqual = await compare(identity.password, currentPassword);
+      if (!isEqual) {
+        identity.deactivateJwtsBefore = Date.now() / 1000;
+      }
 
       if (this.options.passwordHistoryUniquenessCount > 0) {
         identity.lastPasswords = lastPasswords || [];
@@ -399,7 +402,7 @@ export class IdentityController {
         }
       }
 
-      identity.password = desiredPassword;
+      identity.password = await hash(identity.password);
     }
 
     delete identity.authFactor;
