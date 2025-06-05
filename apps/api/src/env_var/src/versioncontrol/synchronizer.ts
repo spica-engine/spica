@@ -1,26 +1,20 @@
-import {FunctionService} from "@spica-server/function/services";
 import {
   DocChange,
   RepChange,
   RepresentativeManagerResource,
   VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
-import {FunctionEngine} from "../engine";
-import {LogService} from "@spica-server/function/log/src/log.service";
 import * as CRUD from "../crud";
-import {Function} from "@spica-server/interface/function";
+import {EnvVarService} from "@spica-server/env_var/services";
+import {EnvVar} from "@spica-server/interface/env_var";
 import YAML from "yaml";
 import {ObjectId} from "bson";
 
-export const getSchemaSynchronizer = (
-  fs: FunctionService,
-  engine: FunctionEngine,
-  logs: LogService
-): VCSynchronizerArgs<Function> => {
+export const getSynchronizer = (evs: EnvVarService): VCSynchronizerArgs<EnvVar> => {
   const fileName = "schema";
   const extension = "yaml";
 
-  const convertToRepResource = (change: DocChange<Function>) => ({
+  const convertToRepResource = (change: DocChange<EnvVar>) => ({
     _id: change.resource._id.toString(),
     content: YAML.stringify(change.resource)
   });
@@ -30,16 +24,10 @@ export const getSchemaSynchronizer = (
     return {...parsed, _id: new ObjectId(change.resource._id)};
   };
 
-  const insert = async (fn: Function) => {
-    fn = await CRUD.insert(fs, engine, fn);
-    // check whether we really need to update index
-    await engine.update(fn, "");
-  };
-
   return {
     syncs: [
       {
-        watcher: {collectionService: fs},
+        watcher: {collectionService: evs},
         converter: {convertToRepResource},
         applier: {fileName, getExtension: () => extension}
       },
@@ -47,13 +35,13 @@ export const getSchemaSynchronizer = (
         watcher: {filesToWatch: [{name: fileName, extension}]},
         converter: {convertToDocResource},
         applier: {
-          insert: insert,
-          update: (fn: Function) => CRUD.replace(fs, engine, fn),
-          delete: (fn: Function) => CRUD.remove(fs, engine, logs, fn._id)
+          insert: (envVar: EnvVar) => CRUD.insert(evs, envVar),
+          update: (envVar: EnvVar) => CRUD.replace(evs, envVar),
+          delete: (envVar: EnvVar) => CRUD.remove(evs, envVar._id)
         }
       }
     ],
-    moduleName: "function",
+    moduleName: "env-var",
     subModuleName: "schema"
   };
 };
