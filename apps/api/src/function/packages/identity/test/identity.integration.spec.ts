@@ -38,7 +38,8 @@ describe("Identity", () => {
           defaultIdentityIdentifier: "spica",
           defaultIdentityPassword: "spica",
           audience: "spica",
-          defaultIdentityPolicies: ["PassportFullAccess"]
+          defaultIdentityPolicies: ["PassportFullAccess"],
+          passwordHistoryUniquenessCount: 0
         }),
         PreferenceTestingModule,
         CoreTestingModule,
