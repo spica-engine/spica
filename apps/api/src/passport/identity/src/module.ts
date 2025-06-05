@@ -40,7 +40,9 @@ export class IdentityModule {
         identifier: options.defaultIdentityIdentifier,
         password: options.defaultIdentityPassword,
         policies: options.defaultIdentityPolicies,
-        lastPasswords: []
+        lastPasswords: [],
+        failedAttempts: [],
+        lastLogin: undefined
       });
     }
     registerStatusProvider(identityService);

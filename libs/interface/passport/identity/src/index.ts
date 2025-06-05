@@ -22,6 +22,8 @@ export interface Identity {
   };
   authFactor?: FactorMeta;
   lastPasswords: string[];
+  lastLogin: Date;
+  failedAttempts: Date[];
 }
 
 export interface LoginCredentials {
@@ -53,6 +55,10 @@ export interface IdentityOptions {
   defaultIdentityPassword?: string;
   defaultIdentityPolicies?: string[];
   entryLimit?: number;
+  blockingOptions: {
+    failedAttemptLimit: number;
+    blockDurationMinutes: number;
+  };
   refreshTokenExpiresIn?: number;
   passwordHistoryUniquenessCount: number;
 }

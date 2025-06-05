@@ -46,6 +46,10 @@ describe("identity-settings", () => {
         issuer: "spica",
         maxExpiresIn: MAX_EXPIRES_IN,
         secretOrKey: "secret",
+        blockingOptions: {
+          blockDurationMinutes: 0,
+          failedAttemptLimit: 0
+        },
         refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
         passwordHistoryUniquenessCount: 0
       }),
