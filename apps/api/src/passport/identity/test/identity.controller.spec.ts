@@ -33,7 +33,8 @@ describe("Identity Controller", () => {
           expiresIn: 1000,
           issuer: "spica",
           maxExpiresIn: 1000,
-          secretOrKey: "spica"
+          secretOrKey: "spica",
+          passwordHistoryUniquenessCount: 0
         }),
         PolicyModule.forRoot()
       ]
