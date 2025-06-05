@@ -14,6 +14,7 @@ import {parse} from "url";
 import samlp from "samlp";
 
 import cookieParser from "cookie-parser";
+import {jwtDecode} from "jwt-decode";
 
 const EXPIRES_IN = 60_000;
 
@@ -229,7 +230,7 @@ describe("E2E Tests", () => {
         audience: "spica",
         defaultIdentityPolicies: ["PassportFullAccess"],
         refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
-        passwordHistoryUniquenessCount: 0
+        passwordHistoryUniquenessCount: 2
       }),
       PreferenceTestingModule,
       CoreTestingModule
@@ -250,6 +251,8 @@ describe("E2E Tests", () => {
     token = response.body.token;
 
     cookies = response.headers["set-cookie"] as unknown as string[];
+
+    return response;
   }
 
   describe("JWT", () => {
@@ -894,6 +897,98 @@ describe("E2E Tests", () => {
           expect(res.body.message).toEqual("Unauthorized");
         });
       });
+    });
+  });
+
+  describe("Prevent reusing old passwords", () => {
+    let identityID: string;
+
+    beforeEach(async () => {
+      const module = await Test.createTestingModule(moduleMetaData).compile();
+
+      req = module.get(Request);
+      app = module.createNestApplication();
+
+      app.use(cookieParser());
+
+      await app.listen(req.socket);
+
+      // WAIT UNTIL IDENTITY IS INSERTED
+      await new Promise((resolve, _) => setTimeout(resolve, 3000));
+
+      await login();
+
+      identityID = await req
+        .get("/passport/identity", {}, {Authorization: `IDENTITY ${token}`})
+        .then(r => r.body[0]._id);
+    });
+
+    const updatePassword = (newPassword: string) =>
+      req.put(
+        `/passport/identity/${identityID}`,
+        {identifier: "spica", password: newPassword},
+        {Authorization: `IDENTITY ${token}`}
+      );
+
+    const sleep = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+    it("should prevent password update if it is current one", async () => {
+      const errRes = await updatePassword("spica");
+      expect(errRes.statusCode).toEqual(400);
+      expect(errRes.body.message).toEqual("New password can't be the one of last 2 passwords.");
+    });
+
+    it("should prevent password update if it was one of the last used", async () => {
+      const updateResponse = await updatePassword("newPassword");
+      expect(updateResponse.statusCode).toEqual(200);
+
+      await sleep(1000);
+      await login("spica", "newPassword");
+
+      const errRes = await updatePassword("spica");
+      expect(errRes.statusCode).toEqual(400);
+      expect(errRes.body.message).toEqual("New password can't be the one of last 2 passwords.");
+
+      const reUpdateResponse = await updatePassword("brandNewPassword");
+      expect(reUpdateResponse.statusCode).toEqual(200);
+
+      await sleep(1000);
+      await login("spica", "brandNewPassword");
+
+      const repeatErrRes = await updatePassword("newPassword");
+      expect(repeatErrRes.statusCode).toEqual(400);
+      expect(repeatErrRes.body.message).toEqual(
+        "New password can't be the one of last 2 passwords."
+      );
+    });
+
+    it("should not prevent password update if it is not in the last passwords array", async () => {
+      const updateResponse = await updatePassword("newPassword");
+      expect(updateResponse.statusCode).toEqual(200);
+
+      await sleep(1000);
+      await login("spica", "newPassword");
+
+      const errRes = await updatePassword("spica");
+      expect(errRes.statusCode).toEqual(400);
+      expect(errRes.body.message).toEqual("New password can't be the one of last 2 passwords.");
+
+      await updatePassword("brandNewPassword");
+
+      await sleep(1000);
+      await login("spica", "brandNewPassword");
+
+      const reUpdateResponse = await updatePassword("spica");
+      expect(reUpdateResponse.statusCode).toEqual(200);
+    });
+
+    it("should not return last passwords", async () => {
+      const res = await login();
+
+      expect(res).not.toHaveProperty("lastPasswords");
+      expect(res.headers).not.toHaveProperty("lastPasswords");
+      expect(res.body).not.toHaveProperty("lastPasswords");
+      expect(jwtDecode(token)).not.toHaveProperty("lastPasswords");
     });
   });
 });
