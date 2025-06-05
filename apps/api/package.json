@@ -69,6 +69,7 @@
     "nodemon": "^3.1.9",
     "pngjs": "^7.0.0",
     "rollup": "^4.31.0",
-    "samlp": "^7.1.1"
+    "samlp": "^7.1.1",
+    "testcontainers": "^10.0.0"
   }
 }

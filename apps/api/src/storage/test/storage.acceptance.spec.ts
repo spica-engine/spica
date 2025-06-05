@@ -62,6 +62,9 @@ describe("Storage Acceptance", () => {
     req = module.get(Request);
     await app.listen(req.socket);
 
+    // wait for indexes
+    await new Promise((resolve, _) => setTimeout(resolve, 1000));
+
     await addTextObjects();
   }
 
@@ -591,14 +594,13 @@ describe("Storage Acceptance", () => {
         }
       ];
 
-      await req
-        .post("/storage", serialize({content: objects}), {
-          "Content-Type": "application/bson"
-        })
-        .catch(error => {
-          expect(error.response.statusCode).toBe(400);
-          expect(error.response.message).toBe("An object with this name already exists.");
-        });
+      const res = await req.post("/storage", serialize({content: objects}), {
+        "Content-Type": "application/bson"
+      });
+
+      expect(res.statusCode).toEqual(400);
+      expect(res.statusText).toEqual("Bad Request");
+      expect(res.body.message).toEqual("An object with this name already exists.");
     });
 
     it("should throw an error if the inserted object's data is empty", async () => {
