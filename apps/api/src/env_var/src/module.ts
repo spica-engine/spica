@@ -3,13 +3,9 @@ import {EnvVarService, ServicesModule} from "@spica-server/env_var/services";
 import {EnvVarController} from "./controller";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import EnvVarSchema from "./schema.json" with {type: "json"};
-import {
-  IRepresentativeManager,
-  RepresentativeManagerResource
-} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {registerAssetHandlers} from "./asset";
 import {
-  VC_REPRESENTATIVE_MANAGER,
   REGISTER_VC_SYNCHRONIZER,
   RegisterVCSynchronizer
 } from "@spica-server/interface/versioncontrol";
@@ -37,16 +33,13 @@ export class EnvVarModule {
   constructor(
     evs: EnvVarService,
     @Optional()
-    @Inject(VC_REPRESENTATIVE_MANAGER)
-    private vcRepresentativeManager: IRepresentativeManager,
-    @Optional()
     @Inject(REGISTER_VC_SYNCHRONIZER)
-    registerVCSynchronizer: RegisterVCSynchronizer<EnvVar, RepresentativeManagerResource>,
+    registerVCSynchronizer: RegisterVCSynchronizer<EnvVar>,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
     validator: Validator
   ) {
     if (registerVCSynchronizer) {
-      const synchronizer = getSynchronizer(evs, this.vcRepresentativeManager);
+      const synchronizer = getSynchronizer(evs);
       registerVCSynchronizer(synchronizer);
     }
     registerAssetHandlers(evs, validator, this.assetRepManager);

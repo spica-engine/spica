@@ -1,182 +1,47 @@
 import {
-  IRepresentativeManager,
-  RepresentativeManagerResource
-} from "@spica-server/interface/representative";
-import {
-  ChangeTypes,
   DocChange,
   RepChange,
-  ResourceType,
-  SynchronizerArgs
+  RepresentativeManagerResource,
+  VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
-import {ChangeStreamDocument, ObjectId} from "mongodb";
-import {Observable} from "rxjs";
-import YAML from "yaml";
 import * as CRUD from "../crud";
 import {EnvVarService} from "@spica-server/env_var/services";
 import {EnvVar} from "@spica-server/interface/env_var";
+import YAML from "yaml";
+import {ObjectId} from "bson";
 
-export const getSynchronizer = (
-  evs: EnvVarService,
-  vcRepresentativeManager: IRepresentativeManager
-): SynchronizerArgs<EnvVar, RepresentativeManagerResource> => {
-  const moduleName = "env-var";
+export const getSynchronizer = (evs: EnvVarService): VCSynchronizerArgs<EnvVar> => {
   const fileName = "schema";
   const extension = "yaml";
 
-  const docWatcher = () => {
-    return new Observable<DocChange<EnvVar>>(observer => {
-      const changeStream = evs._coll.watch([], {
-        fullDocument: "updateLookup"
-      });
+  const convertToRepResource = (change: DocChange<EnvVar>) => ({
+    _id: change.resource._id.toString(),
+    content: YAML.stringify(change.resource)
+  });
 
-      changeStream.on("change", (change: ChangeStreamDocument<EnvVar>) => {
-        let changeType: ChangeTypes;
-        let resource: EnvVar;
-
-        switch (change.operationType) {
-          case "insert":
-            changeType = ChangeTypes.INSERT;
-            resource = change.fullDocument!;
-            break;
-
-          case "replace":
-          case "update":
-            changeType = ChangeTypes.UPDATE;
-            resource = change.fullDocument!;
-            break;
-
-          case "delete":
-            changeType = ChangeTypes.DELETE;
-            resource = {_id: change.documentKey._id} as EnvVar;
-            break;
-
-          default:
-            return;
-        }
-
-        const docChange: DocChange<EnvVar> = {
-          resourceType: ResourceType.DOCUMENT,
-          changeType,
-          resource
-        };
-
-        observer.next(docChange);
-      });
-
-      changeStream.on("error", err => observer.error(err));
-      changeStream.on("close", () => observer.complete());
-
-      evs._coll
-        .find()
-        .toArray()
-        .then(envVars => {
-          envVars.forEach(envVar => {
-            const docChange: DocChange<EnvVar> = {
-              resourceType: ResourceType.DOCUMENT,
-              changeType: ChangeTypes.INSERT,
-              resource: envVar
-            };
-
-            observer.next(docChange);
-          });
-        });
-
-      return () => changeStream.close();
-    });
-  };
-
-  const docToRepConverter = (
-    change: DocChange<EnvVar>
-  ): RepChange<RepresentativeManagerResource> => {
-    return {
-      ...change,
-      resourceType: ResourceType.REPRESENTATIVE,
-      resource: {
-        _id: change.resource._id.toString(),
-        content: YAML.stringify(change.resource)
-      }
-    };
-  };
-
-  const repApplier = (change: RepChange<RepresentativeManagerResource>) => {
-    const write = (resource: RepresentativeManagerResource) => {
-      vcRepresentativeManager.write(
-        moduleName,
-        resource._id,
-        fileName,
-        resource.content,
-        extension
-      );
-    };
-
-    const rm = (resource: RepresentativeManagerResource) => {
-      vcRepresentativeManager.rm(moduleName, resource._id);
-    };
-
-    const representativeStrategy = {
-      [ChangeTypes.INSERT]: write,
-      [ChangeTypes.UPDATE]: write,
-      [ChangeTypes.DELETE]: rm
-    };
-
-    representativeStrategy[change.changeType](change.resource);
-  };
-
-  const repWatcher = () => vcRepresentativeManager.watch(moduleName, [`${fileName}.${extension}`]);
-
-  const repToDocConverter = (
-    change: RepChange<RepresentativeManagerResource>
-  ): DocChange<EnvVar> => {
+  const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) => {
     const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
-
-    return {
-      ...change,
-      resourceType: ResourceType.DOCUMENT,
-      resource: {...parsed, _id: new ObjectId(change.resource._id)}
-    };
-  };
-
-  const docApplier = (change: DocChange<EnvVar>) => {
-    const documentStrategy = {
-      [ChangeTypes.INSERT]: (envVar: EnvVar) => CRUD.insert(evs, envVar),
-      [ChangeTypes.UPDATE]: (envVar: EnvVar) => CRUD.replace(evs, envVar),
-      [ChangeTypes.DELETE]: (envVar: EnvVar) => CRUD.remove(evs, envVar._id)
-    };
-
-    documentStrategy[change.changeType](change.resource);
+    return {...parsed, _id: new ObjectId(change.resource._id)};
   };
 
   return {
     syncs: [
       {
-        watcher: {
-          resourceType: ResourceType.DOCUMENT,
-          watch: docWatcher
-        },
-        converter: {
-          convert: docToRepConverter
-        },
-        applier: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          apply: repApplier
-        }
+        watcher: {collectionService: evs},
+        converter: {convertToRepResource},
+        applier: {fileName, getExtension: () => extension}
       },
       {
-        watcher: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          watch: repWatcher
-        },
-        converter: {
-          convert: repToDocConverter
-        },
+        watcher: {filesToWatch: [{name: fileName, extension}]},
+        converter: {convertToDocResource},
         applier: {
-          resourceType: ResourceType.DOCUMENT,
-          apply: docApplier
+          insert: (envVar: EnvVar) => CRUD.insert(evs, envVar),
+          update: (envVar: EnvVar) => CRUD.replace(evs, envVar),
+          delete: (envVar: EnvVar) => CRUD.remove(evs, envVar._id)
         }
       }
     ],
-    moduleName,
+    moduleName: "env-var",
     subModuleName: "schema"
   };
 };

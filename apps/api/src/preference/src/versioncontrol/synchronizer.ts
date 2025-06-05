@@ -1,137 +1,78 @@
+import {Identity} from "@spica-server/interface/passport/identity";
 import {Preference} from "@spica-server/interface/preference";
-import {
-  IRepresentativeManager,
-  RepresentativeManagerResource
-} from "@spica-server/interface/representative";
 import {
   ChangeTypes,
   DocChange,
   RepChange,
+  RepresentativeManagerResource,
   ResourceType,
-  SynchronizerArgs
+  VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {PreferenceService} from "@spica-server/preference/services";
-import {ObjectId} from "mongodb";
 import {map, Observable} from "rxjs";
 import YAML from "yaml";
 
 export const getSynchronizer = (
-  prefService: PreferenceService,
-  vcRepresentativeManager: IRepresentativeManager
-): SynchronizerArgs<Preference, RepresentativeManagerResource> => {
-  const moduleName = "preference";
+  prefService: PreferenceService
+): VCSynchronizerArgs<Identity["attributes"]> => {
   const fileName = "schema";
   const extension = "yaml";
 
-  const docWatcher = (): Observable<DocChange<Preference>> => {
+  const docWatcher = (): Observable<DocChange<Identity["attributes"]>> => {
     return prefService.watch("passport", {propagateOnStart: true}).pipe(
       map((preference: Preference) => ({
         resourceType: ResourceType.DOCUMENT,
         changeType: ChangeTypes.UPDATE,
-        resource: preference
+        resource: {...preference.identity, _id: "identity"}
       }))
     );
   };
 
-  const docToRepConverter = (
-    change: DocChange<Preference>
-  ): RepChange<RepresentativeManagerResource> => {
-    return {
-      changeType: change.changeType,
-      resourceType: ResourceType.REPRESENTATIVE,
-      resource: {
-        _id: change.resource._id.toString(),
-        content: YAML.stringify(change.resource)
-      }
-    };
+  const convertToRepResource = (change: DocChange<Identity["attributes"]>) => {
+    const {_id, ...resourceWithoutID} = change.resource;
+    return {_id, content: YAML.stringify(resourceWithoutID)};
   };
 
-  const repApplier = (change: RepChange<RepresentativeManagerResource>) => {
-    vcRepresentativeManager.write(
-      moduleName,
-      change.resource._id,
-      fileName,
-      change.resource.content,
-      extension
+  const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) => {
+    return change.resource.content ? YAML.parse(change.resource.content) : {};
+  };
+
+  const upsert = (identityAttributes: Identity["attributes"]) => {
+    delete identityAttributes._id;
+    prefService.updateOne(
+      {scope: "passport"},
+      {$set: {identity: identityAttributes}},
+      {upsert: true}
     );
   };
 
-  const repWatcher = () => vcRepresentativeManager.watch(moduleName, [`${fileName}.${extension}`]);
-
-  const repToDocConverter = (
-    change: RepChange<RepresentativeManagerResource>
-  ): DocChange<Preference> => {
-    const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
-
-    return {
-      ...change,
-      resourceType: ResourceType.DOCUMENT,
-      resource: {...parsed, _id: new ObjectId(change.resource._id)}
-    };
-  };
-
-  const docApplier = (change: DocChange<Preference>) => {
-    const upsert = (preference: Preference) => {
-      delete preference._id;
-      return prefService.updateOne(
-        {scope: "passport"},
-        {$set: {identity: preference}},
-        {upsert: true}
-      );
-    };
-
-    const remove = async () => {
-      await prefService.updateOne(
-        {scope: "passport"},
-        {
-          $set: {
-            identity: {
-              attributes: {}
-            }
+  const remove = async () => {
+    await prefService.updateOne(
+      {scope: "passport"},
+      {
+        $set: {
+          identity: {
+            attributes: {}
           }
         }
-      );
-    };
-
-    const documentStrategy = {
-      [ChangeTypes.INSERT]: upsert,
-      [ChangeTypes.UPDATE]: upsert,
-      [ChangeTypes.DELETE]: remove
-    };
-
-    documentStrategy[change.changeType](change.resource);
+      }
+    );
   };
 
   return {
     syncs: [
       {
-        watcher: {
-          resourceType: ResourceType.DOCUMENT,
-          watch: docWatcher
-        },
-        converter: {
-          convert: docToRepConverter
-        },
-        applier: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          apply: repApplier
-        }
+        watcher: {docWatcher},
+        converter: {convertToRepResource},
+        applier: {fileName, getExtension: () => extension}
       },
       {
-        watcher: {
-          resourceType: ResourceType.REPRESENTATIVE,
-          watch: repWatcher
-        },
-        converter: {
-          convert: repToDocConverter
-        },
-        applier: {
-          resourceType: ResourceType.DOCUMENT,
-          apply: docApplier
-        }
+        watcher: {filesToWatch: [{name: fileName, extension}]},
+        converter: {convertToDocResource},
+        applier: {insert: upsert, update: upsert, delete: remove}
       }
     ],
-    moduleName,
+    moduleName: "preference",
     subModuleName: "schema"
   };
 };

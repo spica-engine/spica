@@ -3,7 +3,7 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../interface/versioncontrol"
+      "path": "../versioncontrol"
     }
   ]
 }

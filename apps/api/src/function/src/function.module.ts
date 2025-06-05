@@ -14,21 +14,17 @@ import {Axios} from "./services/axios";
 import {registerStatusProvider} from "./status";
 import FunctionSchema from "./schema/function.json" with {type: "json"};
 import {
-  VC_REPRESENTATIVE_MANAGER,
   REGISTER_VC_SYNCHRONIZER,
   RegisterVCSynchronizer
 } from "@spica-server/interface/versioncontrol";
 import {registerAssetHandlers} from "./asset";
-import {
-  IRepresentativeManager,
-  RepresentativeManagerResource
-} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {
   Function,
   FunctionOptions,
   FUNCTION_OPTIONS,
-  FunctionChange
+  FunctionWithContent
 } from "@spica-server/interface/function";
 import {getSynchronizers} from "./versioncontrol";
 
@@ -40,25 +36,17 @@ export class FunctionModule {
     scheduler: Scheduler,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
     @Optional()
-    @Inject(VC_REPRESENTATIVE_MANAGER)
-    private vcRepresentativeManager: IRepresentativeManager,
-    @Optional()
     @Inject(REGISTER_VC_SYNCHRONIZER)
-    registerVCSynchronizer: RegisterVCSynchronizer<
-      Function | FunctionChange,
-      RepresentativeManagerResource
-    >,
+    registerVCSynchronizer: RegisterVCSynchronizer<Function | FunctionWithContent>,
     logs: LogService,
     validator: Validator
   ) {
     if (registerVCSynchronizer) {
-      getSynchronizers(fs, this.vcRepresentativeManager, fe, logs).forEach(synchronizer =>
-        registerVCSynchronizer(synchronizer)
-      );
+      getSynchronizers(fs, fe, logs).forEach(synchronizer => registerVCSynchronizer(synchronizer));
     }
 
     registerStatusProvider(fs, scheduler);
-    registerAssetHandlers(fs, fe, logs, validator, assetRepManager);
+    registerAssetHandlers(fs, fe, logs, validator, this.assetRepManager);
   }
   static forRoot(options: SchedulingOptions & FunctionOptions): DynamicModule {
     return {

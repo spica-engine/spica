@@ -1,13 +1,15 @@
 import {Injectable} from "@nestjs/common";
 import fs from "fs";
 import path from "path";
-import {
-  IRepresentativeManager,
-  RepresentativeManagerResource
-} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 import chokidar from "chokidar";
 import {Observable} from "rxjs";
-import {ChangeTypes, RepChange, ResourceType} from "@spica-server/interface/versioncontrol";
+import {
+  ChangeTypes,
+  RepChange,
+  ResourceType,
+  RepresentativeManagerResource
+} from "@spica-server/interface/versioncontrol";
 
 @Injectable()
 export class VCRepresentativeManager implements IRepresentativeManager {
