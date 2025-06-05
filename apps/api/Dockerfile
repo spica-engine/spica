@@ -40,9 +40,11 @@ COPY jest.flaky.setup.js jest.preset.js jest.setup.js ./
 COPY *.env ./
 ARG PROJECTS=""
 ARG EXCLUDE=""
-RUN yarn nx run-many -t test --projects=$PROJECTS --exclude=$EXCLUDE
+ARG RABBITMQ_URL=""
+ENV RABBITMQ_URL=$RABBITMQ_URL
+RUN yarn nx run-many -t test --projects=$PROJECTS --exclude=$EXCLUDE 
 
-# start app from tools, because app executes many mongodb commands
+# start app from tools, because app uses git
 # copy deps and build
 FROM tools AS runner
 WORKDIR /app
