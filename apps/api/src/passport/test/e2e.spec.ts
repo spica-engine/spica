@@ -903,9 +903,9 @@ describe("E2E Tests", () => {
       });
     });
   });
-  
+
   describe("Login attempts", () => {
-     beforeEach(async () => {
+    beforeEach(async () => {
       const module = await Test.createTestingModule(moduleMetaData).compile();
 
       req = module.get(Request);
@@ -915,7 +915,7 @@ describe("E2E Tests", () => {
 
       // WAIT UNTIL IDENTITY IS INSERTED
       await new Promise((resolve, _) => setTimeout(resolve, 3000));
-  
+
       jest.useFakeTimers({doNotFake: ["nextTick"]});
       jest.setSystemTime(new Date());
     });
@@ -923,7 +923,7 @@ describe("E2E Tests", () => {
     afterEach(() => {
       jest.useRealTimers();
     });
-    
+
     it("should block if the attempt limit is exceeded ", async () => {
       const responses = [];
       for (const fn of Array(3).fill(() => login("spica", "wrongPassword"))) {
@@ -977,11 +977,11 @@ describe("E2E Tests", () => {
       await login();
       expect(token).toBeDefined();
     });
-  })
+  });
 
   describe("Prevent reusing old passwords", () => {
     let identityID: string;
-    
+
     beforeEach(async () => {
       const module = await Test.createTestingModule(moduleMetaData).compile();
 
