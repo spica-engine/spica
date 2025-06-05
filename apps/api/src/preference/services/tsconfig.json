@@ -7,6 +7,9 @@
     },
     {
       "path": "../../../../../libs/interface/preference"
+    },
+    {
+      "path": "../../../../../libs/core/patch"
     }
   ]
 }

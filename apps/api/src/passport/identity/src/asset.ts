@@ -27,23 +27,36 @@ export function registerAssetHandlers(
 
   registrar.validator(_module, validator);
 
-  const upsert = (resource: Resource<IdentitySettingsContents>) => {
+  const upsert = async (resource: Resource<IdentitySettingsContents>) => {
     if (!isIdentityPreference(resource)) {
       return;
     }
 
+    const existing = await prefService.get("passport");
+    const attributes = mergeAttributes(
+      existing.identity.attributes,
+      resource.contents.schema.attributes
+    );
+
     return prefService.updateOne(
       {scope: "passport"},
-      {$set: {identity: resource.contents.schema}},
+      {$set: {identity: {attributes}}},
       {upsert: true}
     );
   };
 
-  const remove = resource => {
+  const remove = async resource => {
     if (!isIdentityPreference(resource)) {
       return;
     }
-    return prefService.updateOne({scope: "passport"}, {$set: {identity: {attributes: {}}}});
+
+    const existing = await prefService.get("passport");
+    const attributes = extractAttributes(
+      existing.identity.attributes,
+      resource.contents.schema.attributes
+    );
+
+    return prefService.updateOne({scope: "passport"}, {$set: {identity: {attributes}}});
   };
 
   const operator = {
@@ -67,4 +80,22 @@ export function registerAssetHandlers(
   };
 
   registrar.exporter(_module, exporter);
+}
+
+function mergeAttributes(attributes1, attributes2) {
+  return {
+    ...(attributes1 || {}),
+    ...(attributes2 || {})
+  };
+}
+
+function extractAttributes(from, to) {
+  const attributes = {};
+  Object.entries(from).forEach(([key, value]) => {
+    if (!Object.keys(to).includes(key)) {
+      attributes[key] = value;
+    }
+  });
+
+  return attributes;
 }
