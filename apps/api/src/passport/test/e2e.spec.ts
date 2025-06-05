@@ -228,7 +228,8 @@ describe("E2E Tests", () => {
         defaultIdentityPassword: "spica",
         audience: "spica",
         defaultIdentityPolicies: ["PassportFullAccess"],
-        refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN
+        refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+        passwordHistoryUniquenessCount: 0
       }),
       PreferenceTestingModule,
       CoreTestingModule

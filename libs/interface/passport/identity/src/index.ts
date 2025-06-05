@@ -21,6 +21,7 @@ export interface Identity {
     [key: string]: any;
   };
   authFactor?: FactorMeta;
+  lastPasswords: string[];
 }
 
 export interface LoginCredentials {
@@ -53,6 +54,7 @@ export interface IdentityOptions {
   defaultIdentityPolicies?: string[];
   entryLimit?: number;
   refreshTokenExpiresIn?: number;
+  passwordHistoryUniquenessCount: number;
 }
 
 export const IDENTITY_OPTIONS = Symbol.for("IDENTITY_OPTIONS");

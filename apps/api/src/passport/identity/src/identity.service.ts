@@ -40,7 +40,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     };
 
     const token = this.jwt.sign(
-      {...identity, password: undefined},
+      {...identity, password: undefined, lastPasswords: []},
       {
         header: {
           identifier: identity.identifier,

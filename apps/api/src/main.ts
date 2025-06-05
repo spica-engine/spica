@@ -120,6 +120,12 @@ const args = yargs(process.argv.slice(2))
       description: "Default lifespan of the issued JWT tokens. Unit: second",
       default: 60 * 60 * 24 * 2
     },
+    "passport-identity-password-history-uniqueness-count": {
+      number: true,
+      description:
+        "How many of last passwords will be compared with the new password in terms of uniqueness",
+      default: 0
+    },
     "passport-identity-token-expiration-seconds-limit": {
       number: true,
       description: "Maximum lifespan of the requested JWT token can have. Unit: second"
@@ -509,7 +515,8 @@ const modules = [
     defaultIdentityPassword: args["passport-default-identity-password"],
     audience: "spica.io",
     samlCertificateTTL: args["passport-saml-certificate-ttl"],
-    refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"]
+    refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
+    passwordHistoryUniquenessCount: args["passport-identity-password-history-uniqueness-count"]
   }),
   FunctionModule.forRoot({
     logExpireAfterSeconds: args["common-log-lifespan"],

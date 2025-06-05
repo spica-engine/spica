@@ -137,7 +137,8 @@ describe("Status", () => {
             maxExpiresIn: 1000,
             secretOrKey: "spica",
             entryLimit: 20,
-            refreshTokenExpiresIn: 1000
+            refreshTokenExpiresIn: 1000,
+            passwordHistoryUniquenessCount: 0
           })
         ]
       }).compile();

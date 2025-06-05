@@ -46,7 +46,8 @@ describe("identity-settings", () => {
         issuer: "spica",
         maxExpiresIn: MAX_EXPIRES_IN,
         secretOrKey: "secret",
-        refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN
+        refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+        passwordHistoryUniquenessCount: 0
       }),
       PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
       SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
