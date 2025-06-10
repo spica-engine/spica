@@ -156,7 +156,9 @@ export class PassportController {
         identifier: idenfitifer,
         password: undefined,
         policies: [],
-        attributes: user
+        attributes: user,
+        failedAttempts: [],
+        lastLogin: undefined
       });
     }
 
