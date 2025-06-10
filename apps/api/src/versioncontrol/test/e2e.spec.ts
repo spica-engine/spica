@@ -9,7 +9,7 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {FunctionModule} from "@spica-server/function";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {RepresentativeManager} from "@spica-server/representative";
+import {VCRepresentativeManager} from "@spica-server/representative";
 import {VersionControlModule} from "@spica-server/versioncontrol";
 import {VC_REPRESENTATIVE_MANAGER} from "@spica-server/interface/versioncontrol";
 import os from "os";
@@ -19,13 +19,13 @@ import path from "path";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50050";
 
-const sleep = () => new Promise(r => setTimeout(r, 1000));
+const sleep = () => new Promise(r => setTimeout(r, 500));
 
 describe("Versioning e2e", () => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
-  let rep: RepresentativeManager;
+  let rep: VCRepresentativeManager;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
