@@ -22,7 +22,7 @@ export class VCRepresentativeManager implements IRepresentativeManager {
   write(module: string, id: string, fileName: string, content: string, extension: string) {
     const resourcesDirectory = path.join(this.cwd, module, id);
     if (!fs.existsSync(resourcesDirectory)) {
-      fs.mkdirSync(resourcesDirectory);
+      fs.mkdirSync(resourcesDirectory, {recursive: true});
     }
 
     const fullPath = path.join(resourcesDirectory, `${fileName}.${extension}`);
