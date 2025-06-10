@@ -3,7 +3,7 @@ import {useFormik} from "formik";
 import {BaseInput, Button, FlexElement, Icon, Input, StringInput, Text} from "oziko-ui-kit";
 import styles from "./Login.module.scss";
 import Logo from "../../components/atoms/logo/Logo";
-import {identify} from "../../services/passport/identify";
+import {authorization} from "../../services/passport/identify";
 import {useNavigate} from "react-router-dom";
 
 const getErrorMessage = (error: any): string => {
@@ -19,7 +19,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await identify(values);
+      const response = await authorization(values);
       if (response.data && response.data.token) {
         // localStorage.setItem('token', response.data.token);
         navigate("/home");

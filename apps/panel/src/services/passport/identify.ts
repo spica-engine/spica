@@ -4,22 +4,29 @@ export type IdentifyParams = {
   identifier: string;
   password: string;
 };
-export async function identify(
+
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
+const apiClient = axios.create({
+  baseURL: BASE_URL
+});
+
+export async function authorization(
   identityOrStrategy: IdentifyParams | string,
   openCallback?: (url: string) => void
 ): Promise<any> {
   if (typeof identityOrStrategy !== "string") {
-    return axios.post(`/api/passport/identify`, identityOrStrategy);
+    return apiClient.post(`/api/passport/identify`, identityOrStrategy);
   }
-
+  //Login with strategy part
   const strategy = identityOrStrategy;
-  const res = await axios.get(`/api/passport/strategy/${strategy}/url`, {
+  const strategyRes = await apiClient.get(`/api/passport/strategy/${strategy}/url`, {
     params: {identityOrStrategy: strategy}
   });
 
-  if (openCallback) openCallback(res.data.url);
+  if (openCallback) openCallback(strategyRes.data.url);
 
-  return axios.get("/api/passport/identify", {
-    params: {state: res.data.state}
+  return apiClient.get("/api/passport/identify", {
+    params: {state: strategyRes.data.state}
   });
 }
