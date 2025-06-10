@@ -1,8 +1,11 @@
+import RefreshTokenReadOnlyAccess from "./refresh.token.readonly";
+
 export default {
   _id: "RefreshTokenFullAccess",
   name: "Refresh Token Full Access",
   description: "Full access to refresh token service.",
   statement: [
+    ...RefreshTokenReadOnlyAccess.statement,
     {
       action: "passport:refresh-token:delete",
       resource: {include: ["*"], exclude: []},
