@@ -54,6 +54,39 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     return fs.promises.rm(dir, {recursive: true});
   }
 
+  // for test use only
+  async readResource(module: string, id: string): Promise<any> {
+    const moduleDir = this.getModuleDir(module);
+
+    const resourcesPath = path.join(moduleDir, id);
+
+    const contents = {};
+
+    if (!fs.existsSync(resourcesPath)) {
+      return Promise.resolve(contents);
+    }
+
+    let resources = fs.readdirSync(resourcesPath);
+
+    const promises: Promise<any>[] = [];
+
+    for (const resource of resources) {
+      const resourcePath = path.join(resourcesPath, resource);
+
+      const promise = fs.promises.readFile(resourcePath).then(content => {
+        const extension = resource.split(".").pop();
+
+        const key = resource.replace(`.${extension}`, "");
+        contents[key] = content.toString();
+      });
+
+      promises.push(promise);
+    }
+
+    await Promise.all(promises);
+    return {_id: id, contents};
+  }
+
   // delete later
   async read() {
     return [];
