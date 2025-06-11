@@ -141,7 +141,8 @@ describe("Status", () => {
               failedAttemptLimit: 0,
               blockDurationMinutes: 0
             },
-            refreshTokenExpiresIn: 1000
+            refreshTokenExpiresIn: 1000,
+            passwordHistoryLimit: 0
           })
         ]
       }).compile();
