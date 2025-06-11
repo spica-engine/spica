@@ -142,7 +142,7 @@ describe("Status", () => {
               blockDurationMinutes: 0
             },
             refreshTokenExpiresIn: 1000,
-            passwordHistoryUniquenessCount: 0
+            passwordHistoryLimit: 0
           })
         ]
       }).compile();

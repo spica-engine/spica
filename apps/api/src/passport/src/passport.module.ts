@@ -67,7 +67,7 @@ export class PassportModule {
           defaultIdentityPassword: options.defaultIdentityPassword,
           defaultIdentityPolicies: options.defaultIdentityPolicies,
           entryLimit: options.entryLimit,
-          passwordHistoryUniquenessCount: options.passwordHistoryUniquenessCount,
+          passwordHistoryLimit: options.passwordHistoryLimit,
           blockingOptions: options.blockingOptions
         }),
         PolicyModule.forRoot(),

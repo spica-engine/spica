@@ -120,7 +120,7 @@ const args = yargs(process.argv.slice(2))
       description: "Default lifespan of the issued JWT tokens. Unit: second",
       default: 60 * 60 * 24 * 2
     },
-    "passport-identity-password-history-uniqueness-count": {
+    "passport-identity-password-history-limit": {
       number: true,
       description:
         "How many of last passwords will be compared with the new password in terms of uniqueness",
@@ -530,7 +530,7 @@ const modules = [
       blockDurationMinutes: args["passport-identity-block-duration-after-failed-login-attempts"]
     },
     refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
-    passwordHistoryUniquenessCount: args["passport-identity-password-history-uniqueness-count"]
+    passwordHistoryLimit: args["passport-identity-password-history-limit"]
   }),
   FunctionModule.forRoot({
     logExpireAfterSeconds: args["common-log-lifespan"],

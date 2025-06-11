@@ -382,12 +382,12 @@ export class IdentityController {
         identity.deactivateJwtsBefore = Date.now() / 1000;
       }
 
-      if (this.options.passwordHistoryUniquenessCount > 0) {
+      if (this.options.passwordHistoryLimit > 0) {
         identity.lastPasswords = lastPasswords || [];
 
         identity.lastPasswords.push(currentPassword);
 
-        if (identity.lastPasswords.length == this.options.passwordHistoryUniquenessCount + 1) {
+        if (identity.lastPasswords.length == this.options.passwordHistoryLimit + 1) {
           identity.lastPasswords.shift();
         }
 
@@ -397,7 +397,7 @@ export class IdentityController {
 
         if (isOneOfLastPasswords) {
           throw new BadRequestException(
-            `New password can't be the one of last ${this.options.passwordHistoryUniquenessCount} passwords.`
+            `New password can't be the one of last ${this.options.passwordHistoryLimit} passwords.`
           );
         }
       }
@@ -408,8 +408,13 @@ export class IdentityController {
     delete identity.authFactor;
 
     return this.identityService
-      .findOneAndUpdate({_id: id}, {$set: identity}, {returnDocument: "after"})
-      .then(updatedIdentity => this.afterIdentityUpsert(updatedIdentity))
+      .findOneAndUpdate({_id: id}, {$set: identity}, {returnDocument: ReturnDocument.AFTER})
+      .then(updatedIdentity => {
+        if (!updatedIdentity) {
+          throw new NotFoundException(`Identity with ID ${id} not found`);
+        }
+        return this.afterIdentityUpsert(updatedIdentity);
+      })
       .catch(exception => {
         throw new BadRequestException(
           exception.code === 11000 ? "Identity already exists." : exception.message

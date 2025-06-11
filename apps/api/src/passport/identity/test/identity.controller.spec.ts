@@ -34,7 +34,7 @@ describe("Identity Controller", () => {
           issuer: "spica",
           maxExpiresIn: 1000,
           secretOrKey: "spica",
-          passwordHistoryUniquenessCount: 0,
+          passwordHistoryLimit: 0,
           blockingOptions: {
             blockDurationMinutes: 0,
             failedAttemptLimit: 0

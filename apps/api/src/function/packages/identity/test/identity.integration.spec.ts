@@ -43,7 +43,7 @@ describe("Identity", () => {
             blockDurationMinutes: 0,
             failedAttemptLimit: 0
           },
-          passwordHistoryUniquenessCount: 0
+          passwordHistoryLimit: 0
         }),
         PreferenceTestingModule,
         CoreTestingModule,

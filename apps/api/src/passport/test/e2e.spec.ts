@@ -234,7 +234,7 @@ describe("E2E Tests", () => {
           blockDurationMinutes: 10
         },
         refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
-        passwordHistoryUniquenessCount: 2
+        passwordHistoryLimit: 2
       }),
       PreferenceTestingModule,
       CoreTestingModule
@@ -1020,7 +1020,9 @@ describe("E2E Tests", () => {
       expect(updateResponse.statusCode).toEqual(200);
 
       await sleep(1000);
-      await login("spica", "newPassword");
+      const res = await login("spica", "newPassword");
+      expect(res.statusCode).toEqual(200);
+      expect(res.statusText).toEqual("OK");
 
       const errRes = await updatePassword("spica");
       expect(errRes.statusCode).toEqual(400);
@@ -1030,7 +1032,9 @@ describe("E2E Tests", () => {
       expect(reUpdateResponse.statusCode).toEqual(200);
 
       await sleep(1000);
-      await login("spica", "brandNewPassword");
+      const res2 = await login("spica", "brandNewPassword");
+      expect(res2.statusCode).toEqual(200);
+      expect(res2.statusText).toEqual("OK");
 
       const repeatErrRes = await updatePassword("newPassword");
       expect(repeatErrRes.statusCode).toEqual(400);
@@ -1044,7 +1048,9 @@ describe("E2E Tests", () => {
       expect(updateResponse.statusCode).toEqual(200);
 
       await sleep(1000);
-      await login("spica", "newPassword");
+      const res = await login("spica", "newPassword");
+      expect(res.statusCode).toEqual(200);
+      expect(res.statusText).toEqual("OK");
 
       const errRes = await updatePassword("spica");
       expect(errRes.statusCode).toEqual(400);
@@ -1053,7 +1059,9 @@ describe("E2E Tests", () => {
       await updatePassword("brandNewPassword");
 
       await sleep(1000);
-      await login("spica", "brandNewPassword");
+      const res2 = await login("spica", "brandNewPassword");
+      expect(res2.statusCode).toEqual(200);
+      expect(res2.statusText).toEqual("OK");
 
       const reUpdateResponse = await updatePassword("spica");
       expect(reUpdateResponse.statusCode).toEqual(200);

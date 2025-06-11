@@ -60,7 +60,7 @@ export interface IdentityOptions {
     blockDurationMinutes: number;
   };
   refreshTokenExpiresIn?: number;
-  passwordHistoryUniquenessCount: number;
+  passwordHistoryLimit: number;
 }
 
 export const IDENTITY_OPTIONS = Symbol.for("IDENTITY_OPTIONS");

@@ -51,7 +51,7 @@ describe("identity-settings", () => {
           failedAttemptLimit: 0
         },
         refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
-        passwordHistoryUniquenessCount: 0
+        passwordHistoryLimit: 0
       }),
       PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
       SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
