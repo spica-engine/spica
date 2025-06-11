@@ -5,9 +5,10 @@ import styles from "./Toolbar.module.scss";
 type TypeToolbar = {
   token: string;
   name: string;
+  onDrawerOpen?: () => void;
 };
 
-const Toolbar: FC<TypeToolbar> = ({token, name}) => {
+const Toolbar: FC<TypeToolbar> = ({token, name, onDrawerOpen}) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -23,11 +24,20 @@ const Toolbar: FC<TypeToolbar> = ({token, name}) => {
   };
   return (
     <FluidContainer
-      dimensionX={"fill"}
+      dimensionX="fill"
       className={styles.toolbar}
       prefix={{
         children: (
           <FlexElement className={styles.flexElement} gap={10}>
+            <Button
+              variant="icon"
+              shape="circle"
+              onClick={onDrawerOpen}
+              className={styles.menuButton}
+            >
+              <Icon name="sort" />
+            </Button>
+
             <span className={styles.text}>{token}</span>
             <Button
               variant="icon"
@@ -45,7 +55,7 @@ const Toolbar: FC<TypeToolbar> = ({token, name}) => {
           <FlexElement className={styles.flexElement} gap={10}>
             <span className={styles.text}>{name}</span>
             <Button variant="icon" shape="circle" className={styles.button} onClick={() => {}}>
-              <Icon name={"identities"}></Icon> {/* Todo! change icon name */}
+              <Icon name="person" />
             </Button>
           </FlexElement>
         )

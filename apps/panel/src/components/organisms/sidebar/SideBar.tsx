@@ -27,6 +27,7 @@ type TypeSideBar = {
   logo?: string;
   footer?: ReactNode;
   toggleIconName?: IconName;
+  displayToggleIcon?: boolean;
   onNavigatorToggle?: (isOpen: boolean) => void;
 };
 
@@ -35,6 +36,7 @@ const SideBar: FC<TypeSideBar> = ({
   navigatorItems,
   footer,
   toggleIconName = "chevronLeft",
+  displayToggleIcon = true,
   onNavigatorToggle
 }) => {
   const [activeMenu, setActiveMenu] = useState<number>(0);
@@ -68,9 +70,11 @@ const SideBar: FC<TypeSideBar> = ({
               <Icon name={menuItems.icon as IconName} />
             </div>
           ))}
-          <div className={styles.menuItem} onClick={toggleNavigator}>
-            <Icon name={toggleIconName} />
-          </div>
+          {displayToggleIcon && (
+            <div className={styles.menuItem} onClick={toggleNavigator}>
+              <Icon name={toggleIconName} />
+            </div>
+          )}
         </div>
 
         {footer || <Icon name="forkRight" size="lg" className={styles.versionControl} />}
