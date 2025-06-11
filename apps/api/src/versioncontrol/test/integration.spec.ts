@@ -434,7 +434,6 @@ describe("Versioning", () => {
         packages = await engine.getPackages(fn);
         expect(packages).toEqual([]);
 
-        console.log("fn: ", fn);
         index = await engine.read(fn);
         expect(index).toEqual("console.log('hi')");
 
