@@ -49,7 +49,7 @@ const ProfilePopover: FC<TypeProfilePopover> = ({
         ></MenuGroup>
       }
     >
-      <Button variant="icon" shape="circle" className={styles.button} onClick={() => {}}>
+      <Button variant="icon" shape="circle" className={styles.button}>
         <Icon name={"person"}></Icon>
       </Button>
     </Popover>
