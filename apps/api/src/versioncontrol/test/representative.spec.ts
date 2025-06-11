@@ -1,10 +1,13 @@
-import {RepresentativeManager} from "@spica-server/representative";
+import {ChangeTypes, ResourceType} from "@spica-server/interface/versioncontrol";
+import {VCRepresentativeManager} from "@spica-server/representative";
 import fs from "fs";
 import path from "path";
+import {Subscription} from "rxjs";
+import YAML from "yaml";
 
 describe("Representative", () => {
   const cwd = path.join(process.cwd(), "representatives");
-  const representative: RepresentativeManager = new RepresentativeManager(cwd);
+  const representative: VCRepresentativeManager = new VCRepresentativeManager(cwd);
 
   afterEach(() => {
     fs.rmSync(cwd, {recursive: true});
@@ -12,7 +15,8 @@ describe("Representative", () => {
 
   describe("write", () => {
     it("should write yaml", async () => {
-      await representative.write("module1", "id1", "schema", {write_me: "ok"}, "yaml");
+      const stringified = YAML.stringify({write_me: "ok"});
+      await representative.write("module1", "id1", "schema", stringified, "yaml");
 
       const directory = path.join(cwd, "module1", "id1");
       expect(fs.existsSync(directory)).toEqual(true);
@@ -35,84 +39,118 @@ describe("Representative", () => {
     });
 
     it("should write json file", async () => {
-      await representative.write("module1", "id1", "index", {imjson: "ok"}, "json");
+      const stringified = JSON.stringify({imjson: "ok"});
+      await representative.write("module1", "id1", "index", stringified, "json");
 
       const fileContent = fs.readFileSync(path.join(cwd, "module1", "id1", "index.json"));
 
       expect(fileContent.toString()).toEqual('{"imjson":"ok"}');
     });
-
-    it("should write env file", async () => {
-      await representative.write("module1", "id1", "env", {APIKEY: "SECRET"}, "env");
-
-      const fileContent = fs.readFileSync(path.join(cwd, "module1", "id1", "env.env"));
-
-      expect(fileContent.toString()).toEqual("APIKEY=SECRET");
-    });
   });
 
   describe("read", () => {
-    it("should read content of specific file", async () => {
-      await representative.write("module1", "id1", "schema", {title: "hi"}, "yaml");
+    it("should read content of files", async () => {
+      const stringifiedJSON = JSON.stringify({dependencies: {dep1: "1.1"}});
+      await representative.write("module1", "id1", "package", stringifiedJSON, "json");
+      const stringifiedYAML = YAML.stringify({title: "hi"});
+      await representative.write("module1", "id1", "schema", stringifiedYAML, "yaml");
       await representative.write("module1", "id1", "index", "console.log(123)", "js");
-
-      const resource = await representative.readResource("module1", "id1", ["schema.yaml"]);
-      expect(resource).toEqual({
-        _id: "id1",
-        contents: {
-          schema: {title: "hi"}
-        }
-      });
-    });
-
-    it("should read content of multiple files", async () => {
-      await representative.write(
-        "module1",
-        "id1",
-        "package",
-        {dependencies: {dep1: "1.1"}},
-        "json"
-      );
-      await representative.write("module1", "id1", "schema", {title: "hi"}, "yaml");
-      await representative.write("module1", "id1", "index", "console.log(123)", "js");
-      await representative.write("module1", "id1", "env", {APIKEY: "SECRET"}, "env");
 
       const resource = await representative.readResource("module1", "id1");
-      expect(resource).toEqual({
+      const parsed = {
+        ...resource,
+        contents: {
+          ...resource.contents,
+          package: JSON.parse(resource.contents.package),
+          schema: YAML.parse(resource.contents.schema)
+        }
+      };
+      expect(parsed).toEqual({
         _id: "id1",
         contents: {
           package: {dependencies: {dep1: "1.1"}},
           schema: {title: "hi"},
-          index: "console.log(123)",
-          env: {
-            APIKEY: "SECRET"
-          }
+          index: "console.log(123)"
         }
       });
     });
+  });
 
-    it("should read all contents of module", async () => {
-      await representative.write(
-        "module1",
-        "id1",
-        "package",
-        {dependencies: {dep1: "1.1"}},
-        "json"
-      );
-      await representative.write("module1", "id1", "schema", {title: "hi"}, "yaml");
-      await representative.write("module1", "id1", "index", "console.log(123)", "js");
+  describe("watch", () => {
+    let subscribtion: Subscription;
 
-      const contents = await representative.read("module1", () => true);
-      expect(contents).toEqual([
-        {
-          _id: "id1",
-          contents: {
-            package: {dependencies: {dep1: "1.1"}},
-            schema: {title: "hi"},
-            index: "console.log(123)"
-          }
+    it("should track insert change type", done => {
+      subscribtion = representative.watch("module1", ["schema.yaml"]).subscribe({
+        next: change => {
+          const parsedContent = YAML.parse(change.resource.content);
+          change.resource = {...change.resource, content: parsedContent};
+
+          expect(change).toEqual({
+            resourceType: ResourceType.REPRESENTATIVE,
+            changeType: ChangeTypes.INSERT,
+            resource: {_id: "id1", content: {title: "hi"}}
+          });
+          subscribtion.unsubscribe();
+          done();
         }
-      ]);
+      });
+
+      const stringified = YAML.stringify({title: "hi"});
+      representative.write("module1", "id1", "schema", stringified, "yaml");
+    });
+
+    it("should track update change type", done => {
+      subscribtion = representative.watch("module1", ["schema.yaml"]).subscribe({
+        next: change => {
+          if (change.changeType == ChangeTypes.INSERT) return;
+
+          const parsedContent = YAML.parse(change.resource.content);
+          change.resource = {...change.resource, content: parsedContent};
+
+          expect(change).toEqual({
+            resourceType: ResourceType.REPRESENTATIVE,
+            changeType: ChangeTypes.UPDATE,
+            resource: {_id: "id1", content: {title: "hello"}}
+          });
+          subscribtion.unsubscribe();
+          done();
+        }
+      });
+
+      setTimeout(() => {
+        const stringified = YAML.stringify({title: "hi"});
+        representative.write("module1", "id1", "schema", stringified, "yaml");
+      }, 1000);
+
+      setTimeout(() => {
+        const updated = YAML.stringify({title: "hello"});
+        representative.write("module1", "id1", "schema", updated, "yaml");
+      }, 2000);
+    });
+
+    it("should track delete change type", done => {
+      subscribtion = representative.watch("module1", ["schema.yaml"]).subscribe({
+        next: change => {
+          if (change.changeType == ChangeTypes.INSERT) return;
+
+          expect(change).toEqual({
+            resourceType: ResourceType.REPRESENTATIVE,
+            changeType: ChangeTypes.DELETE,
+            resource: {_id: "id1", content: ""}
+          });
+          subscribtion.unsubscribe();
+          done();
+        }
+      });
+
+      setTimeout(() => {
+        const stringified = YAML.stringify({title: "hi"});
+        representative.write("module1", "id1", "schema", stringified, "yaml");
+      }, 1000);
+
+      setTimeout(() => {
+        representative.rm("module1", "id1");
+      }, 2000);
     });
   });
 });
