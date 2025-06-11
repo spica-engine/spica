@@ -165,22 +165,23 @@ const args = yargs(process.argv.slice(2))
       array: true,
       description: "Policies to attach to the default identity.",
       default: [
-        "ApiKeyFullAccess",
-        "IdentityFullAccess",
-        "StrategyFullAccess",
-        "PolicyFullAccess",
-        "PassportFullAccess",
         "ActivityFullAccess",
-        "StorageFullAccess",
-        "FunctionFullAccess",
+        "ApiKeyFullAccess",
+        "AssetFullAccess",
         "BucketFullAccess",
         "DashboardFullAccess",
-        "WebhookFullAccess",
+        "EnvVarFullAccess",
+        "FunctionFullAccess",
+        "IdentityFullAccess",
+        "PassportFullAccess",
+        "PolicyFullAccess",
         "PreferenceFullAccess",
+        "RefreshTokenFullAccess",
         "StatusFullAccess",
-        "AssetFullAccess",
+        "StorageFullAccess",
+        "StrategyFullAccess",
         "VersionControlFullAccess",
-        "RefreshTokenFullAccess"
+        "WebhookFullAccess"
       ]
     },
     "passport-identity-limit": {
