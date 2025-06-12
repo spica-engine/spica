@@ -1,17 +1,20 @@
 import React, {useEffect, useState} from "react";
 import {Outlet} from "react-router-dom";
 import SideBar from "../components/organisms/sidebar/SideBar";
-import {menuItems, navigatorItems, token, name} from "../pages/home/mock";
+import {menuItems, navigatorItems, name} from "../pages/home/mock";
 import styles from "./Layout.module.scss";
 import {Drawer} from "oziko-ui-kit";
 import Toolbar from "../components/atoms/toolbar/Toolbar";
+import useLocalStorage from "../hooks/passport/identify";
 
+const {getItem} = useLocalStorage();
 const Layout = () => {
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const closeDrawer = () => setIsDrawerOpen(false);
   const openDrawer = () => setIsDrawerOpen(true);
+  const token = getItem("access_token");
 
   useEffect(() => {
     const handleResize = () => {
@@ -63,7 +66,7 @@ const Layout = () => {
       </div>
       <div className={styles.main}>
         <div className={styles.toolbar}>
-          <Toolbar token={token} name={name} onDrawerOpen={openDrawer} />
+          <Toolbar token={token || ""} name={name} onDrawerOpen={openDrawer} />
         </div>
         <div className={styles.content}>
           <Outlet />
