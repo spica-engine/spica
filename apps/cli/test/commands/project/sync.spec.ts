@@ -139,7 +139,9 @@ describe("Synchronize", () => {
       });
 
       describe("BucketSynchronizer", () => {
-        const synchronizer = new BucketSynchronizer(sourceService as any, targetService as any);
+        const synchronizer = new BucketSynchronizer(sourceService as any, targetService as any, {
+          bucketIds: undefined
+        });
 
         it("should analyze buckets", async () => {
           const {insertions, updations, deletions} = await synchronizer.analyze();
@@ -182,7 +184,8 @@ describe("Synchronize", () => {
 
       describe("FunctionSynchronizer", () => {
         const synchronizer = new FunctionSynchronizer(sourceService as any, targetService as any, {
-          syncFnEnv: true
+          syncFnEnv: true,
+          functionIds: undefined
         });
 
         it("should analyze function", async () => {
@@ -277,7 +280,9 @@ describe("Synchronize", () => {
         targetService.delete.mockClear();
       });
 
-      const synchronizer = new ApikeySynchronizer(sourceService as any, targetService as any);
+      const synchronizer = new ApikeySynchronizer(sourceService as any, targetService as any, {
+        apikeyIds: undefined
+      });
 
       it("should analyze apikeys", async () => {
         const result = await synchronizer.analyze();
@@ -394,7 +399,9 @@ describe("Synchronize", () => {
         targetService.delete.mockClear();
       });
 
-      const synchronizer = new PolicySynchronizer(sourceService as any, targetService as any);
+      const synchronizer = new PolicySynchronizer(sourceService as any, targetService as any, {
+        policyIds: undefined
+      });
 
       it("should analyze policies", async () => {
         const result = await synchronizer.analyze();
@@ -495,7 +502,10 @@ describe("Synchronize", () => {
 
       const synchronizer = new EnvironmentVariableSynchronizer(
         sourceService as any,
-        targetService as any
+        targetService as any,
+        {
+          envVarIds: undefined
+        }
       );
 
       it("should analyze env vars", async () => {
