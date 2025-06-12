@@ -1,19 +1,25 @@
-import React, {memo, useState} from "react";
+import React, {memo, useEffect, useState} from "react";
 import {useFormik} from "formik";
 import {BaseInput, Button, FlexElement, Icon, Input, StringInput, Text} from "oziko-ui-kit";
 import styles from "./Login.module.scss";
 import Logo from "../../components/atoms/logo/Logo";
-import {authorization} from "../../services/passport/identify";
+import useLocalStorage, {authorization} from "../../hooks/passport/identify";
 import {useNavigate} from "react-router-dom";
 
 const getErrorMessage = (error: any): string => {
   return error.response?.data?.message || "An unexpected error occurred. Please try again.";
 };
-
 const Login = () => {
   const navigate = useNavigate();
   const [loginError, setLoginError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const {setItem, isValid} = useLocalStorage();
+
+  useEffect(() => {
+    if (isValid()) {
+      navigate("/home");
+    }
+  }, []);
 
   const handleLogin = async (values: {identifier: string; password: string}) => {
     setIsLoading(true);
@@ -21,7 +27,7 @@ const Login = () => {
     try {
       const response = await authorization(values);
       if (response.data && response.data.token) {
-        // localStorage.setItem('token', response.data.token);
+        setItem("access_token", `IDENTITY ${response.data.token}`);
         navigate("/home");
       } else {
         throw new Error("Invalid response: No authentication token received");
