@@ -10,6 +10,7 @@ import {
 } from "@spica-server/database";
 import {Preference} from "@spica-server/interface/preference";
 import {Observable} from "rxjs";
+import {deepCopy} from "@spica-server/core/patch";
 
 @Injectable()
 export class PreferenceService extends BaseCollection("preferences") {
@@ -54,7 +55,7 @@ export class PreferenceService extends BaseCollection("preferences") {
   get<T extends Preference>(scope: string) {
     return this._coll
       .findOne<T>({scope})
-      .then(preference => preference || (this._defaults.get(scope) as T));
+      .then(preference => preference || deepCopy(this._defaults.get(scope) as T));
   }
 
   replace<T extends Preference>(
@@ -72,6 +73,7 @@ export class PreferenceService extends BaseCollection("preferences") {
   }
 
   default<T extends Preference>(preference: T) {
+    preference = deepCopy(preference);
     this._defaults.set(preference.scope, preference);
   }
 }
