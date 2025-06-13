@@ -18,6 +18,8 @@ import {PassportTestingModule} from "@spica-server/passport/testing";
 import {EnvVarService} from "@spica-server/env_var/services";
 import {EnvVarModule} from "@spica-server/env_var";
 import YAML from "yaml";
+import path from "path";
+import fs from "fs";
 
 const sleep = () => new Promise(r => setTimeout(r, 1000));
 
@@ -26,9 +28,36 @@ describe("Versioning", () => {
   let app: INestApplication;
   let bs: BucketService;
   let rep: VCRepresentativeManager;
-  let fs: FunctionService;
+  let fnservice: FunctionService;
   let engine: FunctionEngine;
   let evs: EnvVarService;
+
+  async function readResource(module: string, id: string): Promise<any> {
+    const moduleDir = rep.getModuleDir(module);
+    const resourcesPath = path.join(moduleDir, id);
+    const contents = {};
+
+    if (!fs.existsSync(resourcesPath)) {
+      return Promise.resolve(contents);
+    }
+
+    let resources = fs.readdirSync(resourcesPath);
+    const promises: Promise<any>[] = [];
+
+    for (const resource of resources) {
+      const resourcePath = path.join(resourcesPath, resource);
+
+      const promise = fs.promises.readFile(resourcePath).then(content => {
+        const extension = resource.split(".").pop();
+        const key = resource.replace(`.${extension}`, "");
+        contents[key] = content.toString();
+      });
+      promises.push(promise);
+    }
+
+    await Promise.all(promises);
+    return {_id: id, contents};
+  }
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -77,7 +106,7 @@ describe("Versioning", () => {
     bs = module.get(BucketService);
     rep = module.get(VC_REPRESENTATIVE_MANAGER);
 
-    fs = module.get(FunctionService);
+    fnservice = module.get(FunctionService);
     engine = module.get(FunctionEngine);
     evs = module.get(EnvVarService);
   });
@@ -133,13 +162,19 @@ describe("Versioning", () => {
             await prefService.insertOne(preference);
           });
 
+          it("should do the initial sync", async () => {
+            const file = await readResource("preference", "identity");
+            const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
+            expect(parsedFile).toEqual({_id: "identity", contents: {schema: preference.identity}});
+          });
+
           it("should update if schema has changes", async () => {
             await prefService.updateOne(
               {scope: "passport"},
               {$set: {"identity.attributes.properties.name.type": "number"}}
             );
 
-            const file = await rep.readResource("preference", "identity");
+            const file = await readResource("preference", "identity");
             const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
             const expectedSchema = {...preference.identity};
@@ -216,7 +251,7 @@ describe("Versioning", () => {
         await bs.insertOne(bucket);
         await sleep();
 
-        const file = await rep.readResource("bucket", id.toString());
+        const file = await readResource("bucket", id.toString());
         const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
         expect(parsedFile).toEqual({
@@ -232,7 +267,7 @@ describe("Versioning", () => {
         await bs.updateOne({_id: id}, {$set: {"properties.title.type": "number"}});
         await sleep();
 
-        const file = await rep.readResource("bucket", id.toString());
+        const file = await readResource("bucket", id.toString());
         const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
         const expectedBucket = {...bucket, _id: id.toString()};
@@ -253,7 +288,7 @@ describe("Versioning", () => {
         await bs.findOneAndDelete({_id: id});
         await sleep();
 
-        const file = await rep.readResource("bucket", id.toString());
+        const file = await readResource("bucket", id.toString());
         expect(file).toEqual({});
       });
     });
@@ -309,14 +344,14 @@ describe("Versioning", () => {
         };
 
         // SCHEMA INSERT
-        await fs.insertOne(fn);
+        await fnservice.insertOne(fn);
         await engine.createFunction(fn);
         await engine.update(fn, "");
         await engine.compile(fn);
 
         await sleep();
 
-        let file = await rep.readResource("function", id.toString());
+        let file = await readResource("function", id.toString());
         let parsedFile = {
           ...file,
           contents: {
@@ -342,10 +377,10 @@ describe("Versioning", () => {
           active: true,
           options: {}
         };
-        await fs.findOneAndUpdate({_id: id}, {$set: {"triggers.onCall": onCall}});
+        await fnservice.findOneAndUpdate({_id: id}, {$set: {"triggers.onCall": onCall}});
         await sleep();
 
-        file = await rep.readResource("function", id.toString());
+        file = await readResource("function", id.toString());
         parsedFile = {
           ...file,
           contents: {
@@ -368,7 +403,7 @@ describe("Versioning", () => {
         await engine.update(fn, "console.log(123)");
         await sleep();
 
-        file = await rep.readResource("function", id.toString());
+        file = await readResource("function", id.toString());
         parsedFile = {
           ...file,
           contents: {
@@ -388,10 +423,10 @@ describe("Versioning", () => {
         });
 
         // SCHEMA DELETE
-        await fs.findOneAndDelete({_id: id});
+        await fnservice.findOneAndDelete({_id: id});
         await sleep();
 
-        file = await rep.readResource("function", id.toString());
+        file = await readResource("function", id.toString());
         expect(file).toEqual({});
         // we can not install dependency on test environment
       });
@@ -423,7 +458,7 @@ describe("Versioning", () => {
         await rep.write("function", id, "package", stringifiedPackages, "json");
         await sleep();
 
-        let fns = await fs.find();
+        let fns = await fnservice.find();
         expect(fns).toEqual([
           {
             ...fn,
@@ -447,7 +482,7 @@ describe("Versioning", () => {
         await rep.write("function", id, "schema", stringifiedSchema, "yaml");
         await sleep();
 
-        fns = await fs.find();
+        fns = await fnservice.find();
         expect(fns).toEqual([
           {
             ...fn,
@@ -468,7 +503,7 @@ describe("Versioning", () => {
         await rep.rm("function", id);
         await sleep();
 
-        fns = await fs.find();
+        fns = await fnservice.find();
         expect(fns).toEqual([]);
 
         packages = await engine.getPackages(fn);
@@ -499,7 +534,7 @@ describe("Versioning", () => {
         await evs.insertOne(envVar);
         await sleep();
 
-        const file = await rep.readResource("env-var", id.toString());
+        const file = await readResource("env-var", id.toString());
         const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
         expect(parsedFile).toEqual({
@@ -515,7 +550,7 @@ describe("Versioning", () => {
         await evs.updateOne({_id: id}, {$set: {value: "false"}});
         await sleep();
 
-        const file = await rep.readResource("env-var", id.toString());
+        const file = await readResource("env-var", id.toString());
         const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
         expect(parsedFile).toEqual({
@@ -531,7 +566,7 @@ describe("Versioning", () => {
         await evs.findOneAndDelete({_id: id});
         await sleep();
 
-        const file = await rep.readResource("env-var", id.toString());
+        const file = await readResource("env-var", id.toString());
         expect(file).toEqual({});
       });
     });

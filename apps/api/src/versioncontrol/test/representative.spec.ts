@@ -9,6 +9,33 @@ describe("Representative", () => {
   const cwd = path.join(process.cwd(), "representatives");
   const representative: VCRepresentativeManager = new VCRepresentativeManager(cwd);
 
+  async function readResource(module: string, id: string): Promise<any> {
+    const moduleDir = representative.getModuleDir(module);
+    const resourcesPath = path.join(moduleDir, id);
+    const contents = {};
+
+    if (!fs.existsSync(resourcesPath)) {
+      return Promise.resolve(contents);
+    }
+
+    let resources = fs.readdirSync(resourcesPath);
+    const promises: Promise<any>[] = [];
+
+    for (const resource of resources) {
+      const resourcePath = path.join(resourcesPath, resource);
+
+      const promise = fs.promises.readFile(resourcePath).then(content => {
+        const extension = resource.split(".").pop();
+        const key = resource.replace(`.${extension}`, "");
+        contents[key] = content.toString();
+      });
+      promises.push(promise);
+    }
+
+    await Promise.all(promises);
+    return {_id: id, contents};
+  }
+
   afterEach(() => {
     fs.rmSync(cwd, {recursive: true});
   });
@@ -56,7 +83,7 @@ describe("Representative", () => {
       await representative.write("module1", "id1", "schema", stringifiedYAML, "yaml");
       await representative.write("module1", "id1", "index", "console.log(123)", "js");
 
-      const resource = await representative.readResource("module1", "id1");
+      const resource = await readResource("module1", "id1");
       const parsed = {
         ...resource,
         contents: {
@@ -118,15 +145,11 @@ describe("Representative", () => {
           }
         });
 
-      setTimeout(() => {
-        const stringified = YAML.stringify({title: "hi"});
-        representative.write("module1", "id1", "schema", stringified, "yaml");
-      }, 1000);
+      const stringified = YAML.stringify({title: "hi"});
+      representative.write("module1", "id1", "schema", stringified, "yaml");
 
-      setTimeout(() => {
-        const updated = YAML.stringify({title: "hello"});
-        representative.write("module1", "id1", "schema", updated, "yaml");
-      }, 2000);
+      const updated = YAML.stringify({title: "hello"});
+      representative.write("module1", "id1", "schema", updated, "yaml");
     });
 
     it("should track delete change type", done => {
