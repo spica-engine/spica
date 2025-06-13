@@ -1,0 +1,12 @@
+.title {
+  font-weight: 700;
+}
+
+.content {
+  cursor: pointer;
+
+  .dangerButton {
+    padding: 0 !important;
+    color: var(--color-danger) !important;
+  }
+}
