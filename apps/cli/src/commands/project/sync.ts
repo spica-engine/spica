@@ -60,11 +60,11 @@ async function sync({
   for (const Ctor of coreSynchronizers) {
     const synchronizer = new Ctor(sourceService, targetService, {
       syncFnEnv,
-      bucketIds,
-      functionIds,
-      apikeyIds,
-      policyIds,
-      envVarIds
+      bucketIds: transformIDs(bucketIds),
+      functionIds: transformIDs(functionIds),
+      apikeyIds: transformIDs(apikeyIds),
+      policyIds: transformIDs(policyIds),
+      envVarIds: transformIDs(envVarIds)
     });
     const subSynchronizers = await synchronizer.initialize().catch(e => {
       return Promise.reject(returnErrorMessage(e));
@@ -1186,4 +1186,8 @@ function isNotFoundException(e) {
 
 function getFilteredResources(resources: any[], ids: string[] | undefined) {
   return ids ? resources.filter(resource => ids.includes(resource._id)) : resources;
+}
+
+function transformIDs(ids: any) {
+  return ids === "string" ? ids.split(",") : [];
 }

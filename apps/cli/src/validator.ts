@@ -40,11 +40,11 @@ ${availableSyncModules.map(m => `- ${green(m)}`).join("\n")}
   return input;
 }
 
-export function validateSyncIds(input: any): string[] {
+export function validateSyncIds(input: any): string {
   if (typeof input !== "string") {
     throw new Error("You should provide a comma separated string");
   }
-  return input.split(",");
+  return input;
 }
 
 export const availableHttpServices = ["axios"];
