@@ -4,14 +4,14 @@ import {EnvVarController} from "./controller";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import EnvVarSchema from "./schema.json" with {type: "json"};
 import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {getVCSyncProvider} from "./versioncontrol/schema";
 import {registerAssetHandlers} from "./asset";
 import {
-  RegisterSyncProvider,
-  VC_REP_MANAGER,
-  REGISTER_VC_SYNC_PROVIDER
+  REGISTER_VC_SYNCHRONIZER,
+  RegisterVCSynchronizer
 } from "@spica-server/interface/versioncontrol";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
+import {EnvVar} from "@spica-server/interface/env_var";
+import {getSynchronizer} from "./versioncontrol/synchronizer";
 
 @Module({})
 export class EnvVarModule {
@@ -32,14 +32,15 @@ export class EnvVarModule {
 
   constructor(
     evs: EnvVarService,
-    @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
-    @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerVCSyncProvider: RegisterSyncProvider,
+    @Optional()
+    @Inject(REGISTER_VC_SYNCHRONIZER)
+    registerVCSynchronizer: RegisterVCSynchronizer<EnvVar>,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
     validator: Validator
   ) {
-    if (registerVCSyncProvider) {
-      const provider = getVCSyncProvider(evs, this.vcRepManager);
-      registerVCSyncProvider(provider);
+    if (registerVCSynchronizer) {
+      const synchronizer = getSynchronizer(evs);
+      registerVCSynchronizer(synchronizer);
     }
     registerAssetHandlers(evs, validator, this.assetRepManager);
   }
