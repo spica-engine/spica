@@ -10,23 +10,54 @@ import {FunctionEngine} from "@spica-server/function/src/engine";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import os from "os";
 import {VersionControlModule} from "@spica-server/versioncontrol";
-import {SyncDirection} from "@spica-server/interface/versioncontrol";
-import {RepresentativeManager} from "@spica-server/representative";
+import {VC_REPRESENTATIVE_MANAGER} from "@spica-server/interface/versioncontrol";
+import {VCRepresentativeManager} from "@spica-server/representative";
 import {PreferenceModule} from "@spica-server/preference";
 import {PreferenceService} from "@spica-server/preference/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {EnvVarService} from "@spica-server/env_var/services";
 import {EnvVarModule} from "@spica-server/env_var";
+import YAML from "yaml";
+import path from "path";
+import fs from "fs";
+
+const sleep = () => new Promise(r => setTimeout(r, 1000));
 
 describe("Versioning", () => {
   let module: TestingModule;
   let app: INestApplication;
-  let synchronizer: Synchronizer;
   let bs: BucketService;
-  let rep: RepresentativeManager;
-  let fs: FunctionService;
+  let rep: VCRepresentativeManager;
+  let fnservice: FunctionService;
   let engine: FunctionEngine;
   let evs: EnvVarService;
+
+  async function readResource(module: string, id: string): Promise<any> {
+    const moduleDir = rep.getModuleDir(module);
+    const resourcesPath = path.join(moduleDir, id);
+    const contents = {};
+
+    if (!fs.existsSync(resourcesPath)) {
+      return Promise.resolve(contents);
+    }
+
+    let resources = fs.readdirSync(resourcesPath);
+    const promises: Promise<any>[] = [];
+
+    for (const resource of resources) {
+      const resourcePath = path.join(resourcesPath, resource);
+
+      const promise = fs.promises.readFile(resourcePath).then(content => {
+        const extension = resource.split(".").pop();
+        const key = resource.replace(`.${extension}`, "");
+        contents[key] = content.toString();
+      });
+      promises.push(promise);
+    }
+
+    await Promise.all(promises);
+    return {_id: id, contents};
+  }
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -72,11 +103,10 @@ describe("Versioning", () => {
     module.enableShutdownHooks();
 
     app = module.createNestApplication();
-    synchronizer = module.get(Synchronizer);
     bs = module.get(BucketService);
-    rep = module.get(VC_REP_MANAGER);
+    rep = module.get(VC_REPRESENTATIVE_MANAGER);
 
-    fs = module.get(FunctionService);
+    fnservice = module.get(FunctionService);
     engine = module.get(FunctionEngine);
     evs = module.get(EnvVarService);
   });
@@ -85,8 +115,7 @@ describe("Versioning", () => {
     const defaultPref = {scope: "passport", identity: {attributes: {}}};
     let module: TestingModule;
     let app: INestApplication;
-    let synchronizer: Synchronizer;
-    let rep: RepresentativeManager;
+    let rep: VCRepresentativeManager;
     let prefService: PreferenceService;
 
     beforeEach(async () => {
@@ -100,11 +129,11 @@ describe("Versioning", () => {
 
       app = module.createNestApplication();
 
-      synchronizer = module.get(Synchronizer);
-      rep = module.get(VC_REP_MANAGER);
+      rep = module.get(VC_REPRESENTATIVE_MANAGER);
       prefService = module.get(PreferenceService);
 
       prefService.default(defaultPref);
+      await sleep();
     });
 
     describe("passport", () => {
@@ -131,11 +160,12 @@ describe("Versioning", () => {
         describe("Document to representative", () => {
           beforeEach(async () => {
             await prefService.insertOne(preference);
-            await synchronizer.synchronize(SyncDirection.DocToRep);
           });
+
           it("should do the initial sync", async () => {
-            const file = await rep.readResource("preference", "identity");
-            expect(file).toEqual({_id: "identity", contents: {schema: preference.identity}});
+            const file = await readResource("preference", "identity");
+            const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
+            expect(parsedFile).toEqual({_id: "identity", contents: {schema: preference.identity}});
           });
 
           it("should update if schema has changes", async () => {
@@ -143,31 +173,22 @@ describe("Versioning", () => {
               {scope: "passport"},
               {$set: {"identity.attributes.properties.name.type": "number"}}
             );
-            await synchronizer.synchronize(SyncDirection.DocToRep);
 
-            const file = await rep.readResource("preference", "identity");
+            const file = await readResource("preference", "identity");
+            const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
+
             const expectedSchema = {...preference.identity};
             expectedSchema.attributes.properties.name.type = "number";
-            expect(file).toEqual({_id: "identity", contents: {schema: expectedSchema}});
-          });
 
-          it("should delete if schema has been deleted", async () => {
-            await prefService.deleteOne({scope: "passport"});
-            await synchronizer.synchronize(SyncDirection.DocToRep);
-
-            // it returns the default schema
-            const file = await rep.readResource("preference", "identity");
-            expect(file).toEqual({
-              _id: "identity",
-              contents: {schema: defaultPref.identity}
-            });
+            expect(parsedFile).toEqual({_id: "identity", contents: {schema: expectedSchema}});
           });
         });
 
         describe("Representative to document", () => {
           beforeEach(async () => {
-            await rep.write("preference", "identity", "schema", preference.identity, "yaml");
-            await synchronizer.synchronize(SyncDirection.RepToDoc);
+            const stringified = YAML.stringify(preference.identity);
+            await rep.write("preference", "identity", "schema", stringified, "yaml");
+            await sleep();
           });
 
           it("should do the initial synchronization", async () => {
@@ -179,9 +200,10 @@ describe("Versioning", () => {
           it("should update if schema has changes", async () => {
             const updatedSchema = {...preference.identity};
             updatedSchema.attributes.properties.name.type = "number";
+            const stringified = YAML.stringify(updatedSchema);
 
-            await rep.write("preference", "identity", "schema", updatedSchema, "yaml");
-            await synchronizer.synchronize(SyncDirection.RepToDoc);
+            await rep.write("preference", "identity", "schema", stringified, "yaml");
+            await sleep();
 
             const document = await prefService.findOne({scope: "passport"});
             delete document._id;
@@ -190,8 +212,7 @@ describe("Versioning", () => {
 
           it("should delete if schema is deleted", async () => {
             await rep.rm("preference", "identity");
-            await synchronizer.synchronize(SyncDirection.RepToDoc);
-
+            await sleep();
             const document = await prefService.findOne({scope: "passport"});
             delete document._id;
             expect(document).toEqual(defaultPref);
@@ -228,10 +249,12 @@ describe("Versioning", () => {
     describe("Synchronization from database to files", () => {
       it("should make first synchronization", async () => {
         await bs.insertOne(bucket);
-        await synchronizer.synchronize(SyncDirection.DocToRep);
+        await sleep();
 
-        const file = await rep.readResource("bucket", id.toString());
-        expect(file).toEqual({
+        const file = await readResource("bucket", id.toString());
+        const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
+
+        expect(parsedFile).toEqual({
           _id: id.toHexString(),
           contents: {schema: {...bucket, _id: id.toString()}}
         });
@@ -239,16 +262,18 @@ describe("Versioning", () => {
 
       it("should update if schema has changes", async () => {
         await bs.insertOne(bucket);
-        await synchronizer.synchronize(SyncDirection.DocToRep);
+        await sleep();
 
         await bs.updateOne({_id: id}, {$set: {"properties.title.type": "number"}});
-        await synchronizer.synchronize(SyncDirection.DocToRep);
+        await sleep();
 
-        const file = await rep.readResource("bucket", id.toString());
+        const file = await readResource("bucket", id.toString());
+        const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
+
         const expectedBucket = {...bucket, _id: id.toString()};
         expectedBucket.properties.title.type = "number";
 
-        expect(file).toEqual({
+        expect(parsedFile).toEqual({
           _id: id.toHexString(),
           contents: {
             schema: expectedBucket
@@ -258,49 +283,45 @@ describe("Versioning", () => {
 
       it("should delete if schema has been deleted", async () => {
         await bs.insertOne(bucket);
-        await synchronizer.synchronize(SyncDirection.DocToRep);
+        await sleep();
 
         await bs.findOneAndDelete({_id: id});
-        await synchronizer.synchronize(SyncDirection.DocToRep);
+        await sleep();
 
-        const file = await rep.readResource("bucket", id.toString());
+        const file = await readResource("bucket", id.toString());
         expect(file).toEqual({});
       });
     });
 
     describe("Synchronization from files to database", () => {
       it("should make first synchronization", async () => {
-        await rep.write("bucket", id.toHexString(), "schema", bucket, "yaml");
-
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
+        const stringified = YAML.stringify(bucket);
+        await rep.write("bucket", id.toHexString(), "schema", stringified, "yaml");
+        await sleep();
 
         const buckets = await bs.find();
         expect(buckets).toEqual([{...bucket, _id: id}]);
       });
 
       it("should update if schema has changes", async () => {
-        await rep.write("bucket", id.toHexString(), "schema", bucket, "yaml");
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
+        const stringified = YAML.stringify(bucket);
+        await rep.write("bucket", id.toHexString(), "schema", stringified, "yaml");
+        await sleep();
 
-        await rep.write(
-          "bucket",
-          id.toHexString(),
-          "schema",
-          {...bucket, title: "new title"},
-          "yaml"
-        );
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
+        const updated = YAML.stringify({...bucket, title: "new title"});
+        await rep.write("bucket", id.toHexString(), "schema", updated, "yaml");
+        await sleep();
 
         const buckets = await bs.find({});
         expect(buckets).toEqual([{...bucket, _id: id, title: "new title"}]);
       });
 
       it("should delete if schema has been deleted", async () => {
-        await rep.write("bucket", id.toHexString(), "schema", bucket, "yaml");
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
-
+        const stringified = YAML.stringify(bucket);
+        await rep.write("bucket", id.toHexString(), "schema", stringified, "yaml");
+        await sleep();
         await rep.rm("bucket", id.toHexString());
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
+        await sleep();
 
         const buckets = await bs.find({});
         expect(buckets).toEqual([]);
@@ -323,19 +344,25 @@ describe("Versioning", () => {
         };
 
         // SCHEMA INSERT
-        await fs.insertOne(fn);
+        await fnservice.insertOne(fn);
         await engine.createFunction(fn);
         await engine.update(fn, "");
         await engine.compile(fn);
 
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await sleep();
 
-        await synchronizer.synchronize(SyncDirection.DocToRep);
-
-        let file = await rep.readResource("function", id.toString());
+        let file = await readResource("function", id.toString());
+        let parsedFile = {
+          ...file,
+          contents: {
+            ...file.contents,
+            schema: YAML.parse(file.contents.schema),
+            package: YAML.parse(file.contents.package)
+          }
+        };
         const expectedSchema = {...fn, _id: id.toHexString()};
 
-        expect(file).toEqual({
+        expect(parsedFile).toEqual({
           _id: id.toHexString(),
           contents: {
             index: "",
@@ -350,11 +377,20 @@ describe("Versioning", () => {
           active: true,
           options: {}
         };
-        await fs.findOneAndUpdate({_id: id}, {$set: {"triggers.onCall": onCall}});
-        await synchronizer.synchronize(SyncDirection.DocToRep);
+        await fnservice.findOneAndUpdate({_id: id}, {$set: {"triggers.onCall": onCall}});
+        await sleep();
 
-        file = await rep.readResource("function", id.toString());
-        expect(file).toEqual({
+        file = await readResource("function", id.toString());
+        parsedFile = {
+          ...file,
+          contents: {
+            ...file.contents,
+            schema: YAML.parse(file.contents.schema),
+            package: YAML.parse(file.contents.package)
+          }
+        };
+
+        expect(parsedFile).toEqual({
           _id: id.toHexString(),
           contents: {
             index: "",
@@ -365,10 +401,19 @@ describe("Versioning", () => {
 
         // INDEX UPDATE
         await engine.update(fn, "console.log(123)");
-        await synchronizer.synchronize(SyncDirection.DocToRep);
+        await sleep();
 
-        file = await rep.readResource("function", id.toString());
-        expect(file).toEqual({
+        file = await readResource("function", id.toString());
+        parsedFile = {
+          ...file,
+          contents: {
+            ...file.contents,
+            schema: YAML.parse(file.contents.schema),
+            package: YAML.parse(file.contents.package)
+          }
+        };
+
+        expect(parsedFile).toEqual({
           _id: id.toHexString(),
           contents: {
             index: "console.log(123)",
@@ -378,10 +423,10 @@ describe("Versioning", () => {
         });
 
         // SCHEMA DELETE
-        await fs.findOneAndDelete({_id: id});
-        await synchronizer.synchronize(SyncDirection.DocToRep);
+        await fnservice.findOneAndDelete({_id: id});
+        await sleep();
 
-        file = await rep.readResource("function", id.toString());
+        file = await readResource("function", id.toString());
         expect(file).toEqual({});
         // we can not install dependency on test environment
       });
@@ -398,19 +443,22 @@ describe("Versioning", () => {
           timeout: 100,
           triggers: {}
         };
-        await rep.write("function", id, "schema", fn, "yaml");
+        const stringified = YAML.stringify(fn);
+        await rep.write("function", id, "schema", stringified, "yaml");
+        await sleep();
 
         let index = "console.log('hi')";
         await rep.write("function", id, "index", index, "ts");
+        await sleep();
 
         let packages: any = {
           dependencies: {}
         };
-        await rep.write("function", id, "package", packages, "json");
+        const stringifiedPackages = YAML.stringify(packages);
+        await rep.write("function", id, "package", stringifiedPackages, "json");
+        await sleep();
 
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
-
-        let fns = await fs.find();
+        let fns = await fnservice.find();
         expect(fns).toEqual([
           {
             ...fn,
@@ -430,11 +478,11 @@ describe("Versioning", () => {
           active: true,
           options: {}
         };
-        await rep.write("function", id, "schema", {...fn, triggers: {onCall}}, "yaml");
+        const stringifiedSchema = YAML.stringify({...fn, triggers: {onCall}});
+        await rep.write("function", id, "schema", stringifiedSchema, "yaml");
+        await sleep();
 
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
-
-        fns = await fs.find();
+        fns = await fnservice.find();
         expect(fns).toEqual([
           {
             ...fn,
@@ -446,18 +494,16 @@ describe("Versioning", () => {
         // INDEX UPDATES
         index = "console.log('hi2')";
         await rep.write("function", id, "index", index, "ts");
-
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
+        await sleep();
 
         index = await engine.read(fn);
         expect(index).toEqual("console.log('hi2')");
 
         // SCHEMA DELETE
         await rep.rm("function", id);
+        await sleep();
 
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
-
-        fns = await fs.find();
+        fns = await fnservice.find();
         expect(fns).toEqual([]);
 
         packages = await engine.getPackages(fn);
@@ -486,10 +532,12 @@ describe("Versioning", () => {
     describe("Synchronization from database to files", () => {
       it("should make first synchronization", async () => {
         await evs.insertOne(envVar);
-        await synchronizer.synchronize(SyncDirection.DocToRep);
+        await sleep();
 
-        const file = await rep.readResource("env-var", id.toString());
-        expect(file).toEqual({
+        const file = await readResource("env-var", id.toString());
+        const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
+
+        expect(parsedFile).toEqual({
           _id: id.toHexString(),
           contents: {schema: {_id: id.toString(), key: "IGNORE_ERRORS", value: "true"}}
         });
@@ -497,14 +545,15 @@ describe("Versioning", () => {
 
       it("should update if schema has changes", async () => {
         await evs.insertOne(envVar);
-        await synchronizer.synchronize(SyncDirection.DocToRep);
+        await sleep();
 
         await evs.updateOne({_id: id}, {$set: {value: "false"}});
-        await synchronizer.synchronize(SyncDirection.DocToRep);
+        await sleep();
 
-        const file = await rep.readResource("env-var", id.toString());
+        const file = await readResource("env-var", id.toString());
+        const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
-        expect(file).toEqual({
+        expect(parsedFile).toEqual({
           _id: id.toHexString(),
           contents: {schema: {_id: id.toString(), key: "IGNORE_ERRORS", value: "false"}}
         });
@@ -512,32 +561,34 @@ describe("Versioning", () => {
 
       it("should delete if schema has been deleted", async () => {
         await evs.insertOne(envVar);
-        await synchronizer.synchronize(SyncDirection.DocToRep);
+        await sleep();
 
         await evs.findOneAndDelete({_id: id});
-        await synchronizer.synchronize(SyncDirection.DocToRep);
+        await sleep();
 
-        const file = await rep.readResource("env-var", id.toString());
+        const file = await readResource("env-var", id.toString());
         expect(file).toEqual({});
       });
     });
 
     describe("Synchronization from files to database", () => {
       it("should make first synchronization", async () => {
-        await rep.write("env-var", id.toHexString(), "schema", envVar, "yaml");
-
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
+        const stringified = YAML.stringify(envVar);
+        await rep.write("env-var", id.toHexString(), "schema", stringified, "yaml");
+        await sleep();
 
         const envVars = await evs.find();
         expect(envVars).toEqual([{...envVar, _id: id}]);
       });
 
       it("should update if schema has changes", async () => {
-        await rep.write("env-var", id.toHexString(), "schema", envVar, "yaml");
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
+        const stringified = YAML.stringify(envVar);
+        await rep.write("env-var", id.toHexString(), "schema", stringified, "yaml");
+        await sleep();
 
-        await rep.write("env-var", id.toHexString(), "schema", {...envVar, value: "false"}, "yaml");
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
+        const updated = YAML.stringify({...envVar, value: "false"});
+        await rep.write("env-var", id.toHexString(), "schema", updated, "yaml");
+        await sleep();
 
         const envVars = await evs.find({});
         expect(envVars).toEqual([
@@ -550,11 +601,12 @@ describe("Versioning", () => {
       });
 
       it("should delete if schema has been deleted", async () => {
-        await rep.write("env-var", id.toHexString(), "schema", envVar, "yaml");
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
+        const stringified = YAML.stringify(envVar);
+        await rep.write("env-var", id.toHexString(), "schema", stringified, "yaml");
+        await sleep();
 
         await rep.rm("env-var", id.toHexString());
-        await synchronizer.synchronize(SyncDirection.RepToDoc);
+        await sleep();
 
         const envVars = await evs.find({});
         expect(envVars).toEqual([]);

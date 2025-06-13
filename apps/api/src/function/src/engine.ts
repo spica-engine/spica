@@ -214,6 +214,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     }
 
     const moduleDir = this.options.root;
+    fs.mkdirSync(moduleDir, {recursive: true});
 
     return new Observable<FunctionWithContent>(observer => {
       const watcher = chokidar.watch(moduleDir, {
@@ -235,6 +236,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         const fn = await CRUD.findOne(this.fs, new ObjectId(_id), {
           resolveEnvRelations: EnvRelation.NotResolved
         });
+        if (!fn) return;
 
         const content = await fs.promises.readFile(path).then(b => b.toString());
 

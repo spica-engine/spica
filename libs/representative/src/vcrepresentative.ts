@@ -15,14 +15,14 @@ import {
 export class VCRepresentativeManager implements IRepresentativeManager {
   constructor(protected cwd: string) {}
 
-  private getModuleDir(module: string) {
+  getModuleDir(module: string) {
     return path.join(this.cwd, module);
   }
 
   write(module: string, id: string, fileName: string, content: string, extension: string) {
     const resourcesDirectory = path.join(this.cwd, module, id);
     if (!fs.existsSync(resourcesDirectory)) {
-      fs.mkdirSync(resourcesDirectory);
+      fs.mkdirSync(resourcesDirectory, {recursive: true});
     }
 
     const fullPath = path.join(resourcesDirectory, `${fileName}.${extension}`);
