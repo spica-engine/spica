@@ -1,0 +1,13 @@
+.container {
+  background-color: var(--color-menu-background);
+  border-radius: var(--border-radius-md);
+  padding: var(--padding-xl);
+  .title {
+    font-size: var(--font-size-lg);
+    color: var(--color-font-primary);
+    font-weight: 400;
+  }
+  .settingsButton {
+    border: var(--border-default) !important;
+  }
+}
