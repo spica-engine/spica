@@ -42,7 +42,8 @@ describe("Identity", () => {
           blockingOptions: {
             blockDurationMinutes: 0,
             failedAttemptLimit: 0
-          }
+          },
+          passwordHistoryLimit: 0
         }),
         PreferenceTestingModule,
         CoreTestingModule,

@@ -32,6 +32,8 @@ import {compare, hash} from "./hash";
 import {IdentityService} from "./identity.service";
 import {
   Identity,
+  IDENTITY_OPTIONS,
+  IdentityOptions,
   PaginationResponse,
   POLICY_PROVIDER
 } from "@spica-server/interface/passport/identity";
@@ -62,6 +64,7 @@ export class IdentityController {
 
   constructor(
     private identityService: IdentityService,
+    @Inject(IDENTITY_OPTIONS) private options: IdentityOptions,
     @Inject(POLICY_PROVIDER)
     private identityPolicyResolver: (req: any) => Promise<[{statement: []}]>,
     private authFactor: AuthFactor,
@@ -112,7 +115,7 @@ export class IdentityController {
   }
 
   private hideSecretsExpression(): {[key: string]: 0} {
-    const expression: any = {password: 0};
+    const expression: any = {password: 0, lastPasswords: 0};
 
     const authFactorSecretPaths = this.authFactor.getSecretPaths();
     authFactorSecretPaths.forEach(path => {
@@ -333,6 +336,7 @@ export class IdentityController {
   ) {
     identity.password = await hash(identity.password);
     identity.policies = [];
+    identity.lastPasswords = [];
 
     return this.identityService
       .insertOne(identity)
@@ -346,6 +350,7 @@ export class IdentityController {
 
   private afterIdentityUpsert(identity: Identity) {
     delete identity.password;
+    delete identity.lastPasswords;
 
     if (identity.authFactor) {
       this.authFactor.getSecretPaths().map(path => {
@@ -368,12 +373,32 @@ export class IdentityController {
     identity: Partial<Identity>
   ) {
     if (identity.password) {
-      const user = await this.identityService.findOne({_id: id});
+      const {password: currentPassword, lastPasswords} = await this.identityService.findOne({
+        identifier: identity.identifier
+      });
 
-      if (user) {
-        const isEqual = await compare(identity.password, user.password);
-        if (!isEqual) {
-          identity.deactivateJwtsBefore = Date.now() / 1000;
+      const isEqual = await compare(identity.password, currentPassword);
+      if (!isEqual) {
+        identity.deactivateJwtsBefore = Date.now() / 1000;
+      }
+
+      if (this.options.passwordHistoryLimit > 0) {
+        identity.lastPasswords = lastPasswords || [];
+
+        identity.lastPasswords.push(currentPassword);
+
+        if (identity.lastPasswords.length == this.options.passwordHistoryLimit + 1) {
+          identity.lastPasswords.shift();
+        }
+
+        const isOneOfLastPasswords = (
+          await Promise.all(identity.lastPasswords.map(oldPw => compare(identity.password, oldPw)))
+        ).includes(true);
+
+        if (isOneOfLastPasswords) {
+          throw new BadRequestException(
+            `New password can't be the one of last ${this.options.passwordHistoryLimit} passwords.`
+          );
         }
       }
 
@@ -432,7 +457,7 @@ export class IdentityController {
       },
       {
         returnDocument: ReturnDocument.AFTER,
-        projection: {password: 0}
+        projection: {password: 0, lastPasswords: 0}
       }
     );
     if (!res) {
@@ -455,7 +480,7 @@ export class IdentityController {
       },
       {
         returnDocument: ReturnDocument.AFTER,
-        projection: {password: 0}
+        projection: {password: 0, lastPasswords: 0}
       }
     );
     if (!res) {

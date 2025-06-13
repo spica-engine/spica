@@ -40,6 +40,7 @@ export class IdentityModule {
         identifier: options.defaultIdentityIdentifier,
         password: options.defaultIdentityPassword,
         policies: options.defaultIdentityPolicies,
+        lastPasswords: [],
         failedAttempts: [],
         lastLogin: undefined
       });
