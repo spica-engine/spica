@@ -11,7 +11,7 @@ import {
 import {VCRepresentativeManager} from "@spica-server/representative";
 import {Git} from "./versionmanager";
 import fs from "fs";
-import {JobReducer} from "@spica-server/replication";
+import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {VCSynchronizer} from "./synchronizer/vcsynchronizer";
 
 @Global()
@@ -49,10 +49,14 @@ export class VersionControlModule {
         {
           provide: REGISTER_VC_SYNCHRONIZER,
           useFactory:
-            (vcRepresentativeManager: VCRepresentativeManager) =>
+            (
+              vcRepresentativeManager: VCRepresentativeManager,
+              jobReducer?: JobReducer,
+              commander?: ClassCommander
+            ) =>
             <R1>(args: VCSynchronizerArgs<R1>) =>
-              new VCSynchronizer(args, vcRepresentativeManager).start(),
-          inject: [VC_REPRESENTATIVE_MANAGER]
+              new VCSynchronizer(args, vcRepresentativeManager, jobReducer, commander).start(),
+          inject: [VC_REPRESENTATIVE_MANAGER, JobReducer, ClassCommander]
         }
       ],
       exports: [REGISTER_VC_SYNCHRONIZER, VC_REPRESENTATIVE_MANAGER]

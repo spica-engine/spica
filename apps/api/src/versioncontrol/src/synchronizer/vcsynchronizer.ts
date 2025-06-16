@@ -12,13 +12,20 @@ import {VCRepresentativeManager} from "@spica-server/representative";
 import {RepresentativeManagerResource} from "@spica-server/interface/versioncontrol";
 import {getDocToRepConverter, getDocWatcher, getRepApplier} from "./doc.synchronizer";
 import {getDocApplier, getRepToDocConverter, getRepWatcher} from "./rep.synchronizer";
+import {ClassCommander, JobReducer} from "@spica-server/replication";
+import {CommandType} from "@spica-server/interface/replication";
 
 @Injectable()
 export class VCSynchronizer<R extends Resource> extends Synchronizer<
   R,
   RepresentativeManagerResource
 > {
-  constructor(args: VCSynchronizerArgs<R>, vcRepresentativeManager: VCRepresentativeManager) {
+  constructor(
+    args: VCSynchronizerArgs<R>,
+    vcRepresentativeManager: VCRepresentativeManager,
+    jobReducer?: JobReducer,
+    commander?: ClassCommander
+  ) {
     const docSync = args.syncs[0];
 
     const docWatcher = getDocWatcher<R>(docSync.watcher);
@@ -70,5 +77,25 @@ export class VCSynchronizer<R extends Resource> extends Synchronizer<
     };
 
     super(synchronizerArgs);
+
+    if (commander) {
+      commander = commander.new();
+      commander.register(this, [this.shift], CommandType.SHIFT);
+    }
+  }
+
+  private shift(
+    rawChange,
+    target: {
+      id: string;
+      cwd: string;
+    },
+    eventId: string
+  ) {
+    const newTarget = new event.Target({
+      id: target.id,
+      cwd: target.cwd
+    });
+    return;
   }
 }
