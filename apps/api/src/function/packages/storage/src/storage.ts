@@ -6,14 +6,13 @@ import {
   Batch,
   BatchResponse
 } from "@spica-devkit/internal_common";
-import {
-  StorageObject,
-  BufferWithMeta,
-  IndexResult,
-  ApikeyInitialization,
-  IdentityInitialization
-} from "./interface";
+import {StorageObject, BufferWithMeta} from "./interface";
 import {preparePostBody, preparePutBody} from "./utility";
+import {
+  ApikeyInitialization,
+  IdentityInitialization,
+  IndexResult
+} from "@spica-server/interface/function/packages";
 
 let authorization;
 

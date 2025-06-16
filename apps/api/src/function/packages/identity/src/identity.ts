@@ -1,9 +1,6 @@
 import {
   IdentityCreate,
   IdentityGet,
-  IdentityInitialization,
-  ApikeyInitialization,
-  IndexResult,
   LoginWithStrategyResponse,
   TokenScheme,
   ChallengeRes,
@@ -23,6 +20,11 @@ import {
 import {Strategy} from "./interface";
 import {Observable} from "rxjs";
 import {deepCopyJSON} from "@spica-server/core/copy";
+import {
+  ApikeyInitialization,
+  IdentityInitialization,
+  IndexResult
+} from "@spica-server/interface/function/packages";
 
 let authorization;
 
