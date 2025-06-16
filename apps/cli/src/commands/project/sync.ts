@@ -276,15 +276,14 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
     private options: {syncFnEnv; functionIds}
   ) {}
 
-  async getFunctions(service: httpService.Client) {
-    const allFunctions = await service.get<any[]>("function");
-    return getFilteredResources(allFunctions, this.options.functionIds);
-  }
-
   async initialize() {
     const synchronizers = [];
 
-    const sourceFns = await this.getFunctions(this.sourceService);
+    const sourceFns = await getFilteredResources(
+      "function",
+      this.sourceService,
+      this.options.functionIds
+    );
 
     // put dependency synchronizer for each function
     for (const fn of sourceFns) {
@@ -302,12 +301,12 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
     console.log();
     let sourceFns = await spin<any>({
       text: "Fetching functions from source instance",
-      op: () => this.getFunctions(this.sourceService)
+      op: () => getFilteredResources("function", this.sourceService, this.options.functionIds)
     });
 
     const targetFns = await spin<any>({
       text: "Fetching functions from target instance",
-      op: () => this.getFunctions(this.targetService)
+      op: () => getFilteredResources("function", this.targetService, this.options.functionIds)
     });
 
     if (!this.options.syncFnEnv) {
@@ -691,15 +690,14 @@ export class BucketSynchronizer implements ModuleSynchronizer {
     private options: {bucketIds}
   ) {}
 
-  async getBuckets(service: httpService.Client) {
-    const allBuckets = await service.get<any[]>("bucket");
-    return getFilteredResources(allBuckets, this.options.bucketIds);
-  }
-
   async initialize() {
     const synchronizers = [];
 
-    const sourceBuckets = await this.getBuckets(this.sourceService);
+    const sourceBuckets = await getFilteredResources(
+      "bucket",
+      this.sourceService,
+      this.options.bucketIds
+    );
 
     for (const bucket of sourceBuckets) {
       synchronizers.push(
@@ -713,12 +711,12 @@ export class BucketSynchronizer implements ModuleSynchronizer {
     console.log();
     const sourceBuckets = await spin<any>({
       text: "Fetching buckets from source instance",
-      op: () => this.getBuckets(this.sourceService)
+      op: () => getFilteredResources("bucket", this.sourceService, this.options.bucketIds)
     });
 
     const targetBuckets = await spin<any>({
       text: "Fetching buckets from target instance",
-      op: () => this.getBuckets(this.targetService)
+      op: () => getFilteredResources("bucket", this.targetService, this.options.bucketIds)
     });
 
     const decider = new ResourceGroupComparisor(sourceBuckets, targetBuckets);
@@ -792,12 +790,6 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
     private options: {apikeyIds}
   ) {}
 
-  async getApikeys(service: httpService.Client) {
-    const res = await service.get<{meta: {total: number}; data: any[]}>("passport/apikey");
-    const allApikeys = res.data;
-    return getFilteredResources(allApikeys, this.options.apikeyIds);
-  }
-
   initialize() {
     return Promise.resolve([]);
   }
@@ -806,12 +798,14 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
     console.log();
     const sourceApikeys = await spin<any>({
       text: "Fetching apikeys from source instance",
-      op: () => this.getApikeys(this.sourceService)
+      op: () =>
+        getFilteredResources("passport/apikey", this.sourceService, this.options.apikeyIds, true)
     });
 
     const targetApikeys = await spin<any>({
       text: "Fetching apikeys from target instance",
-      op: () => this.getApikeys(this.targetService)
+      op: () =>
+        getFilteredResources("passport/apikey", this.targetService, this.options.apikeyIds, true)
     });
 
     const decider = new ResourceGroupComparisor(sourceApikeys, targetApikeys);
@@ -918,12 +912,6 @@ export class PolicySynchronizer implements ModuleSynchronizer {
     private options: {policyIds}
   ) {}
 
-  async getPolicies(service: httpService.Client) {
-    const res = await service.get<{meta: {total: number}; data: any[]}>("passport/policy");
-    const allPolicies = res.data;
-    return getFilteredResources(allPolicies, this.options.policyIds);
-  }
-
   initialize() {
     return Promise.resolve([]);
   }
@@ -932,12 +920,14 @@ export class PolicySynchronizer implements ModuleSynchronizer {
     console.log();
     const sourcePolicies = await spin<any>({
       text: "Fetching policies from source instance",
-      op: () => this.getPolicies(this.sourceService)
+      op: () =>
+        getFilteredResources("passport/policy", this.sourceService, this.options.policyIds, true)
     });
 
     const targetPolicies = await spin<any>({
       text: "Fetching policies from target instance",
-      op: () => this.getPolicies(this.targetService)
+      op: () =>
+        getFilteredResources("passport/policy", this.targetService, this.options.policyIds, true)
     });
 
     const decider = new ResourceGroupComparisor(sourcePolicies, targetPolicies);
@@ -1013,11 +1003,6 @@ export class EnvironmentVariableSynchronizer implements ModuleSynchronizer {
     private options: {envVarIds}
   ) {}
 
-  async getEnvVars(service: httpService.Client) {
-    const allEnvVars = await service.get<any[]>("env-var");
-    return getFilteredResources(allEnvVars, this.options.envVarIds);
-  }
-
   initialize() {
     return Promise.resolve([]);
   }
@@ -1026,12 +1011,12 @@ export class EnvironmentVariableSynchronizer implements ModuleSynchronizer {
     console.log();
     const sourceEnvVars = await spin<any>({
       text: "Fetching env vars from source instance",
-      op: () => this.getEnvVars(this.sourceService)
+      op: () => getFilteredResources("env-var", this.sourceService, this.options.envVarIds)
     });
 
     const targetEnvVars = await spin<any>({
       text: "Fetching env vars from target instance",
-      op: () => this.getEnvVars(this.targetService)
+      op: () => getFilteredResources("env-var", this.targetService, this.options.envVarIds)
     });
 
     const decider = new ResourceGroupComparisor(sourceEnvVars, targetEnvVars);
@@ -1184,7 +1169,14 @@ function isNotFoundException(e) {
   return e.status == code || e.statusCode == code || (e.data && e.data.statusCode == code);
 }
 
-function getFilteredResources(resources: any[], ids: string[] | undefined) {
+async function getFilteredResources(
+  path: string,
+  service: httpService.Client,
+  ids: string[] | undefined,
+  paginate?: boolean
+) {
+  const res = await service.get<any>(path);
+  const resources: any[] = paginate ? res.data : res;
   return ids ? resources.filter(resource => ids.includes(resource._id)) : resources;
 }
 
