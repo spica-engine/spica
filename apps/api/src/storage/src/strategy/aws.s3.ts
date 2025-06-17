@@ -1,64 +1,71 @@
 import {ReadStream} from "fs";
 import {Strategy} from "./strategy";
-import AWS from "aws-sdk";
+import {
+  S3Client,
+  GetObjectCommand,
+  PutObjectCommand,
+  DeleteObjectCommand
+} from "@aws-sdk/client-s3";
+import {fromIni} from "@aws-sdk/credential-providers";
 
 export class AWSS3 implements Strategy {
-  s3: AWS.S3;
+  s3: S3Client;
+
   constructor(
     private credentialsPath: string,
     private bucketName: string
   ) {
-    AWS.config.loadFromPath(this.credentialsPath);
-    this.s3 = new AWS.S3();
+    this.s3 = new S3Client({
+      credentials: fromIni({filepath: this.credentialsPath})
+    });
   }
 
   writeStream(id: string, data: ReadStream, mimeType?: string): Promise<void> {
     return this.write(id, data, mimeType);
   }
 
-  read(id: string): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
-      this.s3.getObject({Bucket: this.bucketName, Key: id}, (err, data) => {
-        if (err) {
-          return reject(err);
-        }
+  async read(id: string): Promise<Buffer> {
+    const res = await this.s3.send(
+      new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: id
+      })
+    );
 
-        return resolve(data.Body as Buffer);
-      });
+    return new Promise((resolve, reject) => {
+      const chunks: any[] = [];
+      const stream = res.Body as NodeJS.ReadableStream;
+
+      stream.on("data", chunk => chunks.push(chunk));
+      stream.on("end", () => resolve(Buffer.concat(chunks)));
+      stream.on("error", reject);
     });
   }
 
-  write(id: string, data: Buffer | ReadStream, mimeType?: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.s3.upload(
-        {Bucket: this.bucketName, Key: id, Body: data, ContentType: mimeType},
-        (err, data) => {
-          if (err) {
-            return reject(err);
-          }
-
-          return resolve();
-        }
-      );
-    });
+  async write(id: string, data: Buffer | ReadStream, mimeType?: string): Promise<void> {
+    await this.s3.send(
+      new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: id,
+        Body: data,
+        ContentType: mimeType
+      })
+    );
   }
 
-  delete(id: string): void | Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.s3.deleteObject({Bucket: this.bucketName, Key: id}, (err, data) => {
-        if (err) {
-          return reject(err);
-        }
-
-        return resolve();
-      });
-    });
+  async delete(id: string): Promise<void> {
+    await this.s3.send(
+      new DeleteObjectCommand({
+        Bucket: this.bucketName,
+        Key: id
+      })
+    );
   }
 
   url(id: string): Promise<string> {
     // @TODO: find a way to get object location instead of this
     return Promise.resolve(
-      `https://${this.bucketName}.s3.${AWS.config.region}.amazonaws.com/${id}`
+      `https://${this.bucketName}.s3.${this.s3.config.region}.amazonaws.com/${id}`
     );
   }
 }
