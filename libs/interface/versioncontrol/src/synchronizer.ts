@@ -1,5 +1,6 @@
 import {Observable} from "rxjs";
 import {BaseCollection} from "@spica-server/database";
+import {IJobReducer} from "@spica-server/interface/replication";
 
 export enum ChangeTypes {
   INSERT,
@@ -106,6 +107,7 @@ export type SynchronizerArgs<R1 extends Resource, R2 extends Resource> = {
   syncs: [DocSync<R1, R2>, RepSync<R2, R1>];
   moduleName: string;
   subModuleName: string;
+  jobReducer?: IJobReducer;
 };
 
 export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
@@ -115,7 +117,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
   repToDocActions = new Set<string>();
 
   start() {
-    const {syncs, moduleName, subModuleName} = this.args;
+    const {syncs, moduleName, subModuleName, jobReducer} = this.args;
 
     const errorHandler = err => {
       console.error(`Error received while listening ${moduleName}.${subModuleName} changes.`);
@@ -135,8 +137,17 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 
         this.docToRepActions.add(resourceId);
 
-        const convertedChange = docSync.converter.convert(change);
-        docSync.applier.apply(convertedChange);
+        const apply = () => {
+          const convertedChange = docSync.converter.convert(change);
+          docSync.applier.apply(convertedChange);
+        };
+
+        if (jobReducer) {
+          const meta = {_id: `doc->rep:${resourceId}`};
+          jobReducer.do(meta, apply);
+        } else {
+          apply();
+        }
       },
       error: errorHandler
     });
@@ -153,22 +164,31 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 
         this.repToDocActions.add(resourceId);
 
-        const convertedChange = repSync.converter.convert(change);
+        const apply = () => {
+          const convertedChange = repSync.converter.convert(change);
 
-        const retry = (delays: number[]) => {
-          repSync.applier.apply(convertedChange).catch(err => {
-            delays.length
-              ? new Promise(res => setTimeout(res, delays[0])).then(() => retry(delays.slice(1)))
-              : console.error(
-                  "Failed to apply changes from doc to rep for the following change:\n",
-                  convertedChange,
-                  "\nreason:\n",
-                  err
-                );
-          });
+          const retry = (delays: number[]) => {
+            repSync.applier.apply(convertedChange).catch(err => {
+              delays.length
+                ? new Promise(res => setTimeout(res, delays[0])).then(() => retry(delays.slice(1)))
+                : console.error(
+                    "Failed to apply changes from doc to rep for the following change:\n",
+                    convertedChange,
+                    "\nreason:\n",
+                    err
+                  );
+            });
+          };
+
+          retry([2000, 4000, 8000]);
         };
 
-        retry([2000, 4000, 8000]);
+        if (jobReducer) {
+          const meta = {_id: `rep->doc:${resourceId}`};
+          jobReducer.do(meta, apply);
+        } else {
+          apply();
+        }
       },
       error: errorHandler
     });
