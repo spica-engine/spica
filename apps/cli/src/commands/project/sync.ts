@@ -141,13 +141,6 @@ We highly recommend you to use --dry-run=true and check the changes that will be
       default: false
     })
     .option(
-      "--sync-fn-env",
-      "Set true if you need to sync function environment variables as well.",
-      {
-        default: false
-      }
-    )
-    .option(
       "--ignore-errors",
       "Set true if you don't want to interrupt sync process because of failed requests.",
       {
