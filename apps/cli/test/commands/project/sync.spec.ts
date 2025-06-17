@@ -181,9 +181,7 @@ describe("Synchronize", () => {
       });
 
       describe("FunctionSynchronizer", () => {
-        const synchronizer = new FunctionSynchronizer(sourceService as any, targetService as any, {
-          syncFnEnv: true
-        });
+        const synchronizer = new FunctionSynchronizer(sourceService as any, targetService as any);
 
         it("should analyze function", async () => {
           const {insertions, updations, deletions} = await synchronizer.analyze();

@@ -19,7 +19,6 @@ async function sync({
     targetApikey,
     modules,
     dryRun,
-    syncFnEnv,
     ignoreErrors,
     concurrencyLimit
   }
@@ -53,7 +52,7 @@ async function sync({
   const synchronizers = [];
 
   for (const Ctor of coreSynchronizers) {
-    const synchronizer = new Ctor(sourceService, targetService, {syncFnEnv});
+    const synchronizer = new Ctor(sourceService, targetService);
     const subSynchronizers = await synchronizer.initialize().catch(e => {
       return Promise.reject(returnErrorMessage(e));
     });
@@ -233,8 +232,7 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
 
   constructor(
     private sourceService: httpService.Client,
-    private targetService: httpService.Client,
-    private options: {syncFnEnv}
+    private targetService: httpService.Client
   ) {}
 
   async initialize() {
@@ -265,19 +263,6 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
       text: "Fetching functions from target instance",
       op: () => this.targetService.get<any[]>("function")
     });
-
-    if (!this.options.syncFnEnv) {
-      sourceFns = sourceFns.map(fn => {
-        fn.env = {};
-        return fn;
-      });
-      for (const target of targetFns) {
-        const index = sourceFns.findIndex(srcFn => srcFn._id == target._id);
-        if (index != -1) {
-          sourceFns[index].env = target.env;
-        }
-      }
-    }
 
     const decider = new ResourceGroupComparisor(sourceFns, targetFns);
 
