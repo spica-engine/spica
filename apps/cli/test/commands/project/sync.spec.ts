@@ -139,7 +139,9 @@ describe("Synchronize", () => {
       });
 
       describe("BucketSynchronizer", () => {
-        const synchronizer = new BucketSynchronizer(sourceService as any, targetService as any);
+        const synchronizer = new BucketSynchronizer(sourceService as any, targetService as any, {
+          bucketIds: undefined
+        });
 
         it("should analyze buckets", async () => {
           const {insertions, updations, deletions} = await synchronizer.analyze();
@@ -178,11 +180,53 @@ describe("Synchronize", () => {
           });
           expect(targetService.delete).toHaveBeenCalledWith("bucket/4");
         });
+
+        describe("with selected bucket IDs", () => {
+          const synchronizer = new BucketSynchronizer(sourceService as any, targetService as any, {
+            bucketIds: ["1", "2"]
+          });
+
+          it("should analyze buckets", async () => {
+            const {insertions, updations, deletions} = await synchronizer.analyze();
+            expect(insertions).toEqual([]);
+            expect(updations).toEqual([{_id: "2", prop: "update_me"}]);
+            expect(deletions).toEqual([]);
+
+            expect(synchronizer.insertions).toEqual([]);
+            expect(synchronizer.updations).toEqual([{_id: "2", prop: "update_me"}]);
+            expect(synchronizer.deletions).toEqual([]);
+
+            expect(sourceService.get).toHaveBeenCalledWith("bucket");
+            expect(sourceService.put).not.toHaveBeenCalled();
+            expect(sourceService.post).not.toHaveBeenCalled();
+
+            expect(targetService.get).toHaveBeenCalledWith("bucket");
+            expect(targetService.put).not.toHaveBeenCalled();
+            expect(targetService.post).not.toHaveBeenCalled();
+          });
+
+          it("should synchronize buckets", async () => {
+            await synchronizer.analyze();
+            await synchronizer.synchronize();
+
+            expect(sourceService.put).not.toHaveBeenCalled();
+            expect(sourceService.post).not.toHaveBeenCalled();
+            expect(sourceService.delete).not.toHaveBeenCalled();
+
+            expect(targetService.put).toHaveBeenCalledWith("bucket/2", {
+              _id: "2",
+              prop: "update_me"
+            });
+            expect(targetService.post).not.toHaveBeenCalledWith();
+            expect(targetService.delete).not.toHaveBeenCalledWith();
+          });
+        });
       });
 
       describe("FunctionSynchronizer", () => {
         const synchronizer = new FunctionSynchronizer(sourceService as any, targetService as any, {
-          syncFnEnv: true
+          syncFnEnv: true,
+          functionIds: undefined
         });
 
         it("should analyze function", async () => {
@@ -221,6 +265,49 @@ describe("Synchronize", () => {
             prop: "insert_me"
           });
           expect(targetService.delete).toHaveBeenCalledWith("function/4");
+        });
+
+        describe("with selected function IDs", () => {
+          const synchronizer = new FunctionSynchronizer(
+            sourceService as any,
+            targetService as any,
+            {syncFnEnv: true, functionIds: ["1", "2"]}
+          );
+
+          it("should analyze function", async () => {
+            const {insertions, updations, deletions} = await synchronizer.analyze();
+            expect(insertions).toEqual([]);
+            expect(updations).toEqual([{_id: "2", prop: "update_me"}]);
+            expect(deletions).toEqual([]);
+
+            expect(synchronizer.insertions).toEqual([]);
+            expect(synchronizer.updations).toEqual([{_id: "2", prop: "update_me"}]);
+            expect(synchronizer.deletions).toEqual([]);
+
+            expect(sourceService.get).toHaveBeenCalledWith("function");
+            expect(sourceService.put).not.toHaveBeenCalled();
+            expect(sourceService.post).not.toHaveBeenCalled();
+
+            expect(targetService.get).toHaveBeenCalledWith("function");
+            expect(targetService.put).not.toHaveBeenCalled();
+            expect(targetService.post).not.toHaveBeenCalled();
+          });
+
+          it("should synchronize functions", async () => {
+            await synchronizer.analyze();
+            await synchronizer.synchronize();
+
+            expect(sourceService.put).not.toHaveBeenCalled();
+            expect(sourceService.post).not.toHaveBeenCalled();
+            expect(sourceService.delete).not.toHaveBeenCalled();
+
+            expect(targetService.put).toHaveBeenCalledWith("function/2", {
+              _id: "2",
+              prop: "update_me"
+            });
+            expect(targetService.post).not.toHaveBeenCalledWith();
+            expect(targetService.delete).not.toHaveBeenCalledWith();
+          });
         });
       });
     });
@@ -277,7 +364,9 @@ describe("Synchronize", () => {
         targetService.delete.mockClear();
       });
 
-      const synchronizer = new ApikeySynchronizer(sourceService as any, targetService as any);
+      const synchronizer = new ApikeySynchronizer(sourceService as any, targetService as any, {
+        apikeyIds: undefined
+      });
 
       it("should analyze apikeys", async () => {
         const result = await synchronizer.analyze();
@@ -340,6 +429,63 @@ describe("Synchronize", () => {
           ["passport/apikey/4"]
         ]);
       });
+
+      describe("with selected apikey IDs", () => {
+        const synchronizer = new ApikeySynchronizer(sourceService as any, targetService as any, {
+          apikeyIds: ["1", "2"]
+        });
+
+        it("should analyze apikeys", async () => {
+          const result = await synchronizer.analyze();
+
+          const expecteds = {
+            insertions: [],
+            updations: [{_id: "2", name: "update_me", policies: ["new_policy_id"]}],
+            deletions: []
+          };
+          expect(result).toEqual(expecteds);
+
+          expect(synchronizer.insertions).toEqual(expecteds.insertions);
+          expect(synchronizer.updations).toEqual(expecteds.updations);
+          expect(synchronizer.deletions).toEqual(expecteds.deletions);
+
+          expect(sourceService.get).toHaveBeenCalledWith("passport/apikey");
+          expect(sourceService.put).not.toHaveBeenCalled();
+          expect(sourceService.post).not.toHaveBeenCalled();
+
+          expect(targetService.get).toHaveBeenCalledWith("passport/apikey");
+          expect(targetService.put).not.toHaveBeenCalled();
+          expect(targetService.post).not.toHaveBeenCalled();
+        });
+
+        it("should synchronize apikeys", async () => {
+          await synchronizer.analyze();
+          await synchronizer.synchronize();
+
+          expect(sourceService.put).not.toHaveBeenCalled();
+          expect(sourceService.post).not.toHaveBeenCalled();
+          expect(sourceService.delete).not.toHaveBeenCalled();
+
+          expect(targetService.post).toHaveBeenCalledTimes(1);
+          expect(targetService.post.mock.calls).toEqual([
+            [
+              "passport/apikey",
+              {
+                _id: "2",
+                name: "update_me"
+              }
+            ]
+          ]);
+
+          expect(targetService.put).toHaveBeenCalledTimes(1);
+          expect(targetService.put.mock.calls).toEqual([
+            ["passport/apikey/2/policy/new_policy_id"]
+          ]);
+
+          expect(targetService.delete).toHaveBeenCalledTimes(1);
+          expect(targetService.delete.mock.calls).toEqual([["passport/apikey/2"]]);
+        });
+      });
     });
 
     describe("PolicySynchronizer", () => {
@@ -394,7 +540,9 @@ describe("Synchronize", () => {
         targetService.delete.mockClear();
       });
 
-      const synchronizer = new PolicySynchronizer(sourceService as any, targetService as any);
+      const synchronizer = new PolicySynchronizer(sourceService as any, targetService as any, {
+        policyIds: undefined
+      });
 
       it("should analyze policies", async () => {
         const result = await synchronizer.analyze();
@@ -438,6 +586,52 @@ describe("Synchronize", () => {
           statements: []
         });
         expect(targetService.delete).toHaveBeenCalledWith("passport/policy/4");
+      });
+
+      describe("with selected policy IDs", () => {
+        const synchronizer = new PolicySynchronizer(sourceService as any, targetService as any, {
+          policyIds: ["1", "2"]
+        });
+
+        it("should analyze policies", async () => {
+          const result = await synchronizer.analyze();
+
+          const expecteds = {
+            insertions: [],
+            updations: [{_id: "2", name: "update_me", statements: []}],
+            deletions: []
+          };
+          expect(result).toEqual(expecteds);
+
+          expect(synchronizer.insertions).toEqual(expecteds.insertions);
+          expect(synchronizer.updations).toEqual(expecteds.updations);
+          expect(synchronizer.deletions).toEqual(expecteds.deletions);
+
+          expect(sourceService.get).toHaveBeenCalledWith("passport/policy");
+          expect(sourceService.put).not.toHaveBeenCalled();
+          expect(sourceService.post).not.toHaveBeenCalled();
+
+          expect(targetService.get).toHaveBeenCalledWith("passport/policy");
+          expect(targetService.put).not.toHaveBeenCalled();
+          expect(targetService.post).not.toHaveBeenCalled();
+        });
+
+        it("should synchronize policies", async () => {
+          await synchronizer.analyze();
+          await synchronizer.synchronize();
+
+          expect(sourceService.put).not.toHaveBeenCalled();
+          expect(sourceService.post).not.toHaveBeenCalled();
+          expect(sourceService.delete).not.toHaveBeenCalled();
+
+          expect(targetService.put).toHaveBeenCalledWith("passport/policy/2", {
+            _id: "2",
+            name: "update_me",
+            statements: []
+          });
+          expect(targetService.post).not.toHaveBeenCalledWith();
+          expect(targetService.delete).not.toHaveBeenCalledWith();
+        });
       });
     });
 
@@ -495,7 +689,10 @@ describe("Synchronize", () => {
 
       const synchronizer = new EnvironmentVariableSynchronizer(
         sourceService as any,
-        targetService as any
+        targetService as any,
+        {
+          envVarIds: undefined
+        }
       );
 
       it("should analyze env vars", async () => {
@@ -536,6 +733,52 @@ describe("Synchronize", () => {
           value: "new_val"
         });
         expect(targetService.delete).toHaveBeenCalledWith("env-var/4");
+      });
+
+      describe("with selected env vars IDs", () => {
+        const synchronizer = new EnvironmentVariableSynchronizer(
+          sourceService as any,
+          targetService as any,
+          {
+            envVarIds: ["1", "2"]
+          }
+        );
+
+        it("should analyze env vars", async () => {
+          const {insertions, updations, deletions} = await synchronizer.analyze();
+          expect(insertions).toEqual([]);
+          expect(updations).toEqual([{_id: "2", key: "update_me", value: "val_2"}]);
+          expect(deletions).toEqual([]);
+
+          expect(synchronizer.insertions).toEqual([]);
+          expect(synchronizer.updations).toEqual([{_id: "2", key: "update_me", value: "val_2"}]);
+          expect(synchronizer.deletions).toEqual([]);
+
+          expect(sourceService.get).toHaveBeenCalledWith("env-var");
+          expect(sourceService.put).not.toHaveBeenCalled();
+          expect(sourceService.post).not.toHaveBeenCalled();
+
+          expect(targetService.get).toHaveBeenCalledWith("env-var");
+          expect(targetService.put).not.toHaveBeenCalled();
+          expect(targetService.post).not.toHaveBeenCalled();
+        });
+
+        it("should synchronize env vars", async () => {
+          await synchronizer.analyze();
+          await synchronizer.synchronize();
+
+          expect(sourceService.put).not.toHaveBeenCalled();
+          expect(sourceService.post).not.toHaveBeenCalled();
+          expect(sourceService.delete).not.toHaveBeenCalled();
+
+          expect(targetService.put).toHaveBeenCalledWith("env-var/2", {
+            _id: "2",
+            key: "update_me",
+            value: "val_2"
+          });
+          expect(targetService.post).not.toHaveBeenCalledWith();
+          expect(targetService.delete).not.toHaveBeenCalledWith();
+        });
       });
     });
   });
