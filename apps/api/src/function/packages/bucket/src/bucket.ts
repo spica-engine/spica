@@ -3,16 +3,16 @@ import {
   initialize as _initialize,
   checkInitialized,
   buildUrl,
-  HttpService,
-  Batch,
-  BatchResponse
+  Batch
 } from "@spica-devkit/internal_common";
 import {getWsObs} from "./operators";
 import {
   ApikeyInitialization,
   IdentityInitialization,
-  IndexResult
+  IndexResult,
+  HttpService
 } from "@spica-server/interface/function/packages";
+import {BatchResponse} from "@spica-server/interface/batch";
 
 // do not remove these unused imports
 import {Observable} from "rxjs";

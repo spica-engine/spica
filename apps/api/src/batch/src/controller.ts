@@ -21,7 +21,7 @@ export class BatchController {
   @Post()
   @UseGuards(AuthGuard())
   async insert(
-    @Body(Schema.validate("http://spica.internal/batch")) batch: BatchRequest,
+    @Body(Schema.validate("http://spica.internal/batch")) batch: BatchRequest<any>,
     @Req() req
   ) {
     this.httpService.baseURL = getBaseUrl(req, this.options);

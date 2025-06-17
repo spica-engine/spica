@@ -12,10 +12,8 @@ import {
 import {
   initialize as _initialize,
   checkInitialized,
-  HttpService,
   Axios,
-  Batch,
-  BatchResponse
+  Batch
 } from "@spica-devkit/internal_common";
 import {Strategy} from "./interface";
 import {Observable} from "rxjs";
@@ -23,8 +21,10 @@ import {deepCopyJSON} from "@spica-server/core/copy";
 import {
   ApikeyInitialization,
   IdentityInitialization,
-  IndexResult
+  IndexResult,
+  HttpService
 } from "@spica-server/interface/function/packages";
+import {BatchResponse} from "@spica-server/interface/batch";
 
 let authorization;
 

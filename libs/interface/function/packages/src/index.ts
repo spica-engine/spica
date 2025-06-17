@@ -1,5 +1,20 @@
 import {Observable} from "rxjs";
 
+export interface HttpService {
+  baseUrl: string;
+  setBaseUrl(url: string): void;
+  setAuthorization(authorization: string): void;
+  getAuthorization(): string;
+  setWriteDefaults(writeDefaults: {headers: {[key: string]: string}}): void;
+
+  get<T>(url: string, options?: any): Promise<T>;
+  post<T>(url: string, body: any, options?: any): Promise<T>;
+  put<T>(url: string, body: any, options?: any): Promise<T>;
+  patch<T>(url: string, body: any, options?: any): Promise<T>;
+  delete(url: string, options?: any);
+  request<T>(options: any): Promise<T>;
+}
+
 interface InitializeOptions {
   publicUrl?: string;
 }
@@ -15,6 +30,7 @@ export interface IdentityInitialization extends InitializeOptions {
 export interface InitializationResult {
   authorization: string;
   publicUrl: string;
+  service: HttpService;
 }
 
 export interface IndexResult<T> {

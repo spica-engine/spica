@@ -2,17 +2,17 @@ import {
   initialize as _initialize,
   checkInitialized,
   isPlatformBrowser,
-  HttpService,
-  Batch,
-  BatchResponse
+  Batch
 } from "@spica-devkit/internal_common";
 import {StorageObject, BufferWithMeta} from "./interface";
 import {preparePostBody, preparePutBody} from "./utility";
 import {
   ApikeyInitialization,
   IdentityInitialization,
-  IndexResult
+  IndexResult,
+  HttpService
 } from "@spica-server/interface/function/packages";
+import {BatchResponse} from "@spica-server/interface/batch";
 
 let authorization;
 
