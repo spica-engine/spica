@@ -6,6 +6,9 @@
       "path": "../../../../libs/core/schema"
     },
     {
+      "path": "../../../../libs/interface/batch"
+    },
+    {
       "path": "../passport/guard"
     }
   ]

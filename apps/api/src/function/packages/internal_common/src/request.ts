@@ -1,5 +1,4 @@
 import axios, {AxiosRequestConfig, AxiosInstance, AxiosResponse} from "axios";
-import {BatchRequest, BatchResponse, ManyResponse} from "./interface";
 
 export interface HttpService {
   baseUrl: string;

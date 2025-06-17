@@ -4,7 +4,6 @@ import {
   checkInitialized,
   buildUrl,
   HttpService,
-  BatchRequest,
   Batch,
   BatchResponse
 } from "@spica-devkit/internal_common";
