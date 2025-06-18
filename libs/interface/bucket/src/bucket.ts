@@ -39,7 +39,7 @@ interface PropertyOptions {
     unique?: boolean;
     index?: boolean;
   };
-  acl: string;
+  acl?: string;
 }
 
 export interface BucketDocument {
