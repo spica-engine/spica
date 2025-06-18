@@ -2,7 +2,7 @@ import {ObjectId} from "@spica-server/database";
 import {getMostLeftSelectIdentifier} from "./ast";
 import {compile} from "./compile";
 import * as func from "./func";
-import {Replacer} from "@spica-server/interface/bucket/expression";
+import {Mode, Replacer} from "@spica-server/interface/bucket/expression";
 
 function visitArgFns(fns: any[], ctx) {
   const finalResult = [];
@@ -223,39 +223,56 @@ function visitBinaryOperatorOr(node) {
   };
 }
 
-function visitBinaryOperatorGreater(node) {
+function wrapExpressionByMode(expression: object, mode: Mode) {
+  switch (mode) {
+    case "match":
+      return {$expr: expression};
+    case "project":
+      return expression;
+    default:
+      throw Error("Unknown mode received.");
+  }
+}
+
+function visitBinaryOperatorGreater(node, mode: Mode) {
   return ctx => {
-    return {$expr: {$gt: [visit(node.left)(ctx), visit(node.right)(ctx)]}};
+    const expression = {$gt: [visit(node.left)(ctx), visit(node.right)(ctx)]};
+    return wrapExpressionByMode(expression, mode);
   };
 }
 
-function visitBinaryOperatorGreaterOrEqual(node) {
+function visitBinaryOperatorGreaterOrEqual(node, mode: Mode) {
   return ctx => {
-    return {$expr: {$gte: [visit(node.left)(ctx), visit(node.right)(ctx)]}};
+    const expression = {$gte: [visit(node.left)(ctx), visit(node.right)(ctx)]};
+    return wrapExpressionByMode(expression, mode);
   };
 }
 
-function visitBinaryOperatorLess(node) {
+function visitBinaryOperatorLess(node, mode: Mode) {
   return ctx => {
-    return {$expr: {$lt: [visit(node.left)(ctx), visit(node.right)(ctx)]}};
+    const expression = {$lt: [visit(node.left)(ctx), visit(node.right)(ctx)]};
+    return wrapExpressionByMode(expression, mode);
   };
 }
 
-function visitBinaryOperatorLessOrEqual(node) {
+function visitBinaryOperatorLessOrEqual(node, mode: Mode) {
   return ctx => {
-    return {$expr: {$lte: [visit(node.left)(ctx), visit(node.right)(ctx)]}};
+    const expression = {$lte: [visit(node.left)(ctx), visit(node.right)(ctx)]};
+    return wrapExpressionByMode(expression, mode);
   };
 }
 
-function visitBinaryOperatorEqual(node) {
+function visitBinaryOperatorEqual(node, mode: Mode) {
   return ctx => {
-    return {$expr: {$eq: [visit(node.left)(ctx), visit(node.right)(ctx)]}};
+    const expression = {$eq: [visit(node.left)(ctx), visit(node.right)(ctx)]};
+    return wrapExpressionByMode(expression, mode);
   };
 }
 
-function visitBinaryOperatorNotEqual(node) {
+function visitBinaryOperatorNotEqual(node, mode: Mode) {
   return ctx => {
-    return {$expr: {$ne: [visit(node.left)(ctx), visit(node.right)(ctx)]}};
+    const expression = {$ne: [visit(node.left)(ctx), visit(node.right)(ctx)]};
+    return wrapExpressionByMode(expression, mode);
   };
 }
 

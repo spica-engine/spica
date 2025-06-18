@@ -15,3 +15,5 @@ export interface FunctionContext {
 }
 
 export type Func = (context: FunctionContext) => (ctx) => unknown;
+
+export type Mode = "match" | "project";
