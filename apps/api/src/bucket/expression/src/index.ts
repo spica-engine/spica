@@ -4,6 +4,7 @@ import {convert} from "./convert";
 import {extract} from "./property_map";
 import * as func from "./func";
 import * as builtin from "./builtin_funcs";
+import {Mode} from "@spica-server/interface/bucket/expression";
 
 export function run(expression: string, context: unknown) {
   const tree = parser.parse(expression);
@@ -11,9 +12,9 @@ export function run(expression: string, context: unknown) {
   return rule(context);
 }
 
-export function aggregate(expression: string, context: unknown) {
+export function aggregate(expression: string, context: unknown, mode: Mode) {
   const tree = parser.parse(expression);
-  const result = convert(tree);
+  const result = convert(tree, mode);
   return result(context);
 }
 
