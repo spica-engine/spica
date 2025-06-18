@@ -52,6 +52,30 @@ export class BucketPipelineBuilder extends PipelineBuilder {
     return removeSpaceAndNewlines(rule1) == removeSpaceAndNewlines(rule2);
   }
 
+  private buildAclProjection(properties: Record<string, {acl?: string}>, user: any) {
+    const result: Record<string, object | number> = {};
+
+    for (const key in properties) {
+      const acl = properties[key].acl;
+
+      if (acl) {
+        const condition = expression.aggregate(acl, {auth: user}, "project");
+
+        result[key] = {
+          $cond: {
+            if: condition,
+            then: "$" + key,
+            else: "$$REMOVE"
+          }
+        };
+      } else {
+        result[key] = 1;
+      }
+    }
+
+    return result;
+  }
+
   async rules(
     user: any,
     callback?: (arg0: string[][], arg1: RelationMap[]) => void
@@ -75,6 +99,9 @@ export class BucketPipelineBuilder extends PipelineBuilder {
 
     this.attachToPipeline(true, ...documentRelationStage);
     this.attachToPipeline(true, {$match: ruleExpression});
+
+    const aclProjection = this.buildAclProjection(this.schema.properties, user);
+    this.attachToPipeline(true, {$project: aclProjection});
 
     callback(documentPropertyMap, documentRelationMap);
     return this;
