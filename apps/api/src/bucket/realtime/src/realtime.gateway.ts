@@ -503,7 +503,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       if (parsedFilter) {
         parsedFilter = await constructFilterValues(parsedFilter, schema, this.getBucketResolver());
       } else if (!parsedFilter) {
-        parsedFilter = parseFilter(aggregate, filter, {});
+        parsedFilter = parseFilter(aggregate, filter, {}, "match");
       }
 
       if (!parsedFilter) {
