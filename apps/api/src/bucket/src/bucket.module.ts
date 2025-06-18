@@ -45,7 +45,8 @@ export class BucketModule {
         "relationType",
         "dependent",
         // location
-        "locationType"
+        "locationType",
+        "acl"
       ]
     });
     const imports: (Type<any> | DynamicModule)[] = [
