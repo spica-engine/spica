@@ -94,25 +94,33 @@ export async function remove(
 function ruleValidation(schema: Bucket) {
   try {
     expression.extractPropertyMap(schema.acl.read);
-    expression.aggregate(schema.acl.read, {
-      auth: {
-        identifier: "",
-        policies: []
+    expression.aggregate(
+      schema.acl.read,
+      {
+        auth: {
+          identifier: "",
+          policies: []
+        },
+        document: {}
       },
-      document: {}
-    });
+      "match"
+    );
   } catch (error) {
     throw new BadRequestException("Error occurred while parsing read rule\n" + error.message);
   }
 
   try {
-    expression.run(schema.acl.write, {
-      auth: {
-        identifier: "",
-        policies: []
+    expression.run(
+      schema.acl.write,
+      {
+        auth: {
+          identifier: "",
+          policies: []
+        },
+        document: {}
       },
-      document: {}
-    });
+      "match"
+    );
   } catch (error) {
     throw new BadRequestException("Error occurred while parsing write rule\n" + error.message);
   }

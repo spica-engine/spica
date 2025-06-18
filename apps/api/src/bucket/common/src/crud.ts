@@ -332,10 +332,14 @@ async function executeWriteRule(
   let aclResult;
 
   try {
-    aclResult = expression.run(schema.acl.write, {
-      auth,
-      document: fullDocument
-    });
+    aclResult = expression.run(
+      schema.acl.write,
+      {
+        auth,
+        document: fullDocument
+      },
+      "match"
+    );
   } catch (error) {
     throw new ACLSyntaxException(error.message);
   }

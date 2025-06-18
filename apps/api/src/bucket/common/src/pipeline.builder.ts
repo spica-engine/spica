@@ -71,7 +71,7 @@ export class BucketPipelineBuilder extends PipelineBuilder {
 
     const documentRelationMap = await this.buildRelationMap(documentPropertyMap);
     const documentRelationStage = getRelationPipeline(documentRelationMap, this.locale);
-    const ruleExpression = expression.aggregate(this.schema.acl.read, {auth: user});
+    const ruleExpression = expression.aggregate(this.schema.acl.read, {auth: user}, "match");
 
     this.attachToPipeline(true, ...documentRelationStage);
     this.attachToPipeline(true, {$match: ruleExpression});
@@ -102,7 +102,7 @@ export class BucketPipelineBuilder extends PipelineBuilder {
         filterExpression = filterByUserRequest;
       } else if (typeof filterByUserRequest == "string") {
         filterPropertyMap = expression.extractPropertyMap(filterByUserRequest);
-        filterExpression = expression.aggregate(filterByUserRequest, {});
+        filterExpression = expression.aggregate(filterByUserRequest, {}, "match");
       }
 
       filterRelationMap = await this.buildRelationMap(filterPropertyMap);

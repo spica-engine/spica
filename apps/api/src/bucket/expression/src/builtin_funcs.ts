@@ -1,9 +1,9 @@
-import {convert} from "./convert";
+import {convert, wrapExpressionByMode} from "./convert";
 import {compile} from "./compile";
 import {ObjectId} from "@spica-server/database";
 import {ArgumentValidation, Func} from "@spica-server/interface/bucket/expression";
 
-export const has: Func = context => {
+export const has: Func = (context, mode) => {
   const fnName = "has";
 
   validateArgumentsLength(fnName, context.arguments, 1);
@@ -20,7 +20,9 @@ export const has: Func = context => {
       // we can not use $exists since it is a query operator which we can't use as an logical operator
       // so we use a clever trick to see if "type number" of the field is greater than "null's" type number
       // https://docs.mongodb.com/manual/reference/bson-types/#bson-types-comparison-order
-      return {$expr: {$gt: [propertyName, null]}};
+      const expression = {$gt: [propertyName, null]};
+
+      return wrapExpressionByMode(expression, mode);
     } else {
       const parsedArguments = parseArguments(context.arguments, ctx, compile);
 
@@ -84,7 +86,7 @@ export const now: Func = context => {
   };
 };
 
-export const some: Func = context => {
+export const some: Func = (context, mode) => {
   const fnName = "some";
 
   validateArgumentsLength(fnName, context.arguments, 2);
@@ -113,7 +115,7 @@ export const some: Func = context => {
       const propertyName: string = parsedArguments[0];
       const compare: unknown[] = objectIdReplacer(propertyName, parsedArguments[1]);
 
-      return createInQuery(compare, propertyName, "$or");
+      return createInQuery(compare, propertyName, "$or", mode);
     } else {
       const parsedArguments = parseArguments(context.arguments, ctx, compile);
 
@@ -129,7 +131,7 @@ export const some: Func = context => {
   };
 };
 
-export const every: Func = context => {
+export const every: Func = (context, mode) => {
   const fnName = "every";
   validateArgumentsLength(fnName, context.arguments, 2);
 
@@ -157,7 +159,7 @@ export const every: Func = context => {
       const propertyName: string = parsedArguments[0];
       const compare: unknown[] = objectIdReplacer(propertyName, parsedArguments[1]);
 
-      return createInQuery(compare, propertyName, "$and");
+      return createInQuery(compare, propertyName, "$and", mode);
     } else {
       const parsedArguments = parseArguments(context.arguments, ctx, compile);
 
@@ -173,7 +175,7 @@ export const every: Func = context => {
   };
 };
 
-export const equal: Func = context => {
+export const equal: Func = (context, mode) => {
   const fnName = "equal";
   validateArgumentsLength(fnName, context.arguments, 2);
 
@@ -201,30 +203,30 @@ export const equal: Func = context => {
       const propertyName: string = parsedArguments[0];
       const compare: unknown[] = objectIdReplacer(propertyName, parsedArguments[1]);
 
-      const match = {
-        $expr: {
-          $and: [
-            {
-              $eq: [
-                {
-                  $size: {
-                    $ifNull: [propertyName, []]
-                  }
-                },
-                compare.length
-              ]
-            },
-            {
-              $eq: [
-                {
-                  $setDifference: [propertyName, compare]
-                },
-                []
-              ]
-            }
-          ]
-        }
+      const expression = {
+        $and: [
+          {
+            $eq: [
+              {
+                $size: {
+                  $ifNull: [propertyName, []]
+                }
+              },
+              compare.length
+            ]
+          },
+          {
+            $eq: [
+              {
+                $setDifference: [propertyName, compare]
+              },
+              []
+            ]
+          }
+        ]
       };
+
+      const match = wrapExpressionByMode(expression, mode);
 
       return match;
     } else {
@@ -285,7 +287,7 @@ export const length: Func = context => {
   };
 };
 
-export const regex: Func = context => {
+export const regex: Func = (context, mode) => {
   const fnName = "regex";
   validateArgumentsLength(fnName, context.arguments, undefined, 2, 3);
 
@@ -303,20 +305,20 @@ export const regex: Func = context => {
       const regex: string = parsedArguments[1];
       const options: string = parsedArguments[2] || "";
 
-      return {
-        $expr: {
-          $eq: [
-            {
-              $regexMatch: {
-                input: propertyName,
-                regex: regex,
-                options: options
-              }
-            },
-            true
-          ]
-        }
+      const expression = {
+        $eq: [
+          {
+            $regexMatch: {
+              input: propertyName,
+              regex: regex,
+              options: options
+            }
+          },
+          true
+        ]
       };
+
+      return wrapExpressionByMode(expression, mode);
     } else {
       const parsedArguments = parseArguments(context.arguments, ctx, compile);
 
@@ -352,29 +354,27 @@ function objectIdReplacer(field: string, value: any[]) {
   return value;
 }
 
-export function createInQuery(items: any[], propertyName: string, operator: "$and" | "$or") {
+export function createInQuery(items: any[], propertyName: string, operator: "$and" | "$or", mode) {
   const query = {
     [operator]: []
   };
 
   for (const item of items) {
     const expression = {
-      $expr: {
-        $eq: [
-          {
-            $in: [
-              item,
-              {
-                $ifNull: [propertyName, []]
-              }
-            ]
-          },
-          true
-        ]
-      }
+      $eq: [
+        {
+          $in: [
+            item,
+            {
+              $ifNull: [propertyName, []]
+            }
+          ]
+        },
+        true
+      ]
     };
 
-    query[operator].push(expression);
+    query[operator].push(wrapExpressionByMode(expression, mode));
   }
 
   return query;
