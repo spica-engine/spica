@@ -39,11 +39,15 @@ function visit(node, mode: Mode) {
     case "literal":
       return visitLiteral(node);
     case "call":
-      return func.visit(node.left.name, {
-        target: "aggregation",
-        arguments: node.arguments,
-        receiver: undefined
-      });
+      return func.visit(
+        node.left.name,
+        {
+          target: "aggregation",
+          arguments: node.arguments,
+          receiver: undefined
+        },
+        mode
+      );
     case "unary":
       return visitUnary(node, mode);
     default:
@@ -188,7 +192,7 @@ function visitBinaryOperatorSelect(node, mode: Mode) {
     const mostLeft = getMostLeftSelectIdentifier(node);
 
     if (mostLeft == "auth") {
-      return compile(node)(ctx);
+      return compile(node, mode)(ctx);
     }
 
     const right = visit(node.right, mode)(ctx);
@@ -223,7 +227,7 @@ function visitBinaryOperatorOr(node, mode: Mode) {
   };
 }
 
-function wrapExpressionByMode(expression: object, mode: Mode) {
+export function wrapExpressionByMode(expression: object, mode: Mode) {
   switch (mode) {
     case "match":
       return {$expr: expression};

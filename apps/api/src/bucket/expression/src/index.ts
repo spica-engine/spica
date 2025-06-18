@@ -6,9 +6,9 @@ import * as func from "./func";
 import * as builtin from "./builtin_funcs";
 import {Mode} from "@spica-server/interface/bucket/expression";
 
-export function run(expression: string, context: unknown) {
+export function run(expression: string, context: unknown, mode: Mode) {
   const tree = parser.parse(expression);
-  const rule = compile(tree);
+  const rule = compile(tree, mode);
   return rule(context);
 }
 
