@@ -97,6 +97,9 @@ export async function findDocuments<T>(
     }
   );
 
+  const aclProjection = buildAclProjection(schema.properties, params.req.user);
+  seekingPipelineBuilder.attachToPipeline(true, {$project: aclProjection});
+
   // for graphql responses
   seekingPipeline.setVisibilityOfFields(getVisibilityOfFields(params.projectMap));
 
@@ -126,6 +129,30 @@ export async function findDocuments<T>(
     .catch(error => {
       throw new DatabaseException(error.message);
     });
+}
+
+function buildAclProjection(properties: Record<string, {acl?: string}>, user: any) {
+  const result: Record<string, object | number> = {};
+
+  for (const key in properties) {
+    const acl = properties[key].acl;
+
+    if (acl) {
+      const condition = expression.aggregate(acl, {auth: user}, "project");
+
+      result[key] = {
+        $cond: {
+          if: condition,
+          then: "$" + key,
+          else: "$$REMOVE"
+        }
+      };
+    } else {
+      result[key] = 1;
+    }
+  }
+
+  return result;
 }
 
 export async function insertDocument(
