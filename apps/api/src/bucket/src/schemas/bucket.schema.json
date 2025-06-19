@@ -150,7 +150,8 @@
         },
 
         "type": {"$ref": "#/definitions/simpleTypes"},
-        "format": {"type": "string"}
+        "format": {"type": "string"},
+        "acl": {"type": "string"}
       }
     }
   },
