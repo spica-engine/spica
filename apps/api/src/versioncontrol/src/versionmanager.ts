@@ -90,7 +90,7 @@ export class Git implements VersionManager {
     const messageIndex = args.findIndex(
       arg => arg.startsWith("`") || arg.startsWith("'") || arg.startsWith('"')
     );
-    const message = args[messageIndex];
+    const message = args[messageIndex]?.replace(/['"`]/g, "");
     args = args.slice(messageIndex + 1);
 
     return this.git.commit(message, args);

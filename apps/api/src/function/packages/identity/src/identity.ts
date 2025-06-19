@@ -16,7 +16,9 @@ import {
   initialize as _initialize,
   checkInitialized,
   HttpService,
-  Axios
+  Axios,
+  Batch,
+  BatchResponse
 } from "@spica-devkit/internal_common";
 import {Strategy} from "./interface";
 import {Observable} from "rxjs";
@@ -269,6 +271,21 @@ export function remove(id: string, headers?: object): Promise<any> {
   checkInitialized(authorization);
 
   return service.delete(`${identitySegment}/${id}`, {headers});
+}
+
+export function removeMany(ids: string[], headers?: object) {
+  checkInitialized(authorization);
+
+  const batchReqs = Batch.prepareRemoveRequest(
+    ids,
+    identitySegment,
+    service.getAuthorization(),
+    headers
+  );
+
+  return service
+    .post<BatchResponse<string>>("batch", batchReqs, {headers})
+    .then(response => Batch.handleBatchResponse<string>(batchReqs, response));
 }
 
 // policy attach detach

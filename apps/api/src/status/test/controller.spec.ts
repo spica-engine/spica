@@ -136,7 +136,13 @@ describe("Status", () => {
             issuer: "spica",
             maxExpiresIn: 1000,
             secretOrKey: "spica",
-            entryLimit: 20
+            entryLimit: 20,
+            blockingOptions: {
+              failedAttemptLimit: 0,
+              blockDurationMinutes: 0
+            },
+            refreshTokenExpiresIn: 1000,
+            passwordHistoryLimit: 0
           })
         ]
       }).compile();
@@ -271,6 +277,8 @@ describe("Status", () => {
       });
 
       await req.get("/fn-execute/test");
+
+      await sleep(1000);
 
       res = await req.get("/status/function");
       expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);

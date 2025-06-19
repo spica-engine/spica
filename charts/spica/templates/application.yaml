@@ -64,6 +64,15 @@ spec:
 {{ toYaml .Values.application.apiResources | indent 12 }}
           ports:
             - containerPort: 4300
+          readinessProbe:
+            httpGet:
+              path: /passport/strategies
+              port: 4300
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 6
           args: [
 {{if len .Values.application.args}}
 {{- range .Values.application.args }}

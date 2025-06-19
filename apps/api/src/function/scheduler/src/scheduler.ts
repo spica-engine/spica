@@ -10,12 +10,19 @@ import {
   FirehoseEnqueuer,
   HttpEnqueuer,
   ScheduleEnqueuer,
-  SystemEnqueuer
+  SystemEnqueuer,
+  RabbitMQEnqueuer
 } from "@spica-server/function/enqueuer";
 import {DelegatePkgManager} from "@spica-server/function/pkgmanager";
 import {Npm} from "@spica-server/function/pkgmanager/node";
 import {LocalPackageManager} from "@spica-server/function/pkgmanager/local";
-import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
+import {
+  DatabaseQueue,
+  EventQueue,
+  FirehoseQueue,
+  HttpQueue,
+  RabbitMQQueue
+} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
 import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
@@ -37,6 +44,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   private httpQueue: HttpQueue;
   private databaseQueue: DatabaseQueue;
   private firehoseQueue: FirehoseQueue;
+  private rabbitmqQueue: RabbitMQQueue;
 
   readonly runtimes = new Map<string, Runtime>();
   readonly pkgmanagers = new Map<string, DelegatePkgManager>();
@@ -80,6 +88,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     this.firehoseQueue = new FirehoseQueue();
     this.queue.addQueue(this.firehoseQueue);
+
+    this.rabbitmqQueue = new RabbitMQQueue();
+    this.queue.addQueue(this.rabbitmqQueue);
   }
 
   async onModuleInit() {
@@ -124,6 +135,16 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
+    this.enqueuers.add(
+      new RabbitMQEnqueuer(
+        this.queue,
+        this.rabbitmqQueue,
+        schedulerUnsubscription,
+        this.jobReducer,
+        this.commander
+      )
+    );
+
     if (typeof this.enqueuerFactory == "function") {
       const factory = this.enqueuerFactory(this.queue, this.jobReducer, this.commander);
       this.queue.addQueue(factory.queue);
@@ -137,7 +158,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   killFreeWorkers() {
     const freeWorkers = Array.from(this.workers.entries()).filter(
-      ([key, worker]) => worker.state == WorkerState.Fresh || worker.state == WorkerState.Targeted
+      ([key, worker]) =>
+        worker.state == WorkerState.Initial ||
+        worker.state == WorkerState.Fresh ||
+        worker.state == WorkerState.Targeted
     );
 
     const killWorkers = freeWorkers.map(([key, worker]) => {
@@ -194,8 +218,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   getStatus() {
     const workers = Array.from(this.workers.values());
 
+    const initial = workers.filter(w => w.state == WorkerState.Initial).length;
     const fresh = workers.filter(w => w.state == WorkerState.Fresh).length;
-    const activated = workers.length - fresh;
+    const activated = workers.length - initial - fresh;
 
     return {
       activated: activated,
@@ -304,7 +329,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       this.print(`the worker ${id} won't be scheduled anymore.`);
     } else {
       let message;
-      if (relatedWorker.state == WorkerState.Fresh) {
+      if (relatedWorker.state == WorkerState.Initial) {
         message = `got a new worker ${id}`;
       } else if (relatedWorker.state == WorkerState.Busy) {
         message = `worker ${id} is waiting for new event`;

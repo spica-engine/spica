@@ -24,6 +24,7 @@ import https from "https";
 import path from "path";
 import yargs from "yargs/yargs";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
 
 const args = yargs(process.argv.slice(2))
   /* TLS Options */
@@ -119,9 +120,30 @@ const args = yargs(process.argv.slice(2))
       description: "Default lifespan of the issued JWT tokens. Unit: second",
       default: 60 * 60 * 24 * 2
     },
+    "passport-identity-password-history-limit": {
+      number: true,
+      description:
+        "How many of last passwords will be compared with the new password in terms of uniqueness",
+      default: 0
+    },
+    "passport-identity-failed-login-attempt-limit": {
+      number: true,
+      description: "Maximum failed login attempt before blocking further attempts.",
+      default: 0
+    },
+    "passport-identity-block-duration-after-failed-login-attempts": {
+      number: true,
+      description: "Duration of blocking login attempts in minutes.",
+      default: 0
+    },
     "passport-identity-token-expiration-seconds-limit": {
       number: true,
       description: "Maximum lifespan of the requested JWT token can have. Unit: second"
+    },
+    "passport-identity-refresh-token-expires-in": {
+      number: true,
+      description: "Default lifespan of the issued refresh JWT tokens. Unit: second",
+      default: 60 * 60 * 24 * 3
     },
     "passport-default-identity-identifier": {
       string: true,
@@ -143,21 +165,23 @@ const args = yargs(process.argv.slice(2))
       array: true,
       description: "Policies to attach to the default identity.",
       default: [
-        "ApiKeyFullAccess",
-        "IdentityFullAccess",
-        "StrategyFullAccess",
-        "PolicyFullAccess",
-        "PassportFullAccess",
         "ActivityFullAccess",
-        "StorageFullAccess",
-        "FunctionFullAccess",
+        "ApiKeyFullAccess",
+        "AssetFullAccess",
         "BucketFullAccess",
         "DashboardFullAccess",
-        "WebhookFullAccess",
+        "EnvVarFullAccess",
+        "FunctionFullAccess",
+        "IdentityFullAccess",
+        "PassportFullAccess",
+        "PolicyFullAccess",
         "PreferenceFullAccess",
+        "RefreshTokenFullAccess",
         "StatusFullAccess",
-        "AssetFullAccess",
-        "VersionControlFullAccess"
+        "StorageFullAccess",
+        "StrategyFullAccess",
+        "VersionControlFullAccess",
+        "WebhookFullAccess"
       ]
     },
     "passport-identity-limit": {
@@ -307,6 +331,17 @@ const args = yargs(process.argv.slice(2))
       boolean: true,
       description: "Access-Control-Allow-Credentials",
       default: true
+    }
+  })
+  /* Additional Header Options */
+  .option({
+    "cache-control-header": {
+      string: true,
+      description: "Cache-Control"
+    },
+    "x-frame-options-header": {
+      string: true,
+      description: "X-Frame-Option"
     }
   })
   /* Common Options */
@@ -490,7 +525,13 @@ const modules = [
     defaultIdentityIdentifier: args["passport-default-identity-identifier"],
     defaultIdentityPassword: args["passport-default-identity-password"],
     audience: "spica.io",
-    samlCertificateTTL: args["passport-saml-certificate-ttl"]
+    samlCertificateTTL: args["passport-saml-certificate-ttl"],
+    blockingOptions: {
+      failedAttemptLimit: args["passport-identity-failed-login-attempt-limit"],
+      blockDurationMinutes: args["passport-identity-block-duration-after-failed-login-attempts"]
+    },
+    refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
+    passwordHistoryLimit: args["passport-identity-password-history-limit"]
   }),
   FunctionModule.forRoot({
     logExpireAfterSeconds: args["common-log-lifespan"],
@@ -561,6 +602,10 @@ NestFactory.create(RootModule, {
 }).then(async app => {
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
+    Middlewares.Headers({
+      "Cache-Control": args["cache-control-header"],
+      "X-Frame-Options": args["x-frame-options-header"]
+    }),
     Middlewares.Preflight({
       allowedOrigins: args["cors-allowed-origins"],
       allowedMethods: args["cors-allowed-methods"],
@@ -590,6 +635,8 @@ NestFactory.create(RootModule, {
       )
     );
   }
+
+  app.use(cookieParser());
 
   const {port} = await args;
   await app.listen(port);

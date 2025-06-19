@@ -8,9 +8,11 @@ import {PassportModule} from "@spica-server/passport";
 import * as Identity from "@spica-devkit/identity";
 import Axios from "axios";
 import {jwtDecode} from "jwt-decode";
+import {BatchModule} from "@spica-server/batch";
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
+const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
 
 const PORT = 3000;
 const PUBLIC_URL = `http://localhost:${PORT}`;
@@ -30,15 +32,22 @@ describe("Identity", () => {
           maxExpiresIn: MAX_EXPIRES_IN,
           publicUrl: PUBLIC_URL,
           samlCertificateTTL: EXPIRES_IN,
+          refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
           secretOrKey: "spica",
           defaultStrategy: "IDENTITY",
           defaultIdentityIdentifier: "spica",
           defaultIdentityPassword: "spica",
           audience: "spica",
-          defaultIdentityPolicies: ["PassportFullAccess"]
+          defaultIdentityPolicies: ["PassportFullAccess"],
+          blockingOptions: {
+            blockDurationMinutes: 0,
+            failedAttemptLimit: 0
+          },
+          passwordHistoryLimit: 0
         }),
         PreferenceTestingModule,
-        CoreTestingModule
+        CoreTestingModule,
+        BatchModule.forRoot({port: PORT.toString()})
       ]
     }).compile();
     app = module.createNestApplication();
@@ -102,11 +111,13 @@ describe("Identity", () => {
   describe("identity", () => {
     it("should get all", async () => {
       const identities = await Identity.getAll();
+      identities.forEach(i => delete i.lastLogin);
       expect(identities).toEqual([
         {
           identifier: "spica",
           _id: identities[0]._id,
-          policies: ["PassportFullAccess"]
+          policies: ["PassportFullAccess"],
+          failedAttempts: []
         }
       ]);
     });
@@ -116,22 +127,27 @@ describe("Identity", () => {
         const identities = await Identity.getAll();
 
         const spica = await Identity.get(identities[0]._id);
+        delete spica.lastLogin;
+
         expect(spica).toEqual({
           _id: spica._id,
           identifier: "spica",
-          policies: ["PassportFullAccess"]
+          policies: ["PassportFullAccess"],
+          failedAttempts: []
         });
       });
 
       it("should get with paginate", async () => {
         const identities = await Identity.getAll({paginate: true});
+        identities.data.forEach(i => delete i.lastLogin);
         expect(identities).toEqual({
           meta: {total: 1},
           data: [
             {
               identifier: "spica",
               _id: identities.data[0]._id,
-              policies: ["PassportFullAccess"]
+              policies: ["PassportFullAccess"],
+              failedAttempts: []
             }
           ]
         });
@@ -140,11 +156,13 @@ describe("Identity", () => {
       it("should get with limit", async () => {
         await Identity.insert({identifier: "user", password: "pass", policies: []});
         const identities = await Identity.getAll({limit: 1});
+        identities.forEach(i => delete i.lastLogin);
         expect(identities).toEqual([
           {
             _id: identities[0]._id,
             identifier: "spica",
-            policies: ["PassportFullAccess"]
+            policies: ["PassportFullAccess"],
+            failedAttempts: []
           }
         ]);
       });
@@ -168,6 +186,8 @@ describe("Identity", () => {
             _id: -1
           }
         });
+
+        delete identities[1].lastLogin;
         expect(identities).toEqual([
           {
             _id: identities[0]._id,
@@ -177,7 +197,8 @@ describe("Identity", () => {
           {
             _id: identities[1]._id,
             identifier: "spica",
-            policies: ["PassportFullAccess"]
+            policies: ["PassportFullAccess"],
+            failedAttempts: []
           }
         ]);
       });
@@ -276,12 +297,65 @@ describe("Identity", () => {
       await Identity.remove(identity._id);
 
       const identities = await Identity.getAll();
+      delete identities[0].lastLogin;
 
       expect(identities).toEqual([
         {
           identifier: "spica",
           _id: identities[0]._id,
-          policies: ["PassportFullAccess"]
+          policies: ["PassportFullAccess"],
+          failedAttempts: []
+        }
+      ]);
+    });
+
+    it("should remove multiple identities", async () => {
+      let identities = await Promise.all([
+        Identity.insert({
+          identifier: "user1",
+          password: "pass1",
+          policies: ["BucketReadonlyAccess"]
+        }),
+        Identity.insert({
+          identifier: "user2",
+          password: "pass2",
+          policies: ["BucketReadonlyAccess"]
+        })
+      ]);
+
+      const response = await Identity.removeMany([...identities.map(i => i._id), "123"]);
+
+      expect(response).toEqual({
+        successes: [
+          {
+            request: `passport/identity/${identities[0]._id}`,
+            response: ""
+          },
+          {
+            request: `passport/identity/${identities[1]._id}`,
+            response: ""
+          }
+        ],
+        failures: [
+          {
+            request: `passport/identity/123`,
+            response: {
+              error: undefined,
+              message: "Invalid id."
+            }
+          }
+        ]
+      });
+
+      const existingIdentities = await Identity.getAll();
+      delete existingIdentities[0].lastLogin;
+
+      expect(existingIdentities).toEqual([
+        {
+          identifier: "spica",
+          _id: existingIdentities[0]._id,
+          policies: ["PassportFullAccess"],
+          failedAttempts: []
         }
       ]);
     });

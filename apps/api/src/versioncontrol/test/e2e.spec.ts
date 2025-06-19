@@ -273,10 +273,12 @@ describe("Versioning e2e", () => {
         await insertBucket(getEmptyBucket());
 
         await req.post("/versioncontrol/commands/add", {args: ["."]});
-        await req.post("/versioncontrol/commands/commit", {args: ["-m", "'first commit'"]});
+        await req.post("/versioncontrol/commands/commit", {
+          args: ["-m", "'first commit'"]
+        });
 
         const res = await req.post("/versioncontrol/commands/log", {args: []});
-        expect(res.body.latest.message).toEqual("'first commit'");
+        expect(res.body.latest.message).toEqual("first commit");
       });
     });
 
@@ -360,7 +362,7 @@ describe("Versioning e2e", () => {
         await req.post("/versioncontrol/commands/merge", {args: ["fix"]});
 
         const res = await req.post("/versioncontrol/commands/log", {args: []});
-        expect(res.body.all.map(c => c.message)).toEqual(["'bucket 2 inserted'", "'first commit'"]);
+        expect(res.body.all.map(c => c.message)).toEqual(["bucket 2 inserted", "first commit"]);
       });
     });
 
@@ -385,9 +387,9 @@ describe("Versioning e2e", () => {
 
         const res = await req.post("/versioncontrol/commands/log", {args: []});
         expect(res.body.all.map(c => c.message)).toEqual([
-          "'bucket 3 inserted'",
-          "'bucket 2 inserted'",
-          "'first commit'"
+          "bucket 3 inserted",
+          "bucket 2 inserted",
+          "first commit"
         ]);
       });
     });
@@ -423,7 +425,7 @@ describe("Versioning e2e", () => {
         await req.post("/versioncontrol/commands/push", {args: ["origin", "master"]});
 
         const res = await req.post("/versioncontrol/commands/log", {args: ["origin/master"]});
-        expect(res.body.all.map(c => c.message)).toEqual(["'initial commit'"]);
+        expect(res.body.all.map(c => c.message)).toEqual(["initial commit"]);
       });
 
       it("should fetch", async () => {
@@ -456,14 +458,14 @@ describe("Versioning e2e", () => {
         await req.post("/versioncontrol/commands/reset", {args: ["--hard", "HEAD~1"]});
 
         const log = await req.post("/versioncontrol/commands/log", {args: ["master"]});
-        expect(log.body.all.map(c => c.message)).toEqual(["'initial commit'"]);
+        expect(log.body.all.map(c => c.message)).toEqual(["initial commit"]);
 
         await req.post("/versioncontrol/commands/pull");
 
         const updatedLog = await req.post("/versioncontrol/commands/log", {args: ["master"]});
         expect(updatedLog.body.all.map(c => c.message)).toEqual([
-          "'second commit'",
-          "'initial commit'"
+          "second commit",
+          "initial commit"
         ]);
       });
     });

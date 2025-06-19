@@ -13,9 +13,14 @@ import speakeasy from "speakeasy";
 import {parse} from "url";
 import samlp from "samlp";
 
+import cookieParser from "cookie-parser";
+import {jwtDecode} from "jwt-decode";
+
 const EXPIRES_IN = 60_000;
 
 const TOTP_TIMEOUT = 1000 * 30;
+
+const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
 
 const CERTIFICATE = `-----BEGIN CERTIFICATE-----
 MIIDVjCCAj4CCQCIeeA38VX/wjANBgkqhkiG9w0BAQUFADBtMQswCQYDVQQGEwJU
@@ -175,6 +180,36 @@ export class RequestService {
   }
 }
 
+type ParsedCookie = {
+  name: string;
+  value: string;
+  attributes: Record<string, string | boolean>;
+};
+
+function parseCookie(setCookieHeader: string): ParsedCookie {
+  const parts = setCookieHeader.split(";").map(p => p.trim());
+  const [nameValue, ...attrParts] = parts;
+
+  const [name, value] = nameValue.split("=");
+  const attributes: Record<string, string | boolean> = {};
+
+  attrParts.forEach(attr => {
+    if (attr.includes("=")) {
+      const [key, val] = attr.split("=");
+      attributes[key.toLowerCase()] = val;
+    } else {
+      // Attributes without a value (flags)
+      attributes[attr.toLowerCase()] = true;
+    }
+  });
+
+  return {
+    name,
+    value: decodeURIComponent(value),
+    attributes
+  };
+}
+
 describe("E2E Tests", () => {
   const publicUrl = "http://insteadof";
   const moduleMetaData: ModuleMetadata = {
@@ -193,7 +228,13 @@ describe("E2E Tests", () => {
         defaultIdentityIdentifier: "spica",
         defaultIdentityPassword: "spica",
         audience: "spica",
-        defaultIdentityPolicies: ["PassportFullAccess"]
+        defaultIdentityPolicies: ["PassportFullAccess"],
+        blockingOptions: {
+          failedAttemptLimit: 3,
+          blockDurationMinutes: 10
+        },
+        refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+        passwordHistoryLimit: 2
       }),
       PreferenceTestingModule,
       CoreTestingModule
@@ -203,14 +244,19 @@ describe("E2E Tests", () => {
   let req: Request;
   let app: INestApplication;
   let token: string;
+  let cookies: string[] = [];
 
   async function login(identifier?: string, password?: string) {
-    const {body} = await req.post("/passport/identify", {
+    const response = await req.post("/passport/identify", {
       identifier: identifier || "spica",
       password: password || "spica"
     });
 
-    token = body.token;
+    token = response.body.token;
+
+    cookies = response.headers["set-cookie"] as unknown as string[];
+
+    return response;
   }
 
   describe("JWT", () => {
@@ -219,6 +265,8 @@ describe("E2E Tests", () => {
 
       req = module.get(Request);
       app = module.createNestApplication();
+
+      app.use(cookieParser());
 
       await app.listen(req.socket);
 
@@ -265,6 +313,135 @@ describe("E2E Tests", () => {
 
       const {body: updatedIdentities} = await getIdentities();
       expect(updatedIdentities.length).toBe(1);
+    });
+
+    it("should set refresh token cookie on login", async () => {
+      const now = new Date();
+      jest.useFakeTimers({doNotFake: ["nextTick"]}); // passport.authenticate() depends on it
+      jest.setSystemTime(now);
+
+      await login("spica", "spica");
+
+      jest.useRealTimers();
+
+      const {name, value, attributes} = parseCookie(cookies[0]);
+      expect(name).toEqual("refreshToken");
+      expect(value).toBeDefined();
+      expect(attributes).toEqual({
+        "max-age": String(REFRESH_TOKEN_EXPIRES_IN),
+        path: "passport/session/refresh",
+        expires: new Date(now.getTime() + REFRESH_TOKEN_EXPIRES_IN * 1000).toUTCString(),
+        httponly: true,
+        secure: true,
+        samesite: "None"
+      });
+    });
+
+    it("should refresh jwt", async () => {
+      await login("spica", "spica");
+
+      const {statusCode, body} = await req.post(
+        "passport/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`,
+          Cookie: cookies
+        }
+      );
+
+      expect(statusCode).toEqual(200);
+      expect(body.scheme).toEqual("IDENTITY");
+      expect(body.issuer).toEqual("passport/identity");
+      expect(body.token).toBeDefined();
+
+      const newToken = body.token;
+
+      const response = await req.get(
+        "passport/identity/verify",
+        {},
+        {
+          Authorization: newToken
+        }
+      );
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.identifier).toEqual("spica");
+    });
+
+    it("should refresh expired jwts", async () => {
+      const tokenExpirationDate = new Date(Date.now() + EXPIRES_IN * 1000 + 100);
+      jest.useFakeTimers();
+      jest.setSystemTime(tokenExpirationDate);
+
+      // ensure token is expired
+      let response = await req.get(
+        "passport/identity/verify",
+        {},
+        {
+          Authorization: token
+        }
+      );
+      expect(response.statusCode).toEqual(400);
+      expect(response.body.message).toEqual("jwt expired");
+
+      jest.useRealTimers();
+
+      // refresh token
+      const {body} = await req.post(
+        "passport/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`,
+          Cookie: cookies
+        }
+      );
+
+      const newToken = body.token;
+
+      // new token should be valid
+      response = await req.get(
+        "passport/identity/verify",
+        {},
+        {
+          Authorization: newToken
+        }
+      );
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.identifier).toEqual("spica");
+
+      const parsedCookie = parseCookie(cookies[0]);
+
+      // also refresh token last_used_at should be updated
+      const {body: tokens} = await req.get(
+        "passport/refresh-token",
+        {filter: JSON.stringify({token: parsedCookie.value})},
+        {
+          Authorization: `IDENTITY ${newToken}`
+        }
+      );
+
+      expect(tokens.length).toEqual(1);
+      expect(tokens[0].last_used_at).toBeDefined();
+    });
+
+    it("should store refresh token", async () => {
+      const parsedCookie = parseCookie(cookies[0]);
+
+      let {
+        body: [refreshToken]
+      } = await req.get(
+        "passport/refresh-token",
+        {filter: JSON.stringify({token: parsedCookie.value})},
+        {
+          Authorization: `IDENTITY ${token}`
+        }
+      );
+
+      let {
+        body: [identity]
+      } = await getIdentities();
+      expect(identity._id).toEqual(refreshToken.identity);
     });
   });
 
@@ -643,7 +820,7 @@ describe("E2E Tests", () => {
           const totp = generateTotp(challenge);
 
           res = await req.post(res.body.answerUrl, {answer: totp});
-          expect(res.statusCode).toEqual(201);
+          expect(res.statusCode).toEqual(200);
           expect(res.body.token).toBeDefined();
         });
 
@@ -724,6 +901,179 @@ describe("E2E Tests", () => {
           expect(res.body.message).toEqual("Unauthorized");
         });
       });
+    });
+  });
+
+  describe("Login attempts", () => {
+    beforeEach(async () => {
+      const module = await Test.createTestingModule(moduleMetaData).compile();
+
+      req = module.get(Request);
+      app = module.createNestApplication();
+
+      await app.listen(req.socket);
+
+      // WAIT UNTIL IDENTITY IS INSERTED
+      await new Promise((resolve, _) => setTimeout(resolve, 3000));
+
+      jest.useFakeTimers({doNotFake: ["nextTick"]});
+      jest.setSystemTime(new Date());
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it("should block if the attempt limit is exceeded ", async () => {
+      const responses = [];
+      for (const fn of Array(3).fill(() => login("spica", "wrongPassword"))) {
+        responses.push(await fn());
+      }
+
+      const responseWithBlockedError = responses[responses.length - 1];
+
+      expect(responseWithBlockedError.statusCode).toEqual(401);
+      expect(responseWithBlockedError.statusText).toEqual("Unauthorized");
+      expect(responseWithBlockedError.body.message).toEqual(
+        "Too many failed login attempts. Try again after 10 minutes."
+      );
+
+      await login();
+      expect(token).toBeUndefined();
+
+      jest.advanceTimersByTime(6 * 60 * 1000);
+
+      const retryResponse = await login("spica", "wrongPassword");
+      expect(retryResponse.body.message).toEqual(
+        "Too many failed login attempts. Try again after 4 minutes."
+      );
+    });
+
+    it("should unlock after the lock time expires", async () => {
+      for (const fn of Array(3).fill(() => login("spica", "wrongPassword"))) {
+        await fn();
+      }
+
+      await login();
+      expect(token).toBeUndefined();
+
+      jest.advanceTimersByTime(11 * 60 * 1000);
+
+      await login();
+      expect(token).toBeDefined();
+    });
+
+    it("should give three chances after the block duration ended", async () => {
+      for (const fn of Array(3).fill(() => login("spica", "wrongPassword"))) {
+        await fn();
+      }
+
+      jest.advanceTimersByTime(11 * 60 * 1000);
+
+      for (const fn of Array(2).fill(() => login("spica", "wrongPassword"))) {
+        const res = await fn();
+        expect(res.body.message).toEqual("Identifier or password was incorrect.");
+      }
+      await login();
+      expect(token).toBeDefined();
+    });
+  });
+
+  describe("Prevent reusing old passwords", () => {
+    let identityID: string;
+
+    beforeEach(async () => {
+      const module = await Test.createTestingModule(moduleMetaData).compile();
+
+      req = module.get(Request);
+      app = module.createNestApplication();
+
+      await app.listen(req.socket);
+
+      // WAIT UNTIL IDENTITY IS INSERTED
+      await new Promise((resolve, _) => setTimeout(resolve, 3000));
+
+      await login();
+
+      identityID = await req
+        .get("/passport/identity", {}, {Authorization: `IDENTITY ${token}`})
+        .then(r => r.body[0]._id);
+    });
+
+    const updatePassword = (newPassword: string) =>
+      req.put(
+        `/passport/identity/${identityID}`,
+        {identifier: "spica", password: newPassword},
+        {Authorization: `IDENTITY ${token}`}
+      );
+
+    const sleep = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+    it("should prevent password update if it is current one", async () => {
+      const errRes = await updatePassword("spica");
+      expect(errRes.statusCode).toEqual(400);
+      expect(errRes.body.message).toEqual("New password can't be the one of last 2 passwords.");
+    });
+
+    it("should prevent password update if it was one of the last used", async () => {
+      const updateResponse = await updatePassword("newPassword");
+      expect(updateResponse.statusCode).toEqual(200);
+
+      await sleep(1000);
+      const res = await login("spica", "newPassword");
+      expect(res.statusCode).toEqual(200);
+      expect(res.statusText).toEqual("OK");
+
+      const errRes = await updatePassword("spica");
+      expect(errRes.statusCode).toEqual(400);
+      expect(errRes.body.message).toEqual("New password can't be the one of last 2 passwords.");
+
+      const reUpdateResponse = await updatePassword("brandNewPassword");
+      expect(reUpdateResponse.statusCode).toEqual(200);
+
+      await sleep(1000);
+      const res2 = await login("spica", "brandNewPassword");
+      expect(res2.statusCode).toEqual(200);
+      expect(res2.statusText).toEqual("OK");
+
+      const repeatErrRes = await updatePassword("newPassword");
+      expect(repeatErrRes.statusCode).toEqual(400);
+      expect(repeatErrRes.body.message).toEqual(
+        "New password can't be the one of last 2 passwords."
+      );
+    });
+
+    it("should not prevent password update if it is not in the last passwords array", async () => {
+      const updateResponse = await updatePassword("newPassword");
+      expect(updateResponse.statusCode).toEqual(200);
+
+      await sleep(1000);
+      const res = await login("spica", "newPassword");
+      expect(res.statusCode).toEqual(200);
+      expect(res.statusText).toEqual("OK");
+
+      const errRes = await updatePassword("spica");
+      expect(errRes.statusCode).toEqual(400);
+      expect(errRes.body.message).toEqual("New password can't be the one of last 2 passwords.");
+
+      await updatePassword("brandNewPassword");
+
+      await sleep(1000);
+      const res2 = await login("spica", "brandNewPassword");
+      expect(res2.statusCode).toEqual(200);
+      expect(res2.statusText).toEqual("OK");
+
+      const reUpdateResponse = await updatePassword("spica");
+      expect(reUpdateResponse.statusCode).toEqual(200);
+    });
+
+    it("should not return last passwords", async () => {
+      const res = await login();
+
+      expect(res).not.toHaveProperty("lastPasswords");
+      expect(res.headers).not.toHaveProperty("lastPasswords");
+      expect(res.body).not.toHaveProperty("lastPasswords");
+      expect(jwtDecode(token)).not.toHaveProperty("lastPasswords");
     });
   });
 });

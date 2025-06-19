@@ -1,87 +1,99 @@
-import StorageFullAccess from "./storage.fullaccess";
-import StorageReadOnlyAccess from "./storage.readonly";
+import ActivityFullAccess from "./activity.fullaccess";
+import ActivityReadOnlyAccess from "./activity.readonly";
 
-import WebhookFullAccess from "./webhook.fullaccess";
-import WebhookReadOnlyAccess from "./webhook.readonly";
+import ApiKeyFullAccess from "./apikey.fullaccess";
+import ApiKeyReadOnlyAccess from "./apikey.readonly";
 
-import FunctionFullAccess from "./function.fullaccess";
-import FunctionReadOnlyAccess from "./function.readonly";
-
-import DashboardFullAccess from "./dashboard.fullaccess";
-import DashboardReadOnlyAccess from "./dashboard.readonly";
+import AssetFullAccess from "./asset.fullaccess";
+import AssetReadOnlyAccess from "./asset.readonly";
 
 import BucketFullAccess from "./bucket.fullaccess";
 import BucketReadOnlyAccess from "./bucket.readonly";
 
-import ActivityFullAccess from "./activity.fullaccess";
-import ActivityReadOnlyAccess from "./activity.readonly";
+import DashboardFullAccess from "./dashboard.fullaccess";
+import DashboardReadOnlyAccess from "./dashboard.readonly";
 
-import ApiKeyFullAccess from "./passport/apikey.fullaccess";
-import ApiKeyReadOnlyAccess from "./passport/apikey.readonly";
+import EnvVarFullAccess from "./env.var.fullaccess";
+import EnvVarReadOnlyAccess from "./env.var.readonly";
 
-import IdentityFullAccess from "./passport/identity.fullaccess";
-import IdentityReadOnlyAccess from "./passport/identity.readonly";
+import FunctionFullAccess from "./function.fullaccess";
+import FunctionReadOnlyAccess from "./function.readonly";
 
-import PolicyFullAccess from "./passport/policy.fullaccess";
-import PolicyReadOnlyAccess from "./passport/policy.readonly";
+import IdentityFullAccess from "./identity.fullaccess";
+import IdentityReadOnlyAccess from "./identity.readonly";
 
-import StrategyFullAccess from "./passport/strategy.fullaccess";
-import StrategyReadOnlyAccess from "./passport/strategy.readonly";
+import PassportFullAccess from "./passport.fullaccess";
+import PassportReadOnlyAccess from "./passport.readonly";
 
-import PassportFullAccess from "./passport/passport.fullaccess";
-import PassportReadOnlyAccess from "./passport/passport.readonly";
+import PolicyFullAccess from "./policy.fullaccess";
+import PolicyReadOnlyAccess from "./policy.readonly";
 
 import PreferenceFullAccess from "./preference.fullaccess";
 import PreferenceReadOnlyAccess from "./preference.readonly";
 
-import StatusFullaccess from "./status.fullaccess";
+import RefreshTokenFullAccess from "./refresh.token.fullaccess";
+import RefreshTokenReadOnlyAccess from "./refresh.token.readonly";
 
-import AssetFullaccess from "./asset.fullaccess";
-import AssetReadOnlyAccess from "./asset.readonly";
+import StatusFullAccess from "./status.fullaccess";
+
+import StorageFullAccess from "./storage.fullaccess";
+import StorageReadOnlyAccess from "./storage.readonly";
+
+import StrategyFullAccess from "./strategy.fullaccess";
+import StrategyReadOnlyAccess from "./strategy.readonly";
 
 import VersionControlFullAccess from "./version.fullaccess";
 
+import WebhookFullAccess from "./webhook.fullaccess";
+import WebhookReadOnlyAccess from "./webhook.readonly";
+
 export default [
-  ApiKeyFullAccess,
-  ApiKeyReadOnlyAccess,
-
-  IdentityFullAccess,
-  IdentityReadOnlyAccess,
-
-  PolicyFullAccess,
-  PolicyReadOnlyAccess,
-
-  StrategyFullAccess,
-  StrategyReadOnlyAccess,
-
-  PassportFullAccess,
-  PassportReadOnlyAccess,
-
   ActivityFullAccess,
   ActivityReadOnlyAccess,
 
-  StorageFullAccess,
-  StorageReadOnlyAccess,
+  ApiKeyFullAccess,
+  ApiKeyReadOnlyAccess,
 
-  WebhookFullAccess,
-  WebhookReadOnlyAccess,
-
-  FunctionFullAccess,
-  FunctionReadOnlyAccess,
-
-  DashboardFullAccess,
-  DashboardReadOnlyAccess,
+  AssetFullAccess,
+  AssetReadOnlyAccess,
 
   BucketFullAccess,
   BucketReadOnlyAccess,
 
+  DashboardFullAccess,
+  DashboardReadOnlyAccess,
+
+  EnvVarFullAccess,
+  EnvVarReadOnlyAccess,
+
+  FunctionFullAccess,
+  FunctionReadOnlyAccess,
+
+  IdentityFullAccess,
+  IdentityReadOnlyAccess,
+
+  PassportFullAccess,
+  PassportReadOnlyAccess,
+
+  PolicyFullAccess,
+  PolicyReadOnlyAccess,
+
   PreferenceFullAccess,
   PreferenceReadOnlyAccess,
 
-  StatusFullaccess,
+  RefreshTokenFullAccess,
+  RefreshTokenReadOnlyAccess,
 
-  AssetFullaccess,
-  AssetReadOnlyAccess,
+  StatusFullAccess,
 
-  VersionControlFullAccess
+  StorageFullAccess,
+  StorageReadOnlyAccess,
+
+  StrategyFullAccess,
+  StrategyReadOnlyAccess,
+
+  VersionControlFullAccess,
+
+  WebhookFullAccess,
+  WebhookReadOnlyAccess
 ];
