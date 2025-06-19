@@ -12,7 +12,7 @@ import {VCRepresentativeManager} from "@spica-server/representative";
 import {RepresentativeManagerResource} from "@spica-server/interface/versioncontrol";
 import {getDocToRepConverter, getDocWatcher, getRepApplier} from "./doc.synchronizer";
 import {getDocApplier, getRepToDocConverter, getRepWatcher} from "./rep.synchronizer";
-import {JobReducer} from "@spica-server/replication";
+import {ClassCommander, JobReducer} from "@spica-server/replication";
 
 @Injectable()
 export class VCSynchronizer<R extends Resource> extends Synchronizer<
@@ -22,7 +22,8 @@ export class VCSynchronizer<R extends Resource> extends Synchronizer<
   constructor(
     args: VCSynchronizerArgs<R>,
     vcRepresentativeManager: VCRepresentativeManager,
-    jobReducer?: JobReducer
+    jobReducer?: JobReducer,
+    commander?: ClassCommander
   ) {
     const docSync = args.syncs[0];
 
@@ -72,7 +73,8 @@ export class VCSynchronizer<R extends Resource> extends Synchronizer<
       syncs,
       moduleName: args.moduleName,
       subModuleName: args.subModuleName,
-      jobReducer
+      jobReducer,
+      commander
     };
 
     super(synchronizerArgs);

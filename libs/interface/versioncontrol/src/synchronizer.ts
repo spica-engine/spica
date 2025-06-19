@@ -1,6 +1,6 @@
 import {Observable} from "rxjs";
 import {BaseCollection} from "@spica-server/database";
-import {IJobReducer} from "@spica-server/interface/replication";
+import {CommandType, ICommander, IJobReducer} from "@spica-server/interface/replication";
 
 export enum ChangeTypes {
   INSERT,
@@ -108,13 +108,29 @@ export type SynchronizerArgs<R1 extends Resource, R2 extends Resource> = {
   moduleName: string;
   subModuleName: string;
   jobReducer?: IJobReducer;
+  commander?: ICommander;
 };
 
 export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
-  constructor(private args: SynchronizerArgs<R1, R2>) {}
+  constructor(private args: SynchronizerArgs<R1, R2>) {
+    if (args.commander) {
+      args.commander.register(
+        this,
+        [this.addDocToRepAction, this.addRepToDocAction],
+        CommandType.SYNC
+      );
+    }
+  }
 
   docToRepActions = new Set<string>();
   repToDocActions = new Set<string>();
+
+  addDocToRepAction(resourceId: string) {
+    this.docToRepActions.add(resourceId);
+  }
+  addRepToDocAction(resourceId: string) {
+    this.repToDocActions.add(resourceId);
+  }
 
   start() {
     const {syncs, moduleName, subModuleName, jobReducer} = this.args;
@@ -135,7 +151,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
           return this.repToDocActions.delete(resourceId);
         }
 
-        this.docToRepActions.add(resourceId);
+        this.addDocToRepAction(resourceId);
 
         const apply = () => {
           const convertedChange = docSync.converter.convert(change);
@@ -143,7 +159,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
         };
 
         if (jobReducer) {
-          const meta = {_id: `doc->rep:${resourceId}`};
+          const meta = {_id: `doc-rep:${moduleName}:${subModuleName}:${resourceId}`};
           jobReducer.do(meta, apply);
         } else {
           apply();
@@ -162,7 +178,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
           return this.docToRepActions.delete(resourceId);
         }
 
-        this.repToDocActions.add(resourceId);
+        this.addRepToDocAction(resourceId);
 
         const apply = () => {
           const convertedChange = repSync.converter.convert(change);
@@ -184,7 +200,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
         };
 
         if (jobReducer) {
-          const meta = {_id: `rep->doc:${resourceId}`};
+          const meta = {_id: `rep-doc:${moduleName}:${subModuleName}:${resourceId}`};
           jobReducer.do(meta, apply);
         } else {
           apply();
