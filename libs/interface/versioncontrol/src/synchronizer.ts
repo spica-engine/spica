@@ -132,13 +132,15 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
     this.repToDocActions.add(resourceId);
   }
 
+  errorHandler = err => {
+    console.error(
+      `Error received while listening ${this.args.moduleName}.${this.args.subModuleName} changes.`
+    );
+    console.error(err);
+  };
+
   start() {
     const {syncs, moduleName, subModuleName, jobReducer} = this.args;
-
-    const errorHandler = err => {
-      console.error(`Error received while listening ${moduleName}.${subModuleName} changes.`);
-      console.error(err);
-    };
 
     // can't loop since array elements are different
     const docSync = syncs[0];
@@ -165,7 +167,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
           apply();
         }
       },
-      error: errorHandler
+      error: this.errorHandler
     });
 
     const repSync = syncs[1];
@@ -206,7 +208,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
           apply();
         }
       },
-      error: errorHandler
+      error: this.errorHandler
     });
   }
 }
