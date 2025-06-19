@@ -78,7 +78,7 @@ Function 'macro' arg[2] must be property access chain.`
 
   describe("helpers", () => {
     it("should create in query", () => {
-      const query = createInQuery(["18", "35"], "ages", "$or");
+      const query = createInQuery(["18", "35"], "ages", "$or", "match");
 
       expect(query as any).toEqual({
         $or: [
@@ -129,7 +129,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "default"
         };
 
-        const hasFn = has(context);
+        const hasFn = has(context, "match");
 
         it("should return true", () => {
           const request = {
@@ -161,7 +161,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "aggregation"
         };
 
-        const hasFn = has(context);
+        const hasFn = has(context, "match");
 
         it("should return aggregation", () => {
           const request = {};
@@ -184,7 +184,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "default"
         };
 
-        const unixTimeFn = unixTime(context);
+        const unixTimeFn = unixTime(context, "match");
 
         it("should return unixtime stamp", () => {
           const request = {
@@ -205,7 +205,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "aggregation"
         };
 
-        const unixTimeFn = unixTime(context);
+        const unixTimeFn = unixTime(context, "match");
 
         it("should return aggregation", () => {
           const request = {};
@@ -231,7 +231,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "default"
         };
 
-        const nowFn = now(context);
+        const nowFn = now(context, "match");
 
         it("should return unixtime stamp of now", () => {
           jest.setSystemTime(time);
@@ -249,7 +249,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "aggregation"
         };
 
-        const nowFn = now(context);
+        const nowFn = now(context, "match");
 
         it("should return aggregation", () => {
           jest.setSystemTime(time);
@@ -279,7 +279,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "default"
         };
 
-        const someFn = some(context);
+        const someFn = some(context, "match");
 
         it("should return true", () => {
           const request = {
@@ -313,7 +313,7 @@ Function 'macro' arg[2] must be property access chain.`
             target: "default"
           };
 
-          const someFn = some(context);
+          const someFn = some(context, "match");
 
           it("should return true", () => {
             const request = {
@@ -348,7 +348,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "aggregation"
         };
 
-        const someFn = some(context);
+        const someFn = some(context, "match");
 
         it("should return aggregation", () => {
           const request = {};
@@ -403,7 +403,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "default"
         };
 
-        const everyFn = every(context);
+        const everyFn = every(context, "match");
 
         it("should return true", () => {
           const request = {
@@ -437,7 +437,7 @@ Function 'macro' arg[2] must be property access chain.`
             target: "default"
           };
 
-          const everyFn = every(context);
+          const everyFn = every(context, "match");
 
           it("should return true", () => {
             const request = {
@@ -472,7 +472,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "aggregation"
         };
 
-        const everyFn = every(context);
+        const everyFn = every(context, "match");
 
         it("should return aggregation", () => {
           const request = {};
@@ -527,7 +527,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "default"
         };
 
-        const equalFn = equal(context);
+        const equalFn = equal(context, "match");
 
         it("should return true", () => {
           const request = {
@@ -561,7 +561,7 @@ Function 'macro' arg[2] must be property access chain.`
             target: "default"
           };
 
-          const equalFn = equal(context);
+          const equalFn = equal(context, "match");
 
           it("should return true", () => {
             const request = {
@@ -597,7 +597,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "aggregation"
         };
 
-        const equalFn = equal(context);
+        const equalFn = equal(context, "match");
 
         it("should return aggregation", () => {
           const request = {};
@@ -643,7 +643,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "default"
         };
 
-        const regexFn = regex(context);
+        const regexFn = regex(context, "match");
 
         it("should return true", () => {
           const request = {
@@ -675,7 +675,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "aggregation"
         };
 
-        const regexFn = regex(context);
+        const regexFn = regex(context, "match");
 
         it("should return aggregation", () => {
           const request = {};
@@ -708,7 +708,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "default"
         };
 
-        const lengthFn = length(context);
+        const lengthFn = length(context, "match");
 
         it("should return length of array", () => {
           const request = {
@@ -753,7 +753,7 @@ Function 'macro' arg[2] must be property access chain.`
           target: "aggregation"
         };
 
-        const lengthFn = length(context);
+        const lengthFn = length(context, "match");
 
         it("should return aggregation", () => {
           const request = {};
