@@ -116,7 +116,12 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
     if (args.commander) {
       args.commander.register(
         this,
-        [this.addDocToRepAction, this.addRepToDocAction],
+        [
+          this.addDocToRepAction,
+          this.addRepToDocAction,
+          this.removeDocToRepAction,
+          this.removeDocToRepAction
+        ],
         CommandType.SYNC
       );
     }
@@ -130,6 +135,13 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
   }
   addRepToDocAction(resourceId: string) {
     this.repToDocActions.add(resourceId);
+  }
+
+  removeDocToRepAction(resourceId: string) {
+    this.docToRepActions.delete(resourceId);
+  }
+  removeRepToDocAction(resourceId: string) {
+    this.repToDocActions.delete(resourceId);
   }
 
   errorHandler = err => {
@@ -150,7 +162,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 
         const isSynchronizerAction = this.repToDocActions.has(resourceId);
         if (isSynchronizerAction) {
-          return this.repToDocActions.delete(resourceId);
+          return this.removeRepToDocAction(resourceId);
         }
 
         this.addDocToRepAction(resourceId);
@@ -177,7 +189,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 
         const isSynchronizerAction = this.docToRepActions.has(resourceId);
         if (isSynchronizerAction) {
-          return this.docToRepActions.delete(resourceId);
+          return this.removeDocToRepAction(resourceId);
         }
 
         this.addRepToDocAction(resourceId);
