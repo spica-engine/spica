@@ -15,6 +15,7 @@ import {
   length
 } from "@spica-server/bucket/expression/src/builtin_funcs";
 import {parser} from "@spica-server/bucket/expression/src/parser";
+import {wrapExpressionByMode} from "../src/convert";
 
 jest.useFakeTimers();
 
@@ -77,42 +78,52 @@ Function 'macro' arg[2] must be property access chain.`
   });
 
   describe("helpers", () => {
-    it("should create in query", () => {
-      const query = createInQuery(["18", "35"], "ages", "$or", "match");
+    const values = ["18", "35"];
+    const field = "ages";
+    const operator = "$or";
 
-      expect(query as any).toEqual({
-        $or: [
+    const expectedExpr = [
+      {
+        $eq: [
           {
-            $expr: {
-              $eq: [
-                {
-                  $in: [
-                    "18",
-                    {
-                      $ifNull: ["ages", []]
-                    }
-                  ]
-                },
-                true
-              ]
-            }
+            $in: [
+              "18",
+              {
+                $ifNull: [field, []]
+              }
+            ]
           },
-          {
-            $expr: {
-              $eq: [
-                {
-                  $in: [
-                    "35",
-                    {
-                      $ifNull: ["ages", []]
-                    }
-                  ]
-                },
-                true
-              ]
-            }
-          }
+          true
         ]
+      },
+      {
+        $eq: [
+          {
+            $in: [
+              "35",
+              {
+                $ifNull: [field, []]
+              }
+            ]
+          },
+          true
+        ]
+      }
+    ];
+
+    it("should create in query for mode: match", () => {
+      const query = createInQuery(values, field, operator, "match");
+
+      expect(query).toEqual({
+        [operator]: expectedExpr.map(expr => ({$expr: expr}))
+      });
+    });
+
+    it("should create in query for mode: project", () => {
+      const query = createInQuery(values, field, operator, "project");
+
+      expect(query).toEqual({
+        [operator]: expectedExpr
       });
     });
   });
@@ -161,16 +172,18 @@ Function 'macro' arg[2] must be property access chain.`
           target: "aggregation"
         };
 
-        const hasFn = has(context, "match");
+        const expectedExpr = {$gt: ["$title", null]};
 
-        it("should return aggregation", () => {
-          const request = {};
+        it("should return aggregation for mode: match", () => {
+          const hasFn = has(context, "match");
+          const result = hasFn({});
+          expect(result).toEqual({$expr: expectedExpr});
+        });
 
-          const result = hasFn(request);
-
-          expect(result).toEqual({
-            $expr: {$gt: ["$title", null]}
-          });
+        it("should return aggregation for mode: project", () => {
+          const hasFn = has(context, "project");
+          const result = hasFn({});
+          expect(result).toEqual(expectedExpr);
         });
       });
     });
@@ -597,37 +610,39 @@ Function 'macro' arg[2] must be property access chain.`
           target: "aggregation"
         };
 
-        const equalFn = equal(context, "match");
-
-        it("should return aggregation", () => {
-          const request = {};
-
-          const result = equalFn(request);
-
-          expect(result).toEqual({
-            $expr: {
-              $and: [
+        const expected = {
+          $and: [
+            {
+              $eq: [
                 {
-                  $eq: [
-                    {
-                      $size: {
-                        $ifNull: ["$tags", []]
-                      }
-                    },
-                    2
-                  ]
+                  $size: {
+                    $ifNull: ["$tags", []]
+                  }
                 },
+                2
+              ]
+            },
+            {
+              $eq: [
                 {
-                  $eq: [
-                    {
-                      $setDifference: ["$tags", ["nodejs", "angular"]]
-                    },
-                    []
-                  ]
-                }
+                  $setDifference: ["$tags", ["nodejs", "angular"]]
+                },
+                []
               ]
             }
-          });
+          ]
+        };
+
+        it("should return aggregation for mode: match", () => {
+          const fn = equal(context, "match");
+          const result = fn({});
+          expect(result).toEqual({$expr: expected});
+        });
+
+        it("should return aggregation for mode: project", () => {
+          const fn = equal(context, "project");
+          const result = fn({});
+          expect(result).toEqual(expected);
         });
       });
     });
@@ -675,27 +690,29 @@ Function 'macro' arg[2] must be property access chain.`
           target: "aggregation"
         };
 
-        const regexFn = regex(context, "match");
+        const expectedExpr = {
+          $eq: [
+            {
+              $regexMatch: {
+                input: "$name",
+                regex: "^jo",
+                options: "i"
+              }
+            },
+            true
+          ]
+        };
 
-        it("should return aggregation", () => {
-          const request = {};
+        it("should return aggregation for mode: match", () => {
+          const regexFn = regex(context, "match");
+          const result = regexFn({});
+          expect(result).toEqual({$expr: expectedExpr});
+        });
 
-          const result = regexFn(request);
-
-          expect(result).toEqual({
-            $expr: {
-              $eq: [
-                {
-                  $regexMatch: {
-                    input: "$name",
-                    regex: "^jo",
-                    options: "i"
-                  }
-                },
-                true
-              ]
-            }
-          });
+        it("should return aggregation for mode: project", () => {
+          const regexFn = regex(context, "project");
+          const result = regexFn({});
+          expect(result).toEqual(expectedExpr);
         });
       });
     });
@@ -764,6 +781,25 @@ Function 'macro' arg[2] must be property access chain.`
           });
         });
       });
+    });
+  });
+  describe("wrapExpressionByMode", () => {
+    const expression = {someField: 123};
+
+    it('should wrap expression in $expr when mode is "match"', () => {
+      const result = wrapExpressionByMode(expression, "match");
+      expect(result).toEqual({$expr: expression});
+    });
+
+    it('should return expression as-is when mode is "project"', () => {
+      const result = wrapExpressionByMode(expression, "project");
+      expect(result).toBe(expression);
+    });
+
+    it("should throw error for unknown mode", () => {
+      expect(() => wrapExpressionByMode(expression, "unknown" as any)).toThrow(
+        "Unknown mode received."
+      );
     });
   });
 });
