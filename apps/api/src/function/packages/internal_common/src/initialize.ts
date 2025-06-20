@@ -1,4 +1,8 @@
-import {ApikeyInitialization, IdentityInitialization, InitializationResult} from "./interface";
+import {
+  ApikeyInitialization,
+  IdentityInitialization,
+  InitializationResult
+} from "@spica-server/interface/function/packages";
 import {Axios} from "./request";
 
 let service: Axios;

@@ -1,5 +1,5 @@
 import {getBaseUrl, handleResponse, splitIntoChunks} from "../src/utilities";
-import {BatchOptions, HTTPResponse, Request} from "../src/interface";
+import {BatchOptions, HTTPResponse, Request} from "@spica-server/interface/batch";
 
 describe("Utilities", () => {
   describe("handleResponse", () => {

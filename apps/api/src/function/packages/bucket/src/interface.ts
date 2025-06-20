@@ -28,30 +28,6 @@ export interface BucketDocument {
   [key: string]: any | undefined;
 }
 
-interface InitializeOptions {
-  publicUrl?: string;
-}
-
-export interface ApikeyInitialization extends InitializeOptions {
-  apikey: string;
-}
-
-export interface IdentityInitialization extends InitializeOptions {
-  identity: string;
-}
-
-export interface InitializationResult {
-  authorization: string;
-  publicUrl: string;
-}
-
-export interface IndexResult<T> {
-  meta: {
-    total: number;
-  };
-  data: T[];
-}
-
 export type RealtimeConnection<T> = Observable<T> & {
   insert: (document: Omit<Singular<T>, "_id">) => void;
   replace: (document: Singular<T> & {_id: string}) => void;
