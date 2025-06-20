@@ -38,9 +38,9 @@ describe("Representative", () => {
 
   let subscription: Subscription;
 
-  afterEach(() => {
+  afterEach(async () => {
     subscription?.unsubscribe();
-    fs.rmSync(cwd, {recursive: true});
+    await representative.rm();
   });
 
   describe("write", () => {
