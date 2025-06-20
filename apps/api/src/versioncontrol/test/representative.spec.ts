@@ -36,7 +36,10 @@ describe("Representative", () => {
     return {_id: id, contents};
   }
 
+  let subscription: Subscription;
+
   afterEach(() => {
+    subscription?.unsubscribe();
     fs.rmSync(cwd, {recursive: true});
   });
 
@@ -104,8 +107,6 @@ describe("Representative", () => {
   });
 
   describe("watch", () => {
-    let subscription: Subscription;
-
     it("should track insert change type", done => {
       subscription = representative.watch("module1", ["schema.yaml"]).subscribe({
         next: change => {
