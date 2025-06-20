@@ -57,9 +57,7 @@ async function sync({
   const synchronizers = [];
 
   for (const Ctor of coreSynchronizers) {
-
     const synchronizer = new Ctor(sourceService, targetService, {
-      syncFnEnv,
       bucketIds: transformIDs(bucketIds),
       functionIds: transformIDs(functionIds),
       apikeyIds: transformIDs(apikeyIds),
@@ -267,7 +265,7 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
   constructor(
     private sourceService: httpService.Client,
     private targetService: httpService.Client,
-    private options: {syncFnEnv; functionIds}
+    private options: {functionIds}
   ) {}
 
   async initialize() {
