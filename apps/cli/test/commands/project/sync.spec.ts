@@ -224,9 +224,7 @@ describe("Synchronize", () => {
       });
 
       describe("FunctionSynchronizer", () => {
-
         const synchronizer = new FunctionSynchronizer(sourceService as any, targetService as any, {
-          syncFnEnv: true,
           functionIds: undefined
         });
 
@@ -272,7 +270,7 @@ describe("Synchronize", () => {
           const synchronizer = new FunctionSynchronizer(
             sourceService as any,
             targetService as any,
-            {syncFnEnv: true, functionIds: ["1", "2"]}
+            {functionIds: ["1", "2"]}
           );
 
           it("should analyze function", async () => {
