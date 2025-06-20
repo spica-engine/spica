@@ -7,7 +7,7 @@ import {
   DeleteObjectCommand
 } from "@aws-sdk/client-s3";
 import {fromIni} from "@aws-sdk/credential-providers";
-
+import {readFileSync} from "fs";
 export class AWSS3 implements Strategy {
   s3: S3Client;
 
@@ -15,8 +15,13 @@ export class AWSS3 implements Strategy {
     private credentialsPath: string,
     private bucketName: string
   ) {
+    const config = JSON.parse(readFileSync(this.credentialsPath, "utf-8"));
     this.s3 = new S3Client({
-      credentials: fromIni({filepath: this.credentialsPath})
+      credentials: {
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey
+      },
+      region: config.region
     });
   }
 
@@ -62,10 +67,8 @@ export class AWSS3 implements Strategy {
     );
   }
 
-  url(id: string): Promise<string> {
-    // @TODO: find a way to get object location instead of this
-    return Promise.resolve(
-      `https://${this.bucketName}.s3.${this.s3.config.region}.amazonaws.com/${id}`
-    );
+  async url(id: string): Promise<string> {
+    const region = await this.s3.config.region();
+    return `https://${this.bucketName}.s3.${region}.amazonaws.com/${id}`;
   }
 }
