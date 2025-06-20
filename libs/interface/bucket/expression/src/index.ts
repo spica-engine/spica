@@ -14,4 +14,6 @@ export interface FunctionContext {
   target: "aggregation" | "default";
 }
 
-export type Func = (context: FunctionContext) => (ctx) => unknown;
+export type Func = (context: FunctionContext, mode: Mode) => (ctx) => unknown;
+
+export type Mode = "match" | "project";

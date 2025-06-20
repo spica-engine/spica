@@ -2,7 +2,7 @@ import {ObjectId} from "@spica-server/database";
 import {getMostLeftSelectIdentifier} from "./ast";
 import {compile} from "./compile";
 import * as func from "./func";
-import {Replacer} from "@spica-server/interface/bucket/expression";
+import {Mode, Replacer} from "@spica-server/interface/bucket/expression";
 
 function visitArgFns(fns: any[], ctx) {
   const finalResult = [];
@@ -19,9 +19,9 @@ function visitArgFns(fns: any[], ctx) {
   return finalResult;
 }
 
-function visit(node) {
+function visit(node, mode: Mode) {
   if (Array.isArray(node)) {
-    const fns = visitArgs(node);
+    const fns = visitArgs(node, mode);
     return ctx => visitArgFns(fns, ctx);
   }
 
@@ -33,34 +33,38 @@ function visit(node) {
 
   switch (node.kind) {
     case "operator":
-      return visitOperator(node);
+      return visitOperator(node, mode);
     case "identifier":
       return visitIdentifier(node);
     case "literal":
       return visitLiteral(node);
     case "call":
-      return func.visit(node.left.name, {
-        target: "aggregation",
-        arguments: node.arguments,
-        receiver: undefined
-      });
+      return func.visit(
+        node.left.name,
+        {
+          target: "aggregation",
+          arguments: node.arguments,
+          receiver: undefined
+        },
+        mode
+      );
     case "unary":
-      return visitUnary(node);
+      return visitUnary(node, mode);
     default:
       throw new Error(`invalid kind ${node.kind}`);
   }
 }
 
-function visitArgs(args: any[]): any[] {
+function visitArgs(args: any[], mode: Mode): any[] {
   const finalResult = [];
   for (const arg of args) {
     if (Array.isArray(arg)) {
-      const extracteds = visitArgs(arg);
+      const extracteds = visitArgs(arg, mode);
       finalResult.push(extracteds);
       continue;
     }
 
-    const result = visit(arg);
+    const result = visit(arg, mode);
 
     if (Array.isArray(result)) {
       finalResult.push(...result);
@@ -85,16 +89,16 @@ function visitIdentifier(node) {
   };
 }
 
-function visitUnary(node) {
+function visitUnary(node, mode: Mode) {
   switch (node.type) {
     case "not":
-      return visitUnaryNot(node);
+      return visitUnaryNot(node, mode);
     default:
       throw new Error(`invalid unary kind ${node.kind}`);
   }
 }
 
-function visitUnaryNot(node) {
+function visitUnaryNot(node, mode: Mode) {
   if (node.member.type == "select" || node.member.type == "identifier") {
     throw new TypeError(
       `unary operator 'not' does not support "${node.member.type}".\nDid you mean to wrap your expression with brackets?\n!document.title=="test" -> !(document.title=="test")`
@@ -103,95 +107,95 @@ function visitUnaryNot(node) {
   return ctx => {
     // $not is not accepted as a top level operator
     // see: https://jira.mongodb.org/browse/SERVER-10708
-    return {$nor: [visit(node.member)(ctx)]};
+    return {$nor: [visit(node.member, mode)(ctx)]};
   };
 }
 
-function visitOperator(node) {
+function visitOperator(node, mode: Mode) {
   switch (node.category) {
     case "binary":
-      return visitBinaryOperator(node);
+      return visitBinaryOperator(node, mode);
     case "tenary":
-      return visitTenaryOperator(node);
+      return visitTenaryOperator(node, mode);
     default:
       throw new Error(`unknown operator category ${node.category}`);
   }
 }
 
-function visitTenaryOperator(node) {
+function visitTenaryOperator(node, mode: Mode) {
   switch (node.type) {
     case "conditional":
-      return visitTenaryOperatorConditional(node);
+      return visitTenaryOperatorConditional(node, mode);
     default:
       throw new Error(`unknown tenary operator ${node.type}`);
   }
 }
 
-function visitTenaryOperatorConditional(node) {
+function visitTenaryOperatorConditional(node, mode: Mode) {
   return ctx => {
-    const test = visit(node.test)(ctx);
+    const test = visit(node.test, mode)(ctx);
     return {
       $or: [
         {
-          $and: [test, visit(node.consequent)(ctx)]
+          $and: [test, visit(node.consequent, mode)(ctx)]
         },
         {
-          $and: [{$nor: [test]}, visit(node.alternative)(ctx)]
+          $and: [{$nor: [test]}, visit(node.alternative, mode)(ctx)]
         }
       ]
     };
   };
 }
 
-function visitBinaryOperator(node) {
+function visitBinaryOperator(node, mode: Mode) {
   switch (node.type) {
     case "and":
-      return visitBinaryOperatorAnd(node);
+      return visitBinaryOperatorAnd(node, mode);
     case "or":
-      return visitBinaryOperatorOr(node);
+      return visitBinaryOperatorOr(node, mode);
     case ">":
-      return visitBinaryOperatorGreater(node);
+      return visitBinaryOperatorGreater(node, mode);
     case ">=":
-      return visitBinaryOperatorGreaterOrEqual(node);
+      return visitBinaryOperatorGreaterOrEqual(node, mode);
     case "<":
-      return visitBinaryOperatorLess(node);
+      return visitBinaryOperatorLess(node, mode);
     case "<=":
-      return visitBinaryOperatorLessOrEqual(node);
+      return visitBinaryOperatorLessOrEqual(node, mode);
     case "==":
-      return visitBinaryOperatorEqual(node);
+      return visitBinaryOperatorEqual(node, mode);
     case "!=":
-      return visitBinaryOperatorNotEqual(node);
+      return visitBinaryOperatorNotEqual(node, mode);
 
     case "%":
-      return visitBinaryOperatorRemainder(node);
+      return visitBinaryOperatorRemainder(node, mode);
     case "*":
-      return visitBinaryOperatorMultiply(node);
+      return visitBinaryOperatorMultiply(node, mode);
     case "/":
-      return visitBinaryOperatorDivide(node);
+      return visitBinaryOperatorDivide(node, mode);
 
     case "+":
-      return visitBinaryOperatorAdd(node);
+      return visitBinaryOperatorAdd(node, mode);
     case "-":
-      return visitBinaryOperatorSubtract(node);
+      return visitBinaryOperatorSubtract(node, mode);
 
     case "select":
-      return visitBinaryOperatorSelect(node);
+      return visitBinaryOperatorSelect(node, mode);
     default:
       throw new Error(`unknown binary operator ${node.type}`);
   }
 }
 
-function visitBinaryOperatorSelect(node) {
+function visitBinaryOperatorSelect(node, mode: Mode) {
   return ctx => {
-    const left = visit(node.left)(ctx);
+    const left = visit(node.left, mode)(ctx);
 
     const mostLeft = getMostLeftSelectIdentifier(node);
 
     if (mostLeft == "auth") {
-      return compile(node)(ctx);
+      return compile(node, mode)(ctx);
     }
 
-    const right = visit(node.right)(ctx);
+    const right = visit(node.right, mode)(ctx);
 
     let path = `${left}.${right}`;
 
@@ -207,85 +211,102 @@ function visitBinaryOperatorSelect(node) {
   };
 }
 
-function visitBinaryOperatorAnd(node) {
+function visitBinaryOperatorAnd(node, mode: Mode) {
   return ctx => {
     return {
-      $and: [visit(node.left)(ctx), visit(node.right)(ctx)]
+      $and: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]
     };
   };
 }
 
-function visitBinaryOperatorOr(node) {
+function visitBinaryOperatorOr(node, mode: Mode) {
   return ctx => {
     return {
-      $or: [visit(node.left)(ctx), visit(node.right)(ctx)]
+      $or: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]
     };
   };
 }
 
-function visitBinaryOperatorGreater(node) {
+export function wrapExpressionByMode(expression: object, mode: Mode) {
+  switch (mode) {
+    case "match":
+      return {$expr: expression};
+    case "project":
+      return expression;
+    default:
+      throw Error("Unknown mode received.");
+  }
+}
+
+function visitBinaryOperatorGreater(node, mode: Mode) {
   return ctx => {
-    return {$expr: {$gt: [visit(node.left)(ctx), visit(node.right)(ctx)]}};
+    const expression = {$gt: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]};
+    return wrapExpressionByMode(expression, mode);
   };
 }
 
-function visitBinaryOperatorGreaterOrEqual(node) {
+function visitBinaryOperatorGreaterOrEqual(node, mode: Mode) {
   return ctx => {
-    return {$expr: {$gte: [visit(node.left)(ctx), visit(node.right)(ctx)]}};
+    const expression = {$gte: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]};
+    return wrapExpressionByMode(expression, mode);
   };
 }
 
-function visitBinaryOperatorLess(node) {
+function visitBinaryOperatorLess(node, mode: Mode) {
   return ctx => {
-    return {$expr: {$lt: [visit(node.left)(ctx), visit(node.right)(ctx)]}};
+    const expression = {$lt: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]};
+    return wrapExpressionByMode(expression, mode);
   };
 }
 
-function visitBinaryOperatorLessOrEqual(node) {
+function visitBinaryOperatorLessOrEqual(node, mode: Mode) {
   return ctx => {
-    return {$expr: {$lte: [visit(node.left)(ctx), visit(node.right)(ctx)]}};
+    const expression = {$lte: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]};
+    return wrapExpressionByMode(expression, mode);
   };
 }
 
-function visitBinaryOperatorEqual(node) {
+function visitBinaryOperatorEqual(node, mode: Mode) {
   return ctx => {
-    return {$expr: {$eq: [visit(node.left)(ctx), visit(node.right)(ctx)]}};
+    const expression = {$eq: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]};
+    return wrapExpressionByMode(expression, mode);
   };
 }
 
-function visitBinaryOperatorNotEqual(node) {
+function visitBinaryOperatorNotEqual(node, mode: Mode) {
   return ctx => {
-    return {$expr: {$ne: [visit(node.left)(ctx), visit(node.right)(ctx)]}};
+    const expression = {$ne: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]};
+    return wrapExpressionByMode(expression, mode);
   };
 }
 
-function visitBinaryOperatorRemainder(node) {
+function visitBinaryOperatorRemainder(node, mode: Mode) {
   return ctx => {
-    return {$mod: [visit(node.left)(ctx), visit(node.right)(ctx)]};
+    return {$mod: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]};
   };
 }
 
-function visitBinaryOperatorMultiply(node) {
+function visitBinaryOperatorMultiply(node, mode: Mode) {
   return ctx => {
-    return {$multiply: [visit(node.left)(ctx), visit(node.right)(ctx)]};
+    return {$multiply: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]};
   };
 }
 
-function visitBinaryOperatorDivide(node) {
+function visitBinaryOperatorDivide(node, mode: Mode) {
   return ctx => {
-    return {$divide: [visit(node.left)(ctx), visit(node.right)(ctx)]};
+    return {$divide: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]};
   };
 }
 
-function visitBinaryOperatorAdd(node) {
+function visitBinaryOperatorAdd(node, mode: Mode) {
   return ctx => {
-    return {$add: [visit(node.left)(ctx), visit(node.right)(ctx)]};
+    return {$add: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]};
   };
 }
 
-function visitBinaryOperatorSubtract(node) {
+function visitBinaryOperatorSubtract(node, mode: Mode) {
   return ctx => {
-    return {$subtract: [visit(node.left)(ctx), visit(node.right)(ctx)]};
+    return {$subtract: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]};
   };
 }
 

@@ -1,3 +1,4 @@
+import {Mode} from "@spica-server/interface/bucket/expression";
 import * as func from "./func";
 
 function visitArgFns(fns: any[], ctx) {
@@ -15,40 +16,44 @@ function visitArgFns(fns: any[], ctx) {
   return finalResult;
 }
 
-function visit(node) {
+function visit(node, mode: Mode) {
   if (Array.isArray(node)) {
-    const fns = visitArgs(node);
+    const fns = visitArgs(node, mode);
     return ctx => visitArgFns(fns, ctx);
   }
   switch (node.kind) {
     case "operator":
-      return visitOperator(node);
+      return visitOperator(node, mode);
     case "identifier":
       return visitIdentifier(node);
     case "literal":
       return visitLiteral(node);
     case "call":
-      return func.visit(node.left.name, {
-        target: "default",
-        arguments: node.arguments,
-        receiver: undefined
-      });
+      return func.visit(
+        node.left.name,
+        {
+          target: "default",
+          arguments: node.arguments,
+          receiver: undefined
+        },
+        mode
+      );
     case "unary":
-      return visitUnary(node);
+      return visitUnary(node, mode);
     default:
       throw new Error(`Invalid kind ${node.kind}`);
   }
 }
 
-function visitArgs(args: any[]): any[] {
+function visitArgs(args: any[], mode: Mode): any[] {
   const finalResult = [];
   for (const arg of args) {
     if (Array.isArray(arg)) {
-      const extracteds = visitArgs(arg);
+      const extracteds = visitArgs(arg, mode);
       finalResult.push(extracteds);
       continue;
     }
-    const result = visit(arg);
+    const result = visit(arg, mode);
 
     if (Array.isArray(result)) {
       finalResult.push(...result);
@@ -67,91 +72,93 @@ function visitIdentifier(node) {
   return ctx => ctx[node.name];
 }
 
-function visitUnary(node) {
+function visitUnary(node, mode: Mode) {
   switch (node.type) {
     case "not":
-      return visitUnaryNot(node);
+      return visitUnaryNot(node, mode);
     default:
       throw new Error(`invalid unary kind ${node.kind}`);
   }
 }
 
-function visitUnaryNot(node) {
+function visitUnaryNot(node, mode: Mode) {
   if (node.member.type == "select" || node.member.type == "identifier") {
     throw new TypeError(
       `unary operator 'not' does not support "${node.member.type}".\nDid you mean to wrap your expression with brackets?\n!document.title=="test" -> !(document.title=="test")`
     );
   }
-  return () => !visit(node.member);
+  return () => !visit(node.member, mode);
 }
 
-function visitOperator(node) {
+function visitOperator(node, mode: Mode) {
   switch (node.category) {
     case "binary":
-      return visitBinaryOperator(node);
+      return visitBinaryOperator(node, mode);
     case "tenary":
-      return visitTenaryOperator(node);
+      return visitTenaryOperator(node, mode);
     default:
       throw new Error(`unknown operator category ${node.category}`);
   }
 }
 
-function visitTenaryOperator(node) {
+function visitTenaryOperator(node, mode: Mode) {
   switch (node.type) {
     case "conditional":
-      return visitTenaryOperatorConditional(node);
+      return visitTenaryOperatorConditional(node, mode);
     default:
       throw new Error(`unknown tenary operator ${node.type}`);
   }
 }
 
-function visitTenaryOperatorConditional(node) {
+function visitTenaryOperatorConditional(node, mode: Mode) {
   return ctx => {
-    return visit(node.test)(ctx) ? visit(node.consequent)(ctx) : visit(node.alternative)(ctx);
+    return visit(node.test, mode)(ctx)
+      ? visit(node.consequent, mode)(ctx)
+      : visit(node.alternative, mode)(ctx);
   };
 }
 
-function visitBinaryOperator(node) {
+function visitBinaryOperator(node, mode: Mode) {
   switch (node.type) {
     case "and":
-      return visitBinaryOperatorAnd(node);
+      return visitBinaryOperatorAnd(node, mode);
     case "or":
-      return visitBinaryOperatorOr(node);
+      return visitBinaryOperatorOr(node, mode);
     case ">":
-      return visitBinaryOperatorGreater(node);
+      return visitBinaryOperatorGreater(node, mode);
     case ">=":
-      return visitBinaryOperatorGreaterOrEqual(node);
+      return visitBinaryOperatorGreaterOrEqual(node, mode);
     case "<":
-      return visitBinaryOperatorLess(node);
+      return visitBinaryOperatorLess(node, mode);
     case "<=":
-      return visitBinaryOperatorLessOrEqual(node);
+      return visitBinaryOperatorLessOrEqual(node, mode);
     case "==":
-      return visitBinaryOperatorEqual(node);
+      return visitBinaryOperatorEqual(node, mode);
     case "!=":
-      return visitBinaryOperatorNotEqual(node);
+      return visitBinaryOperatorNotEqual(node, mode);
 
     case "%":
-      return visitBinaryOperatorRemainder(node);
+      return visitBinaryOperatorRemainder(node, mode);
     case "*":
-      return visitBinaryOperatorMultiply(node);
+      return visitBinaryOperatorMultiply(node, mode);
     case "/":
-      return visitBinaryOperatorDivide(node);
+      return visitBinaryOperatorDivide(node, mode);
 
     case "+":
-      return visitBinaryOperatorAdd(node);
+      return visitBinaryOperatorAdd(node, mode);
     case "-":
-      return visitBinaryOperatorSubtract(node);
+      return visitBinaryOperatorSubtract(node, mode);
 
     case "select":
-      return visitBinaryOperatorSelect(node);
+      return visitBinaryOperatorSelect(node, mode);
     default:
       throw new Error(`unknown binary operator ${node.type}`);
   }
 }
 
-function visitBinaryOperatorSelect(node) {
+function visitBinaryOperatorSelect(node, mode: Mode) {
   return ctx => {
-    const left = visit(node.left);
+    const left = visit(node.left, mode);
     const data = left(ctx);
     if (typeof data == "object" && data != null && node.right.name in data) {
       return data[node.right.name];
@@ -160,56 +167,56 @@ function visitBinaryOperatorSelect(node) {
   };
 }
 
-function visitBinaryOperatorAnd(node) {
-  return ctx => visit(node.left)(ctx) && visit(node.right)(ctx);
+function visitBinaryOperatorAnd(node, mode: Mode) {
+  return ctx => visit(node.left, mode)(ctx) && visit(node.right, mode)(ctx);
 }
 
-function visitBinaryOperatorOr(node) {
-  return ctx => visit(node.left)(ctx) || visit(node.right)(ctx);
+function visitBinaryOperatorOr(node, mode: Mode) {
+  return ctx => visit(node.left, mode)(ctx) || visit(node.right, mode)(ctx);
 }
 
-function visitBinaryOperatorGreater(node) {
-  return ctx => visit(node.left)(ctx) > visit(node.right)(ctx);
+function visitBinaryOperatorGreater(node, mode: Mode) {
+  return ctx => visit(node.left, mode)(ctx) > visit(node.right, mode)(ctx);
 }
 
-function visitBinaryOperatorGreaterOrEqual(node) {
-  return ctx => visit(node.left)(ctx) >= visit(node.right)(ctx);
+function visitBinaryOperatorGreaterOrEqual(node, mode: Mode) {
+  return ctx => visit(node.left, mode)(ctx) >= visit(node.right, mode)(ctx);
 }
 
-function visitBinaryOperatorLess(node) {
-  return ctx => visit(node.left)(ctx) < visit(node.right)(ctx);
+function visitBinaryOperatorLess(node, mode: Mode) {
+  return ctx => visit(node.left, mode)(ctx) < visit(node.right, mode)(ctx);
 }
 
-function visitBinaryOperatorLessOrEqual(node) {
-  return ctx => visit(node.left)(ctx) <= visit(node.right)(ctx);
+function visitBinaryOperatorLessOrEqual(node, mode: Mode) {
+  return ctx => visit(node.left, mode)(ctx) <= visit(node.right, mode)(ctx);
 }
 
-function visitBinaryOperatorEqual(node) {
-  return ctx => visit(node.left)(ctx) == visit(node.right)(ctx);
+function visitBinaryOperatorEqual(node, mode: Mode) {
+  return ctx => visit(node.left, mode)(ctx) == visit(node.right, mode)(ctx);
 }
 
-function visitBinaryOperatorNotEqual(node) {
-  return ctx => visit(node.left)(ctx) != visit(node.right)(ctx);
+function visitBinaryOperatorNotEqual(node, mode: Mode) {
+  return ctx => visit(node.left, mode)(ctx) != visit(node.right, mode)(ctx);
 }
 
-function visitBinaryOperatorRemainder(node) {
-  return ctx => visit(node.left)(ctx) % visit(node.right)(ctx);
+function visitBinaryOperatorRemainder(node, mode: Mode) {
+  return ctx => visit(node.left, mode)(ctx) % visit(node.right, mode)(ctx);
 }
 
-function visitBinaryOperatorMultiply(node) {
-  return ctx => visit(node.left)(ctx) * visit(node.right)(ctx);
+function visitBinaryOperatorMultiply(node, mode: Mode) {
+  return ctx => visit(node.left, mode)(ctx) * visit(node.right, mode)(ctx);
 }
 
-function visitBinaryOperatorDivide(node) {
-  return ctx => visit(node.left)(ctx) / visit(node.right)(ctx);
+function visitBinaryOperatorDivide(node, mode: Mode) {
+  return ctx => visit(node.left, mode)(ctx) / visit(node.right, mode)(ctx);
 }
 
-function visitBinaryOperatorAdd(node) {
-  return ctx => visit(node.left)(ctx) + visit(node.right)(ctx);
+function visitBinaryOperatorAdd(node, mode: Mode) {
+  return ctx => visit(node.left, mode)(ctx) + visit(node.right, mode)(ctx);
 }
 
-function visitBinaryOperatorSubtract(node) {
-  return ctx => visit(node.left)(ctx) - visit(node.right)(ctx);
+function visitBinaryOperatorSubtract(node, mode: Mode) {
+  return ctx => visit(node.left, mode)(ctx) - visit(node.right, mode)(ctx);
 }
 
 export const compile = visit;

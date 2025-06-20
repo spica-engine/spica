@@ -3,7 +3,7 @@ import caporalCore from "@caporal/core";
 const {CaporalValidator} = caporalCore;
 import {spin} from "../../console";
 import {httpService} from "../../http";
-import {availableSyncModules, validateSyncModules} from "../../validator";
+import {availableSyncModules, validateSyncIds, validateSyncModules} from "../../validator";
 import {bold, green, red} from "colorette";
 import lodash from "lodash";
 const {isEqual} = lodash;
@@ -18,6 +18,11 @@ async function sync({
     targetUrl,
     targetApikey,
     modules,
+    bucketIds,
+    functionIds,
+    apikeyIds,
+    policyIds,
+    envVarIds,
     dryRun,
     ignoreErrors,
     concurrencyLimit
@@ -52,7 +57,16 @@ async function sync({
   const synchronizers = [];
 
   for (const Ctor of coreSynchronizers) {
-    const synchronizer = new Ctor(sourceService, targetService);
+
+    const synchronizer = new Ctor(sourceService, targetService, {
+      syncFnEnv,
+      bucketIds: transformIDs(bucketIds),
+      functionIds: transformIDs(functionIds),
+      apikeyIds: transformIDs(apikeyIds),
+      policyIds: transformIDs(policyIds),
+      envVarIds: transformIDs(envVarIds)
+    });
+
     const subSynchronizers = await synchronizer.initialize().catch(e => {
       return Promise.reject(returnErrorMessage(e));
     });
@@ -63,10 +77,6 @@ async function sync({
 
   for (const name of modules) {
     const moduleSynchronizers = synchronizers.filter(s => s.moduleName == name);
-
-    if (!moduleSynchronizers.length) {
-      return Promise.reject(`Module ${name} does not exist.`);
-    }
 
     for (const synchronizer of moduleSynchronizers) {
       const {insertions, updations, deletions} = await synchronizer.analyze().catch(e => {
@@ -134,6 +144,30 @@ We highly recommend you to use --dry-run=true and check the changes that will be
       {
         required: true,
         validator: validateSyncModules
+      }
+    )
+    .option("--bucket-ids <ids>", "Buckets that will be synchronized (comma-separated)", {
+      required: false,
+      validator: validateSyncIds
+    })
+    .option("--function-ids <ids>", "Functions that will be synchronized (comma-separated)", {
+      required: false,
+      validator: validateSyncIds
+    })
+    .option("--apikey-ids <ids>", "Apikeys that will be synchronized (comma-separated)", {
+      required: false,
+      validator: validateSyncIds
+    })
+    .option("--policy-ids <ids>", "Policies that will be synchronized (comma-separated)", {
+      required: false,
+      validator: validateSyncIds
+    })
+    .option(
+      "--env-var-ids <ids>",
+      "Environment variables that will be synchronized (comma-separated)",
+      {
+        required: false,
+        validator: validateSyncIds
       }
     )
     .option("--dry-run", "Shows the changes that will be applied to the target instance.", {
@@ -232,13 +266,18 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
 
   constructor(
     private sourceService: httpService.Client,
-    private targetService: httpService.Client
+    private targetService: httpService.Client,
+    private options: {syncFnEnv; functionIds}
   ) {}
 
   async initialize() {
     const synchronizers = [];
 
-    const sourceFns = await this.sourceService.get<any[]>("function");
+    const sourceFns = await getFilteredResources(
+      "function",
+      this.sourceService,
+      this.options.functionIds
+    );
 
     // put dependency synchronizer for each function
     for (const fn of sourceFns) {
@@ -256,12 +295,12 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
     console.log();
     let sourceFns = await spin<any>({
       text: "Fetching functions from source instance",
-      op: () => this.sourceService.get("function")
+      op: () => getFilteredResources("function", this.sourceService, this.options.functionIds)
     });
 
     const targetFns = await spin<any>({
       text: "Fetching functions from target instance",
-      op: () => this.targetService.get<any[]>("function")
+      op: () => getFilteredResources("function", this.targetService, this.options.functionIds)
     });
 
     const decider = new ResourceGroupComparisor(sourceFns, targetFns);
@@ -628,13 +667,19 @@ export class BucketSynchronizer implements ModuleSynchronizer {
 
   constructor(
     private sourceService: httpService.Client,
-    private targetService: httpService.Client
+    private targetService: httpService.Client,
+    private options: {bucketIds}
   ) {}
 
   async initialize() {
     const synchronizers = [];
 
-    const sourceBuckets = await this.sourceService.get<any[]>("bucket");
+    const sourceBuckets = await getFilteredResources(
+      "bucket",
+      this.sourceService,
+      this.options.bucketIds
+    );
+
     for (const bucket of sourceBuckets) {
       synchronizers.push(
         new BucketDataSynchronizer(this.sourceService, this.targetService, bucket)
@@ -647,12 +692,12 @@ export class BucketSynchronizer implements ModuleSynchronizer {
     console.log();
     const sourceBuckets = await spin<any>({
       text: "Fetching buckets from source instance",
-      op: () => this.sourceService.get("bucket")
+      op: () => getFilteredResources("bucket", this.sourceService, this.options.bucketIds)
     });
 
     const targetBuckets = await spin<any>({
       text: "Fetching buckets from target instance",
-      op: () => this.targetService.get("bucket")
+      op: () => getFilteredResources("bucket", this.targetService, this.options.bucketIds)
     });
 
     const decider = new ResourceGroupComparisor(sourceBuckets, targetBuckets);
@@ -722,7 +767,8 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
 
   constructor(
     private sourceService: httpService.Client,
-    private targetService: httpService.Client
+    private targetService: httpService.Client,
+    private options: {apikeyIds}
   ) {}
 
   initialize() {
@@ -734,17 +780,13 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
     const sourceApikeys = await spin<any>({
       text: "Fetching apikeys from source instance",
       op: () =>
-        this.sourceService
-          .get<{meta: {total: number}; data: any[]}>("passport/apikey")
-          .then(r => r.data)
+        getFilteredResources("passport/apikey", this.sourceService, this.options.apikeyIds, true)
     });
 
     const targetApikeys = await spin<any>({
       text: "Fetching apikeys from target instance",
       op: () =>
-        this.targetService
-          .get<{meta: {total: number}; data: any[]}>("passport/apikey")
-          .then(r => r.data)
+        getFilteredResources("passport/apikey", this.targetService, this.options.apikeyIds, true)
     });
 
     const decider = new ResourceGroupComparisor(sourceApikeys, targetApikeys);
@@ -847,7 +889,8 @@ export class PolicySynchronizer implements ModuleSynchronizer {
 
   constructor(
     private sourceService: httpService.Client,
-    private targetService: httpService.Client
+    private targetService: httpService.Client,
+    private options: {policyIds}
   ) {}
 
   initialize() {
@@ -859,17 +902,13 @@ export class PolicySynchronizer implements ModuleSynchronizer {
     const sourcePolicies = await spin<any>({
       text: "Fetching policies from source instance",
       op: () =>
-        this.sourceService
-          .get<{meta: {total: number}; data: any[]}>("passport/policy")
-          .then(r => r.data)
+        getFilteredResources("passport/policy", this.sourceService, this.options.policyIds, true)
     });
 
     const targetPolicies = await spin<any>({
       text: "Fetching policies from target instance",
       op: () =>
-        this.targetService
-          .get<{meta: {total: number}; data: any[]}>("passport/policy")
-          .then(r => r.data)
+        getFilteredResources("passport/policy", this.targetService, this.options.policyIds, true)
     });
 
     const decider = new ResourceGroupComparisor(sourcePolicies, targetPolicies);
@@ -941,7 +980,8 @@ export class EnvironmentVariableSynchronizer implements ModuleSynchronizer {
 
   constructor(
     private sourceService: httpService.Client,
-    private targetService: httpService.Client
+    private targetService: httpService.Client,
+    private options: {envVarIds}
   ) {}
 
   initialize() {
@@ -952,12 +992,12 @@ export class EnvironmentVariableSynchronizer implements ModuleSynchronizer {
     console.log();
     const sourceEnvVars = await spin<any>({
       text: "Fetching env vars from source instance",
-      op: () => this.sourceService.get("env-var")
+      op: () => getFilteredResources("env-var", this.sourceService, this.options.envVarIds)
     });
 
     const targetEnvVars = await spin<any>({
       text: "Fetching env vars from target instance",
-      op: () => this.targetService.get("env-var")
+      op: () => getFilteredResources("env-var", this.targetService, this.options.envVarIds)
     });
 
     const decider = new ResourceGroupComparisor(sourceEnvVars, targetEnvVars);
@@ -1108,4 +1148,19 @@ function returnErrorMessage(e) {
 function isNotFoundException(e) {
   const code = 404;
   return e.status == code || e.statusCode == code || (e.data && e.data.statusCode == code);
+}
+
+async function getFilteredResources(
+  path: string,
+  service: httpService.Client,
+  ids: string[] | undefined,
+  paginate?: boolean
+) {
+  const res = await service.get<any>(path);
+  const resources: any[] = paginate ? res.data : res;
+  return ids ? resources.filter(resource => ids.includes(resource._id)) : resources;
+}
+
+function transformIDs(ids: any) {
+  return ids === "string" ? ids.split(",") : [];
 }
