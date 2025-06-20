@@ -1,26 +1,25 @@
-import {FunctionService} from "@spica-server/function/services";
+import {BucketDataService, BucketService} from "@spica-server/bucket/services";
+import {Bucket} from "@spica-server/interface/bucket";
 import {
   DocChange,
   RepChange,
   RepresentativeManagerResource,
   VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
-import {FunctionEngine} from "../engine";
-import {LogService} from "@spica-server/function/log/src/log.service";
 import * as CRUD from "../crud";
-import {Function} from "@spica-server/interface/function";
+import {HistoryService} from "@spica-server/bucket/history";
 import YAML from "yaml";
 import {ObjectId} from "bson";
 
-export const getSchemaSynchronizer = (
-  fs: FunctionService,
-  engine: FunctionEngine,
-  logs: LogService
-): VCSynchronizerArgs<Function> => {
+export const getSynchronizer = (
+  bs: BucketService,
+  bds: BucketDataService,
+  history: HistoryService
+): VCSynchronizerArgs<Bucket> => {
   const fileName = "schema";
   const extension = "yaml";
 
-  const convertToRepResource = (change: DocChange<Function>) => ({
+  const convertToRepResource = (change: DocChange<Bucket>) => ({
     _id: change.resource._id.toString(),
     content: YAML.stringify(change.resource)
   });
@@ -30,16 +29,10 @@ export const getSchemaSynchronizer = (
     return {...parsed, _id: new ObjectId(change.resource._id)};
   };
 
-  const insert = async (fn: Function) => {
-    fn = await CRUD.insert(fs, engine, fn);
-    // check whether we really need to update index
-    await engine.update(fn, "");
-  };
-
   return {
     syncs: [
       {
-        watcher: {collectionService: fs},
+        watcher: {collectionService: bs},
         converter: {convertToRepResource},
         applier: {fileName, getExtension: () => extension}
       },
@@ -47,13 +40,13 @@ export const getSchemaSynchronizer = (
         watcher: {filesToWatch: [{name: fileName, extension}]},
         converter: {convertToDocResource},
         applier: {
-          insert: insert,
-          update: (fn: Function) => CRUD.replace(fs, engine, fn),
-          delete: (fn: Function) => CRUD.remove(fs, engine, logs, fn._id)
+          insert: (bucket: Bucket) => CRUD.insert(bs, bucket),
+          update: (bucket: Bucket) => CRUD.replace(bs, bds, history, bucket),
+          delete: (bucket: Bucket) => CRUD.remove(bs, bds, history, bucket._id)
         }
       }
     ],
-    moduleName: "function",
+    moduleName: "bucket",
     subModuleName: "schema"
   };
 };

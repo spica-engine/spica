@@ -1,6 +1,7 @@
 import {Injectable, Scope} from "@nestjs/common";
 import {CommandMessenger} from "./messenger";
 import {
+  ICommander,
   CommandMessage,
   CommandMessageFilter,
   CommandSource,
@@ -9,7 +10,7 @@ import {
   CommandType
 } from "@spica-server/interface/replication";
 
-abstract class Commander {
+abstract class Commander implements ICommander {
   protected filters: CommandMessageFilter[] = [];
 
   public readonly replicaId: string;

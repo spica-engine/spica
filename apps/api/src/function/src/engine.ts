@@ -1,5 +1,5 @@
 import {Inject, Injectable, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
-import {DatabaseService, MongoClient} from "@spica-server/database";
+import {DatabaseService, ObjectId} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {DelegatePkgManager} from "@spica-server/function/pkgmanager";
 import {event} from "@spica-server/function/queue/proto";
@@ -19,7 +19,8 @@ import {
   TargetChange,
   SCHEMA,
   SchemaWithName,
-  EnvRelation
+  EnvRelation,
+  FunctionWithContent
 } from "@spica-server/interface/function";
 
 import {createTargetChanges} from "./change";
@@ -33,7 +34,7 @@ import * as CRUD from "./crud";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {Package} from "@spica-server/interface/function/pkgmanager";
-import {Language} from "../compiler";
+import chokidar from "chokidar";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
@@ -200,6 +201,57 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         }
         throw Error(e);
       });
+  }
+
+  watch(scope: "index" | "dependency"): Observable<FunctionWithContent> {
+    let files = [];
+
+    switch (scope) {
+      case "index":
+        files = ["index.mjs", "index.ts"];
+        break;
+      case "dependency":
+        files = ["package.json"];
+        break;
+    }
+
+    const moduleDir = this.options.root;
+    fs.mkdirSync(moduleDir, {recursive: true});
+
+    return new Observable<FunctionWithContent>(observer => {
+      const watcher = chokidar.watch(moduleDir, {
+        ignored: /(^|[/\\])\../,
+        persistent: true,
+        depth: 2
+      });
+
+      const handleFileEvent = async (path: string) => {
+        const relativePath = path.slice(moduleDir.length + 1);
+        const parts = relativePath.split(/[/\\]/);
+
+        const isCorrectDepth = parts.length == 2;
+        const isTrackedFile = files.some(file => parts[1] == file);
+        if (!isCorrectDepth || !isTrackedFile) return;
+
+        const _id = parts[0];
+
+        const fn = await CRUD.findOne(this.fs, new ObjectId(_id), {
+          resolveEnvRelations: EnvRelation.NotResolved
+        });
+        if (!fn) return;
+
+        const content = await fs.promises.readFile(path).then(b => b.toString());
+
+        observer.next({...fn, content});
+      };
+
+      watcher.on("change", path => handleFileEvent(path));
+      watcher.on("add", path => handleFileEvent(path));
+
+      watcher.on("error", err => observer.error(err));
+
+      return () => watcher.close();
+    });
   }
 
   getSchema(name: string): Promise<JSONSchema7 | null> {

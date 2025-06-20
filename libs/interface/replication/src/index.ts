@@ -19,6 +19,10 @@ export interface JobMeta {
   [key: string]: any;
 }
 
+export interface ICommander {
+  register(ctx: Object, fns: Function[], cmdType: CommandType): {unsubscribe: () => void};
+}
+
 export interface CommandMessengerOptions {
   /**
    * default: false

@@ -9,10 +9,9 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {FunctionModule} from "@spica-server/function";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {RepresentativeManager} from "@spica-server/representative";
+import {VCRepresentativeManager} from "@spica-server/representative";
 import {VersionControlModule} from "@spica-server/versioncontrol";
-import {VC_REP_MANAGER} from "@spica-server/interface/versioncontrol";
-
+import {VC_REPRESENTATIVE_MANAGER} from "@spica-server/interface/versioncontrol";
 import os from "os";
 import fs from "fs";
 import {execSync} from "child_process";
@@ -20,11 +19,13 @@ import path from "path";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50050";
 
+const sleep = () => new Promise(r => setTimeout(r, 500));
+
 describe("Versioning e2e", () => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
-  let rep: RepresentativeManager;
+  let rep: VCRepresentativeManager;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -71,7 +72,7 @@ describe("Versioning e2e", () => {
 
     app = module.createNestApplication();
     req = module.get(Request);
-    rep = module.get(VC_REP_MANAGER);
+    rep = module.get(VC_REPRESENTATIVE_MANAGER);
 
     app.useWebSocketAdapter(new WsAdapter(app));
 
@@ -83,6 +84,8 @@ describe("Versioning e2e", () => {
     // but it should be removed for tests cases in order to make tests run clearly
     await rep.rm();
     await app.close();
+    const functionsDir = path.join(os.tmpdir(), "functions");
+    fs.rmSync(functionsDir, {recursive: true, force: true});
   });
 
   function getEmptyBucket() {
@@ -183,6 +186,7 @@ describe("Versioning e2e", () => {
           await insertFunctionIndex(fn._id, "console.log()");
           return fn;
         });
+        await sleep();
       });
 
       it("should add all files", async () => {
@@ -197,7 +201,7 @@ describe("Versioning e2e", () => {
           //bucket
           `bucket/${bucket._id}/schema.yaml`,
           //fn
-          `function/${fn._id}/index.ts`,
+          `function/${fn._id}/index.js`,
           `function/${fn._id}/package.json`,
           `function/${fn._id}/schema.yaml`
         ]);
@@ -212,7 +216,7 @@ describe("Versioning e2e", () => {
 
         const changes = stringToArray(res.body.message);
         expect(changes).toEqual([
-          `function/${fn._id}/index.ts`,
+          `function/${fn._id}/index.js`,
           `function/${fn._id}/package.json`,
           `function/${fn._id}/schema.yaml`
         ]);
@@ -278,9 +282,11 @@ describe("Versioning e2e", () => {
     describe("reset", () => {
       it("should reset to previous commit", async () => {
         await insertBucket(getEmptyBucket());
+        await sleep();
         await commit("first commit");
 
         const bucket2 = await insertBucket(getEmptyBucket());
+        await sleep();
         await commit("second commit");
 
         // to ensure that two buckets exist
@@ -288,6 +294,7 @@ describe("Versioning e2e", () => {
         expect(buckets.length).toEqual(2);
 
         await req.post("/versioncontrol/commands/reset", {args: ["--hard", "HEAD~1"]});
+        await sleep();
 
         buckets = await req.get("/bucket").then(r => r.body);
         expect(buckets.length).toEqual(1);
@@ -311,14 +318,17 @@ describe("Versioning e2e", () => {
     describe("stash", () => {
       it("should stash changes", async () => {
         await insertBucket(getEmptyBucket());
+        await sleep();
         await commit("first commit");
 
         const bucket2 = await insertBucket(getEmptyBucket());
+        await sleep();
         await req.post("/versioncontrol/commands/stash", {
           args: ["push", "-m", "wip", "--include-untracked"]
         });
 
         let res = await req.post("/versioncontrol/commands/stash", {args: ["list"]});
+        await sleep();
         const stashes = stringToArray(res.body.message);
         expect(stashes).toEqual(["stash@{0}: On master: wip"]);
 
@@ -327,6 +337,7 @@ describe("Versioning e2e", () => {
         expect(buckets[0]._id).not.toEqual(bucket2._id);
 
         await req.post("/versioncontrol/commands/stash", {args: ["apply", "0"]});
+        await sleep();
         buckets = await req.get("/bucket").then(r => r.body);
         expect(buckets.length).toEqual(2);
         expect(buckets[1]._id).toEqual(bucket2._id);
@@ -399,12 +410,8 @@ describe("Versioning e2e", () => {
       });
 
       it("should clean", async () => {
-        await insertBucket(getEmptyBucket());
-        await req.post("/versioncontrol/commands/add", {args: ["."]});
-        await req.post("/versioncontrol/commands/rm", {args: ["--cached", "-r", "bucket"]});
-
         const res = await req.post("/versioncontrol/commands/clean", {args: ["-f", "-d"]});
-        expect(res.body.folders).toEqual(["bucket/"]);
+        expect(res.body.folders).toEqual(["bucket/", "function/"]);
       });
 
       it("should push", async () => {
