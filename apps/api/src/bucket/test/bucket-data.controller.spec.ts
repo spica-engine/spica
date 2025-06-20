@@ -84,15 +84,21 @@ describe("BucketDataController", () => {
     });
 
     describe("Field level authorization", () => {
+      let clonedBucket;
+
+      beforeEach(async () => {
+        // Deep clone bucket so mutations don’t affect original
+        clonedBucket = JSON.parse(JSON.stringify(bucket));
+      });
+
       describe("when name is hidden for noop", () => {
         beforeEach(async () => {
-          //Identifier is noop for test environment (not spica)
-          bucket.properties.name.acl = "auth.identifier != 'noop'";
-          await req.put(`/bucket/${bucket._id}`, bucket).then(res => console.log(res.body));
+          clonedBucket.properties.name.acl = "auth.identifier != 'noop'";
+          await req.put(`/bucket/${clonedBucket._id}`, clonedBucket);
         });
 
         it("shouldn't see name field", async () => {
-          const response = await req.get(`/bucket/${bucket._id}/data`);
+          const response = await req.get(`/bucket/${clonedBucket._id}/data`);
 
           expect(response.body.length).toBe(5);
           response.body.forEach((item: any) => {
@@ -104,12 +110,12 @@ describe("BucketDataController", () => {
 
       describe("when name is shown only if age > 24", () => {
         beforeEach(async () => {
-          bucket.properties.name.acl = "document.age > 24";
-          await req.put(`/bucket/${bucket._id}`, bucket);
+          clonedBucket.properties.name.acl = "document.age > 24";
+          await req.put(`/bucket/${clonedBucket._id}`, clonedBucket);
         });
 
         it("should only show name if age > 24", async () => {
-          const response = await req.get(`/bucket/${bucket._id}/data`);
+          const response = await req.get(`/bucket/${clonedBucket._id}/data`);
 
           expect(response.body.length).toBe(5);
           expect(response.body).toEqual([
