@@ -24,7 +24,6 @@ async function sync({
     policyIds,
     envVarIds,
     dryRun,
-    syncFnEnv,
     ignoreErrors,
     concurrencyLimit
   }
@@ -59,13 +58,13 @@ async function sync({
 
   for (const Ctor of coreSynchronizers) {
     const synchronizer = new Ctor(sourceService, targetService, {
-      syncFnEnv,
       bucketIds: transformIDs(bucketIds),
       functionIds: transformIDs(functionIds),
       apikeyIds: transformIDs(apikeyIds),
       policyIds: transformIDs(policyIds),
       envVarIds: transformIDs(envVarIds)
     });
+
     const subSynchronizers = await synchronizer.initialize().catch(e => {
       return Promise.reject(returnErrorMessage(e));
     });
@@ -173,13 +172,6 @@ We highly recommend you to use --dry-run=true and check the changes that will be
       default: false
     })
     .option(
-      "--sync-fn-env",
-      "Set true if you need to sync function environment variables as well.",
-      {
-        default: false
-      }
-    )
-    .option(
       "--ignore-errors",
       "Set true if you don't want to interrupt sync process because of failed requests.",
       {
@@ -273,7 +265,7 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
   constructor(
     private sourceService: httpService.Client,
     private targetService: httpService.Client,
-    private options: {syncFnEnv; functionIds}
+    private options: {functionIds}
   ) {}
 
   async initialize() {
@@ -308,19 +300,6 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
       text: "Fetching functions from target instance",
       op: () => getFilteredResources("function", this.targetService, this.options.functionIds)
     });
-
-    if (!this.options.syncFnEnv) {
-      sourceFns = sourceFns.map(fn => {
-        fn.env = {};
-        return fn;
-      });
-      for (const target of targetFns) {
-        const index = sourceFns.findIndex(srcFn => srcFn._id == target._id);
-        if (index != -1) {
-          sourceFns[index].env = target.env;
-        }
-      }
-    }
 
     const decider = new ResourceGroupComparisor(sourceFns, targetFns);
 
