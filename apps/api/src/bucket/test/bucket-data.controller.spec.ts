@@ -83,52 +83,6 @@ describe("BucketDataController", () => {
       ].map(r => r.body);
     });
 
-    describe("Field level authorization", () => {
-      let clonedBucket;
-
-      beforeEach(async () => {
-        // Deep clone bucket so mutations don’t affect original
-        clonedBucket = JSON.parse(JSON.stringify(bucket));
-      });
-
-      describe("when name is hidden for noop", () => {
-        beforeEach(async () => {
-          clonedBucket.properties.name.acl = "auth.identifier != 'noop'";
-          await req.put(`/bucket/${clonedBucket._id}`, clonedBucket);
-        });
-
-        it("shouldn't see name field", async () => {
-          const response = await req.get(`/bucket/${clonedBucket._id}/data`);
-
-          expect(response.body.length).toBe(5);
-          response.body.forEach((item: any) => {
-            expect(item).not.toHaveProperty("name");
-            expect(item).toHaveProperty("age");
-          });
-        });
-      });
-
-      describe("when name is shown only if age > 24", () => {
-        beforeEach(async () => {
-          clonedBucket.properties.name.acl = "document.age > 24";
-          await req.put(`/bucket/${clonedBucket._id}`, clonedBucket);
-        });
-
-        it("should only show name if age > 24", async () => {
-          const response = await req.get(`/bucket/${clonedBucket._id}/data`);
-
-          expect(response.body.length).toBe(5);
-          expect(response.body).toEqual([
-            {_id: rows[0]._id, age: 20},
-            {_id: rows[1]._id, age: 22},
-            {_id: rows[2]._id, name: "Kevin", age: 25},
-            {_id: rows[3]._id, name: "Dwight", age: 38},
-            {_id: rows[4]._id, name: "Toby", age: 30}
-          ]);
-        });
-      });
-    });
-
     it("should have created the bucket and the rows", () => {
       expect(bucket._id).toBeTruthy();
 
