@@ -19,7 +19,7 @@ import path from "path";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50050";
 
-const sleep = () => new Promise(r => setTimeout(r, 1000));
+const sleep = () => new Promise(r => setTimeout(r, 500));
 
 describe("Versioning e2e", () => {
   let module: TestingModule;
@@ -84,9 +84,6 @@ describe("Versioning e2e", () => {
     // but it should be removed for tests cases in order to make tests run clearly
     await rep.rm();
     await app.close();
-  });
-
-  afterAll(() => {
     const functionsDir = path.join(os.tmpdir(), "functions");
     fs.rmSync(functionsDir, {recursive: true, force: true});
   });

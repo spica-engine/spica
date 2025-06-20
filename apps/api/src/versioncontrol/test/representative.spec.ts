@@ -1,9 +1,12 @@
+import {ObjectId} from "@spica-devkit/database";
 import {ChangeTypes, ResourceType} from "@spica-server/interface/versioncontrol";
 import {VCRepresentativeManager} from "@spica-server/representative";
 import fs from "fs";
 import path from "path";
 import {skip, Subscription} from "rxjs";
 import YAML from "yaml";
+
+const sleep = () => new Promise(r => setTimeout(r, 500));
 
 describe("Representative", () => {
   const cwd = path.join(process.cwd(), "representatives");
@@ -38,17 +41,24 @@ describe("Representative", () => {
 
   let subscription: Subscription;
 
+  let id: string;
+
+  beforeEach(() => {
+    id = new ObjectId().toString();
+  });
+
   afterEach(async () => {
     subscription?.unsubscribe();
     await representative.rm();
+    await sleep();
   });
 
   describe("write", () => {
     it("should write yaml", async () => {
       const stringified = YAML.stringify({write_me: "ok"});
-      await representative.write("module1", "id1", "schema", stringified, "yaml");
+      await representative.write("module1", id, "schema", stringified, "yaml");
 
-      const directory = path.join(cwd, "module1", "id1");
+      const directory = path.join(cwd, "module1", id);
       expect(fs.existsSync(directory)).toEqual(true);
 
       const fileNames = fs.readdirSync(directory);
@@ -61,18 +71,18 @@ describe("Representative", () => {
     });
 
     it("should write js file", async () => {
-      await representative.write("module1", "id1", "index", "console.log()", "js");
+      await representative.write("module1", id, "index", "console.log()", "js");
 
-      const fileContent = fs.readFileSync(path.join(cwd, "module1", "id1", "index.js"));
+      const fileContent = fs.readFileSync(path.join(cwd, "module1", id, "index.js"));
 
       expect(fileContent.toString()).toEqual("console.log()");
     });
 
     it("should write json file", async () => {
       const stringified = JSON.stringify({imjson: "ok"});
-      await representative.write("module1", "id1", "index", stringified, "json");
+      await representative.write("module1", id, "index", stringified, "json");
 
-      const fileContent = fs.readFileSync(path.join(cwd, "module1", "id1", "index.json"));
+      const fileContent = fs.readFileSync(path.join(cwd, "module1", id, "index.json"));
 
       expect(fileContent.toString()).toEqual('{"imjson":"ok"}');
     });
@@ -81,12 +91,13 @@ describe("Representative", () => {
   describe("read", () => {
     it("should read content of files", async () => {
       const stringifiedJSON = JSON.stringify({dependencies: {dep1: "1.1"}});
-      await representative.write("module1", "id1", "package", stringifiedJSON, "json");
+      await representative.write("module1", id, "package", stringifiedJSON, "json");
       const stringifiedYAML = YAML.stringify({title: "hi"});
-      await representative.write("module1", "id1", "schema", stringifiedYAML, "yaml");
-      await representative.write("module1", "id1", "index", "console.log(123)", "js");
+      await representative.write("module1", id, "schema", stringifiedYAML, "yaml");
+      await representative.write("module1", id, "index", "console.log(123)", "js");
+      await sleep();
 
-      const resource = await readResource("module1", "id1");
+      const resource = await readResource("module1", id);
       const parsed = {
         ...resource,
         contents: {
@@ -96,7 +107,7 @@ describe("Representative", () => {
         }
       };
       expect(parsed).toEqual({
-        _id: "id1",
+        _id: id,
         contents: {
           package: {dependencies: {dep1: "1.1"}},
           schema: {title: "hi"},
@@ -116,7 +127,7 @@ describe("Representative", () => {
           expect(change).toEqual({
             resourceType: ResourceType.REPRESENTATIVE,
             changeType: ChangeTypes.INSERT,
-            resource: {_id: "id1", content: {title: "hi"}}
+            resource: {_id: id, content: {title: "hi"}}
           });
           subscription.unsubscribe();
           done();
@@ -124,7 +135,7 @@ describe("Representative", () => {
       });
 
       const stringified = YAML.stringify({title: "hi"});
-      representative.write("module1", "id1", "schema", stringified, "yaml");
+      representative.write("module1", id, "schema", stringified, "yaml");
     });
 
     it("should track update change type", done => {
@@ -139,7 +150,7 @@ describe("Representative", () => {
             expect(change).toEqual({
               resourceType: ResourceType.REPRESENTATIVE,
               changeType: ChangeTypes.UPDATE,
-              resource: {_id: "id1", content: {title: "hello"}}
+              resource: {_id: id, content: {title: "hello"}}
             });
             subscription.unsubscribe();
             done();
@@ -147,10 +158,10 @@ describe("Representative", () => {
         });
 
       const stringified = YAML.stringify({title: "hi"});
-      representative.write("module1", "id1", "schema", stringified, "yaml");
+      representative.write("module1", id, "schema", stringified, "yaml");
 
       const updated = YAML.stringify({title: "hello"});
-      representative.write("module1", "id1", "schema", updated, "yaml");
+      representative.write("module1", id, "schema", updated, "yaml");
     });
 
     it("should track delete change type", done => {
@@ -162,7 +173,7 @@ describe("Representative", () => {
             expect(change).toEqual({
               resourceType: ResourceType.REPRESENTATIVE,
               changeType: ChangeTypes.DELETE,
-              resource: {_id: "id1", content: ""}
+              resource: {_id: id, content: ""}
             });
             subscription.unsubscribe();
             done();
@@ -171,11 +182,11 @@ describe("Representative", () => {
 
       setTimeout(() => {
         const stringified = YAML.stringify({title: "hi"});
-        representative.write("module1", "id1", "schema", stringified, "yaml");
+        representative.write("module1", id, "schema", stringified, "yaml");
       }, 1000);
 
       setTimeout(() => {
-        representative.rm("module1", "id1");
+        representative.rm("module1", id);
       }, 2000);
     });
   });

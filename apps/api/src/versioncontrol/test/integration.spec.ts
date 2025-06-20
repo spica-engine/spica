@@ -114,6 +114,9 @@ describe("Versioning", () => {
 
   afterEach(async () => {
     await rep.rm();
+    await app.close();
+    const functionsDir = path.join(os.tmpdir(), "functions");
+    fs.rmSync(functionsDir, {recursive: true, force: true});
   });
 
   describe("preference", () => {
