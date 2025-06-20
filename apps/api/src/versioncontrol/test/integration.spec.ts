@@ -331,6 +331,10 @@ describe("Versioning", () => {
 
   describe("function", () => {
     describe("Synchronization from database to files", () => {
+      beforeEach(async () => {
+        await sleep();
+      });
+
       // seperating function tests will increase test duration
       // that's why we are testing all cases in one 'it'
       it("should sync changes", async () => {
@@ -433,6 +437,10 @@ describe("Versioning", () => {
     });
 
     describe("Synchronization from files to database", () => {
+      beforeEach(async () => {
+        await sleep();
+      });
+
       it("should sync changes", async () => {
         // SCHEMA INSERT
         const id = new ObjectId().toHexString();
@@ -527,6 +535,7 @@ describe("Versioning", () => {
         key: "IGNORE_ERRORS",
         value: "true"
       };
+      await sleep();
     });
 
     describe("Synchronization from database to files", () => {
