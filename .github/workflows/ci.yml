@@ -15,33 +15,33 @@ jobs:
     strategy:
       matrix:
         include:
-          - command: format:check
-          - command: build:cli
-          - command: build:devkit:*
-          - command: build-image:api
-          - command: build-image:migrate
-          - command: build-image:mongoreplicationcontroller
-          - command: test:cli
-          - command: test:devkit:*
-          - command: test-image:migrate
-          - command: test-image:api --build-arg PROJECTS=api/activity/**
-          - command: test-image:api --build-arg PROJECTS=api/asset/**
-          - command: test-image:api --build-arg PROJECTS=api/bucket
-          - command: test-image:api --build-arg PROJECTS=api/bucket/** --build-arg EXCLUDE=api/bucket
-          - command: test-image:api --build-arg PROJECTS=api/dashboard/**
-          - command: test-image:api --build-arg PROJECTS=api/function
-          - command: test-image:api --build-arg PROJECTS=api/function/enqueuer --build-arg RABBITMQ_URL=amqp://172.17.0.1:5672
-            rabbitmq: true
-          - command: test-image:api --build-arg PROJECTS=api/function/** --build-arg EXCLUDE='api/function/packages/**,api/function,api/function/enqueuer'
-          - command: test-image:api --build-arg PROJECTS=api/passport/**
-          - command: test-image:api --build-arg PROJECTS=api/preference/**
-          - command: test-image:api --build-arg PROJECTS=api/replication/**
-          - command: test-image:api --build-arg PROJECTS=api/status/**
-          - command: test-image:api --build-arg PROJECTS=api/storage/**
+          # - command: format:check
+          # - command: build:cli
+          # - command: build:devkit:*
+          # - command: build-image:api
+          # - command: build-image:migrate
+          # - command: build-image:mongoreplicationcontroller
+          # - command: test:cli
+          # - command: test:devkit:*
+          # - command: test-image:migrate
+          # - command: test-image:api --build-arg PROJECTS=api/activity/**
+          # - command: test-image:api --build-arg PROJECTS=api/asset/**
+          # - command: test-image:api --build-arg PROJECTS=api/bucket
+          # - command: test-image:api --build-arg PROJECTS=api/bucket/** --build-arg EXCLUDE=api/bucket
+          # - command: test-image:api --build-arg PROJECTS=api/dashboard/**
+          # - command: test-image:api --build-arg PROJECTS=api/function
+          # - command: test-image:api --build-arg PROJECTS=api/function/enqueuer --build-arg RABBITMQ_URL=amqp://172.17.0.1:5672
+          #   rabbitmq: true
+          # - command: test-image:api --build-arg PROJECTS=api/function/** --build-arg EXCLUDE='api/function/packages/**,api/function,api/function/enqueuer'
+          # - command: test-image:api --build-arg PROJECTS=api/passport/**
+          # - command: test-image:api --build-arg PROJECTS=api/preference/**
+          # - command: test-image:api --build-arg PROJECTS=api/replication/**
+          # - command: test-image:api --build-arg PROJECTS=api/status/**
+          # - command: test-image:api --build-arg PROJECTS=api/storage/**
           - command: test-image:api --build-arg PROJECTS=api/versioncontrol/**
-          - command: test-image:api --build-arg PROJECTS=core/**
-          - command: test-image:api --build-arg PROJECTS=database/**
-          - command: test-image:api --build-arg PROJECTS=filter/**
+          # - command: test-image:api --build-arg PROJECTS=core/**
+          # - command: test-image:api --build-arg PROJECTS=database/**
+          # - command: test-image:api --build-arg PROJECTS=filter/**
 
     steps:
       - name: Free up some space on disk

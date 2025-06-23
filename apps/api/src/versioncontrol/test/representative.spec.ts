@@ -183,14 +183,10 @@ describe("Representative", () => {
           }
         });
 
-      setTimeout(() => {
-        const stringified = YAML.stringify({title: "hi"});
-        representative.write("module7", id, "schema", stringified, "yaml");
-      }, 1000);
+      const stringified = YAML.stringify({title: "hi"});
+      representative.write("module7", id, "schema", stringified, "yaml");
 
-      setTimeout(() => {
-        representative.rm("module7", id);
-      }, 2000);
+      representative.rm("module7", id);
     });
   });
 });
