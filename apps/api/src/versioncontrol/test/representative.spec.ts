@@ -161,11 +161,15 @@ describe("Representative", () => {
           }
         });
 
-      const stringified = YAML.stringify({title: "hi"});
-      representative.write("module6", id, "schema", stringified, "yaml");
+      setTimeout(() => {
+        const stringified = YAML.stringify({title: "hi"});
+        representative.write("module6", id, "schema", stringified, "yaml");
+      }, 1000);
 
-      const updated = YAML.stringify({title: "hello"});
-      representative.write("module6", id, "schema", updated, "yaml");
+      setTimeout(() => {
+        const updated = YAML.stringify({title: "hello"});
+        representative.write("module6", id, "schema", updated, "yaml");
+      }, 2000);
     });
 
     it("should track delete change type", done => {
@@ -183,10 +187,14 @@ describe("Representative", () => {
           }
         });
 
-      const stringified = YAML.stringify({title: "hi"});
-      representative.write("module7", id, "schema", stringified, "yaml");
+      setTimeout(() => {
+        const stringified = YAML.stringify({title: "hi"});
+        representative.write("module7", id, "schema", stringified, "yaml");
+      }, 1000);
 
-      representative.rm("module7", id);
+      setTimeout(() => {
+        representative.rm("module7", id);
+      }, 2000);
     });
   });
 });
