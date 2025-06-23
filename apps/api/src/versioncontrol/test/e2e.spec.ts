@@ -16,6 +16,7 @@ import os from "os";
 import fs from "fs";
 import {execSync} from "child_process";
 import path from "path";
+import {v4 as uuidv4} from "uuid";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50050";
 
@@ -26,8 +27,12 @@ describe("Versioning e2e", () => {
   let app: INestApplication;
   let req: Request;
   let rep: VCRepresentativeManager;
+  let directoryPath: string;
 
   beforeEach(async () => {
+    directoryPath = `${os.tmpdir()}/${uuidv4()}`;
+    fs.mkdirSync(directoryPath, {recursive: true});
+
     module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
@@ -44,7 +49,7 @@ describe("Versioning e2e", () => {
         }),
         FunctionModule.forRoot({
           invocationLogs: false,
-          path: os.tmpdir(),
+          path: directoryPath,
           databaseName: undefined,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
@@ -65,7 +70,7 @@ describe("Versioning e2e", () => {
           spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
           tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
         }),
-        VersionControlModule.forRoot({persistentPath: os.tmpdir(), isReplicationEnabled: false})
+        VersionControlModule.forRoot({persistentPath: directoryPath, isReplicationEnabled: false})
       ]
     }).compile();
     module.enableShutdownHooks();
@@ -84,7 +89,7 @@ describe("Versioning e2e", () => {
     // but it should be removed for tests cases in order to make tests run clearly
     await rep.rm();
     await app.close();
-    const functionsDir = path.join(os.tmpdir(), "functions");
+    const functionsDir = path.join(directoryPath, "functions");
     fs.rmSync(functionsDir, {recursive: true, force: true});
   });
 
@@ -392,9 +397,10 @@ describe("Versioning e2e", () => {
     });
 
     describe("remote repo", () => {
-      const bareRepo = path.join(os.tmpdir(), "test-repo");
+      let bareRepo: string;
 
       beforeEach(async () => {
+        bareRepo = path.join(directoryPath, "test-repo");
         fs.mkdirSync(bareRepo, {recursive: true});
         execSync("git init --bare", {cwd: bareRepo});
       });
