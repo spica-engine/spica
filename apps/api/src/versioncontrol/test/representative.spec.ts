@@ -48,7 +48,7 @@ describe("Representative", () => {
 
   beforeEach(() => {
     id = new ObjectId().toString();
-    cwd = path.join(`${os.tmpdir()}/${uuidv4()}`, "representatives");
+    cwd = path.join(os.tmpdir(), uuidv4(), "representatives");
     representative = new VCRepresentativeManager(cwd);
   });
 
@@ -74,18 +74,18 @@ describe("Representative", () => {
     });
 
     it("should write js file", async () => {
-      await representative.write("module1", id, "index", "console.log()", "js");
+      await representative.write("module2", id, "index", "console.log()", "js");
 
-      const fileContent = fs.readFileSync(path.join(cwd, "module1", id, "index.js"));
+      const fileContent = fs.readFileSync(path.join(cwd, "module2", id, "index.js"));
 
       expect(fileContent.toString()).toEqual("console.log()");
     });
 
     it("should write json file", async () => {
       const stringified = JSON.stringify({imjson: "ok"});
-      await representative.write("module1", id, "index", stringified, "json");
+      await representative.write("module3", id, "index", stringified, "json");
 
-      const fileContent = fs.readFileSync(path.join(cwd, "module1", id, "index.json"));
+      const fileContent = fs.readFileSync(path.join(cwd, "module3", id, "index.json"));
 
       expect(fileContent.toString()).toEqual('{"imjson":"ok"}');
     });
@@ -94,13 +94,13 @@ describe("Representative", () => {
   describe("read", () => {
     it("should read content of files", async () => {
       const stringifiedJSON = JSON.stringify({dependencies: {dep1: "1.1"}});
-      await representative.write("module1", id, "package", stringifiedJSON, "json");
+      await representative.write("module4", id, "package", stringifiedJSON, "json");
       const stringifiedYAML = YAML.stringify({title: "hi"});
-      await representative.write("module1", id, "schema", stringifiedYAML, "yaml");
-      await representative.write("module1", id, "index", "console.log(123)", "js");
+      await representative.write("module4", id, "schema", stringifiedYAML, "yaml");
+      await representative.write("module4", id, "index", "console.log(123)", "js");
       await sleep();
 
-      const resource = await readResource(representative, "module1", id);
+      const resource = await readResource(representative, "module4", id);
       const parsed = {
         ...resource,
         contents: {
@@ -123,7 +123,7 @@ describe("Representative", () => {
   describe("watch", () => {
     it("should track insert change type", done => {
       representative
-        .watch("module1", ["schema.yaml"])
+        .watch("module5", ["schema.yaml"])
         .pipe(take(1))
         .subscribe({
           next: change => {
@@ -140,12 +140,12 @@ describe("Representative", () => {
         });
 
       const stringified = YAML.stringify({title: "hi"});
-      representative.write("module1", id, "schema", stringified, "yaml");
+      representative.write("module5", id, "schema", stringified, "yaml");
     });
 
     it("should track update change type", done => {
       representative
-        .watch("module1", ["schema.yaml"])
+        .watch("module6", ["schema.yaml"])
         .pipe(skip(1), take(1))
         .subscribe({
           next: change => {
@@ -162,15 +162,15 @@ describe("Representative", () => {
         });
 
       const stringified = YAML.stringify({title: "hi"});
-      representative.write("module1", id, "schema", stringified, "yaml");
+      representative.write("module6", id, "schema", stringified, "yaml");
 
       const updated = YAML.stringify({title: "hello"});
-      representative.write("module1", id, "schema", updated, "yaml");
+      representative.write("module6", id, "schema", updated, "yaml");
     });
 
     it("should track delete change type", done => {
       representative
-        .watch("module1", ["schema.yaml"])
+        .watch("module7", ["schema.yaml"])
         .pipe(skip(1), take(1))
         .subscribe({
           next: change => {
@@ -185,11 +185,11 @@ describe("Representative", () => {
 
       setTimeout(() => {
         const stringified = YAML.stringify({title: "hi"});
-        representative.write("module1", id, "schema", stringified, "yaml");
+        representative.write("module7", id, "schema", stringified, "yaml");
       }, 1000);
 
       setTimeout(() => {
-        representative.rm("module1", id);
+        representative.rm("module7", id);
       }, 2000);
     });
   });

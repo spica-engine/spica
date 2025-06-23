@@ -63,7 +63,7 @@ describe("Versioning", () => {
   }
 
   beforeEach(async () => {
-    directoryPath = `${os.tmpdir()}/${uuidv4()}`;
+    directoryPath = path.join(os.tmpdir(), uuidv4());
     fs.mkdirSync(directoryPath, {recursive: true});
 
     module = await Test.createTestingModule({
