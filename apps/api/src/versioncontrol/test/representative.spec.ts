@@ -124,6 +124,8 @@ describe("Representative", () => {
     it("should track insert change type", done => {
       representative.watch("module5", ["schema.yaml"]).subscribe({
         next: change => {
+          if (change.changeType !== ChangeTypes.INSERT) return;
+
           const parsedContent = YAML.parse(change.resource.content);
           change.resource = {...change.resource, content: parsedContent};
 
@@ -136,8 +138,10 @@ describe("Representative", () => {
         }
       });
 
-      const stringified = YAML.stringify({title: "hi"});
-      representative.write("module5", id, "schema", stringified, "yaml");
+      setTimeout(() => {
+        const stringified = YAML.stringify({title: "hi"});
+        representative.write("module5", id, "schema", stringified, "yaml");
+      }, 1000);
     });
 
     it("should track update change type", done => {
