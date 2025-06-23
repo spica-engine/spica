@@ -138,9 +138,9 @@ describe("Representative", () => {
         }
       });
 
-      setTimeout(() => {
+      setTimeout(async () => {
         const stringified = YAML.stringify({title: "hi"});
-        representative.write("module5", id, "schema", stringified, "yaml");
+        await representative.write("module5", id, "schema", stringified, "yaml");
       }, 1000);
     });
 
@@ -161,14 +161,14 @@ describe("Representative", () => {
         }
       });
 
-      setTimeout(() => {
+      setTimeout(async () => {
         const stringified = YAML.stringify({title: "hi"});
-        representative.write("module6", id, "schema", stringified, "yaml");
+        await representative.write("module6", id, "schema", stringified, "yaml");
       }, 1000);
 
-      setTimeout(() => {
+      setTimeout(async () => {
         const updated = YAML.stringify({title: "hello"});
-        representative.write("module6", id, "schema", updated, "yaml");
+        await representative.write("module6", id, "schema", updated, "yaml");
       }, 2000);
     });
 
@@ -186,13 +186,13 @@ describe("Representative", () => {
         }
       });
 
-      setTimeout(() => {
+      setTimeout(async () => {
         const stringified = YAML.stringify({title: "hi"});
-        representative.write("module7", id, "schema", stringified, "yaml");
+        await representative.write("module7", id, "schema", stringified, "yaml");
       }, 1000);
 
-      setTimeout(() => {
-        representative.rm("module7", id);
+      setTimeout(async () => {
+        await representative.rm("module7", id);
       }, 2000);
     });
   });
