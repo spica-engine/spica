@@ -6,7 +6,7 @@ import path from "path";
 import {skip, take} from "rxjs";
 import YAML from "yaml";
 
-const sleep = () => new Promise(r => setTimeout(r, 500));
+const sleep = () => new Promise(r => setTimeout(r, 1000));
 
 describe("Representative", () => {
   const cwd = path.join(process.cwd(), "representatives");

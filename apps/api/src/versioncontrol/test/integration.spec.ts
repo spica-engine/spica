@@ -23,7 +23,7 @@ import fs from "fs";
 import * as fnCRUD from "@spica-server/function/src/crud";
 import {v4 as uuidv4} from "uuid";
 
-const sleep = () => new Promise(r => setTimeout(r, 500));
+const sleep = () => new Promise(r => setTimeout(r, 1000));
 
 describe("Versioning", () => {
   let module: TestingModule;
