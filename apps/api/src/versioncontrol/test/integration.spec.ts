@@ -20,6 +20,8 @@ import {EnvVarModule} from "@spica-server/env_var";
 import YAML from "yaml";
 import path from "path";
 import fs from "fs";
+import * as fnCRUD from "@spica-server/function/src/crud";
+import {v4 as uuidv4} from "uuid";
 
 const sleep = () => new Promise(r => setTimeout(r, 500));
 
@@ -31,6 +33,7 @@ describe("Versioning", () => {
   let fnservice: FunctionService;
   let engine: FunctionEngine;
   let evs: EnvVarService;
+  let directoryPath: string;
 
   async function readResource(module: string, id: string): Promise<any> {
     const moduleDir = rep.getModuleDir(module);
@@ -60,6 +63,9 @@ describe("Versioning", () => {
   }
 
   beforeEach(async () => {
+    directoryPath = `${os.tmpdir()}/${uuidv4()}`;
+    fs.mkdirSync(directoryPath, {recursive: true});
+
     module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
@@ -75,7 +81,7 @@ describe("Versioning", () => {
         }),
         FunctionModule.forRoot({
           invocationLogs: false,
-          path: os.tmpdir(),
+          path: directoryPath,
           databaseName: undefined,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
@@ -96,7 +102,10 @@ describe("Versioning", () => {
           tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
         }),
         EnvVarModule.forRoot(),
-        VersionControlModule.forRoot({persistentPath: os.tmpdir(), isReplicationEnabled: false})
+        VersionControlModule.forRoot({
+          persistentPath: directoryPath,
+          isReplicationEnabled: false
+        })
       ]
     }).compile();
 
@@ -115,7 +124,7 @@ describe("Versioning", () => {
   afterEach(async () => {
     await rep.rm();
     await app.close();
-    const functionsDir = path.join(os.tmpdir(), "functions");
+    const functionsDir = path.join(directoryPath, "functions");
     fs.rmSync(functionsDir, {recursive: true, force: true});
   });
 
@@ -131,7 +140,7 @@ describe("Versioning", () => {
         imports: [
           DatabaseTestingModule.replicaSet(),
           PreferenceModule.forRoot(),
-          VersionControlModule.forRoot({persistentPath: os.tmpdir(), isReplicationEnabled: false})
+          VersionControlModule.forRoot({persistentPath: directoryPath, isReplicationEnabled: false})
         ]
       }).compile();
 
@@ -353,10 +362,8 @@ describe("Versioning", () => {
         };
 
         // SCHEMA INSERT
-        await fnservice.insertOne(fn);
-        await engine.createFunction(fn);
-        await engine.update(fn, "");
-        await engine.compile(fn);
+        await fnCRUD.insert(fnservice, engine, fn);
+        await fnCRUD.index.write(fnservice, engine, id, "");
 
         await sleep();
 

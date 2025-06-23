@@ -3,7 +3,7 @@ import {ChangeTypes, ResourceType} from "@spica-server/interface/versioncontrol"
 import {VCRepresentativeManager} from "@spica-server/representative";
 import fs from "fs";
 import path from "path";
-import {skip, Subscription} from "rxjs";
+import {skip, take} from "rxjs";
 import YAML from "yaml";
 
 const sleep = () => new Promise(r => setTimeout(r, 500));
@@ -39,8 +39,6 @@ describe("Representative", () => {
     return {_id: id, contents};
   }
 
-  let subscription: Subscription;
-
   let id: string;
 
   beforeEach(() => {
@@ -48,7 +46,6 @@ describe("Representative", () => {
   });
 
   afterEach(async () => {
-    subscription?.unsubscribe();
     await representative.rm();
     await sleep();
   });
@@ -119,29 +116,31 @@ describe("Representative", () => {
 
   describe("watch", () => {
     it("should track insert change type", done => {
-      subscription = representative.watch("module1", ["schema.yaml"]).subscribe({
-        next: change => {
-          const parsedContent = YAML.parse(change.resource.content);
-          change.resource = {...change.resource, content: parsedContent};
+      representative
+        .watch("module1", ["schema.yaml"])
+        .pipe(take(1))
+        .subscribe({
+          next: change => {
+            const parsedContent = YAML.parse(change.resource.content);
+            change.resource = {...change.resource, content: parsedContent};
 
-          expect(change).toEqual({
-            resourceType: ResourceType.REPRESENTATIVE,
-            changeType: ChangeTypes.INSERT,
-            resource: {_id: id, content: {title: "hi"}}
-          });
-          subscription.unsubscribe();
-          done();
-        }
-      });
+            expect(change).toEqual({
+              resourceType: ResourceType.REPRESENTATIVE,
+              changeType: ChangeTypes.INSERT,
+              resource: {_id: id, content: {title: "hi"}}
+            });
+            done();
+          }
+        });
 
       const stringified = YAML.stringify({title: "hi"});
       representative.write("module1", id, "schema", stringified, "yaml");
     });
 
     it("should track update change type", done => {
-      subscription = representative
+      representative
         .watch("module1", ["schema.yaml"])
-        .pipe(skip(1))
+        .pipe(skip(1), take(1))
         .subscribe({
           next: change => {
             const parsedContent = YAML.parse(change.resource.content);
@@ -152,7 +151,6 @@ describe("Representative", () => {
               changeType: ChangeTypes.UPDATE,
               resource: {_id: id, content: {title: "hello"}}
             });
-            subscription.unsubscribe();
             done();
           }
         });
@@ -165,9 +163,9 @@ describe("Representative", () => {
     });
 
     it("should track delete change type", done => {
-      subscription = representative
+      representative
         .watch("module1", ["schema.yaml"])
-        .pipe(skip(1))
+        .pipe(skip(1), take(1))
         .subscribe({
           next: change => {
             expect(change).toEqual({
@@ -175,7 +173,6 @@ describe("Representative", () => {
               changeType: ChangeTypes.DELETE,
               resource: {_id: id, content: ""}
             });
-            subscription.unsubscribe();
             done();
           }
         });
