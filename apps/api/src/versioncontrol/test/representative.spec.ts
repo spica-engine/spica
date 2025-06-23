@@ -3,7 +3,6 @@ import {ChangeTypes, ResourceType} from "@spica-server/interface/versioncontrol"
 import {VCRepresentativeManager} from "@spica-server/representative";
 import fs from "fs";
 import path from "path";
-import {skip, take} from "rxjs";
 import YAML from "yaml";
 import {v4 as uuidv4} from "uuid";
 import os from "os";
