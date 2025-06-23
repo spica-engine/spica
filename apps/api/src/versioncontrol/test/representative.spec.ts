@@ -122,44 +122,40 @@ describe("Representative", () => {
 
   describe("watch", () => {
     it("should track insert change type", done => {
-      representative
-        .watch("module5", ["schema.yaml"])
-        .pipe(take(1))
-        .subscribe({
-          next: change => {
-            const parsedContent = YAML.parse(change.resource.content);
-            change.resource = {...change.resource, content: parsedContent};
+      representative.watch("module5", ["schema.yaml"]).subscribe({
+        next: change => {
+          const parsedContent = YAML.parse(change.resource.content);
+          change.resource = {...change.resource, content: parsedContent};
 
-            expect(change).toEqual({
-              resourceType: ResourceType.REPRESENTATIVE,
-              changeType: ChangeTypes.INSERT,
-              resource: {_id: id, content: {title: "hi"}}
-            });
-            done();
-          }
-        });
+          expect(change).toEqual({
+            resourceType: ResourceType.REPRESENTATIVE,
+            changeType: ChangeTypes.INSERT,
+            resource: {_id: id, content: {title: "hi"}}
+          });
+          done();
+        }
+      });
 
       const stringified = YAML.stringify({title: "hi"});
       representative.write("module5", id, "schema", stringified, "yaml");
     });
 
     it("should track update change type", done => {
-      representative
-        .watch("module6", ["schema.yaml"])
-        .pipe(skip(1), take(1))
-        .subscribe({
-          next: change => {
-            const parsedContent = YAML.parse(change.resource.content);
-            change.resource = {...change.resource, content: parsedContent};
+      representative.watch("module6", ["schema.yaml"]).subscribe({
+        next: change => {
+          if (change.changeType !== ChangeTypes.UPDATE) return;
 
-            expect(change).toEqual({
-              resourceType: ResourceType.REPRESENTATIVE,
-              changeType: ChangeTypes.UPDATE,
-              resource: {_id: id, content: {title: "hello"}}
-            });
-            done();
-          }
-        });
+          const parsedContent = YAML.parse(change.resource.content);
+          change.resource = {...change.resource, content: parsedContent};
+
+          expect(change).toEqual({
+            resourceType: ResourceType.REPRESENTATIVE,
+            changeType: ChangeTypes.UPDATE,
+            resource: {_id: id, content: {title: "hello"}}
+          });
+          done();
+        }
+      });
 
       setTimeout(() => {
         const stringified = YAML.stringify({title: "hi"});
@@ -173,19 +169,18 @@ describe("Representative", () => {
     });
 
     it("should track delete change type", done => {
-      representative
-        .watch("module7", ["schema.yaml"])
-        .pipe(skip(1), take(1))
-        .subscribe({
-          next: change => {
-            expect(change).toEqual({
-              resourceType: ResourceType.REPRESENTATIVE,
-              changeType: ChangeTypes.DELETE,
-              resource: {_id: id, content: ""}
-            });
-            done();
-          }
-        });
+      representative.watch("module7", ["schema.yaml"]).subscribe({
+        next: change => {
+          if (change.changeType !== ChangeTypes.DELETE) return;
+
+          expect(change).toEqual({
+            resourceType: ResourceType.REPRESENTATIVE,
+            changeType: ChangeTypes.DELETE,
+            resource: {_id: id, content: ""}
+          });
+          done();
+        }
+      });
 
       setTimeout(() => {
         const stringified = YAML.stringify({title: "hi"});
