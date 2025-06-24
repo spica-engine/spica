@@ -7,7 +7,7 @@ import getport from "get-port";
 import open from "open";
 import {Stream} from "stream";
 import {spin} from "../../console";
-import {projectName} from "../../validator";
+import {projectLocalResourceFolder, projectName} from "../../validator";
 import path from "path";
 import fs from "fs";
 import {DockerMachine} from "../../project";
@@ -28,7 +28,7 @@ function streamToBuffer(stream: Stream): Promise<Buffer> {
 }
 
 async function create({args: cmdArgs, options}: ActionParameters) {
-  const {name}: {name?: string} = cmdArgs;
+  const {name, localResourceFolder}: {name?: string; localResourceFolder?: string} = cmdArgs;
 
   const machine = new DockerMachine();
 
@@ -64,6 +64,8 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     }
   }
 
+  const persistentPath = "/var/data";
+
   args = [
     ...args,
     // If user defines some of these values in the apiOptions file, they will be overwriten.
@@ -74,7 +76,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     `--public-url=${apiUrl}`,
     `--function-api-url=${functionApiUrl}`,
     `--passport-secret=${name}`,
-    `--persistent-path=/var/data`
+    `--persistent-path=${persistentPath}`
   ];
 
   const foundNetworks = await machine.listNetworks({
@@ -304,8 +306,9 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     }
   });
 
-  const representativePath = options.representativePath as string;
-  fs.mkdirSync(representativePath, {recursive: true});
+  if (localResourceFolder) {
+    fs.mkdirSync(localResourceFolder, {recursive: true});
+  }
 
   await spin({
     text: `Creating spica containers (0/2)`,
@@ -338,7 +341,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
           },
           Mounts: [
             {
-              Target: "/var/data",
+              Target: persistentPath,
               Source: `${name}-api`,
               Type: "volume",
               VolumeOptions: {
@@ -351,7 +354,9 @@ async function create({args: cmdArgs, options}: ActionParameters) {
               }
             }
           ],
-          Binds: [`${representativePath}:/var/data/representatives`]
+          Binds: localResourceFolder
+            ? [`${localResourceFolder}:${persistentPath}/representatives`]
+            : []
         }
       });
       await network.connect({Container: api.id});
@@ -440,6 +445,13 @@ export default function (program: Program): Command {
   return program
     .command("project start", "Start a project on your local machine.")
     .argument("<name>", "Name of the project.", {validator: projectName})
+    .argument(
+      "[localResourceFolder]",
+      "Optional path to a local directory where generated resources will be saved. The resources in this folder can be modified directly.",
+      {
+        validator: projectLocalResourceFolder
+      }
+    )
     .option(
       "-p, --port",
       "Port that ingress will serve on. If not specified an open port will be used.",
@@ -486,8 +498,5 @@ export default function (program: Program): Command {
         validator: CaporalValidator.STRING
       }
     )
-    .option("--representative-path", "Path to representative folder.", {
-      validator: CaporalValidator.STRING
-    })
     .action(create as unknown as Action);
 }
