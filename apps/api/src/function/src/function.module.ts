@@ -14,15 +14,19 @@ import {Axios} from "./services/axios";
 import {registerStatusProvider} from "./status";
 import FunctionSchema from "./schema/function.json" with {type: "json"};
 import {
-  RegisterSyncProvider,
-  REGISTER_VC_SYNC_PROVIDER,
-  VC_REP_MANAGER
+  REGISTER_VC_SYNCHRONIZER,
+  RegisterVCSynchronizer
 } from "@spica-server/interface/versioncontrol";
-import {getSyncProviders} from "./versioncontrol";
 import {registerAssetHandlers} from "./asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
-import {FunctionOptions, FUNCTION_OPTIONS} from "@spica-server/interface/function";
+import {
+  Function,
+  FunctionOptions,
+  FUNCTION_OPTIONS,
+  FunctionWithContent
+} from "@spica-server/interface/function";
+import {getSynchronizers} from "./versioncontrol";
 
 @Module({})
 export class FunctionModule {
@@ -30,21 +34,20 @@ export class FunctionModule {
     fs: FunctionService,
     fe: FunctionEngine,
     scheduler: Scheduler,
-    @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
-    @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
+    @Optional()
+    @Inject(REGISTER_VC_SYNCHRONIZER)
+    registerVCSynchronizer: RegisterVCSynchronizer<Function | FunctionWithContent>,
     logs: LogService,
     validator: Validator
   ) {
-    if (registerSync) {
-      getSyncProviders(fs, this.vcRepManager, fe, logs).forEach(provider => registerSync(provider));
+    if (registerVCSynchronizer) {
+      getSynchronizers(fs, fe, logs).forEach(synchronizer => registerVCSynchronizer(synchronizer));
     }
 
     registerStatusProvider(fs, scheduler);
-
-    registerAssetHandlers(fs, fe, logs, validator, assetRepManager);
+    registerAssetHandlers(fs, fe, logs, validator, this.assetRepManager);
   }
-
   static forRoot(options: SchedulingOptions & FunctionOptions): DynamicModule {
     return {
       module: FunctionModule,
