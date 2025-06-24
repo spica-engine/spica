@@ -7,7 +7,7 @@ import YAML from "yaml";
 import {v4 as uuidv4} from "uuid";
 import os from "os";
 
-const sleep = () => new Promise(r => setTimeout(r, 1000));
+const sleep = () => new Promise(r => setTimeout(r, 5000));
 
 async function readResource(
   representative: VCRepresentativeManager,
