@@ -304,6 +304,9 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     }
   });
 
+  const representativePath = options.representativePath as string;
+  fs.mkdirSync(representativePath, {recursive: true});
+
   await spin({
     text: `Creating spica containers (0/2)`,
     op: async spinner => {
@@ -347,7 +350,8 @@ async function create({args: cmdArgs, options}: ActionParameters) {
                 }
               }
             }
-          ]
+          ],
+          Binds: [`${representativePath}:/var/data/representatives`]
         }
       });
       await network.connect({Container: api.id});
@@ -482,5 +486,8 @@ export default function (program: Program): Command {
         validator: CaporalValidator.STRING
       }
     )
+    .option("--representative-path", "Path to representative folder.", {
+      validator: CaporalValidator.STRING
+    })
     .action(create as unknown as Action);
 }
