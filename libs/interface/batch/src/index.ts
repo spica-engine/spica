@@ -1,31 +1,49 @@
-export interface BatchRequest {
-  requests: Request[];
-  concurrency: number;
+export interface BatchRequest<T> {
+  requests: Request<T>[];
+  concurrency?: number;
 }
 
-export interface BatchResponse {
-  responses: Response[];
+export interface BatchResponse<T> {
+  responses: Response<T>[];
 }
 
 type RequestMethods = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
-export interface Request {
+export interface Request<T = any> {
   id: string;
   method: RequestMethods;
   url: string;
-  body: any;
-  headers: Record<string, string>;
+  body: T;
+  headers: object;
 }
 
-export interface Response {
+export interface Response<T = any> {
   id: string;
   status: number;
-  body: any;
-  headers: Record<string, string>;
+  body: T;
+  headers: object;
 }
 
 export interface BatchOptions {
   port: string;
+}
+
+interface SuccessResponse<P, R = P> {
+  request: P;
+  response: R;
+}
+
+interface FailureResponse<P> {
+  request: P;
+  response: {
+    message: string;
+    error: string;
+  };
+}
+
+export interface ManyResponse<P, R> {
+  successes: SuccessResponse<P, R>[];
+  failures: FailureResponse<P>[];
 }
 
 export interface HTTPResponse {
@@ -39,7 +57,7 @@ export interface HTTPService {
     url: string,
     method: RequestMethods,
     params?: Record<string, any>,
-    headers?: Record<string, string>,
+    headers?: Record<string, any>,
     body?: Record<string, any>
   ): Promise<R>;
 
