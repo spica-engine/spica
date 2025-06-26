@@ -61,24 +61,28 @@ export class RootDirService {
   }
 
   findAll() {
-    return this.storageService.getAll().pipe(
-      map(storages => {
-        storages = storages
-          .filter(s => s.name.includes("/"))
-          .map(s => {
-            s.name = s.name.split("/")[0];
-            return s;
-          });
-        storages = storages.reduce((acc, curr) => {
-          const doesExist = acc.find(a => a.name == curr.name);
-          if (!doesExist) {
-            acc.push(curr);
-          }
-          return acc;
-        }, []);
-        return storages;
+    return this.storageService
+      .getAll({
+        filter: Filters.Match(`[^\/]+\/`)
       })
-    );
+      .pipe(
+        map(storages => {
+          storages = storages
+            .filter(s => s.name.includes("/"))
+            .map(s => {
+              s.name = s.name.split("/")[0];
+              return s;
+            });
+          storages = storages.reduce((acc, curr) => {
+            const doesExist = acc.find(a => a.name == curr.name);
+            if (!doesExist) {
+              acc.push(curr);
+            }
+            return acc;
+          }, []);
+          return storages;
+        })
+      );
   }
 
   find(name: string) {
