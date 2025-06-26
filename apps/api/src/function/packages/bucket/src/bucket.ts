@@ -1,22 +1,18 @@
-import {
-  Bucket,
-  BucketDocument,
-  ApikeyInitialization,
-  IdentityInitialization,
-  IndexResult,
-  RealtimeConnection,
-  RealtimeConnectionOne
-} from "./interface";
+import {Bucket, BucketDocument, RealtimeConnection, RealtimeConnectionOne} from "./interface";
 import {
   initialize as _initialize,
   checkInitialized,
   buildUrl,
-  HttpService,
-  BatchRequest,
-  Batch,
-  BatchResponse
+  Batch
 } from "@spica-devkit/internal_common";
 import {getWsObs} from "./operators";
+import {
+  ApikeyInitialization,
+  IdentityInitialization,
+  IndexResult,
+  HttpService
+} from "@spica-server/interface/function/packages";
+import {BatchResponse} from "@spica-server/interface/batch";
 
 // do not remove these unused imports
 import {Observable} from "rxjs";
