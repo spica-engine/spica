@@ -1,17 +1,15 @@
 import {Controller, Body, Post, Inject, Req, UseGuards} from "@nestjs/common";
 import {Schema} from "@spica-server/core/schema";
+import {AuthGuard} from "@spica-server/passport/guard";
+import {getBaseUrl, handleResponse, splitIntoChunks} from "./utilities";
 import {
   BatchRequest,
   BATCH_OPTIONS,
   BatchOptions,
   HTTP_SERVICE,
-  HTTPResponse,
   HTTPService,
-  Request,
   Response
-} from "./interface";
-import {AuthGuard} from "@spica-server/passport/guard";
-import {getBaseUrl, handleResponse, splitIntoChunks} from "./utilities";
+} from "@spica-server/interface/batch";
 
 @Controller("batch")
 export class BatchController {
@@ -23,7 +21,7 @@ export class BatchController {
   @Post()
   @UseGuards(AuthGuard())
   async insert(
-    @Body(Schema.validate("http://spica.internal/batch")) batch: BatchRequest,
+    @Body(Schema.validate("http://spica.internal/batch")) batch: BatchRequest<any>,
     @Req() req
   ) {
     this.httpService.baseURL = getBaseUrl(req, this.options);
