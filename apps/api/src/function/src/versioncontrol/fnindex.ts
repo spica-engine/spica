@@ -1,70 +1,83 @@
-import {ObjectId} from "@spica-server/database";
 import {FunctionService} from "@spica-server/function/services";
-import {SyncProvider} from "@spica-server/interface/versioncontrol";
+import {
+  ChangeTypes,
+  DocChange,
+  RepChange,
+  RepresentativeManagerResource,
+  ResourceType,
+  VCSynchronizerArgs
+} from "@spica-server/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
+import {Function, FunctionWithContent} from "@spica-server/interface/function";
+import {Observable} from "rxjs";
 import * as CRUD from "../crud";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {ObjectId} from "bson";
 
-export function indexSyncProviders(
+export const getIndexSynchronizer = (
   fs: FunctionService,
-  manager: IRepresentativeManager,
   engine: FunctionEngine
-): SyncProvider {
-  const name = "function-index";
-  const module = "function";
+): VCSynchronizerArgs<FunctionWithContent> => {
+  const fileName = "index";
 
-  const getAll = async () => {
-    const fns = await fs.find();
-    const promises = [];
+  const docWatcher = () =>
+    new Observable<DocChange<FunctionWithContent>>(observer => {
+      engine.watch("index").subscribe({
+        next: (change: FunctionWithContent) => {
+          const docChange: DocChange<FunctionWithContent> = {
+            resourceType: ResourceType.DOCUMENT,
+            changeType: ChangeTypes.INSERT,
+            resource: {...change, content: change.content}
+          };
 
-    const indexes = [];
-    for (const fn of fns) {
-      const promise = engine.read(fn).then(index => {
-        indexes.push({_id: fn._id.toString(), index});
+          observer.next(docChange);
+        },
+        error: observer.error
       });
-
-      promises.push(promise);
-    }
-
-    return Promise.all(promises).then(() => indexes);
-  };
-
-  const insert = fn => CRUD.index.write(fs, engine, fn._id, fn.index);
-
-  // we can not remove index because it can break the function
-  const rm = () => Promise.resolve();
-
-  const document = {
-    getAll,
-    insert,
-    update: insert,
-    delete: rm
-  };
-
-  const readAll = async () => {
-    const resourceNameValidator = str => ObjectId.isValid(str);
-    const files = await manager.read(module, resourceNameValidator, ["index.mjs", "index.ts"]);
-    return files.map(file => {
-      return {_id: file._id, index: file.contents.index};
     });
-  };
 
-  const write = fn => {
-    const extension = fn.language == "javascript" ? "js" : "ts";
-    return manager.write(module, fn._id.toString(), "index", fn.index, extension);
-  };
+  const convertToRepResource = change => ({
+    _id: change.resource._id.toString(),
+    content: change.resource.content,
+    additionalParameters: {language: change.resource.language}
+  });
 
-  const representative = {
-    getAll: readAll,
-    insert: write,
-    update: write,
-    delete: rm
-  };
+  const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) =>
+    ({
+      _id: new ObjectId(change.resource._id),
+      content: change.resource.content
+    }) as FunctionWithContent;
+
+  const apply = (resource: FunctionWithContent) =>
+    CRUD.index.write(fs, engine, resource._id, resource.content);
 
   return {
-    name,
-    document,
-    representative,
-    parents: 2
+    syncs: [
+      {
+        watcher: {docWatcher},
+        converter: {convertToRepResource},
+        applier: {
+          fileName,
+          getExtension: change =>
+            change.resource.additionalParameters.language == "javascript" ? "js" : "ts"
+        }
+      },
+      {
+        watcher: {
+          filesToWatch: [
+            {name: "index", extension: "js"},
+            {name: "index", extension: "ts"}
+          ],
+          eventsToWatch: ["add", "change"]
+        },
+        converter: {convertToDocResource},
+        applier: {
+          insert: apply,
+          update: apply,
+          delete: () => {}
+        }
+      }
+    ],
+    moduleName: "function",
+    subModuleName: "index"
   };
-}
+};

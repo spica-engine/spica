@@ -1,93 +1,84 @@
-import {ObjectId} from "@spica-server/database";
-import {FunctionService} from "@spica-server/function/services";
-import {SyncProvider} from "@spica-server/interface/versioncontrol";
+import {
+  ChangeTypes,
+  DocChange,
+  RepChange,
+  RepresentativeManagerResource,
+  ResourceType,
+  VCSynchronizerArgs
+} from "@spica-server/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
+import {FunctionWithContent} from "@spica-server/interface/function";
+import {Observable} from "rxjs";
 import * as CRUD from "../crud";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {ObjectId} from "bson";
 
-export function dependecySyncProviders(
-  service: FunctionService,
-  manager: IRepresentativeManager,
+export const getDependencySynchronizer = (
   engine: FunctionEngine
-): SyncProvider {
-  const name = "function-dependency";
-  const module = "function";
+): VCSynchronizerArgs<FunctionWithContent> => {
+  const fileName = "package";
+  const extension = "json";
 
-  const getAll = async () => {
-    const fns = await service.find();
-    const promises = [];
+  const docWatcher = () =>
+    new Observable<DocChange<FunctionWithContent>>(observer => {
+      engine.watch("dependency").subscribe({
+        next: (change: FunctionWithContent) => {
+          const docChange: DocChange<FunctionWithContent> = {
+            resourceType: ResourceType.DOCUMENT,
+            changeType: ChangeTypes.INSERT,
+            resource: change
+          };
 
-    const dependencies = [];
-    for (const fn of fns) {
-      const promise = engine.getPackages(fn).then(deps => {
-        const depsDef = deps.reduce((acc, curr) => {
-          acc[curr.name] = curr.version;
-          return acc;
-        }, {});
-        deps = deps.map(d => {
-          delete d.types;
-          return d;
-        });
-        dependencies.push({_id: fn._id.toString(), dependencies: depsDef});
+          observer.next(docChange);
+        },
+        error: observer.error
       });
+    });
 
-      promises.push(promise);
-    }
+  const convertToRepResource = (change: DocChange<FunctionWithContent>) => {
+    const parsed = JSON.parse(change.resource.content);
+    const dependencies = parsed.dependencies || {};
 
-    return Promise.all(promises).then(() => dependencies);
+    return {
+      _id: change.resource._id.toString(),
+      content: JSON.stringify({dependencies})
+    };
   };
 
-  const install = fn => CRUD.dependencies.install(engine, fn, fn.dependencies);
+  const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) =>
+    ({
+      _id: new ObjectId(change.resource._id),
+      content: change.resource.content
+    }) as FunctionWithContent;
 
-  const update = fn => CRUD.dependencies.update(engine, fn);
-
-  const uninstall = async fn => {
-    const deps = await engine.getPackages(fn);
-    return CRUD.dependencies.uninstall(
-      engine,
-      fn,
-      deps.map(d => d.name)
-    );
-  };
-
-  const document = {
-    getAll,
-    insert: install,
-    update: update,
-    delete: uninstall
-  };
-
-  const readAll = async () => {
-    const resourceNameValidator = str => ObjectId.isValid(str);
-    const files = await manager.read(module, resourceNameValidator, ["package.json"]);
-    return files.map(file => {
-      return {_id: file._id, dependencies: file.contents.package.dependencies};
+  const apply = (resource: FunctionWithContent) => {
+    const parsed = JSON.parse(resource.content);
+    return CRUD.dependencies.update(engine, {
+      ...resource,
+      dependencies: parsed.dependencies
     });
   };
 
-  const write = fn => {
-    return manager.write(
-      module,
-      fn._id.toString(),
-      "package",
-      {dependencies: fn.dependencies},
-      "json"
-    );
-  };
-
-  const rm = () => Promise.resolve();
-
-  const representative = {
-    getAll: readAll,
-    insert: write,
-    update: write,
-    delete: rm
-  };
-
   return {
-    name,
-    document,
-    representative,
-    parents: 2
+    syncs: [
+      {
+        watcher: {docWatcher},
+        converter: {convertToRepResource},
+        applier: {fileName, getExtension: () => extension}
+      },
+      {
+        watcher: {
+          filesToWatch: [{name: fileName, extension}],
+          eventsToWatch: ["add", "change"]
+        },
+        converter: {convertToDocResource},
+        applier: {
+          insert: apply,
+          update: apply,
+          delete: () => {}
+        }
+      }
+    ],
+    moduleName: "function",
+    subModuleName: "dependency"
   };
-}
+};
