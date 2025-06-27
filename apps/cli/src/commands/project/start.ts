@@ -494,9 +494,9 @@ export default function (program: Program): Command {
     )
     .option(
       "--local-resource-folder",
-      `Absolute local folder path to sync resources from and to spica. 
-      WARNING: On container startup, initial synchronization from spica to local folder will remove local files(bucket, function etc) and insert spica ones.
-      Files doesn't managed by spica will remain.(.git, .gitignore etc.) 
+      `Absolute local folder path to sync resources from and to Spica. 
+      WARNING: During container startup, the initial synchronization from Spica to the local folder will remove local files (bucket, function, etc.) and insert Spica ones.
+      Files that aren't managed by Spica will remain(.git, .gitignore etc.).
       Backup or commit necessary files before starting.`,
       {
         validator: projectLocalResourceFolder
