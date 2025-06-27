@@ -117,19 +117,19 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
       })
     });
 
-    if (name === "connection") {
+    if (name == "connection") {
       this.firehoseQueue.setSocket(incomingMessage, ws);
     }
 
-    if (name === "close") {
+    if (name == "close") {
       this.firehoseQueue.removeSocket(incomingMessage);
     }
 
     for (const pair of this.eventTargetPairs) {
       if (
-        pair.name === name ||
-        pair.name === "*" ||
-        (pair.name === "**" && (name === "connection" || name === "close"))
+        pair.name == name ||
+        pair.name == "*" ||
+        (pair.name == "**" && (name == "connection" || name == "close"))
       ) {
         const ev = new event.Event({
           target: pair.target,
