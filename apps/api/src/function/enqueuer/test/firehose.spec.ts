@@ -7,7 +7,7 @@ import {event, Firehose} from "@spica-server/function/queue/proto";
 
 describe("FirehoseEnqueuer", () => {
   let eventQueue: {enqueue: jest.Mock};
-  let firehoseQueue: {enqueue: jest.Mock};
+  let firehoseQueue: {enqueue: jest.Mock; setSocket: jest.Mock; removeSocket: jest.Mock};
   let noopTarget: event.Target;
   let firehoseEnqueuer: FirehoseEnqueuer;
   let app: INestApplication;
@@ -20,7 +20,9 @@ describe("FirehoseEnqueuer", () => {
       enqueue: jest.fn()
     };
     firehoseQueue = {
-      enqueue: jest.fn()
+      enqueue: jest.fn(),
+      setSocket: jest.fn(),
+      removeSocket: jest.fn()
     };
 
     noopTarget = new event.Target();
