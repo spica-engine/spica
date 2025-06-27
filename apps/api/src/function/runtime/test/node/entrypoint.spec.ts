@@ -712,8 +712,7 @@ describe("Entrypoint", () => {
           }),
           message: new Firehose.Message({name: "test", data: JSON.stringify("test")}),
           pool: new Firehose.PoolDescription({size: 21})
-        }),
-        undefined
+        })
       );
 
       const exitCode = await spawn().catch(r => r);
@@ -749,18 +748,17 @@ describe("Entrypoint", () => {
           readyState: 1
         };
 
-        firehoseQueue.enqueue(
-          ev.id,
-          new Firehose.Message.Incoming({
-            client: new Firehose.ClientDescription({
-              id: "1",
-              remoteAddress: "[::1]"
-            }),
-            message: new Firehose.Message({name: "connection"}),
-            pool: new Firehose.PoolDescription({size: 21})
+        const msg = new Firehose.Message.Incoming({
+          client: new Firehose.ClientDescription({
+            id: "1",
+            remoteAddress: "[::1]"
           }),
-          socketSpy as unknown as WebSocket
-        );
+          message: new Firehose.Message({name: "connection"}),
+          pool: new Firehose.PoolDescription({size: 21})
+        });
+
+        firehoseQueue.enqueue(ev.id, msg);
+        firehoseQueue.setSocket(msg, socketSpy as unknown as WebSocket);
 
         spawn();
       });
@@ -794,18 +792,16 @@ describe("Entrypoint", () => {
           readyState: 1
         };
 
-        firehoseQueue.enqueue(
-          ev.id,
-          new Firehose.Message.Incoming({
-            client: new Firehose.ClientDescription({
-              id: "1",
-              remoteAddress: "[::1]"
-            }),
-            message: new Firehose.Message({name: "connection"}),
-            pool: new Firehose.PoolDescription({size: 21})
+        const msg = new Firehose.Message.Incoming({
+          client: new Firehose.ClientDescription({
+            id: "1",
+            remoteAddress: "[::1]"
           }),
-          socketSpy as unknown as WebSocket
-        );
+          message: new Firehose.Message({name: "connection"}),
+          pool: new Firehose.PoolDescription({size: 21})
+        });
+        firehoseQueue.enqueue(ev.id, msg);
+        firehoseQueue.setSocket(msg, socketSpy as unknown as WebSocket);
 
         spawn();
       });
@@ -840,41 +836,36 @@ describe("Entrypoint", () => {
         const pool = new Firehose.PoolDescription({size: 21}),
           message = new Firehose.Message({name: "connection"});
 
+        const msg1 = new Firehose.Message.Incoming({
+          client: new Firehose.ClientDescription({
+            id: "1",
+            remoteAddress: "[::1]"
+          }),
+          message,
+          pool
+        });
+
         const firstSocket = {
           send: jest.fn(),
-          readyState: 1 /* OPEN */
+          readyState: 1
         };
+        firehoseQueue.enqueue(ev.id, msg1);
+        firehoseQueue.setSocket(msg1, firstSocket as unknown as WebSocket);
 
-        firehoseQueue.enqueue(
-          ev.id,
-          new Firehose.Message.Incoming({
-            client: new Firehose.ClientDescription({
-              id: "1",
-              remoteAddress: "[::1]"
-            }),
-            message,
-            pool
+        const msg2 = new Firehose.Message.Incoming({
+          client: new Firehose.ClientDescription({
+            id: "2",
+            remoteAddress: "[::1]"
           }),
-          firstSocket as unknown as WebSocket
-        );
-
+          message,
+          pool
+        });
         const secondSocket = {
           send: jest.fn(),
-          readyState: 1 /* OPEN */
+          readyState: 1
         };
-
-        firehoseQueue.enqueue(
-          ev.id,
-          new Firehose.Message.Incoming({
-            client: new Firehose.ClientDescription({
-              id: "2",
-              remoteAddress: "[::1]"
-            }),
-            message,
-            pool
-          }),
-          secondSocket as unknown as WebSocket
-        );
+        firehoseQueue.enqueue(ev.id, msg2);
+        firehoseQueue.setSocket(msg2, secondSocket as unknown as WebSocket);
 
         spawn();
       });
