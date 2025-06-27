@@ -13,6 +13,10 @@ export namespace Filters {
   export const ListOnlyObjects = generateRegexFilter("^.*[^\/]$");
   export const Match = name => generateRegexFilter(`^${name}$`);
   export const ListFirstChildren = (dir, itself = false) => {
+    if (dir.length && !dir.endsWith("/")) {
+      dir = dir + "/";
+    }
+
     let regex = `^${dir}[^\/]+\/?$`;
 
     if (itself) {

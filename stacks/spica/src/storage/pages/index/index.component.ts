@@ -16,7 +16,7 @@ import {
 } from "@spica-client/storage/helpers";
 import {RootDirService} from "@spica-client/storage/services/root.dir.service";
 import {BehaviorSubject, Subject, combineLatest, Subscription} from "rxjs";
-import {switchMap, tap} from "rxjs/operators";
+import {map, switchMap, tap} from "rxjs/operators";
 import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
 import {Storage, StorageNode} from "../../interfaces/storage";
 import {StorageService} from "../../services/storage.service";
@@ -56,6 +56,8 @@ export class IndexComponent implements OnInit, OnDestroy {
   filter$ = new Subject<object>();
 
   renamingNode: StorageNode;
+
+  storages: Storage[] = [];
 
   constructor(
     private storageService: StorageService,
@@ -116,10 +118,32 @@ export class IndexComponent implements OnInit, OnDestroy {
     const storagesSubs = combineLatest([this.refresh, this.filter$])
       .pipe(
         tap(() => this.loading$.next(true)),
-        tap(() => (this.currentNode = undefined)),
-        switchMap(([_, filter]) => this.storageService.getAll({filter, sort: this.sorter})),
+        switchMap(([_, filter]) => {
+          if (this.currentNode) {
+            if (!this.currentNode.isDirectory) {
+              this.currentNode = this.currentNode.parent;
+            }
+            this.currentNode.children = [];
+            this.storages = this.storages.filter(storage => {
+              const fullName = getFullName(this.currentNode);
+              return !storage.name.startsWith(fullName);
+            });
+            filter = Filters.ListFirstChildren(getFullName(this.currentNode));
+          }
+          return this.storageService.getAll({filter, sort: this.sorter});
+        }),
         tap(storages => {
-          const newNodes = mapObjectsToNodes(storages);
+          // prevent duplication
+          if (this.storages) {
+            storages.forEach(storage => {
+              if (!this.storages.some(_storage => _storage.name == storage.name)) {
+                this.storages.push(storage);
+              }
+            });
+          } else {
+            this.storages = storages;
+          }
+          const newNodes = mapObjectsToNodes(this.storages);
           this.updateNodes(newNodes);
         }),
         tap(() => this.loading$.next(false))
@@ -203,7 +227,6 @@ export class IndexComponent implements OnInit, OnDestroy {
       .delete(id)
       .toPromise()
       .then(() => {
-        this.currentNode = this.currentNode.parent;
         this.refresh.next();
       });
   }
@@ -283,10 +306,24 @@ export class IndexComponent implements OnInit, OnDestroy {
       .then(() => this.refresh.next());
   }
 
-  onNodeHighlighted(node: StorageNode) {
+  onNodeHighlighted(node: StorageNode, refresh?: boolean) {
     this.currentNode = node;
 
     this.setHighlighteds(node);
+
+    if (node.isDirectory && refresh) {
+      const fullName = getFullName(node);
+      this.storageService
+        .getAll({
+          filter: Filters.ListFirstChildren(fullName)
+        })
+        .toPromise()
+        .then(storages => {
+          this.storages.push(...storages);
+          const newNodes = mapObjectsToNodes(this.storages);
+          this.updateNodes(newNodes);
+        });
+    }
   }
 
   onDetailsClosed(node: StorageNode) {
@@ -320,17 +357,13 @@ export class IndexComponent implements OnInit, OnDestroy {
     setHighlighted(node);
   }
 
-  buildFilterForDir(fullName: string) {
-    if (!fullName) {
-      return null;
-    }
-
-    return Filters.ListAllChildren(fullName, true);
+  buildFilterForDir(fullName: string, itself?: boolean) {
+    return Filters.ListFirstChildren(fullName, itself);
   }
 
   onColumnClicked(nodes: StorageNode[]) {
     if (nodes.length) {
-      this.onNodeHighlighted(nodes[0].parent);
+      this.onNodeHighlighted(nodes[0].parent, false);
     }
   }
 

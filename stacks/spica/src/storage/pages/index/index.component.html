@@ -219,7 +219,7 @@
   >
     <div
       (click)="
-        $event.stopPropagation(); !selectionActive ? onNodeHighlighted(node) : onSelect(node)
+        $event.stopPropagation(); !selectionActive ? onNodeHighlighted(node, true) : onSelect(node)
       "
       class="line"
       [class.highlight]="node.isHighlighted"
