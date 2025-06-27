@@ -28,7 +28,8 @@ function streamToBuffer(stream: Stream): Promise<Buffer> {
 }
 
 async function create({args: cmdArgs, options}: ActionParameters) {
-  const {name, localResourceFolder}: {name?: string; localResourceFolder?: string} = cmdArgs;
+  const {name}: {name?: string} = cmdArgs;
+  const {localResourceFolder}: {localResourceFolder?: string} = options;
 
   const machine = new DockerMachine();
 
@@ -306,8 +307,10 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     }
   });
 
+  let binds = [];
   if (localResourceFolder) {
     fs.mkdirSync(localResourceFolder, {recursive: true});
+    binds = [`${localResourceFolder}:${persistentPath}/representatives`];
   }
 
   await spin({
@@ -354,9 +357,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
               }
             }
           ],
-          Binds: localResourceFolder
-            ? [`${localResourceFolder}:${persistentPath}/representatives`]
-            : []
+          Binds: binds
         }
       });
       await network.connect({Container: api.id});
@@ -445,13 +446,6 @@ export default function (program: Program): Command {
   return program
     .command("project start", "Start a project on your local machine.")
     .argument("<name>", "Name of the project.", {validator: projectName})
-    .argument(
-      "[localResourceFolder]",
-      "Optional path to a local directory where generated resources will be saved. The resources in this folder can be modified directly.",
-      {
-        validator: projectLocalResourceFolder
-      }
-    )
     .option(
       "-p, --port",
       "Port that ingress will serve on. If not specified an open port will be used.",
@@ -496,6 +490,16 @@ export default function (program: Program): Command {
       "Absolute file path that contains api key options as key value in JSON format.",
       {
         validator: CaporalValidator.STRING
+      }
+    )
+    .option(
+      "--local-resource-folder",
+      `Absolute local folder path to sync resources from and to spica. 
+      WARNING: On container startup, initial synchronization from spica to local folder will remove local files(bucket, function etc) and insert spica ones.
+      Files doesn't managed by spica will remain.(.git, .gitignore etc.) 
+      Backup or commit necessary files before starting.`,
+      {
+        validator: projectLocalResourceFolder
       }
     )
     .action(create as unknown as Action);
