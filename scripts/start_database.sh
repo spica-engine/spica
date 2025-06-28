@@ -10,7 +10,7 @@ fi
 mkdir -p ./db/.data
 mongod --bind_ip localhost --dbpath ./db/.data --replSet infra & PID="$!"
 echo "Waiting for the mongodb instance to start up."
-sleep 5 && mongo --eval 'rs.initiate()'
+sleep 5 && mongosh --eval 'rs.initiate()'
 
 trap "kill $PID" exit INT TERM
 wait
