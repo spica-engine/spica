@@ -12,7 +12,7 @@ mongod --port 27017 --bind_ip_all --dbpath ./db/.data1 --replSet infra & PID1="$
 mongod --port 27018 --bind_ip_all --dbpath ./db/.data2 --replSet infra & PID2="$!"
 mongod --port 27019 --bind_ip_all --dbpath ./db/.data3 --replSet infra & PID3="$!"
 echo "Waiting for the nodes to become ready."
-sleep 10 && mongo --port 27017 --eval '
+sleep 10 && mongosh --port 27017 --eval '
 rs.initiate(
    {
       _id: "infra",
