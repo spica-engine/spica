@@ -101,17 +101,17 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 5
             failureThreshold: 6
-          {{- if eq (int .Values.database.replicas) 1}}
           lifecycle:
             postStart:
               exec:
                 command:
                   - "/bin/sh"
                   - "-c"
-                  - | 
+                  - |
+          {{- if eq (int .Values.database.replicas) 1 }}
                     ./scripts/init-replica.sh > ./init-replica.log
+          {{- end }}
                     ./scripts/set-profiling-level.sh > ./set-profiling-level.log
-          {{- end}}
           resources:
 {{ toYaml .Values.database.resources | indent 12 }}
           volumeMounts:
