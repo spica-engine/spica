@@ -42,9 +42,7 @@ describe("FirehoseQueue", () => {
         expect(e).not.toBeUndefined();
         expect(e.message).toBe("2 UNKNOWN: Queue has no item with id 1");
         expect(req).toBeUndefined();
-
         expect(firehoseQueue.size).toEqual(0);
-
         done();
       });
     });
@@ -53,8 +51,7 @@ describe("FirehoseQueue", () => {
       const pop = new Firehose.Message.Pop({
         id: "2"
       });
-      firehoseQueue.enqueue(pop.id, new Firehose.Message.Incoming(), undefined);
-
+      firehoseQueue.enqueue(pop.id, new Firehose.Message.Incoming());
       expect(firehoseQueue.size).toEqual(1);
 
       firehoseQueueClient.pop(pop, (e, req) => {
@@ -70,30 +67,25 @@ describe("FirehoseQueue", () => {
 
   it("should send message to socket", done => {
     const socket: any = {
-      send: jest.fn()
+      send: jest.fn(),
+      readyState: 1
     };
-    socket.readyState = 1;
 
-    const client = new Firehose.ClientDescription({
-      id: "1"
-    });
+    const client = new Firehose.ClientDescription({id: "1"});
 
     const incomingMessage = new Firehose.Message.Incoming({
       client,
-      message: new Firehose.Message({
-        name: "connection"
-      })
+      message: new Firehose.Message({name: "connection"})
     });
 
-    firehoseQueue.enqueue("1", incomingMessage, socket);
+    firehoseQueue.enqueue("1", incomingMessage);
+    firehoseQueue.setSocket(incomingMessage, socket);
 
     expect(firehoseQueue["sockets"].size).toEqual(1);
 
     const outgoingMessage = new Firehose.Message.Outgoing({
       client,
-      message: new Firehose.Message({
-        name: "test"
-      })
+      message: new Firehose.Message({name: "test"})
     });
 
     firehoseQueueClient.send(outgoingMessage, (e, req) => {
@@ -107,40 +99,30 @@ describe("FirehoseQueue", () => {
 
   it("should send message to all OPEN sockets", done => {
     const firstSocket: any = {
-      send: jest.fn()
+      send: jest.fn(),
+      readyState: 1
     };
-    firstSocket.readyState = 1; /* https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState */
-
-    firehoseQueue.enqueue(
-      "1",
-      new Firehose.Message.Incoming({
-        client: new Firehose.ClientDescription({
-          id: "1"
-        }),
-        message: new Firehose.Message({
-          name: "connection"
-        })
-      }),
-      firstSocket
-    );
 
     const secondSocket: any = {
-      send: jest.fn()
+      send: jest.fn(),
+      readyState: 2
     };
-    secondSocket.readyState = 2; /* https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState */
 
-    firehoseQueue.enqueue(
-      "2",
-      new Firehose.Message.Incoming({
-        client: new Firehose.ClientDescription({
-          id: "2"
-        }),
-        message: new Firehose.Message({
-          name: "connection"
-        })
-      }),
-      secondSocket
-    );
+    const firstMessage = new Firehose.Message.Incoming({
+      client: new Firehose.ClientDescription({id: "1"}),
+      message: new Firehose.Message({name: "connection"})
+    });
+
+    const secondMessage = new Firehose.Message.Incoming({
+      client: new Firehose.ClientDescription({id: "2"}),
+      message: new Firehose.Message({name: "connection"})
+    });
+
+    firehoseQueue.enqueue("1", firstMessage);
+    firehoseQueue.setSocket(firstMessage, firstSocket);
+
+    firehoseQueue.enqueue("2", secondMessage);
+    firehoseQueue.setSocket(secondMessage, secondSocket);
 
     firehoseQueueClient.sendAll(
       new Firehose.Message({
@@ -160,71 +142,56 @@ describe("FirehoseQueue", () => {
 
   it("should close socket", done => {
     const socket: any = {
-      close: jest.fn()
+      close: jest.fn(),
+      readyState: 1
     };
-    socket.readyState = 1; /* https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState */
-    const client = new Firehose.ClientDescription({
-      id: "1"
+
+    const client = new Firehose.ClientDescription({id: "1"});
+
+    const incomingMessage = new Firehose.Message.Incoming({
+      client,
+      message: new Firehose.Message({name: "connection"})
     });
 
-    firehoseQueue.enqueue(
-      "1",
-      new Firehose.Message.Incoming({
-        client,
-        message: new Firehose.Message({
-          name: "connection"
-        })
-      }),
-      socket
-    );
+    firehoseQueue.enqueue("1", incomingMessage);
+    firehoseQueue.setSocket(incomingMessage, socket);
 
-    firehoseQueueClient.close(
-      new Firehose.Close({
-        client
-      }),
-      (e, req) => {
-        expect(e).toBe(null);
-        expect(req instanceof Firehose.Close.Result).toBe(true);
-        expect(socket.close).toHaveBeenCalledTimes(1);
-        done();
-      }
-    );
+    firehoseQueueClient.close(new Firehose.Close({client}), (e, req) => {
+      expect(e).toBe(null);
+      expect(req instanceof Firehose.Close.Result).toBe(true);
+      expect(socket.close).toHaveBeenCalledTimes(1);
+      done();
+    });
   });
 
   it("should remove socket for close message", done => {
-    const client = new Firehose.ClientDescription({
-      id: "1"
+    const socket: any = {
+      send: jest.fn(),
+      readyState: 1
+    };
+
+    const client = new Firehose.ClientDescription({id: "1"});
+
+    const connectionMessage = new Firehose.Message.Incoming({
+      client,
+      message: new Firehose.Message({name: "connection"})
     });
 
-    const pop = new Firehose.Message.Pop({
-      id: "1"
+    const closeMessage = new Firehose.Message.Incoming({
+      client,
+      message: new Firehose.Message({name: "close"})
     });
 
-    firehoseQueue.enqueue(
-      pop.id,
-      new Firehose.Message.Incoming({
-        client,
-        message: new Firehose.Message({
-          name: "connection"
-        })
-      }),
-      undefined
-    );
+    firehoseQueue.enqueue("1", connectionMessage);
+    firehoseQueue.setSocket(connectionMessage, socket);
+
     expect(firehoseQueue["sockets"].size).toEqual(1);
 
-    pop.id = "2";
-    firehoseQueue.enqueue(
-      pop.id,
-      new Firehose.Message.Incoming({
-        client,
-        message: new Firehose.Message({
-          name: "close"
-        })
-      }),
-      undefined
-    );
+    firehoseQueue.enqueue("2", closeMessage);
+    firehoseQueue.removeSocket(closeMessage);
+
     expect(firehoseQueue["sockets"].size).toEqual(0);
 
-    firehoseQueueClient.pop(pop, done);
+    firehoseQueueClient.pop(new Firehose.Message.Pop({id: "2"}), done);
   });
 });
