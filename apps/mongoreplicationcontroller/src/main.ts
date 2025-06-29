@@ -90,9 +90,12 @@ function authenticateForMongo(username, password, authenticationDatabase) {
 async function findPrimaryNode(nodes: string[]) {
   for (const node of nodes) {
     try {
-      const {stdout} = await execMongo(`admin --host "${node}" --eval "rs.isMaster()"`);
+      const {stdout} = await execMongo(
+        `admin --host "${node}" --eval "JSON.stringify(rs.isMaster())"`
+      );
       debug(stdout);
-      if (stdout.indexOf('"ismaster" : true') > -1) {
+      const result = JSON.parse(stdout);
+      if (result.ismaster === true) {
         return node;
       }
     } catch (error) {
@@ -108,15 +111,18 @@ async function findPrimaryNode(nodes: string[]) {
 }
 
 async function initiateReplication(nodes: string[], reinitiate = false) {
-  const {stdout} = await execMongo(`--host "${nodes[0]}" --eval "rs.status()"`);
-  if (stdout.indexOf("no replset config has been received") > -1) {
+  const {stdout} = await execMongo(`--host "${nodes[0]}" --eval 'JSON.stringify(rs.status())'`);
+  const statusResult = JSON.parse(stdout);
+
+  if (statusResult.ok !== 1 && statusResult.codeName === "NotYetInitialized") {
     const {stdout} = await execMongo(
-      `--host ${nodes[0]} --eval 'rs.initiate({"_id": "${
+      `--host ${nodes[0]} --eval 'JSON.stringify(rs.initiate({"_id": "${
         options["replica-set"]
-      }", "members": ${JSON.stringify(nodes.map((host, _id) => ({_id, host})))}})'`
+      }", "members": ${JSON.stringify(nodes.map((host, _id) => ({_id, host})))}}))'`
     );
     debug(stdout);
-    if (stdout.indexOf('"ok" : 1') == -1) {
+    const result = JSON.parse(stdout);
+    if (result.ok !== 1) {
       throw new Error("Can not initialize replica set.");
     }
   } else if (reinitiate) {
@@ -132,29 +138,40 @@ async function initiateReplication(nodes: string[], reinitiate = false) {
     const script = [
       "cfg = rs.conf()",
       `cfg.members = ${JSON.stringify(nodes.map((host, _id) => ({_id, host})))}`,
-      "rs.reconfig(cfg, { force: true })"
+      "rs.reconfig(cfg, { force: true })",
+      "return { ok: 1 }"
     ];
-    const {stdout} = await execMongo(`admin --host "${primary}" --eval '${script.join(";")}'`);
+    const {stdout} = await execMongo(
+      `admin --host "${primary}" --eval 'JSON.stringify((function() { ${script.join(";")} })())'`
+    );
     debug(stdout);
-    if (stdout.indexOf('"ok" : 1') == -1) {
+    const result = JSON.parse(stdout);
+    if (result.ok !== 1) {
       throw new Error("Can not initialize replica set.");
     }
   }
 }
 
 async function addAsSecondary(primaryHost: string, secondaryHost: string, index: number) {
-  const {stdout} = await execMongo(`admin --host "${primaryHost}" --eval "rs.config()"`);
+  const {stdout} = await execMongo(
+    `admin --host "${primaryHost}" --eval 'JSON.stringify(rs.config())'`
+  );
   debug(stdout);
+  const config = JSON.parse(stdout);
 
-  if (stdout.indexOf(secondaryHost) == -1) {
+  if (!config.members.some(member => member.host === secondaryHost)) {
     const conf = [
-      "cfg = rs.conf()",
+      `cfg = ${JSON.stringify(config)}`,
       `cfg.members[${index}] = { _id: ${index},  host: "${secondaryHost}"}`,
-      "rs.reconfig(cfg, { force: true })"
+      "rs.reconfig(cfg, { force: true })",
+      "return { ok: 1 }"
     ];
-    const {stdout} = await execMongo(`admin --host "${primaryHost}" --eval '${conf.join(";")}'`);
+    const {stdout} = await execMongo(
+      `admin --host "${primaryHost}" --eval 'JSON.stringify((function() { ${conf.join(";")} })())'`
+    );
     debug(stdout);
-    if (stdout.indexOf('"ok" : 1') == -1) {
+    const result = JSON.parse(stdout);
+    if (result.ok !== 1) {
       throw new Error(`Can not add the secondary node ${secondaryHost}`);
     }
   }
