@@ -7,7 +7,7 @@ import getport from "get-port";
 import open from "open";
 import {Stream} from "stream";
 import {spin} from "../../console";
-import {projectName} from "../../validator";
+import {projectLocalResourceFolder, projectName} from "../../validator";
 import path from "path";
 import fs from "fs";
 import {DockerMachine} from "../../project";
@@ -29,6 +29,7 @@ function streamToBuffer(stream: Stream): Promise<Buffer> {
 
 async function create({args: cmdArgs, options}: ActionParameters) {
   const {name}: {name?: string} = cmdArgs;
+  const {localResourceFolder}: {localResourceFolder?: string} = options;
 
   const machine = new DockerMachine();
 
@@ -64,6 +65,8 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     }
   }
 
+  const persistentPath = "/var/data";
+
   args = [
     ...args,
     // If user defines some of these values in the apiOptions file, they will be overwriten.
@@ -74,7 +77,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     `--public-url=${apiUrl}`,
     `--function-api-url=${functionApiUrl}`,
     `--passport-secret=${name}`,
-    `--persistent-path=/var/data`
+    `--persistent-path=${persistentPath}`
   ];
 
   const foundNetworks = await machine.listNetworks({
@@ -304,6 +307,12 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     }
   });
 
+  let binds = [];
+  if (localResourceFolder) {
+    fs.mkdirSync(localResourceFolder, {recursive: true});
+    binds = [`${localResourceFolder}:${persistentPath}/representatives`];
+  }
+
   await spin({
     text: `Creating spica containers (0/2)`,
     op: async spinner => {
@@ -335,7 +344,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
           },
           Mounts: [
             {
-              Target: "/var/data",
+              Target: persistentPath,
               Source: `${name}-api`,
               Type: "volume",
               VolumeOptions: {
@@ -347,7 +356,8 @@ async function create({args: cmdArgs, options}: ActionParameters) {
                 }
               }
             }
-          ]
+          ],
+          Binds: binds
         }
       });
       await network.connect({Container: api.id});
@@ -480,6 +490,16 @@ export default function (program: Program): Command {
       "Absolute file path that contains api key options as key value in JSON format.",
       {
         validator: CaporalValidator.STRING
+      }
+    )
+    .option(
+      "--local-resource-folder",
+      `Absolute local folder path to sync resources from and to Spica. 
+      WARNING: During container startup, the initial synchronization from Spica to the local folder will remove local files (bucket, function, etc.) and insert Spica ones.
+      Files that aren't managed by Spica will remain(.git, .gitignore etc.).
+      Backup or commit necessary files before starting.`,
+      {
+        validator: projectLocalResourceFolder
       }
     )
     .action(create as unknown as Action);
