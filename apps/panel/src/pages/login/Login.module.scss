@@ -55,6 +55,17 @@
 
     >div:nth-child(1) {
       height: 30px !important;
+      outline: none;
+    }
+
+    &:focus-within, &:focus {
+      border-color: rgb(var(--color-primary-rgb));
+    }
+
+    input,
+    span {
+      line-height: var(--font-size-sm) !important;
+      font-size: var(--font-size-sm) !important;
     }
 
   }

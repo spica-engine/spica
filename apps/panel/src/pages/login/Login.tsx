@@ -50,7 +50,7 @@ const Login = () => {
           formik.handleSubmit();
         }}
       >
-        <FlexElement direction="vertical" gap={19}>
+        <FlexElement direction="vertical" gap={10}>
           <FlexElement
             className={styles.contentContainer}
             dimensionX={400}
