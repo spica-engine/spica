@@ -109,7 +109,6 @@ const Login = () => {
                 formik.values.password.length < 3 ||
                 isLoading
               }
-              className={styles.formButton}
               containerProps={{
                 className: styles.formButtonContainer
               }}
@@ -124,7 +123,6 @@ const Login = () => {
               type="button"
               color="default"
               variant="outlined"
-              className={styles.formButton}
               containerProps={{
                 className: styles.formButtonContainer
               }}

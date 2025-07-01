@@ -58,13 +58,14 @@
       outline: none;
     }
 
-    &:focus-within, &:focus {
+    &:focus-within,
+    &:focus {
       border-color: rgb(var(--color-primary-rgb));
     }
 
     input,
     span {
-      line-height: var(--font-size-sm) !important;
+      line-height: var(--line-height-sm) !important;
       font-size: var(--font-size-sm) !important;
     }
 
@@ -75,13 +76,8 @@
   }
 
   .formButtonContainer {
-    height: 16px !important;
     font-size: var(--font-size-sm);
     font-family: var(--font-family-base);
   }
 
-  .formButton {
-    padding-bottom: calc(var(--padding-sm) + var(--padding-xs));
-    padding-top: calc(var(--padding-sm) + var(--padding-xs));
-  }
 }
