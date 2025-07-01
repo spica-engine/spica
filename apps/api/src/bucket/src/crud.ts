@@ -202,3 +202,17 @@ async function clearRelationsOnDrop(
 
   return Promise.all(updatePromises);
 }
+
+export async function removeByName(
+  bs: BucketService,
+  bds: BucketDataService,
+  history: HistoryService,
+  title: string
+) {
+  const bucket = await bs.findOne({title});
+  if (!bucket) {
+    throw new NotFoundException(`Bucket with title "${title}" does not exist.`);
+  }
+
+  return remove(bs, bds, history, bucket._id);
+}

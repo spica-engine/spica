@@ -36,19 +36,19 @@ export const getIndexSynchronizer = (
     });
 
   const convertToRepResource = change => ({
-    _id: change.resource._id.toString(),
+    name: change.resource.name,
     content: change.resource.content,
     additionalParameters: {language: change.resource.language}
   });
 
   const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) =>
     ({
-      _id: new ObjectId(change.resource._id),
+      name: change.resource.name,
       content: change.resource.content
     }) as FunctionWithContent;
 
   const apply = (resource: FunctionWithContent) =>
-    CRUD.index.write(fs, engine, resource._id, resource.content);
+    CRUD.index.writeByName(fs, engine, resource.name, resource.content);
 
   return {
     syncs: [

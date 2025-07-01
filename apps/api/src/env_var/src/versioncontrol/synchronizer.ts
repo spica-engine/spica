@@ -8,20 +8,19 @@ import * as CRUD from "../crud";
 import {EnvVarService} from "@spica-server/env_var/services";
 import {EnvVar} from "@spica-server/interface/env_var";
 import YAML from "yaml";
-import {ObjectId} from "bson";
 
 export const getSynchronizer = (evs: EnvVarService): VCSynchronizerArgs<EnvVar> => {
   const fileName = "schema";
   const extension = "yaml";
 
   const convertToRepResource = (change: DocChange<EnvVar>) => ({
-    _id: change.resource._id.toString(),
+    name: change.resource.key,
     content: YAML.stringify(change.resource)
   });
 
   const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) => {
     const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
-    return {...parsed, _id: new ObjectId(change.resource._id)};
+    return {...parsed, name: change.resource.name};
   };
 
   return {
@@ -37,7 +36,9 @@ export const getSynchronizer = (evs: EnvVarService): VCSynchronizerArgs<EnvVar> 
         applier: {
           insert: (envVar: EnvVar) => CRUD.insert(evs, envVar),
           update: (envVar: EnvVar) => CRUD.replace(evs, envVar),
-          delete: (envVar: EnvVar) => CRUD.remove(evs, envVar._id)
+          delete: (envVar: EnvVar) => {
+            CRUD.removeByKey(evs, envVar.key);
+          }
         }
       }
     ],

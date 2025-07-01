@@ -19,8 +19,8 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     return path.join(this.cwd, module);
   }
 
-  write(module: string, id: string, fileName: string, content: string, extension: string) {
-    const resourcesDirectory = path.join(this.cwd, module, id);
+  write(module: string, name: string, fileName: string, content: string, extension: string) {
+    const resourcesDirectory = path.join(this.cwd, module, name);
     if (!fs.existsSync(resourcesDirectory)) {
       fs.mkdirSync(resourcesDirectory, {recursive: true});
     }
@@ -82,7 +82,7 @@ export class VCRepresentativeManager implements IRepresentativeManager {
         const isTrackedFile = files.some(file => parts[1] == file);
         if (!isCorrectDepth || !isTrackedFile) return;
 
-        const _id = parts[0];
+        const name = parts[0];
 
         let changeType: ChangeTypes;
         let resource: RepresentativeManagerResource;
@@ -90,17 +90,17 @@ export class VCRepresentativeManager implements IRepresentativeManager {
         switch (event) {
           case "add":
             changeType = ChangeTypes.INSERT;
-            resource = {_id, content: this.readFile(path)};
+            resource = {name, content: this.readFile(path)};
             break;
 
           case "change":
             changeType = ChangeTypes.UPDATE;
-            resource = {_id, content: this.readFile(path)};
+            resource = {name, content: this.readFile(path)};
             break;
 
           case "unlink":
             changeType = ChangeTypes.DELETE;
-            resource = {_id, content: ""};
+            resource = {name, content: ""};
             break;
 
           default:

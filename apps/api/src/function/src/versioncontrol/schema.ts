@@ -21,13 +21,13 @@ export const getSchemaSynchronizer = (
   const extension = "yaml";
 
   const convertToRepResource = (change: DocChange<Function>) => ({
-    _id: change.resource._id.toString(),
+    name: change.resource.name,
     content: YAML.stringify(change.resource)
   });
 
   const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) => {
     const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
-    return {...parsed, _id: new ObjectId(change.resource._id)};
+    return {...parsed, name: change.resource.name};
   };
 
   const insert = async (fn: Function) => {
@@ -49,7 +49,9 @@ export const getSchemaSynchronizer = (
         applier: {
           insert: insert,
           update: (fn: Function) => CRUD.replace(fs, engine, fn),
-          delete: (fn: Function) => CRUD.remove(fs, engine, logs, fn._id)
+          delete: (fn: Function) => {
+            CRUD.removeByName(fs, engine, logs, fn.name);
+          }
         }
       }
     ],

@@ -23,14 +23,14 @@ export const getSynchronizer = (
       map((preference: Preference) => ({
         resourceType: ResourceType.DOCUMENT,
         changeType: ChangeTypes.UPDATE,
-        resource: {...preference.identity, _id: "identity"}
+        resource: {...preference.identity, name: "identity"}
       }))
     );
   };
 
   const convertToRepResource = (change: DocChange<Identity["attributes"]>) => {
-    const {_id, ...resourceWithoutID} = change.resource;
-    return {_id, content: YAML.stringify(resourceWithoutID)};
+    const {name, ...resourceWithoutID} = change.resource;
+    return {name, content: YAML.stringify(resourceWithoutID)};
   };
 
   const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) => {

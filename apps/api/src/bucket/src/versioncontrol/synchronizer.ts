@@ -20,13 +20,13 @@ export const getSynchronizer = (
   const extension = "yaml";
 
   const convertToRepResource = (change: DocChange<Bucket>) => ({
-    _id: change.resource._id.toString(),
+    name: change.resource.title,
     content: YAML.stringify(change.resource)
   });
 
   const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) => {
     const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
-    return {...parsed, _id: new ObjectId(change.resource._id)};
+    return {...parsed, title: change.resource.name};
   };
 
   return {
@@ -42,7 +42,11 @@ export const getSynchronizer = (
         applier: {
           insert: (bucket: Bucket) => CRUD.insert(bs, bucket),
           update: (bucket: Bucket) => CRUD.replace(bs, bds, history, bucket),
-          delete: (bucket: Bucket) => CRUD.remove(bs, bds, history, bucket._id)
+          delete: (bucket: Bucket) => {
+            console.log(bucket);
+
+            CRUD.removeByName(bs, bds, history, bucket.title);
+          }
         }
       }
     ],

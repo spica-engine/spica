@@ -103,7 +103,7 @@ export function getRepApplier<R extends Resource>(
     const write = (resource: RepresentativeManagerResource) => {
       return vcRepresentativeManager.write(
         moduleName,
-        resource._id,
+        resource.name,
         props.fileName,
         resource.content,
         props.getExtension(change)
@@ -111,7 +111,7 @@ export function getRepApplier<R extends Resource>(
     };
 
     const rm = (resource: RepresentativeManagerResource) => {
-      return vcRepresentativeManager.rm(moduleName, resource._id);
+      return vcRepresentativeManager.rm(moduleName, resource.name);
     };
 
     const representativeStrategy = {

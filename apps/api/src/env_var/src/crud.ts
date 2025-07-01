@@ -74,3 +74,11 @@ export async function remove(evs: EnvVarService, id: string | ObjectId) {
     throw new NotFoundException(`Environment Variable with ID ${id} not found`);
   }
 }
+
+export async function removeByKey(evs: EnvVarService, key: string) {
+  const res = await evs.findOneAndDelete({key});
+
+  if (!res) {
+    throw new NotFoundException(`Environment Variable with key "${key}" not found`);
+  }
+}

@@ -119,6 +119,25 @@ export async function remove(
   await engine.deleteFunction(fn);
 }
 
+export async function removeByName(
+  fs: FunctionService,
+  engine: FunctionEngine,
+  logs: LogService,
+  name: string
+) {
+  const fn = await fs.findOneAndDelete({name});
+
+  if (!fn) {
+    throw new NotFoundException(`Function with name "${name}" does not exist.`);
+  }
+
+  logs.deleteMany({function: fn._id.toString()});
+
+  const changes = createTargetChanges(fn, ChangeKind.Removed);
+  engine.categorizeChanges(changes);
+
+  await engine.deleteFunction(fn);
+}
 export namespace index {
   export async function find(fs: FunctionService, engine: FunctionEngine, id: ObjectId) {
     const fn = await fs.findOne({_id: id});
@@ -151,6 +170,30 @@ export namespace index {
     await engine.update(fn, index);
 
     const envResolvedFn = await findOne(fs, id, {resolveEnvRelations: EnvRelation.Resolved});
+
+    const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated);
+    engine.categorizeChanges(changes);
+
+    return engine.compile(fn);
+  }
+
+  export async function writeByName(
+    fs: FunctionService,
+    engine: FunctionEngine,
+    name: string,
+    index: string
+  ) {
+    const fn = await fs.findOne({name});
+
+    if (!fn) {
+      throw new NotFoundException(`Function with name "${name}" not found.`);
+    }
+
+    await engine.update(fn, index);
+
+    const envResolvedFn = await findOne(fs, fn._id, {
+      resolveEnvRelations: EnvRelation.Resolved
+    });
 
     const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated);
     engine.categorizeChanges(changes);

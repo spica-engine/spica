@@ -39,14 +39,14 @@ export const getDependencySynchronizer = (
     const dependencies = parsed.dependencies || {};
 
     return {
-      _id: change.resource._id.toString(),
+      name: change.resource.name,
       content: JSON.stringify({dependencies})
     };
   };
 
   const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) =>
     ({
-      _id: new ObjectId(change.resource._id),
+      name: change.resource.name,
       content: change.resource.content
     }) as FunctionWithContent;
 

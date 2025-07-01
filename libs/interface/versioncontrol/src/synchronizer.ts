@@ -130,18 +130,18 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
   docToRepActions = new Set<string>();
   repToDocActions = new Set<string>();
 
-  addDocToRepAction(resourceId: string) {
-    this.docToRepActions.add(resourceId);
+  addDocToRepAction(resourceName: string) {
+    this.docToRepActions.add(resourceName);
   }
-  addRepToDocAction(resourceId: string) {
-    this.repToDocActions.add(resourceId);
+  addRepToDocAction(resourceName: string) {
+    this.repToDocActions.add(resourceName);
   }
 
-  removeDocToRepAction(resourceId: string) {
-    this.docToRepActions.delete(resourceId);
+  removeDocToRepAction(resourceName: string) {
+    this.docToRepActions.delete(resourceName);
   }
-  removeRepToDocAction(resourceId: string) {
-    this.repToDocActions.delete(resourceId);
+  removeRepToDocAction(resourceName: string) {
+    this.repToDocActions.delete(resourceName);
   }
 
   errorHandler = err => {
@@ -158,14 +158,14 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
     const docSync = syncs[0];
     docSync.watcher.watch().subscribe({
       next: change => {
-        const resourceId = change.resource._id.toString();
+        const resourceName = change.resource.name;
 
-        const isSynchronizerAction = this.repToDocActions.has(resourceId);
+        const isSynchronizerAction = this.repToDocActions.has(resourceName);
         if (isSynchronizerAction) {
-          return this.removeRepToDocAction(resourceId);
+          return this.removeRepToDocAction(resourceName);
         }
 
-        this.addDocToRepAction(resourceId);
+        this.addDocToRepAction(resourceName);
 
         const apply = () => {
           const convertedChange = docSync.converter.convert(change);
@@ -173,7 +173,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
         };
 
         if (jobReducer) {
-          const meta = {_id: `doc-rep:${moduleName}:${subModuleName}:${resourceId}`};
+          const meta = {_id: `doc-rep:${moduleName}:${subModuleName}:${resourceName}`};
           jobReducer.do(meta, apply);
         } else {
           apply();
@@ -185,14 +185,13 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
     const repSync = syncs[1];
     repSync.watcher.watch().subscribe({
       next: change => {
-        const resourceId = change.resource._id;
-
-        const isSynchronizerAction = this.docToRepActions.has(resourceId);
+        const resourceName = change.resource.name;
+        const isSynchronizerAction = this.docToRepActions.has(resourceName);
         if (isSynchronizerAction) {
-          return this.removeDocToRepAction(resourceId);
+          return this.removeDocToRepAction(resourceName);
         }
 
-        this.addRepToDocAction(resourceId);
+        this.addRepToDocAction(resourceName);
 
         const apply = () => {
           const convertedChange = repSync.converter.convert(change);
@@ -214,7 +213,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
         };
 
         if (jobReducer) {
-          const meta = {_id: `rep-doc:${moduleName}:${subModuleName}:${resourceId}`};
+          const meta = {_id: `rep-doc:${moduleName}:${subModuleName}:${resourceName}`};
           jobReducer.do(meta, apply);
         } else {
           apply();
@@ -226,7 +225,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 }
 
 export type RepresentativeManagerResource = {
-  _id: string;
+  name: string;
   content: string;
   additionalParameters?: {[key: string]: string | number};
 };
