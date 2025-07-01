@@ -139,6 +139,7 @@ const Login = () => {
             dimensionX={"fill"}
             className={styles.bottomContainer}
             dimensionY={16}
+            gap={0}
           >
             <Button
               variant="icon"
