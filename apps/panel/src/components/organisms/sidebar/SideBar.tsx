@@ -1,7 +1,7 @@
-import React, {type FC, type ReactNode, useState} from "react";
+import React, { type FC, type ReactNode, useState } from "react";
 import styles from "./SideBar.module.scss";
-import {Icon, type IconName} from "oziko-ui-kit";
-import Navigator, {type TypeNavigatorHeader} from "./navigator/Navigator";
+import { Icon, type IconName } from "oziko-ui-kit";
+import Navigator, { type TypeNavigatorHeader } from "./navigator/Navigator";
 import Logo from "../../atoms/logo/Logo";
 
 export type TypeMenuItems = {
@@ -9,6 +9,7 @@ export type TypeMenuItems = {
   icon?: IconName;
   header?: TypeNavigatorHeader;
   id: string;
+  addNewButtonText?: string;
 };
 
 export type TypeNavigatorItems = {
@@ -67,7 +68,7 @@ const SideBar: FC<TypeSideBar> = ({
               className={`${styles.menuItem} ${activeMenu === index ? styles.active : ""}`}
               onClick={() => handleClick(index)}
             >
-              <Icon name={menuItems.icon as IconName} />
+              <Icon name={menuItems.icon as IconName} size={"lg"}  />
             </div>
           ))}
           {displayToggleIcon && (
@@ -77,7 +78,7 @@ const SideBar: FC<TypeSideBar> = ({
           )}
         </div>
 
-        {footer || <Icon name="forkRight" size="lg" className={styles.versionControl} />}
+        {footer || <Icon name="forkRight" size={24} className={styles.versionControl} />}
       </div>
 
       <div
@@ -86,6 +87,7 @@ const SideBar: FC<TypeSideBar> = ({
         <Navigator
           header={menuItems?.[activeMenu]?.header as TypeNavigatorHeader}
           items={navigatorItems?.[menuItems![activeMenu]?.id] ?? []}
+          addNewButtonText={menuItems?.[activeMenu]?.addNewButtonText}
         />
       </div>
     </div>
