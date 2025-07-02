@@ -1,3 +1,3 @@
-export interface IUser {
+export type UserType = {
     email: string;
 }

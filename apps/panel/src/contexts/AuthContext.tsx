@@ -8,7 +8,7 @@ import {
     type ReactNode,
 } from 'react';
 import useLocalStorage from '../custom-hooks/useLocalStorage';
-import type { IUser } from '../types/user';
+import type { UserType } from '../types/user';
 
 async function mockLoginRequest(email: string, password: string): Promise<{ ok: boolean; token: string }> {
     return new Promise((resolve) => {
@@ -19,7 +19,7 @@ async function mockLoginRequest(email: string, password: string): Promise<{ ok: 
 }
 
 interface IAuthContext {
-    user: IUser | null;
+    user: UserType | null;
     isAuthenticated: boolean;
     login: (email: string, password: string) => Promise<void>;
     logout: () => void;
@@ -30,7 +30,7 @@ const AuthContext = createContext<IAuthContext | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [userToken, setUserToken] = useLocalStorage<string | null>('userToken', null);
-    const [user, setUser] = useState<IUser | null>(null);
+    const [user, setUser] = useState<UserType | null>(null);
     const [loading, setLoading] = useState(true);
 
     const isAuthenticated = !!user;
@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } finally {
             setLoading(false);
         }
-    }, [userToken, setUserToken]);
+    }, [userToken]);
 
     useEffect(() => {
         if (user || !userToken) {
@@ -75,12 +75,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } finally {
             setLoading(false);
         }
-    }, [setUserToken]);
+    }, []);
 
     const logout = useCallback(() => {
         setUserToken(null);
         setUser(null);
-    }, [setUserToken]);
+    }, []);
 
     const contextValue = useMemo(
         () => ({ user, isAuthenticated, login, logout, loading }),
