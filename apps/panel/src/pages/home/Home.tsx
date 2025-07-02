@@ -5,7 +5,6 @@ import "oziko-ui-kit/dist/index.css";
 import VideoDisplay from "../../components/molecules/video-display/VideoDisplay";
 import Quicklinks from "../../components/molecules/quicklinks/Quicklinks";
 import WelcomeText from "../../components/atoms/welcome-text/WelcomeText";
-import HookExample from "../../components/molecules/hook-example/HookExample";
 
 const Home = () => {
   return (
@@ -17,7 +16,6 @@ const Home = () => {
           <VideoDisplay />
         </FlexElement>
       </FlexElement>
-      <HookExample />
     </div>
   );
 };
