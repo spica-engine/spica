@@ -22,6 +22,7 @@
     }
     .title {
       font-weight: 600;
+      font-size: var(--font-size-lg);
       height: 50px;
     }
     .icon {
@@ -40,5 +41,6 @@
     justify-content: center;
     align-items: center;
     gap: var(--gap-sm);
+    font-weight: 400;
   }
 }

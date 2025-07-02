@@ -28,11 +28,11 @@ const NavigatorItem: FC<TypeNavigatorItem> = ({label, prefixIcon, suffixIcons = 
       mode="fill"
       prefix={
         prefixIcon && {
-          children: <Icon name={prefixIcon} size={"sm"}/>
+          children: <Icon name={prefixIcon} size={"md"}/>
         }
       }
       root={{
-        children: <Text dimensionX={"fill"} size="small">{label}</Text>
+        children: <Text dimensionX={"fill"} size="medium">{label}</Text>
       }}
       suffix={{
         children: suffixIcons.length > 0 && (

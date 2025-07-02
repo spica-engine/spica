@@ -144,7 +144,7 @@ const Navigator = ({ header, items, button, addNewButtonText }: TypeNavigatorPro
         ))}
         {addNewButtonText && <Button className={styles.addNewButton} color="transparent" variant="text">
           <Icon name="plus" size="xs" />
-          <Text size="small">{addNewButtonText}</Text>
+          <Text size="medium">{addNewButtonText}</Text>
         </Button>}
       </div>
       {button && (
