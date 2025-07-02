@@ -62,13 +62,13 @@ const SideBar: FC<TypeSideBar> = ({
         </div>
 
         <div className={styles.menu}>
-          {menuItems?.map((menuItems, index) => (
+          {menuItems?.map((menuItem, index) => (
             <div
               key={index}
               className={`${styles.menuItem} ${activeMenu === index ? styles.active : ""}`}
               onClick={() => handleClick(index)}
             >
-              <Icon name={menuItems.icon as IconName} size={"lg"}  />
+              <Icon name={menuItem.icon as IconName} size={menuItems?.[activeMenu].id === menuItem.id ? "lg" : "md"} />
             </div>
           ))}
           {displayToggleIcon && (

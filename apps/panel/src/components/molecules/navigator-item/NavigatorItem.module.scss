@@ -1,7 +1,7 @@
 @use "../../../styles/mixins";
 
 .navigatorItem {
-  padding: var(--padding-md);
+  padding: var(--padding-md) !important;
   color: var(--color-font-primary);
 
   .suffixButton {

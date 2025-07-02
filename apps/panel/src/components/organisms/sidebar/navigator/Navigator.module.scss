@@ -3,7 +3,6 @@
   height: 100%;
   background: white;
   border-radius: var(--border-radius-md);
-  padding: var(--padding-md);
   display: flex;
   flex-direction: column;
   gap: var(--gap-lg);
@@ -11,23 +10,28 @@
   .items {
     display: flex;
     flex-direction: column;
-    gap: var(--gap-md);
+    gap: 0;
   }
 
   .header {
-    padding: var(--padding-md) 0 !important;
+    padding: 0 !important;
+    span {
+      display: flex;
+      align-items: center;
+      padding-left: var(--padding-md);
+    }
     .title {
       font-weight: 600;
+      height: 50px;
     }
     .icon {
-      padding: 0 !important;
       height: unset !important;
+      width: min-content !important;
+      min-width: min-content !important;
+      padding: 0 var(--padding-md) 0 0 !important;
     }
   }
-  .content,
-  .ungrouped {
-    padding: 0 !important;
-  }
+  
 
   .addNewButton {
     width: 100%;

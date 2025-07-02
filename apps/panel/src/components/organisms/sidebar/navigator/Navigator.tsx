@@ -45,7 +45,7 @@ const NavigatorHeader = ({ header }: TypeNavigatorHeaderProps) => {
             className={styles.icon}
             onClick={button.onClick}
           >
-            <Icon name={button.icon} size="md" />
+            <Icon name={button.icon} size={18} />
           </Button>
         ))
       }}
@@ -119,7 +119,6 @@ const Navigator = ({ header, items, button, addNewButtonText }: TypeNavigatorPro
         <Accordion
           items={accordionItems}
           headerClassName={styles.header}
-          contentClassName={styles.content}
           gap={0}
 
         //TODO: add hoverable api
