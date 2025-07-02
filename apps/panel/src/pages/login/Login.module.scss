@@ -9,31 +9,75 @@
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
+
   .contentContainer {
     padding: var(--padding-xl);
     border-radius: var(--border-radius-md);
     background-color: var(--color-menu-background);
   }
+
   .passwordIcon {
     color: var(--color-font-primary) !important;
   }
+
   .passwordText {
     color: var(--color-input-placeholder) !important;
   }
-  .spicaButton {
-    height: 16px !important;
-  }
+
   .bottomContainer {
     padding: 0;
 
     .linkButtons {
       color: var(--color-font-primary) !important;
+      font-family: var(--font-family-base);
     }
   }
+
   .errorText {
     width: 100%;
     color: var(--color-danger);
     font-size: var(--font-size-sm);
     margin-top: calc(var(--gap-md) * -1);
   }
+
+  .stringInput {
+    border: var(--border-default);
+    border-radius: var(--border-radius-md);
+
+    span {
+      font-size: var(--font-size-sm) !important;
+    }
+
+    svg {
+      width: var(--icon-size-sm) !important;
+      height: var(--icon-size-sm) !important;
+    }
+
+    >div:nth-child(1) {
+      height: 30px !important;
+      outline: none;
+    }
+
+    &:focus-within,
+    &:focus {
+      border-color: rgb(var(--color-primary-rgb));
+    }
+
+    input,
+    span {
+      line-height: var(--line-height-sm) !important;
+      font-size: var(--font-size-sm) !important;
+    }
+
+  }
+
+  .submitButton {
+    background-color: var(--color-primary) !important;
+  }
+
+  .formButtonContainer {
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family-base);
+  }
+
 }

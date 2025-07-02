@@ -1,10 +1,10 @@
-import React, {memo, useState} from "react";
-import {useFormik} from "formik";
-import {BaseInput, Button, FlexElement, Icon, Input, StringInput, Text} from "oziko-ui-kit";
+import React, { memo, useState } from "react";
+import { useFormik } from "formik";
+import { BaseInput, Button, FlexElement, Icon, Input, StringInput, Text } from "oziko-ui-kit";
 import styles from "./Login.module.scss";
 import Logo from "../../components/atoms/logo/Logo";
-import {authorization} from "../../services/passport/identify";
-import {useNavigate} from "react-router-dom";
+import { authorization } from "../../services/passport/identify";
+import { useNavigate } from "react-router-dom";
 
 const getErrorMessage = (error: any): string => {
   return error.response?.data?.message || "An unexpected error occurred. Please try again.";
@@ -15,7 +15,7 @@ const Login = () => {
   const [loginError, setLoginError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleLogin = async (values: {identifier: string; password: string}) => {
+  const handleLogin = async (values: { identifier: string; password: string }) => {
     setIsLoading(true);
 
     try {
@@ -36,7 +36,7 @@ const Login = () => {
   };
 
   const formik = useFormik({
-    initialValues: {identifier: "", password: ""},
+    initialValues: { identifier: "", password: "" },
     onSubmit: handleLogin,
     validateOnChange: false,
     validateOnBlur: false
@@ -50,7 +50,7 @@ const Login = () => {
           formik.handleSubmit();
         }}
       >
-        <FlexElement direction="vertical" gap={5}>
+        <FlexElement direction="vertical" gap={10}>
           <FlexElement
             className={styles.contentContainer}
             dimensionX={400}
@@ -69,10 +69,12 @@ const Login = () => {
                 formik.setFieldValue("identifier", value);
               }}
               onBlur={() => formik.setFieldTouched("identifier", true)}
+              className={styles.stringInput}
             />
 
             <BaseInput
               dimensionX="fill"
+              className={styles.stringInput}
               labelProps={{
                 dimensionX: "hug",
                 divider: true,
@@ -107,8 +109,12 @@ const Login = () => {
                 formik.values.password.length < 3 ||
                 isLoading
               }
+              containerProps={{
+                className: styles.formButtonContainer
+              }}
+
             >
-              <Icon name="login" />
+              <Icon name="login" size="xs" />
               Login
             </Button>
 
@@ -118,7 +124,7 @@ const Login = () => {
               color="default"
               variant="outlined"
               containerProps={{
-                className: styles.spicaButton
+                className: styles.formButtonContainer
               }}
             >
               <Logo size="sm" type="withoutText" />
@@ -131,6 +137,7 @@ const Login = () => {
             dimensionX={"fill"}
             className={styles.bottomContainer}
             dimensionY={16}
+            gap={0}
           >
             <Button
               variant="icon"
@@ -140,8 +147,8 @@ const Login = () => {
                 window.open("https://spicaengine.com/docs/start/getting-started", "_blank")
               }
             >
-              <Icon name="article" />
-              Document
+              <Icon name="article" size="sm" />
+              Documentation
             </Button>
             <Button
               variant="icon"
@@ -149,7 +156,7 @@ const Login = () => {
               className={styles.linkButtons}
               onClick={() => window.open("https://github.com/spica-engine/spica", "_blank")}
             >
-              <Icon name="github" />
+              <Icon name="github" size="sm" />
               Github
             </Button>
           </FlexElement>
