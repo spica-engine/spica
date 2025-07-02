@@ -36,11 +36,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const isAuthenticated = !!user;
 
     const fetchUser = useCallback(async () => {
-        if (!userToken) {
-            setLoading(false);
-            return;
-        }
-
         try {
             const response = await fetch('/api/me', {
                 headers: {
@@ -61,7 +56,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, [userToken, setUserToken]);
 
     useEffect(() => {
-        if (user) return;
+        if (user || !userToken) {
+            setLoading(false);
+            return;
+        }
         fetchUser();
     }, [user, fetchUser]);
 
