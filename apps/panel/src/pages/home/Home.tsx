@@ -1,6 +1,6 @@
-import React, {memo} from "react";
+import React, { memo } from "react";
 import styles from "./Home.module.scss";
-import {FlexElement} from "oziko-ui-kit";
+import { FlexElement } from "oziko-ui-kit";
 import "oziko-ui-kit/dist/index.css";
 import VideoDisplay from "../../components/molecules/video-display/VideoDisplay";
 import Quicklinks from "../../components/molecules/quicklinks/Quicklinks";
