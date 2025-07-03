@@ -28,6 +28,7 @@ export interface OAuthRequestDetails {
   params: {[key: string]: any};
   method: string;
   headers: {[key: string]: any};
+  data?: {[key: string]: any} | string;
 }
 
 export interface IncomingOAuthPreset extends Strategy {

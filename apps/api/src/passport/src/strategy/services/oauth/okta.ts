@@ -1,6 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {IncomingOAuthPreset, OAuthStrategy} from "@spica-server/interface/passport";
 import {CustomOAuthService} from "./custom";
+import qs from "qs";
 
 @Injectable()
 export class OktaOAuthService extends CustomOAuthService {
@@ -27,7 +28,8 @@ export class OktaOAuthService extends CustomOAuthService {
         },
         access_token: {
           base_url: `https://${strategy.options.domain}/oauth2/v1/token`,
-          params: {
+          params: {},
+          data: {
             client_id: strategy.options.client_id,
             client_secret: strategy.options.client_secret,
             grant_type: "authorization_code"
@@ -45,6 +47,19 @@ export class OktaOAuthService extends CustomOAuthService {
         }
       }
     };
+  }
+
+  async getToken(strategy: OAuthStrategy, code?: string) {
+    strategy.options.access_token.data = qs.stringify({
+      ...((strategy.options.access_token.data as object) || {}),
+      code
+    });
+
+    const tokenResponse = await this.sendRequest(strategy.options.access_token);
+    if (!tokenResponse.access_token) {
+      throw Error("Access token could not find.");
+    }
+    return tokenResponse;
   }
 
   getIdentifier(strategy: OAuthStrategy, tokenResponse) {
