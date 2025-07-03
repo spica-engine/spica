@@ -27,7 +27,7 @@ spec:
     http:
       paths:
 {{- if .application }}
-      - path: {{ .application | trimSuffix "/" }}
+      - path: {{ .application }}?(.*)
         pathType: ImplementationSpecific
         backend:
           service:
@@ -36,7 +36,7 @@ spec:
               number: 80
 {{- end }}
 {{- if .api }}
-      - path: {{ .api | trimSuffix "/" }}
+      - path: {{ .application }}?(.*)
         pathType: ImplementationSpecific
         backend:
           service:
