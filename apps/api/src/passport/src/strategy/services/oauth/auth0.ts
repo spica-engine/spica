@@ -45,6 +45,20 @@ export class Auth0OAuthService extends CustomOAuthService {
     };
   }
 
+  async getToken(strategy: OAuthStrategy, code?: string) {
+    strategy.options.access_token.data = {
+      ...(strategy.options.access_token.params || {}),
+      code
+    };
+    strategy.options.access_token.params = undefined;
+
+    const tokenResponse = await this.sendRequest(strategy.options.access_token);
+    if (!tokenResponse.access_token) {
+      throw Error("Access token could not find.");
+    }
+    return tokenResponse;
+  }
+
   getIdentifier(strategy: OAuthStrategy, tokenResponse) {
     strategy.options.identifier.headers = {
       Authorization: `Bearer ${tokenResponse.access_token}`
