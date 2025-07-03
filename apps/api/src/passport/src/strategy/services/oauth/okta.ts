@@ -28,8 +28,7 @@ export class OktaOAuthService extends CustomOAuthService {
         },
         access_token: {
           base_url: `https://${strategy.options.domain}/oauth2/v1/token`,
-          params: {},
-          data: {
+          params: {
             client_id: strategy.options.client_id,
             client_secret: strategy.options.client_secret,
             grant_type: "authorization_code"
@@ -51,9 +50,10 @@ export class OktaOAuthService extends CustomOAuthService {
 
   async getToken(strategy: OAuthStrategy, code?: string) {
     strategy.options.access_token.data = qs.stringify({
-      ...((strategy.options.access_token.data as object) || {}),
+      ...(strategy.options.access_token.params || {}),
       code
     });
+    strategy.options.access_token.params = undefined;
 
     const tokenResponse = await this.sendRequest(strategy.options.access_token);
     if (!tokenResponse.access_token) {
