@@ -72,7 +72,7 @@
   label {
     width: 20px !important;
     height: 20px !important;
-    border-color: #9b9b9b !important; /* Set your custom border color */
+    border-color: var(--color-input-placeholder);
     border-radius: var(--border-radius-md) !important;
     cursor: pointer !important;
     position: relative !important;
