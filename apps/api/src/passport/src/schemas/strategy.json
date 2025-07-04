@@ -50,7 +50,7 @@
       "properties": {
         "idp": {
           "type": "string",
-          "enum": ["custom", "google", "facebook", "github", "okta"],
+          "enum": ["custom", "google", "facebook", "github", "okta", "auth0"],
           "default": "custom",
           "title": "Identity provider",
           "description": "Identity provider that will be used for authentication"
