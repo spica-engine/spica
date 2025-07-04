@@ -4,7 +4,8 @@ import {
   S3Client,
   GetObjectCommand,
   PutObjectCommand,
-  DeleteObjectCommand
+  DeleteObjectCommand,
+  CopyObjectCommand
 } from "@aws-sdk/client-s3";
 import {fromIni} from "@aws-sdk/credential-providers";
 import {readFileSync} from "fs";
@@ -70,5 +71,21 @@ export class AWSS3 implements Strategy {
   async url(id: string): Promise<string> {
     const region = await this.s3.config.region();
     return `https://${this.bucketName}.s3.${region}.amazonaws.com/${id}`;
+  }
+
+  async rename(oldKey: string, newKey: string): Promise<void> {
+    await this.s3.send(
+      new CopyObjectCommand({
+        Bucket: this.bucketName,
+        CopySource: `${this.bucketName}/${encodeURIComponent(oldKey)}`,
+        Key: newKey
+      })
+    );
+    await this.s3.send(
+      new DeleteObjectCommand({
+        Bucket: this.bucketName,
+        Key: oldKey
+      })
+    );
   }
 }

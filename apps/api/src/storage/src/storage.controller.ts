@@ -102,7 +102,7 @@ export class StorageController {
       throw new NotFoundException("Could not find the object.");
     }
 
-    object.url = await this.storage.getUrl(id.toHexString());
+    object.url = await this.storage.getUrl(object.name);
 
     delete object.content.data;
     return object;
@@ -127,7 +127,7 @@ export class StorageController {
     {name}
   ) {
     const object = await this.storage.updateMeta(id, name);
-    object.url = await this.storage.getUrl(id.toHexString());
+    object.url = await this.storage.getUrl(object.name);
     return object;
   }
 
@@ -165,7 +165,7 @@ export class StorageController {
     const storageObject = await this.storage.update(id, object).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
-    storageObject.url = await this.storage.getUrl(id.toHexString());
+    storageObject.url = await this.storage.getUrl(object.name);
     return storageObject;
   }
 
@@ -210,10 +210,10 @@ export class StorageController {
    * @param id Identifier of the object
    */
   @UseInterceptors(activity(createStorageActivity))
-  @Delete(":id")
+  @Delete(":name")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
-  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.storage.delete(id);
+  async deleteOne(@Param("name") name: string) {
+    return this.storage.delete(name);
   }
 }

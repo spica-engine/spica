@@ -6,4 +6,5 @@ export abstract class Strategy {
   abstract writeStream(id: string, data: ReadStream, mimeType?: string): Promise<void>;
   abstract delete(id: string): Promise<void> | void;
   abstract url(id: string): Promise<string>;
+  abstract rename(oldKey: string, newKey: string): Promise<void>;
 }

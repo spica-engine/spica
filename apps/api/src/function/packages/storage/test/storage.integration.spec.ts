@@ -63,7 +63,7 @@ describe("Storage", () => {
       {
         _id: getAllResponse[0]._id,
         name: "test.txt",
-        url: `${PUBLIC_URL}/storage/${getAllResponse[0]._id}/view`,
+        url: `${PUBLIC_URL}/storage/test.txt/view`,
         content: {
           size: 5,
           type: "text/plain"
@@ -82,7 +82,7 @@ describe("Storage", () => {
         {
           _id: getAllResponse.data[0]._id,
           name: "test.txt",
-          url: `${PUBLIC_URL}/storage/${getAllResponse.data[0]._id}/view`,
+          url: `${PUBLIC_URL}/storage/test.txt/view`,
           content: {
             size: 5,
             type: "text/plain"
@@ -99,7 +99,7 @@ describe("Storage", () => {
     expect(getResponse).toEqual({
       _id: getResponse._id,
       name: "test.txt",
-      url: `${PUBLIC_URL}/storage/${storageObj._id}/view`,
+      url: `${PUBLIC_URL}/storage/test.txt/view`,
       content: {
         size: 5,
         type: "text/plain"
@@ -113,7 +113,7 @@ describe("Storage", () => {
     const expectedObj = {
       _id: insertedObject._id,
       name: "test.txt",
-      url: `${PUBLIC_URL}/storage/${insertedObject._id}/view`,
+      url: `${PUBLIC_URL}/storage/test.txt/view`,
       content: {
         size: 5,
         type: "text/plain"
@@ -136,7 +136,7 @@ describe("Storage", () => {
       {
         _id: insertedObjects[0]._id,
         name: "test.txt",
-        url: `${PUBLIC_URL}/storage/${insertedObjects[0]._id}/view`,
+        url: `${PUBLIC_URL}/storage/test.txt/view`,
         content: {
           size: 5,
           type: "text/plain"
@@ -145,7 +145,7 @@ describe("Storage", () => {
       {
         _id: insertedObjects[1]._id,
         name: "test2.json",
-        url: `${PUBLIC_URL}/storage/${insertedObjects[1]._id}/view`,
+        url: `${PUBLIC_URL}/storage/test2.json/view`,
         content: {
           size: 2,
           type: "application/json"
@@ -168,7 +168,7 @@ describe("Storage", () => {
     const expectedObject = {
       _id: insertedObj._id,
       name: "test.txt",
-      url: `${PUBLIC_URL}/storage/${insertedObj._id}/view`,
+      url: `${PUBLIC_URL}/storage/test.txt/view`,
       content: {
         size: 9,
         type: "text/plain"
@@ -189,7 +189,7 @@ describe("Storage", () => {
     const expectedObject = {
       _id: insertedObj._id,
       name: "updated_test.txt",
-      url: `${PUBLIC_URL}/storage/${insertedObj._id}/view`,
+      url: `${PUBLIC_URL}/storage/updated_test.txt/view`,
       content: {
         size: 5,
         type: "text/plain"

@@ -56,4 +56,9 @@ export class GCloud implements Strategy {
         return url.toString();
       });
   }
+
+  async rename(oldName: string, newName: string): Promise<void> {
+    const file = this.bucket.file(oldName);
+    await file.move(newName);
+  }
 }
