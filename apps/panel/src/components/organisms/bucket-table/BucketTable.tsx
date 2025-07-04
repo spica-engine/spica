@@ -45,7 +45,6 @@ type ColumnMeta = {
   deletable?: boolean;
 };
 
-
 // TODO: Update the icon mappings below to use appropriate icons for each field type.
 // Currently, many field types are using the same placeholder icon ("formatQuoteClose").
 const COLUMN_ICONS: Record<FieldType, IconName> = {
@@ -79,12 +78,13 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
   );
 };
 
+
 const defaultColumns: ColumnType[] = [
   {
     header: <ColumnHeader />,
     key: "select",
     type: "boolean",
-    width: "10px",
+    width: "70px",
     headerClassName: styles.columnHeader,
     columnClassName: `${styles.selectColumn} ${styles.column}`,
     cellClassName: styles.selectCell
@@ -100,7 +100,7 @@ const defaultColumns: ColumnType[] = [
       </Button>
     ),
     key: "new field",
-    width: "10px",
+    width: "100px",
     headerClassName: styles.columnHeader,
     cellClassName: styles.newFieldCell,
     columnClassName: `${styles.newFieldColumn} ${styles.column}`
@@ -112,14 +112,14 @@ const defaultColumns: ColumnType[] = [
 function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
   function renderDefault() {
     return (
-      <>
-        {cellData}
+      <div className={styles.defaultCell}>
+        <div className={styles.defaultCellData}>{cellData}</div>
         {deletable && cellData && (
           <Button variant="icon">
             <Icon name="close" size="sm" />
           </Button>
         )}
-      </>
+      </div>
     );
   }
   switch (type) {
@@ -168,7 +168,16 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
     case "array":
       return renderDefault();
     case "object":
-      return <div className={styles.objectCell}>{JSON.stringify(cellData)}</div>;
+      return (
+        <div className={styles.defaultCell}>
+          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
+          {!deletable && cellData && (
+            <Button variant="icon">
+              <Icon name="close" size="sm" />
+            </Button>
+          )}
+        </div>
+      );
     case "file":
       return (
         <div className={styles.fileCell}>

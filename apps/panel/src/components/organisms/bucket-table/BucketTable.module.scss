@@ -6,6 +6,8 @@
   border-bottom: none;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .columnHeaderText {
@@ -93,7 +95,7 @@
 }
 
 .selectColumn {
-  width: 60px !important;
+  min-width: 60px !important;
   flex: none !important;
   &:not(:last-child) {
     border-right: none;
@@ -132,11 +134,6 @@
   border-radius: var(--border-radius-md);
 }
 
-.objectCell {
-  width: 100%;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
 
 .fileCell {
   display: flex;
@@ -147,7 +144,6 @@
     width: 90%;
     text-overflow: ellipsis;
     overflow: hidden;
-    white-space: nowrap;
   }
 }
 
@@ -155,6 +151,25 @@
   background-color: var(--color-zebra);
 }
 
+.column > :not(:nth-child(2)) {
+  .grayText {
+    display: none;
+  }
+}
+
 .grayText {
-  color: var(--color-input-placeholder)
+  color: var(--color-input-placeholder);
+}
+
+.defaultCell {
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+}
+
+.defaultCellData {
+  width: 100%;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }

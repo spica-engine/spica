@@ -10,42 +10,103 @@ import BucketTable, {type ColumnType} from "../../components/organisms/bucket-ta
 // Temporary mock data used for testing; will be removed once the table passes manual testing.
 const mockData = [
   {
-    id: "1",
-    name: "Homepage",
-    slug: "homepage",
-    user: "john_doe",
-    meta_tags: {_id: "642438aab86243423", somein: "somein", someinelse: "someinelse"},
+    id: "64244c01d9e654002c973911",
+    name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation",
+    slug: "/test",
+    user: "akhnos",
+    meta_tags: {_id: "642438aab86a3423", somein: "somein", someinelse: "someinelse"},
     localization: "23.521, 20.113",
-    images: "hero.jpg"
+    pages: ["home", "about"]
   },
   {
-    id: "2",
-    name: "Blog",
-    slug: "blog",
-    user: "jane_smith",
-    meta_tags: {_id: "529769810329", somein: "somein", someinelse: "someinelse"},
+    id: "64244c01d9e654002c973911",
+    name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation",
+    slug: "/test",
+    user: "akhnos",
+    meta_tags: {_id: "642438aab86a3423", somein: "somein", someinelse: "someinelse"},
     localization: "23.521, 20.113",
-    pages: ["post-1", "post-2"]
+    pages: ["home", "about"]
   },
   {
-    id: "3",
-    name: "Store",
-    slug: "store",
-    user: "admin",
-    meta_tags: {_id: "529769810329", somein: "somein", someinelse: "someinelse"},
+    id: "64244c01d9e654002c973911",
+    name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation",
+    slug: "/test",
+    user: "akhnos",
+    meta_tags: {_id: "642438aab86a3423", somein: "somein", someinelse: "someinelse"},
     localization: "23.521, 20.113",
-    pages: ["product-1", "product-2"],
-    images: "storefront.png"
+    pages: ["home", "about"]
   },
   {
-    id: "4",
-    name: "Support",
-    slug: "support",
-    user: "support_user",
-    meta_tags: {_id: "529769810329", somein: "somein", someinelse: "someinelse"},
+    id: "64244c01d9e654002c973911",
+    name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation",
+    slug: "/test",
+    user: "akhnos",
+    meta_tags: {_id: "642438aab86a3423", somein: "somein", someinelse: "someinelse"},
     localization: "23.521, 20.113",
-    pages: ["faq", "contact-support"],
-    images: "support.png"
+    pages: ["home", "about"]
+  },
+  {
+    id: "64244c01d9e654002c973911",
+    name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation",
+    slug: "/test",
+    user: "akhnos",
+    meta_tags: {_id: "642438aab86a3423", somein: "somein", someinelse: "someinelse"},
+    localization: "23.521, 20.113",
+    pages: ["home", "about"]
+  },
+  {
+    id: "64244c01d9e654002c973911",
+    name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation",
+    slug: "/test",
+    user: "akhnos",
+    meta_tags: {_id: "642438aab86a3423", somein: "somein", someinelse: "someinelse"},
+    localization: "23.521, 20.113",
+    pages: ["home", "about"]
+  },
+  {
+    id: "64244c01d9e654002c973911",
+    name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation",
+    slug: "/test",
+    user: "akhnos",
+    meta_tags: {_id: "642438aab86a3423", somein: "somein", someinelse: "someinelse"},
+    localization: "23.521, 20.113",
+    pages: ["home", "about"]
+  },
+  {
+    id: "64244c01d9e654002c973911",
+    name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation",
+    slug: "/test",
+    user: "akhnos",
+    meta_tags: {_id: "642438aab86a3423", somein: "somein", someinelse: "someinelse"},
+    localization: "23.521, 20.113",
+    pages: ["home", "about"]
+  },
+  {
+    id: "64244c01d9e654002c973911",
+    name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation",
+    slug: "/test",
+    user: "akhnos",
+    meta_tags: {_id: "642438aab86a3423", somein: "somein", someinelse: "someinelse"},
+    localization: "23.521, 20.113",
+    pages: ["home", "about"]
+  },
+  {
+    id: "64244c01d9e654002c973911",
+    name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation",
+    slug: "/test",
+    user: "akhnos",
+    meta_tags: {_id: "642438aab86a3423", somein: "somein", someinelse: "someinelse"},
+    localization: "23.521, 20.113",
+    pages: ["home", "about"]
+  },
+  {
+    id: "64244c01d9e654002c973911",
+    name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation",
+    slug: "/test",
+    user: "akhnos",
+    meta_tags: {_id: "642438aab86a3423", somein: "somein", someinelse: "someinelse"},
+    localization: "23.521, 20.113",
+    pages: ["home", "about"]
   }
 ];
 
@@ -53,7 +114,9 @@ const columns = [
   {
     header: "_id",
     key: "id",
-    width: "10px"
+    width: "10px",
+    type: "string",
+    showDropdownIcon: true,
   },
   {
     header: "name",
