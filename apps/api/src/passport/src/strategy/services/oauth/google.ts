@@ -43,14 +43,4 @@ export class GoogleOAuthService extends CustomOAuthService {
       }
     };
   }
-
-  getIdentifier(strategy: OAuthStrategy, tokenResponse) {
-    strategy.options.identifier.headers = {
-      Authorization: `Bearer ${tokenResponse.access_token}`
-    };
-
-    return this.sendRequest(strategy.options.identifier).then(user => {
-      return {user};
-    });
-  }
 }

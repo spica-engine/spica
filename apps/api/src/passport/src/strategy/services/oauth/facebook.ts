@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {IncomingOAuthPreset} from "@spica-server/interface/passport";
+import {IncomingOAuthPreset, OAuthStrategy} from "@spica-server/interface/passport";
 import {CustomOAuthService} from "./custom";
 
 @Injectable()
@@ -41,5 +41,16 @@ export class FacebookOAuthService extends CustomOAuthService {
         }
       }
     };
+  }
+
+  async getIdentifier(strategy: OAuthStrategy, tokenResponse) {
+    strategy.options.identifier.params = {
+      ...(strategy.options.identifier.params || {}),
+      access_token: tokenResponse.access_token
+    };
+
+    return this.sendRequest(strategy.options.identifier).then(user => {
+      return {user};
+    });
   }
 }
