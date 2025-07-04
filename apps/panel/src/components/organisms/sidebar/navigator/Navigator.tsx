@@ -13,7 +13,10 @@ type TypeNavigatorProps = {
     icon: IconName;
     onClick: () => void;
   };
+  addNewButtonText?: string;
 };
+
+type TypeNavigatorHeaderProps = Omit<TypeNavigatorProps, "addNewButtonText">;
 
 export type TypeNavigatorHeader = {
   name?: string;
@@ -23,7 +26,7 @@ export type TypeNavigatorHeader = {
   }[];
 };
 
-const NavigatorHeader = ({header}: TypeNavigatorProps) => {
+const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
   return (
     <FluidContainer
       dimensionX="fill"
@@ -42,7 +45,7 @@ const NavigatorHeader = ({header}: TypeNavigatorProps) => {
             className={styles.icon}
             onClick={button.onClick}
           >
-            <Icon name={button.icon} size="lg" />
+            <Icon name={button.icon} size={18} />
           </Button>
         ))
       }}
@@ -51,7 +54,7 @@ const NavigatorHeader = ({header}: TypeNavigatorProps) => {
   );
 };
 
-const Navigator = ({header, items, button}: TypeNavigatorProps) => {
+const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps) => {
   const navigate = useNavigate();
   const groupObjectsByCategory = (objects: any) => {
     const groupedMap = new Map();
@@ -116,7 +119,6 @@ const Navigator = ({header, items, button}: TypeNavigatorProps) => {
         <Accordion
           items={accordionItems}
           headerClassName={styles.header}
-          contentClassName={styles.content}
           gap={0}
 
           //TODO: add hoverable api
@@ -140,11 +142,19 @@ const Navigator = ({header, items, button}: TypeNavigatorProps) => {
             className={styles.ungrouped}
           />
         ))}
+        {addNewButtonText && (
+          <Button className={styles.addNewButton} color="transparent" variant="text">
+            <Icon name="plus" size="xs" />
+            <Text className={styles.noLineHeight} size="medium">
+              {addNewButtonText}
+            </Text>
+          </Button>
+        )}
       </div>
       {button && (
         <Button color="transparent" variant="text">
           <Icon name={button.icon} />
-          <Text>{button.title}</Text>
+          <Text className={styles.noLineHeight}>{button.title}</Text>
         </Button>
       )}
     </div>

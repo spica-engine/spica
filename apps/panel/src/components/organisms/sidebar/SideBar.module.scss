@@ -11,6 +11,7 @@
 
   .menuContainer {
     height: 100%;
+    width: 60px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -24,7 +25,7 @@
     align-items: flex-end;
     width: 100%;
     .menuItem {
-      width: 50px;
+      width: 55px;
       height: 70px;
       @include mixins.flexCenter;
       border-top-left-radius: var(--border-radius-md);
@@ -53,5 +54,13 @@
         transition: opacity var(--transition-duration) ease-out;
       }
     }
+  }
+
+  .activeMenuIcon {
+    color: var(--color-font-primary)
+  }
+
+  .deactiveMenuIcon {
+    color: var(--color-font-tertiary)
   }
 }

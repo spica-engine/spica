@@ -9,6 +9,7 @@ export type TypeMenuItems = {
   icon?: IconName;
   header?: TypeNavigatorHeader;
   id: string;
+  addNewButtonText?: string;
 };
 
 export type TypeNavigatorItems = {
@@ -61,13 +62,21 @@ const SideBar: FC<TypeSideBar> = ({
         </div>
 
         <div className={styles.menu}>
-          {menuItems?.map((menuItems, index) => (
+          {menuItems?.map((menuItem, index) => (
             <div
               key={index}
               className={`${styles.menuItem} ${activeMenu === index ? styles.active : ""}`}
               onClick={() => handleClick(index)}
             >
-              <Icon name={menuItems.icon as IconName} />
+              <Icon
+                name={menuItem.icon as IconName}
+                size={menuItems?.[activeMenu].id === menuItem.id ? "lg" : "md"}
+                className={
+                  menuItems?.[activeMenu].id === menuItem.id
+                    ? styles.activeMenuIcon
+                    : styles.deactiveMenuIcon
+                }
+              />
             </div>
           ))}
           {displayToggleIcon && (
@@ -77,7 +86,7 @@ const SideBar: FC<TypeSideBar> = ({
           )}
         </div>
 
-        {footer || <Icon name="forkRight" size="lg" className={styles.versionControl} />}
+        {footer || <Icon name="forkRight" size={24} className={styles.versionControl} />}
       </div>
 
       <div
@@ -86,6 +95,7 @@ const SideBar: FC<TypeSideBar> = ({
         <Navigator
           header={menuItems?.[activeMenu]?.header as TypeNavigatorHeader}
           items={navigatorItems?.[menuItems![activeMenu]?.id] ?? []}
+          addNewButtonText={menuItems?.[activeMenu]?.addNewButtonText}
         />
       </div>
     </div>
