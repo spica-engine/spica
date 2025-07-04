@@ -1,0 +1,131 @@
+.table {
+  font-family: var(--font-family-base);
+  border-radius: var(--border-radius-md);
+  color: var(--color-font-primary);
+  font-size: var(--font-size-sm);
+  border-bottom: none;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.columnHeaderText {
+  display: flex;
+  justify-content: normal !important;
+  align-items: center;
+  gap: var(--gap-md) !important;
+}
+
+.headerIcon {
+  color: var(--color-icon);
+}
+
+.arrayCell {
+  display: flex;
+  gap: var(--gap-md);
+
+  .grayBox {
+    width: 22px;
+    height: 22px;
+    border-radius: var(--border-radius-md);
+    background-color: var(--color-border);
+  }
+}
+
+.columnHeader {
+  display: flex;
+  justify-content: space-between !important;
+  padding-right: calc(var(--padding-xl) + var(--padding-md)) !important;
+  background-color: var(--color-border);
+}
+
+.newFieldColumn {
+  background-color: var(--color-border);
+  font-weight: 600;
+  button {
+    width: 100%;
+    gap: var(--gap-xl);
+  }
+  max-width: 140px;
+}
+
+.newFieldCell {
+  background-color: var(--color-border);
+}
+
+.checkbox {
+  label {
+    width: 20px !important;
+    height: 20px !important;
+    border-color: #9b9b9b !important; /* Set your custom border color */
+    border-radius: var(--border-radius-md) !important;
+    cursor: pointer !important;
+    position: relative !important;
+  }
+
+  div:nth-child(2) {
+    display: none;
+  }
+
+  height: min-content !important;
+}
+
+.newFieldColumn {
+  flex: 1;
+  position: relative;
+
+  &:not(:last-child) {
+    border-right: none;
+  }
+}
+
+.selectColumn {
+  width: 60px !important;
+  flex: none !important;
+  &:not(:last-child) {
+    border-right: none;
+  }
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-right: 0 !important;
+  * {
+    padding-right: 0 !important;
+  }
+  > div > div {
+    height: min-content !important;
+  }
+}
+
+.selectCell {
+  width: 60px;
+}
+
+.evenRow {
+  background-color: var(--color-zebra);
+}
+
+.locationCell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.locationImage {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--border-radius-md);
+}
+
+.objectCell {
+  width: 100%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.fileCell {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+}
