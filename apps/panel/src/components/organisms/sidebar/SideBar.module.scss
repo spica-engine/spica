@@ -55,4 +55,12 @@
       }
     }
   }
+
+  .activeMenuIcon {
+    color: var(--color-font-primary)
+  }
+
+  .deactiveMenuIcon {
+    color: var(--color-font-tertiary)
+  }
 }

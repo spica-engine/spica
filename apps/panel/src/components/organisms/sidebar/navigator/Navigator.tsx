@@ -1,9 +1,9 @@
-import { FluidContainer, Icon, Text, type IconName, helperUtils } from "oziko-ui-kit";
+import {FluidContainer, Icon, Text, type IconName, helperUtils} from "oziko-ui-kit";
 import styles from "./Navigator.module.scss";
-import { Button, Accordion } from "oziko-ui-kit";
+import {Button, Accordion} from "oziko-ui-kit";
 import NavigatorItem from "../../../molecules/navigator-item/NavigatorItem";
-import { memo } from "react";
-import { useNavigate } from "react-router-dom";
+import {memo} from "react";
+import {useNavigate} from "react-router-dom";
 
 type TypeNavigatorProps = {
   header?: TypeNavigatorHeader;
@@ -13,10 +13,10 @@ type TypeNavigatorProps = {
     icon: IconName;
     onClick: () => void;
   };
-  addNewButtonText?: string
+  addNewButtonText?: string;
 };
 
-type TypeNavigatorHeaderProps = Omit<TypeNavigatorProps, "addNewButtonText">
+type TypeNavigatorHeaderProps = Omit<TypeNavigatorProps, "addNewButtonText">;
 
 export type TypeNavigatorHeader = {
   name?: string;
@@ -26,7 +26,7 @@ export type TypeNavigatorHeader = {
   }[];
 };
 
-const NavigatorHeader = ({ header }: TypeNavigatorHeaderProps) => {
+const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
   return (
     <FluidContainer
       dimensionX="fill"
@@ -54,7 +54,7 @@ const NavigatorHeader = ({ header }: TypeNavigatorHeaderProps) => {
   );
 };
 
-const Navigator = ({ header, items, button, addNewButtonText }: TypeNavigatorProps) => {
+const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps) => {
   const navigate = useNavigate();
   const groupObjectsByCategory = (objects: any) => {
     const groupedMap = new Map();
@@ -77,7 +77,7 @@ const Navigator = ({ header, items, button, addNewButtonText }: TypeNavigatorPro
     };
   };
 
-  const { grouped, ungrouped } = groupObjectsByCategory(items);
+  const {grouped, ungrouped} = groupObjectsByCategory(items);
 
   const accordionItems = grouped?.map((item: any, index: number) => ({
     title: helperUtils.capitalize(item[0].category),
@@ -87,7 +87,7 @@ const Navigator = ({ header, items, button, addNewButtonText }: TypeNavigatorPro
           <NavigatorItem
             key={item?._id}
             label={item?.title}
-            prefix={{ children: <Icon name={item?.icon} /> }}
+            prefix={{children: <Icon name={item?.icon} />}}
             prefixIcon={item?.icon}
             suffixIcons={[
               {
@@ -121,7 +121,7 @@ const Navigator = ({ header, items, button, addNewButtonText }: TypeNavigatorPro
           headerClassName={styles.header}
           gap={0}
 
-        //TODO: add hoverable api
+          //TODO: add hoverable api
         />
         {ungrouped?.map((item: any, index: number) => (
           <NavigatorItem
@@ -142,15 +142,19 @@ const Navigator = ({ header, items, button, addNewButtonText }: TypeNavigatorPro
             className={styles.ungrouped}
           />
         ))}
-        {addNewButtonText && <Button className={styles.addNewButton} color="transparent" variant="text">
-          <Icon name="plus" size="xs" />
-          <Text size="medium">{addNewButtonText}</Text>
-        </Button>}
+        {addNewButtonText && (
+          <Button className={styles.addNewButton} color="transparent" variant="text">
+            <Icon name="plus" size="xs" />
+            <Text className={styles.noLineHeight} size="medium">
+              {addNewButtonText}
+            </Text>
+          </Button>
+        )}
       </div>
       {button && (
         <Button color="transparent" variant="text">
           <Icon name={button.icon} />
-          <Text>{button.title}</Text>
+          <Text className={styles.noLineHeight}>{button.title}</Text>
         </Button>
       )}
     </div>

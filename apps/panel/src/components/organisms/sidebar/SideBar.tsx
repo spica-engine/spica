@@ -1,7 +1,7 @@
-import React, { type FC, type ReactNode, useState } from "react";
+import React, {type FC, type ReactNode, useState} from "react";
 import styles from "./SideBar.module.scss";
-import { Icon, type IconName } from "oziko-ui-kit";
-import Navigator, { type TypeNavigatorHeader } from "./navigator/Navigator";
+import {Icon, type IconName} from "oziko-ui-kit";
+import Navigator, {type TypeNavigatorHeader} from "./navigator/Navigator";
 import Logo from "../../atoms/logo/Logo";
 
 export type TypeMenuItems = {
@@ -68,7 +68,15 @@ const SideBar: FC<TypeSideBar> = ({
               className={`${styles.menuItem} ${activeMenu === index ? styles.active : ""}`}
               onClick={() => handleClick(index)}
             >
-              <Icon name={menuItem.icon as IconName} size={menuItems?.[activeMenu].id === menuItem.id ? "lg" : "md"} />
+              <Icon
+                name={menuItem.icon as IconName}
+                size={menuItems?.[activeMenu].id === menuItem.id ? "lg" : "md"}
+                className={
+                  menuItems?.[activeMenu].id === menuItem.id
+                    ? styles.activeMenuIcon
+                    : styles.deactiveMenuIcon
+                }
+              />
             </div>
           ))}
           {displayToggleIcon && (

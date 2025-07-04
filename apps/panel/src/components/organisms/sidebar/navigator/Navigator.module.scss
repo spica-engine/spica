@@ -24,6 +24,7 @@
       font-weight: 600;
       font-size: var(--font-size-lg);
       height: 50px;
+      line-height: 0;
     }
     .icon {
       height: unset !important;
@@ -33,6 +34,9 @@
     }
   }
   
+  .noLineHeight {
+    line-height: 0 !important;
+  }
 
   .addNewButton {
     width: 100%;
