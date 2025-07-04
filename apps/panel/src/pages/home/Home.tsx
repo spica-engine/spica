@@ -115,7 +115,6 @@ const columns = [
     header: "_id",
     key: "id",
     width: "10px",
-    type: "string",
     showDropdownIcon: true,
   },
   {

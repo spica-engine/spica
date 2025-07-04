@@ -78,7 +78,6 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
   );
 };
 
-
 const defaultColumns: ColumnType[] = [
   {
     header: <ColumnHeader />,
@@ -191,8 +190,17 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
       );
     case "richtext":
       return renderDefault();
-    default:
-      return cellData ? JSON.stringify(cellData) : <div />;
+    default: {
+      if (!cellData) {
+        return <div />;
+      }
+
+      if (typeof cellData === "string") {
+        return cellData;
+      }
+
+      return JSON.stringify(cellData);
+    }
   }
 }
 
