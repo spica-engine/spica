@@ -37,7 +37,7 @@
     background-color: var(--color-border);
     font-family: var(--font-family-base);
     font-size: var(--font-size-sm);
-    line-height: unset;
+    line-height: 0 !important;
   }
 }
 
@@ -52,7 +52,7 @@
   padding-left: 0;
   background-color: var(--color-border);
   font-weight: 600;
-  line-height: unset;
+  line-height: 0 !important;
   span {
     font-weight: 600;
     font-size: var(--font-size-sm);
