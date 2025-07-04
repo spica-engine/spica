@@ -15,7 +15,6 @@ const mockData = [
     user: "john_doe",
     meta_tags: {_id: "642438aab86243423", somein: "somein", someinelse: "someinelse"},
     localization: "23.521, 20.113",
-    pages: ["about", "contact"],
     images: "hero.jpg"
   },
   {
@@ -26,7 +25,6 @@ const mockData = [
     meta_tags: {_id: "529769810329", somein: "somein", someinelse: "someinelse"},
     localization: "23.521, 20.113",
     pages: ["post-1", "post-2"],
-    images: "blog-banner.png"
   },
   {
     id: "3",

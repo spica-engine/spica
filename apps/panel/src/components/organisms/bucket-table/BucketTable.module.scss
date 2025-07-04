@@ -61,7 +61,7 @@
 }
 
 .newFieldCell {
-  background-color: var(--color-border);
+  background-color: var(--color-border) !important;
 }
 
 .checkbox {
@@ -113,7 +113,7 @@
   width: 60px;
 }
 
-.evenRow {
+.evenCell {
   background-color: var(--color-zebra);
 }
 
@@ -147,4 +147,12 @@
     overflow: hidden;
     white-space: nowrap;
   }
+}
+
+.column > :nth-child(odd):not(:first-child) {
+  background-color: var(--color-zebra);
+}
+
+.grayText {
+  color: var(--color-input-placeholder)
 }
