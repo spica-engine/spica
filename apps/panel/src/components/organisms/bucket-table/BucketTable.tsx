@@ -84,12 +84,17 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
       return renderDefault();
     case "multiple selection":
       return (
-        <div className={styles.arrayCell}>
-          {cellData.map((_: any, index: number) => (
+        <div className={styles.multipleSelectionCell}>
+          {cellData.slice(0, 2).map((_: any, index: number) => (
             <Button variant="icon" className={styles.grayBox}>
               {index + 1}
             </Button>
           ))}
+          {cellData.length > 2 && (
+            <Button variant="icon" className={styles.grayBox}>
+              <Icon name="dotsHorizontal" size="xs" />
+            </Button>
+          )}
           <Button variant="icon" className={styles.grayBox}>
             <Icon name="plus" size="xs" />
           </Button>
@@ -155,14 +160,15 @@ const defaultColumns: ColumnType[] = [
   },
   {
     header: (
-      <Button variant="icon" className={styles.columnHeaderText}>
-        <Icon name={"plus"} size="sm" className={styles.headerIcon} />
-        New&nbsp;Field
+      <Button variant="icon" className={`${styles.columnHeaderText} ${styles.newFieldColumnHeader}`}>
+        <Icon name={"plus"} size="sm" className={styles.newFieldHeaderIcon} />
+        <span>New&nbsp;Field</span>
       </Button>
     ),
     key: "new field",
     width: "10px",
-    cellClassName: styles.newFieldCell
+    cellClassName: styles.newFieldCell,
+    columnClassName: styles.newFieldColumn
   }
 ];
 
