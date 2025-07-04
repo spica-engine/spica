@@ -107,6 +107,7 @@ export class CustomOAuthService implements OAuthStrategyService {
       params: requestDetails.params,
       method: requestDetails.method,
       headers: requestDetails.headers,
+      data: requestDetails.data,
       responseType: "json"
     });
   }
