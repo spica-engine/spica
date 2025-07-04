@@ -72,7 +72,7 @@
   label {
     width: 20px !important;
     height: 20px !important;
-    border-color: var(--color-input-placeholder);
+    border-color: var(--color-input-placeholder) !important;
     border-radius: var(--border-radius-md) !important;
     cursor: pointer !important;
     position: relative !important;
