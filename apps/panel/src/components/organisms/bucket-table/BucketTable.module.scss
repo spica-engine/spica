@@ -149,6 +149,10 @@
   }
 }
 
+.column {
+  border-right-color: var(--color-input-placeholder) !important;
+}
+
 .column > :nth-child(odd):not(:first-child) {
   background-color: var(--color-zebra);
 }
