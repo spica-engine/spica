@@ -7,6 +7,7 @@ import Quicklinks from "../../components/molecules/quicklinks/Quicklinks";
 import WelcomeText from "../../components/atoms/welcome-text/WelcomeText";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
 
+// Temporary mock data used for testing; will be removed once the table passes manual testing.
 const mockData = [
   {
     id: "1",
@@ -24,7 +25,7 @@ const mockData = [
     user: "jane_smith",
     meta_tags: {_id: "529769810329", somein: "somein", someinelse: "someinelse"},
     localization: "23.521, 20.113",
-    pages: ["post-1", "post-2"],
+    pages: ["post-1", "post-2"]
   },
   {
     id: "3",
@@ -116,8 +117,8 @@ const Home = () => {
           <Quicklinks />
           <VideoDisplay />
         </FlexElement>
+        <BucketTable columns={columns as ColumnType[]} data={mockData} />
       </FlexElement>
-      <BucketTable columns={columns as ColumnType[]} data={mockData} />
     </div>
   );
 };

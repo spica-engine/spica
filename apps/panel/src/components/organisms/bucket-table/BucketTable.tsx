@@ -35,7 +35,7 @@ type BucketTableProps = {
 };
 
 type ColumnHeaderProps = {
-  title: string;
+  title?: string;
   icon?: IconName;
   showDropdownIcon?: boolean;
 };
@@ -81,8 +81,7 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
 
 const defaultColumns: ColumnType[] = [
   {
-    // Renders an empty-looking header
-    header: <ColumnHeader title={String.fromCharCode(160)} />,
+    header: <ColumnHeader />,
     key: "select",
     type: "boolean",
     width: "10px",
