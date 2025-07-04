@@ -10,6 +10,7 @@ type TypeTable = {
   };
   fixedColumns?: string[];
   noResizeableColumns?: string[];
+  className?: string;
 };
 
 const Table: FC<TypeTable> = ({
@@ -17,7 +18,8 @@ const Table: FC<TypeTable> = ({
   data,
   saveToLocalStorage = {id: "table", save: false},
   fixedColumns = [],
-  noResizeableColumns = []
+  noResizeableColumns = [],
+  className
 }) => {
   const [dataColumns, setDataColumns] = useState(() => {
     return columns.map(column => {
@@ -93,8 +95,8 @@ const Table: FC<TypeTable> = ({
   }, [focusedCell]);
 
   return (
-    <div className={styles.table}>
-      {dataColumns.map((column: any, index: number) => {
+    <div className={`${styles.table} ${className}`}>
+      {dataColumns.map(column => {
         const isFixed = fixedColumns.includes(column.key);
         const positionAmount = isFixed
           ? fixedColumns
@@ -108,7 +110,7 @@ const Table: FC<TypeTable> = ({
           <Column
             key={column.key}
             columnKey={column.key}
-            className={`${styles.column} ${isFixed ? styles.fixedColumns : styles.scrollableColumns}`}
+            className={`${styles.column} ${isFixed ? styles.fixedColumns : styles.scrollableColumns} ${column.columnClassName}`}
             style={{
               left: positionAmount
             }}
@@ -116,11 +118,12 @@ const Table: FC<TypeTable> = ({
             updateColumnWidth={updateColumnWidth}
             noResizeable={noResizeableColumns.includes(column.key)}
           >
-            <Column.Header>{column.header}</Column.Header>
+            <Column.Header className={column.headerClassName}>{column.header}</Column.Header>
             {data.map(
               (row: any, index: number) =>
                 row[column.key] && (
                   <Column.Cell
+                    className={column.cellClassName}
                     focused={focusedCell?.column === column.key && focusedCell?.row === index}
                   >
                     {row[column.key]}
