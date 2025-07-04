@@ -36,7 +36,7 @@ spec:
               number: 80
 {{- end }}
 {{- if .api }}
-      - path: {{ .application }}?(.*)
+      - path: {{ .api }}?(.*)
         pathType: ImplementationSpecific
         backend:
           service:

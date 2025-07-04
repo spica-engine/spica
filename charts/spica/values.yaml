@@ -27,11 +27,11 @@ images:
 
 application:
   replicas: 1
-  secret:
+  secret: "asd"
   defaultPassword: spica
   webBaseUrl: /spica/
   apiBaseUrl: /api/
-  publicHost:
+  publicHost: "spica.example.com"
   storageSize: 2Gi
   storageClass:
   apiResources: {}
@@ -40,7 +40,13 @@ application:
   diskAccessMode: ReadWriteOnce
   serviceAccountName: default
 ingress:
-  hosts: []
+  hosts:
+    - name: domain1.com
+      application : /
+      api: /api/
+    - name: domain2.com
+      api: / 
+  
   tls: []
   ingressClassName: nginx
   annotations:
