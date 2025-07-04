@@ -44,6 +44,7 @@ export class Default implements Strategy {
   async delete(id: string) {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
+    console.log("default delete", id);
     return fs.promises.unlink(objectPath);
   }
 
@@ -52,7 +53,7 @@ export class Default implements Strategy {
   }
 
   private buildPath(id: string) {
-    return `${this.path}/${id}.storageobj`;
+    return `${this.path}/${id}`;
   }
 
   private async ensureStorageDiskExists() {
@@ -64,5 +65,13 @@ export class Default implements Strategy {
       return fs.promises.mkdir(this.path);
     }
     return Promise.resolve();
+  }
+
+  async rename(oldName: string, newName: string): Promise<void> {
+    const oldPath = this.buildPath(oldName);
+    const newPath = this.buildPath(newName);
+    fs.rename(oldPath, newPath, err => {
+      if (err) throw err;
+    });
   }
 }

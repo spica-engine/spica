@@ -132,20 +132,14 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     return objectWithData;
   }
 
-  async delete(id: ObjectId): Promise<void> {
-    const object = await this._coll.findOne({_id: id});
-
-    if (!object) {
-      throw new NotFoundException(`Storage object ${id} could not be found`);
-    }
-
-    const deletedCount = await this._coll.deleteOne({_id: id}).then(res => res.deletedCount);
+  async delete(name: string): Promise<void> {
+    const deletedCount = await this._coll.deleteOne({name: name}).then(res => res.deletedCount);
 
     if (!deletedCount) {
-      throw new NotFoundException(`Storage object ${id} could not be found`);
+      throw new NotFoundException(`Storage object ${name} could not be found`);
     }
 
-    await this.service.delete(object.name);
+    await this.service.delete(name);
   }
 
   async updateMeta(_id: ObjectId, name: string) {
@@ -155,10 +149,9 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     }
 
     const oldName = existing.name;
+
     if (oldName !== name) {
-      const buffer = await this.service.read(oldName);
-      await this.service.write(name, buffer, existing.content.type);
-      await this.service.delete(oldName);
+      await this.service.rename(oldName, name);
     }
 
     return this._coll.findOneAndUpdate(
@@ -184,7 +177,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     if (object.content.data) {
       if (oldName !== newName) {
-        await this.service.delete(oldName);
+        this.service.delete(oldName);
       }
       await this.write(newName, object.content.data, object.content.type);
     }
@@ -192,9 +185,9 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     delete object.content.data;
     delete object._id;
 
-    await this._coll.updateOne({_id}, {$set: object});
-
-    return {...object, _id};
+    return this._coll.findOneAndUpdate({_id}, {$set: object}).then(() => {
+      return {...object, _id: _id};
+    });
   }
 
   async insert(objects: StorageObject<fs.ReadStream | Buffer>[]): Promise<StorageObjectMeta[]> {
@@ -222,18 +215,14 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       try {
         await this.write(object.name, datas[i], object.content.type);
       } catch (error) {
-        const idsToDelete = insertedObjects.map(o => o._id);
-        await this._coll.deleteMany({_id: {$in: idsToDelete}});
+        const namesToDelete = insertedObjects.map(o => o.name);
+        await this._coll.deleteMany({name: {$in: namesToDelete}});
 
-        for (const id of idsToDelete.slice(0, i)) {
-          try {
-            await this.service.delete(id.toString());
-          } catch (err: any) {
-            if (err.code !== "ENOENT") {
-              throw err;
-            }
-          }
-        }
+        const deletePromises = [];
+        namesToDelete.slice(0, i).forEach(name => {
+          deletePromises.push(this.service.delete(name));
+        });
+        await Promise.all(deletePromises);
 
         throw new Error(
           `Error: Failed to write object ${object.name} to storage. Reason: ${error}`
@@ -252,9 +241,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     }
   }
 
-  async getUrl(id: string): Promise<string> {
-    const object = await this._coll.findOne({_id: new ObjectId(id)});
-    if (!object) throw new NotFoundException("Storage object not found");
-    return this.service.url(object.name);
+  async getUrl(name: string) {
+    return this.service.url(name);
   }
 }
