@@ -41,7 +41,6 @@ application:
   serviceAccountName: default
 ingress:
   hosts: []
-  
   tls: []
   ingressClassName: nginx
   annotations:
