@@ -75,10 +75,10 @@ export const DrawerProvider = ({children}: {children: ReactNode}) => {
   );
 };
 
-export function useDrawer() {
+export function useDrawerController() {
   const context = useContext(DrawerContext);
 
-  if (!context) throw new Error("useDrawer must be used within an DrawerProvider");
+  if (!context) throw new Error("useDrawerController must be used within an DrawerProvider");
   return context;
 }
 
