@@ -1,6 +1,6 @@
 import {Button, Modal} from "oziko-ui-kit";
 import styles from "./Confirmation.module.scss";
-import {useState, useId, useMemo} from "react";
+import {useState, useId, useMemo, memo} from "react";
 
 type ConfirmationProps = {
   title: string;
@@ -99,4 +99,4 @@ function Confirmation({
   );
 }
 
-export default Confirmation;
+export default memo(Confirmation);
