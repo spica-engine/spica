@@ -20,6 +20,7 @@ import {
   BucketPreferences,
   BUCKET_DATA_LIMIT
 } from "@spica-server/interface/bucket";
+import * as crypto from "crypto";
 
 @Injectable()
 export class BucketService extends BaseCollection<Bucket>("buckets") {
@@ -95,31 +96,6 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
       .then(r => this.updateIndexes({...doc, _id: filter._id as ObjectId}).then(() => r));
   }
 
-  async updateIndexes(bucket: Bucket): Promise<void> {
-    const bucketDataCollection = this.db.collection(getBucketDataCollection(bucket._id));
-
-    const indexDefinitions = this.createIndexDefinitions(bucket);
-    const indexesWillBeDropped = [];
-
-    const errors = [];
-
-    const indexes = await this.getIndexesWillBeDropped(bucketDataCollection);
-    for (const index of indexes) {
-      indexesWillBeDropped.push(bucketDataCollection.dropIndex(index).catch(e => errors.push(e)));
-    }
-
-    await Promise.all(indexesWillBeDropped);
-    await Promise.all(
-      indexDefinitions.map(index =>
-        bucketDataCollection.createIndex(index.definition, index.options).catch(e => errors.push(e))
-      )
-    );
-
-    if (errors.length) {
-      throw Error(errors.map(e => e.message).join(""));
-    }
-  }
-
   async drop(id: string | ObjectId) {
     const schema = await super.findOneAndDelete({_id: new ObjectId(id)});
     if (!schema) {
@@ -165,54 +141,64 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     return this.validator.defaults;
   }
 
-  createIndexDefinitions(
-    bucket: Bucket,
-    definitions: IndexDefinition[] = [],
-    prefix: string = ""
-  ): IndexDefinition[] {
-    const keyGenerator = (prefix, name) => {
-      return prefix ? `${prefix}.${name}` : name;
-    };
-    for (const [name, spec] of Object.entries(bucket.properties)) {
-      if (spec.options && (spec.options.index || spec.options.unique)) {
-        const key = keyGenerator(prefix, name);
-        definitions.push({
-          // direction of index is unimportant for single field indexes
-          definition: {[key]: 1},
-          options: {unique: !!spec.options.unique}
-        });
-      }
-
-      if (spec.type == "object") {
-        const key = keyGenerator(prefix, name);
-
-        this.createIndexDefinitions(spec as any, definitions, key);
-      } else if (spec.type == "array") {
-        const key = keyGenerator(prefix, name);
-
-        const schema = {
-          properties: {
-            [key]: spec.items
-          }
-        };
-        this.createIndexDefinitions(schema as any, definitions, "");
-      }
+  generateIndexName(definition: Record<string, number>, options: Record<string, any>): string {
+    const defsParts = [];
+    for (const key of Object.keys(definition)) {
+      defsParts.push(`${key}_${definition[key]}`);
     }
+    const defs = defsParts.join("_");
 
-    return definitions;
+    const sortedOptions: Record<string, any> = {};
+    Object.keys(options)
+      .sort()
+      .forEach(k => {
+        sortedOptions[k] = options[k];
+      });
+
+    const optionsStr = JSON.stringify(sortedOptions);
+
+    const hash = crypto.createHash("sha1").update(optionsStr).digest("hex").slice(0, 8);
+
+    return `${defs}-${hash}`;
   }
 
-  async getIndexesWillBeDropped(collection: Collection<any>): Promise<string[]> {
-    const existings: ExistingIndex[] = await collection.listIndexes().toArray();
-    return existings
-      .filter(existing => this.isExistingSingleFieldIndex(existing))
-      .map(existing => existing.name);
-  }
+  async updateIndexes(bucket: Bucket): Promise<void> {
+    const collection = this.db.collection(getBucketDataCollection(bucket._id));
 
-  isExistingSingleFieldIndex(index: ExistingIndex) {
-    const keys = Object.keys(index.key);
-    // we can not remove _id index since it's default index of mongodb
-    return keys.length == 1 && keys[0] != "_id";
+    const existingIndexes = await collection.listIndexes().toArray();
+
+    // _id is default index for MondoDB collections, we cant drop it
+    // _id_ is internal name for _id index in MongoDB
+    const existingNames = new Set(
+      existingIndexes.map(index => index.name).filter(name => name !== "_id_" && name !== "_id")
+    );
+
+    const desiredIndexes = (bucket.indexes || []).map(idx => {
+      const name = this.generateIndexName(idx.definition, idx.options || {});
+      return {...idx, name};
+    });
+
+    const indexes = desiredIndexes.filter(idx => !existingNames.has(idx.name));
+
+    const errors = [];
+
+    await Promise.all(
+      Array.from(existingNames).map(name =>
+        collection.dropIndex(name).catch(err => errors.push(err))
+      )
+    );
+
+    await Promise.all(
+      indexes.map(idx =>
+        collection
+          .createIndex(idx.definition, {...idx.options, name: idx.name})
+          .catch(err => errors.push(err))
+      )
+    );
+
+    if (errors.length) {
+      throw new Error(errors.map(e => e.message).join("; "));
+    }
   }
 
   collNameToId(collName: string) {
