@@ -215,8 +215,9 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       try {
         await this.write(object.name, datas[i], object.content.type);
       } catch (error) {
+        const idsToDelete = insertedObjects.map(o => o._id);
+        await this._coll.deleteMany({_id: {$in: idsToDelete}});
         const namesToDelete = insertedObjects.map(o => o.name);
-        await this._coll.deleteMany({name: {$in: namesToDelete}});
 
         const deletePromises = [];
         namesToDelete.slice(0, i).forEach(name => {
