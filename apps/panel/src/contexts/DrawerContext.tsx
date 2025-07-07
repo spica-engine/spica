@@ -18,9 +18,9 @@ type DrawerRenderProps = Omit<TypeDrawer, "isOpen" | "onClose">;
 
 type DrawerContextType = {
   isOpen: boolean;
-  openDrawer: (content: ReactNode, drawerProps?: DrawerOpenOptions) => void;
+  openDrawer: (newContent: ReactNode, drawerProps?: DrawerOpenOptions) => void;
   closeDrawer: () => void;
-  content: ReactNode | null
+  content: ReactNode | null;
 };
 
 const DrawerContext = createContext<DrawerContextType | null>(null);
@@ -35,11 +35,11 @@ export const DrawerProvider = ({children}: {children: ReactNode}) => {
     setContent(null);
   }, []);
 
-  const openDrawer = useCallback((content: ReactNode, newDrawerProps?: DrawerOpenOptions) => {
+  const openDrawer = useCallback((newContent: ReactNode, newDrawerProps?: DrawerOpenOptions) => {
     if (isOpen) closeDrawer();
     if (newDrawerProps)
       setDrawerProps({...newDrawerProps, placement: newDrawerProps.placement || "right"});
-    setContent(content);
+    setContent(newContent);
     setIsOpen(true);
   }, []);
 
