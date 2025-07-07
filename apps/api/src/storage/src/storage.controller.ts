@@ -210,10 +210,10 @@ export class StorageController {
    * @param id Identifier of the object
    */
   @UseInterceptors(activity(createStorageActivity))
-  @Delete(":name")
+  @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
-  async deleteOne(@Param("name") name: string) {
-    return this.storage.delete(name);
+  async deleteOne(@Param("id") id: ObjectId) {
+    return this.storage.delete(id);
   }
 }

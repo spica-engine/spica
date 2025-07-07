@@ -44,7 +44,6 @@ export class Default implements Strategy {
   async delete(id: string) {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
-    console.log("default delete", id);
     return fs.promises.unlink(objectPath);
   }
 
@@ -70,8 +69,11 @@ export class Default implements Strategy {
   async rename(oldName: string, newName: string): Promise<void> {
     const oldPath = this.buildPath(oldName);
     const newPath = this.buildPath(newName);
-    fs.rename(oldPath, newPath, err => {
-      if (err) throw err;
-    });
+    try {
+      await fs.promises.rename(oldPath, newPath);
+    } catch (err) {
+      console.error(`Error renaming file from ${oldName} to ${newName}:`, err);
+      throw err;
+    }
   }
 }
