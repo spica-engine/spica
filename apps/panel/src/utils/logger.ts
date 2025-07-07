@@ -52,6 +52,23 @@ function makeLogger(): Logger {
   };
 }
 
+/**
+ * Example usage:
+ *
+ * logger.log("This is an info message", { some: "data" });
+ * logger.warn("Warning! Something might be wrong");
+ * logger.error("Error occurred:", new Error("Something bad"));
+ * logger.debug("Debug details", { debugValue: 42 });
+ *
+ * logger.group("Grouped logs start");
+ * logger.log("Inside group log 1");
+ * logger.log("Inside group log 2");
+ * logger.groupEnd();
+ *
+ * logger.time("timer");
+ * // some code to measure
+ * logger.timeEnd("timer");
+ */
 const logger = makeLogger();
 
 export default logger;
