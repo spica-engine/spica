@@ -50,7 +50,7 @@
       "properties": {
         "idp": {
           "type": "string",
-          "enum": ["custom", "google", "facebook", "github"],
+          "enum": ["custom", "google", "facebook", "github", "auth0"],
           "default": "custom",
           "title": "Identity provider",
           "description": "Identity provider that will be used for authentication"
@@ -89,6 +89,10 @@
           "client_secret": {
             "type": "string",
             "title": "Client secret of the application"
+          },
+          "domain": {
+            "type": "string",
+            "title": "Custom domain obtained from the identity provider"
           }
         },
         "required": ["client_id", "client_secret"],

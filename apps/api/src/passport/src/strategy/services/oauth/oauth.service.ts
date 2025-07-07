@@ -5,6 +5,7 @@ import {CustomOAuthService} from "./custom";
 import {GoogleOAuthService} from "./google";
 import {GithubOAuthService} from "./github";
 import {FacebookOAuthService} from "./facebook";
+import {Auth0OAuthService} from "./auth0";
 
 export function initializeOAuthServices(
   strategyService: StrategyService,
@@ -15,6 +16,7 @@ export function initializeOAuthServices(
     new CustomOAuthService(strategyService, options, req),
     new GoogleOAuthService(strategyService, options, req),
     new GithubOAuthService(strategyService, options, req),
-    new FacebookOAuthService(strategyService, options, req)
+    new FacebookOAuthService(strategyService, options, req),
+    new Auth0OAuthService(strategyService, options, req)
   ];
 }
