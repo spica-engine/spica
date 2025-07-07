@@ -1,14 +1,13 @@
 type Logger = Readonly<{
-  log: (msg: any) => void;
-  warn: (msg: any) => void;
-  error: (msg: any) => void;
-  debug: (msg: any) => void;
-  group: (msg: any) => void;
+  log: (...msg: any[]) => void;
+  warn: (...msg: any[]) => void;
+  error: (...msg: any[]) => void;
+  debug: (...msg: any[]) => void;
+  group: (...msg: any[]) => void;
   groupEnd: () => void;
   time: (label: string) => void;
   timeEnd: (label: string) => void;
 }>;
-
 
 function makeLogger(): Logger {
   if (process.env.NODE_ENV !== "development") {
@@ -26,20 +25,20 @@ function makeLogger(): Logger {
   }
 
   return {
-    log: (msg: any) => {
-      console.log(`%c[INFO]%c ${msg}`, "color: green; font-weight: bold;", "color: inherit;");
+    log: (...msg: any[]) => {
+      console.log("%c[INFO]%c", "color: green; font-weight: bold;", "color: inherit;", ...msg);
     },
-    warn: (msg: any) => {
-      console.warn(`%c[WARN]%c ${msg}`, "color: orange; font-weight: bold;", "color: inherit;");
+    warn: (...msg: any[]) => {
+      console.warn("%c[WARN]%c", "color: orange; font-weight: bold;", "color: inherit;", ...msg);
     },
-    error: (msg: any) => {
-      console.error(`%c[ERROR]%c ${msg}`, "color: red; font-weight: bold;", "color: inherit;");
+    error: (...msg: any[]) => {
+      console.error("%c[ERROR]%c", "color: red; font-weight: bold;", "color: inherit;", ...msg);
     },
-    debug: (msg: any) => {
-      console.debug(`%c[DEBUG]%c ${msg}`, "color: blue; font-weight: bold;", "color: inherit;");
+    debug: (...msg: any[]) => {
+      console.debug("%c[DEBUG]%c", "color: blue; font-weight: bold;", "color: inherit;", ...msg);
     },
-    group: (msg: any) => {
-      console.group(`%c[GROUP]%c ${msg}`, "color: purple; font-weight: bold;", "color: inherit;");
+    group: (...msg: any[]) => {
+      console.group("%c[GROUP]%c", "color: purple; font-weight: bold;", "color: inherit;", ...msg);
     },
     groupEnd: () => {
       console.groupEnd();
