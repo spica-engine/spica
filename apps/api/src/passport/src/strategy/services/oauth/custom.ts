@@ -44,9 +44,9 @@ export class CustomOAuthService implements OAuthStrategyService {
   }
 
   getIdentifier(strategy: OAuthStrategy, tokenResponse) {
-    strategy.options.identifier.params = {
-      ...(strategy.options.identifier.params || {}),
-      access_token: tokenResponse.access_token
+    strategy.options.identifier.headers = {
+      ...(strategy.options.identifier.headers || {}),
+      Authorization: `Bearer ${tokenResponse.access_token}`
     };
 
     return this.sendRequest(strategy.options.identifier).then(user => {
@@ -107,6 +107,7 @@ export class CustomOAuthService implements OAuthStrategyService {
       params: requestDetails.params,
       method: requestDetails.method,
       headers: requestDetails.headers,
+      data: requestDetails.data,
       responseType: "json"
     });
   }

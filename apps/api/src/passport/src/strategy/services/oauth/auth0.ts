@@ -3,29 +3,30 @@ import {IncomingOAuthPreset, OAuthStrategy} from "@spica-server/interface/passpo
 import {CustomOAuthService} from "./custom";
 
 @Injectable()
-export class GoogleOAuthService extends CustomOAuthService {
-  _idp = "google";
+export class Auth0OAuthService extends CustomOAuthService {
+  _idp = "auth0";
 
   prepareToInsert(strategy: IncomingOAuthPreset) {
     return {
       type: "oauth",
-      name: "Google oauth",
-      title: "Google oauth",
+      name: "Auth0 oauth",
+      title: "Auth0 oauth",
       icon: strategy.icon,
       options: {
         idp: this.idp,
         code: {
-          base_url: "https://accounts.google.com/o/oauth2/v2/auth",
+          base_url: `https://${strategy.options.domain}/authorize`,
           params: {
             client_id: strategy.options.client_id,
             response_type: "code",
-            scope: "email"
+            response_mode: "query",
+            scope: "openid profile email"
           },
           headers: {},
           method: "get"
         },
         access_token: {
-          base_url: "https://oauth2.googleapis.com/token",
+          base_url: `https://${strategy.options.domain}/oauth/token`,
           params: {
             client_id: strategy.options.client_id,
             client_secret: strategy.options.client_secret,
@@ -35,12 +36,26 @@ export class GoogleOAuthService extends CustomOAuthService {
           method: "post"
         },
         identifier: {
-          base_url: "https://www.googleapis.com/oauth2/v2/userinfo",
+          base_url: `https://${strategy.options.domain}/userinfo`,
           params: {},
           headers: {},
           method: "get"
         }
       }
     };
+  }
+
+  async getToken(strategy: OAuthStrategy, code?: string) {
+    strategy.options.access_token.data = {
+      ...(strategy.options.access_token.params || {}),
+      code
+    };
+    strategy.options.access_token.params = undefined;
+
+    const tokenResponse = await this.sendRequest(strategy.options.access_token);
+    if (!tokenResponse.access_token) {
+      throw Error("Access token could not find.");
+    }
+    return tokenResponse;
   }
 }
