@@ -22,7 +22,7 @@ describe("Default", () => {
   });
 
   it("should return build path", () => {
-    expect(service["buildPath"]("test_file2")).toEqual(`${service["path"]}/test_file2.storageobj`);
+    expect(service["buildPath"]("test_file2")).toEqual(`${service["path"]}/test_file2`);
   });
 
   it("should write and read file", async () => {

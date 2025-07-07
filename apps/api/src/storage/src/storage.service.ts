@@ -133,7 +133,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   }
 
   async delete(id: ObjectId): Promise<void> {
-    const result = await this._coll.findOneAndDelete({id});
+    const result = await this._coll.findOneAndDelete({_id: id});
 
     if (!result) {
       throw new NotFoundException(`Storage object could not be found`);
