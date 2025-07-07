@@ -6,11 +6,13 @@ type ApiRequestOptions = {
   endpoint: string;
   method?: "get" | "post" | "put" | "delete";
   body?: any;
+  onSuccess?: () => void;
+  onError?: () => void;
 };
 
 const defaultBaseUrl = "https://jsonplaceholder.typicode.com";
 
-function useApi<T>({endpoint, method = "get", body}: ApiRequestOptions) {
+function useApi<T>({endpoint, method = "get", body, onSuccess, onError}: ApiRequestOptions) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<T | null>(null);
@@ -33,8 +35,10 @@ function useApi<T>({endpoint, method = "get", body}: ApiRequestOptions) {
 
         if (response.status >= 200 && response.status < 300) {
           setData(response.data);
+          onSuccess?.();
         } else {
           setError(response.statusText ?? "Something went wrong");
+          onError?.();
         }
       } catch (err: any) {
         setError(err.message ?? "Something went wrong");
