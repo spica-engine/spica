@@ -40,7 +40,7 @@ application:
   diskAccessMode: ReadWriteOnce
   serviceAccountName: default
 ingress:
-  host:
+  hosts: []
   tls: []
   ingressClassName: nginx
   annotations:
