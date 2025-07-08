@@ -15,20 +15,8 @@ import Logo from "../../components/atoms/logo/Logo";
 import useAuthService from "../../services/authService";
 
 const Login = () => {
-  const {
-    getStrategies,
-    strategies,
-    strategiesLoading,
-    strategiesError,
-
-    triggerStrategyLogin,
-    strategyUrlLoading,
-    strategyUrlError,
-
-    login,
-    loginLoading,
-    loginError
-  } = useAuthService();
+  const {fetchStrategies, strategies, strategiesLoading, login, loginLoading, loginError} =
+    useAuthService();
 
   const formik = useFormik({
     initialValues: {identifier: "", password: ""},
@@ -38,7 +26,7 @@ const Login = () => {
   });
 
   useEffect(() => {
-    getStrategies();
+    fetchStrategies();
   }, []);
 
   return (
@@ -57,27 +45,15 @@ const Login = () => {
             gap={10}
           >
             <Logo size="xl" />
-            {(loginLoading || strategiesLoading || strategyUrlLoading) && (
+            {loginLoading && (
               <Text className={styles.loadingText} size="medium">
-                {loginLoading && "Logging in..."}
-                {strategiesLoading && "Loading login options..."}
-                {strategyUrlLoading && "Connecting..."}
+                Logging in...
               </Text>
             )}
             <div className={styles.errorsContainer}>
               {loginError && (
                 <div className={styles.errorBox}>
                   <div className={styles.errorText}>{loginError}</div>
-                </div>
-              )}
-              {strategiesError && (
-                <div className={styles.errorBox}>
-                  <div className={styles.errorText}>{strategiesError}</div>
-                </div>
-              )}
-              {strategyUrlError && (
-                <div className={styles.errorBox}>
-                  <div className={styles.errorText}>{strategyUrlError}</div>
                 </div>
               )}
             </div>
@@ -127,8 +103,7 @@ const Login = () => {
               disabled={
                 formik.values.identifier.length < 3 ||
                 formik.values.password.length < 3 ||
-                loginLoading ||
-                strategyUrlLoading
+                loginLoading
               }
               containerProps={{
                 className: styles.formButtonContainer
@@ -145,12 +120,9 @@ const Login = () => {
                 type="button"
                 color="default"
                 variant="outlined"
-                disabled={loginLoading || strategyUrlLoading}
+                disabled={loginLoading}
                 containerProps={{
                   className: styles.formButtonContainer
-                }}
-                onClick={() => {
-                  triggerStrategyLogin(strategy);
                 }}
               >
                 <Icon size="sm" name={strategy.icon as IconName} />
