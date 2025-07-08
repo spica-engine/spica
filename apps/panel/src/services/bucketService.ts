@@ -1,4 +1,4 @@
-import useApi from "src/hooks/useApi";
+import useApi from "../hooks/useApi";
 
 export const useBucketService = () => {
   const { request, data, error, loading } = useApi({
