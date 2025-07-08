@@ -58,35 +58,29 @@ describe("Migrate index/unique flags into indexes array", () => {
   it("should migrate index/unique to 'indexes' array and strip old flags", async () => {
     await run([...args, "--from", "0.15.0", "--to", "0.16.0", "--continue-if-versions-are-equal"]);
 
-    const buckets = await db
-      .collection("bucket")
-      .find({})
-      .project({indexes: 1, properties: 1})
-      .toArray();
+    const buckets = await db.collection("bucket").find({}).toArray();
 
-    expect(buckets[0].indexes).toEqual([
-      {
-        definition: {title: 1},
-        options: {unique: true}
+    expect(buckets[0]).toEqual({
+      _id: buckets[0]._id,
+      title: "Bucket 1",
+      properties: {
+        title: {type: "string", options: {}},
+        description: {type: "string", options: {}}
       },
-      {
-        definition: {description: 1},
-        options: {}
-      }
-    ]);
+      indexes: [
+        {definition: {title: 1}, options: {unique: true}},
+        {definition: {description: 1}, options: {}}
+      ]
+    });
 
-    expect(buckets[0].properties.title.options.index).toBeUndefined();
-    expect(buckets[0].properties.title.options.unique).toBeUndefined();
-    expect(buckets[0].properties.description.options.index).toBeUndefined();
-
-    expect(buckets[1].indexes).toEqual([
-      {
-        definition: {name: 1},
-        options: {unique: true}
-      }
-    ]);
-    expect(buckets[1].properties.name.options.index).toBeUndefined();
-    expect(buckets[1].properties.name.options.unique).toBeUndefined();
-    expect(buckets[1].properties.bio.options).toEqual({});
+    expect(buckets[1]).toEqual({
+      _id: buckets[1]._id,
+      title: "Bucket 2",
+      properties: {
+        name: {type: "string", options: {}},
+        bio: {type: "string", options: {}}
+      },
+      indexes: [{definition: {name: 1}, options: {unique: true}}]
+    });
   });
 });
