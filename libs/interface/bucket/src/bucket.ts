@@ -24,7 +24,7 @@ export interface Bucket {
     limitExceedBehaviour: LimitExceedBehaviours;
   };
   indexes?: {
-    definition: Record<string, number>;
+    definition: Record<string, any>;
     options: Record<string, any>;
   }[];
 }

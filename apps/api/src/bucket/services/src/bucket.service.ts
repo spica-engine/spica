@@ -157,7 +157,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
 
     const optionsStr = JSON.stringify(sortedOptions);
 
-    const hash = crypto.createHash("sha1").update(optionsStr).digest("hex");
+    const hash = crypto.createHash("sha1").update(optionsStr).digest("hex").slice(0, 8);
 
     return `${defs}-${hash}`;
   }
