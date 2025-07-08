@@ -21,7 +21,7 @@ function useApi<T>({endpoint, method = "get", onSuccess, onError}: ApiRequestOpt
   }, [endpoint]);
 
   const request = useCallback(
-    ({body, headers}: {body?: any; headers?: Record<string, string>}) => {
+    ({body, headers}: {body?: any; headers?: Record<string, string>} = {}) => {
       const makeRequest = async () => {
         try {
           const combinedHeaders =
