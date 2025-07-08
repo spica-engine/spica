@@ -1,19 +1,16 @@
 import {Button, Modal} from "oziko-ui-kit";
 import styles from "./Confirmation.module.scss";
-import {useState, useId, useMemo, memo} from "react";
+import {useState, useMemo, memo} from "react";
 
 type ConfirmationProps = {
   title: string;
   description?: string;
   confirmText?: string;
   cancelText?: string;
-  inputOptions?: {
-    placeHolder?: string;
-    defaultValue?: string;
-    label?: string;
-    enabled: boolean;
-  };
-  confirmCondition?: (input: string) => boolean; // disables confirm button if false
+  showInput?: boolean;
+  inputPlaceholder?: string;
+  inputDefaultValue?: string;
+  confirmCondition?: (input: string) => boolean;
   onConfirm: (inputValue?: string) => void;
   onCancel: () => void;
   loading?: boolean;
@@ -24,14 +21,15 @@ function Confirmation({
   description,
   confirmText = "Confirm",
   cancelText = "Cancel",
-  inputOptions,
+  showInput = true,
+  inputPlaceholder,
+  inputDefaultValue,
   confirmCondition,
   onConfirm,
   onCancel,
   loading
 }: ConfirmationProps) {
-  const [inputValue, setInputValue] = useState(inputOptions?.defaultValue ?? "");
-  const inputId = useId();
+  const [inputValue, setInputValue] = useState(inputDefaultValue ?? "");
 
   const confirmConditionResult = useMemo(() => {
     if (!confirmCondition) return true;
@@ -45,31 +43,24 @@ function Confirmation({
       <Modal.Header
         prefix={{
           children: (
-            <h2 className={styles.title} id="confirmation-dialog-title">
+            <h2 className={styles.title}>
               {title}
             </h2>
           )
         }}
         className={styles.header}
       />
-      <Modal.Body className={styles.body} aria-labelledby="confirmation-dialog-title">
-        {inputOptions?.enabled && (
-          <>
-            <label htmlFor={inputId}>
-              {inputOptions.label}
-            </label>
+      <Modal.Body className={styles.body}>
+        {showInput && (
             <input
-              id={inputId}
               autoFocus
-              placeholder={inputOptions.placeHolder}
+              placeholder={inputPlaceholder}
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
               type="text"
-              aria-describedby={description ? "confirmation-description" : undefined}
             />
-          </>
         )}
-        <span id="confirmation-description">{description}</span>
+        <span>{description}</span>
       </Modal.Body>
       <Modal.Footer
         dimensionX="fill"
