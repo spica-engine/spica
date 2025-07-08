@@ -1,7 +1,6 @@
 import {Context} from "../../migrate";
 
 export default async function (ctx: Context) {
-  console.log("Updating old index usage to new format...");
   const bucketCollection = ctx.database.collection("bucket");
 
   const buckets = await bucketCollection.find({}).toArray();
