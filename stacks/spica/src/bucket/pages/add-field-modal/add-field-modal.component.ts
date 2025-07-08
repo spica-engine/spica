@@ -91,6 +91,11 @@ export class AddFieldModalComponent implements OnInit {
   }
 
   save() {
+    if (!this.parentSchema._id) {
+      this.dialogRef.close(true);
+      return;
+    }
+
     this.savingState = SavingState.Saving;
     this.bs
       .replaceOne(this.parentSchema)

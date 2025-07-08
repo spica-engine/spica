@@ -43,7 +43,6 @@
     </mat-form-field>
     <div class="advanced-settings">
       <span
-        *ngIf="field != 'object'"
         class="input-placer-area"
         [inputSchemaPlacer]="field"
         [advancedOnly]="true"
@@ -98,9 +97,7 @@
           </mat-checkbox>
         </div>
         <div>
-          <mat-checkbox [(ngModel)]="propertyKv.readOnly">
-            Read-only
-          </mat-checkbox>
+          <mat-checkbox [(ngModel)]="propertyKv.readOnly"> Read-only </mat-checkbox>
         </div>
         <div
           *ngIf="
@@ -194,18 +191,14 @@
         required
         pattern="^(?!(_id)$)([a-z_0-9]*)+$"
       />
-      <mat-error *ngIf="pnm?.errors?.required">
-        Property name is required.
-      </mat-error>
+      <mat-error *ngIf="pnm?.errors?.required"> Property name is required. </mat-error>
       <mat-error *ngIf="pnm?.errors?.pattern">
         Property name should meet the following requirements<br />
         - Can not be '_id'.<br />
         - Can not include non-word character.<br />
         - Can not include uppercase letter.<br />
       </mat-error>
-      <mat-error *ngIf="pnm?.errors?.propertyExists">
-        Property name already exists.
-      </mat-error>
+      <mat-error *ngIf="pnm?.errors?.propertyExists"> Property name already exists. </mat-error>
     </mat-form-field>
     <button
       mat-button
