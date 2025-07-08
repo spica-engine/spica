@@ -36,21 +36,14 @@ export default async function (ctx: Context) {
     const updateOp: any = {
       updateOne: {
         filter: {_id: bucket._id},
-        update: {}
+        update: {
+          $set: {
+            properties: bucket.properties,
+            indexes
+          }
+        }
       }
     };
-
-    if (indexes.length > 0) {
-      updateOp.updateOne.update.$set = {
-        indexes,
-        properties: bucket.properties
-      };
-    } else {
-      updateOp.updateOne.update.$set = {
-        properties: bucket.properties
-      };
-    }
-
     bulkOps.push(updateOp);
   }
 
