@@ -1,4 +1,4 @@
-import axios, {AxiosHeaders} from "axios";
+import axios from "axios";
 import {useCallback, useMemo, useState} from "react";
 import useLocalStorage from "./useLocalStorage";
 
