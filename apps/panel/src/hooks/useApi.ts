@@ -1,10 +1,10 @@
-import axios from "axios";
-import {useCallback, useEffect, useMemo, useState} from "react";
+import axios, {AxiosHeaders} from "axios";
+import {useCallback, useMemo, useState} from "react";
 import useLocalStorage from "./useLocalStorage";
 
 type ApiRequestOptions = {
   endpoint: string;
-  method?: "get" | "post" | "put" | "delete";
+  method?: "get" | "post" | "put" | "delete" | "patch";
   onSuccess?: () => void;
   onError?: () => void;
 };
@@ -21,14 +21,22 @@ function useApi<T>({endpoint, method = "get", onSuccess, onError}: ApiRequestOpt
   }, [endpoint]);
 
   const request = useCallback(
-    (body?: any) => {
+    ({body, headers}: {body?: any; headers?: Record<string, string>}) => {
       const makeRequest = async () => {
         try {
+          const combinedHeaders =
+            token || headers
+              ? {
+                  ...(token ? {Authorization: `IDENTITY ${token}`} : {}),
+                  ...(headers ?? {})
+                }
+              : undefined;
+
           const response = await axios({
             method,
             url: resolvedUrl,
             data: body,
-            headers: token ? {Authorization: token} : undefined
+            headers: combinedHeaders
           });
 
           if (response.status >= 200 && response.status < 300) {
