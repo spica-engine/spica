@@ -1,5 +1,5 @@
-import {createContext, useMemo, useContext, type ReactNode, useState, useEffect} from "react";
-import {useBucketService} from "src/services/bucketService";
+import {createContext, useMemo, useContext, type ReactNode, useEffect} from "react";
+import {useBucketService} from "../services/bucketService";
 
 type BucketContextType = {
   buckets: any; // Replace with actual type
@@ -14,7 +14,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
 
   useEffect(() => {
     fetchBuckets();
-  }, [fetchBuckets]);
+  }, []);
 
   const contextValue = useMemo(
     () => ({
