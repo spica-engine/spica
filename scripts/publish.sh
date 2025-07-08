@@ -50,7 +50,7 @@ echo $DOCKER_IMAGE_LABELS
 # Once we migrate client to bazel we'll get rid of these steps
 echo ""
 echo "## Building spica"
-yarn --cwd=stacks/spica --silent ng build --prod --progress=false
+NODE_OPTIONS=--openssl-legacy-provider yarn --cwd=stacks/spica --silent ng build --prod --progress=false
 
 # echo ""
 # echo "## Building bazel generated artifacts in parallel"
