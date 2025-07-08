@@ -203,29 +203,15 @@
             "type": "object",
             "minProperties": 1,
             "propertyNames": {
-              "type": "string",
-              "pattern": "^[a-zA-Z0-9_.]+$"
+              "type": "string"
             },
             "additionalProperties": {
-              "type": "integer",
-              "enum": [1, -1]
+              "type": "string"
             },
-            "description": "Field paths and direction of the index (1 or -1)"
+            "description": "Field paths and direction of the index"
           },
           "options": {
             "type": "object",
-            "properties": {
-              "unique": {
-                "type": "boolean"
-              },
-              "expireAfterSeconds": {
-                "type": "integer",
-                "minimum": 1
-              },
-              "sparse": {
-                "type": "boolean"
-              }
-            },
             "additionalProperties": true,
             "description": "Additional index options, such as TTL, uniqueness, or sparse"
           }

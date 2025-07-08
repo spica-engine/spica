@@ -157,7 +157,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
 
     const optionsStr = JSON.stringify(sortedOptions);
 
-    const hash = crypto.createHash("sha1").update(optionsStr).digest("hex").slice(0, 8);
+    const hash = crypto.createHash("sha1").update(optionsStr).digest("hex");
 
     return `${defs}-${hash}`;
   }
@@ -168,28 +168,29 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     const existingIndexes = await collection.listIndexes().toArray();
 
     // _id is default index for MondoDB collections, we cant drop it
-    // _id_ is internal name for _id index in MongoDB
+    // _id_ is internal name for _id index in MongoDB so we are filtering out
     const existingNames = new Set(
-      existingIndexes.map(index => index.name).filter(name => name !== "_id_" && name !== "_id")
+      existingIndexes.map(index => index.name).filter(name => name !== "_id_")
     );
 
-    const desiredIndexes = (bucket.indexes || []).map(idx => {
+    const newIndexes = (bucket.indexes || []).map(idx => {
       const name = this.generateIndexName(idx.definition, idx.options || {});
       return {...idx, name};
     });
 
-    const indexes = desiredIndexes.filter(idx => !existingNames.has(idx.name));
+    const desiredNames = new Set(newIndexes.map(idx => idx.name));
+
+    const indexesToDrop = Array.from(existingNames).filter(name => !desiredNames.has(name));
+    const indexesToAdd = newIndexes.filter(idx => !existingNames.has(idx.name));
 
     const errors = [];
 
     await Promise.all(
-      Array.from(existingNames).map(name =>
-        collection.dropIndex(name).catch(err => errors.push(err))
-      )
+      indexesToDrop.map(name => collection.dropIndex(name).catch(err => errors.push(err)))
     );
 
     await Promise.all(
-      indexes.map(idx =>
+      indexesToAdd.map(idx =>
         collection
           .createIndex(idx.definition, {...idx.options, name: idx.name})
           .catch(err => errors.push(err))
