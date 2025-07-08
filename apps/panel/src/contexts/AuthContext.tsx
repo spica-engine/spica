@@ -7,7 +7,7 @@ import {
     useContext,
     type ReactNode,
 } from 'react';
-import useLocalStorage from '../custom-hooks/useLocalStorage';
+import useLocalStorage from '../hooks/useLocalStorage';
 import type { UserType } from '../types/user';
 
 async function mockLoginRequest(email: string, password: string): Promise<{ ok: boolean; token: string }> {
