@@ -1,46 +1,49 @@
-import React, { memo, useState } from "react";
-import { useFormik } from "formik";
-import { BaseInput, Button, FlexElement, Icon, Input, StringInput, Text } from "oziko-ui-kit";
+import {memo, useEffect} from "react";
+import {useFormik} from "formik";
+import {
+  BaseInput,
+  Button,
+  FlexElement,
+  Icon,
+  Input,
+  StringInput,
+  Text,
+  type IconName
+} from "oziko-ui-kit";
 import styles from "./Login.module.scss";
 import Logo from "../../components/atoms/logo/Logo";
-import { authorization } from "../../services/passport/identify";
-import { useNavigate } from "react-router-dom";
-
-const getErrorMessage = (error: any): string => {
-  return error.response?.data?.message || "An unexpected error occurred. Please try again.";
-};
+import useAuthService from "../../services/authService";
 
 const Login = () => {
-  const navigate = useNavigate();
-  const [loginError, setLoginError] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const {
+    getStrategies,
+    strategies,
+    strategiesLoading,
+    strategiesError,
 
-  const handleLogin = async (values: { identifier: string; password: string }) => {
-    setIsLoading(true);
+    triggerStrategyLogin,
+    strategyUrlLoading,
+    strategyUrlError,
 
-    try {
-      const response = await authorization(values);
-      if (response.data && response.data.token) {
-        // localStorage.setItem('token', response.data.token);
-        navigate("/home");
-      } else {
-        throw new Error("Invalid response: No authentication token received");
-      }
-    } catch (error) {
-      const errorMessage = getErrorMessage(error);
-      console.error("Login failed:", error);
-      setLoginError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
+    login,
+    loginLoading,
+    loginError
+  } = useAuthService();
+
+  const handleLogin = async (values: {identifier: string; password: string}) => {
+    login(values.identifier, values.password);
   };
 
   const formik = useFormik({
-    initialValues: { identifier: "", password: "" },
+    initialValues: {identifier: "", password: ""},
     onSubmit: handleLogin,
     validateOnChange: false,
     validateOnBlur: false
   });
+
+  useEffect(() => {
+    getStrategies();
+  }, []);
 
   return (
     <div className={styles.container}>
@@ -58,9 +61,30 @@ const Login = () => {
             gap={10}
           >
             <Logo size="xl" />
-
-            {loginError && <div className={styles.errorText}>{loginError}</div>}
-
+            {(loginLoading || strategiesLoading || strategyUrlLoading) && (
+              <Text className={styles.loadingText} size="medium">
+                {loginLoading && "Logging in..."}
+                {strategiesLoading && "Loading login options..."}
+                {strategyUrlLoading && "Connecting..."}
+              </Text>
+            )}
+            <div>
+              {loginError && (
+                <div className={styles.errorBox}>
+                  <div className={styles.errorText}>{loginError}</div>
+                </div>
+              )}
+              {strategiesError && (
+                <div className={styles.errorBox}>
+                  <div className={styles.errorText}>{strategiesError}</div>
+                </div>
+              )}
+              {strategyUrlError && (
+                <div className={styles.errorBox}>
+                  <div className={styles.errorText}>{strategyUrlError}</div>
+                </div>
+              )}
+            </div>
             <StringInput
               id="identifier"
               label="Name"
@@ -107,29 +131,36 @@ const Login = () => {
               disabled={
                 formik.values.identifier.length < 3 ||
                 formik.values.password.length < 3 ||
-                isLoading
+                loginLoading ||
+                strategyUrlLoading
               }
               containerProps={{
                 className: styles.formButtonContainer
               }}
-
             >
               <Icon name="login" size="xs" />
               Login
             </Button>
 
-            <Button
-              fullWidth
-              type="button"
-              color="default"
-              variant="outlined"
-              containerProps={{
-                className: styles.formButtonContainer
-              }}
-            >
-              <Logo size="sm" type="withoutText" />
-              Login With Spica Account
-            </Button>
+            {strategies?.map(strategy => (
+              <Button
+                key={strategy._id}
+                fullWidth
+                type="button"
+                color="default"
+                variant="outlined"
+                disabled={loginLoading || strategyUrlLoading}
+                containerProps={{
+                  className: styles.formButtonContainer
+                }}
+                onClick={() => {
+                  triggerStrategyLogin(strategy);
+                }}
+              >
+                <Icon size="sm" name={strategy.icon as IconName} />
+                {strategy.title}
+              </Button>
+            ))}
           </FlexElement>
 
           <FlexElement

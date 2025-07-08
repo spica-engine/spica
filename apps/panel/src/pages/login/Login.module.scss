@@ -33,11 +33,29 @@
     }
   }
 
+  .errorBox {
+    background-color: #ffeaea;
+    border: 1px solid #ffbaba;
+    padding: 12px;
+    border-radius: 8px;
+    color: #b00020;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
   .errorText {
-    width: 100%;
-    color: var(--color-danger);
-    font-size: var(--font-size-sm);
-    margin-top: calc(var(--gap-md) * -1);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .loadingText {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #555;
+    margin-top: 12px;
   }
 
   .stringInput {
@@ -53,7 +71,7 @@
       height: var(--icon-size-sm) !important;
     }
 
-    >div:nth-child(1) {
+    > div:nth-child(1) {
       height: 30px !important;
       outline: none;
     }
@@ -68,7 +86,6 @@
       line-height: var(--line-height-sm) !important;
       font-size: var(--font-size-sm) !important;
     }
-
   }
 
   .submitButton {
@@ -79,5 +96,4 @@
     font-size: var(--font-size-sm);
     font-family: var(--font-family-base);
   }
-
 }
