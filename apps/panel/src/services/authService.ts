@@ -22,21 +22,20 @@ function useAuthService() {
     method: "get"
   });
 
-  const strategyId = selectedStrategy?._id;
   const {
     request: fetchStrategyUrl,
     data: strategyUrl,
     error: strategyUrlError,
     loading: strategyUrlLoading
   } = useApi<StrategyUrlData>({
-    endpoint: `/api/passport/strategy/${strategyId}/url`,
+    endpoint: `/api/passport/strategy/${selectedStrategy?._id}/url`,
     method: "get"
   });
 
   useEffect(() => {
-    if (!strategyId) return;
+    if (!selectedStrategy?._id) return;
     fetchStrategyUrl();
-  }, [strategyId, fetchStrategyUrl]);
+  }, [selectedStrategy?._id, fetchStrategyUrl]);
 
   useEffect(() => {
     if (strategyUrl?.url) {

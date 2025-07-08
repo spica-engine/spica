@@ -30,13 +30,9 @@ const Login = () => {
     loginError
   } = useAuthService();
 
-  const handleLogin = async (values: {identifier: string; password: string}) => {
-    login(values.identifier, values.password);
-  };
-
   const formik = useFormik({
     initialValues: {identifier: "", password: ""},
-    onSubmit: handleLogin,
+    onSubmit: values => login(values.identifier, values.password),
     validateOnChange: false,
     validateOnBlur: false
   });
@@ -68,7 +64,7 @@ const Login = () => {
                 {strategyUrlLoading && "Connecting..."}
               </Text>
             )}
-            <div>
+            <div className={styles.errorsContainer}>
               {loginError && (
                 <div className={styles.errorBox}>
                   <div className={styles.errorText}>{loginError}</div>
