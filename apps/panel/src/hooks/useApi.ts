@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { type AxiosRequestHeaders } from "axios";
 import {useCallback, useMemo, useState} from "react";
 import useLocalStorage from "./useLocalStorage";
 
@@ -21,7 +21,7 @@ function useApi<T>({endpoint, method = "get", onSuccess, onError}: ApiRequestOpt
   }, [endpoint]);
 
   const request = useCallback(
-    ({body, headers}: {body?: any; headers?: Record<string, string>} = {}) => {
+    ({body, headers}: {body?: any; headers?: AxiosRequestHeaders} = {}) => {
       const makeRequest = async () => {
         try {
           const combinedHeaders =
