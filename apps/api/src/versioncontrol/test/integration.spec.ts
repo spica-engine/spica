@@ -269,7 +269,7 @@ describe("Versioning", () => {
         await bs.insertOne(bucket);
         await sleep();
 
-        const file = await readResource("bucket", id.toString());
+        const file = await readResource("bucket", `${bucket.title}(${id.toString()})`);
         const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
         expect(parsedFile).toEqual({
@@ -285,7 +285,7 @@ describe("Versioning", () => {
         await bs.updateOne({_id: id}, {$set: {"properties.title.type": "number"}});
         await sleep();
 
-        const file = await readResource("bucket", id.toString());
+        const file = await readResource("bucket", `${bucket.title}(${id.toString()})`);
         const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
         const expectedBucket = {...bucket, _id: id.toString()};
