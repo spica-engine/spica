@@ -36,7 +36,7 @@ export const getIndexSynchronizer = (
     });
 
   const convertToRepResource = change => ({
-    _id: change.resource._id.toString(),
+    _id: `${change.resource.name}(${change.resource._id.toString()})`,
     content: change.resource.content,
     additionalParameters: {language: change.resource.language}
   });

@@ -20,7 +20,7 @@ export const getSynchronizer = (
   const extension = "yaml";
 
   const convertToRepResource = (change: DocChange<Bucket>) => ({
-    _id: change.resource._id.toString(),
+    _id: `${change.resource.title}(${change.resource._id.toString()})`,
     content: YAML.stringify(change.resource)
   });
 

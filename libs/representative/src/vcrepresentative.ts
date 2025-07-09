@@ -82,7 +82,10 @@ export class VCRepresentativeManager implements IRepresentativeManager {
         const isTrackedFile = files.some(file => parts[1] == file);
         if (!isCorrectDepth || !isTrackedFile) return;
 
-        const _id = parts[0];
+        const [_id] = parts.map(part => {
+          const match = part.match(/^(identity)|\(([\da-f]{24})\)$/i);
+          return match?.[1] || match?.[2];
+        });
 
         let changeType: ChangeTypes;
         let resource: RepresentativeManagerResource;

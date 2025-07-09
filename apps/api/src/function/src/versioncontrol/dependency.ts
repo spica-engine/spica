@@ -37,9 +37,9 @@ export const getDependencySynchronizer = (
   const convertToRepResource = (change: DocChange<FunctionWithContent>) => {
     const parsed = JSON.parse(change.resource.content);
     const dependencies = parsed.dependencies || {};
-
+    console.log(`${change.resource.name}(${change.resource._id.toString()})`);
     return {
-      _id: change.resource._id.toString(),
+      _id: `${change.resource.name}(${change.resource._id.toString()})`,
       content: JSON.stringify({dependencies})
     };
   };
