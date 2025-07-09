@@ -24,6 +24,7 @@ import * as fnCRUD from "@spica-server/function/src/crud";
 import {v4 as uuidv4} from "uuid";
 
 const sleep = () => new Promise(r => setTimeout(r, 1000));
+const getRepId = (name: string, id: ObjectId | string) => `${name}(${id.toString()})`;
 
 describe("Versioning", () => {
   let module: TestingModule;
@@ -314,7 +315,7 @@ describe("Versioning", () => {
     describe("Synchronization from files to database", () => {
       it("should make first synchronization", async () => {
         const stringified = YAML.stringify(bucket);
-        await rep.write("bucket", id.toHexString(), "schema", stringified, "yaml");
+        await rep.write("bucket", getRepId(bucket.title, id), "schema", stringified, "yaml");
         await sleep();
 
         const buckets = await bs.find();
@@ -323,11 +324,11 @@ describe("Versioning", () => {
 
       it("should update if schema has changes", async () => {
         const stringified = YAML.stringify(bucket);
-        await rep.write("bucket", id.toHexString(), "schema", stringified, "yaml");
+        await rep.write("bucket", getRepId(bucket.title, id), "schema", stringified, "yaml");
         await sleep();
 
         const updated = YAML.stringify({...bucket, title: "new title"});
-        await rep.write("bucket", id.toHexString(), "schema", updated, "yaml");
+        await rep.write("bucket", getRepId(bucket.title, id), "schema", updated, "yaml");
         await sleep();
 
         const buckets = await bs.find({});
@@ -336,9 +337,9 @@ describe("Versioning", () => {
 
       it("should delete if schema has been deleted", async () => {
         const stringified = YAML.stringify(bucket);
-        await rep.write("bucket", id.toHexString(), "schema", stringified, "yaml");
+        await rep.write("bucket", getRepId(bucket.title, id), "schema", stringified, "yaml");
         await sleep();
-        await rep.rm("bucket", id.toHexString());
+        await rep.rm("bucket", getRepId(bucket.title, id));
         await sleep();
 
         const buckets = await bs.find({});
@@ -460,18 +461,18 @@ describe("Versioning", () => {
           triggers: {}
         };
         const stringified = YAML.stringify(fn);
-        await rep.write("function", id, "schema", stringified, "yaml");
+        await rep.write("function", getRepId(fn.name, id), "schema", stringified, "yaml");
         await sleep();
 
         let index = "console.log('hi')";
-        await rep.write("function", id, "index", index, "ts");
+        await rep.write("function", getRepId(fn.name, id), "index", index, "ts");
         await sleep();
 
         let packages: any = {
           dependencies: {}
         };
         const stringifiedPackages = YAML.stringify(packages);
-        await rep.write("function", id, "package", stringifiedPackages, "json");
+        await rep.write("function", getRepId(fn.name, id), "package", stringifiedPackages, "json");
         await sleep();
 
         let fns = await fnservice.find();
@@ -495,7 +496,7 @@ describe("Versioning", () => {
           options: {}
         };
         const stringifiedSchema = YAML.stringify({...fn, triggers: {onCall}});
-        await rep.write("function", id, "schema", stringifiedSchema, "yaml");
+        await rep.write("function", getRepId(fn.name, id), "schema", stringifiedSchema, "yaml");
         await sleep();
 
         fns = await fnservice.find();
@@ -509,14 +510,14 @@ describe("Versioning", () => {
 
         // INDEX UPDATES
         index = "console.log('hi2')";
-        await rep.write("function", id, "index", index, "ts");
+        await rep.write("function", getRepId(fn.name, id), "index", index, "ts");
         await sleep();
 
         index = await engine.read(fn);
         expect(index).toEqual("console.log('hi2')");
 
         // SCHEMA DELETE
-        await rep.rm("function", id);
+        await rep.rm("function", getRepId(fn.name, id));
         await sleep();
 
         fns = await fnservice.find();
@@ -591,7 +592,7 @@ describe("Versioning", () => {
     describe("Synchronization from files to database", () => {
       it("should make first synchronization", async () => {
         const stringified = YAML.stringify(envVar);
-        await rep.write("env-var", id.toHexString(), "schema", stringified, "yaml");
+        await rep.write("env-var", getRepId(envVar.key, id), "schema", stringified, "yaml");
         await sleep();
 
         const envVars = await evs.find();
@@ -600,11 +601,11 @@ describe("Versioning", () => {
 
       it("should update if schema has changes", async () => {
         const stringified = YAML.stringify(envVar);
-        await rep.write("env-var", id.toHexString(), "schema", stringified, "yaml");
+        await rep.write("env-var", getRepId(envVar.key, id), "schema", stringified, "yaml");
         await sleep();
 
         const updated = YAML.stringify({...envVar, value: "false"});
-        await rep.write("env-var", id.toHexString(), "schema", updated, "yaml");
+        await rep.write("env-var", getRepId(envVar.key, id), "schema", updated, "yaml");
         await sleep();
 
         const envVars = await evs.find({});
@@ -619,10 +620,10 @@ describe("Versioning", () => {
 
       it("should delete if schema has been deleted", async () => {
         const stringified = YAML.stringify(envVar);
-        await rep.write("env-var", id.toHexString(), "schema", stringified, "yaml");
+        await rep.write("env-var", getRepId(envVar.key, id), "schema", stringified, "yaml");
         await sleep();
 
-        await rep.rm("env-var", id.toHexString());
+        await rep.rm("env-var", getRepId(envVar.key, id));
         await sleep();
 
         const envVars = await evs.find({});
