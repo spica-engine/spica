@@ -274,7 +274,7 @@ describe("Versioning", () => {
         const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
         expect(parsedFile).toEqual({
-          _id: id.toHexString(),
+          _id: `${bucket.title}(${id.toString()})`,
           contents: {schema: {...bucket, _id: id.toString()}}
         });
       });
@@ -293,7 +293,7 @@ describe("Versioning", () => {
         expectedBucket.properties.title.type = "number";
 
         expect(parsedFile).toEqual({
-          _id: id.toHexString(),
+          _id: `${bucket.title}(${id.toString()})`,
           contents: {
             schema: expectedBucket
           }
@@ -368,7 +368,7 @@ describe("Versioning", () => {
 
         await sleep();
 
-        let file = await readResource("function", id.toString());
+        let file = await readResource("function", `${fn.name}(${id.toString()})`);
         let parsedFile = {
           ...file,
           contents: {
@@ -380,7 +380,7 @@ describe("Versioning", () => {
         const expectedSchema = {...fn, _id: id.toHexString()};
 
         expect(parsedFile).toEqual({
-          _id: id.toHexString(),
+          _id: `${fn.name}(${id.toString()})`,
           contents: {
             index: "",
             package: {dependencies: {}},
@@ -397,7 +397,7 @@ describe("Versioning", () => {
         await fnservice.findOneAndUpdate({_id: id}, {$set: {"triggers.onCall": onCall}});
         await sleep();
 
-        file = await readResource("function", id.toString());
+        file = await readResource("function", `${fn.name}(${id.toString()})`);
         parsedFile = {
           ...file,
           contents: {
@@ -420,7 +420,7 @@ describe("Versioning", () => {
         await engine.update(fn, "console.log(123)");
         await sleep();
 
-        file = await readResource("function", id.toString());
+        file = await readResource("function", `${fn.name}(${id.toString()})`);
         parsedFile = {
           ...file,
           contents: {
@@ -443,7 +443,7 @@ describe("Versioning", () => {
         await fnservice.findOneAndDelete({_id: id});
         await sleep();
 
-        file = await readResource("function", id.toString());
+        file = await readResource("function", `${fn.name}(${id.toString()})`);
         expect(file).toEqual({});
         // we can not install dependency on test environment
       });
@@ -552,11 +552,11 @@ describe("Versioning", () => {
         await evs.insertOne(envVar);
         await sleep();
 
-        const file = await readResource("env-var", id.toString());
+        const file = await readResource("env-var", `${envVar.key}(${id.toString()})`);
         const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
         expect(parsedFile).toEqual({
-          _id: id.toHexString(),
+          _id: `${envVar.key}(${id.toString()})`,
           contents: {schema: {_id: id.toString(), key: "IGNORE_ERRORS", value: "true"}}
         });
       });
@@ -568,11 +568,11 @@ describe("Versioning", () => {
         await evs.updateOne({_id: id}, {$set: {value: "false"}});
         await sleep();
 
-        const file = await readResource("env-var", id.toString());
+        const file = await readResource("env-var", `${envVar.key}(${id.toString()})`);
         const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
         expect(parsedFile).toEqual({
-          _id: id.toHexString(),
+          _id: `${envVar.key}(${id.toString()})`,
           contents: {schema: {_id: id.toString(), key: "IGNORE_ERRORS", value: "false"}}
         });
       });
@@ -584,7 +584,7 @@ describe("Versioning", () => {
         await evs.findOneAndDelete({_id: id});
         await sleep();
 
-        const file = await readResource("env-var", id.toString());
+        const file = await readResource("env-var", `${envVar.key}(${id.toString()})`);
         expect(file).toEqual({});
       });
     });
