@@ -64,7 +64,7 @@ const DraggableItem = ({
   moveItem
 }: {
   id: string;
-  item: TypeNavigatorItems;
+  item: TypeNavigatorItems & {index: number};
   index: number;
   moveItem: (dragIndex: number, hoverIndex: number) => void;
 }) => {
