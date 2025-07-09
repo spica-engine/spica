@@ -305,54 +305,64 @@ export function buildRelationAggregation(
   additionalPipeline?: object[]
 ): object[] {
   assertRelationType(type);
-  const pipeline = [];
-
-  let _let;
+  const aggregations = [];
 
   if (type == RelationType.One) {
-    _let = {
-      documentId: {
-        $toObjectId: `$${property}`
+    aggregations.push({
+      $addFields: {
+        [`${property}`]: {
+          $toObjectId: `$${property}`
+        }
       }
-    };
-    pipeline.push({$match: {$expr: {$eq: ["$_id", "$$documentId"]}}});
+    });
   } else if (type == RelationType.Many) {
-    _let = {
-      documentIds: {
-        $ifNull: [
-          {
-            $map: {
-              input: `$${property}`,
-              in: {$toObjectId: "$$this"}
-            }
-          },
-          []
-        ]
+    aggregations.push({
+      $addFields: {
+        [`${property}`]: {
+          $ifNull: [
+            {
+              $map: {
+                input: `$${property}`,
+                in: {$toObjectId: "$$this"}
+              }
+            },
+            []
+          ]
+        }
       }
-    };
-    pipeline.push({$match: {$expr: {$in: ["$_id", "$$documentIds"]}}});
+    });
   }
 
+  const lookup: any = {
+    $lookup: {
+      from: getBucketDataCollection(bucketId),
+      localField: property,
+      foreignField: "_id",
+      as: property
+    }
+  };
+
+  const pipeline = [];
+
   if (additionalPipeline) {
-    pipeline.push(...additionalPipeline);
+    pipeline.push(additionalPipeline);
   }
 
   if (locale) {
     pipeline.push({$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)});
   }
 
-  const lookup = {
-    $lookup: {
-      from: getBucketDataCollection(bucketId),
-      as: property,
-      let: _let,
-      pipeline
-    }
-  };
+  if (pipeline.length) {
+    lookup.$lookup.pipeline = pipeline;
+  }
 
-  return type == RelationType.One
-    ? [lookup, {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}]
-    : [lookup];
+  aggregations.push(lookup);
+
+  if (type == RelationType.One) {
+    aggregations.push({$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}});
+  }
+
+  return aggregations;
 }
 
 export async function clearRelations(
