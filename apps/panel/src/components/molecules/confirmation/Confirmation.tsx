@@ -1,4 +1,4 @@
-import {Button, Modal} from "oziko-ui-kit";
+import {Button, Input, Modal} from "oziko-ui-kit";
 import styles from "./Confirmation.module.scss";
 import {useState, useMemo, memo} from "react";
 
@@ -52,7 +52,7 @@ function Confirmation({
       />
       <Modal.Body className={styles.body}>
         {showInput && (
-            <input
+            <Input
               autoFocus
               placeholder={inputPlaceholder}
               value={inputValue}
