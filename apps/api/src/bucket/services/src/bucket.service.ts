@@ -214,7 +214,15 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     );
   }
 
-  async createIndexes(collection: Collection, indexes: any[], errors: Error[]): Promise<void> {
+  async createIndexes(
+    collection: Collection,
+    indexes: Array<{
+      definition: Record<string, any>;
+      options?: Record<string, any>;
+      name: string;
+    }>,
+    errors: Error[]
+  ): Promise<void> {
     await Promise.all(
       indexes.map(idx =>
         collection

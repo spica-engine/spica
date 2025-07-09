@@ -26,7 +26,11 @@ describe("Bucket Service", () => {
       await bs.db.createCollection("buckets");
     });
 
-    afterEach(() => module.close());
+    afterEach(async () => {
+      jest.restoreAllMocks();
+      await module.close();
+    });
+
     it("should create all types of indexes", async () => {
       const bucketId = new ObjectId();
       const bucket: any = {
@@ -387,10 +391,15 @@ describe("Bucket Service", () => {
       const existingIndexes = await collection.listIndexes().toArray();
       const existingNames = existingIndexes.map(i => i.name);
 
+      const calculateIndexChangesSpy = jest.spyOn(bs as any, "calculateIndexChanges");
+
       const {indexesToDrop, indexesToCreate} = (bs as any).calculateIndexChanges(
         existingNames,
         reorderedOptionsBucket
       );
+
+      expect(calculateIndexChangesSpy).toHaveBeenCalledWith(existingNames, reorderedOptionsBucket);
+      expect(calculateIndexChangesSpy).toHaveBeenCalledTimes(1);
 
       expect(indexesToDrop).toEqual([]);
       expect(indexesToCreate).toEqual([]);
@@ -428,10 +437,15 @@ describe("Bucket Service", () => {
       const existingIndexes = await collection.listIndexes().toArray();
       const existingNames = existingIndexes.map(i => i.name);
 
+      const calculateIndexChangesSpy = jest.spyOn(bs as any, "calculateIndexChanges");
+
       const {indexesToDrop, indexesToCreate} = (bs as any).calculateIndexChanges(
         existingNames,
         bucket
       );
+
+      expect(calculateIndexChangesSpy).toHaveBeenCalledWith(existingNames, bucket);
+      expect(calculateIndexChangesSpy).toHaveBeenCalledTimes(1);
 
       expect(indexesToDrop).toEqual([]);
       expect(indexesToCreate).toEqual([]);
