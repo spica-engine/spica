@@ -47,4 +47,11 @@
     gap: var(--gap-sm);
     font-weight: 400;
   }
+
+  .ungrouped {
+    svg:hover, button:hover {
+      width: var(--icon-size-md);
+      height: var(--icon-size-md);
+    }
+  }
 }

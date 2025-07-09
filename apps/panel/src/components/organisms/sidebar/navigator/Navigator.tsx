@@ -2,11 +2,12 @@ import {FluidContainer, Icon, Text, type IconName, helperUtils} from "oziko-ui-k
 import styles from "./Navigator.module.scss";
 import {Button, Accordion} from "oziko-ui-kit";
 import NavigatorItem from "../../../molecules/navigator-item/NavigatorItem";
-import React, {memo, useCallback, useState} from "react";
+import React, {memo, useCallback, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {DndProvider, useDrag, useDrop} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import type {TypeNavigatorItems} from "../SideBar";
+import useApi from "../../../../hooks/useApi";
 
 type TypeNavigatorProps = {
   header?: TypeNavigatorHeader;
@@ -28,6 +29,12 @@ export type TypeNavigatorHeader = {
     onClick: () => void;
   }[];
 };
+
+type TypeOrderPayload = {
+  bucketId: string;
+  order: number;
+};
+
 
 const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
   return (
@@ -58,15 +65,15 @@ const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
 };
 
 const DraggableItem = ({
-  id,
   item,
   index,
-  moveItem
+  moveItem,
+  completeMoving
 }: {
-  id: string;
   item: TypeNavigatorItems & {index: number};
   index: number;
   moveItem: (dragIndex: number, hoverIndex: number) => void;
+  completeMoving: (item: {_id: string; index: number}) => void;
 }) => {
   const navigate = useNavigate();
 
@@ -95,15 +102,21 @@ const DraggableItem = ({
     },
     collect: monitor => ({
       isOver: monitor.isOver()
-    })
+    }),
+    drop: () => {
+      return {name: "DraggableItem", _id: item._id, index};
+    }
   });
 
   const [{isDragging}, drag] = useDrag({
     type: "NAVIGATOR_ITEM",
-    item: {id, index},
+    item: {_id: item._id, index},
     collect: monitor => ({
       isDragging: monitor.isDragging()
-    })
+    }),
+    end: (draggedItem, monitor) => {
+      completeMoving(draggedItem);
+    }
   });
 
   drop(containerRef);
@@ -133,7 +146,18 @@ const DraggableItem = ({
 };
 
 const ReorderableList = ({initialItems}: {initialItems: TypeNavigatorItems[]}) => {
-  const [items, setItems] = useState(() => initialItems.map((item, index) => ({...item, index})));
+  const [items, setItems] = useState(initialItems);
+  const [payload, setPayload] = useState<TypeOrderPayload | null>(null);
+
+  const {request} = useApi({endpoint: `/api/bucket/${payload?.bucketId}`, method: "patch"});
+  useEffect(() => {
+    if (!payload) return;
+    request({
+      body: {
+        order: payload.order
+      }
+    });
+  }, [payload?.bucketId, payload?.order]);
 
   const moveItem = useCallback((from: number, to: number) => {
     setItems(prev => {
@@ -144,10 +168,20 @@ const ReorderableList = ({initialItems}: {initialItems: TypeNavigatorItems[]}) =
     });
   }, []);
 
+  const completeMoving = useCallback((item: {_id: string; index: number}) => {
+    setPayload({bucketId: item._id, order: item.index});
+  }, []);
+
   return (
     <DndProvider backend={HTML5Backend}>
       {items.map((item, index) => (
-        <DraggableItem key={item._id} id={item._id} index={index} item={item} moveItem={moveItem} />
+        <DraggableItem
+          key={item._id}
+          index={index}
+          item={{...item, index}}
+          moveItem={moveItem}
+          completeMoving={completeMoving}
+        />
       ))}
     </DndProvider>
   );
