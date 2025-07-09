@@ -2,7 +2,7 @@ import {FluidContainer, Icon, Text, type IconName, helperUtils} from "oziko-ui-k
 import styles from "./Navigator.module.scss";
 import {Button, Accordion} from "oziko-ui-kit";
 import NavigatorItem from "../../../molecules/navigator-item/NavigatorItem";
-import React, {memo, useCallback, useMemo, useState} from "react";
+import React, {memo, useCallback, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {DndProvider, useDrag, useDrop} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
