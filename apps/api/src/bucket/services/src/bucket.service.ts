@@ -189,7 +189,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     bucket: Bucket
   ): {
     indexesToDrop: string[];
-    indexesToCreate: any[];
+    indexesToCreate: IndexDefinition[];
   } {
     const newIndexes = (bucket.indexes || []).map(idx => {
       const name = this.generateIndexName(idx.definition, idx.options || {});
@@ -216,11 +216,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
 
   async createIndexes(
     collection: Collection,
-    indexes: Array<{
-      definition: Record<string, any>;
-      options?: Record<string, any>;
-      name: string;
-    }>,
+    indexes: IndexDefinition[],
     errors: Error[]
   ): Promise<void> {
     await Promise.all(
