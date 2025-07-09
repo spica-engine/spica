@@ -12,6 +12,7 @@ import {
 type SuffixIcon = {
   name: IconName;
   onClick?: () => void;
+  ref?: React.Ref<HTMLButtonElement>;
 };
 
 type TypeNavigatorItem = {
@@ -28,23 +29,33 @@ const NavigatorItem: FC<TypeNavigatorItem> = ({label, prefixIcon, suffixIcons = 
       mode="fill"
       prefix={
         prefixIcon && {
-          children: <Icon name={prefixIcon} size={"md"}/>
+          children: <Icon name={prefixIcon} size={"md"} />
         }
       }
       root={{
-        children: <Text dimensionX={"fill"} size="medium" className={styles.label}>{label}</Text>
+        children: (
+          <Text dimensionX={"fill"} size="medium" className={styles.label}>
+            {label}
+          </Text>
+        )
       }}
       suffix={{
         children: suffixIcons.length > 0 && (
           <>
-            {suffixIcons.map(({name, onClick}, index) => (
+            {suffixIcons.map(({name, onClick, ref}, index) => (
               <Button
                 key={index}
                 color="transparent"
                 className={styles.suffixButton}
                 onClick={onClick}
+                // @ts-expect-error
+                ref={(el: HTMLButtonElement) => {
+                  if (ref && typeof ref === "object") {
+                    (ref as React.MutableRefObject<HTMLButtonElement | null>).current = el;
+                  }
+                }}
               >
-                <Icon name={name} size="sm"/>
+                <Icon name={name} size="sm" />
               </Button>
             ))}
           </>

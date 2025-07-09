@@ -2,8 +2,11 @@ import {FluidContainer, Icon, Text, type IconName, helperUtils} from "oziko-ui-k
 import styles from "./Navigator.module.scss";
 import {Button, Accordion} from "oziko-ui-kit";
 import NavigatorItem from "../../../molecules/navigator-item/NavigatorItem";
-import {memo} from "react";
+import React, {memo, useCallback, useMemo, useState} from "react";
 import {useNavigate} from "react-router-dom";
+import {DndProvider, useDrag, useDrop} from "react-dnd";
+import {HTML5Backend} from "react-dnd-html5-backend";
+import type {TypeNavigatorItems} from "../SideBar";
 
 type TypeNavigatorProps = {
   header?: TypeNavigatorHeader;
@@ -51,6 +54,102 @@ const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
       }}
       className={styles.header}
     />
+  );
+};
+
+const DraggableItem = ({
+  id,
+  item,
+  index,
+  moveItem
+}: {
+  id: string;
+  item: TypeNavigatorItems;
+  index: number;
+  moveItem: (dragIndex: number, hoverIndex: number) => void;
+}) => {
+  const navigate = useNavigate();
+
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+
+  const [{isOver}, drop] = useDrop({
+    accept: "NAVIGATOR_ITEM",
+    hover(item: any, monitor) {
+      if (!containerRef.current) return;
+      const dragIndex = item.index;
+      const hoverIndex = index;
+
+      if (dragIndex === hoverIndex) return;
+
+      const hoverBoundingRect = containerRef.current.getBoundingClientRect();
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      const clientOffset = monitor.getClientOffset();
+      const hoverClientY = clientOffset!.y - hoverBoundingRect.top;
+
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
+
+      moveItem(dragIndex, hoverIndex);
+      item.index = hoverIndex;
+    },
+    collect: monitor => ({
+      isOver: monitor.isOver()
+    })
+  });
+
+  const [{isDragging}, drag] = useDrag({
+    type: "NAVIGATOR_ITEM",
+    item: {id, index},
+    collect: monitor => ({
+      isDragging: monitor.isDragging()
+    })
+  });
+
+  drop(containerRef);
+  drag(buttonRef);
+
+  return (
+    <NavigatorItem
+      ref={containerRef}
+      label={item?.title ?? ""}
+      prefixIcon={item?.icon}
+      style={{opacity: isDragging ? 0.5 : isOver ? 0.3 : 1}}
+      suffixIcons={[
+        {
+          name: "dragHorizontalVariant",
+          ref: buttonRef
+        },
+        {
+          name: "dotsVertical"
+        }
+      ]}
+      onClick={() => {
+        navigate(`/${item?.section}/${item?._id}`);
+      }}
+      className={styles.ungrouped}
+    />
+  );
+};
+
+const ReorderableList = ({initialItems}: {initialItems: TypeNavigatorItems[]}) => {
+  const [items, setItems] = useState(() => initialItems.map((item, index) => ({...item, index})));
+
+  const moveItem = useCallback((from: number, to: number) => {
+    setItems(prev => {
+      const updated = [...prev];
+      const [moved] = updated.splice(from, 1);
+      updated.splice(to, 0, moved);
+      return updated;
+    });
+  }, []);
+
+  return (
+    <DndProvider backend={HTML5Backend}>
+      {items.map((item, index) => (
+        <DraggableItem key={item._id} id={item._id} index={index} item={item} moveItem={moveItem} />
+      ))}
+    </DndProvider>
   );
 };
 
@@ -123,25 +222,7 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
 
           //TODO: add hoverable api
         />
-        {ungrouped?.map((item: any, index: number) => (
-          <NavigatorItem
-            key={item?._id}
-            label={item?.title}
-            prefixIcon={item?.icon}
-            suffixIcons={[
-              {
-                name: "dragHorizontalVariant"
-              },
-              {
-                name: "dotsVertical"
-              }
-            ]}
-            onClick={() => {
-              navigate(`/${item?.section}/${item?._id}`);
-            }}
-            className={styles.ungrouped}
-          />
-        ))}
+        <ReorderableList initialItems={ungrouped} />
         {addNewButtonText && (
           <Button className={styles.addNewButton} color="transparent" variant="text">
             <Icon name="plus" size="xs" />
