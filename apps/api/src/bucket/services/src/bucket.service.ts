@@ -180,26 +180,32 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
 
     const desiredNames = new Set(newIndexes.map(idx => idx.name));
 
-    const indexesToDrop = Array.from(existingNames).filter(name => !desiredNames.has(name));
-    const indexesToAdd = newIndexes.filter(idx => !existingNames.has(idx.name));
-
     const errors = [];
+    const indexesToDrop = Array.from(existingNames).filter(name => !desiredNames.has(name));
+    const indexesToCreate = newIndexes.filter(idx => !existingNames.has(idx.name));
 
+    await this.dropIndexes(collection, indexesToDrop, errors);
+    await this.createIndexes(collection, indexesToCreate, errors);
+
+    if (errors.length) {
+      throw new Error(errors.map(e => e.message).join("; "));
+    }
+  }
+
+  async dropIndexes(collection: Collection, indexNames: string[], errors: Error[]): Promise<void> {
     await Promise.all(
-      indexesToDrop.map(name => collection.dropIndex(name).catch(err => errors.push(err)))
+      indexNames.map(name => collection.dropIndex(name).catch(err => errors.push(err)))
     );
+  }
 
+  async createIndexes(collection: Collection, indexes: any[], errors: Error[]): Promise<void> {
     await Promise.all(
-      indexesToAdd.map(idx =>
+      indexes.map(idx =>
         collection
           .createIndex(idx.definition, {...idx.options, name: idx.name})
           .catch(err => errors.push(err))
       )
     );
-
-    if (errors.length) {
-      throw new Error(errors.map(e => e.message).join("; "));
-    }
   }
 
   collNameToId(collName: string) {

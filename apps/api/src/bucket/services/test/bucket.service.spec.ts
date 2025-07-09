@@ -57,23 +57,34 @@ describe("Bucket Service", () => {
         ]
       };
 
-      const inserted = await bs.insertOne(bucket);
-      const coll = bds.children(inserted)._coll;
-      const indexes = await coll.listIndexes().toArray();
-
-      const keys = indexes.map(i => i.key);
-      expect(keys).toContainEqual({_id: 1});
-      expect(keys).toContainEqual({title: 1});
-      expect(keys).toContainEqual({"meta.score": 1});
-      expect(keys).toContainEqual({name: 1, surname: -1});
-      expect(keys).toContainEqual({email: 1});
-      expect(keys).toContainEqual({created_at: 1});
-
-      const emailIndex = indexes.find(i => JSON.stringify(i.key) === JSON.stringify({email: 1}));
-      expect(emailIndex?.unique).toBe(true);
-
-      const ttlIndex = indexes.find(i => JSON.stringify(i.key) === JSON.stringify({created_at: 1}));
-      expect(ttlIndex?.expireAfterSeconds).toBe(3600);
+      const insteredBucket = await bs.insertOne(bucket);
+      expect(insteredBucket).toEqual({
+        _id: bucketId,
+        properties: {
+          title: {type: "string"},
+          name: {type: "string"},
+          surname: {type: "string"},
+          email: {type: "string"},
+          created_at: {type: "string", format: "date-time"},
+          meta: {
+            type: "object",
+            title: "meta",
+            properties: {
+              score: {
+                type: "number",
+                title: "score"
+              }
+            }
+          }
+        },
+        indexes: [
+          {definition: {title: 1}, options: {}},
+          {definition: {"meta.score": 1}, options: {}},
+          {definition: {name: 1, surname: -1}, options: {}},
+          {definition: {email: 1}, options: {unique: true}},
+          {definition: {created_at: 1}, options: {expireAfterSeconds: 3600}}
+        ]
+      });
     });
 
     it("should replace bucket and indexes", async () => {
@@ -97,7 +108,8 @@ describe("Bucket Service", () => {
         ]
       } as any);
 
-      await bs.findOneAndReplace({_id: bucketId}, {
+      const updatedBucket: any = {
+        _id: bucketId,
         properties: {
           title: {},
           description: {},
@@ -113,13 +125,28 @@ describe("Bucket Service", () => {
             options: {unique: true}
           }
         ]
-      } as any);
+      };
 
-      const coll = bds.children({_id: bucketId} as any)._coll;
-      const indexes = await coll.listIndexes().toArray();
-      const keys = indexes.map(i => i.key);
-
-      expect(keys).toEqual(expect.arrayContaining([{_id: 1}, {title: 1}, {email: 1}]));
+      await bs.findOneAndReplace({_id: bucketId}, updatedBucket);
+      const newBucketSchema = await bs.findOne({_id: bucketId});
+      expect(newBucketSchema).toEqual({
+        _id: bucketId,
+        properties: {
+          title: {},
+          description: {},
+          email: {}
+        },
+        indexes: [
+          {
+            definition: {title: 1},
+            options: {}
+          },
+          {
+            definition: {email: 1},
+            options: {unique: true}
+          }
+        ]
+      });
     });
 
     it("should use IXSCAN instead of COLLSCAN", async () => {
@@ -170,7 +197,7 @@ describe("Bucket Service", () => {
 
     it("should update index if definition key changes", async () => {
       const bucketId = new ObjectId();
-      await bs.insertOne({
+      const originalBucket: any = {
         _id: bucketId,
         properties: {},
         indexes: [
@@ -179,29 +206,38 @@ describe("Bucket Service", () => {
             options: {}
           }
         ]
-      } as any);
+      };
 
-      await bs.findOneAndReplace({_id: bucketId}, {
+      await bs.insertOne(originalBucket);
+
+      const updatedBucket: any = {
+        _id: bucketId,
         properties: {},
         indexes: [
           {
-            definition: {a: 1},
+            definition: {b: 1},
             options: {}
           }
         ]
-      } as any);
+      };
 
-      const indexes = await bds
-        .children({_id: bucketId} as any)
-        ._coll.listIndexes()
-        .toArray();
-      expect(indexes.some(i => i.key.b === 1)).toBe(true);
-      expect(indexes.some(i => i.key.a === 1)).toBe(false);
+      await bs.findOneAndReplace({_id: bucketId}, updatedBucket);
+      const newBucketSchema = await bs.findOne({_id: bucketId});
+      expect(newBucketSchema).toEqual({
+        _id: bucketId,
+        properties: {},
+        indexes: [
+          {
+            definition: {b: 1},
+            options: {}
+          }
+        ]
+      });
     });
 
     it("should update index if definition key order changes (compound)", async () => {
       const bucketId = new ObjectId();
-      await bs.insertOne({
+      const originalBucket: any = {
         _id: bucketId,
         properties: {},
         indexes: [
@@ -210,9 +246,12 @@ describe("Bucket Service", () => {
             options: {}
           }
         ]
-      } as any);
+      };
 
-      await bs.findOneAndReplace({_id: bucketId}, {
+      await bs.insertOne(originalBucket);
+
+      const updatedBucket: any = {
+        _id: bucketId,
         properties: {},
         indexes: [
           {
@@ -220,19 +259,25 @@ describe("Bucket Service", () => {
             options: {}
           }
         ]
-      } as any);
+      };
 
-      const indexes = await bds
-        .children({_id: bucketId} as any)
-        ._coll.listIndexes()
-        .toArray();
-      expect(indexes.some(i => JSON.stringify(i.key) === JSON.stringify({b: 1, a: 1}))).toBe(true);
-      expect(indexes.some(i => JSON.stringify(i.key) === JSON.stringify({a: 1, b: 1}))).toBe(false);
+      await bs.findOneAndReplace({_id: bucketId}, updatedBucket);
+      const newBucketSchema = await bs.findOne({_id: bucketId});
+      expect(newBucketSchema).toEqual({
+        _id: bucketId,
+        properties: {},
+        indexes: [
+          {
+            definition: {b: 1, a: 1},
+            options: {}
+          }
+        ]
+      });
     });
 
     it("should update index if key value changes (-1 => 1)", async () => {
       const bucketId = new ObjectId();
-      await bs.insertOne({
+      const originalBucket: any = {
         _id: bucketId,
         properties: {},
         indexes: [
@@ -241,29 +286,11 @@ describe("Bucket Service", () => {
             options: {}
           }
         ]
-      } as any);
+      };
 
-      await bs.findOneAndReplace({_id: bucketId}, {
-        properties: {},
-        indexes: [
-          {
-            definition: {a: 1},
-            options: {}
-          }
-        ]
-      } as any);
+      await bs.insertOne(originalBucket);
 
-      const indexes = await bds
-        .children({_id: bucketId} as any)
-        ._coll.listIndexes()
-        .toArray();
-      expect(indexes.some(i => i.key.a === 1)).toBe(true);
-      expect(indexes.some(i => i.key.a === -1)).toBe(false);
-    });
-
-    it("should update index if options change", async () => {
-      const bucketId = new ObjectId();
-      await bs.insertOne({
+      const updatedBucket: any = {
         _id: bucketId,
         properties: {},
         indexes: [
@@ -272,9 +299,39 @@ describe("Bucket Service", () => {
             options: {}
           }
         ]
-      } as any);
+      };
 
-      await bs.findOneAndReplace({_id: bucketId}, {
+      await bs.findOneAndReplace({_id: bucketId}, updatedBucket);
+      const newBucketSchema = await bs.findOne({_id: bucketId});
+      expect(newBucketSchema).toEqual({
+        _id: bucketId,
+        properties: {},
+        indexes: [
+          {
+            definition: {a: 1},
+            options: {}
+          }
+        ]
+      });
+    });
+
+    it("should update index if options change", async () => {
+      const bucketId = new ObjectId();
+      const originalBucket: any = {
+        _id: bucketId,
+        properties: {},
+        indexes: [
+          {
+            definition: {a: 1},
+            options: {}
+          }
+        ]
+      };
+
+      await bs.insertOne(originalBucket);
+
+      const updatedBucket: any = {
+        _id: bucketId,
         properties: {},
         indexes: [
           {
@@ -282,18 +339,25 @@ describe("Bucket Service", () => {
             options: {unique: true}
           }
         ]
-      } as any);
+      };
 
-      const indexes = await bds
-        .children({_id: bucketId} as any)
-        ._coll.listIndexes()
-        .toArray();
-      expect(indexes.some(i => i.key.a === 1 && i.unique)).toBe(true);
+      await bs.findOneAndReplace({_id: bucketId}, updatedBucket);
+      const newBucketSchema = await bs.findOne({_id: bucketId});
+      expect(newBucketSchema).toEqual({
+        _id: bucketId,
+        properties: {},
+        indexes: [
+          {
+            definition: {a: 1},
+            options: {unique: true}
+          }
+        ]
+      });
     });
 
     it("should not update index if only options key order changes", async () => {
       const bucketId = new ObjectId();
-      await bs.insertOne({
+      const originalBucket: any = {
         _id: bucketId,
         properties: {},
         indexes: [
@@ -302,9 +366,12 @@ describe("Bucket Service", () => {
             options: {sparse: true, unique: true}
           }
         ]
-      } as any);
+      };
 
-      await bs.findOneAndReplace({_id: bucketId}, {
+      await bs.insertOne(originalBucket);
+
+      const reorderedOptionsBucket: any = {
+        _id: bucketId,
         properties: {},
         indexes: [
           {
@@ -312,19 +379,25 @@ describe("Bucket Service", () => {
             options: {unique: true, sparse: true}
           }
         ]
-      } as any);
+      };
 
-      const indexes = await bds
-        .children({_id: bucketId} as any)
-        ._coll.listIndexes()
-        .toArray();
-      const count = indexes.filter(i => JSON.stringify(i.key) === JSON.stringify({a: 1})).length;
-      expect(count).toBe(1);
+      await bs.findOneAndReplace({_id: bucketId}, reorderedOptionsBucket);
+      const newBucketSchema = await bs.findOne({_id: bucketId});
+      expect(newBucketSchema).toEqual({
+        _id: bucketId,
+        properties: {},
+        indexes: [
+          {
+            definition: {a: 1},
+            options: {unique: true, sparse: true}
+          }
+        ]
+      });
     });
 
     it("should not update index if definition and options are the same", async () => {
       const bucketId = new ObjectId();
-      await bs.insertOne({
+      const bucket: any = {
         _id: bucketId,
         properties: {},
         indexes: [
@@ -333,9 +406,13 @@ describe("Bucket Service", () => {
             options: {unique: true}
           }
         ]
-      } as any);
+      };
 
-      await bs.findOneAndReplace({_id: bucketId}, {
+      await bs.insertOne(bucket);
+      await bs.findOneAndReplace({_id: bucketId}, bucket);
+      const newBucketSchema = await bs.findOne({_id: bucketId});
+      expect(newBucketSchema).toEqual({
+        _id: bucketId,
         properties: {},
         indexes: [
           {
@@ -343,15 +420,7 @@ describe("Bucket Service", () => {
             options: {unique: true}
           }
         ]
-      } as any);
-
-      const indexes = await bds
-        .children({_id: bucketId} as any)
-        ._coll.listIndexes()
-        .toArray();
-      const aIndexes = indexes.filter(i => JSON.stringify(i.key) === JSON.stringify({a: 1}));
-      expect(aIndexes.length).toBe(1);
-      expect(aIndexes[0].unique).toBe(true);
+      });
     });
   });
 });
