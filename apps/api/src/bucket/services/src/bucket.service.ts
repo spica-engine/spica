@@ -167,22 +167,14 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
 
     const existingIndexes = await collection.listIndexes().toArray();
 
-    // _id is default index for MondoDB collections, we cant drop it
-    // _id_ is internal name for _id index in MongoDB so we are filtering out
-    const existingNames = new Set(
-      existingIndexes.map(index => index.name).filter(name => name !== "_id_")
+    const existingNames = new Set(existingIndexes.map(index => index.name));
+
+    const {indexesToDrop, indexesToCreate} = this.calculateIndexChanges(
+      Array.from(existingNames),
+      bucket
     );
 
-    const newIndexes = (bucket.indexes || []).map(idx => {
-      const name = this.generateIndexName(idx.definition, idx.options || {});
-      return {...idx, name};
-    });
-
-    const desiredNames = new Set(newIndexes.map(idx => idx.name));
-
     const errors = [];
-    const indexesToDrop = Array.from(existingNames).filter(name => !desiredNames.has(name));
-    const indexesToCreate = newIndexes.filter(idx => !existingNames.has(idx.name));
 
     await this.dropIndexes(collection, indexesToDrop, errors);
     await this.createIndexes(collection, indexesToCreate, errors);
@@ -190,6 +182,30 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     if (errors.length) {
       throw new Error(errors.map(e => e.message).join("; "));
     }
+  }
+
+  calculateIndexChanges(
+    existingIndexNames: string[],
+    bucket: Bucket
+  ): {
+    indexesToDrop: string[];
+    indexesToCreate: any[];
+  } {
+    const newIndexes = (bucket.indexes || []).map(idx => {
+      const name = this.generateIndexName(idx.definition, idx.options || {});
+      return {...idx, name};
+    });
+
+    const desiredNames = new Set(newIndexes.map(idx => idx.name));
+
+    // _id is default index for MondoDB collections, we cant drop it
+    // _id_ is internal name for _id index in MongoDB so we are filtering out
+    const existingNames = new Set(existingIndexNames.filter(name => name !== "_id_"));
+
+    const indexesToDrop = Array.from(existingNames).filter(name => !desiredNames.has(name));
+    const indexesToCreate = newIndexes.filter(idx => !existingNames.has(idx.name));
+
+    return {indexesToDrop, indexesToCreate};
   }
 
   async dropIndexes(collection: Collection, indexNames: string[], errors: Error[]): Promise<void> {

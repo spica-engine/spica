@@ -382,6 +382,19 @@ describe("Bucket Service", () => {
       };
 
       await bs.findOneAndReplace({_id: bucketId}, reorderedOptionsBucket);
+
+      const collection = bds.children({_id: bucketId} as any)._coll;
+      const existingIndexes = await collection.listIndexes().toArray();
+      const existingNames = existingIndexes.map(i => i.name);
+
+      const {indexesToDrop, indexesToCreate} = (bs as any).calculateIndexChanges(
+        existingNames,
+        reorderedOptionsBucket
+      );
+
+      expect(indexesToDrop).toEqual([]);
+      expect(indexesToCreate).toEqual([]);
+
       const newBucketSchema = await bs.findOne({_id: bucketId});
       expect(newBucketSchema).toEqual({
         _id: bucketId,
@@ -410,6 +423,19 @@ describe("Bucket Service", () => {
 
       await bs.insertOne(bucket);
       await bs.findOneAndReplace({_id: bucketId}, bucket);
+
+      const collection = bds.children({_id: bucketId} as any)._coll;
+      const existingIndexes = await collection.listIndexes().toArray();
+      const existingNames = existingIndexes.map(i => i.name);
+
+      const {indexesToDrop, indexesToCreate} = (bs as any).calculateIndexChanges(
+        existingNames,
+        bucket
+      );
+
+      expect(indexesToDrop).toEqual([]);
+      expect(indexesToCreate).toEqual([]);
+
       const newBucketSchema = await bs.findOne({_id: bucketId});
       expect(newBucketSchema).toEqual({
         _id: bucketId,
