@@ -58,6 +58,11 @@ export class VCRepresentativeManager implements IRepresentativeManager {
   async read() {
     return [];
   }
+  extractId(part: string): string | undefined {
+    if (part === "identity") return "identity";
+    const match = part.match(/\(([\da-f]{24})\)/i);
+    return match?.[1];
+  }
 
   watch(module: string, files: string[], events: string[] = ["add", "change", "unlink"]) {
     const moduleDir = this.getModuleDir(module);
@@ -82,10 +87,7 @@ export class VCRepresentativeManager implements IRepresentativeManager {
         const isTrackedFile = files.some(file => parts[1] == file);
         if (!isCorrectDepth || !isTrackedFile) return;
 
-        const [_id] = parts.map(part => {
-          const match = part.match(/^(identity)|\(([\da-f]{24})\)$/i);
-          return match?.[1] || match?.[2];
-        });
+        const _id = this.extractId(parts[0]);
 
         let changeType: ChangeTypes;
         let resource: RepresentativeManagerResource;
