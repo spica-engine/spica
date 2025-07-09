@@ -75,7 +75,7 @@ const DraggableItem = ({
 
   const [{isOver}, drop] = useDrop({
     accept: "NAVIGATOR_ITEM",
-    hover(item: any, monitor) {
+    hover(item: TypeNavigatorItems & {index: number}, monitor) {
       if (!containerRef.current) return;
       const dragIndex = item.index;
       const hoverIndex = index;
