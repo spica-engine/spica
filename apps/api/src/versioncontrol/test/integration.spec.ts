@@ -408,7 +408,7 @@ describe("Versioning", () => {
         };
 
         expect(parsedFile).toEqual({
-          _id: id.toHexString(),
+          _id: `${fn.name}(${id.toString()})`,
           contents: {
             index: "",
             package: {dependencies: {}},
