@@ -3,7 +3,7 @@ import {useBucket} from "../../contexts/BucketContext";
 import {useEffect} from "react";
 import {useParams} from "react-router-dom";
 
-export function Bucket() {
+export default function Bucket() {
   const {bucketId} = useParams<{bucketId: string}>();
 
   const {currentBucket, currentBucketLoading, currentBucketError, setBucketId} = useBucket();
