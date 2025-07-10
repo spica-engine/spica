@@ -23,6 +23,7 @@ describe("BucketDataController profiler", () => {
     _id: "6824a87e86e3700817eadc77",
     title: "new bucket",
     description: "new bucket",
+    indexes: [],
     properties: {
       name: {
         type: "string",
@@ -36,6 +37,7 @@ describe("BucketDataController profiler", () => {
     _id: "6824a894faa1408d00875d80",
     title: "new bucket 2",
     description: "new bucket 2",
+    indexes: [],
     properties: {
       name: {
         type: "string",
