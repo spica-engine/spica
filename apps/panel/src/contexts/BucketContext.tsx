@@ -1,8 +1,8 @@
 import {createContext, useMemo, useContext, type ReactNode, useEffect} from "react";
-import {useBucketService} from "../services/bucketService";
+import {useBucketService, type BucketType} from "../services/bucketService";
 
 type BucketContextType = {
-  buckets: any; // Replace with actual type
+  buckets: BucketType[] | null;
   loading: boolean;
   error: string | null;
 };
