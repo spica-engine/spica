@@ -1,5 +1,6 @@
 import {
   DocChange,
+  getIdForDocToRepConverter,
   RepChange,
   RepresentativeManagerResource,
   VCSynchronizerArgs
@@ -15,7 +16,7 @@ export const getSynchronizer = (evs: EnvVarService): VCSynchronizerArgs<EnvVar> 
   const extension = "yaml";
 
   const convertToRepResource = (change: DocChange<EnvVar>) => ({
-    _id: `${change.resource.key}(${change.resource._id.toString()})`,
+    _id: getIdForDocToRepConverter(change, change.resource.key),
     content: YAML.stringify(change.resource)
   });
 
