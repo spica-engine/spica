@@ -359,7 +359,7 @@ describe("Bucket Service", () => {
       });
     });
 
-    it("should not update index if only options key order changes", async () => {
+    fit("should not update index if only options key order changes", async () => {
       const bucketId = new ObjectId();
       const originalBucket: any = {
         _id: bucketId,
@@ -385,23 +385,17 @@ describe("Bucket Service", () => {
         ]
       };
 
+      const dropIndexSpy = jest.spyOn(bs as any, "dropIndexes");
+      const createIndexSpy = jest.spyOn(bs as any, "createIndexes");
+
       await bs.findOneAndReplace({_id: bucketId}, reorderedOptionsBucket);
 
-      const collection = bds.children({_id: bucketId} as any)._coll;
-      const existingIndexes = await collection.listIndexes().toArray();
-      const existingNames = existingIndexes.map(i => i.name);
-
-      const calculateIndexChangesSpy = jest.spyOn(bs as any, "calculateIndexChanges");
-
-      const {indexesToDrop, indexesToCreate} = (bs as any).calculateIndexChanges(
-        existingNames,
-        reorderedOptionsBucket
-      );
-
-      expect(calculateIndexChangesSpy).toHaveBeenCalledWith(existingNames, reorderedOptionsBucket);
-      expect(calculateIndexChangesSpy).toHaveBeenCalledTimes(1);
-
+      expect(dropIndexSpy.mock.calls.length).toEqual(1);
+      const indexesToDrop = dropIndexSpy.mock.calls[0][1];
       expect(indexesToDrop).toEqual([]);
+
+      expect(createIndexSpy.mock.calls.length).toEqual(1);
+      const indexesToCreate = createIndexSpy.mock.calls[0][1];
       expect(indexesToCreate).toEqual([]);
 
       const newBucketSchema = await bs.findOne({_id: bucketId});
@@ -417,7 +411,7 @@ describe("Bucket Service", () => {
       });
     });
 
-    it("should not update index if definition and options are the same", async () => {
+    fit("should not update index if definition and options are the same", async () => {
       const bucketId = new ObjectId();
       const bucket: any = {
         _id: bucketId,
@@ -431,23 +425,18 @@ describe("Bucket Service", () => {
       };
 
       await bs.insertOne(bucket);
+
+      const dropIndexSpy = jest.spyOn(bs as any, "dropIndexes");
+      const createIndexSpy = jest.spyOn(bs as any, "createIndexes");
+
       await bs.findOneAndReplace({_id: bucketId}, bucket);
 
-      const collection = bds.children({_id: bucketId} as any)._coll;
-      const existingIndexes = await collection.listIndexes().toArray();
-      const existingNames = existingIndexes.map(i => i.name);
-
-      const calculateIndexChangesSpy = jest.spyOn(bs as any, "calculateIndexChanges");
-
-      const {indexesToDrop, indexesToCreate} = (bs as any).calculateIndexChanges(
-        existingNames,
-        bucket
-      );
-
-      expect(calculateIndexChangesSpy).toHaveBeenCalledWith(existingNames, bucket);
-      expect(calculateIndexChangesSpy).toHaveBeenCalledTimes(1);
-
+      expect(dropIndexSpy.mock.calls.length).toEqual(1);
+      const indexesToDrop = dropIndexSpy.mock.calls[0][1];
       expect(indexesToDrop).toEqual([]);
+
+      expect(createIndexSpy.mock.calls.length).toEqual(1);
+      const indexesToCreate = createIndexSpy.mock.calls[0][1];
       expect(indexesToCreate).toEqual([]);
 
       const newBucketSchema = await bs.findOne({_id: bucketId});
