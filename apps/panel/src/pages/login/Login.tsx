@@ -15,7 +15,7 @@ import Logo from "../../components/atoms/logo/Logo";
 import useAuthService from "../../services/authService";
 
 const Login = () => {
-  const {fetchStrategies, strategies, strategiesLoading, login, loginLoading, loginError} =
+  const {fetchStrategies, strategies, login, loginLoading, loginError} =
     useAuthService();
 
   const formik = useFormik({
@@ -45,11 +45,6 @@ const Login = () => {
             gap={10}
           >
             <Logo size="xl" />
-            {loginLoading && (
-              <Text className={styles.loadingText} size="medium">
-                Logging in...
-              </Text>
-            )}
             <div className={styles.errorsContainer}>
               {loginError && (
                 <div className={styles.errorBox}>

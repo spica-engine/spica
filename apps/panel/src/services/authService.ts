@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useState} from "react";
+import {useCallback} from "react";
 import {useNavigate} from "react-router-dom";
 import useApi from "../hooks/useApi";
 import useLocalStorage from "../hooks/useLocalStorage";
@@ -21,7 +21,6 @@ function useAuthService() {
 
   const {
     request: requestLogin,
-    data: loginData,
     error: loginError,
     loading: loginLoading
   } = useApi<LoginData>({
@@ -31,16 +30,14 @@ function useAuthService() {
 
   const login = useCallback(
     (identifier: string, password: string) => {
-      requestLogin({body: {identifier, password}});
+      requestLogin({body: {identifier, password}}).then(loginData => {
+        if (!loginData) return;
+        setToken(loginData.token);
+        navigate("/home");
+      });
     },
     [requestLogin]
   );
-
-  useEffect(() => {
-    if (!loginData) return;
-    setToken(loginData.token);
-    navigate("/home");
-  }, [loginData, navigate, setToken]);
 
   return {
     fetchStrategies,
