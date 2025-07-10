@@ -9,6 +9,7 @@ export type TypeMenuItems = {
   icon?: IconName;
   header?: TypeNavigatorHeader;
   id: string;
+  addNewButtonText?: string;
 };
 
 export type TypeNavigatorItems = {
@@ -61,15 +62,22 @@ const SideBar: FC<TypeSideBar> = ({
         </div>
 
         <div className={styles.menu}>
-          {menuItems?.map((menuItems, index) => (
-            <div
-              key={index}
-              className={`${styles.menuItem} ${activeMenu === index ? styles.active : ""}`}
-              onClick={() => handleClick(index)}
-            >
-              <Icon name={menuItems.icon as IconName} />
-            </div>
-          ))}
+          {menuItems?.map((menuItem, index) => {
+            const isActive = menuItems?.[activeMenu].id === menuItem.id;
+            return (
+              <div
+                key={index}
+                className={`${styles.menuItem} ${activeMenu === index ? styles.active : ""}`}
+                onClick={() => handleClick(index)}
+              >
+                <Icon
+                  name={menuItem.icon as IconName}
+                  size={isActive ? "lg" : "md"}
+                  className={isActive ? styles.activeMenuIcon : styles.deactiveMenuIcon}
+                />
+              </div>
+            );
+          })}
           {displayToggleIcon && (
             <div className={styles.menuItem} onClick={toggleNavigator}>
               <Icon name={toggleIconName} />
@@ -77,7 +85,7 @@ const SideBar: FC<TypeSideBar> = ({
           )}
         </div>
 
-        {footer || <Icon name="forkRight" size="lg" className={styles.versionControl} />}
+        {footer || <Icon name="forkRight" size={24} className={styles.versionControl} />}
       </div>
 
       <div
@@ -86,6 +94,7 @@ const SideBar: FC<TypeSideBar> = ({
         <Navigator
           header={menuItems?.[activeMenu]?.header as TypeNavigatorHeader}
           items={navigatorItems?.[menuItems![activeMenu]?.id] ?? []}
+          addNewButtonText={menuItems?.[activeMenu]?.addNewButtonText}
         />
       </div>
     </div>

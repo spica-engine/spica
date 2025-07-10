@@ -1,9 +1,9 @@
 @use "../../../styles/mixins";
 
 .navigatorItem {
-  padding: var(--padding-md);
+  padding: var(--padding-md) !important;
   color: var(--color-font-primary);
-
+  font-weight: 400;
   .suffixButton {
     border: 0;
     padding: 0;
@@ -19,5 +19,8 @@
     .suffixButton {
       opacity: 1;
     }
+  }
+  .label {
+    line-height: 0;
   }
 }
