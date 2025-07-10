@@ -39,7 +39,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       currentBucketLoading,
       currentBucketError
     }),
-    [buckets, loading, error, currentBucket]
+    [buckets, loading, error, currentBucket, currentBucketLoading, currentBucketError]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;
