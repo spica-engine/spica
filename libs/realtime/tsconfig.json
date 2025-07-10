@@ -6,6 +6,9 @@
       "path": "../interface/realtime"
     },
     {
+      "path": "../interface/passport/guard"
+    },
+    {
       "path": "../database/realtime"
     }
   ]
