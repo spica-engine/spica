@@ -1,6 +1,5 @@
-import {useParams} from "react-router-dom";
 import useApi from "../hooks/useApi";
-import {use, useEffect, useMemo} from "react";
+import {useEffect, useMemo} from "react";
 
 export type BucketType = {
   _id: string;
