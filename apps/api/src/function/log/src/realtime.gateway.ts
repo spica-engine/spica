@@ -14,7 +14,7 @@ export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private guardService: GuardService
   ) {}
 
-  private readonly handlers = getConnectionHandlers(
+  private handlers = getConnectionHandlers(
     this.guardService,
     async () => this.COLLECTION,
     this.prepareOptions.bind(this),
