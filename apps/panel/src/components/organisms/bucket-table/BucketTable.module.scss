@@ -2,7 +2,7 @@
   font-family: var(--font-family-base);
   border-radius: var(--border-radius-md);
   color: var(--color-font-primary);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   font-weight: 400;
   border-bottom: none;
   border-bottom-left-radius: 0;
@@ -36,7 +36,7 @@
     border-radius: var(--border-radius-md);
     background-color: var(--color-border);
     font-family: var(--font-family-base);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-md);
     line-height: 0 !important;
   }
 }
@@ -55,7 +55,7 @@
   line-height: 0 !important;
   span {
     font-weight: 600;
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-md);
     font-family: var(--font-family-base);
   }
   button {
@@ -73,7 +73,7 @@
   label {
     width: 20px !important;
     height: 20px !important;
-    border-color: var(--color-input-placeholder) !important;
+    border-color: var(--color-border) !important;
     border-radius: var(--border-radius-md) !important;
     cursor: pointer !important;
     position: relative !important;
