@@ -1,17 +1,24 @@
-import {Button, FlexElement, FluidContainer, Icon, Popover, Text} from "oziko-ui-kit";
-import React, {memo, type FC} from "react";
+import {Button, FlexElement, Icon, Popover, Text} from "oziko-ui-kit";
+import {memo, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
+import {useDrawerController} from "../../../contexts/DrawerContext";
+import TitleForm from "../title-form/TitleForm";
+import useApi from "../../../hooks/useApi";
+import type {BucketType} from "src/services/bucketService";
 
 type TypeBucketNavigatorPopup = {
   onAddToCategory?: () => void;
-  onEdit?: () => void;
   onDelete?: () => void;
+  bucket: BucketType;
 };
+
 const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   onAddToCategory,
-  onEdit,
-  onDelete
+  onDelete,
+  bucket
 }) => {
+  const {openDrawer, closeDrawer} = useDrawerController();
+
   return (
     <Popover
       contentProps={{
@@ -37,7 +44,9 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
               dimensionX: "fill"
             }}
             color="default"
-            onClick={onEdit}
+            onClick={() => {
+              openDrawer(<TitleForm bucketId={bucket._id} initalValue={bucket.title} onSave={closeDrawer}/>);
+            }}
             className={styles.buttons}
           >
             <Icon name="pencil" />
