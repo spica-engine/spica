@@ -1,16 +1,29 @@
-import {createContext, useMemo, useContext, type ReactNode, useEffect} from "react";
+import {createContext, useMemo, useContext, type ReactNode, useEffect, useState} from "react";
 import {useBucketService, type BucketType} from "../services/bucketService";
 
 type BucketContextType = {
   buckets: BucketType[] | null;
   loading: boolean;
   error: string | null;
+  currentBucket: BucketType | null;
+  setBucketId: (bucketId: string) => any;
+  currentBucketLoading: boolean;
+  currentBucketError: string | null;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
 
 export const BucketProvider = ({children}: {children: ReactNode}) => {
-  const {buckets, loading, error, fetchBuckets} = useBucketService();
+  const [bucketId, setBucketId] = useState<string | null>(null);
+  const {
+    buckets,
+    loading,
+    error,
+    fetchBuckets,
+    currentBucket,
+    currentBucketLoading,
+    currentBucketError
+  } = useBucketService({bucketId});
 
   useEffect(() => {
     fetchBuckets();
@@ -20,9 +33,13 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     () => ({
       buckets,
       loading,
-      error
+      error,
+      currentBucket,
+      setBucketId,
+      currentBucketLoading,
+      currentBucketError
     }),
-    [buckets, loading, error]
+    [buckets, loading, error, currentBucket]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;
