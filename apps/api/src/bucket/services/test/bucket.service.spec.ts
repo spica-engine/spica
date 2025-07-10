@@ -359,7 +359,7 @@ describe("Bucket Service", () => {
       });
     });
 
-    fit("should not update index if only options key order changes", async () => {
+    it("should not update index if only options key order changes", async () => {
       const bucketId = new ObjectId();
       const originalBucket: any = {
         _id: bucketId,
@@ -411,7 +411,7 @@ describe("Bucket Service", () => {
       });
     });
 
-    fit("should not update index if definition and options are the same", async () => {
+    it("should not update index if definition and options are the same", async () => {
       const bucketId = new ObjectId();
       const bucket: any = {
         _id: bucketId,
