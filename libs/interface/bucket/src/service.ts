@@ -5,6 +5,7 @@ export interface IndexDefinition {
     [key: string]: any;
   };
   options?: CreateIndexesOptions;
+  name: string;
 }
 
 export interface ExistingIndex {
