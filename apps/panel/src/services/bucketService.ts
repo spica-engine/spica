@@ -54,7 +54,7 @@ interface LocationProperty extends IProperty {
 }
 
 interface UseBucketServiceOptions {
-  bucketId: string | null;
+  bucketId?: string | null;
   currentBucketQuery?: {
     paginate?: boolean;
     relation?: boolean;
