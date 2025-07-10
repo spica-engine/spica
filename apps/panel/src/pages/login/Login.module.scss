@@ -33,11 +33,33 @@
     }
   }
 
-  .errorText {
-    width: 100%;
+  .errorsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-md);
+  }
+
+  .errorBox {
+    background-color: var(--color-soft);
+    border: var(--border-default);
+    border-color: var(--color-danger-light);
+    padding: var(--padding-md);
+    border-radius: var(--border-radius-lg);
     color: var(--color-danger);
-    font-size: var(--font-size-sm);
-    margin-top: calc(var(--gap-md) * -1);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-md);
+  }
+
+  .errorText {
+    font-size: var(--font-size-md);
+  }
+
+  .loadingText {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+    color: var(--color-font-primary);
   }
 
   .stringInput {
@@ -53,7 +75,7 @@
       height: var(--icon-size-sm) !important;
     }
 
-    >div:nth-child(1) {
+    > div:nth-child(1) {
       height: 30px !important;
       outline: none;
     }
@@ -68,7 +90,6 @@
       line-height: var(--line-height-sm) !important;
       font-size: var(--font-size-sm) !important;
     }
-
   }
 
   .submitButton {
@@ -79,5 +100,4 @@
     font-size: var(--font-size-sm);
     font-family: var(--font-family-base);
   }
-
 }
