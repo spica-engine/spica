@@ -1,46 +1,33 @@
-import React, { memo, useState } from "react";
-import { useFormik } from "formik";
-import { BaseInput, Button, FlexElement, Icon, Input, StringInput, Text } from "oziko-ui-kit";
+import {memo, useEffect} from "react";
+import {useFormik} from "formik";
+import {
+  BaseInput,
+  Button,
+  FlexElement,
+  Icon,
+  Input,
+  StringInput,
+  Text,
+  type IconName
+} from "oziko-ui-kit";
 import styles from "./Login.module.scss";
 import Logo from "../../components/atoms/logo/Logo";
-import { authorization } from "../../services/passport/identify";
-import { useNavigate } from "react-router-dom";
-
-const getErrorMessage = (error: any): string => {
-  return error.response?.data?.message || "An unexpected error occurred. Please try again.";
-};
+import useAuthService from "../../services/authService";
 
 const Login = () => {
-  const navigate = useNavigate();
-  const [loginError, setLoginError] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const handleLogin = async (values: { identifier: string; password: string }) => {
-    setIsLoading(true);
-
-    try {
-      const response = await authorization(values);
-      if (response.data && response.data.token) {
-        // localStorage.setItem('token', response.data.token);
-        navigate("/home");
-      } else {
-        throw new Error("Invalid response: No authentication token received");
-      }
-    } catch (error) {
-      const errorMessage = getErrorMessage(error);
-      console.error("Login failed:", error);
-      setLoginError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {fetchStrategies, strategies, login, loginLoading, loginError} =
+    useAuthService();
 
   const formik = useFormik({
-    initialValues: { identifier: "", password: "" },
-    onSubmit: handleLogin,
+    initialValues: {identifier: "", password: ""},
+    onSubmit: values => login(values.identifier, values.password),
     validateOnChange: false,
     validateOnBlur: false
   });
+
+  useEffect(() => {
+    fetchStrategies();
+  }, []);
 
   return (
     <div className={styles.container}>
@@ -58,9 +45,13 @@ const Login = () => {
             gap={10}
           >
             <Logo size="xl" />
-
-            {loginError && <div className={styles.errorText}>{loginError}</div>}
-
+            <div className={styles.errorsContainer}>
+              {loginError && (
+                <div className={styles.errorBox}>
+                  <div className={styles.errorText}>{loginError}</div>
+                </div>
+              )}
+            </div>
             <StringInput
               id="identifier"
               label="Name"
@@ -107,29 +98,32 @@ const Login = () => {
               disabled={
                 formik.values.identifier.length < 3 ||
                 formik.values.password.length < 3 ||
-                isLoading
+                loginLoading
               }
               containerProps={{
                 className: styles.formButtonContainer
               }}
-
             >
               <Icon name="login" size="xs" />
               Login
             </Button>
 
-            <Button
-              fullWidth
-              type="button"
-              color="default"
-              variant="outlined"
-              containerProps={{
-                className: styles.formButtonContainer
-              }}
-            >
-              <Logo size="sm" type="withoutText" />
-              Login With Spica Account
-            </Button>
+            {strategies?.map(strategy => (
+              <Button
+                key={strategy._id}
+                fullWidth
+                type="button"
+                color="default"
+                variant="outlined"
+                disabled={loginLoading}
+                containerProps={{
+                  className: styles.formButtonContainer
+                }}
+              >
+                <Icon size="sm" name={strategy.icon as IconName} />
+                {strategy.title}
+              </Button>
+            ))}
           </FlexElement>
 
           <FlexElement
