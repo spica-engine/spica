@@ -1,4 +1,4 @@
-import React, {type FC, forwardRef, memo} from "react";
+import React, {type FC, memo} from "react";
 import styles from "./NavigatorItem.module.scss";
 import {
   Button,
@@ -9,7 +9,6 @@ import {
   type IconName,
   type TypeButton
 } from "oziko-ui-kit";
-import type {IconSize} from "oziko-ui-kit/dist/utils/iconList";
 
 type SuffixIcon = {
   name: IconName;
