@@ -8,10 +8,16 @@ import {DndProvider, useDrag, useDrop} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import type {TypeNavigatorItems} from "../SideBar";
 import {useBucket} from "../../../../contexts/BucketContext";
+import type {BucketType} from "src/services/bucketService";
 
 type TypeNavigatorProps = {
   header?: TypeNavigatorHeader;
-  items?: any;
+  items?: {
+    items: TypeNavigatorItems[] | BucketType[];
+    setter:
+      | React.Dispatch<React.SetStateAction<TypeNavigatorItems[] | null>>
+      | React.Dispatch<React.SetStateAction<BucketType[] | null>>;
+  };
   button?: {
     title: string;
     icon: IconName;
@@ -64,7 +70,7 @@ const DraggableItem = ({
   moveItem,
   completeMoving
 }: {
-  item: TypeNavigatorItems & {index: number};
+  item: (TypeNavigatorItems & {index: number}) | (BucketType & {index: number});
   index: number;
   moveItem: (dragIndex: number, hoverIndex: number) => void;
   completeMoving: (item: {bucketId: string; order: number}) => void;
@@ -115,7 +121,6 @@ const DraggableItem = ({
 
   drop(containerRef);
   drag(buttonRef);
-
   return (
     <NavigatorItem
       ref={containerRef}
@@ -139,11 +144,16 @@ const DraggableItem = ({
   );
 };
 
-const ReorderableList = ({initialItems}: {initialItems: TypeNavigatorItems[]}) => {
-  const [items, setItems] = useState(initialItems);
+const ReorderableList = ({
+  items,
+  setItems
+}: {
+  items: TypeNavigatorItems[];
+  setItems: React.Dispatch<React.SetStateAction<TypeNavigatorItems[]>>;
+}) => {
   const {changeBucketOrder} = useBucket();
   const moveItem = useCallback((from: number, to: number) => {
-    setItems(prev => {
+    setItems((prev: TypeNavigatorItems[]) => {
       const updated = [...prev];
       const [moved] = updated.splice(from, 1);
       updated.splice(to, 0, moved);
@@ -168,16 +178,15 @@ const ReorderableList = ({initialItems}: {initialItems: TypeNavigatorItems[]}) =
 
 const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps) => {
   const navigate = useNavigate();
-  const groupObjectsByCategory = (objects: any) => {
-    const groupedMap = new Map();
-    const ungrouped: any[] = [];
-
-    objects.forEach((obj: any) => {
+  const groupObjectsByCategory = (object: {items: any[]}) => {
+    const groupedMap = new Map<string, TypeNavigatorItems[]>();
+    const ungrouped: TypeNavigatorItems[] = [];
+    object.items.forEach(obj => {
       if (obj.category) {
         if (!groupedMap.has(obj.category)) {
           groupedMap.set(obj.category, []);
         }
-        groupedMap.get(obj.category).push(obj);
+        groupedMap.get(obj.category)!.push(obj);
       } else {
         ungrouped.push(obj);
       }
@@ -189,10 +198,11 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
     };
   };
 
-  const {grouped, ungrouped} = groupObjectsByCategory(items);
-
-  const accordionItems = grouped?.map((item: any, index: number) => ({
-    title: helperUtils.capitalize(item[0].category),
+  const {grouped, ungrouped} = groupObjectsByCategory({
+    items: items?.items ?? []
+  });
+  const accordionItems = grouped?.map(item => ({
+    title: helperUtils.capitalize("item[0].category"),
     content: (
       <>
         {item.map((item: any, index: number) => (
@@ -235,7 +245,12 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
 
           //TODO: add hoverable api
         />
-        <ReorderableList initialItems={ungrouped} />
+        {Array.isArray(ungrouped) && typeof items?.setter === "function" && (
+          <ReorderableList
+            setItems={items.setter as React.Dispatch<React.SetStateAction<TypeNavigatorItems[]>>}
+            items={ungrouped as TypeNavigatorItems[]}
+          />
+        )}
         {addNewButtonText && (
           <Button className={styles.addNewButton} color="transparent" variant="text">
             <Icon name="plus" size="xs" />
