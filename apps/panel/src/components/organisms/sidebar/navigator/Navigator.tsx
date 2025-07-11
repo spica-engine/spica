@@ -67,7 +67,7 @@ const DraggableItem = ({
   item: TypeNavigatorItems & {index: number};
   index: number;
   moveItem: (dragIndex: number, hoverIndex: number) => void;
-  completeMoving: (item: {_id: string; index: number}) => void;
+  completeMoving: (item: {bucketId: string; order: number}) => void;
 }) => {
   const navigate = useNavigate();
 
@@ -109,7 +109,7 @@ const DraggableItem = ({
       isDragging: monitor.isDragging()
     }),
     end: (draggedItem, monitor) => {
-      completeMoving(draggedItem);
+      completeMoving({bucketId: draggedItem._id, order: draggedItem.index});
     }
   });
 

@@ -1,12 +1,11 @@
 import {createContext, useMemo, useContext, type ReactNode, useEffect} from "react";
 import {useBucketService, type BucketType} from "../services/bucketService";
-import type {AxiosRequestHeaders} from "axios";
 
 type BucketContextType = {
   buckets: BucketType[] | null;
   loading: boolean;
   error: string | null;
-  changeBucketOrder: ({_id, index}: {_id: string; index: number}) => void;
+  changeBucketOrder: ({bucketId, order}: {bucketId: string, order: number}) => void;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);

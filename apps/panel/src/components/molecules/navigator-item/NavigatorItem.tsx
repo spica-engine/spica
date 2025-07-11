@@ -1,4 +1,4 @@
-import React, {type FC, memo} from "react";
+import React, {type FC, forwardRef, memo} from "react";
 import styles from "./NavigatorItem.module.scss";
 import {
   Button,
@@ -6,7 +6,8 @@ import {
   Icon,
   FluidContainer,
   type TypeFluidContainer,
-  type IconName
+  type IconName,
+  type TypeButton
 } from "oziko-ui-kit";
 
 type SuffixIcon = {
@@ -20,6 +21,10 @@ type TypeNavigatorItem = {
   prefixIcon?: IconName;
   suffixIcons?: SuffixIcon[];
 } & TypeFluidContainer;
+
+const ButtonWithRef = Button as React.NamedExoticComponent<
+  TypeButton & {ref: React.Ref<HTMLButtonElement> | undefined}
+>;
 
 const NavigatorItem: FC<TypeNavigatorItem> = ({label, prefixIcon, suffixIcons = [], ...props}) => {
   return (
@@ -43,20 +48,15 @@ const NavigatorItem: FC<TypeNavigatorItem> = ({label, prefixIcon, suffixIcons = 
         children: suffixIcons.length > 0 && (
           <>
             {suffixIcons.map(({name, onClick, ref}, index) => (
-              <Button
+              <ButtonWithRef
                 key={index}
                 color="transparent"
                 className={styles.suffixButton}
                 onClick={onClick}
-                // @ts-expect-error
-                ref={(el: HTMLButtonElement) => {
-                  if (ref && typeof ref === "object") {
-                    (ref as React.MutableRefObject<HTMLButtonElement | null>).current = el;
-                  }
-                }}
+                ref={ref}
               >
                 <Icon name={name} size="sm" />
-              </Button>
+              </ButtonWithRef>
             ))}
           </>
         )

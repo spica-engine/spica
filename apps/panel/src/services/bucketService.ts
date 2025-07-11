@@ -64,8 +64,8 @@ export const useBucketService = () => {
     error: bucketOrderError
   } = useApi({endpoint: "", method: "patch"});
 
-  const changeBucketOrder = useCallback(({_id, index}: {_id: string; index: number}) => {
-    bucketOrderRequest({endpoint: `/api/bucket/${_id}`, body: {order: {index}}});
+  const changeBucketOrder = useCallback(({bucketId, order}: {bucketId: string; order: number}) => {
+    bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
   }, []);
 
   return {
