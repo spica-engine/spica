@@ -5,12 +5,23 @@ type BucketContextType = {
   buckets: BucketType[] | null;
   loading: boolean;
   error: string | null;
+  deleteBucket: (bucketId: string) => Promise<any>;
+  deleteBucketLoading: boolean;
+  deleteBucketError: string | null;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
 
 export const BucketProvider = ({children}: {children: ReactNode}) => {
-  const {buckets, loading, error, fetchBuckets} = useBucketService();
+  const {
+    buckets,
+    loading,
+    error,
+    fetchBuckets,
+    deleteBucket,
+    deleteBucketLoading,
+    deleteBucketError
+  } = useBucketService();
 
   useEffect(() => {
     fetchBuckets();
@@ -20,7 +31,10 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     () => ({
       buckets,
       loading,
-      error
+      error,
+      deleteBucket,
+      deleteBucketLoading,
+      deleteBucketError
     }),
     [buckets, loading, error]
   );

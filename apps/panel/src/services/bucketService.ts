@@ -1,3 +1,4 @@
+import {useCallback} from "react";
 import useApi from "../hooks/useApi";
 
 export type BucketType = {
@@ -6,7 +7,7 @@ export type BucketType = {
   properties: Properties;
   required?: string[];
   [key: string]: any;
-}
+};
 
 type Properties = {[key: string]: Property};
 
@@ -51,17 +52,34 @@ interface LocationProperty extends IProperty {
   type: "location";
 }
 
-
 export const useBucketService = () => {
-  const { request, data, error, loading } = useApi<BucketType[]>({
+  const {request, data, error, loading} = useApi<BucketType[]>({
     endpoint: "/api/bucket",
     method: "get"
   });
+
+  const {
+    request: deleteBucketRequest,
+    loading: deleteBucketLoading,
+    error: deleteBucketError
+  } = useApi({
+    endpoint: "",
+    method: "delete"
+  });
+
+  const deleteBucket = useCallback((bucketId: string) => {
+    return deleteBucketRequest({
+      endpoint: `/api/bucket/${bucketId}`
+    });
+  }, []);
 
   return {
     buckets: data,
     fetchBuckets: request,
     error,
     loading,
+    deleteBucket,
+    deleteBucketLoading,
+    deleteBucketError
   };
 };
