@@ -111,48 +111,48 @@ async function findPrimaryNode(nodes: string[]) {
 }
 
 async function initiateReplication(nodes: string[], reinitiate = false) {
+  let statusResult;
   try {
-    if (reinitiate) {
-      debug("Replication has been initialized already. Re-initiating it.");
-      let primary = await findPrimaryNode(nodes);
-      if (primary) {
-        debug(`Re-initiate: Found the primary node ${primary}`);
-      } else {
-        debug(`Could not find the primary node; using the first node instead.`);
-        primary = nodes[0];
-      }
+    const {stdout} = await execMongo(`--host "${nodes[0]}" --eval 'JSON.stringify(rs.status())'`);
+    statusResult = JSON.parse(stdout);
+  } catch (error) {
+    debug(error);
+  }
 
-      const script = [
-        "cfg = rs.conf()",
-        `cfg.members = ${JSON.stringify(nodes.map((host, _id) => ({_id, host})))}`,
-        "rs.reconfig(cfg, { force: true })",
-        "return { ok: 1 }"
-      ];
-      const {stdout} = await execMongo(
-        `admin --host "${primary}" --eval 'JSON.stringify((function() { ${script.join(";")} })())'`
-      );
-      debug(stdout);
-      const result = JSON.parse(stdout);
-      if (result.ok !== 1) {
-        throw new Error("Can not reinitialize replica set.");
-      }
+  if (!statusResult || (statusResult.ok !== 1 && statusResult.codeName === "NotYetInitialized")) {
+    const {stdout} = await execMongo(
+      `--host ${nodes[0]} --eval 'JSON.stringify(rs.initiate({"_id": "${
+        options["replica-set"]
+      }", "members": ${JSON.stringify(nodes.map((host, _id) => ({_id, host})))}}))'`
+    );
+    debug(stdout);
+    const result = JSON.parse(stdout);
+    if (result.ok !== 1) {
+      throw new Error("Can not initialize replica set.");
     }
-  } catch (error: any) {
-    const stderr = error.stderr || "";
-    if (stderr.includes("no replset config has been received")) {
-      debug("Replica set not initialized. Proceeding to initiate it.");
-      const {stdout} = await execMongo(
-        `--host ${nodes[0]} --eval 'JSON.stringify(rs.initiate({"_id": "${
-          options["replica-set"]
-        }", "members": ${JSON.stringify(nodes.map((host, _id) => ({_id, host})))}}))'`
-      );
-      debug(stdout);
-      const result = JSON.parse(stdout);
-      if (result.ok !== 1) {
-        throw new Error("Can not initialize replica set.");
-      }
+  } else if (reinitiate) {
+    debug("Replication has been initialized already. Re-initiating it.");
+    let primary = await findPrimaryNode(nodes);
+    if (primary) {
+      debug(`Re-initiate: Found the primary node ${primary}`);
     } else {
-      throw error;
+      debug(`Could not find the primary node; using the first node instead.`);
+      primary = nodes[0];
+    }
+
+    const script = [
+      "cfg = rs.conf()",
+      `cfg.members = ${JSON.stringify(nodes.map((host, _id) => ({_id, host})))}`,
+      "rs.reconfig(cfg, { force: true })",
+      "return { ok: 1 }"
+    ];
+    const {stdout} = await execMongo(
+      `admin --host "${primary}" --eval 'JSON.stringify((function() { ${script.join(";")} })())'`
+    );
+    debug(stdout);
+    const result = JSON.parse(stdout);
+    if (result.ok !== 1) {
+      throw new Error("Can not initialize replica set.");
     }
   }
 }
