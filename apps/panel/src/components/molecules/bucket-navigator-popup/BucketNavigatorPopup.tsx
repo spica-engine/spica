@@ -3,13 +3,42 @@ import {memo, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
 import {useDrawerController} from "../../../contexts/DrawerContext";
 import TitleForm from "../title-form/TitleForm";
+import type {BucketType} from "../../../services/bucketService";
 import useApi from "../../../hooks/useApi";
-import type {BucketType} from "src/services/bucketService";
 
 type TypeBucketNavigatorPopup = {
   onAddToCategory?: () => void;
   onDelete?: () => void;
   bucket: BucketType;
+};
+
+type TitleFormWrapperProps = {
+  onSubmit?: () => void;
+  bucketId: string;
+  initialValue: string;
+};
+
+const TitleFormWrapper = ({onSubmit, bucketId, initialValue}: TitleFormWrapperProps) => {
+  const {request, loading, error} = useApi({
+    endpoint: `/api/bucket/${bucketId}`,
+    method: "patch"
+  });
+
+  const onSubmit_ = (newTitle: string) => {
+    request({body: {title: newTitle}}).then(result => {
+      if (!result) return;
+      onSubmit?.();
+    });
+  };
+
+  return (
+    <TitleForm
+      onSubmit={onSubmit_}
+      initialValue={initialValue}
+      loading={loading}
+      error={error ?? ""}
+    />
+  );
 };
 
 const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
@@ -45,7 +74,13 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
             }}
             color="default"
             onClick={() => {
-              openDrawer(<TitleForm bucketId={bucket._id} initalValue={bucket.title} onSave={closeDrawer}/>);
+              openDrawer(
+                <TitleFormWrapper
+                  bucketId={bucket._id}
+                  initialValue={bucket.title}
+                  onSubmit={closeDrawer}
+                />
+              );
             }}
             className={styles.buttons}
           >

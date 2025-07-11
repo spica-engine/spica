@@ -1,26 +1,17 @@
 import {Button, FluidContainer, Icon, Text, StringInput} from "oziko-ui-kit";
 import {type FC, useState} from "react";
 import styles from "./TitleForm.module.scss";
-import useApi from "../../../hooks/useApi";
 
 type TypeTitleFormProps = {
-  initalValue: string;
-  onSave: () => void;
-  bucketId: string;
+  onSubmit: (newTitle: string) => void;
+  initialValue: string;
+  error?: string;
+  loading?: boolean;
 };
 
-const TitleForm: FC<TypeTitleFormProps> = ({initalValue, onSave, bucketId}) => {
-  const [value, setValue] = useState(initalValue);
-  const {request, loading, error} = useApi({
-    endpoint: `/api/bucket/${bucketId}`,
-    method: "patch"
-  });
-  const onSubmit = () => {
-    request({body: {title: value}}).then(result => {
-      if (!result) return;
-      onSave?.();
-    });
-  };
+const TitleForm: FC<TypeTitleFormProps> = ({initialValue, error, loading, onSubmit}) => {
+  const [value, setValue] = useState(initialValue);
+
   return (
     <FluidContainer
       className={styles.container}
@@ -42,7 +33,7 @@ const TitleForm: FC<TypeTitleFormProps> = ({initalValue, onSave, bucketId}) => {
         dimensionX: "fill",
         alignment: "rightCenter",
         children: (
-          <Button onClick={() => onSubmit()} disabled={loading} loading={loading}>
+          <Button onClick={() => onSubmit(value)} disabled={loading} loading={loading}>
             <Icon name="save" />
             <Text className={styles.buttonText}>Save</Text>
           </Button>
