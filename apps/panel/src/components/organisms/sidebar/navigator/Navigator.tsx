@@ -30,11 +30,6 @@ export type TypeNavigatorHeader = {
   }[];
 };
 
-type TypeOrderPayload = {
-  bucketId: string;
-  order: number;
-};
-
 const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
   return (
     <FluidContainer
