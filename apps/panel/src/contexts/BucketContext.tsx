@@ -6,7 +6,7 @@ type BucketContextType = {
   loading: boolean;
   error: string | null;
   currentBucket: BucketType | null;
-  setBucketId: (bucketId: string) => any;
+  getCurrentBucket: (bucketId: string) => Promise<any>;
   currentBucketLoading: boolean;
   currentBucketError: string | null;
 };
@@ -14,7 +14,6 @@ type BucketContextType = {
 const BucketContext = createContext<BucketContextType | null>(null);
 
 export const BucketProvider = ({children}: {children: ReactNode}) => {
-  const [bucketId, setBucketId] = useState<string | null>(null);
   const {
     buckets,
     loading,
@@ -22,8 +21,9 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     fetchBuckets,
     currentBucket,
     currentBucketLoading,
-    currentBucketError
-  } = useBucketService({bucketId});
+    currentBucketError,
+    getCurrentBucket,
+  } = useBucketService();
 
   useEffect(() => {
     fetchBuckets();
@@ -35,7 +35,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       loading,
       error,
       currentBucket,
-      setBucketId,
+      getCurrentBucket,
       currentBucketLoading,
       currentBucketError
     }),

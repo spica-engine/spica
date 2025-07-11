@@ -53,7 +53,6 @@ interface LocationProperty extends IProperty {
 }
 
 interface UseBucketServiceOptions {
-  bucketId?: string | null;
   currentBucketQuery?: {
     paginate?: boolean;
     relation?: boolean;
@@ -62,7 +61,7 @@ interface UseBucketServiceOptions {
   };
 }
 
-export const useBucketService = ({bucketId, currentBucketQuery}: UseBucketServiceOptions) => {
+export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions = {}) => {
   const {
     request: fetchBuckets,
     data: buckets,
@@ -97,13 +96,15 @@ export const useBucketService = ({bucketId, currentBucketQuery}: UseBucketServic
     loading: currentBucketLoading,
     error: currentBucketError
   } = useApi<BucketType>({
-    endpoint: `/api/bucket/${bucketId}/data?${currentBucketQueryString}`,
+    endpoint: "",
     method: "get"
   });
 
-  useEffect(() => {
-    if (bucketId) fetchCurrentBucket();
-  }, [bucketId]);
+  const getCurrentBucket = (bucketId: string) => {
+    return fetchCurrentBucket({
+      endpoint: `/api/bucket/${bucketId}/data?${currentBucketQueryString}`
+    });
+  };
 
   return {
     buckets,
@@ -111,7 +112,7 @@ export const useBucketService = ({bucketId, currentBucketQuery}: UseBucketServic
     error,
     loading,
     currentBucket,
-    fetchCurrentBucket,
+    getCurrentBucket,
     currentBucketLoading,
     currentBucketError
   };

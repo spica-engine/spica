@@ -6,12 +6,12 @@ import {useParams} from "react-router-dom";
 export default function Bucket() {
   const {bucketId} = useParams<{bucketId: string}>();
 
-  const {currentBucket, currentBucketLoading, currentBucketError, setBucketId} = useBucket();
+  const {currentBucket, currentBucketLoading, currentBucketError, getCurrentBucket} = useBucket();
 
   useEffect(() => {
     if (!bucketId) return;
-    setBucketId(bucketId);
-  }, [bucketId, setBucketId]);
+    getCurrentBucket(bucketId);
+  }, [bucketId]);
 
   return (
     <div>
