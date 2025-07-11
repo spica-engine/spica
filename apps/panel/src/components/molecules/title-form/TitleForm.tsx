@@ -1,15 +1,16 @@
-import {Button, FluidContainer, Icon, Text, StringInput} from "oziko-ui-kit";
+import {Button, FluidContainer, Icon, Text, StringInput, FlexElement} from "oziko-ui-kit";
 import {type FC, useState} from "react";
 import styles from "./TitleForm.module.scss";
 
 type TypeTitleFormProps = {
-  onSubmit: (newTitle: string) => void;
+  onSave: (newTitle: string) => void;
+  onCancel?: () => void;
   initialValue: string;
   error?: string;
   loading?: boolean;
 };
 
-const TitleForm: FC<TypeTitleFormProps> = ({initialValue, error, loading, onSubmit}) => {
+const TitleForm: FC<TypeTitleFormProps> = ({initialValue, error, loading, onSave, onCancel}) => {
   const [value, setValue] = useState(initialValue);
 
   return (
@@ -33,10 +34,16 @@ const TitleForm: FC<TypeTitleFormProps> = ({initialValue, error, loading, onSubm
         dimensionX: "fill",
         alignment: "rightCenter",
         children: (
-          <Button onClick={() => onSubmit(value)} disabled={loading} loading={loading}>
-            <Icon name="save" />
-            <Text className={styles.buttonText}>Save</Text>
-          </Button>
+          <FlexElement>
+            <Button onClick={() => onCancel?.()} disabled={loading}>
+              <Icon name="close" />
+              <Text className={styles.buttonText}>Cancel</Text>
+            </Button>
+            <Button onClick={() => onSave(value)} disabled={loading} loading={loading}>
+              <Icon name="save" />
+              <Text className={styles.buttonText}>Save</Text>
+            </Button>
+          </FlexElement>
         )
       }}
     />
