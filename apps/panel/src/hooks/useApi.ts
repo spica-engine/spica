@@ -1,4 +1,4 @@
-import axios, { type AxiosRequestHeaders } from "axios";
+import axios, {type AxiosRequestHeaders} from "axios";
 import {useCallback, useMemo, useState} from "react";
 import useLocalStorage from "./useLocalStorage";
 
@@ -9,19 +9,25 @@ type ApiRequestOptions = {
   onError?: () => void;
 };
 
+function resolveEndpoint(endpoint: string) {
+  if (endpoint.startsWith("http")) return endpoint;
+  return `${import.meta.env.VITE_BASE_URL}${endpoint}`;
+}
+
 function useApi<T>({endpoint, method = "get", onSuccess, onError}: ApiRequestOptions) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<T | null>(null);
   const [token] = useLocalStorage("token", null);
 
-  const resolvedUrl = useMemo(() => {
-    if (endpoint.startsWith("http")) return endpoint;
-    return `${import.meta.env.VITE_BASE_URL}${endpoint}`;
-  }, [endpoint]);
+  const resolvedUrl = resolveEndpoint(endpoint);
 
   const request = useCallback(
-    ({body, headers}: {body?: any; headers?: AxiosRequestHeaders} = {}) => {
+    ({
+      body,
+      headers,
+      endpoint
+    }: {body?: any; headers?: AxiosRequestHeaders; endpoint?: string} = {}) => {
       const makeRequest = async () => {
         try {
           const combinedHeaders =
@@ -34,7 +40,7 @@ function useApi<T>({endpoint, method = "get", onSuccess, onError}: ApiRequestOpt
 
           const response = await axios({
             method,
-            url: resolvedUrl,
+            url: endpoint ? resolveEndpoint(endpoint) : resolvedUrl,
             data: body,
             headers: combinedHeaders
           });
