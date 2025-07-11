@@ -1,3 +1,4 @@
+import {useCallback} from "react";
 import useApi from "../hooks/useApi";
 
 export type BucketType = {
@@ -6,7 +7,7 @@ export type BucketType = {
   properties: Properties;
   required?: string[];
   [key: string]: any;
-}
+};
 
 type Properties = {[key: string]: Property};
 
@@ -51,17 +52,29 @@ interface LocationProperty extends IProperty {
   type: "location";
 }
 
-
 export const useBucketService = () => {
-  const { request, data, error, loading } = useApi<BucketType[]>({
+  const {request, data, error, loading} = useApi<BucketType[]>({
     endpoint: "/api/bucket",
     method: "get"
   });
+
+  const {
+    request: bucketOrderRequest,
+    loading: bucketOrderLoading,
+    error: bucketOrderError
+  } = useApi({endpoint: "", method: "patch"});
+
+  const changeBucketOrder = useCallback(({_id, index}: {_id: string; index: number}) => {
+    bucketOrderRequest({endpoint: `/api/bucket/${_id}`, body: {order: {index}}});
+  }, []);
 
   return {
     buckets: data,
     fetchBuckets: request,
     error,
     loading,
+    changeBucketOrder,
+    bucketOrderLoading,
+    bucketOrderError
   };
 };

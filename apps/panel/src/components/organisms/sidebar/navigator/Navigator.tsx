@@ -7,7 +7,7 @@ import {useNavigate} from "react-router-dom";
 import {DndProvider, useDrag, useDrop} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import type {TypeNavigatorItems} from "../SideBar";
-import useApi from "../../../../hooks/useApi";
+import {useBucket} from "../../../../contexts/BucketContext";
 
 type TypeNavigatorProps = {
   header?: TypeNavigatorHeader;
@@ -34,7 +34,6 @@ type TypeOrderPayload = {
   bucketId: string;
   order: number;
 };
-
 
 const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
   return (
@@ -147,18 +146,7 @@ const DraggableItem = ({
 
 const ReorderableList = ({initialItems}: {initialItems: TypeNavigatorItems[]}) => {
   const [items, setItems] = useState(initialItems);
-  const [payload, setPayload] = useState<TypeOrderPayload | null>(null);
-
-  const {request} = useApi({endpoint: `/api/bucket/${payload?.bucketId}`, method: "patch"});
-  useEffect(() => {
-    if (!payload) return;
-    request({
-      body: {
-        order: payload.order
-      }
-    });
-  }, [payload?.bucketId, payload?.order]);
-
+  const {changeBucketOrder} = useBucket();
   const moveItem = useCallback((from: number, to: number) => {
     setItems(prev => {
       const updated = [...prev];
@@ -166,10 +154,6 @@ const ReorderableList = ({initialItems}: {initialItems: TypeNavigatorItems[]}) =
       updated.splice(to, 0, moved);
       return updated;
     });
-  }, []);
-
-  const completeMoving = useCallback((item: {_id: string; index: number}) => {
-    setPayload({bucketId: item._id, order: item.index});
   }, []);
 
   return (
@@ -180,7 +164,7 @@ const ReorderableList = ({initialItems}: {initialItems: TypeNavigatorItems[]}) =
           index={index}
           item={{...item, index}}
           moveItem={moveItem}
-          completeMoving={completeMoving}
+          completeMoving={changeBucketOrder}
         />
       ))}
     </DndProvider>
