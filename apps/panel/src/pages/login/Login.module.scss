@@ -9,31 +9,95 @@
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
+
   .contentContainer {
     padding: var(--padding-xl);
     border-radius: var(--border-radius-md);
     background-color: var(--color-menu-background);
   }
+
   .passwordIcon {
     color: var(--color-font-primary) !important;
   }
+
   .passwordText {
     color: var(--color-input-placeholder) !important;
   }
-  .spicaButton {
-    height: 16px !important;
-  }
+
   .bottomContainer {
     padding: 0;
 
     .linkButtons {
       color: var(--color-font-primary) !important;
+      font-family: var(--font-family-base);
     }
   }
-  .errorText {
-    width: 100%;
+
+  .errorsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-md);
+  }
+
+  .errorBox {
+    background-color: var(--color-soft);
+    border: var(--border-default);
+    border-color: var(--color-danger-light);
+    padding: var(--padding-md);
+    border-radius: var(--border-radius-lg);
     color: var(--color-danger);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-md);
+  }
+
+  .errorText {
+    font-size: var(--font-size-md);
+  }
+
+  .loadingText {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+    color: var(--color-font-primary);
+  }
+
+  .stringInput {
+    border: var(--border-default);
+    border-radius: var(--border-radius-md);
+
+    span {
+      font-size: var(--font-size-sm) !important;
+    }
+
+    svg {
+      width: var(--icon-size-sm) !important;
+      height: var(--icon-size-sm) !important;
+    }
+
+    > div:nth-child(1) {
+      height: 30px !important;
+      outline: none;
+    }
+
+    &:focus-within,
+    &:focus {
+      border-color: rgb(var(--color-primary-rgb));
+    }
+
+    input,
+    span {
+      line-height: var(--line-height-sm) !important;
+      font-size: var(--font-size-sm) !important;
+    }
+  }
+
+  .submitButton {
+    background-color: var(--color-primary) !important;
+  }
+
+  .formButtonContainer {
     font-size: var(--font-size-sm);
-    margin-top: calc(var(--gap-md) * -1);
+    font-family: var(--font-family-base);
   }
 }
