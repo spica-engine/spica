@@ -58,6 +58,7 @@ describe("Bucket", () => {
         title: {type: "string", options: {position: "left"}},
         description: {type: "string", options: {position: "right"}}
       },
+      indexes: [],
       history: false,
       acl: {write: "true==true", read: "true==true"},
       icon: "view_stream"
@@ -71,6 +72,7 @@ describe("Bucket", () => {
         name: {type: "string", options: {position: "left"}},
         surname: {type: "string", options: {position: "right"}}
       },
+      indexes: [],
       history: false,
       acl: {write: "true==true", read: "true==true"},
       icon: "view_stream"
