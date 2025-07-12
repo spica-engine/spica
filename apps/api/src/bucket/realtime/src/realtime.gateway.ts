@@ -35,13 +35,11 @@ import {RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {ChunkKind} from "@spica-server/interface/realtime";
 import {GuardService} from "@spica-server/passport";
 import {resourceFilterFunction} from "@spica-server/passport/guard";
-import {fromEvent, of} from "rxjs";
-import {takeUntil, catchError} from "rxjs/operators";
 import {Action} from "@spica-server/interface/activity";
 import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {MessageKind} from "@spica-server/interface/bucket/realtime";
 import {BucketDocument} from "@spica-server/interface/bucket";
-
+import {getConnectionHandlers} from "@spica-server/realtime";
 @WebSocketGateway({
   path: "/bucket/:id/data"
 })
@@ -57,20 +55,43 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     @Optional() private history: HistoryService,
     @Optional() private hookEmitter: ChangeEmitter,
     @Optional() private bucketCacheService: BucketCacheService
-  ) {}
+  ) {
+    this.handlers = getConnectionHandlers(
+      this.guardService,
+      this.getCollectionName.bind(this),
+      this.getFindOptions.bind(this),
+      error => ({
+        kind: ChunkKind.Error,
+        status: error.status || 500,
+        message: error.message || "Unexpected error"
+      }),
+      this.realtime,
+      resourceFilterFunction,
+      "bucket:data:stream"
+    );
+  }
+
+  private handlers: {
+    handleConnection: (client: any, req: any) => Promise<void>;
+    handleDisconnect: (client: any, req: any) => Promise<void>;
+  };
+
+  private async getCollectionName(client, req): Promise<string> {
+    const {schemaId} = await this.prepareClient(client, req);
+    return getBucketDataCollection(schemaId);
+  }
+
+  private async getFindOptions(client, req): Promise<any> {
+    const {options} = await this.prepareClient(client, req);
+    return options;
+  }
+
+  async handleConnection(client: any, req: any) {
+    return this.handlers.handleConnection(client, req);
+  }
 
   async handleDisconnect(client: any) {
-    const schemaIdAndOptions = await this.prepareClient(client, client.upgradeReq);
-
-    if (!schemaIdAndOptions) {
-      return;
-    }
-
-    const {schemaId, options} = schemaIdAndOptions;
-    const collection = getBucketDataCollection(schemaId);
-    if (this.realtime.doesEmitterExist(collection, options)) {
-      this.realtime.removeEmitter(collection, options);
-    }
+    return this.handlers.handleDisconnect(client, client.upgradeReq);
   }
 
   async authorize(req, client) {
@@ -93,36 +114,6 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         };
       }
     } as any);
-  }
-
-  async handleConnection(client: any, req) {
-    req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
-
-    try {
-      await this.authorize(req, client);
-    } catch (error) {
-      this.send(client, ChunkKind.Error, error.status, error.message);
-      return client.close(1003);
-    }
-
-    const schemaIdAndOptions = await this.prepareClient(client, req);
-
-    if (!schemaIdAndOptions) {
-      return;
-    }
-
-    const {schemaId, options} = schemaIdAndOptions;
-    const stream = this.realtime.find(getBucketDataCollection(schemaId), options).pipe(
-      catchError(error => {
-        this.send(client, ChunkKind.Error, 500, error.toString());
-        client.close(1003);
-        return of(null);
-      })
-    );
-
-    stream
-      .pipe(takeUntil(fromEvent(client, "close")))
-      .subscribe(data => client.send(JSON.stringify(data)));
   }
 
   @SubscribeMessage(MessageKind.INSERT)

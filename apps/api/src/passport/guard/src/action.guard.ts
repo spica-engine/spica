@@ -16,14 +16,15 @@ import {
   Statement,
   PrepareUser,
   PolicyResolver,
-  POLICY_RESOLVER
+  POLICY_RESOLVER,
+  ResourceFilterFunction
 } from "@spica-server/interface/passport/guard";
 
 export function wrapArray(val: string | string[]) {
   return Array.isArray(val) ? val : Array(val);
 }
 
-export const resourceFilterFunction = (
+export const resourceFilterFunction: ResourceFilterFunction = (
   data: {pure?: boolean} = {pure: false},
   ctx: ExecutionContext
 ) => {
