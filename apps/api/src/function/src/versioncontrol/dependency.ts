@@ -1,7 +1,6 @@
 import {
   ChangeTypes,
   DocChange,
-  getIdForDocToRepConverter,
   RepChange,
   RepresentativeManagerResource,
   ResourceType,
@@ -40,7 +39,11 @@ export const getDependencySynchronizer = (
     const dependencies = parsed.dependencies || {};
 
     return {
-      _id: getIdForDocToRepConverter(change, change.resource.name),
+      _id: change.resource._id.toString(),
+      displayableName:
+        change.changeType != ChangeTypes.DELETE
+          ? `${change.resource.name}(${change.resource._id.toString()})`
+          : undefined,
       content: JSON.stringify({dependencies})
     };
   };

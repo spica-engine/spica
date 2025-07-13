@@ -1,8 +1,8 @@
 import {BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {Bucket} from "@spica-server/interface/bucket";
 import {
+  ChangeTypes,
   DocChange,
-  getIdForDocToRepConverter,
   RepChange,
   RepresentativeManagerResource,
   VCSynchronizerArgs
@@ -21,7 +21,11 @@ export const getSynchronizer = (
   const extension = "yaml";
 
   const convertToRepResource = (change: DocChange<Bucket>) => ({
-    _id: getIdForDocToRepConverter(change, change.resource.title),
+    _id: change.resource._id.toString(),
+    displayableName:
+      change.changeType != ChangeTypes.DELETE
+        ? `${change.resource.title}(${change.resource._id.toString()})`
+        : undefined,
     content: YAML.stringify(change.resource)
   });
 

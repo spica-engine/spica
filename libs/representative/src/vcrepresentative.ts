@@ -19,6 +19,12 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     return path.join(this.cwd, module);
   }
 
+  findFolder(module: string, id: string) {
+    return fs.promises
+      .readdir(this.getModuleDir(module))
+      .then(folders => folders.find(folder => this.extractId(folder) == id));
+  }
+
   write(module: string, id: string, fileName: string, content: string, extension: string) {
     const resourcesDirectory = path.join(this.cwd, module, id);
     if (!fs.existsSync(resourcesDirectory)) {

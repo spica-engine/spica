@@ -184,7 +184,11 @@ describe("Versioning", () => {
           it("should do the initial sync", async () => {
             const file = await readResource("preference", "identity");
             const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
-            expect(parsedFile).toEqual({_id: "identity", contents: {schema: preference.identity}});
+            expect(parsedFile).toEqual({
+              _id: "identity",
+              displayableName: "identity",
+              contents: {schema: preference.identity}
+            });
           });
 
           it("should update if schema has changes", async () => {
@@ -194,12 +198,20 @@ describe("Versioning", () => {
             );
 
             const file = await readResource("preference", "identity");
-            const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
+            const parsedFile = {
+              ...file,
+              displayableName: "identity",
+              contents: {schema: YAML.parse(file.contents.schema)}
+            };
 
             const expectedSchema = {...preference.identity};
             expectedSchema.attributes.properties.name.type = "number";
 
-            expect(parsedFile).toEqual({_id: "identity", contents: {schema: expectedSchema}});
+            expect(parsedFile).toEqual({
+              _id: "identity",
+              displayableName: "identity",
+              contents: {schema: expectedSchema}
+            });
           });
         });
 
@@ -307,7 +319,7 @@ describe("Versioning", () => {
         await bs.findOneAndDelete({_id: id});
         await sleep();
 
-        const file = await readResource("bucket", id.toString());
+        const file = await readResource("bucket", `${bucket.title}(${id.toString()})`);
         expect(file).toEqual({});
       });
     });

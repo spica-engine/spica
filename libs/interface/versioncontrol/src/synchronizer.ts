@@ -227,6 +227,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 
 export type RepresentativeManagerResource = {
   _id: string;
+  displayableName?: string;
   content: string;
   additionalParameters?: {[key: string]: string | number};
 };

@@ -2,7 +2,6 @@ import {FunctionService} from "@spica-server/function/services";
 import {
   ChangeTypes,
   DocChange,
-  getIdForDocToRepConverter,
   RepChange,
   RepresentativeManagerResource,
   ResourceType,
@@ -37,7 +36,11 @@ export const getIndexSynchronizer = (
     });
 
   const convertToRepResource = change => ({
-    _id: getIdForDocToRepConverter(change, change.resource.name),
+    _id: change.resource._id.toString(),
+    displayableName:
+      change.changeType != ChangeTypes.DELETE
+        ? `${change.resource.name}(${change.resource._id.toString()})`
+        : undefined,
     content: change.resource.content,
     additionalParameters: {language: change.resource.language}
   });
