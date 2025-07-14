@@ -33,7 +33,7 @@
       padding: 0 var(--padding-md) 0 0 !important;
     }
   }
-  
+
   .noLineHeight {
     line-height: 0 !important;
   }
@@ -49,9 +49,20 @@
   }
 
   .ungrouped {
-    svg:hover, button:hover {
+    svg:hover,
+    button:hover {
       width: var(--icon-size-md);
       height: var(--icon-size-md);
     }
   }
+}
+
+.dragLayer {
+  position: fixed;
+  pointer-events: none;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: max-content;
+  height: 100%;
 }

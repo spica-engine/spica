@@ -2,10 +2,10 @@ import {FluidContainer, Icon, Text, type IconName, helperUtils} from "oziko-ui-k
 import styles from "./Navigator.module.scss";
 import {Button, Accordion} from "oziko-ui-kit";
 import NavigatorItem from "../../../molecules/navigator-item/NavigatorItem";
-import React, {memo, useCallback} from "react";
+import React, {memo, useCallback, useEffect, useImperativeHandle, useRef} from "react";
 import {useNavigate} from "react-router-dom";
-import {DndProvider, useDrag, useDrop} from "react-dnd";
-import {HTML5Backend} from "react-dnd-html5-backend";
+import {DndProvider, useDrag, useDragLayer, useDrop, type XYCoord} from "react-dnd";
+import {getEmptyImage, HTML5Backend} from "react-dnd-html5-backend";
 import type {TypeNavigatorItems} from "../SideBar";
 import {useBucket} from "../../../../contexts/BucketContext";
 import type {BucketType} from "src/services/bucketService";
@@ -64,85 +64,165 @@ const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
   );
 };
 
-const DraggableItem = ({
-  item,
-  index,
-  moveItem,
-  completeMoving
-}: {
+function getItemStyles(initialOffset: XYCoord | null, currentOffset: XYCoord | null) {
+  console.log("currentOffset__: ", currentOffset);
+  console.log("initialOffset__: ", initialOffset);
+  if (!initialOffset || !currentOffset) {
+    return {display: "none"};
+  }
+
+  const {y} = currentOffset;
+  const x = initialOffset.x;
+
+  const transform = `translate(${x}px, ${y}px)`;
+  return {
+    transform,
+    WebkitTransform: transform
+  };
+}
+
+export function CustomDragLayer({items, itemRefs, moveItem}) {
+  const {item, isDragging, currentOffset, initialOffset} = useDragLayer(monitor => ({
+    item: monitor.getItem(),
+    isDragging: monitor.isDragging(),
+    currentOffset: monitor.getSourceClientOffset(),
+    initialOffset: monitor.getInitialSourceClientOffset(),
+  }));
+
+  console.log("currentOffset: ", currentOffset);
+  // Find the hoverIndex based on mouse Y and itemRefs
+  const hoverIndex = itemRefs.findIndex(ref => {
+    if (!ref) return false;
+    const rect = ref.getBoundingClientRect();
+    if (!currentOffset) return false;
+    return currentOffset.y >= rect.top && currentOffset.y <= rect.bottom;
+  });
+  console.log("hoverIndex: ", hoverIndex);
+
+  // Save last hoverIndex in ref to avoid repetitive calls
+  const lastHoverIndexRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (
+      hoverIndex !== -1 &&
+      hoverIndex !== lastHoverIndexRef.current &&
+      item.index !== hoverIndex
+    ) {
+      moveItem(item.index, hoverIndex);
+      item.index = hoverIndex; // Update dragged item index so further moves make sense
+      lastHoverIndexRef.current = hoverIndex;
+    }
+  }, [hoverIndex, item?.index, moveItem]);
+
+  const transform = `translate(${initialOffset?.x}px, ${currentOffset?.y}px)`;
+
+  if (!isDragging) return null;
+
+  return (
+    <div className={styles.dragLayer}>
+      <div style={{transform, WebkitTransform: transform}}>
+        <NavigatorItem
+          style={{background: "white", width: "min-content"}}
+          label={item?.title ?? ""}
+          prefixIcon={item?.icon}
+          suffixIcons={[{name: "dragHorizontalVariant"}, {name: "dotsVertical"}]}
+          className={styles.ungrouped}
+        />
+      </div>
+    </div>
+  );
+}
+
+type DraggableItemProps = {
   item: (TypeNavigatorItems & {index: number}) | (BucketType & {index: number});
   index: number;
-  moveItem: (dragIndex: number, hoverIndex: number) => void;
-  completeMoving: (item: {bucketId: string; order: number}) => void;
-}) => {
-  const navigate = useNavigate();
+};
 
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const buttonRef = React.useRef<HTMLButtonElement>(null);
-
-  const [{isOver}, drop] = useDrop({
+const DraggableItem = React.forwardRef<HTMLDivElement, DraggableItemProps>(({item, index}, ref) => {
+  const innerRef = useRef(null);
+  const [{handlerId}, drop] = useDrop({
     accept: "NAVIGATOR_ITEM",
-    hover(item: TypeNavigatorItems & {index: number}, monitor) {
-      if (!containerRef.current) return;
+    collect(monitor) {
+      return {
+        handlerId: monitor.getHandlerId()
+      };
+    },
+    hover(item: any, monitor) {
+      /*if (!ref.current) {
+        return;
+      }
       const dragIndex = item.index;
       const hoverIndex = index;
-
-      if (dragIndex === hoverIndex) return;
-
-      const hoverBoundingRect = containerRef.current.getBoundingClientRect();
+      // Don't replace items with themselves
+      if (dragIndex === hoverIndex) {
+        return;
+      }
+      // Determine rectangle on screen
+      const hoverBoundingRect = ref.current?.getBoundingClientRect();
+      // Get vertical middle
       const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      // Determine mouse position
       const clientOffset = monitor.getClientOffset();
-      const hoverClientY = clientOffset!.y - hoverBoundingRect.top;
-
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
-
+      // Get pixels to the top
+      const hoverClientY = (clientOffset as {y: number}).y - hoverBoundingRect.top;
+      // Only perform the move when the mouse has crossed half of the items height
+      // When dragging downwards, only move when the cursor is below 50%
+      // When dragging upwards, only move when the cursor is above 50%
+      // Dragging downwards
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+        return;
+      }
+      // Dragging upwards
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+        return;
+      }
+      // Time to actually perform the action
       moveItem(dragIndex, hoverIndex);
       item.index = hoverIndex;
-    },
-    collect: monitor => ({
-      isOver: monitor.isOver()
-    }),
-    drop: () => {
-      return {name: "DraggableItem", _id: item._id, index};
+      */
     }
   });
-
-  const [{isDragging}, drag] = useDrag({
+  const [{isDragging}, drag, preview] = useDrag({
     type: "NAVIGATOR_ITEM",
-    item: {_id: item._id, index},
+    item: () => ({...item, index}),
     collect: monitor => ({
       isDragging: monitor.isDragging()
-    }),
-    end: (draggedItem, monitor) => {
-      completeMoving({bucketId: draggedItem._id, order: draggedItem.index});
-    }
+    })
   });
 
-  drop(containerRef);
-  drag(buttonRef);
+  useEffect(() => {
+    preview(getEmptyImage(), {captureDraggingState: true});
+  }, [preview]);
+
+  const opacity = isDragging ? 0 : 1;
+  drag(drop(innerRef));
+
+  // Forward the DOM node to parent
+  useImperativeHandle(ref, () => innerRef.current!);
+
   return (
     <NavigatorItem
-      ref={containerRef}
+      data-handler-id={handlerId}
+      ref={innerRef}
       label={item?.title ?? ""}
       prefixIcon={item?.icon}
-      style={{opacity: isDragging ? 0.5 : isOver ? 0.3 : 1}}
+      style={{opacity}}
       suffixIcons={[
         {
-          name: "dragHorizontalVariant",
-          ref: buttonRef
+          name: "dragHorizontalVariant"
+          //ref: buttonRef
         },
         {
           name: "dotsVertical"
         }
       ]}
       onClick={() => {
-        navigate(`/${item?.section}/${item?._id}`);
+        //navigate(`/${item?.section}/${item?._id}`);
       }}
       className={styles.ungrouped}
     />
   );
-};
+});
 
 const ReorderableList = ({
   items,
@@ -151,6 +231,11 @@ const ReorderableList = ({
   items: TypeNavigatorItems[];
   setItems: React.Dispatch<React.SetStateAction<TypeNavigatorItems[]>>;
 }) => {
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const setItemRef = (el: HTMLDivElement | null, index: number) => {
+    itemRefs.current[index] = el;
+  };
+
   const {changeBucketOrder} = useBucket();
   const moveItem = useCallback((from: number, to: number) => {
     setItems((prev: TypeNavigatorItems[]) => {
@@ -163,13 +248,13 @@ const ReorderableList = ({
 
   return (
     <DndProvider backend={HTML5Backend}>
+      <CustomDragLayer items={items} itemRefs={itemRefs.current} moveItem={moveItem} />
       {items.map((item, index) => (
         <DraggableItem
           key={item._id}
           index={index}
           item={{...item, index}}
-          moveItem={moveItem}
-          completeMoving={changeBucketOrder}
+          ref={el => setItemRef(el, index)}
         />
       ))}
     </DndProvider>
@@ -211,14 +296,7 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
             label={item?.title}
             prefix={{children: <Icon name={item?.icon} />}}
             prefixIcon={item?.icon}
-            suffixIcons={[
-              {
-                name: "dragHorizontalVariant"
-              },
-              {
-                name: "dotsVertical"
-              }
-            ]}
+            suffixIcons={[{name: "dragHorizontalVariant"}, {name: "dotsVertical"}]}
             onClick={() => {
               navigate(`/${item?.section}/${item?._id}`);
             }}
