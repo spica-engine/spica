@@ -5,10 +5,12 @@ import {menuItems, navigatorItems, token, name} from "../pages/home/mock";
 import styles from "./Layout.module.scss";
 import {Drawer} from "oziko-ui-kit";
 import Toolbar from "../components/atoms/toolbar/Toolbar";
+import { useBucket } from "../contexts/BucketContext";
 
 const Layout = () => {
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const {fetchBuckets} = useBucket()
 
   const closeDrawer = () => setIsDrawerOpen(false);
   const openDrawer = () => setIsDrawerOpen(true);
@@ -23,6 +25,10 @@ const Layout = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [isDrawerOpen]);
+
+  useEffect(() => {
+    fetchBuckets()
+  }, [])
 
   const sideBarElement = (
     <div className={styles.sidebar}>
