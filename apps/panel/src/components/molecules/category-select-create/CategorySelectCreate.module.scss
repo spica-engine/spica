@@ -1,0 +1,38 @@
+.container {
+  padding: var(--padding-md);
+  --container-width: 500px;
+  width: var(--container-width) !important;
+}
+
+.input {
+  width: 100% !important;
+  border: 1px solid red;
+  height: max-content;
+  padding: var(--padding-sm);
+}
+
+.select {
+  width: 100% !important;
+}
+
+.addButton {
+  width: calc(var(--container-width) - var(--padding-md)) !important;
+  max-width: calc(var(--container-width) - var(--padding-md)) !important;
+  > div {
+    max-width: 100% !important;
+  }
+  > div > div {
+    display: block !important;
+  }
+  .prefix,
+  .dynamic,
+  .suffix {
+    display: inline-block !important; // everything inline to stay on the same line if possible
+    white-space: normal !important;
+  }
+}
+
+.flexColumn {
+    display: flex;
+    flex-direction: column !important;
+}
