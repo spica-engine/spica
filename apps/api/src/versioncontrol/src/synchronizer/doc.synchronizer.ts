@@ -111,14 +111,10 @@ export function getRepApplier<R extends Resource>(
     };
 
     const rm = async (resource: RepresentativeManagerResource) => {
-      if (!resource.displayableName) {
-        resource._id = await vcRepresentativeManager.findFolder(
-          moduleName,
-          resource._id.toString()
-        );
-        console.log(resource._id);
-      }
-      return vcRepresentativeManager.rm(moduleName, resource._id);
+      const id =
+        resource.displayableName ??
+        (await vcRepresentativeManager.findFolder(moduleName, resource._id.toString()));
+      return vcRepresentativeManager.rm(moduleName, id);
     };
 
     const representativeStrategy = {

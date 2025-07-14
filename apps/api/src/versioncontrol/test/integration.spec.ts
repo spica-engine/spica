@@ -186,7 +186,6 @@ describe("Versioning", () => {
             const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
             expect(parsedFile).toEqual({
               _id: "identity",
-              displayableName: "identity",
               contents: {schema: preference.identity}
             });
           });

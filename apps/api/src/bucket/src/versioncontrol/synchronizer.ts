@@ -3,6 +3,7 @@ import {Bucket} from "@spica-server/interface/bucket";
 import {
   ChangeTypes,
   DocChange,
+  getDisplayableName,
   RepChange,
   RepresentativeManagerResource,
   VCSynchronizerArgs
@@ -22,10 +23,7 @@ export const getSynchronizer = (
 
   const convertToRepResource = (change: DocChange<Bucket>) => ({
     _id: change.resource._id.toString(),
-    displayableName:
-      change.changeType != ChangeTypes.DELETE
-        ? `${change.resource.title}(${change.resource._id.toString()})`
-        : undefined,
+    displayableName: getDisplayableName(change, change.resource.title),
     content: YAML.stringify(change.resource)
   });
 
