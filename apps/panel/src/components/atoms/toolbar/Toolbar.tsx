@@ -3,8 +3,8 @@ import React, {memo, useState, type FC} from "react";
 import styles from "./Toolbar.module.scss";
 
 type TypeToolbar = {
-  token: string;
-  name: string;
+  token: string | null;
+  name: string | null;
   onDrawerOpen?: () => void;
 };
 
@@ -12,6 +12,7 @@ const Toolbar: FC<TypeToolbar> = ({token, name, onDrawerOpen}) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
+    if (!token) return;
     navigator.clipboard
       .writeText(token)
       .then(() => {
