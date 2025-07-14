@@ -7,7 +7,7 @@ import {Drawer} from "oziko-ui-kit";
 import Toolbar from "../components/atoms/toolbar/Toolbar";
 import useLocalStorage from "../hooks/useLocalStorage";
 import { jwtDecode } from "jwt-decode";
-import type { AuthTokenJWTPayload } from "src/types/user";
+import type { AuthTokenJWTPayload } from "src/types/auth";
 
 const Layout = () => {
   const [token] = useLocalStorage<string | null>("token", null);
