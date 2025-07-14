@@ -33,7 +33,7 @@ const Login = () => {
   }, []);
 
   useEffect(() => {
-    if (token) navigate("/home");
+    if (token) navigate("/dashboard");
   }, [token]);
 
   return (
