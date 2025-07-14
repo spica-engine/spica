@@ -7,7 +7,7 @@ import Layout from "./layout/Layout";
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/passport/identify",
     element: <Login />
   },
   {
