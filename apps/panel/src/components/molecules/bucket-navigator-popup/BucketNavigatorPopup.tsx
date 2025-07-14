@@ -1,49 +1,14 @@
 import {Button, FlexElement, Icon, Popover, Text} from "oziko-ui-kit";
-import {memo, useCallback, type FC} from "react";
+import {memo, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
 import {useDrawerController} from "../../../contexts/DrawerContext";
-import TitleForm from "../title-form/TitleForm";
+import {TitleFormWrapper} from "../title-form/TitleForm";
 import type {BucketType} from "../../../services/bucketService";
-import useApi from "../../../hooks/useApi";
 
 type TypeBucketNavigatorPopup = {
   onAddToCategory?: () => void;
   onDelete?: () => void;
   bucket: BucketType;
-};
-
-type TitleFormWrapperProps = {
-  onSubmit?: () => void;
-  bucketId: string;
-  initialValue: string;
-  onCancel?: () => void;
-};
-
-const TitleFormWrapper = ({onSubmit, bucketId, initialValue, onCancel}: TitleFormWrapperProps) => {
-  const {request, loading, error} = useApi({
-    endpoint: `/api/bucket/${bucketId}`,
-    method: "patch"
-  });
-
-  const onSave = useCallback(
-    (newTitle: string) => {
-      request({body: {title: newTitle}}).then(result => {
-        if (!result) return;
-        onSubmit?.();
-      });
-    },
-    [onSubmit, request]
-  );
-
-  return (
-    <TitleForm
-      onCancel={onCancel}
-      onSave={onSave}
-      initialValue={initialValue}
-      loading={loading}
-      error={error ?? ""}
-    />
-  );
 };
 
 const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
