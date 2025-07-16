@@ -1,17 +1,34 @@
-import {Button, FlexElement, FluidContainer, Icon, Popover, Text} from "oziko-ui-kit";
-import React, {memo, type FC} from "react";
+import {Button, FlexElement, Icon, Popover, Text} from "oziko-ui-kit";
+import {memo, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
+import {useDrawerController} from "../../../contexts/DrawerContext";
+import type {BucketType} from "../../../services/bucketService";
+import CategorySelectCreate from "../category-select-create/CategorySelectCreate";
+import {useBucket} from "../../../contexts/BucketContext";
 
 type TypeBucketNavigatorPopup = {
-  onAddToCategory?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  bucket: BucketType;
 };
 const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
-  onAddToCategory,
   onEdit,
-  onDelete
+  onDelete,
+  bucket
 }) => {
+  const {categories, changeCategory} = useBucket();
+  const {openDrawer, closeDrawer} = useDrawerController();
+
+  const handleAddToCategory = () => {
+    openDrawer(
+      <CategorySelectCreate
+        changeCategory={changeCategory}
+        bucketId={bucket._id}
+        categories={categories}
+        onSubmit={closeDrawer}
+      />
+    );
+  };
   return (
     <Popover
       contentProps={{
@@ -25,7 +42,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
               dimensionX: "fill"
             }}
             color="default"
-            onClick={onAddToCategory}
+            onClick={handleAddToCategory}
             className={styles.buttons}
           >
             <Icon name="plus" />

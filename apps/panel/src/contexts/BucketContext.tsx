@@ -1,4 +1,12 @@
-import {createContext, useMemo, useContext, type ReactNode, useEffect} from "react";
+import {
+  createContext,
+  useMemo,
+  useContext,
+  type ReactNode,
+  useEffect,
+  useState,
+  useCallback
+} from "react";
 import {useBucketService, type BucketType} from "../services/bucketService";
 import type {AxiosRequestHeaders} from "axios";
 
@@ -11,21 +19,55 @@ type BucketContextType = {
     headers?: AxiosRequestHeaders;
     endpoint?: string;
   }) => Promise<any>;
+  categories: string[];
+  changeCategory: (bucketId: string, category: string) => Promise<any>;
+  setBuckets: React.Dispatch<React.SetStateAction<BucketType[] | null>>;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
 
 export const BucketProvider = ({children}: {children: ReactNode}) => {
-  const {buckets, loading, error, fetchBuckets} = useBucketService();
+  const {buckets: data, loading, error, fetchBuckets, requestCategoryChange} = useBucketService();
+  const [buckets, setBuckets] = useState<BucketType[] | null>(data);
+
+  useEffect(() => setBuckets(data), [data]);
+
+  const changeCategory = useCallback(
+    (bucketId: string, category: string) => {
+      setBuckets(prev =>
+        prev
+          ? prev?.map(i => {
+              if (i._id === bucketId) return {...i, category};
+              return i;
+            })
+          : null
+      );
+      return requestCategoryChange(bucketId, category);
+    },
+    [requestCategoryChange]
+  );
+
+  const categories = useMemo(() => {
+    if (!buckets) return [];
+    const set = new Set<string>();
+    buckets.forEach(bucket => {
+      if (!bucket.category) return;
+      set.add(bucket.category);
+    });
+    return Array.from(set);
+  }, [buckets]);
 
   const contextValue = useMemo(
     () => ({
       buckets,
       loading,
       error,
-      fetchBuckets
+      fetchBuckets,
+      categories,
+      changeCategory,
+      setBuckets
     }),
-    [buckets, loading, error, fetchBuckets]
+    [buckets, loading, error, fetchBuckets, categories]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;
