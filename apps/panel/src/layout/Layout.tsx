@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {Outlet} from "react-router-dom";
 import SideBar from "../components/organisms/sidebar/SideBar";
 import {menuItems, navigatorItems} from "../pages/home/mock";
@@ -6,12 +6,11 @@ import styles from "./Layout.module.scss";
 import {Drawer} from "oziko-ui-kit";
 import Toolbar from "../components/atoms/toolbar/Toolbar";
 import useLocalStorage from "../hooks/useLocalStorage";
-import { jwtDecode } from "jwt-decode";
-import type { AuthTokenJWTPayload } from "src/types/auth";
+import {jwtDecode} from "jwt-decode";
+import type {AuthTokenJWTPayload} from "src/types/auth";
 
 const Layout = () => {
-  const [token] = useLocalStorage<string | null>("token", null);
-  const [name, setName] = useState<string | null>(null);
+  const [token] = useLocalStorage<string>("token", "");
 
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -30,13 +29,11 @@ const Layout = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, [isDrawerOpen]);
 
-
-  useEffect(() => {
+  const name = useMemo(() => {
     if (!token || !token.length) return;
     const decoded = jwtDecode<AuthTokenJWTPayload>(token);
-    const name = decoded.identifier
-    setName(name)
-  }, [token])
+    return decoded.identifier;
+  }, [token]);
 
   const sideBarElement = (
     <div className={styles.sidebar}>
