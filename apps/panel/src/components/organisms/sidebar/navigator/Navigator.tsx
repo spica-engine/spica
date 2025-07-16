@@ -128,9 +128,6 @@ const DraggableItem = React.forwardRef<HTMLDivElement, DraggableItemProps>(
       })
     });
 
-    if (item.title === "New Bucket 2") {
-      console.log("isOver: ", isOver);
-    }
     const [, drag, preview] = useDrag({
       type: "NAVIGATOR_ITEM",
       item: () => item,
