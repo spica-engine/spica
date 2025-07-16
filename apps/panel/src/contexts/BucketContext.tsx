@@ -1,4 +1,12 @@
-import {createContext, useMemo, useContext, type ReactNode, useEffect, useState} from "react";
+import {
+  createContext,
+  useMemo,
+  useContext,
+  type ReactNode,
+  useEffect,
+  useState,
+  useCallback
+} from "react";
 import {useBucketService, type BucketType} from "../services/bucketService";
 import type {AxiosRequestHeaders} from "axios";
 
@@ -19,22 +27,25 @@ type BucketContextType = {
 const BucketContext = createContext<BucketContextType | null>(null);
 
 export const BucketProvider = ({children}: {children: ReactNode}) => {
-  const {buckets: data, loading, error, fetchBuckets, changeCategoryRequest} = useBucketService();
+  const {buckets: data, loading, error, fetchBuckets, requestCategoryChange} = useBucketService();
   const [buckets, setBuckets] = useState<BucketType[] | null>(data);
 
   useEffect(() => setBuckets(data), [data]);
 
-  const changeCategory = (bucketId: string, category: string) => {
-    setBuckets(prev =>
-      prev
-        ? prev?.map(i => {
-            if (i._id === bucketId) return {...i, category};
-            return i;
-          })
-        : null
-    );
-    return changeCategoryRequest(bucketId, category);
-  };
+  const changeCategory = useCallback(
+    (bucketId: string, category: string) => {
+      setBuckets(prev =>
+        prev
+          ? prev?.map(i => {
+              if (i._id === bucketId) return {...i, category};
+              return i;
+            })
+          : null
+      );
+      return requestCategoryChange(bucketId, category);
+    },
+    [requestCategoryChange]
+  );
 
   const categories = useMemo(() => {
     if (!buckets) return [];

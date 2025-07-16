@@ -19,10 +19,12 @@ const CategorySelectCreate = ({
   const [textValue, setTextValue] = useState("");
   const [textError, setTextError] = useState<string | null>(null);
   const textInputId = useId();
-  const extendedCategories = useMemo(
+
+  const filteredCategories = useMemo(
     () => categories.filter(i => i.toLowerCase().includes(textValue.toLowerCase())),
     [categories, textValue]
   );
+
   const handleSubmit = useCallback((value: string) => {
     changeCategory(bucketId, value).then(() => onSubmit?.());
   }, []);
@@ -81,8 +83,8 @@ const CategorySelectCreate = ({
           <div className={styles.selectField}>
             <p className={styles.label}>Or choose an existing one</p>
             <div>
-              {extendedCategories.length ? (
-                extendedCategories.map(i => (
+              {filteredCategories.length ? (
+                filteredCategories.map(i => (
                   <Button onClick={() => handleSubmit(i)} key={i}>
                     {i}
                   </Button>
@@ -96,7 +98,7 @@ const CategorySelectCreate = ({
       }}
       suffix={{
         children: (
-          <Button onClick={handleTextSubmit} className={`${styles.addButton}`}>
+          <Button onClick={handleTextSubmit} className={styles.addButton}>
             <span className={styles.prefix}>Add</span>
             <span className={styles.dynamic}>&nbsp;"{truncateText(textValue, 45)}"&nbsp;</span>
             <span className={styles.suffix}>as new category</span>

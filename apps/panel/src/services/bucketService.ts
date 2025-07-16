@@ -58,10 +58,10 @@ export const useBucketService = () => {
     method: "get"
   });
 
-  const {request: requestPatch} = useApi({endpoint: "/api/bucket", method: "patch"});
+  const {request: patchRequest} = useApi({endpoint: "/api/bucket", method: "patch"});
 
-  const changeCategoryRequest = useCallback((bucketId: string, category: string) => {
-    return requestPatch({body: {category}, endpoint: `/api/bucket/${bucketId}`});
+  const requestCategoryChange = useCallback((bucketId: string, category: string) => {
+    return patchRequest({body: {category}, endpoint: `/api/bucket/${bucketId}`});
   }, []);
 
   return {
@@ -69,6 +69,6 @@ export const useBucketService = () => {
     fetchBuckets: request,
     error,
     loading,
-    changeCategoryRequest
+    requestCategoryChange
   };
 };

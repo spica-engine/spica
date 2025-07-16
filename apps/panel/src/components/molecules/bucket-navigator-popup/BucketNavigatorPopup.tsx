@@ -1,5 +1,5 @@
 import {Button, FlexElement, Icon, Popover, Text} from "oziko-ui-kit";
-import React, {memo, type FC} from "react";
+import {memo, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
 import {useDrawerController} from "../../../contexts/DrawerContext";
 import type {BucketType} from "../../../services/bucketService";
