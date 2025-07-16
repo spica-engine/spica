@@ -30,7 +30,7 @@ const Layout = () => {
   }, [isDrawerOpen]);
 
   const name = useMemo(() => {
-    if (!token || !token.length) return;
+    if (!token || !token.length) return "";
     const decoded = jwtDecode<AuthTokenJWTPayload>(token);
     return decoded.identifier;
   }, [token]);

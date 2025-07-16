@@ -4,7 +4,7 @@ import styles from "./Toolbar.module.scss";
 
 type TypeToolbar = {
   token: string;
-  name?: string;
+  name: string;
   onDrawerOpen?: () => void;
 };
 
