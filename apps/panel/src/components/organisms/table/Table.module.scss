@@ -26,6 +26,7 @@
 
 .header {
   padding: var(--padding-md);
+  height: 36px !important;
   &.border {
     border-bottom: 1px solid var(--color-border);
   }
@@ -42,6 +43,10 @@
     border-bottom: 1px solid var(--color-border);
   }
   white-space: nowrap;
+  height: 36px !important;
+  display: flex;
+  justify-content: space-between;
+  padding-right: calc(var(--padding-xl) + var(--padding-md)) !important;
 }
 
 .resizer {

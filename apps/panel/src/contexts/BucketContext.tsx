@@ -1,22 +1,24 @@
 import {createContext, useMemo, useContext, type ReactNode, useEffect} from "react";
 import {useBucketService, type BucketType} from "../services/bucketService";
+import type {AxiosRequestHeaders} from "axios";
 
 type BucketContextType = {
   buckets: BucketType[] | null;
   loading: boolean;
   error: string | null;
+  fetchBuckets: (params?: {
+    body?: any;
+    headers?: AxiosRequestHeaders;
+    endpoint?: string;
+  }) => Promise<any>;
   categories: string[];
-  changeCategory: (bucketId: string, category: string) => Promise<any>
+  changeCategory: (bucketId: string, category: string) => Promise<any>;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
 
 export const BucketProvider = ({children}: {children: ReactNode}) => {
   const {buckets, loading, error, fetchBuckets, changeCategory} = useBucketService();
-
-  useEffect(() => {
-    fetchBuckets();
-  }, []);
 
   const categories = useMemo(() => {
     if (!buckets) return [];
@@ -33,10 +35,11 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       buckets,
       loading,
       error,
+      fetchBuckets,
       categories,
-      changeCategory,
+      changeCategory
     }),
-    [buckets, loading, error, categories]
+    [buckets, loading, error, fetchBuckets, categories]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;
