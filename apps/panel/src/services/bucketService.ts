@@ -60,7 +60,7 @@ export const useBucketService = () => {
 
   const {request: requestPatch} = useApi({endpoint: "/api/bucket", method: "patch"});
 
-  const changeCategory = useCallback((bucketId: string, category: string) => {
+  const changeCategoryRequest = useCallback((bucketId: string, category: string) => {
     return requestPatch({body: {category}, endpoint: `/api/bucket/${bucketId}`});
   }, []);
 
@@ -69,6 +69,6 @@ export const useBucketService = () => {
     fetchBuckets: request,
     error,
     loading,
-    changeCategory
+    changeCategoryRequest
   };
 };

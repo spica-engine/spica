@@ -1,6 +1,7 @@
-import {Button, FluidContainer, Input, Select} from "oziko-ui-kit";
+import {Button, FluidContainer, Input} from "oziko-ui-kit";
 import styles from "./CategorySelectCreate.module.scss";
-import {useCallback, useEffect, useId, useMemo, useState} from "react";
+import {memo, useCallback, useEffect, useId, useMemo, useState} from "react";
+import truncateText from "../../../utils/truncate-text";
 
 type CategorySelectCreateProps = {
   bucketId: string;
@@ -9,7 +10,6 @@ type CategorySelectCreateProps = {
   changeCategory: (bucketId: string, category: string) => Promise<any>;
 };
 
-const MAX_LENGTH = 45;
 const CategorySelectCreate = ({
   bucketId,
   categories,
@@ -81,11 +81,15 @@ const CategorySelectCreate = ({
           <div className={styles.selectField}>
             <p className={styles.label}>Or choose an existing one</p>
             <div>
-              {extendedCategories.length ? extendedCategories.map(i => (
-                <Button onClick={() => handleSubmit(i)} key={i}>
-                  {i}
-                </Button>
-              )) : <span className={styles.noCategoryFound}>No category found</span>}
+              {extendedCategories.length ? (
+                extendedCategories.map(i => (
+                  <Button onClick={() => handleSubmit(i)} key={i}>
+                    {i}
+                  </Button>
+                ))
+              ) : (
+                <span className={styles.noCategoryFound}>No category found</span>
+              )}
             </div>
           </div>
         )
@@ -94,13 +98,7 @@ const CategorySelectCreate = ({
         children: (
           <Button onClick={handleTextSubmit} className={`${styles.addButton}`}>
             <span className={styles.prefix}>Add</span>
-            <span className={styles.dynamic}>
-              &nbsp;"
-              {textValue.length
-                ? textValue.slice(0, MAX_LENGTH) + "" + (textValue.length > MAX_LENGTH ? "..." : "")
-                : " "}
-              "&nbsp;
-            </span>
+            <span className={styles.dynamic}>&nbsp;"{truncateText(textValue, 45)}"&nbsp;</span>
             <span className={styles.suffix}>as new category</span>
           </Button>
         )
@@ -109,4 +107,4 @@ const CategorySelectCreate = ({
   );
 };
 
-export default CategorySelectCreate;
+export default memo(CategorySelectCreate);
