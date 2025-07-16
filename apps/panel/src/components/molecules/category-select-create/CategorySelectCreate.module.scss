@@ -6,7 +6,6 @@
 
 .input {
   width: 100% !important;
-  border: 1px solid red;
   height: max-content;
   padding: var(--padding-sm);
 }
@@ -27,12 +26,57 @@
   .prefix,
   .dynamic,
   .suffix {
-    display: inline-block !important; // everything inline to stay on the same line if possible
+    display: inline-block !important;
     white-space: normal !important;
   }
 }
 
 .flexColumn {
+  display: flex;
+  flex-direction: column !important;
+}
+
+.textField {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-md);
+  width: 100%;
+}
+
+.textFieldContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-md)
+}
+
+.selectField {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-md);
+  width: 100%;
+  > div {
     display: flex;
-    flex-direction: column !important;
+    flex-wrap: wrap;
+    gap: var(--gap-md);
+  }
+}
+
+.label {
+  white-space: nowrap;
+  font-weight: bold;
+  font-size: var(--font-size-md);
+  color: var(--color-primary);
+}
+
+.errorText {
+  font-size: var(--font-size-md);
+  color: var(--color-danger);
+}
+
+.noCategoryFound {
+  font-size: var(--font-size-sm);
+  color: var(--color-font-tertiary)
 }

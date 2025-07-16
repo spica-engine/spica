@@ -6,15 +6,13 @@ type BucketContextType = {
   loading: boolean;
   error: string | null;
   categories: string[];
+  changeCategory: (bucketId: string, category: string) => Promise<any>
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
 
-// Delete this
-const mockCategories = ["Category1", "Category2", "Category3", "Category4", "Category5"];
-
 export const BucketProvider = ({children}: {children: ReactNode}) => {
-  const {buckets, loading, error, fetchBuckets} = useBucketService();
+  const {buckets, loading, error, fetchBuckets, changeCategory} = useBucketService();
 
   useEffect(() => {
     fetchBuckets();
@@ -27,7 +25,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       if (!bucket.category) return;
       set.add(bucket.category);
     });
-    return [...Array.from(set), ...mockCategories];
+    return Array.from(set);
   }, [buckets]);
 
   const contextValue = useMemo(
@@ -35,7 +33,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       buckets,
       loading,
       error,
-      categories
+      categories,
+      changeCategory,
     }),
     [buckets, loading, error, categories]
   );

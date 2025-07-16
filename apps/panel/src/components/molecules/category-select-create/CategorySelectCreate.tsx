@@ -1,14 +1,54 @@
 import {Button, FluidContainer, Input, Select} from "oziko-ui-kit";
 import styles from "./CategorySelectCreate.module.scss";
-import {useState} from "react";
+import {useCallback, useEffect, useId, useMemo, useState} from "react";
 
 type CategorySelectCreateProps = {
+  bucketId: string;
   categories: string[];
+  onSubmit?: () => void;
+  changeCategory: (bucketId: string, category: string) => Promise<any>;
 };
 
 const MAX_LENGTH = 45;
-const CategorySelectCreate = ({categories}: CategorySelectCreateProps) => {
-  const [newCategory, setNewCategory] = useState("");
+const CategorySelectCreate = ({
+  bucketId,
+  categories,
+  onSubmit,
+  changeCategory
+}: CategorySelectCreateProps) => {
+  const [textValue, setTextValue] = useState("");
+  const [textError, setTextError] = useState<string | null>(null);
+  const textInputId = useId();
+  const extendedCategories = useMemo(
+    () => categories.filter(i => i.toLowerCase().includes(textValue.toLowerCase())),
+    [categories, textValue]
+  );
+  const handleSubmit = useCallback((value: string) => {
+    changeCategory(bucketId, value).then(() => onSubmit?.());
+  }, []);
+
+  const handleTextSubmit = useCallback(() => {
+    const valid = handleValidation();
+    if (!valid) return;
+    handleSubmit(textValue);
+  }, [textValue]);
+
+  const handleValidation = useCallback(() => {
+    if (categories.some(i => i === textValue)) {
+      setTextError("Category already exists");
+      return false;
+    } else if (textValue === "") {
+      setTextError("Please type the category name");
+      return false;
+    }
+    setTextError(null);
+    return true;
+  }, [categories, textValue]);
+
+  useEffect(() => {
+    if (!textError) return;
+    handleValidation();
+  }, [textValue]);
 
   return (
     <FluidContainer
@@ -19,38 +59,45 @@ const CategorySelectCreate = ({categories}: CategorySelectCreateProps) => {
       className={styles.container}
       prefix={{
         children: (
-          <>
-            <label>New Category</label>
-            <Input
-              autoFocus
-              className={styles.input}
-              value={newCategory}
-              onChange={e => setNewCategory(e.target.value)}
-            />
-          </>
+          <div className={styles.textFieldContainer}>
+            <div className={styles.textField}>
+              <label htmlFor={textInputId} className={styles.label}>
+                Create a New Category
+              </label>
+              <Input
+                id={textInputId}
+                autoFocus
+                className={styles.input}
+                value={textValue}
+                onChange={e => setTextValue(e.target.value)}
+              />
+            </div>
+            {textError && <span className={styles.errorText}>{textError}</span>}
+          </div>
         )
       }}
       root={{
         children: (
-          <Select
-            options={categories}
-            dimensionY="fill"
-            dimensionX={120}
-            placeholder="Choose A Category"
-            className={styles.select}
-          />
+          <div className={styles.selectField}>
+            <p className={styles.label}>Or choose an existing one</p>
+            <div>
+              {extendedCategories.length ? extendedCategories.map(i => (
+                <Button onClick={() => handleSubmit(i)} key={i}>
+                  {i}
+                </Button>
+              )) : <span className={styles.noCategoryFound}>No category found</span>}
+            </div>
+          </div>
         )
       }}
       suffix={{
         children: (
-          <Button className={`${styles.addButton}`}>
+          <Button onClick={handleTextSubmit} className={`${styles.addButton}`}>
             <span className={styles.prefix}>Add</span>
             <span className={styles.dynamic}>
               &nbsp;"
-              {newCategory.length
-                ? newCategory.slice(0, MAX_LENGTH) +
-                  "" +
-                  (newCategory.length > MAX_LENGTH ? "..." : "")
+              {textValue.length
+                ? textValue.slice(0, MAX_LENGTH) + "" + (textValue.length > MAX_LENGTH ? "..." : "")
                 : " "}
               "&nbsp;
             </span>

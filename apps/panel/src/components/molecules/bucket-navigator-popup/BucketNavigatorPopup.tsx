@@ -7,22 +7,27 @@ import CategorySelectCreate from "../category-select-create/CategorySelectCreate
 import {useBucket} from "../../../contexts/BucketContext";
 
 type TypeBucketNavigatorPopup = {
-  onAddToCategory?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
   bucket: BucketType;
 };
 const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
-  onAddToCategory,
   onEdit,
   onDelete,
   bucket
 }) => {
-  const {categories} = useBucket();
+  const {categories, changeCategory} = useBucket();
   const {openDrawer, closeDrawer} = useDrawerController();
 
   const handleAddToCategory = () => {
-    openDrawer(<CategorySelectCreate categories={categories} />);
+    openDrawer(
+      <CategorySelectCreate
+        changeCategory={changeCategory}
+        bucketId={bucket._id}
+        categories={categories}
+        onSubmit={closeDrawer}
+      />
+    );
   };
   return (
     <Popover
