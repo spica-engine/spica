@@ -5,13 +5,12 @@ import {menuItems, navigatorItems, token, name} from "../pages/home/mock";
 import styles from "./Layout.module.scss";
 import {Drawer} from "oziko-ui-kit";
 import Toolbar from "../components/atoms/toolbar/Toolbar";
-import {useBucket} from "../contexts/BucketContext";
+import { useBucket } from "../contexts/BucketContext";
 
 const Layout = () => {
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  const {buckets, setBuckets} = useBucket();
+  const {buckets, setBuckets, fetchBuckets} = useBucket();
   
 
   const mergedNavigatorItems = {
@@ -34,6 +33,10 @@ const Layout = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [isDrawerOpen]);
+
+  useEffect(() => {
+    fetchBuckets()
+  }, [])
 
   const sideBarElement = (
     <div className={styles.sidebar}>
