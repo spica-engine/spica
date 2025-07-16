@@ -2,10 +2,14 @@ import {Inject, Injectable, Optional} from "@nestjs/common";
 import {AuthModuleOptions} from "@nestjs/passport";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {from, Observable} from "rxjs";
-import {PolicyResolver, POLICY_RESOLVER} from "@spica-server/interface/passport/guard";
+import {
+  PolicyResolver,
+  POLICY_RESOLVER,
+  IGuardService
+} from "@spica-server/interface/passport/guard";
 
 @Injectable()
-export class GuardService {
+export class GuardService implements IGuardService {
   constructor(
     @Optional() @Inject(POLICY_RESOLVER) private resolver: PolicyResolver<any>,
     @Optional() private readonly options?: AuthModuleOptions

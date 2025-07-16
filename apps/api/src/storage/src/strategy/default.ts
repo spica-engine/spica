@@ -52,7 +52,7 @@ export class Default implements Strategy {
   }
 
   private buildPath(id: string) {
-    return `${this.path}/${id}.storageobj`;
+    return `${this.path}/${id}`;
   }
 
   private async ensureStorageDiskExists() {
@@ -64,5 +64,16 @@ export class Default implements Strategy {
       return fs.promises.mkdir(this.path);
     }
     return Promise.resolve();
+  }
+
+  async rename(oldName: string, newName: string): Promise<void> {
+    const oldPath = this.buildPath(oldName);
+    const newPath = this.buildPath(newName);
+    try {
+      await fs.promises.rename(oldPath, newPath);
+    } catch (err) {
+      console.error(`Error renaming file from ${oldName} to ${newName}:`, err);
+      throw err;
+    }
   }
 }

@@ -1,8 +1,7 @@
 import {OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway} from "@nestjs/websockets";
 import {RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {GuardService} from "@spica-server/passport";
-import {fromEvent, of} from "rxjs";
-import {catchError, takeUntil} from "rxjs/operators";
+import {getConnectionHandlers} from "@spica-server/realtime";
 
 @WebSocketGateway(31, {
   path: "/function-logs"
@@ -15,41 +14,23 @@ export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private guardService: GuardService
   ) {}
 
-  async handleDisconnect(client: any) {
-    const options = await this.prepareOptions(client, client.upgradeReq);
+  private handlers = getConnectionHandlers(
+    this.guardService,
+    async () => this.COLLECTION,
+    this.prepareOptions.bind(this),
+    error => ({
+      code: error.status || 500,
+      message: error.message || "Unexpected error"
+    }),
+    this.realtime
+  );
 
-    if (this.realtime.doesEmitterExist(this.COLLECTION, options)) {
-      this.realtime.removeEmitter(this.COLLECTION, options);
-    }
+  async handleConnection(client: WebSocket, req: any) {
+    return this.handlers.handleConnection(client, req);
   }
 
-  async handleConnection(client: WebSocket, req) {
-    req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
-
-    try {
-      await this.guardService.checkAuthorization({
-        request: req,
-        response: client
-      });
-    } catch (e) {
-      client.send(JSON.stringify({code: e.status || 500, message: e.message}));
-      return client.close(1003);
-    }
-
-    const options = await this.prepareOptions(client, req);
-
-    const stream = this.realtime.find("function_logs", options).pipe(
-      catchError(e => {
-        client.send(JSON.stringify({code: e.status || 500, message: e.message}));
-        client.close(1003);
-
-        return of(null);
-      })
-    );
-
-    stream
-      .pipe(takeUntil(fromEvent(client, "close")))
-      .subscribe(data => client.send(JSON.stringify(data)));
+  async handleDisconnect(client: any) {
+    return this.handlers.handleDisconnect(client, client.upgradeReq);
   }
 
   async prepareOptions(client, req) {

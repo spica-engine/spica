@@ -131,7 +131,7 @@ describe("Storage Service", () => {
 
     const originalWrite = strategyInstance.write.bind(strategyInstance);
     jest.spyOn(strategyInstance, "write").mockImplementation((id: string, data: Buffer) => {
-      if (id == "failId") {
+      if (id === "name2") {
         return Promise.reject("Upload failed for Item");
       }
       return originalWrite(id, data);
@@ -141,8 +141,8 @@ describe("Storage Service", () => {
       "Error: Failed to write object name2 to storage. Reason: Upload failed for Item"
     );
 
-    const insertedBbjects = await storageService.find();
-    expect(insertedBbjects).toEqual([]);
+    const insertedObjects = await storageService.find();
+    expect(insertedObjects).toEqual([]);
 
     const objectPromises = storageObjects.map(storageObject =>
       strategyInstance.read(storageObject._id).catch(e => e.code)

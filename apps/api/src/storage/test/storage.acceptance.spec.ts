@@ -85,7 +85,7 @@ describe("Storage Acceptance", () => {
         {
           _id: body[0]._id,
           name: "third.txt",
-          url: `http://insteadof/storage/${body[0]._id}/view`,
+          url: `http://insteadof/storage/third.txt/view`,
           content: {
             type: `text/plain`,
             size: 5
@@ -107,7 +107,7 @@ describe("Storage Acceptance", () => {
         {
           _id: body.data[0]._id,
           name: "third.txt",
-          url: `http://insteadof/storage/${body.data[0]._id}/view`,
+          url: `http://insteadof/storage/third.txt/view`,
           content: {
             type: `text/plain`,
             size: 5
@@ -147,7 +147,7 @@ describe("Storage Acceptance", () => {
         {
           _id: body[0]._id,
           name: "third.txt",
-          url: `http://insteadof/storage/${body[0]._id}/view`,
+          url: `http://insteadof/storage/third.txt/view`,
           content: {
             type: `text/plain`,
             size: 5
@@ -169,7 +169,7 @@ describe("Storage Acceptance", () => {
         {
           _id: data[0]._id,
           name: "third.txt",
-          url: `http://insteadof/storage/${data[0]._id}/view`,
+          url: `http://insteadof/storage/third.txt/view`,
           content: {
             type: `text/plain`,
             size: 5
@@ -190,7 +190,7 @@ describe("Storage Acceptance", () => {
         {
           _id: data[0]._id,
           name: "second.txt",
-          url: `http://insteadof/storage/${data[0]._id}/view`,
+          url: `http://insteadof/storage/second.txt/view`,
           content: {
             type: `text/plain`,
             size: 6
@@ -199,7 +199,7 @@ describe("Storage Acceptance", () => {
         {
           _id: data[1]._id,
           name: "first.txt",
-          url: `http://insteadof/storage/${data[1]._id}/view`,
+          url: `http://insteadof/storage/first.txt/view`,
           content: {
             type: `text/plain`,
             size: 5
@@ -224,7 +224,7 @@ describe("Storage Acceptance", () => {
         {
           _id: data[0]._id,
           name: "second.txt",
-          url: `http://insteadof/storage/${data[0]._id}/view`,
+          url: `http://insteadof/storage/second.txt/view`,
           content: {
             type: `text/plain`,
             size: 6
@@ -250,7 +250,7 @@ describe("Storage Acceptance", () => {
           {
             _id: data[0]._id,
             name: "first.txt",
-            url: `http://insteadof/storage/${data[0]._id}/view`,
+            url: `http://insteadof/storage/first.txt/view`,
             content: {
               type: `text/plain`,
               size: 5
@@ -259,7 +259,7 @@ describe("Storage Acceptance", () => {
           {
             _id: data[1]._id,
             name: "second.txt",
-            url: `http://insteadof/storage/${data[1]._id}/view`,
+            url: `http://insteadof/storage/second.txt/view`,
             content: {
               type: `text/plain`,
               size: 6
@@ -268,7 +268,7 @@ describe("Storage Acceptance", () => {
           {
             _id: data[2]._id,
             name: "third.txt",
-            url: `http://insteadof/storage/${data[2]._id}/view`,
+            url: `http://insteadof/storage/third.txt/view`,
             content: {
               type: `text/plain`,
               size: 5
@@ -293,7 +293,7 @@ describe("Storage Acceptance", () => {
           {
             _id: data[0]._id,
             name: "third.txt",
-            url: `http://insteadof/storage/${data[0]._id}/view`,
+            url: `http://insteadof/storage/third.txt/view`,
             content: {
               type: `text/plain`,
               size: 5
@@ -302,7 +302,7 @@ describe("Storage Acceptance", () => {
           {
             _id: data[1]._id,
             name: "second.txt",
-            url: `http://insteadof/storage/${data[1]._id}/view`,
+            url: `http://insteadof/storage/second.txt/view`,
             content: {
               type: `text/plain`,
               size: 6
@@ -311,7 +311,7 @@ describe("Storage Acceptance", () => {
           {
             _id: data[2]._id,
             name: "first.txt",
-            url: `http://insteadof/storage/${data[2]._id}/view`,
+            url: `http://insteadof/storage/first.txt/view`,
             content: {
               type: `text/plain`,
               size: 5
@@ -456,7 +456,7 @@ describe("Storage Acceptance", () => {
       const expectedObject = {
         _id: res.body._id,
         name: "updated_first.txt",
-        url: `http://insteadof/storage/${first._id}/view`,
+        url: `http://insteadof/storage/updated_first.txt/view`,
         content: {
           type: `text/plain`,
           size: 5
@@ -470,7 +470,7 @@ describe("Storage Acceptance", () => {
       expect(res.body).toEqual({
         _id: res.body._id,
         name: "updated_first.txt",
-        url: `http://insteadof/storage/${first._id}/view`,
+        url: `http://insteadof/storage/updated_first.txt/view`,
         content: {
           type: `text/plain`,
           size: 5

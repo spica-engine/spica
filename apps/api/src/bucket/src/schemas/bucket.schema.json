@@ -191,6 +191,35 @@
         }
       }
     },
+    "indexes": {
+      "type": "array",
+      "title": "Database Indexes",
+      "description": "Explicit list of indexes to apply on the bucket collection",
+      "items": {
+        "type": "object",
+        "required": ["definition"],
+        "properties": {
+          "definition": {
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": ["integer", "string"]
+            },
+            "description": "Field paths and direction of the index"
+          },
+          "options": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Additional index options, such as TTL, uniqueness, or sparse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "default": []
+    },
     "title": {
       "type": "string",
       "title": "Title of the bucket",
@@ -281,16 +310,6 @@
                       "type": "string",
                       "enum": ["left", "right", "bottom"],
                       "description": "Set where will be placed of the field on the bucket-data page"
-                    },
-                    "unique": {
-                      "type": "boolean",
-                      "title": "Unique",
-                      "description": "If true, each document will have a different value for this field"
-                    },
-                    "index": {
-                      "type": "boolean",
-                      "title": "Index",
-                      "description": "Whether field will be indexed on the database. Setting this option as 'true' will reduce the query response time but increase the RAM usage."
                     }
                   },
                   "additionalProperties": false
