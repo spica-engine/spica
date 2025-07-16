@@ -59,7 +59,7 @@ export const useBucketService = () => {
   });
 
   const {
-    request: deleteBucketRequest,
+    request: deleteRequest,
     loading: deleteBucketLoading,
     error: deleteBucketError
   } = useApi({
@@ -67,8 +67,8 @@ export const useBucketService = () => {
     method: "delete"
   });
 
-  const deleteBucket = useCallback((bucketId: string) => {
-    return deleteBucketRequest({
+  const deleteBucketRequest = useCallback((bucketId: string) => {
+    return deleteRequest({
       endpoint: `/api/bucket/${bucketId}`
     });
   }, []);
@@ -78,7 +78,7 @@ export const useBucketService = () => {
     fetchBuckets: request,
     error,
     loading,
-    deleteBucket,
+    deleteBucketRequest,
     deleteBucketLoading,
     deleteBucketError
   };

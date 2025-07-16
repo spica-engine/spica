@@ -15,10 +15,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({onAddToCategory, on
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
   const handleDeleteBucket = () => {
-    deleteBucket(bucket._id).then(result => {
-      if (!result) return;
-      setIsConfirmationOpen(false);
-    });
+    deleteBucket(bucket._id).then(() => setIsConfirmationOpen(false));
   };
 
   return (
