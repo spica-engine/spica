@@ -4,7 +4,7 @@ import {Button, Accordion} from "oziko-ui-kit";
 import NavigatorItem from "../../../molecules/navigator-item/NavigatorItem";
 import React, {memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef} from "react";
 import {useNavigate} from "react-router-dom";
-import {DndProvider, useDrag, useDragLayer, useDrop, type XYCoord} from "react-dnd";
+import {DndProvider, useDrag, useDragLayer, useDrop} from "react-dnd";
 import {getEmptyImage, HTML5Backend} from "react-dnd-html5-backend";
 import type {TypeNavigatorItems} from "../SideBar";
 import {useBucket} from "../../../../contexts/BucketContext";
