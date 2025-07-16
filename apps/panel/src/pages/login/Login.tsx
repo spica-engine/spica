@@ -14,11 +14,10 @@ import styles from "./Login.module.scss";
 import Logo from "../../components/atoms/logo/Logo";
 import useAuthService from "../../services/authService";
 import useLocalStorage from "../../hooks/useLocalStorage";
-import {useNavigate} from "react-router-dom";
+import {Navigate} from "react-router-dom";
 
 const Login = () => {
   const [token] = useLocalStorage("token", undefined);
-  const navigate = useNavigate();
   const {fetchStrategies, strategies, login, loginLoading, loginError} = useAuthService();
 
   const formik = useFormik({
@@ -32,9 +31,9 @@ const Login = () => {
     fetchStrategies();
   }, []);
 
-  useEffect(() => {
-    if (token) navigate("/dashboard");
-  }, [token]);
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className={styles.container}>
