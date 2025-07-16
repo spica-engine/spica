@@ -79,23 +79,15 @@ export function CustomDragLayer({
   }));
 
   const hoverIndex = itemRefs.findIndex(ref => {
-    if (!ref) return false;
+    if (!ref || !currentOffset) return false;
     const rect = ref.getBoundingClientRect();
-    if (!currentOffset) return false;
     return currentOffset.y >= rect.top && currentOffset.y <= rect.bottom;
   });
 
-  const lastHoverIndexRef = useRef<number | null>(null);
-
   useEffect(() => {
-    if (
-      hoverIndex !== -1 &&
-      hoverIndex !== lastHoverIndexRef.current &&
-      item.index !== hoverIndex
-    ) {
+    if (hoverIndex !== -1 && item.index !== hoverIndex) {
       moveItem(item.index, hoverIndex);
-      item.index = hoverIndex; // Update dragged item index so further moves make sense
-      lastHoverIndexRef.current = hoverIndex;
+      item.index = hoverIndex;
     }
   }, [hoverIndex, item?.index, moveItem]);
 
@@ -107,7 +99,6 @@ export function CustomDragLayer({
     <div className={styles.dragLayer}>
       <div style={{transform, WebkitTransform: transform}}>
         <NavigatorItem
-          style={{background: "white", width: "min-content"}}
           label={item?.title ?? ""}
           prefixIcon={item?.icon}
           suffixIcons={[{name: "dragHorizontalVariant"}, {name: "dotsVertical"}]}
@@ -125,17 +116,21 @@ type DraggableItemProps = {
 
 const DraggableItem = React.forwardRef<HTMLDivElement, DraggableItemProps>(
   ({item, completeMoving}, ref) => {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
     const innerRef = useRef<HTMLDivElement | null>(null);
     const buttonRef = useRef<HTMLButtonElement | null>(null);
 
-    const [{handlerId}, drop] = useDrop({
+    const [{handlerId, isOver}, drop] = useDrop({
       accept: "NAVIGATOR_ITEM",
       collect: monitor => ({
-        handlerId: monitor.getHandlerId()
+        handlerId: monitor.getHandlerId(),
+        isOver: monitor.isOver()
       })
     });
 
+    if (item.title === "New Bucket 2") {
+      console.log("isOver: ", isOver);
+    }
     const [, drag, preview] = useDrag({
       type: "NAVIGATOR_ITEM",
       item: () => item,

@@ -65,4 +65,8 @@
   top: 0;
   width: max-content;
   height: 100%;
+  .ungrouped {
+    background: var(--color-default);
+    width: min-content;
+  }
 }
