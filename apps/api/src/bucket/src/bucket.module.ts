@@ -2,6 +2,7 @@ import {DynamicModule, Global, Inject, Module, Optional, Type} from "@nestjs/com
 import {HistoryModule, HistoryService} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
+import {SchemasRealtimeModule} from "@spica-server/bucket/schemas-realtime";
 import {BucketService, BucketDataService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {PreferenceService} from "@spica-server/preference/services";
@@ -51,7 +52,8 @@ export class BucketModule {
     const imports: (Type<any> | DynamicModule)[] = [
       schemaModule,
       ServicesModule,
-      BucketCoreModule.initialize(options)
+      BucketCoreModule.initialize(options),
+      SchemasRealtimeModule.register()
     ];
 
     let BucketCache;
