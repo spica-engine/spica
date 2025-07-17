@@ -89,14 +89,7 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
             label={item?.title}
             prefix={{children: <Icon name={item?.icon} />}}
             prefixIcon={item?.icon}
-            suffixIcons={[
-              {
-                name: "dragHorizontalVariant"
-              },
-              {
-                name: "dotsVertical"
-              }
-            ]}
+            suffixIcons={[{name: "dragHorizontalVariant"}]}
             onClick={() => {
               navigate(`/${item?.section}/${item?._id}`);
             }}
@@ -128,14 +121,7 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
             key={item?._id}
             label={item?.title}
             prefixIcon={item?.icon}
-            suffixIcons={[
-              {
-                name: "dragHorizontalVariant"
-              },
-              {
-                name: "dotsVertical"
-              }
-            ]}
+            suffixIcons={[{name: "dragHorizontalVariant"}]}
             onClick={() => {
               navigate(`/${item?.section}/${item?._id}`);
             }}

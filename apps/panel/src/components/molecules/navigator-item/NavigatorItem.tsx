@@ -8,6 +8,8 @@ import {
   type TypeFluidContainer,
   type IconName
 } from "oziko-ui-kit";
+import BucketNavigatorPopup from "../bucket-navigator-popup/BucketNavigatorPopup";
+import type { BucketType } from "src/services/bucketService";
 
 type SuffixIcon = {
   name: IconName;
@@ -18,9 +20,10 @@ type TypeNavigatorItem = {
   label: string;
   prefixIcon?: IconName;
   suffixIcons?: SuffixIcon[];
+  bucket?: BucketType
 } & TypeFluidContainer;
 
-const NavigatorItem: FC<TypeNavigatorItem> = ({label, prefixIcon, suffixIcons = [], ...props}) => {
+const NavigatorItem: FC<TypeNavigatorItem> = ({label, prefixIcon, bucket, suffixIcons = [], ...props}) => {
   return (
     <FluidContainer
       dimensionX={"fill"}
@@ -28,26 +31,35 @@ const NavigatorItem: FC<TypeNavigatorItem> = ({label, prefixIcon, suffixIcons = 
       mode="fill"
       prefix={
         prefixIcon && {
-          children: <Icon name={prefixIcon} size={"md"}/>
+          children: <Icon name={prefixIcon} size={"md"} />
         }
       }
       root={{
-        children: <Text dimensionX={"fill"} size="medium" className={styles.label}>{label}</Text>
+        children: (
+          <Text dimensionX={"fill"} size="medium" className={styles.label}>
+            {label}
+          </Text>
+        )
       }}
       suffix={{
-        children: suffixIcons.length > 0 && (
+        children: (
           <>
-            {suffixIcons.map(({name, onClick}, index) => (
-              <Button
-                key={index}
-                color="transparent"
-                className={styles.suffixButton}
-                onClick={onClick}
-              >
-                <Icon name={name} size="sm"/>
-              </Button>
-            ))}
-          </>
+            {suffixIcons.length > 0 && (
+              <>
+                {suffixIcons.map(({name, onClick}, index) => (
+                  <Button
+                    key={index}
+                    color="transparent"
+                    className={styles.suffixButton}
+                    onClick={onClick}
+                  >
+                    <Icon name={name} size="sm" />
+                  </Button>
+                ))}
+                <BucketNavigatorPopup bucket={bucket} className={styles.suffixButton}/>
+              </>
+            )}
+          </> 
         )
       }}
       {...props}
