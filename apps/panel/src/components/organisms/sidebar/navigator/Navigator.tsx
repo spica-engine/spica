@@ -96,11 +96,15 @@ const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
     initialOffset: monitor.getInitialSourceClientOffset()
   }));
 
-  const hoverIndex = itemRefs.findIndex(ref => {
-    if (!ref || !currentOffset) return false;
-    const rect = ref.getBoundingClientRect();
-    return currentOffset.y >= rect.top && currentOffset.y <= rect.bottom;
-  });
+  const hoverIndex = useMemo(
+    () =>
+      itemRefs.findIndex(ref => {
+        if (!ref || !currentOffset) return false;
+        const rect = ref.getBoundingClientRect();
+        return currentOffset.y >= rect.top && currentOffset.y <= rect.bottom;
+      }),
+    [itemRefs, currentOffset?.x, currentOffset?.y]
+  );
 
   useEffect(() => {
     if (hoverIndex !== -1 && item.index !== hoverIndex) {
@@ -109,7 +113,10 @@ const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
     }
   }, [hoverIndex, item?.index, moveItem]);
 
-  const transform = `translate(${(initialOffset?.x ?? 0) - 153}px, ${currentOffset?.y}px)`;
+  const transform = useMemo(
+    () => `translate(${(initialOffset?.x ?? 0) - 153}px, ${currentOffset?.y}px)`,
+    [initialOffset?.x, currentOffset?.y]
+  );
 
   if (!isDragging) return null;
 
@@ -125,7 +132,7 @@ const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
       </div>
     </div>
   );
-}
+};
 
 const DraggableItem = ({item, completeMoving, ref}: TypeDraggableItemProps) => {
   const navigate = useNavigate();
@@ -189,9 +196,9 @@ const DraggableItem = ({item, completeMoving, ref}: TypeDraggableItemProps) => {
 
 const ReorderableList = ({items, setItems}: TypeReorderableListProps) => {
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const setItemRef = (el: HTMLDivElement | null, index: number) => {
+  const setItemRef = useCallback((el: HTMLDivElement | null, index: number) => {
     itemRefs.current[index] = el;
-  };
+  }, []);
 
   const {changeBucketOrder} = useBucket();
   const moveItem = useCallback((from: number, to: number) => {

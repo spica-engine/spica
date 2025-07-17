@@ -20,7 +20,7 @@ function useApi<T>({endpoint, method = "get", onSuccess, onError}: ApiRequestOpt
   const [data, setData] = useState<T | null>(null);
   const [token] = useLocalStorage("token", null);
 
-  const resolvedUrl = useMemo(() => resolveEndpoint(endpoint), [endpoint]);
+  const resolvedUrl = useMemo(() => resolveEndpoint(endpoint), []);
 
   const request = useCallback(
     ({
