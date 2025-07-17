@@ -11,7 +11,7 @@ type TypeBucketNavigatorPopup = {
   bucket: BucketType;
 };
 const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({onAddToCategory, onEdit, bucket}) => {
-  const {deleteBucket, deleteBucketLoading, deleteBucketError} = useBucket();
+  const {deleteBucket, deleteBucketLoading} = useBucket();
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
   const handleDeleteBucket = () => {
