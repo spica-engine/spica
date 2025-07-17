@@ -1,10 +1,20 @@
+.container {
+  > div {
+    width: var(--icon-size-sm) !important;
+    height: var(--icon-size-sm) !important;
+  }
+  svg {
+    color: var(--color-font-primary);
+  }
+}
+
 .popoverContainer {
   padding: 0 !important;
   .popoverContent {
     padding: var(--padding-md);
 
     .buttons {
-      padding: 2px 0;
+      padding: var(--padding-xs) 0;
       width: 100%;
     }
     .deleteIcon {
