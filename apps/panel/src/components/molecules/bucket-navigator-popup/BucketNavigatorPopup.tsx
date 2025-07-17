@@ -11,10 +11,10 @@ type TypeBucketNavigatorPopup = {
 const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({className}) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
-  const popoverRef = useRef(null);
+  const contentRef = useRef(null);
 
   useOnClickOutside({
-    refs: [containerRef, popoverRef],
+    refs: [containerRef, contentRef],
     onClickOutside: () => setIsOpen(false)
   });
 
@@ -27,7 +27,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({className}) => {
         }}
         content={
           <FlexElement
-            ref={popoverRef}
+            ref={contentRef}
             dimensionX={160}
             direction="vertical"
             className={styles.popoverContent}
