@@ -4,6 +4,7 @@ import Login from "./pages/login/Login";
 import App from "./app/app";
 import Home from "./pages/home/Home";
 import Layout from "./layout/Layout";
+import Bucket from "./pages/bucket/Bucket";
 
 const router = createBrowserRouter([
   {
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
       {
         path: "dashboard",
         element: <Home />
+      },
+      {
+        path: "bucket/:bucketId",
+        element: <Bucket />
       }
     ]
   }
