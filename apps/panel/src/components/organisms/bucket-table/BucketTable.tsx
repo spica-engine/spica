@@ -2,6 +2,7 @@ import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useMemo} from "react";
+import useLocalStorage from "../../../hooks/useLocalStorage";
 
 type FieldType =
   | "string"
@@ -32,6 +33,7 @@ export type ColumnType = {
 type BucketTableProps = {
   data: any[];
   columns: ColumnType[];
+  bucketId: string;
 };
 
 type ColumnHeaderProps = {
@@ -254,8 +256,22 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
   });
 }
 
-const BucketTable = ({data, columns}: BucketTableProps) => {
-  const formattedColumns = useMemo(() => getFormattedColumns(columns), [columns]);
+const BucketTable = ({data, columns, bucketId}: BucketTableProps) => {
+  const defaultVisibleColumns = useMemo(
+    () => Object.fromEntries(columns.map(col => [col.key, true])),
+    []
+  );
+  const [visibleColumns] = useLocalStorage<{[key: string]: boolean}>(
+    `${bucketId}-visible-columns`,
+    defaultVisibleColumns
+  );
+
+  const filteredColumns = useMemo(
+    () => columns.filter(i => visibleColumns?.[i.key]),
+    [columns, visibleColumns]
+  );
+
+  const formattedColumns = useMemo(() => getFormattedColumns(filteredColumns), [filteredColumns]);
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
   const formattedData = useMemo(() => formatDataRows(data, columnMap), [data, columnMap]);
 

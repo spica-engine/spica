@@ -1,4 +1,4 @@
-import React, {type FC, memo, useEffect, useRef, useState} from "react";
+import React, {type FC, memo, useCallback, useEffect, useRef, useState} from "react";
 import {FlexElement, type TypeFlexElement, type TypeAlignment} from "oziko-ui-kit";
 import styles from "./Table.module.scss";
 type TypeTable = {
@@ -21,7 +21,7 @@ const Table: FC<TypeTable> = ({
   noResizeableColumns = [],
   className
 }) => {
-  const [dataColumns, setDataColumns] = useState(() => {
+  const getDataColumns = useCallback(() => {
     return columns.map(column => {
       const savedWidth = saveToLocalStorage?.save
         ? localStorage.getItem(`${saveToLocalStorage?.id}-${column.key}`)
@@ -31,7 +31,13 @@ const Table: FC<TypeTable> = ({
         width: savedWidth || column.width || "300px"
       };
     });
-  });
+  }, [columns, saveToLocalStorage]);
+
+  const [dataColumns, setDataColumns] = useState(getDataColumns);
+
+  useEffect(() => {
+    setDataColumns(getDataColumns());
+  }, [columns]);
 
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
 
@@ -123,6 +129,7 @@ const Table: FC<TypeTable> = ({
               (row: any, index: number) =>
                 row[column.key] && (
                   <Column.Cell
+                    key={`${row[column.key]}-${index}`}
                     className={column.cellClassName}
                     focused={focusedCell?.column === column.key && focusedCell?.row === index}
                   >
