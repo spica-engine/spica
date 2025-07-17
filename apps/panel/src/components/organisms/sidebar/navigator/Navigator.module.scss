@@ -49,8 +49,8 @@
   }
 
   .ungrouped {
-    svg:hover,
-    button:hover {
+    svg,
+    button {
       width: var(--icon-size-md);
       height: var(--icon-size-md);
     }
@@ -69,4 +69,11 @@
     background: var(--color-default);
     width: min-content;
   }
+
+  
 }
+.globalDragActive {
+    button {
+      opacity: 0 !important;
+    }
+  }

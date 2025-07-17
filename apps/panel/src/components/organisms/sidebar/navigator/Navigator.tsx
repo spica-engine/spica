@@ -2,7 +2,15 @@ import {FluidContainer, Icon, Text, type IconName, helperUtils} from "oziko-ui-k
 import styles from "./Navigator.module.scss";
 import {Button, Accordion} from "oziko-ui-kit";
 import NavigatorItem from "../../../molecules/navigator-item/NavigatorItem";
-import React, {memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef} from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  type Ref
+} from "react";
 import {useNavigate} from "react-router-dom";
 import {DndProvider, useDrag, useDragLayer, useDrop} from "react-dnd";
 import {getEmptyImage, HTML5Backend} from "react-dnd-html5-backend";
@@ -36,6 +44,22 @@ export type TypeNavigatorHeader = {
   }[];
 };
 
+type TypeDraggableItemProps = {
+  item: (TypeNavigatorItems & {index: number}) | (BucketType & {index: number});
+  completeMoving: ({bucketId, order}: {bucketId: string; order: number}) => void;
+  ref: Ref<HTMLDivElement>;
+};
+
+type TypeCustomDragLayerProps = {
+  itemRefs: (HTMLDivElement | null)[];
+  moveItem: (itemIndex: number, hoverIndex: number) => void;
+};
+
+type TypeReorderableListProps = {
+  items: TypeNavigatorItems[];
+  setItems: React.Dispatch<React.SetStateAction<TypeNavigatorItems[]>>;
+};
+
 const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
   return (
     <FluidContainer
@@ -64,13 +88,7 @@ const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
   );
 };
 
-export function CustomDragLayer({
-  itemRefs,
-  moveItem
-}: {
-  itemRefs: (HTMLDivElement | null)[];
-  moveItem: (itemIndex: number, hoverIndex: number) => void;
-}) {
+const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
   const {item, isDragging, currentOffset, initialOffset} = useDragLayer(monitor => ({
     item: monitor.getItem(),
     isDragging: monitor.isDragging(),
@@ -91,7 +109,7 @@ export function CustomDragLayer({
     }
   }, [hoverIndex, item?.index, moveItem]);
 
-  const transform = `translate(${(initialOffset?.x ?? 0) - 156}px, ${currentOffset?.y}px)`;
+  const transform = `translate(${(initialOffset?.x ?? 0) - 153}px, ${currentOffset?.y}px)`;
 
   if (!isDragging) return null;
 
@@ -109,80 +127,67 @@ export function CustomDragLayer({
   );
 }
 
-type DraggableItemProps = {
-  item: (TypeNavigatorItems & {index: number}) | (BucketType & {index: number});
-  completeMoving: ({bucketId, order}: {bucketId: string; order: number}) => void;
+const DraggableItem = ({item, completeMoving, ref}: TypeDraggableItemProps) => {
+  const navigate = useNavigate();
+  const innerRef = useRef<HTMLDivElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+
+  const [{handlerId, isOver}, drop] = useDrop({
+    accept: "NAVIGATOR_ITEM",
+    collect: monitor => ({
+      handlerId: monitor.getHandlerId(),
+      isOver: monitor.isOver()
+    })
+  });
+
+  const [, drag, preview] = useDrag({
+    type: "NAVIGATOR_ITEM",
+    item: () => item,
+    end: draggedItem => {
+      completeMoving({bucketId: draggedItem._id, order: draggedItem.index});
+    }
+  });
+
+  // We intentionally use useDragLayer instead useDrag for isDragging
+  // because useDrag's isDragging can be inconsistent. useDragLayer is more reliable.
+  const {dragLayerItem, isDragging} = useDragLayer(monitor => ({
+    dragLayerItem: monitor.getItem(),
+    isDragging: monitor.isDragging()
+  }));
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      preview(getEmptyImage(), {captureDraggingState: true});
+    });
+    return () => clearTimeout(timeout);
+  }, [preview]);
+
+  const opacity = useMemo(() => {
+    if (dragLayerItem?._id === item._id) return isDragging ? 0 : 1;
+    return 1;
+  }, [dragLayerItem?._id, item._id, isDragging]);
+
+  useImperativeHandle(ref, () => innerRef.current!);
+
+  drop(innerRef);
+  drag(buttonRef);
+  return (
+    <NavigatorItem
+      data-handler-id={handlerId}
+      ref={innerRef}
+      label={item?.title ?? ""}
+      prefixIcon={item?.icon}
+      style={{opacity}}
+      suffixIcons={[{name: "dragHorizontalVariant", ref: buttonRef}, {name: "dotsVertical"}]}
+      onClick={() => {
+        navigate(`/${item?.section}/${item?._id}`);
+      }}
+      className={`${styles.ungrouped} ${isDragging ? styles.globalDragActive : ""}`}
+    />
+  );
 };
 
-const DraggableItem = React.forwardRef<HTMLDivElement, DraggableItemProps>(
-  ({item, completeMoving}, ref) => {
-    const navigate = useNavigate();
-    const innerRef = useRef<HTMLDivElement | null>(null);
-    const buttonRef = useRef<HTMLButtonElement | null>(null);
-
-    const [{handlerId, isOver}, drop] = useDrop({
-      accept: "NAVIGATOR_ITEM",
-      collect: monitor => ({
-        handlerId: monitor.getHandlerId(),
-        isOver: monitor.isOver()
-      })
-    });
-
-    const [, drag, preview] = useDrag({
-      type: "NAVIGATOR_ITEM",
-      item: () => item,
-      end: draggedItem => {
-        completeMoving({bucketId: draggedItem._id, order: draggedItem.index});
-      }
-    });
-
-    // We intentionally use useDragLayer instead useDrag for isDragging
-    // because useDrag's isDragging can be inconsistent. useDragLayer is more reliable.
-    const {dragLayerItem, isDragging} = useDragLayer(monitor => ({
-      dragLayerItem: monitor.getItem(),
-      isDragging: monitor.isDragging()
-    }));
-
-    useEffect(() => {
-      const timeout = setTimeout(() => {
-        preview(getEmptyImage(), {captureDraggingState: true});
-      });
-      return () => clearTimeout(timeout);
-    }, [preview]);
-
-    const opacity = useMemo(() => {
-      if (dragLayerItem?._id === item._id) return isDragging ? 0 : 1;
-      return 1;
-    }, [dragLayerItem?._id, item._id, isDragging]);
-
-    useImperativeHandle(ref, () => innerRef.current!);
-
-    drop(innerRef);
-    drag(buttonRef);
-    return (
-      <NavigatorItem
-        data-handler-id={handlerId}
-        ref={innerRef}
-        label={item?.title ?? ""}
-        prefixIcon={item?.icon}
-        style={{opacity}}
-        suffixIcons={[{name: "dragHorizontalVariant", ref: buttonRef}, {name: "dotsVertical"}]}
-        onClick={() => {
-          navigate(`/${item?.section}/${item?._id}`);
-        }}
-        className={styles.ungrouped}
-      />
-    );
-  }
-);
-
-const ReorderableList = ({
-  items,
-  setItems
-}: {
-  items: TypeNavigatorItems[];
-  setItems: React.Dispatch<React.SetStateAction<TypeNavigatorItems[]>>;
-}) => {
+const ReorderableList = ({items, setItems}: TypeReorderableListProps) => {
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const setItemRef = (el: HTMLDivElement | null, index: number) => {
     itemRefs.current[index] = el;
@@ -206,7 +211,7 @@ const ReorderableList = ({
           key={item._id}
           item={{...item, index}}
           completeMoving={changeBucketOrder}
-          ref={el => setItemRef(el, index)}
+          ref={(el: HTMLDivElement) => setItemRef(el, index)}
         />
       ))}
     </DndProvider>
