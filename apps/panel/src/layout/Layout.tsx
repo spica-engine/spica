@@ -10,7 +10,15 @@ import { useBucket } from "../contexts/BucketContext";
 const Layout = () => {
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const {fetchBuckets} = useBucket()
+  const {buckets, setBuckets, fetchBuckets} = useBucket();
+  
+
+  const mergedNavigatorItems = {
+    ...Object.fromEntries(
+      Object.entries(navigatorItems).map(([key, value]) => [key, {items: value ?? [], setter: () => {}}])
+    ),
+    bucket: {items: buckets ?? [], setter: setBuckets}
+  };
 
   const closeDrawer = () => setIsDrawerOpen(false);
   const openDrawer = () => setIsDrawerOpen(true);
@@ -34,7 +42,7 @@ const Layout = () => {
     <div className={styles.sidebar}>
       <SideBar
         menuItems={menuItems}
-        navigatorItems={navigatorItems}
+        navigatorItems={mergedNavigatorItems}
         onNavigatorToggle={setNavigatorOpen}
       />
     </div>
@@ -50,7 +58,7 @@ const Layout = () => {
     >
       <SideBar
         menuItems={menuItems}
-        navigatorItems={navigatorItems}
+        navigatorItems={mergedNavigatorItems}
         onNavigatorToggle={setNavigatorOpen}
         displayToggleIcon={false}
       />

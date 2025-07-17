@@ -33,7 +33,7 @@
       padding: 0 var(--padding-md) 0 0 !important;
     }
   }
-  
+
   .noLineHeight {
     line-height: 0 !important;
   }
@@ -46,5 +46,33 @@
     align-items: center;
     gap: var(--gap-sm);
     font-weight: 400;
+  }
+
+  .ungrouped {
+    svg,
+    button {
+      width: var(--icon-size-md);
+      height: var(--icon-size-md);
+    }
+  }
+}
+
+.dragLayer {
+  position: fixed;
+  pointer-events: none;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: max-content;
+  height: 100%;
+  .ungrouped {
+    background: var(--color-default);
+    width: 200px !important;
+    box-shadow: var(--box-shadow)
+  }
+}
+.globalDragActive {
+  button {
+    opacity: 0 !important;
   }
 }
