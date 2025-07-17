@@ -1,4 +1,12 @@
-import {createContext, useMemo, useContext, type ReactNode, useEffect} from "react";
+import {
+  createContext,
+  useMemo,
+  useContext,
+  type ReactNode,
+  useEffect,
+  useState,
+  useCallback
+} from "react";
 import {useBucketService, type BucketType} from "../services/bucketService";
 import type {AxiosRequestHeaders} from "axios";
 
@@ -6,6 +14,9 @@ type BucketContextType = {
   buckets: BucketType[] | null;
   loading: boolean;
   error: string | null;
+  deleteBucket: (bucketId: string) => Promise<any>;
+  deleteBucketLoading: boolean;
+  deleteBucketError: string | null;
   fetchBuckets: (params?: {
     body?: any;
     headers?: AxiosRequestHeaders;
@@ -16,16 +27,37 @@ type BucketContextType = {
 const BucketContext = createContext<BucketContextType | null>(null);
 
 export const BucketProvider = ({children}: {children: ReactNode}) => {
-  const {buckets, loading, error, fetchBuckets} = useBucketService();
+  const {
+    buckets: data,
+    loading,
+    error,
+    fetchBuckets,
+    deleteBucketRequest,
+    deleteBucketLoading,
+    deleteBucketError
+  } = useBucketService();
+  const [buckets, setBuckets] = useState(data);
+  useEffect(() => setBuckets(data), [data]);
+
+  const deleteBucket = useCallback(
+    (bucketId: string) => {
+      setBuckets(prev => (prev ? prev.filter(i => i._id !== bucketId) : null));
+      return deleteBucketRequest(bucketId);
+    },
+    [deleteBucketRequest]
+  );
 
   const contextValue = useMemo(
     () => ({
       buckets,
       loading,
       error,
+      deleteBucket,
+      deleteBucketLoading,
+      deleteBucketError,
       fetchBuckets
     }),
-    [buckets, loading, error, fetchBuckets]
+    [buckets, loading, error, deleteBucketLoading, deleteBucketError, fetchBuckets]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;

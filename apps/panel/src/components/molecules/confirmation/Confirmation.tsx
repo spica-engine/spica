@@ -55,6 +55,7 @@ function Confirmation({
             <Input
               autoFocus
               placeholder={inputPlaceholder}
+              className={styles.input}
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
               type="text"
