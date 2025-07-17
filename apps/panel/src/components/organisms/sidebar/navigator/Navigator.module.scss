@@ -67,13 +67,12 @@
   height: 100%;
   .ungrouped {
     background: var(--color-default);
-    width: min-content;
+    width: 200px !important;
+    box-shadow: var(--box-shadow)
   }
-
-  
 }
 .globalDragActive {
-    button {
-      opacity: 0 !important;
-    }
+  button {
+    opacity: 0 !important;
   }
+}
