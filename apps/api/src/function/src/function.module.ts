@@ -27,6 +27,7 @@ import {
   FunctionWithContent
 } from "@spica-server/interface/function";
 import {getSynchronizers} from "./versioncontrol";
+import {FunctionRealtimeModule} from "@spica-server/function/realtime";
 
 @Module({})
 export class FunctionModule {
@@ -81,7 +82,8 @@ export class FunctionModule {
           path: options.path,
           entryLimit: options.entryLimit,
           realtimeLogs: options.realtimeLogs
-        })
+        }),
+        FunctionRealtimeModule.listen()
       ],
       controllers: [FunctionController],
       providers: [
