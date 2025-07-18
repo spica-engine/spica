@@ -52,7 +52,7 @@ export class BucketModule {
     const imports: (Type<any> | DynamicModule)[] = [
       schemaModule,
       ServicesModule,
-      BucketCoreModule.initialize(options),
+      BucketCoreModule.initialize(options)
     ];
 
     let BucketCache;
@@ -87,7 +87,7 @@ export class BucketModule {
       realtime.imports.push(schemaModule as any);
 
       imports.push(realtime);
-      imports.push(SchemasRealtimeModule.register())
+      imports.push(SchemasRealtimeModule.register());
     }
 
     if (options.graphql) {
