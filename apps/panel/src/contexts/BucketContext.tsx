@@ -20,7 +20,7 @@ type BucketContextType = {
   getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
   bucketDataLoading: boolean;
   bucketDataError: string | null;
-  bucketDataNextPageQuery: any;
+  nextbucketDataQuery: any;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -52,7 +52,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     });
   }, [JSON.stringify(lastUsedBucketDataQuery)]);
 
-  const bucketDataNextPageQuery: {
+  const nextbucketDataQuery: {
     paginate?: boolean;
     relation?: boolean;
     limit?: number;
@@ -73,9 +73,19 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       getBucketData,
       bucketDataLoading,
       bucketDataError,
-      bucketDataNextPageQuery
+      nextbucketDataQuery
     }),
-    [buckets, loading, error, fetchBuckets, bucketData, bucketDataLoading, bucketDataError]
+    [
+      buckets,
+      loading,
+      error,
+      fetchBuckets,
+      bucketData,
+      getBucketData,
+      bucketDataLoading,
+      bucketDataError,
+      nextbucketDataQuery
+    ]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;

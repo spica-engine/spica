@@ -7,7 +7,7 @@ import BucketActionBar from "../../components/molecules/bucket-action-bar/Bucket
 
 export default function Bucket() {
   const {bucketId} = useParams<{bucketId: string}>();
-  const {buckets, bucketData, getBucketData, bucketDataNextPageQuery} = useBucket();
+  const {buckets, bucketData, getBucketData, nextbucketDataQuery} = useBucket();
 
   useEffect(() => {
     if (!bucketId) return;
@@ -41,7 +41,7 @@ export default function Bucket() {
         data={bucketData?.data ?? []}
         onScrollEnd={() => {
           if (!bucketId) return;
-          getBucketData(bucketId, bucketDataNextPageQuery);
+          getBucketData(bucketId, nextbucketDataQuery);
         }}
         totalDataLength={bucketData?.meta.total ?? 0}
         maxHeight="70vh"

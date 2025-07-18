@@ -44,7 +44,7 @@ const Table: FC<TypeTable> = ({
 
   const [dataColumns, setDataColumns] = useState(getDataColumns());
 
-  useEffect(() => setDataColumns(getDataColumns()), [columns]);
+  useEffect(() => setDataColumns(getDataColumns()), [columns.length]);
 
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
 
@@ -122,7 +122,7 @@ const Table: FC<TypeTable> = ({
           : "unset";
         return (
           <Column
-            id={column.key === "new field" ? `scrollableDiv-${index}` : undefined}
+            id={index === dataColumns.length - 1 ? `scrollableDiv-${index}` : undefined}
             key={column.key}
             ref={ref => setSyncedScrollElements(ref, index)}
             columnKey={column.key}
