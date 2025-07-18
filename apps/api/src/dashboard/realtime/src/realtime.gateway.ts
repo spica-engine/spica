@@ -1,5 +1,6 @@
 import {OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway} from "@nestjs/websockets";
 import {RealtimeDatabaseService} from "@spica-server/database/realtime";
+import {ChunkKind} from "@spica-server/interface/realtime";
 import {GuardService} from "@spica-server/passport";
 import {getConnectionHandlers} from "@spica-server/realtime";
 
@@ -19,7 +20,8 @@ export class RealtimeDashboardService implements OnGatewayConnection, OnGatewayD
     async () => this.COLLECTION,
     async () => ({}),
     error => ({
-      code: error.status || 500,
+      kind: ChunkKind.Error,
+      status: error.status || 500,
       message: error.message || "Unexpected error"
     }),
     this.realtime
