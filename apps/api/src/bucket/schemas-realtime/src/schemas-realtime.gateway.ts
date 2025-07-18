@@ -21,7 +21,8 @@ export class SchemasRealtimeGateway implements OnGatewayConnection, OnGatewayDis
     async () => this.COLLECTION,
     this.prepareOptions.bind(this),
     error => ({
-      code: error.status || 500,
+      kind: ChunkKind.Error,
+      status: error.status || 500,
       message: error.message || "Unexpected error"
     }),
     this.realtime,
