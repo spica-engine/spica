@@ -1,4 +1,14 @@
-import React, {type FC, memo, useEffect, useImperativeHandle, useRef, useState} from "react";
+import React, {
+  type FC,
+  type JSX,
+  memo,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import {FlexElement, type TypeFlexElement, type TypeAlignment} from "oziko-ui-kit";
 import styles from "./Table.module.scss";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -30,17 +40,18 @@ const Table: FC<TypeTable> = ({
   totalDataLength,
   style
 }) => {
-  const getDataColumns = () => {
-    return columns.map(column => {
+  const getDataColumns = useCallback(() => {
+    return columns.map((column, index) => {
       const savedWidth = saveToLocalStorage?.save
         ? localStorage.getItem(`${saveToLocalStorage?.id}-${column.key}`)
         : null;
       return {
         ...column,
-        width: savedWidth || column.width || "300px"
+        width: savedWidth || column.width || "300px",
+        isLastColumn: index === columns.length - 1
       };
     });
-  };
+  }, [columns.length]);
 
   const [dataColumns, setDataColumns] = useState(getDataColumns());
 
@@ -111,66 +122,22 @@ const Table: FC<TypeTable> = ({
   return (
     <>
       <div className={`${styles.table} ${className}`} style={style}>
-        {dataColumns.map((column, index) => {
-          const isFixed = fixedColumns.includes(column.key);
-          const positionAmount = isFixed
-            ? fixedColumns
-                .slice(0, fixedColumns.indexOf(column.key))
-                .reduce(
-                  (acc, curr) => acc + parseInt(dataColumns.find(dc => dc.key === curr).width),
-                  0
-                ) + "px"
-            : "unset";
-          const cells = (
-            <>
-              {data.map(
-                (row: any, index: number) =>
-                  row[column.key] && (
-                    <Column.Cell
-                      key={`${row[column.key]}-${index}`}
-                      className={column.cellClassName}
-                      focused={focusedCell?.column === column.key && focusedCell?.row === index}
-                    >
-                      {row[column.key]}
-                    </Column.Cell>
-                  )
-              )}
-            </>
-          );
-
-          return (
-            <Column
-              id={index === dataColumns.length - 1 ? `scrollableDiv-${index}` : undefined}
-              key={column.key}
-              ref={ref => setSyncedScrollElements(ref, index)}
-              columnKey={column.key}
-              className={`${styles.column} ${isFixed ? styles.fixedColumns : styles.scrollableColumns} ${column.columnClassName}`}
-              style={{
-                left: positionAmount
-              }}
-              width={column.width}
-              updateColumnWidth={updateColumnWidth}
-              noResizeable={noResizeableColumns.includes(column.key)}
-            >
-              <Column.Header className={column.headerClassName}>{column.header}</Column.Header>
-              {index === dataColumns.length - 1 ? (
-                <InfiniteScroll
-                  next={() => {
-                    onScrollEnd?.();
-                  }}
-                  hasMore={totalDataLength > data.length}
-                  loader={"Loading.."}
-                  dataLength={data.length}
-                  scrollableTarget={`scrollableDiv-${index}`}
-                >
-                  {cells}
-                </InfiniteScroll>
-              ) : (
-                <>{cells}</>
-              )}
-            </Column>
-          );
-        })}
+        {dataColumns.map(column => (
+          <ColumnRenderer
+            key={column.id}
+            fixedColumns={fixedColumns}
+            column={column}
+            dataColumns={dataColumns}
+            focusedCell={focusedCell}
+            setSyncedScrollElements={setSyncedScrollElements}
+            updateColumnWidth={updateColumnWidth}
+            noResizeableColumns={noResizeableColumns}
+            onScrollEnd={onScrollEnd}
+            totalDataLength={totalDataLength}
+            data={data}
+            isLastColumn={column.isLastColumn}
+          />
+        ))}
       </div>
       {!data.length && <div className={styles.noDataText}>No Data Found</div>}
     </>
@@ -178,6 +145,86 @@ const Table: FC<TypeTable> = ({
 };
 
 export default memo(Table);
+
+const ColumnRenderer = memo(
+  ({
+    fixedColumns,
+    column,
+    dataColumns,
+    focusedCell,
+    setSyncedScrollElements,
+    updateColumnWidth,
+    noResizeableColumns,
+    onScrollEnd,
+    totalDataLength,
+    data,
+    isLastColumn
+  }: any) => {
+    const isFixed = useMemo(() => fixedColumns.includes(column.key), [fixedColumns.length]);
+    const positionAmount = useMemo(
+      () =>
+        isFixed
+          ? fixedColumns
+              .slice(0, fixedColumns.indexOf(column.key))
+              .reduce(
+                (acc, curr) => acc + parseInt(dataColumns.find(dc => dc.key === curr).width),
+                0
+              ) + "px"
+          : "unset",
+      [isFixed]
+    );
+
+    const [cells, setCells] = useState<JSX.Element[]>([]);
+
+    useEffect(() => {
+      const newCells = data.slice(cells.length).map((row, index) => {
+        const value = row[column.key];
+        if (!value) return null;
+        return (
+          <Cell
+            key={value.id}
+            children={value.component}
+            focused={focusedCell?.column === column.key && focusedCell?.row === index}
+            className={column.cellClassName}
+          />
+        );
+      });
+      setCells(prev => [...prev, ...newCells]);
+    }, [data]);
+
+    return (
+      <Column
+        id={isLastColumn ? `scrollableDiv-${column.key}` : undefined}
+        ref={ref => setSyncedScrollElements(ref, column.key)}
+        columnKey={column.key}
+        className={`${styles.column} ${isFixed ? styles.fixedColumns : styles.scrollableColumns} ${column.columnClassName}`}
+        style={{
+          left: positionAmount
+        }}
+        width={column.width}
+        updateColumnWidth={updateColumnWidth}
+        noResizeable={noResizeableColumns.includes(column.key)}
+      >
+        <Column.Header className={column.headerClassName}>{column.header}</Column.Header>
+        {isLastColumn ? (
+          <InfiniteScroll
+            next={() => {
+              onScrollEnd?.();
+            }}
+            hasMore={totalDataLength > data.length}
+            loader={"Loading.."}
+            dataLength={data.length}
+            scrollableTarget={`scrollableDiv-${column.key}`}
+          >
+            {cells}
+          </InfiniteScroll>
+        ) : (
+          cells
+        )}
+      </Column>
+    );
+  }
+);
 
 type TypeColumn = {
   columnKey?: string;
@@ -281,7 +328,12 @@ type TypeCell = React.HTMLAttributes<HTMLDivElement> & {
   focused?: boolean;
 };
 
+let totalRenderCount = 0;
+
 const Cell = ({children, focused, ...props}: TypeCell) => {
+  totalRenderCount++;
+  console.log(`MyComponent total renders: ${totalRenderCount}`);
+
   return (
     <div
       {...props}
@@ -295,4 +347,4 @@ const Cell = ({children, focused, ...props}: TypeCell) => {
 const Column = memo(ColumnComponent) as unknown as TypeColumnComponent;
 
 Column.Header = HeaderCell;
-Column.Cell = Cell;
+Column.Cell = memo(Cell) as any;

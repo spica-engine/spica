@@ -18,6 +18,7 @@ type FieldType =
   | "richtext";
 
 export type ColumnType = {
+  id: string;
   header: any;
   key: string;
   type?: FieldType;
@@ -83,6 +84,7 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
 
 const defaultColumns: ColumnType[] = [
   {
+    id: "0",
     header: <ColumnHeader />,
     key: "select",
     type: "boolean",
@@ -92,6 +94,7 @@ const defaultColumns: ColumnType[] = [
     cellClassName: styles.selectCell
   },
   {
+    id: "1",
     header: (
       <Button
         variant="icon"
@@ -220,7 +223,8 @@ function getFormattedColumns(columns: ColumnType[]): ColumnType[] {
         />
       ),
       headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
-      columnClassName: `${col.columnClassName || ""} ${styles.column}`
+      columnClassName: `${col.columnClassName || ""} ${styles.column}`,
+      id: crypto.randomUUID()
     })),
     defaultColumns[1]
   ];
@@ -241,7 +245,6 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
       "new field": ""
     };
 
-    // Ensure all keys are present
     allKeys.forEach(key => {
       if (!(key in fullRow)) {
         fullRow[key] = "";
@@ -251,7 +254,10 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
     return Object.fromEntries(
       Object.entries(fullRow).map(([key, value]) => {
         const meta = columnMap[key] || {};
-        return [key, renderCell(value, meta.type, meta.deletable)];
+        return [
+          key,
+          {id: crypto.randomUUID(), component: renderCell(value, meta.type, meta.deletable)}
+        ];
       })
     );
   });
@@ -267,7 +273,6 @@ const BucketTable = ({
   const formattedColumns = useMemo(() => getFormattedColumns(columns), [columns]);
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
   const formattedData = useMemo(() => formatDataRows(data, columnMap), [data, columnMap]);
-
   return (
     <Table
       style={{maxHeight}}

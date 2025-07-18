@@ -1,13 +1,17 @@
 import {useEffect, useRef} from "react";
 
-const controllerIndex = 0
 function useSyncedScroll(elementCount: number) {
-  const elementsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const elementsRef = useRef<Map<string, HTMLDivElement | null>>(new Map());
   const syncingRef = useRef(false);
 
   useEffect(() => {
     const els = elementsRef.current;
-    const controller = els[controllerIndex];
+    const keys = Array.from(els.keys());
+
+    const controllerKey = keys[0];
+    if (!controllerKey) return;
+
+    const controller = els.get(controllerKey);
     if (!controller) return;
 
     const forwardWheel = (e: WheelEvent) => {
@@ -20,18 +24,22 @@ function useSyncedScroll(elementCount: number) {
       syncingRef.current = true;
 
       const scrollTop = controller.scrollTop;
-      els.forEach((el, i) => {
-        if (i !== controllerIndex && el) {
-          el.scrollTop = scrollTop;
+      keys.forEach(key => {
+        if (key !== controllerKey) {
+          const el = els.get(key);
+          if (el && el.scrollTop !== scrollTop) {
+            el.scrollTop = scrollTop;
+          }
         }
       });
 
       syncingRef.current = false;
     };
 
-    els.forEach((el, i) => {
+    keys.forEach((key, i) => {
+      const el = els.get(key);
       if (!el) return;
-      if (i === controllerIndex) {
+      if (key === controllerKey) {
         el.addEventListener("scroll", handleControllerScroll);
       } else {
         el.addEventListener("wheel", forwardWheel, {passive: false});
@@ -39,19 +47,20 @@ function useSyncedScroll(elementCount: number) {
     });
 
     return () => {
-      els.forEach((el, i) => {
+      keys.forEach(key => {
+        const el = els.get(key);
         if (!el) return;
-        if (i === controllerIndex) {
+        if (key === controllerKey) {
           el.removeEventListener("scroll", handleControllerScroll);
         } else {
           el.removeEventListener("wheel", forwardWheel);
         }
       });
     };
-  }, [elementCount, controllerIndex]);
+  }, [elementCount]);
 
-  const setRef = (el: HTMLDivElement | null, index: number) => {
-    elementsRef.current[index] = el;
+  const setRef = (el: HTMLDivElement | null, identifier: string) => {
+    elementsRef.current.set(identifier, el);
   };
 
   return setRef;
