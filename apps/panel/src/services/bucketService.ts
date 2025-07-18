@@ -1,5 +1,5 @@
 import useApi from "../hooks/useApi";
-import {useMemo, useState} from "react";
+import {useCallback, useState} from "react";
 
 export type BucketDataType = {
   data: {[key: string]: any}[];
@@ -91,30 +91,35 @@ export const useBucketService = () => {
     method: "get"
   });
 
-  const getBucketData = (bucketId: string, query?: BucketDataQueryType) => {
-    const defaultParams: Omit<BucketDataQueryType, "sort"> & {sort: string} = {
-      paginate: true,
-      relation: true,
-      limit: 25,
-      sort: JSON.stringify({_id: -1})
-    };
+  const getBucketData = useCallback(
+    (bucketId: string, query?: BucketDataQueryType) => {
+      const defaultParams: Omit<BucketDataQueryType, "sort"> & {sort: string} = {
+        paginate: true,
+        relation: true,
+        limit: 25,
+        sort: JSON.stringify({_id: -1})
+      };
 
-    const params = query
-      ? {
-          ...query,
-          sort: query.sort ? JSON.stringify(query.sort) : undefined
-        }
-      : defaultParams;
+      const params = query
+        ? {
+            ...query,
+            sort: query.sort ? JSON.stringify(query.sort) : undefined
+          }
+        : defaultParams;
 
-    if (!params.sort) delete params.sort;
-    const queryString = new URLSearchParams(params as unknown as Record<string, string>).toString();
-    return fetchBucketData({
-      endpoint: `/api/bucket/${bucketId}/data?${queryString}`
-    }).then(result => {
-      setLastUsedBucketDataQuery(query ?? {...defaultParams, sort: {_id: -1}});
-      return result;
-    });
-  };
+      if (!params.sort) delete params.sort;
+      const queryString = new URLSearchParams(
+        params as unknown as Record<string, string>
+      ).toString();
+      return fetchBucketData({
+        endpoint: `/api/bucket/${bucketId}/data?${queryString}`
+      }).then(result => {
+        setLastUsedBucketDataQuery(query ?? {...defaultParams, sort: {_id: -1}});
+        return result;
+      });
+    },
+    [fetchBucketData]
+  );
 
   return {
     buckets,
