@@ -133,8 +133,7 @@ export default {
       "bucket:show": [bucketResource],
       "bucket:create": [],
       "bucket:update": [bucketResource],
-      "bucket:delete": [bucketResource],
-      "bucket:stream": [bucketResource]
+      "bucket:delete": [bucketResource]
     }
   },
   "bucket:data": {
