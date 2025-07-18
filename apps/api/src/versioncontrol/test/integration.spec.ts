@@ -22,6 +22,7 @@ import path from "path";
 import fs from "fs";
 import * as fnCRUD from "@spica-server/function/src/crud";
 import {v4 as uuidv4} from "uuid";
+import {PolicyModule, PolicyService} from "@spica-server/passport/policy";
 
 const sleep = () => new Promise(r => setTimeout(r, 1000));
 const getRepId = (name: string, id: ObjectId | string) => `${name}(${id.toString()})`;
@@ -34,6 +35,7 @@ describe("Versioning", () => {
   let fnservice: FunctionService;
   let engine: FunctionEngine;
   let evs: EnvVarService;
+  let ps: PolicyService;
   let directoryPath: string;
 
   async function readResource(module: string, id: string): Promise<any> {
@@ -106,7 +108,8 @@ describe("Versioning", () => {
         VersionControlModule.forRoot({
           persistentPath: directoryPath,
           isReplicationEnabled: false
-        })
+        }),
+        PolicyModule.forRoot()
       ]
     }).compile();
 
@@ -119,6 +122,7 @@ describe("Versioning", () => {
     fnservice = module.get(FunctionService);
     engine = module.get(FunctionEngine);
     evs = module.get(EnvVarService);
+    ps = module.get(PolicyService);
     await sleep();
   });
 
@@ -639,6 +643,148 @@ describe("Versioning", () => {
 
         const envVars = await evs.find({});
         expect(envVars).toEqual([]);
+      });
+    });
+  });
+
+  describe("policy", () => {
+    let policy;
+    let id: ObjectId;
+
+    beforeEach(async () => {
+      id = new ObjectId();
+      policy = {
+        _id: id,
+        name: "Test Policy",
+        description: "Test Policy description",
+        statement: [
+          {
+            action: "bucket:create",
+            module: "bucket",
+            resource: "*"
+          }
+        ]
+      };
+      await sleep();
+    });
+
+    describe("Synchronization from database to files", () => {
+      it("should make first synchronization", async () => {
+        await ps.insertOne(policy);
+        await sleep();
+
+        const file = await readResource("policy", `${policy.name}(${id.toString()})`);
+
+        const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
+
+        expect(parsedFile).toEqual({
+          _id: `${policy.name}(${id.toString()})`,
+          contents: {
+            schema: {
+              _id: id.toString(),
+              name: "Test Policy",
+              description: "Test Policy description",
+              statement: [
+                {
+                  action: "bucket:create",
+                  module: "bucket",
+                  resource: "*"
+                }
+              ]
+            }
+          }
+        });
+      });
+
+      it("should update if schema has changes", async () => {
+        await ps.insertOne(policy);
+        await sleep();
+
+        await ps.updateOne({_id: id as any}, {$set: {value: "false"}});
+        await sleep();
+
+        const file = await readResource("policy", `${policy.name}(${id.toString()})`);
+        const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
+
+        expect(parsedFile).toEqual({
+          _id: `${policy.name}(${id.toString()})`,
+          contents: {
+            schema: {
+              _id: id.toString(),
+              name: "Test Policy",
+              description: "Test Policy description",
+              statement: [
+                {
+                  action: "bucket:create",
+                  module: "bucket",
+                  resource: "*"
+                }
+              ],
+              value: "false"
+            }
+          }
+        });
+      });
+
+      it("should delete if schema has been deleted", async () => {
+        await ps.insertOne(policy);
+        await sleep();
+
+        await ps.findOneAndDelete({_id: id as any});
+        await sleep();
+
+        const file = await readResource("policy", `${policy.name}(${id.toString()})`);
+        expect(file).toEqual({});
+      });
+    });
+
+    describe("Synchronization from files to database", () => {
+      it("should make first synchronization", async () => {
+        const stringified = YAML.stringify(policy);
+        await rep.write("policy", getRepId(policy.name, id), "schema", stringified, "yaml");
+        await sleep();
+
+        const policies = await ps.find();
+        expect(policies).toEqual([{...policy, _id: id}]);
+      });
+
+      it("should update if schema has changes", async () => {
+        const stringified = YAML.stringify(policy);
+        await rep.write("policy", getRepId(policy.name, id), "schema", stringified, "yaml");
+        await sleep();
+
+        const updated = YAML.stringify({...policy, value: "false"});
+        await rep.write("policy", getRepId(policy.name, id), "schema", updated, "yaml");
+        await sleep();
+
+        const policies = await ps.find({});
+        expect(policies).toEqual([
+          {
+            _id: id,
+            name: "Test Policy",
+            description: "Test Policy description",
+            statement: [
+              {
+                action: "bucket:create",
+                module: "bucket",
+                resource: "*"
+              }
+            ],
+            value: "false"
+          }
+        ]);
+      });
+
+      it("should delete if schema has been deleted", async () => {
+        const stringified = YAML.stringify(policy);
+        await rep.write("policy", getRepId(policy.name, id), "schema", stringified, "yaml");
+        await sleep();
+
+        await rep.rm("policy", getRepId(policy.name, id));
+        await sleep();
+
+        const policies = await ps.find({});
+        expect(policies).toEqual([]);
       });
     });
   });
