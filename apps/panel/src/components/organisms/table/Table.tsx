@@ -109,75 +109,71 @@ const Table: FC<TypeTable> = ({
 
   const setSyncedScrollElements = useSyncedScroll(dataColumns.length);
   return (
-    <div className={`${styles.table} ${className}`} style={style}>
-      {dataColumns.map((column, index) => {
-        const isFixed = fixedColumns.includes(column.key);
-        const positionAmount = isFixed
-          ? fixedColumns
-              .slice(0, fixedColumns.indexOf(column.key))
-              .reduce(
-                (acc, curr) => acc + parseInt(dataColumns.find(dc => dc.key === curr).width),
-                0
-              ) + "px"
-          : "unset";
-        return (
-          <Column
-            id={index === dataColumns.length - 1 ? `scrollableDiv-${index}` : undefined}
-            key={column.key}
-            ref={ref => setSyncedScrollElements(ref, index)}
-            columnKey={column.key}
-            className={`${styles.column} ${isFixed ? styles.fixedColumns : styles.scrollableColumns} ${column.columnClassName}`}
-            style={{
-              left: positionAmount
-            }}
-            width={column.width}
-            updateColumnWidth={updateColumnWidth}
-            noResizeable={noResizeableColumns.includes(column.key)}
-          >
-            <Column.Header className={column.headerClassName}>{column.header}</Column.Header>
-            {column.key === "new field" ? (
-              <InfiniteScroll
-                next={() => {
-                  onScrollEnd?.();
-                }}
-                hasMore={totalDataLength > data.length}
-                loader={"Loading.."}
-                dataLength={data.length}
-                scrollableTarget={`scrollableDiv-${index}`}
-              >
-                {data.map(
-                  (row: any, index: number) =>
-                    row[column.key] && (
-                      <Column.Cell
-                        key={`${row[column.key]}-${index}`}
-                        className={column.cellClassName}
-                        focused={focusedCell?.column === column.key && focusedCell?.row === index}
-                      >
-                        {row[column.key]}
-                      </Column.Cell>
-                    )
-                )}
-              </InfiniteScroll>
-            ) : (
-              <>
-                {data.map(
-                  (row: any, index: number) =>
-                    row[column.key] && (
-                      <Column.Cell
-                        key={`${row[column.key]}-${index}`}
-                        className={column.cellClassName}
-                        focused={focusedCell?.column === column.key && focusedCell?.row === index}
-                      >
-                        {row[column.key]}
-                      </Column.Cell>
-                    )
-                )}
-              </>
-            )}
-          </Column>
-        );
-      })}
-    </div>
+    <>
+      <div className={`${styles.table} ${className}`} style={style}>
+        {dataColumns.map((column, index) => {
+          const isFixed = fixedColumns.includes(column.key);
+          const positionAmount = isFixed
+            ? fixedColumns
+                .slice(0, fixedColumns.indexOf(column.key))
+                .reduce(
+                  (acc, curr) => acc + parseInt(dataColumns.find(dc => dc.key === curr).width),
+                  0
+                ) + "px"
+            : "unset";
+          const cells = (
+            <>
+              {data.map(
+                (row: any, index: number) =>
+                  row[column.key] && (
+                    <Column.Cell
+                      key={`${row[column.key]}-${index}`}
+                      className={column.cellClassName}
+                      focused={focusedCell?.column === column.key && focusedCell?.row === index}
+                    >
+                      {row[column.key]}
+                    </Column.Cell>
+                  )
+              )}
+            </>
+          );
+
+          return (
+            <Column
+              id={index === dataColumns.length - 1 ? `scrollableDiv-${index}` : undefined}
+              key={column.key}
+              ref={ref => setSyncedScrollElements(ref, index)}
+              columnKey={column.key}
+              className={`${styles.column} ${isFixed ? styles.fixedColumns : styles.scrollableColumns} ${column.columnClassName}`}
+              style={{
+                left: positionAmount
+              }}
+              width={column.width}
+              updateColumnWidth={updateColumnWidth}
+              noResizeable={noResizeableColumns.includes(column.key)}
+            >
+              <Column.Header className={column.headerClassName}>{column.header}</Column.Header>
+              {index === dataColumns.length - 1 ? (
+                <InfiniteScroll
+                  next={() => {
+                    onScrollEnd?.();
+                  }}
+                  hasMore={totalDataLength > data.length}
+                  loader={"Loading.."}
+                  dataLength={data.length}
+                  scrollableTarget={`scrollableDiv-${index}`}
+                >
+                  {cells}
+                </InfiniteScroll>
+              ) : (
+                <>{cells}</>
+              )}
+            </Column>
+          );
+        })}
+      </div>
+      {!data.length && <div className={styles.noDataText}>No Data Found</div>}
+    </>
   );
 };
 

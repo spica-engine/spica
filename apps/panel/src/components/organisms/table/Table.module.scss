@@ -63,3 +63,13 @@
 .focusedCell {
   border: 1px solid var(--color-primary) !important;
 }
+
+.noDataText {
+  text-align: center;
+  font-size: var(--font-size-lg);
+  color: var(--color-font-tertiary);
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
