@@ -32,6 +32,9 @@ export type ColumnType = {
 type BucketTableProps = {
   data: any[];
   columns: ColumnType[];
+  onScrollEnd?: () => void;
+  totalDataLength: number;
+  maxHeight?: string | number;
 };
 
 type ColumnHeaderProps = {
@@ -67,7 +70,7 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
     <>
       <div className={styles.columnHeaderText}>
         {icon && <Icon name={icon} size="sm" className={styles.headerIcon} />}
-        {title}
+        {title || "\u00A0"}
       </div>
       {showDropdownIcon && (
         <Button variant="icon">
@@ -254,12 +257,27 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
   });
 }
 
-const BucketTable = ({data, columns}: BucketTableProps) => {
+const BucketTable = ({
+  data,
+  columns,
+  onScrollEnd,
+  totalDataLength,
+  maxHeight
+}: BucketTableProps) => {
   const formattedColumns = useMemo(() => getFormattedColumns(columns), [columns]);
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
   const formattedData = useMemo(() => formatDataRows(data, columnMap), [data, columnMap]);
 
-  return <Table className={styles.table} columns={formattedColumns} data={formattedData} />;
+  return (
+    <Table
+      style={{maxHeight}}
+      className={styles.table}
+      columns={formattedColumns}
+      data={formattedData}
+      onScrollEnd={onScrollEnd}
+      totalDataLength={totalDataLength}
+    />
+  );
 };
 
 export default memo(BucketTable);

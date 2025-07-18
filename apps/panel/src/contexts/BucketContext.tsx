@@ -1,5 +1,10 @@
 import {createContext, useMemo, useContext, type ReactNode, useEffect, useState} from "react";
-import {useBucketService, type BucketType} from "../services/bucketService";
+import {
+  useBucketService,
+  type BucketDataQueryType,
+  type BucketDataType,
+  type BucketType
+} from "../services/bucketService";
 import type {AxiosRequestHeaders} from "axios";
 
 type BucketContextType = {
@@ -10,11 +15,12 @@ type BucketContextType = {
     body?: any;
     headers?: AxiosRequestHeaders;
     endpoint?: string;
-  }) => Promise<any>;
-  currentBucket: BucketType | null;
-  getCurrentBucket: (bucketId: string) => Promise<any>;
-  currentBucketLoading: boolean;
-  currentBucketError: string | null;
+  }) => Promise<BucketDataType>;
+  bucketData: BucketDataType | null;
+  getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
+  bucketDataLoading: boolean;
+  bucketDataError: string | null;
+  bucketDataNextPageQuery: any;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -25,11 +31,37 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     loading,
     error,
     fetchBuckets,
-    currentBucket,
-    currentBucketLoading,
-    currentBucketError,
-    getCurrentBucket,
+    bucketData: fetchedBucketData,
+    bucketDataLoading,
+    bucketDataError,
+    getBucketData,
+    lastUsedBucketDataQuery
   } = useBucketService();
+  const [bucketData, setBucketData] = useState(fetchedBucketData);
+
+  useEffect(() => {
+    if (!fetchedBucketData || bucketDataError) return;
+
+    setBucketData(prev => {
+      if (!prev) return fetchedBucketData;
+
+      const existingIds = new Set(prev.data.map(item => item._id));
+      const newItems = fetchedBucketData.data.filter(item => !existingIds.has(item.id));
+      if (newItems.length === 0) return prev;
+      return {...prev, data: [...prev.data, ...newItems]};
+    });
+  }, [JSON.stringify(lastUsedBucketDataQuery)]);
+
+  const bucketDataNextPageQuery: {
+    paginate?: boolean;
+    relation?: boolean;
+    limit?: number;
+    sort?: Record<string, number>;
+    skip?: number;
+  } = useMemo(
+    () => ({...lastUsedBucketDataQuery, skip: (lastUsedBucketDataQuery?.skip ?? 0) + 25}),
+    [JSON.stringify(lastUsedBucketDataQuery)]
+  );
 
   const contextValue = useMemo(
     () => ({
@@ -37,12 +69,13 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       loading,
       error,
       fetchBuckets,
-      currentBucket,
-      getCurrentBucket,
-      currentBucketLoading,
-      currentBucketError
+      bucketData,
+      getBucketData,
+      bucketDataLoading,
+      bucketDataError,
+      bucketDataNextPageQuery
     }),
-    [buckets, loading, error, fetchBuckets, currentBucket, currentBucketLoading, currentBucketError]
+    [buckets, loading, error, fetchBuckets, bucketData, bucketDataLoading, bucketDataError]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;

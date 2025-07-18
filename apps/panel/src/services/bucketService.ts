@@ -1,5 +1,12 @@
 import useApi from "../hooks/useApi";
-import {useEffect, useMemo} from "react";
+import {useMemo, useState} from "react";
+
+export type BucketDataType = {
+  data: {[key: string]: any}[];
+  meta: {
+    total: number;
+  };
+};
 
 export type BucketType = {
   _id: string;
@@ -52,16 +59,18 @@ interface LocationProperty extends IProperty {
   type: "location";
 }
 
-interface UseBucketServiceOptions {
-  currentBucketQuery?: {
-    paginate?: boolean;
-    relation?: boolean;
-    limit?: number;
-    sort?: Record<string, number>;
-  };
-}
+export type BucketDataQueryType = {
+  paginate?: boolean;
+  relation?: boolean;
+  limit?: number;
+  sort?: Record<string, number>;
+  skip?: number;
+};
 
-export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions = {}) => {
+export const useBucketService = () => {
+  const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
+    useState<BucketDataQueryType | null>(null);
+
   const {
     request: fetchBuckets,
     data: buckets,
@@ -72,37 +81,38 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     method: "get"
   });
 
-  const currentBucketQueryString = useMemo(() => {
-    const defaultParams: Record<string, any> = {
+  const {
+    request: fetchBucketData,
+    data: bucketData,
+    loading: bucketDataLoading,
+    error: bucketDataError
+  } = useApi<BucketDataType>({
+    endpoint: "",
+    method: "get"
+  });
+
+  const getBucketData = (bucketId: string, query?: BucketDataQueryType) => {
+    const defaultParams: Omit<BucketDataQueryType, "sort"> & {sort: string} = {
       paginate: true,
       relation: true,
       limit: 25,
       sort: JSON.stringify({_id: -1})
     };
 
-    const params = currentBucketQuery
+    const params = query
       ? {
-          ...currentBucketQuery,
-          sort: currentBucketQuery.sort ? JSON.stringify(currentBucketQuery.sort) : undefined
+          ...query,
+          sort: query.sort ? JSON.stringify(query.sort) : undefined
         }
       : defaultParams;
 
-    return new URLSearchParams(params).toString();
-  }, [currentBucketQuery]);
-
-  const {
-    request: fetchCurrentBucket,
-    data: currentBucket,
-    loading: currentBucketLoading,
-    error: currentBucketError
-  } = useApi<BucketType>({
-    endpoint: "",
-    method: "get"
-  });
-
-  const getCurrentBucket = (bucketId: string) => {
-    return fetchCurrentBucket({
-      endpoint: `/api/bucket/${bucketId}/data?${currentBucketQueryString}`
+    if (!params.sort) delete params.sort;
+    const queryString = new URLSearchParams(params as unknown as Record<string, string>).toString();
+    return fetchBucketData({
+      endpoint: `/api/bucket/${bucketId}/data?${queryString}`
+    }).then(result => {
+      setLastUsedBucketDataQuery(query ?? {...defaultParams, sort: {_id: -1}});
+      return result;
     });
   };
 
@@ -111,9 +121,10 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     fetchBuckets,
     error,
     loading,
-    currentBucket,
-    getCurrentBucket,
-    currentBucketLoading,
-    currentBucketError
+    bucketData,
+    getBucketData,
+    bucketDataLoading,
+    bucketDataError,
+    lastUsedBucketDataQuery
   };
 };

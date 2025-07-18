@@ -1,6 +1,9 @@
-import React, {type FC, memo, useEffect, useRef, useState} from "react";
+import React, {type FC, memo, useEffect, useImperativeHandle, useRef, useState} from "react";
 import {FlexElement, type TypeFlexElement, type TypeAlignment} from "oziko-ui-kit";
 import styles from "./Table.module.scss";
+import InfiniteScroll from "react-infinite-scroll-component";
+import useSyncedScroll from "../../../hooks/useSyncedScroll";
+
 type TypeTable = {
   columns: any[];
   data: any[];
@@ -11,6 +14,9 @@ type TypeTable = {
   fixedColumns?: string[];
   noResizeableColumns?: string[];
   className?: string;
+  onScrollEnd?: () => void;
+  totalDataLength: number;
+  style?: React.CSSProperties;
 };
 
 const Table: FC<TypeTable> = ({
@@ -19,9 +25,12 @@ const Table: FC<TypeTable> = ({
   saveToLocalStorage = {id: "table", save: false},
   fixedColumns = [],
   noResizeableColumns = [],
-  className
+  className,
+  onScrollEnd,
+  totalDataLength,
+  style
 }) => {
-  const [dataColumns, setDataColumns] = useState(() => {
+  const getDataColumns = () => {
     return columns.map(column => {
       const savedWidth = saveToLocalStorage?.save
         ? localStorage.getItem(`${saveToLocalStorage?.id}-${column.key}`)
@@ -31,7 +40,11 @@ const Table: FC<TypeTable> = ({
         width: savedWidth || column.width || "300px"
       };
     });
-  });
+  };
+
+  const [dataColumns, setDataColumns] = useState(getDataColumns());
+
+  useEffect(() => setDataColumns(getDataColumns()), [columns]);
 
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
 
@@ -94,9 +107,10 @@ const Table: FC<TypeTable> = ({
     };
   }, [focusedCell]);
 
+  const setSyncedScrollElements = useSyncedScroll(dataColumns.length);
   return (
-    <div className={`${styles.table} ${className}`}>
-      {dataColumns.map(column => {
+    <div className={`${styles.table} ${className}`} style={style}>
+      {dataColumns.map((column, index) => {
         const isFixed = fixedColumns.includes(column.key);
         const positionAmount = isFixed
           ? fixedColumns
@@ -108,7 +122,9 @@ const Table: FC<TypeTable> = ({
           : "unset";
         return (
           <Column
+            id={column.key === "new field" ? `scrollableDiv-${index}` : undefined}
             key={column.key}
+            ref={ref => setSyncedScrollElements(ref, index)}
             columnKey={column.key}
             className={`${styles.column} ${isFixed ? styles.fixedColumns : styles.scrollableColumns} ${column.columnClassName}`}
             style={{
@@ -119,16 +135,44 @@ const Table: FC<TypeTable> = ({
             noResizeable={noResizeableColumns.includes(column.key)}
           >
             <Column.Header className={column.headerClassName}>{column.header}</Column.Header>
-            {data.map(
-              (row: any, index: number) =>
-                row[column.key] && (
-                  <Column.Cell
-                    className={column.cellClassName}
-                    focused={focusedCell?.column === column.key && focusedCell?.row === index}
-                  >
-                    {row[column.key]}
-                  </Column.Cell>
-                )
+            {column.key === "new field" ? (
+              <InfiniteScroll
+                next={() => {
+                  onScrollEnd?.();
+                }}
+                hasMore={totalDataLength > data.length}
+                loader={"Loading.."}
+                dataLength={data.length}
+                scrollableTarget={`scrollableDiv-${index}`}
+              >
+                {data.map(
+                  (row: any, index: number) =>
+                    row[column.key] && (
+                      <Column.Cell
+                        key={`${row[column.key]}-${index}`}
+                        className={column.cellClassName}
+                        focused={focusedCell?.column === column.key && focusedCell?.row === index}
+                      >
+                        {row[column.key]}
+                      </Column.Cell>
+                    )
+                )}
+              </InfiniteScroll>
+            ) : (
+              <>
+                {data.map(
+                  (row: any, index: number) =>
+                    row[column.key] && (
+                      <Column.Cell
+                        key={`${row[column.key]}-${index}`}
+                        className={column.cellClassName}
+                        focused={focusedCell?.column === column.key && focusedCell?.row === index}
+                      >
+                        {row[column.key]}
+                      </Column.Cell>
+                    )
+                )}
+              </>
             )}
           </Column>
         );
@@ -148,6 +192,7 @@ type TypeColumn = {
   updateColumnWidth?: (key: string, newWidth: string) => void;
   noResizeable?: boolean;
   style?: React.CSSProperties;
+  id?: string;
 };
 
 type TypeColumnComponent = React.FC<TypeColumn> & {
@@ -163,11 +208,14 @@ const ColumnComponent = ({
   width,
   updateColumnWidth,
   noResizeable,
-  style
+  style,
+  id
 }: TypeColumn) => {
   const [columnWidth, setColumnWidth] = useState(width);
   const [isResizing, setIsResizing] = useState(false);
   const columnRef = useRef<HTMLDivElement>(null);
+
+  useImperativeHandle(ref, () => columnRef.current!, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -197,7 +245,7 @@ const ColumnComponent = ({
   }, [isResizing, columnKey, updateColumnWidth]);
 
   return (
-    <div ref={columnRef} className={className} style={{...style, minWidth: columnWidth}}>
+    <div id={id} ref={columnRef} className={className} style={{...style, minWidth: columnWidth}}>
       {children}
       {!noResizeable && <div className={styles.resizer} onMouseDown={() => setIsResizing(true)} />}
     </div>

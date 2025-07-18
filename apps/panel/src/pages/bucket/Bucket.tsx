@@ -1,26 +1,51 @@
 import styles from "./Bucket.module.scss";
 import {useBucket} from "../../contexts/BucketContext";
-import {useEffect} from "react";
 import {useParams} from "react-router-dom";
+import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
+import {useEffect} from "react";
+import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
 
 export default function Bucket() {
   const {bucketId} = useParams<{bucketId: string}>();
-
-  const {currentBucket, currentBucketLoading, currentBucketError, getCurrentBucket} = useBucket();
+  const {buckets, bucketData, getBucketData, bucketDataNextPageQuery} = useBucket();
 
   useEffect(() => {
     if (!bucketId) return;
-    getCurrentBucket(bucketId);
+    getBucketData(bucketId);
   }, [bucketId]);
 
+  const bucket = buckets?.find(i => i._id === bucketId);
+  const columns = Object.values(bucket?.properties ?? {});
+  const formattedColumns = [
+    {
+      header: "_id",
+      key: "_id",
+      type: "string",
+      width: "30px",
+      showDropdownIcon: true
+    },
+    ...columns.map(i => ({
+      ...i,
+      header: i.title,
+      key: i.title,
+      width: "30px",
+      showDropdownIcon: true
+    }))
+  ];
+
   return (
-    <div>
-      <h1>Bucket Page</h1>
-      <p>This is the bucket page content.</p>
-      <p>Bucket Id: {bucketId}</p>
-      <p>Data: {JSON.stringify(currentBucket)}</p>
-      <p>Loading: {currentBucketLoading ? "yes" : "no"}</p>
-      <p>Error: {currentBucketError ?? "Everything is okay"}</p>
+    <div className={styles.container}>
+      <BucketActionBar />
+      <BucketTable
+        columns={formattedColumns as ColumnType[]}
+        data={bucketData?.data ?? []}
+        onScrollEnd={() => {
+          if (!bucketId) return;
+          getBucketData(bucketId, bucketDataNextPageQuery);
+        }}
+        totalDataLength={bucketData?.meta.total ?? 0}
+        maxHeight="70vh"
+      />
     </div>
   );
 }
