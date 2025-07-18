@@ -111,10 +111,15 @@ async function findPrimaryNode(nodes: string[]) {
 }
 
 async function initiateReplication(nodes: string[], reinitiate = false) {
-  const {stdout} = await execMongo(`--host "${nodes[0]}" --eval 'JSON.stringify(rs.status())'`);
-  const statusResult = JSON.parse(stdout);
+  let statusResult;
+  try {
+    const {stdout} = await execMongo(`--host "${nodes[0]}" --eval 'JSON.stringify(rs.status())'`);
+    statusResult = JSON.parse(stdout);
+  } catch (error) {
+    debug(error);
+  }
 
-  if (statusResult.ok !== 1 && statusResult.codeName === "NotYetInitialized") {
+  if (!statusResult || (statusResult.ok !== 1 && statusResult.codeName === "NotYetInitialized")) {
     const {stdout} = await execMongo(
       `--host ${nodes[0]} --eval 'JSON.stringify(rs.initiate({"_id": "${
         options["replica-set"]

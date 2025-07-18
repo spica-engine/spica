@@ -1,6 +1,8 @@
 import {FunctionService} from "@spica-server/function/services";
 import {
+  ChangeTypes,
   DocChange,
+  getDisplayableName,
   RepChange,
   RepresentativeManagerResource,
   VCSynchronizerArgs
@@ -22,6 +24,7 @@ export const getSchemaSynchronizer = (
 
   const convertToRepResource = (change: DocChange<Function>) => ({
     _id: change.resource._id.toString(),
+    displayableName: getDisplayableName(change, change.resource.name),
     content: YAML.stringify(change.resource)
   });
 

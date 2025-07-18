@@ -1,24 +1,23 @@
 import {
-  ChangeTypes,
   DocChange,
-  getDisplayableName,
   RepChange,
   RepresentativeManagerResource,
-  VCSynchronizerArgs
+  VCSynchronizerArgs,
+  getDisplayableName
 } from "@spica-server/interface/versioncontrol";
 import * as CRUD from "../crud";
-import {EnvVarService} from "@spica-server/env_var/services";
-import {EnvVar} from "@spica-server/interface/env_var";
+import {PolicyService} from "@spica-server/passport/policy";
+import {Policy} from "@spica-server/interface/passport/policy";
 import YAML from "yaml";
 import {ObjectId} from "bson";
 
-export const getSynchronizer = (evs: EnvVarService): VCSynchronizerArgs<EnvVar> => {
+export const getSynchronizer = (ps: PolicyService): VCSynchronizerArgs<Policy> => {
   const fileName = "schema";
   const extension = "yaml";
 
-  const convertToRepResource = (change: DocChange<EnvVar>) => ({
+  const convertToRepResource = (change: DocChange<Policy>) => ({
     _id: change.resource._id.toString(),
-    displayableName: getDisplayableName(change, change.resource.key),
+    displayableName: getDisplayableName(change, change.resource.name),
     content: YAML.stringify(change.resource)
   });
 
@@ -30,7 +29,7 @@ export const getSynchronizer = (evs: EnvVarService): VCSynchronizerArgs<EnvVar> 
   return {
     syncs: [
       {
-        watcher: {collectionService: evs},
+        watcher: {collectionService: ps},
         converter: {convertToRepResource},
         applier: {fileName, getExtension: () => extension}
       },
@@ -38,13 +37,13 @@ export const getSynchronizer = (evs: EnvVarService): VCSynchronizerArgs<EnvVar> 
         watcher: {filesToWatch: [{name: fileName, extension}]},
         converter: {convertToDocResource},
         applier: {
-          insert: (envVar: EnvVar) => CRUD.insert(evs, envVar),
-          update: (envVar: EnvVar) => CRUD.replace(evs, envVar),
-          delete: (envVar: EnvVar) => CRUD.remove(evs, envVar._id)
+          insert: (policy: Policy) => CRUD.insert(ps, policy),
+          update: (policy: Policy) => CRUD.replace(ps, policy),
+          delete: (policy: Policy) => CRUD.remove(ps, policy._id as unknown as ObjectId)
         }
       }
     ],
-    moduleName: "env-var",
+    moduleName: "policy",
     subModuleName: "schema"
   };
 };
