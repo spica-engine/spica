@@ -2,6 +2,7 @@ import {DynamicModule, Global, Inject, Module, Optional, Type} from "@nestjs/com
 import {HistoryModule, HistoryService} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
+import {SchemasRealtimeModule} from "@spica-server/bucket/schemas-realtime";
 import {BucketService, BucketDataService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {PreferenceService} from "@spica-server/preference/services";
@@ -86,6 +87,7 @@ export class BucketModule {
       realtime.imports.push(schemaModule as any);
 
       imports.push(realtime);
+      imports.push(SchemasRealtimeModule.register());
     }
 
     if (options.graphql) {
