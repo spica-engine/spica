@@ -4,7 +4,7 @@ import {Policy} from "@spica-server/interface/passport/policy";
 import managedPolicies from "./policies";
 
 @Injectable()
-export class PolicyService extends BaseCollection("policies") {
+export class PolicyService extends BaseCollection<Policy>("policies") {
   managedPolicies: Array<PolicyWithType>;
   customerManagedPolicies: Array<PolicyWithType>;
 
