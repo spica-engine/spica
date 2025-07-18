@@ -6,7 +6,7 @@ import DashboardSchema from "./schema/dashboard.json" with {type: "json"};
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {registerAssetHandlers} from "./asset";
-
+import {DashboardRealtimeModule} from "../realtime";
 @Module({})
 export class DashboardModule {
   constructor(
@@ -22,7 +22,8 @@ export class DashboardModule {
       imports: [
         SchemaModule.forChild({
           schemas: [DashboardSchema]
-        })
+        }),
+        DashboardRealtimeModule.register()
       ],
       controllers: [DashboardController],
       providers: [DashboardService],
