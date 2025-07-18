@@ -83,7 +83,7 @@ export class FunctionModule {
           entryLimit: options.entryLimit,
           realtimeLogs: options.realtimeLogs
         }),
-        FunctionRealtimeModule.listen()
+        FunctionRealtimeModule.register()
       ],
       controllers: [FunctionController],
       providers: [

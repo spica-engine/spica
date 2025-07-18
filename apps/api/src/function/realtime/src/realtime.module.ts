@@ -4,7 +4,7 @@ import {RealtimeDatabaseModule} from "@spica-server/database/realtime";
 
 @Module({})
 export class FunctionRealtimeModule {
-  static listen() {
+  static register() {
     return {
       module: FunctionRealtimeModule,
       imports: [RealtimeDatabaseModule],
