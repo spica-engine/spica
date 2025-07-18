@@ -2,7 +2,8 @@ import {
   DocChange,
   RepChange,
   RepresentativeManagerResource,
-  VCSynchronizerArgs
+  VCSynchronizerArgs,
+  getDisplayableName
 } from "@spica-server/interface/versioncontrol";
 import * as CRUD from "../crud";
 import {PolicyService} from "@spica-server/passport/policy";
@@ -16,6 +17,7 @@ export const getSynchronizer = (ps: PolicyService): VCSynchronizerArgs<Policy> =
 
   const convertToRepResource = (change: DocChange<Policy>) => ({
     _id: change.resource._id.toString(),
+    displayableName: getDisplayableName(change, change.resource.name),
     content: YAML.stringify(change.resource)
   });
 
