@@ -2,7 +2,7 @@ import styles from "./Bucket.module.scss";
 import {useBucket} from "../../contexts/BucketContext";
 import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
-import {useEffect} from "react";
+import {useEffect, useMemo} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
 
 export default function Bucket() {
@@ -14,24 +14,26 @@ export default function Bucket() {
     getBucketData(bucketId);
   }, [bucketId]);
 
-  const bucket = buckets?.find(i => i._id === bucketId);
-  const columns = Object.values(bucket?.properties ?? {});
-  const formattedColumns = [
-    {
-      header: "_id",
-      key: "_id",
-      type: "string",
-      width: "30px",
-      showDropdownIcon: true
-    },
-    ...columns.map(i => ({
-      ...i,
-      header: i.title,
-      key: i.title,
-      width: "30px",
-      showDropdownIcon: true
-    }))
-  ];
+  const formattedColumns = useMemo(() => {
+    const bucket = buckets?.find(i => i._id === bucketId);
+    const columns = Object.values(bucket?.properties ?? {});
+    return [
+      {
+        header: "_id",
+        key: "_id",
+        type: "string",
+        width: "30px",
+        showDropdownIcon: true
+      },
+      ...columns.map(i => ({
+        ...i,
+        header: i.title,
+        key: i.title,
+        width: "30px",
+        showDropdownIcon: true
+      }))
+    ];
+  }, [buckets]);
 
   return (
     <div className={styles.container}>
