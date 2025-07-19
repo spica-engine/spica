@@ -11,8 +11,6 @@ import {
   UseInterceptors,
   Optional,
   Inject,
-  BadRequestException,
-  NotFoundException,
   HttpCode,
   HttpStatus
 } from "@nestjs/common";
@@ -29,7 +27,7 @@ import {
   IDENTITY_POLICY_FINALIZER
 } from "@spica-server/interface/passport/policy";
 import {PolicyService} from "./policy.service";
-import {getDuplicatedActionMaps, createDuplicatedActionsErrorMessage} from "./utility";
+import * as CRUD from "./crud";
 
 @Controller("passport/policy")
 export class PolicyController {
@@ -47,27 +45,20 @@ export class PolicyController {
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number
   ) {
-    return this.policy.paginate(filter, limit, skip);
+    return CRUD.find(this.policy, filter, limit, skip);
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.policy.findOne(id);
+    return CRUD.findOne(this.policy, id);
   }
 
   @UseInterceptors(activity(createPolicyActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:create"))
   insertOne(@Body(Schema.validate("http://spica.internal/passport/policy")) body: Policy) {
-    const duplicatedActionMaps = getDuplicatedActionMaps(body);
-
-    if (duplicatedActionMaps.length) {
-      const message = createDuplicatedActionsErrorMessage(duplicatedActionMaps);
-      throw new BadRequestException(message);
-    }
-
-    return this.policy.insertOne(body);
+    return CRUD.insert(this.policy, body);
   }
 
   @UseInterceptors(activity(createPolicyActivity))
@@ -77,18 +68,7 @@ export class PolicyController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/policy")) body: Policy
   ) {
-    const duplicatedActionMaps = getDuplicatedActionMaps(body);
-
-    if (duplicatedActionMaps.length) {
-      const message = createDuplicatedActionsErrorMessage(duplicatedActionMaps);
-      throw new BadRequestException(message);
-    }
-    const res = await this.policy.replaceOne({_id: id}, body);
-
-    if (!res) {
-      throw new NotFoundException(`Policy with ID ${id} not found`);
-    }
-    return res;
+    return CRUD.replace(this.policy, {_id: id, ...body});
   }
 
   @UseInterceptors(activity(createPolicyActivity))
@@ -96,19 +76,6 @@ export class PolicyController {
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    if (this.apikeyFinalizer) {
-      await this.apikeyFinalizer(id.toHexString());
-    }
-
-    if (this.identityFinalizer) {
-      await this.identityFinalizer(id.toHexString());
-    }
-
-    const res = await this.policy.deleteOne({_id: id});
-
-    if (!res) {
-      throw new NotFoundException(`Policy with ID ${id} not found`);
-    }
-    return res;
+    return CRUD.remove(this.policy, id);
   }
 }
