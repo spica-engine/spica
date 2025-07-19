@@ -22,8 +22,7 @@ export class DashboardModule {
       imports: [
         SchemaModule.forChild({
           schemas: [DashboardSchema]
-        }),
-        DashboardRealtimeModule.register()
+        })
       ],
       controllers: [DashboardController],
       providers: [DashboardService],
@@ -31,7 +30,7 @@ export class DashboardModule {
     };
 
     if (realtime) {
-      module.imports.push(DashboardRealtimeModule);
+      module.imports.push(DashboardRealtimeModule.register());
     }
     return module;
   }
