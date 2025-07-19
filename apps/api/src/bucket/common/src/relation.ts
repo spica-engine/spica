@@ -306,17 +306,20 @@ export function buildRelationAggregation(
 ): object[] {
   assertRelationType(type);
   const aggregations = [];
+  const beforeLookup = [];
+  const afterLookup = [];
 
   if (type == RelationType.One) {
-    aggregations.push({
+    beforeLookup.push({
       $addFields: {
         [`${property}`]: {
           $toObjectId: `$${property}`
         }
       }
     });
+    afterLookup.push({$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}});
   } else if (type == RelationType.Many) {
-    aggregations.push({
+    beforeLookup.push({
       $addFields: {
         [`${property}`]: {
           $ifNull: [
@@ -342,25 +345,25 @@ export function buildRelationAggregation(
     }
   };
 
-  const pipeline = [];
+  const lookupPipeline = [];
 
   if (additionalPipeline) {
-    pipeline.push(additionalPipeline);
+    lookupPipeline.push(...additionalPipeline);
   }
 
   if (locale) {
-    pipeline.push({$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)});
+    lookupPipeline.push({
+      $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
+    });
   }
 
-  if (pipeline.length) {
-    lookup.$lookup.pipeline = pipeline;
+  if (lookupPipeline.length) {
+    lookup.$lookup.pipeline = lookupPipeline;
   }
 
+  aggregations.push(...beforeLookup);
   aggregations.push(lookup);
-
-  if (type == RelationType.One) {
-    aggregations.push({$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}});
-  }
+  aggregations.push(...afterLookup);
 
   return aggregations;
 }
