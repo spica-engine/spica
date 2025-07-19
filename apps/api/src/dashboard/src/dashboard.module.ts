@@ -16,8 +16,8 @@ export class DashboardModule {
   ) {
     registerAssetHandlers(ds, validator, assetRepManager);
   }
-  static forRoot(): DynamicModule {
-    return {
+  static forRoot({realtime}): DynamicModule {
+    const module: DynamicModule = {
       module: DashboardModule,
       imports: [
         SchemaModule.forChild({
@@ -29,5 +29,10 @@ export class DashboardModule {
       providers: [DashboardService],
       exports: [DashboardService]
     };
+
+    if (realtime) {
+      module.imports.push(DashboardRealtimeModule);
+    }
+    return module;
   }
 }
