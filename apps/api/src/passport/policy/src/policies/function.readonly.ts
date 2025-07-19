@@ -19,6 +19,11 @@ export default {
     {
       action: "function:logs:index",
       module: "function:logs"
+    },
+    {
+      action: "function:stream",
+      resource: {include: ["*"], exclude: []},
+      module: "function"
     }
   ]
 };
