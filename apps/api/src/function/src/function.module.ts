@@ -49,8 +49,10 @@ export class FunctionModule {
     registerStatusProvider(fs, scheduler);
     registerAssetHandlers(fs, fe, logs, validator, this.assetRepManager);
   }
-  static forRoot(options: SchedulingOptions & FunctionOptions): DynamicModule {
-    return {
+  static forRoot(
+    options: SchedulingOptions & FunctionOptions & {realtime: boolean}
+  ): DynamicModule {
+    const module: DynamicModule = {
       module: FunctionModule,
       imports: [
         LogModule.forRoot({
@@ -82,8 +84,7 @@ export class FunctionModule {
           path: options.path,
           entryLimit: options.entryLimit,
           realtimeLogs: options.realtimeLogs
-        }),
-        FunctionRealtimeModule.register()
+        })
       ],
       controllers: [FunctionController],
       providers: [
@@ -108,5 +109,9 @@ export class FunctionModule {
         }
       ]
     };
+    if (options.realtime) {
+      module.imports.push(FunctionRealtimeModule.register());
+    }
+    return module;
   }
 }
