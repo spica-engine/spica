@@ -1,0 +1,5 @@
+{
+  "name": "api/dashboard/realtime",
+  "sourceRoot": "apps/api/src/dashboard/realtime",
+  "projectType": "application"
+}

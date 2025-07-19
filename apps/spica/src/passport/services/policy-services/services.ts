@@ -209,7 +209,8 @@ export default {
       "dashboard:show": [dashboardResource],
       "dashboard:create": [],
       "dashboard:update": [dashboardResource],
-      "dashboard:delete": [dashboardResource]
+      "dashboard:delete": [dashboardResource],
+      "dashboard:stream": [dashboardResource]
     }
   },
   // FUNCTION
