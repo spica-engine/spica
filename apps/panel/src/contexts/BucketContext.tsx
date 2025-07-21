@@ -15,12 +15,26 @@ type BucketContextType = {
   changeBucketOrder: ({bucketId, order}: {bucketId: string; order: number}) => void;
   bucketOrderLoading: boolean;
   bucketOrderError: string | null;
+  currentBucket: BucketType | null;
+  getCurrentBucket: (bucketId: string) => Promise<any>;
+  currentBucketLoading: boolean;
+  currentBucketError: string | null;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
 export const BucketProvider = ({children}: {children: ReactNode}) => {
-  const {loading, error, fetchBuckets, changeBucketOrder, bucketOrderLoading, bucketOrderError} =
-    useBucketService();
+  const {
+    loading,
+    error,
+    fetchBuckets,
+    currentBucket,
+    currentBucketLoading,
+    currentBucketError,
+    getCurrentBucket,
+    changeBucketOrder,
+    bucketOrderLoading,
+    bucketOrderError
+  } = useBucketService();
 
   const [buckets, setBuckets] = useState<BucketType[] | null>(null);
 
@@ -40,9 +54,13 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       fetchBuckets,
       changeBucketOrder,
       bucketOrderLoading,
-      bucketOrderError
+      bucketOrderError,
+      currentBucket,
+      getCurrentBucket,
+      currentBucketLoading,
+      currentBucketError
     }),
-    [buckets, loading, error, changeBucketOrder, bucketOrderLoading, bucketOrderError, fetchBuckets]
+    [buckets, loading, error, fetchBuckets, currentBucket, currentBucketLoading, currentBucketError]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;

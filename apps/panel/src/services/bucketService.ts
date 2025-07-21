@@ -1,5 +1,6 @@
 import {useCallback} from "react";
 import useApi from "../hooks/useApi";
+import {useEffect, useMemo} from "react";
 
 export type BucketType = {
   _id: string;
@@ -7,7 +8,7 @@ export type BucketType = {
   properties: Properties;
   required?: string[];
   [key: string]: any;
-};
+}
 
 type Properties = {[key: string]: Property};
 
@@ -52,11 +53,59 @@ interface LocationProperty extends IProperty {
   type: "location";
 }
 
-export const useBucketService = () => {
-  const {request, data, error, loading} = useApi<BucketType[]>({
+interface UseBucketServiceOptions {
+  currentBucketQuery?: {
+    paginate?: boolean;
+    relation?: boolean;
+    limit?: number;
+    sort?: Record<string, number>;
+  };
+}
+
+export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions = {}) => {
+  const {
+    request: fetchBuckets,
+    data: buckets,
+    error,
+    loading
+  } = useApi<BucketType[]>({
     endpoint: "/api/bucket",
     method: "get"
   });
+
+  const currentBucketQueryString = useMemo(() => {
+    const defaultParams: Record<string, any> = {
+      paginate: true,
+      relation: true,
+      limit: 25,
+      sort: JSON.stringify({_id: -1})
+    };
+
+    const params = currentBucketQuery
+      ? {
+          ...currentBucketQuery,
+          sort: currentBucketQuery.sort ? JSON.stringify(currentBucketQuery.sort) : undefined
+        }
+      : defaultParams;
+
+    return new URLSearchParams(params).toString();
+  }, [currentBucketQuery]);
+
+  const {
+    request: fetchCurrentBucket,
+    data: currentBucket,
+    loading: currentBucketLoading,
+    error: currentBucketError
+  } = useApi<BucketType>({
+    endpoint: "",
+    method: "get"
+  });
+
+  const getCurrentBucket = (bucketId: string) => {
+    return fetchCurrentBucket({
+      endpoint: `/api/bucket/${bucketId}/data?${currentBucketQueryString}`
+    });
+  };
 
   const {
     request: bucketOrderRequest,
@@ -69,10 +118,14 @@ export const useBucketService = () => {
   }, []);
 
   return {
-    buckets: data,
-    fetchBuckets: request,
+    buckets,
+    fetchBuckets,
     error,
     loading,
+    currentBucket,
+    getCurrentBucket,
+    currentBucketLoading,
+    currentBucketError,
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError
