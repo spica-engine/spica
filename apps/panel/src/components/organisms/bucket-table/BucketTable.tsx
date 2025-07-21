@@ -47,6 +47,7 @@ type ColumnHeaderProps = {
 type ColumnMeta = {
   type?: FieldType;
   deletable?: boolean;
+  id: string;
 };
 
 // TODO: Update the icon mappings below to use appropriate icons for each field type.
@@ -213,7 +214,7 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
 function getFormattedColumns(columns: ColumnType[]): ColumnType[] {
   return [
     defaultColumns[0],
-    ...columns.map(col => ({
+    ...columns.map((col, index) => ({
       ...col,
       header: (
         <ColumnHeader
@@ -224,7 +225,7 @@ function getFormattedColumns(columns: ColumnType[]): ColumnType[] {
       ),
       headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
       columnClassName: `${col.columnClassName || ""} ${styles.column}`,
-      id: crypto.randomUUID()
+      id: `${col.key}-${index}`
     })),
     defaultColumns[1]
   ];
@@ -232,7 +233,7 @@ function getFormattedColumns(columns: ColumnType[]): ColumnType[] {
 
 function buildColumnMeta(columns: ColumnType[]): Record<string, ColumnMeta> {
   return Object.fromEntries(
-    columns.map(col => [col.key, {type: col.type, deletable: col.deletable}])
+    columns.map((col) => [col.key, {type: col.type, deletable: col.deletable, id: col.id}])
   );
 }
 function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
@@ -256,7 +257,7 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
         const meta = columnMap[key] || {};
         return [
           key,
-          {id: crypto.randomUUID(), component: renderCell(value, meta.type, meta.deletable)}
+          {id: `${meta.id}-${fullRow._id}`, component: renderCell(value, meta.type, meta.deletable)}
         ];
       })
     );

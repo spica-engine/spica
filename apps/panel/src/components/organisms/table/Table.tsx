@@ -1,6 +1,7 @@
 import React, {
   type FC,
   type JSX,
+  type Key,
   memo,
   useCallback,
   useEffect,
@@ -13,10 +14,29 @@ import {FlexElement, type TypeFlexElement, type TypeAlignment} from "oziko-ui-ki
 import styles from "./Table.module.scss";
 import InfiniteScroll from "react-infinite-scroll-component";
 import useSyncedScroll from "../../../hooks/useSyncedScroll";
+import type {ColumnType} from "../bucket-table/BucketTable";
+
+type TypeDataColumn = {
+  header: string;
+  key: string;
+  isLastColumn: boolean;
+  id?: Key | null;
+  width?: string;
+  headerClassName?: string;
+  columnClassName?: string;
+  cellClassName?: string;
+};
+
+type TypeTableData = {
+  [k: string]: {
+    id: string;
+    component: string | JSX.Element;
+  };
+};
 
 type TypeTable = {
-  columns: any[];
-  data: any[];
+  columns: ColumnType[];
+  data: TypeTableData[];
   saveToLocalStorage?: {
     id: string;
     save?: boolean;
@@ -53,21 +73,21 @@ const Table: FC<TypeTable> = ({
     });
   }, [columns.length]);
 
-  const [dataColumns, setDataColumns] = useState(getDataColumns());
+  const [dataColumns, setDataColumns] = useState<TypeDataColumn[]>(getDataColumns());
 
   useEffect(() => setDataColumns(getDataColumns()), [columns.length]);
 
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
 
   const updateColumnWidth = (key: string, newWidth: string) => {
-    setDataColumns((prevColumns: any) =>
-      prevColumns.map((col: any) => (col.key === key ? {...col, width: newWidth} : col))
+    setDataColumns(prevColumns =>
+      prevColumns.map(col => (col.key === key ? {...col, width: newWidth} : col))
     );
   };
 
-  const saveColumns = (columns: any[], tableId: string) => {
+  const saveColumns = (columns: TypeDataColumn[], tableId: string) => {
     columns.forEach(column => {
-      localStorage.setItem(`${tableId}-${column.key}`, column.width);
+      localStorage.setItem(`${tableId}-${column.key}`, column.width as string);
     });
   };
 
@@ -146,6 +166,73 @@ const Table: FC<TypeTable> = ({
 
 export default memo(Table);
 
+type ColumnRendererProps = {
+  fixedColumns: string[];
+  column: TypeDataColumn;
+  dataColumns: TypeDataColumn[];
+  focusedCell: {
+    column: string;
+    row: number;
+  } | null;
+  setSyncedScrollElements: (el: HTMLDivElement | null, identifier: string) => void;
+  updateColumnWidth: (key: string, newWidth: string) => void;
+  noResizeableColumns: string[];
+  onScrollEnd?: () => void;
+  totalDataLength: number;
+  data: TypeTableData[];
+  isLastColumn: boolean;
+};
+
+type ColumnCellsRendererProps = {
+  data: TypeTableData[];
+  focusedCell: {
+    column: string;
+    row: number;
+  } | null;
+  column: TypeDataColumn;
+};
+
+const ColumnCellsRenderer = memo(({data, focusedCell, column}: ColumnCellsRendererProps) => {
+  const prevCellsRef = useRef<Map<string, JSX.Element>>(new Map());
+
+  const cells: JSX.Element[] = [];
+
+  data.forEach((row, index) => {
+    const value = row[column.key];
+    if (!value) return;
+
+    const key = value.id;
+    const isFocused = focusedCell?.column === column.key && focusedCell?.row === index;
+
+    const prev = prevCellsRef.current.get(key);
+
+    if (prev && !isFocused) {
+      cells.push(prev);
+    } else {
+      const newCell = (
+        <Column.Cell
+          key={key}
+          children={value.component}
+          focused={isFocused}
+          className={column.cellClassName}
+        />
+      );
+
+      prevCellsRef.current.set(key, newCell);
+      cells.push(newCell);
+    }
+  });
+
+  const currentKeys = new Set(data.map(row => row[column.key]?.id));
+  for (const key of prevCellsRef.current.keys()) {
+    if (!currentKeys.has(key)) {
+      prevCellsRef.current.delete(key);
+    }
+  }
+
+  return <>{cells}</>;
+});
+
 const ColumnRenderer = memo(
   ({
     fixedColumns,
@@ -159,7 +246,7 @@ const ColumnRenderer = memo(
     totalDataLength,
     data,
     isLastColumn
-  }: any) => {
+  }: ColumnRendererProps) => {
     const isFixed = useMemo(() => fixedColumns.includes(column.key), [fixedColumns.length]);
     const positionAmount = useMemo(
       () =>
@@ -167,30 +254,13 @@ const ColumnRenderer = memo(
           ? fixedColumns
               .slice(0, fixedColumns.indexOf(column.key))
               .reduce(
-                (acc, curr) => acc + parseInt(dataColumns.find(dc => dc.key === curr).width),
+                (acc, curr) =>
+                  acc + parseInt(dataColumns.find(dc => dc.key === curr)?.width ?? "0"),
                 0
               ) + "px"
           : "unset",
       [isFixed]
     );
-
-    const [cells, setCells] = useState<JSX.Element[]>([]);
-
-    useEffect(() => {
-      const newCells = data.slice(cells.length).map((row, index) => {
-        const value = row[column.key];
-        if (!value) return null;
-        return (
-          <Cell
-            key={value.id}
-            children={value.component}
-            focused={focusedCell?.column === column.key && focusedCell?.row === index}
-            className={column.cellClassName}
-          />
-        );
-      });
-      setCells(prev => [...prev, ...newCells]);
-    }, [data]);
 
     return (
       <Column
@@ -216,10 +286,10 @@ const ColumnRenderer = memo(
             dataLength={data.length}
             scrollableTarget={`scrollableDiv-${column.key}`}
           >
-            {cells}
+            <ColumnCellsRenderer data={data} focusedCell={focusedCell} column={column} />
           </InfiniteScroll>
         ) : (
-          cells
+          <ColumnCellsRenderer data={data} focusedCell={focusedCell} column={column} />
         )}
       </Column>
     );
@@ -328,12 +398,7 @@ type TypeCell = React.HTMLAttributes<HTMLDivElement> & {
   focused?: boolean;
 };
 
-let totalRenderCount = 0;
-
 const Cell = ({children, focused, ...props}: TypeCell) => {
-  totalRenderCount++;
-  console.log(`MyComponent total renders: ${totalRenderCount}`);
-
   return (
     <div
       {...props}
@@ -347,4 +412,4 @@ const Cell = ({children, focused, ...props}: TypeCell) => {
 const Column = memo(ColumnComponent) as unknown as TypeColumnComponent;
 
 Column.Header = HeaderCell;
-Column.Cell = memo(Cell) as any;
+Column.Cell = memo(Cell) as typeof Cell;
