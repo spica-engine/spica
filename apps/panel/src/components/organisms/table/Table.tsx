@@ -45,7 +45,7 @@ type TypeTable = {
   noResizeableColumns?: string[];
   className?: string;
   onScrollEnd?: () => void;
-  totalDataLength: number;
+  totalDataLength?: number;
   style?: React.CSSProperties;
 };
 
@@ -178,7 +178,7 @@ type ColumnRendererProps = {
   updateColumnWidth: (key: string, newWidth: string) => void;
   noResizeableColumns: string[];
   onScrollEnd?: () => void;
-  totalDataLength: number;
+  totalDataLength?: number;
   data: TypeTableData[];
   isLastColumn: boolean;
 };
@@ -281,7 +281,7 @@ const ColumnRenderer = memo(
             next={() => {
               onScrollEnd?.();
             }}
-            hasMore={totalDataLength > data.length}
+            hasMore={totalDataLength !== undefined && totalDataLength > data.length}
             loader={"Loading.."}
             dataLength={data.length}
             scrollableTarget={`scrollableDiv-${column.key}`}
