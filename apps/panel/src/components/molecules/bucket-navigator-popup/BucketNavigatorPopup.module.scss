@@ -11,12 +11,25 @@
 .popoverContainer {
   padding: 0 !important;
   .popoverContent {
-    padding: var(--padding-md);
+    padding: var(--padding-md) 0;
+    gap: 0 !important;
 
     .buttons {
-      padding: var(--padding-xs) 0;
+      padding: var(--padding-xs) var(--padding-md);
       width: 100%;
+      border: none !important;
+      border-radius: 0;
+      align-items: center;
+      justify-content: center;
+      >div>div {
+        gap: var(--gap-md) !important;
+      }
     }
+
+    .buttons:hover {
+      background-color: var(--color-hover);
+    }
+
     .deleteIcon {
       color: var(--color-danger);
     }
