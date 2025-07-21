@@ -11,12 +11,10 @@
 .popoverContainer {
   padding: 0 !important;
   .popoverContent {
-    height: 77px !important;
     padding: var(--padding-md) 0;
     gap: 0 !important;
 
     .buttons {
-      height: 19px !important;
       padding: var(--padding-xs) var(--padding-md);
       width: 100%;
       border: none !important;

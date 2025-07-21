@@ -1,4 +1,4 @@
-import React, {type FC, memo} from "react";
+import React, {type FC, memo, useState} from "react";
 import styles from "./NavigatorItem.module.scss";
 import {
   Button,
@@ -9,7 +9,7 @@ import {
   type IconName
 } from "oziko-ui-kit";
 import BucketNavigatorPopup from "../bucket-navigator-popup/BucketNavigatorPopup";
-import type { BucketType } from "src/services/bucketService";
+import type {BucketType} from "src/services/bucketService";
 
 type SuffixIcon = {
   name: IconName;
@@ -20,10 +20,19 @@ type TypeNavigatorItem = {
   label: string;
   prefixIcon?: IconName;
   suffixIcons?: SuffixIcon[];
-  bucket?: BucketType
+  bucket?: BucketType;
 } & TypeFluidContainer;
 
-const NavigatorItem: FC<TypeNavigatorItem> = ({label, prefixIcon, bucket, suffixIcons = [], ...props}) => {
+const NavigatorItem: FC<TypeNavigatorItem> = ({
+  label,
+  prefixIcon,
+  bucket,
+  suffixIcons = [],
+  ...props
+}) => {
+
+  const [isPopupOpen, setIsPopupOpen]  = useState(false)
+
   return (
     <FluidContainer
       dimensionX={"fill"}
@@ -56,14 +65,19 @@ const NavigatorItem: FC<TypeNavigatorItem> = ({label, prefixIcon, bucket, suffix
                     <Icon name={name} size="sm" />
                   </Button>
                 ))}
-                <BucketNavigatorPopup bucket={bucket} className={styles.suffixButton}/>
+                <BucketNavigatorPopup
+                  isOpen={isPopupOpen}
+                  setIsOpen={setIsPopupOpen}
+                  bucket={bucket}
+                  className={styles.suffixButton}
+                />
               </>
             )}
-          </> 
+          </>
         )
       }}
       {...props}
-      className={`${styles.navigatorItem} ${props.className}`}
+      className={`${styles.navigatorItem} ${props.className} ${isPopupOpen && styles.popupOpen}`}
     />
   );
 };

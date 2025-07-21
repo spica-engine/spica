@@ -1,15 +1,18 @@
 import {Button, FlexElement, Icon, Popover, Text, useOnClickOutside} from "oziko-ui-kit";
 import {memo, useRef, useState, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
-import type { BucketType } from "src/services/bucketService";
+import type {BucketType} from "src/services/bucketService";
 
 type TypeBucketNavigatorPopup = {
   className?: string;
   bucket?: BucketType;
+  onOpen?: () => void;
+  onClose?: () => void;
+  isOpen: boolean;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
 };
 
-const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({className}) => {
-  const [isOpen, setIsOpen] = useState(false);
+const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({className, isOpen, setIsOpen}) => {
   const containerRef = useRef(null);
   const contentRef = useRef(null);
 
