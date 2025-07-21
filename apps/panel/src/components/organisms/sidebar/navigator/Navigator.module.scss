@@ -71,7 +71,7 @@
     box-shadow: var(--box-shadow)
   }
 }
-.globalDragActive {
+.globalDragActive, .justDropped {
   button {
     opacity: 0 !important;
   }

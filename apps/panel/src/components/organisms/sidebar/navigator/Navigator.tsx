@@ -9,6 +9,7 @@ import React, {
   useImperativeHandle,
   useMemo,
   useRef,
+  useState,
   type Ref
 } from "react";
 import {useNavigate} from "react-router-dom";
@@ -48,6 +49,8 @@ type TypeDraggableItemProps = {
   item: (TypeNavigatorItems & {index: number}) | (BucketType & {index: number});
   completeMoving: ({bucketId, order}: {bucketId: string; order: number}) => void;
   ref: Ref<HTMLDivElement>;
+  justDropped: boolean;
+  setJustDropped: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 type TypeCustomDragLayerProps = {
@@ -134,16 +137,21 @@ const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
   );
 };
 
-const DraggableItem = ({item, completeMoving, ref}: TypeDraggableItemProps) => {
+const DraggableItem = ({
+  item,
+  completeMoving,
+  ref,
+  justDropped,
+  setJustDropped
+}: TypeDraggableItemProps) => {
   const navigate = useNavigate();
   const innerRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
-  const [{handlerId, isOver}, drop] = useDrop({
+  const [{handlerId}, drop] = useDrop({
     accept: "NAVIGATOR_ITEM",
     collect: monitor => ({
-      handlerId: monitor.getHandlerId(),
-      isOver: monitor.isOver()
+      handlerId: monitor.getHandlerId()
     })
   });
 
@@ -151,6 +159,7 @@ const DraggableItem = ({item, completeMoving, ref}: TypeDraggableItemProps) => {
     type: "NAVIGATOR_ITEM",
     item: () => item,
     end: draggedItem => {
+      setJustDropped(true);
       completeMoving({bucketId: draggedItem._id, order: draggedItem.index});
     }
   });
@@ -189,12 +198,13 @@ const DraggableItem = ({item, completeMoving, ref}: TypeDraggableItemProps) => {
       onClick={() => {
         navigate(`/${item?.section}/${item?._id}`);
       }}
-      className={`${styles.ungrouped} ${isDragging ? styles.globalDragActive : ""}`}
+      className={`${styles.ungrouped} ${isDragging ? styles.globalDragActive : ""} ${justDropped ? styles.justDropped : ""} `}
     />
   );
 };
 
 const ReorderableList = ({items, setItems}: TypeReorderableListProps) => {
+  const [justDropped, setJustDropped] = useState(false);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const setItemRef = useCallback((el: HTMLDivElement | null, index: number) => {
     itemRefs.current[index] = el;
@@ -210,6 +220,12 @@ const ReorderableList = ({items, setItems}: TypeReorderableListProps) => {
     });
   }, []);
 
+  useEffect(() => {
+    const handleMouseMove = () => setJustDropped(false);
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
   return (
     <DndProvider backend={HTML5Backend}>
       <CustomDragLayer itemRefs={itemRefs.current} moveItem={moveItem} />
@@ -219,6 +235,8 @@ const ReorderableList = ({items, setItems}: TypeReorderableListProps) => {
           item={{...item, index}}
           completeMoving={changeBucketOrder}
           ref={(el: HTMLDivElement) => setItemRef(el, index)}
+          justDropped={justDropped}
+          setJustDropped={setJustDropped}
         />
       ))}
     </DndProvider>
