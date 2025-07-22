@@ -22,6 +22,10 @@ type BucketContextType = {
     headers?: AxiosRequestHeaders;
     endpoint?: string;
   }) => Promise<any>;
+  currentBucket: BucketType | null;
+  getCurrentBucket: (bucketId: string) => Promise<any>;
+  currentBucketLoading: boolean;
+  currentBucketError: string | null;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -34,8 +38,13 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     fetchBuckets,
     deleteBucketRequest,
     deleteBucketLoading,
-    deleteBucketError
+    deleteBucketError,
+    currentBucket,
+    currentBucketLoading,
+    currentBucketError,
+    getCurrentBucket,
   } = useBucketService();
+
   const [buckets, setBuckets] = useState(data);
   useEffect(() => setBuckets(data), [data]);
 
@@ -55,9 +64,13 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       deleteBucket,
       deleteBucketLoading,
       deleteBucketError,
-      fetchBuckets
+      fetchBuckets,
+      currentBucket,
+      getCurrentBucket,
+      currentBucketLoading,
+      currentBucketError
     }),
-    [buckets, loading, error, deleteBucketLoading, deleteBucketError, fetchBuckets]
+    [buckets, loading, error, deleteBucketLoading, deleteBucketError, fetchBuckets, currentBucket, currentBucketLoading, currentBucketError]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;

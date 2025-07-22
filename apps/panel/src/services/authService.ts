@@ -33,7 +33,7 @@ function useAuthService() {
       requestLogin({body: {identifier, password}}).then(loginData => {
         if (!loginData) return;
         setToken(loginData.token);
-        navigate("/home");
+        navigate("/dashboard");
       });
     },
     [requestLogin]

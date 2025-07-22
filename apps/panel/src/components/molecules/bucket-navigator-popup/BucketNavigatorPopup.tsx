@@ -1,16 +1,37 @@
-import {Button, FlexElement, Icon, Popover, Text} from "oziko-ui-kit";
-import React, {memo, useState, type FC} from "react";
+import {Button, FlexElement, Icon, Popover, Text, useOnClickOutside} from "oziko-ui-kit";
+import {memo, useRef, useState, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
 import type {BucketType} from "../../../services/bucketService";
 import {useBucket} from "../../../contexts/BucketContext";
 import Confirmation from "../confirmation/Confirmation";
 
 type TypeBucketNavigatorPopup = {
+  className?: string;
+  onOpen?: () => void;
+  onClose?: () => void;
+  isOpen: boolean;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onAddToCategory?: () => void;
   onEdit?: () => void;
   bucket: BucketType;
 };
-const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({onAddToCategory, onEdit, bucket}) => {
+
+const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
+  onAddToCategory,
+  onEdit,
+  bucket,
+  className,
+  isOpen,
+  setIsOpen
+}) => {
+  const containerRef = useRef(null);
+  const contentRef = useRef(null);
+
+  useOnClickOutside({
+    refs: [containerRef, contentRef],
+    onClickOutside: () => setIsOpen(false)
+  });
+
   const {deleteBucket, deleteBucketLoading} = useBucket();
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
@@ -19,20 +40,28 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({onAddToCategory, on
   };
 
   return (
-    <>
+    <div ref={containerRef} className={`${styles.container} ${className || ""}`}>
       <Popover
+        open={isOpen}
         contentProps={{
           className: styles.popoverContainer
         }}
         content={
-          <FlexElement dimensionX={160} direction="vertical" className={styles.popoverContent}>
+          <FlexElement
+            ref={contentRef}
+            dimensionX={160}
+            direction="vertical"
+            className={styles.popoverContent}
+          >
             <Button
               containerProps={{
                 alignment: "leftCenter",
                 dimensionX: "fill"
               }}
               color="default"
-              onClick={onAddToCategory}
+              onClick={e => {
+                e.stopPropagation();
+              }}
               className={styles.buttons}
             >
               <Icon name="plus" />
@@ -44,7 +73,9 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({onAddToCategory, on
                 dimensionX: "fill"
               }}
               color="default"
-              onClick={onEdit}
+              onClick={e => {
+                e.stopPropagation();
+              }}
               className={styles.buttons}
             >
               <Icon name="pencil" />
@@ -56,7 +87,8 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({onAddToCategory, on
                 dimensionX: "fill"
               }}
               color="default"
-              onClick={() => {
+              onClick={e => {
+                e.stopPropagation();
                 setIsConfirmationOpen(true);
               }}
               className={styles.buttons}
@@ -67,8 +99,15 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({onAddToCategory, on
           </FlexElement>
         }
       >
-        <Button color="transparent" variant="icon">
-          <Icon name="dotsVertical" />
+        <Button
+          onClick={e => {
+            e.stopPropagation();
+            setIsOpen(true);
+          }}
+          color="transparent"
+          variant="icon"
+        >
+          <Icon name="dotsVertical" size="sm" />
         </Button>
       </Popover>
       {isConfirmationOpen && (
@@ -85,7 +124,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({onAddToCategory, on
           loading={deleteBucketLoading}
         />
       )}
-    </>
+    </div>
   );
 };
 
