@@ -13,10 +13,12 @@ import {
 import styles from "./Login.module.scss";
 import Logo from "../../components/atoms/logo/Logo";
 import useAuthService from "../../services/authService";
+import useLocalStorage from "../../hooks/useLocalStorage";
+import {Navigate} from "react-router-dom";
 
 const Login = () => {
-  const {fetchStrategies, strategies, login, loginLoading, loginError} =
-    useAuthService();
+  const [token] = useLocalStorage("token", undefined);
+  const {fetchStrategies, strategies, login, loginLoading, loginError} = useAuthService();
 
   const formik = useFormik({
     initialValues: {identifier: "", password: ""},
@@ -28,6 +30,10 @@ const Login = () => {
   useEffect(() => {
     fetchStrategies();
   }, []);
+
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className={styles.container}>
