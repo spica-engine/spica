@@ -1,5 +1,5 @@
-import useApi from "../hooks/useApi";
 import {useCallback, useState} from "react";
+import useApi from "../hooks/useApi";
 
 export type BucketDataType = {
   data: {[key: string]: any}[];
@@ -100,17 +100,25 @@ export const useBucketService = () => {
         sort: JSON.stringify({_id: -1})
       };
 
-      const params = query
+      // Create a mutable copy of params
+      let params = query
         ? {
+            ...defaultParams,
             ...query,
-            sort: query.sort ? JSON.stringify(query.sort) : undefined
+            sort: query.sort ? JSON.stringify(query.sort) : defaultParams.sort
           }
-        : defaultParams;
+        : {...defaultParams};
 
-      if (!params.sort) delete params.sort;
+      // Remove sort if it's undefined or empty
+      if (!params.sort || Object.keys(JSON.parse(params.sort)).length === 0) {
+        const {sort, ...rest} = params;
+        params = rest as typeof params;
+      }
+      
       const queryString = new URLSearchParams(
         params as unknown as Record<string, string>
       ).toString();
+      
       return fetchBucketData({
         endpoint: `/api/bucket/${bucketId}/data?${queryString}`
       }).then(result => {
@@ -121,7 +129,46 @@ export const useBucketService = () => {
     [fetchBucketData]
   );
 
+  const {
+    request: fetchCurrentBucket,
+    data: currentBucket,
+    loading: currentBucketLoading,
+    error: currentBucketError
+  } = useApi<BucketType>({
+    endpoint: "",
+    method: "get"
+  });
+
+  const getCurrentBucket = useCallback((bucketId: string) => {
+    return fetchCurrentBucket({
+      endpoint: `/api/bucket/${bucketId}`
+    });
+  }, [fetchCurrentBucket]);
+
+  const {
+    request: bucketOrderRequest,
+    loading: bucketOrderLoading,
+    error: bucketOrderError
+  } = useApi({endpoint: "", method: "patch"});
+
+  const changeBucketOrder = useCallback((bucketId: string, order: number) => {
+    return bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
+  }, [bucketOrderRequest]);
+
   return {
+    loading,
+    error,
+    fetchBuckets,
+    bucketData,
+    bucketDataLoading,
+    bucketDataError,
+    getBucketData,
+    lastUsedBucketDataQuery,
+    changeBucketOrder,
+    bucketOrderLoading,
+    bucketOrderError,
+    buckets,
+    /*
     buckets,
     fetchBuckets,
     error,
@@ -130,6 +177,10 @@ export const useBucketService = () => {
     getBucketData,
     bucketDataLoading,
     bucketDataError,
-    lastUsedBucketDataQuery
+    lastUsedBucketDataQuery,
+    changeBucketOrder,
+    bucketOrderLoading,
+    bucketOrderError
+    */
   };
 };
