@@ -1,16 +1,20 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {Outlet} from "react-router-dom";
 import SideBar from "../components/organisms/sidebar/SideBar";
-import {menuItems, navigatorItems, token, name} from "../pages/home/mock";
+import {menuItems, navigatorItems} from "../pages/home/mock";
 import styles from "./Layout.module.scss";
 import {Drawer} from "oziko-ui-kit";
 import Toolbar from "../components/atoms/toolbar/Toolbar";
-import { useBucket } from "../contexts/BucketContext";
+import useLocalStorage from "../hooks/useLocalStorage";
+import {jwtDecode} from "jwt-decode";
+import type {AuthTokenJWTPayload} from "src/types/auth";
+import {useBucket} from "../contexts/BucketContext";
 
 const Layout = () => {
+  const [token] = useLocalStorage<string>("token", "");
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const {fetchBuckets} = useBucket()
+  const {fetchBuckets} = useBucket();
 
   const closeDrawer = () => setIsDrawerOpen(false);
   const openDrawer = () => setIsDrawerOpen(true);
@@ -26,9 +30,15 @@ const Layout = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, [isDrawerOpen]);
 
+  const name = useMemo(() => {
+    if (!token || !token.length) return "";
+    const decoded = jwtDecode<AuthTokenJWTPayload>(token);
+    return decoded.identifier;
+  }, [token]);
+
   useEffect(() => {
-    fetchBuckets()
-  }, [])
+    fetchBuckets();
+  }, []);
 
   const sideBarElement = (
     <div className={styles.sidebar}>

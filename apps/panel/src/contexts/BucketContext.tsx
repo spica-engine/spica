@@ -22,12 +22,26 @@ type BucketContextType = {
   categories: string[];
   changeCategory: (bucketId: string, category: string) => Promise<any>;
   setBuckets: React.Dispatch<React.SetStateAction<BucketType[] | null>>;
+  currentBucket: BucketType | null;
+  getCurrentBucket: (bucketId: string) => Promise<any>;
+  currentBucketLoading: boolean;
+  currentBucketError: string | null;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
 
 export const BucketProvider = ({children}: {children: ReactNode}) => {
-  const {buckets: data, loading, error, fetchBuckets, requestCategoryChange} = useBucketService();
+  const {
+    buckets: data,
+    loading,
+    error,
+    fetchBuckets,
+    requestCategoryChange,
+    currentBucket,
+    currentBucketLoading,
+    currentBucketError,
+    getCurrentBucket
+  } = useBucketService();
   const [buckets, setBuckets] = useState<BucketType[] | null>(data);
 
   useEffect(() => setBuckets(data), [data]);
@@ -65,9 +79,22 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       fetchBuckets,
       categories,
       changeCategory,
-      setBuckets
+      setBuckets,
+      currentBucket,
+      getCurrentBucket,
+      currentBucketLoading,
+      currentBucketError
     }),
-    [buckets, loading, error, fetchBuckets, categories]
+    [
+      buckets,
+      loading,
+      error,
+      fetchBuckets,
+      categories,
+      currentBucket,
+      currentBucketLoading,
+      currentBucketError
+    ]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;
