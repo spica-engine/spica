@@ -72,11 +72,13 @@
   .ungrouped {
     background: var(--color-default);
     width: 200px !important;
-    box-shadow: var(--box-shadow)
+    box-shadow: var(--box-shadow);
   }
 }
-.globalDragActive, .justDropped {
+.globalDragActive,
+.justDropped {
   button {
     opacity: 0 !important;
   }
+  background-color: var(--color-default) !important;
 }

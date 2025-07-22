@@ -120,7 +120,7 @@ const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
         <NavigatorItem
           label={item?.title ?? ""}
           //prefixIcon={item?.icon}
-          suffixIcons={[{name: "dragHorizontalVariant"}, {name: "dotsVertical"}]}
+          suffixIcons={[{name: "dragHorizontalVariant"}]}
           className={styles.ungrouped}
         />
       </div>
@@ -185,7 +185,7 @@ const DraggableItem = ({
       label={item?.title ?? ""}
       //prefixIcon={item?.icon}
       style={{opacity}}
-      suffixIcons={[{name: "dragHorizontalVariant", ref: buttonRef}, {name: "dotsVertical"}]}
+      suffixIcons={[{name: "dragHorizontalVariant", ref: buttonRef}]}
       onClick={() => {
         navigate(`/${item?.section}/${item?._id}`);
       }}

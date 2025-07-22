@@ -32,11 +32,9 @@ const NavigatorItem: FC<TypeNavigatorItem> = ({
       dimensionX={"fill"}
       dimensionY={36}
       mode="fill"
-      prefix={
-        prefixIcon && {
-          children: <Icon name={prefixIcon ?? "help"} size={"md"} />
-        }
-      }
+      prefix={{
+        children: <Icon name={"help"} size={"md"} />
+      }}
       root={{
         children: (
           <Text dimensionX={"fill"} size="medium" className={styles.label}>
@@ -49,7 +47,7 @@ const NavigatorItem: FC<TypeNavigatorItem> = ({
           <>
             {suffixIcons.length > 0 && (
               <>
-                {suffixIcons.map(({name, onClick}, index) => (
+                {suffixIcons.map(({name, onClick, ref}, index) => (
                   <Button
                     key={index}
                     color="transparent"
