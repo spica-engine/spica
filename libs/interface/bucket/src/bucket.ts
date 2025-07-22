@@ -23,6 +23,10 @@ export interface Bucket {
     countLimit: number;
     limitExceedBehaviour: LimitExceedBehaviours;
   };
+  indexes?: {
+    definition: Record<string, any>;
+    options: Record<string, any>;
+  }[];
 }
 
 export enum LimitExceedBehaviours {
@@ -36,8 +40,6 @@ interface PropertyOptions {
     translate?: boolean;
     history?: boolean;
     position: "left" | "right" | "bottom";
-    unique?: boolean;
-    index?: boolean;
   };
   acl?: string;
 }

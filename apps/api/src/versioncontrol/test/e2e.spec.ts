@@ -204,11 +204,11 @@ describe("Versioning e2e", () => {
         const changes = res.body.message.split("\n").filter(c => c != "");
         expect(changes).toEqual([
           //bucket
-          `bucket/${bucket._id}/schema.yaml`,
+          `bucket/${bucket.title}(${bucket._id})/schema.yaml`,
           //fn
-          `function/${fn._id}/index.js`,
-          `function/${fn._id}/package.json`,
-          `function/${fn._id}/schema.yaml`
+          `function/${fn.name}(${fn._id})/index.js`,
+          `function/${fn.name}(${fn._id})/package.json`,
+          `function/${fn.name}(${fn._id})/schema.yaml`
         ]);
       });
 
@@ -221,9 +221,9 @@ describe("Versioning e2e", () => {
 
         const changes = stringToArray(res.body.message);
         expect(changes).toEqual([
-          `function/${fn._id}/index.js`,
-          `function/${fn._id}/package.json`,
-          `function/${fn._id}/schema.yaml`
+          `function/${fn.name}(${fn._id})/index.js`,
+          `function/${fn.name}(${fn._id})/package.json`,
+          `function/${fn.name}(${fn._id})/schema.yaml`
         ]);
       });
     });

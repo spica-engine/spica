@@ -52,8 +52,7 @@ describe("BucketDataController", () => {
           title: {
             type: "string",
             options: {
-              position: "right",
-              unique: true
+              position: "right"
             }
           },
           description: {
@@ -62,7 +61,13 @@ describe("BucketDataController", () => {
               position: "right"
             }
           }
-        }
+        },
+        indexes: [
+          {
+            definition: {title: 1},
+            options: {unique: true}
+          }
+        ]
       };
 
       bucket = await req.post("/bucket", body).then(r => r.body);

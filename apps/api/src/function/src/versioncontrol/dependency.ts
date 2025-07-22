@@ -1,6 +1,7 @@
 import {
   ChangeTypes,
   DocChange,
+  getDisplayableName,
   RepChange,
   RepresentativeManagerResource,
   ResourceType,
@@ -40,6 +41,7 @@ export const getDependencySynchronizer = (
 
     return {
       _id: change.resource._id.toString(),
+      displayableName: getDisplayableName(change, change.resource.name),
       content: JSON.stringify({dependencies})
     };
   };

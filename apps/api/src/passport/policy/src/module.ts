@@ -1,10 +1,15 @@
-import {DynamicModule, Global, Module} from "@nestjs/common";
+import {DynamicModule, Global, Inject, Module, Optional} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
 import {PolicyResolver, POLICY_RESOLVER} from "@spica-server/interface/passport/guard";
 import {Policy} from "@spica-server/interface/passport/policy";
 import {PolicyController} from "./policy.controller";
 import {PolicyService} from "./policy.service";
 import PolicySchema from "./schemas/policy.json" with {type: "json"};
+import {getSynchronizer} from "./versioncontrol/synchronizer";
+import {
+  REGISTER_VC_SYNCHRONIZER,
+  RegisterVCSynchronizer
+} from "@spica-server/interface/versioncontrol";
 
 @Global()
 @Module({})
@@ -33,5 +38,17 @@ export class PolicyModule {
         }
       ]
     };
+  }
+
+  constructor(
+    ps: PolicyService,
+    @Optional()
+    @Inject(REGISTER_VC_SYNCHRONIZER)
+    registerVCSynchronizer: RegisterVCSynchronizer<Policy>
+  ) {
+    if (registerVCSynchronizer) {
+      const synchronizer = getSynchronizer(ps);
+      registerVCSynchronizer(synchronizer);
+    }
   }
 }

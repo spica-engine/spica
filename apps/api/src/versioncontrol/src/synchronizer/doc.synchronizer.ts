@@ -103,15 +103,18 @@ export function getRepApplier<R extends Resource>(
     const write = (resource: RepresentativeManagerResource) => {
       return vcRepresentativeManager.write(
         moduleName,
-        resource._id,
+        resource.displayableName || resource._id,
         props.fileName,
         resource.content,
         props.getExtension(change)
       );
     };
 
-    const rm = (resource: RepresentativeManagerResource) => {
-      return vcRepresentativeManager.rm(moduleName, resource._id);
+    const rm = async (resource: RepresentativeManagerResource) => {
+      const id =
+        resource.displayableName ??
+        (await vcRepresentativeManager.findFolder(moduleName, resource._id.toString()));
+      return vcRepresentativeManager.rm(moduleName, id);
     };
 
     const representativeStrategy = {

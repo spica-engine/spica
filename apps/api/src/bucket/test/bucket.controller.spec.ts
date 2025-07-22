@@ -54,6 +54,7 @@ describe("BucketController", () => {
       readOnly: false,
       history: true,
       acl: {write: "true==true", read: "true==true"},
+      indexes: [],
       properties: {
         title: {
           type: "string",
