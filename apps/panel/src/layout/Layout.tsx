@@ -27,7 +27,13 @@ const Layout = () => {
     ),
     bucket: {
       items: buckets?.map(i => ({...i, section: "bucket"})) ?? [],
-      onOrderChange: () => {},
+      onOrderChange: (from, to) =>
+        setBuckets(prev => {
+          const updated = [...prev];
+          const [moved] = updated.splice(from, 1);
+          updated.splice(to, 0, moved);
+          return updated;
+        }),
       completeOrderChange: changeBucketOrder
     }
   };

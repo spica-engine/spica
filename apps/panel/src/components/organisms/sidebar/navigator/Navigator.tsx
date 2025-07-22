@@ -119,7 +119,7 @@ const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
       <div style={{transform, WebkitTransform: transform}}>
         <NavigatorItem
           label={item?.title ?? ""}
-          prefixIcon={item?.icon}
+          //prefixIcon={item?.icon}
           suffixIcons={[{name: "dragHorizontalVariant"}, {name: "dotsVertical"}]}
           className={styles.ungrouped}
         />
@@ -183,7 +183,7 @@ const DraggableItem = ({
       data-handler-id={handlerId}
       ref={innerRef}
       label={item?.title ?? ""}
-      prefixIcon={item?.icon}
+      //prefixIcon={item?.icon}
       style={{opacity}}
       suffixIcons={[{name: "dragHorizontalVariant", ref: buttonRef}, {name: "dotsVertical"}]}
       onClick={() => {
@@ -200,17 +200,6 @@ const ReorderableList = ({items, onOrderChange, completeOrderChange}: TypeReorde
   const setItemRef = useCallback((el: HTMLDivElement | null, index: number) => {
     itemRefs.current[index] = el;
   }, []);
-
-  /*const {changeBucketOrder} = useBucket();
-  const moveItem = useCallback((from: number, to: number) => {
-
-    setItems((prev: TypeNavigatorItems[]) => {
-      const updated = [...prev];
-      const [moved] = updated.splice(from, 1);
-      updated.splice(to, 0, moved);
-      return updated;
-    });
-  }, []);*/
 
   useEffect(() => {
     const handleMouseMove = () => setJustDropped(false);
@@ -269,7 +258,7 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
             key={item?._id}
             label={item?.title}
             prefix={{children: <Icon name={item?.icon} />}}
-            prefixIcon={item?.icon}
+            //prefixIcon={item?.icon}
             suffixIcons={[{name: "dragHorizontalVariant"}, {name: "dotsVertical"}]}
             onClick={() => {
               navigate(`/${item?.section}/${item?._id}`);
