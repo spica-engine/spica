@@ -122,8 +122,6 @@ const NavigatorItem: FC<TypeNavigatorItem> = ({label, prefixIcon, suffixIcons = 
       mode="fill"
       prefix={
         prefixIcon && {
-          // TODO: <Icon /> should handle invalid IconName inputs internally.
-          // It currently throws — consider adding a `fallback` prop or defaulting to a safe internal value.
           children: (
             <Icon name={validIcons.includes(prefixIcon) ? prefixIcon : "help"} size={"md"} />
           )

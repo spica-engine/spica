@@ -23,9 +23,8 @@ type TypeNavigatorProps = {
   header?: TypeNavigatorHeader;
   items?: {
     items: TypeNavigatorItems[] | BucketType[];
-    setter:
-      | React.Dispatch<React.SetStateAction<TypeNavigatorItems[] | null>>
-      | React.Dispatch<React.SetStateAction<BucketType[] | null>>;
+    onOrderChange: (from: number, to: number) => void;
+    completeOrderChange: (identifier: string, newOrder: number) => void;
   };
   button?: {
     title: string;
@@ -47,7 +46,7 @@ export type TypeNavigatorHeader = {
 
 type TypeDraggableItemProps = {
   item: (TypeNavigatorItems & {index: number}) | (BucketType & {index: number});
-  completeMoving: ({bucketId, order}: {bucketId: string; order: number}) => void;
+  completeMoving: (identifier: string, order: number) => void;
   ref: Ref<HTMLDivElement>;
   justDropped: boolean;
   setJustDropped: React.Dispatch<React.SetStateAction<boolean>>;
@@ -60,7 +59,8 @@ type TypeCustomDragLayerProps = {
 
 type TypeReorderableListProps = {
   items: TypeNavigatorItems[];
-  setItems: React.Dispatch<React.SetStateAction<TypeNavigatorItems[]>>;
+  onOrderChange: (from: number, to: number) => void;
+  completeOrderChange: (identifier: string, newOrder: number) => void;
 };
 
 const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
@@ -160,7 +160,7 @@ const DraggableItem = ({
     item: () => item,
     end: draggedItem => {
       setJustDropped(true);
-      completeMoving({bucketId: draggedItem._id, order: draggedItem.index});
+      completeMoving(draggedItem._id, draggedItem.index);
     }
   });
 
@@ -203,22 +203,23 @@ const DraggableItem = ({
   );
 };
 
-const ReorderableList = ({items, setItems}: TypeReorderableListProps) => {
+const ReorderableList = ({items, onOrderChange, completeOrderChange}: TypeReorderableListProps) => {
   const [justDropped, setJustDropped] = useState(false);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const setItemRef = useCallback((el: HTMLDivElement | null, index: number) => {
     itemRefs.current[index] = el;
   }, []);
 
-  const {changeBucketOrder} = useBucket();
+  /*const {changeBucketOrder} = useBucket();
   const moveItem = useCallback((from: number, to: number) => {
+
     setItems((prev: TypeNavigatorItems[]) => {
       const updated = [...prev];
       const [moved] = updated.splice(from, 1);
       updated.splice(to, 0, moved);
       return updated;
     });
-  }, []);
+  }, []);*/
 
   useEffect(() => {
     const handleMouseMove = () => setJustDropped(false);
@@ -228,12 +229,12 @@ const ReorderableList = ({items, setItems}: TypeReorderableListProps) => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <CustomDragLayer itemRefs={itemRefs.current} moveItem={moveItem} />
+      <CustomDragLayer itemRefs={itemRefs.current} moveItem={onOrderChange} />
       {items.map((item, index) => (
         <DraggableItem
           key={item._id}
           item={{...item, index}}
-          completeMoving={changeBucketOrder}
+          completeMoving={completeOrderChange}
           ref={(el: HTMLDivElement) => setItemRef(el, index)}
           justDropped={justDropped}
           setJustDropped={setJustDropped}
@@ -305,9 +306,10 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
 
           //TODO: add hoverable api
         />
-        {Array.isArray(ungrouped) && typeof items?.setter === "function" && (
+        {Array.isArray(ungrouped) && items && (
           <ReorderableList
-            setItems={items.setter as React.Dispatch<React.SetStateAction<TypeNavigatorItems[]>>}
+            onOrderChange={items.onOrderChange}
+            completeOrderChange={items.completeOrderChange}
             items={ungrouped as TypeNavigatorItems[]}
           />
         )}

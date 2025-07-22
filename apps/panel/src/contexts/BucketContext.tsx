@@ -3,8 +3,8 @@ import {useBucketService, type BucketType} from "../services/bucketService";
 import type {AxiosRequestHeaders} from "axios";
 
 type BucketContextType = {
-  buckets: BucketType[] | null;
-  setBuckets: React.Dispatch<React.SetStateAction<BucketType[] | null>>;
+  buckets: BucketType[];
+  setBuckets: React.Dispatch<React.SetStateAction<BucketType[]>>;
   loading: boolean;
   error: string | null;
   fetchBuckets: (params?: {
@@ -36,11 +36,10 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     bucketOrderError
   } = useBucketService();
 
-  const [buckets, setBuckets] = useState<BucketType[] | null>(null);
+  const [buckets, setBuckets] = useState<BucketType[]>([]);
 
   useEffect(() => {
     fetchBuckets().then(result => {
-      if (!result) return;
       setBuckets(result);
     });
   }, []);

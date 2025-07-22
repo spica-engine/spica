@@ -27,8 +27,8 @@ type TypeSideBar = {
     [key: string]: {
       items: TypeNavigatorItems[] | BucketType[];
       setter:
-        | React.Dispatch<React.SetStateAction<TypeNavigatorItems[] | null>>
-        | React.Dispatch<React.SetStateAction<BucketType[] | null>>;
+        | React.Dispatch<React.SetStateAction<TypeNavigatorItems[]>>
+        | React.Dispatch<React.SetStateAction<BucketType[]>>;
     };
   };
   logo?: string;
