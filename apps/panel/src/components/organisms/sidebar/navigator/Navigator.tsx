@@ -15,17 +15,12 @@ import React, {
 import {useNavigate} from "react-router-dom";
 import {DndProvider, useDrag, useDragLayer, useDrop} from "react-dnd";
 import {getEmptyImage, HTML5Backend} from "react-dnd-html5-backend";
-import type {TypeNavigatorItems} from "../SideBar";
-import {useBucket} from "../../../../contexts/BucketContext";
+import type {ReorderableItemGroup, TypeNavigatorItems} from "../SideBar";
 import type {BucketType} from "src/services/bucketService";
 
 type TypeNavigatorProps = {
   header?: TypeNavigatorHeader;
-  items?: {
-    items: TypeNavigatorItems[] | BucketType[];
-    onOrderChange: (from: number, to: number) => void;
-    completeOrderChange: (identifier: string, newOrder: number) => void;
-  };
+  items?: ReorderableItemGroup;
   button?: {
     title: string;
     icon: IconName;
@@ -57,11 +52,7 @@ type TypeCustomDragLayerProps = {
   moveItem: (itemIndex: number, hoverIndex: number) => void;
 };
 
-type TypeReorderableListProps = {
-  items: TypeNavigatorItems[];
-  onOrderChange: (from: number, to: number) => void;
-  completeOrderChange: (identifier: string, newOrder: number) => void;
-};
+type TypeReorderableListProps = ReorderableItemGroup
 
 const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
   return (

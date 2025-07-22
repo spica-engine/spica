@@ -21,15 +21,16 @@ export type TypeNavigatorItems = {
   category?: string;
 };
 
+export type ReorderableItemGroup = {
+  items: TypeNavigatorItems[] | BucketType[];
+  onOrderChange: (from: number, to: number) => void;
+  completeOrderChange: (identifier: string, newOrder: number) => void;
+};
+
 type TypeSideBar = {
   menuItems?: TypeMenuItems[];
   navigatorItems?: {
-    [key: string]: {
-      items: TypeNavigatorItems[] | BucketType[];
-      setter:
-        | React.Dispatch<React.SetStateAction<TypeNavigatorItems[]>>
-        | React.Dispatch<React.SetStateAction<BucketType[]>>;
-    };
+    [key: string]: ReorderableItemGroup;
   };
   logo?: string;
   footer?: ReactNode;

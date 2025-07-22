@@ -8,7 +8,7 @@ export type BucketType = {
   properties: Properties;
   required?: string[];
   [key: string]: any;
-}
+};
 
 type Properties = {[key: string]: Property};
 
@@ -113,7 +113,7 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     error: bucketOrderError
   } = useApi({endpoint: "", method: "patch"});
 
-  const changeBucketOrder = useCallback(({bucketId, order}: {bucketId: string; order: number}) => {
+  const changeBucketOrder = useCallback((bucketId: string, order: number) => {
     bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
   }, []);
 

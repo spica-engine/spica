@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {Outlet} from "react-router-dom";
-import SideBar from "../components/organisms/sidebar/SideBar";
+import SideBar, {type ReorderableItemGroup} from "../components/organisms/sidebar/SideBar";
 import {menuItems, navigatorItems} from "../pages/home/mock";
 import styles from "./Layout.module.scss";
 import {Drawer} from "oziko-ui-kit";
@@ -14,16 +14,22 @@ const Layout = () => {
   const [token] = useLocalStorage<string>("token", "");
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const {buckets, setBuckets, fetchBuckets} = useBucket();
+  const {buckets, setBuckets, fetchBuckets, changeBucketOrder} = useBucket();
 
-  const mergedNavigatorItems = {
+  const mergedNavigatorItems: {
+    [key: string]: ReorderableItemGroup;
+  } = {
     ...Object.fromEntries(
       Object.entries(navigatorItems).map(([key, value]) => [
         key,
         {items: value ?? [], setter: () => {}}
       ])
     ),
-    bucket: {items: buckets?.map(i => ({...i, section: "bucket"})) ?? [], setter: setBuckets}
+    bucket: {
+      items: buckets?.map(i => ({...i, section: "bucket"})) ?? [],
+      onOrderChange: () => {},
+      completeOrderChange: changeBucketOrder
+    }
   };
 
   const closeDrawer = () => setIsDrawerOpen(false);

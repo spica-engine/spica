@@ -12,7 +12,7 @@ type BucketContextType = {
     headers?: AxiosRequestHeaders;
     endpoint?: string;
   }) => Promise<any>;
-  changeBucketOrder: ({bucketId, order}: {bucketId: string; order: number}) => void;
+  changeBucketOrder: (bucketId: string, order: number) => void;
   bucketOrderLoading: boolean;
   bucketOrderError: string | null;
   currentBucket: BucketType | null;
