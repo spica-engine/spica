@@ -29,7 +29,7 @@ interface IAuthContext {
 const AuthContext = createContext<IAuthContext | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [userToken, setUserToken] = useLocalStorage<string | null>('userToken', null);
+    const [userToken, setUserToken, deleteUserToken] = useLocalStorage<string | null>('token', null);
     const [user, setUser] = useState<UserType | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(data.user ?? null);
         } catch (error) {
             console.error('Fetch user error:', error);
-            setUserToken(null);
+            //deleteUserToken();
         } finally {
             setLoading(false);
         }
@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     const logout = useCallback(() => {
-        setUserToken(null);
+        deleteUserToken();
         setUser(null);
     }, []);
 
