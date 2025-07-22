@@ -13,6 +13,10 @@
     gap: 0;
   }
 
+  .items > div:hover {
+    background-color: var(--color-hover);
+  }
+
   .header {
     padding: 0 !important;
     span {
@@ -33,7 +37,7 @@
       padding: 0 var(--padding-md) 0 0 !important;
     }
   }
-  
+
   .noLineHeight {
     line-height: 0 !important;
   }
