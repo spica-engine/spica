@@ -13,6 +13,10 @@
     gap: 0;
   }
 
+  .items > div:hover {
+    background-color: var(--color-hover);
+  }
+
   .header {
     padding: 0 !important;
     span {
