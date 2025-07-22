@@ -3,7 +3,8 @@ import {useBucketService, type BucketType} from "../services/bucketService";
 import type {AxiosRequestHeaders} from "axios";
 
 type BucketContextType = {
-  buckets: BucketType[] | null;
+  buckets: BucketType[];
+  setBuckets: React.Dispatch<React.SetStateAction<BucketType[]>>;
   loading: boolean;
   error: string | null;
   fetchBuckets: (params?: {
@@ -11,6 +12,9 @@ type BucketContextType = {
     headers?: AxiosRequestHeaders;
     endpoint?: string;
   }) => Promise<any>;
+  changeBucketOrder: (bucketId: string, order: number) => void;
+  bucketOrderLoading: boolean;
+  bucketOrderError: string | null;
   currentBucket: BucketType | null;
   getCurrentBucket: (bucketId: string) => Promise<any>;
   currentBucketLoading: boolean;
@@ -18,10 +22,8 @@ type BucketContextType = {
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
-
 export const BucketProvider = ({children}: {children: ReactNode}) => {
   const {
-    buckets,
     loading,
     error,
     fetchBuckets,
@@ -29,14 +31,29 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     currentBucketLoading,
     currentBucketError,
     getCurrentBucket,
+    changeBucketOrder,
+    bucketOrderLoading,
+    bucketOrderError
   } = useBucketService();
+
+  const [buckets, setBuckets] = useState<BucketType[]>([]);
+
+  useEffect(() => {
+    fetchBuckets().then(result => {
+      setBuckets(result);
+    });
+  }, []);
 
   const contextValue = useMemo(
     () => ({
       buckets,
+      setBuckets,
       loading,
       error,
       fetchBuckets,
+      changeBucketOrder,
+      bucketOrderLoading,
+      bucketOrderError,
       currentBucket,
       getCurrentBucket,
       currentBucketLoading,

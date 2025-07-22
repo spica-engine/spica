@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {Navigate, Outlet} from "react-router-dom";
-import SideBar from "../components/organisms/sidebar/SideBar";
+import SideBar, {type ReorderableItemGroup} from "../components/organisms/sidebar/SideBar";
 import {menuItems, navigatorItems} from "../pages/home/mock";
 import styles from "./Layout.module.scss";
 import {Drawer} from "oziko-ui-kit";
@@ -15,7 +15,29 @@ const Layout = () => {
   const [token] = useLocalStorage<string>("token", "");
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const {fetchBuckets} = useBucket();
+  const {buckets, setBuckets, fetchBuckets, changeBucketOrder} = useBucket();
+
+  const mergedNavigatorItems: {
+    [key: string]: ReorderableItemGroup;
+  } = {
+    ...Object.fromEntries(
+      Object.entries(navigatorItems).map(([key, value]) => [
+        key,
+        {items: value ?? [], setter: () => {}}
+      ])
+    ),
+    bucket: {
+      items: buckets?.map(i => ({...i, section: "bucket"})) ?? [],
+      onOrderChange: (from, to) =>
+        setBuckets(prev => {
+          const updated = [...prev];
+          const [moved] = updated.splice(from, 1);
+          updated.splice(to, 0, moved);
+          return updated;
+        }),
+      completeOrderChange: changeBucketOrder
+    }
+  };
 
   const closeDrawer = () => setIsDrawerOpen(false);
   const openDrawer = () => setIsDrawerOpen(true);
@@ -44,6 +66,7 @@ const Layout = () => {
     fetchBuckets();
   }, []);
 
+
   if (!token) return <Navigate to="/passport/identify" replace />;
 
   return (
@@ -58,7 +81,7 @@ const Layout = () => {
         >
           <SideBar
             menuItems={menuItems}
-            navigatorItems={navigatorItems}
+            navigatorItems={mergedNavigatorItems}
             onNavigatorToggle={setNavigatorOpen}
             displayToggleIcon={false}
           />
@@ -72,7 +95,7 @@ const Layout = () => {
         <div className={styles.sidebar}>
           <SideBar
             menuItems={menuItems}
-            navigatorItems={navigatorItems}
+            navigatorItems={mergedNavigatorItems}
             onNavigatorToggle={setNavigatorOpen}
           />
         </div>

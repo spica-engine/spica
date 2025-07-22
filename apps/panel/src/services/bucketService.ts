@@ -1,3 +1,4 @@
+import {useCallback} from "react";
 import useApi from "../hooks/useApi";
 import {useEffect, useMemo} from "react";
 
@@ -106,6 +107,16 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     });
   };
 
+  const {
+    request: bucketOrderRequest,
+    loading: bucketOrderLoading,
+    error: bucketOrderError
+  } = useApi({endpoint: "", method: "patch"});
+
+  const changeBucketOrder = useCallback((bucketId: string, order: number) => {
+    bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
+  }, []);
+
   return {
     buckets,
     fetchBuckets,
@@ -114,6 +125,9 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     currentBucket,
     getCurrentBucket,
     currentBucketLoading,
-    currentBucketError
+    currentBucketError,
+    changeBucketOrder,
+    bucketOrderLoading,
+    bucketOrderError
   };
 };

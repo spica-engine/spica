@@ -3,6 +3,7 @@ import styles from "./SideBar.module.scss";
 import {Icon, type IconName} from "oziko-ui-kit";
 import Navigator, {type TypeNavigatorHeader} from "./navigator/Navigator";
 import Logo from "../../atoms/logo/Logo";
+import type {BucketType} from "src/services/bucketService";
 
 export type TypeMenuItems = {
   name?: string;
@@ -20,10 +21,16 @@ export type TypeNavigatorItems = {
   category?: string;
 };
 
+export type ReorderableItemGroup = {
+  items: TypeNavigatorItems[] | BucketType[];
+  onOrderChange: (from: number, to: number) => void;
+  completeOrderChange: (identifier: string, newOrder: number) => void;
+};
+
 type TypeSideBar = {
   menuItems?: TypeMenuItems[];
   navigatorItems?: {
-    [key: string]: TypeNavigatorItems[];
+    [key: string]: ReorderableItemGroup;
   };
   logo?: string;
   footer?: ReactNode;
@@ -93,7 +100,7 @@ const SideBar: FC<TypeSideBar> = ({
       >
         <Navigator
           header={menuItems?.[activeMenu]?.header as TypeNavigatorHeader}
-          items={navigatorItems?.[menuItems![activeMenu]?.id] ?? []}
+          items={navigatorItems?.[menuItems![activeMenu]?.id]}
           addNewButtonText={menuItems?.[activeMenu]?.addNewButtonText}
         />
       </div>
