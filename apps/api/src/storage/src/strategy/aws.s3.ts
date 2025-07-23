@@ -7,7 +7,6 @@ import {
   DeleteObjectCommand,
   CopyObjectCommand
 } from "@aws-sdk/client-s3";
-import {fromIni} from "@aws-sdk/credential-providers";
 import {readFileSync} from "fs";
 export class AWSS3 implements Strategy {
   s3: S3Client;
@@ -88,4 +87,6 @@ export class AWSS3 implements Strategy {
       })
     );
   }
+
+  async createResumableUpload(req, res) {}
 }

@@ -16,7 +16,7 @@ import {
   PaginatedStorageResponse
 } from "@spica-server/interface/storage";
 import {Strategy} from "./strategy/strategy";
-import fs from "fs";
+import fs, {ReadStream} from "fs";
 
 @Injectable()
 export class StorageService extends BaseCollection<StorageObjectMeta>("storage") {
@@ -245,4 +245,15 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   async getUrl(name: string) {
     return this.service.url(name);
   }
+
+  async createResumableUpload(req: any, res: any, objects: StorageObject<Buffer | ReadStream>[]) {
+    for (let object of objects) {
+      req.headers["upload-length"] = object.content.size;
+      await this.service.createResumableUpload(req, res);
+    }
+  }
+
+  // async handleResumableUpload() {
+  //   this.service.handleResumableUpload();
+  // }
 }
