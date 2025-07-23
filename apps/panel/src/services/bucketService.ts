@@ -108,6 +108,16 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
   };
 
   const {
+    request: bucketOrderRequest,
+    loading: bucketOrderLoading,
+    error: bucketOrderError
+  } = useApi({endpoint: "", method: "patch"});
+
+  const changeBucketOrder = useCallback((bucketId: string, order: number) => {
+    bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
+  }, []);
+
+  const {
     request: deleteRequest,
     loading: deleteBucketLoading,
     error: deleteBucketError
@@ -131,6 +141,9 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     getCurrentBucket,
     currentBucketLoading,
     currentBucketError,
+    changeBucketOrder,
+    bucketOrderLoading,
+    bucketOrderError,
     deleteBucketRequest,
     deleteBucketLoading,
     deleteBucketError
