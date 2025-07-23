@@ -63,4 +63,5 @@ export class GCloud implements Strategy {
   }
 
   async createResumableUpload(req, res) {}
+  async handleResumableUpload(req, res) {}
 }

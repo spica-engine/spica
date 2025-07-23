@@ -89,4 +89,5 @@ export class AWSS3 implements Strategy {
   }
 
   async createResumableUpload(req, res) {}
+  async handleResumableUpload(req, res) {}
 }
