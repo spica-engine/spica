@@ -222,26 +222,18 @@ export class StorageController {
   /**
    * Creates and returns new upload resource
    */
-  @UseInterceptors(MultipartFormDataParser({isArray: true}), BsonBodyParser(), JsonBodyParser())
   @Post("resumable")
   // @UseGuards(AuthGuard(), ActionGuard("storage:create"))
-  async getUploadUrl(
-    @Req() req,
-    @Res() res,
-    @Body(Schema.validate("http://spica.internal/storage/body")) body: MixedBody
-  ) {
-    const converter = getPostBodyConverter(body);
-    const objects = converter.convert(body);
-    req.headers["tus-resumable"] = "1.0.0";
-    await this.storage.createResumableUpload(req, res, objects);
+  async getUploadUrl(@Req() req, @Res() res) {
+    await this.storage.handleResumableUpload(req, res);
   }
 
   /**
    * Accepts all resumable uploads
    */
-  // @All("resumable/:id")
+  @All("resumable/:id")
   // @UseGuards(AuthGuard(), ActionGuard("storage:create"))
-  // async handleUpload() {
-  //   return this.storage.handleResumableUpload();
-  // }
+  async handleUpload(@Req() req, @Res() res) {
+    await this.storage.handleResumableUpload(req, res);
+  }
 }

@@ -1,6 +1,6 @@
 import fs from "fs";
 import {Strategy} from "./strategy";
-import {Server} from "@tus/server";
+import {Server, EVENTS} from "@tus/server";
 import {FileStore} from "@tus/file-store";
 
 export class Default implements Strategy {
@@ -13,8 +13,18 @@ export class Default implements Strategy {
     this.publicUrl = publicUrl;
 
     this.tusServer = new Server({
-      path: "/resumable",
+      path: "/storage/resumable",
       datastore: new FileStore({directory: path})
+    });
+
+    this.tusServer.on(EVENTS.POST_FINISH, async event => {
+      const fileId = event.url.split("/").pop();
+
+      const infoBuffer = await this.read(fileId + ".json");
+      const info = JSON.parse(infoBuffer.toString());
+
+      const finename = info.metadata.filename;
+      this.rename(fileId, finename);
     });
   }
 
@@ -86,10 +96,8 @@ export class Default implements Strategy {
     }
   }
 
-  async createResumableUpload(req, res) {
+  async handleResumableUpload(req: any, res: any) {
     await this.ensureStorageDiskExists();
     await this.tusServer.handle(req, res);
   }
-
-  async handleResumableUpload() {}
 }
