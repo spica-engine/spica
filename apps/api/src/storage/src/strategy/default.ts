@@ -1,12 +1,21 @@
 import fs from "fs";
 import {Strategy} from "./strategy";
+import {Server} from "@tus/server";
+import {FileStore} from "@tus/file-store";
 
 export class Default implements Strategy {
+  private tusServer: Server;
+
   constructor(
     private path: string,
     private publicUrl: string
   ) {
     this.publicUrl = publicUrl;
+
+    this.tusServer = new Server({
+      path: "/resumable",
+      datastore: new FileStore({directory: path})
+    });
   }
 
   async writeStream(id: string, data: fs.ReadStream, mimeType?: string): Promise<void> {
@@ -76,4 +85,11 @@ export class Default implements Strategy {
       throw err;
     }
   }
+
+  async createResumableUpload(req, res) {
+    await this.ensureStorageDiskExists();
+    await this.tusServer.handle(req, res);
+  }
+
+  async handleResumableUpload() {}
 }

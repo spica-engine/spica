@@ -7,4 +7,6 @@ export abstract class Strategy {
   abstract delete(id: string): Promise<void> | void;
   abstract url(id: string): Promise<string>;
   abstract rename(oldKey: string, newKey: string): Promise<void>;
+  abstract createResumableUpload(req: any, res: any): Promise<void>;
+  // abstract handleResumableUpload(): Promise<void>;
 }
