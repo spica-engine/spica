@@ -1,6 +1,7 @@
 import {ReadStream} from "fs";
 import {Strategy} from "./strategy";
 import {Storage, Bucket} from "@google-cloud/storage";
+import {GCSStore} from "@tus/gcs-store";
 
 export class GCloud implements Strategy {
   private storage: Storage;
@@ -46,19 +47,39 @@ export class GCloud implements Strategy {
     this.bucket.file(id).delete();
   }
 
+  async getMetadata(id: string) {
+    const [res] = await this.bucket.file(id).getMetadata();
+    return res;
+  }
+
   url(id: string) {
-    return this.bucket
-      .file(id)
-      .getMetadata()
-      .then(([res]) => {
-        const url = new URL(res.mediaLink);
-        url.searchParams.delete("generation");
-        return url.toString();
-      });
+    return this.getMetadata(id).then(res => {
+      const url = new URL(res.mediaLink);
+      url.searchParams.delete("generation");
+      return url.toString();
+    });
   }
 
   async rename(oldName: string, newName: string): Promise<void> {
     const file = this.bucket.file(oldName);
     await file.move(newName);
+  }
+
+  getTusServerDatastore() {
+    return new GCSStore({
+      bucket: this.bucket
+    });
+  }
+
+  async getFileInfo(id: string) {
+    const metadata = await this.getMetadata(id);
+    const customMetadata = JSON.parse(metadata.metadata.metadata as string);
+    return {
+      size: Number(metadata.size),
+      metadata: {
+        filename: customMetadata.filename,
+        filetype: customMetadata.filetype
+      }
+    };
   }
 }

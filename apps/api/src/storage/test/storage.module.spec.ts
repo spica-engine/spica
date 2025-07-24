@@ -13,8 +13,8 @@ describe("Strategy", () => {
         PassportTestingModule.initialize(),
         DatabaseTestingModule.standalone(),
         StorageModule.forRoot({
-          defaultPath: undefined,
-          defaultPublicUrl: undefined,
+          defaultPath: process.env.TEST_TMPDIR,
+          defaultPublicUrl: "http://insteadof",
           strategy: "default",
           objectSizeLimit: 20
         })

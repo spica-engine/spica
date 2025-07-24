@@ -7,8 +7,9 @@ import {
   DeleteObjectCommand,
   CopyObjectCommand
 } from "@aws-sdk/client-s3";
-import {fromIni} from "@aws-sdk/credential-providers";
 import {readFileSync} from "fs";
+import {S3Store} from "@tus/s3-store";
+
 export class AWSS3 implements Strategy {
   s3: S3Client;
 
@@ -16,7 +17,7 @@ export class AWSS3 implements Strategy {
     private credentialsPath: string,
     private bucketName: string
   ) {
-    const config = JSON.parse(readFileSync(this.credentialsPath, "utf-8"));
+    const config = this.getConfig();
     this.s3 = new S3Client({
       credentials: {
         accessKeyId: config.accessKeyId,
@@ -24,6 +25,10 @@ export class AWSS3 implements Strategy {
       },
       region: config.region
     });
+  }
+
+  getConfig() {
+    return JSON.parse(readFileSync(this.credentialsPath, "utf-8"));
   }
 
   writeStream(id: string, data: ReadStream, mimeType?: string): Promise<void> {
@@ -87,5 +92,27 @@ export class AWSS3 implements Strategy {
         Key: oldKey
       })
     );
+  }
+
+  getTusServerDatastore() {
+    const config = this.getConfig();
+
+    return new S3Store({
+      partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MiB,
+      s3ClientConfig: {
+        bucket: this.bucketName,
+        region: config.region,
+        credentials: {
+          accessKeyId: config.accessKeyId,
+          secretAccessKey: config.secretAccessKey
+        }
+      },
+      expirationPeriodInMilliseconds: 1000 * 60 * 60 * 24 * 2 // 2 days
+    });
+  }
+
+  async getFileInfo(id: string) {
+    const infoBuffer = await this.read(id + ".json");
+    return JSON.parse(infoBuffer.toString());
   }
 }

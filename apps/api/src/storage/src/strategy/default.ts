@@ -1,5 +1,6 @@
 import fs from "fs";
 import {Strategy} from "./strategy";
+import {FileStore} from "@tus/file-store";
 
 export class Default implements Strategy {
   constructor(
@@ -75,5 +76,17 @@ export class Default implements Strategy {
       console.error(`Error renaming file from ${oldName} to ${newName}:`, err);
       throw err;
     }
+  }
+
+  getTusServerDatastore() {
+    return new FileStore({
+      directory: this.path,
+      expirationPeriodInMilliseconds: 1000 * 60 * 60 * 24 * 2 // 2 days
+    });
+  }
+
+  async getFileInfo(id: string) {
+    const infoBuffer = await this.read(id + ".json");
+    return JSON.parse(infoBuffer.toString());
   }
 }

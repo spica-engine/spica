@@ -17,9 +17,13 @@ import {
 } from "@spica-server/interface/storage";
 import {Strategy} from "./strategy/strategy";
 import fs from "fs";
+import {Server, EVENTS} from "@tus/server";
+import {CronJob} from "cron";
 
 @Injectable()
 export class StorageService extends BaseCollection<StorageObjectMeta>("storage") {
+  private tusServer: Server;
+
   constructor(
     database: DatabaseService,
     private service: Strategy,
@@ -27,6 +31,17 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   ) {
     super(database, {
       afterInit: () => this._coll.createIndex({name: 1}, {unique: true})
+    });
+
+    this.tusServer = new Server({
+      path: "/storage/resumable",
+      datastore: this.service.getTusServerDatastore()
+    });
+
+    this.tusServer.on(EVENTS.POST_FINISH, this.onFileUploaded.bind(this));
+
+    new CronJob("0 0 * * *", () => {
+      this.tusServer.cleanUpExpiredUploads();
     });
   }
 
@@ -244,5 +259,33 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
   async getUrl(name: string) {
     return this.service.url(name);
+  }
+
+  async handleResumableUpload(req: any, res: any) {
+    await this.tusServer.handle(req, res);
+  }
+
+  async onFileUploaded(event) {
+    const fileId = event.url.split("/").pop();
+    const info = await this.service.getFileInfo(fileId);
+    const finename = info.metadata.filename;
+
+    this.service.rename(fileId, finename);
+
+    const document = {
+      name: finename,
+      content: {
+        type: info.metadata.filetype,
+        size: info.size
+      }
+    };
+
+    try {
+      await this._coll.insertOne(document);
+    } catch (exception) {
+      throw new BadRequestException(
+        exception.code === 11000 ? "An object with this name already exists." : exception.message
+      );
+    }
   }
 }

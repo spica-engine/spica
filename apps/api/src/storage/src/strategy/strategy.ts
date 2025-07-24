@@ -7,4 +7,8 @@ export abstract class Strategy {
   abstract delete(id: string): Promise<void> | void;
   abstract url(id: string): Promise<string>;
   abstract rename(oldKey: string, newKey: string): Promise<void>;
+  abstract getTusServerDatastore(): any;
+  abstract getFileInfo(
+    id: string
+  ): Promise<{size: number; metadata: {filename: string; filetype: string}}>;
 }
