@@ -98,7 +98,7 @@ export class AWSS3 implements Strategy {
     const config = this.getConfig();
 
     return new S3Store({
-      partSize: 4 * 1024 * 1024, // Each uploaded part will have ~4MiB,
+      partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MiB,
       s3ClientConfig: {
         bucket: this.bucketName,
         region: config.region,
@@ -109,5 +109,10 @@ export class AWSS3 implements Strategy {
       },
       expirationPeriodInMilliseconds: 1000 * 60 * 60 * 24 * 2 // 2 days
     });
+  }
+
+  async getFileInfo(id: string) {
+    const infoBuffer = await this.read(id + ".json");
+    return JSON.parse(infoBuffer.toString());
   }
 }
