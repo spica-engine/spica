@@ -1,4 +1,4 @@
-import {Button, FluidContainer, Icon, Popover} from "oziko-ui-kit";
+import {Button, FluidContainer, Icon, Popover, Text} from "oziko-ui-kit";
 import {memo, useEffect, useMemo, useRef, useState} from "react";
 import styles from "./BucketMorePopup.module.scss";
 import Editor from "@monaco-editor/react";
@@ -288,7 +288,7 @@ const BucketMorePopup = ({bucket}: BucketMorePopupProps) => {
           prefix={{
             children: (
               <div className={styles.header}>
-                <h3 className={styles.headerText}>RULES</h3>
+                <Text className={styles.headerText}>RULES</Text>
                 <Icon name="help" size="md" />
               </div>
             )

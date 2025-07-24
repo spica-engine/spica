@@ -21,10 +21,11 @@
 }
 
 .headerText {
-  margin: 0;
-  font-size: var(--font-size-lg);
-  font-weight: bold;
-  font-family: var(--font-family-base);
+  margin: 0 !important;
+  font-size: var(--font-size-lg) !important;
+  font-weight: bold !important;
+  font-family: var(--font-family-base) !important;
+  line-height: unset;
 }
 
 .body {
