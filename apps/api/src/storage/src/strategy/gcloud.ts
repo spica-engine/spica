@@ -1,6 +1,7 @@
 import {ReadStream} from "fs";
 import {Strategy} from "./strategy";
 import {Storage, Bucket} from "@google-cloud/storage";
+import {GCSStore} from "@tus/gcs-store";
 
 export class GCloud implements Strategy {
   private storage: Storage;
@@ -62,7 +63,11 @@ export class GCloud implements Strategy {
     await file.move(newName);
   }
 
-  getTusServerDatastore() {}
+  getTusServerDatastore() {
+    return new GCSStore({
+      bucket: this.bucket
+    });
+  }
 
   async getFileInfo(event) {}
 }
