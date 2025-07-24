@@ -1,0 +1,62 @@
+.popupContainer {
+  padding: 0;
+}
+.contentContainer {
+  width: 600px !important;
+  padding: 0;
+}
+
+.headerContainer,
+.headerContainer > div,
+.header,
+.header > div {
+  width: 100% !important;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between !important;
+  border-bottom: var(--border-default);
+  padding: var(--padding-xl);
+}
+
+.headerText {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: bold;
+  font-family: var(--font-family-base);
+}
+
+.body {
+  width: 100%;
+  padding: var(--padding-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+}
+
+.buttonsContainer {
+  display: flex;
+  justify-content: end;
+  gap: var(--gap-md);
+  button {
+    font-size: var(--font-size-md);
+  }
+}
+
+.editor {
+  width: 540px;
+  height: 60px;
+}
+
+.editorContainer {
+  height: 80px;
+  width: 100%;
+  padding: var(--padding-lg);
+  background-color: var(--color-menu-contrast);
+  border-radius: var(--border-radius-md);
+  > section {
+    width: 540px !important;
+    height: 60px !important;
+  }
+}
