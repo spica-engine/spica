@@ -27,7 +27,7 @@ type BucketContextType = {
   getCurrentBucket: (bucketId: string) => Promise<any>;
   currentBucketLoading: boolean;
   currentBucketError: string | null;
-  changeBucketName: (newTitle: string, bucket: BucketType, onSuccess?: () => void) => void;
+  changeBucketName: (newTitle: string, bucket: BucketType) => Promise<any>;
   bucketNameChangeLoading: boolean;
 };
 
@@ -50,15 +50,12 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
 
   const [buckets, setBuckets] = useState<BucketType[]>([]);
 
-  const changeBucketName = useCallback(
-    (newTitle: string, bucket: BucketType, onSuccess?: () => void) => {
-      requestBucketNameChange(newTitle, bucket, () => {
-        setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
-        onSuccess?.();
-      });
-    },
-    []
-  );
+  const changeBucketName = useCallback((newTitle: string, bucket: BucketType) => {
+    return requestBucketNameChange(newTitle, bucket).then(result => {
+      setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
+      return result;
+    });
+  }, []);
 
   useEffect(() => {
     fetchBuckets().then(result => {

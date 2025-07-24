@@ -123,14 +123,11 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
   });
 
   const requestBucketNameChange = useCallback(
-    (newTitle: string, bucket: BucketType, onSuccess?: () => void) => {
+    (newTitle: string, bucket: BucketType) => {
       const body = {...bucket, title: newTitle};
       delete (body as unknown as {section: any}).section;
       delete (body as unknown as {index: any}).index;
-      requestNameChange({body, endpoint: `/api/bucket/${bucket._id}`}).then(result => {
-        if (!result) return;
-        onSuccess?.();
-      });
+      return requestNameChange({body, endpoint: `/api/bucket/${bucket._id}`});
     },
     []
   );

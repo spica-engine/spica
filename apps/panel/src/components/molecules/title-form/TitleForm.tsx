@@ -1,12 +1,4 @@
-import {
-  Button,
-  FluidContainer,
-  Icon,
-  Text,
-  FlexElement,
-  Modal,
-  Input
-} from "oziko-ui-kit";
+import {Button, FluidContainer, Icon, Text, FlexElement, Modal, Input} from "oziko-ui-kit";
 import {type FC, memo, useState} from "react";
 import styles from "./TitleForm.module.scss";
 import type {BucketType} from "src/services/bucketService";
@@ -21,6 +13,12 @@ type TypeTitleFormProps = {
 const TitleForm: FC<TypeTitleFormProps> = ({bucket, initialValue, onClose}) => {
   const [value, setValue] = useState(initialValue);
   const {changeBucketName, bucketNameChangeLoading} = useBucket();
+  const handleSave = () => {
+    changeBucketName(value, bucket).then(result => {
+      if (!result) return;
+      onClose?.();
+    });
+  };
   return (
     <Modal showCloseButton={false} onClose={onClose} className={styles.modal} isOpen>
       <FluidContainer
@@ -56,7 +54,7 @@ const TitleForm: FC<TypeTitleFormProps> = ({bucket, initialValue, onClose}) => {
               <div className={styles.addButtonWrapper}>
                 <Button
                   className={styles.addButton}
-                  onClick={() => changeBucketName(value, bucket, onClose)}
+                  onClick={handleSave}
                   disabled={bucketNameChangeLoading}
                   loading={bucketNameChangeLoading}
                 >
