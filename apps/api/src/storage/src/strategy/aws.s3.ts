@@ -88,5 +88,7 @@ export class AWSS3 implements Strategy {
     );
   }
 
-  async handleResumableUpload(req, res) {}
+  getTusServerDatastore() {}
+
+  async getFileInfo(event) {}
 }
