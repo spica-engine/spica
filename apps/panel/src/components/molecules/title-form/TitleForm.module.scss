@@ -54,7 +54,9 @@
   .cancelButton {
     background-color: var(--color-menu-contrast) !important;
   }
-
+  .inputContainerContainer {
+    padding-top: var(--padding-md);
+  }
   .inputContainer {
     width: 340px !important;
     height: 44px;

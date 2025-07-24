@@ -34,6 +34,7 @@ const TitleForm: FC<TypeTitleFormProps> = ({bucket, initialValue, onClose}) => {
           )
         }}
         root={{
+          className: styles.inputContainerContainer,
           children: (
             <FlexElement gap={5} className={styles.inputContainer}>
               <Icon name="formatQuoteClose" size="md" />
