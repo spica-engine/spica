@@ -62,6 +62,5 @@ export class GCloud implements Strategy {
     await file.move(newName);
   }
 
-  async createResumableUpload(req, res) {}
   async handleResumableUpload(req, res) {}
 }
