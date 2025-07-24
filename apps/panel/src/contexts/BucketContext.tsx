@@ -56,8 +56,11 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
 
   const deleteBucket = useCallback(
     (bucketId: string) => {
-      setBuckets(prev => (prev ? prev.filter(i => i._id !== bucketId) : []));
-      return deleteBucketRequest(bucketId);
+      return deleteBucketRequest(bucketId).then(result => {
+        if (!result) return;
+        setBuckets(prev => (prev ? prev.filter(i => i._id !== bucketId) : []));
+        return result;
+      });
     },
     [deleteBucketRequest]
   );
@@ -80,7 +83,17 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       currentBucketLoading,
       currentBucketError
     }),
-    [buckets, loading, error, deleteBucketLoading, deleteBucketError, fetchBuckets, currentBucket, currentBucketLoading, currentBucketError]
+    [
+      buckets,
+      loading,
+      error,
+      deleteBucketLoading,
+      deleteBucketError,
+      fetchBuckets,
+      currentBucket,
+      currentBucketLoading,
+      currentBucketError
+    ]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;

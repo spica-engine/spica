@@ -1,12 +1,12 @@
-import {Button, Input, Modal} from "oziko-ui-kit";
+import {Button, FlexElement, Icon, Input, Modal} from "oziko-ui-kit";
 import styles from "./Confirmation.module.scss";
-import {useState, useMemo, memo} from "react";
+import {useState, useMemo, memo, type ReactNode} from "react";
 
 type ConfirmationProps = {
   title: string;
-  description?: string;
-  confirmText?: string;
-  cancelText?: string;
+  description?: string | ReactNode;
+  confirmLabel?: string | ReactNode;
+  cancelLabel?: string | ReactNode;
   showInput?: boolean;
   inputPlaceholder?: string;
   inputDefaultValue?: string;
@@ -14,20 +14,22 @@ type ConfirmationProps = {
   onConfirm: (inputValue?: string) => void;
   onCancel: () => void;
   loading?: boolean;
+  showCloseButton?: boolean;
 };
 
 function Confirmation({
   title,
   description,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
+  confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
   showInput = true,
   inputPlaceholder,
   inputDefaultValue,
   confirmCondition,
   onConfirm,
   onCancel,
-  loading
+  loading,
+  showCloseButton
 }: ConfirmationProps) {
   const [inputValue, setInputValue] = useState(inputDefaultValue ?? "");
 
@@ -39,19 +41,23 @@ function Confirmation({
   const isConfirmEnabled = !loading && confirmConditionResult;
 
   return (
-    <Modal showCloseButton onClose={onCancel} className={styles.confirmModal} isOpen>
+    <Modal
+      showCloseButton={showCloseButton ?? false}
+      onClose={onCancel}
+      className={styles.confirmModal}
+      isOpen
+    >
       <Modal.Header
         prefix={{
-          children: (
-            <h2 className={styles.title}>
-              {title}
-            </h2>
-          )
+          children: <h2 className={styles.title}>{title}</h2>
         }}
         className={styles.header}
       />
       <Modal.Body className={styles.body}>
+        <span>{description}</span>
         {showInput && (
+          <FlexElement gap={5} className={styles.inputContainer}>
+            <Icon name="formatQuoteClose" size="md" />
             <Input
               autoFocus
               placeholder={inputPlaceholder}
@@ -60,8 +66,8 @@ function Confirmation({
               onChange={e => setInputValue(e.target.value)}
               type="text"
             />
+          </FlexElement>
         )}
-        <span>{description}</span>
       </Modal.Body>
       <Modal.Footer
         dimensionX="fill"
@@ -69,8 +75,13 @@ function Confirmation({
         className={styles.footer}
         prefix={{
           children: (
-            <Button color="default" onClick={() => onCancel()} className={styles.cancelButton}>
-              {cancelText}
+            <Button
+              color="danger"
+              onClick={() => onConfirm(inputValue)}
+              className={styles.confirmButton}
+              disabled={!isConfirmEnabled}
+            >
+              {confirmLabel}
             </Button>
           )
         }}
@@ -78,15 +89,15 @@ function Confirmation({
           children: (
             <Button
               color="default"
-              onClick={() => onConfirm(inputValue)}
-              className={styles.confirmButton}
-              disabled={!isConfirmEnabled}
+              variant="text"
+              onClick={() => onCancel()}
+              className={styles.cancelButton}
             >
-              {confirmText}
+              {cancelLabel}
             </Button>
           )
         }}
-      ></Modal.Footer>
+      />
     </Modal>
   );
 }

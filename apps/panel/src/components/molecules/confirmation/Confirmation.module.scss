@@ -1,6 +1,8 @@
 .confirmModal {
   padding: var(--padding-xl) !important;
   min-height: 0 !important;
+  width: 360px !important;
+  min-width: 360px !important;
   .header {
     border-bottom: var(--border-default);
     padding: var(--padding-lg) 0px;
@@ -12,11 +14,28 @@
   .body {
     display: flex;
     flex-direction: column !important;
+    gap: var(--gap-lg) !important;
   }
   .footer {
     padding: 0;
   }
 }
+.inputContainer {
+  width: 100% !important;
+  height: 44px;
+  padding: 0 var(--padding-md);
+  border-radius: var(--border-radius-md);
+  border: var(--border-default);
+  background-color: var(--color-input-background);
+}
 .input {
-  width: 100%;
+  width: 100% !important;
+  height: 44px;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+}
+
+.cancelButton:hover {
+  background-color: var(--color-menu-contrast) !important;
+  border: none;
 }

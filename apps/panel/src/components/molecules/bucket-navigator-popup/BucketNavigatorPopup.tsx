@@ -36,7 +36,10 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
   const handleDeleteBucket = () => {
-    deleteBucket(bucket._id).then(() => setIsConfirmationOpen(false));
+    deleteBucket(bucket._id).then(result => {
+      if (!result) return;
+      setIsConfirmationOpen(false);
+    });
   };
 
   return (
@@ -112,15 +115,39 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
       </Popover>
       {isConfirmationOpen && (
         <Confirmation
-          title={`Delete Bucket ${bucket.title}`}
-          description={`Please type ${bucket.title} to confirm deletion. This action can not be undone.`}
-          inputPlaceholder={`Type ${bucket.title} to confirm`}
-          confirmText="Delete"
-          cancelText="Cancel"
+          title="DELETE BUCKET"
+          description={
+            <>
+              <p className={styles.confirmText}>
+                This action will permanently delete this bucket and remove all associated data and
+                connections. This cannot be undone.
+              </p>
+              <span className={styles.confirmHint}>
+                {" "}
+                Please type {bucket.title} to confirm deletion.
+              </span>
+            </>
+          }
+          inputPlaceholder="Type Here"
+          confirmLabel={
+            <>
+              <Icon name="delete" />
+              Confirm
+            </>
+          }
+          cancelLabel={
+            <>
+              <Icon name="close" />
+              Cancel
+            </>
+          }
           showInput
           confirmCondition={val => val === bucket.title}
           onConfirm={handleDeleteBucket}
-          onCancel={() => setIsConfirmationOpen(false)}
+          onCancel={() => {
+            setIsConfirmationOpen(false);
+            setIsOpen(false);
+          }}
           loading={deleteBucketLoading}
         />
       )}
