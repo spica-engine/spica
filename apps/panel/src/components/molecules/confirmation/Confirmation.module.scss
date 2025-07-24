@@ -1,14 +1,23 @@
+* {
+  font-family: var(--font-family-base) !important;
+  line-height: unset !important;
+}
+
 .confirmModal {
-  padding: var(--padding-xl) !important;
+  padding: 0;
   min-height: 0 !important;
   width: 360px !important;
   min-width: 360px !important;
   .header {
+    padding: 0 var(--padding-md) !important;
     border-bottom: var(--border-default);
-    padding: var(--padding-lg) 0px;
+    height: fit-content !important;
+    padding: 0;
     .title {
       font-size: var(--font-size-xl);
       font-weight: 700;
+      padding: var(--padding-xl) 0 !important;
+      color: var(--color-black)
     }
   }
   .body {
@@ -17,9 +26,17 @@
     gap: var(--gap-lg) !important;
   }
   .footer {
-    padding: 0;
+    padding: 0 var(--padding-md) var(--padding-md) 0;
   }
 }
+.title {
+  margin: 0 !important;
+  font-size: var(--font-size-lg) !important;
+  font-weight: bold !important;
+  font-family: var(--font-family-base) !important;
+  line-height: unset;
+}
+
 .inputContainer {
   width: 100% !important;
   height: 44px;

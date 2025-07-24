@@ -1,4 +1,4 @@
-import {Button, FlexElement, Icon, Input, Modal} from "oziko-ui-kit";
+import {Button, FlexElement, Icon, Input, Modal, Text} from "oziko-ui-kit";
 import styles from "./Confirmation.module.scss";
 import {useState, useMemo, memo, type ReactNode} from "react";
 
@@ -49,7 +49,7 @@ function Confirmation({
     >
       <Modal.Header
         prefix={{
-          children: <h2 className={styles.title}>{title}</h2>
+          children: <Text className={styles.title}>{title}</Text>
         }}
         className={styles.header}
       />
