@@ -38,30 +38,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       datastore: this.service.getTusServerDatastore()
     });
 
-    this.tusServer.on(EVENTS.POST_FINISH, async event => {
-      const fileId = event.url.split("/").pop();
-      const infoBuffer = await this.service.read(fileId + ".json");
-      const info = JSON.parse(infoBuffer.toString());
-
-      const finename = info.metadata.filename;
-      this.service.rename(fileId, finename);
-
-      const document = {
-        name: finename,
-        content: {
-          type: info.metadata.filetype,
-          size: info.size
-        }
-      };
-
-      try {
-        await this._coll.insertOne(document);
-      } catch (exception) {
-        throw new BadRequestException(
-          exception.code === 11000 ? "An object with this name already exists." : exception.message
-        );
-      }
-    });
+    this.tusServer.on(EVENTS.POST_FINISH, this.onFileUploaded.bind(this));
 
     new CronJob("0 0 * * *", () => {
       this.tusServer.cleanUpExpiredUploads();
@@ -286,5 +263,30 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
   async handleResumableUpload(req: any, res: any) {
     await this.tusServer.handle(req, res);
+  }
+
+  async onFileUploaded(event) {
+    const fileId = event.url.split("/").pop();
+    const infoBuffer = await this.service.read(fileId + ".json");
+    const info = JSON.parse(infoBuffer.toString());
+
+    const finename = info.metadata.filename;
+    this.service.rename(fileId, finename);
+
+    const document = {
+      name: finename,
+      content: {
+        type: info.metadata.filetype,
+        size: info.size
+      }
+    };
+
+    try {
+      await this._coll.insertOne(document);
+    } catch (exception) {
+      throw new BadRequestException(
+        exception.code === 11000 ? "An object with this name already exists." : exception.message
+      );
+    }
   }
 }
