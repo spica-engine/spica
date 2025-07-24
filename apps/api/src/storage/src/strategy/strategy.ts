@@ -8,5 +8,4 @@ export abstract class Strategy {
   abstract url(id: string): Promise<string>;
   abstract rename(oldKey: string, newKey: string): Promise<void>;
   abstract getTusServerDatastore(): any;
-  abstract getFileInfo(event): Promise<any>;
 }

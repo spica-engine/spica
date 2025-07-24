@@ -81,10 +81,4 @@ export class Default implements Strategy {
   getTusServerDatastore() {
     return new FileStore({directory: this.path});
   }
-
-  async getFileInfo(event) {
-    const fileId = event.url.split("/").pop();
-    const infoBuffer = await this.read(fileId + ".json");
-    return JSON.parse(infoBuffer.toString());
-  }
 }

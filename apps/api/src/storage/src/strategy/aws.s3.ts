@@ -109,6 +109,4 @@ export class AWSS3 implements Strategy {
       }
     });
   }
-
-  async getFileInfo(event) {}
 }
