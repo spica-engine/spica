@@ -6474,6 +6474,14 @@
   optionalDependencies:
     "@redis/client" "^1.6.0"
 
+"@tus/gcs-store@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.npmjs.org/@tus/gcs-store/-/gcs-store-2.0.0.tgz#b801b4803bb04536de7f69d90096fe91db386e83"
+  integrity sha512-YCSSI8PesTSFEmfJaYBHRN+kvmPBElW+w2w4ODr3JsemH2JTeEbc47BgOC9PgEIEMdo+3FgmmyUcq5jsyO2vmQ==
+  dependencies:
+    "@tus/utils" "^0.6.0"
+    debug "^4.3.4"
+
 "@tus/s3-store@^2.0.0":
   version "2.0.0"
   resolved "https://registry.npmjs.org/@tus/s3-store/-/s3-store-2.0.0.tgz#f33ec8b4136280598427963a747aff4131598f45"
