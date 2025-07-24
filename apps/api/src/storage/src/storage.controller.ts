@@ -223,7 +223,7 @@ export class StorageController {
    * Creates and returns new upload resource
    */
   @Post("resumable")
-  // @UseGuards(AuthGuard(), ActionGuard("storage:create"))
+  @UseGuards(AuthGuard(), ActionGuard("storage:create"))
   async getUploadUrl(@Req() req, @Res() res) {
     await this.storage.handleResumableUpload(req, res);
   }
@@ -232,7 +232,7 @@ export class StorageController {
    * Accepts all resumable uploads
    */
   @All("resumable/:id")
-  // @UseGuards(AuthGuard(), ActionGuard("storage:create"))
+  @UseGuards(AuthGuard(), ActionGuard("storage:create"))
   async handleUpload(@Req() req, @Res() res) {
     await this.storage.handleResumableUpload(req, res);
   }
