@@ -84,4 +84,9 @@ export class Default implements Strategy {
       expirationPeriodInMilliseconds: 1000 * 60 * 60 * 24 * 2 // 2 days
     });
   }
+
+  async getFileInfo(id: string) {
+    const infoBuffer = await this.read(id + ".json");
+    return JSON.parse(infoBuffer.toString());
+  }
 }
