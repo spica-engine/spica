@@ -38,9 +38,10 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     });
 
     this.tusServer.on(EVENTS.POST_FINISH, async event => {
-      const info = await this.service.getFileInfo(event);
-
       const fileId = event.url.split("/").pop();
+      const infoBuffer = await this.service.read(fileId + ".json");
+      const info = JSON.parse(infoBuffer.toString());
+
       const finename = info.metadata.filename;
       this.service.rename(fileId, finename);
 

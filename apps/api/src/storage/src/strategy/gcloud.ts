@@ -68,6 +68,4 @@ export class GCloud implements Strategy {
       bucket: this.bucket
     });
   }
-
-  async getFileInfo(event) {}
 }
