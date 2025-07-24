@@ -1,6 +1,6 @@
 import {useCallback} from "react";
 import useApi from "../hooks/useApi";
-import {useEffect, useMemo} from "react";
+import {useMemo} from "react";
 
 export type BucketType = {
   _id: string;
@@ -117,6 +117,24 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
   }, []);
 
+  const {request: requestNameChange, loading: bucketNameChangeLoading} = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
+  const requestBucketNameChange = useCallback(
+    (newTitle: string, bucket: BucketType, onSuccess?: () => void) => {
+      const body = {...bucket, title: newTitle};
+      delete (body as unknown as {section: any}).section;
+      delete (body as unknown as {index: any}).index;
+      requestNameChange({body, endpoint: `/api/bucket/${bucket._id}`}).then(result => {
+        if (!result) return;
+        onSuccess?.();
+      });
+    },
+    []
+  );
+
   return {
     buckets,
     fetchBuckets,
@@ -128,6 +146,8 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     currentBucketError,
     changeBucketOrder,
     bucketOrderLoading,
-    bucketOrderError
+    bucketOrderError,
+    requestBucketNameChange,
+    bucketNameChangeLoading
   };
 };

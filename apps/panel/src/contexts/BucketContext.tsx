@@ -1,4 +1,12 @@
-import {createContext, useMemo, useContext, type ReactNode, useEffect, useState} from "react";
+import {
+  createContext,
+  useMemo,
+  useContext,
+  type ReactNode,
+  useEffect,
+  useState,
+  useCallback
+} from "react";
 import {useBucketService, type BucketType} from "../services/bucketService";
 import type {AxiosRequestHeaders} from "axios";
 
@@ -19,6 +27,8 @@ type BucketContextType = {
   getCurrentBucket: (bucketId: string) => Promise<any>;
   currentBucketLoading: boolean;
   currentBucketError: string | null;
+  changeBucketName: (newTitle: string, bucket: BucketType, onSuccess?: () => void) => void;
+  bucketNameChangeLoading: boolean;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -33,10 +43,22 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     getCurrentBucket,
     changeBucketOrder,
     bucketOrderLoading,
-    bucketOrderError
+    bucketOrderError,
+    bucketNameChangeLoading,
+    requestBucketNameChange
   } = useBucketService();
 
   const [buckets, setBuckets] = useState<BucketType[]>([]);
+
+  const changeBucketName = useCallback(
+    (newTitle: string, bucket: BucketType, onSuccess?: () => void) => {
+      requestBucketNameChange(newTitle, bucket, () => {
+        setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
+        onSuccess?.();
+      });
+    },
+    []
+  );
 
   useEffect(() => {
     fetchBuckets().then(result => {
@@ -57,9 +79,21 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       currentBucket,
       getCurrentBucket,
       currentBucketLoading,
-      currentBucketError
+      currentBucketError,
+      bucketNameChangeLoading,
+      changeBucketName
     }),
-    [buckets, loading, error, fetchBuckets, currentBucket, currentBucketLoading, currentBucketError]
+    [
+      buckets,
+      loading,
+      error,
+      fetchBuckets,
+      currentBucket,
+      currentBucketLoading,
+      currentBucketError,
+      bucketNameChangeLoading,
+      changeBucketName
+    ]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;

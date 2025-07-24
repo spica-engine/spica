@@ -1,8 +1,7 @@
 import {Button, FlexElement, Icon, Popover, Text, useOnClickOutside} from "oziko-ui-kit";
-import {memo, useRef, type FC} from "react";
+import {memo, useRef, useState, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
-import {useDrawerController} from "../../../contexts/DrawerContext";
-import {TitleFormWrapper} from "../title-form/TitleForm";
+import TitleForm from "../title-form/TitleForm";
 import type {BucketType} from "../../../services/bucketService";
 
 type TypeBucketNavigatorPopup = {
@@ -26,6 +25,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   bucket,
   onEdit
 }) => {
+  const [titleFormOpen, setTitleFormOpen] = useState(false);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
 
@@ -33,8 +33,6 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
     refs: [containerRef, contentRef],
     onClickOutside: () => setIsOpen(false)
   });
-
-  const {openDrawer, closeDrawer} = useDrawerController();
 
   return (
     <div ref={containerRef} className={`${styles.container} ${className || ""}`}>
@@ -70,16 +68,10 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
                 dimensionX: "fill"
               }}
               color="default"
-              onClick={(e) => {
-                e.stopPropagation()
-                openDrawer(
-                  <TitleFormWrapper
-                    bucketId={bucket._id}
-                    initialValue={bucket.title}
-                    onSubmit={closeDrawer}
-                    onCancel={closeDrawer}
-                  />
-                );
+              onClick={e => {
+                e.stopPropagation();
+                setTitleFormOpen(true);
+                setIsOpen(false);
               }}
               className={styles.buttons}
             >
@@ -114,6 +106,13 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
           <Icon name="dotsVertical" size="sm" />
         </Button>
       </Popover>
+      {titleFormOpen && (
+        <TitleForm
+          bucket={bucket}
+          initialValue={bucket.title}
+          onClose={() => setTitleFormOpen(false)}
+        />
+      )}
     </div>
   );
 };

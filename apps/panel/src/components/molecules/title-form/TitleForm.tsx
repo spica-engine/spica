@@ -1,93 +1,84 @@
-import {Button, FluidContainer, Icon, Text, StringInput, FlexElement} from "oziko-ui-kit";
-import {type FC, useCallback, useState} from "react";
+import {
+  Button,
+  FluidContainer,
+  Icon,
+  Text,
+  FlexElement,
+  Modal,
+  Input
+} from "oziko-ui-kit";
+import {type FC, memo, useState} from "react";
 import styles from "./TitleForm.module.scss";
-import useApi from "../../../hooks/useApi";
+import type {BucketType} from "src/services/bucketService";
+import {useBucket} from "../../../contexts/BucketContext";
 
 type TypeTitleFormProps = {
-  onSave: (newTitle: string) => void;
-  onCancel?: () => void;
+  bucket: BucketType;
   initialValue: string;
-  error?: string;
-  loading?: boolean;
+  onClose?: () => void;
 };
 
-type TitleFormWrapperProps = {
-  onSubmit?: () => void;
-  bucketId: string;
-  initialValue: string;
-  onCancel?: () => void;
-};
-
-export const TitleFormWrapper = ({
-  onSubmit,
-  bucketId,
-  initialValue,
-  onCancel
-}: TitleFormWrapperProps) => {
-  const {request, loading, error} = useApi({
-    endpoint: `/api/bucket/${bucketId}`,
-    method: "patch"
-  });
-
-  const onSave = useCallback(
-    (newTitle: string) => {
-      request({body: {title: newTitle}}).then(result => {
-        if (!result) return;
-        onSubmit?.();
-      });
-    },
-    [onSubmit, request]
-  );
-
-  return (
-    <TitleForm
-      onCancel={onCancel}
-      onSave={onSave}
-      initialValue={initialValue}
-      loading={loading}
-      error={error ?? ""}
-    />
-  );
-};
-
-const TitleForm: FC<TypeTitleFormProps> = ({initialValue, error, loading, onSave, onCancel}) => {
+const TitleForm: FC<TypeTitleFormProps> = ({bucket, initialValue, onClose}) => {
   const [value, setValue] = useState(initialValue);
-
+  const {changeBucketName, bucketNameChangeLoading} = useBucket();
   return (
-    <FluidContainer
-      className={styles.container}
-      direction="vertical"
-      gap={10}
-      prefix={{
-        children: <Text className={styles.title}>Edit Name</Text>
-      }}
-      root={{
-        dimensionX: 360,
-        children: (
-          <div>
-            <StringInput onChange={setValue} label={"Name"} value={value} />
-            <Text className={styles.errorText}>{error}</Text>
-          </div>
-        )
-      }}
-      suffix={{
-        dimensionX: "fill",
-        alignment: "rightCenter",
-        children: (
-          <FlexElement>
-            <Button onClick={() => onCancel?.()} disabled={loading}>
-              <Icon name="close" />
-              <Text className={styles.buttonText}>Cancel</Text>
-            </Button>
-            <Button onClick={() => onSave(value)} disabled={loading} loading={loading}>
-              <Icon name="save" />
-              <Text className={styles.buttonText}>Save</Text>
-            </Button>
-          </FlexElement>
-        )
-      }}
-    />
+    <Modal showCloseButton={false} onClose={onClose} className={styles.modal} isOpen>
+      <FluidContainer
+        className={styles.container}
+        direction="vertical"
+        gap={10}
+        mode="fill"
+        prefix={{
+          children: (
+            <div className={styles.header}>
+              <Text className={styles.headerText}>EDIT NAME</Text>
+            </div>
+          )
+        }}
+        root={{
+          children: (
+            <FlexElement gap={5} className={styles.inputContainer}>
+              <Icon name="formatQuoteClose" size="md" />
+              <Input
+                className={styles.input}
+                onChange={e => setValue(e.target.value)}
+                placeholder="Name"
+                value={value}
+              />
+            </FlexElement>
+          )
+        }}
+        suffix={{
+          dimensionX: "fill",
+          alignment: "rightCenter",
+          children: (
+            <FlexElement gap={10} className={styles.buttonsContainer}>
+              <div className={styles.addButtonWrapper}>
+                <Button
+                  className={styles.addButton}
+                  onClick={() => changeBucketName(value, bucket, onClose)}
+                  disabled={bucketNameChangeLoading}
+                  loading={bucketNameChangeLoading}
+                >
+                  <Icon name="save" />
+                  <Text className={styles.addButtonText}>Save</Text>
+                </Button>
+              </div>
+              <Button
+                className={styles.cancelButton}
+                variant="text"
+                onClick={() => onClose?.()}
+                disabled={bucketNameChangeLoading}
+              >
+                <Icon name="close" />
+                <Text>Cancel</Text>
+              </Button>
+            </FlexElement>
+          )
+        }}
+      />
+    </Modal>
   );
 };
 
-export default TitleForm;
+export default memo(TitleForm);
