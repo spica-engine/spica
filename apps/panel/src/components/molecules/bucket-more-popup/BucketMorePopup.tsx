@@ -1,5 +1,5 @@
-import {Button, FluidContainer, Icon, Popover, Text, useOnClickOutside} from "oziko-ui-kit";
-import {memo, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject} from "react";
+import {Button, FluidContainer, Icon, Popover} from "oziko-ui-kit";
+import {memo, useEffect, useMemo, useRef, useState} from "react";
 import styles from "./BucketMorePopup.module.scss";
 import Editor from "@monaco-editor/react";
 import * as monaco from "monaco-editor";

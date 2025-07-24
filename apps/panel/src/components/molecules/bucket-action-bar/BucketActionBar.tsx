@@ -1,6 +1,6 @@
 import React, {memo} from "react";
 import styles from "./BucketActionBar.module.scss";
-import {Button, FlexElement, Icon, InputWithIcon} from "oziko-ui-kit";
+import {Button, FlexElement, Icon} from "oziko-ui-kit";
 import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
 import type {BucketType} from "src/services/bucketService";
