@@ -18,6 +18,7 @@ import {
 import {Strategy} from "./strategy/strategy";
 import fs from "fs";
 import {Server, EVENTS} from "@tus/server";
+import {CronJob} from "cron";
 
 @Injectable()
 export class StorageService extends BaseCollection<StorageObjectMeta>("storage") {
@@ -52,7 +53,18 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
           size: info.size
         }
       };
-      this._coll.insertOne(document);
+
+      try {
+        await this._coll.insertOne(document);
+      } catch (exception) {
+        throw new BadRequestException(
+          exception.code === 11000 ? "An object with this name already exists." : exception.message
+        );
+      }
+    });
+
+    new CronJob("0 0 * * *", () => {
+      this.tusServer.cleanUpExpiredUploads();
     });
   }
 

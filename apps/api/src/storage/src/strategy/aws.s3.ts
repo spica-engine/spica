@@ -106,7 +106,8 @@ export class AWSS3 implements Strategy {
           accessKeyId: config.accessKeyId,
           secretAccessKey: config.secretAccessKey
         }
-      }
+      },
+      expirationPeriodInMilliseconds: 1000 * 60 * 60 * 24 * 2 // 2 days
     });
   }
 }

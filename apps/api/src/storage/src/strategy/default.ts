@@ -79,6 +79,9 @@ export class Default implements Strategy {
   }
 
   getTusServerDatastore() {
-    return new FileStore({directory: this.path});
+    return new FileStore({
+      directory: this.path,
+      expirationPeriodInMilliseconds: 1000 * 60 * 60 * 24 * 2 // 2 days
+    });
   }
 }
