@@ -17,9 +17,12 @@ import {
 } from "@spica-server/interface/storage";
 import {Strategy} from "./strategy/strategy";
 import fs from "fs";
+import {Server, EVENTS} from "@tus/server";
 
 @Injectable()
 export class StorageService extends BaseCollection<StorageObjectMeta>("storage") {
+  private tusServer: Server;
+
   constructor(
     database: DatabaseService,
     private service: Strategy,
@@ -27,6 +30,28 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   ) {
     super(database, {
       afterInit: () => this._coll.createIndex({name: 1}, {unique: true})
+    });
+
+    this.tusServer = new Server({
+      path: "/storage/resumable",
+      datastore: this.service.getTusServerDatastore()
+    });
+
+    this.tusServer.on(EVENTS.POST_FINISH, async event => {
+      const info = await this.service.getFileInfo(event);
+
+      const fileId = event.url.split("/").pop();
+      const finename = info.metadata.filename;
+      this.service.rename(fileId, finename);
+
+      const document = {
+        name: finename,
+        content: {
+          type: info.metadata.filetype,
+          size: info.size
+        }
+      };
+      this._coll.insertOne(document);
     });
   }
 
@@ -247,6 +272,6 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   }
 
   async handleResumableUpload(req: any, res: any) {
-    await this.service.handleResumableUpload(req, res);
+    await this.tusServer.handle(req, res);
   }
 }

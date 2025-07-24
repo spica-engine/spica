@@ -1,31 +1,13 @@
 import fs from "fs";
 import {Strategy} from "./strategy";
-import {Server, EVENTS} from "@tus/server";
 import {FileStore} from "@tus/file-store";
 
 export class Default implements Strategy {
-  private tusServer: Server;
-
   constructor(
     private path: string,
     private publicUrl: string
   ) {
     this.publicUrl = publicUrl;
-
-    this.tusServer = new Server({
-      path: "/storage/resumable",
-      datastore: new FileStore({directory: path})
-    });
-
-    this.tusServer.on(EVENTS.POST_FINISH, async event => {
-      const fileId = event.url.split("/").pop();
-
-      const infoBuffer = await this.read(fileId + ".json");
-      const info = JSON.parse(infoBuffer.toString());
-
-      const finename = info.metadata.filename;
-      this.rename(fileId, finename);
-    });
   }
 
   async writeStream(id: string, data: fs.ReadStream, mimeType?: string): Promise<void> {
@@ -96,8 +78,13 @@ export class Default implements Strategy {
     }
   }
 
-  async handleResumableUpload(req: any, res: any) {
-    await this.ensureStorageDiskExists();
-    await this.tusServer.handle(req, res);
+  getTusServerDatastore() {
+    return new FileStore({directory: this.path});
+  }
+
+  async getFileInfo(event) {
+    const fileId = event.url.split("/").pop();
+    const infoBuffer = await this.read(fileId + ".json");
+    return JSON.parse(infoBuffer.toString());
   }
 }
