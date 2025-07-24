@@ -225,7 +225,6 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
     };
   }, []);
 
-  console.log("suggestions: ", suggestions)
   return (
     <div className={styles.body}>
       <div className={styles.editorContainer}>
