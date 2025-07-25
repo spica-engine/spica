@@ -154,13 +154,9 @@ export class GraphqlController implements OnModuleInit {
           return;
         }
 
-        try {
-          const result = validateBuckets(buckets);
-          this.buckets = result.buckets;
-          this.schemaWarnings = result.warnings;
-        } catch (err) {
-          console.error("GraphQL bucket validation error: ", err);
-        }
+        const result = validateBuckets(buckets);
+        this.buckets = result.buckets;
+        this.schemaWarnings = result.warnings;
 
         this.schema = this.getSchema(this.buckets);
       });
