@@ -22,7 +22,7 @@
       align-items: center;
       justify-content: center;
       line-height: unset;
-      >div>div {
+      > div > div {
         gap: var(--gap-md) !important;
       }
     }
@@ -35,4 +35,8 @@
       color: var(--color-danger);
     }
   }
+}
+
+.confirmText {
+  margin-top: 0;
 }
