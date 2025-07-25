@@ -1,7 +1,6 @@
 import {Button, FlexElement, Icon, Popover, Text, useOnClickOutside} from "oziko-ui-kit";
-import {memo, useRef, type FC} from "react";
+import {memo, useRef, useState, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
-import {useDrawerController} from "../../../contexts/DrawerContext";
 import type {BucketType} from "../../../services/bucketService";
 import CategorySelectCreate from "../category-select-create/CategorySelectCreate";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -12,30 +11,24 @@ type TypeBucketNavigatorPopup = {
   onOpen?: () => void;
   onClose?: () => void;
   isOpen: boolean;
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({className, isOpen, setIsOpen, bucket}) => {
+const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
+  className,
+  isOpen,
+  setIsOpen,
+  bucket
+}) => {
   const containerRef = useRef(null);
   const contentRef = useRef(null);
+  const [isCategorySelectCreateOpen, setIsCategorySelectCreateOpen] = useState(false);
 
   useOnClickOutside({
     refs: [containerRef, contentRef],
     onClickOutside: () => setIsOpen(false)
   });
   const {categories, changeCategory} = useBucket();
-  const {openDrawer, closeDrawer} = useDrawerController();
-
-  const handleAddToCategory = () => {
-    openDrawer(
-      <CategorySelectCreate
-        changeCategory={changeCategory}
-        bucketId={bucket._id}
-        categories={categories}
-        onSubmit={closeDrawer}
-      />
-    );
-  };
 
   return (
     <div ref={containerRef} className={`${styles.container} ${className || ""}`}>
@@ -59,7 +52,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({className, isOpen, 
               color="default"
               onClick={e => {
                 e.stopPropagation();
-                handleAddToCategory();
+                setIsCategorySelectCreateOpen(true);
               }}
               className={styles.buttons}
             >
@@ -108,6 +101,14 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({className, isOpen, 
           <Icon name="dotsVertical" size="sm" />
         </Button>
       </Popover>
+      {isCategorySelectCreateOpen && (
+        <CategorySelectCreate
+          changeCategory={changeCategory}
+          bucket={bucket}
+          categories={categories}
+          onCancel={() => setIsCategorySelectCreateOpen(false)}
+        />
+      )}
     </div>
   );
 };

@@ -1,19 +1,20 @@
-import {Button, FluidContainer, Input} from "oziko-ui-kit";
+import {Button, FluidContainer, Input, Modal, Text} from "oziko-ui-kit";
 import styles from "./CategorySelectCreate.module.scss";
 import {memo, useCallback, useEffect, useId, useMemo, useState} from "react";
 import truncateText from "../../../utils/truncate-text";
+import type {BucketType} from "src/services/bucketService";
 
 type CategorySelectCreateProps = {
-  bucketId: string;
+  bucket: BucketType;
   categories: string[];
-  onSubmit?: () => void;
+  onCancel?: () => void;
   changeCategory: (bucketId: string, category: string) => Promise<any>;
 };
 
 const CategorySelectCreate = ({
-  bucketId,
+  bucket,
   categories,
-  onSubmit,
+  onCancel,
   changeCategory
 }: CategorySelectCreateProps) => {
   const [textValue, setTextValue] = useState("");
@@ -26,7 +27,7 @@ const CategorySelectCreate = ({
   );
 
   const handleSubmit = useCallback((value: string) => {
-    changeCategory(bucketId, value).then(() => onSubmit?.());
+    changeCategory(bucket._id, value).then(() => onCancel?.());
   }, []);
 
   const handleTextSubmit = useCallback(() => {
@@ -52,60 +53,94 @@ const CategorySelectCreate = ({
     handleValidation();
   }, [textValue]);
 
+  const truncatedCategoryName = truncateText(textValue, 32)
+
   return (
-    <FluidContainer
-      mode="fill"
-      dimensionX={"fill"}
-      direction="vertical"
-      gap={20}
-      className={styles.container}
-      prefix={{
-        children: (
-          <div className={styles.textFieldContainer}>
-            <div className={styles.textField}>
-              <label htmlFor={textInputId} className={styles.label}>
-                Create a New Category
-              </label>
-              <Input
-                id={textInputId}
-                autoFocus
-                className={styles.input}
-                value={textValue}
-                onChange={e => setTextValue(e.target.value)}
-              />
-            </div>
-            {textError && <span className={styles.errorText}>{textError}</span>}
-          </div>
-        )
-      }}
-      root={{
-        children: (
-          <div className={styles.selectField}>
-            <p className={styles.label}>Or choose an existing one</p>
-            <div>
-              {filteredCategories.length ? (
-                filteredCategories.map(i => (
-                  <Button onClick={() => handleSubmit(i)} key={i}>
-                    {i}
-                  </Button>
-                ))
-              ) : (
-                <span className={styles.noCategoryFound}>No category found</span>
-              )}
-            </div>
-          </div>
-        )
-      }}
-      suffix={{
-        children: (
-          <Button onClick={handleTextSubmit} className={styles.addButton}>
-            <span className={styles.prefix}>Add</span>
-            <span className={styles.dynamic}>&nbsp;"{truncateText(textValue, 45)}"&nbsp;</span>
-            <span className={styles.suffix}>as new category</span>
-          </Button>
-        )
-      }}
-    />
+    <Modal showCloseButton={false} onClose={onCancel} className={styles.modal} isOpen>
+      <Modal.Header
+        className={styles.header}
+        prefix={{
+          children: (
+            <Text className={styles.title}>
+              Move {bucket.title} to Category{" "}
+              <span className={styles.dynamic}>&nbsp;"{truncatedCategoryName}"&nbsp;</span>
+            </Text>
+          )
+        }}
+      />
+      <Modal.Body>
+        <FluidContainer
+          mode="fill"
+          dimensionX={"fill"}
+          direction="vertical"
+          gap={20}
+          className={styles.container}
+          prefix={{
+            children: (
+              <div className={styles.textFieldContainer}>
+                <div className={styles.textField}>
+                  <label htmlFor={textInputId} className={styles.label}>
+                    Create a New Category
+                  </label>
+                  <Input
+                    id={textInputId}
+                    autoFocus
+                    className={styles.input}
+                    value={textValue}
+                    onChange={e => setTextValue(e.target.value)}
+                  />
+                </div>
+                {textError && <span className={styles.errorText}>{textError}</span>}
+              </div>
+            )
+          }}
+          root={{
+            children: (
+              <div className={styles.selectField}>
+                <p className={styles.label}>Or choose an existing one</p>
+                <div>
+                  {filteredCategories.length ? (
+                    filteredCategories.map(i => (
+                      <Button onClick={() => handleSubmit(i)} key={i}>
+                        {i}
+                      </Button>
+                    ))
+                  ) : (
+                    <span className={styles.noCategoryFound}>No category found</span>
+                  )}
+                </div>
+              </div>
+            )
+          }}
+        />
+      </Modal.Body>
+      <Modal.Footer
+        dimensionX="fill"
+        alignment="rightCenter"
+        className={styles.footer}
+        prefix={{
+          children: (
+            <Button onClick={handleTextSubmit} className={styles.addButton}>
+              <span className={styles.prefix}>Add</span>
+              <span className={styles.dynamic}>&nbsp;"{truncatedCategoryName}"&nbsp;</span>
+              <span className={styles.suffix}>as new category</span>
+            </Button>
+          )
+        }}
+        suffix={{
+          children: (
+            <Button
+              color="default"
+              variant="text"
+              onClick={() => onCancel?.()}
+              className={styles.cancelButton}
+            >
+              Cancel
+            </Button>
+          )
+        }}
+      />
+    </Modal>
   );
 };
 
