@@ -62,3 +62,7 @@
 .cancelButton, .confirmButton {
   height: 32px !important;
 }
+
+.confirmButton:disabled:hover {
+  background-color: var(--color-danger) !important;
+}
