@@ -9,6 +9,7 @@
   border-bottom-right-radius: 0;
   white-space: nowrap;
   max-width: 100%;
+  width: 100%;
 }
 
 .columnHeaderText {
@@ -87,15 +88,6 @@
   margin-top: -2px;
 }
 
-.newFieldColumn {
-  flex: 1;
-  position: relative;
-  max-width: 140px;
-  &:not(:last-child) {
-    border-right: none;
-  }
-}
-
 .selectColumn {
   min-width: 60px !important;
   flex: none !important;
@@ -117,6 +109,7 @@
 
 .selectCell {
   width: 60px;
+  border-bottom: var(--border-default) !important;
 }
 
 .evenCell {
@@ -136,7 +129,6 @@
   border-radius: var(--border-radius-md);
 }
 
-
 .fileCell {
   display: flex;
   align-items: center;
@@ -153,13 +145,38 @@
   border-right-color: var(--color-input-placeholder) !important;
 }
 
+.column:not(.newFieldColumn) {
+  overscroll-behavior: none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.column:not(.newFieldColumn)::-webkit-scrollbar {
+  display: none;
+}
+
 .column > :nth-child(odd):not(:first-child) {
   background-color: var(--color-zebra);
 }
+.column > :nth-child(even) {
+  background-color: var(--color-default);
+}
+
 
 .column > :not(:nth-child(2)) {
   .grayText {
     display: none;
+  }
+}
+
+.newFieldColumn {
+  flex: 1;
+  position: relative;
+  max-width: 140px;
+  overflow-y: auto;
+
+  &:not(:last-child) {
+    border-right: none;
   }
 }
 

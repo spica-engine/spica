@@ -18,6 +18,7 @@ type FieldType =
   | "richtext";
 
 export type ColumnType = {
+  id: string;
   header: any;
   key: string;
   type?: FieldType;
@@ -32,6 +33,10 @@ export type ColumnType = {
 type BucketTableProps = {
   data: any[];
   columns: ColumnType[];
+  onScrollEnd?: () => void;
+  totalDataLength: number;
+  maxHeight?: string | number;
+  bucketId: string;
 };
 
 type ColumnHeaderProps = {
@@ -43,6 +48,7 @@ type ColumnHeaderProps = {
 type ColumnMeta = {
   type?: FieldType;
   deletable?: boolean;
+  id: string;
 };
 
 // TODO: Update the icon mappings below to use appropriate icons for each field type.
@@ -67,7 +73,7 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
     <>
       <div className={styles.columnHeaderText}>
         {icon && <Icon name={icon} size="sm" className={styles.headerIcon} />}
-        {title}
+        {title || "\u00A0"}
       </div>
       {showDropdownIcon && (
         <Button variant="icon">
@@ -80,15 +86,17 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
 
 const defaultColumns: ColumnType[] = [
   {
+    id: "0",
     header: <ColumnHeader />,
     key: "select",
     type: "boolean",
-    width: "70px",
+    width: "60px",
     headerClassName: styles.columnHeader,
     columnClassName: `${styles.selectColumn} ${styles.column}`,
     cellClassName: styles.selectCell
   },
   {
+    id: "1",
     header: (
       <Button
         variant="icon"
@@ -99,7 +107,7 @@ const defaultColumns: ColumnType[] = [
       </Button>
     ),
     key: "new field",
-    width: "100px",
+    width: "125px",
     headerClassName: styles.columnHeader,
     cellClassName: styles.newFieldCell,
     columnClassName: `${styles.newFieldColumn} ${styles.column}`
@@ -204,10 +212,10 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
   }
 }
 
-function getFormattedColumns(columns: ColumnType[]): ColumnType[] {
+function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnType[] {
   return [
     defaultColumns[0],
-    ...columns.map(col => ({
+    ...columns.map((col, index) => ({
       ...col,
       header: (
         <ColumnHeader
@@ -217,7 +225,8 @@ function getFormattedColumns(columns: ColumnType[]): ColumnType[] {
         />
       ),
       headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
-      columnClassName: `${col.columnClassName || ""} ${styles.column}`
+      columnClassName: `${col.columnClassName || ""} ${styles.column}`,
+      id: `${col.key}-${index}-${bucketId}`
     })),
     defaultColumns[1]
   ];
@@ -225,7 +234,7 @@ function getFormattedColumns(columns: ColumnType[]): ColumnType[] {
 
 function buildColumnMeta(columns: ColumnType[]): Record<string, ColumnMeta> {
   return Object.fromEntries(
-    columns.map(col => [col.key, {type: col.type, deletable: col.deletable}])
+    columns.map(col => [col.key, {type: col.type, deletable: col.deletable, id: col.id}])
   );
 }
 function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
@@ -238,7 +247,6 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
       "new field": ""
     };
 
-    // Ensure all keys are present
     allKeys.forEach(key => {
       if (!(key in fullRow)) {
         fullRow[key] = "";
@@ -248,18 +256,37 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
     return Object.fromEntries(
       Object.entries(fullRow).map(([key, value]) => {
         const meta = columnMap[key] || {};
-        return [key, renderCell(value, meta.type, meta.deletable)];
+        return [
+          key,
+          {id: `${meta.id}-${fullRow._id}`, component: renderCell(value, meta.type, meta.deletable)}
+        ];
       })
     );
   });
 }
 
-const BucketTable = ({data, columns}: BucketTableProps) => {
-  const formattedColumns = useMemo(() => getFormattedColumns(columns), [columns]);
+const BucketTable = ({
+  data,
+  columns,
+  onScrollEnd,
+  totalDataLength,
+  maxHeight,
+  bucketId
+}: BucketTableProps) => {
+  const formattedColumns = useMemo(() => getFormattedColumns(columns, bucketId), [columns, bucketId]);
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
   const formattedData = useMemo(() => formatDataRows(data, columnMap), [data, columnMap]);
-
-  return <Table className={styles.table} columns={formattedColumns} data={formattedData} />;
+  return (
+    <Table
+      style={{maxHeight}}
+      className={styles.table}
+      columns={formattedColumns}
+      data={formattedData}
+      onScrollEnd={onScrollEnd}
+      totalDataLength={totalDataLength}
+      noResizeableColumns={["select", "new field"]}
+    />
+  );
 };
 
 export default memo(BucketTable);
