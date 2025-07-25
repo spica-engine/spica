@@ -43,7 +43,8 @@ describe("Identity", () => {
             blockDurationMinutes: 0,
             failedAttemptLimit: 0
           },
-          passwordHistoryLimit: 0
+          passwordHistoryLimit: 0,
+          apikeyRealtime: false
         }),
         PreferenceTestingModule,
         CoreTestingModule,

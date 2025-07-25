@@ -9,6 +9,7 @@ import ApiKeySchema from "./schemas/apikey.json" with {type: "json"};
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {registerAssetHandlers} from "./asset";
+import {ApikeyRealtimeModule} from "../realtime";
 
 @Global()
 @Module({})
@@ -20,8 +21,8 @@ export class ApiKeyModule {
   ) {
     registerAssetHandlers(as, validator, assetRepManager);
   }
-  static forRoot(): DynamicModule {
-    return {
+  static forRoot({realtime}): DynamicModule {
+    const module: DynamicModule = {
       module: ApiKeyModule,
       imports: [
         SchemaModule.forChild({
@@ -40,5 +41,11 @@ export class ApiKeyModule {
         }
       ]
     };
+
+    if (realtime) {
+      module.imports.push(ApikeyRealtimeModule.register());
+    }
+
+    return module;
   }
 }

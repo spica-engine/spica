@@ -36,7 +36,7 @@ describe("Apikey", () => {
         DatabaseTestingModule.replicaSet(),
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
-        ApiKeyModule.forRoot(),
+        ApiKeyModule.forRoot({realtime: false}),
         AssetModule.forRoot({persistentPath: os.tmpdir()})
       ]
     }).compile();

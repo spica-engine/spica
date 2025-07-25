@@ -1,0 +1,5 @@
+{
+  "name": "api/passport/apikey/realtime",
+  "sourceRoot": "apps/api/src/passport/apikey/realtime",
+  "projectType": "application"
+}
