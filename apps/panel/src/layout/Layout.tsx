@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useState} from "react";
-import {Outlet} from "react-router-dom";
+import {Navigate, Outlet} from "react-router-dom";
 import SideBar, {type ReorderableItemGroup} from "../components/organisms/sidebar/SideBar";
 import {menuItems, navigatorItems} from "../pages/home/mock";
 import styles from "./Layout.module.scss";
@@ -9,6 +9,7 @@ import useLocalStorage from "../hooks/useLocalStorage";
 import {jwtDecode} from "jwt-decode";
 import type {AuthTokenJWTPayload} from "src/types/auth";
 import {useBucket} from "../contexts/BucketContext";
+import {useRequestTracker} from "../hooks/useRequestTracker";
 
 const Layout = () => {
   const [token] = useLocalStorage<string>("token", "");
@@ -52,6 +53,8 @@ const Layout = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, [isDrawerOpen]);
 
+  useRequestTracker();
+
   const name = useMemo(() => {
     if (!token || !token.length) return "";
     const decoded = jwtDecode<AuthTokenJWTPayload>(token);
@@ -60,44 +63,41 @@ const Layout = () => {
 
   useEffect(() => {
     fetchBuckets();
-  }, []);
+  }, [token]);
 
-  const sideBarElement = (
-    <div className={styles.sidebar}>
-      <SideBar
-        menuItems={menuItems}
-        navigatorItems={mergedNavigatorItems}
-        onNavigatorToggle={setNavigatorOpen}
-      />
-    </div>
-  );
 
-  const drawerSidebar = (
-    <Drawer
-      placement="left"
-      showCloseButton={false}
-      isOpen={isDrawerOpen}
-      onClose={closeDrawer}
-      size={260}
-    >
-      <SideBar
-        menuItems={menuItems}
-        navigatorItems={mergedNavigatorItems}
-        onNavigatorToggle={setNavigatorOpen}
-        displayToggleIcon={false}
-      />
-    </Drawer>
-  );
+  if (!token) return <Navigate to="/passport/identify" replace />;
 
   return (
     <div className={styles.layout}>
-      {isDrawerOpen && drawerSidebar}
+      {isDrawerOpen && (
+        <Drawer
+          placement="left"
+          showCloseButton={false}
+          isOpen={isDrawerOpen}
+          onClose={closeDrawer}
+          size={260}
+        >
+          <SideBar
+            menuItems={menuItems}
+            navigatorItems={mergedNavigatorItems}
+            onNavigatorToggle={setNavigatorOpen}
+            displayToggleIcon={false}
+          />
+        </Drawer>
+      )}
       <div
         className={`${styles.sidebar} ${
           navigatorOpen ? styles.navigatorOpen : styles.navigatorClosed
         }`}
       >
-        {sideBarElement}
+        <div className={styles.sidebar}>
+          <SideBar
+            menuItems={menuItems}
+            navigatorItems={mergedNavigatorItems}
+            onNavigatorToggle={setNavigatorOpen}
+          />
+        </div>
       </div>
       <div className={styles.main}>
         <div className={styles.toolbar}>
