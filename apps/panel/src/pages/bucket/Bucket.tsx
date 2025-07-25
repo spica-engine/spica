@@ -4,6 +4,7 @@ import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
 import {useEffect, useMemo} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
+import type {BucketDataQueryType} from "src/services/bucketService";
 
 export default function Bucket() {
   const {bucketId} = useParams<{bucketId: string}>();
@@ -43,9 +44,13 @@ export default function Bucket() {
         data={bucketData?.data ?? []}
         onScrollEnd={() => {
           if (!bucketId) return;
-          getBucketData(bucketId, nextbucketDataQuery);
+          const query = nextbucketDataQuery;
+          if (query?.bucketId) {
+            delete (query as any).bucketId;
+          }
+          getBucketData(bucketId, query as BucketDataQueryType);
         }}
-        totalDataLength={bucketData?.meta.total ?? 0}
+        totalDataLength={bucketData?.meta?.total ?? 0}
         maxHeight="70vh"
       />
     </div>

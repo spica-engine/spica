@@ -8,6 +8,8 @@ export type BucketDataType = {
   };
 };
 
+export type BucketDataWithIdType = BucketDataType & {bucketId: string};
+
 export type BucketType = {
   _id: string;
   title: string;
@@ -67,9 +69,11 @@ export type BucketDataQueryType = {
   skip?: number;
 };
 
+export type BucketDataQueryWithIdType = BucketDataQueryType & {bucketId: string};
+
 export const useBucketService = () => {
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
-    useState<BucketDataQueryType | null>(null);
+    useState<BucketDataQueryWithIdType | null>(null);
 
   const {
     request: fetchBuckets,
@@ -100,7 +104,6 @@ export const useBucketService = () => {
         sort: JSON.stringify({_id: -1})
       };
 
-      // Create a mutable copy of params
       let params = query
         ? {
             ...defaultParams,
@@ -109,20 +112,21 @@ export const useBucketService = () => {
           }
         : {...defaultParams};
 
-      // Remove sort if it's undefined or empty
       if (!params.sort || Object.keys(JSON.parse(params.sort)).length === 0) {
         const {sort, ...rest} = params;
         params = rest as typeof params;
       }
-      
+
       const queryString = new URLSearchParams(
         params as unknown as Record<string, string>
       ).toString();
-      
+
       return fetchBucketData({
         endpoint: `/api/bucket/${bucketId}/data?${queryString}`
       }).then(result => {
-        setLastUsedBucketDataQuery(query ?? {...defaultParams, sort: {_id: -1}});
+        setLastUsedBucketDataQuery(
+          query ? {...query, bucketId} : {...defaultParams, sort: {_id: -1}, bucketId}
+        );
         return result;
       });
     },
@@ -130,30 +134,17 @@ export const useBucketService = () => {
   );
 
   const {
-    request: fetchCurrentBucket,
-    data: currentBucket,
-    loading: currentBucketLoading,
-    error: currentBucketError
-  } = useApi<BucketType>({
-    endpoint: "",
-    method: "get"
-  });
-
-  const getCurrentBucket = useCallback((bucketId: string) => {
-    return fetchCurrentBucket({
-      endpoint: `/api/bucket/${bucketId}`
-    });
-  }, [fetchCurrentBucket]);
-
-  const {
     request: bucketOrderRequest,
     loading: bucketOrderLoading,
     error: bucketOrderError
   } = useApi({endpoint: "", method: "patch"});
 
-  const changeBucketOrder = useCallback((bucketId: string, order: number) => {
-    return bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
-  }, [bucketOrderRequest]);
+  const changeBucketOrder = useCallback(
+    (bucketId: string, order: number) => {
+      return bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
+    },
+    [bucketOrderRequest]
+  );
 
   return {
     loading,
@@ -167,20 +158,6 @@ export const useBucketService = () => {
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
-    buckets,
-    /*
-    buckets,
-    fetchBuckets,
-    error,
-    loading,
-    bucketData,
-    getBucketData,
-    bucketDataLoading,
-    bucketDataError,
-    lastUsedBucketDataQuery,
-    changeBucketOrder,
-    bucketOrderLoading,
-    bucketOrderError
-    */
+    buckets
   };
 };

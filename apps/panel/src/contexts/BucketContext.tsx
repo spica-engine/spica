@@ -2,7 +2,9 @@ import {createContext, useMemo, useContext, type ReactNode, useEffect, useState}
 import {
   useBucketService,
   type BucketDataQueryType,
+  type BucketDataQueryWithIdType,
   type BucketDataType,
+  type BucketDataWithIdType,
   type BucketType
 } from "../services/bucketService";
 import type {AxiosRequestHeaders} from "axios";
@@ -24,7 +26,7 @@ type BucketContextType = {
   getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
   bucketDataLoading: boolean;
   bucketDataError: string | null;
-  nextbucketDataQuery: any;
+  nextbucketDataQuery: BucketDataQueryWithIdType | null;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -42,29 +44,42 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     bucketOrderLoading,
     bucketOrderError
   } = useBucketService();
-  const [bucketData, setBucketData] = useState(fetchedBucketData);
+  const [bucketData, setBucketData] = useState<BucketDataWithIdType>({
+    ...fetchedBucketData,
+    bucketId: lastUsedBucketDataQuery?.bucketId as string
+  } as BucketDataWithIdType);
 
   useEffect(() => {
     if (!fetchedBucketData || bucketDataError) return;
 
     setBucketData(prev => {
-      if (!prev) return fetchedBucketData;
+      const fetchedBucketDataWithId = {
+        ...fetchedBucketData,
+        bucketId: lastUsedBucketDataQuery?.bucketId as string
+      } as BucketDataWithIdType;
+      if (!prev) return fetchedBucketDataWithId;
+
+      const prevBucketId = prev.bucketId;
+      const newBucketId = lastUsedBucketDataQuery?.bucketId;
+
+      if (prevBucketId !== newBucketId) {
+        return fetchedBucketDataWithId;
+      }
 
       const existingIds = new Set(prev.data.map(item => item._id));
+
       const newItems = fetchedBucketData.data.filter(item => !existingIds.has(item.id));
+
       if (newItems.length === 0) return prev;
       return {...prev, data: [...prev.data, ...newItems]};
     });
   }, [JSON.stringify(lastUsedBucketDataQuery)]);
 
-  const nextbucketDataQuery: {
-    paginate?: boolean;
-    relation?: boolean;
-    limit?: number;
-    sort?: Record<string, number>;
-    skip?: number;
-  } = useMemo(
-    () => ({...lastUsedBucketDataQuery, skip: (lastUsedBucketDataQuery?.skip ?? 0) + 25}),
+  const nextbucketDataQuery: BucketDataQueryWithIdType | null = useMemo(
+    () => ({
+      ...(lastUsedBucketDataQuery as BucketDataQueryWithIdType),
+      skip: (lastUsedBucketDataQuery?.skip ?? 0) + 25
+    }),
     [JSON.stringify(lastUsedBucketDataQuery)]
   );
 
@@ -115,3 +130,6 @@ export function useBucket() {
 }
 
 export default BucketContext;
+function BucketDataWithIdType(fetchedBucketData: BucketDataType | null) {
+  throw new Error("Function not implemented.");
+}
