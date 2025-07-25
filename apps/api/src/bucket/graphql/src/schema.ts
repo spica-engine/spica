@@ -18,12 +18,34 @@ export function validateBuckets(buckets: Bucket[]) {
   return {warnings, buckets};
 }
 
+function fixBucketProperties(bucket: Bucket, baseName: string, errors: SchemaWarning[]) {
+  if (bucket.properties) return bucket;
+
+  bucket.properties = {
+    default: {
+      type: "string",
+      title: "default",
+      description: "This field was created automatically because there was no other.",
+      options: {position: "bottom"}
+    }
+  };
+
+  errors.push({
+    target: baseName,
+    reason: "Should have properties field"
+  });
+
+  return bucket;
+}
+
 function validateProperties(
   bucket: Bucket,
   baseName: string,
   bucketIds: string[],
   errors: SchemaWarning[]
 ) {
+  bucket = fixBucketProperties(bucket, baseName, errors);
+
   for (const [key, definition] of Object.entries(bucket.properties)) {
     if (!validateName(key)) {
       errors.push({
