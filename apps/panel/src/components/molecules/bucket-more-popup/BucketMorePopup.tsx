@@ -6,8 +6,8 @@ import * as monaco from "monaco-editor";
 import useLocalStorage from "../../../hooks/useLocalStorage";
 import {jwtDecode} from "jwt-decode";
 import type {AuthTokenJWTPayload} from "src/types/auth";
-import useApi from "../../../hooks/useApi";
 import type {BucketType} from "src/services/bucketService";
+import {useBucket} from "../../../contexts/BucketContext";
 
 type EditorFormProps = {
   bucket: BucketType;
@@ -185,10 +185,7 @@ function handleEditerMounted(editor: monaco.editor.IStandaloneCodeEditor) {
 }
 
 const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
-  const {request} = useApi({
-    endpoint: `/api/bucket/${bucket._id}`,
-    method: "put"
-  });
+  const {changeBucketRule, bucketRuleChangeLoading: loading} = useBucket();
   const [value, setValue] = useState<string>(`{ 
     read: ${bucket.acl.read}
     write: ${bucket.acl.write}
@@ -212,7 +209,7 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
     const lines = value.split("\n");
     const read = lines[1].trim().slice(5).trim(); // "read:".length
     const write = lines[2].trim().slice(6).trim(); // "write:".length
-    request({body: {...bucket, acl: {write, read}}});
+    changeBucketRule(bucket, {write, read});
   };
 
   const disposableRef = useRef<monaco.IDisposable | null>(null);
@@ -244,7 +241,7 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
             folding: false,
             lineDecorationsWidth: 0,
             fontSize: 14,
-            lineHeight: 12,
+            lineHeight: 14,
             insertSpaces: true,
             detectIndentation: false,
             fontFamily: "var(--font-family-base)",
@@ -264,7 +261,7 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
           <Icon name="close" size="sm" />
           Cancel
         </Button>
-        <Button onClick={handleSubmit}>
+        <Button disabled={loading} loading={loading} onClick={handleSubmit}>
           <Icon name="filter" size="sm" />
           Apply
         </Button>
@@ -284,6 +281,7 @@ const BucketMorePopup = ({bucket}: BucketMorePopupProps) => {
       content={
         <FluidContainer
           direction="vertical"
+          gap={0}
           className={styles.headerContainer}
           prefix={{
             children: (

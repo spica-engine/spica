@@ -1,4 +1,12 @@
-import {createContext, useMemo, useContext, type ReactNode, useEffect, useState} from "react";
+import {
+  createContext,
+  useMemo,
+  useContext,
+  type ReactNode,
+  useEffect,
+  useState,
+  useCallback
+} from "react";
 import {useBucketService, type BucketType} from "../services/bucketService";
 import type {AxiosRequestHeaders} from "axios";
 
@@ -19,6 +27,15 @@ type BucketContextType = {
   getCurrentBucket: (bucketId: string) => Promise<any>;
   currentBucketLoading: boolean;
   currentBucketError: string | null;
+  changeBucketRule: (
+    bucket: BucketType,
+    newRules: {
+      read: string;
+      write: string;
+    }
+  ) => void;
+
+  bucketRuleChangeLoading: boolean;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -33,7 +50,9 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     getCurrentBucket,
     changeBucketOrder,
     bucketOrderLoading,
-    bucketOrderError
+    bucketOrderError,
+    changeBucketRuleRequest,
+    bucketRuleChangeLoading
   } = useBucketService();
 
   const [buckets, setBuckets] = useState<BucketType[]>([]);
@@ -43,6 +62,16 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       setBuckets(result);
     });
   }, []);
+
+  const changeBucketRule = useCallback(
+    (bucket: BucketType, newRules: {read: string; write: string}) => {
+      changeBucketRuleRequest(bucket, newRules).then(result => {
+        if (!result) return;
+        setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, acl: newRules} : i)));
+      });
+    },
+    []
+  );
 
   const contextValue = useMemo(
     () => ({
@@ -57,7 +86,9 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       currentBucket,
       getCurrentBucket,
       currentBucketLoading,
-      currentBucketError
+      currentBucketError,
+      changeBucketRule,
+      bucketRuleChangeLoading
     }),
     [buckets, loading, error, fetchBuckets, currentBucket, currentBucketLoading, currentBucketError]
   );
