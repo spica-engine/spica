@@ -42,18 +42,17 @@
   }
 
   .addButtonWrapper {
-    border: var(--border-default);
     border-radius: var(--border-radius-md);
-    border-width: var(--border-width-default);
   }
 
   .addButtonText {
     color: var(--color-font-secondary);
   }
 
-  .cancelButton {
-    background-color: var(--color-menu-contrast) !important;
+  .addButton, .cancelButton {
+    height: 32px !important;
   }
+
   .inputContainerContainer {
     padding-top: var(--padding-md);
   }
