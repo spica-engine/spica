@@ -24,6 +24,7 @@ type BucketContextType = {
 const BucketContext = createContext<BucketContextType | null>(null);
 export const BucketProvider = ({children}: {children: ReactNode}) => {
   const {
+    buckets: data,
     loading,
     error,
     fetchBuckets,
@@ -37,12 +38,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   } = useBucketService();
 
   const [buckets, setBuckets] = useState<BucketType[]>([]);
-
-  useEffect(() => {
-    fetchBuckets().then(result => {
-      setBuckets(result);
-    });
-  }, []);
+  useEffect(() => setBuckets(data ?? []), [data]);
 
   const contextValue = useMemo(
     () => ({

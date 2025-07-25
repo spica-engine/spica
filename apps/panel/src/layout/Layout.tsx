@@ -62,9 +62,8 @@ const Layout = () => {
   }, [token]);
 
   useEffect(() => {
-    if (!token) return;
     fetchBuckets();
-  }, []);
+  }, [token]);
 
 
   if (!token) return <Navigate to="/passport/identify" replace />;
