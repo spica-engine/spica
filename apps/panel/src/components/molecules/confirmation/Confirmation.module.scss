@@ -24,9 +24,11 @@
     display: flex;
     flex-direction: column !important;
     gap: var(--gap-lg) !important;
+    padding-bottom: var(--padding-sm);
   }
   .footer {
     padding: 0 var(--padding-md) var(--padding-md) 0;
+    gap: var(--gap-md) !important;
   }
 }
 .title {
@@ -55,4 +57,16 @@
 .cancelButton:hover {
   background-color: var(--color-menu-contrast) !important;
   border: none;
+}
+
+.confirmButton {
+  cursor: pointer !important;
+  opacity: unset !important;
+  background-color: var(--color-danger);
+}
+
+
+.confirmButton:hover {
+  cursor: pointer !important;
+  background-color: var(--color-danger) !important;
 }

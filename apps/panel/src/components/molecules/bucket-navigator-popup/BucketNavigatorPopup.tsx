@@ -132,7 +132,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
           confirmLabel={
             <>
               <Icon name="delete" />
-              Confirm
+              Delete
             </>
           }
           cancelLabel={
