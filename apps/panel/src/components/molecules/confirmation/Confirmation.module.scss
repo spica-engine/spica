@@ -58,15 +58,3 @@
   background-color: var(--color-menu-contrast) !important;
   border: none;
 }
-
-.confirmButton {
-  cursor: pointer !important;
-  opacity: unset !important;
-  background-color: var(--color-danger);
-}
-
-
-.confirmButton:hover {
-  cursor: pointer !important;
-  background-color: var(--color-danger) !important;
-}
