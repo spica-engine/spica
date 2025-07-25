@@ -122,6 +122,7 @@ const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
           //prefixIcon={item?.icon}
           suffixIcons={[{name: "dragHorizontalVariant"}]}
           className={styles.ungrouped}
+          bucket={item}
         />
       </div>
     </div>
@@ -190,6 +191,7 @@ const DraggableItem = ({
         navigate(`/${item?.section}/${item?._id}`);
       }}
       className={`${styles.ungrouped} ${isDragging ? styles.globalDragActive : ""} ${justDropped ? styles.justDropped : ""} `}
+      bucket={item as BucketType}
     />
   );
 };
@@ -263,6 +265,7 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
             onClick={() => {
               navigate(`/${item?.section}/${item?._id}`);
             }}
+            bucket={item}
           />
         ))}
       </>

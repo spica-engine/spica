@@ -1,18 +1,31 @@
 import {Button, FlexElement, Icon, Popover, Text, useOnClickOutside} from "oziko-ui-kit";
-import {memo, useRef, type FC} from "react";
+import {memo, useRef, useState, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
-import type {BucketType} from "src/services/bucketService";
+import TitleForm from "../title-form/TitleForm";
+import type {BucketType} from "../../../services/bucketService";
 
 type TypeBucketNavigatorPopup = {
   className?: string;
-  bucket?: BucketType;
   onOpen?: () => void;
   onClose?: () => void;
   isOpen: boolean;
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  onAddToCategory?: () => void;
+  onDelete?: () => void;
+  bucket: BucketType;
+  onEdit?: () => void;
 };
 
-const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({className, isOpen, setIsOpen}) => {
+const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
+  className,
+  isOpen,
+  setIsOpen,
+  onAddToCategory,
+  onDelete,
+  bucket,
+  onEdit
+}) => {
+  const [titleFormOpen, setTitleFormOpen] = useState(false);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
 
@@ -57,6 +70,8 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({className, isOpen, 
               color="default"
               onClick={e => {
                 e.stopPropagation();
+                setTitleFormOpen(true);
+                setIsOpen(false);
               }}
               className={styles.buttons}
             >
@@ -91,6 +106,13 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({className, isOpen, 
           <Icon name="dotsVertical" size="sm" />
         </Button>
       </Popover>
+      {titleFormOpen && (
+        <TitleForm
+          bucket={bucket}
+          initialValue={bucket.title}
+          onClose={() => setTitleFormOpen(false)}
+        />
+      )}
     </div>
   );
 };
