@@ -23,23 +23,21 @@ export default function Bucket() {
         header: "_id",
         key: "_id",
         type: "string",
-        width: "30px",
         showDropdownIcon: true
       },
       ...columns.map(i => ({
         ...i,
         header: i.title,
         key: i.title,
-        width: "30px",
         showDropdownIcon: true
       }))
     ];
-  }, [buckets]);
-
+  }, [buckets, bucketId]);
   return (
     <div className={styles.container}>
       <BucketActionBar />
       <BucketTable
+        bucketId={bucketId as string}
         columns={formattedColumns as ColumnType[]}
         data={bucketData?.data ?? []}
         onScrollEnd={() => {

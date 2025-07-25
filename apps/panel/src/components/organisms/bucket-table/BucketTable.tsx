@@ -36,6 +36,7 @@ type BucketTableProps = {
   onScrollEnd?: () => void;
   totalDataLength: number;
   maxHeight?: string | number;
+  bucketId: string;
 };
 
 type ColumnHeaderProps = {
@@ -89,7 +90,7 @@ const defaultColumns: ColumnType[] = [
     header: <ColumnHeader />,
     key: "select",
     type: "boolean",
-    width: "70px",
+    width: "60px",
     headerClassName: styles.columnHeader,
     columnClassName: `${styles.selectColumn} ${styles.column}`,
     cellClassName: styles.selectCell
@@ -106,7 +107,7 @@ const defaultColumns: ColumnType[] = [
       </Button>
     ),
     key: "new field",
-    width: "100px",
+    width: "125px",
     headerClassName: styles.columnHeader,
     cellClassName: styles.newFieldCell,
     columnClassName: `${styles.newFieldColumn} ${styles.column}`
@@ -211,7 +212,7 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
   }
 }
 
-function getFormattedColumns(columns: ColumnType[]): ColumnType[] {
+function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnType[] {
   return [
     defaultColumns[0],
     ...columns.map((col, index) => ({
@@ -225,7 +226,7 @@ function getFormattedColumns(columns: ColumnType[]): ColumnType[] {
       ),
       headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
       columnClassName: `${col.columnClassName || ""} ${styles.column}`,
-      id: `${col.key}-${index}`
+      id: `${col.key}-${index}-${bucketId}`
     })),
     defaultColumns[1]
   ];
@@ -233,7 +234,7 @@ function getFormattedColumns(columns: ColumnType[]): ColumnType[] {
 
 function buildColumnMeta(columns: ColumnType[]): Record<string, ColumnMeta> {
   return Object.fromEntries(
-    columns.map((col) => [col.key, {type: col.type, deletable: col.deletable, id: col.id}])
+    columns.map(col => [col.key, {type: col.type, deletable: col.deletable, id: col.id}])
   );
 }
 function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
@@ -269,9 +270,10 @@ const BucketTable = ({
   columns,
   onScrollEnd,
   totalDataLength,
-  maxHeight
+  maxHeight,
+  bucketId
 }: BucketTableProps) => {
-  const formattedColumns = useMemo(() => getFormattedColumns(columns), [columns]);
+  const formattedColumns = useMemo(() => getFormattedColumns(columns, bucketId), [columns, bucketId]);
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
   const formattedData = useMemo(() => formatDataRows(data, columnMap), [data, columnMap]);
   return (
@@ -282,6 +284,7 @@ const BucketTable = ({
       data={formattedData}
       onScrollEnd={onScrollEnd}
       totalDataLength={totalDataLength}
+      noResizeableColumns={["select", "new field"]}
     />
   );
 };

@@ -109,6 +109,7 @@
 
 .selectCell {
   width: 60px;
+  border-bottom: var(--border-default) !important;
 }
 
 .evenCell {
@@ -157,6 +158,10 @@
 .column > :nth-child(odd):not(:first-child) {
   background-color: var(--color-zebra);
 }
+.column > :nth-child(even) {
+  background-color: var(--color-default);
+}
+
 
 .column > :not(:nth-child(2)) {
   .grayText {
@@ -168,13 +173,10 @@
   flex: 1;
   position: relative;
   max-width: 140px;
-  overflow-y: scroll;
+  overflow-y: auto;
 
   &:not(:last-child) {
     border-right: none;
-  }
-  button {
-    position: fixed;
   }
 }
 

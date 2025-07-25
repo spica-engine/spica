@@ -49,6 +49,29 @@ type TypeTable = {
   style?: React.CSSProperties;
 };
 
+function getCalculatedWidth(columns: ColumnType[], containerWidth: number): string {
+  const baseFontSize = 16;
+
+  const parseWidth = (value: string): number => {
+    if (value.endsWith("px")) return parseFloat(value);
+    if (value.endsWith("rem")) return parseFloat(value) * baseFontSize;
+    if (value.endsWith("em")) return parseFloat(value) * baseFontSize;
+    if (value.endsWith("%")) return (parseFloat(value) / 100) * containerWidth;
+    return 0; // fallback for unsupported or auto values
+  };
+
+  const totalFixedWidth = columns.reduce((sum, col) => {
+    if (!col.width) return sum;
+    return sum + parseWidth(col.width);
+  }, 0);
+
+  const unsetCount = columns.filter(col => col.width === undefined)?.length;
+  const remainingWidth = Math.max(containerWidth - totalFixedWidth, 0);
+
+  const autoWidth = remainingWidth / unsetCount;
+  return `${autoWidth}px`;
+}
+
 const Table: FC<TypeTable> = ({
   columns,
   data,
@@ -60,22 +83,28 @@ const Table: FC<TypeTable> = ({
   totalDataLength,
   style
 }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const getDataColumns = useCallback(() => {
+    const containerWidth = containerRef.current?.clientWidth ?? 0;
+    const calculatedWidth = getCalculatedWidth(columns, containerWidth);
     return columns.map((column, index) => {
       const savedWidth = saveToLocalStorage?.save
         ? localStorage.getItem(`${saveToLocalStorage?.id}-${column.key}`)
         : null;
       return {
         ...column,
-        width: savedWidth || column.width || "300px",
+        width: savedWidth || column.width || calculatedWidth,
         isLastColumn: index === columns.length - 1
       };
     });
-  }, [columns.length]);
+  }, [columns]);
 
-  const [dataColumns, setDataColumns] = useState<TypeDataColumn[]>(getDataColumns());
+  const [dataColumns, setDataColumns] = useState<TypeDataColumn[]>([]);
 
-  useEffect(() => setDataColumns(getDataColumns()), [columns.length]);
+  useEffect(() => {
+    if (!containerRef.current) return;
+    setDataColumns(getDataColumns());
+  }, [getDataColumns, columns]);
 
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
 
@@ -141,7 +170,7 @@ const Table: FC<TypeTable> = ({
   const setSyncedScrollElements = useSyncedScroll(dataColumns.length);
   return (
     <>
-      <div className={`${styles.table} ${className}`} style={style}>
+      <div ref={containerRef} className={`${styles.table} ${className}`} style={style}>
         {dataColumns.map(column => (
           <ColumnRenderer
             key={column.id}
@@ -328,13 +357,16 @@ const ColumnComponent = ({
   const [isResizing, setIsResizing] = useState(false);
   const columnRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => setColumnWidth(width), [width]);
+
   useImperativeHandle(ref, () => columnRef.current!, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isResizing && columnRef.current) {
         const newWidth = e.clientX - columnRef.current.getBoundingClientRect().left;
-        setColumnWidth(`${newWidth}px`);
+        const minColumnWidth = 5;
+        setColumnWidth(`${Math.max(newWidth, minColumnWidth)}px`);
       }
     };
 
@@ -357,10 +389,23 @@ const ColumnComponent = ({
     };
   }, [isResizing, columnKey, updateColumnWidth]);
 
+  const handleMouseDown = () => {
+    const selection = window.getSelection();
+    if (selection && selection.removeAllRanges) {
+      selection.removeAllRanges();
+    }
+    setIsResizing(true);
+  };
+
   return (
-    <div id={id} ref={columnRef} className={className} style={{...style, minWidth: columnWidth}}>
+    <div
+      id={id}
+      ref={columnRef}
+      className={`${className} ${isResizing ? styles.resizingColumn : ""}`}
+      style={{...style, maxWidth: columnWidth, minWidth: columnWidth, width: columnWidth}}
+    >
       {children}
-      {!noResizeable && <div className={styles.resizer} onMouseDown={() => setIsResizing(true)} />}
+      {!noResizeable && <div className={styles.resizer} onMouseDown={handleMouseDown} />}
     </div>
   );
 };

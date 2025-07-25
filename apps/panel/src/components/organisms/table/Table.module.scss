@@ -4,6 +4,10 @@
   width: max-content;
 }
 
+.table:has(.resizingColumn) {
+  user-select: none;
+}
+
 .fixedColumns {
   position: sticky !important;
   left: 0;
