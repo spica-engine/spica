@@ -1,4 +1,12 @@
-import {createContext, useMemo, useContext, type ReactNode, useEffect, useState} from "react";
+import {
+  createContext,
+  useMemo,
+  useContext,
+  type ReactNode,
+  useEffect,
+  useState,
+  useCallback
+} from "react";
 import {useBucketService, type BucketType} from "../services/bucketService";
 import type {AxiosRequestHeaders} from "axios";
 
@@ -12,6 +20,8 @@ type BucketContextType = {
     headers?: AxiosRequestHeaders;
     endpoint?: string;
   }) => Promise<any>;
+  categories: string[];
+  changeCategory: (bucketId: string, category: string) => Promise<any>;
   changeBucketOrder: (bucketId: string, order: number) => void;
   bucketOrderLoading: boolean;
   bucketOrderError: string | null;
@@ -24,9 +34,11 @@ type BucketContextType = {
 const BucketContext = createContext<BucketContextType | null>(null);
 export const BucketProvider = ({children}: {children: ReactNode}) => {
   const {
+    buckets: data,
     loading,
     error,
     fetchBuckets,
+    requestCategoryChange,
     currentBucket,
     currentBucketLoading,
     currentBucketError,
@@ -35,8 +47,34 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     bucketOrderLoading,
     bucketOrderError
   } = useBucketService();
+  const [buckets, setBuckets] = useState<BucketType[]>(data ?? []);
 
-  const [buckets, setBuckets] = useState<BucketType[]>([]);
+  useEffect(() => setBuckets(data ?? []), [data]);
+
+  const changeCategory = useCallback(
+    (bucketId: string, category: string) => {
+      setBuckets(prev =>
+        prev
+          ? prev.map(i => {
+              if (i._id === bucketId) return {...i, category};
+              return i;
+            })
+          : []
+      );
+      return requestCategoryChange(bucketId, category);
+    },
+    [requestCategoryChange]
+  );
+
+  const categories = useMemo(() => {
+    if (!buckets) return [];
+    const set = new Set<string>();
+    buckets.forEach(bucket => {
+      if (!bucket.category) return;
+      set.add(bucket.category);
+    });
+    return Array.from(set);
+  }, [buckets]);
 
   useEffect(() => {
     fetchBuckets().then(result => {
@@ -51,6 +89,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       loading,
       error,
       fetchBuckets,
+      categories,
+      changeCategory,
       changeBucketOrder,
       bucketOrderLoading,
       bucketOrderError,
@@ -59,7 +99,16 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       currentBucketLoading,
       currentBucketError
     }),
-    [buckets, loading, error, fetchBuckets, currentBucket, currentBucketLoading, currentBucketError]
+    [
+      buckets,
+      loading,
+      error,
+      fetchBuckets,
+      categories,
+      currentBucket,
+      currentBucketLoading,
+      currentBucketError
+    ]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;

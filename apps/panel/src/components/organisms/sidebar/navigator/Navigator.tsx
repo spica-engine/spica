@@ -52,7 +52,7 @@ type TypeCustomDragLayerProps = {
   moveItem: (itemIndex: number, hoverIndex: number) => void;
 };
 
-type TypeReorderableListProps = ReorderableItemGroup
+type TypeReorderableListProps = ReorderableItemGroup;
 
 const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
   return (
@@ -122,6 +122,7 @@ const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
           //prefixIcon={item?.icon}
           suffixIcons={[{name: "dragHorizontalVariant"}]}
           className={styles.ungrouped}
+          bucket={item}
         />
       </div>
     </div>
@@ -190,6 +191,7 @@ const DraggableItem = ({
         navigate(`/${item?.section}/${item?._id}`);
       }}
       className={`${styles.ungrouped} ${isDragging ? styles.globalDragActive : ""} ${justDropped ? styles.justDropped : ""} `}
+      bucket={item as BucketType}
     />
   );
 };
@@ -250,19 +252,20 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
     items: items?.items ?? []
   });
   const accordionItems = grouped?.map(item => ({
-    title: helperUtils.capitalize("item[0].category"),
+    title: helperUtils.capitalize(item?.[0]?.category ?? ""),
     content: (
       <>
         {item.map((item: any, index: number) => (
           <NavigatorItem
             key={item?._id}
             label={item?.title}
-            prefix={{children: <Icon name={item?.icon} />}}
+            prefix={{children: <Icon name={"help"} />}}
             //prefixIcon={item?.icon}
             suffixIcons={[{name: "dragHorizontalVariant"}]}
             onClick={() => {
               navigate(`/${item?.section}/${item?._id}`);
             }}
+            bucket={item}
           />
         ))}
       </>
