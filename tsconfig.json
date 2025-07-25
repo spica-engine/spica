@@ -107,6 +107,9 @@
       "path": "./apps/api/src/passport/apikey"
     },
     {
+      "path": "./apps/api/src/passport/apikey/realtime"
+    },
+    {
       "path": "./apps/api/src/passport/policy"
     },
     {

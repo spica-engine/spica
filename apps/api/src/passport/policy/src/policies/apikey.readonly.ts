@@ -12,6 +12,11 @@ export default {
       action: "passport:apikey:show",
       resource: {include: ["*"], exclude: []},
       module: "passport:apikey"
+    },
+    {
+      action: "passport:apikey:stream",
+      resource: {include: ["*"], exclude: []},
+      module: "passport:apikey"
     }
   ]
 };
