@@ -57,7 +57,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   const deleteBucket = useCallback(
     (bucketId: string) => {
       return deleteBucketRequest(bucketId).then(result => {
-        if (!result) return;
         setBuckets(prev => (prev ? prev.filter(i => i._id !== bucketId) : []));
         return result;
       });

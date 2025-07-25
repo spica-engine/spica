@@ -36,8 +36,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
   const handleDeleteBucket = () => {
-    deleteBucket(bucket._id).then(result => {
-      if (!result) return;
+    deleteBucket(bucket._id).then(() => {
       setIsConfirmationOpen(false);
     });
   };
@@ -123,8 +122,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
                 connections. This cannot be undone.
               </p>
               <span className={styles.confirmHint}>
-                {" "}
-                Please type {bucket.title} to confirm deletion.
+                Please type <strong>{bucket.title}</strong> to confirm deletion.
               </span>
             </>
           }

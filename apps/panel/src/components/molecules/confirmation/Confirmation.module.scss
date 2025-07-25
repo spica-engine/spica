@@ -6,8 +6,8 @@
 .confirmModal {
   padding: 0;
   min-height: 0 !important;
-  width: 360px !important;
-  min-width: 360px !important;
+  width: 600px !important;
+  min-width: 600px !important;
   .header {
     padding: 0 var(--padding-md) !important;
     border-bottom: var(--border-default);
@@ -57,4 +57,8 @@
 .cancelButton:hover {
   background-color: var(--color-menu-contrast) !important;
   border: none;
+}
+
+.cancelButton, .confirmButton {
+  height: 32px !important;
 }
