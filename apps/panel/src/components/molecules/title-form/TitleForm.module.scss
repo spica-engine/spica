@@ -5,9 +5,10 @@
   width: 360px !important;
   min-width: 360px !important;
   box-shadow: var(--box-shadow);
-}
-* {
-  line-height: unset !important;
+
+  * {
+    line-height: unset !important;
+  }
 }
 
 .container {
@@ -49,7 +50,8 @@
     color: var(--color-font-secondary);
   }
 
-  .addButton, .cancelButton {
+  .addButton,
+  .cancelButton {
     height: 32px !important;
   }
 

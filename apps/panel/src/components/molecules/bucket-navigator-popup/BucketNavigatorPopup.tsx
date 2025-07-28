@@ -41,6 +41,11 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
     changeBucketName(value, bucket);
   };
 
+  const handleOpenEdit = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    event.stopPropagation();
+    setTitleFormOpen(true);
+    setIsOpen(false);
+  };
   return (
     <div ref={containerRef} className={`${styles.container} ${className || ""}`}>
       <Popover
@@ -75,11 +80,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
                 dimensionX: "fill"
               }}
               color="default"
-              onClick={e => {
-                e.stopPropagation();
-                setTitleFormOpen(true);
-                setIsOpen(false);
-              }}
+              onClick={handleOpenEdit}
               className={styles.buttons}
             >
               <Icon name="pencil" />
