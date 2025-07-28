@@ -122,15 +122,16 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     method: "put"
   });
 
-  const requestBucketNameChange = useCallback(
-    (newTitle: string, bucket: BucketType) => {
+  const requestBucketNameChange = useCallback(async (newTitle: string, bucket: BucketType) => {
+    try {
       const body = {...bucket, title: newTitle};
       delete (body as unknown as {section: any}).section;
       delete (body as unknown as {index: any}).index;
-      return requestNameChange({body, endpoint: `/api/bucket/${bucket._id}`});
-    },
-    []
-  );
+      await requestNameChange({body, endpoint: `/api/bucket/${bucket._id}`});
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
 
   return {
     buckets,
@@ -144,6 +145,6 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
-    requestBucketNameChange,
+    requestBucketNameChange
   };
 };

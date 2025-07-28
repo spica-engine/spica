@@ -48,11 +48,13 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
 
   const [buckets, setBuckets] = useState<BucketType[]>([]);
 
-  const changeBucketName = useCallback((newTitle: string, bucket: BucketType) => {
-    return requestBucketNameChange(newTitle, bucket).then(result => {
+  const changeBucketName = useCallback(async (newTitle: string, bucket: BucketType) => {
+    try {
+      await requestBucketNameChange(newTitle, bucket);
       setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
-      return result;
-    });
+    } catch (err) {
+      console.error(err);
+    }
   }, []);
 
   useEffect(() => {

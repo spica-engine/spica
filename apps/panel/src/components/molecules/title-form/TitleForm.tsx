@@ -1,16 +1,14 @@
 import {Button, FluidContainer, Icon, Text, FlexElement, Modal, Input} from "oziko-ui-kit";
 import {type FC, memo, useState} from "react";
 import styles from "./TitleForm.module.scss";
-import type {BucketType} from "src/services/bucketService";
 
 type TypeTitleFormProps = {
-  bucket: BucketType;
   initialValue: string;
   onClose?: () => void;
   onSubmit: (value: string) => void | Promise<void>;
 };
 
-const TitleForm: FC<TypeTitleFormProps> = ({bucket, initialValue, onClose, onSubmit}) => {
+const TitleForm: FC<TypeTitleFormProps> = ({initialValue, onClose, onSubmit}) => {
   const [value, setValue] = useState(initialValue);
   const handleSave = async () => {
     try {
