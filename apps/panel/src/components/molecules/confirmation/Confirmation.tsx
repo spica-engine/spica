@@ -54,7 +54,7 @@ function Confirmation({
         className={styles.header}
       />
       <Modal.Body className={styles.body}>
-        <span>{description}</span>
+        {description && <span>{description}</span>}
         {showInput && (
           <FlexElement gap={5} className={styles.inputContainer}>
             <Icon name="formatQuoteClose" size="md" />

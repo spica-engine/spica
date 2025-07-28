@@ -35,10 +35,18 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   const {deleteBucket} = useBucket();
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
-  const handleDeleteBucket = () => {
-    deleteBucket(bucket._id).then(() => {
+  const handleDeleteBucket = async () => {
+    try {
+      await deleteBucket(bucket._id);
       setIsConfirmationOpen(false);
-    });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsConfirmationOpen(false);
+    setIsOpen(false);
   };
 
   return (
@@ -142,10 +150,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
           showInput
           confirmCondition={val => val === bucket.title}
           onConfirm={handleDeleteBucket}
-          onCancel={() => {
-            setIsConfirmationOpen(false);
-            setIsOpen(false);
-          }}
+          onCancel={handleCancel}
         />
       )}
     </div>
