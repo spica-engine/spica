@@ -54,8 +54,15 @@ const CategorySelectCreate = ({
   });
 
   return (
-    <Modal showCloseButton={false} onClose={onCancel} className={styles.modal} isOpen>
+    <Modal
+      showCloseButton={false}
+      onClose={onCancel}
+      className={styles.modal}
+      isOpen
+      onClick={e => e.stopPropagation()}
+    >
       <Modal.Header
+        onClick={e => e.stopPropagation()}
         className={styles.header}
         prefix={{
           children: (
@@ -66,50 +73,52 @@ const CategorySelectCreate = ({
           )
         }}
       />
-      <Modal.Body className={styles.modalBody} />
-      <FluidContainer
-        mode="fill"
-        dimensionX={"fill"}
-        direction="vertical"
-        gap={20}
-        prefix={{
-          children: (
-            <FlexElement gap={10} direction="vertical">
-              <FlexElement ref={containerRef} gap={10} className={styles.inputContainer}>
-                <Icon name="formatListChecks" size="md" />
-                <Input
-                  className={styles.input}
-                  onChange={e => setTextValue(e.target.value)}
-                  placeholder="Find a category"
-                  value={textValue}
-                  onFocus={() => setFocused(true)}
-                />
-              </FlexElement>
-              {focused && (
-                <FlexElement
-                  ref={dropdownRef}
-                  className={styles.selectDropdown}
-                  direction="vertical"
-                  alignment="leftTop"
-                  gap={0}
-                >
-                  {filteredCategories.map(option => {
-                    return (
-                      <Text
-                        onClick={() => handleSubmit(option)}
-                        className={styles.option}
-                        key={option}
-                      >
-                        {option}
-                      </Text>
-                    );
-                  })}
+      <Modal.Body className={styles.modalBody}>
+        <FluidContainer
+          mode="fill"
+          dimensionX={"fill"}
+          direction="vertical"
+          gap={20}
+          prefix={{
+            className: styles.inputSection,
+            children: (
+              <FlexElement gap={10} direction="vertical" dimensionX="fill">
+                <FlexElement ref={containerRef} gap={10} className={styles.inputContainer}>
+                  <Icon name="formatQuoteClose" size="md" />
+                  <Input
+                    className={styles.input}
+                    onChange={e => setTextValue(e.target.value)}
+                    placeholder="Find a category"
+                    value={textValue}
+                    onFocus={() => setFocused(true)}
+                  />
                 </FlexElement>
-              )}
-            </FlexElement>
-          )
-        }}
-      />
+                {focused && (
+                  <FlexElement
+                    ref={dropdownRef}
+                    className={styles.optionsContainer}
+                    direction="vertical"
+                    alignment="leftTop"
+                    gap={0}
+                  >
+                    {filteredCategories.map(option => {
+                      return (
+                        <Text
+                          onClick={() => handleSubmit(option)}
+                          className={styles.option}
+                          key={option}
+                        >
+                          {option}
+                        </Text>
+                      );
+                    })}
+                  </FlexElement>
+                )}
+              </FlexElement>
+            )
+          }}
+        />
+      </Modal.Body>
       <Modal.Footer
         dimensionX="fill"
         alignment="rightCenter"

@@ -13,33 +13,25 @@
 }
 
 .modalBody {
-  padding-top: var(--padding-xl);
+  padding: var(--padding-xl) 0 0 0;
 }
 
 .modalFooter {
-  gap:  var(--gap-md) !important;
+  gap: var(--gap-md) !important;
 }
 
-.option {
-  width: 340px;
-  height: 39px;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  color: var(--color-input-placeholder) !important;
-  cursor: pointer;
-  padding-left: var(--padding-xl);
-}
+.inputSection {
+  width: 100% !important;
 
-.option:hover {
-  background-color: var(--color-soft);
-}
-
-.inputContainerContainer {
-  padding-top: var(--padding-md);
+  > div {
+    padding: 0 var(--padding-md);
+  }
 }
 .inputContainer {
-  width: 340px !important;
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  width: 100% !important;
+  //width: 340px !important;
   height: 44px;
   padding: 0 var(--padding-md);
   background-color: var(--color-input-background);
@@ -53,9 +45,26 @@
   color: var(--color-input-placeholder) !important;
 }
 
-.select {
+.optionsContainer {
   width: 100% !important;
+  background-color: var(--color-input-background);
 }
+
+.option {
+  width: 100%;
+  height: 39px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  color: var(--color-input-placeholder) !important;
+  cursor: pointer;
+  padding-left: var(--padding-xl);
+}
+
+.option:hover {
+  background-color: var(--color-soft);
+}
+
 
 .addButton {
   width: min-content;
