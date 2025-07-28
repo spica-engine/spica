@@ -79,13 +79,12 @@ const CategorySelectCreate = ({
           )
         }}
       />
-      <Modal.Body>
+      <Modal.Body className={styles.modalBody}>
         <FluidContainer
           mode="fill"
           dimensionX={"fill"}
           direction="vertical"
           gap={20}
-          className={styles.container}
           prefix={{
             children: (
               <FlexElement direction="vertical">
@@ -129,7 +128,7 @@ const CategorySelectCreate = ({
       <Modal.Footer
         dimensionX="fill"
         alignment="rightCenter"
-        className={styles.footer}
+        className={styles.modalFooter}
         prefix={{
           children: (
             <Button

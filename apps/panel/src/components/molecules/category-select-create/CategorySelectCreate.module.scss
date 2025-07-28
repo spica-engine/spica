@@ -1,5 +1,6 @@
 * {
   font-family: var(--font-family-base) !important;
+  line-height: unset !important;
 }
 
 .modal {
@@ -8,6 +9,15 @@
   width: 600px !important;
   min-width: 600px !important;
   font-size: var(--font-size-md);
+  gap: 0 !important;
+}
+
+.modalBody {
+  padding-top: var(--padding-xl);
+}
+
+.modalFooter {
+  gap:  var(--gap-md) !important;
 }
 
 .option {
@@ -66,7 +76,8 @@
   }
 }
 
-.addButton, .cancelButton {
+.addButton,
+.cancelButton {
   height: 32px !important;
 }
 
@@ -111,5 +122,4 @@
   margin: 0 !important;
   font-size: var(--font-size-lg) !important;
   font-weight: bold !important;
-  line-height: unset;
 }
