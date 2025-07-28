@@ -1,0 +1,82 @@
+.container {
+  width: 100%;
+  padding: 0;
+  height: fit-content;
+  max-height: fit-content;
+  min-height: fit-content;
+}
+
+.contentContainer {
+  width: 600px !important;
+  height: fit-content;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.headerContainer,
+.headerContainer > div,
+.header,
+.header > div {
+  width: 100% !important;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between !important;
+  border-bottom: var(--border-default);
+  padding: var(--padding-xl);
+}
+
+.headerText {
+  margin: 0 !important;
+  font-size: var(--font-size-lg) !important;
+  font-weight: bold !important;
+  font-family: var(--font-family-base) !important;
+  line-height: unset;
+}
+
+.body {
+  width: 100%;
+  padding: var(--padding-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+}
+
+.buttonsContainer {
+  display: flex;
+  justify-content: end;
+  gap: var(--gap-md);
+  button {
+    font-size: var(--font-size-md);
+  }
+}
+
+.editor {
+  width: 540px;
+  height: 60px;
+}
+
+.editorContainer {
+  height: 80px;
+  width: 100%;
+  padding: var(--padding-md);
+  background-color: var(--color-menu-contrast);
+  border-radius: var(--border-radius-md);
+  > section {
+    width: 540px !important;
+    height: 60px !important;
+  }
+}
+
+.openPopupButton {
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  justify-content: start;
+  padding-left: 0;
+  height: 20px;
+  > div > div {
+    gap: var(--gap-md) !important;
+  }
+}

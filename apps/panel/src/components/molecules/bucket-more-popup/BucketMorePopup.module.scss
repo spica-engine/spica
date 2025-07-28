@@ -1,63 +1,51 @@
-.popupContainer {
-  padding: 0;
-}
-.contentContainer {
-  width: 600px !important;
-  padding: 0;
-}
-
-.headerContainer,
-.headerContainer > div,
-.header,
-.header > div {
-  width: 100% !important;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between !important;
-  border-bottom: var(--border-default);
-  padding: var(--padding-xl);
-}
-
-.headerText {
-  margin: 0 !important;
-  font-size: var(--font-size-lg) !important;
-  font-weight: bold !important;
+* {
+  line-height: unset !important;
   font-family: var(--font-family-base) !important;
-  line-height: unset;
 }
 
-.body {
+.popoverContainer {
+  width: 160px;
+  padding: 0;
+}
+
+.popoverContent {
   width: 100%;
-  padding: var(--padding-xl);
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-md);
 }
 
-.buttonsContainer {
-  display: flex;
-  justify-content: end;
-  gap: var(--gap-md);
-  button {
-    font-size: var(--font-size-md);
+.popoverButtonsContainer {
+  width: 100% !important;
+  border-bottom: var(--border-default);
+  padding: var(--padding-md);
+
+  .popoverButtons {
+    width: 100% !important;
+    button {
+      width: 100% !important;
+      min-width: 100% !important;
+      max-width: 100% !important;
+      justify-content: start;
+      padding-left: 0;
+      height: 20px;
+      > div > div {
+        gap: var(--gap-md) !important;
+      }
+    }
+
+    button:hover {
+      background-color: transparent !important;
+    }
   }
 }
-
-.editor {
-  width: 540px;
-  height: 60px;
-}
-
-.editorContainer {
-  height: 80px;
-  width: 100%;
+.popoverCheckboxesContainer {
   padding: var(--padding-md);
-  background-color: var(--color-menu-contrast);
-  border-radius: var(--border-radius-md);
-  > section {
-    width: 540px !important;
-    height: 60px !important;
+
+  width: 100% !important;
+  .popoverCheckboxes {
+    width: 100% !important;
+    > div {
+      width: 100% !important;
+      height: 20px !important;
+      gap: var(--gap-md) !important;
+    }
   }
 }

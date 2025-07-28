@@ -33,7 +33,7 @@ type BucketContextType = {
       read: string;
       write: string;
     }
-  ) => void;
+  ) => Promise<any>;
 
   bucketRuleChangeLoading: boolean;
 };
@@ -65,7 +65,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
 
   const changeBucketRule = useCallback(
     (bucket: BucketType, newRules: {read: string; write: string}) => {
-      changeBucketRuleRequest(bucket, newRules).then(result => {
+      return changeBucketRuleRequest(bucket, newRules).then(result => {
         if (!result) return;
         setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, acl: newRules} : i)));
       });
