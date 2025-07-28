@@ -2,22 +2,19 @@ import {Button, FluidContainer, Icon, Text, FlexElement, Modal, Input} from "ozi
 import {type FC, memo, useState} from "react";
 import styles from "./TitleForm.module.scss";
 import type {BucketType} from "src/services/bucketService";
-import {useBucket} from "../../../contexts/BucketContext";
 
 type TypeTitleFormProps = {
   bucket: BucketType;
   initialValue: string;
   onClose?: () => void;
+  onSubmit: (value: string) => void | Promise<void>;
 };
 
-const TitleForm: FC<TypeTitleFormProps> = ({bucket, initialValue, onClose}) => {
+const TitleForm: FC<TypeTitleFormProps> = ({bucket, initialValue, onClose, onSubmit}) => {
   const [value, setValue] = useState(initialValue);
-  const {changeBucketName} = useBucket();
-  const handleSave = () => {
-    changeBucketName(value, bucket).then(result => {
-      if (!result) return;
-      onClose?.();
-    });
+  const handleSave = async () => {
+    await onSubmit(value);
+    onClose?.();
   };
   return (
     <Modal showCloseButton={false} onClose={onClose} className={styles.modal} isOpen>

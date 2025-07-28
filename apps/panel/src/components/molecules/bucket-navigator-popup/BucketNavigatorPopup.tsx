@@ -3,6 +3,7 @@ import {memo, useRef, useState, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
 import TitleForm from "../title-form/TitleForm";
 import type {BucketType} from "../../../services/bucketService";
+import {useBucket} from "../../../contexts/BucketContext";
 
 type TypeBucketNavigatorPopup = {
   className?: string;
@@ -25,6 +26,8 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   bucket,
   onEdit
 }) => {
+  const {changeBucketName} = useBucket();
+
   const [titleFormOpen, setTitleFormOpen] = useState(false);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
@@ -33,6 +36,10 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
     refs: [containerRef, contentRef],
     onClickOutside: () => setIsOpen(false)
   });
+
+  const handleChangeBucketName = (value: string) => {
+    changeBucketName(value, bucket);
+  };
 
   return (
     <div ref={containerRef} className={`${styles.container} ${className || ""}`}>
@@ -111,6 +118,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
           bucket={bucket}
           initialValue={bucket.title}
           onClose={() => setTitleFormOpen(false)}
+          onSubmit={handleChangeBucketName}
         />
       )}
     </div>
