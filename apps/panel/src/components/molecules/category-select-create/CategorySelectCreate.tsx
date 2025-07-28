@@ -87,7 +87,7 @@ const CategorySelectCreate = ({
           gap={20}
           prefix={{
             children: (
-              <FlexElement direction="vertical">
+              <FlexElement gap={10} direction="vertical">
                 <FlexElement ref={containerRef} gap={10} className={styles.inputContainer}>
                   <Icon name="formatListChecks" size="md" />
                   <Input
