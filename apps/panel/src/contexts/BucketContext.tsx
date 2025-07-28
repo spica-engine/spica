@@ -16,8 +16,6 @@ type BucketContextType = {
   loading: boolean;
   error: string | null;
   deleteBucket: (bucketId: string) => Promise<any>;
-  deleteBucketLoading: boolean;
-  deleteBucketError: string | null;
   fetchBuckets: (params?: {
     body?: any;
     headers?: AxiosRequestHeaders;
@@ -40,8 +38,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     error,
     fetchBuckets,
     deleteBucketRequest,
-    deleteBucketLoading,
-    deleteBucketError,
     currentBucket,
     currentBucketLoading,
     currentBucketError,
@@ -71,8 +67,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       loading,
       error,
       deleteBucket,
-      deleteBucketLoading,
-      deleteBucketError,
       fetchBuckets,
       changeBucketOrder,
       bucketOrderLoading,
@@ -86,8 +80,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       buckets,
       loading,
       error,
-      deleteBucketLoading,
-      deleteBucketError,
       fetchBuckets,
       currentBucket,
       currentBucketLoading,

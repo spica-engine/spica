@@ -117,11 +117,7 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
   }, []);
 
-  const {
-    request: deleteRequest,
-    loading: deleteBucketLoading,
-    error: deleteBucketError
-  } = useApi({
+  const {request: deleteRequest} = useApi({
     endpoint: "",
     method: "delete"
   });
@@ -144,8 +140,6 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
-    deleteBucketRequest,
-    deleteBucketLoading,
-    deleteBucketError
+    deleteBucketRequest
   };
 };

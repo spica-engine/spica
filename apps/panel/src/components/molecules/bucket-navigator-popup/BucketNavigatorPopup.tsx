@@ -32,7 +32,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
     onClickOutside: () => setIsOpen(false)
   });
 
-  const {deleteBucket, deleteBucketLoading} = useBucket();
+  const {deleteBucket} = useBucket();
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
   const handleDeleteBucket = () => {
@@ -146,7 +146,6 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
             setIsConfirmationOpen(false);
             setIsOpen(false);
           }}
-          loading={deleteBucketLoading}
         />
       )}
     </div>
