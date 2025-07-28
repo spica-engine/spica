@@ -106,7 +106,10 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
           changeCategory={changeCategory}
           bucket={bucket}
           categories={categories}
-          onCancel={() => setIsCategorySelectCreateOpen(false)}
+          onCancel={() => {
+            setIsCategorySelectCreateOpen(false);
+            setIsOpen(false);
+          }}
         />
       )}
     </div>
