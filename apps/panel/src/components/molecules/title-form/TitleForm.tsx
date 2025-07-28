@@ -13,8 +13,12 @@ type TypeTitleFormProps = {
 const TitleForm: FC<TypeTitleFormProps> = ({bucket, initialValue, onClose, onSubmit}) => {
   const [value, setValue] = useState(initialValue);
   const handleSave = async () => {
-    await onSubmit(value);
-    onClose?.();
+    try {
+      await onSubmit(value);
+      onClose?.();
+    } catch (err) {
+      console.error(err);
+    }
   };
   return (
     <Modal showCloseButton={false} onClose={onClose} className={styles.modal} isOpen>
