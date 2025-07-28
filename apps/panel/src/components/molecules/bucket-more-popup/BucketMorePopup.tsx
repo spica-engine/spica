@@ -43,7 +43,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
         content={
           <FluidContainer
             ref={contentRef}
-            dimensionX={160}
+            gap={0}
             direction="vertical"
             className={styles.popoverContent}
             prefix={{

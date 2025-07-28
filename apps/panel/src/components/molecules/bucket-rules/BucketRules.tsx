@@ -273,7 +273,7 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
 
 const BucketRules = ({bucket, onClose}: BucketRulesProps) => {
   return (
-    <Modal className={styles.container} isOpen showCloseButton={false}>
+    <Modal onClose={onClose} className={styles.container} isOpen showCloseButton={false}>
       <Modal.Body className={styles.contentContainer}>
         <FluidContainer
           direction="vertical"
