@@ -9,10 +9,9 @@ import {
   useOnClickOutside
 } from "oziko-ui-kit";
 import styles from "./CategorySelectCreate.module.scss";
-import {memo, useCallback, useLayoutEffect, useMemo, useRef, useState} from "react";
+import {memo, useCallback, useMemo, useRef, useState} from "react";
 import truncateText from "../../../utils/truncate-text";
 import type {BucketType} from "src/services/bucketService";
-import useAdaptivePosition from "../../../hooks/useAdaptivePosition";
 
 type CategorySelectCreateProps = {
   bucket: BucketType;
@@ -40,7 +39,7 @@ const CategorySelectCreate = ({
   }, []);
 
   const truncatedCategoryName = truncateText(textValue, 32);
-  const calculatedCateforyName = truncatedCategoryName.length
+  const calculatedCategoryName = truncatedCategoryName.length
     ? truncatedCategoryName
     : "Category Name";
 
@@ -53,18 +52,6 @@ const CategorySelectCreate = ({
       setFocused(false);
     }
   });
-
-  const {targetPosition, calculatePosition} = useAdaptivePosition({
-    containerRef,
-    targetRef: dropdownRef,
-    initialPlacement: "bottom"
-  });
-
-  useLayoutEffect(() => {
-    if (focused && containerRef.current && dropdownRef.current) {
-      calculatePosition();
-    }
-  }, [focused, filteredCategories, calculatePosition]);
 
   return (
     <Modal showCloseButton={false} onClose={onCancel} className={styles.modal} isOpen>
@@ -79,52 +66,50 @@ const CategorySelectCreate = ({
           )
         }}
       />
-      <Modal.Body className={styles.modalBody}>
-        <FluidContainer
-          mode="fill"
-          dimensionX={"fill"}
-          direction="vertical"
-          gap={20}
-          prefix={{
-            children: (
-              <FlexElement gap={10} direction="vertical">
-                <FlexElement ref={containerRef} gap={10} className={styles.inputContainer}>
-                  <Icon name="formatListChecks" size="md" />
-                  <Input
-                    className={styles.input}
-                    onChange={e => setTextValue(e.target.value)}
-                    placeholder="Type Here"
-                    value={textValue}
-                    onFocus={() => setFocused(true)}
-                  />
-                </FlexElement>
-                {focused && (
-                  <FlexElement
-                    ref={dropdownRef}
-                    style={{...targetPosition}}
-                    className={styles.selectDropdown}
-                    direction="vertical"
-                    alignment="leftTop"
-                    gap={0}
-                  >
-                    {filteredCategories.map(option => {
-                      return (
-                        <Text
-                          onClick={() => handleSubmit(option)}
-                          className={styles.option}
-                          key={option}
-                        >
-                          {option}
-                        </Text>
-                      );
-                    })}
-                  </FlexElement>
-                )}
+      <Modal.Body className={styles.modalBody} />
+      <FluidContainer
+        mode="fill"
+        dimensionX={"fill"}
+        direction="vertical"
+        gap={20}
+        prefix={{
+          children: (
+            <FlexElement gap={10} direction="vertical">
+              <FlexElement ref={containerRef} gap={10} className={styles.inputContainer}>
+                <Icon name="formatListChecks" size="md" />
+                <Input
+                  className={styles.input}
+                  onChange={e => setTextValue(e.target.value)}
+                  placeholder="Find a category"
+                  value={textValue}
+                  onFocus={() => setFocused(true)}
+                />
               </FlexElement>
-            )
-          }}
-        />
-      </Modal.Body>
+              {focused && (
+                <FlexElement
+                  ref={dropdownRef}
+                  className={styles.selectDropdown}
+                  direction="vertical"
+                  alignment="leftTop"
+                  gap={0}
+                >
+                  {filteredCategories.map(option => {
+                    return (
+                      <Text
+                        onClick={() => handleSubmit(option)}
+                        className={styles.option}
+                        key={option}
+                      >
+                        {option}
+                      </Text>
+                    );
+                  })}
+                </FlexElement>
+              )}
+            </FlexElement>
+          )
+        }}
+      />
       <Modal.Footer
         dimensionX="fill"
         alignment="rightCenter"
@@ -138,19 +123,14 @@ const CategorySelectCreate = ({
             >
               <Icon name="plus" size="sm" />
               <span className={styles.prefix}>Add</span>
-              <span className={styles.dynamic}>&nbsp;"{calculatedCateforyName}"&nbsp;</span>
+              <span className={styles.dynamic}>&nbsp;"{calculatedCategoryName}"&nbsp;</span>
               <span className={styles.suffix}>as new category</span>
             </Button>
           )
         }}
         suffix={{
           children: (
-            
-            <Button
-              variant="text"
-              onClick={() => onCancel?.()}
-              className={styles.cancelButton}
-            >
+            <Button variant="text" onClick={() => onCancel?.()} className={styles.cancelButton}>
               <Icon name="close" size="sm" />
               Cancel
             </Button>
