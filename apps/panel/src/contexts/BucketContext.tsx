@@ -24,8 +24,6 @@ type BucketContextType = {
   bucketOrderError: string | null;
   bucketData: BucketDataType | null;
   getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
-  bucketDataLoading: boolean;
-  bucketDataError: string | null;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
 };
 
@@ -36,8 +34,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     error,
     fetchBuckets,
     bucketData: fetchedBucketData,
-    bucketDataLoading,
-    bucketDataError,
     getBucketData,
     lastUsedBucketDataQuery,
     changeBucketOrder,
@@ -50,7 +46,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   } as BucketDataWithIdType);
 
   useEffect(() => {
-    if (!fetchedBucketData || bucketDataError) return;
+    if (!fetchedBucketData) return;
 
     setBucketData(prev => {
       const fetchedBucketDataWithId = {
@@ -103,8 +99,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketOrderError,
       bucketData,
       getBucketData,
-      bucketDataLoading,
-      bucketDataError,
       nextbucketDataQuery
     }),
     [
@@ -114,8 +108,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       fetchBuckets,
       bucketData,
       getBucketData,
-      bucketDataLoading,
-      bucketDataError,
       nextbucketDataQuery
     ]
   );
