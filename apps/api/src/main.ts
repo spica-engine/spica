@@ -191,7 +191,7 @@ const args = yargs(process.argv.slice(2))
     "apikey-realtime": {
       boolean: true,
       description: "Enable/disable listening apikey realtime. Default value is true",
-      default: true
+      default: false
     }
   })
   .demandOption("passport-secret")
