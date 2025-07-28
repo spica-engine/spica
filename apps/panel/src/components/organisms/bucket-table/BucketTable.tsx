@@ -37,6 +37,8 @@ type BucketTableProps = {
   totalDataLength: number;
   maxHeight?: string | number;
   bucketId: string;
+  noResizeableColumns?: string[];
+  fixedColumns?: string[];
 };
 
 type ColumnHeaderProps = {
@@ -73,7 +75,7 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
     <>
       <div className={styles.columnHeaderText}>
         {icon && <Icon name={icon} size="sm" className={styles.headerIcon} />}
-        {title || "\u00A0"}
+        <span>{title || "\u00A0"}</span>
       </div>
       {showDropdownIcon && (
         <Button variant="icon">
@@ -271,9 +273,14 @@ const BucketTable = ({
   onScrollEnd,
   totalDataLength,
   maxHeight,
-  bucketId
+  bucketId,
+  noResizeableColumns = [],
+  fixedColumns = []
 }: BucketTableProps) => {
-  const formattedColumns = useMemo(() => getFormattedColumns(columns, bucketId), [columns, bucketId]);
+  const formattedColumns = useMemo(
+    () => getFormattedColumns(columns, bucketId),
+    [columns, bucketId]
+  );
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
   const formattedData = useMemo(() => formatDataRows(data, columnMap), [data, columnMap]);
   return (
@@ -284,7 +291,8 @@ const BucketTable = ({
       data={formattedData}
       onScrollEnd={onScrollEnd}
       totalDataLength={totalDataLength}
-      noResizeableColumns={["select", "new field"]}
+      noResizeableColumns={["select", "new field", ...noResizeableColumns]}
+      fixedColumns={["select", ...fixedColumns]}
     />
   );
 };

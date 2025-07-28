@@ -17,6 +17,13 @@
   justify-content: normal !important;
   align-items: center;
   gap: var(--gap-md) !important;
+  > span {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    min-width: 50px;
+    width: min-content;
+  }
+  width: 80%;
 }
 
 .headerIcon {
@@ -110,6 +117,7 @@
 .selectCell {
   width: 60px;
   border-bottom: var(--border-default) !important;
+  padding-bottom: var(--padding-md) !important
 }
 
 .evenCell {
@@ -161,7 +169,6 @@
 .column > :nth-child(even) {
   background-color: var(--color-default);
 }
-
 
 .column > :not(:nth-child(2)) {
   .grayText {

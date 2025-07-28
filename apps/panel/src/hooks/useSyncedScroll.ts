@@ -1,6 +1,6 @@
-import {useEffect, useRef} from "react";
+import {useEffect, useRef, type RefObject} from "react";
 
-function useSyncedScroll(elementCount: number) {
+function useSyncedScroll(elementCount: number, parentRef?: RefObject<HTMLElement | null>) {
   const elementsRef = useRef<Map<string, HTMLDivElement | null>>(new Map());
   const syncingRef = useRef(false);
 
@@ -17,6 +17,10 @@ function useSyncedScroll(elementCount: number) {
     const forwardWheel = (e: WheelEvent) => {
       e.preventDefault();
       controller.scrollTop += e.deltaY;
+
+      if (parentRef?.current && Math.abs(e.deltaX) > 0 && parentRef.current) {
+        parentRef.current.scrollLeft += e.deltaX;
+      }
     };
 
     const handleControllerScroll = () => {

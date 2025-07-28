@@ -49,6 +49,8 @@ type TypeTable = {
   style?: React.CSSProperties;
 };
 
+const MIN_COLUMN_WIDTH = 140;
+
 function getCalculatedWidth(columns: ColumnType[], containerWidth: number): string {
   const baseFontSize = 16;
 
@@ -69,7 +71,7 @@ function getCalculatedWidth(columns: ColumnType[], containerWidth: number): stri
   const remainingWidth = Math.max(containerWidth - totalFixedWidth, 0);
 
   const autoWidth = remainingWidth / unsetCount;
-  return `${autoWidth}px`;
+  return `${Math.max(autoWidth, MIN_COLUMN_WIDTH)}px`;
 }
 
 const Table: FC<TypeTable> = ({
@@ -167,7 +169,7 @@ const Table: FC<TypeTable> = ({
     };
   }, [focusedCell]);
 
-  const setSyncedScrollElements = useSyncedScroll(dataColumns.length);
+  const setSyncedScrollElements = useSyncedScroll(dataColumns.length, containerRef);
   return (
     <>
       <div ref={containerRef} className={`${styles.table} ${className}`} style={style}>
@@ -355,6 +357,7 @@ const ColumnComponent = ({
 }: TypeColumn) => {
   const [columnWidth, setColumnWidth] = useState(width);
   const [isResizing, setIsResizing] = useState(false);
+  const [isResized, setIsResized] = useState(false);
   const columnRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setColumnWidth(width), [width]);
@@ -365,13 +368,13 @@ const ColumnComponent = ({
     const handleMouseMove = (e: MouseEvent) => {
       if (isResizing && columnRef.current) {
         const newWidth = e.clientX - columnRef.current.getBoundingClientRect().left;
-        const minColumnWidth = 5;
-        setColumnWidth(`${Math.max(newWidth, minColumnWidth)}px`);
+        setColumnWidth(`${Math.max(newWidth, MIN_COLUMN_WIDTH)}px`);
       }
     };
 
     const handleMouseUp = () => {
       setIsResizing(false);
+      setIsResized(true);
       if (columnRef.current) {
         const newWidth = columnRef.current.style.minWidth;
         updateColumnWidth?.(columnKey!, newWidth);
@@ -401,7 +404,7 @@ const ColumnComponent = ({
     <div
       id={id}
       ref={columnRef}
-      className={`${className} ${isResizing ? styles.resizingColumn : ""}`}
+      className={`${className} ${isResizing ? styles.resizingColumn : ""} ${isResized ? styles.resizedColumn : ""}`}
       style={{...style, maxWidth: columnWidth, minWidth: columnWidth, width: columnWidth}}
     >
       {children}

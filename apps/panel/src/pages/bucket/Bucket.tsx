@@ -22,8 +22,9 @@ export default function Bucket() {
       {
         header: "_id",
         key: "_id",
-        type: "string",
-        showDropdownIcon: true
+        showDropdownIcon: true,
+        sticky: true,
+        width: "210px"
       },
       ...columns.map(i => ({
         ...i,
@@ -49,7 +50,9 @@ export default function Bucket() {
           getBucketData(bucketId, query as BucketDataQueryType);
         }}
         totalDataLength={bucketData?.meta?.total ?? 0}
-        maxHeight="70vh"
+        noResizeableColumns={["_id"]}
+        fixedColumns={["_id"]}
+        maxHeight="88vh"
       />
     </div>
   );

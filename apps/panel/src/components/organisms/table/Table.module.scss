@@ -1,11 +1,17 @@
 .table {
   display: flex;
   border: 1px solid var(--color-border);
-  width: max-content;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .table:has(.resizingColumn) {
   user-select: none;
+  width: fit-content !important;
+}
+
+.table:has(.resizedColumn) {
+  width: fit-content !important;
 }
 
 .fixedColumns {
@@ -13,6 +19,7 @@
   left: 0;
   z-index: 1;
   background-color: white;
+  overflow: auto;
 }
 
 .scrollableColumns {
@@ -43,6 +50,7 @@
 
 .cell {
   padding: var(--padding-md);
+  padding-bottom: 0;
   &:not(:last-child) {
     border-bottom: 1px solid var(--color-border);
   }
