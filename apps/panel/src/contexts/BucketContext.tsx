@@ -5,8 +5,6 @@ import type {AxiosRequestHeaders} from "axios";
 type BucketContextType = {
   buckets: BucketType[];
   setBuckets: React.Dispatch<React.SetStateAction<BucketType[]>>;
-  loading: boolean;
-  error: string | null;
   fetchBuckets: (params?: {
     body?: any;
     headers?: AxiosRequestHeaders;
@@ -24,8 +22,6 @@ type BucketContextType = {
 const BucketContext = createContext<BucketContextType | null>(null);
 export const BucketProvider = ({children}: {children: ReactNode}) => {
   const {
-    loading,
-    error,
     fetchBuckets,
     currentBucket,
     currentBucketLoading,
@@ -48,8 +44,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     () => ({
       buckets,
       setBuckets,
-      loading,
-      error,
       fetchBuckets,
       changeBucketOrder,
       bucketOrderLoading,
@@ -59,7 +53,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       currentBucketLoading,
       currentBucketError
     }),
-    [buckets, loading, error, fetchBuckets, currentBucket, currentBucketLoading, currentBucketError]
+    [buckets, fetchBuckets, currentBucket, currentBucketLoading, currentBucketError]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;

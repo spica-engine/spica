@@ -63,12 +63,7 @@ interface UseBucketServiceOptions {
 }
 
 export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions = {}) => {
-  const {
-    request: fetchBuckets,
-    data: buckets,
-    error,
-    loading
-  } = useApi<BucketType[]>({
+  const {request: fetchBuckets, data: buckets} = useApi<BucketType[]>({
     endpoint: "/api/bucket",
     method: "get"
   });
@@ -120,8 +115,6 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
   return {
     buckets,
     fetchBuckets,
-    error,
-    loading,
     currentBucket,
     getCurrentBucket,
     currentBucketLoading,
