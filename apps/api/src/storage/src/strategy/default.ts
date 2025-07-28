@@ -13,6 +13,11 @@ export class Default implements Strategy {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
 
+    if (id.endsWith("/")) {
+      await fs.promises.mkdir(objectPath, {recursive: true});
+      return;
+    }
+
     return new Promise((resolve, reject) => {
       const writeStream = fs.createWriteStream(objectPath);
 
@@ -38,12 +43,23 @@ export class Default implements Strategy {
   async write(id: string, data: Buffer) {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
+
+    if (id.endsWith("/")) {
+      await fs.promises.mkdir(objectPath, {recursive: true});
+      return;
+    }
+
     return fs.promises.writeFile(objectPath, data);
   }
 
   async delete(id: string) {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
+
+    if (id.endsWith("/")) {
+      return fs.promises.rm(objectPath, {recursive: true});
+    }
+
     return fs.promises.unlink(objectPath);
   }
 
