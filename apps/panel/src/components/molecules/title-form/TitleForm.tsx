@@ -12,7 +12,7 @@ type TypeTitleFormProps = {
 
 const TitleForm: FC<TypeTitleFormProps> = ({bucket, initialValue, onClose}) => {
   const [value, setValue] = useState(initialValue);
-  const {changeBucketName, bucketNameChangeLoading} = useBucket();
+  const {changeBucketName} = useBucket();
   const handleSave = () => {
     changeBucketName(value, bucket).then(result => {
       if (!result) return;
@@ -53,22 +53,12 @@ const TitleForm: FC<TypeTitleFormProps> = ({bucket, initialValue, onClose}) => {
           children: (
             <FlexElement gap={10} className={styles.buttonsContainer}>
               <div className={styles.addButtonWrapper}>
-                <Button
-                  className={styles.addButton}
-                  onClick={handleSave}
-                  disabled={bucketNameChangeLoading}
-                  loading={bucketNameChangeLoading}
-                >
+                <Button className={styles.addButton} onClick={handleSave}>
                   <Icon name="save" />
                   <Text className={styles.addButtonText}>Save</Text>
                 </Button>
               </div>
-              <Button
-                className={styles.cancelButton}
-                variant="text"
-                onClick={() => onClose?.()}
-                disabled={bucketNameChangeLoading}
-              >
+              <Button className={styles.cancelButton} variant="text" onClick={() => onClose?.()}>
                 <Icon name="close" />
                 <Text>Cancel</Text>
               </Button>

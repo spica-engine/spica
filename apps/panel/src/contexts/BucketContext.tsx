@@ -28,7 +28,6 @@ type BucketContextType = {
   currentBucketLoading: boolean;
   currentBucketError: string | null;
   changeBucketName: (newTitle: string, bucket: BucketType) => Promise<any>;
-  bucketNameChangeLoading: boolean;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -44,7 +43,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
-    bucketNameChangeLoading,
     requestBucketNameChange
   } = useBucketService();
 
@@ -77,7 +75,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       getCurrentBucket,
       currentBucketLoading,
       currentBucketError,
-      bucketNameChangeLoading,
       changeBucketName
     }),
     [
@@ -88,7 +85,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       currentBucket,
       currentBucketLoading,
       currentBucketError,
-      bucketNameChangeLoading,
       changeBucketName
     ]
   );

@@ -117,7 +117,7 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
   }, []);
 
-  const {request: requestNameChange, loading: bucketNameChangeLoading} = useApi({
+  const {request: requestNameChange} = useApi({
     endpoint: "",
     method: "put"
   });
@@ -145,6 +145,5 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     bucketOrderLoading,
     bucketOrderError,
     requestBucketNameChange,
-    bucketNameChangeLoading
   };
 };
