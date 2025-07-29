@@ -5,7 +5,8 @@ import {FileStore} from "@tus/file-store";
 export class Default implements Strategy {
   constructor(
     private path: string,
-    private publicUrl: string
+    private publicUrl: string,
+    private expirationPeriod: number
   ) {
     this.publicUrl = publicUrl;
   }
@@ -81,7 +82,7 @@ export class Default implements Strategy {
   getTusServerDatastore() {
     return new FileStore({
       directory: this.path,
-      expirationPeriodInMilliseconds: 1000 * 60 * 60 * 24 * 2 // 2 days
+      expirationPeriodInMilliseconds: this.expirationPeriod
     });
   }
 

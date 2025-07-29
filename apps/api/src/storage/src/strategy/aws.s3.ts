@@ -15,7 +15,8 @@ export class AWSS3 implements Strategy {
 
   constructor(
     private credentialsPath: string,
-    private bucketName: string
+    private bucketName: string,
+    private expirationPeriod: number
   ) {
     const config = this.getConfig();
     this.s3 = new S3Client({
@@ -107,7 +108,7 @@ export class AWSS3 implements Strategy {
           secretAccessKey: config.secretAccessKey
         }
       },
-      expirationPeriodInMilliseconds: 1000 * 60 * 60 * 24 * 2 // 2 days
+      expirationPeriodInMilliseconds: this.expirationPeriod
     });
   }
 

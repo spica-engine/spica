@@ -287,6 +287,11 @@ const args = yargs(process.argv.slice(2))
     "storage-total-size-limit": {
       number: true,
       description: "Total size limit of storage. Unit: Mb"
+    },
+    "expiration-period": {
+      number: true,
+      description: "Storage period for unloaded files in milliseconds, default is 2 days",
+      default: 1000 * 60 * 60 * 24 * 2 // 2 days
     }
   })
   /* Status Options */
@@ -516,7 +521,8 @@ const modules = [
     awss3CredentialsPath: args["awss3-credentials-path"],
     awss3BucketName: args["awss3-bucket-name"],
     objectSizeLimit: args["storage-object-size-limit"],
-    totalSizeLimit: args["storage-total-size-limit"]
+    totalSizeLimit: args["storage-total-size-limit"],
+    expirationPeriod: args["expiration-period"]
   }),
   PassportModule.forRoot({
     publicUrl: args["public-url"],

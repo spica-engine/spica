@@ -7,7 +7,11 @@ export class GCloud implements Strategy {
   private storage: Storage;
   private bucket: Bucket;
 
-  constructor(serviceAccountPath: string, bucketName: string) {
+  constructor(
+    serviceAccountPath: string,
+    bucketName: string,
+    private expirationPeriod: number
+  ) {
     process.env.GOOGLE_APPLICATION_CREDENTIALS = serviceAccountPath;
     this.storage = new Storage();
     this.bucket = this.storage.bucket(bucketName);
@@ -127,7 +131,7 @@ export class GCloud implements Strategy {
           const now = new Date();
           const diffMs = now.getTime() - createdTime.getTime();
 
-          const twoDaysMs = 1000 * 60 * 60 * 24 * 2; // 2 days
+          const twoDaysMs = this.expirationPeriod;
 
           const isExpired = diffMs >= twoDaysMs;
           if (!isExpired) return;
