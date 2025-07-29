@@ -83,9 +83,61 @@ export class GCloud implements Strategy {
     };
   }
 
+  async getAllFilesMetadataPaginated(pageToken?: string): Promise<{
+    files: Array<{name: string; metadata: any}>;
+    nextPageToken?: string;
+  }> {
+    const options: any = {maxResults: 100, autoPaginate: false};
+
+    if (pageToken) {
+      options.pageToken = pageToken;
+    }
+
+    const [files, , response] = await this.bucket.getFiles(options);
+
+    const metadataList = await Promise.all(
+      files.map(async file => {
+        const [metadata] = await file.getMetadata();
+        return {name: file.name, metadata};
+      })
+    );
+
+    return {files: metadataList, nextPageToken: (response as any)?.nextPageToken};
+  }
+
+  isValidHex32(id: string): boolean {
+    return /^[0-9a-f]{32}$/i.test(id);
+  }
+
   getCleanUpExpiredUploadsMethod() {
     return async () => {
-      console.log("clean expirations");
+      let pageToken: string | undefined;
+
+      do {
+        const {files, nextPageToken} = await this.getAllFilesMetadataPaginated(pageToken);
+
+        files.forEach(file => {
+          const isUploadedWithTus = !!file.metadata.metadata?.tus_version;
+          if (!isUploadedWithTus) return;
+
+          const isValidHex = this.isValidHex32(file.name);
+          if (!isValidHex) return;
+
+          const createdTime = new Date(file.metadata.timeCreated);
+          const now = new Date();
+          const diffMs = now.getTime() - createdTime.getTime();
+
+          const twoDaysMs = 1000 * 60 * 60 * 24 * 2; // 2 days
+
+          const isExpired = diffMs >= twoDaysMs;
+          if (!isExpired) return;
+
+          this.delete(file.name);
+        });
+
+        pageToken = nextPageToken;
+      } while (pageToken);
+
       return 1;
     };
   }

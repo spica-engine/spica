@@ -50,7 +50,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     }
 
     new CronJob(
-      "* * * * *",
+      "0 0 * * *",
       () => {
         this.tusServer.cleanUpExpiredUploads();
       },
