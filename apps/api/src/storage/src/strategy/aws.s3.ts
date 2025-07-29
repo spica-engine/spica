@@ -112,7 +112,7 @@ export class AWSS3 implements Strategy {
   }
 
   async getFileInfo(id: string) {
-    const infoBuffer = await this.read(id + ".json");
+    const infoBuffer = await this.read(id + ".info");
     return JSON.parse(infoBuffer.toString());
   }
 
