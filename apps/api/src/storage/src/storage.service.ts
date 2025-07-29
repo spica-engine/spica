@@ -33,6 +33,10 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       afterInit: () => this._coll.createIndex({name: 1}, {unique: true})
     });
 
+    this.initializeTusServer();
+  }
+
+  private initializeTusServer() {
     this.tusServer = new Server({
       path: "/storage/resumable",
       datastore: this.service.getTusServerDatastore()
@@ -40,9 +44,19 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     this.tusServer.on(EVENTS.POST_FINISH, this.onFileUploaded.bind(this));
 
-    new CronJob("0 0 * * *", () => {
-      this.tusServer.cleanUpExpiredUploads();
-    });
+    const cleanUpExpiredUploads = this.service.getCleanUpExpiredUploadsMethod();
+    if (cleanUpExpiredUploads) {
+      this.tusServer.cleanUpExpiredUploads = cleanUpExpiredUploads;
+    }
+
+    new CronJob(
+      "* * * * *",
+      () => {
+        this.tusServer.cleanUpExpiredUploads();
+      },
+      null,
+      true
+    );
   }
 
   private existingSize(): Promise<number> {

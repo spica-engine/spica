@@ -11,4 +11,5 @@ export abstract class Strategy {
   abstract getFileInfo(
     id: string
   ): Promise<{size: number; metadata: {filename: string; filetype: string}}>;
+  abstract getCleanUpExpiredUploadsMethod(): () => Promise<number> | null;
 }

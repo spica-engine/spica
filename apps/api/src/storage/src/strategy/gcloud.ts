@@ -82,4 +82,11 @@ export class GCloud implements Strategy {
       }
     };
   }
+
+  getCleanUpExpiredUploadsMethod() {
+    return async () => {
+      console.log("clean expirations");
+      return 1;
+    };
+  }
 }

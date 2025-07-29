@@ -89,4 +89,9 @@ export class Default implements Strategy {
     const infoBuffer = await this.read(id + ".json");
     return JSON.parse(infoBuffer.toString());
   }
+
+  getCleanUpExpiredUploadsMethod() {
+    // tus server implementation will be used
+    return null;
+  }
 }
