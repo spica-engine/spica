@@ -19,7 +19,7 @@ describe("ApiKey", () => {
         CoreTestingModule,
         PreferenceTestingModule,
         PassportTestingModule.initialize(),
-        ApiKeyModule.forRoot(),
+        ApiKeyModule.forRoot({realtime: false}),
         SchemaModule.forRoot({formats: [OBJECT_ID]})
       ]
     }).compile();
