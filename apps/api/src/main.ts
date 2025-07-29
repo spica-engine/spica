@@ -192,6 +192,11 @@ const args = yargs(process.argv.slice(2))
       boolean: true,
       description: "Enable/disable listening apikey realtime. Default value is true",
       default: true
+    },
+    "identity-realtime": {
+      boolean: true,
+      description: "Enable/disable listening identity realtime. Default value is true",
+      default: true
     }
   })
   .demandOption("passport-secret")
@@ -537,7 +542,8 @@ const modules = [
     },
     refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
     passwordHistoryLimit: args["passport-identity-password-history-limit"],
-    apikeyRealtime: args["apikey-realtime"]
+    apikeyRealtime: args["apikey-realtime"],
+    identityRealtime: args["identity-realtime"]
   }),
   FunctionModule.forRoot({
     logExpireAfterSeconds: args["common-log-lifespan"],

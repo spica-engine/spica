@@ -28,6 +28,9 @@
     },
     {
       "path": "../../../../../libs/interface/passport/identity"
+    },
+    {
+      "path": "./realtime"
     }
   ]
 }
