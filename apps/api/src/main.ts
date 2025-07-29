@@ -195,6 +195,11 @@ const args = yargs(process.argv.slice(2))
     "passport-identity-limit": {
       number: true,
       description: "Maximum number of identity that can be inserted."
+    },
+    "apikey-realtime": {
+      boolean: true,
+      description: "Enable/disable listening apikey realtime. Default value is true",
+      default: true
     }
   })
   .demandOption("passport-secret")
@@ -539,7 +544,8 @@ const modules = [
       blockDurationMinutes: args["passport-identity-block-duration-after-failed-login-attempts"]
     },
     refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
-    passwordHistoryLimit: args["passport-identity-password-history-limit"]
+    passwordHistoryLimit: args["passport-identity-password-history-limit"],
+    apikeyRealtime: args["apikey-realtime"]
   }),
   FunctionModule.forRoot({
     logExpireAfterSeconds: args["common-log-lifespan"],
