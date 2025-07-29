@@ -10,12 +10,12 @@ import {
   REGISTER_VC_SYNCHRONIZER,
   RegisterVCSynchronizer
 } from "@spica-server/interface/versioncontrol";
-
+import {PolicyRealtimeModule} from "../realtime";
 @Global()
 @Module({})
 export class PolicyModule {
-  static forRoot(): DynamicModule {
-    return {
+  static forRoot({realtime}): DynamicModule {
+    const module: DynamicModule = {
       module: PolicyModule,
       imports: [
         SchemaModule.forChild({
@@ -38,6 +38,12 @@ export class PolicyModule {
         }
       ]
     };
+
+    if (realtime) {
+      module.imports.push(PolicyRealtimeModule.register());
+    }
+
+    return module;
   }
 
   constructor(

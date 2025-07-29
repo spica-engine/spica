@@ -109,7 +109,7 @@ describe("Versioning", () => {
           persistentPath: directoryPath,
           isReplicationEnabled: false
         }),
-        PolicyModule.forRoot()
+        PolicyModule.forRoot({realtime: false})
       ]
     }).compile();
 

@@ -40,7 +40,7 @@ describe("Identity Controller", () => {
             failedAttemptLimit: 0
           }
         }),
-        PolicyModule.forRoot()
+        PolicyModule.forRoot({realtime: false})
       ]
     }).compile();
     app = module.createNestApplication();

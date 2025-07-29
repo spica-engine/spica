@@ -70,7 +70,7 @@ export class PassportModule {
           passwordHistoryLimit: options.passwordHistoryLimit,
           blockingOptions: options.blockingOptions
         }),
-        PolicyModule.forRoot(),
+        PolicyModule.forRoot({realtime: options.policyRealtime}),
         ApiKeyModule.forRoot({realtime: options.apikeyRealtime}),
         RefreshTokenModule.forRoot({
           expiresIn: options.refreshTokenExpiresIn
