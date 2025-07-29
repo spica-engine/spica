@@ -13,6 +13,9 @@
     },
     {
       "path": "../../../../libs/interface/dashboard"
+    },
+    {
+      "path": "./realtime"
     }
   ]
 }

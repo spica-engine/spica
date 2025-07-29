@@ -6,7 +6,7 @@ import DashboardSchema from "./schema/dashboard.json" with {type: "json"};
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {registerAssetHandlers} from "./asset";
-
+import {DashboardRealtimeModule} from "../realtime";
 @Module({})
 export class DashboardModule {
   constructor(
@@ -16,8 +16,8 @@ export class DashboardModule {
   ) {
     registerAssetHandlers(ds, validator, assetRepManager);
   }
-  static forRoot(): DynamicModule {
-    return {
+  static forRoot({realtime}): DynamicModule {
+    const module: DynamicModule = {
       module: DashboardModule,
       imports: [
         SchemaModule.forChild({
@@ -28,5 +28,10 @@ export class DashboardModule {
       providers: [DashboardService],
       exports: [DashboardService]
     };
+
+    if (realtime) {
+      module.imports.push(DashboardRealtimeModule.register());
+    }
+    return module;
   }
 }
