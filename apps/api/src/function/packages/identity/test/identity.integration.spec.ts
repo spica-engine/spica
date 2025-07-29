@@ -44,7 +44,8 @@ describe("Identity", () => {
             failedAttemptLimit: 0
           },
           passwordHistoryLimit: 0,
-          apikeyRealtime: false
+          apikeyRealtime: false,
+          policyRealtime: false
         }),
         PreferenceTestingModule,
         CoreTestingModule,
