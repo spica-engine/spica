@@ -32,7 +32,7 @@ function fixBucketProperties(bucket: Bucket, baseName: string, errors: SchemaWar
 
   errors.push({
     target: baseName,
-    reason: "Should have properties field"
+    reason: "Should have at least one property"
   });
 
   return bucket;
