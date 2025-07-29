@@ -24,13 +24,15 @@ export default function Bucket() {
         key: "_id",
         showDropdownIcon: true,
         sticky: true,
-        width: "210px"
+        width: "230px",
+        resizable: false,
+        fixed: true
       },
       ...columns.map(i => ({
         ...i,
         header: i.title,
         key: i.title,
-        showDropdownIcon: true
+        showDropdownIcon: true,
       }))
     ];
   }, [buckets, bucketId]);
@@ -50,8 +52,6 @@ export default function Bucket() {
           getBucketData(bucketId, query as BucketDataQueryType);
         }}
         totalDataLength={bucketData?.meta?.total ?? 0}
-        noResizeableColumns={["_id"]}
-        fixedColumns={["_id"]}
         maxHeight="88vh"
       />
     </div>

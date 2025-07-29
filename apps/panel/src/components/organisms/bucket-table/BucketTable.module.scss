@@ -12,6 +12,20 @@
   width: 100%;
 }
 
+.table td:not([class*="focusedCell"]),
+.table th {
+  border-bottom: none !important;
+  border-right: var(--border-default);
+  border-color: var(--color-input-placeholder);
+}
+
+.table > tbody > tr:nth-child(even) {
+  background-color: var(--color-zebra);
+}
+.table > tbody > tr:nth-child(odd) {
+  background-color: var(--color-default);
+}
+
 .columnHeaderText {
   display: flex;
   justify-content: normal !important;
@@ -50,10 +64,13 @@
 }
 
 .columnHeader {
-  display: flex;
   justify-content: space-between !important;
   padding-right: calc(var(--padding-xl) + var(--padding-md)) !important;
   background-color: var(--color-border);
+}
+
+.columnHeader:first-child {
+  border-right: none;
 }
 
 .newFieldColumnHeader {
@@ -98,9 +115,6 @@
 .selectColumn {
   min-width: 60px !important;
   flex: none !important;
-  &:not(:last-child) {
-    border-right: none;
-  }
 
   display: flex;
   flex-direction: column;
@@ -114,14 +128,12 @@
   }
 }
 
-.selectCell {
-  width: 60px;
-  border-bottom: var(--border-default) !important;
-  padding-bottom: var(--padding-md) !important
-}
 
-.evenCell {
-  background-color: var(--color-zebra);
+
+.selectCell {
+  border-bottom: var(--border-default) !important;
+  padding-bottom: var(--padding-md) !important;
+  border-right: none !important;
 }
 
 .locationCell {
@@ -149,33 +161,6 @@
   }
 }
 
-.column {
-  border-right-color: var(--color-input-placeholder) !important;
-}
-
-.column:not(.newFieldColumn) {
-  overscroll-behavior: none;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.column:not(.newFieldColumn)::-webkit-scrollbar {
-  display: none;
-}
-
-.column > :nth-child(odd):not(:first-child) {
-  background-color: var(--color-zebra);
-}
-.column > :nth-child(even) {
-  background-color: var(--color-default);
-}
-
-.column > :not(:nth-child(2)) {
-  .grayText {
-    display: none;
-  }
-}
-
 .newFieldColumn {
   flex: 1;
   position: relative;
@@ -192,7 +177,6 @@
 }
 
 .defaultCell {
-  width: 100%;
   overflow: hidden;
   display: flex;
   justify-content: space-between;

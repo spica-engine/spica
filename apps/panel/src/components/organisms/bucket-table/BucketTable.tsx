@@ -28,6 +28,10 @@ export type ColumnType = {
   cellClassName?: string;
   columnClassName?: string;
   showDropdownIcon?: boolean;
+  resizable?: boolean;
+  fixed?: boolean;
+  selectable?: boolean
+  leftOffset?: number
 };
 
 type BucketTableProps = {
@@ -37,8 +41,6 @@ type BucketTableProps = {
   totalDataLength: number;
   maxHeight?: string | number;
   bucketId: string;
-  noResizeableColumns?: string[];
-  fixedColumns?: string[];
 };
 
 type ColumnHeaderProps = {
@@ -92,10 +94,13 @@ const defaultColumns: ColumnType[] = [
     header: <ColumnHeader />,
     key: "select",
     type: "boolean",
-    width: "60px",
+    width: "41px",
     headerClassName: styles.columnHeader,
     columnClassName: `${styles.selectColumn} ${styles.column}`,
-    cellClassName: styles.selectCell
+    cellClassName: styles.selectCell,
+    resizable: false,
+    fixed: true,
+    selectable: false,
   },
   {
     id: "1",
@@ -112,7 +117,9 @@ const defaultColumns: ColumnType[] = [
     width: "125px",
     headerClassName: styles.columnHeader,
     cellClassName: styles.newFieldCell,
-    columnClassName: `${styles.newFieldColumn} ${styles.column}`
+    columnClassName: `${styles.newFieldColumn} ${styles.column}`,
+    resizable: false,
+    selectable: false
   }
 ];
 
@@ -274,8 +281,6 @@ const BucketTable = ({
   totalDataLength,
   maxHeight,
   bucketId,
-  noResizeableColumns = [],
-  fixedColumns = []
 }: BucketTableProps) => {
   const formattedColumns = useMemo(
     () => getFormattedColumns(columns, bucketId),
@@ -291,8 +296,6 @@ const BucketTable = ({
       data={formattedData}
       onScrollEnd={onScrollEnd}
       totalDataLength={totalDataLength}
-      noResizeableColumns={["select", "new field", ...noResizeableColumns]}
-      fixedColumns={["select", ...fixedColumns]}
     />
   );
 };
