@@ -117,6 +117,17 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
   }, []);
 
+  const {request: deleteRequest} = useApi({
+    endpoint: "",
+    method: "delete"
+  });
+
+  const deleteBucketRequest = useCallback((bucketId: string) => {
+    return deleteRequest({
+      endpoint: `/api/bucket/${bucketId}`
+    });
+  }, []);
+
   return {
     buckets,
     fetchBuckets,
@@ -128,6 +139,7 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     currentBucketError,
     changeBucketOrder,
     bucketOrderLoading,
-    bucketOrderError
+    bucketOrderError,
+    deleteBucketRequest
   };
 };
