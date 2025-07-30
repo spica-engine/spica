@@ -14,7 +14,7 @@ export class Default implements Strategy {
     const objectPath = this.buildPath(id);
 
     if (this.isDirectory(id)) {
-      this.createDir(objectPath);
+      await this.createDir(objectPath);
       return;
     }
 
@@ -45,7 +45,7 @@ export class Default implements Strategy {
     const objectPath = this.buildPath(id);
 
     if (this.isDirectory(id)) {
-      this.createDir(objectPath);
+      await this.createDir(objectPath);
       return;
     }
 
@@ -57,7 +57,7 @@ export class Default implements Strategy {
     const objectPath = this.buildPath(id);
 
     if (this.isDirectory(id)) {
-      this.removeDir(objectPath);
+      await this.removeDir(objectPath);
       return;
     }
 
