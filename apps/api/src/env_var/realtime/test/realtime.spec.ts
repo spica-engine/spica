@@ -139,7 +139,7 @@ describe("EnvVar Realtime", () => {
       };
     });
 
-    it("should the action error message", done => {
+    it("should display the action error message", done => {
       actionGuardCheck.mockImplementation(() => {
         throw new ForbiddenException("You do not have sufficient permissions to do this action.");
       });
@@ -245,7 +245,18 @@ describe("EnvVar Realtime", () => {
         await waitForOpen(socket);
 
         const messages = await collectMessages(socket);
-        expect(messages.filter(m => m.kind === ChunkKind.Initial).length).toBe(2);
+        const initialMessages = messages.filter(m => m.kind === ChunkKind.Initial);
+
+        expect(initialMessages).toEqual([
+          {
+            kind: ChunkKind.Initial,
+            document: {key: "key1", value: "val1"}
+          },
+          {
+            kind: ChunkKind.Initial,
+            document: {key: "key2", value: "val2"}
+          }
+        ]);
       });
 
       it("should perform 'skip' action", async () => {
@@ -257,8 +268,18 @@ describe("EnvVar Realtime", () => {
         await waitForOpen(socket);
 
         const messages = await collectMessages(socket);
-        const docs = messages.filter(m => m.kind === ChunkKind.Initial).map(m => m.document.key);
-        expect(docs).not.toContain("key1");
+        const initialMessages = messages.filter(m => m.kind === ChunkKind.Initial);
+
+        expect(initialMessages).toEqual([
+          {
+            kind: ChunkKind.Initial,
+            document: {key: "key2", value: "val2"}
+          },
+          {
+            kind: ChunkKind.Initial,
+            document: {key: "key3", value: "val3"}
+          }
+        ]);
       });
 
       it("should perform 'sort' action", async () => {
@@ -270,8 +291,22 @@ describe("EnvVar Realtime", () => {
         await waitForOpen(socket);
 
         const messages = await collectMessages(socket);
-        const docs = messages.filter(m => m.kind === ChunkKind.Initial).map(m => m.document.key);
-        expect(docs).toEqual(["a-key", "b-key", "c-key"]);
+        const initialMessages = messages.filter(m => m.kind === ChunkKind.Initial);
+
+        expect(initialMessages).toEqual([
+          {
+            kind: ChunkKind.Initial,
+            document: {key: "a-key", value: "valA"}
+          },
+          {
+            kind: ChunkKind.Initial,
+            document: {key: "b-key", value: "valB"}
+          },
+          {
+            kind: ChunkKind.Initial,
+            document: {key: "c-key", value: "valC"}
+          }
+        ]);
       });
     });
   });
