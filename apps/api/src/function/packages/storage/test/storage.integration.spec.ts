@@ -27,7 +27,8 @@ describe("Storage", () => {
           objectSizeLimit: 10,
           strategy: "default",
           defaultPublicUrl: PUBLIC_URL,
-          defaultPath: process.env.TEST_TMPDIR
+          defaultPath: process.env.TEST_TMPDIR,
+          expirationPeriod: 0
         }),
         CoreTestingModule,
         BatchModule.forRoot({port: PORT.toString()})
