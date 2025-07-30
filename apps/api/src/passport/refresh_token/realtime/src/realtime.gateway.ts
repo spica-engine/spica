@@ -31,7 +31,6 @@ export class RefreshTokenRealtimeGateway implements OnGatewayConnection, OnGatew
   );
 
   async handleConnection(client: WebSocket, req: any) {
-    console.log("Client connecting", req.url);
     return this.handlers.handleConnection(client, req);
   }
 
@@ -40,10 +39,6 @@ export class RefreshTokenRealtimeGateway implements OnGatewayConnection, OnGatew
   }
 
   async prepareOptions(client, req) {
-    console.log("Preparing options for refresh token realtime connection");
-    console.log("Client:", client);
-    console.log("Request:", req);
-
     const options: any = {filter: {$and: []}};
 
     const policyMatch = req.resourceFilter || {$match: {}};
