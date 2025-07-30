@@ -82,7 +82,7 @@ const CategorySelectCreate = ({
           prefix={{
             className: styles.inputSection,
             children: (
-              <FlexElement gap={10} direction="vertical" dimensionX="fill">
+              <FlexElement gap={filteredCategories.length > 0 ? 10 : 0} direction="vertical" dimensionX="fill">
                 <FlexElement ref={containerRef} gap={10} className={styles.inputContainer}>
                   <Icon name="formatQuoteClose" size="md" />
                   <Input
