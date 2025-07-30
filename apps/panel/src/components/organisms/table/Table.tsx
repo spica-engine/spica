@@ -32,7 +32,7 @@ type TypeDataColumn = {
 type TypeTableData = {
   [k: string]: {
     id: string;
-    component: string | JSX.Element;
+    value: string | JSX.Element;
   };
 };
 
@@ -228,7 +228,7 @@ const Table: FC<TypeTable> = ({
             onScrollEnd?.();
           }}
           hasMore={totalDataLength !== undefined && totalDataLength > data.length}
-          loader={<div>Loading…</div>}
+          loader={<div className={styles.loader}/>}
           scrollableTarget="scrollableDiv"
           className={styles.infiniteScroll}
         >
@@ -285,10 +285,10 @@ const RowRenderer = memo(
     const cells: JSX.Element[] = [];
 
     for (const column of formattedColumns) {
-      const value = row[column.key];
-      if (!value) continue;
+      const cellData = row[column.key];
+      if (!cellData) continue;
 
-      const key = value.id;
+      const key = cellData.id;
       const isFocused = focusedCell?.row === rowIndex && focusedCell?.column === column.key;
 
       const cacheKey = `${key}-${isFocused ? "focused" : "normal"}`;
@@ -308,7 +308,7 @@ const RowRenderer = memo(
           leftOffset={column.leftOffset}
           focused={isFocused}
         >
-          {value.component}
+          {cellData.value}
         </Cell>
       );
 

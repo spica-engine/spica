@@ -267,7 +267,7 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
         const meta = columnMap[key] || {};
         return [
           key,
-          {id: `${meta.id}-${fullRow._id}`, component: renderCell(value, meta.type, meta.deletable)}
+          {id: `${meta.id}-${fullRow._id}`, value: renderCell(value, meta.type, meta.deletable)}
         ];
       })
     );

@@ -122,6 +122,7 @@ export const useBucketService = () => {
       return fetchBucketData({
         endpoint: `/api/bucket/${bucketId}/data?${queryString}`
       }).then(result => {
+        if (!result) return;
         setLastUsedBucketDataQuery(
           query ? {...query, bucketId} : {...defaultParams, sort: {_id: -1}, bucketId}
         );

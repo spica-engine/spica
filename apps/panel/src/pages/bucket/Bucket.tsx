@@ -2,7 +2,7 @@ import styles from "./Bucket.module.scss";
 import {useBucket} from "../../contexts/BucketContext";
 import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
-import {useEffect, useMemo} from "react";
+import {useCallback, useEffect, useMemo} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
 import type {BucketDataQueryType} from "src/services/bucketService";
 
@@ -32,10 +32,20 @@ export default function Bucket() {
         ...i,
         header: i.title,
         key: i.title,
-        showDropdownIcon: true,
+        showDropdownIcon: true
       }))
     ];
   }, [buckets, bucketId]);
+
+  const handleScrollEnd = useCallback(() => {
+    if (!bucketId) return;
+    const query = nextbucketDataQuery;
+    if (query?.bucketId) {
+      delete (query as any).bucketId;
+    }
+    getBucketData(bucketId, query as BucketDataQueryType);
+  }, [bucketId, getBucketData, nextbucketDataQuery]);
+
   return (
     <div className={styles.container}>
       <BucketActionBar />
@@ -43,14 +53,7 @@ export default function Bucket() {
         bucketId={bucketId as string}
         columns={formattedColumns as ColumnType[]}
         data={bucketData?.data ?? []}
-        onScrollEnd={() => {
-          if (!bucketId) return;
-          const query = nextbucketDataQuery;
-          if (query?.bucketId) {
-            delete (query as any).bucketId;
-          }
-          getBucketData(bucketId, query as BucketDataQueryType);
-        }}
+        onScrollEnd={handleScrollEnd}
         totalDataLength={bucketData?.meta?.total ?? 0}
         maxHeight="88vh"
       />
