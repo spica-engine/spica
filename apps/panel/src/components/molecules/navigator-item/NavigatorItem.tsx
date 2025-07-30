@@ -15,7 +15,7 @@ type TypeNavigatorItem = {
   label: string;
   prefixIcon?: IconName;
   suffixIcons?: SuffixIcon[];
-  bucket?: BucketType;
+  bucket: BucketType;
 } & TypeFluidContainer;
 
 const NavigatorItem: FC<TypeNavigatorItem> = ({

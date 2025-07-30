@@ -145,6 +145,17 @@ export const useBucketService = () => {
     [bucketOrderRequest]
   );
 
+  const {request: deleteRequest} = useApi({
+    endpoint: "",
+    method: "delete"
+  });
+
+  const deleteBucketRequest = useCallback((bucketId: string) => {
+    return deleteRequest({
+      endpoint: `/api/bucket/${bucketId}`
+    });
+  }, []);
+
   return {
     loading,
     error,
@@ -155,6 +166,7 @@ export const useBucketService = () => {
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
-    buckets
+    buckets,
+    deleteBucketRequest
   };
 };
