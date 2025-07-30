@@ -104,7 +104,7 @@ describe("Versioning", () => {
           spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
           tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
         }),
-        EnvVarModule.forRoot(),
+        EnvVarModule.forRoot({realtime: false}),
         VersionControlModule.forRoot({
           persistentPath: directoryPath,
           isReplicationEnabled: false
