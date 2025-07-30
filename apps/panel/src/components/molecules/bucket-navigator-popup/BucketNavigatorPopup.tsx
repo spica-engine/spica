@@ -1,6 +1,7 @@
 import {Button, FlexElement, Icon, Popover, Text, useOnClickOutside} from "oziko-ui-kit";
 import {memo, useRef, useState, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
+import Confirmation from "../confirmation/Confirmation";
 import TitleForm from "../title-form/TitleForm";
 import type {BucketType} from "../../../services/bucketService";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -12,9 +13,8 @@ type TypeBucketNavigatorPopup = {
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onAddToCategory?: () => void;
-  onDelete?: () => void;
-  bucket: BucketType;
   onEdit?: () => void;
+  bucket: BucketType;
 };
 
 const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
@@ -22,7 +22,6 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   isOpen,
   setIsOpen,
   onAddToCategory,
-  onDelete,
   bucket,
   onEdit
 }) => {
@@ -36,6 +35,24 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
     refs: [containerRef, contentRef],
     onClickOutside: () => setIsOpen(false)
   });
+
+
+  const {deleteBucket} = useBucket();
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+
+  const handleDeleteBucket = async () => {
+    try {
+      await deleteBucket(bucket._id);
+      setIsConfirmationOpen(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsConfirmationOpen(false);
+    setIsOpen(false);
+  };
 
   const handleChangeBucketName = async (value: string) => {
     await changeBucketName(value, bucket);
@@ -94,6 +111,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
               color="default"
               onClick={e => {
                 e.stopPropagation();
+                setIsConfirmationOpen(true);
               }}
               className={styles.buttons}
             >
@@ -114,6 +132,39 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
           <Icon name="dotsVertical" size="sm" />
         </Button>
       </Popover>
+      {isConfirmationOpen && (
+        <Confirmation
+          title="DELETE BUCKET"
+          description={
+            <>
+              <p className={styles.confirmText}>
+                This action will permanently delete this bucket and remove all associated data and
+                connections. This cannot be undone.
+              </p>
+              <span className={styles.confirmHint}>
+                Please type <strong>{bucket.title}</strong> to confirm deletion.
+              </span>
+            </>
+          }
+          inputPlaceholder="Type Here"
+          confirmLabel={
+            <>
+              <Icon name="delete" />
+              Delete
+            </>
+          }
+          cancelLabel={
+            <>
+              <Icon name="close" />
+              Cancel
+            </>
+          }
+          showInput
+          confirmCondition={val => val === bucket.title}
+          onConfirm={handleDeleteBucket}
+          onCancel={handleCancel}
+        />
+      )}
       {titleFormOpen && (
         <TitleForm
           initialValue={bucket.title}

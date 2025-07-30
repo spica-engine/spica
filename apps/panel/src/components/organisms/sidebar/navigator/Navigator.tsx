@@ -52,7 +52,7 @@ type TypeCustomDragLayerProps = {
   moveItem: (itemIndex: number, hoverIndex: number) => void;
 };
 
-type TypeReorderableListProps = ReorderableItemGroup
+type TypeReorderableListProps = ReorderableItemGroup;
 
 const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
   return (

@@ -15,6 +15,7 @@ type BucketContextType = {
   setBuckets: React.Dispatch<React.SetStateAction<BucketType[]>>;
   loading: boolean;
   error: string | null;
+  deleteBucket: (bucketId: string) => Promise<any>;
   fetchBuckets: (params?: {
     body?: any;
     headers?: AxiosRequestHeaders;
@@ -33,9 +34,11 @@ type BucketContextType = {
 const BucketContext = createContext<BucketContextType | null>(null);
 export const BucketProvider = ({children}: {children: ReactNode}) => {
   const {
+    buckets: data,
     loading,
     error,
     fetchBuckets,
+    deleteBucketRequest,
     currentBucket,
     currentBucketLoading,
     currentBucketError,
@@ -46,7 +49,20 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     requestBucketNameChange
   } = useBucketService();
 
-  const [buckets, setBuckets] = useState<BucketType[]>([]);
+  const [buckets, setBuckets] = useState<BucketType[]>(data ?? []);
+  useEffect(() => setBuckets(data ?? []), [data]);
+
+  const deleteBucket = useCallback(
+    async (bucketId: string) => {
+      try {
+        await deleteBucketRequest(bucketId);
+        setBuckets(prev => (prev ? prev.filter(i => i._id !== bucketId) : []));
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    [deleteBucketRequest]
+  );
 
   const changeBucketName = useCallback(async (newTitle: string, bucket: BucketType) => {
     try {
@@ -69,6 +85,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       setBuckets,
       loading,
       error,
+      deleteBucket,
       fetchBuckets,
       changeBucketOrder,
       bucketOrderLoading,
