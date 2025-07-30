@@ -277,7 +277,7 @@ describe("Realtime", () => {
       });
 
       it("should perform 'limit' action", async () => {
-        await insertPolicy({
+        const p1 = {
           _id: new ObjectId().toHexString(),
           name: "Activity Full Access",
           description: "Full access to activity service.",
@@ -285,47 +285,38 @@ describe("Realtime", () => {
             {action: "activity:index", module: "activity"},
             {action: "activity:delete", module: "activity"}
           ]
-        }),
-          await insertPolicy({
-            _id: new ObjectId().toHexString(),
-            name: "ApiKey Read Only Access",
-            description: "Read only access to passport apikey service.",
-            statement: [
-              {
-                action: "passport:apikey:index",
-                module: "passport:apikey"
-              },
-              {
-                action: "passport:apikey:show",
-                module: "passport:apikey"
-              },
-              {
-                action: "passport:apikey:stream",
-                module: "passport:apikey"
-              }
-            ]
-          }),
-          await insertPolicy({
-            _id: new ObjectId().toHexString(),
-            name: "Environment Variables Read Only Access",
-            description: "Read only access to function environment variables service.",
-            statement: [
-              {
-                action: "env-var:index",
-                module: "env-var"
-              },
-              {
-                action: "env-var:show",
-                module: "env-var"
-              }
-            ]
-          });
+        };
+        const p2 = {
+          _id: new ObjectId().toHexString(),
+          name: "ApiKey Read Only Access",
+          description: "Read only access to passport apikey service.",
+          statement: [
+            {action: "passport:apikey:index", module: "passport:apikey"},
+            {action: "passport:apikey:show", module: "passport:apikey"},
+            {action: "passport:apikey:stream", module: "passport:apikey"}
+          ]
+        };
+        const p3 = {
+          _id: new ObjectId().toHexString(),
+          name: "Environment Variables Read Only Access",
+          description: "Read only access to function environment variables service.",
+          statement: [
+            {action: "env-var:index", module: "env-var"},
+            {action: "env-var:show", module: "env-var"}
+          ]
+        };
+
+        await insertPolicy(p1);
+        await insertPolicy(p2);
+        await insertPolicy(p3);
 
         const socket = connectSocket({query: {limit: "2"}});
         await waitForOpen(socket);
 
         const messages = await collectMessages(socket);
-        expect(messages.filter(m => m.kind === ChunkKind.Initial).length).toBe(2);
+        const docs = messages.filter(m => m.kind === ChunkKind.Initial).map(m => m.document);
+
+        expect(docs).toEqual([p1, p2]);
       });
 
       it("should perform 'skip' action", async () => {
