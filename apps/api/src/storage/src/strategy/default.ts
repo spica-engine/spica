@@ -1,14 +1,42 @@
 import fs from "fs";
 import {Strategy} from "./strategy";
+import {Server, EVENTS} from "@tus/server";
 import {FileStore} from "@tus/file-store";
+import {CronJob} from "cron";
+import {StorageObjectMeta} from "@spica-server/interface/storage";
 
 export class Default implements Strategy {
+  private tusServer: Server;
+
   constructor(
     private path: string,
     private publicUrl: string,
     private resumableUploadExpiresIn: number
   ) {
     this.publicUrl = publicUrl;
+
+    this.initializeTusServer();
+  }
+
+  private initializeTusServer() {
+    const datastore = new FileStore({
+      directory: this.path,
+      expirationPeriodInMilliseconds: this.resumableUploadExpiresIn
+    });
+
+    this.tusServer = new Server({
+      path: "/storage/resumable",
+      datastore
+    });
+
+    new CronJob(
+      "0 0 * * *",
+      () => {
+        this.tusServer.cleanUpExpiredUploads();
+      },
+      null,
+      true
+    );
   }
 
   async writeStream(id: string, data: fs.ReadStream, mimeType?: string): Promise<void> {
@@ -79,15 +107,27 @@ export class Default implements Strategy {
     }
   }
 
-  getTusServerDatastore() {
-    return new FileStore({
-      directory: this.path,
-      expirationPeriodInMilliseconds: this.resumableUploadExpiresIn
-    });
+  handleResumableUpload(req: any, res: any) {
+    return this.tusServer.handle(req, res);
   }
 
-  getCleanUpExpiredUploadsMethod() {
-    // tus server implementation will be used
-    return null;
+  async onResumableUploadFinished(callback: (document: StorageObjectMeta) => void) {
+    this.tusServer.on(EVENTS.POST_FINISH, async event => {
+      const fileId = event.url.split("/").pop();
+
+      const info = await this.tusServer.datastore.getUpload(fileId);
+      const finename = info.metadata.filename;
+
+      await this.rename(fileId, finename);
+
+      const document = {
+        name: finename,
+        content: {
+          type: info.metadata.filetype,
+          size: info.size
+        }
+      };
+      callback(document);
+    });
   }
 }

@@ -1,11 +1,15 @@
 import {ReadStream} from "fs";
 import {Strategy} from "./strategy";
 import {Storage, Bucket} from "@google-cloud/storage";
+import {Server, EVENTS} from "@tus/server";
 import {GCSStore} from "@tus/gcs-store";
+import {CronJob} from "cron";
+import {StorageObjectMeta} from "@spica-server/interface/storage";
 
 export class GCloud implements Strategy {
   private storage: Storage;
   private bucket: Bucket;
+  private tusServer: Server;
 
   constructor(
     serviceAccountPath: string,
@@ -15,6 +19,24 @@ export class GCloud implements Strategy {
     process.env.GOOGLE_APPLICATION_CREDENTIALS = serviceAccountPath;
     this.storage = new Storage();
     this.bucket = this.storage.bucket(bucketName);
+
+    this.initializeTusServer();
+  }
+
+  private initializeTusServer() {
+    this.tusServer = new Server({
+      path: "/storage/resumable",
+      datastore: new GCSStore({bucket: this.bucket})
+    });
+
+    new CronJob(
+      "0 0 * * *",
+      () => {
+        this.cleanUpExpiredUploads();
+      },
+      null,
+      true
+    );
   }
 
   write(id: string, data: Buffer, contentType: string) {
@@ -69,9 +91,27 @@ export class GCloud implements Strategy {
     await file.move(newName);
   }
 
-  getTusServerDatastore() {
-    return new GCSStore({
-      bucket: this.bucket
+  handleResumableUpload(req: any, res: any) {
+    return this.tusServer.handle(req, res);
+  }
+
+  async onResumableUploadFinished(callback: (document: StorageObjectMeta) => void) {
+    this.tusServer.on(EVENTS.POST_FINISH, async event => {
+      const fileId = event.url.split("/").pop();
+
+      const info = await this.tusServer.datastore.getUpload(fileId);
+      const finename = info.metadata.filename;
+
+      await this.rename(fileId, finename);
+
+      const document = {
+        name: finename,
+        content: {
+          type: info.metadata.filetype,
+          size: info.size
+        }
+      };
+      callback(document);
     });
   }
 
@@ -101,37 +141,35 @@ export class GCloud implements Strategy {
     return /^[0-9a-f]{32}$/i.test(id);
   }
 
-  getCleanUpExpiredUploadsMethod() {
-    return async () => {
-      let pageToken: string | undefined;
+  async cleanUpExpiredUploads() {
+    let pageToken: string | undefined;
 
-      let count = 0;
+    let count = 0;
 
-      do {
-        const {files, nextPageToken} = await this.getAllFilesMetadataPaginated(pageToken);
+    do {
+      const {files, nextPageToken} = await this.getAllFilesMetadataPaginated(pageToken);
 
-        files.forEach(file => {
-          const isUploadedWithTus = !!file.metadata.metadata?.tus_version;
-          if (!isUploadedWithTus) return;
+      files.forEach(file => {
+        const isUploadedWithTus = !!file.metadata.metadata?.tus_version;
+        if (!isUploadedWithTus) return;
 
-          const isValidHex = this.isValidHex32(file.name);
-          if (!isValidHex) return;
+        const isValidHex = this.isValidHex32(file.name);
+        if (!isValidHex) return;
 
-          const createdTime = new Date(file.metadata.timeCreated);
-          const now = new Date();
-          const diffMs = now.getTime() - createdTime.getTime();
+        const createdTime = new Date(file.metadata.timeCreated);
+        const now = new Date();
+        const diffMs = now.getTime() - createdTime.getTime();
 
-          const isExpired = diffMs >= this.resumableUploadExpiresIn;
-          if (!isExpired) return;
+        const isExpired = diffMs >= this.resumableUploadExpiresIn;
+        if (!isExpired) return;
 
-          this.delete(file.name);
-          count++;
-        });
+        this.delete(file.name);
+        count++;
+      });
 
-        pageToken = nextPageToken;
-      } while (pageToken);
+      pageToken = nextPageToken;
+    } while (pageToken);
 
-      return count;
-    };
+    return count;
   }
 }

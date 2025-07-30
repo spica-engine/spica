@@ -8,10 +8,14 @@ import {
   CopyObjectCommand
 } from "@aws-sdk/client-s3";
 import {readFileSync} from "fs";
+import {Server, EVENTS} from "@tus/server";
 import {S3Store} from "@tus/s3-store";
+import {CronJob} from "cron";
+import {StorageObjectMeta} from "@spica-server/interface/storage";
 
 export class AWSS3 implements Strategy {
   s3: S3Client;
+  private tusServer: Server;
 
   constructor(
     private credentialsPath: string,
@@ -26,6 +30,39 @@ export class AWSS3 implements Strategy {
       },
       region: config.region
     });
+
+    this.initializeTusServer();
+  }
+
+  private initializeTusServer() {
+    const config = this.getConfig();
+
+    const datastore = new S3Store({
+      partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MiB,
+      s3ClientConfig: {
+        bucket: this.bucketName,
+        region: config.region,
+        credentials: {
+          accessKeyId: config.accessKeyId,
+          secretAccessKey: config.secretAccessKey
+        }
+      },
+      expirationPeriodInMilliseconds: this.resumableUploadExpiresIn
+    });
+
+    this.tusServer = new Server({
+      path: "/storage/resumable",
+      datastore
+    });
+
+    new CronJob(
+      "0 0 * * *",
+      () => {
+        this.tusServer.cleanUpExpiredUploads();
+      },
+      null,
+      true
+    );
   }
 
   getConfig() {
@@ -95,25 +132,27 @@ export class AWSS3 implements Strategy {
     );
   }
 
-  getTusServerDatastore() {
-    const config = this.getConfig();
-
-    return new S3Store({
-      partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MiB,
-      s3ClientConfig: {
-        bucket: this.bucketName,
-        region: config.region,
-        credentials: {
-          accessKeyId: config.accessKeyId,
-          secretAccessKey: config.secretAccessKey
-        }
-      },
-      expirationPeriodInMilliseconds: this.resumableUploadExpiresIn
-    });
+  handleResumableUpload(req: any, res: any) {
+    return this.tusServer.handle(req, res);
   }
 
-  getCleanUpExpiredUploadsMethod() {
-    // tus server implementation will be used
-    return null;
+  async onResumableUploadFinished(callback: (document: StorageObjectMeta) => void) {
+    this.tusServer.on(EVENTS.POST_FINISH, async event => {
+      const fileId = event.url.split("/").pop();
+
+      const info = await this.tusServer.datastore.getUpload(fileId);
+      const finename = info.metadata.filename;
+
+      await this.rename(fileId, finename);
+
+      const document = {
+        name: finename,
+        content: {
+          type: info.metadata.filetype,
+          size: info.size
+        }
+      };
+      callback(document);
+    });
   }
 }

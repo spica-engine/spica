@@ -17,13 +17,9 @@ import {
 } from "@spica-server/interface/storage";
 import {Strategy} from "./strategy/strategy";
 import fs from "fs";
-import {Server, EVENTS} from "@tus/server";
-import {CronJob} from "cron";
 
 @Injectable()
 export class StorageService extends BaseCollection<StorageObjectMeta>("storage") {
-  private tusServer: Server;
-
   constructor(
     database: DatabaseService,
     private service: Strategy,
@@ -33,30 +29,16 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       afterInit: () => this._coll.createIndex({name: 1}, {unique: true})
     });
 
-    this.initializeTusServer();
-  }
-
-  private initializeTusServer() {
-    this.tusServer = new Server({
-      path: "/storage/resumable",
-      datastore: this.service.getTusServerDatastore()
+    this.service.onResumableUploadFinished(async (document: StorageObjectMeta) => {
+      try {
+        await this._coll.insertOne(document);
+      } catch (exception) {
+        this.service.delete(document.name);
+        throw new BadRequestException(
+          exception.code === 11000 ? "An object with this name already exists." : exception.message
+        );
+      }
     });
-
-    this.tusServer.on(EVENTS.POST_FINISH, this.onFileUploaded.bind(this));
-
-    const cleanUpExpiredUploads = this.service.getCleanUpExpiredUploadsMethod();
-    if (cleanUpExpiredUploads) {
-      this.tusServer.cleanUpExpiredUploads = cleanUpExpiredUploads;
-    }
-
-    new CronJob(
-      "0 0 * * *",
-      () => {
-        this.tusServer.cleanUpExpiredUploads();
-      },
-      null,
-      true
-    );
   }
 
   private existingSize(): Promise<number> {
@@ -276,33 +258,6 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   }
 
   async handleResumableUpload(req: any, res: any) {
-    await this.tusServer.handle(req, res);
-  }
-
-  async onFileUploaded(event) {
-    const fileId = event.url.split("/").pop();
-
-    const info = await this.tusServer.datastore.getUpload(fileId);
-    const finename = info.metadata.filename;
-
-    await this.service.rename(fileId, finename);
-
-    const document = {
-      name: finename,
-      content: {
-        type: info.metadata.filetype,
-        size: info.size
-      }
-    };
-
-    try {
-      await this._coll.insertOne(document);
-    } catch (exception) {
-      this.service.delete(finename);
-
-      throw new BadRequestException(
-        exception.code === 11000 ? "An object with this name already exists." : exception.message
-      );
-    }
+    await this.service.handleResumableUpload(req, res);
   }
 }
