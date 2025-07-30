@@ -17,7 +17,7 @@ describe("Strategy", () => {
           defaultPublicUrl: "http://insteadof",
           strategy: "default",
           objectSizeLimit: 20,
-          expirationPeriod: 0
+          resumableUploadExpiresIn: 0
         })
       ]
     }).compile();
@@ -35,7 +35,7 @@ describe("Strategy", () => {
           gcloudBucketName: "test",
           gcloudServiceAccountPath: process.env.TEST_TMPDIR,
           objectSizeLimit: 20,
-          expirationPeriod: 0
+          resumableUploadExpiresIn: 0
         })
       ]
     }).compile();

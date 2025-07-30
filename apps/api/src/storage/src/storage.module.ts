@@ -47,19 +47,19 @@ export class StorageModule {
                 return new AWSS3(
                   options.awss3CredentialsPath,
                   options.awss3BucketName,
-                  options.expirationPeriod
+                  options.resumableUploadExpiresIn
                 );
               case "gcloud":
                 return new GCloud(
                   options.gcloudServiceAccountPath,
                   options.gcloudBucketName,
-                  options.expirationPeriod
+                  options.resumableUploadExpiresIn
                 );
               case "default":
                 return new Default(
                   options.defaultPath,
                   options.defaultPublicUrl,
-                  options.expirationPeriod
+                  options.resumableUploadExpiresIn
                 );
               default:
                 throw new Error(`Unknown strategy ${options.strategy}`);

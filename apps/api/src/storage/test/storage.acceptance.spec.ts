@@ -55,7 +55,7 @@ describe("Storage Acceptance", () => {
           defaultPublicUrl: "http://insteadof",
           strategy: "default",
           objectSizeLimit: 0.1,
-          expirationPeriod: 0
+          resumableUploadExpiresIn: 0
         })
       ]
     }).compile();

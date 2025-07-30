@@ -8,7 +8,7 @@ export interface StorageOptions {
   awss3BucketName?: string;
   objectSizeLimit: number;
   totalSizeLimit?: number;
-  expirationPeriod: number;
+  resumableUploadExpiresIn: number;
 }
 
 export const STORAGE_OPTIONS = Symbol.for("STORAGE_OPTIONS");

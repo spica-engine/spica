@@ -6,7 +6,7 @@ export class Default implements Strategy {
   constructor(
     private path: string,
     private publicUrl: string,
-    private expirationPeriod: number
+    private resumableUploadExpiresIn: number
   ) {
     this.publicUrl = publicUrl;
   }
@@ -82,7 +82,7 @@ export class Default implements Strategy {
   getTusServerDatastore() {
     return new FileStore({
       directory: this.path,
-      expirationPeriodInMilliseconds: this.expirationPeriod
+      expirationPeriodInMilliseconds: this.resumableUploadExpiresIn
     });
   }
 

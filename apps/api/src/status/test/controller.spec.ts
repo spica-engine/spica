@@ -317,7 +317,7 @@ describe("Status", () => {
             strategy: "default",
             totalSizeLimit: 10,
             defaultPath: process.env.TEST_TMPDIR,
-            expirationPeriod: 0
+            resumableUploadExpiresIn: 0
           })
         ]
       }).compile();

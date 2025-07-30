@@ -28,7 +28,7 @@ describe("Storage", () => {
           strategy: "default",
           defaultPublicUrl: PUBLIC_URL,
           defaultPath: process.env.TEST_TMPDIR,
-          expirationPeriod: 0
+          resumableUploadExpiresIn: 0
         }),
         CoreTestingModule,
         BatchModule.forRoot({port: PORT.toString()})

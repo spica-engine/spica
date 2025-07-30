@@ -10,7 +10,7 @@ export class GCloud implements Strategy {
   constructor(
     serviceAccountPath: string,
     bucketName: string,
-    private expirationPeriod: number
+    private resumableUploadExpiresIn: number
   ) {
     process.env.GOOGLE_APPLICATION_CREDENTIALS = serviceAccountPath;
     this.storage = new Storage();
@@ -131,9 +131,7 @@ export class GCloud implements Strategy {
           const now = new Date();
           const diffMs = now.getTime() - createdTime.getTime();
 
-          const twoDaysMs = this.expirationPeriod;
-
-          const isExpired = diffMs >= twoDaysMs;
+          const isExpired = diffMs >= this.resumableUploadExpiresIn;
           if (!isExpired) return;
 
           this.delete(file.name);

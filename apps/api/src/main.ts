@@ -288,7 +288,7 @@ const args = yargs(process.argv.slice(2))
       number: true,
       description: "Total size limit of storage. Unit: Mb"
     },
-    "expiration-period": {
+    "resumable-upload-expires-in": {
       number: true,
       description: "Storage period for unloaded files in milliseconds, default is 2 days",
       default: 1000 * 60 * 60 * 24 * 2 // 2 days
@@ -522,7 +522,7 @@ const modules = [
     awss3BucketName: args["awss3-bucket-name"],
     objectSizeLimit: args["storage-object-size-limit"],
     totalSizeLimit: args["storage-total-size-limit"],
-    expirationPeriod: args["expiration-period"]
+    resumableUploadExpiresIn: args["resumable-upload-expires-in"]
   }),
   PassportModule.forRoot({
     publicUrl: args["public-url"],
