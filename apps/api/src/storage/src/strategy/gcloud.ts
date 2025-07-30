@@ -105,6 +105,8 @@ export class GCloud implements Strategy {
     return async () => {
       let pageToken: string | undefined;
 
+      let count = 0;
+
       do {
         const {files, nextPageToken} = await this.getAllFilesMetadataPaginated(pageToken);
 
@@ -123,12 +125,13 @@ export class GCloud implements Strategy {
           if (!isExpired) return;
 
           this.delete(file.name);
+          count++;
         });
 
         pageToken = nextPageToken;
       } while (pageToken);
 
-      return 1;
+      return count;
     };
   }
 }
