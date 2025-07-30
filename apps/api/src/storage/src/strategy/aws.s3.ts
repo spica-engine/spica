@@ -112,11 +112,6 @@ export class AWSS3 implements Strategy {
     });
   }
 
-  async getFileInfo(id: string) {
-    const infoBuffer = await this.read(id + ".info");
-    return JSON.parse(infoBuffer.toString());
-  }
-
   getCleanUpExpiredUploadsMethod() {
     // tus server implementation will be used
     return null;

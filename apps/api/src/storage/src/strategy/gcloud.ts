@@ -75,18 +75,6 @@ export class GCloud implements Strategy {
     });
   }
 
-  async getFileInfo(id: string) {
-    const metadata = await this.getMetadata(id);
-    const customMetadata = JSON.parse(metadata.metadata.metadata as string);
-    return {
-      size: Number(metadata.size),
-      metadata: {
-        filename: customMetadata.filename,
-        filetype: customMetadata.filetype
-      }
-    };
-  }
-
   async getAllFilesMetadataPaginated(pageToken?: string): Promise<{
     files: Array<{name: string; metadata: any}>;
     nextPageToken?: string;

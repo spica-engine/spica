@@ -281,7 +281,8 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
   async onFileUploaded(event) {
     const fileId = event.url.split("/").pop();
-    const info = await this.service.getFileInfo(fileId);
+
+    const info = await this.tusServer.datastore.getUpload(fileId);
     const finename = info.metadata.filename;
 
     this.service.rename(fileId, finename);
