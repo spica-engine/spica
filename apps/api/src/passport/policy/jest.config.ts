@@ -5,5 +5,5 @@ export default {
   preset: "../../../../../jest.preset.js",
   testEnvironment: "node",
   coverageDirectory: path.join(workspaceRoot, "coverage/apps/api/passport/policy"),
-  testMatch: ["<rootDir>/realtime/test/**/*.spec.ts"]
+  testMatch: ["<rootDir>/test/**/*.spec.ts"]
 };
