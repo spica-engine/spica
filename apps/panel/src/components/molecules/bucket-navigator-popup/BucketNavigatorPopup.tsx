@@ -37,8 +37,8 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
     onClickOutside: () => setIsOpen(false)
   });
 
-  const handleChangeBucketName = (value: string) => {
-    changeBucketName(value, bucket);
+  const handleChangeBucketName = async (value: string) => {
+    await changeBucketName(value, bucket);
   };
 
   const handleOpenEdit = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
