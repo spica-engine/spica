@@ -13,6 +13,7 @@ import {FlexElement} from "oziko-ui-kit";
 import styles from "./Table.module.scss";
 import InfiniteScroll from "react-infinite-scroll-component";
 import type {ColumnType} from "../bucket-table/BucketTable";
+import useScrollDirectionLock from "../../../hooks/useScrollDirectionLock";
 
 type TypeDataColumn = {
   header: string;
@@ -137,14 +138,15 @@ const Table: FC<TypeTable> = ({
   totalDataLength,
   style
 }) => {
-  const containerRef = useRef<HTMLTableElement | null>(null);
+  const containerRef = useScrollDirectionLock();
   const [formattedColumns, setFormattedColumns] = useState<TypeDataColumn[]>([]);
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
     const containerWidth = containerRef.current?.clientWidth ?? 0;
-    const formattedColumns = getFormattedColumns(containerWidth, columns);
+    // Making it just a little bit smaller than the container to prevent unnecessary horizontal scrolls
+    const formattedColumns = getFormattedColumns(containerWidth - 50, columns);
     setFormattedColumns(formattedColumns);
   }, [columns]);
 
@@ -210,10 +212,16 @@ const Table: FC<TypeTable> = ({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [focusedCell]);
+
   const cellCacheRef = useRef<Map<string, JSX.Element>>(new Map());
+
   return (
     <>
-      <div id="scrollableDiv" ref={containerRef} className={styles.container}>
+      <div
+        ref={containerRef as RefObject<HTMLDivElement>}
+        id="scrollableDiv"
+        className={styles.container}
+      >
         <InfiniteScroll
           dataLength={data.length}
           next={() => {
@@ -229,14 +237,15 @@ const Table: FC<TypeTable> = ({
               <tr>
                 {formattedColumns.map(col => (
                   <HeaderCell
-                    onResize={newWidth => {
-                      updateColumnWidth(col.id, Math.max(newWidth, MIN_COLUMN_WIDTH));
-                    }}
+                    onResize={newWidth =>
+                      updateColumnWidth(col.id, Math.max(newWidth, MIN_COLUMN_WIDTH))
+                    }
                     key={col.id}
                     className={`${col.headerClassName} ${col.fixed ? styles.fixedCell : ""}`}
                     resizable={col.resizable === undefined ? true : col.resizable}
                     width={col.width}
                     leftOffset={col.leftOffset}
+                    tableRef={containerRef}
                   >
                     {col.header}
                   </HeaderCell>
@@ -320,6 +329,7 @@ type TypeHeaderCell = {
   onResize: (newWidth: number) => void;
   resizable?: boolean;
   leftOffset?: number;
+  tableRef: RefObject<HTMLElement | null>;
 };
 
 const HeaderCell = ({
@@ -328,16 +338,18 @@ const HeaderCell = ({
   width,
   onResize,
   resizable,
-  leftOffset
+  leftOffset,
+  tableRef
 }: TypeHeaderCell) => {
-  const ref = useRef<HTMLTableCellElement | null>(null);
+  const containerRef = useRef<HTMLTableCellElement | null>(null);
+  const resizerRef = useRef<HTMLDivElement | null>(null);
   const startX = useRef(0);
   const startWidth = useRef(0);
 
   function onMouseDown(e: MouseEvent) {
-    if (!ref.current || !resizable) return;
+    if (!containerRef.current || !resizable) return;
     startX.current = e.clientX;
-    startWidth.current = ref.current?.getBoundingClientRect().width;
+    startWidth.current = containerRef.current?.getBoundingClientRect().width;
 
     function onMouseMove(e: MouseEvent) {
       if (!resizable) return;
@@ -354,18 +366,36 @@ const HeaderCell = ({
     window.addEventListener("mouseup", onMouseUp);
   }
 
+  useEffect(() => {
+    const table = tableRef.current;
+    if (!table) return;
+
+    const observer = new ResizeObserver(() => {
+      if (resizerRef.current) {
+        resizerRef.current.style.height = `${table.clientHeight}px`;
+      }
+    });
+
+    observer.observe(table);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [tableRef]);
+
   return (
     <th
-      ref={ref}
+      ref={containerRef}
       scope="col"
       className={`${styles.header} ${className || ""}`}
       style={{width, minWidth: width, maxWidth: width, left: leftOffset}}
     >
-      <FlexElement dimensionX="fill" alignment="leftCenter" className={styles.headerFlex}>
+      <FlexElement dimensionX="fill" alignment="leftCenter" className={styles.headerContent}>
         {children}
       </FlexElement>
       {resizable && (
         <div
+          ref={resizerRef}
           onMouseDown={e => onMouseDown(e as unknown as MouseEvent)}
           className={styles.resizer}
         />

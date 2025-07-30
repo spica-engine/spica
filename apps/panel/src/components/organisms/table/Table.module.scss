@@ -1,14 +1,13 @@
+
 .container {
   border-radius: var(--border-radius-md);
-  overflow-y: auto;
-  max-height: 88vh;
+  border: var(--border-default);
+  overflow: auto;
+  max-height: 86vh;
+  width: 100%;
 }
 
 .table {
-  border: 1px solid var(--color-border);
-  overflow-x: auto;
-  overflow-y: hidden;
-  border-collapse: collapse;
   border-spacing: 0;
   scrollbar-gutter: stable both-edges;
 }
@@ -17,10 +16,10 @@
   padding: 0;
 }
 
-.table > thead > tr {
-  overflow: auto;
-  top: 0;
+.table thead {
   position: sticky;
+  top: 0;
+  z-index: 4;
 }
 
 .fixedCell {
@@ -31,24 +30,14 @@
   overflow: auto;
 }
 
-.column {
-  flex: 1;
-  position: relative;
-
-  &:not(:last-child) {
-    border-right: 1px solid var(--color-border);
-  }
-}
-
 .header {
-  height: 36px !important;
   position: sticky;
   top: 0;
-  z-index: 2;
-  overflow: hidden;
+  overflow-x: visible;
+  overflow-y: visible;
 }
 
-.headerFlex {
+.headerContent {
   display: flex;
   align-items: center;
   padding-left: var(--padding-md);
@@ -59,8 +48,7 @@
 }
 
 .cell {
-  padding: var(--padding-md);
-  padding-bottom: 0;
+  padding: 0 var(--padding-md);
   &:not(:last-child) {
     border-bottom: 1px solid var(--color-border);
   }
@@ -83,6 +71,10 @@
 
 .focusedCell {
   border: 1px solid var(--color-primary) !important;
+}
+
+.infiniteScroll {
+  overflow: unset !important;
 }
 
 .noDataText {
