@@ -57,8 +57,13 @@ const Layout = () => {
 
   const name = useMemo(() => {
     if (!token || !token.length) return "";
-    const decoded = jwtDecode<AuthTokenJWTPayload>(token);
-    return decoded.identifier;
+    try {
+      const decoded = jwtDecode<AuthTokenJWTPayload>(token);
+      return decoded.identifier;
+    } catch (err) {
+      console.error(err);
+      return "";
+    }
   }, [token]);
 
   useEffect(() => {
