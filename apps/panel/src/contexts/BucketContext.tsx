@@ -15,6 +15,7 @@ type BucketContextType = {
   setBuckets: React.Dispatch<React.SetStateAction<BucketType[]>>;
   loading: boolean;
   error: string | null;
+  deleteBucket: (bucketId: string) => Promise<any>;
   fetchBuckets: (params?: {
     body?: any;
     headers?: AxiosRequestHeaders;
@@ -39,6 +40,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     error,
     fetchBuckets,
     requestCategoryChange,
+    deleteBucketRequest,
     currentBucket,
     currentBucketLoading,
     currentBucketError,
@@ -76,11 +78,17 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     return Array.from(set);
   }, [buckets]);
 
-  useEffect(() => {
-    fetchBuckets().then(result => {
-      setBuckets(result);
-    });
-  }, []);
+  const deleteBucket = useCallback(
+    async (bucketId: string) => {
+      try {
+        await deleteBucketRequest(bucketId);
+        setBuckets(prev => (prev ? prev.filter(i => i._id !== bucketId) : []));
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    [deleteBucketRequest]
+  );
 
   const contextValue = useMemo(
     () => ({
@@ -88,6 +96,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       setBuckets,
       loading,
       error,
+      deleteBucket,
       fetchBuckets,
       categories,
       changeCategory,
