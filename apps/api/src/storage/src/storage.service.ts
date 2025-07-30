@@ -285,7 +285,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     const info = await this.tusServer.datastore.getUpload(fileId);
     const finename = info.metadata.filename;
 
-    this.service.rename(fileId, finename);
+    await this.service.rename(fileId, finename);
 
     const document = {
       name: finename,
@@ -298,6 +298,8 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     try {
       await this._coll.insertOne(document);
     } catch (exception) {
+      this.service.delete(finename);
+
       throw new BadRequestException(
         exception.code === 11000 ? "An object with this name already exists." : exception.message
       );
