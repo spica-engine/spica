@@ -13,8 +13,8 @@ export class Default implements Strategy {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
 
-    if (id.endsWith("/")) {
-      await fs.promises.mkdir(objectPath, {recursive: true});
+    if (this.isDirectory(id)) {
+      this.createDir(objectPath);
       return;
     }
 
@@ -44,8 +44,8 @@ export class Default implements Strategy {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
 
-    if (id.endsWith("/")) {
-      await fs.promises.mkdir(objectPath, {recursive: true});
+    if (this.isDirectory(id)) {
+      this.createDir(objectPath);
       return;
     }
 
@@ -56,8 +56,9 @@ export class Default implements Strategy {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
 
-    if (id.endsWith("/")) {
-      return fs.promises.rm(objectPath, {recursive: true});
+    if (this.isDirectory(id)) {
+      this.removeDir(objectPath);
+      return;
     }
 
     return fs.promises.unlink(objectPath);
@@ -91,5 +92,20 @@ export class Default implements Strategy {
       console.error(`Error renaming file from ${oldName} to ${newName}:`, err);
       throw err;
     }
+  }
+
+  private isDirectory(id) {
+    if (id.endsWith("/")) {
+      return true;
+    }
+    return false;
+  }
+
+  private createDir(objectPath) {
+    return fs.promises.mkdir(objectPath, {recursive: true});
+  }
+
+  private removeDir(objectPath) {
+    return fs.promises.rm(objectPath, {recursive: true});
   }
 }
