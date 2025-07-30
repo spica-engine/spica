@@ -7,7 +7,8 @@ describe("Default", () => {
   beforeEach(() => {
     service = new Default(
       path.join(process.env.TEST_TMPDIR, Date.now().toString()),
-      "http://insteadof"
+      "http://insteadof",
+      0
     );
   });
 
