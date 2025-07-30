@@ -245,17 +245,11 @@ describe("EnvVar Realtime", () => {
         await waitForOpen(socket);
 
         const messages = await collectMessages(socket);
-        const initialMessages = messages.filter(m => m.kind === ChunkKind.Initial);
 
-        expect(initialMessages).toEqual([
-          {
-            kind: ChunkKind.Initial,
-            document: {key: "key1", value: "val1"}
-          },
-          {
-            kind: ChunkKind.Initial,
-            document: {key: "key2", value: "val2"}
-          }
+        expect(messages).toMatchObject([
+          {kind: ChunkKind.Initial, document: {key: "key1", value: "val1"}},
+          {kind: ChunkKind.Initial, document: {key: "key2", value: "val2"}},
+          {kind: ChunkKind.EndOfInitial}
         ]);
       });
 
@@ -268,17 +262,11 @@ describe("EnvVar Realtime", () => {
         await waitForOpen(socket);
 
         const messages = await collectMessages(socket);
-        const initialMessages = messages.filter(m => m.kind === ChunkKind.Initial);
 
-        expect(initialMessages).toEqual([
-          {
-            kind: ChunkKind.Initial,
-            document: {key: "key2", value: "val2"}
-          },
-          {
-            kind: ChunkKind.Initial,
-            document: {key: "key3", value: "val3"}
-          }
+        expect(messages).toMatchObject([
+          {kind: ChunkKind.Initial, document: {key: "key2", value: "val2"}},
+          {kind: ChunkKind.Initial, document: {key: "key3", value: "val3"}},
+          {kind: ChunkKind.EndOfInitial}
         ]);
       });
 
@@ -291,21 +279,11 @@ describe("EnvVar Realtime", () => {
         await waitForOpen(socket);
 
         const messages = await collectMessages(socket);
-        const initialMessages = messages.filter(m => m.kind === ChunkKind.Initial);
-
-        expect(initialMessages).toEqual([
-          {
-            kind: ChunkKind.Initial,
-            document: {key: "a-key", value: "valA"}
-          },
-          {
-            kind: ChunkKind.Initial,
-            document: {key: "b-key", value: "valB"}
-          },
-          {
-            kind: ChunkKind.Initial,
-            document: {key: "c-key", value: "valC"}
-          }
+        expect(messages).toMatchObject([
+          {kind: ChunkKind.Initial, document: {key: "a-key", value: "valA"}},
+          {kind: ChunkKind.Initial, document: {key: "b-key", value: "valB"}},
+          {kind: ChunkKind.Initial, document: {key: "c-key", value: "valC"}},
+          {kind: ChunkKind.EndOfInitial}
         ]);
       });
     });
