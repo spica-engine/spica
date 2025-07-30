@@ -43,16 +43,6 @@ const CategorySelectCreate = ({
     ? truncatedCategoryName
     : "Category Name";
 
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-
-  useOnClickOutside({
-    refs: [dropdownRef, containerRef],
-    onClickOutside: () => {
-      setFocused(false);
-    }
-  });
-
   return (
     <Modal
       showCloseButton={false}
@@ -83,7 +73,7 @@ const CategorySelectCreate = ({
             className: styles.inputSection,
             children: (
               <FlexElement gap={filteredCategories.length > 0 ? 10 : 0} direction="vertical" dimensionX="fill">
-                <FlexElement ref={containerRef} gap={10} className={styles.inputContainer}>
+                <FlexElement gap={10} className={styles.inputContainer}>
                   <Icon name="formatQuoteClose" size="md" />
                   <Input
                     className={styles.input}
@@ -95,7 +85,6 @@ const CategorySelectCreate = ({
                 </FlexElement>
                 {focused && (
                   <FlexElement
-                    ref={dropdownRef}
                     className={styles.optionsContainer}
                     direction="vertical"
                     alignment="leftTop"
