@@ -314,9 +314,12 @@ describe("Realtime", () => {
         await waitForOpen(socket);
 
         const messages = await collectMessages(socket);
-        const docs = messages.filter(m => m.kind === ChunkKind.Initial).map(m => m.document);
 
-        expect(docs).toEqual([p1, p2]);
+        expect(messages).toMatchObject([
+          {kind: ChunkKind.Initial, document: p1},
+          {kind: ChunkKind.Initial, document: p2},
+          {kind: ChunkKind.EndOfInitial}
+        ]);
       });
 
       it("should perform 'skip' action", async () => {
@@ -357,9 +360,12 @@ describe("Realtime", () => {
         await waitForOpen(socket);
 
         const messages = await collectMessages(socket);
-        const docs = messages.filter(m => m.kind === ChunkKind.Initial).map(m => m.document);
 
-        expect(docs).toEqual([p2, p3]); // Skip the first one alphabetically (p1)
+        expect(messages).toMatchObject([
+          {kind: ChunkKind.Initial, document: p2},
+          {kind: ChunkKind.Initial, document: p3},
+          {kind: ChunkKind.EndOfInitial}
+        ]);
       });
 
       it("should perform 'sort' action", async () => {
@@ -400,9 +406,13 @@ describe("Realtime", () => {
         await waitForOpen(socket);
 
         const messages = await collectMessages(socket);
-        const docs = messages.filter(m => m.kind === ChunkKind.Initial).map(m => m.document);
 
-        expect(docs).toEqual([p3, p1, p2]); // a-Policy, b-Policy, c-Policy
+        expect(messages).toMatchObject([
+          {kind: ChunkKind.Initial, document: p3},
+          {kind: ChunkKind.Initial, document: p1},
+          {kind: ChunkKind.Initial, document: p2},
+          {kind: ChunkKind.EndOfInitial}
+        ]);
       });
     });
   });
