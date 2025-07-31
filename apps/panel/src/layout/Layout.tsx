@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useState} from "react";
-import {Navigate, Outlet} from "react-router-dom";
+import {Outlet} from "react-router-dom";
 import SideBar, {type ReorderableItemGroup} from "../components/organisms/sidebar/SideBar";
 import {menuItems, navigatorItems} from "../pages/home/mock";
 import styles from "./Layout.module.scss";
@@ -68,9 +68,8 @@ const Layout = () => {
 
   useEffect(() => {
     fetchBuckets();
-  }, [token]);
+  }, []);
 
-  if (!token) return <Navigate to="/passport/identify" replace />;
 
   const sideBarElement = (
     <div className={styles.sidebar}>
