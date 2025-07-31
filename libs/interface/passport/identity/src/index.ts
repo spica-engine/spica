@@ -61,6 +61,7 @@ export interface IdentityOptions {
   };
   refreshTokenExpiresIn?: number;
   passwordHistoryLimit: number;
+  identityRealtime: boolean;
 }
 
 export const IDENTITY_OPTIONS = Symbol.for("IDENTITY_OPTIONS");
