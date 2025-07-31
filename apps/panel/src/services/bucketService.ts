@@ -125,7 +125,7 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
 
   const {request: requestNameChange} = useApi({
     endpoint: "",
-    method: "patch"
+    method: "put"
   });
 
   const requestBucketNameChange = useCallback(async (newTitle: string, bucket: BucketType) => {
