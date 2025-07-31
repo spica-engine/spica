@@ -10,6 +10,7 @@
   white-space: nowrap;
   max-width: 100%;
   width: 100%;
+  border-spacing: 0;
 }
 
 .table td:not([class*="focusedCell"]),
@@ -23,7 +24,7 @@
   background-color: var(--color-zebra);
 }
 .table > tbody > tr:nth-child(odd) {
-  background-color: var(--color-default);
+  background-color: var(--color-soft-light);
 }
 
 .columnHeaderText {

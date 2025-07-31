@@ -6,7 +6,7 @@ type ScrollDirectionLockOptions = {
 };
 
 function useScrollDirectionLock(options: ScrollDirectionLockOptions = {}) {
-  const {directionThreshold = 2.0, resetDelay = 100} = options;
+  const {directionThreshold = 2.0, resetDelay = 250} = options;
 
   const scrollDirection = useRef<"horizontal" | "vertical">(null);
   const scrollTimeout = useRef<NodeJS.Timeout>(null);

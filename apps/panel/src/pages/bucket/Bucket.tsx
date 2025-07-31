@@ -26,7 +26,8 @@ export default function Bucket() {
         sticky: true,
         width: "230px",
         resizable: false,
-        fixed: true
+        fixed: true,
+        selectable: false
       },
       ...columns.map(i => ({
         ...i,
@@ -49,14 +50,16 @@ export default function Bucket() {
   return (
     <div className={styles.container}>
       <BucketActionBar />
-      <BucketTable
-        bucketId={bucketId as string}
-        columns={formattedColumns as ColumnType[]}
-        data={bucketData?.data ?? []}
-        onScrollEnd={handleScrollEnd}
-        totalDataLength={bucketData?.meta?.total ?? 0}
-        maxHeight="88vh"
-      />
+      {bucketData?.data && (
+        <BucketTable
+          bucketId={bucketId as string}
+          columns={formattedColumns as ColumnType[]}
+          data={bucketData?.data ?? []}
+          onScrollEnd={handleScrollEnd}
+          totalDataLength={bucketData?.meta?.total ?? 0}
+          maxHeight="88vh"
+        />
+      )}
     </div>
   );
 }

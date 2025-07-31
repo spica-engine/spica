@@ -26,16 +26,15 @@ export type ColumnType = {
   deletable?: boolean;
   headerClassName?: string;
   cellClassName?: string;
-  columnClassName?: string;
   showDropdownIcon?: boolean;
   resizable?: boolean;
   fixed?: boolean;
-  selectable?: boolean
-  leftOffset?: number
+  selectable?: boolean;
+  leftOffset?: number;
 };
 
 type BucketTableProps = {
-  data: any[];
+  data: Record<string, any>[];
   columns: ColumnType[];
   onScrollEnd?: () => void;
   totalDataLength: number;
@@ -96,11 +95,10 @@ const defaultColumns: ColumnType[] = [
     type: "boolean",
     width: "41px",
     headerClassName: styles.columnHeader,
-    columnClassName: `${styles.selectColumn} ${styles.column}`,
     cellClassName: styles.selectCell,
     resizable: false,
     fixed: true,
-    selectable: false,
+    selectable: false
   },
   {
     id: "1",
@@ -117,7 +115,6 @@ const defaultColumns: ColumnType[] = [
     width: "125px",
     headerClassName: styles.columnHeader,
     cellClassName: styles.newFieldCell,
-    columnClassName: `${styles.newFieldColumn} ${styles.column}`,
     resizable: false,
     selectable: false
   }
@@ -234,7 +231,6 @@ function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnTyp
         />
       ),
       headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
-      columnClassName: `${col.columnClassName || ""} ${styles.column}`,
       id: `${col.key}-${index}-${bucketId}`
     })),
     defaultColumns[1]
@@ -280,7 +276,7 @@ const BucketTable = ({
   onScrollEnd,
   totalDataLength,
   maxHeight,
-  bucketId,
+  bucketId
 }: BucketTableProps) => {
   const formattedColumns = useMemo(
     () => getFormattedColumns(columns, bucketId),
