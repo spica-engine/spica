@@ -70,39 +70,45 @@ const Layout = () => {
     fetchBuckets();
   }, [token]);
 
-
   if (!token) return <Navigate to="/passport/identify" replace />;
+
+  const sideBarElement = (
+    <div className={styles.sidebar}>
+      <SideBar
+        menuItems={menuItems}
+        navigatorItems={mergedNavigatorItems}
+        onNavigatorToggle={setNavigatorOpen}
+      />
+    </div>
+  );
+
+  const drawerSidebar = (
+    <Drawer
+      placement="left"
+      showCloseButton={false}
+      isOpen={isDrawerOpen}
+      onClose={closeDrawer}
+      size={260}
+    >
+      <SideBar
+        menuItems={menuItems}
+        navigatorItems={mergedNavigatorItems}
+        onNavigatorToggle={setNavigatorOpen}
+        displayToggleIcon={false}
+      />
+    </Drawer>
+  );
 
   return (
     <div className={styles.layout}>
-      {isDrawerOpen && (
-        <Drawer
-          placement="left"
-          showCloseButton={false}
-          isOpen={isDrawerOpen}
-          onClose={closeDrawer}
-          size={260}
-        >
-          <SideBar
-            menuItems={menuItems}
-            navigatorItems={mergedNavigatorItems}
-            onNavigatorToggle={setNavigatorOpen}
-            displayToggleIcon={false}
-          />
-        </Drawer>
-      )}
+      {isDrawerOpen && drawerSidebar}
+
       <div
         className={`${styles.sidebar} ${
           navigatorOpen ? styles.navigatorOpen : styles.navigatorClosed
         }`}
       >
-        <div className={styles.sidebar}>
-          <SideBar
-            menuItems={menuItems}
-            navigatorItems={mergedNavigatorItems}
-            onNavigatorToggle={setNavigatorOpen}
-          />
-        </div>
+        {sideBarElement}
       </div>
       <div className={styles.main}>
         <div className={styles.toolbar}>
