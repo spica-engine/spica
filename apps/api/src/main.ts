@@ -232,9 +232,14 @@ const args = yargs(process.argv.slice(2))
       description: "Enable/disable function workers debugging mode. Default value is true",
       default: false
     },
+    "function-realtime": {
+      boolean: true,
+      description: "Enable/disable tracking functions realtime. Default value is true.",
+      default: true
+    },
     "function-realtime-logs": {
       boolean: true,
-      description: "Enable/disable tracking function logs realtime. Default value is false.",
+      description: "Enable/disable tracking function logs realtime. Default value is true.",
       default: true
     },
     "function-logger": {
@@ -565,7 +570,8 @@ const modules = [
     maxConcurrency: args["function-worker-concurrency"],
     realtimeLogs: args["function-realtime-logs"],
     logger: args["function-logger"],
-    invocationLogs: args["function-invocation-logs"]
+    invocationLogs: args["function-invocation-logs"],
+    realtime: args["function-realtime"]
   })
 ];
 

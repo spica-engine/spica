@@ -1,0 +1,5 @@
+{
+  "name": "api/function/realtime",
+  "sourceRoot": "apps/api/src/function/realtime",
+  "projectType": "application"
+}
