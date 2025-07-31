@@ -116,6 +116,7 @@ const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataL
     // Making it just a little bit smaller than the container to prevent unnecessary horizontal scrolls
     const formattedColumns = getFormattedColumns(containerWidth - 50, columns);
     setFormattedColumns(formattedColumns);
+    setFocusedCell(null);
   }, [columns]);
 
   const updateColumnWidth = useCallback((id: string, newWidth: number) => {
@@ -175,6 +176,24 @@ const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataL
     };
   }, [focusedCell]);
 
+  const HeaderRow = useMemo(
+    () =>
+      formattedColumns.map(col => (
+        <HeaderCell
+          onResize={newWidth => updateColumnWidth(col.id, Math.max(newWidth, MIN_COLUMN_WIDTH))}
+          key={col.id}
+          className={`${col.headerClassName} ${col.fixed ? styles.fixedCell : ""}`}
+          resizable={col.resizable === undefined ? true : col.resizable}
+          width={col.width}
+          leftOffset={col.leftOffset}
+          tableRef={containerRef}
+        >
+          {col.header}
+        </HeaderCell>
+      )),
+    [formattedColumns, updateColumnWidth, containerRef]
+  );
+
   return (
     <>
       <div
@@ -194,23 +213,7 @@ const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataL
         >
           <table className={`${styles.table} ${className}`} style={style}>
             <thead>
-              <tr>
-                {formattedColumns.map(col => (
-                  <HeaderCell
-                    onResize={newWidth =>
-                      updateColumnWidth(col.id, Math.max(newWidth, MIN_COLUMN_WIDTH))
-                    }
-                    key={col.id}
-                    className={`${col.headerClassName} ${col.fixed ? styles.fixedCell : ""}`}
-                    resizable={col.resizable === undefined ? true : col.resizable}
-                    width={col.width}
-                    leftOffset={col.leftOffset}
-                    tableRef={containerRef}
-                  >
-                    {col.header}
-                  </HeaderCell>
-                ))  }
-              </tr>
+              <tr>{HeaderRow}</tr>
             </thead>
             <tbody>
               {formattedColumns.length > 0 && (
@@ -247,6 +250,9 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
     const row = data[index];
     const rowId = row[Object.keys(row)[0]].id;
 
+    const missingCellData = formattedColumns.some(column => !row[column.key]);
+    if (missingCellData) continue;
+
     const focusedKey = focusedCell ? `${focusedCell.row}-${focusedCell.column}` : null;
     const cached = rowCacheRef.current.get(rowId);
 
@@ -265,11 +271,10 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
           key={cellData.id}
           onClick={() => column.selectable !== false && handleCellClick(column.key, index)}
           className={`${column.cellClassName || ""} ${column.fixed ? styles.fixedCell : ""}`}
-          width={column.width}
           leftOffset={column.leftOffset}
           focused={focusedCell?.row === index && focusedCell?.column === column.key}
         >
-          {cellData?.value}
+          {cellData.value}
         </Cell>
       );
     });
@@ -279,13 +284,14 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
     rows.push(rowElement);
   }
 
-  // Clean up stale rows
-  const currentRowIds = new Set(data.map(row => row[Object.keys(row)[0]].id));
-  for (const cachedKey of rowCacheRef.current.keys()) {
-    if (!currentRowIds.has(cachedKey)) {
-      rowCacheRef.current.delete(cachedKey);
+  useEffect(() => {
+    const currentRowIds = new Set(data.map(row => row[Object.keys(row)[0]].id));
+    for (const cachedKey of rowCacheRef.current.keys()) {
+      if (!currentRowIds.has(cachedKey)) {
+        rowCacheRef.current.delete(cachedKey);
+      }
     }
-  }
+  }, [data]);
 
   return <>{rows}</>;
 });
@@ -368,16 +374,15 @@ const HeaderCell = memo(
 
 type TypeCell = React.HTMLAttributes<HTMLDivElement> & {
   focused?: boolean;
-  width?: string | number;
   leftOffset?: number;
 };
 
-const Cell = memo(({children, focused, width, leftOffset, ...props}: TypeCell) => {
+const Cell = memo(({children, focused, leftOffset, ...props}: TypeCell) => {
   return (
     <td
       {...props}
       className={`${styles.cell} ${focused ? styles.focusedCell : ""} ${props.className || ""}`}
-      style={{width, minWidth: width, maxWidth: width, left: leftOffset}}
+      style={{left: leftOffset}}
     >
       {children}
     </td>
