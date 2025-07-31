@@ -30,7 +30,7 @@ describe("Preference Integration", () => {
         IdentityModule.forRoot({
           secretOrKey: "key"
         }),
-        PolicyModule.forRoot(),
+        PolicyModule.forRoot({realtime: false}),
         BucketModule.forRoot({
           hooks: false,
           history: false,

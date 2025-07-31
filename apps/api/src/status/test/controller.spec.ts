@@ -126,7 +126,7 @@ describe("Status", () => {
       module = await Test.createTestingModule({
         imports: [
           DatabaseTestingModule.standalone(),
-          PolicyModule.forRoot(),
+          PolicyModule.forRoot({realtime: false}),
           StatusModule.forRoot({expireAfterSeconds: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),

@@ -5,6 +5,7 @@ export interface PassportOptions extends IdentityOptions {
   defaultStrategy?: string;
   samlCertificateTTL: number;
   apikeyRealtime: boolean;
+  policyRealtime: boolean;
 }
 
 export const PASSPORT_OPTIONS = Symbol.for("PASSPORT_OPTIONS");
