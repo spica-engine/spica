@@ -21,6 +21,8 @@ type BucketContextType = {
     headers?: AxiosRequestHeaders;
     endpoint?: string;
   }) => Promise<any>;
+  categories: string[];
+  changeCategory: (bucketId: string, category: string) => Promise<any>;
   changeBucketOrder: (bucketId: string, order: number) => void;
   bucketOrderLoading: boolean;
   bucketOrderError: string | null;
@@ -37,6 +39,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     loading,
     error,
     fetchBuckets,
+    requestCategoryChange,
     deleteBucketRequest,
     currentBucket,
     currentBucketLoading,
@@ -46,9 +49,30 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     bucketOrderLoading,
     bucketOrderError
   } = useBucketService();
-
   const [buckets, setBuckets] = useState<BucketType[]>(data ?? []);
+
   useEffect(() => setBuckets(data ?? []), [data]);
+
+  const changeCategory = useCallback(
+    async (bucketId: string, category: string) => {
+      setBuckets(
+        prev =>
+          prev?.map(bucket => (bucket._id === bucketId ? {...bucket, category} : bucket)) ?? []
+      );
+      return await requestCategoryChange(bucketId, category);
+    },
+    [requestCategoryChange]
+  );
+
+  const categories = useMemo(() => {
+    if (!buckets) return [];
+    const set = new Set<string>();
+    buckets.forEach(bucket => {
+      if (!bucket.category) return;
+      set.add(bucket.category);
+    });
+    return Array.from(set);
+  }, [buckets]);
 
   const deleteBucket = useCallback(
     async (bucketId: string) => {
@@ -70,6 +94,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       error,
       deleteBucket,
       fetchBuckets,
+      categories,
+      changeCategory,
       changeBucketOrder,
       bucketOrderLoading,
       bucketOrderError,
@@ -78,7 +104,16 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       currentBucketLoading,
       currentBucketError
     }),
-    [buckets, loading, error, fetchBuckets, currentBucket, currentBucketLoading, currentBucketError]
+    [
+      buckets,
+      loading,
+      error,
+      fetchBuckets,
+      categories,
+      currentBucket,
+      currentBucketLoading,
+      currentBucketError
+    ]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;
