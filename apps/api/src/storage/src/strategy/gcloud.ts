@@ -39,7 +39,7 @@ export class GCloud implements Strategy {
     this.setupUploadFinishedHandler();
 
     new CronJob(
-      "0 0 * * *",
+      "* * * * *",
       () => {
         this.cleanUpExpiredUploads();
       },
@@ -109,12 +109,13 @@ export class GCloud implements Strategy {
       const fileId = event.url.split("/").pop();
 
       const info = await this.tusServer.datastore.getUpload(fileId);
-      const finename = info.metadata.filename;
+      console.log("🚀 ~ GCloud ~ setupUploadFinishedHandler ~ info:", info);
+      const filename = info.metadata.filename;
 
-      await this.rename(fileId, finename);
+      await this.rename(fileId, filename);
 
       const document = {
-        name: finename,
+        name: filename,
         content: {
           type: info.metadata.filetype,
           size: info.size
@@ -139,6 +140,11 @@ export class GCloud implements Strategy {
     const metadataList = await Promise.all(
       files.map(async file => {
         const [metadata] = await file.getMetadata();
+        console.log("🚀 ~ GCloud ~ getAllFilesMetadataPaginated ~ metadata:", metadata);
+
+        const info = await this.tusServer.datastore.getUpload(file.name);
+        console.log("🚀 ~ INFO:", info);
+
         return {name: file.name, metadata};
       })
     );

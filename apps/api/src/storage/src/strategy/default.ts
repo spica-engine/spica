@@ -123,12 +123,12 @@ export class Default implements Strategy {
       const fileId = event.url.split("/").pop();
 
       const info = await this.tusServer.datastore.getUpload(fileId);
-      const finename = info.metadata.filename;
+      const filename = info.metadata.filename;
 
-      await this.rename(fileId, finename);
+      await this.rename(fileId, filename);
 
       const document = {
-        name: finename,
+        name: filename,
         content: {
           type: info.metadata.filetype,
           size: info.size
