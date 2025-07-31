@@ -5,11 +5,14 @@ import {Server, EVENTS} from "@tus/server";
 import {GCSStore} from "@tus/gcs-store";
 import {CronJob} from "cron";
 import {StorageObjectMeta} from "@spica-server/interface/storage";
+import {Observable, Subject} from "rxjs";
 
 export class GCloud implements Strategy {
   private storage: Storage;
   private bucket: Bucket;
+
   private tusServer: Server;
+  private resumableUploadFinishedSubject = new Subject<StorageObjectMeta>();
 
   constructor(
     serviceAccountPath: string,
@@ -23,11 +26,17 @@ export class GCloud implements Strategy {
     this.initializeTusServer();
   }
 
+  get resumableUploadFinished(): Observable<StorageObjectMeta> {
+    return this.resumableUploadFinishedSubject.asObservable();
+  }
+
   private initializeTusServer() {
     this.tusServer = new Server({
       path: "/storage/resumable",
       datastore: new GCSStore({bucket: this.bucket})
     });
+
+    this.setupUploadFinishedHandler();
 
     new CronJob(
       "0 0 * * *",
@@ -95,7 +104,7 @@ export class GCloud implements Strategy {
     return this.tusServer.handle(req, res);
   }
 
-  async onResumableUploadFinished(callback: (document: StorageObjectMeta) => void) {
+  private setupUploadFinishedHandler() {
     this.tusServer.on(EVENTS.POST_FINISH, async event => {
       const fileId = event.url.split("/").pop();
 
@@ -111,7 +120,7 @@ export class GCloud implements Strategy {
           size: info.size
         }
       };
-      callback(document);
+      this.resumableUploadFinishedSubject.next(document);
     });
   }
 

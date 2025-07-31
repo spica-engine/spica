@@ -1,5 +1,6 @@
 import {StorageObjectMeta} from "@spica-server/interface/storage";
 import {ReadStream} from "fs";
+import {Observable} from "rxjs";
 
 export abstract class Strategy {
   abstract read(id: string): Promise<Buffer>;
@@ -9,5 +10,5 @@ export abstract class Strategy {
   abstract url(id: string): Promise<string>;
   abstract rename(oldKey: string, newKey: string): Promise<void>;
   abstract handleResumableUpload(req: any, res: any): any;
-  abstract onResumableUploadFinished(callback: (document: StorageObjectMeta) => void): void;
+  abstract get resumableUploadFinished(): Observable<StorageObjectMeta>;
 }

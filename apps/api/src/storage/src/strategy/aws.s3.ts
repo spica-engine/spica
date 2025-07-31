@@ -12,10 +12,13 @@ import {Server, EVENTS} from "@tus/server";
 import {S3Store} from "@tus/s3-store";
 import {CronJob} from "cron";
 import {StorageObjectMeta} from "@spica-server/interface/storage";
+import {Observable, Subject} from "rxjs";
 
 export class AWSS3 implements Strategy {
   s3: S3Client;
+
   private tusServer: Server;
+  private resumableUploadFinishedSubject = new Subject<StorageObjectMeta>();
 
   constructor(
     private credentialsPath: string,
@@ -32,6 +35,10 @@ export class AWSS3 implements Strategy {
     });
 
     this.initializeTusServer();
+  }
+
+  get resumableUploadFinished(): Observable<StorageObjectMeta> {
+    return this.resumableUploadFinishedSubject.asObservable();
   }
 
   private initializeTusServer() {
@@ -54,6 +61,8 @@ export class AWSS3 implements Strategy {
       path: "/storage/resumable",
       datastore
     });
+
+    this.setupUploadFinishedHandler();
 
     new CronJob(
       "0 0 * * *",
@@ -136,7 +145,7 @@ export class AWSS3 implements Strategy {
     return this.tusServer.handle(req, res);
   }
 
-  async onResumableUploadFinished(callback: (document: StorageObjectMeta) => void) {
+  private setupUploadFinishedHandler() {
     this.tusServer.on(EVENTS.POST_FINISH, async event => {
       const fileId = event.url.split("/").pop();
 
@@ -152,7 +161,7 @@ export class AWSS3 implements Strategy {
           size: info.size
         }
       };
-      callback(document);
+      this.resumableUploadFinishedSubject.next(document);
     });
   }
 }

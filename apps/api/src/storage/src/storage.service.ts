@@ -29,14 +29,18 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       afterInit: () => this._coll.createIndex({name: 1}, {unique: true})
     });
 
-    this.service.onResumableUploadFinished(async (document: StorageObjectMeta) => {
-      try {
-        await this._coll.insertOne(document);
-      } catch (exception) {
-        this.service.delete(document.name);
-        throw new BadRequestException(
-          exception.code === 11000 ? "An object with this name already exists." : exception.message
-        );
+    this.service.resumableUploadFinished.subscribe({
+      next: async (document: StorageObjectMeta) => {
+        try {
+          await this._coll.insertOne(document);
+        } catch (exception) {
+          this.service.delete(document.name);
+          throw new BadRequestException(
+            exception.code === 11000
+              ? "An object with this name already exists."
+              : exception.message
+          );
+        }
       }
     });
   }

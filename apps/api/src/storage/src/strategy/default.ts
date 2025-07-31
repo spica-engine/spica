@@ -4,9 +4,11 @@ import {Server, EVENTS} from "@tus/server";
 import {FileStore} from "@tus/file-store";
 import {CronJob} from "cron";
 import {StorageObjectMeta} from "@spica-server/interface/storage";
+import {Observable, Subject} from "rxjs";
 
 export class Default implements Strategy {
   private tusServer: Server;
+  private resumableUploadFinishedSubject = new Subject<StorageObjectMeta>();
 
   constructor(
     private path: string,
@@ -14,8 +16,11 @@ export class Default implements Strategy {
     private resumableUploadExpiresIn: number
   ) {
     this.publicUrl = publicUrl;
-
     this.initializeTusServer();
+  }
+
+  get resumableUploadFinished(): Observable<StorageObjectMeta> {
+    return this.resumableUploadFinishedSubject.asObservable();
   }
 
   private initializeTusServer() {
@@ -28,6 +33,8 @@ export class Default implements Strategy {
       path: "/storage/resumable",
       datastore
     });
+
+    this.setupUploadFinishedHandler();
 
     new CronJob(
       "0 0 * * *",
@@ -111,7 +118,7 @@ export class Default implements Strategy {
     return this.tusServer.handle(req, res);
   }
 
-  async onResumableUploadFinished(callback: (document: StorageObjectMeta) => void) {
+  private setupUploadFinishedHandler() {
     this.tusServer.on(EVENTS.POST_FINISH, async event => {
       const fileId = event.url.split("/").pop();
 
@@ -127,7 +134,7 @@ export class Default implements Strategy {
           size: info.size
         }
       };
-      callback(document);
+      this.resumableUploadFinishedSubject.next(document);
     });
   }
 }
