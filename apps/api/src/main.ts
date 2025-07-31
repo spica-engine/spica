@@ -57,6 +57,12 @@ const args = yargs(process.argv.slice(2))
       number: true,
       description: "Amount of connection that will be opened against database.",
       default: 50
+    },
+    "database-read-preference": {
+      string: true,
+      description: "Read preference for the database connection.",
+      default: "primary",
+      choices: ["primary", "primaryPreferred", "secondary", "secondaryPreferred", "nearest"]
     }
   })
   .demandOption("database-name")
@@ -192,6 +198,11 @@ const args = yargs(process.argv.slice(2))
       boolean: true,
       description: "Enable/disable listening apikey realtime. Default value is true",
       default: true
+    },
+    "identity-realtime": {
+      boolean: true,
+      description: "Enable/disable listening identity realtime. Default value is true",
+      default: true
     }
   })
   .demandOption("passport-secret")
@@ -227,9 +238,14 @@ const args = yargs(process.argv.slice(2))
       description: "Enable/disable function workers debugging mode. Default value is true",
       default: false
     },
+    "function-realtime": {
+      boolean: true,
+      description: "Enable/disable tracking functions realtime. Default value is true.",
+      default: true
+    },
     "function-realtime-logs": {
       boolean: true,
-      description: "Enable/disable tracking function logs realtime. Default value is false.",
+      description: "Enable/disable tracking function logs realtime. Default value is true.",
       default: true
     },
     "function-logger": {
@@ -496,7 +512,8 @@ const modules = [
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
     maxPoolSize: args["database-pool-size"],
-    appName: "spica"
+    appName: "spica",
+    readPreference: args["database-read-preference"]
   }),
   EnvVarModule.forRoot(),
   SchemaModule.forRoot({
@@ -543,7 +560,8 @@ const modules = [
     },
     refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
     passwordHistoryLimit: args["passport-identity-password-history-limit"],
-    apikeyRealtime: args["apikey-realtime"]
+    apikeyRealtime: args["apikey-realtime"],
+    identityRealtime: args["identity-realtime"]
   }),
   FunctionModule.forRoot({
     logExpireAfterSeconds: args["common-log-lifespan"],
@@ -565,7 +583,8 @@ const modules = [
     maxConcurrency: args["function-worker-concurrency"],
     realtimeLogs: args["function-realtime-logs"],
     logger: args["function-logger"],
-    invocationLogs: args["function-invocation-logs"]
+    invocationLogs: args["function-invocation-logs"],
+    realtime: args["function-realtime"]
   })
 ];
 
