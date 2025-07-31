@@ -132,6 +132,12 @@ export const useBucketService = () => {
     [fetchBucketData]
   );
 
+  const {request: patchRequest} = useApi({endpoint: "/api/bucket", method: "patch"});
+
+  const requestCategoryChange = useCallback((bucketId: string, category: string) => {
+    return patchRequest({body: {category}, endpoint: `/api/bucket/${bucketId}`});
+  }, []);
+
   const {
     request: bucketOrderRequest,
     loading: bucketOrderLoading,
@@ -163,6 +169,7 @@ export const useBucketService = () => {
     bucketData,
     getBucketData,
     lastUsedBucketDataQuery,
+    requestCategoryChange,
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,

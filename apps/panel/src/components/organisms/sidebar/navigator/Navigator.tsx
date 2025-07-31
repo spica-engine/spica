@@ -252,7 +252,7 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
     items: items?.items ?? []
   });
   const accordionItems = grouped?.map(item => ({
-    title: helperUtils.capitalize("item[0].category"),
+    title: helperUtils.capitalize(item?.[0]?.category ?? ""),
     content: (
       <>
         {item.map((item: any, index: number) => (
