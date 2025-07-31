@@ -30,6 +30,15 @@ type BucketContextType = {
   getCurrentBucket: (bucketId: string) => Promise<any>;
   currentBucketLoading: boolean;
   currentBucketError: string | null;
+  changeBucketRule: (
+    bucket: BucketType,
+    newRules: {
+      read: string;
+      write: string;
+    }
+  ) => Promise<any>;
+
+  bucketRuleChangeLoading: boolean;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -47,7 +56,9 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     getCurrentBucket,
     changeBucketOrder,
     bucketOrderLoading,
-    bucketOrderError
+    bucketOrderError,
+    changeBucketRuleRequest,
+    bucketRuleChangeLoading
   } = useBucketService();
   const [buckets, setBuckets] = useState<BucketType[]>(data ?? []);
 
@@ -86,6 +97,16 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [deleteBucketRequest]
   );
 
+  const changeBucketRule = useCallback(
+    (bucket: BucketType, newRules: {read: string; write: string}) => {
+      return changeBucketRuleRequest(bucket, newRules).then(result => {
+        if (!result) return;
+        setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, acl: newRules} : i)));
+      });
+    },
+    []
+  );
+
   const contextValue = useMemo(
     () => ({
       buckets,
@@ -102,7 +123,9 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       currentBucket,
       getCurrentBucket,
       currentBucketLoading,
-      currentBucketError
+      currentBucketError,
+      changeBucketRule,
+      bucketRuleChangeLoading
     }),
     [
       buckets,

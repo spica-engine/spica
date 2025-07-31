@@ -134,6 +134,21 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     });
   }, []);
 
+  const {request: changeBucketRule, loading: bucketRuleChangeLoading} = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
+  const changeBucketRuleRequest = useCallback(
+    (bucket: BucketType, newRules: {write: string; read: string}) => {
+      return changeBucketRule({
+        endpoint: `/api/bucket/${bucket._id}`,
+        body: {...bucket, acl: newRules}
+      });
+    },
+    []
+  );
+
   return {
     buckets,
     fetchBuckets,
@@ -147,6 +162,8 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
-    deleteBucketRequest
+    deleteBucketRequest,
+    changeBucketRuleRequest,
+    bucketRuleChangeLoading
   };
 };
