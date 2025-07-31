@@ -57,6 +57,12 @@ const args = yargs(process.argv.slice(2))
       number: true,
       description: "Amount of connection that will be opened against database.",
       default: 50
+    },
+    "database-read-preference": {
+      string: true,
+      description: "Read preference for the database connection.",
+      default: "primary",
+      choices: ["primary", "primaryPreferred", "secondary", "secondaryPreferred", "nearest"]
     }
   })
   .demandOption("database-name")
@@ -501,7 +507,8 @@ const modules = [
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
     maxPoolSize: args["database-pool-size"],
-    appName: "spica"
+    appName: "spica",
+    readPreference: args["database-read-preference"]
   }),
   EnvVarModule.forRoot(),
   SchemaModule.forRoot({
