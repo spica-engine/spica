@@ -71,10 +71,7 @@ function getCalculatedColumnWidth(columns: TypeDataColumn[], containerWidth: num
   return `${Math.max(distributedWidth, MIN_COLUMN_WIDTH)}px`;
 }
 
-const getFormattedColumns = (
-  containerWidth: number,
-  columns: TypeDataColumn[],
-) => {
+const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) => {
   const defaultColumnWidth = getCalculatedColumnWidth(columns, containerWidth + 10);
 
   const columnsWithWidth = columns.map(column => {
@@ -108,14 +105,7 @@ const getFormattedColumns = (
   return formattedColumns;
 };
 
-const Table: FC<TypeTable> = ({
-  columns,
-  data,
-  className,
-  onScrollEnd,
-  totalDataLength,
-  style
-}) => {
+const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataLength, style}) => {
   const containerRef = useScrollDirectionLock();
   const [formattedColumns, setFormattedColumns] = useState<TypeDataColumn[]>([]);
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
@@ -185,24 +175,6 @@ const Table: FC<TypeTable> = ({
     };
   }, [focusedCell]);
 
-  const HeaderRow = useMemo(
-    () =>
-      formattedColumns.map(col => (
-        <HeaderCell
-          onResize={newWidth => updateColumnWidth(col.id, Math.max(newWidth, MIN_COLUMN_WIDTH))}
-          key={col.id}
-          className={`${col.headerClassName} ${col.fixed ? styles.fixedCell : ""}`}
-          resizable={col.resizable === undefined ? true : col.resizable}
-          width={col.width}
-          leftOffset={col.leftOffset}
-          tableRef={containerRef}
-        >
-          {col.header}
-        </HeaderCell>
-      )),
-    [formattedColumns, updateColumnWidth, containerRef]
-  );
-
   return (
     <>
       <div
@@ -222,7 +194,23 @@ const Table: FC<TypeTable> = ({
         >
           <table className={`${styles.table} ${className}`} style={style}>
             <thead>
-              <tr>{HeaderRow}</tr>
+              <tr>
+                {formattedColumns.map(col => (
+                  <HeaderCell
+                    onResize={newWidth =>
+                      updateColumnWidth(col.id, Math.max(newWidth, MIN_COLUMN_WIDTH))
+                    }
+                    key={col.id}
+                    className={`${col.headerClassName} ${col.fixed ? styles.fixedCell : ""}`}
+                    resizable={col.resizable === undefined ? true : col.resizable}
+                    width={col.width}
+                    leftOffset={col.leftOffset}
+                    tableRef={containerRef}
+                  >
+                    {col.header}
+                  </HeaderCell>
+                ))  }
+              </tr>
             </thead>
             <tbody>
               {formattedColumns.length > 0 && (
