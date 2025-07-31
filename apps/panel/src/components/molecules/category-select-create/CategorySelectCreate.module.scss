@@ -1,0 +1,134 @@
+* {
+  font-family: var(--font-family-base) !important;
+  line-height: unset !important;
+}
+
+.modal {
+  padding: 0;
+  min-height: 0 !important;
+  width: 600px !important;
+  min-width: 600px !important;
+  font-size: var(--font-size-md);
+  gap: 0 !important;
+}
+
+.modalBody {
+  padding: var(--padding-xl) 0 0 0;
+}
+
+.modalFooter {
+  gap: var(--gap-md) !important;
+}
+
+.inputSection {
+  width: 100% !important;
+
+  > div {
+    padding: 0 var(--padding-md);
+  }
+}
+.inputContainer {
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  width: 100% !important;
+  //width: 340px !important;
+  height: 44px;
+  padding: 0 var(--padding-md);
+  background-color: var(--color-input-background);
+}
+.input {
+  height: 44px;
+  font-size: var(--font-size-md);
+}
+
+.input:placeholder {
+  color: var(--color-input-placeholder) !important;
+}
+
+.optionsContainer {
+  width: 100% !important;
+  background-color: var(--color-input-background);
+}
+
+.option {
+  width: 100%;
+  height: 39px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  color: var(--color-input-placeholder) !important;
+  cursor: pointer;
+  padding-left: var(--padding-xl);
+}
+
+.option:hover {
+  background-color: var(--color-soft);
+}
+
+
+.addButton {
+  width: min-content;
+  max-width: min-content;
+  min-width: min-content !important;
+  > div {
+    max-width: 100% !important;
+  }
+  > div > div {
+    display: flex;
+    align-items: center;
+  }
+  .prefix,
+  .dynamic,
+  .suffix {
+    display: inline-block !important;
+    white-space: normal !important;
+  }
+}
+
+.addButton,
+.cancelButton {
+  height: 32px !important;
+}
+
+.flexColumn {
+  display: flex;
+  flex-direction: column !important;
+}
+
+.selectField {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-md);
+  width: 100%;
+  > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-md);
+  }
+}
+
+.noCategoryFound {
+  font-size: var(--font-size-sm);
+  color: var(--color-font-tertiary);
+}
+
+.header {
+  padding: 0 var(--padding-md) !important;
+  border-bottom: var(--border-default);
+  height: fit-content !important;
+  padding: 0;
+  .title {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    padding: var(--padding-xl) 0 !important;
+    color: var(--color-black);
+  }
+}
+
+.title {
+  margin: 0 !important;
+  font-size: var(--font-size-lg) !important;
+  font-weight: bold !important;
+}

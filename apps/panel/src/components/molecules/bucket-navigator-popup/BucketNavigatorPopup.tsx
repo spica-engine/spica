@@ -4,6 +4,7 @@ import styles from "./BucketNavigatorPopup.module.scss";
 import Confirmation from "../confirmation/Confirmation";
 import TitleForm from "../title-form/TitleForm";
 import type {BucketType} from "../../../services/bucketService";
+import CategorySelectCreate from "../category-select-create/CategorySelectCreate";
 import {useBucket} from "../../../contexts/BucketContext";
 
 type TypeBucketNavigatorPopup = {
@@ -30,14 +31,13 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   const [titleFormOpen, setTitleFormOpen] = useState(false);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
+  const [isCategorySelectCreateOpen, setIsCategorySelectCreateOpen] = useState(false);
 
   useOnClickOutside({
     refs: [containerRef, contentRef],
     onClickOutside: () => setIsOpen(false)
   });
-
-
-  const {deleteBucket} = useBucket();
+  const {deleteBucket, categories, changeCategory} = useBucket();
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
   const handleDeleteBucket = async () => {
@@ -49,8 +49,23 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
     }
   };
 
-  const handleCancel = () => {
+  const handleOpenCategorySelectCreate = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    e.preventDefault();
+    setIsCategorySelectCreateOpen(true);
+  };
+
+  const handleOpenConfirmation = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    e.stopPropagation();
+    setIsConfirmationOpen(true);
+  };
+
+  const handleCancelConfirmation = () => {
     setIsConfirmationOpen(false);
+    setIsOpen(false);
+  };
+
+  const handleCancelCategorySelectCreate = () => {
+    setIsCategorySelectCreateOpen(false);
     setIsOpen(false);
   };
 
@@ -83,9 +98,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
                 dimensionX: "fill"
               }}
               color="default"
-              onClick={e => {
-                e.stopPropagation();
-              }}
+              onClick={handleOpenCategorySelectCreate}
               className={styles.buttons}
             >
               <Icon name="plus" />
@@ -109,10 +122,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
                 dimensionX: "fill"
               }}
               color="default"
-              onClick={e => {
-                e.stopPropagation();
-                setIsConfirmationOpen(true);
-              }}
+              onClick={handleOpenConfirmation}
               className={styles.buttons}
             >
               <Icon name="delete" className={styles.deleteIcon} />
@@ -132,6 +142,14 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
           <Icon name="dotsVertical" size="sm" />
         </Button>
       </Popover>
+      {isCategorySelectCreateOpen && (
+        <CategorySelectCreate
+          changeCategory={changeCategory}
+          bucket={bucket}
+          categories={categories}
+          onCancel={handleCancelCategorySelectCreate}
+        />
+      )}
       {isConfirmationOpen && (
         <Confirmation
           title="DELETE BUCKET"
@@ -162,7 +180,14 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
           showInput
           confirmCondition={val => val === bucket.title}
           onConfirm={handleDeleteBucket}
-          onCancel={handleCancel}
+          onCancel={handleCancelConfirmation}
+        />
+      )}
+      {titleFormOpen && (
+        <TitleForm
+          initialValue={bucket.title}
+          onClose={() => setTitleFormOpen(false)}
+          onSubmit={handleChangeBucketName}
         />
       )}
       {titleFormOpen && (
