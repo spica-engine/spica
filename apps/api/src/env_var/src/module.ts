@@ -1,4 +1,4 @@
-import {Inject, Module, Optional} from "@nestjs/common";
+import {DynamicModule, Inject, Module, Optional} from "@nestjs/common";
 import {EnvVarService, ServicesModule} from "@spica-server/env_var/services";
 import {EnvVarController} from "./controller";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
@@ -12,18 +12,25 @@ import {
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {EnvVar} from "@spica-server/interface/env_var";
 import {getSynchronizer} from "./versioncontrol/synchronizer";
+import {EnvVarRealtimeModule} from "@spica-server/env_var/realtime";
 
 @Module({})
 export class EnvVarModule {
-  static forRoot() {
+  static forRoot(options: {realtime: boolean}): DynamicModule {
+    const imports = [
+      SchemaModule.forChild({
+        schemas: [EnvVarSchema]
+      }),
+      ServicesModule
+    ];
+
+    if (options.realtime) {
+      imports.push(EnvVarRealtimeModule.register());
+    }
+
     return {
       module: EnvVarModule,
-      imports: [
-        SchemaModule.forChild({
-          schemas: [EnvVarSchema]
-        }),
-        ServicesModule
-      ],
+      imports,
       controllers: [EnvVarController],
       providers: [EnvVarService],
       exports: []

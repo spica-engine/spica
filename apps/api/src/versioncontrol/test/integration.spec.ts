@@ -105,7 +105,7 @@ describe("Versioning", () => {
           tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH,
           realtime: false
         }),
-        EnvVarModule.forRoot(),
+        EnvVarModule.forRoot({realtime: false}),
         VersionControlModule.forRoot({
           persistentPath: directoryPath,
           isReplicationEnabled: false

@@ -12,6 +12,11 @@ export default {
       action: "env-var:show",
       resource: {include: ["*"], exclude: []},
       module: "env-var"
+    },
+    {
+      action: "env-var:stream",
+      resource: {include: ["*"], exclude: []},
+      module: "env-var"
     }
   ]
 };

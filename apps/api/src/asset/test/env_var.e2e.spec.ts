@@ -39,7 +39,7 @@ describe("EnvVar", () => {
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
         AssetModule.forRoot({persistentPath: os.tmpdir()}),
-        EnvVarModule.forRoot()
+        EnvVarModule.forRoot({realtime: false})
       ]
     }).compile();
 

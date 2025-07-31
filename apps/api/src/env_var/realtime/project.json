@@ -1,0 +1,5 @@
+{
+  "name": "api/env_var/realtime",
+  "sourceRoot": "apps/api/src/env_var/realtime",
+  "projectType": "application"
+}
