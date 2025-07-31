@@ -349,3 +349,73 @@ function createActionGuard(
   }
   return mixin(MixinActionGuard);
 }
+
+export const SimpleActionGuard: (actions: string | string[], format?: string) => Type<CanActivate> =
+  createSimpleActionGuard;
+
+function createSimpleActionGuard(actions: string | string[], format?: string): Type<CanActivate> {
+  class MixinActionGuard implements CanActivate {
+    constructor(@Optional() @Inject(POLICY_RESOLVER) private resolver: PolicyResolver<any>) {}
+
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+      let request = context.switchToHttp().getRequest(),
+        response = context.switchToHttp().getResponse();
+
+      if (request.TESTING_SKIP_CHECK) {
+        request.resourceFilter = {
+          include: [],
+          exclude: []
+        };
+        return true;
+      }
+
+      actions = wrapArray(actions);
+
+      let policies: Array<{name: string; statement: Statement[]}> = await this.resolver(
+        request.user.policies || []
+      );
+
+      const resourceAndModule = buildResourceAndModuleName(
+        request.route.path,
+        request.params,
+        format
+      );
+
+      if (response.header) {
+        response.header("X-Policy-Module", resourceAndModule.module);
+        response.header("X-Policy-Action", actions.join(", "));
+        // response.header("X-Policy-Resource", "partial");
+
+        if (resourceAndModule.resource.length) {
+          response.header("X-Policy-Resource", resourceAndModule.resource.join("/"));
+        }
+      }
+
+      for (const action of actions) {
+        for (const policy of policies) {
+          for (const [index, statement] of policy.statement.entries()) {
+            const actionMatch = action == statement.action;
+            const moduleMatch = resourceAndModule.module == statement.module;
+
+            if (actionMatch && moduleMatch) {
+              console.log("index: ", index, "statement: ", statement);
+
+              request.resourceFilter = {
+                include: statement.resource.include,
+                exclude: statement.resource.exclude
+              };
+              return true;
+            }
+          }
+        }
+      }
+
+      throw new ForbiddenException(
+        `You do not have sufficient permissions to do ${actions.join(
+          ", "
+        )} on resource ${resourceAndModule.resource.join("/")}`
+      );
+    }
+  }
+  return mixin(MixinActionGuard);
+}
