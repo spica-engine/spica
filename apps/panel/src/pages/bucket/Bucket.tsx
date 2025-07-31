@@ -50,7 +50,7 @@ export default function Bucket() {
   return (
     <div className={styles.container}>
       <BucketActionBar />
-      {bucketData?.data && (
+      {formattedColumns.length > 1 && (
         <BucketTable
           bucketId={bucketId as string}
           columns={formattedColumns as ColumnType[]}
