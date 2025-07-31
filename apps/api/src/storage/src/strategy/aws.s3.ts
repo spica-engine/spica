@@ -1,5 +1,4 @@
 import {ReadStream} from "fs";
-import {Strategy} from "./strategy";
 import {
   S3Client,
   GetObjectCommand,
@@ -8,23 +7,18 @@ import {
   CopyObjectCommand
 } from "@aws-sdk/client-s3";
 import {readFileSync} from "fs";
-import {Server, EVENTS} from "@tus/server";
 import {S3Store} from "@tus/s3-store";
-import {CronJob} from "cron";
-import {StorageObjectMeta} from "@spica-server/interface/storage";
-import {Observable, Subject} from "rxjs";
+import {BaseStrategy} from "./base-strategy";
 
-export class AWSS3 implements Strategy {
+export class AWSS3 extends BaseStrategy {
   s3: S3Client;
-
-  private tusServer: Server;
-  private resumableUploadFinishedSubject = new Subject<StorageObjectMeta>();
 
   constructor(
     private credentialsPath: string,
     private bucketName: string,
-    private resumableUploadExpiresIn: number
+    resumableUploadExpiresIn: number
   ) {
+    super(resumableUploadExpiresIn);
     const config = this.getConfig();
     this.s3 = new S3Client({
       credentials: {
@@ -37,11 +31,7 @@ export class AWSS3 implements Strategy {
     this.initializeTusServer();
   }
 
-  get resumableUploadFinished(): Observable<StorageObjectMeta> {
-    return this.resumableUploadFinishedSubject.asObservable();
-  }
-
-  private initializeTusServer() {
+  protected initializeTusServer() {
     const config = this.getConfig();
 
     const datastore = new S3Store({
@@ -57,21 +47,7 @@ export class AWSS3 implements Strategy {
       expirationPeriodInMilliseconds: this.resumableUploadExpiresIn
     });
 
-    this.tusServer = new Server({
-      path: "/storage/resumable",
-      datastore
-    });
-
-    this.setupUploadFinishedHandler();
-
-    new CronJob(
-      "0 0 * * *",
-      () => {
-        this.tusServer.cleanUpExpiredUploads();
-      },
-      null,
-      true
-    );
+    super.initializeTusServer(datastore);
   }
 
   getConfig() {
@@ -139,29 +115,5 @@ export class AWSS3 implements Strategy {
         Key: oldKey
       })
     );
-  }
-
-  handleResumableUpload(req: any, res: any) {
-    return this.tusServer.handle(req, res);
-  }
-
-  private setupUploadFinishedHandler() {
-    this.tusServer.on(EVENTS.POST_FINISH, async event => {
-      const fileId = event.url.split("/").pop();
-
-      const info = await this.tusServer.datastore.getUpload(fileId);
-      const filename = info.metadata.filename;
-
-      await this.rename(fileId, filename);
-
-      const document = {
-        name: filename,
-        content: {
-          type: info.metadata.filetype,
-          size: info.size
-        }
-      };
-      this.resumableUploadFinishedSubject.next(document);
-    });
   }
 }

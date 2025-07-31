@@ -1,49 +1,25 @@
 import fs from "fs";
-import {Strategy} from "./strategy";
-import {Server, EVENTS} from "@tus/server";
 import {FileStore} from "@tus/file-store";
-import {CronJob} from "cron";
-import {StorageObjectMeta} from "@spica-server/interface/storage";
-import {Observable, Subject} from "rxjs";
+import {BaseStrategy} from "./base-strategy";
 
-export class Default implements Strategy {
-  private tusServer: Server;
-  private resumableUploadFinishedSubject = new Subject<StorageObjectMeta>();
-
+export class Default extends BaseStrategy {
   constructor(
     private path: string,
     private publicUrl: string,
-    private resumableUploadExpiresIn: number
+    resumableUploadExpiresIn: number
   ) {
+    super(resumableUploadExpiresIn);
     this.publicUrl = publicUrl;
     this.initializeTusServer();
   }
 
-  get resumableUploadFinished(): Observable<StorageObjectMeta> {
-    return this.resumableUploadFinishedSubject.asObservable();
-  }
-
-  private initializeTusServer() {
+  protected initializeTusServer() {
     const datastore = new FileStore({
       directory: this.path,
       expirationPeriodInMilliseconds: this.resumableUploadExpiresIn
     });
 
-    this.tusServer = new Server({
-      path: "/storage/resumable",
-      datastore
-    });
-
-    this.setupUploadFinishedHandler();
-
-    new CronJob(
-      "0 0 * * *",
-      () => {
-        this.tusServer.cleanUpExpiredUploads();
-      },
-      null,
-      true
-    );
+    super.initializeTusServer(datastore);
   }
 
   async writeStream(id: string, data: fs.ReadStream, mimeType?: string): Promise<void> {
@@ -112,29 +88,5 @@ export class Default implements Strategy {
       console.error(`Error renaming file from ${oldName} to ${newName}:`, err);
       throw err;
     }
-  }
-
-  handleResumableUpload(req: any, res: any) {
-    return this.tusServer.handle(req, res);
-  }
-
-  private setupUploadFinishedHandler() {
-    this.tusServer.on(EVENTS.POST_FINISH, async event => {
-      const fileId = event.url.split("/").pop();
-
-      const info = await this.tusServer.datastore.getUpload(fileId);
-      const filename = info.metadata.filename;
-
-      await this.rename(fileId, filename);
-
-      const document = {
-        name: filename,
-        content: {
-          type: info.metadata.filetype,
-          size: info.size
-        }
-      };
-      this.resumableUploadFinishedSubject.next(document);
-    });
   }
 }

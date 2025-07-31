@@ -1,24 +1,14 @@
 import {ReadStream} from "fs";
-import {Strategy} from "./strategy";
 import {Storage, Bucket} from "@google-cloud/storage";
-import {Server, EVENTS} from "@tus/server";
 import {GCSStore} from "@tus/gcs-store";
-import {CronJob} from "cron";
-import {StorageObjectMeta} from "@spica-server/interface/storage";
-import {Observable, Subject} from "rxjs";
+import {BaseStrategy} from "./base-strategy";
 
-export class GCloud implements Strategy {
+export class GCloud extends BaseStrategy {
   private storage: Storage;
   private bucket: Bucket;
 
-  private tusServer: Server;
-  private resumableUploadFinishedSubject = new Subject<StorageObjectMeta>();
-
-  constructor(
-    serviceAccountPath: string,
-    bucketName: string,
-    private resumableUploadExpiresIn: number
-  ) {
+  constructor(serviceAccountPath: string, bucketName: string, resumableUploadExpiresIn: number) {
+    super(resumableUploadExpiresIn);
     process.env.GOOGLE_APPLICATION_CREDENTIALS = serviceAccountPath;
     this.storage = new Storage();
     this.bucket = this.storage.bucket(bucketName);
@@ -26,26 +16,13 @@ export class GCloud implements Strategy {
     this.initializeTusServer();
   }
 
-  get resumableUploadFinished(): Observable<StorageObjectMeta> {
-    return this.resumableUploadFinishedSubject.asObservable();
+  protected initializeTusServer() {
+    const datastore = new GCSStore({bucket: this.bucket});
+    super.initializeTusServer(datastore);
   }
 
-  private initializeTusServer() {
-    this.tusServer = new Server({
-      path: "/storage/resumable",
-      datastore: new GCSStore({bucket: this.bucket})
-    });
-
-    this.setupUploadFinishedHandler();
-
-    new CronJob(
-      "0 0 * * *",
-      () => {
-        this.cleanUpExpiredUploads();
-      },
-      null,
-      true
-    );
+  protected cleanUpExpiredUploads() {
+    return this.cleanUpExpiredUploadsGCS();
   }
 
   write(id: string, data: Buffer, contentType: string) {
@@ -100,30 +77,6 @@ export class GCloud implements Strategy {
     await file.move(newName);
   }
 
-  handleResumableUpload(req: any, res: any) {
-    return this.tusServer.handle(req, res);
-  }
-
-  private setupUploadFinishedHandler() {
-    this.tusServer.on(EVENTS.POST_FINISH, async event => {
-      const fileId = event.url.split("/").pop();
-
-      const info = await this.tusServer.datastore.getUpload(fileId);
-      const filename = info.metadata.filename;
-
-      await this.rename(fileId, filename);
-
-      const document = {
-        name: filename,
-        content: {
-          type: info.metadata.filetype,
-          size: info.size
-        }
-      };
-      this.resumableUploadFinishedSubject.next(document);
-    });
-  }
-
   async getAllFilesMetadataPaginated(pageToken?: string): Promise<{
     files: Array<{name: string; metadata: any}>;
     nextPageToken?: string;
@@ -151,7 +104,7 @@ export class GCloud implements Strategy {
     return /^[0-9a-f]{32}$/i.test(id);
   }
 
-  async cleanUpExpiredUploads() {
+  async cleanUpExpiredUploadsGCS() {
     let pageToken: string | undefined;
 
     let count = 0;
