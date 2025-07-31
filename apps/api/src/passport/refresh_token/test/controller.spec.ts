@@ -27,7 +27,8 @@ describe("ApiKey", () => {
         // PreferenceTestingModule,
         PassportTestingModule.initialize(),
         RefreshTokenModule.forRoot({
-          expiresIn: REFRESH_TOKEN_EXPIRES_IN
+          expiresIn: REFRESH_TOKEN_EXPIRES_IN,
+          realtime: false
         }),
         SchemaModule.forRoot({formats: [OBJECT_ID]})
       ]
