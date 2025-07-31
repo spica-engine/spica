@@ -39,10 +39,6 @@ type TypeTableData = {
 type TypeTable = {
   columns: TypeDataColumn[];
   data: TypeTableData[];
-  saveToLocalStorage?: {
-    id: string;
-    save?: boolean;
-  };
   className?: string;
   onScrollEnd?: () => void;
   totalDataLength?: number;
@@ -78,21 +74,13 @@ function getCalculatedColumnWidth(columns: TypeDataColumn[], containerWidth: num
 const getFormattedColumns = (
   containerWidth: number,
   columns: TypeDataColumn[],
-  localStorageOptions?: {
-    id: string;
-    save?: boolean;
-  }
 ) => {
   const defaultColumnWidth = getCalculatedColumnWidth(columns, containerWidth + 10);
 
   const columnsWithWidth = columns.map(column => {
-    const storedWidth = localStorageOptions?.save
-      ? localStorage.getItem(`${localStorageOptions.id}-${column.key}`)
-      : null;
-
     return {
       ...column,
-      width: storedWidth || column.width || defaultColumnWidth
+      width: column.width || defaultColumnWidth
     };
   });
 
@@ -123,7 +111,6 @@ const getFormattedColumns = (
 const Table: FC<TypeTable> = ({
   columns,
   data,
-  saveToLocalStorage = {id: "table", save: false},
   className,
   onScrollEnd,
   totalDataLength,
@@ -140,12 +127,6 @@ const Table: FC<TypeTable> = ({
     const formattedColumns = getFormattedColumns(containerWidth - 50, columns);
     setFormattedColumns(formattedColumns);
   }, [columns]);
-
-  useEffect(() => {
-    columns.forEach(column => {
-      localStorage.setItem(`${saveToLocalStorage.id}-${column.key}`, column.width as string);
-    });
-  }, [formattedColumns, saveToLocalStorage.save]);
 
   const updateColumnWidth = useCallback((id: string, newWidth: number) => {
     setFormattedColumns(prevColumns =>
