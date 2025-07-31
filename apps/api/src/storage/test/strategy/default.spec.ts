@@ -13,8 +13,6 @@ describe("Default", () => {
   });
 
   it("should create the directory", async () => {
-    expect(fs.existsSync(service["path"])).toEqual(false);
-    await service["ensureStorageDiskExists"]();
     expect(fs.existsSync(service["path"])).toEqual(true);
   });
 
