@@ -45,8 +45,23 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
     }
   };
 
-  const handleCancel = () => {
+  const handleOpenCategorySelectCreate = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    e.preventDefault();
+    setIsCategorySelectCreateOpen(true);
+  };
+
+  const handleOpenConfirmation = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    e.stopPropagation();
+    setIsConfirmationOpen(true);
+  };
+
+  const handleCancelConfirmation = () => {
     setIsConfirmationOpen(false);
+    setIsOpen(false);
+  };
+
+  const handleCancelCategorySelectCreate = () => {
+    setIsCategorySelectCreateOpen(false);
     setIsOpen(false);
   };
 
@@ -70,10 +85,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
                 dimensionX: "fill"
               }}
               color="default"
-              onClick={e => {
-                e.stopPropagation();
-                setIsCategorySelectCreateOpen(true);
-              }}
+              onClick={handleOpenCategorySelectCreate}
               className={styles.buttons}
             >
               <Icon name="plus" />
@@ -99,10 +111,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
                 dimensionX: "fill"
               }}
               color="default"
-              onClick={e => {
-                e.stopPropagation();
-                setIsConfirmationOpen(true);
-              }}
+              onClick={handleOpenConfirmation}
               className={styles.buttons}
             >
               <Icon name="delete" className={styles.deleteIcon} />
@@ -127,10 +136,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
           changeCategory={changeCategory}
           bucket={bucket}
           categories={categories}
-          onCancel={() => {
-            setIsCategorySelectCreateOpen(false);
-            setIsOpen(false);
-          }}
+          onCancel={handleCancelCategorySelectCreate}
         />
       )}
       {isConfirmationOpen && (
@@ -163,7 +169,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
           showInput
           confirmCondition={val => val === bucket.title}
           onConfirm={handleDeleteBucket}
-          onCancel={handleCancel}
+          onCancel={handleCancelConfirmation}
         />
       )}
     </div>

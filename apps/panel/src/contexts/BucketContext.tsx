@@ -54,16 +54,12 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   useEffect(() => setBuckets(data ?? []), [data]);
 
   const changeCategory = useCallback(
-    (bucketId: string, category: string) => {
-      setBuckets(prev =>
-        prev
-          ? prev.map(i => {
-              if (i._id === bucketId) return {...i, category};
-              return i;
-            })
-          : []
+    async (bucketId: string, category: string) => {
+      setBuckets(
+        prev =>
+          prev?.map(bucket => (bucket._id === bucketId ? {...bucket, category} : bucket)) ?? []
       );
-      return requestCategoryChange(bucketId, category);
+      return await requestCategoryChange(bucketId, category);
     },
     [requestCategoryChange]
   );
