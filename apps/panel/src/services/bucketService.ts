@@ -107,6 +107,12 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     });
   };
 
+  const {request: patchRequest} = useApi({endpoint: "/api/bucket", method: "patch"});
+
+  const requestCategoryChange = useCallback((bucketId: string, category: string) => {
+    return patchRequest({body: {category}, endpoint: `/api/bucket/${bucketId}`});
+  }, []);
+
   const {
     request: bucketOrderRequest,
     loading: bucketOrderLoading,
@@ -115,6 +121,17 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
 
   const changeBucketOrder = useCallback((bucketId: string, order: number) => {
     bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
+  }, []);
+
+  const {request: deleteRequest} = useApi({
+    endpoint: "",
+    method: "delete"
+  });
+
+  const deleteBucketRequest = useCallback((bucketId: string) => {
+    return deleteRequest({
+      endpoint: `/api/bucket/${bucketId}`
+    });
   }, []);
 
   const {request: changeBucketRule, loading: bucketRuleChangeLoading} = useApi({
@@ -141,9 +158,11 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     getCurrentBucket,
     currentBucketLoading,
     currentBucketError,
+    requestCategoryChange,
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
+    deleteBucketRequest,
     changeBucketRuleRequest,
     bucketRuleChangeLoading
   };
