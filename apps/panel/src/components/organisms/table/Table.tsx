@@ -14,6 +14,7 @@ import {FlexElement} from "oziko-ui-kit";
 import styles from "./Table.module.scss";
 import InfiniteScroll from "react-infinite-scroll-component";
 import useScrollDirectionLock from "../../../hooks/useScrollDirectionLock";
+import Loader from "../../../components/atoms/loader/Loader";
 
 type TypeDataColumn = {
   header: string | ReactNode;
@@ -234,7 +235,7 @@ const Table: FC<TypeTable> = ({
             onScrollEnd?.();
           }}
           hasMore={totalDataLength !== undefined && totalDataLength > data.length}
-          loader={<div className={styles.loader} />}
+          loader={<Loader />}
           scrollableTarget="scrollableDiv"
           className={styles.infiniteScroll}
         >
