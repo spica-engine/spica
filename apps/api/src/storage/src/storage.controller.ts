@@ -16,7 +16,9 @@ import {
   UseInterceptors,
   HttpCode,
   HttpException,
-  Patch
+  Patch,
+  All,
+  Req
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
@@ -215,5 +217,23 @@ export class StorageController {
   @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.storage.delete(id);
+  }
+
+  /**
+   * Creates and returns new upload resource
+   */
+  @Post("resumable")
+  @UseGuards(AuthGuard(), ActionGuard("storage:create"))
+  async getUploadUrl(@Req() req, @Res() res) {
+    await this.storage.handleResumableUpload(req, res);
+  }
+
+  /**
+   * Accepts all resumable uploads
+   */
+  @All("resumable/:id")
+  @UseGuards(AuthGuard(), ActionGuard("storage:create"))
+  async handleUpload(@Req() req, @Res() res) {
+    await this.storage.handleResumableUpload(req, res);
   }
 }

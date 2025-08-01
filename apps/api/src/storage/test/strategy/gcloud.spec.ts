@@ -31,7 +31,7 @@ describe("GCloud", () => {
   beforeEach(() => {
     mediaLink = "http://insteadof?generation=123123";
 
-    service = new GCloud("test_path", "test_bucket");
+    service = new GCloud("test_path", "test_bucket", 0);
 
     //@ts-ignore
     service["bucket"] = Bucket;

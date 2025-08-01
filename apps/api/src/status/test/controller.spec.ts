@@ -318,7 +318,8 @@ describe("Status", () => {
             objectSizeLimit: 10,
             strategy: "default",
             totalSizeLimit: 10,
-            defaultPath: process.env.TEST_TMPDIR
+            defaultPath: process.env.TEST_TMPDIR,
+            resumableUploadExpiresIn: 0
           })
         ]
       }).compile();

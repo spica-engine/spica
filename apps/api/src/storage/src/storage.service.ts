@@ -28,6 +28,21 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     super(database, {
       afterInit: () => this._coll.createIndex({name: 1}, {unique: true})
     });
+
+    this.service.resumableUploadFinished.subscribe({
+      next: async (document: StorageObjectMeta) => {
+        try {
+          await this._coll.insertOne(document);
+        } catch (exception) {
+          this.service.delete(document.name);
+          throw new BadRequestException(
+            exception.code === 11000
+              ? "An object with this name already exists."
+              : exception.message
+          );
+        }
+      }
+    });
   }
 
   private existingSize(): Promise<number> {
@@ -244,5 +259,9 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
   async getUrl(name: string) {
     return this.service.url(name);
+  }
+
+  async handleResumableUpload(req: any, res: any) {
+    await this.service.handleResumableUpload(req, res);
   }
 }

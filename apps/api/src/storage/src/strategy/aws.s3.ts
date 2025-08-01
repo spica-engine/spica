@@ -1,5 +1,4 @@
 import {ReadStream} from "fs";
-import {Strategy} from "./strategy";
 import {
   S3Client,
   GetObjectCommand,
@@ -7,16 +6,20 @@ import {
   DeleteObjectCommand,
   CopyObjectCommand
 } from "@aws-sdk/client-s3";
-import {fromIni} from "@aws-sdk/credential-providers";
 import {readFileSync} from "fs";
-export class AWSS3 implements Strategy {
+import {S3Store} from "@tus/s3-store";
+import {BaseStrategy} from "./base-strategy";
+
+export class AWSS3 extends BaseStrategy {
   s3: S3Client;
 
   constructor(
     private credentialsPath: string,
-    private bucketName: string
+    private bucketName: string,
+    resumableUploadExpiresIn: number
   ) {
-    const config = JSON.parse(readFileSync(this.credentialsPath, "utf-8"));
+    super(resumableUploadExpiresIn);
+    const config = this.getConfig();
     this.s3 = new S3Client({
       credentials: {
         accessKeyId: config.accessKeyId,
@@ -24,6 +27,31 @@ export class AWSS3 implements Strategy {
       },
       region: config.region
     });
+
+    this.initializeTusServer();
+  }
+
+  protected initializeTusServer() {
+    const config = this.getConfig();
+
+    const datastore = new S3Store({
+      partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MiB,
+      s3ClientConfig: {
+        bucket: this.bucketName,
+        region: config.region,
+        credentials: {
+          accessKeyId: config.accessKeyId,
+          secretAccessKey: config.secretAccessKey
+        }
+      },
+      expirationPeriodInMilliseconds: this.resumableUploadExpiresIn
+    });
+
+    super.initializeTusServer(datastore);
+  }
+
+  getConfig() {
+    return JSON.parse(readFileSync(this.credentialsPath, "utf-8"));
   }
 
   writeStream(id: string, data: ReadStream, mimeType?: string): Promise<void> {
