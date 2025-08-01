@@ -30,6 +30,8 @@ type BucketContextType = {
   getCurrentBucket: (bucketId: string) => Promise<any>;
   currentBucketLoading: boolean;
   currentBucketError: string | null;
+  changeHistory: (bucket: BucketType) => Promise<any>;
+  deleteHistory: (bucket: BucketType) => Promise<any>;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -47,7 +49,9 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     getCurrentBucket,
     changeBucketOrder,
     bucketOrderLoading,
-    bucketOrderError
+    bucketOrderError,
+    changeBucketHistory,
+    deleteBucketHistory
   } = useBucketService();
   const [buckets, setBuckets] = useState<BucketType[]>(data ?? []);
 
@@ -86,6 +90,20 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [deleteBucketRequest]
   );
 
+  const changeHistory = useCallback(
+    async (bucket: BucketType) => {
+      const previousBuckets = buckets;
+      setBuckets(prev => (prev ? prev.map(i => ({...i, history: !i.history})) : []));
+      return changeBucketHistory(bucket).then(result => {
+        if (!result) {
+          setBuckets(previousBuckets);
+        }
+        return result;
+      });
+    },
+    [buckets]
+  );
+
   const contextValue = useMemo(
     () => ({
       buckets,
@@ -102,7 +120,9 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       currentBucket,
       getCurrentBucket,
       currentBucketLoading,
-      currentBucketError
+      currentBucketError,
+      changeHistory,
+      deleteHistory: deleteBucketHistory
     }),
     [
       buckets,
