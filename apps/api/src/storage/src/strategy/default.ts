@@ -13,6 +13,11 @@ export class Default implements Strategy {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
 
+    if (this.isDirectory(id)) {
+      await this.createDir(objectPath);
+      return;
+    }
+
     return new Promise((resolve, reject) => {
       const writeStream = fs.createWriteStream(objectPath);
 
@@ -38,12 +43,24 @@ export class Default implements Strategy {
   async write(id: string, data: Buffer) {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
+
+    if (this.isDirectory(id)) {
+      await this.createDir(objectPath);
+      return;
+    }
+
     return fs.promises.writeFile(objectPath, data);
   }
 
   async delete(id: string) {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
+
+    if (this.isDirectory(id)) {
+      await this.removeDir(objectPath);
+      return;
+    }
+
     return fs.promises.unlink(objectPath);
   }
 
@@ -75,5 +92,20 @@ export class Default implements Strategy {
       console.error(`Error renaming file from ${oldName} to ${newName}:`, err);
       throw err;
     }
+  }
+
+  private isDirectory(id) {
+    if (id.endsWith("/")) {
+      return true;
+    }
+    return false;
+  }
+
+  private createDir(objectPath) {
+    return fs.promises.mkdir(objectPath, {recursive: true});
+  }
+
+  private removeDir(objectPath) {
+    return fs.promises.rm(objectPath, {recursive: true});
   }
 }
