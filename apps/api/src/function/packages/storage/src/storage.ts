@@ -66,9 +66,9 @@ export async function insertMany(
 export function insertResumable(
   object: File | BufferWithMeta,
   headers: Record<string, string>,
-  onError: ResumableUploadOptions["onError"],
-  onProgress: ResumableUploadOptions["onProgress"],
-  onSuccess: ResumableUploadOptions["onSuccess"]
+  onError?: ResumableUploadOptions["onError"],
+  onProgress?: ResumableUploadOptions["onProgress"],
+  onSuccess?: ResumableUploadOptions["onSuccess"]
 ) {
   checkInitialized(authorization);
 
