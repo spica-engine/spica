@@ -256,4 +256,19 @@ describe("Storage", () => {
       })
     );
   });
+
+  it("should resumable upload", done => {
+    const onError = jest.fn();
+    const onProgress = jest.fn();
+    const onSuccess = jest.fn();
+
+    Storage.insertResumable(storageObject, {}, onError, onProgress, onSuccess);
+
+    setTimeout(() => {
+      expect(onError).not.toHaveBeenCalled();
+      expect(onProgress).toHaveBeenCalled();
+      expect(onSuccess).toHaveBeenCalled();
+      done();
+    }, 1000);
+  });
 });
