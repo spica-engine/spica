@@ -16,3 +16,13 @@ export interface BufferWithMeta {
   name: string;
   contentType: string;
 }
+
+export interface ResumableUploadOptions {
+  publicUrl: string;
+  authorization: string;
+  object: File | BufferWithMeta;
+  headers: Record<string, string>;
+  onError(error: Error): void;
+  onProgress(bytesUploaded: number, bytesTotal: number): void;
+  onSuccess(): void;
+}
