@@ -114,6 +114,6 @@ export default function getConfig(project, additionalCopyPaths = []) {
         }
       }
     ],
-    external: ["mongodb", "axios", "ws"]
+    external: ["mongodb", "axios", "ws", "tus-js-client"]
   };
 }
