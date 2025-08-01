@@ -5,10 +5,24 @@
   font-size: var(--font-size-md);
   font-weight: 400;
   border-bottom: none;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
   white-space: nowrap;
   max-width: 100%;
+  width: 100%;
+  border-spacing: 0;
+}
+
+.table td:not([class*="focusedCell"]),
+.table th {
+  border-bottom: none !important;
+  border-right: var(--border-default);
+  border-color: var(--color-input-placeholder);
+}
+
+.table > tbody > tr:nth-child(even) {
+  background-color: var(--color-zebra);
+}
+.table > tbody > tr:nth-child(odd) {
+  background-color: var(--color-soft-light);
 }
 
 .columnHeaderText {
@@ -16,6 +30,13 @@
   justify-content: normal !important;
   align-items: center;
   gap: var(--gap-md) !important;
+  > span {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    min-width: 50px;
+    width: min-content;
+  }
+  width: 80%;
 }
 
 .headerIcon {
@@ -24,6 +45,10 @@
 
 .newFieldHeaderIcon {
   color: var(--color-font-primary);
+}
+
+.newFieldHeader {
+  border-top-right-radius: var(--border-radius-md);
 }
 
 .multipleSelectionCell {
@@ -42,13 +67,15 @@
 }
 
 .columnHeader {
-  display: flex;
   justify-content: space-between !important;
-  padding-right: calc(var(--padding-xl) + var(--padding-md)) !important;
   background-color: var(--color-border);
 }
 
-.newFieldColumnHeader {
+.columnHeader:first-child {
+  border-right: none;
+}
+
+.newFieldColumnButton {
   padding-left: 0;
   background-color: var(--color-border);
   font-weight: 600;
@@ -87,21 +114,9 @@
   margin-top: -2px;
 }
 
-.newFieldColumn {
-  flex: 1;
-  position: relative;
-  max-width: 140px;
-  &:not(:last-child) {
-    border-right: none;
-  }
-}
-
 .selectColumn {
   min-width: 60px !important;
   flex: none !important;
-  &:not(:last-child) {
-    border-right: none;
-  }
 
   display: flex;
   flex-direction: column;
@@ -116,11 +131,9 @@
 }
 
 .selectCell {
-  width: 60px;
-}
-
-.evenCell {
-  background-color: var(--color-zebra);
+  border-bottom: var(--border-default) !important;
+  padding: var(--padding-md) !important;
+  border-right: none !important;
 }
 
 .locationCell {
@@ -136,7 +149,6 @@
   border-radius: var(--border-radius-md);
 }
 
-
 .fileCell {
   display: flex;
   align-items: center;
@@ -149,17 +161,14 @@
   }
 }
 
-.column {
-  border-right-color: var(--color-input-placeholder) !important;
-}
+.newFieldColumn {
+  flex: 1;
+  position: relative;
+  max-width: 140px;
+  overflow-y: auto;
 
-.column > :nth-child(odd):not(:first-child) {
-  background-color: var(--color-zebra);
-}
-
-.column > :not(:nth-child(2)) {
-  .grayText {
-    display: none;
+  &:not(:last-child) {
+    border-right: none;
   }
 }
 
@@ -168,14 +177,18 @@
 }
 
 .defaultCell {
-  width: 100%;
   overflow: hidden;
   display: flex;
   justify-content: space-between;
+  height: 100%;
+  align-items: center;
 }
 
 .defaultCellData {
   width: 100%;
+  height: 100%;
   text-overflow: ellipsis;
   overflow: hidden;
+  align-items: center;
+  align-content: center;
 }

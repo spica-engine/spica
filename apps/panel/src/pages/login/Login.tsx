@@ -126,7 +126,7 @@ const Login = () => {
                   className: styles.formButtonContainer
                 }}
               >
-                <Icon size="sm" name={strategy.icon as IconName} />
+                <Icon size="sm" name={"help"} />
                 {strategy.title}
               </Button>
             ))}

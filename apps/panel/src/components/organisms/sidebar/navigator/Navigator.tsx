@@ -259,7 +259,7 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
           <NavigatorItem
             key={item?._id}
             label={item?.title}
-            prefix={{children: <Icon name={"help"} />}}
+            prefix={{children: <Icon name={"help"} />}} //item?.icon
             //prefixIcon={item?.icon}
             suffixIcons={[{name: "dragHorizontalVariant"}]}
             onClick={() => {
