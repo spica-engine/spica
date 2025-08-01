@@ -50,16 +50,15 @@ export default function Bucket() {
   return (
     <div className={styles.container}>
       <BucketActionBar />
-      {formattedColumns.length > 1 && (
-        <BucketTable
-          bucketId={bucketId as string}
-          columns={formattedColumns as ColumnType[]}
-          data={bucketData?.data ?? []}
-          onScrollEnd={handleScrollEnd}
-          totalDataLength={bucketData?.meta?.total ?? 0}
-          maxHeight="88vh"
-        />
-      )}
+      <BucketTable
+        bucketId={bucketId as string}
+        columns={formattedColumns as ColumnType[]}
+        data={bucketData?.data ?? []}
+        onScrollEnd={handleScrollEnd}
+        totalDataLength={bucketData?.meta?.total ?? 0}
+        maxHeight="88vh"
+        loading={!(formattedColumns.length > 1 && nextbucketDataQuery?.bucketId === bucketId)}
+      />
     </div>
   );
 }

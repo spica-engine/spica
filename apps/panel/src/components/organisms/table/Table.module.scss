@@ -1,12 +1,15 @@
 .container {
-  border-radius: var(--border-radius-md);
-  border: var(--border-default);
   overflow: auto;
   max-height: 86vh;
   width: 100%;
+  border-left: var(--border-default);
+  border-radius: var(--border-radius-md);
 }
 
 .table {
+  border-radius: var(--border-radius-md);
+  border: var(--border-default);
+  border-left: none;
   table-layout: fixed;
 }
 

@@ -2,6 +2,7 @@ import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useMemo} from "react";
+import Loader from "../../../components/atoms/loader/Loader";
 
 type FieldType =
   | "string"
@@ -40,6 +41,7 @@ type BucketTableProps = {
   totalDataLength: number;
   maxHeight?: string | number;
   bucketId: string;
+  loading: boolean;
 };
 
 type ColumnHeaderProps = {
@@ -170,7 +172,16 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
         </div>
       );
     case "relation":
-      return renderDefault();
+      return (
+        <div className={styles.defaultCell}>
+          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
+          {deletable && cellData && (
+            <Button variant="icon">
+              <Icon name="close" size="sm" />
+            </Button>
+          )}
+        </div>
+      );
     case "location":
       return (
         <div className={styles.locationCell}>
@@ -179,7 +190,16 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
         </div>
       );
     case "array":
-      return renderDefault();
+      return (
+        <div className={styles.defaultCell}>
+          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
+          {deletable && cellData && (
+            <Button variant="icon">
+              <Icon name="close" size="sm" />
+            </Button>
+          )}
+        </div>
+      );
     case "object":
       return (
         <div className={styles.defaultCell}>
@@ -276,7 +296,8 @@ const BucketTable = ({
   onScrollEnd,
   totalDataLength,
   maxHeight,
-  bucketId
+  bucketId,
+  loading
 }: BucketTableProps) => {
   const formattedColumns = useMemo(
     () => getFormattedColumns(columns, bucketId),
@@ -284,7 +305,9 @@ const BucketTable = ({
   );
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
   const formattedData = useMemo(() => formatDataRows(data, columnMap), [data, columnMap]);
-  return (
+  return loading ? (
+    <Loader />
+  ) : (
     <Table
       style={{maxHeight}}
       className={styles.table}

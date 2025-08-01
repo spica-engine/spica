@@ -5,8 +5,6 @@
   font-size: var(--font-size-md);
   font-weight: 400;
   border-bottom: none;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
   white-space: nowrap;
   max-width: 100%;
   width: 100%;
@@ -66,7 +64,6 @@
 
 .columnHeader {
   justify-content: space-between !important;
-  padding-right: calc(var(--padding-xl) + var(--padding-md)) !important;
   background-color: var(--color-border);
 }
 
@@ -185,4 +182,6 @@
   width: 100%;
   text-overflow: ellipsis;
   overflow: hidden;
+  display: flex;
+  align-items: center;
 }

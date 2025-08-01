@@ -114,12 +114,12 @@ const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataL
     if (!containerRef.current) return;
     const containerWidth = containerRef.current?.clientWidth ?? 0;
     // Making it just a little bit smaller than the container to prevent unnecessary horizontal scrolls
-    const formattedColumns = getFormattedColumns(containerWidth - 50, columns);
+    const formattedColumns = getFormattedColumns(containerWidth - 15, columns);
     setFormattedColumns(formattedColumns);
     setFocusedCell(null);
   }, [columns]);
 
-  const updateColumnWidth = useCallback((id: string, newWidth: number) => {
+  const handleColumnResize = useCallback((id: string, newWidth: number) => {
     setFormattedColumns(prevColumns =>
       prevColumns.map(col => (col.id === id ? {...col, width: `${newWidth}px`} : col))
     );
@@ -176,23 +176,12 @@ const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataL
     };
   }, [focusedCell]);
 
-  const HeaderRow = useMemo(
-    () =>
-      formattedColumns.map(col => (
-        <HeaderCell
-          onResize={newWidth => updateColumnWidth(col.id, Math.max(newWidth, MIN_COLUMN_WIDTH))}
-          key={col.id}
-          className={`${col.headerClassName} ${col.fixed ? styles.fixedCell : ""}`}
-          resizable={col.resizable === undefined ? true : col.resizable}
-          width={col.width}
-          leftOffset={col.leftOffset}
-          tableRef={containerRef}
-        >
-          {col.header}
-        </HeaderCell>
-      )),
-    [formattedColumns, updateColumnWidth, containerRef]
-  );
+  // Calculate total table width to ensure fixed layout works properly
+  const totalTableWidth = useMemo(() => {
+    return formattedColumns.reduce((total, col) => {
+      return total + parseWidth(col.width || "0", 0);
+    }, 0);
+  }, [formattedColumns]);
 
   return (
     <>
@@ -211,10 +200,18 @@ const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataL
           scrollableTarget="scrollableDiv"
           className={styles.infiniteScroll}
         >
-          <table className={`${styles.table} ${className}`} style={style}>
-            <thead>
-              <tr>{HeaderRow}</tr>
-            </thead>
+          <table
+            className={`${styles.table} ${className}`}
+            style={{
+              ...style,
+              width: `${totalTableWidth}px`,
+              minWidth: `${totalTableWidth}px`
+            }}
+          >
+            <TableHeader
+              formattedColumns={formattedColumns}
+              onColumnResize={handleColumnResize}
+            />
             <tbody>
               {formattedColumns.length > 0 && (
                 <Rows
@@ -232,6 +229,115 @@ const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataL
     </>
   );
 };
+
+type TableHeaderProps = {
+  formattedColumns: TypeDataColumn[];
+  onColumnResize: (id: string, newWidth: number) => void;
+};
+
+const TableHeader = memo(({formattedColumns, onColumnResize}: TableHeaderProps) => {
+  const updateColumnWidth = useCallback(
+    (id: string, newWidth: number) => {
+      onColumnResize(id, Math.max(newWidth, MIN_COLUMN_WIDTH));
+    },
+    [onColumnResize]
+  );
+
+  const colElements = useMemo(
+    () =>
+      formattedColumns.map(col => (
+        <col
+          id={col.id}
+          key={col.id}
+          style={{width: col.width, minWidth: col.width, maxWidth: col.width}}
+        />
+      )),
+    [formattedColumns]
+  );
+
+  const headerCells = useMemo(
+    () =>
+      formattedColumns.map(col => (
+        <HeaderCell
+          onResize={newWidth => updateColumnWidth(col.id, newWidth)}
+          key={col.id}
+          className={`${col.headerClassName} ${col.fixed ? styles.fixedCell : ""}`}
+          resizable={col.resizable === undefined ? true : col.resizable}
+          leftOffset={col.leftOffset}
+        >
+          {col.header}
+        </HeaderCell>
+      )),
+    [formattedColumns, updateColumnWidth]
+  );
+
+  return (
+    <>
+      <colgroup>{colElements}</colgroup>
+      <thead>
+        <tr>{headerCells}</tr>
+      </thead>
+    </>
+  );
+});
+
+type TypeHeaderCell = {
+  className?: string;
+  children: ReactNode;
+  onResize: (newWidth: number) => void;
+  resizable?: boolean;
+  leftOffset?: number;
+};
+
+const HeaderCell = memo(
+  ({className, children, onResize, resizable, leftOffset}: TypeHeaderCell) => {
+    const headerRef = useRef<HTMLTableCellElement | null>(null);
+    const startX = useRef(0);
+    const startWidth = useRef(0);
+
+    function onMouseDown(e: MouseEvent) {
+      if (!headerRef.current || !resizable) return;
+      startX.current = e.clientX;
+      startWidth.current = headerRef.current?.getBoundingClientRect().width;
+
+      function onMouseMove(e: MouseEvent) {
+        if (!resizable) return;
+        const newWidth = Math.max(
+          MIN_COLUMN_WIDTH,
+          startWidth.current + (e.clientX - startX.current)
+        );
+        onResize(newWidth);
+      }
+
+      function onMouseUp() {
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+      }
+
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    }
+
+    return (
+      <th
+        ref={headerRef}
+        scope="col"
+        className={`${styles.header} ${className || ""}`}
+        style={{left: leftOffset}}
+      >
+        <FlexElement dimensionX="fill" alignment="leftCenter" className={styles.headerContent}>
+          {children}
+        </FlexElement>
+        {resizable && (
+          <div
+            onMouseDown={e => onMouseDown(e as unknown as MouseEvent)}
+            className={styles.resizer}
+          />
+        )}
+      </th>
+    );
+  }
+);
 
 type RowsProps = {
   formattedColumns: TypeDataColumn[];
@@ -295,82 +401,6 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
 
   return <>{rows}</>;
 });
-
-type TypeHeaderCell = {
-  className?: string;
-  children: ReactNode;
-  width?: string | number;
-  onResize: (newWidth: number) => void;
-  resizable?: boolean;
-  leftOffset?: number;
-  tableRef: RefObject<HTMLElement | null>;
-};
-
-const HeaderCell = memo(
-  ({className, children, width, onResize, resizable, leftOffset, tableRef}: TypeHeaderCell) => {
-    const containerRef = useRef<HTMLTableCellElement | null>(null);
-    const resizerRef = useRef<HTMLDivElement | null>(null);
-    const startX = useRef(0);
-    const startWidth = useRef(0);
-
-    function onMouseDown(e: MouseEvent) {
-      if (!containerRef.current || !resizable) return;
-      startX.current = e.clientX;
-      startWidth.current = containerRef.current?.getBoundingClientRect().width;
-
-      function onMouseMove(e: MouseEvent) {
-        if (!resizable) return;
-        const newWidth = startWidth.current + (e.clientX - startX.current);
-        onResize(newWidth);
-      }
-
-      function onMouseUp() {
-        window.removeEventListener("mousemove", onMouseMove);
-        window.removeEventListener("mouseup", onMouseUp);
-      }
-
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("mouseup", onMouseUp);
-    }
-
-    useEffect(() => {
-      const table = tableRef.current;
-      if (!table) return;
-
-      const observer = new ResizeObserver(() => {
-        if (resizerRef.current) {
-          resizerRef.current.style.height = `${table.clientHeight}px`;
-        }
-      });
-
-      observer.observe(table);
-
-      return () => {
-        observer.disconnect();
-      };
-    }, [tableRef]);
-
-    return (
-      <th
-        ref={containerRef}
-        scope="col"
-        className={`${styles.header} ${className || ""}`}
-        style={{width, minWidth: width, maxWidth: width, left: leftOffset}}
-      >
-        <FlexElement dimensionX="fill" alignment="leftCenter" className={styles.headerContent}>
-          {children}
-        </FlexElement>
-        {resizable && (
-          <div
-            ref={resizerRef}
-            onMouseDown={e => onMouseDown(e as unknown as MouseEvent)}
-            className={styles.resizer}
-          />
-        )}
-      </th>
-    );
-  }
-);
 
 type TypeCell = React.HTMLAttributes<HTMLDivElement> & {
   focused?: boolean;
