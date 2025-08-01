@@ -55,7 +55,7 @@ describe("Storage Acceptance", () => {
           defaultPublicUrl: "http://insteadof",
           strategy: "default",
           objectSizeLimit: 0.1,
-          resumableUploadExpiresIn: 0
+          resumableUploadExpiresIn: 1000 * 60 // 1 minute
         })
       ]
     }).compile();
@@ -830,6 +830,152 @@ describe("Storage Acceptance", () => {
 
       expect(resBody).toBe("new data");
       expect(prevETag).not.toBe(ETag);
+    });
+  });
+
+  describe("resumable upload", () => {
+    it("should return upload url", async () => {
+      const res = await req.post("/storage/resumable", undefined, {
+        "Tus-Resumable": "1.0.0",
+        "Upload-Length": "100"
+      });
+
+      expect(res.statusCode).toBe(201);
+      expect(res.headers["location"]).toBeDefined();
+    });
+
+    it("should upload and rename", async () => {
+      const content = Buffer.from("new data");
+      const object = {
+        name: "file.txt",
+        content: {
+          data: new Binary(content),
+          type: "text/plain"
+        }
+      };
+
+      const actualSize = content.byteLength;
+
+      const postRes = await req.post("/storage/resumable", undefined, {
+        "Tus-Resumable": "1.0.0",
+        "Upload-Length": String(actualSize),
+        "Upload-Metadata": `filename ${Buffer.from(object.name).toString("base64")}`
+      });
+
+      expect(postRes.statusCode).toBe(201);
+      expect(postRes.headers["location"]).toBeDefined();
+
+      const fileId = postRes.headers["location"].split("/").at(-1);
+      const url = `/storage/resumable/${fileId}`;
+
+      const res = await req.patch(url, content, {
+        "Tus-Resumable": "1.0.0",
+        "Upload-Offset": "0",
+        "Content-Type": "application/offset+octet-stream"
+      });
+
+      expect(res.statusCode).toBe(204);
+      expect(res.headers["upload-offset"]).toBe(String(actualSize));
+
+      // Wait until the object is added to the database
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const {body} = await req.get("/storage");
+      const uploadedObject = body.at(-1);
+      expect(uploadedObject.name).toBe(object.name);
+
+      const {body: obj} = await req.get(`/storage/${uploadedObject._id}/view`);
+      expect(obj).toBe("new data");
+    });
+
+    it("should resume upload if it was interrupted", async () => {
+      const object = {
+        name: "file.txt",
+        content: {
+          data: new Binary(Buffer.alloc(10, "f")),
+          type: "text/plain"
+        }
+      };
+
+      const serializedData = serialize({content: object});
+      const actualSize = Buffer.byteLength(serializedData);
+
+      const postRes = await req.post("/storage/resumable", undefined, {
+        "Tus-Resumable": "1.0.0",
+        "Upload-Length": String(actualSize),
+        "Upload-Metadata": `filename ${Buffer.from(object.name).toString("base64")}`
+      });
+
+      const fileId = postRes.headers["location"].split("/").at(-1);
+      const url = `/storage/resumable/${fileId}`;
+
+      // Simulate an interruption
+      const res = await req.patch(url, serializedData.slice(0, 5), {
+        "Tus-Resumable": "1.0.0",
+        "Upload-Offset": "0",
+        "Content-Type": "application/offset+octet-stream"
+      });
+
+      expect(res.statusCode).toBe(204);
+      expect(res.headers["upload-offset"]).toBe("5");
+
+      // Resume the upload
+      const resumeRes = await req.patch(url, serializedData.slice(5), {
+        "Tus-Resumable": "1.0.0",
+        "Upload-Offset": "5",
+        "Content-Type": "application/offset+octet-stream"
+      });
+
+      expect(resumeRes.statusCode).toBe(204);
+      expect(resumeRes.headers["upload-offset"]).toBe(String(actualSize));
+
+      // Wait until the object is added to the database
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const {body} = await req.get("/storage");
+      const uploadedObject = body.at(-1);
+      expect(uploadedObject.name).toBe(object.name);
+    });
+
+    it("should remove expired upload", async () => {
+      const object = {
+        name: "file.txt",
+        content: {
+          data: new Binary(Buffer.alloc(10, "f")),
+          type: "text/plain"
+        }
+      };
+
+      const serializedData = serialize({content: object});
+      const actualSize = Buffer.byteLength(serializedData);
+
+      const postRes = await req.post("/storage/resumable", undefined, {
+        "Tus-Resumable": "1.0.0",
+        "Upload-Length": String(actualSize),
+        "Upload-Metadata": `filename ${Buffer.from(object.name).toString("base64")}`
+      });
+
+      const fileId = postRes.headers["location"].split("/").at(-1);
+      const url = `/storage/resumable/${fileId}`;
+
+      // Simulate an interruption
+      const res = await req.patch(url, serializedData.slice(0, 5), {
+        "Tus-Resumable": "1.0.0",
+        "Upload-Offset": "0",
+        "Content-Type": "application/offset+octet-stream"
+      });
+
+      expect(res.statusCode).toBe(204);
+      expect(res.headers["upload-offset"]).toBe("5");
+
+      jest.useFakeTimers();
+      jest.advanceTimersByTime(1000 * 60 + 1000); // Advance time to expire the upload
+
+      const expiredRes = await req.get(url, {}, {"Tus-Resumable": "1.0.0"});
+
+      jest.useRealTimers();
+
+      expect(expiredRes.statusCode).toBe(404);
     });
   });
 });
