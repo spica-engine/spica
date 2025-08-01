@@ -30,6 +30,7 @@ type BucketContextType = {
   getCurrentBucket: (bucketId: string) => Promise<any>;
   currentBucketLoading: boolean;
   currentBucketError: string | null;
+  changeReadOnly: (bucket: BucketType) => Promise<any>;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -47,7 +48,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     getCurrentBucket,
     changeBucketOrder,
     bucketOrderLoading,
-    bucketOrderError
+    bucketOrderError,
+    changeBucketReadOnly
   } = useBucketService();
   const [buckets, setBuckets] = useState<BucketType[]>(data ?? []);
 
@@ -86,6 +88,15 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [deleteBucketRequest]
   );
 
+  const changeReadOnly = useCallback(async (bucket: BucketType) => {
+    const previousBuckets = buckets;
+    setBuckets(prev => (prev ? prev.map(i => ({...i, readOnly: !i.readOnly})) : []));
+    const success = await changeBucketReadOnly(bucket);
+    if (!success) {
+      setBuckets(previousBuckets);
+    }
+  }, [buckets]);
+
   const contextValue = useMemo(
     () => ({
       buckets,
@@ -102,7 +113,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       currentBucket,
       getCurrentBucket,
       currentBucketLoading,
-      currentBucketError
+      currentBucketError,
+      changeReadOnly
     }),
     [
       buckets,

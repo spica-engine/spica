@@ -134,6 +134,16 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     });
   }, []);
 
+  const changeBucketReadOnly = useCallback(async (bucket: BucketType) => {
+    return await patchRequest({
+      endpoint: `/api/bucket/${bucket._id}`,
+      body: {
+        ...bucket,
+        readOnly: !bucket.readOnly
+      }
+    });
+  }, []);
+
   return {
     buckets,
     fetchBuckets,
@@ -147,6 +157,7 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
-    deleteBucketRequest
+    deleteBucketRequest,
+    changeBucketReadOnly
   };
 };

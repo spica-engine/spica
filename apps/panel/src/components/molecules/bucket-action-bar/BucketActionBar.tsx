@@ -1,8 +1,16 @@
 import React, {memo} from "react";
 import styles from "./BucketActionBar.module.scss";
-import {Button, FlexElement, Icon, InputWithIcon} from "oziko-ui-kit";
+import {Button, FlexElement, Icon} from "oziko-ui-kit";
 import SearchBar from "../../../components/atoms/search-bar/SearchBar";
-const BucketActionBar = () => {
+import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
+import type {BucketType} from "src/services/bucketService";
+
+type BucketActionBarProps = {
+  bucket: BucketType;
+};
+
+const BucketActionBar = ({bucket}: BucketActionBarProps) => {
+
   return (
     <div className={styles.container}>
       <SearchBar />
@@ -19,10 +27,7 @@ const BucketActionBar = () => {
           <Icon name="eye" />
           Column
         </Button>
-        <Button color="default" onClick={() => {}}>
-          <Icon name="dotsVertical" />
-          More
-        </Button>
+        <BucketMorePopup bucket={bucket} />
       </FlexElement>
     </div>
   );
