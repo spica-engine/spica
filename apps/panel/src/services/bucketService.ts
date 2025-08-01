@@ -134,6 +134,21 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     });
   }, []);
 
+  const {request: bucketLimitationRequest} = useApi({
+    endpoint: "",
+    method: "patch"
+  });
+
+  const changeBucketLimitation = useCallback(
+    async (bucketId: string, body: Record<string, any>) => {
+      return await bucketLimitationRequest({
+        endpoint: `/api/bucket/${bucketId}`,
+        body
+      });
+    },
+    []
+  );
+
   return {
     buckets,
     fetchBuckets,
@@ -147,6 +162,7 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
-    deleteBucketRequest
+    deleteBucketRequest,
+    changeBucketLimitation
   };
 };

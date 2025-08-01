@@ -30,6 +30,7 @@ type BucketContextType = {
   getCurrentBucket: (bucketId: string) => Promise<any>;
   currentBucketLoading: boolean;
   currentBucketError: string | null;
+  changeLimitation: (bucket: BucketType) => Promise<any>;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -47,7 +48,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     getCurrentBucket,
     changeBucketOrder,
     bucketOrderLoading,
-    bucketOrderError
+    bucketOrderError,
+    changeBucketLimitation
   } = useBucketService();
   const [buckets, setBuckets] = useState<BucketType[]>(data ?? []);
 
@@ -63,6 +65,30 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     },
     [requestCategoryChange]
   );
+
+  const changeLimitation = useCallback(async (bucket: BucketType) => {
+    const hasSettings = Boolean(bucket.documentSettings);
+    const modifiedBucket: BucketType = hasSettings
+      ? (({documentSettings, ...rest}) => rest)(bucket)
+      : {
+          ...bucket,
+          documentSettings: {
+            countLimit: 100,
+            limitExceedBehaviour: "prevent"
+          }
+        };
+
+    let previousBuckets: BucketType[] = [];
+    setBuckets(prev => {
+      previousBuckets = prev ?? [];
+      return (prev ?? []).map(b => (b._id === bucket._id ? modifiedBucket : b));
+    });
+
+    const success = await changeBucketLimitation(bucket._id, modifiedBucket);
+    if (!success) {
+      setBuckets(previousBuckets);
+    }
+  }, []);
 
   const categories = useMemo(() => {
     if (!buckets) return [];
@@ -102,7 +128,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       currentBucket,
       getCurrentBucket,
       currentBucketLoading,
-      currentBucketError
+      currentBucketError,
+      changeLimitation
     }),
     [
       buckets,
