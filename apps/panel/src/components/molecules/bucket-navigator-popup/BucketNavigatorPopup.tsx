@@ -41,12 +41,8 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
   const handleDeleteBucket = async () => {
-    try {
-      await deleteBucket(bucket._id);
-      setIsConfirmationOpen(false);
-    } catch (err) {
-      console.error(err);
-    }
+    deleteBucket(bucket._id);
+    setIsConfirmationOpen(false);
   };
 
   const handleOpenCategorySelectCreate = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {

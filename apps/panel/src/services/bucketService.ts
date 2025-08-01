@@ -133,7 +133,7 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
       const body = {...bucket, title: newTitle};
       delete (body as unknown as {section: any}).section;
       delete (body as unknown as {index: any}).index;
-      await requestNameChange({body, endpoint: `/api/bucket/${bucket._id}`});
+      return await requestNameChange({body, endpoint: `/api/bucket/${bucket._id}`});
     } catch (err) {
       console.error(err);
     }
