@@ -107,7 +107,7 @@ const defaultColumns: ColumnType[] = [
     header: (
       <Button
         variant="icon"
-        className={`${styles.columnHeaderText} ${styles.newFieldColumnHeader}`}
+        className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
       >
         <Icon name={"plus"} size="sm" className={styles.newFieldHeaderIcon} />
         <span>New&nbsp;Field</span>
@@ -115,7 +115,7 @@ const defaultColumns: ColumnType[] = [
     ),
     key: "new field",
     width: "125px",
-    headerClassName: styles.columnHeader,
+    headerClassName: `${styles.columnHeader} ${styles.newFieldHeader}`,
     cellClassName: styles.newFieldCell,
     resizable: false,
     selectable: false

@@ -47,6 +47,10 @@
   color: var(--color-font-primary);
 }
 
+.newFieldHeader {
+  border-top-right-radius: var(--border-radius-md);
+}
+
 .multipleSelectionCell {
   display: flex;
   gap: var(--gap-md);
@@ -71,7 +75,7 @@
   border-right: none;
 }
 
-.newFieldColumnHeader {
+.newFieldColumnButton {
   padding-left: 0;
   background-color: var(--color-border);
   font-weight: 600;
@@ -176,12 +180,15 @@
   overflow: hidden;
   display: flex;
   justify-content: space-between;
+  height: 100%;
+  align-items: center;
 }
 
 .defaultCellData {
   width: 100%;
+  height: 100%;
   text-overflow: ellipsis;
   overflow: hidden;
-  display: flex;
   align-items: center;
+  align-content: center;
 }
