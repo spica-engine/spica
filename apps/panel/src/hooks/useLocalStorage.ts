@@ -1,6 +1,6 @@
 import {useState, useEffect} from "react";
 
-function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
+function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void, () => void] {
   const readValue = (): T => {
     if (typeof window === "undefined") return initialValue;
     try {
@@ -45,7 +45,12 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => voi
     };
   }, [key]);
 
-  return [storedValue, setValue];
+  const deleteValue = () => {
+    window.localStorage.removeItem(key);
+    window.dispatchEvent(new CustomEvent("local-storage-update", {detail: {key}}));
+  };
+
+  return [storedValue, setValue, deleteValue];
 }
 
 export default useLocalStorage;

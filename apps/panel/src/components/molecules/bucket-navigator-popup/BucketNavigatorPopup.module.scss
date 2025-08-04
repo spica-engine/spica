@@ -10,6 +10,7 @@
 
 .popoverContainer {
   padding: 0 !important;
+  z-index: 3;
   .popoverContent {
     padding: var(--padding-md) 0;
     gap: 0 !important;
@@ -22,7 +23,7 @@
       align-items: center;
       justify-content: center;
       line-height: unset;
-      >div>div {
+      > div > div {
         gap: var(--gap-md) !important;
       }
     }
@@ -35,4 +36,8 @@
       color: var(--color-danger);
     }
   }
+}
+
+.confirmText {
+  margin-top: 0;
 }

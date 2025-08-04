@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {Outlet} from "react-router-dom";
-import SideBar from "../components/organisms/sidebar/SideBar";
+import SideBar, {type ReorderableItemGroup} from "../components/organisms/sidebar/SideBar";
 import {menuItems, navigatorItems} from "../pages/home/mock";
 import styles from "./Layout.module.scss";
 import {Drawer} from "oziko-ui-kit";
@@ -9,12 +9,35 @@ import useLocalStorage from "../hooks/useLocalStorage";
 import {jwtDecode} from "jwt-decode";
 import type {AuthTokenJWTPayload} from "src/types/auth";
 import {useBucket} from "../contexts/BucketContext";
+import {useRequestTracker} from "../hooks/useRequestTracker";
 
 const Layout = () => {
   const [token] = useLocalStorage<string>("token", "");
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const {fetchBuckets} = useBucket();
+  const {buckets, setBuckets, fetchBuckets, changeBucketOrder} = useBucket();
+
+  const mergedNavigatorItems: {
+    [key: string]: ReorderableItemGroup;
+  } = {
+    ...Object.fromEntries(
+      Object.entries(navigatorItems).map(([key, value]) => [
+        key,
+        {items: value ?? [], setter: () => {}}
+      ])
+    ),
+    bucket: {
+      items: buckets?.map(i => ({...i, section: "bucket"})) ?? [],
+      onOrderChange: (from, to) =>
+        setBuckets(prev => {
+          const updated = [...prev];
+          const [moved] = updated.splice(from, 1);
+          updated.splice(to, 0, moved);
+          return updated;
+        }),
+      completeOrderChange: changeBucketOrder
+    }
+  };
 
   const closeDrawer = () => setIsDrawerOpen(false);
   const openDrawer = () => setIsDrawerOpen(true);
@@ -30,21 +53,29 @@ const Layout = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, [isDrawerOpen]);
 
+  useRequestTracker();
+
   const name = useMemo(() => {
     if (!token || !token.length) return "";
-    const decoded = jwtDecode<AuthTokenJWTPayload>(token);
-    return decoded.identifier;
+    try {
+      const decoded = jwtDecode<AuthTokenJWTPayload>(token);
+      return decoded.identifier;
+    } catch (err) {
+      console.error(err);
+      return "";
+    }
   }, [token]);
 
   useEffect(() => {
     fetchBuckets();
   }, []);
 
+
   const sideBarElement = (
     <div className={styles.sidebar}>
       <SideBar
         menuItems={menuItems}
-        navigatorItems={navigatorItems}
+        navigatorItems={mergedNavigatorItems}
         onNavigatorToggle={setNavigatorOpen}
       />
     </div>
@@ -60,7 +91,7 @@ const Layout = () => {
     >
       <SideBar
         menuItems={menuItems}
-        navigatorItems={navigatorItems}
+        navigatorItems={mergedNavigatorItems}
         onNavigatorToggle={setNavigatorOpen}
         displayToggleIcon={false}
       />
@@ -70,6 +101,7 @@ const Layout = () => {
   return (
     <div className={styles.layout}>
       {isDrawerOpen && drawerSidebar}
+
       <div
         className={`${styles.sidebar} ${
           navigatorOpen ? styles.navigatorOpen : styles.navigatorClosed

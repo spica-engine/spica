@@ -1,5 +1,14 @@
+import {useCallback, useState} from "react";
 import useApi from "../hooks/useApi";
-import {useEffect, useMemo} from "react";
+
+export type BucketDataType = {
+  data: {[key: string]: any}[];
+  meta: {
+    total: number;
+  };
+};
+
+export type BucketDataWithIdType = BucketDataType & {bucketId: string};
 
 export type BucketType = {
   _id: string;
@@ -52,16 +61,20 @@ interface LocationProperty extends IProperty {
   type: "location";
 }
 
-interface UseBucketServiceOptions {
-  currentBucketQuery?: {
-    paginate?: boolean;
-    relation?: boolean;
-    limit?: number;
-    sort?: Record<string, number>;
-  };
-}
+export type BucketDataQueryType = {
+  paginate?: boolean;
+  relation?: boolean;
+  limit?: number;
+  sort?: Record<string, number>;
+  skip?: number;
+};
 
-export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions = {}) => {
+export type BucketDataQueryWithIdType = BucketDataQueryType & {bucketId: string};
+
+export const useBucketService = () => {
+  const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
+    useState<BucketDataQueryWithIdType | null>(null);
+
   const {
     request: fetchBuckets,
     data: buckets,
@@ -72,48 +85,95 @@ export const useBucketService = ({currentBucketQuery}: UseBucketServiceOptions =
     method: "get"
   });
 
-  const currentBucketQueryString = useMemo(() => {
-    const defaultParams: Record<string, any> = {
-      paginate: true,
-      relation: true,
-      limit: 25,
-      sort: JSON.stringify({_id: -1})
-    };
-
-    const params = currentBucketQuery
-      ? {
-          ...currentBucketQuery,
-          sort: currentBucketQuery.sort ? JSON.stringify(currentBucketQuery.sort) : undefined
-        }
-      : defaultParams;
-
-    return new URLSearchParams(params).toString();
-  }, [currentBucketQuery]);
-
   const {
-    request: fetchCurrentBucket,
-    data: currentBucket,
-    loading: currentBucketLoading,
-    error: currentBucketError
-  } = useApi<BucketType>({
+    request: fetchBucketData,
+    data: bucketData,
+  } = useApi<BucketDataType>({
     endpoint: "",
     method: "get"
   });
 
-  const getCurrentBucket = (bucketId: string) => {
-    return fetchCurrentBucket({
-      endpoint: `/api/bucket/${bucketId}/data?${currentBucketQueryString}`
+  const getBucketData = useCallback(
+    (bucketId: string, query?: BucketDataQueryType) => {
+      const defaultParams: Omit<BucketDataQueryType, "sort"> & {sort: string} = {
+        paginate: true,
+        relation: true,
+        limit: 25,
+        sort: JSON.stringify({_id: -1})
+      };
+
+      let params = query
+        ? {
+            ...defaultParams,
+            ...query,
+            sort: query.sort ? JSON.stringify(query.sort) : defaultParams.sort
+          }
+        : {...defaultParams};
+
+      if (!params.sort || Object.keys(JSON.parse(params.sort)).length === 0) {
+        const {sort, ...rest} = params;
+        params = rest as typeof params;
+      }
+
+      const queryString = new URLSearchParams(
+        params as unknown as Record<string, string>
+      ).toString();
+
+      return fetchBucketData({
+        endpoint: `/api/bucket/${bucketId}/data?${queryString}`
+      }).then(result => {
+        if (!result) return;
+        setLastUsedBucketDataQuery(
+          query ? {...query, bucketId} : {...defaultParams, sort: {_id: -1}, bucketId}
+        );
+        return result;
+      });
+    },
+    [fetchBucketData]
+  );
+
+  const {request: patchRequest} = useApi({endpoint: "/api/bucket", method: "patch"});
+
+  const requestCategoryChange = useCallback((bucketId: string, category: string) => {
+    return patchRequest({body: {category}, endpoint: `/api/bucket/${bucketId}`});
+  }, []);
+
+  const {
+    request: bucketOrderRequest,
+    loading: bucketOrderLoading,
+    error: bucketOrderError
+  } = useApi({endpoint: "", method: "patch"});
+
+  const changeBucketOrder = useCallback(
+    (bucketId: string, order: number) => {
+      return bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
+    },
+    [bucketOrderRequest]
+  );
+
+  const {request: deleteRequest} = useApi({
+    endpoint: "",
+    method: "delete"
+  });
+
+  const deleteBucketRequest = useCallback((bucketId: string) => {
+    return deleteRequest({
+      endpoint: `/api/bucket/${bucketId}`
     });
-  };
+  }, []);
 
   return {
-    buckets,
-    fetchBuckets,
-    error,
     loading,
-    currentBucket,
-    getCurrentBucket,
-    currentBucketLoading,
-    currentBucketError
+    error,
+    fetchBuckets,
+    bucketData,
+    getBucketData,
+    lastUsedBucketDataQuery,
+    requestCategoryChange,
+    changeBucketOrder,
+    bucketOrderLoading,
+    bucketOrderError,
+    buckets,
+    deleteBucketRequest
   };
 };
