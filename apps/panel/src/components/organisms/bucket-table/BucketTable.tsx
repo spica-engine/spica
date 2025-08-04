@@ -297,9 +297,9 @@ const BucketTable = ({
   onScrollEnd,
   totalDataLength,
   maxHeight,
-  bucketId,
-  loading
-, bucketId}: BucketTableProps) => {
+  loading,
+  bucketId
+}: BucketTableProps) => {
   const defaultVisibleColumns = useMemo(
     () => Object.fromEntries(columns.map(col => [col.key, true])),
     []
