@@ -10,6 +10,7 @@
 
 .popoverContainer {
   padding: 0 !important;
+  z-index: 3;
   .popoverContent {
     padding: var(--padding-md) 0;
     gap: 0 !important;
