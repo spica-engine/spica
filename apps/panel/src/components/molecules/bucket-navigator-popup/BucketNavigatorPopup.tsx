@@ -186,13 +186,6 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
           onSubmit={handleChangeBucketName}
         />
       )}
-      {titleFormOpen && (
-        <TitleForm
-          initialValue={bucket.title}
-          onClose={() => setTitleFormOpen(false)}
-          onSubmit={handleChangeBucketName}
-        />
-      )}
     </div>
   );
 };
