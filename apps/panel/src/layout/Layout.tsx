@@ -9,6 +9,7 @@ import useLocalStorage from "../hooks/useLocalStorage";
 import {jwtDecode} from "jwt-decode";
 import type {AuthTokenJWTPayload} from "src/types/auth";
 import {useBucket} from "../contexts/BucketContext";
+import {useRequestTracker} from "../hooks/useRequestTracker";
 
 const Layout = () => {
   const [token] = useLocalStorage<string>("token", "");
@@ -52,15 +53,23 @@ const Layout = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, [isDrawerOpen]);
 
+  useRequestTracker();
+
   const name = useMemo(() => {
     if (!token || !token.length) return "";
-    const decoded = jwtDecode<AuthTokenJWTPayload>(token);
-    return decoded.identifier;
+    try {
+      const decoded = jwtDecode<AuthTokenJWTPayload>(token);
+      return decoded.identifier;
+    } catch (err) {
+      console.error(err);
+      return "";
+    }
   }, [token]);
 
   useEffect(() => {
     fetchBuckets();
   }, []);
+
 
   const sideBarElement = (
     <div className={styles.sidebar}>
@@ -92,6 +101,7 @@ const Layout = () => {
   return (
     <div className={styles.layout}>
       {isDrawerOpen && drawerSidebar}
+
       <div
         className={`${styles.sidebar} ${
           navigatorOpen ? styles.navigatorOpen : styles.navigatorClosed
