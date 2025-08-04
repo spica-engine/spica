@@ -88,12 +88,13 @@ export const useBucketService = () => {
   const {
     request: fetchBucketData,
     data: bucketData,
+    loading: bucketDataLoading
   } = useApi<BucketDataType>({
     endpoint: "",
     method: "get"
   });
 
-  const getBucketData = useCallback(
+  const requestBucketData = useCallback(
     (bucketId: string, query?: BucketDataQueryType) => {
       const defaultParams: Omit<BucketDataQueryType, "sort"> & {sort: string} = {
         paginate: true,
@@ -167,13 +168,14 @@ export const useBucketService = () => {
     error,
     fetchBuckets,
     bucketData,
-    getBucketData,
+    requestBucketData,
     lastUsedBucketDataQuery,
     requestCategoryChange,
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
     buckets,
-    deleteBucketRequest
+    deleteBucketRequest,
+    bucketDataLoading
   };
 };

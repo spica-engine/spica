@@ -34,8 +34,13 @@ type BucketContextType = {
   bucketOrderLoading: boolean;
   bucketOrderError: string | null;
   bucketData: BucketDataType | null;
-  getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
+  getBucketData: (
+    bucketId: string,
+    query?: BucketDataQueryType,
+    restart?: boolean
+  ) => Promise<BucketDataType>;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
+  bucketDataLoading: boolean;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -46,13 +51,14 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     error,
     fetchBuckets,
     bucketData: fetchedBucketData,
-    getBucketData,
+    requestBucketData,
     lastUsedBucketDataQuery,
     requestCategoryChange,
     deleteBucketRequest,
     changeBucketOrder,
     bucketOrderLoading,
-    bucketOrderError
+    bucketOrderError,
+    bucketDataLoading
   } = useBucketService();
   const [bucketData, setBucketData] = useState<BucketDataWithIdType>({
     ...fetchedBucketData,
@@ -129,6 +135,23 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [deleteBucketRequest]
   );
 
+  const getBucketData = useCallback(
+    async (bucketId: string, query?: BucketDataQueryType, restart = false) => {
+      try {
+        if (restart) {
+          setBucketData({
+            data: []
+          } as any);
+        }
+        const result = await requestBucketData(bucketId, query);
+        return result;
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    []
+  );
+
   const contextValue = useMemo(
     () => ({
       buckets,
@@ -144,16 +167,10 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketOrderError,
       bucketData,
       getBucketData,
-      nextbucketDataQuery
+      nextbucketDataQuery,
+      bucketDataLoading
     }),
-    [
-      buckets,
-      loading,
-      error,
-      fetchBuckets,
-      categories,
-      bucketData
-    ]
+    [buckets, loading, error, fetchBuckets, categories, bucketData]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;
