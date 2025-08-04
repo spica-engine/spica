@@ -29,7 +29,7 @@ const BucketActionBar = ({columns, visibleColumns, toggleColumn}: BucketActionBa
           }}
           content={
             <div>
-              {columns.map(col => (
+              {columns.slice(1).map(col => (
                 <Checkbox
                   key={col.key}
                   label={col.header}
