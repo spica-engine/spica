@@ -3,3 +3,9 @@
   width: 100%;
   @include mixins.flexAlignCenterJustifyBetween;
 }
+
+.columnsPopoverContent {
+  z-index: 4;
+  max-height: 400px;
+  overflow-y: auto;
+}

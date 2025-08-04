@@ -267,15 +267,14 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
   const allKeys = Object.keys(columnMap);
 
   return data.map(row => {
-    const fullRow = {
+    const fullRow: Record<string, any> = {
       select: "",
-      ...row,
       "new field": ""
     };
 
     allKeys.forEach(key => {
       if (!(key in fullRow)) {
-        fullRow[key] = "";
+        fullRow[key] = row[key];
       }
     });
 
@@ -300,26 +299,16 @@ const BucketTable = ({
   loading,
   bucketId
 }: BucketTableProps) => {
-  const defaultVisibleColumns = useMemo(
-    () => Object.fromEntries(columns.map(col => [col.key, true])),
-    []
-  );
-  const [visibleColumns] = useLocalStorage<{[key: string]: boolean}>(
-    `${bucketId}-visible-columns`,
-    defaultVisibleColumns
-  );
-
-  const filteredColumns = useMemo(
-    () => columns.filter(i => visibleColumns?.[i.key]),
-    [columns, visibleColumns]
-  );
-
   const formattedColumns = useMemo(
-    () => getFormattedColumns(filteredColumns, bucketId),
-    [filteredColumns, bucketId]
+    () => getFormattedColumns(columns, bucketId),
+    [columns, bucketId]
   );
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
-  const formattedData = useMemo(() => formatDataRows(data, columnMap), [data, columnMap]);
+  const formattedData = useMemo(
+    () => formatDataRows(data, columnMap),
+    [data, columnMap, columnMap.length]
+  );
+
   return loading ? (
     <Loader />
   ) : (

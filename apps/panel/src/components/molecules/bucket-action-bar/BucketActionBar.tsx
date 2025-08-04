@@ -1,28 +1,16 @@
-import React, {memo, useCallback, useMemo} from "react";
+import React, {memo} from "react";
 import styles from "./BucketActionBar.module.scss";
-import {Button, Checkbox, FlexElement, Icon, Popover} from "oziko-ui-kit";
+import {Button, FlexElement, Icon, Popover} from "oziko-ui-kit";
 import SearchBar from "../../../components/atoms/search-bar/SearchBar";
-import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
-import useLocalStorage from "../../../hooks/useLocalStorage";
+import Checkbox from "../../../components/atoms/checkbox/Checkbox";
+import type {ColumnType} from "src/components/organisms/bucket-table/BucketTable";
 
-const BucketActionBar = ({columns, bucketId}: {columns: ColumnType[]; bucketId: string}) => {
-  const defaultVisibleColumns = useMemo(
-    () => Object.fromEntries(columns.map(col => [col.key, true])),
-    []
-  );
-
-  const [visibleColumns, setVisibleColumns] = useLocalStorage(
-    `${bucketId}-visible-columns`,
-    defaultVisibleColumns
-  );
-
-  const toggleColumn = useCallback(
-    (key: string) => {
-      setVisibleColumns({...visibleColumns, [key]: !visibleColumns[key]});
-    },
-    [visibleColumns]
-  );
-
+type BucketActionBarProps = {
+  columns: ColumnType[];
+  visibleColumns: Record<string, boolean>;
+  toggleColumn: (key: string) => void;
+};
+const BucketActionBar = ({columns, visibleColumns, toggleColumn}: BucketActionBarProps) => {
   return (
     <div className={styles.container}>
       <SearchBar />
@@ -36,6 +24,9 @@ const BucketActionBar = ({columns, bucketId}: {columns: ColumnType[]; bucketId: 
           Refresh
         </Button>
         <Popover
+          contentProps={{
+            className: styles.columnsPopoverContent
+          }}
           content={
             <div>
               {columns.map(col => (
