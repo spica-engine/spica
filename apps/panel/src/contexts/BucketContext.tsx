@@ -90,9 +90,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
 
   const changeBucketName = useCallback(async (newTitle: string, bucket: BucketType) => {
     const oldBuckets = buckets;
-    console.log("oldBuckests", oldBuckets);
     requestBucketNameChange(newTitle, bucket).then(result => {
-      console.log("result: ", result);
       if (!result) setBuckets(oldBuckets);
     });
     setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
