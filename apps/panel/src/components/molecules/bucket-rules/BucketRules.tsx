@@ -148,47 +148,10 @@ function handleEditorWillMount(
   });
 }
 
-function handleEditerMounted(editor: monaco.editor.IStandaloneCodeEditor) {
-  const model = editor.getModel();
-  if (!model) {
-    console.error("error while getting model");
-    return;
-  }
-
-  let lastValue = model.getValue();
-  let isReverting = false;
-  const initialLineCount = model.getLineCount();
-
-  editor.onDidChangeModelContent(e => {
-    if (isReverting) return;
-    const change = e.changes[0];
-    const newLineCount = model.getLineCount();
-
-    const shouldBlock =
-      change.range.startLineNumber === 1 ||
-      change.range.startLineNumber >= 4 ||
-      (change.range.startLineNumber === 2 && change.range.startColumn <= 9) ||
-      (change.range.startLineNumber === 3 && change.range.startColumn <= 10) ||
-      newLineCount !== initialLineCount;
-
-    if (shouldBlock) {
-      const selection = editor.getSelection();
-      if (!selection) return;
-      isReverting = true;
-      model.setValue(lastValue);
-      editor.setSelection(selection);
-      isReverting = false;
-      return;
-    }
-
-    lastValue = model.getValue();
-  });
-}
-
 const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
   const {changeBucketRule, bucketRuleChangeLoading: loading} = useBucket();
   const [value, setValue] = useState<string>(`{ 
-    read: ${bucket.acl.read}
+    read: ${bucket.acl.read},
     write: ${bucket.acl.write}
 }`);
 
@@ -207,10 +170,94 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
   }, [bucket, token]);
 
   const handleSubmit = () => {
-    const lines = value.split("\n");
-    const read = lines[1].trim().slice(5).trim(); // "read:".length
-    const write = lines[2].trim().slice(6).trim(); // "write:".length
-    changeBucketRule(bucket, {write, read}).then(handleClose);
+    try {
+      const rules = parseRulesFromText(value);
+      if (rules.read !== undefined && rules.write !== undefined) {
+        changeBucketRule(bucket, {write: rules.write, read: rules.read}).then(handleClose);
+      } else {
+        console.error("Could not parse read or write rules");
+      }
+    } catch (error) {
+      console.error("Error parsing rules:", error);
+    }
+  };
+
+  const parseRulesFromText = (text: string) => {
+    const rules = {write: "", read: ""};
+
+    const pairs = [];
+    let i = 0;
+
+    while (i < text.length) {
+      if (/[\s{},]/.test(text[i])) {
+        i++;
+        continue;
+      }
+
+      const keyMatch = text.substring(i).match(/^(\w+)\s*:/);
+      if (!keyMatch) {
+        i++;
+        continue;
+      }
+
+      const key = keyMatch[1];
+      i += keyMatch[0].length;
+
+      while (i < text.length && /\s/.test(text[i])) {
+        i++;
+      }
+
+      let value = "";
+      let braceCount = 0;
+      let parenCount = 0;
+      let inString = false;
+      let stringChar = "";
+
+      const startPos = i;
+
+      while (i < text.length) {
+        const char = text[i];
+
+        if (!inString) {
+          if (char === '"' || char === "'") {
+            inString = true;
+            stringChar = char;
+          } else if (char === "(") {
+            parenCount++;
+          } else if (char === ")") {
+            parenCount--;
+          } else if (char === "{") {
+            braceCount++;
+          } else if (char === "}") {
+            if (braceCount === 0) {
+              break;
+            }
+            braceCount--;
+          } else if (char === "," && braceCount === 0 && parenCount === 0) {
+            break;
+          } else if (braceCount === 0 && parenCount === 0) {
+            const nextKeyMatch = text.substring(i).match(/^\s*\w+\s*:/);
+            if (nextKeyMatch) {
+              break;
+            }
+          }
+        } else {
+          if (char === stringChar && text[i - 1] !== "\\") {
+            inString = false;
+            stringChar = "";
+          }
+        }
+
+        i++;
+      }
+
+      value = text.substring(startPos, i).trim().replace(/,$/, "");
+      rules[key as "read" | "write"] = value;
+
+      pairs.push({key, value});
+    }
+
+    return rules;
   };
 
   const disposableRef = useRef<monaco.IDisposable | null>(null);
@@ -232,7 +279,6 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
           beforeMount={monaco =>
             handleEditorWillMount(monaco, suggestions, {disposableRef, initializedRef})
           }
-          onMount={handleEditerMounted}
           options={{
             lineNumbers: "off",
             renderLineHighlight: "none",

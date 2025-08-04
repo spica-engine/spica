@@ -147,7 +147,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
         setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, acl: newRules} : i)));
       });
     },
-    []
+    [changeBucketRuleRequest]
   );
 
   const contextValue = useMemo(
