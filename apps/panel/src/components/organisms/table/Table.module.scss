@@ -1,65 +1,93 @@
-.table {
-  display: flex;
-  border: 1px solid var(--color-border);
-  width: max-content;
+.container {
+  overflow: auto;
+  max-height: 86vh;
+  width: 100%;
+  border-left: var(--border-default);
+  border-radius: var(--border-radius-md);
 }
 
-.fixedColumns {
+.table {
+  border-radius: var(--border-radius-md);
+  border: var(--border-default);
+  border-left: none;
+  table-layout: fixed;
+}
+
+.table > thead > tr > th {
+  padding: 0;
+  font-weight: 400;
+  text-align: start;
+}
+
+.table thead {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+}
+
+.fixedCell {
   position: sticky !important;
   left: 0;
-  z-index: 1;
-  background-color: white;
-}
-
-.scrollableColumns {
-  overflow-x: auto;
-}
-
-.column {
-  flex: 1;
-  position: relative;
-
-  &:not(:last-child) {
-    border-right: 1px solid var(--color-border);
-  }
+  z-index: 3 !important;
+  background-color: inherit;
+  overflow: auto;
 }
 
 .header {
-  padding: var(--padding-md);
-  height: 36px !important;
-  &.border {
-    border-bottom: 1px solid var(--color-border);
-  }
+  position: sticky;
+  top: 0;
+  overflow-x: visible;
+  overflow-y: visible;
 }
 
-.cellContainer {
+.headerContent {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  padding-left: var(--padding-md);
+  padding-right: var(--padding-xl);
+  height: 36px !important;
+  width: inherit !important;
+  min-width: inherit !important;
+  max-width: inherit !important;
+  justify-content: space-between !important;
 }
 
 .cell {
-  padding: var(--padding-md);
+  padding: 0 var(--padding-md);
   &:not(:last-child) {
     border-bottom: 1px solid var(--color-border);
   }
   white-space: nowrap;
   height: 36px !important;
-  display: flex;
-  justify-content: space-between;
   padding-right: calc(var(--padding-xl) + var(--padding-md)) !important;
+  overflow: hidden;
 }
 
 .resizer {
-  width: 3px;
-  height: 100%;
-  cursor: ew-resize;
   position: absolute;
   right: 0;
   top: 0;
-  opacity: 0;
-  transition: opacity var(--transition-duration) ease;
+  height: 100%;
+  width: 6px;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
 }
 
 .focusedCell {
   border: 1px solid var(--color-primary) !important;
+}
+
+.infiniteScroll {
+  overflow: unset !important;
+}
+
+.noDataText {
+  text-align: center;
+  font-size: var(--font-size-lg);
+  color: var(--color-font-tertiary);
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
