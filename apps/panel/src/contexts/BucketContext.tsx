@@ -7,7 +7,14 @@ import {
   useState,
   useCallback
 } from "react";
-import {useBucketService, type BucketType} from "../services/bucketService";
+import {
+  useBucketService,
+  type BucketDataQueryType,
+  type BucketDataQueryWithIdType,
+  type BucketDataType,
+  type BucketDataWithIdType,
+  type BucketType
+} from "../services/bucketService";
 import type {AxiosRequestHeaders} from "axios";
 
 type BucketContextType = {
@@ -20,16 +27,15 @@ type BucketContextType = {
     body?: any;
     headers?: AxiosRequestHeaders;
     endpoint?: string;
-  }) => Promise<any>;
+  }) => Promise<BucketDataType>;
   categories: string[];
   changeCategory: (bucketId: string, category: string) => Promise<any>;
   changeBucketOrder: (bucketId: string, order: number) => void;
   bucketOrderLoading: boolean;
   bucketOrderError: string | null;
-  currentBucket: BucketType | null;
-  getCurrentBucket: (bucketId: string) => Promise<any>;
-  currentBucketLoading: boolean;
-  currentBucketError: string | null;
+  bucketData: BucketDataType | null;
+  getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
+  nextbucketDataQuery: BucketDataQueryWithIdType | null;
   changeReadOnly: (bucket: BucketType) => Promise<any>;
 };
 
@@ -40,17 +46,54 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     loading,
     error,
     fetchBuckets,
+    bucketData: fetchedBucketData,
+    getBucketData,
+    lastUsedBucketDataQuery,
     requestCategoryChange,
     deleteBucketRequest,
-    currentBucket,
-    currentBucketLoading,
-    currentBucketError,
-    getCurrentBucket,
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
     changeBucketReadOnly
   } = useBucketService();
+  const [bucketData, setBucketData] = useState<BucketDataWithIdType>({
+    ...fetchedBucketData,
+    bucketId: lastUsedBucketDataQuery?.bucketId as string
+  } as BucketDataWithIdType);
+
+  useEffect(() => {
+    if (!fetchedBucketData) return;
+
+    setBucketData(prev => {
+      const fetchedBucketDataWithId = {
+        ...fetchedBucketData,
+        bucketId: lastUsedBucketDataQuery?.bucketId as string
+      } as BucketDataWithIdType;
+      if (!prev) return fetchedBucketDataWithId;
+
+      const prevBucketId = prev.bucketId;
+      const newBucketId = lastUsedBucketDataQuery?.bucketId;
+
+      if (prevBucketId !== newBucketId) {
+        return fetchedBucketDataWithId;
+      }
+
+      const existingIds = new Set(prev.data.map(item => item._id));
+
+      const newItems = fetchedBucketData.data.filter(item => !existingIds.has(item.id));
+
+      if (newItems.length === 0) return prev;
+      return {...prev, data: [...prev.data, ...newItems]};
+    });
+  }, [JSON.stringify(lastUsedBucketDataQuery)]);
+
+  const nextbucketDataQuery: BucketDataQueryWithIdType | null = useMemo(
+    () => ({
+      ...(lastUsedBucketDataQuery as BucketDataQueryWithIdType),
+      skip: (lastUsedBucketDataQuery?.skip ?? 0) + 25
+    }),
+    [JSON.stringify(lastUsedBucketDataQuery)]
+  );
   const [buckets, setBuckets] = useState<BucketType[]>(data ?? []);
 
   useEffect(() => setBuckets(data ?? []), [data]);
@@ -110,10 +153,9 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       changeBucketOrder,
       bucketOrderLoading,
       bucketOrderError,
-      currentBucket,
-      getCurrentBucket,
-      currentBucketLoading,
-      currentBucketError,
+      bucketData,
+      getBucketData,
+      nextbucketDataQuery,
       changeReadOnly
     }),
     [
@@ -122,9 +164,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       error,
       fetchBuckets,
       categories,
-      currentBucket,
-      currentBucketLoading,
-      currentBucketError
+      bucketData
     ]
   );
 

@@ -1,30 +1,64 @@
 import styles from "./Bucket.module.scss";
 import {useBucket} from "../../contexts/BucketContext";
-import {useEffect, useMemo} from "react";
 import {useParams} from "react-router-dom";
+import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
+import {useCallback, useEffect, useMemo} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
+import type {BucketDataQueryType} from "src/services/bucketService";
 
 export default function Bucket() {
   const {bucketId} = useParams<{bucketId: string}>();
-
-  const {currentBucket, currentBucketLoading, currentBucketError, getCurrentBucket, buckets} =
-    useBucket();
+  const {buckets, bucketData, getBucketData, nextbucketDataQuery} = useBucket();
 
   useEffect(() => {
     if (!bucketId) return;
-    getCurrentBucket(bucketId);
+    getBucketData(bucketId);
   }, [bucketId]);
 
-  const myBucket = useMemo(() => buckets.find(i => i._id === bucketId), [bucketId, buckets]);
-  return ( 
-    <div>
-      {myBucket && <BucketActionBar bucket={myBucket} />}
-      <h1>Bucket Page</h1>
-      <p>This is the bucket page content.</p>
-      <p>Bucket Id: {bucketId}</p>
-      <p>Data: {JSON.stringify(currentBucket)}</p>
-      <p>Loading: {currentBucketLoading ? "yes" : "no"}</p>
-      <p>Error: {currentBucketError ?? "Everything is okay"}</p>
+  const formattedColumns = useMemo(() => {
+    const bucket = buckets?.find(i => i._id === bucketId);
+    const columns = Object.values(bucket?.properties ?? {});
+    return [
+      {
+        header: "_id",
+        key: "_id",
+        showDropdownIcon: true,
+        sticky: true,
+        width: "230px",
+        resizable: false,
+        fixed: true,
+        selectable: false
+      },
+      ...columns.map(i => ({
+        ...i,
+        header: i.title,
+        key: i.title,
+        showDropdownIcon: true
+      }))
+    ];
+  }, [buckets, bucketId]);
+
+  const handleScrollEnd = useCallback(() => {
+    if (!bucketId) return;
+    const query = nextbucketDataQuery;
+    if (query?.bucketId) {
+      delete (query as any).bucketId;
+    }
+    getBucketData(bucketId, query as BucketDataQueryType);
+  }, [bucketId, getBucketData, nextbucketDataQuery]);
+
+  return (
+    <div className={styles.container}>
+      <BucketActionBar />
+      <BucketTable
+        bucketId={bucketId as string}
+        columns={formattedColumns as ColumnType[]}
+        data={bucketData?.data ?? []}
+        onScrollEnd={handleScrollEnd}
+        totalDataLength={bucketData?.meta?.total ?? 0}
+        maxHeight="88vh"
+        loading={!(formattedColumns.length > 1 && nextbucketDataQuery?.bucketId === bucketId)}
+      />
     </div>
   );
 }
