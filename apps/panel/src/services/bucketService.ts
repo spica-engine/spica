@@ -170,7 +170,7 @@ export const useBucketService = () => {
         readOnly: !bucket.readOnly
       }
     });
-  }, []);
+  }, [patchRequest]);
 
   return {
     loading,

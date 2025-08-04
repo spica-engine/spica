@@ -21,6 +21,7 @@ type TypeBucketMorePopup = {
 };
 
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
+  const [isReadOnlyLoading, setIsReadOnlyLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
@@ -28,13 +29,17 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   useOnClickOutside({
     refs: [containerRef, contentRef],
     onClickOutside: () => {
-      console.log("wait");
       setIsOpen(false);
     }
   });
 
   const {changeReadOnly} = useBucket();
-  const isReadOnlyChecked = useMemo(() => bucket.readOnly, [bucket]);
+  const isReadOnlyChecked = useMemo(() => bucket?.readOnly, [bucket]);
+
+  const handleChangeReadOnly = () => {
+    setIsReadOnlyLoading(true);
+    changeReadOnly(bucket).then(() => setIsReadOnlyLoading(false));
+  };
 
   return (
     <div ref={containerRef} className={`${styles.container} ${className || ""}`}>
@@ -82,8 +87,9 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                   <Checkbox label="Limitation" />
                   <Checkbox
                     label="Read Only"
+                    disabled={isReadOnlyLoading}
                     checked={isReadOnlyChecked}
-                    onChange={() => changeReadOnly(bucket)}
+                    onChange={handleChangeReadOnly}
                   />
                 </FlexElement>
               )
