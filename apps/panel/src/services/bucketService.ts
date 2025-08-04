@@ -174,7 +174,7 @@ export const useBucketService = () => {
         body: {...bucket, acl: newRules}
       });
     },
-    []
+    [changeBucketRule]
   );
 
   return {
