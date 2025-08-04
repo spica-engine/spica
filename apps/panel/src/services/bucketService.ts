@@ -170,13 +170,13 @@ export const useBucketService = () => {
         history: !bucket.history
       }
     });
-  }, []);
+  }, [patchRequest]);
 
   const deleteBucketHistory = useCallback(async (bucket: BucketType) => {
     return await deleteRequest({
       endpoint: `/api/bucket/${bucket._id}/history`
     });
-  }, []);
+  }, [deleteRequest]);
 
   return {
     loading,

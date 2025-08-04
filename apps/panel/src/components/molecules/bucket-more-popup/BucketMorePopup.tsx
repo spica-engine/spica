@@ -36,7 +36,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   });
 
   const {changeHistory, deleteHistory} = useBucket();
-  const isHistoryChecked = useMemo(() => bucket.history, [bucket]);
+  const isHistoryChecked = useMemo(() => bucket?.history, [bucket]);
   const handleChangeHistory = () => {
     setIsHistoryChangeLoading(true);
     changeHistory(bucket).then(() => {
