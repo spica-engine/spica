@@ -49,6 +49,7 @@
   gap: var(--gap-md);
   button {
     font-size: var(--font-size-md);
+    height: 32px !important;
   }
 }
 
@@ -79,4 +80,8 @@
   > div > div {
     gap: var(--gap-md) !important;
   }
+}
+
+[class^="Portal-module_container__"] {
+  z-index: 4;
 }

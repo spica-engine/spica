@@ -175,7 +175,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       error,
       fetchBuckets,
       categories,
-      bucketData
+      bucketData,
+      bucketRuleChangeLoading
     ]
   );
 

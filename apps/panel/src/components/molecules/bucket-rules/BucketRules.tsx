@@ -258,7 +258,7 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
         />
       </div>
       <div className={styles.buttonsContainer}>
-        <Button variant="text" onClick={handleClose}>
+        <Button variant="text" onClick={handleClose} disabled={loading}>
           <Icon name="close" size="sm" />
           Cancel
         </Button>

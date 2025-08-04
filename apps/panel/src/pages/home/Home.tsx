@@ -5,12 +5,8 @@ import "oziko-ui-kit/dist/index.css";
 import VideoDisplay from "../../components/molecules/video-display/VideoDisplay";
 import Quicklinks from "../../components/molecules/quicklinks/Quicklinks";
 import WelcomeText from "../../components/atoms/welcome-text/WelcomeText";
-import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
-import {useBucket} from "../../contexts/BucketContext";
 
 const Home = () => {
-  const {buckets} = useBucket();
-  const myB = buckets?.[0];
   return (
     <div className={styles.container}>
       <FlexElement dimensionX="fill" direction="vertical" gap={10} className={styles.content}>
@@ -20,7 +16,6 @@ const Home = () => {
           <VideoDisplay />
         </FlexElement>
       </FlexElement>
-      <div style={{width: "90%"}}>{myB && <BucketActionBar bucket={myB} />}</div>
     </div>
   );
 };
