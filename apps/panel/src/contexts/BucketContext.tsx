@@ -37,6 +37,7 @@ type BucketContextType = {
   getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
   changeLimitation: (bucket: BucketType) => Promise<any>;
+  configureLimitation: (bucket: BucketType, countLimit: number, limitExceedBehaviour: "prevent" | "remove") => Promise<any>;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -54,7 +55,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
-    changeBucketLimitation
+    changeBucketLimitation,
+    configureBucketLimitation
   } = useBucketService();
   const [bucketData, setBucketData] = useState<BucketDataWithIdType>({
     ...fetchedBucketData,
@@ -109,29 +111,51 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [requestCategoryChange]
   );
 
-  const changeLimitation = useCallback(async (bucket: BucketType) => {
-    const hasSettings = Boolean(bucket.documentSettings);
-    const modifiedBucket: BucketType = hasSettings
-      ? (({documentSettings, ...rest}) => rest)(bucket)
-      : {
-          ...bucket,
-          documentSettings: {
-            countLimit: 100,
-            limitExceedBehaviour: "prevent"
-          }
-        };
+  const changeLimitation = useCallback(
+    async (bucket: BucketType) => {
+      const hasSettings = Boolean(bucket.documentSettings);
+      const modifiedBucket: BucketType = hasSettings
+        ? (({documentSettings, ...rest}) => rest)(bucket)
+        : {
+            ...bucket,
+            documentSettings: {
+              countLimit: 100,
+              limitExceedBehaviour: "prevent"
+            }
+          };
 
-    let previousBuckets: BucketType[] = [];
-    setBuckets(prev => {
-      previousBuckets = prev ?? [];
-      return (prev ?? []).map(b => (b._id === bucket._id ? modifiedBucket : b));
-    });
+      let previousBuckets: BucketType[] = [];
+      setBuckets(prev => {
+        previousBuckets = prev ?? [];
+        return (prev ?? []).map(b => (b._id === bucket._id ? modifiedBucket : b));
+      });
 
-    const success = await changeBucketLimitation(bucket._id, modifiedBucket);
-    if (!success) {
-      setBuckets(previousBuckets);
-    }
-  }, []);
+      const success = await changeBucketLimitation(bucket._id, modifiedBucket);
+      if (!success) {
+        setBuckets(previousBuckets);
+      }
+    },
+    [changeBucketLimitation]
+  );
+
+  const configureLimitation = useCallback(
+    async (bucket: BucketType, countLimit: number, limitExceedBehaviour: "prevent" | "remove") => {
+      const modifiedBucket = {
+        ...bucket,
+        documentSettings: {
+          countLimit,
+          limitExceedBehaviour
+        }
+      };
+      const success = await configureBucketLimitation(modifiedBucket);
+      if (success) {
+        setBuckets(prev =>
+          prev ? prev.map(b => (b._id === bucket._id ? modifiedBucket : b)) : []
+        );
+      }
+    },
+    [configureBucketLimitation]
+  );
 
   const categories = useMemo(() => {
     if (!buckets) return [];
@@ -171,16 +195,10 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketData,
       getBucketData,
       nextbucketDataQuery,
-      changeLimitation
+      changeLimitation,
+      configureLimitation
     }),
-    [
-      buckets,
-      loading,
-      error,
-      fetchBuckets,
-      categories,
-      bucketData
-    ]
+    [buckets, loading, error, fetchBuckets, categories, bucketData]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;
@@ -193,6 +211,3 @@ export function useBucket() {
 }
 
 export default BucketContext;
-function BucketDataWithIdType(fetchedBucketData: BucketDataType | null) {
-  throw new Error("Function not implemented.");
-}

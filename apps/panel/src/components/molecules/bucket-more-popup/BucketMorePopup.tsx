@@ -12,6 +12,7 @@ import styles from "./BucketMorePopup.module.scss";
 import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType} from "src/services/bucketService";
 import Checkbox from "../../../components/atoms/checkbox/Checkbox";
+import BucketLimitationsModal from "../bucket-limitations-modal/BucketLimitationsModal";
 
 type TypeBucketMorePopup = {
   className?: string;
@@ -21,6 +22,8 @@ type TypeBucketMorePopup = {
 };
 
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
+  const [isLimitationLoading, setIsLimitationLoading] = useState(false);
+  const [isLimitationsModalOpen, setIsLimitationsModalOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
@@ -32,8 +35,26 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     }
   });
 
-  const {changeLimitation} = useBucket();
-  const isLimitationChecked = useMemo(() => Boolean(bucket.documentSettings), [bucket])
+  const {changeLimitation, configureLimitation} = useBucket();
+  const isLimitationChecked = useMemo(() => Boolean(bucket?.documentSettings), [bucket]);
+
+  const handleChangeLimitation = () => {
+    setIsLimitationLoading(true);
+    changeLimitation(bucket).then(() => {
+      setIsLimitationLoading(false);
+    });
+  };
+
+  const handleConfigureLimitation = (
+    countLimit: number,
+    limitExceedBehaviour: "prevent" | "remove"
+  ) => {
+    setIsLimitationLoading(true);
+    configureLimitation(bucket, countLimit, limitExceedBehaviour).then(() => {
+      setIsLimitationLoading(false);
+      setIsLimitationsModalOpen(false);
+    });
+  };
 
   return (
     <div ref={containerRef} className={`${styles.container} ${className || ""}`}>
@@ -65,6 +86,16 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                     <Icon name="security" />
                     <Text>Configure rules</Text>
                   </Button>
+                  {isLimitationChecked && !isLimitationLoading && (
+                    <Button
+                      variant="text"
+                      className={styles.limitationsPopupButton}
+                      onClick={() => setIsLimitationsModalOpen(true)}
+                    >
+                      <Icon name="lock" />
+                      <Text>Configure limitations</Text>
+                    </Button>
+                  )}
                 </FlexElement>
               )
             }}
@@ -80,8 +111,9 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                   <Checkbox label="History" />
                   <Checkbox
                     label="Limitation"
+                    disabled={isLimitationLoading}
                     checked={isLimitationChecked}
-                    onChange={() => changeLimitation(bucket)}
+                    onChange={handleChangeLimitation}
                   />
                   <Checkbox label="Read Only" />
                 </FlexElement>
@@ -94,13 +126,26 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
           color="default"
           onClick={e => {
             e.stopPropagation();
-            setIsOpen(true);
+            // If a checkbox gets clicked, and the popover is closed, the isOpen stays true for some reason and the popover doesn't open
+            // This is a workaround, how popover open state is handled needs to be rethinked
+            if (isOpen) {
+              setIsOpen(false);
+              setTimeout(() => setIsOpen(true), 0);
+            } else setIsOpen(true);
           }}
         >
           <Icon name="dotsVertical" />
           More
         </Button>
       </Popover>
+      {isLimitationsModalOpen && (
+        <BucketLimitationsModal
+          onClose={() => setIsLimitationsModalOpen(false)}
+          bucket={bucket}
+          onSubmit={handleConfigureLimitation}
+          loading={isLimitationLoading}
+        />
+      )}
     </div>
   );
 };

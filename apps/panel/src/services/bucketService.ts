@@ -164,7 +164,7 @@ export const useBucketService = () => {
 
   const {request: bucketLimitationRequest} = useApi({
     endpoint: "",
-    method: "patch"
+    method: "put"
   });
 
   const changeBucketLimitation = useCallback(
@@ -174,8 +174,15 @@ export const useBucketService = () => {
         body
       });
     },
-    []
+    [bucketLimitationRequest]
   );
+
+  const configureBucketLimitation = useCallback((bucket: BucketType) => {
+    return bucketLimitationRequest({
+      endpoint: `/api/bucket/${bucket._id}`,
+      body: bucket
+    });
+  }, [])
 
   return {
     loading,
@@ -190,6 +197,7 @@ export const useBucketService = () => {
     bucketOrderError,
     buckets,
     deleteBucketRequest,
-    changeBucketLimitation
+    changeBucketLimitation,
+    configureBucketLimitation
   };
 };
