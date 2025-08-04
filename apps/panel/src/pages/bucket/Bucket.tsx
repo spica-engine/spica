@@ -93,8 +93,24 @@ function BucketWithVisibleColumns({
     [formattedColumns, visibleColumns]
   );
 
-  const toggleColumn = (key: string) => {
-    setVisibleColumns({...visibleColumns, [key]: !visibleColumns[key]});
+  const toggleColumn = (key?: string) => {
+    if (key) {
+      setVisibleColumns({
+        ...visibleColumns,
+        [key]: !visibleColumns[key]
+      });
+      return;
+    }
+
+    const hasHidden = Object.values(visibleColumns).some(v => !v);
+    if (hasHidden) {
+      setVisibleColumns({...defaultVisibleColumns});
+    } else {
+      setVisibleColumns({
+        ...Object.fromEntries(Object.keys(defaultVisibleColumns).map(k => [k, false])),
+        _id: true
+      });
+    }
   };
 
   return (
@@ -116,4 +132,3 @@ function BucketWithVisibleColumns({
     </div>
   );
 }
-

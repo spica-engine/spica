@@ -11,3 +11,11 @@
     overflow-y: auto;
   }
 }
+
+.displayAllCheckbox {
+  position: sticky;
+  top: 0;
+  background: white;
+  width: 100% !important;
+  border-bottom: var(--border-default);
+}

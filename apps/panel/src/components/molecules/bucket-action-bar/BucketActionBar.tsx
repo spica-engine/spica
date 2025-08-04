@@ -8,7 +8,7 @@ import type {ColumnType} from "src/components/organisms/bucket-table/BucketTable
 type BucketActionBarProps = {
   columns: ColumnType[];
   visibleColumns: Record<string, boolean>;
-  toggleColumn: (key: string) => void;
+  toggleColumn: (key?: string) => void;
 };
 const BucketActionBar = ({columns, visibleColumns, toggleColumn}: BucketActionBarProps) => {
   return (
@@ -29,6 +29,12 @@ const BucketActionBar = ({columns, visibleColumns, toggleColumn}: BucketActionBa
           }}
           content={
             <div>
+              <Checkbox
+                label="Display All"
+                checked={Object.values(visibleColumns).every(v => v)}
+                onChange={() => toggleColumn()}
+                className={styles.displayAllCheckbox}
+              />
               {columns.slice(1).map(col => (
                 <Checkbox
                   key={col.key}
