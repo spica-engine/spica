@@ -49,7 +49,7 @@ export default function Bucket() {
   }, [bucketId, getBucketData, nextbucketDataQuery]);
 
   const searchableColumns = formattedColumns
-    .filter(i => i.type === "string" || i.type === "textarea")
+    .filter(i => i.type === "string" || i.type === "textarea" || i.type === "richtext")
     .map(i => i.key);
 
   const handleSearch = useCallback(
