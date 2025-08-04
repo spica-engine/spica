@@ -6,6 +6,19 @@ import {useCallback, useEffect, useMemo, useState} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
 import type {BucketDataQueryType} from "src/services/bucketService";
 
+const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const buildBucketQuery = (search: string, searchableColumns: string[]) =>
+  ({
+    paginatie: true,
+    relation: true,
+    limit: 25,
+    filter: JSON.stringify({
+      $or: searchableColumns.map(col => ({
+        [col]: {$regex: escapeForRegex(search), $options: "i"}
+      }))
+    })
+  }) as const;
+
 export default function Bucket() {
   const [lastSearchedText, setLastSearchedText] = useState<string | null>(null);
   const {bucketId} = useParams<{bucketId: string}>();
@@ -54,23 +67,21 @@ export default function Bucket() {
 
   const handleSearch = useCallback(
     (search: string) => {
-      if (!search.length && lastSearchedText) {
-        setLastSearchedText(null);
-        getBucketData(bucketId as string, undefined, true);
+      const trimmed = search.trim();
+
+      if (trimmed === "") {
+        if (lastSearchedText) {
+          setLastSearchedText(null);
+          getBucketData(bucketId as string, undefined, true);
+        }
         return;
       }
-      const query = {
-        paginatie: true,
-        relation: true,
-        limit: 25,
-        filter: JSON.stringify({
-          $or: searchableColumns.map(i => ({[i]: {$regex: search, $options: "i"}}))
-        })
-      };
+
+      const query = buildBucketQuery(trimmed, searchableColumns);
       getBucketData(bucketId as string, query as BucketDataQueryType, true);
-      setLastSearchedText(search);
+      setLastSearchedText(trimmed);
     },
-    [bucketId, searchableColumns]
+    [bucketId, searchableColumns, lastSearchedText, getBucketData]
   );
 
   return (

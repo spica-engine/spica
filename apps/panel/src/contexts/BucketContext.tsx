@@ -137,19 +137,28 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
 
   const getBucketData = useCallback(
     async (bucketId: string, query?: BucketDataQueryType, restart = false) => {
+      const {bucketId: _, ...prevQueryNoBucket} = lastUsedBucketDataQuery || {};
+      const {bucketId: __, ...newQueryNoBucket} = query || ({} as any);
+
+      if (
+        Object.keys(prevQueryNoBucket).length > 1 &&
+        Object.keys(newQueryNoBucket).length > 1 &&
+        JSON.stringify(prevQueryNoBucket) === JSON.stringify(newQueryNoBucket)
+      ) {
+        return;
+      }
+
       try {
         if (restart) {
-          setBucketData({
-            data: []
-          } as any);
+          setBucketData({data: []} as any);
         }
         const result = await requestBucketData(bucketId, query);
         return result;
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching bucket data:", err);
       }
     },
-    []
+    [lastUsedBucketDataQuery, requestBucketData, setBucketData]
   );
 
   const contextValue = useMemo(
