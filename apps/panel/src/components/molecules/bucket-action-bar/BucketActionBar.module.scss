@@ -6,6 +6,8 @@
 
 .columnsPopoverContent {
   z-index: 4;
-  max-height: 400px;
-  overflow-y: auto;
+  > div {
+    max-height: 400px;
+    overflow-y: auto;
+  }
 }
