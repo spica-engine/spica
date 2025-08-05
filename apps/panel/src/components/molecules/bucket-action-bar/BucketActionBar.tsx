@@ -1,4 +1,4 @@
-import React, {memo} from "react";
+import React, {memo, useState} from "react";
 import styles from "./BucketActionBar.module.scss";
 import {Button, FlexElement, Icon} from "oziko-ui-kit";
 import SearchBar from "../../../components/atoms/search-bar/SearchBar";
@@ -10,19 +10,20 @@ type BucketActionBarProps = {
 };
 
 const BucketActionBar = ({bucket}: BucketActionBarProps) => {
+
   return (
     <div className={styles.container}>
       <SearchBar />
-      <FlexElement>
+      <FlexElement className={styles.actionBar}>
         <Button onClick={() => {}}>
           <Icon name="plus" />
           New Entry
         </Button>
-        <Button color="default" onClick={() => {}}>
+        <Button variant="text" onClick={() => {}}>
           <Icon name="refresh" />
           Refresh
         </Button>
-        <Button color="default" onClick={() => {}}>
+        <Button variant="text" color="default" onClick={() => {}}>
           <Icon name="eye" />
           Column
         </Button>
