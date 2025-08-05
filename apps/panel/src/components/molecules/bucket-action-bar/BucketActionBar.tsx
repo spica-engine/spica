@@ -8,7 +8,7 @@ type BucketActionBarProps = {
   bucketId: string;
 };
 
-const SEARCH_DEBOUNCE_TIME = 300;
+const SEARCH_DEBOUNCE_TIME = 1000;
 
 const BucketActionBar = ({search, bucketId}: BucketActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
