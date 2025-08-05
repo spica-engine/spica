@@ -27,6 +27,7 @@ import {
   FunctionWithContent
 } from "@spica-server/interface/function";
 import {getSynchronizers} from "./versioncontrol";
+import {FunctionRealtimeModule} from "@spica-server/function/realtime";
 
 @Module({})
 export class FunctionModule {
@@ -48,8 +49,10 @@ export class FunctionModule {
     registerStatusProvider(fs, scheduler);
     registerAssetHandlers(fs, fe, logs, validator, this.assetRepManager);
   }
-  static forRoot(options: SchedulingOptions & FunctionOptions): DynamicModule {
-    return {
+  static forRoot(
+    options: SchedulingOptions & FunctionOptions & {realtime: boolean}
+  ): DynamicModule {
+    const module: DynamicModule = {
       module: FunctionModule,
       imports: [
         LogModule.forRoot({
@@ -106,5 +109,9 @@ export class FunctionModule {
         }
       ]
     };
+    if (options.realtime) {
+      module.imports.push(FunctionRealtimeModule.register());
+    }
+    return module;
   }
 }

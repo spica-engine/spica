@@ -142,7 +142,8 @@ describe("Status", () => {
               blockDurationMinutes: 0
             },
             refreshTokenExpiresIn: 1000,
-            passwordHistoryLimit: 0
+            passwordHistoryLimit: 0,
+            identityRealtime: false
           })
         ]
       }).compile();
@@ -214,7 +215,8 @@ describe("Status", () => {
             realtimeLogs: false,
             logger: false,
             spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
-            tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
+            tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH,
+            realtime: false
           })
         ]
       }).compile();
@@ -316,7 +318,8 @@ describe("Status", () => {
             objectSizeLimit: 10,
             strategy: "default",
             totalSizeLimit: 10,
-            defaultPath: process.env.TEST_TMPDIR
+            defaultPath: process.env.TEST_TMPDIR,
+            resumableUploadExpiresIn: 0
           })
         ]
       }).compile();
