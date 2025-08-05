@@ -57,6 +57,12 @@ const args = yargs(process.argv.slice(2))
       number: true,
       description: "Amount of connection that will be opened against database.",
       default: 50
+    },
+    "database-read-preference": {
+      string: true,
+      description: "Read preference for the database connection.",
+      default: "primary",
+      choices: ["primary", "primaryPreferred", "secondary", "secondaryPreferred", "nearest"]
     }
   })
   .demandOption("database-name")
@@ -197,6 +203,11 @@ const args = yargs(process.argv.slice(2))
       boolean: true,
       description: "Enable/disable listening policy realtime. Default value is true",
       default: true
+    },
+    "identity-realtime": {
+      boolean: true,
+      description: "Enable/disable listening identity realtime. Default value is true",
+      default: true
     }
   })
   .demandOption("passport-secret")
@@ -297,6 +308,11 @@ const args = yargs(process.argv.slice(2))
     "storage-total-size-limit": {
       number: true,
       description: "Total size limit of storage. Unit: Mb"
+    },
+    "resumable-upload-expires-in": {
+      number: true,
+      description: "Storage period for unloaded files in milliseconds, default is 2 days",
+      default: 1000 * 60 * 60 * 24 * 2 // 2 days
     }
   })
   /* Status Options */
@@ -501,7 +517,8 @@ const modules = [
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
     maxPoolSize: args["database-pool-size"],
-    appName: "spica"
+    appName: "spica",
+    readPreference: args["database-read-preference"]
   }),
   EnvVarModule.forRoot(),
   SchemaModule.forRoot({
@@ -526,7 +543,8 @@ const modules = [
     awss3CredentialsPath: args["awss3-credentials-path"],
     awss3BucketName: args["awss3-bucket-name"],
     objectSizeLimit: args["storage-object-size-limit"],
-    totalSizeLimit: args["storage-total-size-limit"]
+    totalSizeLimit: args["storage-total-size-limit"],
+    resumableUploadExpiresIn: args["resumable-upload-expires-in"]
   }),
   PassportModule.forRoot({
     publicUrl: args["public-url"],
@@ -548,7 +566,8 @@ const modules = [
     refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
     passwordHistoryLimit: args["passport-identity-password-history-limit"],
     apikeyRealtime: args["apikey-realtime"],
-    policyRealtime: args["policy-realtime"]
+    policyRealtime: args["policy-realtime"],
+    identityRealtime: args["identity-realtime"]
   }),
   FunctionModule.forRoot({
     logExpireAfterSeconds: args["common-log-lifespan"],

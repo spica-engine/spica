@@ -38,7 +38,8 @@ describe("Identity Controller", () => {
           blockingOptions: {
             blockDurationMinutes: 0,
             failedAttemptLimit: 0
-          }
+          },
+          identityRealtime: false
         }),
         PolicyModule.forRoot({realtime: false})
       ]

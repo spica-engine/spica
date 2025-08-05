@@ -25,6 +25,7 @@ import {registerAssetHandlers} from "./asset";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
+import {IdentityRealtimeModule} from "../realtime";
 
 @Global()
 @Module({})
@@ -50,7 +51,7 @@ export class IdentityModule {
   }
 
   static forRoot(options: IdentityOptions): DynamicModule {
-    return {
+    const module: DynamicModule = {
       module: IdentityModule,
       controllers: [IdentityController],
       exports: [
@@ -114,6 +115,12 @@ export class IdentityModule {
         }
       ]
     };
+
+    if (options.identityRealtime) {
+      module.imports.push(IdentityRealtimeModule.register());
+    }
+
+    return module;
   }
 }
 

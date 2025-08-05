@@ -14,6 +14,11 @@ export default {
       module: "passport:identity"
     },
     {
+      action: "passport:identity:stream",
+      resource: {include: ["*"], exclude: []},
+      module: "passport:identity"
+    },
+    {
       action: "preference:show",
       module: "preference",
       resource: {
