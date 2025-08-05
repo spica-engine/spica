@@ -89,6 +89,9 @@
       "path": "./apps/api/src/passport/identity"
     },
     {
+      "path": "./apps/api/src/passport/identity/realtime"
+    },
+    {
       "path": "./apps/api/src/function/runtime"
     },
     {
@@ -105,6 +108,9 @@
     },
     {
       "path": "./apps/api/src/passport/apikey"
+    },
+    {
+      "path": "./apps/api/src/passport/apikey/realtime"
     },
     {
       "path": "./apps/api/src/passport/policy"
@@ -327,6 +333,9 @@
     },
     {
       "path": "./libs/realtime"
+    },
+    {
+      "path": "./apps/api/src/function/realtime"
     }
   ]
 }

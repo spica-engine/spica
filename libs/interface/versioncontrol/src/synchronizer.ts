@@ -156,68 +156,70 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 
     // can't loop since array elements are different
     const docSync = syncs[0];
+
+    const docSyncNext = (change: DocChange<R1>, resourceId: string) => {
+      const isSynchronizerAction = this.repToDocActions.has(resourceId);
+      if (isSynchronizerAction) {
+        return this.removeRepToDocAction(resourceId);
+      }
+
+      this.addDocToRepAction(resourceId);
+
+      const convertedChange = docSync.converter.convert(change);
+      docSync.applier.apply(convertedChange);
+    };
+
     docSync.watcher.watch().subscribe({
       next: change => {
         const resourceId = change.resource._id.toString();
 
-        const isSynchronizerAction = this.repToDocActions.has(resourceId);
-        if (isSynchronizerAction) {
-          return this.removeRepToDocAction(resourceId);
-        }
-
-        this.addDocToRepAction(resourceId);
-
-        const apply = () => {
-          const convertedChange = docSync.converter.convert(change);
-          docSync.applier.apply(convertedChange);
-        };
-
         if (jobReducer) {
           const meta = {_id: `doc-rep:${moduleName}:${subModuleName}:${resourceId}`};
-          jobReducer.do(meta, apply);
+          jobReducer.do(meta, docSyncNext.bind(this, change, resourceId));
         } else {
-          apply();
+          docSyncNext(change, resourceId);
         }
       },
       error: this.errorHandler
     });
 
     const repSync = syncs[1];
+
+    const repSyncNext = (change: RepChange<R2>, resourceId: string) => {
+      const isSynchronizerAction = this.docToRepActions.has(resourceId);
+      if (isSynchronizerAction) {
+        return this.removeDocToRepAction(resourceId);
+      }
+
+      this.addRepToDocAction(resourceId);
+
+      const convertedChange = repSync.converter.convert(change);
+
+      const retry = (delays: number[]) => {
+        repSync.applier.apply(convertedChange).catch(err => {
+          delays.length
+            ? new Promise(res => setTimeout(res, delays[0])).then(() => retry(delays.slice(1)))
+            : console.error(
+                "Failed to apply changes from doc to rep for the following change:\n",
+                convertedChange,
+                "\nreason:\n",
+                err
+              );
+        });
+      };
+
+      retry([2000, 4000, 8000]);
+    };
+
     repSync.watcher.watch().subscribe({
       next: change => {
         const resourceId = change.resource._id;
 
-        const isSynchronizerAction = this.docToRepActions.has(resourceId);
-        if (isSynchronizerAction) {
-          return this.removeDocToRepAction(resourceId);
-        }
-
-        this.addRepToDocAction(resourceId);
-
-        const apply = () => {
-          const convertedChange = repSync.converter.convert(change);
-
-          const retry = (delays: number[]) => {
-            repSync.applier.apply(convertedChange).catch(err => {
-              delays.length
-                ? new Promise(res => setTimeout(res, delays[0])).then(() => retry(delays.slice(1)))
-                : console.error(
-                    "Failed to apply changes from doc to rep for the following change:\n",
-                    convertedChange,
-                    "\nreason:\n",
-                    err
-                  );
-            });
-          };
-
-          retry([2000, 4000, 8000]);
-        };
-
         if (jobReducer) {
           const meta = {_id: `rep-doc:${moduleName}:${subModuleName}:${resourceId}`};
-          jobReducer.do(meta, apply);
+          jobReducer.do(meta, repSyncNext.bind(this, change, resourceId));
         } else {
-          apply();
+          repSyncNext(change, resourceId);
         }
       },
       error: this.errorHandler
