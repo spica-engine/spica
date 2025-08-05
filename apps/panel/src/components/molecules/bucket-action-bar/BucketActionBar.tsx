@@ -22,11 +22,11 @@ const BucketActionBar = ({bucket}: BucketActionBarProps) => {
             New Entry
           </Button>
         )}
-        <Button color="default" onClick={() => {}}>
+        <Button variant="text" onClick={() => {}}>
           <Icon name="refresh" />
           Refresh
         </Button>
-        <Button color="default" onClick={() => {}}>
+        <Button variant="text" onClick={() => {}}>
           <Icon name="eye" />
           Column
         </Button>

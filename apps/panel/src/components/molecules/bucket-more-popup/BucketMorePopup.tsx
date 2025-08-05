@@ -98,7 +98,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
         }
       >
         <Button
-          color="default"
+          variant="text"
           onClick={e => {
             e.stopPropagation();
             // If a checkbox gets clicked, and the popover is closed, the isOpen stays true for some reason and the popover doesn't open
