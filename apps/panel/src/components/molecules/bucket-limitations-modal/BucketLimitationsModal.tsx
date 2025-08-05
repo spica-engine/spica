@@ -1,4 +1,4 @@
-import {Modal, FluidContainer, Icon, Text, Input, Select, Button} from "oziko-ui-kit";
+import {Modal, FluidContainer, Icon, Text, Input, Select, Button, FlexElement} from "oziko-ui-kit";
 import styles from "./BucketLimitiationsModal.module.scss";
 import type {BucketType} from "src/services/bucketService";
 import {useState} from "react";
@@ -50,27 +50,31 @@ const BucketLimitationsModal = ({
                 <div className={styles.formInputs}>
                   <div>
                     <label htmlFor="bucketLimitationsCountLimit">Maximum number of documents</label>
-                    <Input
-                      id="bucketLimitationsCountLimit"
-                      className={styles.countLimitInput}
-                      value={values.countLimit}
-                      onChange={e => setValues({...values, countLimit: Number(e.target.value)})}
-                      type="number"
-                      name="Count Limit"
-                      min={0}
-                    />
+
+                    <FlexElement gap={5} className={styles.countLimitInputContainer}>
+                      <Icon name="numericBox" size="md" />
+                      <Input
+                        className={styles.countLimitInput}
+                        onChange={e => setValues({...values, countLimit: e.target.value})}
+                        placeholder="Maximum number of documents"
+                        value={values.countLimit}
+                      />
+                    </FlexElement>
                   </div>
                   <div>
                     <label htmlFor="bucketLimitationsLimitExceedBehaviour">
                       After reached limit
                     </label>
-                    <Select
-                      id="bucketLimitationsLimitExceedBehaviour"
-                      className={styles.limitExceedBehaviourInput}
-                      value={values.limitExceedBehaviour}
-                      options={limitExceedBehaviourOptions}
-                      onChange={val => setValues({...values, limitExceedBehaviour: val})}
-                    />
+                    <FlexElement gap={5} className={styles.limitExceedBehaviourInputContainer}>
+                      <Icon name="formatListChecks" size="md" />
+                      <Select
+                        id="bucketLimitationsLimitExceedBehaviour"
+                        className={styles.limitExceedBehaviourInput}
+                        value={values.limitExceedBehaviour}
+                        options={limitExceedBehaviourOptions}
+                        onChange={val => setValues({...values, limitExceedBehaviour: val})}
+                      />
+                    </FlexElement>
                   </div>
                 </div>
                 <div className={styles.buttonsContainer}>
