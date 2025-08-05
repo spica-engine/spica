@@ -22,7 +22,7 @@ const BucketLimitationsModal = ({
   });
 
   const handleSubmit = () => {
-    onSubmit(values.countLimit, values.limitExceedBehaviour)
+    onSubmit(values.countLimit, values.limitExceedBehaviour);
   };
 
   const limitExceedBehaviourOptions = [
@@ -40,8 +40,7 @@ const BucketLimitationsModal = ({
           prefix={{
             children: (
               <div className={styles.header}>
-                <Text className={styles.headerText}>RULES</Text>
-                <Icon name="help" size="md" />
+                <Text className={styles.headerText}>LIMITATIONS</Text>
               </div>
             )
           }}
@@ -50,8 +49,9 @@ const BucketLimitationsModal = ({
               <div className={styles.formContainer}>
                 <div className={styles.formInputs}>
                   <div>
-                    <label>Count Limit</label>
+                    <label htmlFor="bucketLimitationsCountLimit">Maximum number of documents</label>
                     <Input
+                      id="bucketLimitationsCountLimit"
                       className={styles.countLimitInput}
                       value={values.countLimit}
                       onChange={e => setValues({...values, countLimit: Number(e.target.value)})}
@@ -61,8 +61,11 @@ const BucketLimitationsModal = ({
                     />
                   </div>
                   <div>
-                    <label>Limit Exceed Behaviour</label>
+                    <label htmlFor="bucketLimitationsLimitExceedBehaviour">
+                      After reached limit
+                    </label>
                     <Select
+                      id="bucketLimitationsLimitExceedBehaviour"
                       className={styles.limitExceedBehaviourInput}
                       value={values.limitExceedBehaviour}
                       options={limitExceedBehaviourOptions}
