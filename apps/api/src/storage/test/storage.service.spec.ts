@@ -32,7 +32,7 @@ describe("Storage Service", () => {
         StorageService,
         {
           provide: Strategy,
-          useValue: new Default(process.env.TEST_TMPDIR, "http://insteadof")
+          useValue: new Default(process.env.TEST_TMPDIR, "http://insteadof", 0)
         },
         {
           provide: STORAGE_OPTIONS,
@@ -324,7 +324,7 @@ describe("Storage Service", () => {
           StorageService,
           {
             provide: Strategy,
-            useValue: new Default(process.env.TEST_TMPDIR, "http://insteadof")
+            useValue: new Default(process.env.TEST_TMPDIR, "http://insteadof", 0)
           },
           {
             provide: STORAGE_OPTIONS,
