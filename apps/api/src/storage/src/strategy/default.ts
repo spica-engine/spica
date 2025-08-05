@@ -1,12 +1,25 @@
 import fs from "fs";
-import {Strategy} from "./strategy";
+import {FileStore} from "@tus/file-store";
+import {BaseStrategy} from "./base-strategy";
 
-export class Default implements Strategy {
+export class Default extends BaseStrategy {
   constructor(
     private path: string,
-    private publicUrl: string
+    private publicUrl: string,
+    resumableUploadExpiresIn: number
   ) {
+    super(resumableUploadExpiresIn);
     this.publicUrl = publicUrl;
+    this.initializeTusServer();
+  }
+
+  protected initializeTusServer() {
+    const datastore = new FileStore({
+      directory: this.path,
+      expirationPeriodInMilliseconds: this.resumableUploadExpiresIn
+    });
+
+    super.initializeTusServer(datastore);
   }
 
   async writeStream(id: string, data: fs.ReadStream, mimeType?: string): Promise<void> {
