@@ -20,8 +20,16 @@
       opacity: 1;
     }
   }
+
   .label {
-    line-height: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* limit to 2 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-width: 120px;
+    text-overflow: ellipsis;
+    white-space: nowrapS;
+    line-height: 1.2em;
   }
 }
 
