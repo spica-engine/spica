@@ -9,7 +9,9 @@
   > div {
     max-height: 400px;
     overflow-y: auto;
+    width: 100%;
   }
+  min-width: 200px;
 }
 
 .displayAllCheckbox {
@@ -18,4 +20,8 @@
   background: white;
   width: 100% !important;
   border-bottom: var(--border-default);
+}
+
+.actionBar button {
+  height: 32px !important;
 }

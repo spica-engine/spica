@@ -14,12 +14,12 @@ const BucketActionBar = ({columns, visibleColumns, toggleColumn}: BucketActionBa
   return (
     <div className={styles.container}>
       <SearchBar />
-      <FlexElement>
+      <FlexElement className={styles.actionBar}>
         <Button onClick={() => {}}>
           <Icon name="plus" />
           New Entry
         </Button>
-        <Button color="default" onClick={() => {}}>
+        <Button variant="text" onClick={() => {}}>
           <Icon name="refresh" />
           Refresh
         </Button>
@@ -46,12 +46,12 @@ const BucketActionBar = ({columns, visibleColumns, toggleColumn}: BucketActionBa
             </div>
           }
         >
-          <Button color="default" onClick={() => {}}>
+          <Button variant="text" onClick={() => {}}>
             <Icon name="eye" />
             Column
           </Button>
         </Popover>
-        <Button color="default" onClick={() => {}}>
+        <Button variant="text" onClick={() => {}}>
           <Icon name="dotsVertical" />
           More
         </Button>
