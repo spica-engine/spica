@@ -89,6 +89,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
         }
       >
         <Button
+          className={styles.moreButton}
           variant="text"
           onClick={e => {
             e.stopPropagation();

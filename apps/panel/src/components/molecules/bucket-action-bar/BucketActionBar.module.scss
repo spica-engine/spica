@@ -17,3 +17,7 @@
 .actionBar button {
   height: 32px !important;
 }
+
+.refreshButton, .columnButton {
+  color: var(--color-font-primary);
+}

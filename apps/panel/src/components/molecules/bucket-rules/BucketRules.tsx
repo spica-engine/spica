@@ -296,7 +296,15 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
             renderIndentGuides: false,
             suggestLineHeight: 20,
             scrollBeyondLastLine: false,
-            wordBasedSuggestions: "off"
+            wordBasedSuggestions: "off",
+            scrollbar: {
+              verticalScrollbarSize: 3,
+              horizontalScrollbarSize: 3,
+              useShadows: false
+            },
+            stickyScroll: {
+              enabled: false
+            }
           }}
           className={styles.editor}
           value={value}
@@ -329,7 +337,13 @@ const BucketRules = ({bucket, onClose}: BucketRulesProps) => {
             children: (
               <div className={styles.header}>
                 <Text className={styles.headerText}>RULES</Text>
-                <Icon name="help" size="md" />
+                <a
+                  href="https://spicaengine.com/docs/concept/bucket#rules"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Icon name="help" size="md" className={styles.helpIcon} />
+                </a>
               </div>
             )
           }}
