@@ -7,13 +7,12 @@ describe("Default", () => {
   beforeEach(() => {
     service = new Default(
       path.join(process.env.TEST_TMPDIR, Date.now().toString()),
-      "http://insteadof"
+      "http://insteadof",
+      0
     );
   });
 
   it("should create the directory", async () => {
-    expect(fs.existsSync(service["path"])).toEqual(false);
-    await service["ensureStorageDiskExists"]();
     expect(fs.existsSync(service["path"])).toEqual(true);
   });
 

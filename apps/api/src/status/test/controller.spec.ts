@@ -142,7 +142,8 @@ describe("Status", () => {
               blockDurationMinutes: 0
             },
             refreshTokenExpiresIn: 1000,
-            passwordHistoryLimit: 0
+            passwordHistoryLimit: 0,
+            identityRealtime: false
           })
         ]
       }).compile();
@@ -317,7 +318,8 @@ describe("Status", () => {
             objectSizeLimit: 10,
             strategy: "default",
             totalSizeLimit: 10,
-            defaultPath: process.env.TEST_TMPDIR
+            defaultPath: process.env.TEST_TMPDIR,
+            resumableUploadExpiresIn: 0
           })
         ]
       }).compile();
