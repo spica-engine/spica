@@ -89,6 +89,9 @@
       "path": "./apps/api/src/passport/identity"
     },
     {
+      "path": "./apps/api/src/passport/identity/realtime"
+    },
+    {
       "path": "./apps/api/src/function/runtime"
     },
     {
@@ -333,6 +336,9 @@
     },
     {
       "path": "./apps/api/src/dashboard/realtime"
+    },
+    {
+      "path": "./apps/api/src/function/realtime"
     }
   ]
 }

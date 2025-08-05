@@ -221,7 +221,8 @@ export default {
       "function:show": [functionResource],
       "function:create": [],
       "function:update": [functionResource],
-      "function:delete": [functionResource]
+      "function:delete": [functionResource],
+      "function:stream": [functionResource]
     }
   },
   "function:logs": {
