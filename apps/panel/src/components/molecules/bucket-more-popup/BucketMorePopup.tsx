@@ -89,7 +89,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
         }
       >
         <Button
-          color="default"
+          variant="text"
           onClick={e => {
             e.stopPropagation();
             setIsOpen(true);

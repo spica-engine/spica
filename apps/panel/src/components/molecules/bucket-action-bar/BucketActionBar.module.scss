@@ -3,3 +3,17 @@
   width: 100%;
   @include mixins.flexAlignCenterJustifyBetween;
 }
+
+.columnsPopoverContent {
+  z-index: 4;
+  > div {
+    max-height: 400px;
+    overflow-y: auto;
+    width: 100%;
+  }
+  min-width: 200px;
+}
+
+.actionBar button {
+  height: 32px !important;
+}
