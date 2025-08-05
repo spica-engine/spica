@@ -15,18 +15,18 @@ const BucketActionBar = ({bucket}: BucketActionBarProps) => {
   return (
     <div className={styles.container}>
       <SearchBar />
-      <FlexElement>
+      <FlexElement className={styles.actionBar}>
         {!isReadOnlyChecked && (
           <Button onClick={() => {}}>
             <Icon name="plus" />
             New Entry
           </Button>
         )}
-        <Button color="default" onClick={() => {}}>
+        <Button variant="text" onClick={() => {}}>
           <Icon name="refresh" />
           Refresh
         </Button>
-        <Button color="default" onClick={() => {}}>
+        <Button variant="text" onClick={() => {}}>
           <Icon name="eye" />
           Column
         </Button>
