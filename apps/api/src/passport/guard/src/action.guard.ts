@@ -358,8 +358,8 @@ function createSimpleActionGuard(actions: string | string[], format?: string): T
     constructor(@Optional() @Inject(POLICY_RESOLVER) private resolver: PolicyResolver<any>) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
-      let request = context.switchToHttp().getRequest(),
-        response = context.switchToHttp().getResponse();
+      const request = context.switchToHttp().getRequest();
+      const response = context.switchToHttp().getResponse();
 
       if (request.TESTING_SKIP_CHECK) {
         request.resourceFilter = {
@@ -369,12 +369,8 @@ function createSimpleActionGuard(actions: string | string[], format?: string): T
         return true;
       }
 
-      actions = wrapArray(actions);
-
-      let policies: Array<{name: string; statement: Statement[]}> = await this.resolver(
-        request.user.policies || []
-      );
-
+      const actionsArr = wrapArray(actions);
+      const policies = await this.resolver(request.user.policies || []);
       const resourceAndModule = buildResourceAndModuleName(
         request.route.path,
         request.params,
@@ -383,37 +379,35 @@ function createSimpleActionGuard(actions: string | string[], format?: string): T
 
       if (response.header) {
         response.header("X-Policy-Module", resourceAndModule.module);
-        response.header("X-Policy-Action", actions.join(", "));
-        // response.header("X-Policy-Resource", "partial");
-
+        response.header("X-Policy-Action", actionsArr.join(", "));
+        response.header("X-Policy-Resource", "partial");
         if (resourceAndModule.resource.length) {
           response.header("X-Policy-Resource", resourceAndModule.resource.join("/"));
         }
       }
 
-      for (const action of actions) {
-        for (const policy of policies) {
-          for (const [index, statement] of policy.statement.entries()) {
-            const actionMatch = action == statement.action;
-            const moduleMatch = resourceAndModule.module == statement.module;
+      const allPolicyStatements = policies.flatMap(policy => policy.statement);
+      const matchedStatements = allPolicyStatements.filter(
+        statement =>
+          actionsArr.includes(statement.action) && resourceAndModule.module === statement.module
+      );
 
-            if (actionMatch && moduleMatch) {
-              console.log("index: ", index, "statement: ", statement);
-
-              request.resourceFilter = {
-                include: statement.resource.include,
-                exclude: statement.resource.exclude
-              };
-              return true;
-            }
-          }
+      const includedResources = [];
+      const excludedResources = [];
+      for (const statement of matchedStatements) {
+        if (statement.resource && typeof statement.resource === "object") {
+          if (statement.resource.include) includedResources.push(...statement.resource.include);
+          if (statement.resource.exclude) excludedResources.push(...statement.resource.exclude);
         }
       }
 
+      request.resourceFilter = {include: includedResources, exclude: excludedResources};
+
+      if (matchedStatements.length > 0) {
+        return true;
+      }
       throw new ForbiddenException(
-        `You do not have sufficient permissions to do ${actions.join(
-          ", "
-        )} on resource ${resourceAndModule.resource.join("/")}`
+        `You do not have sufficient permissions to do ${actionsArr.join(", ")} on resource ${resourceAndModule.resource.join("/")}`
       );
     }
   }
