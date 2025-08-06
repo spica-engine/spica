@@ -256,18 +256,20 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
     content: (
       <>
         {item.map((item: any, index: number) => (
-          <NavigatorItem
-            key={item?._id}
-            label={item?.title}
-            prefix={{children: <Icon name={"help"} />}} //item?.icon
-            //prefixIcon={item?.icon}
-            suffixIcons={[{name: "dragHorizontalVariant"}]}
-            onClick={() => {
-              navigate(`/${item?.section}/${item?._id}`);
-            }}
-            bucket={item}
-            className={styles.navigatorItem}
-          />
+          <div className={styles.accordionItemContainer} key={index}>
+            <NavigatorItem
+              key={item?._id}
+              label={item?.title}
+              prefix={{children: <Icon name={"help"} />}} //item?.icon
+              //prefixIcon={item?.icon}
+              suffixIcons={[{name: "dragHorizontalVariant"}]}
+              onClick={() => {
+                navigate(`/${item?.section}/${item?._id}`);
+              }}
+              bucket={item}
+              className={styles.navigatorItem}
+            />
+          </div>
         ))}
       </>
     ),
@@ -288,7 +290,7 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
             key={index}
             items={[item]}
             headerClassName={styles.accordionHeader}
-            className={styles.accordion}
+            className={`${styles.accordion} accordion`}
             openClassName={styles.accordionOpen}
             gap={0}
 
