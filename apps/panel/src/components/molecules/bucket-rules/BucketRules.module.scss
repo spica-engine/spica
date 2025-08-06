@@ -57,6 +57,9 @@
 .editor {
   width: 540px;
   height: 60px;
+  :global(.view-lines .view-line:last-child) {
+    margin-top: -3px
+  }
 }
 
 .editorContainer {
@@ -85,6 +88,10 @@
 
 .helpIcon {
   color: var(--color-font-primary);
+}
+
+.errorText {
+  max-width: 100%;
 }
 
 [class^="Portal-module_container__"] {

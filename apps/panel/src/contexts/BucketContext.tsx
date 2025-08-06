@@ -45,6 +45,7 @@ type BucketContextType = {
   ) => Promise<any>;
 
   bucketRuleChangeLoading: boolean;
+  bucketRuleError: string | null;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -63,7 +64,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     bucketOrderLoading,
     bucketOrderError,
     changeBucketRuleRequest,
-    bucketRuleChangeLoading
+    bucketRuleChangeLoading,
+    bucketRuleError
   } = useBucketService();
   const [bucketData, setBucketData] = useState<BucketDataWithIdType>({
     ...fetchedBucketData,
@@ -145,6 +147,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       return changeBucketRuleRequest(bucket, newRules).then(result => {
         if (!result) return;
         setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, acl: newRules} : i)));
+        return result;
       });
     },
     [changeBucketRuleRequest]
@@ -167,7 +170,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       getBucketData,
       nextbucketDataQuery,
       changeBucketRule,
-      bucketRuleChangeLoading
+      bucketRuleChangeLoading,
+      bucketRuleError
     }),
     [
       buckets,
@@ -176,7 +180,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       fetchBuckets,
       categories,
       bucketData,
-      bucketRuleChangeLoading
+      bucketRuleChangeLoading,
+      bucketRuleError
     ]
   );
 

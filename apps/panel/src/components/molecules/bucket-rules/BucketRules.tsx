@@ -1,5 +1,5 @@
 import {Button, FluidContainer, Icon, Modal, Popover, Text} from "oziko-ui-kit";
-import {memo, useEffect, useMemo, useRef, useState} from "react";
+import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import styles from "./BucketRules.module.scss";
 import Editor from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
@@ -17,6 +17,105 @@ type EditorFormProps = {
 type BucketRulesProps = {
   bucket: BucketType;
   onClose: () => void;
+};
+
+const parseRulesFromText = (text: string) => {
+  if (!text.trim().startsWith("{") || !text.trim().endsWith("}")) {
+    throw new Error("Input must be wrapped in curly braces.");
+  }
+
+  const rules = {write: "", read: ""};
+  const knownKeys = new Set(["read", "write"]);
+  const usedKeys = new Set<string>();
+
+  const pairs = [];
+  let i = 0;
+
+  while (i < text.length) {
+    if (/[\s{},]/.test(text[i])) {
+      i++;
+      continue;
+    }
+
+    const keyMatch = text.substring(i).match(/^(\w+)\s*:/);
+    if (!keyMatch) {
+      throw new Error(`Unexpected token at position ${i}: "${text[i]}"`);
+    }
+
+    const key = keyMatch[1];
+    if (!knownKeys.has(key)) {
+      throw new Error(`Unknown key: "${key}"`);
+    }
+
+    if (usedKeys.has(key)) {
+      throw new Error(`Duplicate key: "${key}"`);
+    }
+
+    usedKeys.add(key);
+    i += keyMatch[0].length;
+
+    while (i < text.length && /\s/.test(text[i])) {
+      i++;
+    }
+
+    let value = "";
+    let braceCount = 0;
+    let parenCount = 0;
+    let inString = false;
+    let stringChar = "";
+
+    const startPos = i;
+
+    while (i < text.length) {
+      const char = text[i];
+
+      if (!inString) {
+        if (char === '"' || char === "'") {
+          inString = true;
+          stringChar = char;
+        } else if (char === "(") {
+          parenCount++;
+        } else if (char === ")") {
+          parenCount--;
+        } else if (char === "{") {
+          braceCount++;
+        } else if (char === "}") {
+          if (braceCount === 0) break;
+          braceCount--;
+        } else if (char === "," && braceCount === 0 && parenCount === 0) {
+          break;
+        } else if (braceCount === 0 && parenCount === 0) {
+          const nextKeyMatch = text.substring(i).match(/^\s*\w+\s*:/);
+          if (nextKeyMatch) {
+            break;
+          }
+        }
+      } else {
+        if (char === stringChar && text[i - 1] !== "\\") {
+          inString = false;
+          stringChar = "";
+        }
+      }
+
+      i++;
+    }
+
+    value = text.substring(startPos, i).trim().replace(/,$/, "");
+    rules[key as "read" | "write"] = value;
+
+    pairs.push({key, value});
+
+    // Skip trailing comma
+    if (text[i] === ",") i++;
+  }
+
+  // Check for leftover junk
+  const remaining = text.slice(i).trim();
+  if (remaining.length > 0) {
+    throw new Error(`Unexpected extra content after parsing: "${remaining}"`);
+  }
+
+  return rules;
 };
 
 function handleEditorWillMount(
@@ -149,13 +248,22 @@ function handleEditorWillMount(
 }
 
 const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
-  const {changeBucketRule, bucketRuleChangeLoading: loading} = useBucket();
+  const [error, setError] = useState<string | null>(null);
   const [value, setValue] = useState<string>(`{ 
     read: ${bucket.acl.read},
     write: ${bucket.acl.write}
 }`);
 
+  const {
+    changeBucketRule,
+    bucketRuleChangeLoading: loading,
+    bucketRuleError: apiError
+  } = useBucket();
+
   const [token] = useLocalStorage("token", "");
+
+  const disposableRef = useRef<monaco.IDisposable | null>(null);
+  const initializedRef = useRef(false);
 
   const suggestions = useMemo(() => {
     const auth = jwtDecode<AuthTokenJWTPayload>(token);
@@ -169,99 +277,13 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
     };
   }, [bucket, token]);
 
-  const handleSubmit = () => {
-    try {
-      const rules = parseRulesFromText(value);
-      if (rules.read !== undefined && rules.write !== undefined) {
-        changeBucketRule(bucket, {write: rules.write, read: rules.read}).then(handleClose);
-      } else {
-        console.error("Could not parse read or write rules");
-      }
-    } catch (error) {
-      console.error("Error parsing rules:", error);
-    }
-  };
+  useEffect(() => {
+    setError(apiError);
+  }, [apiError]);
 
-  const parseRulesFromText = (text: string) => {
-    const rules = {write: "", read: ""};
-
-    const pairs = [];
-    let i = 0;
-
-    while (i < text.length) {
-      if (/[\s{},]/.test(text[i])) {
-        i++;
-        continue;
-      }
-
-      const keyMatch = text.substring(i).match(/^(\w+)\s*:/);
-      if (!keyMatch) {
-        i++;
-        continue;
-      }
-
-      const key = keyMatch[1];
-      i += keyMatch[0].length;
-
-      while (i < text.length && /\s/.test(text[i])) {
-        i++;
-      }
-
-      let value = "";
-      let braceCount = 0;
-      let parenCount = 0;
-      let inString = false;
-      let stringChar = "";
-
-      const startPos = i;
-
-      while (i < text.length) {
-        const char = text[i];
-
-        if (!inString) {
-          if (char === '"' || char === "'") {
-            inString = true;
-            stringChar = char;
-          } else if (char === "(") {
-            parenCount++;
-          } else if (char === ")") {
-            parenCount--;
-          } else if (char === "{") {
-            braceCount++;
-          } else if (char === "}") {
-            if (braceCount === 0) {
-              break;
-            }
-            braceCount--;
-          } else if (char === "," && braceCount === 0 && parenCount === 0) {
-            break;
-          } else if (braceCount === 0 && parenCount === 0) {
-            const nextKeyMatch = text.substring(i).match(/^\s*\w+\s*:/);
-            if (nextKeyMatch) {
-              break;
-            }
-          }
-        } else {
-          if (char === stringChar && text[i - 1] !== "\\") {
-            inString = false;
-            stringChar = "";
-          }
-        }
-
-        i++;
-      }
-
-      value = text.substring(startPos, i).trim().replace(/,$/, "");
-      rules[key as "read" | "write"] = value;
-
-      pairs.push({key, value});
-    }
-
-    return rules;
-  };
-
-  const disposableRef = useRef<monaco.IDisposable | null>(null);
-  const initializedRef = useRef(false); // tracks global setup (theme, language, etc.)
+  useEffect(() => {
+    setError(null);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -270,14 +292,49 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
     };
   }, []);
 
+  const handleSubmit = useCallback(
+    (value: string) => {
+      try {
+        const rules = parseRulesFromText(value);
+
+        if (rules.read !== undefined && rules.write !== undefined) {
+          changeBucketRule(bucket, {
+            write: rules.write,
+            read: rules.read
+          }).then(result => {
+            if (result) {
+              handleClose();
+            } else {
+              console.error("Failed to change bucket rules");
+              setError("Failed to change bucket rules");
+            }
+          });
+        } else {
+          console.error("Could not parse read or write rules");
+          setError("Could not parse read or write rules");
+        }
+      } catch (error) {
+        console.error("Error parsing rules:", error);
+        setError(`Error parsing rules: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    },
+    [bucket, changeBucketRule, handleClose]
+  );
+
   return (
     <div className={styles.body}>
       <div className={styles.editorContainer}>
         <Editor
           defaultLanguage="myLang"
           theme="my-custom-theme"
+          value={value}
+          onChange={val => setValue(val as string)}
+          className={styles.editor}
           beforeMount={monaco =>
-            handleEditorWillMount(monaco, suggestions, {disposableRef, initializedRef})
+            handleEditorWillMount(monaco, suggestions, {
+              disposableRef,
+              initializedRef
+            })
           }
           options={{
             lineNumbers: "off",
@@ -292,7 +349,7 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
             insertSpaces: true,
             detectIndentation: false,
             fontFamily: "var(--font-family-base)",
-            //@ts-expect-error
+            // @ts-expect-error - Monaco types issue
             renderIndentGuides: false,
             suggestLineHeight: 20,
             scrollBeyondLastLine: false,
@@ -306,17 +363,22 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
               enabled: false
             }
           }}
-          className={styles.editor}
-          value={value}
-          onChange={val => setValue(val as string)}
         />
       </div>
+
+      {error && (
+        <Text variant="danger" className={styles.errorText}>
+          {error}
+        </Text>
+      )}
+
       <div className={styles.buttonsContainer}>
         <Button variant="text" onClick={handleClose} disabled={loading}>
           <Icon name="close" size="sm" />
           Cancel
         </Button>
-        <Button disabled={loading} loading={loading} onClick={handleSubmit}>
+
+        <Button disabled={loading} loading={loading} onClick={() => handleSubmit(value)}>
           <Icon name="filter" size="sm" />
           Apply
         </Button>

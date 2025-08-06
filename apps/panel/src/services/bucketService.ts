@@ -162,14 +162,14 @@ export const useBucketService = () => {
     });
   }, []);
 
-  const {request: changeBucketRule, loading: bucketRuleChangeLoading} = useApi({
+  const {request: changeBucketRule, loading: bucketRuleChangeLoading, error: bucketRuleError} = useApi({
     endpoint: "",
     method: "put"
   });
 
   const changeBucketRuleRequest = useCallback(
-    (bucket: BucketType, newRules: {write: string; read: string}) => {
-      return changeBucketRule({
+    async (bucket: BucketType, newRules: {write: string; read: string}) => {
+      return await changeBucketRule({
         endpoint: `/api/bucket/${bucket._id}`,
         body: {...bucket, acl: newRules}
       });
@@ -191,6 +191,7 @@ export const useBucketService = () => {
     buckets,
     deleteBucketRequest,
     changeBucketRuleRequest,
-    bucketRuleChangeLoading
+    bucketRuleChangeLoading,
+    bucketRuleError
   };
 };
