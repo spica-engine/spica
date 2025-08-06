@@ -121,6 +121,13 @@ describe("Dashboard Realtime", () => {
 
   describe("documents", () => {
     beforeEach(async () => {
+      const guardService = app.get(GuardService);
+      jest.spyOn(guardService, "checkAuthorization").mockResolvedValue(true);
+      jest.spyOn(guardService, "checkAction").mockImplementation(({request}) => {
+        request.resourceFilter = {include: [], exclude: []};
+        return Promise.resolve(true);
+      });
+
       const insertData = [
         {
           _id: dashboardId1,
@@ -165,7 +172,11 @@ describe("Dashboard Realtime", () => {
     });
 
     it("should do the initial sync", async () => {
-      const ws = wsc.get(url("/dashboard"));
+      const ws = wsc.get("/dashboard", {
+        headers: {
+          Authorization: "APIKEY test"
+        }
+      });
       const message = jest.fn();
       ws.onmessage = e => message(JSON.parse(e.data as string));
       await ws.connect;

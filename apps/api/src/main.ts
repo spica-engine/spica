@@ -68,7 +68,7 @@ const args = yargs(process.argv.slice(2))
   .demandOption("database-name")
   .demandOption("database-uri")
   /* Dashboard Options */
-  .option({
+  .options({
     "dashboard-realtime": {
       boolean: true,
       description: "Enable/disable listening dashboards realtime. Default value is true",
@@ -512,7 +512,7 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     "duplicate-arguments-array": false
   })
   .env()
-  .parse();
+  .parse() as any;
 
 const modules = [
   BatchModule.forRoot({
