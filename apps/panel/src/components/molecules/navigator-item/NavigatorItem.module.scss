@@ -26,10 +26,8 @@
     -webkit-line-clamp: 2; /* limit to 2 lines */
     -webkit-box-orient: vertical;
     overflow: hidden;
-    max-width: 120px;
+    max-width: 100px;
     text-overflow: ellipsis;
-    white-space: nowrapS;
-    line-height: 1.2em;
   }
 }
 

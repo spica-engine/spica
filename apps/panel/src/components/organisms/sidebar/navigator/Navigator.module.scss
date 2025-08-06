@@ -13,7 +13,7 @@
     gap: 0;
   }
 
-  .items > div:hover {
+  .items > div:hover:not(.accordion) {
     background-color: var(--color-hover);
   }
 
@@ -52,7 +52,7 @@
     font-weight: 400;
   }
 
-  .ungrouped {
+  .navigatorItem {
     svg,
     button {
       width: var(--icon-size-md);
@@ -69,7 +69,7 @@
   top: 0;
   width: max-content;
   height: 100%;
-  .ungrouped {
+  .navigatorItem {
     background: var(--color-default);
     width: 200px !important;
     box-shadow: var(--box-shadow);
@@ -81,4 +81,16 @@
     opacity: 0 !important;
   }
   background-color: var(--color-default) !important;
+}
+
+.accordionHeader {
+  height: 32px !important;
+}
+
+.accordion > div > div:nth-child(2) > div > div {
+  padding: var(--padding-xs) !important;
+}
+
+.accordion > div:has(.accordionOpen) > div:nth-child(2) {
+  padding: var(--padding-md) !important;
 }

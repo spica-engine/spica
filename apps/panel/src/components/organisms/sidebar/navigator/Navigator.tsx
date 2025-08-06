@@ -1,6 +1,6 @@
-import {FluidContainer, Icon, Text, type IconName, helperUtils} from "oziko-ui-kit";
+import {FluidContainer, Icon, Text, type IconName, helperUtils, Accordion} from "oziko-ui-kit";
 import styles from "./Navigator.module.scss";
-import {Button, Accordion} from "oziko-ui-kit";
+import {Button} from "oziko-ui-kit";
 import NavigatorItem from "../../../molecules/navigator-item/NavigatorItem";
 import React, {
   memo,
@@ -121,7 +121,7 @@ const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
           label={item?.title ?? ""}
           //prefixIcon={item?.icon}
           suffixIcons={[{name: "dragHorizontalVariant"}]}
-          className={styles.ungrouped}
+          className={styles.navigatorItem}
           bucket={item}
         />
       </div>
@@ -190,7 +190,7 @@ const DraggableItem = ({
       onClick={() => {
         navigate(`/${item?.section}/${item?._id}`);
       }}
-      className={`${styles.ungrouped} ${isDragging ? styles.globalDragActive : ""} ${justDropped ? styles.justDropped : ""} `}
+      className={`${styles.navigatorItem} ${isDragging ? styles.globalDragActive : ""} ${justDropped ? styles.justDropped : ""} `}
       bucket={item as BucketType}
     />
   );
@@ -266,6 +266,7 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
               navigate(`/${item?.section}/${item?._id}`);
             }}
             bucket={item}
+            className={styles.navigatorItem}
           />
         ))}
       </>
@@ -282,13 +283,19 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
     <div className={styles.navigation}>
       <NavigatorHeader header={header} />
       <div className={styles.items}>
-        <Accordion
-          items={accordionItems}
-          headerClassName={styles.header}
-          gap={0}
+        {accordionItems.map((item, index) => (
+          <Accordion
+            key={index}
+            items={[item]}
+            headerClassName={styles.accordionHeader}
+            className={styles.accordion}
+            openClassName={styles.accordionOpen}
+            gap={0}
 
-          //TODO: add hoverable api
-        />
+            //TODO: add hoverable api
+          />
+        ))}
+
         {Array.isArray(ungrouped) && items && (
           <ReorderableList
             onOrderChange={items.onOrderChange}
