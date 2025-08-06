@@ -7,6 +7,8 @@ import {PassportTestingModule} from "@spica-server/passport/testing";
 import {StorageModule} from "@spica-server/storage";
 import * as Storage from "@spica-devkit/storage";
 import {BatchModule} from "@spica-server/batch";
+import * as fs from "fs";
+import * as path from "path";
 
 const PORT = 3001;
 const PUBLIC_URL = `http://localhost:${PORT}`;
@@ -28,7 +30,7 @@ describe("Storage", () => {
           strategy: "default",
           defaultPublicUrl: PUBLIC_URL,
           defaultPath: process.env.TEST_TMPDIR,
-          resumableUploadExpiresIn: 0
+          resumableUploadExpiresIn: 60
         }),
         CoreTestingModule,
         BatchModule.forRoot({port: PORT.toString()})
@@ -257,187 +259,184 @@ describe("Storage", () => {
     );
   });
 
-  it("should resumable upload", done => {
-    const onError = jest.fn();
-    const onProgress = jest.fn();
-    const onSuccess = jest.fn();
-
-    Storage.insertResumable(storageObject, {}, onError, onProgress, onSuccess);
-
-    setTimeout(() => {
-      expect(onError).not.toHaveBeenCalled();
-      expect(onProgress).toHaveBeenCalled();
-      expect(onSuccess).toHaveBeenCalled();
-      done();
-    }, 1000);
-  });
-
-  it("should resumable upload with progress tracking for files", done => {
-    const largeFile = {
-      contentType: "application/octet-stream",
-      name: "large_backend_file.bin",
-      data: Buffer.from("x".repeat(1024 * 15)) // 15KB file
-    };
-
-    const progressCalls = [];
-    const onError = jest.fn();
-    const onProgress = jest.fn((bytesUploaded, bytesTotal) => {
-      progressCalls.push({bytesUploaded, bytesTotal});
+  describe("Resumable Uploads", () => {
+    afterEach(async () => {
+      const tusUrlsPath = path.join(process.cwd(), "tus-urls.json");
+      if (fs.existsSync(tusUrlsPath)) fs.unlinkSync(tusUrlsPath);
     });
-    const onSuccess = jest.fn();
 
-    Storage.insertResumable(largeFile, {}, onError, onProgress, onSuccess);
+    it("should resumable upload", done => {
+      const onError = jest.fn();
+      const onProgress = jest.fn();
+      const onSuccess = jest.fn();
 
-    setTimeout(() => {
-      expect(onError).not.toHaveBeenCalled();
-      expect(onSuccess).toHaveBeenCalled();
-      expect(progressCalls.length).toBeGreaterThan(0);
+      Storage.insertResumable(storageObject, {}, onError, onProgress, onSuccess);
 
-      const finalProgress = progressCalls[progressCalls.length - 1];
-      expect(finalProgress.bytesUploaded).toBe(finalProgress.bytesTotal);
-      expect(finalProgress.bytesTotal).toBe(largeFile.data.length);
-
-      done();
-    }, 3000);
-  });
-
-  it("should resumable upload and verify file persistence in storage", done => {
-    const backendFile = {
-      contentType: "application/json",
-      name: "backend_function_result.json",
-      data: Buffer.from(
-        JSON.stringify({
-          functionId: "test_function_123",
-          executionTime: Date.now(),
-          result: "function execution completed",
-          data: new Array(100).fill("backend_data").join("")
-        })
-      )
-    };
-
-    const onError = jest.fn();
-    const onProgress = jest.fn();
-    const onSuccess = jest.fn();
-
-    Storage.insertResumable(backendFile, {}, onError, onProgress, onSuccess);
-
-    setTimeout(async () => {
-      expect(onError).not.toHaveBeenCalled();
-      expect(onSuccess).toHaveBeenCalled();
-
-      const allFiles = await Storage.getAll();
-      const uploadedFile = allFiles.find(file => file.name === backendFile.name);
-
-      expect(uploadedFile).toBeDefined();
-      expect(uploadedFile.content.type).toBe("application/json");
-      expect(uploadedFile.content.size).toBe(backendFile.data.length);
-
-      const downloadStream = (await Storage.download(uploadedFile._id)) as NodeJS.ReadableStream;
-      const chunks = [];
-
-      downloadStream.on("data", chunk => chunks.push(chunk));
-      downloadStream.on("end", () => {
-        const content = JSON.parse(Buffer.concat(chunks).toString());
-        expect(content.functionId).toBe("test_function_123");
-        expect(content.result).toBe("function execution completed");
-        done();
-      });
-    }, 2000);
-  });
-
-  it("should resumable upload with backend authorization headers", done => {
-    const functionFile = {
-      contentType: "text/plain",
-      name: "authorized_function_upload.txt",
-      data: Buffer.from("This file was uploaded by a Spica function with authorization")
-    };
-
-    const backendHeaders = {
-      "X-Function-Id": "backend_function_456",
-      "X-Execution-Context": "spica-backend",
-      "X-Upload-Source": "function-devkit"
-    };
-
-    const onError = jest.fn();
-    const onProgress = jest.fn();
-    const onSuccess = jest.fn();
-
-    Storage.insertResumable(functionFile, backendHeaders, onError, onProgress, onSuccess);
-
-    setTimeout(async () => {
-      expect(onError).not.toHaveBeenCalled();
-      expect(onSuccess).toHaveBeenCalled();
-
-      const allFiles = await Storage.getAll();
-      const uploadedFile = allFiles.find(file => file.name === functionFile.name);
-
-      expect(uploadedFile).toBeDefined();
-      expect(uploadedFile.content.size).toBe(functionFile.data.length);
-
-      done();
-    }, 1500);
-  });
-
-  fit("should resume upload if it was interrupted", async () => {
-    const testFile = {
-      contentType: "application/octet-stream",
-      name: "interrupted_test.bin",
-      data: Buffer.from("x".repeat(1024 * 200)) // 200KB file
-    };
-
-    // Step 1: Start upload and interrupt it
-    let uploadInterrupted = false;
-    const firstUpload = new Promise(resolve => {
-      const onProgress = (bytesUploaded, bytesTotal) => {
-        if (bytesUploaded > 0 && bytesUploaded < bytesTotal) {
-          uploadInterrupted = true;
-          resolve("interrupted");
-        }
-      };
-
-      Storage.insertResumable(testFile, {}, jest.fn(), onProgress, jest.fn());
-
-      // Force interruption after 1 second
       setTimeout(() => {
-        if (!uploadInterrupted) {
-          uploadInterrupted = true;
-          resolve("forced_interrupt");
-        }
+        expect(onError).not.toHaveBeenCalled();
+        expect(onProgress).toHaveBeenCalled();
+        expect(onSuccess).toHaveBeenCalled();
+        done();
       }, 1000);
     });
 
-    await firstUpload;
-    expect(uploadInterrupted).toBe(true);
-
-    // Step 2: Resume upload
-    let resumeDetected = false;
-    const resumeUpload = new Promise((resolve, reject) => {
-      const onProgress = bytesUploaded => {
-        if (bytesUploaded > 0) {
-          resumeDetected = true;
-        }
+    it("should resumable upload with progress tracking for files", done => {
+      const largeFile = {
+        contentType: "application/octet-stream",
+        name: "large_backend_file.bin",
+        data: Buffer.from("x".repeat(1024 * 15))
       };
 
-      const onSuccess = () => resolve(undefined);
-      const onError = error => reject(error);
+      const progressCalls = [];
+      const onError = jest.fn();
+      const onProgress = jest.fn((bytesUploaded, bytesTotal) => {
+        progressCalls.push({bytesUploaded, bytesTotal});
+      });
+      const onSuccess = jest.fn();
 
-      Storage.insertResumable(testFile, {}, onError, onProgress, onSuccess);
+      Storage.insertResumable(largeFile, {}, onError, onProgress, onSuccess);
+
+      setTimeout(() => {
+        expect(onError).not.toHaveBeenCalled();
+        expect(onSuccess).toHaveBeenCalled();
+        expect(progressCalls.length).toBeGreaterThan(0);
+
+        const finalProgress = progressCalls[progressCalls.length - 1];
+        expect(finalProgress.bytesUploaded).toBe(finalProgress.bytesTotal);
+        expect(finalProgress.bytesTotal).toBe(largeFile.data.length);
+
+        done();
+      }, 3000);
     });
 
-    await resumeUpload;
+    it("should resumable upload and verify file persistence in storage", done => {
+      const backendFile = {
+        contentType: "application/json",
+        name: "backend_function_result.json",
+        data: Buffer.from(
+          JSON.stringify({
+            functionId: "test_function_123",
+            executionTime: Date.now(),
+            result: "function execution completed",
+            data: new Array(100).fill("backend_data").join("")
+          })
+        )
+      };
 
-    // Step 3: Verify results
-    expect(resumeDetected).toBe(true);
+      const onError = jest.fn();
+      const onProgress = jest.fn();
+      const onSuccess = jest.fn();
 
-    const allFiles = await Storage.getAll();
-    const uploadedFile = allFiles.find(f => f.name === testFile.name);
+      Storage.insertResumable(backendFile, {}, onError, onProgress, onSuccess);
 
-    expect(uploadedFile).toMatchObject({
-      name: testFile.name,
-      content: {
-        size: testFile.data.length,
-        type: testFile.contentType
-      }
+      setTimeout(async () => {
+        expect(onError).not.toHaveBeenCalled();
+        expect(onSuccess).toHaveBeenCalled();
+
+        const allFiles = await Storage.getAll();
+        const uploadedFile = allFiles.find(file => file.name === backendFile.name);
+
+        expect(uploadedFile).toBeDefined();
+        expect(uploadedFile.content.type).toBe("application/json");
+        expect(uploadedFile.content.size).toBe(backendFile.data.length);
+
+        const downloadStream = (await Storage.download(uploadedFile._id)) as NodeJS.ReadableStream;
+        const chunks = [];
+
+        downloadStream.on("data", chunk => chunks.push(chunk));
+        downloadStream.on("end", () => {
+          const content = JSON.parse(Buffer.concat(chunks).toString());
+          expect(content.functionId).toBe("test_function_123");
+          expect(content.result).toBe("function execution completed");
+          done();
+        });
+      }, 2000);
     });
-  }, 20000);
+
+    it("should resumable upload with backend authorization headers", done => {
+      const functionFile = {
+        contentType: "text/plain",
+        name: "authorized_function_upload.txt",
+        data: Buffer.from("This file was uploaded by a Spica function with authorization")
+      };
+
+      const backendHeaders = {
+        "X-Function-Id": "backend_function_456",
+        "X-Execution-Context": "spica-backend",
+        "X-Upload-Source": "function-devkit"
+      };
+
+      const onError = jest.fn();
+      const onProgress = jest.fn();
+      const onSuccess = jest.fn();
+
+      Storage.insertResumable(functionFile, backendHeaders, onError, onProgress, onSuccess);
+
+      setTimeout(async () => {
+        expect(onError).not.toHaveBeenCalled();
+        expect(onSuccess).toHaveBeenCalled();
+
+        const allFiles = await Storage.getAll();
+        const uploadedFile = allFiles.find(file => file.name === functionFile.name);
+
+        expect(uploadedFile).toBeDefined();
+        expect(uploadedFile.content.size).toBe(functionFile.data.length);
+
+        done();
+      }, 1500);
+    });
+
+    it("should resume upload if it was interrupted", async () => {
+      const timestamp = Date.now();
+      const testFile = {
+        contentType: "application/octet-stream",
+        name: `interrupted_test_${timestamp}.bin`,
+        data: Buffer.from("x".repeat(1024 * 200)) // 200KB file
+      };
+
+      // Start upload and interrupt it
+      let uploadInterrupted = false;
+      await new Promise<void>(resolve => {
+        const onProgress = (bytesUploaded, bytesTotal) => {
+          if (bytesUploaded > 0 && bytesUploaded < bytesTotal && !uploadInterrupted) {
+            uploadInterrupted = true;
+            resolve();
+          }
+        };
+        Storage.insertResumable(testFile, {}, jest.fn(), onProgress, jest.fn());
+        setTimeout(() => {
+          if (!uploadInterrupted) {
+            uploadInterrupted = true;
+            resolve();
+          }
+        }, 100);
+      });
+      expect(uploadInterrupted).toBe(true);
+
+      // Resume upload
+      let resumeDetected = false;
+      await new Promise<void>((resolve, reject) => {
+        const onProgress = (bytesUploaded, bytesTotal) => {
+          if (bytesUploaded > 0 && !resumeDetected) {
+            resumeDetected = true;
+          }
+        };
+        const onSuccess = () => resolve();
+        const onError = error => reject(error);
+        Storage.insertResumable(testFile, {}, onError, onProgress, onSuccess);
+      });
+      expect(resumeDetected).toBe(true);
+
+      const allFiles = await Storage.getAll();
+      const uploadedFile = allFiles.find(f => f.name === testFile.name);
+      expect(uploadedFile).toBeDefined();
+      expect(uploadedFile).toMatchObject({
+        name: testFile.name,
+        content: {
+          size: testFile.data.length,
+          type: testFile.contentType
+        }
+      });
+    }, 20000);
+  });
 });
