@@ -70,14 +70,7 @@ export default function Bucket() {
   const handleSearch = useCallback(
     (search: string) => {
       const trimmed = search.trim();
-
-      if (trimmed === "") {
-        cleanBucketData();
-        getBucketData(bucketId as string);
-        return;
-      }
-
-      const query = buildBucketQuery(trimmed, searchableColumns);
+      const query = trimmed === "" ? undefined : buildBucketQuery(trimmed, searchableColumns);
       cleanBucketData();
       getBucketData(bucketId as string, query as unknown as BucketDataQueryWithIdType);
     },
