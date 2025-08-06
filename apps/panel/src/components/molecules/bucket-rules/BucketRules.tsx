@@ -19,6 +19,29 @@ type BucketRulesProps = {
   onClose: () => void;
 };
 
+function shortenErrorMessage(message: string, maxTokens = 5): string {
+  const regex = /Expected\s+(.*?)\s+but\s+"(.)"\s+found\./;
+  const match = message.match(regex);
+
+  if (!match) return message;
+
+  const expectedPart = match[1];
+  const foundChar = match[2];
+
+  // Extract all expected tokens (quoted strings or character classes)
+  const tokens = [...expectedPart.matchAll(/"[^"]+"|\[[^\]]+\]/g)].map(m => m[0]);
+
+  if (tokens.length <= maxTokens) return message;
+
+  const shortenedTokens = tokens.slice(0, maxTokens).join(", ");
+  const hiddenCount = tokens.length - maxTokens;
+
+  return message.replace(
+    regex,
+    `Expected ${shortenedTokens} ...${hiddenCount} more, but "${foundChar}" found.`
+  );
+}
+
 const parseRulesFromText = (text: string) => {
   if (!text.trim().startsWith("{") || !text.trim().endsWith("}")) {
     throw new Error("Input must be wrapped in curly braces.");
@@ -364,13 +387,12 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
             }
           }}
         />
+        {error && (
+          <Text variant="danger" className={styles.errorText}>
+            {shortenErrorMessage(error)}
+          </Text>
+        )}
       </div>
-
-      {error && (
-        <Text variant="danger" className={styles.errorText}>
-          {error}
-        </Text>
-      )}
 
       <div className={styles.buttonsContainer}>
         <Button variant="text" onClick={handleClose} disabled={loading}>

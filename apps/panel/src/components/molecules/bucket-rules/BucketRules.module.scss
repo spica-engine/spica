@@ -41,7 +41,7 @@
   padding: var(--padding-xl);
   display: flex;
   flex-direction: column;
-  gap: var(--gap-md);
+  gap: 18px;
 }
 
 .buttonsContainer {
@@ -63,6 +63,7 @@
 }
 
 .editorContainer {
+  position: relative;
   height: 80px;
   width: 100%;
   padding: var(--padding-md);
@@ -92,6 +93,9 @@
 
 .errorText {
   max-width: 100%;
+  font-size: var(--font-size-xs) !important;
+  position: absolute;
+  bottom: -14px;
 }
 
 [class^="Portal-module_container__"] {
