@@ -19,6 +19,9 @@ type BucketRulesProps = {
   onClose: () => void;
 };
 
+const LANGUAGE_NAME = "myLang";
+const THEME_NAME = "myCustomtheme";
+
 function shortenErrorMessage(message: string, maxTokens = 5): string {
   const regex = /Expected\s+(.*?)\s+but\s+"(.)"\s+found\./;
   const match = message.match(regex);
@@ -155,9 +158,9 @@ function handleEditorWillMount(
   const {disposableRef, initializedRef} = refs;
 
   if (!initializedRef.current) {
-    monaco.languages.register({id: "myLang"});
+    monaco.languages.register({id: LANGUAGE_NAME});
 
-    monaco.languages.setMonarchTokensProvider("myLang", {
+    monaco.languages.setMonarchTokensProvider(LANGUAGE_NAME, {
       defaultToken: "",
       tokenizer: {
         root: [
@@ -178,7 +181,7 @@ function handleEditorWillMount(
       }
     });
 
-    monaco.editor.defineTheme("my-custom-theme", {
+    monaco.editor.defineTheme(THEME_NAME, {
       base: "vs",
       inherit: true,
       rules: [
@@ -196,7 +199,7 @@ function handleEditorWillMount(
     initializedRef.current = true;
   }
 
-  disposableRef.current = monaco.languages.registerCompletionItemProvider("myLang", {
+  disposableRef.current = monaco.languages.registerCompletionItemProvider(LANGUAGE_NAME, {
     triggerCharacters: ".".split(""),
 
     provideCompletionItems: (model, position) => {
@@ -320,22 +323,24 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
       try {
         const rules = parseRulesFromText(value);
 
-        if (rules.read !== undefined && rules.write !== undefined) {
-          changeBucketRule(bucket, {
-            write: rules.write,
-            read: rules.read
-          }).then(result => {
-            if (result) {
-              handleClose();
-            } else {
-              console.error("Failed to change bucket rules");
-              setError("Failed to change bucket rules");
-            }
-          });
-        } else {
+        if (rules.read === undefined || rules.write === undefined) {
           console.error("Could not parse read or write rules");
           setError("Could not parse read or write rules");
+          return;
         }
+
+        changeBucketRule(bucket, {
+          write: rules.write,
+          read: rules.read
+        }).then(result => {
+          if (result) {
+            handleClose();
+            return;
+          }
+
+          console.error("Failed to change bucket rules");
+          setError("Failed to change bucket rules");
+        });
       } catch (error) {
         console.error("Error parsing rules:", error);
         setError(`Error parsing rules: ${error instanceof Error ? error.message : String(error)}`);
@@ -348,8 +353,8 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
     <div className={styles.body}>
       <div className={styles.editorContainer}>
         <Editor
-          defaultLanguage="myLang"
-          theme="my-custom-theme"
+          defaultLanguage={LANGUAGE_NAME}
+          theme={THEME_NAME}
           value={value}
           onChange={val => setValue(val as string)}
           className={styles.editor}

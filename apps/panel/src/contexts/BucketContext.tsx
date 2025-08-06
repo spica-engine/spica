@@ -144,13 +144,14 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
 
   const changeBucketRule = useCallback(
     (bucket: BucketType, newRules: {read: string; write: string}) => {
-      return changeBucketRuleRequest(bucket, newRules).then(result => {
-        if (!result) return;
-        setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, acl: newRules} : i)));
+      const oldBuckets = buckets;
+      setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, acl: newRules} : i)));
+      return changeBucketRuleRequest(bucket, newRules).then((result) => {
+        if (!result) setBuckets(oldBuckets);
         return result;
       });
     },
-    [changeBucketRuleRequest]
+    [changeBucketRuleRequest, buckets]
   );
 
   const contextValue = useMemo(
