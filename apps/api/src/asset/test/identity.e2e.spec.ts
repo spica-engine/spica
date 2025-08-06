@@ -40,7 +40,7 @@ describe("identity-settings", () => {
       CoreTestingModule,
       DatabaseTestingModule.replicaSet(),
       PreferenceModule.forRoot(),
-      PolicyModule.forRoot(),
+      PolicyModule.forRoot({realtime: false}),
       IdentityModule.forRoot({
         expiresIn: EXPIRES_IN,
         issuer: "spica",
