@@ -3,16 +3,26 @@ import {type FC, memo, useState} from "react";
 import styles from "./TitleForm.module.scss";
 
 type TypeTitleFormProps = {
+  title: string;
   initialValue: string;
   onClose?: () => void;
   onSubmit: (value: string) => void | Promise<void>;
+  loading?: boolean;
+  closeAfterSubmit?: boolean;
 };
 
-const TitleForm: FC<TypeTitleFormProps> = ({initialValue, onClose, onSubmit}) => {
+const TitleForm: FC<TypeTitleFormProps> = ({
+  initialValue,
+  onClose,
+  onSubmit,
+  title,
+  loading,
+  closeAfterSubmit = true
+}) => {
   const [value, setValue] = useState(initialValue);
   const handleSave = () => {
     onSubmit(value);
-    onClose?.();
+    if (closeAfterSubmit) onClose?.();
   };
   return (
     <Modal showCloseButton={false} onClose={onClose} className={styles.modal} isOpen>
@@ -24,7 +34,7 @@ const TitleForm: FC<TypeTitleFormProps> = ({initialValue, onClose, onSubmit}) =>
         prefix={{
           children: (
             <div className={styles.header}>
-              <Text className={styles.headerText}>EDIT NAME</Text>
+              <Text className={styles.headerText}>{title}</Text>
             </div>
           )
         }}
@@ -48,12 +58,22 @@ const TitleForm: FC<TypeTitleFormProps> = ({initialValue, onClose, onSubmit}) =>
           children: (
             <FlexElement gap={10} className={styles.buttonsContainer}>
               <div className={styles.addButtonWrapper}>
-                <Button className={styles.addButton} onClick={handleSave}>
+                <Button
+                  className={styles.addButton}
+                  onClick={handleSave}
+                  disabled={loading}
+                  loading={loading}
+                >
                   <Icon name="save" />
                   <Text className={styles.addButtonText}>Save</Text>
                 </Button>
               </div>
-              <Button className={styles.cancelButton} variant="text" onClick={() => onClose?.()}>
+              <Button
+                className={styles.cancelButton}
+                variant="text"
+                onClick={() => onClose?.()}
+                disabled={loading}
+              >
                 <Icon name="close" />
                 <Text>Cancel</Text>
               </Button>

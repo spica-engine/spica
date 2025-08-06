@@ -181,6 +181,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
       )}
       {titleFormOpen && (
         <TitleForm
+          title="EDIT NAME"
           initialValue={bucket.title}
           onClose={() => setTitleFormOpen(false)}
           onSubmit={handleChangeBucketName}

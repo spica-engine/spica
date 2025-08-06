@@ -37,6 +37,7 @@ type BucketContextType = {
   getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
   changeBucketName: (newTitle: string, bucket: BucketType) => Promise<any>;
+  addBucket: (title: string) => Promise<any>;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -54,7 +55,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
-    requestBucketNameChange
+    requestBucketNameChange,
+    addBucketRequest,
   } = useBucketService();
   const [bucketData, setBucketData] = useState<BucketDataWithIdType>({
     ...fetchedBucketData,
@@ -139,6 +141,17 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
   }, [buckets]);
 
+  const addBucket = useCallback(
+    async (title: string) => {
+      return await addBucketRequest(title, buckets.length).then(result => {
+        if (!result) return
+        setBuckets(prev => [...(prev ?? []), result]);
+        return result;
+      });
+    },
+    [buckets]
+  );
+
   useEffect(() => {
     fetchBuckets().then(result => {
       setBuckets(result);
@@ -161,7 +174,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketData,
       getBucketData,
       nextbucketDataQuery,
-      changeBucketName
+      changeBucketName,
+      addBucket,
     }),
     [
       buckets,
@@ -170,7 +184,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       fetchBuckets,
       categories,
       bucketData,
-      changeBucketName
+      changeBucketName,
     ]
   );
 

@@ -85,10 +85,7 @@ export const useBucketService = () => {
     method: "get"
   });
 
-  const {
-    request: fetchBucketData,
-    data: bucketData,
-  } = useApi<BucketDataType>({
+  const {request: fetchBucketData, data: bucketData} = useApi<BucketDataType>({
     endpoint: "",
     method: "get"
   });
@@ -156,16 +153,19 @@ export const useBucketService = () => {
     method: "put"
   });
 
-  const requestBucketNameChange = useCallback(async (newTitle: string, bucket: BucketType) => {
-    try {
-      const body = {...bucket, title: newTitle};
-      delete (body as unknown as {section: any}).section;
-      delete (body as unknown as {index: any}).index;
-      return await requestNameChange({body, endpoint: `/api/bucket/${bucket._id}`});
-    } catch (err) {
-      console.error(err);
-    }
-  }, [requestNameChange]);
+  const requestBucketNameChange = useCallback(
+    async (newTitle: string, bucket: BucketType) => {
+      try {
+        const body = {...bucket, title: newTitle};
+        delete (body as unknown as {section: any}).section;
+        delete (body as unknown as {index: any}).index;
+        return await requestNameChange({body, endpoint: `/api/bucket/${bucket._id}`});
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    [requestNameChange]
+  );
 
   const {request: deleteRequest} = useApi({
     endpoint: "",
@@ -177,6 +177,48 @@ export const useBucketService = () => {
       endpoint: `/api/bucket/${bucketId}`
     });
   }, []);
+
+  const {request: postRequest} = useApi<BucketType>({
+    endpoint: "/api/bucket",
+    method: "post"
+  });
+
+  const addBucketRequest = useCallback(
+    (title: string, order: number) => {
+      const bucket = {
+        title,
+        description: "Describe your new bucket",
+        icon: "view_stream",
+        primary: "title",
+        readOnly: false,
+        history: false,
+        properties: {
+          title: {
+            type: "string",
+            title: "title",
+            description: "Title of the row",
+            options: {position: "left"}
+          },
+          description: {
+            type: "textarea",
+            title: "description",
+            description: "Description of the row",
+            options: {position: "right"}
+          }
+        },
+        acl: {
+          write: "true==true",
+          read: "true==true"
+        },
+        order
+      };
+      return postRequest({body: {...bucket}}).then(result => {
+        if (!result) return;
+        return result;
+      });
+    },
+    [postRequest]
+  );
 
   return {
     loading,
@@ -191,6 +233,7 @@ export const useBucketService = () => {
     bucketOrderError,
     requestBucketNameChange,
     buckets,
-    deleteBucketRequest
+    deleteBucketRequest,
+    addBucketRequest,
   };
 };
