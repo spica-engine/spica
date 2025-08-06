@@ -1,8 +1,7 @@
 import React, {memo} from "react";
 import styles from "./BucketActionBar.module.scss";
-import {Button, FlexElement, Icon, Popover} from "oziko-ui-kit";
+import {Button, FlexElement, Icon, Popover, Checkbox} from "oziko-ui-kit";
 import SearchBar from "../../../components/atoms/search-bar/SearchBar";
-import Checkbox from "../../../components/atoms/checkbox/Checkbox";
 import type {ColumnType} from "src/components/organisms/bucket-table/BucketTable";
 
 type BucketActionBarProps = {
