@@ -68,7 +68,7 @@ const args = yargs(process.argv.slice(2))
   .demandOption("database-name")
   .demandOption("database-uri")
   /* Dashboard Options */
-  .options({
+  .option({
     "dashboard-realtime": {
       boolean: true,
       description: "Enable/disable listening dashboards realtime. Default value is true",
