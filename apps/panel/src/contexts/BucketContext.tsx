@@ -36,6 +36,7 @@ type BucketContextType = {
   bucketData: BucketDataType | null;
   getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
+  changeBucketName: (newTitle: string, bucket: BucketType) => Promise<any>;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -52,7 +53,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     deleteBucketRequest,
     changeBucketOrder,
     bucketOrderLoading,
-    bucketOrderError
+    bucketOrderError,
+    requestBucketNameChange
   } = useBucketService();
   const [bucketData, setBucketData] = useState<BucketDataWithIdType>({
     ...fetchedBucketData,
@@ -129,6 +131,20 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [deleteBucketRequest]
   );
 
+  const changeBucketName = useCallback(async (newTitle: string, bucket: BucketType) => {
+    const oldBuckets = buckets;
+    requestBucketNameChange(newTitle, bucket).then(result => {
+      if (!result) setBuckets(oldBuckets);
+    });
+    setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
+  }, [buckets]);
+
+  useEffect(() => {
+    fetchBuckets().then(result => {
+      setBuckets(result);
+    });
+  }, []);
+
   const contextValue = useMemo(
     () => ({
       buckets,
@@ -144,7 +160,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketOrderError,
       bucketData,
       getBucketData,
-      nextbucketDataQuery
+      nextbucketDataQuery,
+      changeBucketName
     }),
     [
       buckets,
@@ -152,7 +169,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       error,
       fetchBuckets,
       categories,
-      bucketData
+      bucketData,
+      changeBucketName
     ]
   );
 
@@ -166,6 +184,3 @@ export function useBucket() {
 }
 
 export default BucketContext;
-function BucketDataWithIdType(fetchedBucketData: BucketDataType | null) {
-  throw new Error("Function not implemented.");
-}
