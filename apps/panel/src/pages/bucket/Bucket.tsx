@@ -2,27 +2,33 @@ import styles from "./Bucket.module.scss";
 import {useBucket} from "../../contexts/BucketContext";
 import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
-import {useCallback, useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useMemo} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
-import type {BucketDataQueryType} from "src/services/bucketService";
+import type {BucketDataQueryWithIdType} from "src/services/bucketService";
 
 const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const buildBucketQuery = (search: string, searchableColumns: string[]) =>
+const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
   ({
     paginatie: true,
     relation: true,
     limit: 25,
     filter: JSON.stringify({
       $or: searchableColumns.map(col => ({
-        [col]: {$regex: escapeForRegex(search), $options: "i"}
+        [col]: {$regex: escapeForRegex(searchText), $options: "i"}
       }))
     })
   }) as const;
 
 export default function Bucket() {
-  const [lastSearchedText, setLastSearchedText] = useState<string | null>(null);
   const {bucketId} = useParams<{bucketId: string}>();
-  const {buckets, bucketData, getBucketData, nextbucketDataQuery, bucketDataLoading} = useBucket();
+  const {
+    buckets,
+    bucketData,
+    getBucketData,
+    nextbucketDataQuery,
+    bucketDataLoading,
+    cleanBucketData
+  } = useBucket();
 
   useEffect(() => {
     if (!bucketId) return;
@@ -53,40 +59,34 @@ export default function Bucket() {
   }, [buckets, bucketId]);
 
   const handleScrollEnd = useCallback(() => {
-    if (!bucketId) return;
-    const query = nextbucketDataQuery;
-    if (query?.bucketId) {
-      delete (query as any).bucketId;
-    }
-    getBucketData(bucketId, query as BucketDataQueryType);
+    if (!bucketId || !nextbucketDataQuery) return;
+    getBucketData(bucketId, nextbucketDataQuery);
   }, [bucketId, getBucketData, nextbucketDataQuery]);
 
   const searchableColumns = formattedColumns
-    .filter(i => i.type === "string" || i.type === "textarea" || i.type === "richtext")
-    .map(i => i.key);
+    .filter(({type}) => ["string", "textarea", "richtext"].includes(type as string))
+    .map(({key}) => key);
 
   const handleSearch = useCallback(
     (search: string) => {
       const trimmed = search.trim();
 
       if (trimmed === "") {
-        if (lastSearchedText) {
-          setLastSearchedText(null);
-          getBucketData(bucketId as string, undefined, true);
-        }
+        cleanBucketData();
+        getBucketData(bucketId as string);
         return;
       }
 
       const query = buildBucketQuery(trimmed, searchableColumns);
-      getBucketData(bucketId as string, query as BucketDataQueryType, true);
-      setLastSearchedText(trimmed);
+      cleanBucketData();
+      getBucketData(bucketId as string, query as unknown as BucketDataQueryWithIdType);
     },
-    [bucketId, searchableColumns, lastSearchedText, getBucketData]
+    [bucketId, searchableColumns, getBucketData]
   );
 
   return (
     <div className={styles.container}>
-      <BucketActionBar bucketId={bucketId as string} search={handleSearch} />
+      <BucketActionBar bucketId={bucketId as string} onSearch={handleSearch} />
       <BucketTable
         bucketId={bucketId as string}
         columns={formattedColumns}

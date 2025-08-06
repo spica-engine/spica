@@ -36,11 +36,11 @@ type BucketContextType = {
   bucketData: BucketDataType | null;
   getBucketData: (
     bucketId: string,
-    query?: BucketDataQueryType,
-    restart?: boolean
+    query?: BucketDataQueryType & {bucketId: string}
   ) => Promise<BucketDataType>;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
   bucketDataLoading: boolean;
+  cleanBucketData: () => void;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -136,30 +136,28 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   );
 
   const getBucketData = useCallback(
-    async (bucketId: string, query?: BucketDataQueryType, restart = false) => {
+    async (bucketId: string, query?: BucketDataQueryWithIdType) => {
       const {bucketId: _, ...prevQueryNoBucket} = lastUsedBucketDataQuery || {};
-      const {bucketId: __, ...newQueryNoBucket} = query || ({} as any);
+      const {bucketId: __, ...newQueryNoBucket} = query || {bucketId: ""};
 
-      if (
-        Object.keys(prevQueryNoBucket).length > 1 &&
-        Object.keys(newQueryNoBucket).length > 1 &&
-        JSON.stringify(prevQueryNoBucket) === JSON.stringify(newQueryNoBucket)
-      ) {
-        return;
-      }
+      const previousQueryEmpty = Object.keys(prevQueryNoBucket).length <= 1;
+      const newQueryEmpty = Object.keys(newQueryNoBucket).length <= 1;
+      const queriesEqual = JSON.stringify(prevQueryNoBucket) === JSON.stringify(newQueryNoBucket);
+      if (queriesEqual && !previousQueryEmpty && !newQueryEmpty) return;
 
       try {
-        if (restart) {
-          setBucketData({data: []} as any);
-        }
-        const result = await requestBucketData(bucketId, query);
+        const result = await requestBucketData(bucketId, newQueryNoBucket);
         return result;
       } catch (err) {
         console.error("Error fetching bucket data:", err);
       }
     },
-    [lastUsedBucketDataQuery, requestBucketData, setBucketData]
+    [lastUsedBucketDataQuery, requestBucketData]
   );
+
+  const cleanBucketData = useCallback(() => {
+    setBucketData({data: []} as unknown as BucketDataWithIdType);
+  }, []);
 
   const contextValue = useMemo(
     () => ({
@@ -177,7 +175,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketData,
       getBucketData,
       nextbucketDataQuery,
-      bucketDataLoading
+      bucketDataLoading,
+      cleanBucketData
     }),
     [buckets, loading, error, fetchBuckets, categories, bucketData]
   );
