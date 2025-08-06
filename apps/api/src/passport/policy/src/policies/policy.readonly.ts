@@ -12,6 +12,11 @@ export default {
       action: "passport:policy:show",
       resource: {include: ["*"], exclude: []},
       module: "passport:policy"
+    },
+    {
+      action: "passport:policy:stream",
+      resource: {include: ["*"], exclude: []},
+      module: "passport:policy"
     }
   ]
 };

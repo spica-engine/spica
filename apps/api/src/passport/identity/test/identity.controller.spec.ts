@@ -41,7 +41,7 @@ describe("Identity Controller", () => {
           },
           identityRealtime: false
         }),
-        PolicyModule.forRoot()
+        PolicyModule.forRoot({realtime: false})
       ]
     }).compile();
     app = module.createNestApplication();
