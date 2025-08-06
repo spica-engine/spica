@@ -151,6 +151,22 @@ export const useBucketService = () => {
     [bucketOrderRequest]
   );
 
+  const {request: requestNameChange} = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
+  const requestBucketNameChange = useCallback(async (newTitle: string, bucket: BucketType) => {
+    try {
+      const body = {...bucket, title: newTitle};
+      delete (body as unknown as {section: any}).section;
+      delete (body as unknown as {index: any}).index;
+      return await requestNameChange({body, endpoint: `/api/bucket/${bucket._id}`});
+    } catch (err) {
+      console.error(err);
+    }
+  }, [requestNameChange]);
+
   const {request: deleteRequest} = useApi({
     endpoint: "",
     method: "delete"
@@ -188,6 +204,7 @@ export const useBucketService = () => {
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
+    requestBucketNameChange,
     buckets,
     deleteBucketRequest,
     changeBucketRuleRequest,

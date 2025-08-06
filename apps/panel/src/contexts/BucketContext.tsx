@@ -46,6 +46,7 @@ type BucketContextType = {
 
   bucketRuleChangeLoading: boolean;
   bucketRuleError: string | null;
+  changeBucketName: (newTitle: string, bucket: BucketType) => Promise<any>;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -65,7 +66,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     bucketOrderError,
     changeBucketRuleRequest,
     bucketRuleChangeLoading,
-    bucketRuleError
+    bucketRuleError,
+    requestBucketNameChange
   } = useBucketService();
   const [bucketData, setBucketData] = useState<BucketDataWithIdType>({
     ...fetchedBucketData,
@@ -154,6 +156,15 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [changeBucketRuleRequest, buckets]
   );
 
+  const changeBucketName = useCallback(async (newTitle: string, bucket: BucketType) => {
+    const oldBuckets = buckets;
+    requestBucketNameChange(newTitle, bucket).then(result => {
+      if (!result) setBuckets(oldBuckets);
+    });
+    setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
+  }, [buckets]);
+
+
   const contextValue = useMemo(
     () => ({
       buckets,
@@ -172,7 +183,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       nextbucketDataQuery,
       changeBucketRule,
       bucketRuleChangeLoading,
-      bucketRuleError
+      bucketRuleError,
+      changeBucketName
     }),
     [
       buckets,
@@ -182,7 +194,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       categories,
       bucketData,
       bucketRuleChangeLoading,
-      bucketRuleError
+      bucketRuleError,
+      changeBucketName
     ]
   );
 

@@ -1,6 +1,7 @@
 .layout {
   display: flex;
   height: 100vh;
+  background-color: var(--color-layout-background);
 
   .sidebar {
     transition: width var(--transition-duration);
