@@ -64,10 +64,10 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
+    requestBucketNameChange,
     changeBucketRuleRequest,
     bucketRuleChangeLoading,
     bucketRuleError,
-    requestBucketNameChange
   } = useBucketService();
   const [bucketData, setBucketData] = useState<BucketDataWithIdType>({
     ...fetchedBucketData,
