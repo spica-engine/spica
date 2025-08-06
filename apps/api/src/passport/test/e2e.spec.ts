@@ -236,7 +236,8 @@ describe("E2E Tests", () => {
         refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
         passwordHistoryLimit: 2,
         apikeyRealtime: false,
-        identityRealtime: false
+        identityRealtime: false,
+        refreshTokenRealtime: false
       }),
       PreferenceTestingModule,
       CoreTestingModule
