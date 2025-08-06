@@ -41,6 +41,7 @@ type BucketContextType = {
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
   bucketDataLoading: boolean;
   cleanBucketData: () => void;
+  changeBucketName: (newTitle: string, bucket: BucketType) => Promise<any>;
 };
 
 const BucketContext = createContext<BucketContextType | null>(null);
@@ -58,6 +59,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
+    requestBucketNameChange,
     bucketDataLoading
   } = useBucketService();
   const [bucketData, setBucketData] = useState<BucketDataWithIdType>({
@@ -135,6 +137,14 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [deleteBucketRequest]
   );
 
+  const changeBucketName = useCallback(async (newTitle: string, bucket: BucketType) => {
+    const oldBuckets = buckets;
+    requestBucketNameChange(newTitle, bucket).then(result => {
+      if (!result) setBuckets(oldBuckets);
+    });
+    setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
+  }, [buckets]);
+
   const getBucketData = useCallback(
     async (bucketId: string, query?: BucketDataQueryWithIdType) => {
       const {bucketId: _, ...prevQueryNoBucket} = lastUsedBucketDataQuery || {};
@@ -176,9 +186,11 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       getBucketData,
       nextbucketDataQuery,
       bucketDataLoading,
-      cleanBucketData
+      cleanBucketData,
+      changeBucketName
     }),
-    [buckets, loading, error, fetchBuckets, categories, bucketData]
+    [buckets, loading, error, fetchBuckets, categories, bucketData,
+      changeBucketName]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;
@@ -191,6 +203,3 @@ export function useBucket() {
 }
 
 export default BucketContext;
-function BucketDataWithIdType(fetchedBucketData: BucketDataType | null) {
-  throw new Error("Function not implemented.");
-}
