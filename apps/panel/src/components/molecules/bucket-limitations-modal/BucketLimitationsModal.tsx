@@ -22,7 +22,7 @@ const BucketLimitationsModal = ({
   });
 
   const handleSubmit = () => {
-    onSubmit(values.countLimit, values.limitExceedBehaviour);
+    onSubmit(Number(values.countLimit), values.limitExceedBehaviour);
   };
 
   const limitExceedBehaviourOptions = [
