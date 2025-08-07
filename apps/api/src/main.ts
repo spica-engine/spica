@@ -432,6 +432,12 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     description: "Regex to filter access logs by status code",
     default: ".*"
   })
+  /* Environment Variable Options */
+  .option("env-var-realtime", {
+    boolean: true,
+    description: "Enable/disable realtime updates for environment variables.",
+    default: true
+  })
   .middleware(args => {
     const username = process.env.MONGODB_USERNAME;
     const password = process.env.MONGODB_PASSWORD;
@@ -528,7 +534,9 @@ const modules = [
     appName: "spica",
     readPreference: args["database-read-preference"]
   }),
-  EnvVarModule.forRoot(),
+  EnvVarModule.forRoot({
+    realtime: args["env-var-realtime"]
+  }),
   SchemaModule.forRoot({
     formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
     defaults: [CREATED_AT, UPDATED_AT]
