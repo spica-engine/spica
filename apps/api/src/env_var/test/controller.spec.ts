@@ -16,7 +16,7 @@ describe("Environment Variable", () => {
       imports: [
         DatabaseTestingModule.standalone(),
         CoreTestingModule,
-        EnvVarModule.forRoot(),
+        EnvVarModule.forRoot({realtime: false}),
         SchemaModule.forRoot({formats: [OBJECT_ID]}),
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"})
       ]
