@@ -5,13 +5,13 @@ import {
   Icon,
   Popover,
   Text,
-  useOnClickOutside
+  useOnClickOutside,
+  Checkbox
 } from "oziko-ui-kit";
 import {memo, useMemo, useRef, useState, type FC} from "react";
 import styles from "./BucketMorePopup.module.scss";
 import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType} from "src/services/bucketService";
-import Checkbox from "../../../components/atoms/checkbox/Checkbox";
 import BucketLimitationsModal from "../bucket-limitations-modal/BucketLimitationsModal";
 
 type TypeBucketMorePopup = {
