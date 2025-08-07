@@ -51,10 +51,6 @@ export class PolicyService extends BaseCollection<Policy>("policies") {
       data: policies.slice(skip || 0, (skip || 0) + (limit || policies.length))
     };
   }
-  async upsertOne(filter: Partial<Policy>, doc: Policy): Promise<number> {
-    const result = await this._coll.updateOne(filter, {$set: doc}, {upsert: true});
-    return result.upsertedCount || result.modifiedCount;
-  }
 }
 
 type PolicyWithType = Policy & {system: boolean};
