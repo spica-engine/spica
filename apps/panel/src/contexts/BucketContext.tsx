@@ -36,6 +36,7 @@ type BucketContextType = {
   bucketData: BucketDataType | null;
   getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
+  changeBucketName: (newTitle: string, bucket: BucketType) => Promise<any>;
   changeHistory: (bucket: BucketType) => Promise<any>;
   deleteHistory: (bucket: BucketType) => Promise<any>;
 };
@@ -55,6 +56,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
+    requestBucketNameChange,
     changeBucketHistory,
     deleteBucketHistory
   } = useBucketService();
@@ -133,6 +135,20 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [deleteBucketRequest]
   );
 
+  const changeBucketName = useCallback(async (newTitle: string, bucket: BucketType) => {
+    const oldBuckets = buckets;
+    requestBucketNameChange(newTitle, bucket).then(result => {
+      if (!result) setBuckets(oldBuckets);
+    });
+    setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
+  }, [buckets]);
+
+  useEffect(() => {
+    fetchBuckets().then(result => {
+      setBuckets(result);
+    });
+  }, []);
+
   const changeHistory = useCallback(
     async (bucket: BucketType) => {
       const previousBuckets = buckets;
@@ -163,6 +179,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketData,
       getBucketData,
       nextbucketDataQuery,
+      changeBucketName,
       changeHistory,
       deleteHistory: deleteBucketHistory
     }),
@@ -172,7 +189,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       error,
       fetchBuckets,
       categories,
-      bucketData
+      bucketData,
+      changeBucketName
     ]
   );
 
@@ -186,6 +204,3 @@ export function useBucket() {
 }
 
 export default BucketContext;
-function BucketDataWithIdType(fetchedBucketData: BucketDataType | null) {
-  throw new Error("Function not implemented.");
-}

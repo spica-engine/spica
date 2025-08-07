@@ -41,3 +41,7 @@
 .confirmText {
   margin-top: 0;
 }
+
+[class^="Portal-module_container__"] {
+  z-index: 4;
+}
