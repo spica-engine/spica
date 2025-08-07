@@ -36,6 +36,7 @@ type BucketContextType = {
   bucketData: BucketDataType | null;
   getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
+  changeBucketName: (newTitle: string, bucket: BucketType) => Promise<any>;
   changeReadOnly: (bucket: BucketType) => Promise<any>;
 };
 
@@ -54,6 +55,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
+    requestBucketNameChange,
     changeBucketReadOnly
   } = useBucketService();
   const [bucketData, setBucketData] = useState<BucketDataWithIdType>({
@@ -131,6 +133,20 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [deleteBucketRequest]
   );
 
+  const changeBucketName = useCallback(async (newTitle: string, bucket: BucketType) => {
+    const oldBuckets = buckets;
+    requestBucketNameChange(newTitle, bucket).then(result => {
+      if (!result) setBuckets(oldBuckets);
+    });
+    setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
+  }, [buckets]);
+
+  useEffect(() => {
+    fetchBuckets().then(result => {
+      setBuckets(result);
+    });
+  }, []);
+
   const changeReadOnly = useCallback(async (bucket: BucketType) => {
     const previousBuckets = buckets;
     setBuckets(prev => (prev ? prev.map(i => ({...i, readOnly: !i.readOnly})) : []));
@@ -156,6 +172,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketData,
       getBucketData,
       nextbucketDataQuery,
+      changeBucketName,
       changeReadOnly
     }),
     [
@@ -164,7 +181,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       error,
       fetchBuckets,
       categories,
-      bucketData
+      bucketData,
+      changeBucketName
     ]
   );
 

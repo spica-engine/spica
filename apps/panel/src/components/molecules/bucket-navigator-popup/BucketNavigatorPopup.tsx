@@ -2,6 +2,7 @@ import {Button, FlexElement, Icon, Popover, Text, useOnClickOutside} from "oziko
 import {memo, useRef, useState, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
 import Confirmation from "../confirmation/Confirmation";
+import TitleForm from "../title-form/TitleForm";
 import type {BucketType} from "../../../services/bucketService";
 import CategorySelectCreate from "../category-select-create/CategorySelectCreate";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -18,13 +19,16 @@ type TypeBucketNavigatorPopup = {
 };
 
 const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
-  onAddToCategory,
-  onEdit,
-  bucket,
   className,
   isOpen,
-  setIsOpen
+  setIsOpen,
+  onAddToCategory,
+  bucket,
+  onEdit
 }) => {
+  const {changeBucketName} = useBucket();
+
+  const [titleFormOpen, setTitleFormOpen] = useState(false);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
   const [isCategorySelectCreateOpen, setIsCategorySelectCreateOpen] = useState(false);
@@ -37,12 +41,8 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
   const handleDeleteBucket = async () => {
-    try {
-      await deleteBucket(bucket._id);
-      setIsConfirmationOpen(false);
-    } catch (err) {
-      console.error(err);
-    }
+    deleteBucket(bucket._id);
+    setIsConfirmationOpen(false);
   };
 
   const handleOpenCategorySelectCreate = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -65,6 +65,15 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
     setIsOpen(false);
   };
 
+  const handleChangeBucketName = async (value: string) => {
+    await changeBucketName(value, bucket);
+  };
+
+  const handleOpenEdit = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    event.stopPropagation();
+    setTitleFormOpen(true);
+    setIsOpen(false);
+  };
   return (
     <div ref={containerRef} className={`${styles.container} ${className || ""}`}>
       <Popover
@@ -97,9 +106,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
                 dimensionX: "fill"
               }}
               color="default"
-              onClick={e => {
-                e.stopPropagation();
-              }}
+              onClick={handleOpenEdit}
               className={styles.buttons}
             >
               <Icon name="pencil" />
@@ -170,6 +177,13 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
           confirmCondition={val => val === bucket.title}
           onConfirm={handleDeleteBucket}
           onCancel={handleCancelConfirmation}
+        />
+      )}
+      {titleFormOpen && (
+        <TitleForm
+          initialValue={bucket.title}
+          onClose={() => setTitleFormOpen(false)}
+          onSubmit={handleChangeBucketName}
         />
       )}
     </div>
