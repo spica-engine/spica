@@ -161,7 +161,7 @@ describe("SimpleActionGuard", () => {
           {
             action: "bucket:data:index",
             resource: {
-              include: ["*/*"],
+              include: ["*"],
               exclude: ["bucket2/*"]
             },
             module: "bucket:data"
@@ -171,7 +171,7 @@ describe("SimpleActionGuard", () => {
 
       expect(await guard()).toBe(true);
       expect(request.resourceFilter).toEqual({
-        include: ["*/*"],
+        include: ["*"],
         exclude: ["bucket2/*"]
       });
     });
@@ -373,6 +373,109 @@ describe("SimpleActionGuard", () => {
   });
 
   describe("edge cases", () => {
+    it("should handle statement.resource.include as a string", async () => {
+      const {guard, request} = createGuardAndRequest({
+        actions: "bucket:data:show",
+        path: "/bucket/:id/data/:row",
+        params: {
+          id: "bucket1",
+          row: "row1"
+        },
+        statements: [
+          {
+            action: "bucket:data:show",
+            resource: {
+              include: "bucket1/row1"
+            },
+            module: "bucket:data"
+          }
+        ]
+      });
+
+      expect(await guard()).toBe(true);
+      expect(request.resourceFilter).toEqual({
+        include: ["bucket1/row1"],
+        exclude: []
+      });
+    });
+
+    it("should handle statement.resource.include as a number", async () => {
+      const {guard, request} = createGuardAndRequest({
+        actions: "bucket:data:show",
+        path: "/bucket/:id/data/:row",
+        params: {
+          id: "bucket1",
+          row: "row1"
+        },
+        statements: [
+          {
+            action: "bucket:data:show",
+            resource: {
+              include: 12345
+            },
+            module: "bucket:data"
+          }
+        ]
+      });
+
+      expect(await guard()).toBe(true);
+      expect(request.resourceFilter).toEqual({
+        include: [12345],
+        exclude: []
+      });
+    });
+
+    it("should handle statement.resource.exclude as a string", async () => {
+      const {guard, request} = createGuardAndRequest({
+        actions: "bucket:data:show",
+        path: "/bucket/:id/data/:row",
+        params: {
+          id: "bucket1",
+          row: "row1"
+        },
+        statements: [
+          {
+            action: "bucket:data:show",
+            resource: {
+              exclude: "bucket1/row2"
+            },
+            module: "bucket:data"
+          }
+        ]
+      });
+
+      expect(await guard()).toBe(true);
+      expect(request.resourceFilter).toEqual({
+        include: [],
+        exclude: ["bucket1/row2"]
+      });
+    });
+
+    it("should handle statement.resource.exclude as a number", async () => {
+      const {guard, request} = createGuardAndRequest({
+        actions: "bucket:data:show",
+        path: "/bucket/:id/data/:row",
+        params: {
+          id: "bucket1",
+          row: "row1"
+        },
+        statements: [
+          {
+            action: "bucket:data:show",
+            resource: {
+              exclude: 67890
+            },
+            module: "bucket:data"
+          }
+        ]
+      });
+
+      expect(await guard()).toBe(true);
+      expect(request.resourceFilter).toEqual({
+        include: [],
+        exclude: [67890]
+      });
+    });
     it("should handle statements with null resource", async () => {
       const {guard, request} = createGuardAndRequest({
         actions: "bucket:create",

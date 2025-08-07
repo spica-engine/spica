@@ -24,6 +24,10 @@ export function wrapArray(val: string | string[]) {
   return Array.isArray(val) ? val : Array(val);
 }
 
+export function wrapArrayFlexible<T>(val: T | T[] | undefined): T[] {
+  return Array.isArray(val) ? val : val === undefined ? [] : [val];
+}
+
 export const resourceFilterFunction: ResourceFilterFunction = (
   data: {pure?: boolean} = {pure: false},
   ctx: ExecutionContext
@@ -396,8 +400,12 @@ function createSimpleActionGuard(actions: string | string[], format?: string): T
       const excludedResources = [];
       for (const statement of matchedStatements) {
         if (statement.resource && typeof statement.resource === "object") {
-          if (statement.resource.include) includedResources.push(...statement.resource.include);
-          if (statement.resource.exclude) excludedResources.push(...statement.resource.exclude);
+          if (statement.resource.include !== undefined) {
+            includedResources.push(...wrapArrayFlexible(statement.resource.include));
+          }
+          if (statement.resource.exclude !== undefined) {
+            excludedResources.push(...wrapArrayFlexible(statement.resource.exclude));
+          }
         }
       }
 
