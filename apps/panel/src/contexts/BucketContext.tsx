@@ -36,6 +36,7 @@ type BucketContextType = {
   bucketData: BucketDataType | null;
   getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
+  changeBucketName: (newTitle: string, bucket: BucketType) => Promise<any>;
   changeLimitation: (bucket: BucketType) => Promise<any>;
   configureLimitation: (bucket: BucketType, countLimit: number, limitExceedBehaviour: "prevent" | "remove") => Promise<any>;
 };
@@ -55,6 +56,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     changeBucketOrder,
     bucketOrderLoading,
     bucketOrderError,
+    requestBucketNameChange,
     changeBucketLimitation,
     configureBucketLimitation
   } = useBucketService();
@@ -179,6 +181,20 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [deleteBucketRequest]
   );
 
+  const changeBucketName = useCallback(async (newTitle: string, bucket: BucketType) => {
+    const oldBuckets = buckets;
+    requestBucketNameChange(newTitle, bucket).then(result => {
+      if (!result) setBuckets(oldBuckets);
+    });
+    setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
+  }, [buckets]);
+
+  useEffect(() => {
+    fetchBuckets().then(result => {
+      setBuckets(result);
+    });
+  }, []);
+
   const contextValue = useMemo(
     () => ({
       buckets,
@@ -195,10 +211,12 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketData,
       getBucketData,
       nextbucketDataQuery,
+      changeBucketName,
       changeLimitation,
       configureLimitation
     }),
-    [buckets, loading, error, fetchBuckets, categories, bucketData]
+    [buckets, loading, error, fetchBuckets, categories, bucketData,
+      changeBucketName]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;
