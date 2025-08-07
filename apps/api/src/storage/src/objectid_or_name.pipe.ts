@@ -1,4 +1,4 @@
-import {PipeTransform, Injectable, BadRequestException} from "@nestjs/common";
+import {PipeTransform, Injectable} from "@nestjs/common";
 import {ObjectId} from "@spica-server/database";
 
 @Injectable()
