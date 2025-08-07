@@ -75,7 +75,7 @@ export class StorageController {
   @UseGuards(AuthGuard(), ActionGuard("storage:show", "storage/:id"))
   async view(
     @Res() res,
-    @Param("id", OR(v => /^[a-f\d]{24}$/i.test(v), OBJECT_ID)) idOrName: ObjectId | string,
+    @Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string,
     @Headers("if-none-match") ifNoneMatch?: string
   ) {
     let object;
