@@ -24,7 +24,7 @@ import {activity} from "@spica-server/activity/services";
 import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ObjectIdOrNamePipe} from "./objectid_or_name.pipe";
+import {OR} from "@spica-server/core";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import etag from "etag";
 import {createStorageActivity} from "./activity.resource";
@@ -75,7 +75,7 @@ export class StorageController {
   @UseGuards(AuthGuard(), ActionGuard("storage:show", "storage/:id"))
   async view(
     @Res() res,
-    @Param("id", ObjectIdOrNamePipe) idOrName: ObjectId | string,
+    @Param("id", OR(v => /^[a-f\d]{24}$/i.test(v), OBJECT_ID)) idOrName: ObjectId | string,
     @Headers("if-none-match") ifNoneMatch?: string
   ) {
     let object;
@@ -103,7 +103,9 @@ export class StorageController {
    */
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:show"))
-  async findOne(@Param("id", ObjectIdOrNamePipe) idOrName: ObjectId | string) {
+  async findOne(
+    @Param("id", OR(v => /^[a-f\d]{24}$/i.test(v), OBJECT_ID)) idOrName: ObjectId | string
+  ) {
     let object;
     if (idOrName instanceof ObjectId) {
       object = await this.storage.get(idOrName);
