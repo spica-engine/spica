@@ -8,6 +8,7 @@ type TypeTitleFormProps = {
   onClose?: () => void;
   onSubmit: (value: string) => void | Promise<void>;
   loading?: boolean;
+  error?: string;
   closeAfterSubmit?: boolean;
 };
 
@@ -17,6 +18,7 @@ const TitleForm: FC<TypeTitleFormProps> = ({
   onSubmit,
   title,
   loading,
+  error,
   closeAfterSubmit = true
 }) => {
   const [value, setValue] = useState(initialValue);
@@ -39,17 +41,23 @@ const TitleForm: FC<TypeTitleFormProps> = ({
           )
         }}
         root={{
-          className: styles.inputContainerContainer,
           children: (
-            <FlexElement gap={5} className={styles.inputContainer}>
-              <Icon name="formatQuoteClose" size="md" />
-              <Input
-                className={styles.input}
-                onChange={e => setValue(e.target.value)}
-                placeholder="Name"
-                value={value}
-              />
-            </FlexElement>
+            <div>
+              <FlexElement gap={5} className={styles.inputContainer}>
+                <Icon name="formatQuoteClose" size="md" />
+                <Input
+                  className={styles.input}
+                  onChange={e => setValue(e.target.value)}
+                  placeholder="Name"
+                  value={value}
+                />
+              </FlexElement>
+              {error && (
+                <Text variant="danger" className={styles.errorText}>
+                  {error}
+                </Text>
+              )}
+            </div>
           )
         }}
         suffix={{

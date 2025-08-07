@@ -7,16 +7,44 @@ import styles from "./AddBucketPopup.module.scss";
 const AddBucketPopup = ({text}: {text?: string}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>();
   const {addBucket} = useBucket();
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setError(undefined);
+  };
+
   const handleAddBucket = async (title: string) => {
+    if (!title) {
+      setError("This field is can not be left empty.");
+      return;
+    }
+
+    if (title.length < 4) {
+      setError("This field must be at least 4 characters long");
+      return;
+    }
+
+    if (title.length > 100) {
+      setError("This field cannot exceed 100 characters");
+      return;
+    }
+
+    setError(undefined);
     setIsLoading(true);
-    await addBucket(title).then(result => {
-      if (!result) return;
-      setIsOpen(false);
-    }).finally(() => {
+
+    try {
+      const result = await addBucket(title);
+      if (result) handleClose();
+    } catch (error) {
+      console.error("Failed to add bucket:", error);
+      setError("Something went wrong while adding the bucket");
+    } finally {
       setIsLoading(false);
-    });
-  }
+    }
+  };
+
   return (
     <>
       <Button
@@ -32,12 +60,13 @@ const AddBucketPopup = ({text}: {text?: string}) => {
       </Button>
       {isOpen && (
         <TitleForm
-          onClose={() => setIsOpen(false)}
+          onClose={handleClose}
           closeAfterSubmit={false}
-          title="Add new bucket"
+          title="ADD NEW BUCKET"
           initialValue="New Bucket"
           onSubmit={handleAddBucket}
           loading={isLoading}
+          error={error}
         />
       )}
     </>
