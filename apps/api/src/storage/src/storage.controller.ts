@@ -24,7 +24,7 @@ import {activity} from "@spica-server/activity/services";
 import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ObjectIdOrNamePipe} from "./object-id-or-name.pipe";
+import {ObjectIdOrNamePipe} from "./objectid_or_name.pipe";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import etag from "etag";
 import {createStorageActivity} from "./activity.resource";
