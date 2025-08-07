@@ -24,6 +24,7 @@ import {activity} from "@spica-server/activity/services";
 import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ObjectIdOrNamePipe} from "./object-id-or-name.pipe";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import etag from "etag";
 import {createStorageActivity} from "./activity.resource";
@@ -74,10 +75,15 @@ export class StorageController {
   @UseGuards(AuthGuard(), ActionGuard("storage:show", "storage/:id"))
   async view(
     @Res() res,
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ObjectIdOrNamePipe) idOrName: ObjectId | string,
     @Headers("if-none-match") ifNoneMatch?: string
   ) {
-    const object = await this.storage.get(id);
+    let object;
+    if (idOrName instanceof ObjectId) {
+      object = await this.storage.get(idOrName);
+    } else {
+      object = await this.storage.getByName(idOrName);
+    }
     if (!object) {
       throw new NotFoundException("Could not find the object.");
     }
@@ -97,9 +103,13 @@ export class StorageController {
    */
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:show"))
-  async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const object = await this.storage.get(id);
-
+  async findOne(@Param("id", ObjectIdOrNamePipe) idOrName: ObjectId | string) {
+    let object;
+    if (idOrName instanceof ObjectId) {
+      object = await this.storage.get(idOrName);
+    } else {
+      object = await this.storage.getByName(idOrName);
+    }
     if (!object) {
       throw new NotFoundException("Could not find the object.");
     }
