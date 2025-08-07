@@ -30,8 +30,7 @@ export async function replace(ps: PolicyService, policy: Policy) {
     const message = createDuplicatedActionsErrorMessage(duplicatedActionMaps);
     throw new BadRequestException(message);
   }
-  const res = await ps.replaceOne({_id: policy._id}, policy);
-
+  const res = await ps.upsertOne({_id: policy._id}, policy);
   if (!res) {
     throw new NotFoundException(`Policy with ID ${policy._id} not found`);
   }
