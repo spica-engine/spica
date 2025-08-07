@@ -31,9 +31,6 @@ export async function replace(ps: PolicyService, policy: Policy) {
     throw new BadRequestException(message);
   }
   const res = await ps.replaceOne({_id: policy._id}, policy, {upsert: true});
-  if (!res) {
-    throw new NotFoundException(`Policy with ID ${policy._id} not found`);
-  }
   return res;
 }
 
