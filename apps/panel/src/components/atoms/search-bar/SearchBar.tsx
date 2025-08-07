@@ -2,12 +2,14 @@ import {Icon, InputWithIcon, type TypeInput} from "oziko-ui-kit";
 import React from "react";
 import styles from "./SearchBar.module.scss";
 import {memo} from "react";
+import Loader from "../loader/Loader";
 
 type SearchBarProps = {
-  inputProps?: TypeInput
+  inputProps?: TypeInput;
+  loading?: boolean;
 };
 
-const SearchBar = ({inputProps}: SearchBarProps) => {
+const SearchBar = ({inputProps, loading}: SearchBarProps) => {
   return (
     <InputWithIcon
       gap={10}
@@ -19,6 +21,7 @@ const SearchBar = ({inputProps}: SearchBarProps) => {
         placeholder: "Search",
         ...inputProps
       }}
+      suffix={{children: loading ? <Loader /> : undefined}}
       className={styles.input}
     />
   );

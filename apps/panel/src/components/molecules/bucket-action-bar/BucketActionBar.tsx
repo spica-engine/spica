@@ -7,11 +7,12 @@ import debounce from "lodash/debounce";
 type BucketActionBarProps = {
   onSearch: (search: string) => void;
   bucketId: string;
+  searchLoading?: boolean;
 };
 
 const SEARCH_DEBOUNCE_TIME = 1000;
 
-const BucketActionBar = ({onSearch, bucketId}: BucketActionBarProps) => {
+const BucketActionBar = ({onSearch, bucketId, searchLoading}: BucketActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => setSearchValue(""), [bucketId]);
@@ -56,6 +57,7 @@ const BucketActionBar = ({onSearch, bucketId}: BucketActionBarProps) => {
           value: searchValue,
           onChange: handleSearchInputChange
         }}
+        loading={searchLoading}
       />
       <FlexElement>
         <Button onClick={() => {}}>

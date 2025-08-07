@@ -137,13 +137,16 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [deleteBucketRequest]
   );
 
-  const changeBucketName = useCallback(async (newTitle: string, bucket: BucketType) => {
-    const oldBuckets = buckets;
-    requestBucketNameChange(newTitle, bucket).then(result => {
-      if (!result) setBuckets(oldBuckets);
-    });
-    setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
-  }, [buckets]);
+  const changeBucketName = useCallback(
+    async (newTitle: string, bucket: BucketType) => {
+      const oldBuckets = buckets;
+      requestBucketNameChange(newTitle, bucket).then(result => {
+        if (!result) setBuckets(oldBuckets);
+      });
+      setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
+    },
+    [buckets]
+  );
 
   const getBucketData = useCallback(
     async (bucketId: string, query?: BucketDataQueryWithIdType) => {
@@ -189,8 +192,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       cleanBucketData,
       changeBucketName
     }),
-    [buckets, loading, error, fetchBuckets, categories, bucketData,
-      changeBucketName]
+    [buckets, loading, error, fetchBuckets, categories, bucketData, changeBucketName, bucketDataLoading]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;

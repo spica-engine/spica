@@ -68,18 +68,23 @@ export default function Bucket() {
     .map(({key}) => key);
 
   const handleSearch = useCallback(
-    (search: string) => {
+    async (search: string) => {
       const trimmed = search.trim();
       const query = trimmed === "" ? undefined : buildBucketQuery(trimmed, searchableColumns);
+      await getBucketData(bucketId as string, query as unknown as BucketDataQueryWithIdType)
       cleanBucketData();
-      getBucketData(bucketId as string, query as unknown as BucketDataQueryWithIdType);
     },
     [bucketId, searchableColumns, getBucketData]
   );
 
+  const isTableLoading = useMemo(() => !(formattedColumns.length > 1 && nextbucketDataQuery?.bucketId === bucketId), [
+    formattedColumns,
+    nextbucketDataQuery,
+    bucketId
+  ]);
   return (
     <div className={styles.container}>
-      <BucketActionBar bucketId={bucketId as string} onSearch={handleSearch} />
+      <BucketActionBar bucketId={bucketId as string} onSearch={handleSearch} searchLoading={bucketDataLoading && !isTableLoading} />
       <BucketTable
         bucketId={bucketId as string}
         columns={formattedColumns}
@@ -87,10 +92,7 @@ export default function Bucket() {
         onScrollEnd={handleScrollEnd}
         totalDataLength={bucketData?.meta?.total ?? 0}
         maxHeight="88vh"
-        loading={
-          !(formattedColumns.length > 1 && nextbucketDataQuery?.bucketId === bucketId) ||
-          bucketDataLoading
-        }
+        loading={isTableLoading}
       />
     </div>
   );
