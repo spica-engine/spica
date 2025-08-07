@@ -11,19 +11,21 @@ type SearchBarProps = {
 
 const SearchBar = ({inputProps, loading}: SearchBarProps) => {
   return (
-    <InputWithIcon
-      gap={10}
-      dimensionX={400}
-      prefix={{
-        children: <Icon name="magnify" className={styles.icon} />
-      }}
-      inputProps={{
-        placeholder: "Search",
-        ...inputProps
-      }}
-      suffix={{children: loading ? <Loader /> : undefined}}
-      className={styles.input}
-    />
+    <div className={styles.container}>
+      <InputWithIcon
+        gap={10}
+        dimensionX={400}
+        prefix={{
+          children: <Icon name="magnify" className={styles.icon} />
+        }}
+        inputProps={{
+          placeholder: "Search",
+          ...inputProps
+        }}
+        className={styles.input}
+      />
+      {loading && <Loader />}
+    </div>
   );
 };
 
