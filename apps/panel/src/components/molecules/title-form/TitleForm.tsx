@@ -12,15 +12,8 @@ type TypeTitleFormProps = {
   closeAfterSubmit?: boolean;
 };
 
-const TitleForm: FC<TypeTitleFormProps> = ({
-  initialValue,
-  onClose,
-  onSubmit,
-  title,
-  loading,
-  error,
-  closeAfterSubmit = true
-}) => {
+const TitleForm: FC<TypeTitleFormProps> = props => {
+  const {initialValue, onClose, onSubmit, title, loading, error, closeAfterSubmit = true} = props;
   const [value, setValue] = useState(initialValue);
   const handleSave = () => {
     onSubmit(value);
@@ -29,7 +22,7 @@ const TitleForm: FC<TypeTitleFormProps> = ({
   return (
     <Modal showCloseButton={false} onClose={onClose} className={styles.modal} isOpen>
       <FluidContainer
-        className={styles.container}
+        className={`${styles.container} ${'error' in props ? styles.containerWithError : ''}`}
         direction="vertical"
         gap={10}
         mode="fill"

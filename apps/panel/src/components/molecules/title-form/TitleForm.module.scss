@@ -11,11 +11,15 @@
   }
 }
 
+.containerWithError {
+  gap: var(--gap-xl) !important;
+}
+
 .container {
   background-color: var(--color-menu-background);
   border-radius: var(--border-radius-md);
   width: 360px !important;
-  gap: var(--gap-xl) !important;
+
   > div,
   .header,
   .header > div {
