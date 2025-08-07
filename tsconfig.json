@@ -335,6 +335,9 @@
       "path": "./libs/realtime"
     },
     {
+      "path": "./apps/api/src/dashboard/realtime"
+    },
+    {
       "path": "./apps/api/src/function/realtime"
     }
   ]
