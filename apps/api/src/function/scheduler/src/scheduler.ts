@@ -38,6 +38,20 @@ import {ScheduleWorker, Node} from "@spica-server/function/scheduler";
 import {LogLevels} from "@spica-server/interface/function/runtime";
 import {ENQUEUER, EnqueuerFactory, WorkerState} from "@spica-server/interface/function/scheduler";
 
+interface WorkerMetrics {
+  spawnTime: number;
+  lastUsed: number;
+  executionCount: number;
+  averageResponseTime: number;
+}
+
+interface LoadMetrics {
+  queueSize: number;
+  responseTimeHistory: number[];
+  lastScaleAction: number;
+  pendingEvents: number;
+}
+
 @Injectable()
 export class Scheduler implements OnModuleInit, OnModuleDestroy {
   private queue: EventQueue;
@@ -53,6 +67,28 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   private output: StandartStream;
 
+  // Auto-scaling metrics and configuration
+  private workerMetrics = new Map<string, WorkerMetrics>();
+  private loadMetrics: LoadMetrics = {
+    queueSize: 0,
+    responseTimeHistory: [],
+    lastScaleAction: 0,
+    pendingEvents: 0
+  };
+
+  // Auto-scaling configuration
+  private readonly SCALE_UP_THRESHOLD: number;
+  private readonly SCALE_DOWN_THRESHOLD: number;
+  private readonly WORKER_IDLE_TIMEOUT: number;
+  private readonly MIN_WORKERS: number;
+  private readonly MAX_WORKERS: number;
+  private readonly SCALE_COOLDOWN: number;
+  private readonly RESPONSE_TIME_WINDOW = 10; // Keep last 10 response times
+  private readonly TARGET_RESPONSE_TIME: number;
+  private readonly AUTO_SCALING_ENABLED: boolean;
+
+  private scaleDownTimer: NodeJS.Timeout;
+
   constructor(
     private http: HttpAdapterHost,
     private database: DatabaseService,
@@ -67,6 +103,17 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     }
 
     this.output = new DatabaseOutput(database);
+
+    // Configure auto-scaling parameters
+    const autoScaling = options.autoScaling || {};
+    this.AUTO_SCALING_ENABLED = autoScaling.enabled !== false; // Default to enabled
+    this.SCALE_UP_THRESHOLD = autoScaling.scaleUpThreshold || 0.7;
+    this.SCALE_DOWN_THRESHOLD = autoScaling.scaleDownThreshold || 0.3;
+    this.WORKER_IDLE_TIMEOUT = autoScaling.workerIdleTimeout || 300000; // 5 minutes
+    this.MIN_WORKERS = autoScaling.minWorkers || 0;
+    this.MAX_WORKERS = autoScaling.maxWorkers || Math.max(10, options.maxConcurrency * 2);
+    this.SCALE_COOLDOWN = autoScaling.scaleCooldown || 30000; // 30 seconds
+    this.TARGET_RESPONSE_TIME = autoScaling.targetResponseTime || 1000; // 1 second
 
     this.languages.set("typescript", new Typescript(options.tsCompilerPath));
     this.languages.set("javascript", new Javascript());
@@ -153,7 +200,14 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     await this.queue.listen();
 
-    this.scaleWorkers();
+    // Start with no workers - they will be created on demand
+    if (this.AUTO_SCALING_ENABLED) {
+      this.print("Scheduler initialized with auto-scaling enabled");
+      this.startAutoScaling();
+    } else {
+      this.print("Scheduler initialized with auto-scaling disabled, using legacy scaling");
+      this.scaleWorkers(); // Legacy behavior
+    }
   }
 
   killFreeWorkers() {
@@ -184,6 +238,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy() {
+    // Stop auto-scaling timer
+    if (this.scaleDownTimer) {
+      clearInterval(this.scaleDownTimer);
+    }
+
     await this.drainEventQueue();
 
     await this.killFreeWorkers();
@@ -220,11 +279,24 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     const initial = workers.filter(w => w.state == WorkerState.Initial).length;
     const fresh = workers.filter(w => w.state == WorkerState.Fresh).length;
+    const busy = workers.filter(w => w.state == WorkerState.Busy).length;
+    const targeted = workers.filter(w => w.state == WorkerState.Targeted).length;
     const activated = workers.length - initial - fresh;
 
+    const averageResponseTime =
+      this.loadMetrics.responseTimeHistory.length > 0
+        ? this.loadMetrics.responseTimeHistory.reduce((a, b) => a + b, 0) /
+          this.loadMetrics.responseTimeHistory.length
+        : 0;
+
     return {
+      total: workers.length,
       activated: activated,
       fresh: fresh,
+      busy: busy,
+      targeted: targeted,
+      queueSize: this.eventQueue.size,
+      averageResponseTime: Math.round(averageResponseTime),
       unit: "count"
     };
   }
@@ -254,13 +326,28 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   process() {
+    this.loadMetrics.queueSize = this.eventQueue.size;
+    this.loadMetrics.pendingEvents = this.eventQueue.size;
+
     for (const event of this.eventQueue.values()) {
+      const startTime = Date.now();
       const workerMeta = this.takeAWorker(event.target);
+
       if (!workerMeta) {
+        if (this.AUTO_SCALING_ENABLED) {
+          // No worker available, trigger immediate scaling
+          this.scaleUpIfNeeded(event.target);
+        } else {
+          // Legacy behavior - spawn worker immediately
+          this.scaleWorkers();
+        }
         continue;
       }
 
       const {id: workerId, worker} = workerMeta;
+
+      // Update worker metrics
+      this.updateWorkerMetrics(workerId, startTime);
 
       const [stdout, stderr] = this.output.create({
         eventId: event.id,
@@ -300,7 +387,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
       this.print(`assigning ${event.id} to ${workerId}`);
 
-      this.scaleWorkers();
+      // Update response time metrics when event completes
+      const responseTime = Date.now() - startTime;
+      this.updateResponseTimeMetrics(responseTime);
     }
   }
 
@@ -311,6 +400,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   enqueue(event: event.Event) {
     this.eventQueue.set(event.id, event);
+    this.loadMetrics.pendingEvents = this.eventQueue.size;
     this.process();
   }
 
@@ -344,6 +434,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   lostWorker(id: string) {
     this.workers.delete(id);
+    this.workerMetrics.delete(id);
 
     clearTimeout(this.timeouts.get(id));
     this.timeouts.delete(id);
@@ -394,6 +485,188 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     worker.once("exit", () => this.lostWorker(id));
 
     this.workers.set(id, worker);
+
+    // Initialize worker metrics
+    this.workerMetrics.set(id, {
+      spawnTime: Date.now(),
+      lastUsed: Date.now(),
+      executionCount: 0,
+      averageResponseTime: 0
+    });
+  }
+
+  /**
+   * Start the auto-scaling system
+   */
+  private startAutoScaling() {
+    if (!this.AUTO_SCALING_ENABLED) {
+      return;
+    }
+
+    // Run scale down check every 30 seconds
+    this.scaleDownTimer = setInterval(() => {
+      this.evaluateScaleDown();
+    }, 30000);
+  }
+
+  /**
+   * Evaluate if we should scale up workers for better performance
+   */
+  private scaleUpIfNeeded(target: event.Target) {
+    const now = Date.now();
+
+    // Cooldown check
+    if (now - this.loadMetrics.lastScaleAction < this.SCALE_COOLDOWN) {
+      return;
+    }
+
+    const currentWorkers = Array.from(this.workers.values());
+    const targetWorkers = currentWorkers.filter(w => w.hasSameTarget(target.id));
+    const availableWorkers = targetWorkers.filter(
+      w => w.state === WorkerState.Fresh || w.state === WorkerState.Targeted
+    );
+
+    // Check if we need more workers based on different criteria
+    const queueUtilization = this.eventQueue.size / Math.max(currentWorkers.length, 1);
+    const averageResponseTime = this.getAverageResponseTime();
+    const maxWorkersReached = currentWorkers.length >= this.MAX_WORKERS;
+
+    const shouldScaleUp =
+      !maxWorkersReached &&
+      // Scale up if queue utilization is high
+      (queueUtilization > this.SCALE_UP_THRESHOLD ||
+        // Scale up if no available workers and there are pending events
+        (availableWorkers.length === 0 && this.eventQueue.size > 0) ||
+        // Scale up if response time is above target
+        (averageResponseTime > this.TARGET_RESPONSE_TIME && this.eventQueue.size > 0));
+
+    if (shouldScaleUp) {
+      this.print(
+        `Scaling up: queue=${this.eventQueue.size}, workers=${currentWorkers.length}, utilization=${queueUtilization.toFixed(2)}, avgResponseTime=${averageResponseTime}ms`
+      );
+      this.spawnWorker();
+      this.loadMetrics.lastScaleAction = now;
+    }
+  }
+
+  /**
+   * Evaluate if we should scale down workers to save resources
+   */
+  private evaluateScaleDown() {
+    const now = Date.now();
+
+    // Cooldown check
+    if (now - this.loadMetrics.lastScaleAction < this.SCALE_COOLDOWN) {
+      return;
+    }
+
+    const currentWorkers = Array.from(this.workers.entries());
+    const idleWorkers = currentWorkers.filter(([id, worker]) => {
+      const metrics = this.workerMetrics.get(id);
+      return (
+        metrics &&
+        (worker.state === WorkerState.Fresh || worker.state === WorkerState.Targeted) &&
+        now - metrics.lastUsed > this.WORKER_IDLE_TIMEOUT
+      );
+    });
+
+    // Check if we should scale down
+    const queueUtilization = this.eventQueue.size / Math.max(currentWorkers.length, 1);
+    const minWorkersReached = currentWorkers.length <= this.MIN_WORKERS;
+
+    const shouldScaleDown =
+      !minWorkersReached &&
+      // Scale down if we have idle workers and low queue utilization
+      ((idleWorkers.length > 0 && queueUtilization < this.SCALE_DOWN_THRESHOLD) ||
+        // Scale down if we have too many idle workers
+        idleWorkers.length > 2);
+
+    if (shouldScaleDown && idleWorkers.length > 0) {
+      const [workerId, worker] = idleWorkers[0];
+      this.print(
+        `Scaling down: removing idle worker ${workerId}, idle for ${((now - this.workerMetrics.get(workerId)?.lastUsed) / 1000).toFixed(0)}s`
+      );
+      worker.kill();
+      this.loadMetrics.lastScaleAction = now;
+    }
+  }
+
+  /**
+   * Spawn a new worker
+   */
+  private spawnWorker() {
+    const id: string = uniqid();
+    const node = this.runtimes.get("node") as Node;
+    const worker = node.spawn({
+      id,
+      env: {
+        __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
+        __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
+        __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
+        __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
+        __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
+          ? "true"
+          : "",
+        LOGGER: this.options.logger ? "true" : undefined
+      },
+      entrypointPath: this.options.spawnEntrypointPath
+    });
+
+    worker.once("exit", () => this.lostWorker(id));
+
+    this.workers.set(id, worker);
+
+    // Initialize worker metrics
+    this.workerMetrics.set(id, {
+      spawnTime: Date.now(),
+      lastUsed: Date.now(),
+      executionCount: 0,
+      averageResponseTime: 0
+    });
+
+    this.print(`Spawned new worker ${id}, total workers: ${this.workers.size}`);
+  }
+
+  /**
+   * Update worker metrics when used
+   */
+  private updateWorkerMetrics(workerId: string, startTime: number) {
+    const metrics = this.workerMetrics.get(workerId);
+    if (metrics) {
+      metrics.lastUsed = Date.now();
+      metrics.executionCount++;
+
+      // Update average response time (simple moving average)
+      const responseTime = Date.now() - startTime;
+      metrics.averageResponseTime =
+        metrics.executionCount === 1
+          ? responseTime
+          : (metrics.averageResponseTime + responseTime) / 2;
+    }
+  }
+
+  /**
+   * Update global response time metrics
+   */
+  private updateResponseTimeMetrics(responseTime: number) {
+    this.loadMetrics.responseTimeHistory.push(responseTime);
+
+    // Keep only last N response times
+    if (this.loadMetrics.responseTimeHistory.length > this.RESPONSE_TIME_WINDOW) {
+      this.loadMetrics.responseTimeHistory.shift();
+    }
+  }
+
+  /**
+   * Get average response time from recent history
+   */
+  private getAverageResponseTime(): number {
+    if (this.loadMetrics.responseTimeHistory.length === 0) {
+      return 0;
+    }
+
+    const sum = this.loadMetrics.responseTimeHistory.reduce((a, b) => a + b, 0);
+    return sum / this.loadMetrics.responseTimeHistory.length;
   }
 
   /**

@@ -262,6 +262,46 @@ const args = yargs(process.argv.slice(2))
       boolean: true,
       description: "Log function invocations to the stdout.",
       default: false
+    },
+    "function-auto-scaling": {
+      boolean: true,
+      description: "Enable/disable intelligent auto-scaling of function workers.",
+      default: true
+    },
+    "function-auto-scaling-min-workers": {
+      number: true,
+      description: "Minimum number of workers to keep alive during low load.",
+      default: 1
+    },
+    "function-auto-scaling-max-workers": {
+      number: true,
+      description: "Maximum number of workers to spawn per function.",
+      default: 10
+    },
+    "function-auto-scaling-scale-up-threshold": {
+      number: true,
+      description: "Queue utilization threshold (0-1) to trigger scale up.",
+      default: 0.7
+    },
+    "function-auto-scaling-scale-down-threshold": {
+      number: true,
+      description: "Queue utilization threshold (0-1) to trigger scale down.",
+      default: 0.3
+    },
+    "function-auto-scaling-idle-timeout": {
+      number: true,
+      description: "Time in milliseconds before idle workers are terminated.",
+      default: 300000
+    },
+    "function-auto-scaling-cooldown": {
+      number: true,
+      description: "Cooldown period in milliseconds between scaling actions.",
+      default: 30000
+    },
+    "function-auto-scaling-target-response-time": {
+      number: true,
+      description: "Target response time in milliseconds for scaling decisions.",
+      default: 1000
     }
   })
   /* Storage Options */
@@ -468,6 +508,62 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       throw new TypeError("--function-worker-concurrency must be a positive number");
     }
 
+    // Auto-scaling validation
+    if (args["function-auto-scaling-min-workers"] < 0) {
+      throw new TypeError("--function-auto-scaling-min-workers must be a non-negative number");
+    }
+
+    if (args["function-auto-scaling-max-workers"] < 1) {
+      throw new TypeError("--function-auto-scaling-max-workers must be a positive number");
+    }
+
+    if (args["function-auto-scaling-min-workers"] > args["function-auto-scaling-max-workers"]) {
+      throw new TypeError(
+        "--function-auto-scaling-min-workers cannot be greater than --function-auto-scaling-max-workers"
+      );
+    }
+
+    if (
+      args["function-auto-scaling-scale-up-threshold"] < 0 ||
+      args["function-auto-scaling-scale-up-threshold"] > 1
+    ) {
+      throw new TypeError("--function-auto-scaling-scale-up-threshold must be between 0 and 1");
+    }
+
+    if (
+      args["function-auto-scaling-scale-down-threshold"] < 0 ||
+      args["function-auto-scaling-scale-down-threshold"] > 1
+    ) {
+      throw new TypeError("--function-auto-scaling-scale-down-threshold must be between 0 and 1");
+    }
+
+    if (
+      args["function-auto-scaling-scale-down-threshold"] >
+      args["function-auto-scaling-scale-up-threshold"]
+    ) {
+      throw new TypeError(
+        "--function-auto-scaling-scale-down-threshold must be less than --function-auto-scaling-scale-up-threshold"
+      );
+    }
+
+    if (args["function-auto-scaling-idle-timeout"] < 10000) {
+      throw new TypeError(
+        "--function-auto-scaling-idle-timeout must be at least 10000 milliseconds (10 seconds)"
+      );
+    }
+
+    if (args["function-auto-scaling-cooldown"] < 5000) {
+      throw new TypeError(
+        "--function-auto-scaling-cooldown must be at least 5000 milliseconds (5 seconds)"
+      );
+    }
+
+    if (args["function-auto-scaling-target-response-time"] < 100) {
+      throw new TypeError(
+        "--function-auto-scaling-target-response-time must be at least 100 milliseconds"
+      );
+    }
+
     if (
       args["storage-strategy"] == "gcloud" &&
       (!args["gcloud-service-account-path"] || !args["gcloud-bucket-name"])
@@ -590,7 +686,17 @@ const modules = [
     realtimeLogs: args["function-realtime-logs"],
     logger: args["function-logger"],
     invocationLogs: args["function-invocation-logs"],
-    realtime: args["function-realtime"]
+    realtime: args["function-realtime"],
+    autoScaling: {
+      enabled: args["function-auto-scaling"],
+      minWorkers: args["function-auto-scaling-min-workers"],
+      maxWorkers: args["function-auto-scaling-max-workers"],
+      scaleUpThreshold: args["function-auto-scaling-scale-up-threshold"],
+      scaleDownThreshold: args["function-auto-scaling-scale-down-threshold"],
+      workerIdleTimeout: args["function-auto-scaling-idle-timeout"],
+      scaleCooldown: args["function-auto-scaling-cooldown"],
+      targetResponseTime: args["function-auto-scaling-target-response-time"]
+    }
   })
 ];
 

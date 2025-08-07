@@ -24,6 +24,17 @@ export interface SchedulingOptions {
   invocationLogs: boolean;
   spawnEntrypointPath?: string;
   tsCompilerPath?: string;
+  // Auto-scaling options
+  autoScaling?: {
+    enabled?: boolean;
+    minWorkers?: number;
+    maxWorkers?: number;
+    scaleUpThreshold?: number;
+    scaleDownThreshold?: number;
+    workerIdleTimeout?: number;
+    scaleCooldown?: number;
+    targetResponseTime?: number;
+  };
 }
 
 export type Schedule = (event: event.Event) => void;
