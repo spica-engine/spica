@@ -34,8 +34,8 @@ const AddBucketPopup = ({text}: {text?: string}) => {
         <TitleForm
           onClose={() => setIsOpen(false)}
           closeAfterSubmit={false}
-          title="Add New Bucket"
-          initialValue=""
+          title="Add new bucket"
+          initialValue="New Bucket"
           onSubmit={handleAddBucket}
           loading={isLoading}
         />
