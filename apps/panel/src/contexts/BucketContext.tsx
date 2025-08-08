@@ -29,6 +29,8 @@ type BucketContextType = {
   updateBucketOrderOnServer: (bucketId: string, order: number) => Promise<any>;
   renameBucket: (newTitle: string, bucket: BucketType) => void;
   deleteBucket: (bucketId: string) => Promise<any>;
+  updateBucketHistory: (bucket: BucketType) => Promise<any>;
+  deleteBucketHistory: (bucket: BucketType) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataType | null;
@@ -50,6 +52,7 @@ type BucketContextType = {
  * - Keep context functions focused on state + side effects.
  * - API-only calls should be imported from useBucketService and named naturally here.
  */
+
 const BucketContext = createContext<BucketContextType | null>(null);
 export const BucketProvider = ({children}: {children: ReactNode}) => {
   const {
@@ -59,6 +62,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiChangeBucketOrder,
     apiRenameBucket,
     apiDeleteBucket,
+    apiUpdateBucketHistory,
+    apiDeleteBucketHistory,
     apiBuckets,
     apiBucketData
   } = useBucketService();
@@ -195,6 +200,21 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [apiGetBucketData]
   );
 
+  const updateBucketHistory = useCallback(
+    async (bucket: BucketType) => {
+      const previousBuckets = buckets;
+      setBuckets(prev => (prev ? prev.map(i => ({...i, history: !i.history})) : []));
+      return apiUpdateBucketHistory(bucket).then(result => {
+        if (!result) {
+          setBuckets(previousBuckets);
+        }
+        return result;
+      });
+    },
+    [buckets]
+  );
+
+
   const contextValue = useMemo(
     () => ({
       getBucketData,
@@ -204,6 +224,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketOrderOnServer: apiChangeBucketOrder,
       renameBucket,
       deleteBucket,
+      updateBucketHistory,
+      deleteBucketHistory: apiDeleteBucketHistory,
       buckets,
       bucketData,
       bucketCategories,
@@ -217,6 +239,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiChangeBucketOrder,
       renameBucket,
       deleteBucket,
+      updateBucketHistory,
+      apiDeleteBucketHistory,
       buckets,
       bucketData,
       bucketCategories,

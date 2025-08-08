@@ -3,3 +3,8 @@
   width: 100%;
   @include mixins.flexAlignCenterJustifyBetween;
 }
+
+
+.actionBar button {
+  height: 32px !important;
+}

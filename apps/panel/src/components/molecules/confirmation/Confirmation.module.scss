@@ -66,3 +66,7 @@
 .confirmButton:disabled:hover {
   background-color: var(--color-danger) !important;
 }
+
+[class^="Portal-module_container__"] {
+  z-index: 4;
+}
