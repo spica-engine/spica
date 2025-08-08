@@ -4,7 +4,7 @@ import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
 import {useCallback, useEffect, useMemo} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
-import type {BucketDataQueryType} from "src/services/bucketService";
+import type {BucketDataQueryType, BucketType} from "src/services/bucketService";
 
 export default function Bucket() {
   const {bucketId} = useParams<{bucketId: string}>();
@@ -15,8 +15,9 @@ export default function Bucket() {
     getBucketData(bucketId);
   }, [bucketId]);
 
+  const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
+
   const formattedColumns = useMemo(() => {
-    const bucket = buckets?.find(i => i._id === bucketId);
     const columns = Object.values(bucket?.properties ?? {});
     return [
       {
@@ -36,7 +37,7 @@ export default function Bucket() {
         showDropdownIcon: true
       }))
     ];
-  }, [buckets, bucketId]);
+  }, [bucket]);
 
   const handleScrollEnd = useCallback(() => {
     if (!bucketId) return;
@@ -49,7 +50,7 @@ export default function Bucket() {
 
   return (
     <div className={styles.container}>
-      <BucketActionBar />
+      <BucketActionBar bucket={bucket as BucketType} />
       <BucketTable
         bucketId={bucketId as string}
         columns={formattedColumns as ColumnType[]}

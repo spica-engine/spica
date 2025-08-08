@@ -110,6 +110,11 @@ export const useBucketService = () => {
     method: "put"
   });
 
+    const {request: bucketLimitationRequest} = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
   const apiGetBucketData = useCallback(
     (bucketId: string, queryString?: string) => {
       return fetchBucketData({
@@ -156,6 +161,23 @@ export const useBucketService = () => {
     [deleteRequest]
   );
 
+    const apiUpdatebucketLimitiation = useCallback(
+    async (bucketId: string, body: Record<string, any>) => {
+      return await bucketLimitationRequest({
+        endpoint: `/api/bucket/${bucketId}`,
+        body
+      });
+    },
+    [bucketLimitationRequest]
+  );
+
+  const apiUpdatebucketLimitiationFields = useCallback((bucket: BucketType) => {
+    return bucketLimitationRequest({
+      endpoint: `/api/bucket/${bucket._id}`,
+      body: bucket
+    });
+  }, [])
+
   return {
     apiGetBucketData,
     apiGetBuckets: fetchBuckets,
@@ -163,6 +185,8 @@ export const useBucketService = () => {
     apiChangeBucketOrder,
     apiRenameBucket,
     apiDeleteBucket,
+    apiUpdatebucketLimitiation,
+    apiUpdatebucketLimitiationFields,
     apiBuckets,
     apiBucketData
   };
