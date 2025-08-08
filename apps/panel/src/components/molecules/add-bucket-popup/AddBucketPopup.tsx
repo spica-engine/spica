@@ -8,7 +8,7 @@ const AddBucketPopup = ({text}: {text?: string}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const {addBucket} = useBucket();
+  const {createBucket} = useBucket();
 
   const handleClose = () => {
     setIsOpen(false);
@@ -35,7 +35,7 @@ const AddBucketPopup = ({text}: {text?: string}) => {
     setIsLoading(true);
 
     try {
-      const result = await addBucket(title);
+      const result = await createBucket(title);
       if (result) handleClose();
     } catch (error) {
       console.error("Failed to add bucket:", error);
