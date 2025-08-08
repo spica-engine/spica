@@ -400,7 +400,7 @@ function createSimpleActionGuard(actions: string | string[], format?: string): T
       const excludedResources = [];
 
       if (!matchedStatements.length) {
-        request.resourceFilter = {include: [], exclude: []};
+        request.resourceFilter = {include: includedResources, exclude: excludedResources};
         throw new ForbiddenException(
           `You do not have sufficient permissions to do ${actionsArr.join(", ")} on resource ${resourceAndModule.resource.join("/")}`
         );
