@@ -35,12 +35,12 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     }
   });
 
-  const {changeLimitation, configureLimitation} = useBucket();
+  const {updateBucketLimitation, updateBucketLimitationFields} = useBucket();
   const isLimitationChecked = useMemo(() => Boolean(bucket?.documentSettings), [bucket]);
 
   const handleChangeLimitation = () => {
     setIsLimitationLoading(true);
-    changeLimitation(bucket).then(() => {
+    updateBucketLimitation(bucket).then(() => {
       setIsLimitationLoading(false);
     });
   };
@@ -50,7 +50,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     limitExceedBehaviour: "prevent" | "remove"
   ) => {
     setIsLimitationLoading(true);
-    configureLimitation(bucket, countLimit, limitExceedBehaviour).then(() => {
+    updateBucketLimitationFields(bucket, countLimit, limitExceedBehaviour).then(() => {
       setIsLimitationLoading(false);
       setIsLimitationsModalOpen(false);
     });

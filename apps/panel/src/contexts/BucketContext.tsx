@@ -16,61 +16,76 @@ import {
   type BucketType
 } from "../services/bucketService";
 import type {AxiosRequestHeaders} from "axios";
+import {api} from "oziko-ui-kit/dist/utils/api";
 
 type BucketContextType = {
-  buckets: BucketType[];
-  setBuckets: React.Dispatch<React.SetStateAction<BucketType[]>>;
-  loading: boolean;
-  error: string | null;
-  deleteBucket: (bucketId: string) => Promise<any>;
-  fetchBuckets: (params?: {
+  getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
+  getBuckets: (params?: {
     body?: any;
     headers?: AxiosRequestHeaders;
     endpoint?: string;
   }) => Promise<BucketDataType>;
-  categories: string[];
-  changeCategory: (bucketId: string, category: string) => Promise<any>;
-  changeBucketOrder: (bucketId: string, order: number) => void;
-  bucketOrderLoading: boolean;
-  bucketOrderError: string | null;
+  changeBucketCategory: (bucketId: string, category: string) => Promise<any>;
+  updateBucketOrderLocally: (from: number, to: number) => void;
+  updateBucketOrderOnServer: (bucketId: string, order: number) => Promise<any>;
+  renameBucket: (newTitle: string, bucket: BucketType) => void;
+  deleteBucket: (bucketId: string) => Promise<any>;
+  updateBucketLimitation: (bucket: BucketType) => Promise<void>;
+  updateBucketLimitationFields: (
+    bucket: BucketType,
+    countLimit: number,
+    limitExceedBehaviour: "prevent" | "remove"
+  ) => Promise<void>;
+  buckets: BucketType[];
+  bucketCategories: string[];
   bucketData: BucketDataType | null;
-  getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
-  changeBucketName: (newTitle: string, bucket: BucketType) => Promise<any>;
-  changeLimitation: (bucket: BucketType) => Promise<any>;
-  configureLimitation: (bucket: BucketType, countLimit: number, limitExceedBehaviour: "prevent" | "remove") => Promise<any>;
 };
 
+/**
+ * BucketContext: React Context managing bucket state and business logic.
+ *
+ * Naming conventions:
+ * - Exposes domain-level functions for components (e.g., getBuckets, deleteBucket, renameBucket).
+ * - Functions may orchestrate API calls AND update React state.
+ * - No `api` prefix on functions here.
+ * - Function names always start with a verb describing the action.
+ * - Always include the entity name (e.g., Bucket, BucketItem) for clarity.
+ *
+ * Usage:
+ * - Use `useBucket()` hook to access buckets and bucket-related actions.
+ * - Keep context functions focused on state + side effects.
+ * - API-only calls should be imported from useBucketService and named naturally here.
+ */
 const BucketContext = createContext<BucketContextType | null>(null);
 export const BucketProvider = ({children}: {children: ReactNode}) => {
   const {
-    buckets: data,
-    loading,
-    error,
-    fetchBuckets,
-    bucketData: fetchedBucketData,
-    getBucketData,
-    lastUsedBucketDataQuery,
-    requestCategoryChange,
-    deleteBucketRequest,
-    changeBucketOrder,
-    bucketOrderLoading,
-    bucketOrderError,
-    requestBucketNameChange,
-    changeBucketLimitation,
-    configureBucketLimitation
+    apiGetBucketData,
+    apiGetBuckets,
+    apiChangeBucketCategory,
+    apiChangeBucketOrder,
+    apiRenameBucket,
+    apiDeleteBucket,
+    apiUpdatebucketLimitiation,
+    apiUpdatebucketLimitiationFields,
+    apiBuckets,
+    apiBucketData
   } = useBucketService();
+
+  const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
+    useState<BucketDataQueryWithIdType | null>(null);
   const [bucketData, setBucketData] = useState<BucketDataWithIdType>({
-    ...fetchedBucketData,
+    ...apiBucketData,
     bucketId: lastUsedBucketDataQuery?.bucketId as string
   } as BucketDataWithIdType);
+  const [buckets, setBuckets] = useState<BucketType[]>(apiBuckets ?? []);
+  useEffect(() => setBuckets(apiBuckets ?? []), [apiBuckets]);
 
   useEffect(() => {
-    if (!fetchedBucketData) return;
-
+    if (!apiBucketData) return;
     setBucketData(prev => {
       const fetchedBucketDataWithId = {
-        ...fetchedBucketData,
+        ...apiBucketData,
         bucketId: lastUsedBucketDataQuery?.bucketId as string
       } as BucketDataWithIdType;
       if (!prev) return fetchedBucketDataWithId;
@@ -78,13 +93,11 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       const prevBucketId = prev.bucketId;
       const newBucketId = lastUsedBucketDataQuery?.bucketId;
 
-      if (prevBucketId !== newBucketId) {
-        return fetchedBucketDataWithId;
-      }
+      if (prevBucketId !== newBucketId) return fetchedBucketDataWithId;
 
       const existingIds = new Set(prev.data.map(item => item._id));
 
-      const newItems = fetchedBucketData.data.filter(item => !existingIds.has(item.id));
+      const newItems = apiBucketData.data.filter(item => !existingIds.has(item.id));
 
       if (newItems.length === 0) return prev;
       return {...prev, data: [...prev.data, ...newItems]};
@@ -98,22 +111,100 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     }),
     [JSON.stringify(lastUsedBucketDataQuery)]
   );
-  const [buckets, setBuckets] = useState<BucketType[]>(data ?? []);
 
-  useEffect(() => setBuckets(data ?? []), [data]);
+  const bucketCategories = useMemo(() => {
+    if (!buckets) return [];
+    const set = new Set<string>();
+    buckets.forEach(bucket => {
+      if (!bucket.category) return;
+      set.add(bucket.category);
+    });
+    return Array.from(set);
+  }, [buckets]);
 
-  const changeCategory = useCallback(
+  const changeBucketCategory = useCallback(
     async (bucketId: string, category: string) => {
       setBuckets(
         prev =>
           prev?.map(bucket => (bucket._id === bucketId ? {...bucket, category} : bucket)) ?? []
       );
-      return await requestCategoryChange(bucketId, category);
+      return await apiChangeBucketCategory(bucketId, category);
     },
-    [requestCategoryChange]
+    [apiChangeBucketCategory]
   );
 
-  const changeLimitation = useCallback(
+  const deleteBucket = useCallback(
+    async (bucketId: string) => {
+      try {
+        await apiDeleteBucket(bucketId);
+        setBuckets(prev => (prev ? prev.filter(i => i._id !== bucketId) : []));
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    [apiDeleteBucket]
+  );
+
+  const renameBucket = useCallback(
+    async (newTitle: string, bucket: BucketType) => {
+      const oldBuckets = buckets;
+      apiRenameBucket(newTitle, bucket).then(result => {
+        if (!result) setBuckets(oldBuckets);
+      });
+      setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
+    },
+    [buckets, apiRenameBucket]
+  );
+
+  const updateBucketOrderLocally = useCallback(
+    (from: number, to: number) =>
+      setBuckets(prev => {
+        const updated = [...prev];
+        const [moved] = updated.splice(from, 1);
+        updated.splice(to, 0, moved);
+        return updated;
+      }),
+    []
+  );
+
+  const getBucketData = useCallback(
+    (bucketId: string, query?: BucketDataQueryType) => {
+      const defaultParams: Omit<BucketDataQueryType, "sort"> & {sort: string} = {
+        paginate: true,
+        relation: true,
+        limit: 25,
+        sort: JSON.stringify({_id: -1})
+      };
+
+      let params = query
+        ? {
+            ...defaultParams,
+            ...query,
+            sort: query.sort ? JSON.stringify(query.sort) : defaultParams.sort
+          }
+        : {...defaultParams};
+
+      if (!params.sort || Object.keys(JSON.parse(params.sort)).length === 0) {
+        const {sort, ...rest} = params;
+        params = rest as typeof params;
+      }
+
+      const queryString = new URLSearchParams(
+        params as unknown as Record<string, string>
+      ).toString();
+
+      return apiGetBucketData(bucketId, queryString).then(result => {
+        if (!result) return;
+        setLastUsedBucketDataQuery(
+          query ? {...query, bucketId} : {...defaultParams, sort: {_id: -1}, bucketId}
+        );
+        return result;
+      });
+    },
+    [apiGetBucketData]
+  );
+
+  const updateBucketLimitation = useCallback(
     async (bucket: BucketType) => {
       const hasSettings = Boolean(bucket.documentSettings);
       const modifiedBucket: BucketType = hasSettings
@@ -132,15 +223,15 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
         return (prev ?? []).map(b => (b._id === bucket._id ? modifiedBucket : b));
       });
 
-      const success = await changeBucketLimitation(bucket._id, modifiedBucket);
+      const success = await apiUpdatebucketLimitiation(bucket._id, modifiedBucket);
       if (!success) {
         setBuckets(previousBuckets);
       }
     },
-    [changeBucketLimitation]
+    [apiUpdatebucketLimitiation]
   );
 
-  const configureLimitation = useCallback(
+  const updateBucketLimitationFields = useCallback(
     async (bucket: BucketType, countLimit: number, limitExceedBehaviour: "prevent" | "remove") => {
       const modifiedBucket = {
         ...bucket,
@@ -149,74 +240,47 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
           limitExceedBehaviour
         }
       };
-      const success = await configureBucketLimitation(modifiedBucket);
+      const success = await apiUpdatebucketLimitiationFields(modifiedBucket);
       if (success) {
         setBuckets(prev =>
           prev ? prev.map(b => (b._id === bucket._id ? modifiedBucket : b)) : []
         );
       }
     },
-    [configureBucketLimitation]
+    [apiUpdatebucketLimitiationFields]
   );
-
-  const categories = useMemo(() => {
-    if (!buckets) return [];
-    const set = new Set<string>();
-    buckets.forEach(bucket => {
-      if (!bucket.category) return;
-      set.add(bucket.category);
-    });
-    return Array.from(set);
-  }, [buckets]);
-
-  const deleteBucket = useCallback(
-    async (bucketId: string) => {
-      try {
-        await deleteBucketRequest(bucketId);
-        setBuckets(prev => (prev ? prev.filter(i => i._id !== bucketId) : []));
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    [deleteBucketRequest]
-  );
-
-  const changeBucketName = useCallback(async (newTitle: string, bucket: BucketType) => {
-    const oldBuckets = buckets;
-    requestBucketNameChange(newTitle, bucket).then(result => {
-      if (!result) setBuckets(oldBuckets);
-    });
-    setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
-  }, [buckets]);
-
-  useEffect(() => {
-    fetchBuckets().then(result => {
-      setBuckets(result);
-    });
-  }, []);
 
   const contextValue = useMemo(
     () => ({
-      buckets,
-      setBuckets,
-      loading,
-      error,
-      deleteBucket,
-      fetchBuckets,
-      categories,
-      changeCategory,
-      changeBucketOrder,
-      bucketOrderLoading,
-      bucketOrderError,
-      bucketData,
       getBucketData,
-      nextbucketDataQuery,
-      changeBucketName,
-      changeLimitation,
-      configureLimitation
+      getBuckets: apiGetBuckets,
+      changeBucketCategory,
+      updateBucketOrderLocally,
+      updateBucketOrderOnServer: apiChangeBucketOrder,
+      renameBucket,
+      deleteBucket,
+      updateBucketLimitation,
+      updateBucketLimitationFields,
+      buckets,
+      bucketData,
+      bucketCategories,
+      nextbucketDataQuery
     }),
-    [buckets, loading, error, fetchBuckets, categories, bucketData,
-      changeBucketName]
+    [
+      getBucketData,
+      apiGetBuckets,
+      changeBucketCategory,
+      updateBucketOrderLocally,
+      apiChangeBucketOrder,
+      renameBucket,
+      deleteBucket,
+      updateBucketLimitation,
+      updateBucketLimitationFields,
+      buckets,
+      bucketData,
+      bucketCategories,
+      nextbucketDataQuery
+    ]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;
