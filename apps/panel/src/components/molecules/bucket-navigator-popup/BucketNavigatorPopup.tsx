@@ -26,7 +26,6 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   bucket,
   onEdit
 }) => {
-  const {changeBucketName} = useBucket();
 
   const [titleFormOpen, setTitleFormOpen] = useState(false);
   const containerRef = useRef(null);
@@ -37,7 +36,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
     refs: [containerRef, contentRef],
     onClickOutside: () => setIsOpen(false)
   });
-  const {deleteBucket, categories, changeCategory} = useBucket();
+  const {deleteBucket, bucketCategories, changeBucketCategory, renameBucket} = useBucket();
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
   const handleDeleteBucket = async () => {
@@ -66,7 +65,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   };
 
   const handleChangeBucketName = async (value: string) => {
-    await changeBucketName(value, bucket);
+    await renameBucket(value, bucket);
   };
 
   const handleOpenEdit = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -140,9 +139,9 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
       </Popover>
       {isCategorySelectCreateOpen && (
         <CategorySelectCreate
-          changeCategory={changeCategory}
+          changeBucketCategory={changeBucketCategory}
           bucket={bucket}
-          categories={categories}
+          categories={bucketCategories}
           onCancel={handleCancelCategorySelectCreate}
         />
       )}

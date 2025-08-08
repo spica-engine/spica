@@ -5,11 +5,10 @@ import {
   Icon,
   Input,
   Modal,
-  Text,
-  useOnClickOutside
+  Text
 } from "oziko-ui-kit";
 import styles from "./CategorySelectCreate.module.scss";
-import {memo, useCallback, useMemo, useRef, useState} from "react";
+import {memo, useCallback, useMemo, useState} from "react";
 import truncateText from "../../../utils/truncate-text";
 import type {BucketType} from "src/services/bucketService";
 
@@ -17,14 +16,14 @@ type CategorySelectCreateProps = {
   bucket: BucketType;
   categories: string[];
   onCancel?: () => void;
-  changeCategory: (bucketId: string, category: string) => Promise<any>;
+  changeBucketCategory: (bucketId: string, category: string) => Promise<any>;
 };
 
 const CategorySelectCreate = ({
   bucket,
   categories,
   onCancel,
-  changeCategory
+  changeBucketCategory
 }: CategorySelectCreateProps) => {
   const [textValue, setTextValue] = useState("");
   const [focused, setFocused] = useState(false);
@@ -35,7 +34,7 @@ const CategorySelectCreate = ({
   );
 
   const handleSubmit = useCallback((value: string) => {
-    changeCategory(bucket._id, value).then(() => onCancel?.());
+    changeBucketCategory(bucket._id, value).then(() => onCancel?.());
   }, []);
 
   const truncatedCategoryName = truncateText(textValue, 32);
