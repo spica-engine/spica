@@ -44,7 +44,7 @@ Object-Relational Mapping features generate TypeScript interfaces and methods fo
 
 1. Create/select a context
 
-- `spica context set --name <name> --url <url/api> --apikey <key>`
+- `spica context set --name <name> --url <api_url> --apikey <key>`
 - `spica context switch <name>`
 
 2. Use commands (e.g., `spica project start <name>`)
@@ -55,7 +55,7 @@ Object-Relational Mapping features generate TypeScript interfaces and methods fo
 
 Create or update a context.
 
-- Usage: `spica context set --name <name> --url <url/api> --apikey <apikey>`
+- Usage: `spica context set --name <name> --url <api_url> --apikey <apikey>`
 - Notes: Name is recommended; URL and API Key are required.
 
 **Example:**
@@ -134,7 +134,7 @@ Upgrade an existing local project to a target version.
 Synchronize resources between two instances.
 
 - Usage:
-  - `spica project sync --source-url <url/api> --source-apikey <key> --target-url <url/api> --target-apikey <key> --modules <list> [id filters] [flags]`
+  - `spica project sync --source-url <api_url> --source-apikey <key> --target-url <api_url> --target-apikey <key> --modules <list> [id filters] [flags]`
 - Modules (comma-separated): `bucket,function,bucket-data,apikey,policy,env-var`
 - Optional ID filters (comma-separated):
   - `--bucket-ids <ids>`
