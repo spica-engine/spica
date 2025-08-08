@@ -13,6 +13,33 @@ Purpose: A clean, concise reference for the `spica` CLI. Optimized for MCP serve
 - Docker installed and running (for project commands)
 - A Spica API URL and API Key (for context and remote operations)
 
+## Installation & Setup
+
+The CLI is distributed as `@spica/cli` npm package with binary name `spica`.
+
+```bash
+npm install -g @spica/cli
+spica --help
+```
+
+## Core Concepts
+
+### Context Management
+
+Contexts store connection information (URL and API key) for Spica instances. The CLI uses these contexts to authenticate and connect to different Spica environments.
+
+### Project Operations
+
+Projects are local Spica instances running in Docker containers. The CLI manages the complete lifecycle of these local instances.
+
+### Asset Management
+
+Assets are collections of Spica resources (buckets, functions, preferences) packaged together for deployment.
+
+### ORM Generation
+
+Object-Relational Mapping features generate TypeScript interfaces and methods for type-safe interaction with Spica resources.
+
 ## Quick Start
 
 1. Create/select a context
@@ -30,6 +57,12 @@ Create or update a context.
 
 - Usage: `spica context set --name <name> --url <url> --apikey <apikey>`
 - Notes: Name is recommended; URL and API Key are required.
+
+**Example:**
+
+```bash
+spica context set --name production --url https://api.spica.com --apikey YOUR_API_KEY
+```
 
 ### context ls
 
@@ -70,6 +103,12 @@ Start a local Spica instance.
 - Output: Spica served at http://localhost:<port>
 - Default login (unless overridden by api-options): identifier `spica`, password `spica`.
 
+**Example:**
+
+```bash
+spica project start myproject --port 3000 --open
+```
+
 ### project ls
 
 List local projects.
@@ -109,6 +148,18 @@ Synchronize resources between two instances.
   - `--concurrency-limit <number>` default: 100
 - Version requirement: both instances v0.9.19+ (ideally same version).
 
+**Example:**
+
+```bash
+spica project sync \
+  --source-url https://source.spica.com \
+  --source-apikey SOURCE_KEY \
+  --target-url https://target.spica.com \
+  --target-apikey TARGET_KEY \
+  --modules bucket,function \
+  --dry-run
+```
+
 ## Asset Commands
 
 ### asset apply
@@ -118,11 +169,23 @@ Upload an asset (composed resources) to the current context instance.
 - Usage: `spica asset apply [--path <folder>] [--dry-run]`
 - Requirements in folder: `asset.yaml` plus resource files under module folders (e.g., bucket/, function/)
 
+**Example:**
+
+```bash
+spica asset apply --path ./my-asset
+```
+
 ### asset delete
 
 Delete an existing asset by name from `asset.yaml` in the folder.
 
 - Usage: `spica asset delete --type <soft|hard> [--path <folder>]`
+
+**Example:**
+
+```bash
+spica asset delete --type soft --path ./my-asset
+```
 
 ## ORM Generators
 
@@ -136,6 +199,12 @@ Generate a typed ORM for buckets.
 - Output: `bucket.ts` in the target folder
 - Features: typed interfaces, CRUD helpers, relations, localization, pagination, realtime helpers
 
+**Example:**
+
+```bash
+spica bucket orm --path ./src/generated
+```
+
 ### function orm
 
 Generate typed clients for functions.
@@ -144,6 +213,12 @@ Generate typed clients for functions.
 - Defaults: `--path ./functions`, `--trigger-types http`, `--http-service axios`
 - Output: one folder per function with typed client code
 
+**Example:**
+
+```bash
+spica function orm --path ./src/functions --http-service axios
+```
+
 ## Notes & Tips
 
 - Most commands require a selected context (except local project lifecycle operations).
@@ -151,10 +226,61 @@ Generate typed clients for functions.
 - For project start with `--local-resource-folder`, initial sync can overwrite managed files under that folder; un-managed files (e.g., .git) remain.
 - If requests fail during sync, adjust `--concurrency-limit` or enable `--ignore-errors`.
 
-## Minimal Examples
+## Error Recovery
 
-- Set context: `spica context set --name prod --url https://api.example.com --apikey XXXX`
-- Start local: `spica project start demo --port 4500 --open`
-- Sync buckets and functions (dry): `spica project sync --source-url https://src --source-apikey A --target-url https://dst --target-apikey B --modules bucket,function --dry-run`
-- Generate bucket ORM: `spica bucket orm --path ./src/generated`
-- Apply asset: `spica asset apply --path ./my-asset`
+- Use `--ignore-errors` flag in sync operations to continue despite failures
+- Check connection and authentication with `spica context ls`
+- Verify Docker status for project operations
+- Use `--dry-run` to preview changes before applying
+
+## Best Practices
+
+### Context Management
+
+- Use descriptive names for contexts (e.g., "production", "staging", "local")
+- Regularly verify context connectivity
+- Secure API keys appropriately
+
+### Project Development
+
+- Use version control for generated ORM files
+- Test asset deployments with `--dry-run` first
+- Keep local projects updated with `project upgrade`
+- Use resource folders for organized asset management
+
+### Synchronization
+
+- Always test sync operations with `--dry-run` first
+- Use specific resource IDs to sync subsets of data
+- Monitor sync operations for errors
+- Backup target instances before major sync operations
+
+### ORM Usage
+
+- Regenerate ORM files when bucket schemas change
+- Use TypeScript strict mode for better type safety
+- Leverage relation resolution for complex data structures
+- Implement proper error handling in generated code
+
+## Troubleshooting
+
+### Docker Issues
+
+- Ensure Docker daemon is running
+- Check Docker permissions
+- Verify available ports
+- Monitor container logs
+
+### Network Issues
+
+- Verify API endpoint URLs
+- Check firewall settings
+- Test connectivity with curl or similar tools
+- Validate SSL certificates
+
+### Authentication Issues
+
+- Verify API key permissions
+- Check token expiration
+- Ensure correct context selection
+- Test authentication with simple API calls
