@@ -978,4 +978,30 @@ describe("Storage Acceptance", () => {
       expect(expiredRes.statusCode).toBe(404);
     });
   });
+
+  describe("get by name operations", () => {
+    it("should return storage object by name", async () => {
+      const {
+        body: {
+          data: [row]
+        }
+      } = await req.get("/storage", {paginate: true});
+      const {body: response} = await req.get(`/storage/${row.name}`);
+      expect(response._id).toEqual(row._id);
+      expect(response.url).toEqual(row.url);
+      expect(response.name).toEqual(row.name);
+    });
+
+    it("should show the object by name", async () => {
+      const {
+        body: {
+          data: [row]
+        }
+      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
+      const {headers, body} = await req.get(`/storage/${row.name}/view`);
+      expect(headers["content-type"]).toEqual("text/plain; charset=utf-8");
+      expect(headers["etag"]).toBe(etag("third"));
+      expect(body).toBe("third");
+    });
+  });
 });
