@@ -105,7 +105,7 @@ export const useBucketService = () => {
     method: "delete"
   });
 
-  const {request: requestNameChange} = useApi({
+  const {request: putRequest} = useApi({
     endpoint: "",
     method: "put"
   });
@@ -139,12 +139,12 @@ export const useBucketService = () => {
         const body = {...bucket, title: newTitle};
         delete (body as unknown as {section: any}).section;
         delete (body as unknown as {index: any}).index;
-        return await requestNameChange({body, endpoint: `/api/bucket/${bucket._id}`});
+        return await putRequest({body, endpoint: `/api/bucket/${bucket._id}`});
       } catch (err) {
         console.error(err);
       }
     },
-    [requestNameChange]
+    [putRequest]
   );
 
   const apiDeleteBucket = useCallback(
@@ -156,15 +156,18 @@ export const useBucketService = () => {
     [deleteRequest]
   );
 
-  const apiUpdateBucketReadonly = useCallback(async (bucket: BucketType) => {
-    return await patchRequest({
-      endpoint: `/api/bucket/${bucket._id}`,
-      body: {
-        ...bucket,
-        readOnly: !bucket.readOnly
-      }
-    });
-  }, [patchRequest]);
+  const apiUpdateBucketReadonly = useCallback(
+    async (bucket: BucketType) => {
+      return await putRequest({
+        endpoint: `/api/bucket/${bucket._id}`,
+        body: {
+          ...bucket,
+          readOnly: !bucket.readOnly
+        }
+      });
+    },
+    [putRequest]
+  );
 
   return {
     apiGetBucketData,
