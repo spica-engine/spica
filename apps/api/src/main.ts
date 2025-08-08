@@ -57,10 +57,24 @@ const args = yargs(process.argv.slice(2))
       number: true,
       description: "Amount of connection that will be opened against database.",
       default: 50
+    },
+    "database-read-preference": {
+      string: true,
+      description: "Read preference for the database connection.",
+      default: "primary",
+      choices: ["primary", "primaryPreferred", "secondary", "secondaryPreferred", "nearest"]
     }
   })
   .demandOption("database-name")
   .demandOption("database-uri")
+  /* Dashboard Options */
+  .options({
+    "dashboard-realtime": {
+      boolean: true,
+      description: "Enable/disable listening dashboards realtime. Default value is true",
+      default: true
+    }
+  })
   /* Feature Toggling: Bucket and Activity Stream */
   .options({
     "bucket-cache": {
@@ -193,6 +207,11 @@ const args = yargs(process.argv.slice(2))
       description: "Enable/disable listening apikey realtime. Default value is true",
       default: true
     },
+    "policy-realtime": {
+      boolean: true,
+      description: "Enable/disable listening policy realtime. Default value is true",
+      default: true
+    },
     "identity-realtime": {
       boolean: true,
       description: "Enable/disable listening identity realtime. Default value is true",
@@ -297,6 +316,11 @@ const args = yargs(process.argv.slice(2))
     "storage-total-size-limit": {
       number: true,
       description: "Total size limit of storage. Unit: Mb"
+    },
+    "resumable-upload-expires-in": {
+      number: true,
+      description: "Storage period for unloaded files in milliseconds, default is 2 days",
+      default: 1000 * 60 * 60 * 24 * 2 // 2 days
     }
   })
   /* Status Options */
@@ -408,6 +432,12 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     description: "Regex to filter access logs by status code",
     default: ".*"
   })
+  /* Environment Variable Options */
+  .option("env-var-realtime", {
+    boolean: true,
+    description: "Enable/disable realtime updates for environment variables.",
+    default: true
+  })
   .middleware(args => {
     const username = process.env.MONGODB_USERNAME;
     const password = process.env.MONGODB_PASSWORD;
@@ -488,22 +518,25 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     "duplicate-arguments-array": false
   })
   .env()
-  .parse();
+  .parse() as any;
 
 const modules = [
   BatchModule.forRoot({
     port: args["port"]
   }),
-  DashboardModule.forRoot(),
+  DashboardModule.forRoot({realtime: args["dashboard-realtime"]}),
   PreferenceModule.forRoot(),
   AssetModule.forRoot({persistentPath: args["persistent-path"]}),
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
     maxPoolSize: args["database-pool-size"],
-    appName: "spica"
+    appName: "spica",
+    readPreference: args["database-read-preference"]
   }),
-  EnvVarModule.forRoot(),
+  EnvVarModule.forRoot({
+    realtime: args["env-var-realtime"]
+  }),
   SchemaModule.forRoot({
     formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
     defaults: [CREATED_AT, UPDATED_AT]
@@ -526,7 +559,8 @@ const modules = [
     awss3CredentialsPath: args["awss3-credentials-path"],
     awss3BucketName: args["awss3-bucket-name"],
     objectSizeLimit: args["storage-object-size-limit"],
-    totalSizeLimit: args["storage-total-size-limit"]
+    totalSizeLimit: args["storage-total-size-limit"],
+    resumableUploadExpiresIn: args["resumable-upload-expires-in"]
   }),
   PassportModule.forRoot({
     publicUrl: args["public-url"],
@@ -548,6 +582,7 @@ const modules = [
     refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
     passwordHistoryLimit: args["passport-identity-password-history-limit"],
     apikeyRealtime: args["apikey-realtime"],
+    policyRealtime: args["policy-realtime"],
     identityRealtime: args["identity-realtime"]
   }),
   FunctionModule.forRoot({

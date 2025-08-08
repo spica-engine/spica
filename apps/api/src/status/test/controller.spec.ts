@@ -126,7 +126,7 @@ describe("Status", () => {
       module = await Test.createTestingModule({
         imports: [
           DatabaseTestingModule.standalone(),
-          PolicyModule.forRoot(),
+          PolicyModule.forRoot({realtime: false}),
           StatusModule.forRoot({expireAfterSeconds: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),
@@ -318,7 +318,8 @@ describe("Status", () => {
             objectSizeLimit: 10,
             strategy: "default",
             totalSizeLimit: 10,
-            defaultPath: process.env.TEST_TMPDIR
+            defaultPath: process.env.TEST_TMPDIR,
+            resumableUploadExpiresIn: 0
           })
         ]
       }).compile();
