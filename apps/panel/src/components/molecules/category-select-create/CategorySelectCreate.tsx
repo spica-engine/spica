@@ -16,14 +16,14 @@ type CategorySelectCreateProps = {
   bucket: BucketType;
   categories: string[];
   onCancel?: () => void;
-  changeBucketCategory: (bucketId: string, category: string) => Promise<any>;
+  changeCategory: (bucketId: string, category: string) => Promise<any>;
 };
 
 const CategorySelectCreate = ({
   bucket,
   categories,
   onCancel,
-  changeBucketCategory
+  changeCategory
 }: CategorySelectCreateProps) => {
   const [textValue, setTextValue] = useState("");
   const [focused, setFocused] = useState(false);
@@ -34,7 +34,7 @@ const CategorySelectCreate = ({
   );
 
   const handleSubmit = useCallback((value: string) => {
-    changeBucketCategory(bucket._id, value).then(() => onCancel?.());
+    changeCategory(bucket._id, value).then(() => onCancel?.());
   }, []);
 
   const truncatedCategoryName = truncateText(textValue, 32);

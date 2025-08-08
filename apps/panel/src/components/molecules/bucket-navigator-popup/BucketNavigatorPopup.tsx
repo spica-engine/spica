@@ -139,7 +139,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
       </Popover>
       {isCategorySelectCreateOpen && (
         <CategorySelectCreate
-          changeBucketCategory={changeBucketCategory}
+          changeCategory={changeBucketCategory}
           bucket={bucket}
           categories={bucketCategories}
           onCancel={handleCancelCategorySelectCreate}
