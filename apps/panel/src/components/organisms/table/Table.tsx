@@ -208,10 +208,7 @@ const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataL
               minWidth: `${totalTableWidth}px`
             }}
           >
-            <TableHeader
-              formattedColumns={formattedColumns}
-              onColumnResize={handleColumnResize}
-            />
+            <TableHeader formattedColumns={formattedColumns} onColumnResize={handleColumnResize} />
             <tbody>
               {formattedColumns.length > 0 && (
                 <Rows
@@ -350,6 +347,14 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
   const rowCacheRef = useRef<Map<string, {element: JSX.Element; lastFocusedCell: string | null}>>(
     new Map()
   );
+
+  const prevColumnsRef = useRef(formattedColumns);
+
+  if (prevColumnsRef.current !== formattedColumns) {
+    rowCacheRef.current.clear();
+    prevColumnsRef.current = formattedColumns;
+  }
+
   const rows: JSX.Element[] = [];
 
   for (let index = 0; index < data.length; index++) {
