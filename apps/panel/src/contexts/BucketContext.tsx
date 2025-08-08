@@ -29,10 +29,19 @@ type BucketContextType = {
   updateBucketOrderOnServer: (bucketId: string, order: number) => Promise<any>;
   renameBucket: (newTitle: string, bucket: BucketType) => void;
   deleteBucket: (bucketId: string) => Promise<any>;
+  updateBucketRule: (
+    bucket: BucketType,
+    newRules: {
+      read: string;
+      write: string;
+    }
+  ) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataType | null;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
+  updateBucketRuleLoading: boolean;
+  updateBucketRuleError: string | null;
 };
 
 /**
@@ -59,8 +68,11 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiChangeBucketOrder,
     apiRenameBucket,
     apiDeleteBucket,
+    apiUpdateBucketRule,
     apiBuckets,
-    apiBucketData
+    apiBucketData,
+    apiUpdateBucketRuleError,
+    apiUpdateBucketRuleLoading
   } = useBucketService();
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
@@ -136,6 +148,18 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [apiDeleteBucket]
   );
 
+  const updateBucketRule = useCallback(
+    (bucket: BucketType, newRules: {read: string; write: string}) => {
+      const oldBuckets = buckets;
+      setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, acl: newRules} : i)));
+      return apiUpdateBucketRule(bucket, newRules).then(result => {
+        if (!result) setBuckets(oldBuckets);
+        return result;
+      });
+    },
+    [apiUpdateBucketRule, buckets]
+  );
+
   const renameBucket = useCallback(
     async (newTitle: string, bucket: BucketType) => {
       const oldBuckets = buckets;
@@ -204,8 +228,11 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketOrderOnServer: apiChangeBucketOrder,
       renameBucket,
       deleteBucket,
+      updateBucketRule,
       buckets,
       bucketData,
+      updateBucketRuleLoading: apiUpdateBucketRuleLoading,
+      updateBucketRuleError: apiUpdateBucketRuleError,
       bucketCategories,
       nextbucketDataQuery
     }),
@@ -217,8 +244,11 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiChangeBucketOrder,
       renameBucket,
       deleteBucket,
+      updateBucketRule,
       buckets,
       bucketData,
+      apiUpdateBucketRuleLoading,
+      apiUpdateBucketRuleError,
       bucketCategories,
       nextbucketDataQuery
     ]

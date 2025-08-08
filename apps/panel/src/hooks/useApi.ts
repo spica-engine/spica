@@ -54,7 +54,7 @@ function useApi<T>({endpoint, method = "get", onSuccess, onError}: ApiRequestOpt
             onError?.();
           }
         } catch (err: any) {
-          setError(err.message ?? "Something went wrong");
+          setError(err.response?.data?.message ?? err.message ?? "Something went wrong");
         } finally {
           setLoading(false);
         }
