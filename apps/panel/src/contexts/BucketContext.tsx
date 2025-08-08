@@ -16,7 +16,6 @@ import {
   type BucketType
 } from "../services/bucketService";
 import type {AxiosRequestHeaders} from "axios";
-import {api} from "oziko-ui-kit/dist/utils/api";
 
 type BucketContextType = {
   getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
