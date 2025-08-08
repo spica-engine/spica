@@ -29,6 +29,7 @@ type BucketContextType = {
   updateBucketOrderOnServer: (bucketId: string, order: number) => Promise<any>;
   renameBucket: (newTitle: string, bucket: BucketType) => void;
   deleteBucket: (bucketId: string) => Promise<any>;
+  updateBucketReadonly: (bucket: BucketType) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataType | null;
@@ -59,6 +60,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiChangeBucketOrder,
     apiRenameBucket,
     apiDeleteBucket,
+    apiUpdateBucketReadonly,
     apiBuckets,
     apiBucketData
   } = useBucketService();
@@ -195,6 +197,15 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [apiGetBucketData]
   );
 
+  const updateBucketReadonly = useCallback(async (bucket: BucketType) => {
+    const previousBuckets = buckets;
+    setBuckets(prev => (prev ? prev.map(i => ({...i, readOnly: !i.readOnly})) : []));
+    const success = await apiUpdateBucketReadonly(bucket);
+    if (!success) {
+      setBuckets(previousBuckets);
+    }
+  }, [buckets, apiUpdateBucketReadonly]);
+
   const contextValue = useMemo(
     () => ({
       getBucketData,
@@ -204,6 +215,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketOrderOnServer: apiChangeBucketOrder,
       renameBucket,
       deleteBucket,
+      updateBucketReadonly,
       buckets,
       bucketData,
       bucketCategories,
