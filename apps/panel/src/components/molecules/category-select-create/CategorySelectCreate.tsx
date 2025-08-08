@@ -5,11 +5,10 @@ import {
   Icon,
   Input,
   Modal,
-  Text,
-  useOnClickOutside
+  Text
 } from "oziko-ui-kit";
 import styles from "./CategorySelectCreate.module.scss";
-import {memo, useCallback, useMemo, useRef, useState} from "react";
+import {memo, useCallback, useMemo, useState} from "react";
 import truncateText from "../../../utils/truncate-text";
 import type {BucketType} from "src/services/bucketService";
 
