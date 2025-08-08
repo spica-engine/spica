@@ -12,6 +12,11 @@ export default {
       action: "dashboard:show",
       resource: {include: ["*"], exclude: []},
       module: "dashboard"
+    },
+    {
+      action: "dashboard:stream",
+      resource: {include: ["*"], exclude: []},
+      module: "dashboard"
     }
   ]
 };

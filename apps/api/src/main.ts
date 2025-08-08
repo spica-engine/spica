@@ -67,6 +67,14 @@ const args = yargs(process.argv.slice(2))
   })
   .demandOption("database-name")
   .demandOption("database-uri")
+  /* Dashboard Options */
+  .options({
+    "dashboard-realtime": {
+      boolean: true,
+      description: "Enable/disable listening dashboards realtime. Default value is true",
+      default: true
+    }
+  })
   /* Feature Toggling: Bucket and Activity Stream */
   .options({
     "bucket-cache": {
@@ -424,6 +432,12 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     description: "Regex to filter access logs by status code",
     default: ".*"
   })
+  /* Environment Variable Options */
+  .option("env-var-realtime", {
+    boolean: true,
+    description: "Enable/disable realtime updates for environment variables.",
+    default: true
+  })
   .middleware(args => {
     const username = process.env.MONGODB_USERNAME;
     const password = process.env.MONGODB_PASSWORD;
@@ -504,13 +518,13 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     "duplicate-arguments-array": false
   })
   .env()
-  .parse();
+  .parse() as any;
 
 const modules = [
   BatchModule.forRoot({
     port: args["port"]
   }),
-  DashboardModule.forRoot(),
+  DashboardModule.forRoot({realtime: args["dashboard-realtime"]}),
   PreferenceModule.forRoot(),
   AssetModule.forRoot({persistentPath: args["persistent-path"]}),
   DatabaseModule.withConnection(args["database-uri"], {
@@ -520,7 +534,9 @@ const modules = [
     appName: "spica",
     readPreference: args["database-read-preference"]
   }),
-  EnvVarModule.forRoot(),
+  EnvVarModule.forRoot({
+    realtime: args["env-var-realtime"]
+  }),
   SchemaModule.forRoot({
     formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
     defaults: [CREATED_AT, UPDATED_AT]
