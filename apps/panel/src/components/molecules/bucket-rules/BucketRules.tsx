@@ -281,9 +281,9 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
 }`);
 
   const {
-    changeBucketRule,
-    bucketRuleChangeLoading: loading,
-    bucketRuleError: apiError
+    updateBucketRule,
+    updateBucketRuleLoading: loading,
+    updateBucketRuleError: apiError
   } = useBucket();
 
   const [token] = useLocalStorage("token", "");
@@ -329,7 +329,7 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
           return;
         }
 
-        changeBucketRule(bucket, {
+        updateBucketRule(bucket, {
           write: rules.write,
           read: rules.read
         }).then(result => {
@@ -346,7 +346,7 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
         setError(`Error parsing rules: ${error instanceof Error ? error.message : String(error)}`);
       }
     },
-    [bucket, changeBucketRule, handleClose]
+    [bucket, updateBucketRule, handleClose]
   );
 
   return (

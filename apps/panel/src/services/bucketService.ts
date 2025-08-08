@@ -1,4 +1,4 @@
-import {useCallback, useState} from "react";
+import {useCallback} from "react";
 import useApi from "../hooks/useApi";
 
 export type BucketDataType = {
@@ -71,144 +71,121 @@ export type BucketDataQueryType = {
 
 export type BucketDataQueryWithIdType = BucketDataQueryType & {bucketId: string};
 
+/**
+ * useBucketService: Custom hook for bucket-related API calls.
+ *
+ * Naming conventions:
+ * - Functions are API-only; they DO NOT update React state.
+ * - Prefix all function names with `api` (e.g., apiGetBuckets, apiDeleteBucket).
+ * - Function names closely mirror backend operations.
+ * - No side effects or state management here.
+ *
+ * Usage:
+ * - Import and call these functions in BucketContext or other hooks/components.
+ * - Keep all network requests centralized here.
+ * - Separate business logic (state updates, orchestration) to BucketContext.
+ */
 export const useBucketService = () => {
-  const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
-    useState<BucketDataQueryWithIdType | null>(null);
-
-  const {
-    request: fetchBuckets,
-    data: buckets,
-    error,
-    loading
-  } = useApi<BucketType[]>({
+  const {request: fetchBuckets, data: apiBuckets} = useApi<BucketType[]>({
     endpoint: "/api/bucket",
     method: "get"
   });
 
-  const {
-    request: fetchBucketData,
-    data: bucketData,
-  } = useApi<BucketDataType>({
+  const {request: fetchBucketData, data: apiBucketData} = useApi<BucketDataType>({
     endpoint: "",
     method: "get"
   });
 
-  const getBucketData = useCallback(
-    (bucketId: string, query?: BucketDataQueryType) => {
-      const defaultParams: Omit<BucketDataQueryType, "sort"> & {sort: string} = {
-        paginate: true,
-        relation: true,
-        limit: 25,
-        sort: JSON.stringify({_id: -1})
-      };
-
-      let params = query
-        ? {
-            ...defaultParams,
-            ...query,
-            sort: query.sort ? JSON.stringify(query.sort) : defaultParams.sort
-          }
-        : {...defaultParams};
-
-      if (!params.sort || Object.keys(JSON.parse(params.sort)).length === 0) {
-        const {sort, ...rest} = params;
-        params = rest as typeof params;
-      }
-
-      const queryString = new URLSearchParams(
-        params as unknown as Record<string, string>
-      ).toString();
-
-      return fetchBucketData({
-        endpoint: `/api/bucket/${bucketId}/data?${queryString}`
-      }).then(result => {
-        if (!result) return;
-        setLastUsedBucketDataQuery(
-          query ? {...query, bucketId} : {...defaultParams, sort: {_id: -1}, bucketId}
-        );
-        return result;
-      });
-    },
-    [fetchBucketData]
-  );
+  const {request: bucketOrderRequest} = useApi({endpoint: "", method: "patch"});
 
   const {request: patchRequest} = useApi({endpoint: "/api/bucket", method: "patch"});
-
-  const requestCategoryChange = useCallback((bucketId: string, category: string) => {
-    return patchRequest({body: {category}, endpoint: `/api/bucket/${bucketId}`});
-  }, []);
-
-  const {
-    request: bucketOrderRequest,
-    loading: bucketOrderLoading,
-    error: bucketOrderError
-  } = useApi({endpoint: "", method: "patch"});
-
-  const changeBucketOrder = useCallback(
-    (bucketId: string, order: number) => {
-      return bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
-    },
-    [bucketOrderRequest]
-  );
-
-  const {request: requestNameChange} = useApi({
-    endpoint: "",
-    method: "put"
-  });
-
-  const requestBucketNameChange = useCallback(async (newTitle: string, bucket: BucketType) => {
-    try {
-      const body = {...bucket, title: newTitle};
-      delete (body as unknown as {section: any}).section;
-      delete (body as unknown as {index: any}).index;
-      return await requestNameChange({body, endpoint: `/api/bucket/${bucket._id}`});
-    } catch (err) {
-      console.error(err);
-    }
-  }, [requestNameChange]);
 
   const {request: deleteRequest} = useApi({
     endpoint: "",
     method: "delete"
   });
 
-  const deleteBucketRequest = useCallback((bucketId: string) => {
-    return deleteRequest({
-      endpoint: `/api/bucket/${bucketId}`
-    });
-  }, []);
-
-  const {request: changeBucketRule, loading: bucketRuleChangeLoading, error: bucketRuleError} = useApi({
+  const {request: requestNameChange} = useApi({
     endpoint: "",
     method: "put"
   });
 
-  const changeBucketRuleRequest = useCallback(
+  const {
+    request: updateBucketRule,
+    loading: apiUpdateBucketRuleLoading,
+    error: apiUpdateBucketRuleError
+  } = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
+  const apiGetBucketData = useCallback(
+    (bucketId: string, queryString?: string) => {
+      return fetchBucketData({
+        endpoint: `/api/bucket/${bucketId}/data?${queryString}`
+      });
+    },
+    [fetchBucketData]
+  );
+
+  const apiChangeBucketCategory = useCallback(
+    (bucketId: string, category: string) => {
+      return patchRequest({body: {category}, endpoint: `/api/bucket/${bucketId}`});
+    },
+    [patchRequest]
+  );
+
+  const apiChangeBucketOrder = useCallback(
+    (bucketId: string, order: number) => {
+      return bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
+    },
+    [bucketOrderRequest]
+  );
+
+  const apiRenameBucket = useCallback(
+    async (newTitle: string, bucket: BucketType) => {
+      try {
+        const body = {...bucket, title: newTitle};
+        delete (body as unknown as {section: any}).section;
+        delete (body as unknown as {index: any}).index;
+        return await requestNameChange({body, endpoint: `/api/bucket/${bucket._id}`});
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    [requestNameChange]
+  );
+
+  const apiDeleteBucket = useCallback(
+    (bucketId: string) => {
+      return deleteRequest({
+        endpoint: `/api/bucket/${bucketId}`
+      });
+    },
+    [deleteRequest]
+  );
+
+  const apiUpdateBucketRule = useCallback(
     async (bucket: BucketType, newRules: {write: string; read: string}) => {
-      return await changeBucketRule({
+      return await updateBucketRule({
         endpoint: `/api/bucket/${bucket._id}`,
         body: {...bucket, acl: newRules}
       });
     },
-    [changeBucketRule]
+    [updateBucketRule]
   );
 
   return {
-    loading,
-    error,
-    fetchBuckets,
-    bucketData,
-    getBucketData,
-    lastUsedBucketDataQuery,
-    requestCategoryChange,
-    changeBucketOrder,
-    bucketOrderLoading,
-    bucketOrderError,
-    requestBucketNameChange,
-    buckets,
-    deleteBucketRequest,
-    changeBucketRuleRequest,
-    bucketRuleChangeLoading,
-    bucketRuleError
+    apiGetBucketData,
+    apiGetBuckets: fetchBuckets,
+    apiChangeBucketCategory,
+    apiChangeBucketOrder,
+    apiRenameBucket,
+    apiDeleteBucket,
+    apiUpdateBucketRule,
+    apiBuckets,
+    apiBucketData,
+    apiUpdateBucketRuleLoading,
+    apiUpdateBucketRuleError,
   };
 };
