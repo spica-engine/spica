@@ -18,61 +18,68 @@ import {
 import type {AxiosRequestHeaders} from "axios";
 
 type BucketContextType = {
-  buckets: BucketType[];
-  setBuckets: React.Dispatch<React.SetStateAction<BucketType[]>>;
-  loading: boolean;
-  error: string | null;
-  deleteBucket: (bucketId: string) => Promise<any>;
-  fetchBuckets: (params?: {
+  getBucketData: (bucketId: string, query?: BucketDataQueryWithIdType) => Promise<BucketDataType>;
+  cleanBucketData: () => void;
+  getBuckets: (params?: {
     body?: any;
     headers?: AxiosRequestHeaders;
     endpoint?: string;
   }) => Promise<BucketDataType>;
-  categories: string[];
-  changeCategory: (bucketId: string, category: string) => Promise<any>;
-  changeBucketOrder: (bucketId: string, order: number) => void;
-  bucketOrderLoading: boolean;
-  bucketOrderError: string | null;
+  changeBucketCategory: (bucketId: string, category: string) => Promise<any>;
+  updateBucketOrderLocally: (from: number, to: number) => void;
+  updateBucketOrderOnServer: (bucketId: string, order: number) => Promise<any>;
+  renameBucket: (newTitle: string, bucket: BucketType) => void;
+  deleteBucket: (bucketId: string) => Promise<any>;
+  buckets: BucketType[];
+  bucketCategories: string[];
   bucketData: BucketDataType | null;
-  getBucketData: (
-    bucketId: string,
-    query?: BucketDataQueryType & {bucketId: string}
-  ) => Promise<BucketDataType>;
-  nextbucketDataQuery: BucketDataQueryWithIdType | null;
   bucketDataLoading: boolean;
-  cleanBucketData: () => void;
-  changeBucketName: (newTitle: string, bucket: BucketType) => Promise<any>;
+  nextbucketDataQuery: BucketDataQueryWithIdType | null;
 };
 
+/**
+ * BucketContext: React Context managing bucket state and business logic.
+ *
+ * Naming conventions:
+ * - Exposes domain-level functions for components (e.g., getBuckets, deleteBucket, renameBucket).
+ * - Functions may orchestrate API calls AND update React state.
+ * - No `api` prefix on functions here.
+ * - Function names always start with a verb describing the action.
+ * - Always include the entity name (e.g., Bucket, BucketItem) for clarity.
+ *
+ * Usage:
+ * - Use `useBucket()` hook to access buckets and bucket-related actions.
+ * - Keep context functions focused on state + side effects.
+ * - API-only calls should be imported from useBucketService and named naturally here.
+ */
 const BucketContext = createContext<BucketContextType | null>(null);
 export const BucketProvider = ({children}: {children: ReactNode}) => {
   const {
-    buckets: data,
-    loading,
-    error,
-    fetchBuckets,
-    bucketData: fetchedBucketData,
-    requestBucketData,
-    lastUsedBucketDataQuery,
-    requestCategoryChange,
-    deleteBucketRequest,
-    changeBucketOrder,
-    bucketOrderLoading,
-    bucketOrderError,
-    requestBucketNameChange,
-    bucketDataLoading
+    apiGetBucketData,
+    apiGetBuckets,
+    apiChangeBucketCategory,
+    apiChangeBucketOrder,
+    apiRenameBucket,
+    apiDeleteBucket,
+    apiBuckets,
+    apiBucketData,
+    apiBucketDataLoading
   } = useBucketService();
+
+  const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
+    useState<BucketDataQueryWithIdType | null>(null);
   const [bucketData, setBucketData] = useState<BucketDataWithIdType>({
-    ...fetchedBucketData,
+    ...apiBucketData,
     bucketId: lastUsedBucketDataQuery?.bucketId as string
   } as BucketDataWithIdType);
+  const [buckets, setBuckets] = useState<BucketType[]>(apiBuckets ?? []);
+  useEffect(() => setBuckets(apiBuckets ?? []), [apiBuckets]);
 
   useEffect(() => {
-    if (!fetchedBucketData) return;
-
+    if (!apiBucketData) return;
     setBucketData(prev => {
       const fetchedBucketDataWithId = {
-        ...fetchedBucketData,
+        ...apiBucketData,
         bucketId: lastUsedBucketDataQuery?.bucketId as string
       } as BucketDataWithIdType;
       if (!prev) return fetchedBucketDataWithId;
@@ -80,13 +87,11 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       const prevBucketId = prev.bucketId;
       const newBucketId = lastUsedBucketDataQuery?.bucketId;
 
-      if (prevBucketId !== newBucketId) {
-        return fetchedBucketDataWithId;
-      }
+      if (prevBucketId !== newBucketId) return fetchedBucketDataWithId;
 
       const existingIds = new Set(prev.data.map(item => item._id));
 
-      const newItems = fetchedBucketData.data.filter(item => !existingIds.has(item.id));
+      const newItems = apiBucketData.data.filter(item => !existingIds.has(item.id));
 
       if (newItems.length === 0) return prev;
       return {...prev, data: [...prev.data, ...newItems]};
@@ -100,22 +105,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     }),
     [JSON.stringify(lastUsedBucketDataQuery)]
   );
-  const [buckets, setBuckets] = useState<BucketType[]>(data ?? []);
 
-  useEffect(() => setBuckets(data ?? []), [data]);
-
-  const changeCategory = useCallback(
-    async (bucketId: string, category: string) => {
-      setBuckets(
-        prev =>
-          prev?.map(bucket => (bucket._id === bucketId ? {...bucket, category} : bucket)) ?? []
-      );
-      return await requestCategoryChange(bucketId, category);
-    },
-    [requestCategoryChange]
-  );
-
-  const categories = useMemo(() => {
+  const bucketCategories = useMemo(() => {
     if (!buckets) return [];
     const set = new Set<string>();
     buckets.forEach(bucket => {
@@ -125,27 +116,49 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     return Array.from(set);
   }, [buckets]);
 
+  const changeBucketCategory = useCallback(
+    async (bucketId: string, category: string) => {
+      setBuckets(
+        prev =>
+          prev?.map(bucket => (bucket._id === bucketId ? {...bucket, category} : bucket)) ?? []
+      );
+      return await apiChangeBucketCategory(bucketId, category);
+    },
+    [apiChangeBucketCategory]
+  );
+
   const deleteBucket = useCallback(
     async (bucketId: string) => {
       try {
-        await deleteBucketRequest(bucketId);
+        await apiDeleteBucket(bucketId);
         setBuckets(prev => (prev ? prev.filter(i => i._id !== bucketId) : []));
       } catch (err) {
         console.error(err);
       }
     },
-    [deleteBucketRequest]
+    [apiDeleteBucket]
   );
 
-  const changeBucketName = useCallback(
+  const renameBucket = useCallback(
     async (newTitle: string, bucket: BucketType) => {
       const oldBuckets = buckets;
-      requestBucketNameChange(newTitle, bucket).then(result => {
+      apiRenameBucket(newTitle, bucket).then(result => {
         if (!result) setBuckets(oldBuckets);
       });
       setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, title: newTitle} : i)));
     },
-    [buckets]
+    [buckets, apiRenameBucket]
+  );
+
+  const updateBucketOrderLocally = useCallback(
+    (from: number, to: number) =>
+      setBuckets(prev => {
+        const updated = [...prev];
+        const [moved] = updated.splice(from, 1);
+        updated.splice(to, 0, moved);
+        return updated;
+      }),
+    []
   );
 
   const getBucketData = useCallback(
@@ -158,14 +171,41 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       const queriesEqual = JSON.stringify(prevQueryNoBucket) === JSON.stringify(newQueryNoBucket);
       if (queriesEqual && !previousQueryEmpty && !newQueryEmpty) return;
 
-      try {
-        const result = await requestBucketData(bucketId, newQueryNoBucket);
-        return result;
-      } catch (err) {
-        console.error("Error fetching bucket data:", err);
+      const defaultParams: Omit<BucketDataQueryType, "sort"> & {sort: string} = {
+        paginate: true,
+        relation: true,
+        limit: 25,
+        sort: JSON.stringify({_id: -1})
+      };
+
+      let params = newQueryNoBucket
+        ? {
+            ...defaultParams,
+            ...newQueryNoBucket,
+            sort: newQueryNoBucket.sort ? JSON.stringify(newQueryNoBucket.sort) : defaultParams.sort
+          }
+        : {...defaultParams};
+
+      if (!params.sort || Object.keys(JSON.parse(params.sort)).length === 0) {
+        const {sort, ...rest} = params;
+        params = rest as typeof params;
       }
+
+      const queryString = new URLSearchParams(
+        params as unknown as Record<string, string>
+      ).toString();
+
+      return apiGetBucketData(bucketId, queryString).then(result => {
+        if (!result) return;
+        setLastUsedBucketDataQuery(
+          newQueryNoBucket
+            ? {...newQueryNoBucket, bucketId}
+            : {...defaultParams, sort: {_id: -1}, bucketId}
+        );
+        return result;
+      });
     },
-    [lastUsedBucketDataQuery, requestBucketData]
+    [apiGetBucketData]
   );
 
   const cleanBucketData = useCallback(() => {
@@ -174,25 +214,34 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
 
   const contextValue = useMemo(
     () => ({
-      buckets,
-      setBuckets,
-      loading,
-      error,
-      deleteBucket,
-      fetchBuckets,
-      categories,
-      changeCategory,
-      changeBucketOrder,
-      bucketOrderLoading,
-      bucketOrderError,
-      bucketData,
       getBucketData,
-      nextbucketDataQuery,
-      bucketDataLoading,
       cleanBucketData,
-      changeBucketName
+      getBuckets: apiGetBuckets,
+      changeBucketCategory,
+      updateBucketOrderLocally,
+      updateBucketOrderOnServer: apiChangeBucketOrder,
+      renameBucket,
+      deleteBucket,
+      buckets,
+      bucketData,
+      bucketDataLoading: apiBucketDataLoading,
+      bucketCategories,
+      nextbucketDataQuery
     }),
-    [buckets, loading, error, fetchBuckets, categories, bucketData, changeBucketName, bucketDataLoading]
+    [
+      getBucketData,
+      apiGetBuckets,
+      changeBucketCategory,
+      updateBucketOrderLocally,
+      apiChangeBucketOrder,
+      renameBucket,
+      deleteBucket,
+      buckets,
+      bucketData,
+      apiBucketDataLoading,
+      bucketCategories,
+      nextbucketDataQuery
+    ]
   );
 
   return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;
