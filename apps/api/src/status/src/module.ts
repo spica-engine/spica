@@ -4,8 +4,8 @@ import {
   CoreStatusServiceModule,
   StatusInterceptor,
   StatusService
-} from "@spica-server/status/services";
-import {StatusOptions} from "@spica-server/interface/status";
+} from "../services";
+import {StatusOptions} from "../../../../../libs/interface/status";
 import {APP_INTERCEPTOR} from "@nestjs/core";
 import {registerStatusProvider} from "./status";
 

@@ -1,8 +1,8 @@
-import {registrar} from "@spica-server/asset";
-import {Resource} from "@spica-server/interface/asset";
-import {PreferenceService} from "@spica-server/preference/services";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {IdentitySettingsContents} from "@spica-server/interface/passport/identity";
+import {registrar} from "../../../asset";
+import {Resource} from "../../../../../../libs/interface/asset";
+import {PreferenceService} from "../../../preference/services";
+import {IRepresentativeManager} from "../../../../../../libs/interface/representative";
+import {IdentitySettingsContents} from "../../../../../../libs/interface/passport/identity";
 
 /**
  * Preference has 2 sub modules named bucket(not yet) and identity

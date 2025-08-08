@@ -1,8 +1,8 @@
-import {Collection, DatabaseService} from "@spica-server/database";
+import {Collection, DatabaseService} from "../../../../../../../libs/database";
 import {PassThrough, Transform, Writable} from "stream";
 import {StandartStream} from "./standart_stream";
-import {getLogs} from "@spica-server/function/runtime/logger";
-import {StreamOptions, LogChannels} from "@spica-server/interface/function/runtime";
+import {getLogs} from "../../logger";
+import {StreamOptions, LogChannels} from "../../../../../../../libs/interface/function/runtime";
 
 export class DatabaseOutput extends StandartStream {
   private collection: Collection;

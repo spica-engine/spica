@@ -1,5 +1,5 @@
-import {levenshtein} from "@spica-server/database/realtime/src/levenshtein";
-import {SequenceKind} from "@spica-server/interface/realtime";
+import {levenshtein} from "../src/levenshtein";
+import {SequenceKind} from "../../../interface/realtime";
 
 describe("levenstein", () => {
   it("should return 2-dist, insert at last", () => {

@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {JobService} from "./database/job";
-import {IJobReducer, JobMeta} from "@spica-server/interface/replication";
+import {IJobReducer, JobMeta} from "../../../../../libs/interface/replication";
 import {Filter} from "mongodb";
 
 @Injectable()

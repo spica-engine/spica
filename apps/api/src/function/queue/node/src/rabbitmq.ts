@@ -1,4 +1,4 @@
-import {RabbitMQ} from "@spica-server/function/queue/proto";
+import {RabbitMQ} from "../../proto";
 import grpc from "@grpc/grpc-js";
 
 export class RabbitMQQueue {

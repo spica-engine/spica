@@ -1,4 +1,4 @@
-import {provideLanguageFinalizer} from "@spica-server/bucket/common";
+import {provideLanguageFinalizer} from "..";
 
 describe("provideLanguageChangeUpdater", () => {
   let childrenSpy: jest.SpyInstance;

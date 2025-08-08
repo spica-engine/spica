@@ -1,9 +1,9 @@
-import {EventQueue} from "@spica-server/function/queue";
-import {event} from "@spica-server/function/queue/proto";
+import {EventQueue} from "../../queue";
+import {event} from "../../queue/proto";
 import {Subject} from "rxjs";
 import {debounceTime, take} from "rxjs/operators";
 import {Enqueuer} from "./enqueuer";
-import {Description, EventOptions} from "@spica-server/interface/function/enqueuer";
+import {Description, EventOptions} from "../../../../../../libs/interface/function/enqueuer";
 
 export class SystemEnqueuer implements Enqueuer<EventOptions> {
   type = event.Type.DATABASE;

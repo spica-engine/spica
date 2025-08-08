@@ -1,5 +1,5 @@
-import {hooks} from "@spica-server/bucket/hooks/proto";
-import {Queue} from "@spica-server/function/queue";
+import {hooks} from "../proto";
+import {Queue} from "../../../function/queue";
 import grpc from "@grpc/grpc-js";
 
 export class ChangeQueue implements Queue<typeof hooks.ChangeQueue> {

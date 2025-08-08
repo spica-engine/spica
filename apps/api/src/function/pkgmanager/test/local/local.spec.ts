@@ -1,10 +1,10 @@
-import {PackageManager} from "@spica-server/function/pkgmanager";
-import {Npm} from "@spica-server/function/pkgmanager/node";
-import {LocalPackageManager} from "@spica-server/function/pkgmanager/local";
+import {PackageManager} from "../..";
+import {Npm} from "../../node";
+import {LocalPackageManager} from "../../local";
 import fs from "fs";
 import path from "path";
 import {of} from "rxjs";
-import {Package} from "@spica-server/interface/function/pkgmanager";
+import {Package} from "../../../../../../../libs/interface/function/pkgmanager";
 
 describe("local package manager", () => {
   let fn1Id = "67c6ef1bdf7bf58fad82ba4f";

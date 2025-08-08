@@ -1,6 +1,6 @@
 import {Observable} from "rxjs";
-import {BaseCollection} from "@spica-server/database";
-import {CommandType, ICommander, IJobReducer} from "@spica-server/interface/replication";
+import {BaseCollection} from "../../../database";
+import {CommandType, ICommander, IJobReducer} from "../../replication";
 
 export enum ChangeTypes {
   INSERT,

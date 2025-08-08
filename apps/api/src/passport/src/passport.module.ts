@@ -1,9 +1,9 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
 import {PassportModule as CorePassportModule} from "@nestjs/passport";
-import {ApiKeyModule} from "@spica-server/passport/apikey";
-import {IdentityModule} from "@spica-server/passport/identity";
-import {PolicyModule} from "@spica-server/passport/policy";
-import {PreferenceService} from "@spica-server/preference/services";
+import {ApiKeyModule} from "../apikey";
+import {IdentityModule} from "../identity";
+import {PolicyModule} from "../policy";
+import {PreferenceService} from "../../preference/services";
 import {GuardService} from "../services/src/guard.service";
 import {RequestService} from "./options";
 import {
@@ -11,17 +11,17 @@ import {
   PASSPORT_OPTIONS,
   REQUEST_SERVICE,
   STRATEGIES
-} from "@spica-server/interface/passport";
+} from "../../../../../libs/interface/passport";
 import {PassportController} from "./passport.controller";
 import {SamlService} from "./strategy/services/saml.service";
 import {StrategyController} from "./strategy/strategy.controller";
 import {StrategyService} from "./strategy/services/strategy.service";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule} from "../../../../../libs/core/schema";
 import {initializeOAuthServices} from "./strategy/services/oauth/oauth.service";
-import {AuthFactorModule} from "@spica-server/passport/authfactor";
+import {AuthFactorModule} from "../authfactor";
 import LoginSchema from "./schemas/login.json" with {type: "json"};
 import StrategySchema from "./schemas/strategy.json" with {type: "json"};
-import {RefreshTokenModule} from "@spica-server/passport/refresh_token";
+import {RefreshTokenModule} from "../refresh_token";
 
 @Global()
 @Module({})

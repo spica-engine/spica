@@ -1,5 +1,5 @@
-import {RequestService} from "@spica-server/passport/src/options";
-import {PassportOptions} from "@spica-server/interface/passport";
+import {RequestService} from "../../../options";
+import {PassportOptions} from "../../../../../../../../libs/interface/passport";
 import {StrategyService} from "../strategy.service";
 import {CustomOAuthService} from "./custom";
 import {GoogleOAuthService} from "./google";

@@ -1,4 +1,4 @@
-import {BatchOptions, HTTPResponse, Request, Response} from "@spica-server/interface/batch";
+import {BatchOptions, HTTPResponse, Request, Response} from "../../../../../libs/interface/batch";
 
 export function handleResponse(request: Request, response: HTTPResponse): Response {
   return {

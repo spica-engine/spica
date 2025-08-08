@@ -5,8 +5,8 @@ import {
   ObjectId,
   ReturnDocument,
   WithId
-} from "@spica-server/database";
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+} from "../../../../../libs/database";
+import {PipelineBuilder} from "../../../../../libs/database/pipeline";
 import {
   StorageOptions,
   StorageObject,
@@ -14,7 +14,7 @@ import {
   STORAGE_OPTIONS,
   StorageResponse,
   PaginatedStorageResponse
-} from "@spica-server/interface/storage";
+} from "../../../../../libs/interface/storage";
 import {Strategy} from "./strategy/strategy";
 import fs from "fs";
 

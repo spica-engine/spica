@@ -1,15 +1,15 @@
 import {INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {AssetModule} from "@spica-server/asset";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {CoreTestingModule, Request} from "../../../../../libs/core/testing";
+import {DatabaseTestingModule} from "../../../../../libs/database/testing";
+import {PassportTestingModule} from "../../passport/testing";
+import {AssetModule} from "..";
+import {SchemaModule} from "../../../../../libs/core/schema";
+import {OBJECTID_STRING, OBJECT_ID} from "../../../../../libs/core/schema/formats";
 import os from "os";
-import {IdentityModule} from "@spica-server/passport/identity";
-import {PolicyModule} from "@spica-server/passport/policy";
-import {PreferenceModule} from "@spica-server/preference";
+import {IdentityModule} from "../../passport/identity";
+import {PolicyModule} from "../../passport/policy";
+import {PreferenceModule} from "../../preference";
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;

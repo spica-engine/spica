@@ -1,5 +1,5 @@
-import {ObjectId} from "@spica-server/database";
-import {Format} from "@spica-server/interface/core";
+import {ObjectId} from "../../../database";
+import {Format} from "../../../interface/core";
 
 export const OBJECT_ID: Format = {
   name: "objectid",

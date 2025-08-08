@@ -1,10 +1,10 @@
 import {Injectable, Inject} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService} from "../../../../../../libs/database";
 import {
   REPLICATION_SERVICE_OPTIONS,
   ReplicationServiceOptions,
   JobMeta
-} from "@spica-server/interface/replication";
+} from "../../../../../../libs/interface/replication";
 
 @Injectable()
 export class JobService extends BaseCollection<JobMeta>("jobs") {

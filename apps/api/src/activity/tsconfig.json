@@ -1,15 +1,5 @@
 {
   "extends": "../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts"],
-  "references": [
-    {
-      "path": "../passport/guard"
-    },
-    {
-      "path": "../../../../libs/core"
-    },
-    {
-      "path": "./services"
-    }
-  ]
+  "references": []
 }

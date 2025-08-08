@@ -1,4 +1,4 @@
-import {BucketDocument} from "@spica-server/interface/bucket";
+import {BucketDocument} from "../..";
 
 export interface FindResponse {
   meta: {total: number};

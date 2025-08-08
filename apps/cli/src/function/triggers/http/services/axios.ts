@@ -1,4 +1,4 @@
-import {Trigger} from "@spica-server/interface/function";
+import {Trigger} from "../../../../../../../libs/interface/function";
 import ts from "typescript";
 import {FunctionDeclarationModifier, SpicaFunctionModifier} from "../../../modifier";
 

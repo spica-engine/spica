@@ -1,12 +1,5 @@
 {
   "extends": "../../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts"],
-  "references": [
-    {
-      "path": "../../replication"
-    },
-    {
-      "path": "../../../../../libs/interface/passport/authfactor"
-    }
-  ]
+  "references": []
 }

@@ -1,4 +1,4 @@
-import {IdentityOptions} from "@spica-server/interface/passport/identity";
+import {IdentityOptions} from "../identity";
 
 export interface PassportOptions extends IdentityOptions {
   publicUrl: string;

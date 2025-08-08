@@ -1,5 +1,5 @@
-import {EventQueue, HttpQueue} from "@spica-server/function/queue";
-import {Http} from "@spica-server/function/queue/proto";
+import {EventQueue, HttpQueue} from "..";
+import {Http} from "../proto";
 import {credentials} from "@grpc/grpc-js";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5840";

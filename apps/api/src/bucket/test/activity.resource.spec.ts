@@ -1,5 +1,5 @@
-import {createBucketActivity, createBucketDataActivity} from "@spica-server/bucket/common";
-import {Action} from "@spica-server/interface/activity";
+import {createBucketActivity, createBucketDataActivity} from "../common";
+import {Action} from "../../../../../libs/interface/activity";
 
 describe("Activity Resource", () => {
   describe("bucket", () => {

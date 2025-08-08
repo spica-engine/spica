@@ -1,6 +1,6 @@
 import {JSONSchema7, JSONSchema7Definition} from "json-schema";
 import {BadRequestException} from "@nestjs/common";
-import {Bucket, BucketPreferences, ExtendedJSONSchema7Type} from "@spica-server/interface/bucket";
+import {Bucket, BucketPreferences, ExtendedJSONSchema7Type} from "../../../../../../libs/interface/bucket";
 
 function addIdField(bucket) {
   bucket.properties._id = {

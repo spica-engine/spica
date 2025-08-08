@@ -1,20 +1,5 @@
 {
   "extends": "../../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
-  "references": [
-    {"path": "../../../../../libs/core"},
-    {"path": "../../../../../libs/database"},
-    {
-      "path": "../guard"
-    },
-    {
-      "path": "../../../../../libs/database/pipeline"
-    },
-    {
-      "path": "../../../../../libs/interface/passport/refresh_token"
-    },
-    {
-      "path": "./services"
-    }
-  ]
+  "references": []
 }

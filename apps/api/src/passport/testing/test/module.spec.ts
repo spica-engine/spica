@@ -1,9 +1,9 @@
 import {Controller, Get, INestApplication, Req, UseGuards} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {AuthGuard, ActionGuard} from "@spica-server/passport";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {StrategyType} from "@spica-server/passport/guard";
+import {CoreTestingModule, Request} from "../../../../../../libs/core/testing";
+import {AuthGuard, ActionGuard} from "../..";
+import {PassportTestingModule} from "..";
+import {StrategyType} from "../../guard";
 
 @Controller("test")
 class TestController {

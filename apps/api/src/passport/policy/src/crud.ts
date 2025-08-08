@@ -1,6 +1,6 @@
-import {ObjectId, ReturnDocument} from "@spica-server/database";
+import {ObjectId, ReturnDocument} from "../../../../../../libs/database";
 import {PolicyService} from "./policy.service";
-import {Policy} from "@spica-server/interface/passport/policy";
+import {Policy} from "../../../../../../libs/interface/passport/policy";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
 import {createDuplicatedActionsErrorMessage, getDuplicatedActionMaps} from "./utility";
 

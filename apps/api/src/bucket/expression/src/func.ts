@@ -1,4 +1,4 @@
-import {FunctionContext, Func, Mode} from "@spica-server/interface/bucket/expression";
+import {FunctionContext, Func, Mode} from "../../../../../../libs/interface/bucket/expression";
 
 let funcs = new Map<string, Func>();
 

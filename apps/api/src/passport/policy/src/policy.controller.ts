@@ -14,18 +14,18 @@ import {
   HttpCode,
   HttpStatus
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
-import {NUMBER, DEFAULT, JSONP} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {activity} from "../../../activity/services";
+import {NUMBER, DEFAULT, JSONP} from "../../../../../../libs/core";
+import {Schema} from "../../../../../../libs/core/schema";
+import {ObjectId, OBJECT_ID} from "../../../../../../libs/database";
+import {ActionGuard, AuthGuard, ResourceFilter} from "../../guard";
 import {createPolicyActivity} from "./activity.resource";
 import {
   Policy,
   APIKEY_POLICY_FINALIZER,
   changeFactory,
   IDENTITY_POLICY_FINALIZER
-} from "@spica-server/interface/passport/policy";
+} from "../../../../../../libs/interface/passport/policy";
 import {PolicyService} from "./policy.service";
 import * as CRUD from "./crud";
 

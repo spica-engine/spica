@@ -1,5 +1,5 @@
 import {Observable} from "rxjs";
-import {Package} from "@spica-server/interface/function/pkgmanager";
+import {Package} from "../../../../../../libs/interface/function/pkgmanager";
 
 export abstract class PackageManager {
   normalizePackageNames(qualifiedNames: string | string[]): string[] {

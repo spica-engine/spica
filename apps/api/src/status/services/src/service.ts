@@ -1,7 +1,7 @@
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService} from "../../../../../../libs/database";
 import {Inject, Injectable} from "@nestjs/common";
-import {ApiStatus, StatusOptions, STATUS_OPTIONS} from "@spica-server/interface/status";
-import {ObjectId} from "@spica-server/database";
+import {ApiStatus, StatusOptions, STATUS_OPTIONS} from "../../../../../../libs/interface/status";
+import {ObjectId} from "../../../../../../libs/database";
 
 @Injectable()
 export class StatusService extends BaseCollection<ApiStatus>("status") {

@@ -1,4 +1,4 @@
-import {RabbitMQ} from "@spica-server/function/queue/proto";
+import {RabbitMQ} from "../../proto";
 import {RabbitMQMessage} from "../../node/src/rabbitmq";
 
 describe("RabbitMQ", () => {

@@ -5,9 +5,9 @@ import {
   ObjectId,
   DeleteResult,
   InsertOneResult
-} from "@spica-server/database/testing";
-import {HistoryService} from "@spica-server/bucket/history";
-import {diff} from "@spica-server/core/differ";
+} from "../../../../../../libs/database/testing";
+import {HistoryService} from "..";
+import {diff} from "../../../../../../libs/core/differ";
 
 describe("History Service", () => {
   let module: TestingModule;

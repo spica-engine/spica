@@ -6,8 +6,8 @@ import {
   ClassCommander,
   CommandMemory,
   JobReducer
-} from "@spica-server/replication";
-import {REPLICA_ID, REPLICATION_SERVICE_OPTIONS} from "@spica-server/interface/replication";
+} from "..";
+import {REPLICA_ID, REPLICATION_SERVICE_OPTIONS} from "../../../../../libs/interface/replication";
 import {MockJobReducer, MockMemoryService} from "./utilities";
 
 const memoryService = new MockMemoryService();

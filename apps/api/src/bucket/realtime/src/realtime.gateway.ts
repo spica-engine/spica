@@ -5,8 +5,8 @@ import {
   SubscribeMessage,
   WebSocketGateway
 } from "@nestjs/websockets";
-import {ActivityService} from "@spica-server/activity/services";
-import {BucketCacheService} from "@spica-server/bucket/cache";
+import {ActivityService} from "../../../activity/services";
+import {BucketCacheService} from "../../cache";
 import {
   insertDocument,
   insertActivity,
@@ -18,28 +18,28 @@ import {
   authIdToString,
   filterReviver,
   constructFilterValues
-} from "@spica-server/bucket/common";
-import * as expression from "@spica-server/bucket/expression";
-import {aggregate} from "@spica-server/bucket/expression";
-import {HistoryService} from "@spica-server/bucket/history";
-import {ChangeEmitter} from "@spica-server/bucket/hooks";
+} from "../../common";
+import * as expression from "../../expression";
+import {aggregate} from "../../expression";
+import {HistoryService} from "../../history";
+import {ChangeEmitter} from "../../hooks";
 import {
   BucketService,
   getBucketDataCollection,
   BucketDataService
-} from "@spica-server/bucket/services";
-import {applyPatch, deepCopy} from "@spica-server/core/patch";
-import {Schema, Validator} from "@spica-server/core/schema";
-import {ObjectId, ReturnDocument} from "@spica-server/database";
-import {RealtimeDatabaseService} from "@spica-server/database/realtime";
-import {ChunkKind} from "@spica-server/interface/realtime";
-import {GuardService} from "@spica-server/passport";
-import {resourceFilterFunction} from "@spica-server/passport/guard";
-import {Action} from "@spica-server/interface/activity";
-import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
-import {MessageKind} from "@spica-server/interface/bucket/realtime";
-import {BucketDocument} from "@spica-server/interface/bucket";
-import {getConnectionHandlers} from "@spica-server/realtime";
+} from "../../services";
+import {applyPatch, deepCopy} from "../../../../../../libs/core/patch";
+import {Schema, Validator} from "../../../../../../libs/core/schema";
+import {ObjectId, ReturnDocument} from "../../../../../../libs/database";
+import {RealtimeDatabaseService} from "../../../../../../libs/database/realtime";
+import {ChunkKind} from "../../../../../../libs/interface/realtime";
+import {GuardService} from "../../../passport";
+import {resourceFilterFunction} from "../../../passport/guard";
+import {Action} from "../../../../../../libs/interface/activity";
+import {IAuthResolver, AUTH_RESOLVER} from "../../../../../../libs/interface/bucket/common";
+import {MessageKind} from "../../../../../../libs/interface/bucket/realtime";
+import {BucketDocument} from "../../../../../../libs/interface/bucket";
+import {getConnectionHandlers} from "../../../../../../libs/realtime";
 @WebSocketGateway({
   path: "/bucket/:id/data"
 })

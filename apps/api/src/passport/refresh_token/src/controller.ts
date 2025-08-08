@@ -9,12 +9,12 @@ import {
   Query,
   UseGuards
 } from "@nestjs/common";
-import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
-import {RefreshToken, PaginationResponse} from "@spica-server/interface/passport/refresh_token";
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "../../../../../../libs/core";
+import {ObjectId, OBJECT_ID} from "../../../../../../libs/database";
+import {ActionGuard, AuthGuard, ResourceFilter} from "../../guard";
+import {RefreshTokenService} from "../services";
+import {RefreshToken, PaginationResponse} from "../../../../../../libs/interface/passport/refresh_token";
+import {PipelineBuilder} from "../../../../../../libs/database/pipeline";
 
 @Controller("passport/refresh-token")
 export class RefreshTokenController {

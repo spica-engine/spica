@@ -10,10 +10,10 @@ import {
   Query,
   UseGuards
 } from "@nestjs/common";
-import {ARRAY, DATE, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
-import {Filter, ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
-import {Log} from "@spica-server/interface/function/webhook";
+import {ARRAY, DATE, DEFAULT, JSONP, NUMBER} from "../../../../../../libs/core";
+import {Filter, ObjectId, OBJECT_ID} from "../../../../../../libs/database";
+import {ActionGuard, AuthGuard} from "../../../passport/guard";
+import {Log} from "../../../../../../libs/interface/function/webhook";
 import {WebhookLogService} from "./log.service";
 
 @Controller("webhook/logs")

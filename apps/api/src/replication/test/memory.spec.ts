@@ -1,10 +1,10 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, ObjectId, stream} from "@spica-server/database/testing";
-import {CommandMemory, CommandService} from "@spica-server/replication";
+import {DatabaseTestingModule, ObjectId, stream} from "../../../../../libs/database/testing";
+import {CommandMemory, CommandService} from "..";
 import {
   COMMAND_MEMORY_OPTIONS,
   REPLICATION_SERVICE_OPTIONS
-} from "@spica-server/interface/replication";
+} from "../../../../../libs/interface/replication";
 
 describe("Memory", () => {
   describe("Command", () => {

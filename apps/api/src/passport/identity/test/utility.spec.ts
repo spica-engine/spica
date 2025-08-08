@@ -1,7 +1,7 @@
 import {
   registerPolicyAttacher,
   providePolicyFinalizer
-} from "@spica-server/passport/identity/src/utility";
+} from "../src/utility";
 
 describe("Utilities", () => {
   let request;

@@ -1,6 +1,6 @@
 import {Injectable, Inject} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
-import {Log, WEBHOOK_OPTIONS, WebhookOptions} from "@spica-server/interface/function/webhook";
+import {BaseCollection, DatabaseService} from "../../../../../../libs/database";
+import {Log, WEBHOOK_OPTIONS, WebhookOptions} from "../../../../../../libs/interface/function/webhook";
 
 @Injectable()
 export class WebhookLogService extends BaseCollection<Log>("webhook_logs") {

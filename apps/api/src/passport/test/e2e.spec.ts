@@ -1,11 +1,11 @@
 import {Controller, Get, INestApplication, ModuleMetadata, Req, Res} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {SchemaModule} from "@spica-server/core/schema";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {PassportModule} from "@spica-server/passport";
-import {REQUEST_SERVICE} from "@spica-server/interface/passport";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {SchemaModule} from "../../../../../libs/core/schema";
+import {CoreTestingModule, Request} from "../../../../../libs/core/testing";
+import {DatabaseTestingModule} from "../../../../../libs/database/testing";
+import {PassportModule} from "..";
+import {REQUEST_SERVICE} from "../../../../../libs/interface/passport";
+import {PreferenceTestingModule} from "../../preference/testing";
 
 import jsQR from "jsqr";
 import {PNG} from "pngjs";

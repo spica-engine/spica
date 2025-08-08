@@ -2,7 +2,7 @@ import {BadRequestException, Inject, Injectable, UnauthorizedException} from "@n
 import {PassportStrategy} from "@nestjs/passport";
 import {ExtractJwt, Strategy} from "passport-jwt";
 import {IdentityService} from "./identity.service";
-import {IdentityOptions, IDENTITY_OPTIONS} from "@spica-server/interface/passport/identity";
+import {IdentityOptions, IDENTITY_OPTIONS} from "../../../../../../libs/interface/passport/identity";
 
 @Injectable()
 export class IdentityStrategy extends PassportStrategy(Strategy, "identity") {

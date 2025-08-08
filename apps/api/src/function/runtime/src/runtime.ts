@@ -1,6 +1,6 @@
 import {EventEmitter} from "events";
 import {Writable} from "stream";
-import {SpawnOptions, Description} from "@spica-server/interface/function/runtime";
+import {SpawnOptions, Description} from "../../../../../../libs/interface/function/runtime";
 
 export abstract class Runtime {
   abstract description: Description;

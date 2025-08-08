@@ -1,5 +1,5 @@
 import {BadRequestException, Body, Controller, Get, Post, UseGuards, Param} from "@nestjs/common";
-import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard} from "../../passport/guard";
 import {VersionManager} from "./interface";
 
 @Controller("versioncontrol")

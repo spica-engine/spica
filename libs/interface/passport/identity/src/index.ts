@@ -1,5 +1,5 @@
-import {ObjectId} from "@spica-server/database";
-import {FactorMeta} from "@spica-server/interface/passport/authfactor";
+import {ObjectId} from "../../../../database";
+import {FactorMeta} from "../../authfactor";
 
 export interface IdentitySettingsContents {
   schema: IdentitySchema;

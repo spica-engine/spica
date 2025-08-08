@@ -1,12 +1,12 @@
-import {diff} from "@spica-server/core/differ";
-import {EnvVar} from "@spica-server/interface/env_var";
+import {diff} from "../../../../../libs/core/differ";
+import {EnvVar} from "../../../../../libs/interface/env_var";
 import {
   Triggers,
   Function,
   ChangeKind,
   TargetChange,
   EnvRelation
-} from "@spica-server/interface/function";
+} from "../../../../../libs/interface/function";
 
 export function changesFromTriggers(
   previousFn: Function<EnvRelation.Resolved | EnvRelation.NotResolved>,

@@ -7,8 +7,8 @@ import {
   ResourceType,
   SynchronizerArgs,
   VCSynchronizerArgs
-} from "@spica-server/interface/versioncontrol";
-import {VCRepresentativeManager} from "@spica-server/representative";
+} from "../../../../../../libs/interface/versioncontrol";
+import {VCRepresentativeManager} from "../../../../../../libs/representative";
 import {ChangeStreamDocument} from "mongodb";
 import {Observable} from "rxjs";
 import YAML from "yaml";

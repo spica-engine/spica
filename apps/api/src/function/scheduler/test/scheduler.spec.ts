@@ -1,11 +1,11 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {event} from "@spica-server/function/queue/proto";
-import {FunctionTestBed} from "@spica-server/function/runtime/testing";
-import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
+import {DatabaseTestingModule} from "../../../../../../libs/database/testing";
+import {event} from "../../queue/proto";
+import {FunctionTestBed} from "../../runtime/testing";
+import {Scheduler, SchedulerModule} from "..";
 import {PassThrough} from "stream";
-import {WorkerState} from "@spica-server/interface/function/scheduler";
+import {WorkerState} from "../../../../../../libs/interface/function/scheduler";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5687";
 process.env.DISABLE_LOGGER = "true";

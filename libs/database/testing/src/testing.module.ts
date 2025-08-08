@@ -1,5 +1,5 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
-import {DatabaseService, MongoClient} from "@spica-server/database";
+import {DatabaseService, MongoClient} from "../..";
 import {start, connect, getDatabaseName} from "./start";
 
 @Global()

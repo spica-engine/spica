@@ -1,6 +1,6 @@
 import {DynamicModule, Module} from "@nestjs/common";
 import {Scheduler} from "./scheduler";
-import {SchedulingOptions, SCHEDULING_OPTIONS} from "@spica-server/interface/function/scheduler";
+import {SchedulingOptions, SCHEDULING_OPTIONS} from "../../../../../../libs/interface/function/scheduler";
 
 @Module({})
 export class SchedulerModule {

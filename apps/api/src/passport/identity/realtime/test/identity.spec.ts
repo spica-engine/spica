@@ -1,17 +1,17 @@
 import {ForbiddenException, INestApplication, UnauthorizedException} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
-import {WsAdapter} from "@spica-server/core/websocket";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {GuardService} from "@spica-server/passport";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECT_ID} from "@spica-server/core/schema/formats";
-import {ChunkKind} from "@spica-server/interface/realtime";
-import {IdentityModule} from "@spica-server/passport/identity";
-import {Identity} from "@spica-server/interface/passport/identity";
-import {PolicyModule} from "@spica-server/passport/policy";
+import {CoreTestingModule, Request, Websocket} from "../../../../../../../libs/core/testing";
+import {WsAdapter} from "../../../../../../../libs/core/websocket";
+import {DatabaseTestingModule} from "../../../../../../../libs/database/testing";
+import {GuardService} from "../../..";
+import {PassportTestingModule} from "../../../testing";
+import {PreferenceTestingModule} from "../../../../preference/testing";
+import {SchemaModule} from "../../../../../../../libs/core/schema";
+import {OBJECT_ID} from "../../../../../../../libs/core/schema/formats";
+import {ChunkKind} from "../../../../../../../libs/interface/realtime";
+import {IdentityModule} from "../..";
+import {Identity} from "../../../../../../../libs/interface/passport/identity";
+import {PolicyModule} from "../../../policy";
 
 function url(query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL("/passport/identity", "ws://insteadof");

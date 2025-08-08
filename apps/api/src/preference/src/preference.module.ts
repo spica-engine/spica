@@ -1,13 +1,13 @@
 import {Global, Inject, Module, Optional} from "@nestjs/common";
-import {DatabaseModule} from "@spica-server/database";
-import {PreferenceService} from "@spica-server/preference/services";
+import {DatabaseModule} from "../../../../../libs/database";
+import {PreferenceService} from "../services";
 import {
   REGISTER_VC_SYNCHRONIZER,
   RegisterVCSynchronizer
-} from "@spica-server/interface/versioncontrol";
+} from "../../../../../libs/interface/versioncontrol";
 import {PreferenceController} from "./preference.controller";
 import {getSynchronizer} from "./versioncontrol/synchronizer";
-import {Identity} from "@spica-server/interface/passport/identity";
+import {Identity} from "../../../../../libs/interface/passport/identity";
 
 @Global()
 @Module({})

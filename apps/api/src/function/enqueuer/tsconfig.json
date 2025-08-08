@@ -1,24 +1,5 @@
 {
   "extends": "../../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts"],
-  "references": [
-    {
-      "path": "../../status/services"
-    },
-    {
-      "path": "../../../../../libs/core"
-    },
-    {
-      "path": "../../../../../libs/interface/core"
-    },
-    {
-      "path": "../../replication"
-    },
-    {
-      "path": "../queue"
-    },
-    {
-      "path": "../../../../../libs/interface/function/enqueuer"
-    }
-  ]
+  "references": []
 }

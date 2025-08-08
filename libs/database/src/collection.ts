@@ -18,7 +18,7 @@ import {
   CreateIndexesOptions
 } from "mongodb";
 import {DatabaseService} from "./database.service";
-import {InitializeOptions, OptionalId, ProfilerEntry} from "@spica-server/interface/database";
+import {InitializeOptions, OptionalId, ProfilerEntry} from "../../interface/database";
 
 export class _MixinCollection<T> {
   _coll: Collection<T>;

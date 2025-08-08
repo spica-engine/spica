@@ -1,4 +1,4 @@
-import {BatchRequest, BatchResponse, ManyResponse} from "@spica-server/interface/batch";
+import {BatchRequest, BatchResponse, ManyResponse} from "../../../../../../../libs/interface/batch";
 
 export namespace Batch {
   export function prepareInsertRequest<T>(

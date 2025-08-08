@@ -1,15 +1,15 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceModule} from "@spica-server/preference";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {IdentityModule} from "@spica-server/passport/identity";
+import {DatabaseTestingModule} from "../../../../../libs/database/testing";
+import {PassportTestingModule} from "../../passport/testing";
+import {PreferenceModule} from "..";
+import {CoreTestingModule, Request} from "../../../../../libs/core/testing";
+import {IdentityModule} from "../../passport/identity";
 import {INestApplication} from "@nestjs/common";
-import {BucketModule, BucketCoreModule} from "@spica-server/bucket";
-import {PolicyModule} from "@spica-server/passport/policy";
-import {PreferenceService} from "@spica-server/preference/services";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {BucketModule, BucketCoreModule} from "../../bucket";
+import {PolicyModule} from "../../passport/policy";
+import {PreferenceService} from "../services";
+import {SchemaModule} from "../../../../../libs/core/schema";
+import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "../../../../../libs/core/schema/formats";
 
 describe("Preference Integration", () => {
   let module: TestingModule;

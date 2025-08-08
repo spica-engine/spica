@@ -1,14 +1,14 @@
 import {INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {AssetModule} from "@spica-server/asset";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {CoreTestingModule, Request} from "../../../../../libs/core/testing";
+import {DatabaseTestingModule, ObjectId} from "../../../../../libs/database/testing";
+import {PassportTestingModule} from "../../passport/testing";
+import {AssetModule} from "..";
+import {SchemaModule} from "../../../../../libs/core/schema";
+import {OBJECTID_STRING, OBJECT_ID} from "../../../../../libs/core/schema/formats";
 import os from "os";
-import {PreferenceModule} from "@spica-server/preference";
-import {EnvVarModule} from "@spica-server/env_var";
+import {PreferenceModule} from "../../preference";
+import {EnvVarModule} from "../../env_var";
 
 describe("EnvVar", () => {
   function downloadAsset(asset) {

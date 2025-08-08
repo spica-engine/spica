@@ -9,7 +9,7 @@ import {
   NUMBER,
   OR,
   BooleanCheck
-} from "@spica-server/core/src/pipes";
+} from "../src/pipes";
 
 describe("core pipes", () => {
   describe("NUMBER pipe", () => {

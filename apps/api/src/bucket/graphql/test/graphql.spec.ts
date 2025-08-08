@@ -1,14 +1,14 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {ActivityModule} from "@spica-server/activity";
-import {BucketModule} from "@spica-server/bucket";
-import {SchemaModule} from "@spica-server/core/schema";
-import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
-import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule, ObjectId, stream} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {ActivityModule} from "../../../activity";
+import {BucketModule} from "../..";
+import {SchemaModule} from "../../../../../../libs/core/schema";
+import {CREATED_AT, UPDATED_AT} from "../../../../../../libs/core/schema/defaults";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "../../../../../../libs/core/schema/formats";
+import {CoreTestingModule, Request} from "../../../../../../libs/core/testing";
+import {DatabaseTestingModule, ObjectId, stream} from "../../../../../../libs/database/testing";
+import {PassportTestingModule} from "../../../passport/testing";
+import {PreferenceTestingModule} from "../../../preference/testing";
 
 export function getBucketName(id: string | ObjectId) {
   return `Bucket_${id}`;

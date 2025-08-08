@@ -1,9 +1,9 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database/testing";
-import {WebhookService} from "@spica-server/function/webhook";
-import {Webhook, WEBHOOK_OPTIONS} from "@spica-server/interface/function/webhook";
-import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
-import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
+import {DatabaseService, DatabaseTestingModule, stream} from "../../../../../../libs/database/testing";
+import {WebhookService} from "..";
+import {Webhook, WEBHOOK_OPTIONS} from "../../../../../../libs/interface/function/webhook";
+import {WebhookInvoker} from "../src/invoker";
+import {WebhookLogService} from "../src/log.service";
 import __fetch__ from "node-fetch";
 
 jest.setTimeout(60_000);

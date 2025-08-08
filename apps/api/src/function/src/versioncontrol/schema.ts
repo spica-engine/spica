@@ -1,4 +1,4 @@
-import {FunctionService} from "@spica-server/function/services";
+import {FunctionService} from "../../services";
 import {
   ChangeTypes,
   DocChange,
@@ -6,11 +6,11 @@ import {
   RepChange,
   RepresentativeManagerResource,
   VCSynchronizerArgs
-} from "@spica-server/interface/versioncontrol";
+} from "../../../../../../libs/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
-import {LogService} from "@spica-server/function/log/src/log.service";
+import {LogService} from "../../log/src/log.service";
 import * as CRUD from "../crud";
-import {Function} from "@spica-server/interface/function";
+import {Function} from "../../../../../../libs/interface/function";
 import YAML from "yaml";
 import {ObjectId} from "bson";
 

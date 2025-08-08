@@ -1,6 +1,6 @@
-import {Compilation} from "@spica-server/interface/function/compiler";
-import {Typescript} from "@spica-server/function/compiler/typescript";
-import {FunctionTestBed} from "@spica-server/function/runtime/testing";
+import {Compilation} from "../../../../../../../libs/interface/function/compiler";
+import {Typescript} from "..";
+import {FunctionTestBed} from "../../../runtime/testing";
 import fs from "fs";
 import path from "path";
 
@@ -47,7 +47,7 @@ describe("Typescript", () => {
   it("should report diagnostics", async () => {
     compilation.cwd = FunctionTestBed.initialize(
       `
-    import {database} from '@spica-server/database';
+    import {database} from '../../../../../../../libs/database';
     export default function() {
     const a;
     }

@@ -1,7 +1,7 @@
 import {AddedFormat, CodeKeywordDefinition, KeywordErrorDefinition} from "ajv/dist/types";
 import {KeywordCxt} from "ajv/dist/compile/validate/index";
 import {_, str, nil, or, Code, getProperty} from "ajv/dist/compile/codegen/index.js";
-import {FormatValidate} from "@spica-server/interface/core";
+import {FormatValidate} from "../../../interface/core";
 
 const error: KeywordErrorDefinition = {
   message: ({schemaCode}) => str`should match format "${schemaCode}"`,

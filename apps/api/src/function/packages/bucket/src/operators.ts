@@ -1,4 +1,4 @@
-import {ChunkKind, Sequence, SequenceKind} from "@spica-server/interface/realtime";
+import {ChunkKind, Sequence, SequenceKind} from "../../../../../../../libs/interface/realtime";
 import {RealtimeConnection, RealtimeConnectionOne} from "./interface";
 import {
   tap,

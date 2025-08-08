@@ -1,5 +1,5 @@
-import {Change} from "@spica-server/function/queue/node";
-import {Database} from "@spica-server/function/queue/proto";
+import {Change} from "../../node";
+import {Database} from "../../proto";
 
 describe("Database", () => {
   describe("Change", () => {

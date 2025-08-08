@@ -1,9 +1,9 @@
 import {Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
-import {DatabaseService} from "@spica-server/database";
-import {Language} from "@spica-server/function/compiler";
-import {Javascript} from "@spica-server/function/compiler/javascript";
-import {Typescript} from "@spica-server/function/compiler/typescript";
+import {DatabaseService} from "../../../../../../libs/database";
+import {Language} from "../../compiler";
+import {Javascript} from "../../compiler/javascript";
+import {Typescript} from "../../compiler/typescript";
 import {
   DatabaseEnqueuer,
   Enqueuer,
@@ -12,31 +12,31 @@ import {
   ScheduleEnqueuer,
   SystemEnqueuer,
   RabbitMQEnqueuer
-} from "@spica-server/function/enqueuer";
-import {DelegatePkgManager} from "@spica-server/function/pkgmanager";
-import {Npm} from "@spica-server/function/pkgmanager/node";
-import {LocalPackageManager} from "@spica-server/function/pkgmanager/local";
+} from "../../enqueuer";
+import {DelegatePkgManager} from "../../pkgmanager";
+import {Npm} from "../../pkgmanager/node";
+import {LocalPackageManager} from "../../pkgmanager/local";
 import {
   DatabaseQueue,
   EventQueue,
   FirehoseQueue,
   HttpQueue,
   RabbitMQQueue
-} from "@spica-server/function/queue";
-import {event} from "@spica-server/function/queue/proto";
-import {Runtime, Worker} from "@spica-server/function/runtime";
-import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
-import {generateLog} from "@spica-server/function/runtime/logger";
-import {ClassCommander, JobReducer} from "@spica-server/replication";
-import {CommandType} from "@spica-server/interface/replication";
-import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/interface/status";
+} from "../../queue";
+import {event} from "../../queue/proto";
+import {Runtime, Worker} from "../../runtime";
+import {DatabaseOutput, StandartStream} from "../../runtime/io";
+import {generateLog} from "../../runtime/logger";
+import {ClassCommander, JobReducer} from "../../../replication";
+import {CommandType} from "../../../../../../libs/interface/replication";
+import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "../../../../../../libs/interface/status";
 import uniqid from "uniqid";
-import {SchedulingOptions, SCHEDULING_OPTIONS} from "@spica-server/interface/function/scheduler";
+import {SchedulingOptions, SCHEDULING_OPTIONS} from "../../../../../../libs/interface/function/scheduler";
 import {Subject} from "rxjs";
 import {take} from "rxjs/operators";
-import {ScheduleWorker, Node} from "@spica-server/function/scheduler";
-import {LogLevels} from "@spica-server/interface/function/runtime";
-import {ENQUEUER, EnqueuerFactory, WorkerState} from "@spica-server/interface/function/scheduler";
+import {ScheduleWorker, Node} from "..";
+import {LogLevels} from "../../../../../../libs/interface/function/runtime";
+import {ENQUEUER, EnqueuerFactory, WorkerState} from "../../../../../../libs/interface/function/scheduler";
 
 @Injectable()
 export class Scheduler implements OnModuleInit, OnModuleDestroy {

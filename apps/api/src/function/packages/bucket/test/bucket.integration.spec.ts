@@ -1,16 +1,16 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {BucketModule} from "@spica-server/bucket";
-import {SchemaModule} from "@spica-server/core/schema";
-import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {BucketModule} from "../../../../bucket";
+import {SchemaModule} from "../../../../../../../libs/core/schema";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "../../../../../../../libs/core/schema/formats";
+import {DatabaseTestingModule, ObjectId} from "../../../../../../../libs/database/testing";
+import {CoreTestingModule, Websocket} from "../../../../../../../libs/core/testing";
+import {PassportTestingModule} from "../../../../passport/testing";
+import {PreferenceTestingModule} from "../../../../preference/testing";
 import * as Bucket from "@spica-devkit/bucket";
 import {bufferCount, take} from "rxjs/operators";
-import {WsAdapter} from "@spica-server/core/websocket";
-import {BatchModule} from "@spica-server/batch";
+import {WsAdapter} from "../../../../../../../libs/core/websocket";
+import {BatchModule} from "../../../../batch";
 
 const PORT = 3002;
 const PUBLIC_URL = `http://localhost:${PORT}`;

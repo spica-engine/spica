@@ -1,10 +1,10 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "../../database";
 import {
   Expression,
   Extractor,
   KeyValidator,
   ValueConstructor
-} from "@spica-server/interface/filter";
+} from "../../interface/filter";
 
 export const DefaultExtractor: Extractor = {
   operators: [],

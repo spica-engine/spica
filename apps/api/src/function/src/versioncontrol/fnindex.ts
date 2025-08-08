@@ -1,4 +1,4 @@
-import {FunctionService} from "@spica-server/function/services";
+import {FunctionService} from "../../services";
 import {
   ChangeTypes,
   DocChange,
@@ -7,9 +7,9 @@ import {
   RepresentativeManagerResource,
   ResourceType,
   VCSynchronizerArgs
-} from "@spica-server/interface/versioncontrol";
+} from "../../../../../../libs/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
-import {Function, FunctionWithContent} from "@spica-server/interface/function";
+import {Function, FunctionWithContent} from "../../../../../../libs/interface/function";
 import {Observable} from "rxjs";
 import * as CRUD from "../crud";
 import {ObjectId} from "bson";

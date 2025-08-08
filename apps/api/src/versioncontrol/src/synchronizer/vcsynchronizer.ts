@@ -7,12 +7,12 @@ import {
   Synchronizer,
   SynchronizerArgs,
   VCSynchronizerArgs
-} from "@spica-server/interface/versioncontrol";
-import {VCRepresentativeManager} from "@spica-server/representative";
-import {RepresentativeManagerResource} from "@spica-server/interface/versioncontrol";
+} from "../../../../../../libs/interface/versioncontrol";
+import {VCRepresentativeManager} from "../../../../../../libs/representative";
+import {RepresentativeManagerResource} from "../../../../../../libs/interface/versioncontrol";
 import {getDocToRepConverter, getDocWatcher, getRepApplier} from "./doc.synchronizer";
 import {getDocApplier, getRepToDocConverter, getRepWatcher} from "./rep.synchronizer";
-import {ClassCommander, JobReducer} from "@spica-server/replication";
+import {ClassCommander, JobReducer} from "../../../replication";
 
 @Injectable()
 export class VCSynchronizer<R extends Resource> extends Synchronizer<

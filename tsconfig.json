@@ -1,29 +1,6 @@
 {
-  "compilerOptions": {
-    "composite": true,
-    "rootDir": ".",
-    "moduleResolution": "bundler",
-    "module": "ESNext",
-    "resolveJsonModule": true,
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "noFallthroughCasesInSwitch": true,
-    "skipLibCheck": true,
-    "target": "ES2020",
-    "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "lib": ["es2020", "dom"],
-    "esModuleInterop": true,
-    "paths": {
-      "@spica-devkit/*": ["apps/api/src/function/packages/*"],
-      "@spica-server/*": ["libs/*", "apps/api/src/*"],
-      "@spica/*": ["apps/*"]
-    }
-  },
-  "exclude": ["node_modules", "tmp", "dist"],
+  "extends": "./tsconfig.base.json",
+  "files": [],
   "references": [
     {
       "path": "./apps/api/src/function/compiler/javascript"
@@ -339,6 +316,48 @@
     },
     {
       "path": "./apps/api/src/function/realtime"
+    },
+    {
+      "path": "./apps/api/src/passport/refresh_token/services"
+    },
+    {
+      "path": "./apps/api/src/function/pkgmanager/local"
+    },
+    {
+      "path": "./apps/api/src/passport/policy/realtime"
+    },
+    {
+      "path": "./libs/interface/passport/refresh_token"
+    },
+    {
+      "path": "./apps/api/src/bucket/schemas-realtime"
+    },
+    {
+      "path": "./apps/api/src/passport/refresh_token"
+    },
+    {
+      "path": "./libs/interface/function/packages"
+    },
+    {
+      "path": "./apps/api/src/passport/services"
+    },
+    {
+      "path": "./apps/api/src/env_var/realtime"
+    },
+    {
+      "path": "./apps/api/src/env_var/services"
+    },
+    {
+      "path": "./libs/interface/env_var"
+    },
+    {
+      "path": "./apps/api/src/env_var"
+    },
+    {
+      "path": "./libs/interface/batch"
+    },
+    {
+      "path": "./apps/api/src/batch"
     }
   ]
 }

@@ -20,11 +20,11 @@ import {
   All,
   Req
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
-import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {activity} from "../../activity/services";
+import {BOOLEAN, JSONP, NUMBER} from "../../../../../libs/core";
+import {Schema} from "../../../../../libs/core/schema";
+import {ObjectId, OBJECT_ID} from "../../../../../libs/database";
+import {ActionGuard, AuthGuard, ResourceFilter} from "../../passport/guard";
 import etag from "etag";
 import {createStorageActivity} from "./activity.resource";
 import {
@@ -34,7 +34,7 @@ import {
   getPostBodyConverter,
   getPutBodyConverter
 } from "./body";
-import {MixedBody, StorageObject, MultipartFormData} from "@spica-server/interface/storage";
+import {MixedBody, StorageObject, MultipartFormData} from "../../../../../libs/interface/storage";
 import {StorageService} from "./storage.service";
 
 /**

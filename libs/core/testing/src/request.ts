@@ -3,7 +3,7 @@ import {Inject, Injectable} from "@nestjs/common";
 import got, {Headers} from "got";
 import querystring from "querystring";
 import path from "path";
-import {RequestOptions, Response} from "@spica-server/interface/core";
+import {RequestOptions, Response} from "../../../interface/core";
 
 @Injectable()
 export class Request {

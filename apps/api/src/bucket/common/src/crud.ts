@@ -1,29 +1,29 @@
-import {BaseCollection, ObjectId, ReturnDocument} from "@spica-server/database";
-import * as expression from "@spica-server/bucket/expression";
+import {BaseCollection, ObjectId, ReturnDocument} from "../../../../../../libs/database";
+import * as expression from "../../expression";
 import {
   createRelationMap,
   getRelationPipeline,
   resetNonOverlappingPathsInRelationMap
 } from "./relation";
-import {getUpdateQueryForPatch} from "@spica-server/core/patch";
+import {getUpdateQueryForPatch} from "../../../../../../libs/core/patch";
 import {
   ACLSyntaxException,
   BadRequestException,
   DatabaseException,
   ForbiddenException
 } from "./exception";
-import {IAuthResolver} from "@spica-server/interface/bucket/common";
+import {IAuthResolver} from "../../../../../../libs/interface/bucket/common";
 import {categorizePropertyMap} from "./helpers";
 import {BucketPipelineBuilder} from "./pipeline.builder";
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {PipelineBuilder} from "../../../../../../libs/database/pipeline";
 import {
   CrudOptions,
   CrudParams,
   CrudFactories,
   CrudPagination,
   RelationMap
-} from "@spica-server/interface/bucket/common";
-import {Bucket, LimitExceedBehaviours, BucketDocument} from "@spica-server/interface/bucket";
+} from "../../../../../../libs/interface/bucket/common";
+import {Bucket, LimitExceedBehaviours, BucketDocument} from "../../../../../../libs/interface/bucket";
 
 export async function findDocuments<T>(
   schema: Bucket,

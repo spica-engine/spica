@@ -1,5 +1,5 @@
-import {RabbitMQEnqueuer} from "@spica-server/function/enqueuer";
-import {event} from "@spica-server/function/queue/proto";
+import {RabbitMQEnqueuer} from "..";
+import {event} from "../../queue/proto";
 import amqp from "amqplib";
 import {GenericContainer} from "testcontainers";
 

@@ -1,4 +1,4 @@
-import {Function} from "@spica-server/interface/function";
+import {Function} from "../../../../libs/interface/function";
 import {FunctionCompiler} from "@spica/cli/src/compile";
 import ts from "typescript";
 

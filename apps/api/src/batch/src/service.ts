@@ -1,4 +1,4 @@
-import {HTTPService} from "@spica-server/interface/batch";
+import {HTTPService} from "../../../../../libs/interface/batch";
 import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse} from "axios";
 
 export class AxiosHttpService implements HTTPService {

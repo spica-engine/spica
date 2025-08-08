@@ -1,7 +1,7 @@
 import {convert, wrapExpressionByMode} from "./convert";
 import {compile} from "./compile";
-import {ObjectId} from "@spica-server/database";
-import {ArgumentValidation, Func} from "@spica-server/interface/bucket/expression";
+import {ObjectId} from "../../../../../../libs/database";
+import {ArgumentValidation, Func} from "../../../../../../libs/interface/bucket/expression";
 
 export const has: Func = (context, mode) => {
   const fnName = "has";

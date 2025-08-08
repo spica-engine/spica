@@ -4,11 +4,11 @@ import {
   BucketCacheService,
   invalidateCache,
   registerCache
-} from "@spica-server/bucket/cache";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
+} from "..";
+import {CoreTestingModule, Request} from "../../../../../../libs/core/testing";
 import {Test} from "@nestjs/testing";
 import {Store} from "cache-manager";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "../../../../../../libs/database/testing";
 
 @Controller("bucket/:bucketId/data")
 export class TestController {

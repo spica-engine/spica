@@ -7,11 +7,11 @@ import {
   VERSIONCONTROL_WORKING_DIRECTORY,
   VC_REPRESENTATIVE_MANAGER,
   VCSynchronizerArgs
-} from "@spica-server/interface/versioncontrol";
-import {VCRepresentativeManager} from "@spica-server/representative";
+} from "../../../../../libs/interface/versioncontrol";
+import {VCRepresentativeManager} from "../../../../../libs/representative";
 import {Git} from "./versionmanager";
 import fs from "fs";
-import {ClassCommander, JobReducer} from "@spica-server/replication";
+import {ClassCommander, JobReducer} from "../../replication";
 import {VCSynchronizer} from "./synchronizer/vcsynchronizer";
 
 @Global()

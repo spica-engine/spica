@@ -1,12 +1,12 @@
-import {Validator, Schema} from "@spica-server/core/schema";
-import {ApiKeyService} from "@spica-server/passport/apikey/src/apikey.service";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {Resource} from "@spica-server/interface/asset";
-import {registrar} from "@spica-server/asset";
-import {ObjectId, ReturnDocument} from "@spica-server/database";
+import {Validator, Schema} from "../../../../../../libs/core/schema";
+import {ApiKeyService} from "./apikey.service";
+import {IRepresentativeManager} from "../../../../../../libs/interface/representative";
+import {Resource} from "../../../../../../libs/interface/asset";
+import {registrar} from "../../../asset";
+import {ObjectId, ReturnDocument} from "../../../../../../libs/database";
 import uniqid from "uniqid";
 import ApiKeySchema from "./schemas/apikey.json" with {type: "json"};
-import {ApikeyAsset} from "@spica-server/interface/passport/apikey";
+import {ApikeyAsset} from "../../../../../../libs/interface/passport/apikey";
 
 const _module = "apikey";
 

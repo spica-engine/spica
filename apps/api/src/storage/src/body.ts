@@ -24,7 +24,7 @@ import {
   MixedBody,
   BsonArray,
   JsonArray
-} from "@spica-server/interface/storage";
+} from "../../../../../libs/interface/storage";
 
 class __BaseBody {
   payloadSizeError: HttpException;

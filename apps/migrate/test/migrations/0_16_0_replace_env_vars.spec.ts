@@ -4,7 +4,7 @@ import {
   getDatabaseName,
   ObjectId,
   start
-} from "@spica-server/database/testing";
+} from "../../../../libs/database/testing";
 import color from "cli-color/lib/supports-color";
 import {run} from "@spica/migrate";
 import path from "path";

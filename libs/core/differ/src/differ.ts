@@ -1,6 +1,6 @@
 import deepDiff from "deep-diff";
 import diffMatchPatch from "diff-match-patch";
-import {ChangeKind, Change, ChangePath, Patch} from "@spica-server/interface/core";
+import {ChangeKind, Change, ChangePath, Patch} from "../../../interface/core";
 
 export function diff<T>(prev: T, current: T): Change[] {
   const structuralChanges = deepDiff.diff(prev, current);

@@ -1,18 +1,18 @@
 import {DynamicModule, Inject, Module, Optional} from "@nestjs/common";
-import {EnvVarService, ServicesModule} from "@spica-server/env_var/services";
+import {EnvVarService, ServicesModule} from "../services";
 import {EnvVarController} from "./controller";
-import {SchemaModule, Validator} from "@spica-server/core/schema";
+import {SchemaModule, Validator} from "../../../../../libs/core/schema";
 import EnvVarSchema from "./schema.json" with {type: "json"};
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "../../../../../libs/interface/representative";
 import {registerAssetHandlers} from "./asset";
 import {
   REGISTER_VC_SYNCHRONIZER,
   RegisterVCSynchronizer
-} from "@spica-server/interface/versioncontrol";
-import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
-import {EnvVar} from "@spica-server/interface/env_var";
+} from "../../../../../libs/interface/versioncontrol";
+import {ASSET_REP_MANAGER} from "../../../../../libs/interface/asset";
+import {EnvVar} from "../../../../../libs/interface/env_var";
 import {getSynchronizer} from "./versioncontrol/synchronizer";
-import {EnvVarRealtimeModule} from "@spica-server/env_var/realtime";
+import {EnvVarRealtimeModule} from "../realtime";
 
 @Module({})
 export class EnvVarModule {

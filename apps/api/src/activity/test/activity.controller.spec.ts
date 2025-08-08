@@ -1,11 +1,11 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {ActivityModule} from "@spica-server/activity";
-import {ActivityService} from "@spica-server/activity/services";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {Action} from "@spica-server/interface/activity";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {ActivityModule} from "..";
+import {ActivityService} from "../services";
+import {CoreTestingModule, Request} from "../../../../../libs/core/testing";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "../../../../../libs/database/testing";
+import {Action} from "../../../../../libs/interface/activity";
+import {PassportTestingModule} from "../../passport/testing";
 
 describe("Activity Acceptance", () => {
   let request: Request;

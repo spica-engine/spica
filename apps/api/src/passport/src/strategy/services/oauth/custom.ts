@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {ObjectId, ReturnDocument} from "@spica-server/database";
+import {ObjectId, ReturnDocument} from "../../../../../../../../libs/database";
 import {
   IncomingCustomOAuth,
   IncomingOAuthPreset,
@@ -10,7 +10,7 @@ import {
   PassportOptions,
   PASSPORT_OPTIONS,
   REQUEST_SERVICE
-} from "@spica-server/interface/passport";
+} from "../../../../../../../../libs/interface/passport";
 import {StrategyService} from "../strategy.service";
 import {RequestService} from "../../../options";
 import {v4 as uuidv4} from "uuid";

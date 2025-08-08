@@ -3,7 +3,7 @@ import {
   FactorSchema,
   AuthFactorSchemaProvider,
   TotpFactorMeta
-} from "@spica-server/interface/passport/authfactor";
+} from "../../../../../../libs/interface/passport/authfactor";
 import speakeasy from "speakeasy";
 import qrcode from "qrcode";
 

@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": ".",
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "resolveJsonModule": true,
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "target": "ES2020",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "lib": ["es2020", "dom"],
+    "esModuleInterop": true
+  },
+  "exclude": ["node_modules", "tmp", "dist"]
+}

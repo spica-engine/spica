@@ -8,10 +8,10 @@ import {
   IndexSpecification,
   ObjectId,
   WithId
-} from "@spica-server/database";
-import {EnvVarService} from "@spica-server/env_var/services";
+} from "../../../../../../libs/database";
+import {EnvVarService} from "../../../env_var/services";
 import {filter, map, Observable, switchMap} from "rxjs";
-import {Function, FunctionOptions, FUNCTION_OPTIONS} from "@spica-server/interface/function";
+import {Function, FunctionOptions, FUNCTION_OPTIONS} from "../../../../../../libs/interface/function";
 
 const collectionName = "function";
 

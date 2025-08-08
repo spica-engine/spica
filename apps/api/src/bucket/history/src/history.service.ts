@@ -6,11 +6,11 @@ import {
   Filter,
   InsertOneResult,
   ObjectId
-} from "@spica-server/database";
-import {diff, schemaDiff} from "@spica-server/core/differ";
-import {ChangePaths, ChangeKind} from "@spica-server/interface/core";
-import {History} from "@spica-server/interface/bucket/history";
-import {Bucket, BucketDocument} from "@spica-server/interface/bucket";
+} from "../../../../../../libs/database";
+import {diff, schemaDiff} from "../../../../../../libs/core/differ";
+import {ChangePaths, ChangeKind} from "../../../../../../libs/interface/core";
+import {History} from "../../../../../../libs/interface/bucket/history";
+import {Bucket, BucketDocument} from "../../../../../../libs/interface/bucket";
 
 @Injectable()
 export class HistoryService {

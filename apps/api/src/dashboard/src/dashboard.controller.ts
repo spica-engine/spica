@@ -12,12 +12,12 @@ import {
   BadRequestException,
   NotFoundException
 } from "@nestjs/common";
-import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard} from "../../passport/guard";
 import {DashboardService} from "./dashboard.service";
-import {Dashboard} from "@spica-server/interface/dashboard";
-import {Schema} from "@spica-server/core/schema";
-import {ResourceFilter} from "@spica-server/passport/guard";
-import {OBJECT_ID, ObjectId, ReturnDocument} from "@spica-server/database";
+import {Dashboard} from "../../../../../libs/interface/dashboard";
+import {Schema} from "../../../../../libs/core/schema";
+import {ResourceFilter} from "../../passport/guard";
+import {OBJECT_ID, ObjectId, ReturnDocument} from "../../../../../libs/database";
 
 @Controller("dashboard")
 export class DashboardController {

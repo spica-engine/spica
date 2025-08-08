@@ -1,4 +1,4 @@
-import {Asset, Config} from "@spica-server/interface/asset";
+import {Asset, Config} from "../../../../../libs/interface/asset";
 
 export function putConfiguration(asset: Asset, configs: Config[]) {
   configs = eliminateNonConfigurables(asset.configs, configs);

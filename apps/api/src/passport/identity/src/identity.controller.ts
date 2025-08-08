@@ -20,13 +20,13 @@ import {
   Optional,
   NotFoundException
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
-import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {AuthFactor} from "@spica-server/passport/authfactor";
-import {Factor, FactorMeta} from "@spica-server/interface/passport/authfactor";
+import {activity} from "../../../activity/services";
+import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "../../../../../../libs/core";
+import {Schema} from "../../../../../../libs/core/schema";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "../../../../../../libs/database";
+import {ActionGuard, AuthGuard, ResourceFilter} from "../../guard";
+import {AuthFactor} from "../../authfactor";
+import {Factor, FactorMeta} from "../../../../../../libs/interface/passport/authfactor";
 import {createIdentityActivity} from "./activity.resource";
 import {compare, hash} from "./hash";
 import {IdentityService} from "./identity.service";
@@ -36,11 +36,11 @@ import {
   IdentityOptions,
   PaginationResponse,
   POLICY_PROVIDER
-} from "@spica-server/interface/passport/identity";
+} from "../../../../../../libs/interface/passport/identity";
 import {registerPolicyAttacher} from "./utility";
-import {ClassCommander} from "@spica-server/replication";
-import {CommandType} from "@spica-server/interface/replication";
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {ClassCommander} from "../../../replication";
+import {CommandType} from "../../../../../../libs/interface/replication";
+import {PipelineBuilder} from "../../../../../../libs/database/pipeline";
 
 @Controller("passport/identity")
 export class IdentityController {

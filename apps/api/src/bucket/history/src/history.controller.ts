@@ -8,9 +8,9 @@ import {
   HttpStatus,
   NotFoundException
 } from "@nestjs/common";
-import {BucketService, compile} from "@spica-server/bucket/services";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {AuthGuard} from "@spica-server/passport";
+import {BucketService, compile} from "../../services";
+import {ObjectId, OBJECT_ID} from "../../../../../../libs/database";
+import {AuthGuard} from "../../../passport";
 import {applyPatch} from "./differ";
 import {HistoryService} from "./history.service";
 

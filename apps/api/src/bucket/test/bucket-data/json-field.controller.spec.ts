@@ -1,13 +1,13 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {BucketModule} from "@spica-server/bucket";
-import {SchemaModule} from "@spica-server/core/schema";
-import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
-import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {BucketModule} from "../..";
+import {SchemaModule} from "../../../../../../libs/core/schema";
+import {CREATED_AT, UPDATED_AT} from "../../../../../../libs/core/schema/defaults";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "../../../../../../libs/core/schema/formats";
+import {CoreTestingModule, Request} from "../../../../../../libs/core/testing";
+import {DatabaseTestingModule} from "../../../../../../libs/database/testing";
+import {PassportTestingModule} from "../../../passport/testing";
+import {PreferenceTestingModule} from "../../../preference/testing";
 
 describe("BucketDataController json field", () => {
   let app: INestApplication;

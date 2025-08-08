@@ -4,7 +4,7 @@ import {
   CommandMessage,
   COMMAND_MEMORY_OPTIONS,
   MemoryOptions
-} from "@spica-server/interface/replication";
+} from "../../../../../../libs/interface/replication";
 import {MongoMemory} from "./mongo";
 
 @Injectable()

@@ -9,9 +9,9 @@ import {
   Query,
   UseGuards
 } from "@nestjs/common";
-import {ARRAY, DATE, DEFAULT, NUMBER} from "@spica-server/core";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
+import {ARRAY, DATE, DEFAULT, NUMBER} from "../../../../../../libs/core";
+import {ObjectId, OBJECT_ID} from "../../../../../../libs/database";
+import {ActionGuard, AuthGuard} from "../../../passport/guard";
 import {LogService} from "./log.service";
 
 @Controller("function-logs")

@@ -1,6 +1,6 @@
-import {createActivity, ActivityService} from "@spica-server/activity/services";
-import {deepCopy} from "@spica-server/core/patch";
-import {Action, PreActivity, ModuleActivity} from "@spica-server/interface/activity";
+import {createActivity, ActivityService} from "../../../activity/services";
+import {deepCopy} from "../../../../../../libs/core/patch";
+import {Action, PreActivity, ModuleActivity} from "../../../../../../libs/interface/activity";
 
 export function createBucketActivity(
   preActivity: PreActivity,

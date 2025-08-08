@@ -3,21 +3,6 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../versioncontrol"
-    },
-    {
-      "path": "./webhook"
-    },
-    {
-      "path": "./scheduler"
-    },
-    {
-      "path": "./log"
-    },
-    {
-      "path": "../asset"
-    },
-    {
       "path": "./realtime"
     }
   ]

@@ -1,11 +1,11 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {LogModule} from "@spica-server/function/log";
-import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
-import {WsAdapter} from "@spica-server/core/websocket";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {ChunkKind} from "@spica-server/interface/realtime";
+import {LogModule} from "..";
+import {CoreTestingModule, Websocket} from "../../../../../../libs/core/testing";
+import {WsAdapter} from "../../../../../../libs/core/websocket";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "../../../../../../libs/database/testing";
+import {PassportTestingModule} from "../../../passport/testing";
+import {ChunkKind} from "../../../../../../libs/interface/realtime";
 
 function url(path: string, query?: {[k: string]: string | string[]}) {
   const url = new URL(path, "ws://insteadof");

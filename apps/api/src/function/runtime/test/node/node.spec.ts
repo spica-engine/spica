@@ -1,4 +1,4 @@
-import {Node} from "@spica-server/function/scheduler";
+import {Node} from "../../../scheduler";
 
 describe("Node", () => {
   let node: Node;

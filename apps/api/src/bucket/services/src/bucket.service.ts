@@ -1,6 +1,6 @@
 import {Inject, Injectable, NotFoundException, Optional} from "@nestjs/common";
-import {Validator} from "@spica-server/core/schema";
-import {Default} from "@spica-server/interface/core";
+import {Validator} from "../../../../../../libs/core/schema";
+import {Default} from "../../../../../../libs/interface/core";
 import {
   BaseCollection,
   Collection,
@@ -9,8 +9,8 @@ import {
   FindOneAndReplaceOptions,
   ObjectId,
   WithId
-} from "@spica-server/database";
-import {PreferenceService} from "@spica-server/preference/services";
+} from "../../../../../../libs/database";
+import {PreferenceService} from "../../../preference/services";
 import {BehaviorSubject, Observable} from "rxjs";
 import {getBucketDataCollection} from "./";
 import {
@@ -19,7 +19,7 @@ import {
   Bucket,
   BucketPreferences,
   BUCKET_DATA_LIMIT
-} from "@spica-server/interface/bucket";
+} from "../../../../../../libs/interface/bucket";
 import * as crypto from "crypto";
 
 @Injectable()

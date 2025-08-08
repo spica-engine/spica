@@ -1,10 +1,10 @@
-import {Action} from "@spica-server/interface/activity";
+import {Action} from "../../../../../../libs/interface/activity";
 import {
   createFunctionActivity,
   createFunctionDependencyActivity,
   createFunctionEnvVarActivity,
   createFunctionIndexActivity
-} from "@spica-server/function/src/activity.resource";
+} from "../../src/activity.resource";
 
 describe("Activity Resource", () => {
   it("should return activity from post request", () => {

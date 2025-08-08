@@ -1,11 +1,11 @@
-import {EventQueue} from "@spica-server/function/queue";
-import {event} from "@spica-server/function/queue/proto";
-import {ClassCommander, JobReducer} from "@spica-server/replication";
-import {CommandType} from "@spica-server/interface/replication";
+import {EventQueue} from "../../queue";
+import {event} from "../../queue/proto";
+import {ClassCommander, JobReducer} from "../../../replication";
+import {CommandType} from "../../../../../../libs/interface/replication";
 import cron from "cron";
 import {Enqueuer} from "./enqueuer";
 import uniqid from "uniqid";
-import {Description, ScheduleOptions} from "@spica-server/interface/function/enqueuer";
+import {Description, ScheduleOptions} from "../../../../../../libs/interface/function/enqueuer";
 
 export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
   type = event.Type.SCHEDULE;

@@ -1,15 +1,5 @@
 {
   "extends": "../../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts"],
-  "references": [
-    {
-      "path": "../../../../../libs/database"
-    },
-    {
-      "path": "../../env_var/services"
-    },
-    {
-      "path": "../../../../../libs/interface/function"
-    }
-  ]
+  "references": []
 }

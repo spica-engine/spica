@@ -1,13 +1,13 @@
 import {DynamicModule, Global, Inject, Module, Optional, Type} from "@nestjs/common";
-import {HistoryModule, HistoryService} from "@spica-server/bucket/history";
-import {HookModule} from "@spica-server/bucket/hooks";
-import {RealtimeModule} from "@spica-server/bucket/realtime";
-import {SchemasRealtimeModule} from "@spica-server/bucket/schemas-realtime";
-import {BucketService, BucketDataService, ServicesModule} from "@spica-server/bucket/services";
-import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {PreferenceService} from "@spica-server/preference/services";
-import {BUCKET_LANGUAGE_FINALIZER} from "@spica-server/interface/preference";
-import {BucketCacheModule} from "@spica-server/bucket/cache";
+import {HistoryModule, HistoryService} from "../history";
+import {HookModule} from "../hooks";
+import {RealtimeModule} from "../realtime";
+import {SchemasRealtimeModule} from "../schemas-realtime";
+import {BucketService, BucketDataService, ServicesModule} from "../services";
+import {SchemaModule, Validator} from "../../../../../libs/core/schema";
+import {PreferenceService} from "../../preference/services";
+import {BUCKET_LANGUAGE_FINALIZER} from "../../../../../libs/interface/preference";
+import {BucketCacheModule} from "../cache";
 import {BucketDataController} from "./bucket-data.controller";
 import {BucketController} from "./bucket.controller";
 import {
@@ -15,19 +15,19 @@ import {
   bucketSpecificDefault,
   provideBucketSchemaResolver
 } from "./bucket.schema.resolver";
-import {GraphQLModule} from "@spica-server/bucket/graphql";
-import {provideLanguageFinalizer} from "@spica-server/bucket/common";
+import {GraphQLModule} from "../graphql";
+import {provideLanguageFinalizer} from "../common";
 import {registerStatusProvider} from "./status";
 import BucketSchema from "./schemas/bucket.schema.json" with {type: "json"};
 import BucketsSchema from "./schemas/buckets.schema.json" with {type: "json"};
 import {
   REGISTER_VC_SYNCHRONIZER,
   RegisterVCSynchronizer
-} from "@spica-server/interface/versioncontrol";
+} from "../../../../../libs/interface/versioncontrol";
 import {registerAssetHandlers} from "./asset";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
-import {Bucket, BucketOptions} from "@spica-server/interface/bucket";
+import {IRepresentativeManager} from "../../../../../libs/interface/representative";
+import {ASSET_REP_MANAGER} from "../../../../../libs/interface/asset";
+import {Bucket, BucketOptions} from "../../../../../libs/interface/bucket";
 import {getSynchronizer} from "./versioncontrol/synchronizer";
 
 @Module({})

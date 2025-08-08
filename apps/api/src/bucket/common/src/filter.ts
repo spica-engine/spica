@@ -1,14 +1,14 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "../../../../../../libs/database";
 import * as Relation from "./relation";
 import {getPropertyByPath} from "./schema";
 import {
   extractFilterPropertyMap,
   replaceFilter,
   replaceFilterObjectIds
-} from "@spica-server/filter";
-import {ValueConstructor} from "@spica-server/interface/filter";
-import {FilterReplacer, RelationResolver} from "@spica-server/interface/bucket/common";
-import {Bucket} from "@spica-server/interface/bucket";
+} from "../../../../../../libs/filter";
+import {ValueConstructor} from "../../../../../../libs/interface/filter";
+import {FilterReplacer, RelationResolver} from "../../../../../../libs/interface/bucket/common";
+import {Bucket} from "../../../../../../libs/interface/bucket";
 
 // this reviver should be kept for backward compatibility and in case the filter is complex and our replacer can't detect the value that should be constructed
 export function filterReviver(k: string, v: string) {

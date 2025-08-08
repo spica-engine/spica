@@ -6,9 +6,9 @@ import {
   isDesiredRelation,
   createRelationMap,
   getRelationResolvedBucketSchema
-} from "@spica-server/bucket/common";
-import {deepCopy} from "@spica-server/core/patch";
-import {RelationType} from "@spica-server/interface/bucket/common";
+} from "..";
+import {deepCopy} from "../../../../../../libs/core/patch";
+import {RelationType} from "../../../../../../libs/interface/bucket/common";
 
 describe("Relation", () => {
   it("should check whether schema is object or not", () => {

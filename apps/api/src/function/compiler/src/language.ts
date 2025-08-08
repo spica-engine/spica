@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import {Compilation, Description} from "@spica-server/interface/function/compiler";
+import {Compilation, Description} from "../../../../../../libs/interface/function/compiler";
 
 export abstract class Language {
   abstract description: Description;

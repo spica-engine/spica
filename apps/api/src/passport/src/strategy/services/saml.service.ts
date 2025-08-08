@@ -6,10 +6,10 @@ import {
   StrategyTypeService,
   PassportOptions,
   PASSPORT_OPTIONS
-} from "@spica-server/interface/passport";
+} from "../../../../../../../libs/interface/passport";
 import {StrategyService} from "./strategy.service";
 import forge from "node-forge";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "../../../../../../../libs/database";
 
 @Injectable()
 export class SamlService implements StrategyTypeService {

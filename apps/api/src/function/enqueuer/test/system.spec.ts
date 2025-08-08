@@ -1,6 +1,6 @@
-import {SystemEnqueuer} from "@spica-server/function/enqueuer";
-import {EventQueue} from "@spica-server/function/queue";
-import {event} from "@spica-server/function/queue/proto";
+import {SystemEnqueuer} from "..";
+import {EventQueue} from "../../queue";
+import {event} from "../../queue/proto";
 
 function createTarget(cwd?: string, handler?: string) {
   const target = new event.Target();

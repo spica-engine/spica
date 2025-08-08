@@ -1,15 +1,15 @@
 import {Injectable, Inject, UnauthorizedException} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService} from "../../../../../../libs/database";
 import {
   Identity,
   IDENTITY_OPTIONS,
   IdentityOptions
-} from "@spica-server/interface/passport/identity";
-import {Validator} from "@spica-server/core/schema";
-import {Default} from "@spica-server/interface/core";
+} from "../../../../../../libs/interface/passport/identity";
+import {Validator} from "../../../../../../libs/core/schema";
+import {Default} from "../../../../../../libs/interface/core";
 import {hash, compare} from "./hash";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
-import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
+import {RefreshTokenService} from "../../refresh_token/services";
 import {v4 as uuidv4} from "uuid";
 
 @Injectable()

@@ -1,12 +1,12 @@
-import {Middlewares} from "@spica-server/core";
-import {EventQueue, HttpQueue} from "@spica-server/function/queue";
-import {event, Http} from "@spica-server/function/queue/proto";
+import {Middlewares} from "../../../../../../libs/core";
+import {EventQueue, HttpQueue} from "../../queue";
+import {event, Http} from "../../queue/proto";
 import {Enqueuer} from "./enqueuer";
 import express from "express";
 import bodyParser from "body-parser";
-import {CorsOptions} from "@spica-server/interface/core";
-import {AttachStatusTracker} from "@spica-server/interface/status";
-import {Description, HttpMethod, HttpOptions} from "@spica-server/interface/function/enqueuer";
+import {CorsOptions} from "../../../../../../libs/interface/core";
+import {AttachStatusTracker} from "../../../../../../libs/interface/status";
+import {Description, HttpMethod, HttpOptions} from "../../../../../../libs/interface/function/enqueuer";
 
 export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   type = event.Type.HTTP;

@@ -4,10 +4,10 @@ import {
   RepresentativeManagerResource,
   VCSynchronizerArgs,
   getDisplayableName
-} from "@spica-server/interface/versioncontrol";
+} from "../../../../../../../libs/interface/versioncontrol";
 import * as CRUD from "../crud";
-import {PolicyService} from "@spica-server/passport/policy";
-import {Policy} from "@spica-server/interface/passport/policy";
+import {PolicyService} from "../..";
+import {Policy} from "../../../../../../../libs/interface/passport/policy";
 import YAML from "yaml";
 import {ObjectId} from "bson";
 

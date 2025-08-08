@@ -1,15 +1,15 @@
-import {FunctionService} from "@spica-server/function/services";
+import {FunctionService} from "../services";
 import {
   Dependency,
   EnvRelation,
   Function,
   FunctionWithDependencies,
   ChangeKind
-} from "@spica-server/interface/function";
+} from "../../../../../libs/interface/function";
 import {changesFromTriggers, createTargetChanges, hasContextChange} from "./change";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "../../../../../libs/database";
 import {FunctionEngine} from "./engine";
-import {LogService} from "@spica-server/function/log";
+import {LogService} from "../log";
 import {BadRequestException, InternalServerErrorException, NotFoundException} from "@nestjs/common";
 import {FunctionPipelineBuilder} from "./pipeline.builder";
 import fs from "fs";

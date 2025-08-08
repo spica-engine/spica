@@ -1,13 +1,13 @@
 import {DynamicModule, Inject, Module, Optional} from "@nestjs/common";
-import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
-import {SchedulingOptions} from "@spica-server/interface/function/scheduler";
-import {WebhookModule} from "@spica-server/function/webhook";
+import {SchemaModule, Validator} from "../../../../../libs/core/schema";
+import {Scheduler, SchedulerModule} from "../scheduler";
+import {SchedulingOptions} from "../../../../../libs/interface/function/scheduler";
+import {WebhookModule} from "../webhook";
 import path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
-import {LogModule, LogService} from "@spica-server/function/log";
-import {FunctionService, ServicesModule} from "@spica-server/function/services";
+import {LogModule, LogService} from "../log";
+import {FunctionService, ServicesModule} from "../services";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
 import {Http} from "./services/interface";
 import {Axios} from "./services/axios";
@@ -16,18 +16,18 @@ import FunctionSchema from "./schema/function.json" with {type: "json"};
 import {
   REGISTER_VC_SYNCHRONIZER,
   RegisterVCSynchronizer
-} from "@spica-server/interface/versioncontrol";
+} from "../../../../../libs/interface/versioncontrol";
 import {registerAssetHandlers} from "./asset";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
+import {IRepresentativeManager} from "../../../../../libs/interface/representative";
+import {ASSET_REP_MANAGER} from "../../../../../libs/interface/asset";
 import {
   Function,
   FunctionOptions,
   FUNCTION_OPTIONS,
   FunctionWithContent
-} from "@spica-server/interface/function";
+} from "../../../../../libs/interface/function";
 import {getSynchronizers} from "./versioncontrol";
-import {FunctionRealtimeModule} from "@spica-server/function/realtime";
+import {FunctionRealtimeModule} from "../realtime";
 
 @Module({})
 export class FunctionModule {

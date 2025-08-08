@@ -13,8 +13,8 @@ import {
   equal,
   regex,
   length
-} from "@spica-server/bucket/expression/src/builtin_funcs";
-import {parser} from "@spica-server/bucket/expression/src/parser";
+} from "../src/builtin_funcs";
+import {parser} from "../src/parser";
 import {wrapExpressionByMode} from "../src/convert";
 
 jest.useFakeTimers();

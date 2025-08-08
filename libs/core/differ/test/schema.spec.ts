@@ -1,5 +1,5 @@
 import {JSONSchema7} from "json-schema";
-import {clearSchemaPaths, getLastNonSchemaPaths, schemaDiff} from "@spica-server/core/differ";
+import {clearSchemaPaths, getLastNonSchemaPaths, schemaDiff} from "..";
 
 describe("schema path", () => {
   const schema: JSONSchema7 = {

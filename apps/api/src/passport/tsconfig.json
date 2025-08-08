@@ -1,12 +1,5 @@
 {
   "extends": "../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json", "services/src/guard.service.ts"],
-  "references": [
-    {"path": "./guard"},
-    {"path": "./identity"},
-    {"path": "./apikey"},
-    {"path": "./authfactor"},
-    {"path": "./refresh_token"},
-    {"path": "../../../../libs/interface/passport"}
-  ]
+  "references": []
 }

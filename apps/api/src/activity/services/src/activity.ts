@@ -1,4 +1,4 @@
-import {Predict, Action} from "@spica-server/interface/activity";
+import {Predict, Action} from "../../../../../../libs/interface/activity";
 
 export function getAction(action: string): Action {
   return Action[action];

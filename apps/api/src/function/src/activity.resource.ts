@@ -1,4 +1,4 @@
-import {Action, PreActivity, ModuleActivity} from "@spica-server/interface/activity";
+import {Action, PreActivity, ModuleActivity} from "../../../../../libs/interface/activity";
 
 export function createFunctionActivity(
   preActivity: PreActivity,

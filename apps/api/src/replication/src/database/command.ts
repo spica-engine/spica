@@ -1,10 +1,10 @@
 import {Injectable, Inject} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService} from "../../../../../../libs/database";
 import {
   CommandMessage,
   REPLICATION_SERVICE_OPTIONS,
   ReplicationServiceOptions
-} from "@spica-server/interface/replication";
+} from "../../../../../../libs/interface/replication";
 
 @Injectable()
 export class CommandService extends BaseCollection<CommandMessage>("commands") {

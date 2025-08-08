@@ -1,4 +1,4 @@
-import {hooks} from "@spica-server/bucket/hooks/proto";
+import {hooks} from "../..";
 
 function getChangeKind(kind: hooks.Change.Kind) {
   switch (kind) {

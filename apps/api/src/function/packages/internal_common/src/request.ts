@@ -1,4 +1,4 @@
-import {HttpService} from "@spica-server/interface/function/packages";
+import {HttpService} from "../../../../../../../libs/interface/function/packages";
 import axios, {AxiosRequestConfig, AxiosInstance, AxiosResponse} from "axios";
 
 export function logWarning(response: any) {

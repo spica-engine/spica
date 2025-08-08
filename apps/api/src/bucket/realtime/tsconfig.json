@@ -1,18 +1,5 @@
 {
   "extends": "../../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts"],
-  "references": [
-    {
-      "path": "../hooks"
-    },
-    {
-      "path": "../history"
-    },
-    {
-      "path": "../../../../../libs/interface/bucket/realtime"
-    },
-    {
-      "path": "../../../../../libs/realtime"
-    }
-  ]
+  "references": []
 }

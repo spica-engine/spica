@@ -1,10 +1,10 @@
 import {Module, DynamicModule, Optional, Inject} from "@nestjs/common";
 import {DashboardController} from "./dashboard.controller";
 import {DashboardService} from "./dashboard.service";
-import {SchemaModule, Validator} from "@spica-server/core/schema";
+import {SchemaModule, Validator} from "../../../../../libs/core/schema";
 import DashboardSchema from "./schema/dashboard.json" with {type: "json"};
-import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {ASSET_REP_MANAGER} from "../../../../../libs/interface/asset";
+import {IRepresentativeManager} from "../../../../../libs/interface/representative";
 import {registerAssetHandlers} from "./asset";
 import {DashboardRealtimeModule} from "../realtime";
 @Module({})

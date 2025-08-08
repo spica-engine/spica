@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
-import {Validator} from "@spica-server/core/schema";
-import {DatabaseService} from "@spica-server/database";
+import {Validator} from "../../../../../../libs/core/schema";
+import {DatabaseService} from "../../../../../../libs/database";
 import {JSONSchema7} from "json-schema";
 
 export function getSchema(collections: string[]): JSONSchema7 {

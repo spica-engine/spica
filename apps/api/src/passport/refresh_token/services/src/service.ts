@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
-import {RefreshToken} from "@spica-server/interface/passport/refresh_token";
+import {BaseCollection, DatabaseService} from "../../../../../../../libs/database";
+import {RefreshToken} from "../../../../../../../libs/interface/passport/refresh_token";
 
 @Injectable()
 export class RefreshTokenService extends BaseCollection<RefreshToken>("refresh_token") {

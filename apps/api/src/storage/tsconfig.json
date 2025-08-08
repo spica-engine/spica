@@ -1,24 +1,5 @@
 {
   "extends": "../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
-  "references": [
-    {
-      "path": "../../../../libs/core/schema"
-    },
-    {
-      "path": "../../../../libs/database/pipeline"
-    },
-    {
-      "path": "../status"
-    },
-    {
-      "path": "../activity/services"
-    },
-    {
-      "path": "../../../../libs/interface/activity"
-    },
-    {
-      "path": "../../../../libs/interface/storage"
-    }
-  ]
+  "references": []
 }

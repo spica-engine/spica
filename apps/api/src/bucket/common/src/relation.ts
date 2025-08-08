@@ -1,7 +1,7 @@
-import {BucketService, getBucketDataCollection} from "@spica-server/bucket/services";
-import {ObjectId} from "@spica-server/database";
+import {BucketService, getBucketDataCollection} from "../../services";
+import {ObjectId} from "../../../../../../libs/database";
 import {buildI18nAggregation} from "./locale";
-import {deepCopy} from "@spica-server/core/patch";
+import {deepCopy} from "../../../../../../libs/core/patch";
 import {setPropertyByPath} from "./schema";
 import {
   Locale,
@@ -11,8 +11,8 @@ import {
   ResetNonOverlappingPathsOptions,
   RelationDefinition,
   RelationResolver
-} from "@spica-server/interface/bucket/common";
-import {Bucket, BucketDocument} from "@spica-server/interface/bucket";
+} from "../../../../../../libs/interface/bucket/common";
+import {Bucket, BucketDocument} from "../../../../../../libs/interface/bucket";
 
 export function findRelations(
   schema: any,

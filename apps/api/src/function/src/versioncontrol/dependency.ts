@@ -6,9 +6,9 @@ import {
   RepresentativeManagerResource,
   ResourceType,
   VCSynchronizerArgs
-} from "@spica-server/interface/versioncontrol";
+} from "../../../../../../libs/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
-import {FunctionWithContent} from "@spica-server/interface/function";
+import {FunctionWithContent} from "../../../../../../libs/interface/function";
 import {Observable} from "rxjs";
 import * as CRUD from "../crud";
 import {ObjectId} from "bson";

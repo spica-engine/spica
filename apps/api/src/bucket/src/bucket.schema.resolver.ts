@@ -1,10 +1,10 @@
 import {Injectable, OnModuleDestroy} from "@nestjs/common";
-import {BucketService, compile} from "@spica-server/bucket/services";
-import {CodeKeywordDefinition, KeywordCxt, Validator, _} from "@spica-server/core/schema";
-import {ObjectId} from "@spica-server/database";
+import {BucketService, compile} from "../services";
+import {CodeKeywordDefinition, KeywordCxt, Validator, _} from "../../../../../libs/core/schema";
+import {ObjectId} from "../../../../../libs/database";
 import {combineLatest, Observable, Subject} from "rxjs";
 import {map, takeUntil} from "rxjs/operators";
-import {Bucket, BucketPreferences} from "@spica-server/interface/bucket";
+import {Bucket, BucketPreferences} from "../../../../../libs/interface/bucket";
 
 @Injectable()
 export class BucketSchemaResolver implements OnModuleDestroy {

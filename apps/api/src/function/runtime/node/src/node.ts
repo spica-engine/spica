@@ -1,9 +1,9 @@
-import {Worker} from "@spica-server/function/runtime";
+import {Worker} from "../..";
 import child_process from "child_process";
 import {Writable} from "stream";
 import path from "path";
 import {fileURLToPath} from "url";
-import {SpawnOptions} from "@spica-server/interface/function/runtime";
+import {SpawnOptions} from "../../../../../../../libs/interface/function/runtime";
 
 export class NodeWorker extends Worker {
   private _process: child_process.ChildProcess;

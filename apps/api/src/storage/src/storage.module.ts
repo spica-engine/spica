@@ -1,6 +1,6 @@
 import {DynamicModule, Module} from "@nestjs/common";
-import {SchemaModule} from "@spica-server/core/schema";
-import {StorageOptions, STORAGE_OPTIONS} from "@spica-server/interface/storage";
+import {SchemaModule} from "../../../../../libs/core/schema";
+import {StorageOptions, STORAGE_OPTIONS} from "../../../../../libs/interface/storage";
 import {StorageController} from "./storage.controller";
 import {StorageService} from "./storage.service";
 import {Default} from "./strategy/default";

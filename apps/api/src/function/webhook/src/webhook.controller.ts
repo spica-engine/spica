@@ -15,14 +15,14 @@ import {
   Query,
   UseGuards
 } from "@nestjs/common";
-import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
-import {DatabaseService, ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {Webhook} from "@spica-server/interface/function/webhook";
+import {DEFAULT, JSONP, NUMBER} from "../../../../../../libs/core";
+import {Schema} from "../../../../../../libs/core/schema";
+import {DatabaseService, ObjectId, OBJECT_ID, ReturnDocument} from "../../../../../../libs/database";
+import {ActionGuard, AuthGuard, ResourceFilter} from "../../../passport/guard";
+import {Webhook} from "../../../../../../libs/interface/function/webhook";
 import {WebhookInvoker} from "./invoker";
 import {WebhookService} from "./webhook.service";
-import {CollectionSlug, COLL_SLUG} from "@spica-server/interface/function";
+import {CollectionSlug, COLL_SLUG} from "../../../../../../libs/interface/function";
 
 @Controller("webhook")
 export class WebhookController {

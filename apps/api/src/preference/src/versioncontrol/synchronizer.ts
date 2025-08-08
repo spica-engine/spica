@@ -1,5 +1,5 @@
-import {Identity} from "@spica-server/interface/passport/identity";
-import {Preference} from "@spica-server/interface/preference";
+import {Identity} from "../../../../../../libs/interface/passport/identity";
+import {Preference} from "../../../../../../libs/interface/preference";
 import {
   ChangeTypes,
   DocChange,
@@ -7,8 +7,8 @@ import {
   RepresentativeManagerResource,
   ResourceType,
   VCSynchronizerArgs
-} from "@spica-server/interface/versioncontrol";
-import {PreferenceService} from "@spica-server/preference/services";
+} from "../../../../../../libs/interface/versioncontrol";
+import {PreferenceService} from "../../services";
 import {map, Observable} from "rxjs";
 import YAML from "yaml";
 

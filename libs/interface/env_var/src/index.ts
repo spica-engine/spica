@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "../../../database";
 export interface EnvVar {
   _id: ObjectId;
   key: string;

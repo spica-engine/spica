@@ -1,5 +1,5 @@
-import {RabbitMQQueue, EventQueue} from "@spica-server/function/queue";
-import {RabbitMQ} from "@spica-server/function/queue/proto";
+import {RabbitMQQueue, EventQueue} from "..";
+import {RabbitMQ} from "../proto";
 import {credentials} from "@grpc/grpc-js";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5844";

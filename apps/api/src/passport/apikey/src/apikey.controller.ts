@@ -13,15 +13,15 @@ import {
   UseGuards,
   UseInterceptors
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
-import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {activity} from "../../../activity/services";
+import {DEFAULT, JSONP, NUMBER} from "../../../../../../libs/core";
+import {Schema} from "../../../../../../libs/core/schema";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "../../../../../../libs/database";
+import {ActionGuard, AuthGuard, ResourceFilter} from "../../guard";
 import uniqid from "uniqid";
 import {createApikeyActivity} from "./activity.resource";
 import {ApiKeyService} from "./apikey.service";
-import {ApiKey} from "@spica-server/interface/passport/apikey";
+import {ApiKey} from "../../../../../../libs/interface/passport/apikey";
 
 @Controller("passport/apikey")
 export class ApiKeyController {

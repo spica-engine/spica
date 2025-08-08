@@ -1,5 +1,5 @@
-import {event} from "@spica-server/function/queue/proto";
-import {Description} from "@spica-server/interface/function/enqueuer";
+import {event} from "../../queue/proto";
+import {Description} from "../../../../../../libs/interface/function/enqueuer";
 
 export abstract class Enqueuer<OptionsT> {
   type: event.Type;

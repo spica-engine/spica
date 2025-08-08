@@ -1,7 +1,7 @@
 import {VersionManager} from "./interface";
 import {Injectable} from "@nestjs/common";
 import simpleGit, {SimpleGit} from "simple-git";
-import {JobReducer} from "@spica-server/replication";
+import {JobReducer} from "../../replication";
 
 @Injectable()
 export class Git implements VersionManager {

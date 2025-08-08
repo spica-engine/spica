@@ -4,8 +4,8 @@ import {
   ChangeStreamDocument,
   ChangeStreamOptions,
   DatabaseService
-} from "@spica-server/database";
-import {EnvVar} from "@spica-server/interface/env_var";
+} from "../../../../../../libs/database";
+import {EnvVar} from "../../../../../../libs/interface/env_var";
 import {Observable} from "rxjs";
 
 @Injectable()

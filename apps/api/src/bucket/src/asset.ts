@@ -1,12 +1,12 @@
-import {registrar} from "@spica-server/asset";
-import {Resource} from "@spica-server/interface/asset";
-import {HistoryService} from "@spica-server/bucket/history";
-import {BucketDataService, BucketService} from "@spica-server/bucket/services";
-import {Schema, Validator} from "@spica-server/core/schema";
+import {registrar} from "../../asset";
+import {Resource} from "../../../../../libs/interface/asset";
+import {HistoryService} from "../history";
+import {BucketDataService, BucketService} from "../services";
+import {Schema, Validator} from "../../../../../libs/core/schema";
 import * as CRUD from "./crud";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {ObjectId} from "@spica-server/database";
-import {BucketAsset} from "@spica-server/interface/bucket";
+import {IRepresentativeManager} from "../../../../../libs/interface/representative";
+import {ObjectId} from "../../../../../libs/database";
+import {BucketAsset} from "../../../../../libs/interface/bucket";
 
 const _module = "bucket";
 

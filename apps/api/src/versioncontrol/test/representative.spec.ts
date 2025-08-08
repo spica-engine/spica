@@ -1,6 +1,6 @@
 import {ObjectId} from "@spica-devkit/database";
-import {ChangeTypes, ResourceType} from "@spica-server/interface/versioncontrol";
-import {VCRepresentativeManager} from "@spica-server/representative";
+import {ChangeTypes, ResourceType} from "../../../../../libs/interface/versioncontrol";
+import {VCRepresentativeManager} from "../../../../../libs/representative";
 import fs from "fs";
 import path from "path";
 import YAML from "yaml";

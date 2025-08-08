@@ -1,5 +1,5 @@
-import {BucketDataService, BucketService} from "@spica-server/bucket/services";
-import {Bucket} from "@spica-server/interface/bucket";
+import {BucketDataService, BucketService} from "../../services";
+import {Bucket} from "../../../../../../libs/interface/bucket";
 import {
   ChangeTypes,
   DocChange,
@@ -7,9 +7,9 @@ import {
   RepChange,
   RepresentativeManagerResource,
   VCSynchronizerArgs
-} from "@spica-server/interface/versioncontrol";
+} from "../../../../../../libs/interface/versioncontrol";
 import * as CRUD from "../crud";
-import {HistoryService} from "@spica-server/bucket/history";
+import {HistoryService} from "../../history";
 import YAML from "yaml";
 import {ObjectId} from "bson";
 

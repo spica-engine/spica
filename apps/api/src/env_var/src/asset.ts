@@ -1,10 +1,10 @@
-import {registrar} from "@spica-server/asset";
-import {Resource} from "@spica-server/interface/asset";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {Schema, Validator} from "@spica-server/core/schema";
-import {EnvVarService} from "@spica-server/env_var/services";
-import {EnvVar} from "@spica-server/interface/env_var";
-import {ObjectId} from "@spica-server/database";
+import {registrar} from "../../asset";
+import {Resource} from "../../../../../libs/interface/asset";
+import {IRepresentativeManager} from "../../../../../libs/interface/representative";
+import {Schema, Validator} from "../../../../../libs/core/schema";
+import {EnvVarService} from "../services";
+import {EnvVar} from "../../../../../libs/interface/env_var";
+import {ObjectId} from "../../../../../libs/database";
 import * as CRUD from "./crud";
 
 const _module = "env_var";

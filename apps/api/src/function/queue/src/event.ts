@@ -1,5 +1,5 @@
 import grpc from "@grpc/grpc-js";
-import {event} from "@spica-server/function/queue/proto";
+import {event} from "../proto";
 import uniqid from "uniqid";
 import util from "util";
 import {Queue} from "./queue";

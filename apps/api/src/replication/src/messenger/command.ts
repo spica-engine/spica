@@ -4,7 +4,7 @@ import {
   CommandMessage,
   CommandMessageFilter,
   REPLICA_ID
-} from "@spica-server/interface/replication";
+} from "../../../../../../libs/interface/replication";
 import {CommandMemory} from "../memory";
 import {Messenger} from "./messenger";
 

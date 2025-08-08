@@ -1,4 +1,4 @@
-import {Db, getConnectionUri, getDatabaseName, start} from "@spica-server/database/testing";
+import {Db, getConnectionUri, getDatabaseName, start} from "../../../../libs/database/testing";
 import color from "cli-color/lib/supports-color";
 import fs from "fs";
 import {migrate} from "@spica/migrate";

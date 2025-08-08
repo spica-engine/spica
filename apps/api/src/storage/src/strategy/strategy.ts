@@ -1,4 +1,4 @@
-import {StorageObjectMeta} from "@spica-server/interface/storage";
+import {StorageObjectMeta} from "../../../../../../libs/interface/storage";
 import {ReadStream} from "fs";
 import {Observable} from "rxjs";
 

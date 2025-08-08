@@ -1,11 +1,11 @@
-import {EventQueue, RabbitMQOptions, RabbitMQQueue} from "@spica-server/function/queue";
+import {EventQueue, RabbitMQOptions, RabbitMQQueue} from "../../queue";
 import {Enqueuer} from "./enqueuer";
-import {Description} from "@spica-server/interface/function/enqueuer";
-import {event, RabbitMQ} from "@spica-server/function/queue/proto";
+import {Description} from "../../../../../../libs/interface/function/enqueuer";
+import {event, RabbitMQ} from "../../queue/proto";
 import amqp from "amqplib";
 import uniqid from "uniqid";
-import {ClassCommander, JobReducer} from "@spica-server/replication";
-import {CommandType} from "@spica-server/interface/replication";
+import {ClassCommander, JobReducer} from "../../../replication";
+import {CommandType} from "../../../../../../libs/interface/replication";
 
 export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   type = event.Type.RABBITMQ;

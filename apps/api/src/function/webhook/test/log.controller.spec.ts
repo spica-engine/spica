@@ -1,11 +1,11 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {WebhookLogController} from "@spica-server/function/webhook/src/log.controller";
-import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {WEBHOOK_OPTIONS} from "@spica-server/interface/function/webhook";
+import {CoreTestingModule, Request} from "../../../../../../libs/core/testing";
+import {DatabaseTestingModule, ObjectId} from "../../../../../../libs/database/testing";
+import {WebhookLogController} from "../src/log.controller";
+import {WebhookLogService} from "../src/log.service";
+import {PassportTestingModule} from "../../../passport/testing";
+import {WEBHOOK_OPTIONS} from "../../../../../../libs/interface/function/webhook";
 
 describe("Activity Controller", () => {
   let request: Request;

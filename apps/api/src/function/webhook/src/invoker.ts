@@ -1,7 +1,7 @@
 import {Injectable, OnModuleDestroy} from "@nestjs/common";
-import {ChangeStream, DatabaseService} from "@spica-server/database";
+import {ChangeStream, DatabaseService} from "../../../../../../libs/database";
 import fetch from "node-fetch";
-import {Webhook, ChangeKind} from "@spica-server/interface/function/webhook";
+import {Webhook, ChangeKind} from "../../../../../../libs/interface/function/webhook";
 import {WebhookLogService} from "./log.service";
 import {WebhookService} from "./webhook.service";
 import handlebars from "handlebars";

@@ -1,15 +1,5 @@
 {
   "extends": "../../../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts"],
-  "references": [
-    {
-      "path": "../../../../../../libs/database"
-    },
-    {
-      "path": "../logger"
-    },
-    {
-      "path": "../../../../../../libs/interface/function/runtime"
-    }
-  ]
+  "references": []
 }

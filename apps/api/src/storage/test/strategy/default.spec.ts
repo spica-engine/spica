@@ -1,4 +1,4 @@
-import {Default} from "@spica-server/storage/src/strategy/default";
+import {Default} from "../../src/strategy/default";
 import fs from "fs";
 import path from "path";
 

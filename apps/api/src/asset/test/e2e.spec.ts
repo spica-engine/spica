@@ -1,11 +1,11 @@
 import {INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {AssetModule, exporters, operators, registrar, validators} from "@spica-server/asset";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {CoreTestingModule, Request} from "../../../../../libs/core/testing";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "../../../../../libs/database/testing";
+import {PassportTestingModule} from "../../passport/testing";
+import {AssetModule, exporters, operators, registrar, validators} from "..";
+import {SchemaModule} from "../../../../../libs/core/schema";
+import {OBJECTID_STRING, OBJECT_ID} from "../../../../../libs/core/schema/formats";
 import os from "os";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:45672";

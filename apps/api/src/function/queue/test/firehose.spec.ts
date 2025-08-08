@@ -1,5 +1,5 @@
-import {EventQueue, FirehoseQueue} from "@spica-server/function/queue";
-import {Firehose} from "@spica-server/function/queue/proto";
+import {EventQueue, FirehoseQueue} from "..";
+import {Firehose} from "../proto";
 import {credentials} from "@grpc/grpc-js";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:8594";

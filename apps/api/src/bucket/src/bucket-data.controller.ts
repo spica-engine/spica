@@ -19,10 +19,10 @@ import {
   Inject,
   HttpException
 } from "@nestjs/common";
-import {activity, ActivityService, createActivity} from "@spica-server/activity/services";
-import {HistoryService} from "@spica-server/bucket/history";
-import {ChangeEmitter} from "@spica-server/bucket/hooks";
-import {BucketDataService, BucketService} from "@spica-server/bucket/services";
+import {activity, ActivityService, createActivity} from "../../activity/services";
+import {HistoryService} from "../history";
+import {ChangeEmitter} from "../hooks";
+import {BucketDataService, BucketService} from "../services";
 import {
   ARRAY,
   BOOLEAN,
@@ -33,11 +33,11 @@ import {
   NUMBER,
   OR,
   EXPRESSION
-} from "@spica-server/core";
-import {Schema, Validator} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {invalidateCache, registerCache} from "@spica-server/bucket/cache";
+} from "../../../../../libs/core";
+import {Schema, Validator} from "../../../../../libs/core/schema";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "../../../../../libs/database";
+import {ActionGuard, AuthGuard, ResourceFilter} from "../../passport/guard";
+import {invalidateCache, registerCache} from "../cache";
 import {
   deleteDocument,
   findDocuments,
@@ -47,17 +47,17 @@ import {
   authIdToString,
   isJSONFilter,
   filterReviver
-} from "@spica-server/bucket/common";
+} from "../common";
 import {expressionFilterParser} from "./filter";
 import {
   clearRelations,
   getRelationPaths,
   getDependents,
   createBucketDataActivity
-} from "@spica-server/bucket/common";
-import {applyPatch} from "@spica-server/core/patch";
-import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
-import {BucketDocument} from "@spica-server/interface/bucket";
+} from "../common";
+import {applyPatch} from "../../../../../libs/core/patch";
+import {IAuthResolver, AUTH_RESOLVER} from "../../../../../libs/interface/bucket/common";
+import {BucketDocument} from "../../../../../libs/interface/bucket";
 
 /**
  * All APIs related to bucket documents.

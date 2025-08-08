@@ -1,20 +1,20 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {BucketModule} from "@spica-server/bucket";
-import {SchemaModule} from "@spica-server/core/schema";
-import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {FunctionModule} from "@spica-server/function";
-import {IdentityModule} from "@spica-server/passport/identity";
-import {PolicyModule} from "@spica-server/passport/policy";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {StatusModule} from "@spica-server/status";
-import {StorageModule} from "@spica-server/storage";
+import {BucketModule} from "../../bucket";
+import {SchemaModule} from "../../../../../libs/core/schema";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "../../../../../libs/core/schema/formats";
+import {CoreTestingModule, Request} from "../../../../../libs/core/testing";
+import {DatabaseTestingModule} from "../../../../../libs/database/testing";
+import {FunctionModule} from "../../function";
+import {IdentityModule} from "../../passport/identity";
+import {PolicyModule} from "../../passport/policy";
+import {PassportTestingModule} from "../../passport/testing";
+import {PreferenceTestingModule} from "../../preference/testing";
+import {StatusModule} from "..";
+import {StorageModule} from "../../storage";
 import os from "os";
 import {Binary} from "bson";
-import {WsAdapter} from "@spica-server/core/websocket";
+import {WsAdapter} from "../../../../../libs/core/websocket";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50051";
 

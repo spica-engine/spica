@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {PartialObserver} from "rxjs";
-import {IPubSub, Filter} from "@spica-server/interface/replication";
+import {IPubSub, Filter} from "../../../../../../libs/interface/replication";
 
 @Injectable()
 export class Messenger<T> implements IPubSub<T> {

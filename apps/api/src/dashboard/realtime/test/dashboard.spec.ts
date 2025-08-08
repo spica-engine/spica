@@ -1,12 +1,12 @@
 import {ForbiddenException, INestApplication, UnauthorizedException} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
-import {WsAdapter} from "@spica-server/core/websocket";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {ChunkKind} from "@spica-server/interface/realtime";
+import {CoreTestingModule, Websocket} from "../../../../../../libs/core/testing";
+import {WsAdapter} from "../../../../../../libs/core/websocket";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "../../../../../../libs/database/testing";
+import {PassportTestingModule} from "../../../passport/testing";
+import {ChunkKind} from "../../../../../../libs/interface/realtime";
 import {DashboardRealtimeModule} from "../src";
-import {GuardService} from "@spica-server/passport";
+import {GuardService} from "../../../passport";
 
 function url(path: string, query?: {[k: string]: string | string[]}) {
   const url = new URL(path, "ws://insteadof");

@@ -1,12 +1,12 @@
 import {INestApplication, NestApplicationOptions} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {getMultipartFormDataMeta, StorageModule} from "@spica-server/storage";
+import {CoreTestingModule, Request} from "../../../../../libs/core/testing";
+import {DatabaseTestingModule, ObjectId} from "../../../../../libs/database/testing";
+import {PassportTestingModule} from "../../passport/testing";
+import {getMultipartFormDataMeta, StorageModule} from "..";
 import {Binary, serialize} from "bson";
 import etag from "etag";
-import {StorageObject} from "@spica-server/interface/storage";
+import {StorageObject} from "../../../../../libs/interface/storage";
 
 describe("Storage Acceptance", () => {
   let app: INestApplication;

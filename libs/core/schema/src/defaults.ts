@@ -1,4 +1,4 @@
-import {Default} from "@spica-server/interface/core";
+import {Default} from "../../../interface/core";
 
 export const CREATED_AT: Default = {
   match: ":created_at",

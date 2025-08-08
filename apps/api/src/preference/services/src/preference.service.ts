@@ -7,10 +7,10 @@ import {
   FindOneAndReplaceOptions,
   OptionalId,
   WithId
-} from "@spica-server/database";
-import {Preference} from "@spica-server/interface/preference";
+} from "../../../../../../libs/database";
+import {Preference} from "../../../../../../libs/interface/preference";
 import {Observable} from "rxjs";
-import {deepCopy} from "@spica-server/core/patch";
+import {deepCopy} from "../../../../../../libs/core/patch";
 
 @Injectable()
 export class PreferenceService extends BaseCollection("preferences") {

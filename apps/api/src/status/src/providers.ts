@@ -1,4 +1,4 @@
-import {StatusProvider} from "@spica-server/interface/status";
+import {StatusProvider} from "../../../../../libs/interface/status";
 import {providers} from "./controller";
 
 export function register(provider: StatusProvider) {

@@ -17,17 +17,17 @@ import {
   UseGuards,
   UseInterceptors
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
-import {HistoryService} from "@spica-server/bucket/history";
-import {BucketDataService, BucketService} from "@spica-server/bucket/services";
-import {Schema, Validator} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {createBucketActivity} from "@spica-server/bucket/common";
-import {BucketCacheService, invalidateCache} from "@spica-server/bucket/cache";
+import {activity} from "../../activity/services";
+import {HistoryService} from "../history";
+import {BucketDataService, BucketService} from "../services";
+import {Schema, Validator} from "../../../../../libs/core/schema";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "../../../../../libs/database";
+import {ActionGuard, AuthGuard, ResourceFilter} from "../../passport/guard";
+import {createBucketActivity} from "../common";
+import {BucketCacheService, invalidateCache} from "../cache";
 import * as CRUD from "./crud";
-import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core/patch";
-import {Bucket} from "@spica-server/interface/bucket";
+import {applyPatch, getUpdateQueryForPatch} from "../../../../../libs/core/patch";
+import {Bucket} from "../../../../../libs/interface/bucket";
 
 /**
  * All APIs related to bucket schemas.

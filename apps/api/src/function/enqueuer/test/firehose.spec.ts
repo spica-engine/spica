@@ -1,9 +1,9 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
-import {FirehoseEnqueuer} from "@spica-server/function/enqueuer";
-import {EventQueue, FirehoseQueue} from "@spica-server/function/queue";
-import {event, Firehose} from "@spica-server/function/queue/proto";
+import {CoreTestingModule, Websocket} from "../../../../../../libs/core/testing";
+import {FirehoseEnqueuer} from "..";
+import {EventQueue, FirehoseQueue} from "../../queue";
+import {event, Firehose} from "../../queue/proto";
 
 describe("FirehoseEnqueuer", () => {
   let eventQueue: {enqueue: jest.Mock};

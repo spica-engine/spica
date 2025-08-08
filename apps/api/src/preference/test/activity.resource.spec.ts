@@ -1,5 +1,5 @@
-import {Action} from "@spica-server/interface/activity";
-import {createPreferenceActivity} from "@spica-server/preference/src/activity.resource";
+import {Action} from "../../../../../libs/interface/activity";
+import {createPreferenceActivity} from "../src/activity.resource";
 
 describe("Activity Resource", () => {
   it("should return activity", () => {

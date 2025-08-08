@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
-import {Dashboard} from "@spica-server/interface/dashboard";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {Dashboard} from "../../../../../libs/interface/dashboard";
+import {BaseCollection, DatabaseService} from "../../../../../libs/database";
 
 @Injectable()
 export class DashboardService extends BaseCollection<Dashboard>("dashboard") {

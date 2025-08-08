@@ -21,12 +21,12 @@ import {
   UseInterceptors,
   Headers
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
-import {ARRAY, BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
-import {Scheduler} from "@spica-server/function/scheduler";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {activity} from "../../activity/services";
+import {ARRAY, BOOLEAN, DEFAULT, JSONP} from "../../../../../libs/core";
+import {Schema} from "../../../../../libs/core/schema";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "../../../../../libs/database";
+import {Scheduler} from "../scheduler";
+import {ActionGuard, AuthGuard, ResourceFilter} from "../../passport/guard";
 import os from "os";
 import {of, OperatorFunction} from "rxjs";
 import {catchError, finalize, last, map, tap} from "rxjs/operators";
@@ -37,11 +37,11 @@ import {
   createFunctionEnvVarActivity
 } from "./activity.resource";
 import {FunctionEngine} from "./engine";
-import {FunctionService} from "@spica-server/function/services";
-import {Options, FUNCTION_OPTIONS, EnvRelation, Function} from "@spica-server/interface/function";
-import {LogService} from "@spica-server/function/log/src/log.service";
+import {FunctionService} from "../services";
+import {Options, FUNCTION_OPTIONS, EnvRelation, Function} from "../../../../../libs/interface/function";
+import {LogService} from "../log/src/log.service";
 import {generate} from "./schema/enqueuer.resolver";
-import {applyPatch} from "@spica-server/core/patch";
+import {applyPatch} from "../../../../../libs/core/patch";
 import * as CRUD from "./crud";
 
 /**

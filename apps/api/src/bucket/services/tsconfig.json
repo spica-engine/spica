@@ -1,15 +1,5 @@
 {
   "extends": "../../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts"],
-  "references": [
-    {
-      "path": "../../../../../libs/core/schema"
-    },
-    {
-      "path": "../../preference/services"
-    },
-    {
-      "path": "../../../../../libs/interface/bucket"
-    }
-  ]
+  "references": []
 }

@@ -16,7 +16,7 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {AssetService} from "./service";
-import {OBJECT_ID, ObjectId} from "@spica-server/database";
+import {OBJECT_ID, ObjectId} from "../../../../../libs/database";
 import {
   Asset,
   Config,
@@ -26,15 +26,15 @@ import {
   IInstallationStrategy,
   InstallationChanges,
   INSTALLATION_STRATEGIES
-} from "@spica-server/interface/asset";
+} from "../../../../../libs/interface/asset";
 import {exporters, operators, validators} from "./registration";
 import {putConfiguration} from "./helpers";
-import {BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
-import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
+import {BOOLEAN, DEFAULT, JSONP} from "../../../../../libs/core";
+import {Schema} from "../../../../../libs/core/schema";
+import {ActionGuard, AuthGuard} from "../../passport/guard";
 import {AssetRepManager} from "./representative";
 import {createReadStream} from "fs";
-import {OptionalId} from "@spica-server/database";
+import {OptionalId} from "../../../../../libs/database";
 
 @Controller("asset")
 export class AssetController {

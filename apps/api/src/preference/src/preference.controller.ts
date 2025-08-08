@@ -9,17 +9,17 @@ import {
   Optional,
   Inject
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
-import {AuthGuard, ActionGuard} from "@spica-server/passport";
-import {PreferenceService} from "@spica-server/preference/services";
+import {activity} from "../../activity/services";
+import {AuthGuard, ActionGuard} from "../../passport";
+import {PreferenceService} from "../services";
 import {
   Preference,
   BUCKET_LANGUAGE_FINALIZER,
   changeFactory,
   IDENTITY_SETTINGS_FINALIZER
-} from "@spica-server/interface/preference";
+} from "../../../../../libs/interface/preference";
 import {createPreferenceActivity} from "./activity.resource";
-import {ReturnDocument} from "@spica-server/database";
+import {ReturnDocument} from "../../../../../libs/database";
 
 @Controller("preference")
 export class PreferenceController {

@@ -1,8 +1,8 @@
 import {Module, DynamicModule} from "@nestjs/common";
 import {LogController} from "./log.controller";
-import {FUNCTION_LOG_OPTIONS, LogOptions} from "@spica-server/interface/function/log";
+import {FUNCTION_LOG_OPTIONS, LogOptions} from "../../../../../../libs/interface/function/log";
 import {LogGateway} from "./realtime.gateway";
-import {RealtimeDatabaseModule} from "@spica-server/database/realtime";
+import {RealtimeDatabaseModule} from "../../../../../../libs/database/realtime";
 import {LogService} from "./log.service";
 
 @Module({})

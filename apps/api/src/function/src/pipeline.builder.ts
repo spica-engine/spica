@@ -1,6 +1,6 @@
-import {ObjectId} from "@spica-server/database";
-import {PipelineBuilder} from "@spica-server/database/pipeline";
-import {EnvRelation} from "@spica-server/interface/function";
+import {ObjectId} from "../../../../../libs/database";
+import {PipelineBuilder} from "../../../../../libs/database/pipeline";
+import {EnvRelation} from "../../../../../libs/interface/function";
 
 export class FunctionPipelineBuilder extends PipelineBuilder {
   resolveEnvRelation(shouldResolve: EnvRelation) {

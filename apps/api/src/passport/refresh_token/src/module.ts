@@ -1,7 +1,7 @@
 import {DynamicModule, Module} from "@nestjs/common";
 import {RefreshTokenController} from "./controller";
 import {REFRESH_TOKEN_OPTIONS, RefreshTokenOptions} from "./options";
-import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
+import {RefreshTokenServicesModule} from "../services";
 
 @Module({})
 export class RefreshTokenModule {

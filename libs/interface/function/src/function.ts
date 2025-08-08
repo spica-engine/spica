@@ -1,7 +1,7 @@
 import {JSONSchema7} from "json-schema";
 import {Observable} from "rxjs";
-import {EnvVar} from "@spica-server/interface/env_var";
-import {ObjectId} from "@spica-server/database";
+import {EnvVar} from "../../env_var";
+import {ObjectId} from "../../../database";
 
 export enum EnvRelation {
   Resolved,

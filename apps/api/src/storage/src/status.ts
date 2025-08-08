@@ -1,4 +1,4 @@
-import {register} from "@spica-server/status";
+import {register} from "../../status";
 import {StorageService} from "./storage.service";
 
 export async function registerStatusProvider(service: StorageService) {

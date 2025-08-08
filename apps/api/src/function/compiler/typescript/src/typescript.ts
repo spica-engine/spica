@@ -1,5 +1,5 @@
-import {Language} from "@spica-server/function/compiler";
-import {Compilation, Description} from "@spica-server/interface/function/compiler";
+import {Language} from "../..";
+import {Compilation, Description} from "../../../../../../../libs/interface/function/compiler";
 import fs from "fs";
 import {fromEvent, Observable, of, throwError} from "rxjs";
 import {filter, switchMap, take, tap} from "rxjs/operators";

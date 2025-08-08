@@ -1,14 +1,14 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {SchemaModule} from "@spica-server/core/schema";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {CoreTestingModule} from "@spica-server/core/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {PassportModule} from "@spica-server/passport";
+import {SchemaModule} from "../../../../../../../libs/core/schema";
+import {DatabaseTestingModule, ObjectId} from "../../../../../../../libs/database/testing";
+import {CoreTestingModule} from "../../../../../../../libs/core/testing";
+import {PreferenceTestingModule} from "../../../../preference/testing";
+import {PassportModule} from "../../../../passport";
 import * as Identity from "@spica-devkit/identity";
 import Axios from "axios";
 import {jwtDecode} from "jwt-decode";
-import {BatchModule} from "@spica-server/batch";
+import {BatchModule} from "../../../../batch";
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;

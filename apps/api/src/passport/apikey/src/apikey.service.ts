@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
-import {ApiKey} from "@spica-server/interface/passport/apikey";
+import {BaseCollection, DatabaseService} from "../../../../../../libs/database";
+import {ApiKey} from "../../../../../../libs/interface/passport/apikey";
 
 @Injectable()
 export class ApiKeyService extends BaseCollection<ApiKey>("apikey") {

@@ -7,14 +7,14 @@ import {
   PipeTransform
 } from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
-import {ActivityService} from "@spica-server/activity/services";
-import {HistoryService} from "@spica-server/bucket/history";
-import {ChangeEmitter} from "@spica-server/bucket/hooks";
-import {BucketService} from "@spica-server/bucket/services";
-import {Schema, Validator} from "@spica-server/core/schema";
-import {ObjectId, ReturnDocument} from "@spica-server/database";
-import {GuardService} from "@spica-server/passport";
-import {resourceFilterFunction} from "@spica-server/passport/guard";
+import {ActivityService} from "../../../activity/services";
+import {HistoryService} from "../../history";
+import {ChangeEmitter} from "../../hooks";
+import {BucketService} from "../../services";
+import {Schema, Validator} from "../../../../../../libs/core/schema";
+import {ObjectId, ReturnDocument} from "../../../../../../libs/database";
+import {GuardService} from "../../../passport";
+import {resourceFilterFunction} from "../../../passport/guard";
 import {graphqlHTTP} from "express-graphql";
 import {
   GraphQLError,
@@ -25,7 +25,7 @@ import {
 } from "graphql";
 import {makeExecutableSchema} from "@graphql-tools/schema";
 import {mergeResolvers, mergeTypeDefs} from "@graphql-tools/merge";
-import {BucketDataService} from "@spica-server/bucket/services";
+import {BucketDataService} from "../../services";
 import {
   deleteDocument,
   findDocuments,
@@ -36,10 +36,10 @@ import {
   getDependents,
   findLocale,
   insertActivity
-} from "@spica-server/bucket/common";
-import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
-import {FindResponse} from "@spica-server/interface/bucket/graphql";
-import {Bucket, BucketDocument} from "@spica-server/interface/bucket";
+} from "../../common";
+import {IAuthResolver, AUTH_RESOLVER} from "../../../../../../libs/interface/bucket/common";
+import {FindResponse} from "../../../../../../libs/interface/bucket/graphql";
+import {Bucket, BucketDocument} from "../../../../../../libs/interface/bucket";
 
 import {
   createSchema,
@@ -49,9 +49,9 @@ import {
   requestedFieldsFromInfo,
   validateBuckets
 } from "./schema";
-import {applyPatch, deepCopy} from "@spica-server/core/patch";
-import {Action} from "@spica-server/interface/activity";
-import {SchemaWarning} from "@spica-server/interface/bucket/graphql";
+import {applyPatch, deepCopy} from "../../../../../../libs/core/patch";
+import {Action} from "../../../../../../libs/interface/activity";
+import {SchemaWarning} from "../../../../../../libs/interface/bucket/graphql";
 
 @Injectable()
 export class GraphqlController implements OnModuleInit {

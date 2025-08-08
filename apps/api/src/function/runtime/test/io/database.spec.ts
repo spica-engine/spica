@@ -1,9 +1,9 @@
 import {Test} from "@nestjs/testing";
-import {DatabaseService, ObjectId} from "@spica-server/database";
-import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
-import {DatabaseOutput} from "@spica-server/function/runtime/io";
-import {generateLog, getLoggerConsole} from "@spica-server/function/runtime/logger";
-import {LogLevels} from "@spica-server/interface/function/runtime";
+import {DatabaseService, ObjectId} from "../../../../../../../libs/database";
+import {DatabaseTestingModule, stream} from "../../../../../../../libs/database/testing";
+import {DatabaseOutput} from "../../io";
+import {generateLog, getLoggerConsole} from "../../logger";
+import {LogLevels} from "../../../../../../../libs/interface/function/runtime";
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));

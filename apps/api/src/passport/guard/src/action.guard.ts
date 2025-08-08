@@ -9,7 +9,7 @@ import {
   Optional,
   Type
 } from "@nestjs/common";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "../../../../../../libs/database";
 import {isMatch} from "matcher";
 import {Text, Parameter, parse} from "path-to-regexp";
 import {
@@ -18,7 +18,7 @@ import {
   PolicyResolver,
   POLICY_RESOLVER,
   ResourceFilterFunction
-} from "@spica-server/interface/passport/guard";
+} from "../../../../../../libs/interface/passport/guard";
 
 export function wrapArray(val: string | string[]) {
   return Array.isArray(val) ? val : Array(val);

@@ -1,4 +1,4 @@
-import {StorageObjectMeta} from "@spica-server/interface/storage";
+import {StorageObjectMeta} from "../../../../../../libs/interface/storage";
 import {Server, EVENTS} from "@tus/server";
 import {CronJob} from "cron";
 import {Observable, Subject} from "rxjs";

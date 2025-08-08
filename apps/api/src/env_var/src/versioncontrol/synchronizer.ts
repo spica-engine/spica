@@ -5,10 +5,10 @@ import {
   RepChange,
   RepresentativeManagerResource,
   VCSynchronizerArgs
-} from "@spica-server/interface/versioncontrol";
+} from "../../../../../../libs/interface/versioncontrol";
 import * as CRUD from "../crud";
-import {EnvVarService} from "@spica-server/env_var/services";
-import {EnvVar} from "@spica-server/interface/env_var";
+import {EnvVarService} from "../../services";
+import {EnvVar} from "../../../../../../libs/interface/env_var";
 import YAML from "yaml";
 import {ObjectId} from "bson";
 

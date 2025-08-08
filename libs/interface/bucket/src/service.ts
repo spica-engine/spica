@@ -1,4 +1,4 @@
-import {CreateIndexesOptions} from "@spica-server/database";
+import {CreateIndexesOptions} from "../../../database";
 
 export interface IndexDefinition {
   definition: {

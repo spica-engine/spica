@@ -10,7 +10,7 @@ import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {ActivityService} from "./activity.service";
 import {createActivity} from "./activity";
-import {Predict} from "@spica-server/interface/activity";
+import {Predict} from "../../../../../../libs/interface/activity";
 
 export abstract class ActivityInterceptor implements NestInterceptor {
   constructor(

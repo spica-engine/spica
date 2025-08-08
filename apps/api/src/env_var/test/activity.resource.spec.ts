@@ -1,4 +1,4 @@
-import {Action} from "@spica-server/activity/services";
+import {Action} from "../../activity/services";
 import {createEnvVarActivity} from "../src/activity.resource";
 
 describe("Activity Resource", () => {

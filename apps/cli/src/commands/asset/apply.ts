@@ -1,7 +1,7 @@
 import {Action, ActionParameters, Command, CreateCommandParameters, Program} from "@caporal/core";
 import {httpService} from "../../http";
 import {RepresentativeManager} from "../../representative";
-import {Resource} from "@spica-server/interface/asset";
+import {Resource} from "../../../../../libs/interface/asset";
 import path from "path";
 import fs from "fs";
 import YAML from "yaml";

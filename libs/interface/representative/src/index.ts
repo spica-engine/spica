@@ -1,5 +1,5 @@
 import {Observable} from "rxjs";
-import {RepChange, RepresentativeManagerResource} from "@spica-server/interface/versioncontrol";
+import {RepChange, RepresentativeManagerResource} from "../../versioncontrol";
 
 export interface IRepresentativeManager {
   write(module: string, id: string, file: string, content: any, extension: string): Promise<void>;

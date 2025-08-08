@@ -1,21 +1,5 @@
 {
   "extends": "../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
-  "references": [
-    {
-      "path": "./realtime"
-    },
-    {
-      "path": "./schemas-realtime"
-    },
-    {
-      "path": "./graphql"
-    },
-    {
-      "path": "../../../../libs/interface/bucket"
-    },
-    {
-      "path": "../../../../libs/interface/status"
-    }
-  ]
+  "references": []
 }

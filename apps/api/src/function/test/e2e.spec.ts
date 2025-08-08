@@ -1,22 +1,22 @@
 import {Test} from "@nestjs/testing";
-import {FunctionModule} from "@spica-server/function";
+import {FunctionModule} from "..";
 import os from "os";
 import {
   DatabaseService,
   DatabaseTestingModule,
   getConnectionUri,
   stream
-} from "@spica-server/database/testing";
+} from "../../../../../libs/database/testing";
 import {INestApplication} from "@nestjs/common";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {Scheduler} from "@spica-server/function/scheduler";
-import {event} from "@spica-server/function/queue/proto";
-import {JobReducer, ReplicationModule} from "@spica-server/replication";
-import {BucketModule} from "@spica-server/bucket";
+import {CoreTestingModule, Request} from "../../../../../libs/core/testing";
+import {SchemaModule} from "../../../../../libs/core/schema";
+import {OBJECTID_STRING, OBJECT_ID} from "../../../../../libs/core/schema/formats";
+import {PassportTestingModule} from "../../passport/testing";
+import {PreferenceTestingModule} from "../../preference/testing";
+import {Scheduler} from "../scheduler";
+import {event} from "../queue/proto";
+import {JobReducer, ReplicationModule} from "../../replication";
+import {BucketModule} from "../../bucket";
 
 function sleep(ms: number) {
   return new Promise((resolve, _) => setTimeout(resolve, ms));

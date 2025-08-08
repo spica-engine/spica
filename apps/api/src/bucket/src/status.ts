@@ -2,9 +2,9 @@ import {
   BucketDataService,
   BucketService,
   getBucketDataCollection
-} from "@spica-server/bucket/services";
-import {register} from "@spica-server/status";
-import {Status} from "@spica-server/interface/status";
+} from "../services";
+import {register} from "../../status";
+import {Status} from "../../../../../libs/interface/status";
 
 export async function registerStatusProvider(bs: BucketService, bds: BucketDataService) {
   const provide = async () => {

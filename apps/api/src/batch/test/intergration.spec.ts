@@ -14,9 +14,9 @@ import {
   Query
 } from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule} from "@spica-server/core/testing";
-import {BatchModule} from "@spica-server/batch";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {CoreTestingModule} from "../../../../../libs/core/testing";
+import {BatchModule} from "..";
+import {PassportTestingModule} from "../../passport/testing";
 import axios, {AxiosInstance} from "axios";
 
 const PORT = "4300";

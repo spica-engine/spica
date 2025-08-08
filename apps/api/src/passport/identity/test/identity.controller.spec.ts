@@ -3,15 +3,15 @@ import {
   DatabaseService,
   DatabaseTestingModule,
   ProfilingLevel
-} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {IdentityModule} from "@spica-server/passport/identity";
+} from "../../../../../../libs/database/testing";
+import {PassportTestingModule} from "../../testing";
+import {CoreTestingModule, Request} from "../../../../../../libs/core/testing";
+import {IdentityModule} from "..";
 import {INestApplication} from "@nestjs/common";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECT_ID} from "@spica-server/core/schema/formats";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {PolicyModule} from "@spica-server/passport/policy";
+import {SchemaModule} from "../../../../../../libs/core/schema";
+import {OBJECT_ID} from "../../../../../../libs/core/schema/formats";
+import {PreferenceTestingModule} from "../../../preference/testing";
+import {PolicyModule} from "../../policy";
 
 describe("Identity Controller", () => {
   let module: TestingModule;

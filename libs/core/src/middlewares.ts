@@ -1,5 +1,5 @@
 import {isMatch} from "matcher";
-import {CorsOptions} from "@spica-server/interface/core";
+import {CorsOptions} from "../../interface/core";
 import pkg from "body-parser";
 const {json} = pkg;
 import typeis from "type-is";

@@ -1,24 +1,5 @@
 {
   "extends": "../../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts"],
-  "references": [
-    {
-      "path": "../../../../../libs/core/schema"
-    },
-    {
-      "path": "../../../../../libs/core"
-    },
-    {
-      "path": "../../passport/guard"
-    },
-    {
-      "path": "../services"
-    },
-    {
-      "path": "../../../../../libs/interface/function"
-    },
-    {
-      "path": "../../../../../libs/interface/function/webhook"
-    }
-  ]
+  "references": []
 }

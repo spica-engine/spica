@@ -1,10 +1,10 @@
-import {BucketDataService, BucketService} from "@spica-server/bucket/services";
+import {BucketDataService, BucketService} from "../../services";
 import locale from "locale";
-import {diff} from "@spica-server/core/differ";
-import {ChangeKind} from "@spica-server/interface/core";
-import {BucketCacheService} from "@spica-server/bucket/cache";
-import {Locale} from "@spica-server/interface/bucket/common";
-import {Bucket, BucketPreferences} from "@spica-server/interface/bucket";
+import {diff} from "../../../../../../libs/core/differ";
+import {ChangeKind} from "../../../../../../libs/interface/core";
+import {BucketCacheService} from "../../cache";
+import {Locale} from "../../../../../../libs/interface/bucket/common";
+import {Bucket, BucketPreferences} from "../../../../../../libs/interface/bucket";
 
 export function buildI18nAggregation(property: any, locale: string, fallback: string) {
   return {

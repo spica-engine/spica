@@ -1,8 +1,8 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "../../../../../../libs/database";
 import {getMostLeftSelectIdentifier} from "./ast";
 import {compile} from "./compile";
 import * as func from "./func";
-import {Mode, Replacer} from "@spica-server/interface/bucket/expression";
+import {Mode, Replacer} from "../../../../../../libs/interface/bucket/expression";
 
 function visitArgFns(fns: any[], ctx) {
   const finalResult = [];

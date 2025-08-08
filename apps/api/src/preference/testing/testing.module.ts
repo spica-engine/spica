@@ -1,5 +1,5 @@
 import {Global, Module} from "@nestjs/common";
-import {PreferenceService} from "@spica-server/preference/services";
+import {PreferenceService} from "../services";
 import {Observable} from "rxjs";
 import {jest} from "@jest/globals";
 

@@ -1,8 +1,8 @@
-import {event} from "@spica-server/function/queue/proto";
-import {Runtime} from "@spica-server/function/runtime";
-import {NodeWorker} from "@spica-server/function/runtime/node";
-import {Description, SpawnOptions} from "@spica-server/interface/function/runtime";
-import {Schedule, WorkerState} from "@spica-server/interface/function/scheduler";
+import {event} from "../../queue/proto";
+import {Runtime} from "../../runtime";
+import {NodeWorker} from "../../runtime/node";
+import {Description, SpawnOptions} from "../../../../../../libs/interface/function/runtime";
+import {Schedule, WorkerState} from "../../../../../../libs/interface/function/scheduler";
 
 export class Node extends Runtime {
   description: Description = {

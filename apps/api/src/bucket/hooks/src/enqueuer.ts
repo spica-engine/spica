@@ -1,14 +1,14 @@
-import {Enqueuer} from "@spica-server/function/enqueuer";
-import {EventQueue} from "@spica-server/function/queue";
-import {event} from "@spica-server/function/queue/proto";
-import {hooks} from "@spica-server/bucket/hooks/proto";
+import {Enqueuer} from "../../../function/enqueuer";
+import {EventQueue} from "../../../function/queue";
+import {event} from "../../../function/queue/proto";
+import {hooks} from "../proto";
 import {ChangeQueue} from "./queue";
 import {ChangeEmitter, changeKey} from "./emitter";
 import uniqid from "uniqid";
-import {ClassCommander, JobReducer} from "@spica-server/replication";
-import {CommandType} from "@spica-server/interface/replication";
-import {ChangeOptions} from "@spica-server/interface/bucket/hooks";
-import {Description} from "@spica-server/interface/function/enqueuer";
+import {ClassCommander, JobReducer} from "../../../replication";
+import {CommandType} from "../../../../../../libs/interface/replication";
+import {ChangeOptions} from "../../../../../../libs/interface/bucket/hooks";
+import {Description} from "../../../../../../libs/interface/function/enqueuer";
 
 function getChangeType(type: string): hooks.Change.Kind {
   switch (type) {

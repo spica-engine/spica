@@ -1,5 +1,5 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule} from "../../../../../libs/core/schema";
 import {AssetController} from "./controller";
 import {AssetService} from "./service";
 
@@ -8,7 +8,7 @@ import {
   ASSET_REP_MANAGER,
   ASSET_WORKING_DIRECTORY,
   INSTALLATION_STRATEGIES
-} from "@spica-server/interface/asset";
+} from "../../../../../libs/interface/asset";
 import fs from "fs";
 
 import AssetSchema from "../schema/asset.json" with {type: "json"};

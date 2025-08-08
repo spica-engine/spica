@@ -1,13 +1,5 @@
 {
   "extends": "../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
-  "references": [
-    {"path": "../../../../../libs/database/realtime"},
-    {
-      "path": "../../passport"
-    },
-    {
-      "path": "../../../../../libs/realtime"
-    }
-  ]
+  "references": []
 }

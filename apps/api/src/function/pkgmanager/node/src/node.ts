@@ -1,8 +1,8 @@
-import {PackageManager} from "@spica-server/function/pkgmanager";
+import {PackageManager} from "../..";
 import fs from "fs";
 import path from "path";
 import fastGlob from "fast-glob";
-import {Package} from "@spica-server/interface/function/pkgmanager";
+import {Package} from "../../../../../../../libs/interface/function/pkgmanager";
 
 export abstract class NodePackageManager extends PackageManager {
   private readonly MAX_DEP_TYPE_SIZE_MB = 5;

@@ -1,5 +1,5 @@
 import {database, isConnected, close} from "@spica-devkit/database";
-import {start, getConnectionUri, getDatabaseName} from "@spica-server/database/testing";
+import {start, getConnectionUri, getDatabaseName} from "../../../../../../../libs/database/testing";
 import {Db} from "mongodb";
 
 describe("Database e2e", () => {

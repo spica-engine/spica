@@ -1,4 +1,4 @@
-import {providePolicyFinalizer} from "@spica-server/passport/apikey/src/utility";
+import {providePolicyFinalizer} from "../src/utility";
 describe("Utilities", () => {
   it("should pull policy from apikey policies", async () => {
     const ApikeyService: any = {

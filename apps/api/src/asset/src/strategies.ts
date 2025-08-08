@@ -1,5 +1,5 @@
-import {compareResourceGroups} from "@spica-server/core/differ";
-import {Asset, Resource, IInstallationStrategy} from "@spica-server/interface/asset";
+import {compareResourceGroups} from "../../../../../libs/core/differ";
+import {Asset, Resource, IInstallationStrategy} from "../../../../../libs/interface/asset";
 
 export abstract class InstallationStrategy implements IInstallationStrategy {
   private _asset: Asset;

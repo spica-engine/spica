@@ -1,9 +1,5 @@
 {
   "extends": "../../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts"],
-  "references": [
-    {
-      "path": "../env_var"
-    }
-  ]
+  "references": []
 }

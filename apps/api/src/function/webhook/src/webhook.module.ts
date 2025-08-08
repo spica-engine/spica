@@ -1,12 +1,12 @@
 import {DynamicModule, Module} from "@nestjs/common";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule} from "../../../../../../libs/core/schema";
 import {WebhookInvoker} from "./invoker";
 import {SchemaResolver} from "./schema";
 import {WebhookController} from "./webhook.controller";
 import {WebhookService} from "./webhook.service";
 import {WebhookLogService} from "./log.service";
 import {WebhookLogController} from "./log.controller";
-import {WebhookOptions, WEBHOOK_OPTIONS} from "@spica-server/interface/function/webhook";
+import {WebhookOptions, WEBHOOK_OPTIONS} from "../../../../../../libs/interface/function/webhook";
 
 @Module({})
 export class WebhookModule {

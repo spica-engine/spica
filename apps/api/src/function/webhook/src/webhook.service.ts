@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService} from "../../../../../../libs/database";
 import {Observable} from "rxjs";
-import {Webhook, TargetChange, ChangeKind} from "@spica-server/interface/function/webhook";
+import {Webhook, TargetChange, ChangeKind} from "../../../../../../libs/interface/function/webhook";
 
 @Injectable()
 export class WebhookService extends BaseCollection<Webhook>("webhook") {

@@ -1,6 +1,6 @@
 import {Controller, Body, Post, Inject, Req, UseGuards} from "@nestjs/common";
-import {Schema} from "@spica-server/core/schema";
-import {AuthGuard} from "@spica-server/passport/guard";
+import {Schema} from "../../../../../libs/core/schema";
+import {AuthGuard} from "../../passport/guard";
 import {getBaseUrl, handleResponse, splitIntoChunks} from "./utilities";
 import {
   BatchRequest,
@@ -9,7 +9,7 @@ import {
   HTTP_SERVICE,
   HTTPService,
   Response
-} from "@spica-server/interface/batch";
+} from "../../../../../libs/interface/batch";
 
 @Controller("batch")
 export class BatchController {
