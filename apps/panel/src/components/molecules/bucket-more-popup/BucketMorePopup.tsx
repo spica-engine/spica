@@ -35,18 +35,18 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     }
   });
 
-  const {changeHistory, deleteHistory} = useBucket();
+  const {updateBucketHistory, deleteBucketHistory} = useBucket();
   const isHistoryChecked = useMemo(() => bucket?.history, [bucket]);
   const handleChangeHistory = () => {
     setIsHistoryChangeLoading(true);
-    changeHistory(bucket).then(() => {
+    updateBucketHistory(bucket).then(() => {
       setIsHistoryChangeLoading(false);
     });
   };
 
   const handleDeleteHistory = () => {
     setIsHistoryChangeLoading(true);
-    deleteHistory(bucket).then(() => {
+    deleteBucketHistory(bucket).then(() => {
       setIsHistoryChangeLoading(false);
       setIsHistoryConfirmationOpen(false);
     });
