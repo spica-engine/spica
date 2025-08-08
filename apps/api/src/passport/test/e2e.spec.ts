@@ -237,7 +237,8 @@ describe("E2E Tests", () => {
         passwordHistoryLimit: 2,
         apikeyRealtime: false,
         identityRealtime: false,
-        refreshTokenRealtime: false
+        refreshTokenRealtime: false,
+        policyRealtime: false
       }),
       PreferenceTestingModule,
       CoreTestingModule

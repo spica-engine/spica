@@ -34,7 +34,7 @@ describe("DashboardController", () => {
       imports: [
         CoreTestingModule,
         PassportTestingModule.initialize(),
-        DashboardModule.forRoot(),
+        DashboardModule.forRoot({realtime: false}),
         DatabaseTestingModule.standalone(),
         SchemaModule.forRoot({
           formats: [OBJECT_ID]

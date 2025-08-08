@@ -46,7 +46,8 @@ describe("Identity", () => {
           passwordHistoryLimit: 0,
           apikeyRealtime: false,
           identityRealtime: false,
-          refreshTokenRealtime: false
+          refreshTokenRealtime: false,
+          policyRealtime: false
         }),
         PreferenceTestingModule,
         CoreTestingModule,

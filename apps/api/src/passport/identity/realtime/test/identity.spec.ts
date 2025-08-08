@@ -44,7 +44,7 @@ describe("Identity Realtime", () => {
         }),
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
-        PolicyModule.forRoot(),
+        PolicyModule.forRoot({realtime: true}),
         PreferenceTestingModule,
         IdentityModule.forRoot({
           expiresIn: 1000,
