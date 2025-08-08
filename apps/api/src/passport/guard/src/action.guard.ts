@@ -401,12 +401,12 @@ function createSimpleActionGuard(actions: string | string[], format?: string): T
 
       for (const statement of matchedStatements) {
         if (statement.resource && typeof statement.resource === "object") {
-            includedResources.push(...wrapArrayFlexible(statement.resource.include));
-            excludedResources.push(...wrapArrayFlexible(statement.resource.exclude));
+          includedResources.push(...wrapArrayFlexible(statement.resource.include));
+          excludedResources.push(...wrapArrayFlexible(statement.resource.exclude));
         }
       }
 
-      if (!matchedStatements.length || !includedResources.length ) {
+      if (!matchedStatements.length || !includedResources.length) {
         throw new ForbiddenException(
           `You do not have sufficient permissions to do ${actionsArr.join(", ")} on resource ${resourceAndModule.resource.join("/")}`
         );
