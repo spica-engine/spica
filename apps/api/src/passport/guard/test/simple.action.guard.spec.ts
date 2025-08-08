@@ -150,6 +150,33 @@ describe("SimpleActionGuard", () => {
       });
     });
 
+    it("should allow access for all ", async () => {
+      const {guard, request} = createGuardAndRequest({
+        actions: "bucket:data:show",
+        path: "/bucket/:id/data/:row",
+        params: {
+          id: "bucket1",
+          row: "row1"
+        },
+        statements: [
+          {
+            action: "bucket:data:show",
+            resource: {
+              include: ["*"],
+              exclude: []
+            },
+            module: "bucket:data"
+          }
+        ]
+      });
+
+      expect(await guard()).toBe(true);
+      expect(request.resourceFilter).toEqual({
+        include: ["*"],
+        exclude: []
+      });
+    });
+
     it("should handle wildcard resources without validation", async () => {
       const {guard, request} = createGuardAndRequest({
         actions: "bucket:data:index",
@@ -161,7 +188,7 @@ describe("SimpleActionGuard", () => {
           {
             action: "bucket:data:index",
             resource: {
-              include: ["*"],
+              include: ["*/*"],
               exclude: ["bucket2/*"]
             },
             module: "bucket:data"
@@ -171,7 +198,7 @@ describe("SimpleActionGuard", () => {
 
       expect(await guard()).toBe(true);
       expect(request.resourceFilter).toEqual({
-        include: ["*"],
+        include: ["*/*"],
         exclude: ["bucket2/*"]
       });
     });

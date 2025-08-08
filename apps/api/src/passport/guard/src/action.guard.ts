@@ -398,6 +398,13 @@ function createSimpleActionGuard(actions: string | string[], format?: string): T
 
       const includedResources = [];
       const excludedResources = [];
+
+      if (!matchedStatements.length) {
+        request.resourceFilter = {include: [], exclude: []};
+        throw new ForbiddenException(
+          `You do not have sufficient permissions to do ${actionsArr.join(", ")} on resource ${resourceAndModule.resource.join("/")}`
+        );
+      }
       for (const statement of matchedStatements) {
         if (statement.resource && typeof statement.resource === "object") {
           if (statement.resource.include !== undefined) {
@@ -410,13 +417,7 @@ function createSimpleActionGuard(actions: string | string[], format?: string): T
       }
 
       request.resourceFilter = {include: includedResources, exclude: excludedResources};
-
-      if (matchedStatements.length > 0) {
-        return true;
-      }
-      throw new ForbiddenException(
-        `You do not have sufficient permissions to do ${actionsArr.join(", ")} on resource ${resourceAndModule.resource.join("/")}`
-      );
+      return true;
     }
   }
   return mixin(MixinActionGuard);
