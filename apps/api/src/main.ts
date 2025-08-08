@@ -202,6 +202,11 @@ const args = yargs(process.argv.slice(2))
       number: true,
       description: "Maximum number of identity that can be inserted."
     },
+    "refresh-token-realtime": {
+      boolean: true,
+      description: "Enable/disable realtime refresh token listening. Default value is true",
+      default: true
+    },
     "apikey-realtime": {
       boolean: true,
       description: "Enable/disable listening apikey realtime. Default value is true",
@@ -581,6 +586,7 @@ const modules = [
     },
     refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
     passwordHistoryLimit: args["passport-identity-password-history-limit"],
+    refreshTokenRealtime: args["refresh-token-realtime"],
     apikeyRealtime: args["apikey-realtime"],
     policyRealtime: args["policy-realtime"],
     identityRealtime: args["identity-realtime"]

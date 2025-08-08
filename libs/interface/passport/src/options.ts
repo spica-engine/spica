@@ -5,6 +5,7 @@ export interface PassportOptions extends IdentityOptions {
   defaultStrategy?: string;
   samlCertificateTTL: number;
   apikeyRealtime: boolean;
+  refreshTokenRealtime: boolean;
   policyRealtime: boolean;
 }
 
