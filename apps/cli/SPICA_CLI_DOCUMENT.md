@@ -44,7 +44,7 @@ Object-Relational Mapping features generate TypeScript interfaces and methods fo
 
 1. Create/select a context
 
-- `spica context set --name <name> --url <api_url> --apikey <key>`
+- `spica context set --name <name> --url/api <api_url> --apikey <key>`
 - `spica context switch <name>`
 
 2. Use commands (e.g., `spica project start <name>`)
@@ -55,13 +55,13 @@ Object-Relational Mapping features generate TypeScript interfaces and methods fo
 
 Create or update a context.
 
-- Usage: `spica context set --name <name> --url <url> --apikey <apikey>`
+- Usage: `spica context set --name <name> --url/api <url> --apikey <apikey>`
 - Notes: Name is recommended; URL and API Key are required.
 
 **Example:**
 
 ```bash
-spica context set --name production --url https://api.spica.com --apikey YOUR_API_KEY
+spica context set --name production --url  https:/test.spica.com/api --apikey YOUR_API_KEY
 ```
 
 ### context ls
@@ -134,7 +134,7 @@ Upgrade an existing local project to a target version.
 Synchronize resources between two instances.
 
 - Usage:
-  - `spica project sync --source-url <url> --source-apikey <key> --target-url <url> --target-apikey <key> --modules <list> [id filters] [flags]`
+  - `spica project sync --source-url/api <url> --source-apikey <key> --target-url/api <url> --target-apikey <key> --modules <list> [id filters] [flags]`
 - Modules (comma-separated): `bucket,function,bucket-data,apikey,policy,env-var`
 - Optional ID filters (comma-separated):
   - `--bucket-ids <ids>`
@@ -152,9 +152,9 @@ Synchronize resources between two instances.
 
 ```bash
 spica project sync \
-  --source-url https://source.spica.com \
+  --source-url https://source.spica.com/api \
   --source-apikey SOURCE_KEY \
-  --target-url https://target.spica.com \
+  --target-url https://target.spica.com/api \
   --target-apikey TARGET_KEY \
   --modules bucket,function \
   --dry-run
