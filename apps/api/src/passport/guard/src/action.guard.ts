@@ -399,21 +399,17 @@ function createSimpleActionGuard(actions: string | string[], format?: string): T
       const includedResources = [];
       const excludedResources = [];
 
-      if (!matchedStatements.length) {
-        request.resourceFilter = {include: includedResources, exclude: excludedResources};
+      for (const statement of matchedStatements) {
+        if (statement.resource && typeof statement.resource === "object") {
+            includedResources.push(...wrapArrayFlexible(statement.resource.include));
+            excludedResources.push(...wrapArrayFlexible(statement.resource.exclude));
+        }
+      }
+
+      if (!matchedStatements.length || !includedResources.length ) {
         throw new ForbiddenException(
           `You do not have sufficient permissions to do ${actionsArr.join(", ")} on resource ${resourceAndModule.resource.join("/")}`
         );
-      }
-      for (const statement of matchedStatements) {
-        if (statement.resource && typeof statement.resource === "object") {
-          if (statement.resource.include !== undefined) {
-            includedResources.push(...wrapArrayFlexible(statement.resource.include));
-          }
-          if (statement.resource.exclude !== undefined) {
-            excludedResources.push(...wrapArrayFlexible(statement.resource.exclude));
-          }
-        }
       }
 
       request.resourceFilter = {include: includedResources, exclude: excludedResources};
