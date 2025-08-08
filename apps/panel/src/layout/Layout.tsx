@@ -15,7 +15,7 @@ const Layout = () => {
   const [token] = useLocalStorage<string>("token", "");
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const {buckets, setBuckets, fetchBuckets, changeBucketOrder} = useBucket();
+  const {buckets, getBuckets, updateBucketOrderOnServer, updateBucketOrderLocally} = useBucket();
 
   const mergedNavigatorItems: {
     [key: string]: ReorderableItemGroup;
@@ -28,14 +28,8 @@ const Layout = () => {
     ),
     bucket: {
       items: buckets?.map(i => ({...i, section: "bucket"})) ?? [],
-      onOrderChange: (from, to) =>
-        setBuckets(prev => {
-          const updated = [...prev];
-          const [moved] = updated.splice(from, 1);
-          updated.splice(to, 0, moved);
-          return updated;
-        }),
-      completeOrderChange: changeBucketOrder
+      onOrderChange: updateBucketOrderLocally,
+      completeOrderChange: updateBucketOrderOnServer
     }
   };
 
@@ -67,7 +61,7 @@ const Layout = () => {
   }, [token]);
 
   useEffect(() => {
-    fetchBuckets();
+    getBuckets();
   }, []);
 
 

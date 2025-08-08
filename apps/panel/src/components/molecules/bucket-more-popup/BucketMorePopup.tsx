@@ -33,12 +33,12 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     }
   });
 
-  const {changeReadOnly} = useBucket();
+  const {updateBucketReadonly} = useBucket();
   const isReadOnlyChecked = useMemo(() => bucket?.readOnly, [bucket]);
 
   const handleChangeReadOnly = () => {
     setIsReadOnlyLoading(true);
-    changeReadOnly(bucket).then(() => setIsReadOnlyLoading(false));
+    updateBucketReadonly(bucket).then(() => setIsReadOnlyLoading(false));
   };
 
   return (
