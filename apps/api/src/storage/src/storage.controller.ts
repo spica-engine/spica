@@ -103,9 +103,7 @@ export class StorageController {
    */
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:show"))
-  async findOne(
-    @Param("id", OR(v => /^[a-f\d]{24}$/i.test(v), OBJECT_ID)) idOrName: ObjectId | string
-  ) {
+  async findOne(@Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string) {
     let object;
     if (idOrName instanceof ObjectId) {
       object = await this.storage.get(idOrName);
