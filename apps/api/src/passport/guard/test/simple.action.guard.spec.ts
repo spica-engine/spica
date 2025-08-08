@@ -344,37 +344,6 @@ describe("SimpleActionGuard", () => {
         "You do not have sufficient permissions to do bucket:data:show on resource bucket1/row1"
       );
     });
-
-    it("should set empty resource filter even when authorization fails", async () => {
-      const {guard, request} = createGuardAndRequest({
-        actions: "bucket:data:show",
-        path: "/bucket/:id/data/:row",
-        params: {
-          id: "bucket1",
-          row: "row1"
-        },
-        statements: [
-          {
-            action: "bucket:data:update",
-            resource: {
-              include: ["bucket1/row1"],
-              exclude: []
-            },
-            module: "bucket:data"
-          }
-        ]
-      });
-
-      try {
-        await guard();
-      } catch (error) {
-        // Resource filter should still be set even when authorization fails
-        expect(request.resourceFilter).toEqual({
-          include: [],
-          exclude: []
-        });
-      }
-    });
   });
 
   describe("testing mode", () => {

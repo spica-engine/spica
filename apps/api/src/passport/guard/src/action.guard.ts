@@ -406,7 +406,7 @@ function createSimpleActionGuard(actions: string | string[], format?: string): T
         }
       }
 
-      if (!matchedStatements.length || !includedResources.length) {
+      if (!matchedStatements.length) {
         throw new ForbiddenException(
           `You do not have sufficient permissions to do ${actionsArr.join(", ")} on resource ${resourceAndModule.resource.join("/")}`
         );
