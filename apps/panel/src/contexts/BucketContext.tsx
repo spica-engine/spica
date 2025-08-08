@@ -29,6 +29,7 @@ type BucketContextType = {
   updateBucketOrderOnServer: (bucketId: string, order: number) => Promise<any>;
   renameBucket: (newTitle: string, bucket: BucketType) => void;
   deleteBucket: (bucketId: string) => Promise<any>;
+  createBucket: (title: string) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataType | null;
@@ -50,6 +51,7 @@ type BucketContextType = {
  * - Keep context functions focused on state + side effects.
  * - API-only calls should be imported from useBucketService and named naturally here.
  */
+
 const BucketContext = createContext<BucketContextType | null>(null);
 export const BucketProvider = ({children}: {children: ReactNode}) => {
   const {
@@ -59,6 +61,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiChangeBucketOrder,
     apiRenameBucket,
     apiDeleteBucket,
+    apiCreateBucket,
     apiBuckets,
     apiBucketData
   } = useBucketService();
@@ -195,6 +198,17 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [apiGetBucketData]
   );
 
+  const createBucket = useCallback(
+    async (title: string) => {
+      return await apiCreateBucket(title, buckets.length).then(result => {
+        if (!result) return
+        setBuckets(prev => [...(prev ?? []), result]);
+        return result;
+      });
+    },
+    [buckets]
+  );
+
   const contextValue = useMemo(
     () => ({
       getBucketData,
@@ -204,6 +218,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketOrderOnServer: apiChangeBucketOrder,
       renameBucket,
       deleteBucket,
+      createBucket,
       buckets,
       bucketData,
       bucketCategories,
@@ -217,6 +232,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiChangeBucketOrder,
       renameBucket,
       deleteBucket,
+      createBucket,
       buckets,
       bucketData,
       bucketCategories,

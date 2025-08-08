@@ -110,6 +110,11 @@ export const useBucketService = () => {
     method: "put"
   });
 
+  const {request: postRequest} = useApi<BucketType>({
+    endpoint: "/api/bucket",
+    method: "post"
+  });
+
   const apiGetBucketData = useCallback(
     (bucketId: string, queryString?: string) => {
       return fetchBucketData({
@@ -156,6 +161,43 @@ export const useBucketService = () => {
     [deleteRequest]
   );
 
+  const apiCreateBucket = useCallback(
+    (title: string, order: number) => {
+      const bucket = {
+        title,
+        description: "Describe your new bucket",
+        icon: "view_stream",
+        primary: "title",
+        readOnly: false,
+        history: false,
+        properties: {
+          title: {
+            type: "string",
+            title: "title",
+            description: "Title of the row",
+            options: {position: "left"}
+          },
+          description: {
+            type: "textarea",
+            title: "description",
+            description: "Description of the row",
+            options: {position: "right"}
+          }
+        },
+        acl: {
+          write: "true==true",
+          read: "true==true"
+        },
+        order
+      };
+      return postRequest({body: {...bucket}}).then(result => {
+        if (!result) return;
+        return result;
+      });
+    },
+    [postRequest]
+  );
+
   return {
     apiGetBucketData,
     apiGetBuckets: fetchBuckets,
@@ -163,6 +205,7 @@ export const useBucketService = () => {
     apiChangeBucketOrder,
     apiRenameBucket,
     apiDeleteBucket,
+    apiCreateBucket,
     apiBuckets,
     apiBucketData
   };
