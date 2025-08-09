@@ -4,10 +4,6 @@ COMMAND=$1
 AFFECTED_BUILDS=$2
 AFFECTED_TESTS=$3
 result=false
-# Debugging output
-echo "Debug: Command: $COMMAND"
-echo "Debug: AFFECTED_BUILDS: $AFFECTED_BUILDS"
-echo "Debug: AFFECTED_TESTS: $AFFECTED_TESTS"   
 
 if [[ "$COMMAND" == format:check ]]; then
   result=true
