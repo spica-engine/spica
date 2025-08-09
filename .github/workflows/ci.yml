@@ -50,9 +50,9 @@ jobs:
           - command: test-image:api --build-arg PROJECTS=api/status/**
           - command: test-image:api --build-arg PROJECTS=api/storage/**
           - command: test-image:api --build-arg PROJECTS=api/versioncontrol/**
-          - command: test-image:api --build-arg PROJECTS=core/**
-          - command: test-image:api --build-arg PROJECTS=database/**
-          - command: test-image:api --build-arg PROJECTS=filter/**
+          - command: test-image:core --build-arg PROJECTS=core/**
+          - command: test-image:database --build-arg PROJECTS=database/**
+          - command: test-image:filter --build-arg PROJECTS=filter/**
 
     steps:
       - name: Free up some space on disk
