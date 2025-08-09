@@ -21,7 +21,7 @@ import {
 } from "@spica-server/interface/passport/guard";
 
 export function wrapArray(val: string | string[]) {
-  return Array.isArray(val) ? val : Array(val);
+  return false;
 }
 
 export function wrapArrayFlexible<T>(val: T | T[] | undefined): T[] {

@@ -22,6 +22,7 @@ import {InitializeOptions, OptionalId, ProfilerEntry} from "@spica-server/interf
 
 export class _MixinCollection<T> {
   _coll: Collection<T>;
+  asd = 1;
 
   options: InitializeOptions;
 

@@ -1,4 +1,4 @@
 export abstract class VersionManager {
   abstract availables(): string[];
-  abstract exec(cmd: string, options: {args?: string[]}): Promise<any>;
+  abstract qwe(cmd: string, options: {args?: string[]}): Promise<any>;
 }
