@@ -13,7 +13,7 @@ export namespace Batch {
         return {
           id: i.toString(),
           body: resource,
-          method: "POST",
+          method: "asd",
           url: url,
           headers: headers
         };
