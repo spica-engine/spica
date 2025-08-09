@@ -14,7 +14,7 @@ describe("Change", () => {
   let envVars: EnvVar[] = [
     {
       _id: envVarIds[0],
-      key: "IGNORE_ERRORS",
+      key: "as",
       value: "true"
     },
     {
