@@ -110,8 +110,13 @@ jobs:
 
       - name: Run Command
         run: |
-          RESULT=$(./scripts/find_ci_command.sh ${{ matrix.command }} $(nx show projects -t build --affected) $(nx show projects -t test --affected))
-          if [[ RESULT == true ]]; then
+          AFFECTED_BUILDS=$(yarn nx show projects -t build --affected)
+          echo "Debug: AFFECTED_BUILDS: $AFFECTED_BUILDS"
+          AFFECTED_TESTS=$(yarn nx show projects -t test --affected)
+          echo "Debug: AFFECTED_TESTS: $AFFECTED_TESTS"
+          RESULT=$(./scripts/find_ci_command.sh ${{ matrix.command }} $AFFECTED_BUILDS $AFFECTED_TESTS)
+          echo "Debug: Command ${{ matrix.command }} will be executed?: $RESULT"
+          if [[ "$RESULT" == true ]]; then
             yarn run ${{ matrix.command }}
           else
             echo "No affected projects for command: ${{ matrix.command }}"
