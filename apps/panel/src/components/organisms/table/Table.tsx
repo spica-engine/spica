@@ -47,6 +47,61 @@ type TypeTable = {
 
 const MIN_COLUMN_WIDTH = 140;
 
+function extractTextFromReactNode(value: ReactNode | string): string {
+  const extractText = (node: ReactNode): string[] => {
+    if (node == null || typeof node === "boolean") {
+      return [];
+    }
+
+    if (typeof node === "string") {
+      return [node];
+    }
+
+    if (typeof node === "number") {
+      return [node.toString()];
+    }
+
+    if (Array.isArray(node)) {
+      return node.flatMap(extractText);
+    }
+
+    if (React.isValidElement(node)) {
+      if (node.type === React.Fragment) {
+        const props = (node as React.ReactElement).props;
+        if (props && typeof props === "object" && "children" in props) {
+          return extractText(props.children as ReactNode);
+        }
+        return [];
+      }
+
+      if (
+        typeof node === "object" &&
+        node !== null &&
+        "props" in node &&
+        typeof (node as any).props === "object" &&
+        (node as any).props &&
+        "children" in (node as any).props &&
+        (node as any).props.children != null
+      ) {
+        return extractText((node as any).props.children);
+      }
+
+      return [];
+    }
+
+    if (typeof node === "object" && node !== null) {
+      const obj = node as any;
+      if (obj.props && obj.props.children) {
+        return extractText(obj.props.children);
+      }
+    }
+
+    return [];
+  };
+
+  return extractText(value).join("");
+}
+
 const parseWidth = (widthValue: string | number, containerWidth: number): number => {
   const baseFontSize = 16;
 
@@ -208,10 +263,7 @@ const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataL
               minWidth: `${totalTableWidth}px`
             }}
           >
-            <TableHeader
-              formattedColumns={formattedColumns}
-              onColumnResize={handleColumnResize}
-            />
+            <TableHeader formattedColumns={formattedColumns} onColumnResize={handleColumnResize} />
             <tbody>
               {formattedColumns.length > 0 && (
                 <Rows
@@ -354,7 +406,11 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
 
   for (let index = 0; index < data.length; index++) {
     const row = data[index];
-    const rowId = row[Object.keys(row)[0]].id;
+    // If a cell is changed, we need to re-render the row
+    const rowCellValues = Object.values(row)
+      .map(cell => extractTextFromReactNode(cell.value))
+      .join("-");
+    const rowId = row[Object.keys(row)[0]].id + "-" + rowCellValues;
 
     const missingCellData = formattedColumns.some(column => !row[column.key]);
     if (missingCellData) continue;

@@ -5,14 +5,22 @@ import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
 
 type BucketActionBarProps = {
+  onRefresh: () => void;
   onSearch: (search: string) => void;
   bucketId: string;
   searchLoading?: boolean;
+  refreshLoading?: boolean;
 };
 
 const SEARCH_DEBOUNCE_TIME = 1000;
 
-const BucketActionBar = ({onSearch, bucketId, searchLoading}: BucketActionBarProps) => {
+const BucketActionBar = ({
+  onRefresh,
+  onSearch,
+  bucketId,
+  searchLoading,
+  refreshLoading
+}: BucketActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => setSearchValue(""), [bucketId]);
@@ -64,15 +72,20 @@ const BucketActionBar = ({onSearch, bucketId, searchLoading}: BucketActionBarPro
           <Icon name="plus" />
           New Entry
         </Button>
-        <Button color="default" onClick={() => {}}>
+        <Button
+          variant="text"
+          onClick={onRefresh}
+          disabled={refreshLoading || searchLoading}
+          loading={refreshLoading}
+        >
           <Icon name="refresh" />
           Refresh
         </Button>
-        <Button color="default" onClick={() => {}}>
+        <Button variant="text" onClick={() => {}}>
           <Icon name="eye" />
           Column
         </Button>
-        <Button color="default" onClick={() => {}}>
+        <Button variant="text" onClick={() => {}}>
           <Icon name="dotsVertical" />
           More
         </Button>
