@@ -12,6 +12,11 @@ export default {
       action: "storage:show",
       resource: {include: ["*"], exclude: []},
       module: "storage"
+    },
+    {
+      action: "storage:browse",
+      resource: {include: ["*"], exclude: []},
+      module: "storage"
     }
   ]
 };

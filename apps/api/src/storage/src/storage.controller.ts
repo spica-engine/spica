@@ -24,7 +24,12 @@ import {activity} from "@spica-server/activity/services";
 import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {
+  ActionGuard,
+  AuthGuard,
+  ResourceFilter,
+  SimpleActionGuard
+} from "@spica-server/passport/guard";
 import etag from "etag";
 import {createStorageActivity} from "./activity.resource";
 import {
@@ -61,6 +66,19 @@ export class StorageController {
     @Query("sort", JSONP) sort?: object
   ) {
     return this.storage.getAll(resourceFilter, filter, paginate, limit, skip, sort);
+  }
+  @Get("browse")
+  @UseGuards(AuthGuard(), SimpleActionGuard("storage:browse"))
+  async browse(
+    @ResourceFilter() resourceFilter: object,
+    @Query("path") path: string,
+    @Query("filter", JSONP) filter?: object,
+    @Query("paginate", BOOLEAN) paginate?: boolean,
+    @Query("limit", NUMBER) limit?: number,
+    @Query("skip", NUMBER) skip?: number,
+    @Query("sort", JSONP) sort?: object
+  ) {
+    return this.storage.browse(resourceFilter, path, filter, paginate, limit, skip, sort);
   }
 
   /**

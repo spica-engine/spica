@@ -427,5 +427,462 @@ describe("Storage Service", () => {
         });
       });
     });
+
+    describe("browse", () => {
+      beforeEach(async () => {
+        // Clear any existing data from previous tests
+        await storageService.deleteMany({});
+
+        // Mock strategy methods to avoid file system operations for hierarchical paths
+        jest.spyOn(strategyInstance, "write").mockResolvedValue(undefined);
+        jest.spyOn(strategyInstance, "writeStream").mockResolvedValue(undefined);
+
+        const testFiles = [
+          // Root level files
+          {name: "root-file1.txt", content: {data: Buffer.from("root1"), type: "text/plain"}},
+          {name: "root-file2.txt", content: {data: Buffer.from("root2"), type: "text/plain"}},
+
+          // Photos directory structure
+          {
+            name: "photos/vacation1.jpg",
+            content: {data: Buffer.from("photo1"), type: "image/jpeg"}
+          },
+          {
+            name: "photos/vacation2.jpg",
+            content: {data: Buffer.from("photo2"), type: "image/jpeg"}
+          },
+          {name: "photos/family.jpg", content: {data: Buffer.from("family"), type: "image/jpeg"}},
+
+          // Photos subdirectories
+          {name: "photos/dogs/buddy.jpg", content: {data: Buffer.from("dog1"), type: "image/jpeg"}},
+          {name: "photos/dogs/max.jpg", content: {data: Buffer.from("dog2"), type: "image/jpeg"}},
+          {
+            name: "photos/cats/whiskers.jpg",
+            content: {data: Buffer.from("cat1"), type: "image/jpeg"}
+          },
+
+          // Nested deeper
+          {
+            name: "photos/dogs/puppies/small.jpg",
+            content: {data: Buffer.from("puppy"), type: "image/jpeg"}
+          },
+
+          // Documents directory
+          {
+            name: "documents/report.pdf",
+            content: {data: Buffer.from("report"), type: "application/pdf"}
+          },
+          {name: "documents/draft.txt", content: {data: Buffer.from("draft"), type: "text/plain"}},
+
+          // Documents subdirectory
+          {
+            name: "documents/work/project.docx",
+            content: {
+              data: Buffer.from("project"),
+              type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            }
+          }
+        ];
+
+        await storageService.insertMany(testFiles);
+      });
+
+      describe("browse filter", () => {
+        it("should browse files in root directory (empty path)", async () => {
+          const result = await storageService.browse(resourceFilter, "", {}, false, 10, 0);
+          const names = result.map(r => r.name).sort();
+          expect(names).toEqual(["root-file1.txt", "root-file2.txt"]);
+        });
+
+        it("should browse files in root directory (null path)", async () => {
+          const result = await storageService.browse(resourceFilter, null, {}, false, 10, 0);
+          const names = result.map(r => r.name).sort();
+          expect(names).toEqual(["root-file1.txt", "root-file2.txt"]);
+        });
+
+        it("should browse first level of photos directory", async () => {
+          const result = await storageService.browse(resourceFilter, "photos", {}, false, 10, 0);
+          const names = result.map(r => r.name).sort();
+          expect(names).toEqual([
+            "photos/family.jpg",
+            "photos/vacation1.jpg",
+            "photos/vacation2.jpg"
+          ]);
+        });
+
+        it("should browse first level of photos/dogs directory", async () => {
+          const result = await storageService.browse(
+            resourceFilter,
+            "photos/dogs",
+            {},
+            false,
+            10,
+            0
+          );
+          const names = result.map(r => r.name).sort();
+          expect(names).toEqual(["photos/dogs/buddy.jpg", "photos/dogs/max.jpg"]);
+        });
+
+        it("should handle path with leading/trailing slashes", async () => {
+          const result1 = await storageService.browse(resourceFilter, "/photos/", {}, false, 10, 0);
+          const result2 = await storageService.browse(resourceFilter, "photos", {}, false, 10, 0);
+
+          expect(result1.map(r => r.name).sort()).toEqual(result2.map(r => r.name).sort());
+        });
+
+        it("should return empty array for non-existent path", async () => {
+          const result = await storageService.browse(
+            resourceFilter,
+            "nonexistent",
+            {},
+            false,
+            10,
+            0
+          );
+          expect(result).toEqual([]);
+        });
+      });
+
+      describe("resource filter (policy)", () => {
+        it("should work with wildcard * to match everything", async () => {
+          const wildcardResourceFilter = {include: ["*"], exclude: []};
+
+          const result = await storageService.browse(wildcardResourceFilter, "", {}, false, 20, 0, {
+            name: 1
+          });
+          const names = result.map(r => r.name).sort();
+          expect(names).toEqual(["root-file1.txt", "root-file2.txt"]);
+        });
+
+        it("should work with wildcard * to match everything (no browse filter)", async () => {
+          const result = await storageService.getAll({$match: {}}, {}, false, 20, 0, {name: 1});
+          const names = result.map(r => r.name).sort();
+          expect(names).toEqual([
+            "documents/draft.txt",
+            "documents/report.pdf",
+            "documents/work/project.docx",
+            "photos/cats/whiskers.jpg",
+            "photos/dogs/buddy.jpg",
+            "photos/dogs/max.jpg",
+            "photos/dogs/puppies/small.jpg",
+            "photos/family.jpg",
+            "photos/vacation1.jpg",
+            "photos/vacation2.jpg",
+            "root-file1.txt",
+            "root-file2.txt"
+          ]);
+        });
+
+        it("should work with include pattern using /* (single level)", async () => {
+          const photosOnlyResourceFilter = {include: ["photos/*"], exclude: []};
+
+          const result = await storageService.browse(
+            photosOnlyResourceFilter,
+            "photos",
+            {},
+            false,
+            10,
+            0
+          );
+          const names = result.map(r => r.name).sort();
+          expect(names).toEqual([
+            "photos/family.jpg",
+            "photos/vacation1.jpg",
+            "photos/vacation2.jpg"
+          ]);
+        });
+
+        it("should work with include pattern using /** (all nested levels)", async () => {
+          const photosAllResourceFilter = {include: ["photos/**"], exclude: []};
+
+          const result = await storageService.browse(
+            photosAllResourceFilter,
+            "photos",
+            {},
+            false,
+            10,
+            0
+          );
+          const names = result.map(r => r.name).sort();
+          expect(names).toEqual([
+            "photos/family.jpg",
+            "photos/vacation1.jpg",
+            "photos/vacation2.jpg"
+          ]);
+        });
+
+        it("should work with specific path pattern", async () => {
+          const documentsOnlyResourceFilter = {include: ["documents/**"], exclude: []};
+
+          const result = await storageService.browse(
+            documentsOnlyResourceFilter,
+            "documents",
+            {},
+            false,
+            10,
+            0,
+            {name: 1}
+          );
+          const names = result.map(r => r.name);
+          expect(names).toEqual(["documents/draft.txt", "documents/report.pdf"]);
+        });
+
+        it("should work with exclude pattern", async () => {
+          const noPhotosResourceFilter = {include: ["*"], exclude: ["photos/**"]};
+
+          const result = await storageService.browse(noPhotosResourceFilter, "", {}, false, 10, 0);
+          const names = result.map(r => r.name).sort();
+          expect(names).toEqual(["root-file1.txt", "root-file2.txt"]);
+        });
+
+        it("should combine resource filter with browse filter correctly", async () => {
+          const documentsOnlyResourceFilter = {include: ["documents/**"], exclude: []};
+
+          const result = await storageService.browse(
+            documentsOnlyResourceFilter,
+            "photos",
+            {},
+            false,
+            10,
+            0
+          );
+          expect(result).toEqual([]);
+        });
+      });
+
+      describe("user filter", () => {
+        it("should filter by content type", async () => {
+          const filter = {"content.type": "image/jpeg"};
+          const result = await storageService.browse(
+            resourceFilter,
+            "photos",
+            filter,
+            false,
+            10,
+            0
+          );
+          const names = result.map(r => r.name).sort();
+          expect(names).toEqual([
+            "photos/family.jpg",
+            "photos/vacation1.jpg",
+            "photos/vacation2.jpg"
+          ]);
+        });
+
+        it("should filter by name pattern", async () => {
+          const filter = {name: {$regex: "vacation"}};
+          const result = await storageService.browse(
+            resourceFilter,
+            "photos",
+            filter,
+            false,
+            10,
+            0
+          );
+          const names = result.map(r => r.name).sort();
+          expect(names).toEqual(["photos/vacation1.jpg", "photos/vacation2.jpg"]);
+        });
+
+        it("should combine browse filter with user filter", async () => {
+          // Users can still use simple MongoDB queries for additional filtering
+          const filter = {name: {$regex: "family"}};
+          const result = await storageService.browse(
+            resourceFilter,
+            "photos",
+            filter,
+            false,
+            10,
+            0
+          );
+          const names = result.map(r => r.name);
+          expect(names).toEqual(["photos/family.jpg"]);
+        });
+      });
+
+      describe("pagination and sorting", () => {
+        it("should apply limit", async () => {
+          const result = await storageService.browse(resourceFilter, "photos", {}, false, 2, 0);
+          expect(result.length).toBe(2);
+        });
+
+        it("should apply skip", async () => {
+          const allResults = await storageService.browse(
+            resourceFilter,
+            "photos",
+            {},
+            false,
+            10,
+            0,
+            {
+              name: 1
+            }
+          );
+          const skippedResults = await storageService.browse(
+            resourceFilter,
+            "photos",
+            {},
+            false,
+            10,
+            1,
+            {name: 1}
+          );
+
+          expect(skippedResults.length).toBe(2);
+          expect(skippedResults[0].name).toBe(allResults[1].name);
+        });
+
+        it("should apply sort ascending", async () => {
+          const result = await storageService.browse(resourceFilter, "photos", {}, false, 10, 0, {
+            name: 1
+          });
+          const names = result.map(r => r.name);
+          expect(names).toEqual([
+            "photos/family.jpg",
+            "photos/vacation1.jpg",
+            "photos/vacation2.jpg"
+          ]);
+        });
+
+        it("should apply sort descending", async () => {
+          const result = await storageService.browse(resourceFilter, "photos", {}, false, 10, 0, {
+            name: -1
+          });
+          const names = result.map(r => r.name);
+          expect(names).toEqual([
+            "photos/vacation2.jpg",
+            "photos/vacation1.jpg",
+            "photos/family.jpg"
+          ]);
+        });
+
+        it("should combine limit, skip, and sort", async () => {
+          const result = await storageService.browse(resourceFilter, "photos", {}, false, 1, 1, {
+            name: 1
+          });
+          expect(result.length).toBe(1);
+          expect(result[0].name).toBe("photos/vacation1.jpg");
+        });
+      });
+
+      describe("pagination", () => {
+        it("should work with paginate=true", async () => {
+          const result = await storageService.browse(resourceFilter, "photos", {}, true, 2, 0, {
+            name: 1
+          });
+
+          expect(result.meta.total).toBe(3);
+          expect(result.data.length).toBe(2);
+          expect(result.data[0].name).toBe("photos/family.jpg");
+          expect(result.data[1].name).toBe("photos/vacation1.jpg");
+        });
+
+        it("should work with paginate=false", async () => {
+          const result = await storageService.browse(resourceFilter, "photos", {}, false, 2, 0, {
+            name: 1
+          });
+
+          expect(Array.isArray(result)).toBe(true);
+          expect(result.length).toBe(2);
+          expect(result[0].name).toBe("photos/family.jpg");
+          expect(result[1].name).toBe("photos/vacation1.jpg");
+        });
+
+        it("should return zero meta when paginated with no results", async () => {
+          const result = await storageService.browse(
+            resourceFilter,
+            "nonexistent",
+            {},
+            true,
+            10,
+            0
+          );
+
+          expect(result.meta.total).toBe(0);
+          expect(result.data).toEqual([]);
+        });
+      });
+
+      describe("URL attachment", () => {
+        it("should attach URLs to returned objects", async () => {
+          const result = await storageService.browse(resourceFilter, "photos", {}, false, 1, 0);
+
+          expect(result.length).toBe(1);
+          expect(result[0].url).toBeDefined();
+          expect(typeof result[0].url).toBe("string");
+        });
+      });
+
+      describe("integration - all filters combined", () => {
+        it("should combine resource filter, browse filter, and user filter", async () => {
+          const photosOnlyResourceFilter = {include: ["photos/**"], exclude: []};
+
+          const userFilter = {
+            $and: [{"content.type": "image/jpeg"}, {name: {$regex: "vacation"}}]
+          };
+
+          const result = await storageService.browse(
+            photosOnlyResourceFilter,
+            "photos",
+            userFilter,
+            true,
+            10,
+            0,
+            {name: 1}
+          );
+
+          expect(result.data.length).toBe(2);
+          expect(result.data[0].name).toBe("photos/vacation1.jpg");
+          expect(result.data[1].name).toBe("photos/vacation2.jpg");
+          expect(result.meta.total).toBe(2);
+        });
+
+        it("should combine all filtering types with pagination and sorting", async () => {
+          const allowAllResourceFilter = {include: ["*"], exclude: []};
+
+          const userFilter = {"content.type": "image/jpeg"};
+
+          const result = await storageService.browse(
+            allowAllResourceFilter,
+            "photos",
+            userFilter,
+            true,
+            2,
+            1,
+            {name: -1} // sort descending
+          );
+
+          expect(result.data.length).toBe(2);
+          expect(result.data[0].name).toBe("photos/vacation1.jpg");
+          expect(result.data[1].name).toBe("photos/family.jpg");
+          expect(result.meta.total).toBe(3); // Total matching files
+        });
+
+        it("should handle complex user filter with multiple conditions", async () => {
+          const allowAllResourceFilter = {include: ["*"], exclude: []};
+
+          // Complex user filter: photos with specific conditions
+          const complexUserFilter = {
+            $or: [{name: {$regex: "vacation"}}, {name: {$regex: "family"}}]
+          };
+
+          const result = await storageService.browse(
+            allowAllResourceFilter,
+            "photos",
+            complexUserFilter,
+            false,
+            10,
+            0,
+            {name: 1}
+          );
+
+          const names = result.map(r => r.name);
+          expect(names).toEqual([
+            "photos/family.jpg",
+            "photos/vacation1.jpg",
+            "photos/vacation2.jpg"
+          ]);
+        });
+      });
+    });
   });
 });
