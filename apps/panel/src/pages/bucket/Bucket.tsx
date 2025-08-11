@@ -4,11 +4,31 @@ import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
 import {useCallback, useEffect, useMemo} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
-import type {BucketDataQueryType, BucketType} from "src/services/bucketService";
+import type {BucketDataQueryWithIdType, BucketType} from "src/services/bucketService";
+
+const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
+  ({
+    paginatie: true,
+    relation: true,
+    limit: 25,
+    filter: JSON.stringify({
+      $or: searchableColumns.map(col => ({
+        [col]: {$regex: escapeForRegex(searchText), $options: "i"}
+      }))
+    })
+  }) as const;
 
 export default function Bucket() {
   const {bucketId} = useParams<{bucketId: string}>();
-  const {buckets, bucketData, getBucketData, nextbucketDataQuery} = useBucket();
+  const {
+    buckets,
+    bucketData,
+    getBucketData,
+    nextbucketDataQuery,
+    bucketDataLoading,
+    cleanBucketData
+  } = useBucket();
 
   useEffect(() => {
     if (!bucketId) return;
@@ -17,7 +37,8 @@ export default function Bucket() {
 
   const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
 
-  const formattedColumns = useMemo(() => {
+  const formattedColumns: ColumnType[] = useMemo(() => {
+    const bucket = buckets?.find(i => i._id === bucketId);
     const columns = Object.values(bucket?.properties ?? {});
     return [
       {
@@ -36,29 +57,44 @@ export default function Bucket() {
         key: i.title,
         showDropdownIcon: true
       }))
-    ];
-  }, [bucket]);
+    ] as ColumnType[];
+  }, [buckets, bucketId]);
 
   const handleScrollEnd = useCallback(() => {
-    if (!bucketId) return;
-    const query = nextbucketDataQuery;
-    if (query?.bucketId) {
-      delete (query as any).bucketId;
-    }
-    getBucketData(bucketId, query as BucketDataQueryType);
+    if (!bucketId || !nextbucketDataQuery) return;
+    getBucketData(bucketId, nextbucketDataQuery);
   }, [bucketId, getBucketData, nextbucketDataQuery]);
 
+  const searchableColumns = formattedColumns
+    .filter(({type}) => ["string", "textarea", "richtext"].includes(type as string))
+    .map(({key}) => key);
+
+  const handleSearch = useCallback(
+    async (search: string) => {
+      const trimmed = search.trim();
+      const query = trimmed === "" ? undefined : buildBucketQuery(trimmed, searchableColumns);
+      await getBucketData(bucketId as string, query as unknown as BucketDataQueryWithIdType)
+      cleanBucketData();
+    },
+    [bucketId, searchableColumns, getBucketData]
+  );
+
+  const isTableLoading = useMemo(() => !(formattedColumns.length > 1 && nextbucketDataQuery?.bucketId === bucketId), [
+    formattedColumns,
+    nextbucketDataQuery,
+    bucketId
+  ]);
   return (
     <div className={styles.container}>
-      <BucketActionBar bucket={bucket as BucketType} />
+      <BucketActionBar onSearch={handleSearch}  bucket={bucket as BucketType} />
       <BucketTable
         bucketId={bucketId as string}
-        columns={formattedColumns as ColumnType[]}
+        columns={formattedColumns}
         data={bucketData?.data ?? []}
         onScrollEnd={handleScrollEnd}
         totalDataLength={bucketData?.meta?.total ?? 0}
         maxHeight="88vh"
-        loading={!(formattedColumns.length > 1 && nextbucketDataQuery?.bucketId === bucketId)}
+        loading={isTableLoading}
       />
     </div>
   );
