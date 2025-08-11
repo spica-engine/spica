@@ -151,7 +151,16 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
       {isHistoryConfirmationOpen && (
         <Confirmation
           title="DELETE HISTORY"
-          description="This action will permanently delete the history."
+                    description={
+            <>
+              <p className={styles.confirmText}>
+                This action will permanently delete the history.
+              </p>
+              <span>
+                Please type <strong>Delete History</strong> to confirm deletion.
+              </span>
+            </>
+          }
           confirmLabel={
             <>
               <Icon name="delete" />
@@ -164,7 +173,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
               Cancel
             </>
           }
-          showInput={false}
+          confirmCondition={(input) => input === "Delete History"}
           loading={deleteBucketHistoryLoading}
           onConfirm={handleDeleteHistory}
           onCancel={handleCancelHistoryConfirmation}
