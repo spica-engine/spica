@@ -3,17 +3,17 @@ import React, {memo, useState, type FC} from "react";
 import styles from "./Toolbar.module.scss";
 
 type TypeToolbar = {
-  token: string;
+  bucketId?: string;
   name: string;
   onDrawerOpen?: () => void;
 };
 
-const Toolbar: FC<TypeToolbar> = ({token, name, onDrawerOpen}) => {
+const Toolbar: FC<TypeToolbar> = ({bucketId, name, onDrawerOpen}) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard
-      .writeText(token)
+      .writeText(bucketId as string)
       .then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1000);
@@ -37,16 +37,19 @@ const Toolbar: FC<TypeToolbar> = ({token, name, onDrawerOpen}) => {
             >
               <Icon name="sort" />
             </Button>
-
-            <span className={styles.text}>{token}</span>
-            <Button
-              variant="icon"
-              shape="circle"
-              className={`${styles.button} ${styles.tokenButton}`}
-              onClick={handleCopy}
-            >
-              <Icon name={copied ? "check" : "contentCopy"} />
-            </Button>
+            {bucketId && (
+              <>
+                <span className={styles.text}>{bucketId}</span>
+                <Button
+                  variant="icon"
+                  shape="circle"
+                  className={`${styles.button} ${styles.tokenButton}`}
+                  onClick={handleCopy}
+                >
+                  <Icon name={copied ? "check" : "contentCopy"} />
+                </Button>
+              </>
+            )}
           </FlexElement>
         )
       }}

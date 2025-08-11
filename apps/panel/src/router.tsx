@@ -5,6 +5,7 @@ import App from "./app/app";
 import Home from "./pages/home/Home";
 import Layout from "./layout/Layout";
 import Bucket from "./pages/bucket/Bucket";
+import Identity from "./pages/identity/Identity";
 
 const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
       {
         path: "bucket/:bucketId",
         element: <Bucket />
+      },
+      {
+        path: "passport/identity",
+        element: <Identity />
       }
     ]
   }

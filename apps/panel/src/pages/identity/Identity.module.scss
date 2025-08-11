@@ -1,0 +1,23 @@
+@use "../../styles/mixins";
+
+.container {
+  padding: var(--padding-md) 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100% !important;
+}
+
+.tokenText {
+  @include mixins.textEllipsis(1);
+  display: block;
+  white-space: nowrap;
+  font-size: var(--font-size-md);
+  color: var(--color-font-primary);
+  max-width: 125px;
+}
+
+.tokenButton {
+  border: var(--color-border) 1px solid !important;
+  background-color: white !important;
+}

@@ -15,7 +15,7 @@ const Layout = () => {
   const [token] = useLocalStorage<string>("token", "");
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const {buckets, getBuckets, updateBucketOrderOnServer, updateBucketOrderLocally} = useBucket();
+  const {bucketData, buckets, getBuckets, updateBucketOrderOnServer, updateBucketOrderLocally} = useBucket();
 
   const mergedNavigatorItems: {
     [key: string]: ReorderableItemGroup;
@@ -105,7 +105,7 @@ const Layout = () => {
       </div>
       <div className={styles.main}>
         <div className={styles.toolbar}>
-          <Toolbar token={token} name={name} onDrawerOpen={openDrawer} />
+          <Toolbar bucketId={bucketData?.bucketId} name={name} onDrawerOpen={openDrawer} />
         </div>
         <div className={styles.content}>
           <Outlet />
