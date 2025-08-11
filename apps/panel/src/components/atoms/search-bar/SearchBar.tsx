@@ -1,20 +1,31 @@
-import {Icon, InputWithIcon} from "oziko-ui-kit";
+import {Icon, InputWithIcon, type TypeInput} from "oziko-ui-kit";
 import React from "react";
 import styles from "./SearchBar.module.scss";
 import {memo} from "react";
-const SearchBar = () => {
+import Loader from "../loader/Loader";
+
+type SearchBarProps = {
+  inputProps?: TypeInput;
+  loading?: boolean;
+};
+
+const SearchBar = ({inputProps, loading}: SearchBarProps) => {
   return (
-    <InputWithIcon
-      gap={10}
-      dimensionX={400}
-      prefix={{
-        children: <Icon name="magnify" className={styles.icon} />
-      }}
-      inputProps={{
-        placeholder: "Search"
-      }}
-      className={styles.input}
-    ></InputWithIcon>
+    <div className={styles.container}>
+      <InputWithIcon
+        gap={10}
+        dimensionX={400}
+        prefix={{
+          children: <Icon name="magnify" className={styles.icon} />
+        }}
+        inputProps={{
+          placeholder: "Search",
+          ...inputProps
+        }}
+        className={styles.input}
+      />
+      {loading && <Loader />}
+    </div>
   );
 };
 

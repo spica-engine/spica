@@ -4,20 +4,40 @@ import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
 import {useCallback, useEffect, useMemo} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
-import type {BucketDataQueryType} from "src/services/bucketService";
+import type {BucketDataQueryWithIdType} from "../../services/bucketService";
 import useLocalStorage from "../../hooks/useLocalStorage";
 import Loader from "../../components/atoms/loader/Loader";
 
+const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
+  ({
+    paginatie: true,
+    relation: true,
+    limit: 25,
+    filter: JSON.stringify({
+      $or: searchableColumns.map(col => ({
+        [col]: {$regex: escapeForRegex(searchText), $options: "i"}
+      }))
+    })
+  }) as const;
+
 export default function Bucket() {
   const {bucketId} = useParams<{bucketId: string}>();
-  const {buckets, bucketData, getBucketData, nextbucketDataQuery} = useBucket();
+  const {
+    buckets,
+    bucketData,
+    getBucketData,
+    nextbucketDataQuery,
+    bucketDataLoading,
+    cleanBucketData
+  } = useBucket();
 
   useEffect(() => {
     if (!bucketId) return;
     getBucketData(bucketId);
   }, [bucketId]);
 
-  const formattedColumns = useMemo(() => {
+  const formattedColumns: ColumnType[] = useMemo(() => {
     const bucket = buckets?.find(i => i._id === bucketId);
     const columns = Object.values(bucket?.properties ?? {});
     return [
@@ -37,29 +57,46 @@ export default function Bucket() {
         key: i.title,
         showDropdownIcon: true
       }))
-    ];
+    ] as ColumnType[];
   }, [buckets, bucketId]);
 
   const handleScrollEnd = useCallback(() => {
-    if (!bucketId) return;
-    const query = nextbucketDataQuery;
-    if (query?.bucketId) {
-      delete (query as any).bucketId;
-    }
-    getBucketData(bucketId, query as BucketDataQueryType);
+    if (!bucketId || !nextbucketDataQuery) return;
+    getBucketData(bucketId, nextbucketDataQuery);
   }, [bucketId, getBucketData, nextbucketDataQuery]);
 
-  if (formattedColumns.length <= 1 || nextbucketDataQuery?.bucketId !== bucketId || !bucketId) {
-    return <Loader />;
+  const searchableColumns = formattedColumns
+    .filter(({type}) => ["string", "textarea", "richtext"].includes(type as string))
+    .map(({key}) => key);
+
+  const handleSearch = useCallback(
+    async (search: string) => {
+      const trimmed = search.trim();
+      const query = trimmed === "" ? undefined : buildBucketQuery(trimmed, searchableColumns);
+      await getBucketData(bucketId as string, query as unknown as BucketDataQueryWithIdType);
+      cleanBucketData();
+    },
+    [bucketId, searchableColumns, getBucketData]
+  );
+
+  const isTableLoading = useMemo(
+    () => !(formattedColumns.length > 1 && nextbucketDataQuery?.bucketId === bucketId),
+    [formattedColumns, nextbucketDataQuery, bucketId]
+  );
+
+  if (formattedColumns.length <= 1) {
+    return <Loader/>
   }
 
   return (
     <BucketWithVisibleColumns
-      bucketId={bucketId}
+      bucketId={bucketId as string}
       formattedColumns={formattedColumns as ColumnType[]}
       bucketData={bucketData}
       handleScrollEnd={handleScrollEnd}
-      nextbucketDataQuery={nextbucketDataQuery}
+      bucketDataLoading={bucketDataLoading}
+      isTableLoading={isTableLoading}
+      handleSearch={handleSearch}
     />
   );
 }
@@ -69,7 +106,9 @@ type BucketWithVisibleColumnsProps = {
   formattedColumns: ColumnType[];
   bucketData: any;
   handleScrollEnd: () => void;
-  nextbucketDataQuery: any;
+  bucketDataLoading: boolean;
+  isTableLoading: boolean;
+  handleSearch: (search: string) => Promise<void>;
 };
 
 function BucketWithVisibleColumns({
@@ -77,12 +116,15 @@ function BucketWithVisibleColumns({
   formattedColumns,
   bucketData,
   handleScrollEnd,
-  nextbucketDataQuery
+  bucketDataLoading,
+  isTableLoading,
+  handleSearch
 }: BucketWithVisibleColumnsProps) {
   const defaultVisibleColumns = useMemo(
     () => Object.fromEntries(formattedColumns.map(col => [col.key, true])),
     []
   );
+  console.log(defaultVisibleColumns)
   const [visibleColumns, setVisibleColumns] = useLocalStorage<{[key: string]: boolean}>(
     `${bucketId}-visible-columns`,
     defaultVisibleColumns
@@ -119,15 +161,18 @@ function BucketWithVisibleColumns({
         columns={formattedColumns}
         visibleColumns={visibleColumns}
         toggleColumn={toggleColumn}
+        bucketId={bucketId as string}
+        onSearch={handleSearch}
+        searchLoading={bucketDataLoading && !isTableLoading}
       />
       <BucketTable
-        bucketId={bucketId}
+        bucketId={bucketId as string}
         columns={filteredColumns}
         data={bucketData?.data ?? []}
         onScrollEnd={handleScrollEnd}
         totalDataLength={bucketData?.meta?.total ?? 0}
         maxHeight="88vh"
-        loading={!(formattedColumns.length > 1 && nextbucketDataQuery?.bucketId === bucketId)}
+        loading={isTableLoading}
       />
     </div>
   );
