@@ -33,6 +33,7 @@ describe("Storage Browse Acceptance", () => {
     req = module.get(Request);
     await app.listen(req.socket);
 
+    // wait for indexes
     await new Promise((resolve, _) => setTimeout(resolve, 1000));
   }
 
