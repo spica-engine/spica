@@ -7,6 +7,7 @@ import {
   WithId
 } from "@spica-server/database";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {StoragePipelineBuilder} from "./storage-pipeline.builder";
 import {
   StorageOptions,
   StorageObject,
@@ -16,7 +17,7 @@ import {
   PaginatedStorageResponse
 } from "@spica-server/interface/storage";
 import {Strategy} from "./strategy/strategy";
-import {createStorageResourceFilter} from "./storage.resource-filter";
+
 import fs from "fs";
 
 @Injectable()
@@ -85,89 +86,33 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     }
   }
 
-  private createBrowseFilter(path: string): object {
-    const normalizedPath = path ? path.replace(/^\/+|\/+$/g, "") : "";
-
-    if (!normalizedPath) {
-      return {
-        name: {
-          $regex: "^[^/]+$"
-        }
-      };
-    }
-
-    const escapedPath = normalizedPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regexPattern = `^${escapedPath}/[^/]+$`;
-
-    return {
-      name: {
-        $regex: regexPattern
-      }
-    };
-  }
-
-  async browse<P extends boolean>(
+  async browse(
     resourceFilter: {include?: string[]; exclude?: string[]} | object,
     path: string,
     filter: object,
-    paginate: P,
     limit: number,
     skip: number = 0,
     sort?: any
-  ): Promise<P extends true ? PaginatedStorageResponse : StorageResponse[]> {
-    const convertedResourceFilter =
-      resourceFilter && ("include" in resourceFilter || "exclude" in resourceFilter)
-        ? createStorageResourceFilter(resourceFilter as {include?: string[]; exclude?: string[]})
-        : resourceFilter;
+  ): Promise<StorageResponse[]> {
+    const convertedResourceFilter = StoragePipelineBuilder.createResourceFilter(
+      resourceFilter as {include?: string[]; exclude?: string[]}
+    );
 
-    const browseFilter = this.createBrowseFilter(path);
+    const pathFilter = StoragePipelineBuilder.createPathFilter(path);
 
-    const combinedFilters: any[] = [];
-
-    if (Object.keys(browseFilter).length > 0) {
-      combinedFilters.push(browseFilter);
-    }
-
-    if (filter && Object.keys(filter).length > 0) {
-      combinedFilters.push(filter);
-    }
-
-    const finalFilter =
-      combinedFilters.length === 0
-        ? {}
-        : combinedFilters.length === 1
-          ? combinedFilters[0]
-          : {$and: combinedFilters};
-
-    let pipelineBuilder = await new PipelineBuilder()
-      .filterResources(convertedResourceFilter)
-      .filterByUserRequest(finalFilter);
+    const pipelineBuilder = (
+      await new PipelineBuilder()
+        .filterResources(convertedResourceFilter)
+        .attachToPipeline(true, {$match: pathFilter})
+        .filterByUserRequest(filter)
+    ).result();
 
     const seeking = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
 
-    const pipeline = (
-      await pipelineBuilder.paginate(paginate, seeking, this.estimatedDocumentCount())
-    ).result();
-
-    if (paginate) {
-      return this._coll
-        .aggregate<PaginatedStorageResponse>(pipeline)
-        .next()
-        .then(async r => {
-          if (!r.data.length) {
-            r.meta = {total: 0};
-          }
-          r.data = await this.putUrls(r.data);
-          return r;
-        }) as Promise<P extends true ? PaginatedStorageResponse : StorageResponse[]>;
-    }
-
     return this._coll
-      .aggregate<StorageResponse>([...pipeline, ...seeking])
+      .aggregate<StorageResponse>([...pipelineBuilder, ...seeking])
       .toArray()
-      .then(r => this.putUrls(r)) as Promise<
-      P extends true ? PaginatedStorageResponse : StorageResponse[]
-    >;
+      .then(r => this.putUrls(r));
   }
 
   async getAll<P extends boolean>(

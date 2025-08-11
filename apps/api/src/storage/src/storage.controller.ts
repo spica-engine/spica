@@ -73,12 +73,11 @@ export class StorageController {
     @ResourceFilter() resourceFilter: object,
     @Query("path") path: string,
     @Query("filter", JSONP) filter?: object,
-    @Query("paginate", BOOLEAN) paginate?: boolean,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: object
   ) {
-    return this.storage.browse(resourceFilter, path, filter, paginate, limit, skip, sort);
+    return this.storage.browse(resourceFilter, path, filter, limit, skip, sort);
   }
 
   /**
