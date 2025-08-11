@@ -1,0 +1,96 @@
+.formContainer {
+  width: 100%;
+  max-width: 170px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+}
+
+.formInputs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+  width: 100%;
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xs);
+    width: 100%;
+    label {
+      white-space: nowrap;
+      flex: 1;
+      font-size: var(--font-size-xs);
+    }
+  }
+
+  .countLimitInputContainer,
+  .limitExceedBehaviourInputContainer {
+    height: 20px !important;
+    border-radius: var(--border-radius-md);
+    border: var(--border-default);
+    background-color: var(--color-input-background);
+    width: 100% !important;
+    overflow: hidden;
+  }
+
+  .countLimitInput,
+  .limitExceedBehaviourInput {
+    height: 20px !important;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-md);
+    width: 100%;
+    border-radius: var(--border-radius-md);
+    background-color: var(--color-default);
+  }
+
+  .limitExceedBehaviourInput {
+    padding-left: 0;
+  }
+.limitExceedBehaviourInput  span {
+  width: 100% !important;
+  min-width: 100% !important;
+}
+
+}
+
+.applyButtonContainer {
+  display: flex;
+  justify-content: space-between;
+}
+
+.applyButton {
+  font-size: var(--font-size-md);
+  padding: var(--padding-sm) !important;
+  width: min-content !important;
+  min-width: min-content !important;
+  height: 26px;
+}
+
+.selectDropdown {
+  overflow: hidden !important;
+  width: 185px !important;
+}
+
+.selectOption {
+  padding: var(--padding-sm);
+  height: 20px !important;
+  white-space: nowrap;
+  font-size: var(--font-size-md);
+  width: 100% !important;
+}
+
+.selectOption:hover {
+  background-color: var(--color-soft);
+}
+
+.errorTextContainer {
+  position: relative;
+  width: 100%;
+}
+
+.errorText {
+  font-size: var(--font-size-xs) !important;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+}

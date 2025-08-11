@@ -17,7 +17,7 @@ const SEARCH_DEBOUNCE_TIME = 1000;
 const BucketActionBar = ({onSearch, bucket, searchLoading}: BucketActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
 
-  useEffect(() => setSearchValue(""), [bucket._id]);
+  useEffect(() => setSearchValue(""), [bucket?._id]);
 
   const debouncedSearch = useMemo(
     () =>

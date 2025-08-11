@@ -1,18 +1,10 @@
-import {
-  Button,
-  FlexElement,
-  FluidContainer,
-  Icon,
-  Popover,
-  Text,
-  useOnClickOutside,
-  Checkbox
-} from "oziko-ui-kit";
+import {Button, FlexElement, FluidContainer, Icon, Text, Checkbox, Popover} from "oziko-ui-kit";
 import {memo, useMemo, useRef, useState, type FC} from "react";
 import styles from "./BucketMorePopup.module.scss";
 import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType} from "src/services/bucketService";
-import BucketLimitationsModal from "../bucket-limitations-modal/BucketLimitationsModal";
+import BucketLimitationsForm from "../bucket-limitations-form/BucketLimitationsForm";
+import {useOnClickOutside} from "../../../hooks/useOnClickOutside";
 
 type TypeBucketMorePopup = {
   className?: string;
@@ -22,8 +14,8 @@ type TypeBucketMorePopup = {
 };
 
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
-  const [isLimitationLoading, setIsLimitationLoading] = useState(false);
-  const [isLimitationsModalOpen, setIsLimitationsModalOpen] = useState(false);
+  const [isLimitationsVisible, setIsLimitationsVisible] = useState(false);
+  const [limitationFieldsError, setLimitationFieldsError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
@@ -32,28 +24,30 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     refs: [containerRef, contentRef],
     onClickOutside: () => {
       setIsOpen(false);
+      setIsLimitationsVisible(false);
+      setLimitationFieldsError(null);
     }
   });
 
-  const {updateBucketLimitation, updateBucketLimitationFields} = useBucket();
+  const {
+    updateBucketLimitation,
+    updateBucketLimitationFields,
+    updateBucketLimitationFieldsError,
+    updateBucketLimitationFieldsLoading
+  } = useBucket();
   const isLimitationChecked = useMemo(() => Boolean(bucket?.documentSettings), [bucket]);
 
   const handleChangeLimitation = () => {
-    setIsLimitationLoading(true);
-    updateBucketLimitation(bucket).then(() => {
-      setIsLimitationLoading(false);
-    });
+    updateBucketLimitation(bucket);
   };
 
-  const handleConfigureLimitation = (
+  const handleConfigureLimitation = async (
     countLimit: number,
     limitExceedBehaviour: "prevent" | "remove"
   ) => {
-    setIsLimitationLoading(true);
-    updateBucketLimitationFields(bucket, countLimit, limitExceedBehaviour).then(() => {
-      setIsLimitationLoading(false);
-      setIsLimitationsModalOpen(false);
-    });
+    const result = await updateBucketLimitationFields(bucket, countLimit, limitExceedBehaviour);
+    if (!result) setLimitationFieldsError(updateBucketLimitationFieldsError);
+    else setLimitationFieldsError(null);
   };
 
   return (
@@ -86,16 +80,6 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                     <Icon name="security" />
                     <Text>Configure rules</Text>
                   </Button>
-                  {isLimitationChecked && !isLimitationLoading && (
-                    <Button
-                      variant="text"
-                      className={styles.limitationsPopupButton}
-                      onClick={() => setIsLimitationsModalOpen(true)}
-                    >
-                      <Icon name="lock" />
-                      <Text>Configure limitations</Text>
-                    </Button>
-                  )}
                 </FlexElement>
               )
             }}
@@ -111,10 +95,32 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                   <Checkbox label="History" />
                   <Checkbox
                     label="Limitation"
-                    disabled={isLimitationLoading}
+                    //disabled={isLimitationLoading}
                     checked={isLimitationChecked}
                     onChange={handleChangeLimitation}
                   />
+                  {isLimitationChecked && (
+                    <Button
+                      variant="text"
+                      className={styles.limitationsPopupButton}
+                      onClick={() => {
+                        if (isLimitationsVisible) setLimitationFieldsError(null)
+                        setIsLimitationsVisible(!isLimitationsVisible)
+                      }}
+                    >
+                      <Icon name="lock" />
+                      <Text>Configure limitations</Text>
+                    </Button>
+                  )}
+                  {isLimitationChecked && isLimitationsVisible && (
+                    <BucketLimitationsForm
+                      bucket={bucket}
+                      onSubmit={handleConfigureLimitation}
+                      className={styles.bucketLimitationsForm}
+                      loading={updateBucketLimitationFieldsLoading}
+                      error={limitationFieldsError}
+                    />
+                  )}
                   <Checkbox label="Read Only" />
                 </FlexElement>
               )
@@ -138,14 +144,6 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
           More
         </Button>
       </Popover>
-      {isLimitationsModalOpen && (
-        <BucketLimitationsModal
-          onClose={() => setIsLimitationsModalOpen(false)}
-          bucket={bucket}
-          onSubmit={handleConfigureLimitation}
-          loading={isLimitationLoading}
-        />
-      )}
     </div>
   );
 };

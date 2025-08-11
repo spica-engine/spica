@@ -110,7 +110,7 @@ export const useBucketService = () => {
     method: "put"
   });
 
-    const {request: bucketLimitationRequest} = useApi({
+    const {request: bucketLimitationRequest, loading: apiUpdateBucketLimitationFieldsLoading, error: apiUpdateBucketLimitationFieldsError} = useApi({
     endpoint: "",
     method: "put"
   });
@@ -190,5 +190,7 @@ export const useBucketService = () => {
     apiBuckets,
     apiBucketData,
     apiBucketDataLoading,
+    apiUpdateBucketLimitationFieldsLoading,
+    apiUpdateBucketLimitationFieldsError
   };
 };

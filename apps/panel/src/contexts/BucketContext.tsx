@@ -35,11 +35,13 @@ type BucketContextType = {
     bucket: BucketType,
     countLimit: number,
     limitExceedBehaviour: "prevent" | "remove"
-  ) => Promise<void>;
+  ) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataType | null;
   bucketDataLoading: boolean;
+  updateBucketLimitationFieldsLoading: boolean;
+  updateBucketLimitationFieldsError: string | null;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
 };
 
@@ -71,7 +73,9 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiUpdatebucketLimitiationFields,
     apiBuckets,
     apiBucketData,
-    apiBucketDataLoading
+    apiBucketDataLoading,
+    apiUpdateBucketLimitationFieldsLoading,
+    apiUpdateBucketLimitationFieldsError
   } = useBucketService();
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
@@ -282,6 +286,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketData,
       bucketDataLoading: apiBucketDataLoading,
       bucketCategories,
+      updateBucketLimitationFieldsLoading: apiUpdateBucketLimitationFieldsLoading,
+      updateBucketLimitationFieldsError: apiUpdateBucketLimitationFieldsError,
       nextbucketDataQuery
     }),
     [
@@ -298,6 +304,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketData,
       apiBucketDataLoading,
       bucketCategories,
+      apiUpdateBucketLimitationFieldsLoading,
+      apiUpdateBucketLimitationFieldsError,
       nextbucketDataQuery
     ]
   );

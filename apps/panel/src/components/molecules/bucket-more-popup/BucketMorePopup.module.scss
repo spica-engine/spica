@@ -45,8 +45,33 @@
     width: 100% !important;
     > div {
       width: 100% !important;
-      height: 20px !important;
       gap: var(--gap-md) !important;
+    }
+    > div:not(.bucketLimitationsForm) {
+      height: 20px !important;
+    }
+
+    > button {
+      width: 100% !important;
+      min-width: 100% !important;
+      max-width: 100% !important;
+      justify-content: start;
+      padding-left: 0;
+      height: 20px;
+      > div > div {
+        gap: var(--gap-md) !important;
+      }
+      height: 20px;
+    }
+
+    > button svg,
+    > button span {
+      margin-left: -1px;
+    }
+
+    > button:hover {
+      background-color: transparent !important;
     }
   }
 }
+
