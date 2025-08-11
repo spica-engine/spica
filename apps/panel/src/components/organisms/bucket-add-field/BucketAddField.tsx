@@ -16,11 +16,10 @@ import styles from "./BucketAddField.module.scss";
 type TypeBucketAddField = {
   name: string;
   type: TypeInputType;
-  isOpen?: boolean;
   modalProps?: TypeModal;
 };
 
-const BucketAddField: FC<TypeBucketAddField> = ({name = "", type, isOpen, modalProps}) => {
+const BucketAddField: FC<TypeBucketAddField> = ({name = "", type, modalProps}) => {
   const isInnerFieldsType = ["object", "array"].includes(type);
   const initialTab = isInnerFieldsType ? 0 : 1;
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -100,7 +99,7 @@ const BucketAddField: FC<TypeBucketAddField> = ({name = "", type, isOpen, modalP
   ];
 
   return (
-    <Modal overflow={true} showCloseButton={false} {...modalProps}>
+    <Modal isOpen overflow={true} showCloseButton={false} {...modalProps}>
       <Modal.Body className={styles.modalBody}>
         <FlexElement direction="vertical" gap={10} className={styles.contentContainer}>
           {inputRepresenter}

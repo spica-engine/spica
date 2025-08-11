@@ -1,13 +1,15 @@
-import {memo, type FC} from "react";
+import {memo, useState, type ReactNode} from "react";
 import {
   FlexElement,
   ListItem,
   Icon,
-  type TypeFlexElement,
   type IconName,
-  type TypeInputType
+  type TypeInputType,
+  Popover,
+  type TypeModal
 } from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
+import BucketAddField from "../../../components/organisms/bucket-add-field/BucketAddField";
 
 const fieldOptions: {icon: IconName; text: string; type: TypeInputType}[] = [
   {icon: "formatQuoteClose", text: "String", type: "string"},
@@ -23,26 +25,40 @@ const fieldOptions: {icon: IconName; text: string; type: TypeInputType}[] = [
   {icon: "formatAlignCenter", text: "RichText", type: "richtext"}
 ];
 
-const BucketFieldPopup: FC<TypeFlexElement> = () => {
-  const handleClick = (type: TypeInputType) => {
-    return type;
-  };
+const BucketFieldPopup = ({children}: {children: ReactNode}) => {
+  const [selectedType, setSelectedType] = useState<TypeInputType | null>(null);
 
   return (
-    <FlexElement dimensionX={200} direction="vertical" className={styles.container}>
-      {fieldOptions.map(({icon, text, type}) => (
-        <ListItem
-          key={text}
-          label={text}
-          dimensionX="fill"
-          dimensionY="hug"
-          gap={10}
-          prefix={{children: <Icon name={icon} />}}
-          onClick={() => handleClick(type)}
-          className={styles.item}
+    <>
+      <Popover
+        open
+        content={
+          <FlexElement dimensionX={200} direction="vertical" className={styles.container}>
+            {fieldOptions.map(({icon, text, type}) => (
+              <ListItem
+                key={text}
+                label={text}
+                dimensionX="fill"
+                dimensionY="hug"
+                gap={10}
+                prefix={{children: <Icon name={icon} />}}
+                onClick={() => setSelectedType(type)}
+                className={styles.item}
+              />
+            ))}
+          </FlexElement>
+        }
+      >
+        {children}
+      </Popover>
+      {selectedType && (
+        <BucketAddField
+          name="name"
+          type={selectedType}
+          modalProps={{onClose: () => setSelectedType(null)} as TypeModal}
         />
-      ))}
-    </FlexElement>
+      )}
+    </>
   );
 };
 
