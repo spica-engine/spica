@@ -399,19 +399,18 @@ type RowsProps = {
 };
 
 const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsProps) => {
-  const rowCacheRef = useRef<Map<string, {element: JSX.Element; lastFocusedCell: string | null}>>(
-    new Map()
-  );
+  const rowCacheRef = useRef<
+    Map<string, {element: JSX.Element; lastFocusedCell: string | null; rowContentString: string}>
+  >(new Map());
   const rows: JSX.Element[] = [];
 
   for (let index = 0; index < data.length; index++) {
     const row = data[index];
     // If a cell is changed, we need to re-render the row
-    const rowCellValues = Object.values(row)
-      .map(cell => extractTextFromReactNode(cell.value))
+    const rowContentString = formattedColumns
+      .map(column => extractTextFromReactNode(row[column.key]?.value))
       .join("-");
-    const rowId = row[Object.keys(row)[0]].id + "-" + rowCellValues;
-
+    const rowId = row[Object.keys(row)[0]].id;
     const missingCellData = formattedColumns.some(column => !row[column.key]);
     if (missingCellData) continue;
 
@@ -420,7 +419,12 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
 
     const isFocusedInThisRow = focusedCell?.row === index;
 
-    if (cached && !isFocusedInThisRow && cached.lastFocusedCell === focusedKey) {
+    if (
+      cached &&
+      cached.rowContentString === rowContentString &&
+      !isFocusedInThisRow &&
+      cached.lastFocusedCell === focusedKey
+    ) {
       rows.push(cached.element);
       continue;
     }
@@ -442,15 +446,19 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
     });
 
     const rowElement = <tr key={rowId}>{cells}</tr>;
-    rowCacheRef.current.set(rowId, {element: rowElement, lastFocusedCell: focusedKey});
+    rowCacheRef.current.set(rowId, {
+      rowContentString,
+      element: rowElement,
+      lastFocusedCell: focusedKey
+    });
     rows.push(rowElement);
   }
 
   useEffect(() => {
-    const currentRowIds = new Set(data.map(row => row[Object.keys(row)[0]].id));
-    for (const cachedKey of rowCacheRef.current.keys()) {
-      if (!currentRowIds.has(cachedKey)) {
-        rowCacheRef.current.delete(cachedKey);
+    const currentBaseIds = new Set(data.map(row => row[Object.keys(row)[0]].id));
+    for (const cachedBaseId of rowCacheRef.current.keys()) {
+      if (!currentBaseIds.has(cachedBaseId)) {
+        rowCacheRef.current.delete(cachedBaseId);
       }
     }
   }, [data]);
@@ -463,7 +471,10 @@ type TypeCell = React.HTMLAttributes<HTMLDivElement> & {
   leftOffset?: number;
 };
 
+//let c = 0
 const Cell = memo(({children, focused, leftOffset, ...props}: TypeCell) => {
+  //c++;
+  //console.log(c)
   return (
     <td
       {...props}
