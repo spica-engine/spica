@@ -18,7 +18,8 @@ import {
 import type {AxiosRequestHeaders} from "axios";
 
 type BucketContextType = {
-  getBucketData: (bucketId: string, query?: BucketDataQueryType) => Promise<BucketDataType>;
+  getBucketData: (bucketId: string, query?: BucketDataQueryWithIdType) => Promise<BucketDataType>;
+  cleanBucketData: () => void;
   getBuckets: (params?: {
     body?: any;
     headers?: AxiosRequestHeaders;
@@ -33,6 +34,7 @@ type BucketContextType = {
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataType | null;
+  bucketDataLoading: boolean;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
 };
 
@@ -63,7 +65,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiDeleteBucket,
     apiCreateBucket,
     apiBuckets,
-    apiBucketData
+    apiBucketData,
+    apiBucketDataLoading
   } = useBucketService();
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
@@ -162,7 +165,15 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   );
 
   const getBucketData = useCallback(
-    (bucketId: string, query?: BucketDataQueryType) => {
+    async (bucketId: string, query?: BucketDataQueryWithIdType) => {
+      const {bucketId: _, ...prevQueryNoBucket} = lastUsedBucketDataQuery || {};
+      const {bucketId: __, ...newQueryNoBucket} = query || {bucketId: ""};
+
+      const previousQueryEmpty = Object.keys(prevQueryNoBucket).length <= 1;
+      const newQueryEmpty = Object.keys(newQueryNoBucket).length <= 1;
+      const queriesEqual = JSON.stringify(prevQueryNoBucket) === JSON.stringify(newQueryNoBucket);
+      if (queriesEqual && !previousQueryEmpty && !newQueryEmpty) return;
+
       const defaultParams: Omit<BucketDataQueryType, "sort"> & {sort: string} = {
         paginate: true,
         relation: true,
@@ -170,11 +181,11 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
         sort: JSON.stringify({_id: -1})
       };
 
-      let params = query
+      let params = newQueryNoBucket
         ? {
             ...defaultParams,
-            ...query,
-            sort: query.sort ? JSON.stringify(query.sort) : defaultParams.sort
+            ...newQueryNoBucket,
+            sort: newQueryNoBucket.sort ? JSON.stringify(newQueryNoBucket.sort) : defaultParams.sort
           }
         : {...defaultParams};
 
@@ -190,13 +201,19 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       return apiGetBucketData(bucketId, queryString).then(result => {
         if (!result) return;
         setLastUsedBucketDataQuery(
-          query ? {...query, bucketId} : {...defaultParams, sort: {_id: -1}, bucketId}
+          newQueryNoBucket
+            ? {...newQueryNoBucket, bucketId}
+            : {...defaultParams, sort: {_id: -1}, bucketId}
         );
         return result;
       });
     },
     [apiGetBucketData]
   );
+
+  const cleanBucketData = useCallback(() => {
+    setBucketData({data: []} as unknown as BucketDataWithIdType);
+  }, []);
 
   const createBucket = useCallback(
     async (title: string) => {
@@ -212,6 +229,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   const contextValue = useMemo(
     () => ({
       getBucketData,
+      cleanBucketData,
       getBuckets: apiGetBuckets,
       changeBucketCategory,
       updateBucketOrderLocally,
@@ -221,6 +239,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       createBucket,
       buckets,
       bucketData,
+      bucketDataLoading: apiBucketDataLoading,
       bucketCategories,
       nextbucketDataQuery
     }),
@@ -235,6 +254,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       createBucket,
       buckets,
       bucketData,
+      apiBucketDataLoading,
       bucketCategories,
       nextbucketDataQuery
     ]
