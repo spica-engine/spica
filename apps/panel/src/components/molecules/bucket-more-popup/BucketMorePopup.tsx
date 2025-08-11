@@ -24,7 +24,7 @@ type TypeBucketMorePopup = {
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isHistoryConfirmationOpen, setIsHistoryConfirmationOpen] = useState(false);
-  const [isHistoryChangeLoading, setIsHistoryChangeLoading] = useState(false);
+  const [deleteHistoryError, setDeleteHistoryError] = useState<null | string>(null);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
 
@@ -35,22 +35,37 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     }
   });
 
-  const {updateBucketHistory, deleteBucketHistory} = useBucket();
+  const {
+    updateBucketHistory,
+    deleteBucketHistory,
+    deleteBucketHistoryLoading,
+    deleteBucketHistoryError
+  } = useBucket();
+
   const isHistoryChecked = useMemo(() => bucket?.history, [bucket]);
   const handleChangeHistory = () => {
-    setIsHistoryChangeLoading(true);
-    updateBucketHistory(bucket).then(() => {
-      setIsHistoryChangeLoading(false);
-    });
+    updateBucketHistory(bucket);
   };
 
-  const handleDeleteHistory = () => {
-    setIsHistoryChangeLoading(true);
-    deleteBucketHistory(bucket).then(() => {
-      setIsHistoryChangeLoading(false);
-      setIsHistoryConfirmationOpen(false);
-    });
+  const handleDeleteHistory = async () => {
+    try {
+      await deleteBucketHistory(bucket);
+      if (deleteBucketHistoryError) {
+        setDeleteHistoryError(deleteBucketHistoryError);
+        return;
+      }
+      handleCancelHistoryConfirmation();
+    } catch (err) {
+      console.error(err);
+    }
   };
+
+  const handleCancelHistoryConfirmation = () => {
+    setDeleteHistoryError(null);
+    setIsHistoryConfirmationOpen(false);
+  };
+
+  console.log(deleteBucketHistoryError);
 
   return (
     <div ref={containerRef} className={`${styles.container} ${className || ""}`}>
@@ -82,16 +97,6 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                     <Icon name="security" />
                     <Text>Configure rules</Text>
                   </Button>
-                  {isHistoryChecked && !isHistoryChangeLoading && (
-                    <Button
-                      variant="text"
-                      onClick={() => setIsHistoryConfirmationOpen(true)}
-                      className={styles.historyButton}
-                    >
-                      <Icon name="delete" />
-                      <Text>Remove History</Text>
-                    </Button>
-                  )}
                 </FlexElement>
               )
             }}
@@ -108,8 +113,17 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                     label="History"
                     checked={isHistoryChecked}
                     onChange={handleChangeHistory}
-                    disabled={isHistoryChangeLoading}
                   />
+                  {isHistoryChecked && (
+                    <Button
+                      variant="text"
+                      onClick={() => setIsHistoryConfirmationOpen(true)}
+                      className={styles.historyButton}
+                    >
+                      <Icon name="delete" />
+                      <Text>Remove History</Text>
+                    </Button>
+                  )}
                   <Checkbox label="Limitation" />
                   <Checkbox label="Read Only" />
                 </FlexElement>
@@ -151,9 +165,10 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
             </>
           }
           showInput={false}
-          loading={isHistoryChangeLoading}
+          loading={deleteBucketHistoryLoading}
           onConfirm={handleDeleteHistory}
-          onCancel={() => setIsHistoryConfirmationOpen(false)}
+          onCancel={handleCancelHistoryConfirmation}
+          error={deleteHistoryError}
         />
       )}
     </div>

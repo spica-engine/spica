@@ -105,6 +105,11 @@ export const useBucketService = () => {
     method: "delete"
   });
 
+  const {request: deleteHistoty, loading: apiDeleteBucketHistoryLoading, error: apiDeleteBucketHistoryError} = useApi({
+    endpoint: "",
+    method: "delete"
+  });
+
   const {request: putRequest} = useApi({
     endpoint: "",
     method: "put"
@@ -167,10 +172,10 @@ export const useBucketService = () => {
   }, [patchRequest]);
 
   const apiDeleteBucketHistory = useCallback(async (bucket: BucketType) => {
-    return await deleteRequest({
+    return await deleteHistoty({
       endpoint: `/api/bucket/${bucket._id}/history`
     });
-  }, [deleteRequest]);
+  }, [deleteHistoty]);
 
   return {
     apiGetBucketData,
@@ -184,5 +189,7 @@ export const useBucketService = () => {
     apiBuckets,
     apiBucketData,
     apiBucketDataLoading,
+    apiDeleteBucketHistoryLoading,
+    apiDeleteBucketHistoryError,
   };
 };

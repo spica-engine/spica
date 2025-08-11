@@ -36,6 +36,8 @@ type BucketContextType = {
   bucketCategories: string[];
   bucketData: BucketDataType | null;
   bucketDataLoading: boolean;
+  deleteBucketHistoryLoading: boolean;
+  deleteBucketHistoryError: string | null;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
 };
 
@@ -68,7 +70,9 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiDeleteBucketHistory,
     apiBuckets,
     apiBucketData,
-    apiBucketDataLoading
+    apiBucketDataLoading,
+    apiDeleteBucketHistoryLoading,
+    apiDeleteBucketHistoryError,
   } = useBucketService();
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
@@ -248,6 +252,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketData,
       bucketDataLoading: apiBucketDataLoading,
       bucketCategories,
+      deleteBucketHistoryLoading: apiDeleteBucketHistoryLoading,
+      deleteBucketHistoryError: apiDeleteBucketHistoryError,
       nextbucketDataQuery
     }),
     [
@@ -264,6 +270,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketData,
       apiBucketDataLoading,
       bucketCategories,
+      apiDeleteBucketHistoryLoading,
+      apiDeleteBucketHistoryError,
       nextbucketDataQuery
     ]
   );
