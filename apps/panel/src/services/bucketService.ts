@@ -91,7 +91,7 @@ export const useBucketService = () => {
     method: "get"
   });
 
-  const {request: fetchBucketData, data: apiBucketData} = useApi<BucketDataType>({
+  const {request: fetchBucketData, data: apiBucketData, loading: apiBucketDataLoading} = useApi<BucketDataType>({
     endpoint: "",
     method: "get"
   });
@@ -187,5 +187,6 @@ export const useBucketService = () => {
     apiBucketData,
     apiUpdateBucketRuleLoading,
     apiUpdateBucketRuleError,
+    apiBucketDataLoading,
   };
 };
