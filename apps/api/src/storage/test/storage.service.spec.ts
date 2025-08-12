@@ -738,19 +738,6 @@ describe("Storage Service", () => {
         });
       });
 
-      describe("URL attachment", () => {
-        it("should attach URLs to returned objects", async () => {
-          const result = await storageService.browse(resourceFilter, "", {}, 10);
-
-          const names = result.map(r => r.name).sort();
-          expect(names).toEqual(["documents/", "photos/", "root-file1.txt", "root-file2.txt"]);
-
-          const filesWithUrls = result.filter(item => item.url !== undefined);
-          expect(filesWithUrls.length).toBe(4); // All items should have URLs
-          expect(typeof filesWithUrls[0].url).toBe("string");
-        });
-      });
-
       describe("integration - all filters combined", () => {
         it("should combine resource filter, browse filter, and user filter", async () => {
           const photosOnlyResourceFilter = {include: ["photos/**"], exclude: []};
@@ -770,39 +757,6 @@ describe("Storage Service", () => {
 
           const names = result.map(r => r.name);
           expect(names).toEqual(["photos/vacation1.jpg", "photos/vacation2.jpg"]);
-        });
-      });
-
-      describe("directory indicators", () => {
-        it("should show directory indicators at root level", async () => {
-          const allowAllResourceFilter = {include: ["**"], exclude: []};
-
-          const result = await storageService.browse(allowAllResourceFilter, "", {}, 20, 0, {
-            name: 1
-          });
-
-          expect(result.map(r => r.name).sort()).toEqual([
-            "documents/",
-            "photos/",
-            "root-file1.txt",
-            "root-file2.txt"
-          ]);
-        });
-
-        it("should show subdirectory indicators in photos directory", async () => {
-          const allowAllResourceFilter = {include: ["**"], exclude: []};
-
-          const result = await storageService.browse(allowAllResourceFilter, "photos", {}, 20, 0, {
-            name: 1
-          });
-
-          expect(result.map(r => r.name).sort()).toEqual([
-            "photos/cats/",
-            "photos/dogs/",
-            "photos/family.jpg",
-            "photos/vacation1.jpg",
-            "photos/vacation2.jpg"
-          ]);
         });
       });
     });

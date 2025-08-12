@@ -30,13 +30,13 @@ export class StoragePipelineBuilder extends PipelineBuilder {
 
   private static createPatternCondition(pattern: string, isExclude: boolean): object | null {
     const patternType = StoragePipelineBuilder.getPatternType(pattern);
-    const baseCondition = StoragePipelineBuilder.buildBaseCondition(pattern, patternType);
-    if (!baseCondition) {
+    const includeCondition = StoragePipelineBuilder.includeCondition(pattern, patternType);
+    if (!includeCondition) {
       return null;
     }
     return isExclude
-      ? StoragePipelineBuilder.negateCondition(baseCondition, patternType)
-      : baseCondition;
+      ? StoragePipelineBuilder.excludeCondition(includeCondition, patternType)
+      : includeCondition;
   }
 
   private static getPatternType(
@@ -49,17 +49,13 @@ export class StoragePipelineBuilder extends PipelineBuilder {
     return "exact";
   }
 
-  private static buildBaseCondition(pattern: string, patternType: string): object | null {
+  private static includeCondition(pattern: string, patternType: string): object | null {
     switch (patternType) {
       case "wildcard":
         return {
-          $or: [
-            {name: {$not: {$regex: "/"}}}, // Files without any slashes
-            {name: {$regex: "^[^/]+/$"}} // Folders (something ending with / but no slashes before)
-          ]
+          $or: [{name: {$not: {$regex: "/"}}}, {name: {$regex: "^[^/]+/$"}}]
         };
       case "all_files":
-        // "**" should match all files (including nested)
         return {}; // Match everything
       case "single_level": {
         const singleLevelBasePath = pattern.slice(0, -2); // Remove "/*"
@@ -98,60 +94,43 @@ export class StoragePipelineBuilder extends PipelineBuilder {
     }
   }
 
-  private static negateCondition(condition: any, patternType: string): object {
-    if (patternType === "wildcard") {
-      // Negate wildcard: exclude root-level files and folders
-      return {
-        $and: [
-          {name: {$regex: "/"}}, // Must contain slash
-          {name: {$not: {$regex: "^[^/]+/$"}}} // But not root-level folders
-        ]
-      };
+  private static excludeCondition(condition: any, patternType: string): object {
+    switch (patternType) {
+      case "wildcard":
+        return {
+          $and: [{name: {$regex: "/"}}, {name: {$not: {$regex: "^[^/]+/$"}}}]
+        };
+      case "all_files":
+        return {name: {$exists: false}};
+      default:
+        if (condition.name) {
+          if (condition.name.$regex) {
+            return {name: {$not: {$regex: condition.name.$regex}}};
+          }
+          if (condition.name.$not) {
+            return {name: {$regex: "/"}};
+          }
+          return {name: {$ne: condition.name}};
+        }
+        if (condition.$or) {
+          return {$nor: [condition]};
+        }
+        return condition;
     }
-    if (patternType === "all_files") {
-      return {name: {$exists: false}};
-    }
-    if (condition.name) {
-      if (condition.name.$regex) {
-        return {name: {$not: {$regex: condition.name.$regex}}};
-      } else if (condition.name.$not) {
-        return {name: {$regex: "/"}};
-      } else if (condition.$or) {
-        // For complex $or conditions, negate the entire thing
-        return {$nor: [condition]};
-      } else {
-        return {name: {$ne: condition.name}};
-      }
-    }
-    if (condition.$or) {
-      // For $or conditions (like all_levels pattern), use $nor to negate
-      return {$nor: [condition]};
-    }
-    return condition;
   }
 
   private static buildFinalQuery(conditions: any[]): object {
-    if (conditions.length === 0) {
+    if (!conditions || conditions.length === 0) {
       return {$match: {}};
-    } else if (conditions.length === 1) {
-      return {$match: conditions[0]};
-    } else {
-      return {$match: {$and: conditions}};
     }
+    if (conditions.length === 1) {
+      return {$match: conditions[0]};
+    }
+    return {$match: {$and: conditions}};
   }
 
   static escapeRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
-
-  static sortCombinedResults(combined: any[], sort?: any): any[] {
-    if (sort && sort.name) {
-      combined.sort((a, b) => {
-        const direction = sort.name === 1 ? 1 : -1;
-        return a.name.localeCompare(b.name) * direction;
-      });
-    }
-    return combined;
   }
 
   static createPathFilter(path: string): any {
