@@ -38,7 +38,6 @@ export default function Bucket() {
   const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
 
   const formattedColumns: ColumnType[] = useMemo(() => {
-    const bucket = buckets?.find(i => i._id === bucketId);
     const columns = Object.values(bucket?.properties ?? {});
     return [
       {
@@ -58,7 +57,7 @@ export default function Bucket() {
         showDropdownIcon: true
       }))
     ] as ColumnType[];
-  }, [buckets, bucketId]);
+  }, [bucket]);
 
   const handleScrollEnd = useCallback(() => {
     if (!bucketId || !nextbucketDataQuery) return;

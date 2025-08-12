@@ -50,6 +50,16 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     else setLimitationFieldsError(null);
   };
 
+  const handleOpen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // If a checkbox gets clicked, and the popover is closed, the isOpen stays true for some reason and the popover doesn't open
+    // This is a workaround, how popover open state is handled needs to be rethinked
+    if (isOpen) {
+      setIsOpen(false);
+      setTimeout(() => setIsOpen(true), 0);
+    } else setIsOpen(true);
+  };
+
   return (
     <div ref={containerRef} className={`${styles.container} ${className || ""}`}>
       <Popover
@@ -104,8 +114,8 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                       variant="text"
                       className={styles.limitationsPopupButton}
                       onClick={() => {
-                        if (isLimitationsVisible) setLimitationFieldsError(null)
-                        setIsLimitationsVisible(!isLimitationsVisible)
+                        if (isLimitationsVisible) setLimitationFieldsError(null);
+                        setIsLimitationsVisible(!isLimitationsVisible);
                       }}
                     >
                       <Icon name="lock" />
@@ -128,18 +138,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
           />
         }
       >
-        <Button
-          variant="text"
-          onClick={e => {
-            e.stopPropagation();
-            // If a checkbox gets clicked, and the popover is closed, the isOpen stays true for some reason and the popover doesn't open
-            // This is a workaround, how popover open state is handled needs to be rethinked
-            if (isOpen) {
-              setIsOpen(false);
-              setTimeout(() => setIsOpen(true), 0);
-            } else setIsOpen(true);
-          }}
-        >
+        <Button variant="text" onClick={handleOpen}>
           <Icon name="dotsVertical" />
           More
         </Button>

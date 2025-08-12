@@ -1,4 +1,13 @@
-import {FluidContainer, Icon, Input, FlexElement, Button, Text, Select} from "oziko-ui-kit";
+import {
+  FluidContainer,
+  Icon,
+  Input,
+  FlexElement,
+  Button,
+  Text,
+  Select,
+  type TypeValue
+} from "oziko-ui-kit";
 import styles from "./BucketLimitiationsForm.module.scss";
 import type {BucketType} from "src/services/bucketService";
 import {useState} from "react";
@@ -16,7 +25,7 @@ const BucketLimitationsForm = ({
   loading,
   bucket,
   className,
-  error,
+  error
 }: BucketLimitationsFormProps) => {
   const [values, setValues] = useState({
     countLimit: bucket.documentSettings.countLimit,
@@ -31,6 +40,12 @@ const BucketLimitationsForm = ({
     {label: "Do not insert", value: "prevent"},
     {label: "Insert but delete the oldest", value: "remove"}
   ];
+
+  const handleCountLimitChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setValues({...values, countLimit: e.target.value});
+
+  const handleLimitExceedBehaviourChange = (val: TypeValue) =>
+    setValues({...values, limitExceedBehaviour: val});
 
   return (
     <FluidContainer
@@ -47,7 +62,7 @@ const BucketLimitationsForm = ({
                   <Icon name="numericBox" size="md" />
                   <Input
                     className={styles.countLimitInput}
-                    onChange={e => setValues({...values, countLimit: e.target.value})}
+                    onChange={handleCountLimitChange}
                     placeholder="Maximum number of documents"
                     value={values.countLimit}
                   />
@@ -64,16 +79,26 @@ const BucketLimitationsForm = ({
                     options={limitExceedBehaviourOptions}
                     optionProps={{className: styles.selectOption}}
                     popupClassName={styles.selectDropdown}
-                    onChange={val => setValues({...values, limitExceedBehaviour: val})}
+                    onChange={handleLimitExceedBehaviourChange}
                   />
                 </FlexElement>
               </div>
             </div>
             <div className={styles.applyButtonContainer}>
               <div className={styles.errorTextContainer}>
-              {error && <Text className={styles.errorText} variant="danger">{error}</Text>}
+                {error && (
+                  <Text className={styles.errorText} variant="danger">
+                    {error}
+                  </Text>
+                )}
               </div>
-              <Button variant="text" className={styles.applyButton} disabled={loading} loading={loading} onClick={handleSubmit}>
+              <Button
+                variant="text"
+                className={styles.applyButton}
+                disabled={loading}
+                loading={loading}
+                onClick={handleSubmit}
+              >
                 <Icon name="filter" size="sm" />
                 Apply
               </Button>
