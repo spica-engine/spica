@@ -1,21 +1,21 @@
 import {Button, FlexElement, FluidContainer, Icon} from "oziko-ui-kit";
-import React, {memo, useState, type FC} from "react";
+import React, {memo, useMemo, useState, type FC} from "react";
 import styles from "./Toolbar.module.scss";
-import { useLocation } from "react-router-dom";
+import {useLocation} from "react-router-dom";
 
-type TypeToolbar = {
-  bucketId?: string;
-  token: string;
-  name: string;
-  onDrawerOpen?: () => void;
-};
+type TypeToolbar = {bucketId?: string; token: string; name: string; onDrawerOpen?: () => void};
 
 const Toolbar: FC<TypeToolbar> = ({bucketId, token, name, onDrawerOpen}) => {
   const [copied, setCopied] = useState(false);
+  const location = useLocation();
+  const textToCopy = useMemo(() => {
+    const isOnIdentity = location.pathname === "/passport/identity";
+    return isOnIdentity ? token : bucketId;
+  }, [location, token, bucketId]);
 
   const handleCopy = () => {
     navigator.clipboard
-      .writeText(bucketId as string)
+      .writeText(textToCopy as string)
       .then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1000);
@@ -24,9 +24,6 @@ const Toolbar: FC<TypeToolbar> = ({bucketId, token, name, onDrawerOpen}) => {
         console.error("Failed to copy token:", err);
       });
   };
-
-  const location = useLocation();
-  const isOnIdentity = location.pathname === "/passport/identity";
 
   return (
     <FluidContainer
@@ -43,9 +40,9 @@ const Toolbar: FC<TypeToolbar> = ({bucketId, token, name, onDrawerOpen}) => {
             >
               <Icon name="sort" />
             </Button>
-            {(bucketId || isOnIdentity) && (
+            {textToCopy && (
               <>
-                <span className={styles.text}>{isOnIdentity ? token : bucketId}</span>
+                <span className={styles.text}>{textToCopy}</span>
                 <Button
                   variant="icon"
                   shape="circle"
