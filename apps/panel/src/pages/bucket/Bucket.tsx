@@ -19,6 +19,31 @@ const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
     })
   }) as const;
 
+function smoothScrollToTop(el: HTMLElement): Promise<void> {
+  return new Promise(resolve => {
+    if (!el) {
+      resolve();
+      return;
+    }
+
+    if (el.scrollTop === 0) {
+      resolve();
+      return;
+    }
+
+    const onScroll = () => {
+      if (el.scrollTop === 0) {
+        el.removeEventListener("scroll", onScroll);
+        resolve();
+      }
+    };
+
+    el.addEventListener("scroll", onScroll);
+
+    el.scrollTo({top: 0, behavior: "smooth"});
+  });
+}
+
 export default function Bucket() {
   const [refreshLoading, setRefreshLoading] = useState(false);
   const {bucketId} = useParams<{bucketId: string}>();
@@ -72,12 +97,11 @@ export default function Bucket() {
 
   const tableRef = useRef<HTMLElement | null>(null);
 
-  const handleRefresh = useCallback(() => {
-    if (tableRef.current?.scrollTop) tableRef.current.scrollTop = 0;
+  const handleRefresh = useCallback(async () => {
+    if (tableRef.current) await smoothScrollToTop(tableRef.current);
     setRefreshLoading(true);
-    refreshBucketData().then(() => {
-      setRefreshLoading(false);
-    });
+    await refreshBucketData();
+    setRefreshLoading(false);
   }, [bucketId, refreshBucketData]);
 
   return (
