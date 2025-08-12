@@ -41,8 +41,9 @@ export class StoragePipelineBuilder extends PipelineBuilder {
 
   private static getPatternType(
     pattern: string
-  ): "wildcard" | "single_level" | "all_levels" | "exact" {
+  ): "wildcard" | "all_files" | "single_level" | "all_levels" | "exact" {
     if (pattern === "*") return "wildcard";
+    if (pattern === "**") return "all_files";
     if (pattern.endsWith("/**")) return "all_levels";
     if (pattern.endsWith("/*")) return "single_level";
     return "exact";
@@ -51,6 +52,10 @@ export class StoragePipelineBuilder extends PipelineBuilder {
   private static buildBaseCondition(pattern: string, patternType: string): object | null {
     switch (patternType) {
       case "wildcard":
+        // "*" should match only root-level files (no "/" in name)
+        return {name: {$not: {$regex: "/"}}};
+      case "all_files":
+        // "**" should match all files (including nested)
         return {}; // Match everything
       case "single_level": {
         const singleLevelBasePath = pattern.slice(0, -2); // Remove "/*"
@@ -73,9 +78,14 @@ export class StoragePipelineBuilder extends PipelineBuilder {
     if (patternType === "wildcard") {
       return {name: {$exists: false}};
     }
+    if (patternType === "all_files") {
+      return {name: {$exists: false}};
+    }
     if (condition.name) {
       if (condition.name.$regex) {
         return {name: {$not: {$regex: condition.name.$regex}}};
+      } else if (condition.name.$not) {
+        return {name: {$regex: "/"}};
       } else {
         return {name: {$ne: condition.name}};
       }

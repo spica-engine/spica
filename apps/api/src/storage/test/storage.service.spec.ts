@@ -489,8 +489,17 @@ describe("Storage Service", () => {
         it("should work with wildcard * to match everything", async () => {
           const wildcardResourceFilter = {include: ["*"], exclude: []};
 
-          // At root level, should only see root files (due to path-based browsing)
           const result = await storageService.browse(wildcardResourceFilter, "", {}, 20, 0, {
+            name: 1
+          });
+          const names = result.map(r => r.name).sort();
+          expect(names).toEqual(["root-file1.txt", "root-file2.txt"]);
+        });
+
+        it("should work with ** to match all files (including nested)", async () => {
+          const allFilesResourceFilter = {include: ["**"], exclude: []};
+
+          const result = await storageService.browse(allFilesResourceFilter, "", {}, 20, 0, {
             name: 1
           });
           const names = result.map(r => r.name).sort();
@@ -536,6 +545,20 @@ describe("Storage Service", () => {
           expect(names).toEqual(["documents/draft.txt", "documents/report.pdf"]);
         });
 
+        it("shouldn't get docs from documents since policy is restrictive", async () => {
+          const documentsOnlyResourceFilter = {include: ["*"], exclude: []};
+          const result = await storageService.browse(
+            documentsOnlyResourceFilter,
+            "documents",
+            {},
+            10,
+            0,
+            {name: 1}
+          );
+          const names = result.map(r => r.name);
+          expect(names).toEqual([]);
+        });
+
         it("should work with exclude pattern", async () => {
           const noPhotosResourceFilter = {include: ["*"], exclude: ["photos/**"]};
 
@@ -545,7 +568,7 @@ describe("Storage Service", () => {
         });
 
         it("should respect path-based directory browsing", async () => {
-          const allowAllResourceFilter = {include: ["*"], exclude: []};
+          const allowAllResourceFilter = {include: ["**"], exclude: []};
 
           const documentsResult = await storageService.browse(
             allowAllResourceFilter,
@@ -716,7 +739,7 @@ describe("Storage Service", () => {
         });
 
         it("should combine all filtering types with sorting", async () => {
-          const allowAllResourceFilter = {include: ["*"], exclude: []};
+          const allowAllResourceFilter = {include: ["**"], exclude: []};
 
           const userFilter = {"content.type": "image/jpeg"};
 
@@ -735,7 +758,7 @@ describe("Storage Service", () => {
         });
 
         it("should handle complex user filter with multiple conditions", async () => {
-          const allowAllResourceFilter = {include: ["*"], exclude: []};
+          const allowAllResourceFilter = {include: ["**"], exclude: []};
 
           // Complex user filter: photos with specific conditions
           const complexUserFilter = {
