@@ -8,7 +8,7 @@ import {
   useOnClickOutside,
   Checkbox
 } from "oziko-ui-kit";
-import {memo, useMemo, useRef, useState, type FC} from "react";
+import {memo, useEffect, useMemo, useRef, useState, type FC} from "react";
 import styles from "./BucketMorePopup.module.scss";
 import type {BucketType} from "../../../services/bucketService";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -23,7 +23,7 @@ type TypeBucketMorePopup = {
 
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isHistoryConfirmationOpen, setIsHistoryConfirmationOpen] = useState(false);
+  const [isDeleteHistoryConfirmationOpen, setIsDeleteHistoryConfirmationOpen] = useState(false);
   const [deleteHistoryError, setDeleteHistoryError] = useState<null | string>(null);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
@@ -47,13 +47,14 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     updateBucketHistory(bucket);
   };
 
+  useEffect(() => {
+    setDeleteHistoryError(deleteBucketHistoryError);
+  }, [deleteBucketHistoryError]);
+
   const handleDeleteHistory = async () => {
     try {
-      await deleteBucketHistory(bucket);
-      if (deleteBucketHistoryError) {
-        setDeleteHistoryError(deleteBucketHistoryError);
-        return;
-      }
+      const result = await deleteBucketHistory(bucket);
+      if (!result) return;
       handleCancelHistoryConfirmation();
     } catch (err) {
       console.error(err);
@@ -62,18 +63,24 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
 
   const handleCancelHistoryConfirmation = () => {
     setDeleteHistoryError(null);
-    setIsHistoryConfirmationOpen(false);
+    setIsDeleteHistoryConfirmationOpen(false);
   };
 
-  console.log(deleteBucketHistoryError);
+  const handleOpen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // If a checkbox gets clicked, and the popover is closed, the isOpen stays true for some reason and the popover doesn't open
+    // This is a workaround, how popover open state is handled needs to be rethinked
+    if (isOpen) {
+      setIsOpen(false);
+      setTimeout(() => setIsOpen(true), 0);
+    } else setIsOpen(true);
+  };
 
   return (
     <div ref={containerRef} className={`${styles.container} ${className || ""}`}>
       <Popover
         open={isOpen}
-        contentProps={{
-          className: styles.popoverContainer
-        }}
+        contentProps={{className: styles.popoverContainer}}
         content={
           <FluidContainer
             ref={contentRef}
@@ -117,7 +124,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                   {isHistoryChecked && (
                     <Button
                       variant="text"
-                      onClick={() => setIsHistoryConfirmationOpen(true)}
+                      onClick={() => setIsDeleteHistoryConfirmationOpen(true)}
                       className={styles.historyButton}
                     >
                       <Icon name="delete" />
@@ -132,30 +139,18 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
           />
         }
       >
-        <Button
-          variant="text"
-          onClick={e => {
-            e.stopPropagation();
-            // If a checkbox gets clicked, and the popover is closed, the isOpen stays true for some reason and the popover doesn't open
-            // This is a workaround, how popover open state is handled needs to be rethinked
-            if (isOpen) {
-              setIsOpen(false);
-              setTimeout(() => setIsOpen(true), 0);
-            } else setIsOpen(true);
-          }}
-        >
+        <Button variant="text" onClick={handleOpen}>
           <Icon name="dotsVertical" />
           More
         </Button>
       </Popover>
-      {isHistoryConfirmationOpen && (
+      {isDeleteHistoryConfirmationOpen && (
         <Confirmation
           title="DELETE HISTORY"
-                    description={
+          inputPlaceholder="Type Here"
+          description={
             <>
-              <p className={styles.confirmText}>
-                This action will permanently delete the history.
-              </p>
+              <p className={styles.confirmText}>This action will permanently delete the history.</p>
               <span>
                 Please type <strong>Delete History</strong> to confirm deletion.
               </span>
@@ -173,7 +168,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
               Cancel
             </>
           }
-          confirmCondition={(input) => input === "Delete History"}
+          confirmCondition={input => input === "Delete History"}
           loading={deleteBucketHistoryLoading}
           onConfirm={handleDeleteHistory}
           onCancel={handleCancelHistoryConfirmation}
