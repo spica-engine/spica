@@ -31,7 +31,6 @@ const BucketFieldPopup = ({children}: {children: ReactNode}) => {
   return (
     <>
       <Popover
-        open
         content={
           <FlexElement dimensionX={200} direction="vertical" className={styles.container}>
             {fieldOptions.map(({icon, text, type}) => (
