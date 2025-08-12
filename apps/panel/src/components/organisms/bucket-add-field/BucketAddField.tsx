@@ -70,7 +70,7 @@ const BucketAddField: FC<TypeBucketAddField> = ({name = "", type, modalProps}) =
   const configuration = useInputRepresenter({
     properties: configurationSchema,
     value: configurationValue,
-    onChange: setConfigurationValue
+    onChange: (val) => setConfigurationValue(val)
   });
 
   const tabItems = [
@@ -99,7 +99,7 @@ const BucketAddField: FC<TypeBucketAddField> = ({name = "", type, modalProps}) =
   ];
 
   return (
-    <Modal isOpen overflow={true} showCloseButton={false} {...modalProps}>
+    <Modal isOpen overflow={true} showCloseButton={false} {...modalProps} className={styles.modal}>
       <Modal.Body className={styles.modalBody}>
         <FlexElement direction="vertical" gap={10} className={styles.contentContainer}>
           {inputRepresenter}

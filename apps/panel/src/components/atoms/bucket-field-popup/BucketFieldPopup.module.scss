@@ -1,10 +1,19 @@
+.popoverContent {
+  padding: 0 !important
+}
+
 .container {
   background-color: var(--color-menu-background);
-  padding: var(--padding-md);
+  padding: var(--padding-md) 0;
   border-radius: var(--border-radius-lg);
+  gap: 0 !important;
   .item {
     color: var(--color-font-primary);
-    padding: var(--padding-xs) 0;
+    padding: 0 var(--padding-md);
     cursor: pointer;
+    height: 20px !important;
+  }
+  .item:hover {
+    background-color: var(--color-hover);
   }
 }

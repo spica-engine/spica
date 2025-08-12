@@ -16,13 +16,14 @@ const fieldOptions: {icon: IconName; text: string; type: TypeInputType}[] = [
   {icon: "numericBox", text: "Number", type: "number"},
   {icon: "calendarBlank", text: "Date", type: "date"},
   {icon: "checkboxBlankOutline", text: "Boolean", type: "boolean"},
+  {icon: "formatColorText", text: "Textarea", type: "textarea"},
   {icon: "formatListChecks", text: "Multiple Selection", type: "multiselect"},
   {icon: "callMerge", text: "Relation", type: "storage"},
   {icon: "mapMarker", text: "Location", type: "location"},
   {icon: "ballot", text: "Array", type: "array"},
   {icon: "dataObject", text: "Object", type: "object"},
   {icon: "imageMultiple", text: "File", type: "storage"},
-  {icon: "formatAlignCenter", text: "RichText", type: "richtext"}
+  {icon: "formatAlignCenter", text: "Richtext", type: "richtext"}
 ];
 
 const BucketFieldPopup = ({children}: {children: ReactNode}) => {
@@ -31,6 +32,7 @@ const BucketFieldPopup = ({children}: {children: ReactNode}) => {
   return (
     <>
       <Popover
+        contentProps={{className: styles.popoverContent}}
         content={
           <FlexElement dimensionX={200} direction="vertical" className={styles.container}>
             {fieldOptions.map(({icon, text, type}) => (

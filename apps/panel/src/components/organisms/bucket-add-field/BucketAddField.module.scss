@@ -1,8 +1,19 @@
-.contentContainer {
-  max-width: min-content;
-}
-.modalBody {
+.modal {
+  width: 300px !important;
+  min-width: 300px !important;
   padding: 0 !important;
+}
+
+.contentContainer {
+  max-width: 100%;
+  width: 100% !important;
+  > div input {
+    width: 100% !important;
+  }
+}
+
+.modalBody {
+  padding: var(--padding-md) !important;
 }
 .buttonWrapper {
   width: 100%;
