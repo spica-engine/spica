@@ -6,6 +6,7 @@ import React, {
   type RefObject,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState
@@ -29,12 +30,7 @@ type TypeDataColumn = {
   leftOffset?: number;
 };
 
-type TypeTableData = {
-  [k: string]: {
-    id: string;
-    value: string | JSX.Element;
-  };
-};
+type TypeTableData = {[k: string]: {id: string; value: string | JSX.Element}};
 
 type TypeTable = {
   columns: TypeDataColumn[];
@@ -43,6 +39,7 @@ type TypeTable = {
   onScrollEnd?: () => void;
   totalDataLength?: number;
   style?: React.CSSProperties;
+  tableRef?: RefObject<HTMLElement | null>;
 };
 
 const MIN_COLUMN_WIDTH = 140;
@@ -130,10 +127,7 @@ const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) 
   const defaultColumnWidth = getCalculatedColumnWidth(columns, containerWidth + 10);
 
   const columnsWithWidth = columns.map(column => {
-    return {
-      ...column,
-      width: column.width || defaultColumnWidth
-    };
+    return {...column, width: column.width || defaultColumnWidth};
   });
 
   const formattedColumns: TypeDataColumn[] = [];
@@ -148,11 +142,7 @@ const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) 
     const columnWidth = parseWidth(column.width, containerWidth);
     const fixedLeftOffset = cumulativeOffset;
 
-    formattedColumns.push({
-      ...column,
-      width: `${columnWidth}px`,
-      leftOffset: fixedLeftOffset
-    });
+    formattedColumns.push({...column, width: `${columnWidth}px`, leftOffset: fixedLeftOffset});
 
     cumulativeOffset += columnWidth;
   }
@@ -160,8 +150,18 @@ const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) 
   return formattedColumns;
 };
 
-const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataLength, style}) => {
+const Table: FC<TypeTable> = ({
+  columns,
+  data,
+  className,
+  onScrollEnd,
+  totalDataLength,
+  style,
+  tableRef
+}) => {
   const containerRef = useScrollDirectionLock();
+  useImperativeHandle(tableRef, () => containerRef.current as HTMLElement);
+
   const [formattedColumns, setFormattedColumns] = useState<TypeDataColumn[]>([]);
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
 
@@ -257,11 +257,7 @@ const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataL
         >
           <table
             className={`${styles.table} ${className}`}
-            style={{
-              ...style,
-              width: `${totalTableWidth}px`,
-              minWidth: `${totalTableWidth}px`
-            }}
+            style={{...style, width: `${totalTableWidth}px`, minWidth: `${totalTableWidth}px`}}
           >
             <TableHeader formattedColumns={formattedColumns} onColumnResize={handleColumnResize} />
             <tbody>
@@ -466,10 +462,7 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
   return <>{rows}</>;
 });
 
-type TypeCell = React.HTMLAttributes<HTMLDivElement> & {
-  focused?: boolean;
-  leftOffset?: number;
-};
+type TypeCell = React.HTMLAttributes<HTMLDivElement> & {focused?: boolean; leftOffset?: number};
 
 //let c = 0
 const Cell = memo(({children, focused, leftOffset, ...props}: TypeCell) => {

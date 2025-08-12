@@ -2,7 +2,7 @@ import styles from "./Bucket.module.scss";
 import {useBucket} from "../../contexts/BucketContext";
 import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
-import {useCallback, useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useMemo, useReducer, useRef, useState} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
 import type {BucketDataQueryWithIdType} from "src/services/bucketService";
 
@@ -28,7 +28,7 @@ export default function Bucket() {
     getBucketData,
     loadMoreBucketData,
     bucketDataLoading,
-    refreshBucketData,
+    refreshBucketData
   } = useBucket();
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function Bucket() {
   }, [bucketId]);
 
   const formattedColumns: ColumnType[] = useMemo(() => {
-    const calculatedBucketId = bucketData?.bucketId ?? bucketId as string;
+    const calculatedBucketId = bucketData?.bucketId ?? (bucketId as string);
     const bucket = buckets?.find(i => i._id === calculatedBucketId);
     const columns = Object.values(bucket?.properties ?? {});
     return [
@@ -51,15 +51,9 @@ export default function Bucket() {
         fixed: true,
         selectable: false
       },
-      ...columns.map(i => ({
-        ...i,
-        header: i.title,
-        key: i.title,
-        showDropdownIcon: true
-      }))
+      ...columns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
     ] as ColumnType[];
   }, [buckets, bucketId, bucketData?.bucketId]);
-
 
   const searchableColumns = formattedColumns
     .filter(({type}) => ["string", "textarea", "richtext"].includes(type as string))
@@ -74,18 +68,17 @@ export default function Bucket() {
     [bucketId, searchableColumns, getBucketData]
   );
 
-  const isTableLoading = useMemo(
-    () => !(formattedColumns.length > 1),
-    [formattedColumns]
-  );
+  const isTableLoading = useMemo(() => !(formattedColumns.length > 1), [formattedColumns]);
+
+  const tableRef = useRef<HTMLElement | null>(null);
 
   const handleRefresh = useCallback(() => {
+    if (tableRef.current?.scrollTop) tableRef.current.scrollTop = 0;
     setRefreshLoading(true);
     refreshBucketData().then(() => {
       setRefreshLoading(false);
     });
   }, [bucketId, refreshBucketData]);
-
 
   return (
     <div className={styles.container}>
@@ -104,6 +97,7 @@ export default function Bucket() {
         totalDataLength={bucketData?.meta?.total ?? 0}
         maxHeight="88vh"
         loading={isTableLoading}
+        tableRef={tableRef}
       />
     </div>
   );
