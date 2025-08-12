@@ -124,7 +124,7 @@ function BucketWithVisibleColumns({
     () => Object.fromEntries(formattedColumns.map(col => [col.key, true])),
     []
   );
-  console.log(defaultVisibleColumns)
+
   const [visibleColumns, setVisibleColumns] = useLocalStorage<{[key: string]: boolean}>(
     `${bucketId}-visible-columns`,
     defaultVisibleColumns
