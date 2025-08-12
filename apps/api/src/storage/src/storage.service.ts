@@ -109,10 +109,12 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     const seeking = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
 
-    return this._coll
+    const results = await this._coll
       .aggregate<StorageResponse>([...pipelineBuilder, ...seeking])
       .toArray()
       .then(r => this.putUrls(r));
+
+    return StoragePipelineBuilder.sortCombinedResults(results, sort);
   }
 
   async getAll<P extends boolean>(

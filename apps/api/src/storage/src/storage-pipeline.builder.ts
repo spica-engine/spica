@@ -52,22 +52,46 @@ export class StoragePipelineBuilder extends PipelineBuilder {
   private static buildBaseCondition(pattern: string, patternType: string): object | null {
     switch (patternType) {
       case "wildcard":
-        // "*" should match only root-level files (no "/" in name)
-        return {name: {$not: {$regex: "/"}}};
+        return {
+          $or: [
+            {name: {$not: {$regex: "/"}}}, // Files without any slashes
+            {name: {$regex: "^[^/]+/$"}} // Folders (something ending with / but no slashes before)
+          ]
+        };
       case "all_files":
         // "**" should match all files (including nested)
         return {}; // Match everything
       case "single_level": {
         const singleLevelBasePath = pattern.slice(0, -2); // Remove "/*"
+        // Single level should match both files and folders in the specified path
         return {
-          name: {$regex: `^${StoragePipelineBuilder.escapeRegex(singleLevelBasePath)}/[^/]+$`}
+          name: {$regex: `^${StoragePipelineBuilder.escapeRegex(singleLevelBasePath)}/[^/]+/?$`}
         };
       }
       case "all_levels": {
         const allLevelsBasePath = pattern.slice(0, -3); // Remove "/**"
-        return {name: {$regex: `^${StoragePipelineBuilder.escapeRegex(allLevelsBasePath)}/`}};
+        // Match files/folders starting with basePath/ OR the folder itself (basePath/)
+        return {
+          $or: [
+            {name: {$regex: `^${StoragePipelineBuilder.escapeRegex(allLevelsBasePath)}/`}},
+            {name: {$eq: `${allLevelsBasePath}/`}}
+          ]
+        };
       }
       case "exact":
+        // For exact patterns, also include parent folders if they exist
+        const pathParts = pattern.split("/");
+        if (pathParts.length > 1) {
+          // If it's a nested path, also match parent folders
+          const parentFolders = [];
+          for (let i = 1; i < pathParts.length; i++) {
+            const parentPath = pathParts.slice(0, i).join("/") + "/";
+            parentFolders.push({name: {$eq: parentPath}});
+          }
+          return {
+            $or: [{name: pattern}, ...parentFolders]
+          };
+        }
         return {name: pattern};
       default:
         return null;
@@ -76,7 +100,13 @@ export class StoragePipelineBuilder extends PipelineBuilder {
 
   private static negateCondition(condition: any, patternType: string): object {
     if (patternType === "wildcard") {
-      return {name: {$exists: false}};
+      // Negate wildcard: exclude root-level files and folders
+      return {
+        $and: [
+          {name: {$regex: "/"}}, // Must contain slash
+          {name: {$not: {$regex: "^[^/]+/$"}}} // But not root-level folders
+        ]
+      };
     }
     if (patternType === "all_files") {
       return {name: {$exists: false}};
@@ -86,9 +116,16 @@ export class StoragePipelineBuilder extends PipelineBuilder {
         return {name: {$not: {$regex: condition.name.$regex}}};
       } else if (condition.name.$not) {
         return {name: {$regex: "/"}};
+      } else if (condition.$or) {
+        // For complex $or conditions, negate the entire thing
+        return {$nor: [condition]};
       } else {
         return {name: {$ne: condition.name}};
       }
+    }
+    if (condition.$or) {
+      // For $or conditions (like all_levels pattern), use $nor to negate
+      return {$nor: [condition]};
     }
     return condition;
   }
@@ -103,8 +140,18 @@ export class StoragePipelineBuilder extends PipelineBuilder {
     }
   }
 
-  private static escapeRegex(str: string): string {
+  static escapeRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  static sortCombinedResults(combined: any[], sort?: any): any[] {
+    if (sort && sort.name) {
+      combined.sort((a, b) => {
+        const direction = sort.name === 1 ? 1 : -1;
+        return a.name.localeCompare(b.name) * direction;
+      });
+    }
+    return combined;
   }
 
   static createPathFilter(path: string): any {
@@ -116,18 +163,14 @@ export class StoragePipelineBuilder extends PipelineBuilder {
 
     if (!path) {
       return {
-        name: {
-          $not: {
-            $regex: "/"
-          }
-        }
+        $or: [{name: {$not: {$regex: "/"}}}, {name: {$regex: "^[^/]+/$"}}]
       };
     }
 
     const escapedPath = StoragePipelineBuilder.escapeRegex(path);
     return {
       name: {
-        $regex: `^${escapedPath}/[^/]+$`
+        $regex: `^${escapedPath}/[^/]+/?$`
       }
     };
   }
