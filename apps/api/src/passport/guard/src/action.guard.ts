@@ -24,6 +24,10 @@ export function wrapArray(val: string | string[]) {
   return Array.isArray(val) ? val : Array(val);
 }
 
+export function wrapArrayFlexible<T>(val: T | T[] | undefined): T[] {
+  return Array.isArray(val) ? val : val === undefined ? [] : [val];
+}
+
 export const resourceFilterFunction: ResourceFilterFunction = (
   data: {pure?: boolean} = {pure: false},
   ctx: ExecutionContext
@@ -345,6 +349,71 @@ function createActionGuard(
           ", "
         )} on resource ${resourceAndModule.resource.join("/")}`
       );
+    }
+  }
+  return mixin(MixinActionGuard);
+}
+
+export const SimpleActionGuard: (actions: string | string[], format?: string) => Type<CanActivate> =
+  createSimpleActionGuard;
+
+function createSimpleActionGuard(actions: string | string[], format?: string): Type<CanActivate> {
+  class MixinActionGuard implements CanActivate {
+    constructor(@Optional() @Inject(POLICY_RESOLVER) private resolver: PolicyResolver<any>) {}
+
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+      const request = context.switchToHttp().getRequest();
+      const response = context.switchToHttp().getResponse();
+
+      if (request.TESTING_SKIP_CHECK) {
+        request.resourceFilter = {
+          include: [],
+          exclude: []
+        };
+        return true;
+      }
+
+      const actionsArr = wrapArray(actions);
+      const policies = await this.resolver(request.user.policies || []);
+      const resourceAndModule = buildResourceAndModuleName(
+        request.route.path,
+        request.params,
+        format
+      );
+
+      if (response.header) {
+        response.header("X-Policy-Module", resourceAndModule.module);
+        response.header("X-Policy-Action", actionsArr.join(", "));
+        response.header("X-Policy-Resource", "partial");
+        if (resourceAndModule.resource.length) {
+          response.header("X-Policy-Resource", resourceAndModule.resource.join("/"));
+        }
+      }
+
+      const allPolicyStatements = policies.flatMap(policy => policy.statement);
+      const matchedStatements = allPolicyStatements.filter(
+        statement =>
+          actionsArr.includes(statement.action) && resourceAndModule.module === statement.module
+      );
+
+      const includedResources = [];
+      const excludedResources = [];
+
+      for (const statement of matchedStatements) {
+        if (statement.resource && typeof statement.resource === "object") {
+          includedResources.push(...wrapArrayFlexible(statement.resource.include));
+          excludedResources.push(...wrapArrayFlexible(statement.resource.exclude));
+        }
+      }
+
+      if (!matchedStatements.length) {
+        throw new ForbiddenException(
+          `You do not have sufficient permissions to do ${actionsArr.join(", ")} on resource ${resourceAndModule.resource.join("/")}`
+        );
+      }
+
+      request.resourceFilter = {include: includedResources, exclude: excludedResources};
+      return true;
     }
   }
   return mixin(MixinActionGuard);
