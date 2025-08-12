@@ -1,5 +1,5 @@
 import {Button, FlexElement, FluidContainer, Icon} from "oziko-ui-kit";
-import React, {memo, useMemo, useState, type FC} from "react";
+import React, {memo, useState, type FC} from "react";
 import styles from "./Toolbar.module.scss";
 import {useLocation} from "react-router-dom";
 
@@ -8,10 +8,8 @@ type TypeToolbar = {bucketId?: string; token: string; name: string; onDrawerOpen
 const Toolbar: FC<TypeToolbar> = ({bucketId, token, name, onDrawerOpen}) => {
   const [copied, setCopied] = useState(false);
   const location = useLocation();
-  const textToCopy = useMemo(() => {
-    const isOnIdentity = location.pathname === "/passport/identity";
-    return isOnIdentity ? token : bucketId;
-  }, [location, token, bucketId]);
+  const isOnIdentity = location.pathname === "/passport/identity";
+  const textToCopy = isOnIdentity ? token : bucketId;
 
   const handleCopy = () => {
     navigator.clipboard
