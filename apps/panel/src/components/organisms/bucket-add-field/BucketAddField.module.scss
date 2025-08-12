@@ -20,8 +20,37 @@
   display: flex;
   justify-content: space-between;
   flex-direction: row-reverse;
+  gap: var(--gap-sm);
 
   .buttonInnerFields {
     background: var(--color-soft) !important;
+    width: 152px;
+    min-width: 152px !important;
+  }
+
+  .saveAndCloseButton {
+    width: 123px;
+    min-width: 123px !important;
+  }
+}
+
+.tab {
+  font-size: var(--font-size-md);
+  div:not(:nth-child(1)) {
+    cursor: pointer;
+  }
+}
+
+.smallTab {
+  padding-bottom: var(--padding-sm) !important;
+}
+
+.bigTab {
+  padding-bottom: var(--padding-md) !important;
+  > div:nth-child(2) {
+    padding-left: var(--padding-md) !important;
+  }
+  > div:last-child {
+    padding-right: var(--padding-md) !important;
   }
 }
