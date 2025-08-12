@@ -190,10 +190,7 @@ export const useBucketService = () => {
         },
         order
       };
-      return postRequest({body: {...bucket}}).then(result => {
-        if (!result) return;
-        return result;
-      });
+      return postRequest({body: {...bucket}});
     },
     [postRequest]
   );
