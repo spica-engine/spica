@@ -4,7 +4,7 @@ import {Button, FlexElement, Icon} from "oziko-ui-kit";
 import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
 import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
-import type {BucketType} from "src/services/bucketService";
+import type { BucketType } from "src/services/bucketService";
 
 type BucketActionBarProps = {
   onSearch: (search: string) => void;
@@ -70,7 +70,7 @@ const BucketActionBar = ({onSearch, bucket, searchLoading}: BucketActionBarProps
           <Icon name="refresh" />
           Refresh
         </Button>
-        <Button className={styles.columnButton} variant="text" onClick={() => {}}>
+        <Button className={styles.columnButton} variant="text"  onClick={() => {}}>
           <Icon name="eye" />
           Column
         </Button>

@@ -48,7 +48,7 @@ function useApi<T>({endpoint, method = "get", onSuccess, onError}: ApiRequestOpt
           if (response.status >= 200 && response.status < 300) {
             setData(response.data);
             onSuccess?.();
-            return response.data;
+            return response.status === 204 ? "Success" : response.data;
           } else {
             setError(response.statusText ?? "Something went wrong");
             onError?.();

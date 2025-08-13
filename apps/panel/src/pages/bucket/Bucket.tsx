@@ -35,7 +35,7 @@ export default function Bucket() {
     getBucketData(bucketId);
   }, [bucketId]);
 
-  const bucket = buckets?.find(i => i._id === bucketId);
+  const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
 
   const formattedColumns: ColumnType[] = useMemo(() => {
     const bucket = buckets?.find(i => i._id === bucketId);
@@ -86,7 +86,7 @@ export default function Bucket() {
   ]);
   return (
     <div className={styles.container}>
-      <BucketActionBar onSearch={handleSearch} bucket={bucket as BucketType} />
+      <BucketActionBar bucket={bucket as BucketType} onSearch={handleSearch} />
       <BucketTable
         bucketId={bucketId as string}
         columns={formattedColumns}

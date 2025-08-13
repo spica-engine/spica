@@ -21,3 +21,21 @@
 .refreshButton, .columnButton {
   color: var(--color-font-primary);
 }
+
+.columnsPopoverContent {
+  z-index: 4;
+  > div {
+    max-height: 400px;
+    overflow-y: auto;
+    width: 100%;
+  }
+  min-width: 200px;
+}
+
+.actionBar button {
+  height: 32px !important;
+}
+
+.refreshButton, .columnButton {
+  color: var(--color-font-primary);
+}
