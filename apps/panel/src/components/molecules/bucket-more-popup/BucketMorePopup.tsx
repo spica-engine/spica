@@ -1,10 +1,9 @@
-import {Button, FlexElement, FluidContainer, Icon, Text, Checkbox, Popover} from "oziko-ui-kit";
+import {Button, FlexElement, FluidContainer, Icon, Text, Checkbox, Popover, useOnClickOutside} from "oziko-ui-kit";
 import {memo, useMemo, useRef, useState, type FC} from "react";
 import styles from "./BucketMorePopup.module.scss";
 import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType} from "src/services/bucketService";
 import BucketLimitationsForm from "../bucket-limitations-form/BucketLimitationsForm";
-import {useOnClickOutside} from "../../../hooks/useOnClickOutside";
 
 type TypeBucketMorePopup = {
   className?: string;
