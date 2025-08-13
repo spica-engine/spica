@@ -1,5 +1,5 @@
-import axios, {type AxiosRequestHeaders} from "axios";
-import {useCallback, useMemo, useState} from "react";
+import axios, { type AxiosRequestHeaders } from "axios";
+import { useCallback, useMemo, useRef, useState } from "react";
 import useLocalStorage from "./useLocalStorage";
 
 type ApiRequestOptions = {
@@ -7,6 +7,12 @@ type ApiRequestOptions = {
   method?: "get" | "post" | "put" | "delete" | "patch";
   onSuccess?: () => void;
   onError?: () => void;
+  deduplicateRequests?: boolean;
+};
+
+type AbortInfo = {
+  controller: AbortController;
+  isDeduplicationAbort: boolean;
 };
 
 function resolveEndpoint(endpoint: string) {
@@ -14,11 +20,19 @@ function resolveEndpoint(endpoint: string) {
   return `${import.meta.env.VITE_BASE_URL}${endpoint}`;
 }
 
-function useApi<T>({endpoint, method = "get", onSuccess, onError}: ApiRequestOptions) {
+function useApi<T>({
+  endpoint,
+  method = "get",
+  onSuccess,
+  onError,
+  deduplicateRequests = true
+}: ApiRequestOptions) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<T | null>(null);
   const [token] = useLocalStorage("token", null);
+
+  const abortInfoRef = useRef<AbortInfo | null>(null);
 
   const resolvedUrl = useMemo(() => resolveEndpoint(endpoint), [endpoint]);
 
@@ -27,7 +41,18 @@ function useApi<T>({endpoint, method = "get", onSuccess, onError}: ApiRequestOpt
       body,
       headers,
       endpoint
-    }: {body?: any; headers?: AxiosRequestHeaders; endpoint?: string} = {}) => {
+    }: { body?: any; headers?: AxiosRequestHeaders; endpoint?: string } = {}) => {
+      if (deduplicateRequests && abortInfoRef.current) {
+        abortInfoRef.current.isDeduplicationAbort = true; // mark deduplication abort
+        abortInfoRef.current.controller.abort();
+      }
+
+      const controller = new AbortController();
+      abortInfoRef.current = {
+        controller,
+        isDeduplicationAbort: false,
+      };
+
       const makeRequest = async () => {
         try {
           const combinedHeaders =
@@ -42,7 +67,8 @@ function useApi<T>({endpoint, method = "get", onSuccess, onError}: ApiRequestOpt
             method,
             url: endpoint ? resolveEndpoint(endpoint) : resolvedUrl,
             data: body,
-            headers: combinedHeaders
+            headers: combinedHeaders,
+            signal: controller.signal
           });
 
           if (response.status >= 200 && response.status < 300) {
@@ -54,16 +80,28 @@ function useApi<T>({endpoint, method = "get", onSuccess, onError}: ApiRequestOpt
             onError?.();
           }
         } catch (err: any) {
+          if (err.name === "CanceledError") {
+            if (abortInfoRef.current?.isDeduplicationAbort) {
+              return;
+            } else {
+              setError(err.message ?? "Request was cancelled unexpectedly");
+              onError?.();
+              return;
+            }
+          }
           setError(err.response?.data?.message ?? err.message ?? "Something went wrong");
+          onError?.();
         } finally {
           setLoading(false);
+          abortInfoRef.current = null;
         }
       };
+
       setError(null);
       setLoading(true);
       return makeRequest();
     },
-    [resolvedUrl, method, token]
+    [resolvedUrl, method, token, onSuccess, onError, deduplicateRequests]
   );
 
   const result = useMemo(
@@ -75,8 +113,7 @@ function useApi<T>({endpoint, method = "get", onSuccess, onError}: ApiRequestOpt
     }),
     [data, error, loading, request]
   );
-
-  return result;
+  return result
 }
 
 export default useApi;

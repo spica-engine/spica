@@ -93,7 +93,8 @@ export const useBucketService = () => {
 
   const {request: fetchBucketData, data: apiBucketData, loading: apiBucketDataLoading} = useApi<BucketDataType>({
     endpoint: "",
-    method: "get"
+    method: "get",
+    deduplicateRequests: true,
   });
 
   const {request: bucketOrderRequest} = useApi({endpoint: "", method: "patch"});
