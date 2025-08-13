@@ -22,7 +22,6 @@ type TypeBucketMorePopup = {
 };
 
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
-  const [isReadOnlyLoading, setIsReadOnlyLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleteHistoryConfirmationOpen, setIsDeleteHistoryConfirmationOpen] = useState(false);
   const [deleteHistoryError, setDeleteHistoryError] = useState<null | string>(null);
@@ -47,8 +46,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const isReadOnlyChecked = useMemo(() => bucket?.readOnly, [bucket]);
 
   const handleChangeReadOnly = () => {
-    setIsReadOnlyLoading(true);
-    updateBucketReadonly(bucket).then(() => setIsReadOnlyLoading(false));
+    updateBucketReadonly(bucket)
   };
   const isHistoryChecked = useMemo(() => bucket?.history, [bucket]);
   const handleChangeHistory = () => {
@@ -143,7 +141,6 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
 
                   <Checkbox
                     label="Read Only"
-                    disabled={isReadOnlyLoading}
                     checked={isReadOnlyChecked}
                     onChange={handleChangeReadOnly}
                   />
