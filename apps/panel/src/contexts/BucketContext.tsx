@@ -30,11 +30,15 @@ type BucketContextType = {
   updateBucketOrderOnServer: (bucketId: string, order: number) => Promise<any>;
   renameBucket: (newTitle: string, bucket: BucketType) => void;
   deleteBucket: (bucketId: string) => Promise<any>;
+  updateBucketHistory: (bucket: BucketType) => Promise<any>;
+  deleteBucketHistory: (bucket: BucketType) => Promise<any>;
   createBucket: (title: string) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
-  bucketData: BucketDataType | null;
+  bucketData: BucketDataWithIdType | null;
   bucketDataLoading: boolean;
+  deleteBucketHistoryLoading: boolean;
+  deleteBucketHistoryError: string | null;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
 };
 
@@ -63,10 +67,14 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiChangeBucketOrder,
     apiRenameBucket,
     apiDeleteBucket,
+    apiUpdateBucketHistory,
+    apiDeleteBucketHistory,
     apiCreateBucket,
     apiBuckets,
     apiBucketData,
-    apiBucketDataLoading
+    apiBucketDataLoading,
+    apiDeleteBucketHistoryLoading,
+    apiDeleteBucketHistoryError,
   } = useBucketService();
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
@@ -215,6 +223,21 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     setBucketData({data: []} as unknown as BucketDataWithIdType);
   }, []);
 
+  const updateBucketHistory = useCallback(
+    async (bucket: BucketType) => {
+      const previousBuckets = buckets;
+      setBuckets(prev => (prev ? prev.map(i => ({...i, history: !i.history})) : []));
+      return apiUpdateBucketHistory(bucket).then(result => {
+        if (!result) {
+          setBuckets(previousBuckets);
+        }
+        return result;
+      });
+    },
+    [buckets]
+  );
+
+
   const createBucket = useCallback(
     async (title: string) => {
       return await apiCreateBucket(title, buckets.length).then(result => {
@@ -236,11 +259,15 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketOrderOnServer: apiChangeBucketOrder,
       renameBucket,
       deleteBucket,
+      updateBucketHistory,
+      deleteBucketHistory: apiDeleteBucketHistory,
       createBucket,
       buckets,
       bucketData,
       bucketDataLoading: apiBucketDataLoading,
       bucketCategories,
+      deleteBucketHistoryLoading: apiDeleteBucketHistoryLoading,
+      deleteBucketHistoryError: apiDeleteBucketHistoryError,
       nextbucketDataQuery
     }),
     [
@@ -251,11 +278,15 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiChangeBucketOrder,
       renameBucket,
       deleteBucket,
+      updateBucketHistory,
+      apiDeleteBucketHistory,
       createBucket,
       buckets,
       bucketData,
       apiBucketDataLoading,
       bucketCategories,
+      apiDeleteBucketHistoryLoading,
+      apiDeleteBucketHistoryError,
       nextbucketDataQuery
     ]
   );
