@@ -30,6 +30,7 @@ import {
   ResourceFilter,
   SimpleActionGuard
 } from "@spica-server/passport/guard";
+import {OR} from "@spica-server/core";
 import etag from "etag";
 import {createStorageActivity} from "./activity.resource";
 import {
@@ -53,7 +54,8 @@ export class StorageController {
    * @param limit The maximum amount documents that can be present in the response.
    * @param skip The amount of documents to skip.
    * @param sort A JSON string to sort the documents by its properties.
-   * Example: Descending `{"content.size": -1}` OR Ascending `{"content.size": 1}`
+   * Example: Descending `{"content.size": -1}` 
+   Ascending `{"content.size": 1}`
    */
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("storage:index"))
@@ -91,10 +93,15 @@ export class StorageController {
   @UseGuards(AuthGuard(), ActionGuard("storage:show", "storage/:id"))
   async view(
     @Res() res,
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string,
     @Headers("if-none-match") ifNoneMatch?: string
   ) {
-    const object = await this.storage.get(id);
+    let object;
+    if (idOrName instanceof ObjectId) {
+      object = await this.storage.get(idOrName);
+    } else {
+      object = await this.storage.getByName(idOrName);
+    }
     if (!object) {
       throw new NotFoundException("Could not find the object.");
     }
@@ -114,9 +121,13 @@ export class StorageController {
    */
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:show"))
-  async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const object = await this.storage.get(id);
-
+  async findOne(@Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string) {
+    let object;
+    if (idOrName instanceof ObjectId) {
+      object = await this.storage.get(idOrName);
+    } else {
+      object = await this.storage.getByName(idOrName);
+    }
     if (!object) {
       throw new NotFoundException("Could not find the object.");
     }

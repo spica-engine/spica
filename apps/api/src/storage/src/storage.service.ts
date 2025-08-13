@@ -288,6 +288,15 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     }
   }
 
+  async getByName(name: string): Promise<WithId<StorageObject<Buffer>>> {
+    const object = await this._coll.findOne({name});
+    if (!object) return null;
+
+    const objectWithData = object as WithId<StorageObject<Buffer>>;
+    objectWithData.content.data = await this.service.read(object.name);
+    return objectWithData;
+  }
+
   async getUrl(name: string) {
     return this.service.url(name);
   }
