@@ -364,6 +364,7 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
               initializedRef
             })
           }
+          loading={<div className={styles.editorLoadingSkeleton}/>}
           options={{
             lineNumbers: "off",
             renderLineHighlight: "none",

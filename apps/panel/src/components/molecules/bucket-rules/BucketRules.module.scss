@@ -98,6 +98,31 @@
   bottom: -14px;
 }
 
+.editorLoadingSkeleton {
+  width: 560px;
+  height: 130%;
+  border-radius: var(--border-radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--color-menu-contrast) 0%,
+    var(--color-soft-dark) 50%,
+    var(--color-menu-contrast) 100%,
+  );
+  background-size: 200% 100%;
+  animation: shimmer 5s infinite linear;
+  position: absolute;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+
 [class^="Portal-module_container__"] {
   z-index: 4;
 }
