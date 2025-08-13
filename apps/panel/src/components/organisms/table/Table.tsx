@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState
@@ -165,7 +166,7 @@ const Table: FC<TypeTable> = ({
   const [formattedColumns, setFormattedColumns] = useState<TypeDataColumn[]>([]);
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!containerRef.current) return;
     const containerWidth = containerRef.current?.clientWidth ?? 0;
     // Making it just a little bit smaller than the container to prevent unnecessary horizontal scrolls
@@ -398,13 +399,6 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
   const rowCacheRef = useRef<
     Map<string, {element: JSX.Element; lastFocusedCell: string | null; rowContentString: string}>
   >(new Map());
-
-  const prevColumnsRef = useRef(formattedColumns);
-
-  if (prevColumnsRef.current !== formattedColumns) {
-    rowCacheRef.current.clear();
-    prevColumnsRef.current = formattedColumns;
-  }
 
   const rows: JSX.Element[] = [];
 
