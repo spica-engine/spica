@@ -2,14 +2,14 @@ import styles from "./Bucket.module.scss";
 import {useBucket} from "../../contexts/BucketContext";
 import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
-import {useCallback, useEffect, useMemo} from "react";
+import {useCallback, useEffect, useMemo, useReducer, useRef, useState} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
 import type {BucketDataQueryWithIdType, BucketType} from "src/services/bucketService";
 
 const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
   ({
-    paginatie: true,
+    paginate: true,
     relation: true,
     limit: 25,
     filter: JSON.stringify({
@@ -19,15 +19,41 @@ const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
     })
   }) as const;
 
+function smoothScrollToTop(el: HTMLElement): Promise<void> {
+  return new Promise(resolve => {
+    if (!el) {
+      resolve();
+      return;
+    }
+
+    if (el.scrollTop === 0) {
+      resolve();
+      return;
+    }
+
+    const onScroll = () => {
+      if (el.scrollTop === 0) {
+        el.removeEventListener("scroll", onScroll);
+        resolve();
+      }
+    };
+
+    el.addEventListener("scroll", onScroll);
+
+    el.scrollTo({top: 0, behavior: "smooth"});
+  });
+}
+
 export default function Bucket() {
+  const [refreshLoading, setRefreshLoading] = useState(false);
   const {bucketId} = useParams<{bucketId: string}>();
   const {
     buckets,
     bucketData,
     getBucketData,
-    nextbucketDataQuery,
+    loadMoreBucketData,
     bucketDataLoading,
-    cleanBucketData
+    refreshBucketData
   } = useBucket();
 
   useEffect(() => {
@@ -50,19 +76,9 @@ export default function Bucket() {
         fixed: true,
         selectable: false
       },
-      ...columns.map(i => ({
-        ...i,
-        header: i.title,
-        key: i.title,
-        showDropdownIcon: true
-      }))
+      ...columns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
     ] as ColumnType[];
   }, [bucket]);
-
-  const handleScrollEnd = useCallback(() => {
-    if (!bucketId || !nextbucketDataQuery) return;
-    getBucketData(bucketId, nextbucketDataQuery);
-  }, [bucketId, getBucketData, nextbucketDataQuery]);
 
   const searchableColumns = formattedColumns
     .filter(({type}) => ["string", "textarea", "richtext"].includes(type as string))
@@ -72,28 +88,40 @@ export default function Bucket() {
     async (search: string) => {
       const trimmed = search.trim();
       const query = trimmed === "" ? undefined : buildBucketQuery(trimmed, searchableColumns);
-      await getBucketData(bucketId as string, query as unknown as BucketDataQueryWithIdType)
-      cleanBucketData();
+      await getBucketData(bucketId as string, query as unknown as BucketDataQueryWithIdType);
     },
     [bucketId, searchableColumns, getBucketData]
   );
 
-  const isTableLoading = useMemo(() => !(formattedColumns.length > 1 && nextbucketDataQuery?.bucketId === bucketId), [
-    formattedColumns,
-    nextbucketDataQuery,
-    bucketId
-  ]);
+  const isTableLoading = useMemo(() => !(formattedColumns.length > 1), [formattedColumns]);
+
+  const tableRef = useRef<HTMLElement | null>(null);
+
+  const handleRefresh = useCallback(async () => {
+    if (tableRef.current) await smoothScrollToTop(tableRef.current);
+    setRefreshLoading(true);
+    await refreshBucketData();
+    setRefreshLoading(false);
+  }, [bucketId, refreshBucketData]);
+
   return (
     <div className={styles.container}>
-      <BucketActionBar bucket={bucket as BucketType} onSearch={handleSearch} searchLoading={bucketDataLoading && !isTableLoading} />
+      <BucketActionBar
+        bucket={bucket as BucketType}
+        onSearch={handleSearch}
+        onRefresh={handleRefresh}
+        searchLoading={bucketDataLoading && !isTableLoading}
+        refreshLoading={refreshLoading}
+      />
       <BucketTable
         bucketId={bucketId as string}
         columns={formattedColumns}
         data={bucketData?.data ?? []}
-        onScrollEnd={handleScrollEnd}
+        onScrollEnd={loadMoreBucketData}
         totalDataLength={bucketData?.meta?.total ?? 0}
         maxHeight="88vh"
         loading={isTableLoading}
+        tableRef={tableRef}
       />
     </div>
   );

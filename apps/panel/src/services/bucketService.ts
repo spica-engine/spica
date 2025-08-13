@@ -91,9 +91,10 @@ export const useBucketService = () => {
     method: "get"
   });
 
-  const {request: fetchBucketData, data: apiBucketData, loading: apiBucketDataLoading} = useApi<BucketDataType>({
+  const {request: fetchBucketData, loading: apiBucketDataLoading} = useApi<BucketDataType>({
     endpoint: "",
-    method: "get"
+    method: "get",
+    deduplicateRequests: true,
   });
 
   const {request: bucketOrderRequest} = useApi({endpoint: "", method: "patch"});
@@ -105,7 +106,12 @@ export const useBucketService = () => {
     method: "delete"
   });
 
-  const {request: requestNameChange} = useApi({
+  const {request: deleteHistoty, loading: apiDeleteBucketHistoryLoading, error: apiDeleteBucketHistoryError} = useApi({
+    endpoint: "",
+    method: "delete"
+  });
+
+  const {request: putRequest} = useApi({
     endpoint: "",
     method: "put"
   });
@@ -144,12 +150,12 @@ export const useBucketService = () => {
         const body = {...bucket, title: newTitle};
         delete (body as unknown as {section: any}).section;
         delete (body as unknown as {index: any}).index;
-        return await requestNameChange({body, endpoint: `/api/bucket/${bucket._id}`});
+        return await putRequest({body, endpoint: `/api/bucket/${bucket._id}`});
       } catch (err) {
         console.error(err);
       }
     },
-    [requestNameChange]
+    [putRequest]
   );
 
   const apiDeleteBucket = useCallback(
@@ -160,6 +166,22 @@ export const useBucketService = () => {
     },
     [deleteRequest]
   );
+
+  const apiUpdateBucketHistory = useCallback(async (bucket: BucketType) => {
+    return await putRequest({
+      endpoint: `/api/bucket/${bucket._id}`,
+      body: {
+        ...bucket,
+        history: !bucket.history
+      }
+    });
+  }, [patchRequest]);
+
+  const apiDeleteBucketHistory = useCallback(async (bucket: BucketType) => {
+    return await deleteHistoty({
+      endpoint: `/api/bucket/${bucket._id}/history`
+    });
+  }, [deleteHistoty]);
 
     const apiUpdatebucketLimitiation = useCallback(
     async (bucketId: string, body: Record<string, any>) => {
@@ -185,11 +207,14 @@ export const useBucketService = () => {
     apiChangeBucketOrder,
     apiRenameBucket,
     apiDeleteBucket,
+    apiUpdateBucketHistory,
+    apiDeleteBucketHistory,
     apiUpdatebucketLimitiation,
     apiUpdatebucketLimitiationFields,
     apiBuckets,
-    apiBucketData,
     apiBucketDataLoading,
+    apiDeleteBucketHistoryLoading,
+    apiDeleteBucketHistoryError,
     apiUpdateBucketLimitationFieldsLoading,
     apiUpdateBucketLimitationFieldsError
   };

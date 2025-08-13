@@ -1,14 +1,25 @@
-import {Button, FlexElement, FluidContainer, Icon, Text, Checkbox, Popover, useOnClickOutside} from "oziko-ui-kit";
-import {memo, useMemo, useRef, useState, type FC} from "react";
+import {
+  Button,
+  FlexElement,
+  FluidContainer,
+  Icon,
+  Text,
+  Checkbox,
+  Popover,
+  useOnClickOutside
+} from "oziko-ui-kit";
 import styles from "./BucketMorePopup.module.scss";
 import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType} from "src/services/bucketService";
 import BucketLimitationsForm from "../bucket-limitations-form/BucketLimitationsForm";
 
+import {memo, useEffect, useMemo, useRef, useState, type FC} from "react";
+import Confirmation from "../confirmation/Confirmation";
+
 type TypeBucketMorePopup = {
   className?: string;
-  onOpen?: () => void;
   bucket: BucketType;
+  onOpen?: () => void;
   onClose?: () => void;
 };
 
@@ -16,6 +27,9 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const [isLimitationsVisible, setIsLimitationsVisible] = useState(false);
   const [limitationFieldsError, setLimitationFieldsError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isDeleteHistoryConfirmationOpen, setIsDeleteHistoryConfirmationOpen] = useState(false);
+  const [deleteHistoryError, setDeleteHistoryError] = useState<null | string>(null);
+
   const containerRef = useRef(null);
   const contentRef = useRef(null);
 
@@ -32,7 +46,11 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     updateBucketLimitation,
     updateBucketLimitationFields,
     updateBucketLimitationFieldsError,
-    updateBucketLimitationFieldsLoading
+    updateBucketLimitationFieldsLoading,
+    updateBucketHistory,
+    deleteBucketHistory,
+    deleteBucketHistoryLoading,
+    deleteBucketHistoryError
   } = useBucket();
   const isLimitationChecked = useMemo(() => Boolean(bucket?.documentSettings), [bucket]);
 
@@ -49,6 +67,30 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     else setLimitationFieldsError(null);
   };
 
+  const isHistoryChecked = useMemo(() => bucket?.history, [bucket]);
+  const handleChangeHistory = () => {
+    updateBucketHistory(bucket);
+  };
+
+  useEffect(() => {
+    setDeleteHistoryError(deleteBucketHistoryError);
+  }, [deleteBucketHistoryError]);
+
+  const handleDeleteHistory = async () => {
+    try {
+      const result = await deleteBucketHistory(bucket);
+      if (!result) return;
+      handleCancelHistoryConfirmation();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCancelHistoryConfirmation = () => {
+    setDeleteHistoryError(null);
+    setIsDeleteHistoryConfirmationOpen(false);
+  };
+
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
     // If a checkbox gets clicked, and the popover is closed, the isOpen stays true for some reason and the popover doesn't open
@@ -63,9 +105,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     <div ref={containerRef} className={`${styles.container} ${className || ""}`}>
       <Popover
         open={isOpen}
-        contentProps={{
-          className: styles.popoverContainer
-        }}
+        contentProps={{className: styles.popoverContainer}}
         content={
           <FluidContainer
             ref={contentRef}
@@ -101,7 +141,21 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                   direction="vertical"
                   gap={0}
                 >
-                  <Checkbox label="History" />
+                  <Checkbox
+                    label="History"
+                    checked={isHistoryChecked}
+                    onChange={handleChangeHistory}
+                  />
+                  {isHistoryChecked && (
+                    <Button
+                      variant="text"
+                      onClick={() => setIsDeleteHistoryConfirmationOpen(true)}
+                      className={styles.historyButton}
+                    >
+                      <Icon name="delete" />
+                      <Text>Remove History</Text>
+                    </Button>
+                  )}
                   <Checkbox
                     label="Limitation"
                     //disabled={isLimitationLoading}
@@ -142,6 +196,37 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
           More
         </Button>
       </Popover>
+      {isDeleteHistoryConfirmationOpen && (
+        <Confirmation
+          title="DELETE HISTORY"
+          inputPlaceholder="Type Here"
+          description={
+            <>
+              <p className={styles.confirmText}>This action will permanently delete the history.</p>
+              <span>
+                Please type <strong>Delete History</strong> to confirm deletion.
+              </span>
+            </>
+          }
+          confirmLabel={
+            <>
+              <Icon name="delete" />
+              Delete
+            </>
+          }
+          cancelLabel={
+            <>
+              <Icon name="close" />
+              Cancel
+            </>
+          }
+          confirmCondition={input => input === "Delete History"}
+          loading={deleteBucketHistoryLoading}
+          onConfirm={handleDeleteHistory}
+          onCancel={handleCancelHistoryConfirmation}
+          error={deleteHistoryError}
+        />
+      )}
     </div>
   );
 };
