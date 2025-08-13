@@ -3,8 +3,8 @@ import styles from "./BucketActionBar.module.scss";
 import {Button, FlexElement, Icon} from "oziko-ui-kit";
 import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
-import type { BucketType } from "src/services/bucketService";
 import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
+import type { BucketType } from "src/services/bucketService";
 
 type BucketActionBarProps = {
   onSearch: (search: string) => void;

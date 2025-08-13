@@ -30,11 +30,15 @@ type BucketContextType = {
   updateBucketOrderOnServer: (bucketId: string, order: number) => Promise<any>;
   renameBucket: (newTitle: string, bucket: BucketType) => void;
   deleteBucket: (bucketId: string) => Promise<any>;
+  updateBucketHistory: (bucket: BucketType) => Promise<any>;
+  deleteBucketHistory: (bucket: BucketType) => Promise<any>;
   updateBucketReadonly: (bucket: BucketType) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
-  bucketData: BucketDataType | null;
+  bucketData: BucketDataWithIdType | null;
   bucketDataLoading: boolean;
+  deleteBucketHistoryLoading: boolean;
+  deleteBucketHistoryError: string | null;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
 };
 
@@ -53,6 +57,7 @@ type BucketContextType = {
  * - Keep context functions focused on state + side effects.
  * - API-only calls should be imported from useBucketService and named naturally here.
  */
+
 const BucketContext = createContext<BucketContextType | null>(null);
 export const BucketProvider = ({children}: {children: ReactNode}) => {
   const {
@@ -62,10 +67,14 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiChangeBucketOrder,
     apiRenameBucket,
     apiDeleteBucket,
+    apiUpdateBucketHistory,
+    apiDeleteBucketHistory,
     apiUpdateBucketReadonly,
     apiBuckets,
     apiBucketData,
-    apiBucketDataLoading
+    apiBucketDataLoading,
+    apiDeleteBucketHistoryLoading,
+    apiDeleteBucketHistoryError,
   } = useBucketService();
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
@@ -214,6 +223,21 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     setBucketData({data: []} as unknown as BucketDataWithIdType);
   }, []);
 
+  const updateBucketHistory = useCallback(
+    async (bucket: BucketType) => {
+      const previousBuckets = buckets;
+      setBuckets(prev => (prev ? prev.map(i => ({...i, history: !i.history})) : []));
+      return apiUpdateBucketHistory(bucket).then(result => {
+        if (!result) {
+          setBuckets(previousBuckets);
+        }
+        return result;
+      });
+    },
+    [buckets]
+  );
+
+
   const updateBucketReadonly = useCallback(async (bucket: BucketType) => {
     const previousBuckets = buckets;
     setBuckets(prev => (prev ? prev.map(i => ({...i, readOnly: !i.readOnly})) : []));
@@ -233,11 +257,15 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketOrderOnServer: apiChangeBucketOrder,
       renameBucket,
       deleteBucket,
+      updateBucketHistory,
+      deleteBucketHistory: apiDeleteBucketHistory,
       updateBucketReadonly,
       buckets,
       bucketData,
       bucketDataLoading: apiBucketDataLoading,
       bucketCategories,
+      deleteBucketHistoryLoading: apiDeleteBucketHistoryLoading,
+      deleteBucketHistoryError: apiDeleteBucketHistoryError,
       nextbucketDataQuery
     }),
     [
@@ -248,10 +276,14 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiChangeBucketOrder,
       renameBucket,
       deleteBucket,
+      updateBucketHistory,
+      apiDeleteBucketHistory,
       buckets,
       bucketData,
       apiBucketDataLoading,
       bucketCategories,
+      apiDeleteBucketHistoryLoading,
+      apiDeleteBucketHistoryError,
       nextbucketDataQuery
     ]
   );
