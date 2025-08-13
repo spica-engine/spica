@@ -32,7 +32,7 @@ type BucketContextType = {
   deleteBucket: (bucketId: string) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
-  bucketData: BucketDataType | null;
+  bucketData: BucketDataWithIdType | null;
   bucketDataLoading: boolean;
   nextbucketDataQuery: BucketDataQueryWithIdType | null;
 };
