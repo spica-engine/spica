@@ -9,16 +9,14 @@
       "path": "./services"
     },
     {
+      "path": "./realtime"
+    },
+    {
       "path": "../passport/guard"
     },
     {
       "path": "../passport"
     },
-    {
-      "path": "../versioncontrol"
-    },
-    {
-      "path": "./realtime"
-    }
+    {"path": "../../../../libs/interface/versioncontrol"}
   ]
 }

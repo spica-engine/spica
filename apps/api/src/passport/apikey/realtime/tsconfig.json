@@ -12,7 +12,7 @@
       "path": "../../guard"
     },
     {
-      "path": "../../services"
+      "path": "../../guard/services"
     }
   ]
 }

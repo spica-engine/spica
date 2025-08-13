@@ -9,7 +9,7 @@
       "path": "../../../../../libs/database/realtime"
     },
     {
-      "path": "../../passport"
+      "path": "../../passport/guard/services"
     }
   ]
 }

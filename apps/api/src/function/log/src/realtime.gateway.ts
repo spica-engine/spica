@@ -1,6 +1,6 @@
 import {OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway} from "@nestjs/websockets";
 import {RealtimeDatabaseService} from "@spica-server/database/realtime";
-import {GuardService} from "@spica-server/passport";
+import {GuardService} from "@spica-server/passport/guard/services";
 import {getConnectionHandlers} from "@spica-server/realtime";
 
 @WebSocketGateway(31, {

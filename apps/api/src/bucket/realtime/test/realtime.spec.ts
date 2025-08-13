@@ -4,7 +4,7 @@ import {BucketModule} from "@spica-server/bucket/src";
 import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {GuardService} from "@spica-server/passport";
+import {GuardService} from "@spica-server/passport/guard/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica-server/core/schema";

@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts", "src/**/*.json", "services/src/guard.service.ts"],
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json", "guard/services/src/guard.service.ts"],
   "references": [
     {"path": "./guard"},
     {"path": "./identity"},

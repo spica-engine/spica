@@ -3,6 +3,12 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../activity/services"
+    },
+    {
+      "path": "../../../../libs/interface/passport/identity"
+    },
+    {
       "path": "../../../../libs/interface/representative"
     },
     {
@@ -12,7 +18,7 @@
       "path": "../versioncontrol"
     },
     {
-      "path": "../passport"
+      "path": "../passport/guard"
     }
   ]
 }
