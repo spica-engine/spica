@@ -15,11 +15,6 @@ export default {
     },
     {
       action: "storage:browse",
-      resource: {include: ["*"], exclude: []},
-      module: "storage"
-    },
-    {
-      action: "storage:browseAll",
       resource: {include: ["**"], exclude: []},
       module: "storage"
     }
