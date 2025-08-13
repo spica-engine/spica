@@ -1,19 +1,19 @@
 import {Button, FlexElement, FluidContainer, Icon} from "oziko-ui-kit";
 import React, {memo, useState, type FC} from "react";
 import styles from "./Toolbar.module.scss";
+import {useLocation} from "react-router-dom";
 
-type TypeToolbar = {
-  token: string;
-  name: string;
-  onDrawerOpen?: () => void;
-};
+type TypeToolbar = {bucketId?: string; token: string; name: string; onDrawerOpen?: () => void};
 
-const Toolbar: FC<TypeToolbar> = ({token, name, onDrawerOpen}) => {
+const Toolbar: FC<TypeToolbar> = ({bucketId, token, name, onDrawerOpen}) => {
   const [copied, setCopied] = useState(false);
+  const location = useLocation();
+  const isOnIdentity = location.pathname === "/passport/identity";
+  const textToCopy = isOnIdentity ? token : bucketId;
 
   const handleCopy = () => {
     navigator.clipboard
-      .writeText(token)
+      .writeText(textToCopy as string)
       .then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1000);
@@ -22,6 +22,7 @@ const Toolbar: FC<TypeToolbar> = ({token, name, onDrawerOpen}) => {
         console.error("Failed to copy token:", err);
       });
   };
+
   return (
     <FluidContainer
       dimensionX="fill"
@@ -37,16 +38,19 @@ const Toolbar: FC<TypeToolbar> = ({token, name, onDrawerOpen}) => {
             >
               <Icon name="sort" />
             </Button>
-
-            <span className={styles.text}>{token}</span>
-            <Button
-              variant="icon"
-              shape="circle"
-              className={`${styles.button} ${styles.tokenButton}`}
-              onClick={handleCopy}
-            >
-              <Icon name={copied ? "check" : "contentCopy"} />
-            </Button>
+            {textToCopy && (
+              <>
+                <span className={styles.text}>{textToCopy}</span>
+                <Button
+                  variant="icon"
+                  shape="circle"
+                  className={`${styles.button} ${styles.tokenButton}`}
+                  onClick={handleCopy}
+                >
+                  <Icon name={copied ? "check" : "contentCopy"} />
+                </Button>
+              </>
+            )}
           </FlexElement>
         )
       }}

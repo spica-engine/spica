@@ -4,7 +4,7 @@ import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
 import {useCallback, useEffect, useMemo} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
-import type {BucketDataQueryWithIdType} from "../../services/bucketService";
+import type {BucketDataQueryWithIdType, BucketType} from "../../services/bucketService";
 import useLocalStorage from "../../hooks/useLocalStorage";
 import Loader from "../../components/atoms/loader/Loader";
 
@@ -37,8 +37,9 @@ export default function Bucket() {
     getBucketData(bucketId);
   }, [bucketId]);
 
+  const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
+
   const formattedColumns: ColumnType[] = useMemo(() => {
-    const bucket = buckets?.find(i => i._id === bucketId);
     const columns = Object.values(bucket?.properties ?? {});
     return [
       {
@@ -58,7 +59,7 @@ export default function Bucket() {
         showDropdownIcon: true
       }))
     ] as ColumnType[];
-  }, [buckets, bucketId]);
+  }, [bucket]);
 
   const handleScrollEnd = useCallback(() => {
     if (!bucketId || !nextbucketDataQuery) return;
@@ -84,13 +85,13 @@ export default function Bucket() {
     [formattedColumns, nextbucketDataQuery, bucketId]
   );
 
-  if (formattedColumns.length <= 1) {
+  if (formattedColumns.length <= 1 || !bucket) {
     return <Loader/>
   }
 
   return (
     <BucketWithVisibleColumns
-      bucketId={bucketId as string}
+      bucket={bucket}
       formattedColumns={formattedColumns as ColumnType[]}
       bucketData={bucketData}
       handleScrollEnd={handleScrollEnd}
@@ -102,7 +103,7 @@ export default function Bucket() {
 }
 
 type BucketWithVisibleColumnsProps = {
-  bucketId: string;
+  bucket: BucketType;
   formattedColumns: ColumnType[];
   bucketData: any;
   handleScrollEnd: () => void;
@@ -112,7 +113,7 @@ type BucketWithVisibleColumnsProps = {
 };
 
 function BucketWithVisibleColumns({
-  bucketId,
+  bucket,
   formattedColumns,
   bucketData,
   handleScrollEnd,
@@ -126,7 +127,7 @@ function BucketWithVisibleColumns({
   );
 
   const [visibleColumns, setVisibleColumns] = useLocalStorage<{[key: string]: boolean}>(
-    `${bucketId}-visible-columns`,
+    `${bucket._id}-visible-columns`,
     defaultVisibleColumns
   );
 
@@ -161,12 +162,12 @@ function BucketWithVisibleColumns({
         columns={formattedColumns}
         visibleColumns={visibleColumns}
         toggleColumn={toggleColumn}
-        bucketId={bucketId as string}
+        bucket={bucket}
         onSearch={handleSearch}
         searchLoading={bucketDataLoading && !isTableLoading}
       />
       <BucketTable
-        bucketId={bucketId as string}
+        bucketId={bucket._id}
         columns={filteredColumns}
         data={bucketData?.data ?? []}
         onScrollEnd={handleScrollEnd}

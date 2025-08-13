@@ -1,0 +1,84 @@
+.popoverContainer {
+  width: 160px;
+  padding: 0;
+  z-index: 4;
+  * {
+    line-height: unset !important;
+    font-family: var(--font-family-base) !important;
+  }
+}
+
+.popoverContent {
+  width: 100%;
+}
+
+.popoverButtonsContainer {
+  width: 100% !important;
+  border-bottom: var(--border-default);
+  padding: var(--padding-md);
+
+  .popoverButtons {
+    width: 100% !important;
+    button {
+      width: 100% !important;
+      min-width: 100% !important;
+      max-width: 100% !important;
+      justify-content: start;
+      padding-left: 0;
+      height: 20px;
+      > div > div {
+        gap: var(--gap-md) !important;
+      }
+    }
+
+    button:hover {
+      background-color: transparent !important;
+    }
+  }
+}
+
+.popoverCheckboxesContainer {
+  padding: var(--padding-md);
+
+  width: 100% !important;
+  .popoverCheckboxes {
+    width: 100% !important;
+    align-items: start !important;
+    > div {
+      width: 100% !important;
+      height: 20px !important;
+      gap: var(--gap-md) !important;
+    }
+
+    .historyButton,
+    .historyButton span {
+      color: var(--color-danger) !important;
+    }
+
+    button {
+      width: 100% !important;
+      min-width: 100% !important;
+      max-width: 100% !important;
+      justify-content: start;
+      padding-left: 0;
+      height: 20px;
+      > div > div {
+        gap: var(--gap-md) !important;
+      }
+      height: 20px;
+    }
+
+    button svg,
+    button span {
+      margin-left: -1px;
+    }
+
+    button:hover {
+      background-color: transparent !important;
+    }
+  }
+}
+
+.confirmText {
+  margin-top: 0;
+}

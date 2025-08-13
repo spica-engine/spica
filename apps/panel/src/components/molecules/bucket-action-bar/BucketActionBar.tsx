@@ -3,11 +3,13 @@ import styles from "./BucketActionBar.module.scss";
 import {Button, FlexElement, Icon, Popover, Checkbox} from "oziko-ui-kit";
 import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
+import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
+import type { BucketType } from "src/services/bucketService";
 import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
 
 type BucketActionBarProps = {
   onSearch: (search: string) => void;
-  bucketId: string;
+  bucket: BucketType;
   searchLoading?: boolean;
   columns: ColumnType[];
   visibleColumns: Record<string, boolean>;
@@ -18,15 +20,16 @@ const SEARCH_DEBOUNCE_TIME = 1000;
 
 const BucketActionBar = ({
   onSearch,
-  bucketId,
+  bucket,
   searchLoading,
   columns,
   visibleColumns,
   toggleColumn
 }: BucketActionBarProps) => {
+
   const [searchValue, setSearchValue] = useState("");
 
-  useEffect(() => setSearchValue(""), [bucketId]);
+  useEffect(() => setSearchValue(""), [bucket?._id]);
 
   const debouncedSearch = useMemo(
     () =>
@@ -107,10 +110,7 @@ const BucketActionBar = ({
             Column
           </Button>
         </Popover>
-        <Button variant="text" onClick={() => {}}>
-          <Icon name="dotsVertical" />
-          More
-        </Button>
+        <BucketMorePopup bucket={bucket} />
       </FlexElement>
     </div>
   );
