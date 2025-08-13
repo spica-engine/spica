@@ -1,4 +1,4 @@
-import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
+import {Button, Icon, type IconName} from "oziko-ui-kit";
 import Table, { type FieldType } from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useMemo} from "react";
@@ -109,122 +109,6 @@ const defaultColumns: ColumnType[] = [
   }
 ];
 
-// TODO: Refactor this function to render more appropriate UI elements for each field type.
-// Many field types are currently using the generic `renderDefault()`.
-function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
-  function renderDefault() {
-    return (
-      <div className={styles.defaultCell}>
-        <div className={styles.defaultCellData}>{cellData}</div>
-        {deletable && cellData && (
-          <Button variant="icon">
-            <Icon name="close" size="sm" />
-          </Button>
-        )}
-      </div>
-    );
-  }
-  switch (type) {
-    case "string":
-      return renderDefault();
-    case "number":
-      return renderDefault();
-    case "date":
-      return renderDefault();
-    case "boolean":
-      return <Checkbox className={styles.checkbox} />;
-    case "textarea":
-      return renderDefault();
-    case "multiple selection":
-      return (
-        <div className={styles.multipleSelectionCell}>
-          {cellData?.slice(0, 2)?.map?.((_: any, index: number) => (
-            <Button key={index} variant="icon" className={styles.grayBox}>
-              {index + 1}
-            </Button>
-          ))}
-          {cellData.length > 2 && (
-            <Button variant="icon" className={styles.grayBox}>
-              <Icon name="dotsHorizontal" size="xs" />
-            </Button>
-          )}
-          <Button variant="icon" className={styles.grayBox}>
-            <Icon name="plus" size="xs" />
-          </Button>
-          {deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "relation":
-      return (
-        <div className={styles.defaultCell}>
-          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
-          {deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "location":
-      return (
-        <div className={styles.locationCell}>
-          <img src="/locationx.png" className={styles.locationImage} />
-          <div>{cellData.coordinates}</div>
-        </div>
-      );
-    case "array":
-      return (
-        <div className={styles.defaultCell}>
-          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
-          {deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "object":
-      return (
-        <div className={styles.defaultCell}>
-          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
-          {!deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "file":
-      return (
-        <div className={styles.fileCell}>
-          <Icon name="imageMultiple" size="xs" />
-          {cellData ? (
-            <span>{cellData}</span>
-          ) : (
-            <span className={styles.grayText}>Click or Drag&Drop</span>
-          )}
-        </div>
-      );
-    case "richtext":
-      return renderDefault();
-    default: {
-      if (!cellData) {
-        return <div />;
-      }
-
-      if (typeof cellData === "string") {
-        return cellData;
-      }
-
-      return JSON.stringify(cellData);
-    }
-  }
-}
-
 function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnType[] {
   return [
     defaultColumns[0],
@@ -270,7 +154,7 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
         const meta = columnMap[key] || {};
         return [
           key,
-          {id: `${meta.id}-${fullRow._id}`, value: renderCell(value, meta.type, meta.deletable)}
+          {id: `${meta.id}-${fullRow._id}`, value}
         ];
       })
     );

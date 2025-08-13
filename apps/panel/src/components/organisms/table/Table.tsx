@@ -10,11 +10,20 @@ import React, {
   useRef,
   useState
 } from "react";
-import {FlexElement, Popover, useInputRepresenter, useOnClickOutside} from "oziko-ui-kit";
+import {
+  Button,
+  Checkbox,
+  FlexElement,
+  Icon,
+  Popover,
+  useInputRepresenter,
+  useOnClickOutside
+} from "oziko-ui-kit";
 import styles from "./Table.module.scss";
 import InfiniteScroll from "react-infinite-scroll-component";
 import useScrollDirectionLock from "../../../hooks/useScrollDirectionLock";
 import Loader from "../../../components/atoms/loader/Loader";
+import type {TypeInputTypeMap} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 
 export type FieldType =
   | "string"
@@ -42,12 +51,13 @@ type TypeDataColumn = {
   selectable?: boolean;
   leftOffset?: number;
   type?: FieldType;
+  deletable?: boolean;
 };
 
 type TypeTableData = {
   [k: string]: {
     id: string;
-    value: string | JSX.Element;
+    value: any;
   };
 };
 
@@ -61,6 +71,122 @@ type TypeTable = {
 };
 
 const MIN_COLUMN_WIDTH = 140;
+
+// TODO: Refactor this function to render more appropriate UI elements for each field type.
+// Many field types are currently using the generic `renderDefault()`.
+function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
+  function renderDefault() {
+    return (
+      <div className={styles.defaultCell}>
+        <div className={styles.defaultCellData}>{cellData}</div>
+        {deletable && cellData && (
+          <Button variant="icon">
+            <Icon name="close" size="sm" />
+          </Button>
+        )}
+      </div>
+    );
+  }
+  switch (type) {
+    case "string":
+      return renderDefault();
+    case "number":
+      return renderDefault();
+    case "date":
+      return renderDefault();
+    case "boolean":
+      return <Checkbox className={styles.checkbox} />;
+    case "textarea":
+      return renderDefault();
+    case "multiple selection":
+      return (
+        <div className={styles.multipleSelectionCell}>
+          {cellData?.slice(0, 2)?.map?.((_: any, index: number) => (
+            <Button key={index} variant="icon" className={styles.grayBox}>
+              {index + 1}
+            </Button>
+          ))}
+          {cellData.length > 2 && (
+            <Button variant="icon" className={styles.grayBox}>
+              <Icon name="dotsHorizontal" size="xs" />
+            </Button>
+          )}
+          <Button variant="icon" className={styles.grayBox}>
+            <Icon name="plus" size="xs" />
+          </Button>
+          {deletable && cellData && (
+            <Button variant="icon">
+              <Icon name="close" size="sm" />
+            </Button>
+          )}
+        </div>
+      );
+    case "relation":
+      return (
+        <div className={styles.defaultCell}>
+          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
+          {deletable && cellData && (
+            <Button variant="icon">
+              <Icon name="close" size="sm" />
+            </Button>
+          )}
+        </div>
+      );
+    case "location":
+      return (
+        <div className={styles.locationCell}>
+          <img src="/locationx.png" className={styles.locationImage} />
+          <div>{cellData.coordinates}</div>
+        </div>
+      );
+    case "array":
+      return (
+        <div className={styles.defaultCell}>
+          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
+          {deletable && cellData && (
+            <Button variant="icon">
+              <Icon name="close" size="sm" />
+            </Button>
+          )}
+        </div>
+      );
+    case "object":
+      return (
+        <div className={styles.defaultCell}>
+          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
+          {!deletable && cellData && (
+            <Button variant="icon">
+              <Icon name="close" size="sm" />
+            </Button>
+          )}
+        </div>
+      );
+    case "file":
+      return (
+        <div className={styles.fileCell}>
+          <Icon name="imageMultiple" size="xs" />
+          {cellData ? (
+            <span>{cellData}</span>
+          ) : (
+            <span className={styles.grayText}>Click or Drag&Drop</span>
+          )}
+        </div>
+      );
+    case "richtext":
+      return renderDefault();
+    default: {
+      if (!cellData) {
+        return <div />;
+      }
+
+      if (typeof cellData === "string") {
+        return cellData;
+      }
+
+      return JSON.stringify(cellData);
+    }
+  }
+}
 
 const parseWidth = (widthValue: string | number, containerWidth: number): number => {
   const baseFontSize = 16;
@@ -383,23 +509,24 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
 
     const cells = formattedColumns.map(column => {
       const cellData = row[column.key];
-
       const props = {
-        key: cellData.id,
         onClick: () => column.selectable !== false && handleCellClick(column.key, index),
         className: `${column.cellClassName || ""} ${column.fixed ? styles.fixedCell : ""}`,
         leftOffset: column.leftOffset,
-        children: cellData.value
+        value: cellData.value,
+        type: column.type ?? "string",
+        deletable: column.deletable
       };
 
       return column.selectable !== false ? (
         <EditableCell
+          key={cellData.id}
           {...props}
           type={column.type ?? "string"}
           focused={focusedCell?.row === index && focusedCell?.column === column.key}
         />
       ) : (
-        <Cell {...props} />
+        <Cell key={cellData.id} {...props} />
       );
     });
 
@@ -422,49 +549,65 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
 
 type TypeCell = React.HTMLAttributes<HTMLDivElement> & {
   leftOffset?: number;
+  type: FieldType;
+  value: any;
+  deletable?: boolean;
 };
 
-const Cell = memo(({children, leftOffset, ...props}: TypeCell) => {
+const Cell = memo(({value, type, deletable, leftOffset, ...props}: TypeCell) => {
   return (
     <td {...props} className={`${styles.cell} ${props.className || ""}`} style={{left: leftOffset}}>
-      {children}
+      {renderCell(value, type, deletable)}
     </td>
   );
 });
 
 type TypeEditableCell = TypeCell & {
-  type: FieldType;
   focused?: boolean;
 };
 
-const EditableCell = memo(({children, focused, leftOffset, type, ...props}: TypeEditableCell) => {
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    props?.onClick?.(e);
-    setIsEditOpen(true);
-  };
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const contentRef = useRef<HTMLDivElement | null>(null);
+const EditableCell = memo(
+  ({value, type, deletable, focused, leftOffset, ...props}: TypeEditableCell) => {
+    const [cellValue, setCellValue] = useState({value});
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      props?.onClick?.(e);
+      setIsEditOpen(true);
+    };
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const contentRef = useRef<HTMLDivElement | null>(null);
 
-  useOnClickOutside({
-    refs: [containerRef, contentRef],
-    onClickOutside: () => setIsEditOpen(false)
-  });
+    const input = useInputRepresenter({
+      properties: {
+        value: {
+          type: (type === "relation" ? "string" : type) as keyof TypeInputTypeMap,
+          title: "Value"
+        }
+      },
+      value: cellValue,
+      onChange: setCellValue
+    });
 
-  return (
-    <td
-      {...props}
-      onClick={handleClick}
-      className={`${styles.cell} ${styles.selectableCell} ${focused ? styles.focusedCell : ""} ${props.className || ""}`}
-      style={{left: leftOffset}}
-    >
-      <div ref={containerRef}>
-        <Popover open={isEditOpen} content={<div ref={contentRef}>{type}</div>}>
-          {children}
-        </Popover>
-      </div>
-    </td>
-  );
-});
+    useOnClickOutside({
+      refs: [containerRef, contentRef],
+      onClickOutside: () => setIsEditOpen(false)
+    });
+
+    return (
+      <td
+        {...props}
+        onClick={handleClick}
+        className={`${styles.cell} ${styles.selectableCell} ${focused ? styles.focusedCell : ""} ${props.className || ""}`}
+        style={{left: leftOffset}}
+      >
+        <div ref={containerRef}>
+          <Popover open={isEditOpen} content={<div ref={contentRef}>{input}</div>}>
+            {renderCell(cellValue.value, type, deletable)}
+          </Popover>
+        </div>
+      </td>
+    );
+  }
+);
 
 export default memo(Table);
