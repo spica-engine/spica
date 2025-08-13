@@ -8,9 +8,11 @@ import type { BucketType } from "src/services/bucketService";
 import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
 
 type BucketActionBarProps = {
+  onRefresh: () => void;
   onSearch: (search: string) => void;
   bucket: BucketType;
   searchLoading?: boolean;
+  refreshLoading?: boolean;
   columns: ColumnType[];
   visibleColumns: Record<string, boolean>;
   toggleColumn: (key?: string) => void;
@@ -19,14 +21,15 @@ type BucketActionBarProps = {
 const SEARCH_DEBOUNCE_TIME = 1000;
 
 const BucketActionBar = ({
+  onRefresh,
   onSearch,
   bucket,
   searchLoading,
+  refreshLoading,
   columns,
   visibleColumns,
   toggleColumn
 }: BucketActionBarProps) => {
-
   const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => setSearchValue(""), [bucket?._id]);
@@ -78,7 +81,12 @@ const BucketActionBar = ({
           <Icon name="plus" />
           New Entry
         </Button>
-        <Button variant="text" onClick={() => {}}>
+        <Button
+          variant="text"
+          onClick={onRefresh}
+          disabled={refreshLoading || searchLoading}
+          loading={refreshLoading}
+        >
           <Icon name="refresh" />
           Refresh
         </Button>

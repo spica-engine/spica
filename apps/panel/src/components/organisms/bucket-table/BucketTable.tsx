@@ -1,7 +1,7 @@
 import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
-import {memo, useMemo} from "react";
+import {memo, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import useLocalStorage from "../../../hooks/useLocalStorage";
 
@@ -43,6 +43,7 @@ type BucketTableProps = {
   maxHeight?: string | number;
   bucketId: string;
   loading: boolean;
+  tableRef?: RefObject<HTMLElement | null>
 };
 
 type ColumnHeaderProps = {
@@ -297,7 +298,8 @@ const BucketTable = ({
   totalDataLength,
   maxHeight,
   loading,
-  bucketId
+  bucketId,
+  tableRef,
 }: BucketTableProps) => {
   const formattedColumns = useMemo(
     () => getFormattedColumns(columns, bucketId),
@@ -319,6 +321,7 @@ const BucketTable = ({
       data={formattedData}
       onScrollEnd={onScrollEnd}
       totalDataLength={totalDataLength}
+      tableRef={tableRef}
     />
   );
 };

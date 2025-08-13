@@ -2,16 +2,16 @@ import styles from "./Bucket.module.scss";
 import {useBucket} from "../../contexts/BucketContext";
 import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
-import {useCallback, useEffect, useMemo} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
-import type {BucketDataQueryWithIdType, BucketType} from "../../services/bucketService";
+import type {BucketDataQueryWithIdType, BucketType} from "src/services/bucketService";
 import useLocalStorage from "../../hooks/useLocalStorage";
 import Loader from "../../components/atoms/loader/Loader";
 
 const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
   ({
-    paginatie: true,
+    paginate: true,
     relation: true,
     limit: 25,
     filter: JSON.stringify({
@@ -21,15 +21,41 @@ const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
     })
   }) as const;
 
+function smoothScrollToTop(el: HTMLElement): Promise<void> {
+  return new Promise(resolve => {
+    if (!el) {
+      resolve();
+      return;
+    }
+
+    if (el.scrollTop === 0) {
+      resolve();
+      return;
+    }
+
+    const onScroll = () => {
+      if (el.scrollTop === 0) {
+        el.removeEventListener("scroll", onScroll);
+        resolve();
+      }
+    };
+
+    el.addEventListener("scroll", onScroll);
+
+    el.scrollTo({top: 0, behavior: "smooth"});
+  });
+}
+
 export default function Bucket() {
+  const [refreshLoading, setRefreshLoading] = useState(false);
   const {bucketId} = useParams<{bucketId: string}>();
   const {
     buckets,
     bucketData,
     getBucketData,
-    nextbucketDataQuery,
+    loadMoreBucketData,
     bucketDataLoading,
-    cleanBucketData
+    refreshBucketData
   } = useBucket();
 
   useEffect(() => {
@@ -40,6 +66,8 @@ export default function Bucket() {
   const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
 
   const formattedColumns: ColumnType[] = useMemo(() => {
+    const calculatedBucketId = bucketData?.bucketId ?? (bucketId as string);
+    const bucket = buckets?.find(i => i._id === calculatedBucketId);
     const columns = Object.values(bucket?.properties ?? {});
     return [
       {
@@ -52,19 +80,9 @@ export default function Bucket() {
         fixed: true,
         selectable: false
       },
-      ...columns.map(i => ({
-        ...i,
-        header: i.title,
-        key: i.title,
-        showDropdownIcon: true
-      }))
+      ...columns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
     ] as ColumnType[];
-  }, [bucket]);
-
-  const handleScrollEnd = useCallback(() => {
-    if (!bucketId || !nextbucketDataQuery) return;
-    getBucketData(bucketId, nextbucketDataQuery);
-  }, [bucketId, getBucketData, nextbucketDataQuery]);
+  }, [buckets, bucketId, bucketData?.bucketId]);
 
   const searchableColumns = formattedColumns
     .filter(({type}) => ["string", "textarea", "richtext"].includes(type as string))
@@ -75,18 +93,23 @@ export default function Bucket() {
       const trimmed = search.trim();
       const query = trimmed === "" ? undefined : buildBucketQuery(trimmed, searchableColumns);
       await getBucketData(bucketId as string, query as unknown as BucketDataQueryWithIdType);
-      cleanBucketData();
     },
     [bucketId, searchableColumns, getBucketData]
   );
 
-  const isTableLoading = useMemo(
-    () => !(formattedColumns.length > 1 && nextbucketDataQuery?.bucketId === bucketId),
-    [formattedColumns, nextbucketDataQuery, bucketId]
-  );
+  const isTableLoading = useMemo(() => !(formattedColumns.length > 1), [formattedColumns]);
+
+  const tableRef = useRef<HTMLElement | null>(null);
+
+  const handleRefresh = useCallback(async () => {
+    if (tableRef.current) await smoothScrollToTop(tableRef.current);
+    setRefreshLoading(true);
+    await refreshBucketData();
+    setRefreshLoading(false);
+  }, [bucketId, refreshBucketData]);
 
   if (formattedColumns.length <= 1 || !bucket) {
-    return <Loader/>
+    return <Loader />;
   }
 
   return (
@@ -94,10 +117,13 @@ export default function Bucket() {
       bucket={bucket}
       formattedColumns={formattedColumns as ColumnType[]}
       bucketData={bucketData}
-      handleScrollEnd={handleScrollEnd}
+      handleScrollEnd={loadMoreBucketData}
       bucketDataLoading={bucketDataLoading}
       isTableLoading={isTableLoading}
       handleSearch={handleSearch}
+      handleRefresh={handleRefresh}
+      refreshLoading={refreshLoading}
+      tableRef={tableRef}
     />
   );
 }
@@ -110,6 +136,9 @@ type BucketWithVisibleColumnsProps = {
   bucketDataLoading: boolean;
   isTableLoading: boolean;
   handleSearch: (search: string) => Promise<void>;
+  handleRefresh: () => Promise<void>;
+  refreshLoading: boolean;
+  tableRef: React.RefObject<HTMLElement | null>
 };
 
 function BucketWithVisibleColumns({
@@ -119,7 +148,10 @@ function BucketWithVisibleColumns({
   handleScrollEnd,
   bucketDataLoading,
   isTableLoading,
-  handleSearch
+  handleSearch,
+  handleRefresh,
+  refreshLoading,
+  tableRef,
 }: BucketWithVisibleColumnsProps) {
   const defaultVisibleColumns = useMemo(
     () => Object.fromEntries(formattedColumns.map(col => [col.key, true])),
@@ -165,6 +197,8 @@ function BucketWithVisibleColumns({
         bucket={bucket}
         onSearch={handleSearch}
         searchLoading={bucketDataLoading && !isTableLoading}
+        onRefresh={handleRefresh}
+        refreshLoading={refreshLoading}
       />
       <BucketTable
         bucketId={bucket._id}
@@ -174,6 +208,7 @@ function BucketWithVisibleColumns({
         totalDataLength={bucketData?.meta?.total ?? 0}
         maxHeight="88vh"
         loading={isTableLoading}
+        tableRef={tableRef}
       />
     </div>
   );
