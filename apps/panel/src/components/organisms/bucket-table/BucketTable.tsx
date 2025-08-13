@@ -19,6 +19,7 @@ export type ColumnType = {
   fixed?: boolean;
   selectable?: boolean;
   leftOffset?: number;
+  title?: string;
 };
 
 type BucketTableProps = {
@@ -29,6 +30,7 @@ type BucketTableProps = {
   maxHeight?: string | number;
   bucketId: string;
   loading: boolean;
+  onCellSave?: (value: any, columnName: string, rowId: string) => void;
 };
 
 type ColumnHeaderProps = {
@@ -87,7 +89,7 @@ const defaultColumns: ColumnType[] = [
     cellClassName: styles.selectCell,
     resizable: false,
     fixed: true,
-    selectable: false
+    selectable: false,
   },
   {
     id: "1",
@@ -122,7 +124,8 @@ function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnTyp
         />
       ),
       headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
-      id: `${col.key}-${index}-${bucketId}`
+      id: `${col.key}-${index}-${bucketId}`,
+      title: col.header,
     })),
     defaultColumns[1]
   ];
@@ -168,7 +171,8 @@ const BucketTable = ({
   totalDataLength,
   maxHeight,
   bucketId,
-  loading
+  loading,
+  onCellSave
 }: BucketTableProps) => {
   const formattedColumns = useMemo(
     () => getFormattedColumns(columns, bucketId),
@@ -186,6 +190,7 @@ const BucketTable = ({
       data={formattedData}
       onScrollEnd={onScrollEnd}
       totalDataLength={totalDataLength}
+      onCellSave={onCellSave}
     />
   );
 };

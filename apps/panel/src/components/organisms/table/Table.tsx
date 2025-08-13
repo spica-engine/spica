@@ -15,7 +15,6 @@ import {
   Checkbox,
   FlexElement,
   Icon,
-  Popover,
   useInputRepresenter,
   useOnClickOutside
 } from "oziko-ui-kit";
@@ -24,6 +23,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import useScrollDirectionLock from "../../../hooks/useScrollDirectionLock";
 import Loader from "../../../components/atoms/loader/Loader";
 import type {TypeInputTypeMap} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import Popover from "../../../components/atoms/popover/Popover";
 
 export type FieldType =
   | "string"
@@ -52,6 +52,7 @@ type TypeDataColumn = {
   leftOffset?: number;
   type?: FieldType;
   deletable?: boolean;
+  title?: string;
 };
 
 type TypeTableData = {
@@ -68,6 +69,7 @@ type TypeTable = {
   onScrollEnd?: () => void;
   totalDataLength?: number;
   style?: React.CSSProperties;
+  onCellSave?: (value: any, columnName: string, rowId: string) => void;
 };
 
 const MIN_COLUMN_WIDTH = 140;
@@ -246,7 +248,15 @@ const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) 
   return formattedColumns;
 };
 
-const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataLength, style}) => {
+const Table: FC<TypeTable> = ({
+  columns,
+  data,
+  className,
+  onScrollEnd,
+  totalDataLength,
+  style,
+  onCellSave
+}) => {
   const containerRef = useScrollDirectionLock();
   const [formattedColumns, setFormattedColumns] = useState<TypeDataColumn[]>([]);
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
@@ -317,6 +327,22 @@ const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataL
     };
   }, [focusedCell]);
 
+  useEffect(() => {
+    const handleEnter = (event: KeyboardEvent) => {
+      if (event.key === "Enter") {
+        console.log("cellChangeEvent");
+        const event = new CustomEvent("cellChangeEvent");
+        window.dispatchEvent(event);
+        return;
+      }
+    };
+    window.addEventListener("keydown", handleEnter);
+
+    return () => {
+      window.removeEventListener("keydown", handleEnter);
+    };
+  }, []);
+
   // Calculate total table width to ensure fixed layout works properly
   const totalTableWidth = useMemo(() => {
     return formattedColumns.reduce((total, col) => {
@@ -357,6 +383,7 @@ const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataL
                   focusedCell={focusedCell}
                   handleCellClick={handleCellClick}
                   data={data}
+                  onCellSave={onCellSave}
                 />
               )}
             </tbody>
@@ -482,70 +509,75 @@ type RowsProps = {
   focusedCell: {row: number; column: string} | null;
   handleCellClick: (columnKey: string, index: number) => void;
   data: TypeTableData[];
+  onCellSave?: (value: any, columnName: string, rowId: string) => void;
 };
 
-const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsProps) => {
-  const rowCacheRef = useRef<Map<string, {element: JSX.Element; lastFocusedCell: string | null}>>(
-    new Map()
-  );
-  const rows: JSX.Element[] = [];
+const Rows = memo(
+  ({data, formattedColumns, focusedCell, handleCellClick, onCellSave}: RowsProps) => {
+    const rowCacheRef = useRef<Map<string, {element: JSX.Element; lastFocusedCell: string | null}>>(
+      new Map()
+    );
+    const rows: JSX.Element[] = [];
 
-  for (let index = 0; index < data.length; index++) {
-    const row = data[index];
-    const rowId = row[Object.keys(row)[0]].id;
+    for (let index = 0; index < data.length; index++) {
+      const row = data[index];
+      const rowId = row[Object.keys(row)[0]].id;
 
-    const missingCellData = formattedColumns.some(column => !row[column.key]);
-    if (missingCellData) continue;
+      const missingCellData = formattedColumns.some(column => !row[column.key]);
+      if (missingCellData) continue;
 
-    const focusedKey = focusedCell ? `${focusedCell.row}-${focusedCell.column}` : null;
-    const cached = rowCacheRef.current.get(rowId);
+      const focusedKey = focusedCell ? `${focusedCell.row}-${focusedCell.column}` : null;
+      const cached = rowCacheRef.current.get(rowId);
 
-    const isFocusedInThisRow = focusedCell?.row === index;
+      const isFocusedInThisRow = focusedCell?.row === index;
 
-    if (cached && !isFocusedInThisRow && cached.lastFocusedCell === focusedKey) {
-      rows.push(cached.element);
-      continue;
-    }
-
-    const cells = formattedColumns.map(column => {
-      const cellData = row[column.key];
-      const props = {
-        onClick: () => column.selectable !== false && handleCellClick(column.key, index),
-        className: `${column.cellClassName || ""} ${column.fixed ? styles.fixedCell : ""}`,
-        leftOffset: column.leftOffset,
-        value: cellData.value,
-        type: column.type ?? "string",
-        deletable: column.deletable
-      };
-
-      return column.selectable !== false ? (
-        <EditableCell
-          key={cellData.id}
-          {...props}
-          type={column.type ?? "string"}
-          focused={focusedCell?.row === index && focusedCell?.column === column.key}
-        />
-      ) : (
-        <Cell key={cellData.id} {...props} />
-      );
-    });
-
-    const rowElement = <tr key={rowId}>{cells}</tr>;
-    rowCacheRef.current.set(rowId, {element: rowElement, lastFocusedCell: focusedKey});
-    rows.push(rowElement);
-  }
-
-  useEffect(() => {
-    const currentRowIds = new Set(data.map(row => row[Object.keys(row)[0]].id));
-    for (const cachedKey of rowCacheRef.current.keys()) {
-      if (!currentRowIds.has(cachedKey)) {
-        rowCacheRef.current.delete(cachedKey);
+      if (cached && !isFocusedInThisRow && cached.lastFocusedCell === focusedKey) {
+        rows.push(cached.element);
+        continue;
       }
-    }
-  }, [data]);
 
-  return <>{rows}</>;
-});
+      const cells = formattedColumns.map(column => {
+        const cellData = row[column.key];
+        const props = {
+          onClick: () => column.selectable !== false && handleCellClick(column.key, index),
+          className: `${column.cellClassName || ""} ${column.fixed ? styles.fixedCell : ""}`,
+          leftOffset: column.leftOffset,
+          value: cellData.value,
+          type: column.type ?? "string",
+          deletable: column.deletable
+        };
+
+        return column.selectable !== false ? (
+          <EditableCell
+            key={cellData.id}
+            {...props}
+            type={column.type ?? "string"}
+            focused={focusedCell?.row === index && focusedCell?.column === column.key}
+            title={column.title ?? "Value"}
+            onCellSave={value => onCellSave?.(value, column.title as string, rowId.split("-")[1])}
+          />
+        ) : (
+          <Cell key={cellData.id} {...props} />
+        );
+      });
+
+      const rowElement = <tr key={rowId}>{cells}</tr>;
+      rowCacheRef.current.set(rowId, {element: rowElement, lastFocusedCell: focusedKey});
+      rows.push(rowElement);
+    }
+
+    useEffect(() => {
+      const currentRowIds = new Set(data.map(row => row[Object.keys(row)[0]].id));
+      for (const cachedKey of rowCacheRef.current.keys()) {
+        if (!currentRowIds.has(cachedKey)) {
+          rowCacheRef.current.delete(cachedKey);
+        }
+      }
+    }, [data]);
+
+    return <>{rows}</>;
+  }
+);
 
 type TypeCell = React.HTMLAttributes<HTMLDivElement> & {
   leftOffset?: number;
@@ -564,10 +596,21 @@ const Cell = memo(({value, type, deletable, leftOffset, ...props}: TypeCell) => 
 
 type TypeEditableCell = TypeCell & {
   focused?: boolean;
+  title: string;
+  onCellSave?: (value: any) => void;
 };
 
 const EditableCell = memo(
-  ({value, type, deletable, focused, leftOffset, ...props}: TypeEditableCell) => {
+  ({
+    value,
+    type,
+    deletable,
+    title,
+    focused,
+    leftOffset,
+    onCellSave,
+    ...props
+  }: TypeEditableCell) => {
     const [cellValue, setCellValue] = useState({value});
     const [isEditOpen, setIsEditOpen] = useState(false);
     const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -581,17 +624,34 @@ const EditableCell = memo(
       properties: {
         value: {
           type: (type === "relation" ? "string" : type) as keyof TypeInputTypeMap,
-          title: "Value"
+          title
         }
       },
       value: cellValue,
       onChange: setCellValue
     });
 
+    const handleClose = () => {
+      setIsEditOpen(false);
+      setCellValue({value});
+    };
+
     useOnClickOutside({
       refs: [containerRef, contentRef],
-      onClickOutside: () => setIsEditOpen(false)
+      onClickOutside: () => handleClose
     });
+
+    useEffect(() => {
+      const eventListener = () => {
+        if (isEditOpen) {
+          onCellSave?.(cellValue.value);
+          handleClose();
+        }
+      };
+
+      window.addEventListener("cellChangeEvent", eventListener);
+      return () => window.removeEventListener("cellChangeEvent", eventListener);
+    }, [isEditOpen, title, cellValue.value, onCellSave]);
 
     return (
       <td
@@ -601,7 +661,11 @@ const EditableCell = memo(
         style={{left: leftOffset}}
       >
         <div ref={containerRef}>
-          <Popover open={isEditOpen} content={<div ref={contentRef}>{input}</div>}>
+          <Popover
+            open={isEditOpen}
+            onClose={handleClose}
+            content={<div ref={contentRef}>{input}</div>}
+          >
             {renderCell(cellValue.value, type, deletable)}
           </Popover>
         </div>

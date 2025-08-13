@@ -32,6 +32,7 @@ type BucketContextType = {
   deleteBucket: (bucketId: string) => Promise<any>;
   updateBucketHistory: (bucket: BucketType) => Promise<any>;
   deleteBucketHistory: (bucket: BucketType) => Promise<any>;
+  updateCellData: (value: any, title: string, id: string) => Promise<any>
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataWithIdType | null;
@@ -68,11 +69,12 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiDeleteBucket,
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
+    apiUpdateCellData,
     apiBuckets,
     apiBucketData,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
-    apiDeleteBucketHistoryError,
+    apiDeleteBucketHistoryError
   } = useBucketService();
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
@@ -235,7 +237,30 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [buckets]
   );
 
+  const updateCellData = useCallback(
+    async (value: any, title: string, id: string) => {
+      const oldBucketData = bucketData;
+      let index: number | undefined;
+      const dataToChange = bucketData.data.find((i, x) => {
+        if (i._id === id) {
+          index = x;
+          return true
+        }
+      });
+      if (!dataToChange || (!index && index !== 0)) return;
+      dataToChange[title] = value
+      const data = bucketData.data;
+      data[index] = {[title]: value};
+      setBucketData({...bucketData, data: data});
 
+      return apiUpdateCellData(value, title, id, bucketData.bucketId).then(result => {
+        if (!result) setBucketData(oldBucketData);
+      })
+    },
+    [apiUpdateCellData, bucketData]
+  );
+
+  console.log("bucketData: ", bucketData)
   const contextValue = useMemo(
     () => ({
       getBucketData,
@@ -254,6 +279,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketCategories,
       deleteBucketHistoryLoading: apiDeleteBucketHistoryLoading,
       deleteBucketHistoryError: apiDeleteBucketHistoryError,
+      updateCellData,
       nextbucketDataQuery
     }),
     [
@@ -272,6 +298,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketCategories,
       apiDeleteBucketHistoryLoading,
       apiDeleteBucketHistoryError,
+      updateCellData,
       nextbucketDataQuery
     ]
   );

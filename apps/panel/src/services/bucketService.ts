@@ -91,7 +91,11 @@ export const useBucketService = () => {
     method: "get"
   });
 
-  const {request: fetchBucketData, data: apiBucketData, loading: apiBucketDataLoading} = useApi<BucketDataType>({
+  const {
+    request: fetchBucketData,
+    data: apiBucketData,
+    loading: apiBucketDataLoading
+  } = useApi<BucketDataType>({
     endpoint: "",
     method: "get"
   });
@@ -100,12 +104,18 @@ export const useBucketService = () => {
 
   const {request: patchRequest} = useApi({endpoint: "/api/bucket", method: "patch"});
 
+  const {request: updateCellData} = useApi({endpoint: "", method: "patch"});
+
   const {request: deleteRequest} = useApi({
     endpoint: "",
     method: "delete"
   });
 
-  const {request: deleteHistoty, loading: apiDeleteBucketHistoryLoading, error: apiDeleteBucketHistoryError} = useApi({
+  const {
+    request: deleteHistoty,
+    loading: apiDeleteBucketHistoryLoading,
+    error: apiDeleteBucketHistoryError
+  } = useApi({
     endpoint: "",
     method: "delete"
   });
@@ -161,21 +171,37 @@ export const useBucketService = () => {
     [deleteRequest]
   );
 
-  const apiUpdateBucketHistory = useCallback(async (bucket: BucketType) => {
-    return await putRequest({
-      endpoint: `/api/bucket/${bucket._id}`,
-      body: {
-        ...bucket,
-        history: !bucket.history
-      }
-    });
-  }, [patchRequest]);
+  const apiUpdateBucketHistory = useCallback(
+    async (bucket: BucketType) => {
+      return await putRequest({
+        endpoint: `/api/bucket/${bucket._id}`,
+        body: {
+          ...bucket,
+          history: !bucket.history
+        }
+      });
+    },
+    [patchRequest]
+  );
 
-  const apiDeleteBucketHistory = useCallback(async (bucket: BucketType) => {
-    return await deleteHistoty({
-      endpoint: `/api/bucket/${bucket._id}/history`
-    });
-  }, [deleteHistoty]);
+  const apiDeleteBucketHistory = useCallback(
+    async (bucket: BucketType) => {
+      return await deleteHistoty({
+        endpoint: `/api/bucket/${bucket._id}/history`
+      });
+    },
+    [deleteHistoty]
+  );
+
+  const apiUpdateCellData = useCallback(
+    (value: any, title: string, id: string, bucketId: string) => {
+      return updateCellData({
+        endpoint: `/api/bucket/${bucketId}/data/${id}`,
+        body: {[title]: value}
+      });
+    },
+    []
+  );
 
   return {
     apiGetBucketData,
@@ -186,10 +212,11 @@ export const useBucketService = () => {
     apiDeleteBucket,
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
+    apiUpdateCellData,
     apiBuckets,
     apiBucketData,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
-    apiDeleteBucketHistoryError,
+    apiDeleteBucketHistoryError
   };
 };

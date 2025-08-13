@@ -27,7 +27,8 @@ export default function Bucket() {
     getBucketData,
     nextbucketDataQuery,
     bucketDataLoading,
-    cleanBucketData
+    cleanBucketData,
+    updateCellData
   } = useBucket();
 
   useEffect(() => {
@@ -84,6 +85,11 @@ export default function Bucket() {
     nextbucketDataQuery,
     bucketId
   ]);
+
+  const handleCellSave = (value: any, columnName: string, rowId: string) => {
+    updateCellData(value, columnName, rowId)
+  }
+
   return (
     <div className={styles.container}>
       <BucketActionBar bucket={bucket as BucketType} onSearch={handleSearch} />
@@ -95,6 +101,7 @@ export default function Bucket() {
         totalDataLength={bucketData?.meta?.total ?? 0}
         maxHeight="88vh"
         loading={isTableLoading}
+        onCellSave={handleCellSave}
       />
     </div>
   );
